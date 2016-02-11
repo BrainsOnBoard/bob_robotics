@@ -113,7 +113,7 @@ public:
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
         fs << "pmFwdLASize" << getIntegerSize(getPMFwdLASize());
         fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdLAIncreaseSize());
-        fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdLAIncreaseSize());
+        fs << "pmFwdLADecreaseSize" << getIntegerSize(getPMFwdLADecreaseSize());
         fs << "pmMinFwdLASize" << getIntegerSize(getPMMinFwdLASize());
         fs << "pmMaxFwdLASize" << getIntegerSize(getPMMaxFwdLASize());
         fs << "unwrapRes" << getUnwrapRes();
