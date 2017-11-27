@@ -18,6 +18,7 @@
 
 // Model includes
 #include "parameters.h"
+#include "robotParameters.h"
 #include "simulatorCommon.h"
 
 //---------------------------------------------------------------------------
@@ -25,13 +26,11 @@
 //---------------------------------------------------------------------------
 namespace
 {
-constexpr double pi = 3.141592653589793238462643383279502884;
-
 void buildOpticalFlowFilter(cv::Mat &filter, float preferredAngle) {
     // Loop through columns
     for(unsigned int x = 0; x < filter.cols; x++) {
         // Convert column to angle
-        const float th = (((float)x / (float)filter.cols) * 2.0f * pi) - pi;
+        const float th = (((float)x / (float)filter.cols) * 2.0f * Parameters::pi) - Parameters::pi;
 
         // Write filter with sin of angle
         filter.at<float>(0, x) = sin(th - preferredAngle);
@@ -65,7 +64,7 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std::atomic<float> &speed, unsigned int &numFrames)
 {
     Camera360 camera(cameraDevice, cv::Size(640, 480), cv::Size(90, 10),
-                     0.5, 0.416, 0.173, 0.377, -pi);
+                     0.5, 0.416, 0.173, 0.377, -Parameters::pi);
     
     // Create two grayscale frames to hold optical flow
     cv::Mat frames[2];
@@ -118,17 +117,13 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
 int main(int argc, char *argv[])
 {
-    constexpr float joystickDeadzone = 0.25f;
-    constexpr float velocityScale = 1.0f / 500.0f;
-    constexpr float motorSteerThreshold = 2.0f;
-    constexpr int64_t targetTickMicroseconds = (int64_t)(DT * 1000.0) - 10;
+    const float velocityScale = 1.0f / 500.0f;
     
     // Create joystick interface
     Joystick joystick;
     
     // Create motor interface
     MotorI2C motor;
-    
     
     // Initialise GeNN
     allocateMem();
@@ -139,7 +134,7 @@ int main(int argc, char *argv[])
     //---------------------------------------------------------------------------
     // TL
     for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (pi / 4.0) * (double)i;
+        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
     }
 
     //---------------------------------------------------------------------------
@@ -193,24 +188,8 @@ int main(int argc, char *argv[])
         
         // If we are going outbound
         if(outbound) {
-            // Read joystick axis state and drive robot manually
-            const float joystickX = joystick.getAxisState(0);
-            const float joystickY = joystick.getAxisState(1);
-            if(joystickX < -joystickDeadzone) {
-                motor.tank(1.0f, -1.0f);
-            }
-            else if(joystickX > joystickDeadzone) {
-                motor.tank(-1.0f, 1.0f);
-            }
-            else if(joystickY < -joystickDeadzone) {
-                motor.tank(1.0f, 1.0f);
-            }
-            else if(joystickY > joystickDeadzone) {
-                motor.tank(-1.0f, -1.0f);
-            }
-            else {
-                motor.tank(0.0f, 0.0f);
-            }
+            // Use joystick to drive motor
+            joystick.drive(motor, RobotParameters::joystickDeadzone);
             
             // If first button is pressed switch to returning home
             if(joystick.isButtonDown(0)) {
@@ -218,23 +197,9 @@ int main(int argc, char *argv[])
                 outbound = false;
             }
         }
-        // Otherwise we're returning home
+        // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {
-            // Sum left and right motor activity
-            const scalar leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
-            const scalar rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
-            
-            // Steer based on signal
-            const scalar steering = leftMotor - rightMotor;
-            if(steering > motorSteerThreshold) {
-                motor.tank(1.0f, -1.0f);
-            }
-            else if(steering < -motorSteerThreshold) {
-                motor.tank(-1.0f, 1.0f);
-            }
-            else {
-                motor.tank(1.0f, 1.0f);
-            }
+            driveMotorFromCPU1(motor, RobotParameters::motorSteerThreshold, (numTicks % 100) == 0);
         }
         
         // Record time at end of tick
@@ -247,8 +212,8 @@ int main(int argc, char *argv[])
         totalMicroseconds += tickMicroseconds;
         
         // If there is time left in tick, sleep for remainder
-        if(tickMicroseconds < targetTickMicroseconds) {
-            std::this_thread::sleep_for(std::chrono::microseconds(targetTickMicroseconds - tickMicroseconds));
+        if(tickMicroseconds < RobotParameters::targetTickMicroseconds) {
+            std::this_thread::sleep_for(std::chrono::microseconds(RobotParameters::targetTickMicroseconds - tickMicroseconds));
         }
         // Otherwise, increment overflow counter
         else {
