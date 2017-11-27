@@ -107,6 +107,29 @@ public:
     {
         return (float)m_AxisState[axis] / (float)std::numeric_limits<int16_t>::max();
     }
+    
+    template<typename M>
+    void drive(M &motor, float deadzone)
+    {
+        // Read joystick axis state and drive robot manually
+        const float joystickX = getAxisState(0);
+        const float joystickY = getAxisState(1);
+        if(joystickX < -deadzone) {
+            motor.tank(1.0f, -1.0f);
+        }
+        else if(joystickX > deadzone) {
+            motor.tank(-1.0f, 1.0f);
+        }
+        else if(joystickY < -deadzone) {
+            motor.tank(1.0f, 1.0f);
+        }
+        else if(joystickY > deadzone) {
+            motor.tank(-1.0f, -1.0f);
+        }
+        else {
+            motor.tank(0.0f, 0.0f);
+        }
+    }
 
 private:
     //----------------------------------------------------------------------------

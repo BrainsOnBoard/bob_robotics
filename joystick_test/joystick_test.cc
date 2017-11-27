@@ -1,26 +1,24 @@
 #include "../common/joystick.h"
+#include "../common/motor_i2c.h"
 
 int main()
 {
-    constexpr float deadzone = 0.25f;
-    Joystick test;
+    constexpr float joystickDeadzone = 0.25f;
+    
+    // Create joystick interface
+    Joystick joystick;
+    
+    // Create motor interface
+    MotorI2C motor;
 
-    while(true) {
-        const float x = test.getAxisState(0);
-        const float y = test.getAxisState(1);
-        if(x < -deadzone) {
-            std::cout << "Left" << std::endl;
-        }
-        else if(x > deadzone) {
-            std::cout << "Right" << std::endl;
-        }
-        else if(y < -deadzone) {
-            std::cout << "Forwards" << std::endl;
-        }
-        else if(y > deadzone) {
-            std::cout << "Back" << std::endl;
-        }
+    do {
+        // Read joystick
+        joystick.read();
+        
+        // Use joystick to drive motor
+        joystick.drive(motor, joystickDeadzone);
 
-    }
+    } while(!joystick.isButtonDown(1));
+    
     return 0;
 }
