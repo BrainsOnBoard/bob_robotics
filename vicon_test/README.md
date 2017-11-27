@@ -1,0 +1,2 @@
+# Vicon test
+Very simple test application which waits for Vicon system to start streaming object data over UDP and then prints position and orientation of first tracked object. Vicon Tracker application needs to be configured for UDP streaming on port 51001 across the same network interface that the computer running this application is connected to.
