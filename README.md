@@ -1,5 +1,6 @@
 # GeNN_Robotics
 Library of code and models for Jetson TX1 powered wheeled robotics platform being developed at Sussex.
+
 **Note** this repository is public so should only be used for utility code and example models - larger models should go in their own repositories and only be made public upon publication.
 
 # Prerequistites
