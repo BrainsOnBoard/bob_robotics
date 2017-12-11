@@ -24,10 +24,6 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// CUDA includes
-#include <cuda_gl_interop.h>
-#include <cuda_runtime.h>
-
 // Common includes
 #include "../common/connectors.h"
 #include "../common/spike_csv_recorder.h"
