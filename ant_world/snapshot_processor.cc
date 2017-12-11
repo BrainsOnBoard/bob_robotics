@@ -10,14 +10,13 @@ SnapshotProcessor::SnapshotProcessor(unsigned int displayScale, unsigned int int
     m_IntermediateSnapshotGreyscale(intermediateHeight, intermediateWidth, CV_8UC1),
     m_FinalSnapshot(outputHeight, outputWidth, CV_8UC1),
     m_FinalSnapshotFloat(outputHeight, outputWidth, CV_32FC1),
-    m_FinalSnapshotFloatGPU(outputHeight, outputWidth, CV_32FC1),
     m_Clahe(cv::createCLAHE(40.0, cv::Size(8, 8)))
 {
     // Check that the display scale is a multiple of 4
     assert(m_DisplayScale % 4 == 0);
 }
 //----------------------------------------------------------------------------
-std::tuple<float*, unsigned int> SnapshotProcessor::process(const cv::Mat &snapshot)
+const cv::Mat &SnapshotProcessor::process(const cv::Mat &snapshot)
 {
     // **TODO** theoretically this processing could all be done on the GPU but
     // a) we're currently starting from a snapshot in host memory
@@ -77,10 +76,6 @@ std::tuple<float*, unsigned int> SnapshotProcessor::process(const cv::Mat &snaps
     // Normalise snapshot using L2 norm
     cv::normalize(m_FinalSnapshotFloat, m_FinalSnapshotFloat);
 
-    // Upload final snapshot to GPU
-    m_FinalSnapshotFloatGPU.upload(m_FinalSnapshotFloat);
-
-    // Extract device pointers and step; and return
-    auto finalSnapshotPtrStep = (cv::cuda::PtrStep<float>)m_FinalSnapshotFloatGPU;
-    return std::make_tuple(finalSnapshotPtrStep.data, finalSnapshotPtrStep.step / sizeof(float));
+    // Return reference to final snapshot
+    return m_FinalSnapshotFloat;
 }

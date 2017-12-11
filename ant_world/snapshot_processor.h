@@ -6,6 +6,7 @@
 //----------------------------------------------------------------------------
 // SnapshotProcessor
 //----------------------------------------------------------------------------
+// OpenCV-based snapshot processor - uses OpenCV  on CPU to process snapshots
 class SnapshotProcessor
 {
 public:
@@ -16,8 +17,8 @@ public:
     // Public API
     //------------------------------------------------------------------------
     // Process input snapshot (probably at screen resolution)
-    // and return GPU data pointer and step
-    std::tuple<float*, unsigned int> process(const cv::Mat &snapshot);
+    // and return reference to CPU
+    const cv::Mat &process(const cv::Mat &snapshot);
 
 private:
     //------------------------------------------------------------------------
@@ -41,9 +42,6 @@ private:
     cv::Mat m_FinalSnapshot;
 
     cv::Mat m_FinalSnapshotFloat;
-
-    // GPU OpenCV array to hold
-    cv::cuda::GpuMat m_FinalSnapshotFloatGPU;
 
     // CLAHE algorithm for histogram normalization
     cv::Ptr<cv::CLAHE> m_Clahe;

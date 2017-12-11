@@ -432,7 +432,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> presentToMB(float *inputDat
     if(reward) {
         constexpr unsigned int numWeights = Parameters::numKC * Parameters::numEN;
 
+#ifndef CPU_ONLY
         CHECK_CUDA_ERRORS(cudaMemcpy(gkcToEN, d_gkcToEN, numWeights * sizeof(scalar), cudaMemcpyDeviceToHost));
+#endif  // CPU_ONLY
 
         unsigned int numUsedWeights = std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
         std::cout << "\t" << numWeights - numUsedWeights << " unused weights" << std::endl;
@@ -565,6 +567,12 @@ int main(int argc, char *argv[])
     SnapshotProcessor snapshotProcessor(Parameters::displayScale,
                                         Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
                                         Parameters::inputWidth, Parameters::inputHeight);
+
+#ifndef CPU_ONLY
+    // If GeNN is running on GPU create a GPU OpenCV mat to hold output
+    cv::cuda::GpuMat finalSnapshotFloatGPU(Parameters::inputWidth, Parameters::inputHeight, CV_32FC1);
+#endif  // CPU_ONLY
+
 
     // Initialize ant position
     float antX = 5.0f;
@@ -902,9 +910,21 @@ int main(int argc, char *argv[])
                          GL_BGR, GL_UNSIGNED_BYTE, snapshot.data);
 
             // Process snapshot
-            float *finalSnapshotData;
-            unsigned int finalSnapshotStep;
-            std::tie(finalSnapshotData, finalSnapshotStep) = snapshotProcessor.process(snapshot);
+            const cv::Mat &finalSnapshotFloat = snapshotProcessor.process(snapshot);
+
+#ifndef CPU_ONLY
+            // Upload final snapshot to GPU
+            finalSnapshotFloatGPU.upload(finalSnapshotFloat);
+
+            // Extract device pointers and step
+            auto finalSnapshotPtrStep = (cv::cuda::PtrStep<float>)finalSnapshotFloatGPU;
+            const unsigned int finalSnapshotStep = finalSnapshotPtrStep.step / sizeof(float);
+            float *finalSnapshotData = finalSnapshotPtrStep.data;
+#else
+            // Extract step and data pointer directly from CPU Mat
+            const unsigned int finalSnapshotStep = finalSnapshotFloat.cols;
+            float *finalSnapshotData = reinterpret_cast<float*>(finalSnapshotFloat.data);
+#endif
 
             // Start simulation, applying reward if we are training
             gennResult = std::async(std::launch::async, presentToMB,
