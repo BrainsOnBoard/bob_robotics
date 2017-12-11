@@ -37,7 +37,7 @@
 #include "parameters.h"
 #include "render_mesh.h"
 #include "route.h"
-#include "snapshot_processor.h"
+#include "snapshot_processor_ardin.h"
 #include "world.h"
 
 //----------------------------------------------------------------------------
@@ -564,9 +564,9 @@ int main(int argc, char *argv[])
     cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
 
     // Create snapshot processor to perform image processing on snapshot
-    SnapshotProcessor snapshotProcessor(Parameters::displayScale,
-                                        Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
-                                        Parameters::inputWidth, Parameters::inputHeight);
+    SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
+                                             Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
+                                             Parameters::inputWidth, Parameters::inputHeight);
 
 #ifndef CPU_ONLY
     // If GeNN is running on GPU create a GPU OpenCV mat to hold output

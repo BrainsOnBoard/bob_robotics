@@ -7,11 +7,11 @@
 // SnapshotProcessor
 //----------------------------------------------------------------------------
 // OpenCV-based snapshot processor - uses OpenCV  on CPU to process snapshots
-class SnapshotProcessor
+class SnapshotProcessorArdin
 {
 public:
-    SnapshotProcessor(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                      unsigned int outputWidth, unsigned int outputHeight);
+    SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
+                           unsigned int outputWidth, unsigned int outputHeight);
 
     //------------------------------------------------------------------------
     // Public API

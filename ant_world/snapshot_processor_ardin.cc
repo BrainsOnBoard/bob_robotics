@@ -1,10 +1,10 @@
-#include "snapshot_processor.h"
+#include "snapshot_processor_ardin.h"
 
 //----------------------------------------------------------------------------
-// SnapshotProcessor
+// SnapshotProcessorArdin
 //----------------------------------------------------------------------------
-SnapshotProcessor::SnapshotProcessor(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                                     unsigned int outputWidth, unsigned int outputHeight)
+SnapshotProcessorArdin::SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
+                                               unsigned int outputWidth, unsigned int outputHeight)
 :   m_DisplayScale(displayScale), m_IntermediateWidth(intermediateWidth), m_IntermediateHeight(intermediateHeight),
     m_OutputWidth(outputWidth), m_OutputHeight(outputHeight),
     m_IntermediateSnapshotGreyscale(intermediateHeight, intermediateWidth, CV_8UC1),
@@ -16,7 +16,7 @@ SnapshotProcessor::SnapshotProcessor(unsigned int displayScale, unsigned int int
     assert(m_DisplayScale % 4 == 0);
 }
 //----------------------------------------------------------------------------
-const cv::Mat &SnapshotProcessor::process(const cv::Mat &snapshot)
+const cv::Mat &SnapshotProcessorArdin::process(const cv::Mat &snapshot)
 {
     // **TODO** theoretically this processing could all be done on the GPU but
     // a) we're currently starting from a snapshot in host memory
