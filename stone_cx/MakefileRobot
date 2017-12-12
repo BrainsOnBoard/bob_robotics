@@ -1,5 +1,5 @@
 EXECUTABLE      := simulatorRobot
-SOURCES         := simulatorRobot.cc simulatorCommon.cc
+SOURCES         := simulatorRobot.cc simulatorCommon.cc robotCommon.cc
 LINK_FLAGS      := `pkg-config --libs opencv`
 CXXFLAGS       := `pkg-config --cflags opencv` -pthread
 CPU_ONLY=1
