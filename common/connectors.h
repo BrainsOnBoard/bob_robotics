@@ -220,6 +220,35 @@ void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, f
   std::copy(tempInd.begin(), tempInd.end(), &projection.ind[0]);
 }
 //----------------------------------------------------------------------------
+template <typename Generator>
+void buildFixedProbabilityConnector(unsigned int numWords, float probability,
+                                    uint32_t *bitfield, Generator &gen)
+{
+    // Create RNG to draw probabilities
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    // Loop through words that make up bitfield
+    for(unsigned int i = 0; i < numWords; i++) {
+        // Initially zero word
+        uint32_t word = 0;
+
+        // Loop through bits
+        for(unsigned int i = 0; i < 32; i++) {
+            // Shift word up
+            word <<= 1;
+
+            // Set lowest bit if
+            if(dis(gen) < probability)
+            {
+                word |= 0x1;
+            }
+        }
+
+        // Write word into bitfield
+        bitfield[i] = word;
+    }
+}
+//----------------------------------------------------------------------------
 unsigned int calcFixedProbabilityConnectorMaxConnections(unsigned int numPre, unsigned int numPost, double probability)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
