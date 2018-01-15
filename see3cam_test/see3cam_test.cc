@@ -5,6 +5,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Common includes
+#include "../common/timer.h"
 #include "../common/v4l_camera.h"
 
 /*bool ConvertRGIR2RGGB(Mat mInBayerRGIR,Mat &mInBayerRGGB,Mat &mIR)
@@ -41,20 +42,28 @@ int main()
 
     cv::Mat test2(380, 672, CV_8UC1);
 
-    while(true) {
-        void *data = nullptr;
-        uint32_t sizeBytes = 0;
-        if(cam.capture(data, sizeBytes)) {
-            cv::Mat test(380, 672, CV_16UC1, data);
+    {
+        Timer<> timer("Total time:");
+
+        unsigned int frame = 0;
+        for(frame = 0;; frame++) {
+            void *data = nullptr;
+            uint32_t sizeBytes = 0;
+            if(cam.capture(data, sizeBytes)) {
+                cv::Mat test(380, 672, CV_16UC1, data);
 
 
-            cv::convertScaleAbs(test, test2, 0.249023);
-            cv::imshow("Camera", test2);
+                cv::convertScaleAbs(test, test2, 0.249023);
+                cv::imshow("Camera", test2);
 
+            }
+            if(cv::waitKey(1) == 27) {
+                break;
+            }
         }
-        if(cv::waitKey(1) == 27) {
-            break;
-        }
+
+        const double msPerFrame = timer.get() / (double)frame;
+        std::cout << "FPS:" << 1000.0 / msPerFrame << std::endl;
     }
     return 0;
 }
