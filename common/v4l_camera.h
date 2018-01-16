@@ -178,6 +178,42 @@ public:
         return true;
     }
 
+    bool getControlValue(uint32_t id, int32_t &value)
+    {
+        // Fill control structure
+        v4l2_control control;
+        memset(&control, 0, sizeof(v4l2_control));
+        control.id = id;
+
+        // Get control value
+        if(ioctl(m_Camera, VIDIOC_G_CTRL, &control) < 0) {
+            std::cerr << "ERROR: Cannot get control value (" << strerror(errno) << ")" << std::endl;
+            return false;
+        }
+        else {
+            value = control.value;
+            return true;
+        }
+
+    }
+
+    bool setControlValue(uint32_t id, int32_t value)
+    {
+        // Fill control structure
+        v4l2_control control;
+        memset(&control, 0, sizeof(v4l2_control));
+        control.id = id;
+        control.value = value;
+
+        // Get control value
+        if(ioctl(m_Camera, VIDIOC_S_CTRL, &control) < 0) {
+            std::cerr << "ERROR: Cannot set control value (" << strerror(errno) << ")" << std::endl;
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
 private:
     //------------------------------------------------------------------------
     // Members
@@ -218,7 +254,6 @@ public:
         return Video4LinuxCamera::open(device, getWidth(res), getHeight(res), V4L2_PIX_FMT_Y16);
     }
 
-private:
     //------------------------------------------------------------------------
     // Static helpers
     //------------------------------------------------------------------------
