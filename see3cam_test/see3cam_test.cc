@@ -1,6 +1,3 @@
-// ECon_SampleApp_See3Cam_CU40.cpp : Defines the entry point for the console application.
-// This sample is built using Modified VideoIO library so that the Opencv can support Y16 - Input format
-
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
@@ -8,54 +5,68 @@
 #include "../common/timer.h"
 #include "../common/v4l_camera.h"
 
-/*bool ConvertRGIR2RGGB(Mat mInBayerRGIR,Mat &mInBayerRGGB,Mat &mIR)
+/*#define R(x, y, w)  output.data[0 + 3 * ((x) + (w) * (y))]
+#define G(x, y, w)  output.data[1 + 3 * ((x) + (w) * (y))]
+#define B(x, y, w)  output.data[2 + 3 * ((x) + (w) * (y))]
+
+#define Bay(x, y, w) dataPixels[(x) + (w) * (y)]*/
+
+void convertRGIR2RGGB(cv::Mat &bayer)
 {
-        //Use Nearest Neibour Interpolation
-        mInBayerRGGB= mInBayerRGIR.clone();
-        Size szImage=mInBayerRGIR.size();
-        szImage/=2;
-        mIR= Mat(szImage,CV_8UC1);
-
-        for (int Row = 0; Row < mInBayerRGIR.rows; Row+=2)
+    for (int row = 0; row < bayer.rows; row+=2)
+    {
+        for (int col = 0; col < bayer.cols; col+=2)
         {
-                for (int Col = 0; Col < mInBayerRGIR.cols; Col+=2)
-                {
-                        mInBayerRGGB.at<uchar>(Row+1,Col)=mInBayerRGIR.at<uchar>(Row,Col+1);//Set the IR Data with Nearby Green
-                        mIR.at<uchar>(Row/2,Col/2)=mInBayerRGIR.at<uchar>(Row+1,Col);//Set the IR Data
-                }
+            bayer.at<uchar>(row + 1, col) = bayer.at<uchar>(row, col + 1);
         }
-	return true;
-}*/
-
+    }
+}
 
 int main()
 {
     const std::string device = "/dev/video" + std::to_string(1);
-    const unsigned int width = 672;
-    const unsigned int height = 380;
+    const See3CAM_CU40::Resolution res = See3CAM_CU40::Resolution::_672x380;
 
-    // Create motor
+    // Create window
+    const unsigned int width = See3CAM_CU40::getWidth(res);
+    const unsigned int height = See3CAM_CU40::getHeight(res);
+    const unsigned int outputWidth = width;
+    const unsigned int outputHeight = height;
+
     cv::namedWindow("Camera", CV_WINDOW_NORMAL);
-    cv::resizeWindow("Camera", width, height);
+    cv::resizeWindow("Camera", outputWidth, outputHeight);
 
-    See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_672x380);
 
-    cv::Mat test2(380, 672, CV_8UC1);
+    See3CAM_CU40 cam(device, res);
+
+    cv::Mat rescaled(height, width, CV_8UC1);
+    cv::Mat output(outputHeight, outputWidth, CV_8UC3);
 
     {
         Timer<> timer("Total time:");
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
+            // Read data and size (in bytes) from camera
+            // **NOTE** these pointers are only valid within one frame
             void *data = nullptr;
             uint32_t sizeBytes = 0;
             if(cam.capture(data, sizeBytes)) {
-                cv::Mat test(380, 672, CV_16UC1, data);
+                assert(sizeBytes == (width * height * sizeof(uint16_t)));
 
+                // Add OpenCV header to data
+                cv::Mat input(height, width, CV_16UC1, data);
 
-                cv::convertScaleAbs(test, test2, 0.249023);
-                cv::imshow("Camera", test2);
+                //Convert to 8 Bit: Scale the 10 Bit (1024) Pixels into 8 Bit(255) (255/1024)= 0.249023
+                cv::convertScaleAbs(input, rescaled, 0.249023);
 
+                // Overwrite the IR data with duplicated green channel to convert to standard RGGB Bayer format
+                convertRGIR2RGGB(rescaled);
+
+                //Actual Bayer format BG but Opencv uses BGR & Not RGB So taking RG Bayer format
+                cv::demosaicing(rescaled, output, cv::COLOR_BayerRG2BGR);
+
+                cv::imshow("Camera", output);
             }
             if(cv::waitKey(1) == 27) {
                 break;
