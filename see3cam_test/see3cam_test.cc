@@ -9,7 +9,7 @@
 int main()
 {
     // Open camera
-    const std::string device = "/dev/video" + std::to_string(1);
+    const std::string device = "/dev/video" + std::to_string(0);
     See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_1280x720);
 
     // Enumerate controls supported by camera
@@ -31,13 +31,13 @@ int main()
         });
 
     // Tweak exposure down to improve frame rate
-    //cam.setExposure(50);
+    cam.setExposure(100);
 
     // Create window
-    const unsigned int rawWidth = cam.getWidth();
-    const unsigned int rawHeight = cam.getHeight();
-    const unsigned int unwrapWidth = 900;
-    const unsigned int unwrapHeight = 100;
+    const unsigned int rawWidth = cam.getWidth() / 2;
+    const unsigned int rawHeight = cam.getHeight() / 2;
+    const unsigned int unwrapWidth = 450;
+    const unsigned int unwrapHeight = 50;
 
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
@@ -56,7 +56,7 @@ int main()
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
-            if(cam.capture(output)) {
+            if(cam.captureSuperPixel(output)) {
                 cv::imshow("Raw", output);
 
                 unwrapper.unwrap(output, unwrapped);

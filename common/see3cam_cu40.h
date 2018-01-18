@@ -7,6 +7,50 @@
 #include "opencv_unwrap_360.h"
 #include "v4l_camera.h"
 
+/* NEON version of captureSuperPixel - fun but doesn't actually help performance
+// Create tables to use for shuffling BGIR data into BGR
+//                              b0, g0, r0| b1, g1, r1| b2, g2
+const uint8x8_t blockShuffleA = {0, 1,  9,  2,  3,  11, 4,  5};
+//                              r2| b3, g3, r3|
+const uint8x8_t blockShuffleB = {13,6,  7,  15};
+
+// Loop through input pixels in 8x2 blocks i.e. 4 Bayer pixels
+for(unsigned int y = 0; y < inputHeight; y += 2) {
+    // Get pointers to start of both rows of Bayer data and output RGB data
+    const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+    const uint16_t *inIR16Start = &bayerData[(y + 1) * inputWidth];
+    uint8_t *outRGBStart = output.ptr(y / 2);
+    
+    for(unsigned int x = 0; x < inputWidth; x += 8) {
+        // Load 8x2 block into two 128-bit registers and advance each pointer to next block
+        // b0, g0 | b1, g1 | b2, g2 | b3, g3 |
+        uint16x8_t inBG16 = vld1q_u16(inBG16Start += 8);
+        // i0, r0 | i1, r1 | i2, r2 | i3, r3 |
+        uint16x8_t inIR16 = vld1q_u16(inIR16Start += 8);
+        
+        // Shift each 10-bit value right by 2
+        inBG16 = vshrq_n_u16(inBG16, 2);
+        inIR16 = vshrq_n_u16(inIR16, 2);
+        
+        // Convert to 8 bits and stack into a pair of 64-bit registers
+        uint8x8x2_t outBGIR;
+        outBGIR.val[0] = vmovn_u16(inBG16);
+        outBGIR.val[1] = vmovn_u16(inIR16);
+        
+        // Use tables to shuffle each 64-bit register worth of Bayer data into RGB
+        uint8x8_t outA = vtbl2_u8(outBGIR, blockShuffleA);
+        uint8x8_t outB = vtbl2_u8(outBGIR, blockShuffleB);
+        
+        // Combine the two shuffled vectors together into one 128-bit register full of RGB data
+        uint8x16_t out8 = vcombine_u8(outA, outB);
+        
+        // Write this back to output array and advance pointer
+        //if(y != (inputHeight-1) || x != (inputWidth - 1)) {
+            vst1q_u8(outRGBStart += (4 * 3), out8);
+        //}
+    }
+}*/
+
 //------------------------------------------------------------------------
 // See3CAM_CU40
 //------------------------------------------------------------------------
@@ -69,28 +113,41 @@ public:
         }
     }
 
-    bool capture(cv::Mat &output)
+    bool captureSuperPixel(cv::Mat &output)
     {
+        const unsigned int inputWidth = getWidth();
+        const unsigned int inputHeight = getHeight();
+        assert(output.cols == inputWidth / 2);
+        assert(output.rows == inputHeight / 2);
+   
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
         void *data = nullptr;
         uint32_t sizeBytes = 0;
         if(Video4LinuxCamera::capture(data, sizeBytes)) {
             // Check frame size is correct
-            assert(sizeBytes == (getWidth() * getHeight() * sizeof(uint16_t)));
-
-            // Add OpenCV header to data
-            cv::Mat bayer(getHeight(), getWidth(), CV_16UC1, data);
-
-            // Overwrite the IR data with duplicated green channel to convert to standard RGGB Bayer format
-            fillRGGB(bayer);
-
-            // Use OpenCV to demosaic bayer image (the camera's actual Bayer format is BG,
-            // but as OpenCV uses BGR rather than RGB, we use RG Bayer format to take this into account
-            cv::demosaicing(bayer, m_Demosaiced16, cv::COLOR_BayerRG2BGR);
-
-            // Rescale to 8-bit per channel for output
-            cv::convertScaleAbs(m_Demosaiced16, output, 0.249023);
+            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
+        
+            // Loop through bayer pixels
+            for(unsigned int y = 0; y < inputHeight; y += 2) {
+                // Get pointers to start of both rows of Bayer data and output RGB data
+                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+                const uint16_t *inR16Start = &bayerData[((y + 1) * inputWidth) + 1];
+                uint8_t *outRGBStart = output.ptr(y / 2);
+                for(unsigned int x = 0; x < inputWidth; x += 2)
+                {
+                    // Read Bayer pixels
+                    const uint16_t b = *(inBG16Start++) >> 2;
+                    const uint16_t g = *(inBG16Start++) >> 2;
+                    const uint16_t r = *(inR16Start += 2) >> 2;
+                    
+                    // Write back to RGB
+                    *(outRGBStart++) = (uint8_t)b;
+                    *(outRGBStart++) = (uint8_t)g;
+                    *(outRGBStart++) = (uint8_t)r;
+                }
+            }
 
             return true;
         }
@@ -127,6 +184,7 @@ public:
         return OpenCVUnwrap360(camRes, unwrapRes,
                                0.5, 0.434722222, 0.176388889, 0.381944444, 1.570796327, true);
     }
+    
 private:
     //------------------------------------------------------------------------
     // Private API
