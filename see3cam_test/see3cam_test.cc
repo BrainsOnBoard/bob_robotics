@@ -4,18 +4,7 @@
 // Common includes
 #include "../common/opencv_unwrap_360.h"
 #include "../common/timer.h"
-#include "../common/v4l_camera.h"
-
-void fillRGGB(cv::Mat &bayer)
-{
-    for (int row = 0; row < bayer.rows; row+=2)
-    {
-        for (int col = 0; col < bayer.cols; col+=2)
-        {
-            bayer.at<uint16_t>(row + 1, col) = bayer.at<uint16_t>(row, col + 1);
-        }
-    }
-}
+#include "../common/see3cam_cu40.h"
 
 int main()
 {
