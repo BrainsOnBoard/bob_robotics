@@ -40,8 +40,8 @@ int main()
     const unsigned int unwrapHeight = 100;
 
     // Create unwrapper to unwrap camera output
-    OpenCVUnwrap360 unwrapper(cv::Size(rawWidth, rawHeight), cv::Size(unwrapWidth, unwrapHeight),
-                              0.5, 0.434722222, 0.176388889, 0.381944444);
+    auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
+                                         cv::Size(unwrapWidth, unwrapHeight));
 
     cv::namedWindow("Raw", CV_WINDOW_NORMAL);
     cv::resizeWindow("Raw", rawWidth, rawHeight);

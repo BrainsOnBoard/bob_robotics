@@ -4,6 +4,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 // Common includes
+#include "opencv_unwrap_360.h"
 #include "v4l_camera.h"
 
 //------------------------------------------------------------------------
@@ -118,6 +119,14 @@ public:
         return ((static_cast<uint64_t>(m_Resolution) >> 32) & 0xFFFFFFFF);
     }
 
+    //------------------------------------------------------------------------
+    // Static API
+    //------------------------------------------------------------------------
+    static OpenCVUnwrap360 createUnwrapper(const cv::Size &camRes, const cv::Size &unwrapRes)
+    {
+        return OpenCVUnwrap360(camRes, unwrapRes,
+                               0.5, 0.434722222, 0.176388889, 0.381944444, 1.570796327, true);
+    }
 private:
     //------------------------------------------------------------------------
     // Private API
