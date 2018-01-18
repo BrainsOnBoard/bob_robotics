@@ -2,71 +2,76 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Common includes
+#include "../common/opencv_unwrap_360.h"
 #include "../common/timer.h"
 #include "../common/v4l_camera.h"
 
-/*#define R(x, y, w)  output.data[0 + 3 * ((x) + (w) * (y))]
-#define G(x, y, w)  output.data[1 + 3 * ((x) + (w) * (y))]
-#define B(x, y, w)  output.data[2 + 3 * ((x) + (w) * (y))]
-
-#define Bay(x, y, w) dataPixels[(x) + (w) * (y)]*/
-
-void convertRGIR2RGGB(cv::Mat &bayer)
+void fillRGGB(cv::Mat &bayer)
 {
     for (int row = 0; row < bayer.rows; row+=2)
     {
         for (int col = 0; col < bayer.cols; col+=2)
         {
-            bayer.at<uchar>(row + 1, col) = bayer.at<uchar>(row, col + 1);
+            bayer.at<uint16_t>(row + 1, col) = bayer.at<uint16_t>(row, col + 1);
         }
     }
 }
 
 int main()
 {
+    // Open camera
     const std::string device = "/dev/video" + std::to_string(1);
-    const See3CAM_CU40::Resolution res = See3CAM_CU40::Resolution::_672x380;
+    See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_1280x720);
+
+    // Enumerate controls supported by camera
+    cam.enumerateControls(
+        [&cam](const v4l2_queryctrl &control)
+        {
+            std::cout << control.name << " (" << std::hex << control.id << std::dec << ")" << std::endl;
+            if(control.type == V4L2_CTRL_TYPE_INTEGER) {
+                std::cout << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value << std::endl;
+
+                int32_t currentValue;
+                if(cam.getControlValue(control.id, currentValue)){
+                    std::cout << "\tCurrent value=" << currentValue << std::endl;
+                }
+            }
+            else {
+                std::cout << "\tUnknown type " << control.type << std::endl;
+            }
+        });
+
+    // Tweak exposure down to improve frame rate
+    //cam.setExposure(50);
 
     // Create window
-    const unsigned int width = See3CAM_CU40::getWidth(res);
-    const unsigned int height = See3CAM_CU40::getHeight(res);
-    const unsigned int outputWidth = width;
-    const unsigned int outputHeight = height;
+    const unsigned int rawWidth = cam.getWidth();
+    const unsigned int rawHeight = cam.getHeight();
+    const unsigned int unwrapWidth = 900;
+    const unsigned int unwrapHeight = 100;
 
-    cv::namedWindow("Camera", CV_WINDOW_NORMAL);
-    cv::resizeWindow("Camera", outputWidth, outputHeight);
+    // Create unwrapper to unwrap camera output
+    OpenCVUnwrap360 unwrapper(cv::Size(rawWidth, rawHeight), cv::Size(unwrapWidth, unwrapHeight),
+                              0.5, 0.434722222, 0.176388889, 0.381944444);
 
+    cv::namedWindow("Raw", CV_WINDOW_NORMAL);
+    cv::resizeWindow("Raw", rawWidth, rawHeight);
+    cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
+    cv::resizeWindow("Unwrapped", unwrapWidth, unwrapHeight);
 
-    See3CAM_CU40 cam(device, res);
-
-    cv::Mat rescaled(height, width, CV_8UC1);
-    cv::Mat output(outputHeight, outputWidth, CV_8UC3);
+    cv::Mat output(rawHeight, rawWidth, CV_8UC3);
+    cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC3);
 
     {
         Timer<> timer("Total time:");
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
-            // Read data and size (in bytes) from camera
-            // **NOTE** these pointers are only valid within one frame
-            void *data = nullptr;
-            uint32_t sizeBytes = 0;
-            if(cam.capture(data, sizeBytes)) {
-                assert(sizeBytes == (width * height * sizeof(uint16_t)));
+            if(cam.capture(output)) {
+                cv::imshow("Raw", output);
 
-                // Add OpenCV header to data
-                cv::Mat input(height, width, CV_16UC1, data);
-
-                //Convert to 8 Bit: Scale the 10 Bit (1024) Pixels into 8 Bit(255) (255/1024)= 0.249023
-                cv::convertScaleAbs(input, rescaled, 0.249023);
-
-                // Overwrite the IR data with duplicated green channel to convert to standard RGGB Bayer format
-                convertRGIR2RGGB(rescaled);
-
-                //Actual Bayer format BG but Opencv uses BGR & Not RGB So taking RG Bayer format
-                cv::demosaicing(rescaled, output, cv::COLOR_BayerRG2BGR);
-
-                cv::imshow("Camera", output);
+                unwrapper.unwrap(output, unwrapped);
+                cv::imshow("Unwrapped", unwrapped);
             }
             if(cv::waitKey(1) == 27) {
                 break;

@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <functional>
 #include <iostream>
 
 // Standard C includes
@@ -152,6 +153,46 @@ public:
         return true;
     }
 
+    bool enumerateControls(std::function<void(const v4l2_queryctrl&)> processControl)
+    {
+        // Fill control query structure
+        v4l2_queryctrl queryControl;
+        memset(&queryControl, 0, sizeof(v4l2_queryctrl));
+        queryControl.id = V4L2_CTRL_FLAG_NEXT_CTRL;
+
+        while(ioctl(m_Camera, VIDIOC_QUERYCTRL, &queryControl) == 0) {
+            // If this control isn't disabled
+            if (!(queryControl.flags & V4L2_CTRL_FLAG_DISABLED)) {
+                processControl(queryControl);
+            }
+
+            queryControl.id |= V4L2_CTRL_FLAG_NEXT_CTRL;
+        }
+        if(errno == EINVAL) {
+            return true;
+        }
+        else {
+            std::cerr << "ERROR: Cannot query controls (" << strerror(errno) << ")" << std::endl;
+            return false;
+        }
+    }
+
+    bool queryControl(uint32_t id, v4l2_queryctrl &queryControl)
+    {
+        // Fill control query structure
+        memset(&queryControl, 0, sizeof(v4l2_queryctrl));
+        queryControl.id = id;
+
+        if(ioctl(m_Camera, VIDIOC_QUERYCTRL, &queryControl) == 0) {
+            return true;
+        }
+        else {
+            std::cerr << "ERROR: Cannot query controls (" << strerror(errno) << ")" << std::endl;
+            return false;
+        }
+
+    }
+
     bool capture(void *&buffer, uint32_t &sizeBytes)
     {
         // Dequeue this frame's buffer from device's outgoing queue
@@ -218,8 +259,10 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
+    // File handle to camera
     int m_Camera;
 
+    // Index of current frame - used to select correct buffer
     unsigned int m_Frame;
 
     // Two buffers and their corresponding information structures
@@ -241,29 +284,127 @@ public:
         _2688x1520  = (2688ULL | (1520ULL << 32)),
     };
 
-    See3CAM_CU40(const std::string &device, Resolution res)
-        : Video4LinuxCamera(device, getWidth(res), getHeight(res), V4L2_PIX_FMT_Y16)
+    See3CAM_CU40()
     {
+    }
+
+    See3CAM_CU40(const std::string &device, Resolution res, bool resetToDefaults = true)
+    {
+        if(!open(device, res, resetToDefaults)) {
+            throw std::runtime_error("Cannot open See3CAM_CU40");
+        }
     }
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool open(const std::string &device, Resolution res)
+    bool open(const std::string &device, Resolution res, bool resetToDefaults = true)
     {
-        return Video4LinuxCamera::open(device, getWidth(res), getHeight(res), V4L2_PIX_FMT_Y16);
+        // Cache resolution
+        m_Resolution = res;
+
+        // Create additional frame to hold demosaiced frames
+        m_Demosaiced16.create(getHeight(), getWidth(), CV_16UC3);
+
+        // If camera was opened successfully
+        if(Video4LinuxCamera::open(device, getWidth(), getHeight(), V4L2_PIX_FMT_Y16))
+        {
+            // Query camera controls
+            if(!queryControl(V4L2_CID_BRIGHTNESS, m_BrightnessControl)
+                || !queryControl(V4L2_CID_EXPOSURE_ABSOLUTE, m_ExposureControl))
+            {
+                return false;
+            }
+
+            // If we should reset camera to default settings, do so
+            if(resetToDefaults) {
+                if(!setControlValue(V4L2_CID_BRIGHTNESS, m_BrightnessControl.default_value)
+                    || !setControlValue(V4L2_CID_EXPOSURE_ABSOLUTE, m_ExposureControl.default_value))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    bool capture(cv::Mat &output)
+    {
+        // Read data and size (in bytes) from camera
+        // **NOTE** these pointers are only valid within one frame
+        void *data = nullptr;
+        uint32_t sizeBytes = 0;
+        if(Video4LinuxCamera::capture(data, sizeBytes)) {
+            // Check frame size is correct
+            assert(sizeBytes == (getWidth() * getHeight() * sizeof(uint16_t)));
+
+            // Add OpenCV header to data
+            cv::Mat bayer(getHeight(), getWidth(), CV_16UC1, data);
+
+            // Overwrite the IR data with duplicated green channel to convert to standard RGGB Bayer format
+            fillRGGB(bayer);
+
+            // Use OpenCV to demosaic bayer image (the camera's actual Bayer format is BG,
+            // but as OpenCV uses BGR rather than RGB, we use RG Bayer format to take this into account
+            cv::demosaicing(bayer, m_Demosaiced16, cv::COLOR_BayerRG2BGR);
+
+            // Rescale to 8-bit per channel for output
+            cv::convertScaleAbs(m_Demosaiced16, output, 0.249023);
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    bool setBrightness(int32_t brightness)
+    {
+        return setControlValue(V4L2_CID_BRIGHTNESS, std::max(m_BrightnessControl.minimum, std::min(m_BrightnessControl.maximum, brightness)));
+    }
+
+    bool setExposure(int32_t exposure)
+    {
+        return setControlValue(V4L2_CID_EXPOSURE_ABSOLUTE, std::max(m_ExposureControl.minimum, std::min(m_ExposureControl.maximum, exposure)));
+    }
+
+    unsigned int getWidth() const
+    {
+        return (static_cast<uint64_t>(m_Resolution) & 0xFFFFFFFF);
+    }
+
+    unsigned int getHeight() const
+    {
+        return ((static_cast<uint64_t>(m_Resolution) >> 32) & 0xFFFFFFFF);
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Private API
+    //------------------------------------------------------------------------
+    // Overwrite the IR data in the raw bayer image with a
+    // duplicated green channel to form standard RGGB Bayer format
+    void fillRGGB(cv::Mat &bayer)
+    {
+        for (int row = 0; row < bayer.rows; row+=2)
+        {
+            for (int col = 0; col < bayer.cols; col+=2)
+            {
+                bayer.at<uint16_t>(row + 1, col) = bayer.at<uint16_t>(row, col + 1);
+            }
+        }
     }
 
     //------------------------------------------------------------------------
-    // Static helpers
+    // Members
     //------------------------------------------------------------------------
-    static unsigned int getWidth(Resolution res)
-    {
-        return (static_cast<uint64_t>(res) & 0xFFFFFFFF);
-    }
+    Resolution m_Resolution;
+    v4l2_queryctrl m_BrightnessControl;
+    v4l2_queryctrl m_ExposureControl;
 
-    static unsigned int getHeight(Resolution res)
-    {
-        return ((static_cast<uint64_t>(res) >> 32) & 0xFFFFFFFF);
-    }
+    cv::Mat m_Demosaiced16;
 };
