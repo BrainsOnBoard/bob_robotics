@@ -184,24 +184,8 @@ public:
         return OpenCVUnwrap360(camRes, unwrapRes,
                                0.5, 0.434722222, 0.176388889, 0.381944444, 1.570796327, true);
     }
-    
-private:
-    //------------------------------------------------------------------------
-    // Private API
-    //------------------------------------------------------------------------
-    // Overwrite the IR data in the raw bayer image with a
-    // duplicated green channel to form standard RGGB Bayer format
-    void fillRGGB(cv::Mat &bayer)
-    {
-        for (int row = 0; row < bayer.rows; row+=2)
-        {
-            for (int col = 0; col < bayer.cols; col+=2)
-            {
-                bayer.at<uint16_t>(row + 1, col) = bayer.at<uint16_t>(row, col + 1);
-            }
-        }
-    }
 
+private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
