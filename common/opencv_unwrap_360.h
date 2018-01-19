@@ -26,6 +26,9 @@ public:
                offsetRadians, flip);
     }
 
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
     void create(const cv::Size &cameraResolution, const cv::Size &unwrappedResolution,
                 double centreX = 0.5, double centreY = 0.5, double inner = 0.1, double outer = 0.5,
                 double offsetRadians = 0.0, bool flip = false)

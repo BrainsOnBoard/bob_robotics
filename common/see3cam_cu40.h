@@ -115,11 +115,12 @@ public:
 
     bool captureSuperPixel(cv::Mat &output)
     {
+        // Check that output size is suitable for super-pixel output i.e. a quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
         assert(output.cols == inputWidth / 2);
         assert(output.rows == inputHeight / 2);
-   
+
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
         void *data = nullptr;
@@ -128,21 +129,20 @@ public:
             // Check frame size is correct
             assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
             const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
-        
+
             // Loop through bayer pixels
             for(unsigned int y = 0; y < inputHeight; y += 2) {
                 // Get pointers to start of both rows of Bayer data and output RGB data
                 const uint16_t *inBG16Start = &bayerData[y * inputWidth];
                 const uint16_t *inR16Start = &bayerData[((y + 1) * inputWidth) + 1];
                 uint8_t *outRGBStart = output.ptr(y / 2);
-                for(unsigned int x = 0; x < inputWidth; x += 2)
-                {
+                for(unsigned int x = 0; x < inputWidth; x += 2) {
                     // Read Bayer pixels
                     const uint16_t b = *(inBG16Start++) >> 2;
                     const uint16_t g = *(inBG16Start++) >> 2;
                     const uint16_t r = *(inR16Start += 2) >> 2;
-                    
-                    // Write back to RGB
+
+                    // Write back to BGR
                     *(outRGBStart++) = (uint8_t)b;
                     *(outRGBStart++) = (uint8_t)g;
                     *(outRGBStart++) = (uint8_t)r;
