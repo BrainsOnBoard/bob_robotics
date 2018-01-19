@@ -4,14 +4,16 @@
 #include <thread>
 
 // OpenCV includes
-#include <opencv2/superres/optical_flow.hpp>
+
 
 // Common includes
-#include "../common/camera_360.h"
 #include "../common/joystick.h"
 #include "../common/lm9ds1_imu.h"
 #include "../common/motor_i2c.h"
+#include "../common/opencv_optical_flow.h"
+#include "../common/opencv_unwrap_360.h"
 #include "../common/timer.h"
+
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -63,42 +65,46 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 
 void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std::atomic<float> &speed, unsigned int &numFrames)
 {
-    Camera360 camera(cameraDevice, cv::Size(640, 480), cv::Size(90, 10),
-                     0.5, 0.416, 0.173, 0.377, -Parameters::pi);
-    
-    // Create two grayscale frames to hold optical flow
-    cv::Mat frames[2];
-    frames[0].create(10, 90, CV_8UC1);
-    frames[1].create(10, 90, CV_8UC1);
+    const cv::Size cameraRes(640, 480);
+    const cv::Size unwrapRes(90, 10);
+
+    // Open video capture device and check it matches desired camera resolution
+    cv::VideoCapture capture(cameraDevice);
+    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == cameraRes.width);
+    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == cameraRes.height);
+
+    // Create unwrapper
+    OpenCVUnwrap360 unwrapper(cameraRes, unwrapRes,
+                              0.5, 0.416, 0.173, 0.377, -Parameters::pi);
+
+    // Create optical flow calculator
+    OpenCVOpticalFlow opticalFlow(unwrapRes);
+
+    // Create images
+    cv::Mat originalImage(cameraRes, CV_8UC3);
+    cv::Mat outputImage(unwrapRes, CV_8UC3);
 
     // Build a velocity filter whose preferred angle is going straight (0 degrees)
-    cv::Mat velocityFilter(1, 90, CV_32FC1);
+    cv::Mat velocityFilter(1, unwrapRes.width, CV_32FC1);
     buildOpticalFlowFilter(velocityFilter, 0.0f);
 
-    cv::Ptr<cv::superres::FarnebackOpticalFlow> opticalFlow = cv::superres::createOptFlow_Farneback();
-    cv::Mat flowX;
-    cv::Mat flowY;
-    cv::Mat flowXSum(1, 90, CV_32FC1);
+    cv::Mat flowXSum(1, unwrapRes.width, CV_32FC1);
     cv::Mat flowSum(1, 1, CV_32FC1);
     
     // Read frames until should quit
-    for(numFrames = 0; !shouldQuit; numFrames++) {
-        if(!camera.read()) {
+    while(!shouldQuit) {
+        // Read from camera
+        if(!capture.read(originalImage)) {
             std::cerr << "Cannot read from camera" << std::endl;
+            continue;
         }
-        
-        // Convert frame to grayscale and store in array
-        const unsigned int currentFrame = numFrames % 2;
-        cv::cvtColor(camera.getUnwrappedImage(), frames[currentFrame], CV_BGR2GRAY);
-       
-        // If this isn't the first frame
-        if(numFrames > 0) {
-            // Calculate optical flow
-            const unsigned int prevFrame = (numFrames - 1) % 2;
-            opticalFlow->calc(frames[prevFrame], frames[currentFrame], flowX, flowY);
 
+        // Unwrap
+        unwrapper.unwrap(originalImage, outputImage);
+
+        if(opticalFlow.calculate(outputImage)) {
             // Reduce horizontal flow - summing along columns
-            cv::reduce(flowX, flowXSum, 0, CV_REDUCE_SUM);
+            cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, CV_REDUCE_SUM);
 
             // Multiply summed flow by filters
             cv::multiply(flowXSum, velocityFilter, flowXSum);

@@ -5,51 +5,29 @@
 #include <cassert>
 #include <cmath>
 
-// OpenCV includes
-#include <opencv2/superres/optical_flow.hpp>
-
 // Common includes
-#include "../common/camera_360.h"
+#include "../common/opencv_optical_flow.h"
+#include "../common/opencv_unwrap_360.h"
 
 // Anonymous namespace
 namespace
 {
 constexpr float pi = 3.141592653589793238462643383279502884f;
 
-void renderOpticalFlow(const cv::Mat &flowX, const cv::Mat &flowY, cv::Mat &flow, int scale)
+void buildFilter(cv::Mat &filter, float preferredAngle)
 {
-    assert(flow.cols == flowX.cols * scale);
-    assert(flow.rows == flowX.rows * scale);
-
-    // Clear image
-    flow.setTo(cv::Scalar::all(0));
-
-    // Loop through output coordinates
-    for(unsigned int x = 0; x < flowX.cols; x++)
-    {
-        for(unsigned int y = 0; y < flowX.rows; y++)
-        {
-            // Draw line showing direction of optical flow
-            const cv::Point start(x * scale, y * scale);
-            const cv::Point end = start + cv::Point((float)scale * flowX.at<float>(y, x),
-                                                    (float)scale * flowY.at<float>(y, x));
-            cv::line(flow, start, end,
-                     CV_RGB(0xFF, 0xFF, 0xFF));
-        }
-    }
-}
-
-void buildFilter(cv::Mat &filter, float preferredAngle) {
     // Loop through columns
+    float sum = 0.0f;
     for(unsigned int x = 0; x < filter.cols; x++) {
         // Convert column to angle
         const float th = (((float)x / (float)filter.cols) * 2.0f * pi) - pi;
 
         // Write filter with sin of angle
         filter.at<float>(0, x) = sin(th - preferredAngle);
-
+        sum += filter.at<float>(0, x);
         std::cout << x << " = " << filter.at<float>(0, x) << std::endl;
     }
+    std::cout << "Sum = " << sum << std::endl;
 }
 }   // Anonymous namespace
 
@@ -57,59 +35,62 @@ int main(int argc, char *argv[])
 {
     const unsigned int device = (argc > 1) ? std::atoi(argv[1]) : 0;
 
-    std::cout << "CV version:" << CV_VERSION << std::endl;
+    const cv::Size cameraRes(640, 480);
+    const cv::Size unwrapRes(90, 10);
+    const unsigned int outputScale = 10;
 
-    Camera360 camera(device, cv::Size(640, 480), cv::Size(90, 10),
-                     0.5, 0.416, 0.173, 0.377, -pi);
+    // Open video capture device and check it matches desired camera resolution
+    cv::VideoCapture capture(device);
+    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == cameraRes.width);
+    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == cameraRes.height);
+
+    // Create unwrapper
+    OpenCVUnwrap360 unwrapper(cameraRes, unwrapRes,
+                              0.5, 0.416, 0.173, 0.377, -pi);
+
+    // Create optical flow calculator
+    OpenCVOpticalFlow opticalFlow(unwrapRes);
+
+    // Create images
+    cv::Mat originalImage(cameraRes, CV_8UC3);
+    cv::Mat outputImage(unwrapRes, CV_8UC3);
 
     // Create motor
     cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
-    cv::resizeWindow("Unwrapped", 900, 100);
+    cv::resizeWindow("Unwrapped", unwrapRes.width * outputScale,
+                     unwrapRes.height * outputScale);
 
     cv::namedWindow("Original", CV_WINDOW_NORMAL);
-    cv::resizeWindow("Original", 640, 480);
-
-    // Create two grayscale frames to hold optical flow
-    cv::Mat frames[2];
-    frames[0].create(10, 90, CV_8UC1);
-    frames[1].create(10, 90, CV_8UC1);
+    cv::resizeWindow("Original", cameraRes.width, cameraRes.height);
 
     // Build a velocity filter whose preferred angle is going straighj
-    cv::Mat velocityFilter(1, 90, CV_32FC1);
+    cv::Mat velocityFilter(1, unwrapRes.width, CV_32FC1);
     buildFilter(velocityFilter, 0.0f);
 
-    cv::Ptr<cv::superres::FarnebackOpticalFlow> opticalFlow = cv::superres::createOptFlow_Farneback();
-    cv::Mat flowX;
-    cv::Mat flowY;
-    cv::Mat flowImage(100, 900, CV_8UC1);
-    cv::Mat flowXSum(1, 90, CV_32FC1);
+    cv::Mat flowImage(unwrapRes.height * outputScale, unwrapRes.width * outputScale, CV_8UC1);
+    cv::Mat flowXSum(1, unwrapRes.width, CV_32FC1);
     cv::Mat flowSum(1, 1, CV_32FC1);
 
     for(unsigned int i = 0;; i++)
     {
-        if(!camera.read()) {
+        // Read from camera
+        if(!capture.read(originalImage)) {
             return EXIT_FAILURE;
         }
 
+        // Unwrap
+        unwrapper.unwrap(originalImage, outputImage);
+
         // Show frame difference
-        cv::imshow("Original", camera.getOriginalImage());
-        cv::imshow("Unwrapped", camera.getUnwrappedImage());
+        cv::imshow("Original", originalImage);
+        cv::imshow("Unwrapped", outputImage);
 
-        // Convert frame to grayscale and store in array
-        const unsigned int currentFrame = i % 2;
-        cv::cvtColor(camera.getUnwrappedImage(), frames[currentFrame], CV_BGR2GRAY);
-
-        // If this isn't the first frame
-        if(i > 0) {
-            // Calculate optical flow
-            const unsigned int prevFrame = (i - 1) % 2;
-            opticalFlow->calc(frames[prevFrame], frames[currentFrame], flowX, flowY);
-
+        if(opticalFlow.calculate(outputImage)) {
             // Render optical flow
-            renderOpticalFlow(flowX, flowY, flowImage, 10);
+            opticalFlow.render(flowImage, 10);
 
             // Reduce horizontal flow - summing along columns
-            cv::reduce(flowX, flowXSum, 0, CV_REDUCE_SUM);
+            cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, CV_REDUCE_SUM);
 
             // Multiply summed flow by filters
             cv::multiply(flowXSum, velocityFilter, flowXSum);
