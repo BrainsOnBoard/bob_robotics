@@ -8,21 +8,21 @@
 
 // Common includes
 #include "i2c_interface.h"
+#include "motor.h"
 
 //----------------------------------------------------------------------------
 // MotorI2C
 //----------------------------------------------------------------------------
-class MotorI2C
+class MotorI2C : public Motor
 {
 public:
-    MotorI2C(const char *path = "/dev/i2c-1", int slaveAddress = 0x29) : m_I2C(path, slaveAddress)
-    {
+    MotorI2C(const char *path = "/dev/i2c-1", int slaveAddress = 0x29) : m_I2C(path, slaveAddress) {
     }
     
     //----------------------------------------------------------------------------
-    // Public API
+    // Motor virtuals
     //----------------------------------------------------------------------------
-    void tank(float left, float right) 
+    virtual void tank(float left, float right) override
     {  
         // Convert standard (-1,1) values to bytes in order to send to I2C slave
         uint8_t buffer[2] = { floatToI2C(left), floatToI2C(right) };
@@ -31,6 +31,9 @@ public:
         write(buffer);
     }
 
+    //----------------------------------------------------------------------------
+    // Public API
+    //----------------------------------------------------------------------------
     template<typename T, size_t N>
     void read(T (&data)[N])
     {

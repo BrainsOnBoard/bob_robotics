@@ -16,6 +16,9 @@
 #include <fcntl.h>
 #include <linux/joystick.h>
 
+// GeNN robotics includes
+#include "motor.h"
+
 //----------------------------------------------------------------------------
 // Joystick
 //----------------------------------------------------------------------------
@@ -108,8 +111,7 @@ public:
         return (float)m_AxisState[axis] / (float)std::numeric_limits<int16_t>::max();
     }
     
-    template<typename M>
-    void drive(M &motor, float deadzone)
+    void drive(Motor &motor, float deadzone)
     {
         // Read joystick axis state and drive robot manually
         const float joystickX = getAxisState(0);
