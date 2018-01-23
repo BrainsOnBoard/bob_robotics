@@ -31,7 +31,11 @@ unsigned int convertMsToTimesteps(double ms)
 // MBMemory
 //----------------------------------------------------------------------------
 MBMemory::MBMemory()
+#ifndef CPU_ONLY
+    : m_SnapshotFloatGPU(Parameters::inputWidth, Parameters::inputHeight, CV_32FC1)
+#endif  // CPU_ONLY
 {
+
     std::mt19937 gen;
 
     {
@@ -62,7 +66,28 @@ MBMemory::MBMemory()
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(float *inputData, unsigned int inputDataStep, bool reward)
+std::future<std::tuple<unsigned int, unsigned int, unsigned int>> MBMemory::present(const cv::Mat &snapshotFloat, bool train)
+{
+#ifndef CPU_ONLY
+    // Upload final snapshot to GPU
+    m_SnapshotFloatGPU.upload(snapshotFloat);
+
+    // Extract device pointers and step
+    auto snapshotPtrStep = (cv::cuda::PtrStep<float>)m_SnapshotFloatGPU;
+    const unsigned int snapshotStep = snapshotPtrStep.step / sizeof(float);
+    float *snapshotData = snapshotPtrStep.data;
+#else
+    // Extract step and data pointer directly from CPU Mat
+    const unsigned int snapshotStep = snapshotFloat.cols;
+    float *snapshotData = reinterpret_cast<float*>(snapshotFloat.data);
+#endif
+
+    // Start simulation, applying reward if we are training
+    return std::async(std::launch::async, &MBMemory::presentThread,
+                      this, snapshotData, snapshotStep, train);
+}
+//----------------------------------------------------------------------------
+std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(float *inputData, unsigned int inputDataStep, bool reward)
 {
     std::mt19937 gen;
 

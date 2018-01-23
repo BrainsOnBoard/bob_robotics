@@ -1,20 +1,23 @@
 #pragma once
 
 // Standard C++ includes
+#include <array>
 #include <future>
+#include <list>
 #include <tuple>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// Antworld includes
+#include "parameters.h"
+
 //----------------------------------------------------------------------------
-// MBMemory
+// PerfectMemory
 //----------------------------------------------------------------------------
-class MBMemory
+class PerfectMemory
 {
 public:
-    MBMemory();
-
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
@@ -24,9 +27,10 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    std::tuple<unsigned int, unsigned int, unsigned int> presentThread(float *inputData, unsigned int inputDataStep, bool reward);
+    std::tuple<unsigned int, unsigned int, unsigned int> presentThread(const cv::Mat &snapshotFloat, bool train);
 
-#ifndef CPU_ONLY
-    cv::cuda::GpuMat m_SnapshotFloatGPU;
-#endif
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    std::list<std::array<float, Parameters::inputWidth * Parameters::inputHeight>> m_Snapshots;
 };

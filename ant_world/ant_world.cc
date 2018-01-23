@@ -30,6 +30,7 @@
 // Antworld includes
 #include "common.h"
 #include "mb_memory.h"
+#include "perfect_memory.h"
 #include "parameters.h"
 #include "render_mesh.h"
 #include "route.h"
@@ -392,6 +393,7 @@ int main(int argc, char *argv[])
 
     // Create memory
     MBMemory memory;
+    //PerfectMemory memory;
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
@@ -400,11 +402,6 @@ int main(int argc, char *argv[])
     SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
                                              Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
                                              Parameters::inputWidth, Parameters::inputHeight);
-
-#ifndef CPU_ONLY
-    // If GeNN is running on GPU create a GPU OpenCV mat to hold output
-    cv::cuda::GpuMat finalSnapshotFloatGPU(Parameters::inputWidth, Parameters::inputHeight, CV_32FC1);
-#endif  // CPU_ONLY
 
     // Initialize ant position
     float antX = 5.0f;
@@ -744,23 +741,9 @@ int main(int argc, char *argv[])
             // Process snapshot
             const cv::Mat &finalSnapshotFloat = snapshotProcessor.process(snapshot);
 
-#ifndef CPU_ONLY
-            // Upload final snapshot to GPU
-            finalSnapshotFloatGPU.upload(finalSnapshotFloat);
+            // Present to memory
+            gennResult = memory.present(finalSnapshotFloat, trainSnapshot);
 
-            // Extract device pointers and step
-            auto finalSnapshotPtrStep = (cv::cuda::PtrStep<float>)finalSnapshotFloatGPU;
-            const unsigned int finalSnapshotStep = finalSnapshotPtrStep.step / sizeof(float);
-            float *finalSnapshotData = finalSnapshotPtrStep.data;
-#else
-            // Extract step and data pointer directly from CPU Mat
-            const unsigned int finalSnapshotStep = finalSnapshotFloat.cols;
-            float *finalSnapshotData = reinterpret_cast<float*>(finalSnapshotFloat.data);
-#endif
-
-            // Start simulation, applying reward if we are training
-            gennResult = std::async(std::launch::async, &MBMemory::present,
-                                    &memory, finalSnapshotData, finalSnapshotStep, trainSnapshot);
         }
 
         // Poll for and process events
