@@ -115,45 +115,22 @@ public:
 
     bool captureSuperPixel(cv::Mat &output)
     {
-        // Check that output size is suitable for super-pixel output i.e. a quarter input size
-        const unsigned int inputWidth = getWidth();
-        const unsigned int inputHeight = getHeight();
-        assert(output.cols == inputWidth / 2);
-        assert(output.rows == inputHeight / 2);
+        return captureSuperPixel<PixelScale>(output);
+    }
 
-        // Read data and size (in bytes) from camera
-        // **NOTE** these pointers are only valid within one frame
-        void *data = nullptr;
-        uint32_t sizeBytes = 0;
-        if(Video4LinuxCamera::capture(data, sizeBytes)) {
-            // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
-            const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
+    bool captureSuperPixelClamp(cv::Mat &output)
+    {
+        return captureSuperPixel<PixelClamp>(output);
+    }
 
-            // Loop through bayer pixels
-            for(unsigned int y = 0; y < inputHeight; y += 2) {
-                // Get pointers to start of both rows of Bayer data and output RGB data
-                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
-                const uint16_t *inR16Start = &bayerData[((y + 1) * inputWidth) + 1];
-                uint8_t *outRGBStart = output.ptr(y / 2);
-                for(unsigned int x = 0; x < inputWidth; x += 2) {
-                    // Read Bayer pixels
-                    const uint16_t b = *(inBG16Start++) >> 2;
-                    const uint16_t g = *(inBG16Start++) >> 2;
-                    const uint16_t r = *(inR16Start += 2) >> 2;
+    bool captureSuperPixelWBCoolWhite(cv::Mat &output)
+    {
+        return captureSuperPixel<WhiteBalanceCoolWhite>(output);
+    }
 
-                    // Write back to BGR
-                    *(outRGBStart++) = (uint8_t)b;
-                    *(outRGBStart++) = (uint8_t)g;
-                    *(outRGBStart++) = (uint8_t)r;
-                }
-            }
-
-            return true;
-        }
-        else {
-            return false;
-        }
+    bool captureSuperPixelWBU30(cv::Mat &output)
+    {
+        return captureSuperPixel<WhiteBalanceU30>(output);
     }
 
     bool setBrightness(int32_t brightness)
@@ -186,6 +163,138 @@ public:
     }
 
 private:
+    //------------------------------------------------------------------------
+    // PixelScale
+    //------------------------------------------------------------------------
+    // Converts 10-bit intensity values to 8-bit by dividing by 4
+    class PixelScale
+    {
+    public:
+        static uint8_t getR(uint16_t r, uint16_t, uint16_t){ return getScaled(r); }
+        static uint8_t getG(uint16_t, uint16_t g, uint16_t){ return getScaled(g); }
+        static uint8_t getB(uint16_t, uint16_t, uint16_t b){ return getScaled(b); }
+
+    private:
+        static uint8_t getScaled(uint16_t v)
+        {
+            return (uint8_t)(v >> 2);
+        }
+    };
+
+    //------------------------------------------------------------------------
+    // PixelClamp
+    //------------------------------------------------------------------------
+    // Converts 10-bit intensity values to 8-bit by clamping at 255
+    // **NOTE** this is dubious but a)Is what the qtcam example does and b)Can LOOK nicer than PixelScale
+    class PixelClamp
+    {
+    public:
+        static uint8_t getR(uint16_t r, uint16_t, uint16_t){ return getClamped(r); }
+        static uint8_t getG(uint16_t, uint16_t g, uint16_t){ return getClamped(g); }
+        static uint8_t getB(uint16_t, uint16_t, uint16_t b){ return getClamped(b); }
+
+    private:
+        static uint8_t getClamped(uint16_t v)
+        {
+            return (uint8_t)std::min<uint16_t>(255, v);
+        }
+    };
+
+    //------------------------------------------------------------------------
+    // WhiteBalanceCoolWhite
+    //------------------------------------------------------------------------
+    class WhiteBalanceCoolWhite
+    {
+    public:
+        static uint8_t getR(uint16_t r, uint16_t, uint16_t)
+        {
+            // 0.96 (15729)
+            return (uint8_t)(((uint32_t)r * 15729) >> 16);
+        }
+
+        static uint8_t getG(uint16_t, uint16_t g, uint16_t)
+        {
+            return (uint8_t)(g >> 2);
+        }
+
+        static uint8_t getB(uint16_t, uint16_t, uint16_t b)
+        {
+            // 1.74 (28508)
+            return (uint8_t)std::min<uint32_t>(((uint32_t)b * 28508) >> 16, 255);
+        }
+    };
+
+    //------------------------------------------------------------------------
+    // WhiteBalanceU30
+    //------------------------------------------------------------------------
+    class WhiteBalanceU30
+    {
+    public:
+        static uint8_t getR(uint16_t r, uint16_t, uint16_t)
+        {
+            // 0.92 (15073)
+            return (uint8_t)(((uint32_t)r * 15073) >> 16);
+        }
+
+        static uint8_t getG(uint16_t, uint16_t g, uint16_t)
+        {
+            return (uint8_t)(g >> 2);
+        }
+
+        static uint8_t getB(uint16_t, uint16_t, uint16_t b)
+        {
+            // 1.53 (25068)
+            return (uint8_t)std::min<uint32_t>(((uint32_t)b * 25068) >> 16, 255);
+        }
+    };
+
+    //------------------------------------------------------------------------
+    // Private API
+    //------------------------------------------------------------------------
+    template<typename T>
+    bool captureSuperPixel(cv::Mat &output)
+    {
+        // Check that output size is suitable for super-pixel output i.e. a quarter input size
+        const unsigned int inputWidth = getWidth();
+        const unsigned int inputHeight = getHeight();
+        assert(output.cols == inputWidth / 2);
+        assert(output.rows == inputHeight / 2);
+
+        // Read data and size (in bytes) from camera
+        // **NOTE** these pointers are only valid within one frame
+        void *data = nullptr;
+        uint32_t sizeBytes = 0;
+        if(Video4LinuxCamera::capture(data, sizeBytes)) {
+            // Check frame size is correct
+            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
+
+            // Loop through bayer pixels
+            for(unsigned int y = 0; y < inputHeight; y += 2) {
+                // Get pointers to start of both rows of Bayer data and output RGB data
+                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+                const uint16_t *inR16Start = &bayerData[((y + 1) * inputWidth) + 1];
+                uint8_t *outRGBStart = output.ptr(y / 2);
+                for(unsigned int x = 0; x < inputWidth; x += 2) {
+                    // Read Bayer pixels
+                    const uint16_t b = *(inBG16Start++);
+                    const uint16_t g = *(inBG16Start++);
+                    const uint16_t r = *(inR16Start += 2);
+
+                    // Write back to BGR
+                    *(outRGBStart++) = T::getB(r, g, b);
+                    *(outRGBStart++) = T::getG(r, g, b);
+                    *(outRGBStart++) = T::getR(r, g, b);
+                }
+            }
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------

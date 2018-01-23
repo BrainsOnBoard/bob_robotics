@@ -6,6 +6,14 @@
 #include "../common/timer.h"
 #include "../common/see3cam_cu40.h"
 
+enum class Mode
+{
+    Clamp,
+    Shift,
+    WhiteBalanceU30,
+    WhiteBalanceCoolWhite,
+};
+
 int main()
 {
     // Open camera
@@ -31,7 +39,8 @@ int main()
         });
 
     // Tweak exposure down to improve frame rate
-    cam.setExposure(100);
+    //cam.setExposure(100);
+    cam.setBrightness(20);
 
     // Create window
     const unsigned int rawWidth = cam.getWidth() / 2;
@@ -39,6 +48,7 @@ int main()
     const unsigned int unwrapWidth = 450;
     const unsigned int unwrapHeight = 50;
 
+    Mode mode = Mode::Clamp;
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
                                          cv::Size(unwrapWidth, unwrapHeight));
@@ -56,13 +66,47 @@ int main()
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
-            if(cam.captureSuperPixel(output)) {
+            bool success = false;
+            switch(mode) {
+                case Mode::Clamp:
+                    success = cam.captureSuperPixelClamp(output);
+                    break;
+                case Mode::Shift:
+                    success = cam.captureSuperPixel(output);
+                    break;
+                case Mode::WhiteBalanceU30:
+                    success = cam.captureSuperPixelWBU30(output);
+                    break;
+                case Mode::WhiteBalanceCoolWhite:
+                    success = cam.captureSuperPixelWBCoolWhite(output);
+                    break;
+            }
+
+            if(success) {
                 cv::imshow("Raw", output);
 
                 unwrapper.unwrap(output, unwrapped);
                 cv::imshow("Unwrapped", unwrapped);
             }
-            if(cv::waitKey(1) == 27) {
+
+            const int key = cv::waitKey(1);
+            if(key == '1') {
+                mode = Mode::Clamp;
+                std::cout << "Clamp mode" << std::endl;
+            }
+            else if(key == '2') {
+                mode = Mode::Shift;
+                std::cout << "Scale mode" << std::endl;
+            }
+            else if(key == '3') {
+                mode = Mode::WhiteBalanceCoolWhite;
+                std::cout << "White balance (cool white)" << std::endl;
+            }
+            else if(key == '4') {
+                mode = Mode::WhiteBalanceU30;
+                std::cout << "White balance (U30)" << std::endl;
+            }
+            else if(key == 27) {
                 break;
             }
         }
