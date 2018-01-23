@@ -182,7 +182,7 @@ public:
     static OpenCVUnwrap360 createUnwrapper(const cv::Size &camRes, const cv::Size &unwrapRes)
     {
         return OpenCVUnwrap360(camRes, unwrapRes,
-                               0.5, 0.434722222, 0.176388889, 0.381944444, 1.570796327, true);
+                               0.5, 0.461111, 0.183333, 0.408333, 1.570796327, true);
     }
 
 private:
