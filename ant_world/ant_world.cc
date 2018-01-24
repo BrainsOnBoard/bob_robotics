@@ -421,6 +421,7 @@ int main(int argc, char *argv[])
     unsigned int testingScan = 0;
 
     unsigned int numErrors = 0;
+    unsigned int numTestSteps = 0;
 
     float bestHeading = 0.0f;
     unsigned int bestTestENSpikes = std::numeric_limits<unsigned int>::max();
@@ -575,19 +576,32 @@ int main(int argc, char *argv[])
                     // Snap ant to it's best heading
                     antHeading = bestHeading;
 
+                    // Increment step count
+                    numTestSteps++;
+
                     // Move ant forward by snapshot distance
                     antX += Parameters::snapshotDistance * sin(antHeading * degreesToRadians);
                     antY += Parameters::snapshotDistance * cos(antHeading * degreesToRadians);
 
                     // If we've reached destination
                     if(route.atDestination(antX, antY, Parameters::errorDistance)) {
-                        std::cout << "Destination reached with " << numErrors << " errors" << std::endl;
+                        std::cerr << "Destination reached in " << numTestSteps << " steps with " << numErrors << " errors" << std::endl;
 
                         // Reset state to idle
                         state = State::Idle;
 
                         // Add final point to route
                         route.addPoint(antX, antY, false);
+
+                        // Stop
+                        return 0;
+                    }
+                    // Otherwise, if we've
+                    else if(numTestSteps >= Parameters::testStepLimit) {
+                        std::cerr << "Failed to find destination after " << numTestSteps << " steps and " << numErrors << " errors" << std::endl;
+
+                        // Stop
+                        return 0;
                     }
                     // Otherwise
                     else {

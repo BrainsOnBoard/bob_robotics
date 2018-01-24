@@ -18,6 +18,7 @@ namespace Parameters
     constexpr double spinStep = 0.5;
     constexpr double snapshotDistance = 10.0 / 100.0;
     constexpr double errorDistance = 20.0 / 100.0;
+    constexpr unsigned int testStepLimit = 1000;
 
     // Network dimensions
     constexpr unsigned int inputWidth = 36;
