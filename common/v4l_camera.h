@@ -42,6 +42,10 @@ public:
                 std::cerr << "ERROR: Cannot stop streaming (" << strerror(errno) << ")" << std::endl;
             }
 
+            // munmap buffers
+            if (-1 == munmap(m_Buffer[0], m_BufferInfo[0].length) || -1 == munmap(m_Buffer[1], m_BufferInfo[1].length))
+                std::cerr << "ERROR: Could not free buffers (" << strerror(errno) << ")" << std::endl;
+
             // Close camera
             close(m_Camera);
         }
