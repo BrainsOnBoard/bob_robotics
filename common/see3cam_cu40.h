@@ -279,7 +279,8 @@ private:
                     // Read Bayer pixels
                     const uint16_t b = *(inBG16Start++);
                     const uint16_t g = *(inBG16Start++);
-                    const uint16_t r = *(inR16Start += 2);
+                    const uint16_t r = *inR16Start;
+                    inR16Start += 2;
 
                     // Write back to BGR
                     *(outRGBStart++) = T::getB(r, g, b);
