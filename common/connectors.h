@@ -130,6 +130,16 @@ inline void addSynapseToSparseProjection(unsigned int i, unsigned int j, unsigne
                    });
 }
 //----------------------------------------------------------------------------
+void sortRows(unsigned int numPre, SparseProjection &sparseProjection)
+{
+    // Loop through rows and sort indices
+    for(unsigned int i = 0; i < numPre; i++) {
+        const unsigned int rowStartIndex = sparseProjection.indInG[i];
+        const unsigned int rowEndIndex = sparseProjection.indInG[i + 1];
+        std::sort(&sparseProjection.ind[rowStartIndex], &sparseProjection.ind[rowEndIndex]);
+    }
+}
+//----------------------------------------------------------------------------
 template<typename T>
 void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
@@ -179,45 +189,45 @@ template <typename Generator>
 void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, float probability,
                                     SparseProjection &projection, AllocateFn allocate, Generator &gen)
 {
-  // Allocate memory for indices
-  // **NOTE** RESIZE as this vector is populated by index
-  std::vector<unsigned int> tempIndInG;
-  tempIndInG.resize(numPre + 1);
+    // Allocate memory for indices
+    // **NOTE** RESIZE as this vector is populated by index
+    std::vector<unsigned int> tempIndInG;
+    tempIndInG.resize(numPre + 1);
 
-  // Reserve a temporary vector to store indices
-  std::vector<unsigned int> tempInd;
-  tempInd.reserve((unsigned int)((float)(numPre * numPost) * probability));
+    // Reserve a temporary vector to store indices
+    std::vector<unsigned int> tempInd;
+    tempInd.reserve((unsigned int)((float)(numPre * numPost) * probability));
 
-  // Create RNG to draw probabilities
-  std::uniform_real_distribution<> dis(0.0, 1.0);
+    // Create RNG to draw probabilities
+    std::uniform_real_distribution<> dis(0.0, 1.0);
 
-  // Loop through pre neurons
-  for(unsigned int i = 0; i < numPre; i++)
-  {
-    // Connections from this neuron start at current end of indices
-    tempIndInG[i] = tempInd.size();
-
-    // Loop through post neurons
-    for(unsigned int j = 0; j < numPost; j++)
+    // Loop through pre neurons
+    for(unsigned int i = 0; i < numPre; i++)
     {
-      // If there should be a connection here, add one to temporary array
-      if(dis(gen) < probability)
-      {
-        tempInd.push_back(j);
-      }
+        // Connections from this neuron start at current end of indices
+        tempIndInG[i] = tempInd.size();
+
+        // Loop through post neurons
+        for(unsigned int j = 0; j < numPost; j++)
+        {
+            // If there should be a connection here, add one to temporary array
+            if(dis(gen) < probability)
+            {
+                tempInd.push_back(j);
+            }
+        }
     }
-  }
 
-  // Add final index
-  tempIndInG[numPre] = tempInd.size();
+    // Add final index
+    tempIndInG[numPre] = tempInd.size();
 
-  // Allocate SparseProjection arrays
-  // **NOTE** shouldn't do directly as underneath it may use CUDA or host functions
-  allocate(tempInd.size());
+    // Allocate SparseProjection arrays
+    // **NOTE** shouldn't do directly as underneath it may use CUDA or host functions
+    allocate(tempInd.size());
 
-  // Copy indices
-  std::copy(tempIndInG.begin(), tempIndInG.end(), &projection.indInG[0]);
-  std::copy(tempInd.begin(), tempInd.end(), &projection.ind[0]);
+    // Copy indices
+    std::copy(tempIndInG.begin(), tempIndInG.end(), &projection.indInG[0]);
+    std::copy(tempInd.begin(), tempInd.end(), &projection.ind[0]);
 }
 //----------------------------------------------------------------------------
 template <typename Generator>
@@ -290,12 +300,8 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
         }
     }
 
-    // Loop through rows and sort indices
-    for(unsigned int i = 0; i < numPre; i++) {
-        const unsigned int rowStartIndex = projection.indInG[i];
-        const unsigned int rowEndIndex = projection.indInG[i + 1];
-        std::sort(&projection.ind[rowStartIndex], &projection.ind[rowEndIndex]);
-    }
+    // Sort rows so indices are increasing
+    sortRows(numPre, projection);
 
     // Check correct number of connections were added
     assert(projection.indInG[numPre] == projection.connN);
@@ -307,4 +313,80 @@ unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsi
     const double quantile = pow(0.9999, 1.0 / (double)numPre);
 
     return binomialInverseCDF(quantile, numPost, (double)numConnections / (double)numPre);
+}
+//----------------------------------------------------------------------------
+template <typename Generator>
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+                                                   SparseProjection &projection, AllocateFn allocate, Generator &gen)
+{
+    std::cout << "Num pre:" << numPre << ", num post:" << numPost << ", num connections:" << numConnections << std::endl;
+    // Allocate sparse projection
+    allocate(numConnections);
+
+    // Initially populate indInG with row lengths
+    // **NOTE** we are STARTING at the 2nd row because the first row always starts at zero and
+    // FINISHING at second from last row because all remaining connections must go in last row
+    unsigned int remainingConnections = numConnections;
+    unsigned int matrixSize = numPre * numPost;
+    std::generate_n(&projection.indInG[1], numPre - 1,
+                    [&remainingConnections, &matrixSize, numPost, &gen]()
+                    {
+                        const double probability = (double)numPost / (double)matrixSize;
+
+                        // Create distribution to sample row length
+                        std::binomial_distribution<unsigned int> rowLengthDist(remainingConnections, probability);
+
+                        // Sample row length;
+                        const unsigned int rowLength = rowLengthDist(gen);
+
+                        // Update counters
+                        remainingConnections -= rowLength;
+                        matrixSize -= numPost;
+
+                        return rowLength;
+                    });
+
+    // Insert remaining connections into last row
+    projection.indInG[numPre] = remainingConnections;
+
+    // Compute the partial sum so indG now includes offsets
+    std::partial_sum(&projection.indInG[1], &projection.indInG[numPre + 1], &projection.indInG[1]);
+
+    // Insert zero for first row's starting offset
+    projection.indInG[0] = 0;
+
+    // Create distribution to sample row length
+    // **NOTE** these distributions operate on a CLOSED interval hence -1
+    std::uniform_int_distribution<unsigned int> postsynapticNeuronDist(0, numPost - 1);
+
+    // Loop through rows
+    for(unsigned int i = 0; i < numPre; i++) {
+        // Get indices of row start and end
+        const unsigned int rowBegin = projection.indInG[i];
+        const unsigned int rowEnd = projection.indInG[i + 1];
+
+        // Pick a random postsynaptic neuron to connect each one
+        for(unsigned int j = rowBegin; j < rowEnd; j++) {
+            projection.ind[j] = postsynapticNeuronDist(gen);
+        }
+    }
+
+     // Sort rows so indices are increasing
+    sortRows(numPre, projection);
+
+    // Check structure is valid
+    assert(projection.indInG[numPre] == numConnections);
+}
+//----------------------------------------------------------------------------
+unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+{
+    // Calculate suitable quantile for 0.9999 change when drawing numPre times
+    const double quantile = pow(0.9999, 1.0 / (double)numPre);
+
+    // There are numConnections connections amongst the numPre*numPost possible connections.
+    // Each of the numConnections connections has an independent p=float(numPost)/(numPre*numPost)
+    // probability of being selected, and the number of synapses in the sub-row is binomially distributed
+    unsigned int n = binomialInverseCDF(quantile, numConnections, (double)numPost / (double)(numPre * numPost));
+    std::cout << n << std::endl;
+    return n;
 }
