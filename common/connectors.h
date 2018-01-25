@@ -386,7 +386,5 @@ unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned
     // There are numConnections connections amongst the numPre*numPost possible connections.
     // Each of the numConnections connections has an independent p=float(numPost)/(numPre*numPost)
     // probability of being selected, and the number of synapses in the sub-row is binomially distributed
-    unsigned int n = binomialInverseCDF(quantile, numConnections, (double)numPost / (double)(numPre * numPost));
-    std::cout << n << std::endl;
-    return n;
+    return binomialInverseCDF(quantile, numConnections, (double)numPost / (double)(numPre * numPost));
 }
