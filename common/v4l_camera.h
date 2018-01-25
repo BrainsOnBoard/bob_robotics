@@ -43,8 +43,9 @@ public:
             }
 
             // munmap buffers
-            if (-1 == munmap(m_Buffer[0], m_BufferInfo[0].length) || -1 == munmap(m_Buffer[1], m_BufferInfo[1].length))
+            if(munmap(m_Buffer[0], m_BufferInfo[0].length) == -1 || munmap(m_Buffer[1], m_BufferInfo[1].length) == -1) {
                 std::cerr << "ERROR: Could not free buffers (" << strerror(errno) << ")" << std::endl;
+            }
 
             // Close camera
             close(m_Camera);
@@ -259,6 +260,7 @@ public:
             return true;
         }
     }
+
 private:
     //------------------------------------------------------------------------
     // Members
