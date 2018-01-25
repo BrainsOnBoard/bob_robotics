@@ -1,6 +1,9 @@
 #pragma once
 
+// Standard C++ includes
 #include <fstream>
+#include <list>
+#include <vector>
 
 //----------------------------------------------------------------------------
 // SpikeCSVRecorder
@@ -30,6 +33,59 @@ private:
     std::ofstream m_Stream;
     unsigned int *m_SpkCnt;
     unsigned int *m_Spk;
+};
+
+//----------------------------------------------------------------------------
+// SpikeCSVRecorder
+//----------------------------------------------------------------------------
+class SpikeCSVRecorderCached
+{
+public:
+    SpikeCSVRecorderCached(const char *filename,  unsigned int *spkCnt, unsigned int *spk)
+    : m_Stream(filename), m_SpkCnt(spkCnt), m_Spk(spk)
+    {
+        m_Stream << "Time [ms], Neuron ID" << std::endl;
+    }
+
+    void record(double t)
+    {
+        // Add a new entry to the cache
+        m_Cache.emplace_back();
+
+        // Fill in time
+        m_Cache.back().first = t;
+
+        // Reserve vector to hold spikes
+        m_Cache.back().second.reserve(m_SpkCnt[0]);
+
+        // Copy spikes into vector
+        std::copy_n(m_Spk, m_SpkCnt[0], std::back_inserter(m_Cache.back().second));
+    }
+
+    void writeCache()
+    {
+        // Loop through timesteps
+        for(const auto &timestep : m_Cache) {
+            // Loop through spikes
+            for(unsigned int spike : timestep.second) {
+                // Write CSV
+                m_Stream << timestep.first << "," << spike << std::endl;
+            }
+        }
+
+        // Clear cache
+        m_Cache.clear();
+    }
+
+private:
+    //----------------------------------------------------------------------------
+    // Members
+    //----------------------------------------------------------------------------
+    std::ofstream m_Stream;
+    unsigned int *m_SpkCnt;
+    unsigned int *m_Spk;
+
+    std::list<std::pair<double, std::vector<unsigned int>>> m_Cache;
 };
 
 //----------------------------------------------------------------------------
