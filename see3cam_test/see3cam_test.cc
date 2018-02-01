@@ -129,6 +129,11 @@ int main()
                 setMode(Mode::Greyscale, mode, output, unwrapped);
                 std::cout << "Greyscale" << std::endl;
             }
+            else if(key == 'c') {
+                char filename[255];
+                sprintf(filename, "image_%u.png", frame);
+                cv::imwrite(filename, unwrapped);
+            }
             else if(key == 27) {
                 break;
             }

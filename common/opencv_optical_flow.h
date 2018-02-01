@@ -38,9 +38,13 @@ public:
 
     bool calculate(const cv::Mat &input)
     {
-        // Convert frame to grayscale and store in array
+        assert(input.cols == m_Frames[0].cols);
+        assert(input.rows == m_Frames[0].rows);
+        assert(input.type() == CV_8UC1);
+
+        // Copy frame into array
         const unsigned int currentFrame = m_Frame % 2;
-        cv::cvtColor(input, m_Frames[currentFrame], CV_BGR2GRAY);
+        input.copyTo(m_Frames[currentFrame]);
 
         // If this isn't the first frame
         if(m_Frame > 0) {
