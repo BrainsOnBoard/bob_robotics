@@ -6,9 +6,26 @@
 #include <vector>
 
 //----------------------------------------------------------------------------
+// SpikeRecorder
+//----------------------------------------------------------------------------
+// Interface for spike recorders
+class SpikeRecorder
+{
+public:
+    virtual ~SpikeRecorder()
+    {
+    }
+
+    //----------------------------------------------------------------------------
+    // Declared virtuals
+    //----------------------------------------------------------------------------
+    virtual void record(double t) = 0;
+};
+
+//----------------------------------------------------------------------------
 // SpikeCSVRecorder
 //----------------------------------------------------------------------------
-class SpikeCSVRecorder
+class SpikeCSVRecorder : public SpikeRecorder
 {
 public:
     SpikeCSVRecorder(const char *filename,  unsigned int *spkCnt, unsigned int *spk)
@@ -17,7 +34,10 @@ public:
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
-    void record(double t)
+    //----------------------------------------------------------------------------
+    // SpikeRecorder virtuals
+    //----------------------------------------------------------------------------
+    virtual void record(double t) override
     {
         for(unsigned int i = 0; i < m_SpkCnt[0]; i++)
         {
@@ -38,7 +58,7 @@ private:
 //----------------------------------------------------------------------------
 // SpikeCSVRecorder
 //----------------------------------------------------------------------------
-class SpikeCSVRecorderCached
+class SpikeCSVRecorderCached : public SpikeRecorder
 {
 public:
     SpikeCSVRecorderCached(const char *filename,  unsigned int *spkCnt, unsigned int *spk)
@@ -47,7 +67,15 @@ public:
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
-    void record(double t)
+    virtual ~SpikeCSVRecorderCached()
+    {
+        writeCache();
+    }
+
+    //----------------------------------------------------------------------------
+    // SpikeRecorder virtuals
+    //----------------------------------------------------------------------------
+    virtual void record(double t) override
     {
         // Add a new entry to the cache
         m_Cache.emplace_back();
@@ -62,6 +90,9 @@ public:
         std::copy_n(m_Spk, m_SpkCnt[0], std::back_inserter(m_Cache.back().second));
     }
 
+    //----------------------------------------------------------------------------
+    // Public API
+    //----------------------------------------------------------------------------
     void writeCache()
     {
         // Loop through timesteps
@@ -91,7 +122,7 @@ private:
 //----------------------------------------------------------------------------
 // SpikeCSVRecorderDelay
 //----------------------------------------------------------------------------
-class SpikeCSVRecorderDelay
+class SpikeCSVRecorderDelay : public SpikeRecorder
 {
 public:
     SpikeCSVRecorderDelay(const char *filename, unsigned int popSize, unsigned int &spkQueuePtr, unsigned int *spkCnt, unsigned int *spk)
@@ -100,7 +131,10 @@ public:
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
-    void record(double t)
+    //----------------------------------------------------------------------------
+    // SpikeRecorder virtuals
+    //----------------------------------------------------------------------------
+    virtual void record(double t) override
     {
         unsigned int *currentSpk = getCurrentSpk();
         for(unsigned int i = 0; i < getCurrentSpkCnt(); i++)
@@ -110,6 +144,9 @@ public:
     }
 
 private:
+    //----------------------------------------------------------------------------
+    // Private methods
+    //----------------------------------------------------------------------------
     unsigned int *getCurrentSpk() const
     {
         return &m_Spk[m_SpkQueuePtr * m_PopSize];
