@@ -133,6 +133,53 @@ public:
         return captureSuperPixel<WhiteBalanceU30>(output);
     }
 
+    bool captureSuperPixelGreyscale(cv::Mat &output)
+    {
+        // Check that output size is suitable for super-pixel output i.e. a quarter input size
+        const unsigned int inputWidth = getWidth();
+        const unsigned int inputHeight = getHeight();
+        assert(output.cols == inputWidth / 2);
+        assert(output.rows == inputHeight / 2);
+        assert(output.type() == CV_8UC1);
+
+        // Read data and size (in bytes) from camera
+        // **NOTE** these pointers are only valid within one frame
+        void *data = nullptr;
+        uint32_t sizeBytes = 0;
+        if(Video4LinuxCamera::capture(data, sizeBytes)) {
+            // Check frame size is correct
+            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
+
+            // Loop through bayer pixels
+            for(unsigned int y = 0; y < inputHeight; y += 2) {
+                // Get pointers to start of both rows of Bayer data and output RGB data
+                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+                const uint16_t *inR16Start = &bayerData[((y + 1) * inputWidth) + 1];
+                uint8_t *outStart = output.ptr(y / 2);
+                for(unsigned int x = 0; x < inputWidth; x += 2) {
+                    // Read Bayer pixels
+                    const uint16_t b = *(inBG16Start++);
+                    const uint16_t g = *(inBG16Start++);
+                    const uint16_t r = *inR16Start;
+                    inR16Start += 2;
+
+                    // Add channels together and divide by 3 to take average and
+                    // 4 to rescale from 10-bit per-channel to 8-bit
+                    const uint32_t gray = (b + g + r) / (3 * 4);
+
+                    // Write back to BGR
+                    *(outStart++) = (uint8_t)gray;
+                }
+            }
+
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     bool setBrightness(int32_t brightness)
     {
         return setControlValue(V4L2_CID_BRIGHTNESS, std::max(m_BrightnessControl.minimum, std::min(m_BrightnessControl.maximum, brightness)));
@@ -259,6 +306,7 @@ private:
         const unsigned int inputHeight = getHeight();
         assert(output.cols == inputWidth / 2);
         assert(output.rows == inputHeight / 2);
+        assert(output.type() == CV_8UC3);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame

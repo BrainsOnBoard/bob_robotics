@@ -12,12 +12,29 @@ enum class Mode
     Shift,
     WhiteBalanceU30,
     WhiteBalanceCoolWhite,
+    Greyscale,
 };
+
+void setMode(Mode newMode, Mode &mode, cv::Mat &output, cv::Mat &unwrapped) {
+    // If switching TO greyscale - recreate images as greyscale
+    if(newMode == Mode::Greyscale && mode != Mode::Greyscale) {
+        output.create(output.rows, output.cols, CV_8UC1);
+        unwrapped.create(unwrapped.rows, unwrapped.cols, CV_8UC1);
+    }
+    // Otherwise, if switching FROM greyscale - recreate images as colour
+    else if(newMode != Mode::Greyscale && mode == Mode::Greyscale) {
+        output.create(output.rows, output.cols, CV_8UC3);
+        unwrapped.create(unwrapped.rows, unwrapped.cols, CV_8UC3);
+    }
+
+    // Update mode
+    mode = newMode;
+}
 
 int main()
 {
     // Open camera
-    const std::string device = "/dev/video" + std::to_string(0);
+    const std::string device = "/dev/video" + std::to_string(1);
     See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_1280x720);
 
     // Enumerate controls supported by camera
@@ -80,6 +97,8 @@ int main()
                 case Mode::WhiteBalanceCoolWhite:
                     success = cam.captureSuperPixelWBCoolWhite(output);
                     break;
+                case Mode::Greyscale:
+                    success = cam.captureSuperPixelGreyscale(output);
             }
 
             if(success) {
@@ -91,20 +110,24 @@ int main()
 
             const int key = cv::waitKey(1);
             if(key == '1') {
-                mode = Mode::Clamp;
+                setMode(Mode::Clamp, mode, output, unwrapped);
                 std::cout << "Clamp mode" << std::endl;
             }
             else if(key == '2') {
-                mode = Mode::Shift;
+                setMode(Mode::Shift, mode, output, unwrapped);
                 std::cout << "Scale mode" << std::endl;
             }
             else if(key == '3') {
-                mode = Mode::WhiteBalanceCoolWhite;
+                setMode(Mode::WhiteBalanceCoolWhite, mode, output, unwrapped);
                 std::cout << "White balance (cool white)" << std::endl;
             }
             else if(key == '4') {
-                mode = Mode::WhiteBalanceU30;
+                setMode(Mode::WhiteBalanceU30, mode, output, unwrapped);
                 std::cout << "White balance (U30)" << std::endl;
+            }
+            else if(key == '5') {
+                setMode(Mode::Greyscale, mode, output, unwrapped);
+                std::cout << "Greyscale" << std::endl;
             }
             else if(key == 27) {
                 break;
