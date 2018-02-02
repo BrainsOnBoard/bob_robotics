@@ -199,7 +199,13 @@ public:
     {
         return ((static_cast<uint64_t>(m_Resolution) >> 32) & 0xFFFFFFFF);
     }
+    
+    cv::Size getSize() const{ return cv::Size(getWidth(), getHeight()); }
 
+    unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }
+    unsigned int getSuperPixelHeight() const{ return getHeight() / 2; }
+    cv::Size getSuperPixelSize() const{ return cv::Size(getSuperPixelWidth(), getSuperPixelHeight()); }
+    
     //------------------------------------------------------------------------
     // Static API
     //------------------------------------------------------------------------
