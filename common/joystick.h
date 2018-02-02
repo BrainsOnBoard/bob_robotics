@@ -2,9 +2,9 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <bitset>
 #include <iostream>
 #include <limits>
+#include <vector>
 
 // Standard C includes
 #include <cstdint>
@@ -53,12 +53,30 @@ public:
             return false;
         }
         else {
-            return true;
+            // Read number of buttons and axes
+            char numButtons;
+            char numAxes;
+            if(ioctl(m_Joystick, JSIOCGBUTTONS, &numButtons) < 0 || ioctl(m_Joystick, JSIOCGAXES, &numAxes) < 0) {
+                std::cerr << "Couldn't query joystick axes/buttons (" << strerror(errno) << ")" << std::endl;
+                return false;
+            }
+            else {
+                std::cout << "Opened " << (int)numAxes << " axis, " << (int)numButtons << " button joystick" << std::endl;
+                m_AxisState.resize(numAxes, 0);
+                m_ButtonState.resize(numButtons, 0);
+                return true;
+            }
         }
     }
 
     bool read()
     {
+        // Clear all press and release bits
+        for(uint8_t &s : m_ButtonState) {
+            s &= ~(StatePress | StateRelease);
+        }
+        
+        // **TODO** clear all press and release bits
         while(true) {
             // Attempt to read event from joystick device (non-blocking)
             js_event event;
@@ -86,7 +104,20 @@ public:
                 }
                 // Otherwise, if a button state has changed
                 else if((event.type & JS_EVENT_BUTTON) != 0) {
-                    m_ButtonState.set(event.number, event.value);
+                    // Release
+                    uint8_t &s = m_ButtonState[event.number];
+                    if(event.value == 0) {
+                        // Clear down
+                        s &= ~StateDown;
+                        
+                        // Set release
+                        s |= StateRelease;
+                    }
+                    // Press
+                    else {
+                        // Set down and press
+                        s |= (StateDown | StatePress);
+                    }
                 }
                 else {
                     std::cerr << "Unknown event type " << (unsigned int)event.type << std::endl;
@@ -103,7 +134,17 @@ public:
     
     bool isButtonDown(uint8_t button) 
     {
-        return m_ButtonState[button];
+        return ((m_ButtonState[button] & StateDown) != 0);
+    }
+    
+    bool isButtonPressed(uint8_t button) 
+    {
+        return ((m_ButtonState[button] & StatePress) != 0);
+    }
+    
+    bool isButtonReleased(uint8_t button) 
+    {
+        return ((m_ButtonState[button] & StateRelease) != 0);
     }
 
     float getAxisState(uint8_t axis) 
@@ -135,10 +176,20 @@ public:
 
 private:
     //----------------------------------------------------------------------------
+    // Enumerations
+    //----------------------------------------------------------------------------
+    enum State
+    {
+        StateDown       = (1 << 0),
+        StatePress      = (1 << 1),
+        StateRelease    = (1 << 2)
+    };
+    
+    //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     int m_Joystick;
     
-    int16_t m_AxisState[std::numeric_limits<uint8_t>::max()];
-    std::bitset<std::numeric_limits<uint8_t>::max()> m_ButtonState;
+    std::vector<int16_t> m_AxisState;
+    std::vector<uint8_t> m_ButtonState;
 };
