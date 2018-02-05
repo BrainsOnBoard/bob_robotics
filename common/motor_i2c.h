@@ -4,6 +4,7 @@
 #include <vector>
 
 // Standard C includes
+#include <cmath>
 #include <cstdint>
 
 // Common includes
@@ -53,18 +54,7 @@ private:
     //----------------------------------------------------------------------------
     uint8_t floatToI2C(float speed) 
     {
-        // Forward = 1
-        if(speed > 0.0f) {
-            return 1;
-        }
-        // Backwards = 2
-        else if(speed < 0.0f) {
-            return 2;
-        }
-        // Stop = 0
-        else {
-            return 0;
-        }
+        return (uint8_t)std::min(255.0f, std::max(0.0f, std::round(((speed + 1.0f) / 2.0f) * 255.0f)));
     }
     //----------------------------------------------------------------------------
     // Private members

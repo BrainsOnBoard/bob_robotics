@@ -154,23 +154,39 @@ public:
     
     void drive(Motor &motor, float deadzone)
     {
+        constexpr float pi = 3.141592653589793238462643383279502884f;
+        constexpr float halfPi = pi / 2.0f;
+        
         // Read joystick axis state and drive robot manually
         const float joystickX = getAxisState(0);
         const float joystickY = getAxisState(1);
-        if(joystickX < -deadzone) {
-            motor.tank(1.0f, -1.0f);
-        }
-        else if(joystickX > deadzone) {
-            motor.tank(-1.0f, 1.0f);
-        }
-        else if(joystickY < -deadzone) {
-            motor.tank(1.0f, 1.0f);
-        }
-        else if(joystickY > deadzone) {
-            motor.tank(-1.0f, -1.0f);
-        }
-        else {
+        
+        // If length of joystick vector places it in deadzone, stop motors
+        const float r = sqrt((joystickX * joystickX) + (joystickY * joystickY));
+        if(r < deadzone) {
             motor.tank(0.0f, 0.0f);
+        }
+        // Otherwise
+        else {
+            // Also calculate theta
+            const float theta = atan2(joystickX, -joystickY);
+            const float twoTheta = 2.0f * theta;
+            
+            // Drive motor
+            if(theta >= 0.0f && theta < halfPi) {
+                motor.tank(r, r * cos(twoTheta));
+            }
+            else if(theta >= halfPi && theta < pi) {
+                motor.tank(-r * cos(twoTheta), -r);
+            }
+            else if(theta < 0.0f && theta >= -halfPi) {
+                motor.tank(r * cos(twoTheta), r);
+            }
+            else if(theta < -halfPi && theta >= -pi) {
+                motor.tank(-r, -r * cos(twoTheta));
+                
+            }
+            
         }
     }
 
