@@ -7,8 +7,9 @@ Servo servoLeft;                                // left motor
 Servo servoRight;                               // right motor
 
 volatile int movement[2];                       // left and right wheel movement
-static volatile int changed;                    // will signal if any motor value has changed by the master
-static volatile int is_attached;
+volatile bool updateMotors;                    // will signal if any motor value has changed by the master
+volatile bool leftAttached = false;
+volatile bool rightAttached = false;
 
 // sensor values
 volatile int sensor2602;                        // Air contaminants
@@ -44,29 +45,20 @@ void loop()
   sensor2620 = analogRead(A2);  // Ethanol
 
   
-
   // movement duration is 10 millisec, but this could
   // be adjusted depending on what works the best. 
-  
-  
-  if (changed) {
-    // movements /////////////////////////////
-    if (movement[0] == 1 && movement[1] == 1) {
-      forward(10);
+  if (updateMotors) {
+    if(leftAttached) {
+      int mapped = map(movement[0], 0, 255, 1300, 1700);
+      servoLeft.writeMicroseconds(mapped);
     }
-
-    if (movement[0] == 2 && movement[1] == 2) {
-      backward(10);
+    
+    if(rightAttached) {
+      int mapped = map(movement[1], 0, 255, 1700, 1300);
+      servoRight.writeMicroseconds(mapped);
     }
-
-    if (movement[0] == 2 && movement[1] == 1) {
-      turnLeft(10);
-    }
-
-    if (movement[0] == 1 && movement[1] == 2) {
-      turnRight(10);
-    }  
-    changed = 0;
+    delay(10);
+    updateMotors = false;
     ///////////////////////////////////////////
   } 
 }
@@ -97,7 +89,7 @@ void requestEvent()
 // left wheel and array[1] is the right wheel. If any of the 2 values 
 // are 0, we stop the motors. Othewise, we update our global value (movement[]) 
 // where we store the motor commands to use process later in the loop.
-void receiveEvent() 
+void receiveEvent(int numBytes) 
 {
 
   // check incoming bytes from master
@@ -108,54 +100,42 @@ void receiveEvent()
     i++;
   }
 
-  // if any of the motors' value are 0, stop them
-  if (read_array[0] == 0 || read_array[1] == 0) {
+  // Detach left motor if it's attached and left input is zero
+  // **NOTE** very hard to convince crappy servos to stop otherwise
+  if(read_array[0] == 128 && leftAttached) {
     servoLeft.detach();
-    servoRight.detach();
-    is_attached = 0;
-  } 
-  else { // write to movement (global) array
-    movement[0] = read_array[0];
-    movement[1] = read_array[1];
-    changed = 1;
-    // init servos with port number 12 and 13
-    if (!is_attached) {
-      servoLeft.attach(12);
-      servoRight.attach(13); 
-      is_attached = 1;
-    }
+    leftAttached = false;
+  }
 
+  // Detach right motor if it's attached and righ input is zero
+  // **NOTE** very hard to convince crappy servos to stop otherwise
+  if(read_array[1] == 128 && rightAttached) {
+    servoRight.detach();
+    rightAttached = false;
+  }
+  
+  // Attach left motor if it's detached and left input is non-zero
+  if(read_array[0] != 128 && !leftAttached) {
+    servoLeft.attach(13);
+    leftAttached = true;
+  }
+  
+  // Attach right motor if it's detached and right input is non-zero
+  if(read_array[1] != 128 && !rightAttached) {
+    servoRight.attach(12);
+    rightAttached = true;
+  }
+  
+  // If attached motor input has changed
+  if(leftAttached && read_array[0] != movement[0]) {
+    movement[0] = read_array[0];
+    updateMotors = true;
+  }
+
+  // If attached motor input has changed
+  if(rightAttached && read_array[1] != movement[1]) {
+    movement[1] = read_array[1];
+    updateMotors = true;
   }
   
 }
-
-// movement functions - it makes a type of movement
-// for a given time.
-void backward(int time)                       // Forward function
-{
-  servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-  servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-  delay(time);                               // Maneuver for time ms
-}
-
-void turnRight(int time)                      // Left turn function
-{
-  servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-  servoRight.writeMicroseconds(1300);        // Right wheel clockwise
-  delay(time);                               // Maneuver for time ms
-}
-
-void turnLeft(int time)                     // Right turn function
-{
-  servoLeft.writeMicroseconds(1700);         // Left wheel counterclockwise
-  servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-  delay(time);                               // Maneuver for time ms
-}
-
-void forward(int time)                      // Backward function
-{
-  servoLeft.writeMicroseconds(1300);         // Left wheel clockwise
-  servoRight.writeMicroseconds(1700);        // Right wheel counterclockwise
-  delay(time);                               // Maneuver for time ms
-}
-
