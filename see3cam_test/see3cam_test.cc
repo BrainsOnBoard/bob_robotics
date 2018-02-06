@@ -31,10 +31,11 @@ void setMode(Mode newMode, Mode &mode, cv::Mat &output, cv::Mat &unwrapped) {
     mode = newMode;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     // Open camera
-    const std::string device = "/dev/video" + std::to_string(1);
+    const unsigned int deviceIndex = (argc > 1) ? std::atoi(argv[1]) : 0;
+    const std::string device = "/dev/video" + std::to_string(deviceIndex);
     See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_1280x720);
 
     // Enumerate controls supported by camera
