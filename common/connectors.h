@@ -80,6 +80,92 @@ inline double binomialPDF(int n, int k, double p)
         return exp(lnBinomialCoefficient(n, k) + (k * log(p)) + ((n - k) * log(1.0 - p)));
     }
 }
+
+
+double betacf(double a, double b, double x)
+{
+    const int maxIterations = 100;
+    const double epsilon = 3.0E-7;
+    const double fpMin = 1.0E-30;
+    
+    const double qab = a + b;
+    const double qap = a + 1.0;
+    const double  qam = a - 1.0;
+    double c = 1.0;
+    
+    // First step of Lentz’s method.
+    double d = 1.0 - qab * x / qap;
+    if (fabs(d) < fpMin) {
+        d = fpMin;
+    }
+    d = 1.0 / d;
+    double h = d;
+    int m;
+    for(m = 1; m <= maxIterations; m++) {
+        const int m2 = 2 * m;
+        const double aa1 = m * (b - m) * x / ((qam + m2) * (a + m2));
+        d = 1.0 + aa1 * d;
+        // One step (the even one) of the recurrence.
+        if(fabs(d) < fpMin)  {
+            d = fpMin;
+        }
+        c = 1.0 + aa1 / c;
+        if(fabs(c) < fpMin) {
+            c=fpMin;
+        }
+        d = 1.0 / d;
+        h *= d * c;
+        const double aa2 = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+        d = 1.0 + aa2 * d;
+        // Next step of the recurrence (the odd one).
+        if (fabs(d) < fpMin) {
+            d = fpMin;
+        }
+        c = 1.0 + aa2 / c;
+        if (fabs(c) < fpMin)  {
+            c = fpMin;
+        }
+        d = 1.0 / d;
+        const double del = d * c;
+        h *= del;
+        
+        // Are we done?
+        if (fabs(del-1.0) < epsilon) {
+            break;        
+        }
+    }
+    if (m > maxIterations) {
+        throw std::runtime_error("a or b too big, or MAXIT too small in betacf");
+    }
+    return h;
+}
+
+// Ix(a, b)
+double betai(double a, double b, double x)
+{
+    if (x < 0.0 || x > 1.0) {
+        throw std::runtime_error("Bad x in routine betai");
+    }
+    
+    // Factors in front of the continued fraction.
+    double bt;
+    if (x == 0.0 || x == 1.0) {
+        bt=0.0;
+    }
+    else {    
+        bt = exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * log(x) + b * log(1.0 - x));
+    }
+    
+    // Use continued fraction directly.
+    if (x < (a + 1.0) / (a + b + 2.0)) {        
+        return bt * betacf(a, b, x) / a;
+    }
+    // Otherwise, use continued fraction after making the 
+    // symmetry transformation.
+    else {
+        return 1.0 - bt * betacf(b, a, 1.0 - x) / b;
+    }
+}
 //----------------------------------------------------------------------------
 // Evaluates inverse CDF of binomial distribution
 // Adopted from C++ 'prob' libray found https://people.sc.fsu.edu/~jburkardt/
@@ -92,6 +178,8 @@ inline unsigned int binomialInverseCDF(double cdf, unsigned int n, double p)
     double cdf2 = 0.0;
     for (unsigned int k = 0; k <= n; k++)
     {
+        // Ip(k,n−k +1)
+        const double cdf = betai(
         const double pdf = binomialPDF(n, k, p);
         cdf2 += pdf;
 
