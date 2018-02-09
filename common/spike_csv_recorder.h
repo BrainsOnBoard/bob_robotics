@@ -2,6 +2,7 @@
 
 // Standard C++ includes
 #include <fstream>
+#include <iterator>
 #include <list>
 #include <vector>
 
