@@ -32,10 +32,9 @@
 #include "mb_memory.h"
 #include "perfect_memory.h"
 #include "parameters.h"
-#include "render_mesh.h"
+#include "renderer.h"
 #include "route.h"
 #include "snapshot_processor_ardin.h"
-#include "world.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -119,164 +118,6 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int)
     }
 }
 //----------------------------------------------------------------------------
-void generateCubeFaceLookAtMatrices(GLfloat (&matrices)[6][16])
-{
-    // Set matrix model (which matrix stack you trash is somewhat arbitrary)
-    glMatrixMode(GL_MODELVIEW);
-
-    // Loop through cube faces
-    for(unsigned int f = 0; f < 6; f++) {
-        // Load identity matrix
-        glLoadIdentity();
-
-        // Load lookup matrix
-        switch (f + GL_TEXTURE_CUBE_MAP_POSITIVE_X)
-        {
-            case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-                gluLookAt(0.0,  0.0,    0.0,
-                          1.0,  0.0,    0.0,
-                          0.0,  0.0,    1.0);
-                break;
-
-            case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-                gluLookAt(0.0,  0.0,    0.0,
-                          -1.0, 0.0,    0.0,
-                          0.0,  0.0,    1.0);
-                break;
-
-            case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-                gluLookAt(0.0,  0.0,    0.0,
-                          0.0,  0.0,    -1.0,
-                          0.0,  1.0,    0.0);
-                break;
-
-            case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-                gluLookAt(0.0,  0.0,    0.0,
-                          0.0,  0.0,    1.0,
-                          0.0,  -1.0,    0.0);
-                break;
-
-            case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-                gluLookAt(0.0,  0.0,    0.0,
-                          0.0,  1.0,    0.0,
-                          0.0,  0.0,    1.0);
-                break;
-
-            case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-                gluLookAt(0.0,  0.0,    0.0,
-                          0.0,  -1.0,   0.0,
-                          0.0,  0.0,    1.0);
-                break;
-
-            default:
-                break;
-        };
-
-        // Save matrix
-        glGetFloatv(GL_MODELVIEW_MATRIX, matrices[f]);
-    }
-}
-//----------------------------------------------------------------------------
-void renderAntView(float antX, float antY, float antHeading,
-                   const World &world, const RenderMesh &renderMesh,
-                   GLuint cubemapFBO, GLuint cubemapTexture, const GLfloat (&cubeFaceLookAtMatrices)[6][16])
-{
-    // Configure viewport to cubemap-sized square
-    glViewport(0, 0, 256, 256);
-
-    // Bind world
-    world.bind();
-
-    // Bind the cubemap FBO for offscreen rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, cubemapFBO);
-
-    // Configure perspective projection matrix
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(90.0,
-                   1.0,
-                   0.001, 14.0);
-
-    glMatrixMode(GL_MODELVIEW);
-
-    // Save ant transform to matrix
-    float antMatrix[16];
-    glLoadIdentity();
-    glRotatef(antHeading, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-antX, -antY, -0.01f);
-    glGetFloatv(GL_MODELVIEW_MATRIX, antMatrix);
-
-    // Loop through each heading we need to render
-    for(GLenum f = 0; f < 6; f++) {
-        // Attach correct frame buffer face to frame buffer
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, f + GL_TEXTURE_CUBE_MAP_POSITIVE_X, cubemapTexture, 0);
-
-        // Load look at matrix for this cube face
-        glLoadMatrixf(cubeFaceLookAtMatrices[f]);
-
-        // Multiply this by ant transform
-        glMultMatrixf(antMatrix);
-
-        // Clear colour and depth buffer
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Draw world
-        // **NOTE** buffers were manually bound previously
-        world.render(false);
-    }
-
-    // Unbind the FBO for onscreen rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // Set viewport to strip at stop of window
-    glViewport(0, Parameters::displayRenderWidth + 10,
-               Parameters::displayRenderWidth, Parameters::displayRenderHeight);
-
-    // Bind cubemap texture
-    glEnable(GL_TEXTURE_CUBE_MAP);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0, 1.0,
-               0.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // Render render mesh
-    renderMesh.render();
-
-    // Disable texture coordinate array, cube map texture and cube map texturing!
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glDisable(GL_TEXTURE_CUBE_MAP);
-
-}
-//----------------------------------------------------------------------------
-void renderTopDownView(float antX, float antY, float antHeading,
-                       const World &world, const Route &route)
-{
-    // Set viewport to square at bottom of screen
-    glViewport(0, 0, Parameters::displayRenderWidth, Parameters::displayRenderWidth);
-
-    // Configure top-down orthographic projection matrix
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0, 10.0,
-               0.0, 10.0);
-
-    // Build modelview matrix to centre world
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    // Render world
-    world.render();
-
-    // Render route
-    route.render(antX, antY, antHeading);
-
-}
-//----------------------------------------------------------------------------
 void handleGLFWError(int errorNumber, const char *message)
 {
     std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
@@ -331,65 +172,17 @@ int main(int argc, char *argv[])
     // Set key callback
     glfwSetKeyCallback(window, keyCallback);
 
+    // Create renderer
+    Renderer renderer("world5000_gray.bin", Parameters::worldColour, Parameters::groundColour,
+                      Parameters::displayRenderWidth, Parameters::displayRenderHeight);
+
     // Create route object and load route file specified by command line
     Route route(0.2f, 800);
     if(argc > 1) {
         route.load(argv[1]);
     }
 
-    // Load world into OpenGL
-    World world("world5000_gray.bin", Parameters::worldColour, Parameters::groundColour);
 
-    // Build mesh to render cubemap to screen
-    // **NOTE** this matches the matlab:
-    // hfov = hfov/180/2*pi;
-    // axis([0 14 -hfov hfov -pi/12 pi/3]);
-    RenderMesh renderMesh(296.0f, 75.0f, 15.0f,
-                          40, 10);
-
-    // Create FBO for rendering to cubemap and bind
-    GLuint fbo;
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-    // Create cubemap and bind
-    GLuint cubemap;
-    glGenTextures(1, &cubemap);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
-
-    // Create textures for all faces of cubemap
-    // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
-    for(unsigned int t = 0; t < 6; t++) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
-                     256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-    }
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-    // Create depth render buffer
-    GLuint depthbuff;
-    glGenRenderbuffers(1, &depthbuff);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthbuff);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 256, 256);
-
-    // Attach depth buffer to frame buffer
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthbuff);
-
-    // Check frame buffer is created correctly
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        throw std::runtime_error("Frame buffer not complete");
-    }
-
-    // Unbind cube map and frame buffer
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // Pre-generate lookat matrices to point at cubemap faces
-    GLfloat cubeFaceLookAtMatrices[6][16];
-    generateCubeFaceLookAtMatrices(cubeFaceLookAtMatrices);
 
     // Create memory
     MBMemory memory;
@@ -728,16 +521,12 @@ int main(int argc, char *argv[])
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render ant's eye view at top of the screen
-        renderAntView(antX, antY, antHeading,
-                      world, renderMesh,
-                      fbo, cubemap, cubeFaceLookAtMatrices);
+        // Render top down and ants eye view
+        renderer.render(antX, antY, antHeading);
 
-        // Render top-down view at bottom of the screen
-        renderTopDownView(antX, antY, antHeading,
-                          world, route);
-
-
+        // Render route
+        route.render(antX, antY, antHeading);
+        
         // Swap front and back buffers
         glfwSwapBuffers(window);
 
