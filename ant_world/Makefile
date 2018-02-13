@@ -1,7 +1,7 @@
 EXECUTABLE      := ant_world
-SOURCES         := ant_world.cc mb_memory.cc perfect_memory.cc render_mesh.cc renderer.cc route.cc snapshot_processor_ardin.cc world.cc
-LINK_FLAGS      := -lglfw -lGL -lGLU -lGLEW   `pkg-config --libs opencv`
-CXXFLAGS        := -pthread -Wall -Wpedantic -Wextra  `pkg-config --cflags opencv`
+SOURCES         := ant_world.cc mb_memory.cc perfect_memory.cc route.cc snapshot_processor_ardin.cc
+LINK_FLAGS      := -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW  `pkg-config --libs opencv`
+CXXFLAGS        := -I../libantworld -pthread -Wall -Wpedantic -Wextra  `pkg-config --cflags opencv`
 
 ifdef RECORD_SPIKES
     CXXFLAGS += -DRECORD_SPIKES

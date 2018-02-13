@@ -5,11 +5,9 @@
 
 // OpenGL includes
 #include <GL/glew.h>
-#include <GL/glu.h>
 
 // Antworld includes
 #include "render_mesh.h"
-#include "route.h"
 #include "world.h"
 
 //----------------------------------------------------------------------------

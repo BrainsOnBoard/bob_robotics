@@ -1,12 +1,10 @@
 // Standard C++ includes
-#include <algorithm>
 #include <bitset>
 #include <fstream>
 #include <future>
 #include <iostream>
 #include <limits>
 #include <random>
-#include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -19,7 +17,6 @@
 
 // OpenGL includes
 #include <GL/glew.h>
-#include <GL/glu.h>
 
 // GLFW
 #include <GLFW/glfw3.h>
@@ -27,12 +24,14 @@
 // Common includes
 #include "../common/timer.h"
 
-// Antworld includes
+// Libantworld includes
 #include "common.h"
+#include "renderer.h"
+
+// Antworld includes
 #include "mb_memory.h"
 #include "perfect_memory.h"
 #include "parameters.h"
-#include "renderer.h"
 #include "route.h"
 #include "snapshot_processor_ardin.h"
 
@@ -173,7 +172,7 @@ int main(int argc, char *argv[])
     glfwSetKeyCallback(window, keyCallback);
 
     // Create renderer
-    Renderer renderer("world5000_gray.bin", Parameters::worldColour, Parameters::groundColour,
+    Renderer renderer("../libantworld/world5000_gray.bin", Parameters::worldColour, Parameters::groundColour,
                       Parameters::displayRenderWidth, Parameters::displayRenderHeight);
 
     // Create route object and load route file specified by command line
