@@ -8,5 +8,6 @@
 //----------------------------------------------------------------------------
 // Constants
 //----------------------------------------------------------------------------
-constexpr float degreesToRadians = 0.017453293f;
-constexpr float radiansToDegrees = 57.295779513f;
+constexpr float pi = 3.141592654f;
+constexpr float degreesToRadians = (pi / 180.0f);
+constexpr float radiansToDegrees = (180.0f / pi);
