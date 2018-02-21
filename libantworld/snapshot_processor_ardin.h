@@ -17,8 +17,10 @@ public:
     // Public API
     //------------------------------------------------------------------------
     // Process input snapshot (probably at screen resolution)
-    // and return reference to CPU
-    const cv::Mat &process(const cv::Mat &snapshot);
+    void process(const cv::Mat &snapshot);
+
+    const cv::Mat &getFinalSnapshot() const{ return m_FinalSnapshot; }
+    const cv::Mat &getFinalSnapshotFloat() const{ return m_FinalSnapshotFloat; }
 
 private:
     //------------------------------------------------------------------------

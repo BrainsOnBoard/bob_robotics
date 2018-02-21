@@ -1,4 +1,4 @@
-#include "route.h"
+#include "route_ardin.h"
 
 // Standard C++ includes
 #include <fstream>
@@ -10,10 +10,10 @@
 #include <cassert>
 #include <cmath>
 
-// Antworld includes
+// Libantworld includes
 #include "common.h"
 
-// //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Anonymous namespace
 //----------------------------------------------------------------------------
 namespace
@@ -30,9 +30,9 @@ float distanceSquared(float x1, float y1, float x2, float y2)
 }   // Anonymous namespace
 
 //----------------------------------------------------------------------------
-// Route
+// RouteArdin
 //----------------------------------------------------------------------------
-Route::Route(float arrowLength, unsigned int maxRouteEntries)
+RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     : m_WaypointsVAO(0), m_WaypointsPositionVBO(0), m_WaypointsColourVBO(0),
     m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0), m_RouteMaxPoints(maxRouteEntries),
     m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0)
@@ -101,15 +101,15 @@ Route::Route(float arrowLength, unsigned int maxRouteEntries)
     glEnableClientState(GL_COLOR_ARRAY);
 }
 //----------------------------------------------------------------------------
-Route::Route(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
-    : Route(arrowLength, maxRouteEntries)
+RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
+    : RouteArdin(arrowLength, maxRouteEntries)
 {
     if(!load(filename)) {
         throw std::runtime_error("Cannot load route");
     }
 }
 //----------------------------------------------------------------------------
-Route::~Route()
+RouteArdin::~RouteArdin()
 {
     // Delete waypoint objects
     glDeleteBuffers(1, &m_WaypointsPositionVBO);
@@ -127,7 +127,7 @@ Route::~Route()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool Route::load(const std::string &filename)
+bool RouteArdin::load(const std::string &filename)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
@@ -231,7 +231,7 @@ bool Route::load(const std::string &filename)
     return true;
 }
 //----------------------------------------------------------------------------
-void Route::render(float antX, float antY, float antHeading) const
+void RouteArdin::render(float antX, float antY, float antHeading) const
 {
     // Bind route VAO
     glBindVertexArray(m_WaypointsVAO);
@@ -256,7 +256,7 @@ void Route::render(float antX, float antY, float antHeading) const
 
 }
 //----------------------------------------------------------------------------
-bool Route::atDestination(float x, float y, float threshold) const
+bool RouteArdin::atDestination(float x, float y, float threshold) const
 {
     // If route's empty, there is no destination so return false
     if(m_Waypoints.empty()) {
@@ -268,7 +268,7 @@ bool Route::atDestination(float x, float y, float threshold) const
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<float, size_t> Route::getDistanceToRoute(float x, float y) const
+std::tuple<float, size_t> RouteArdin::getDistanceToRoute(float x, float y) const
 {
     // Loop through segments
     float minimumDistanceSquared = std::numeric_limits<float>::max();
@@ -288,7 +288,7 @@ std::tuple<float, size_t> Route::getDistanceToRoute(float x, float y) const
     return std::make_tuple(sqrt(minimumDistanceSquared), nearestWaypoint);
 }
 //----------------------------------------------------------------------------
-void Route::setWaypointFamiliarity(size_t pos, double familiarity)
+void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
 {
     // Convert familiarity to a grayscale colour
     const uint8_t intensity = (uint8_t)std::min(255.0, std::max(0.0, std::round(255.0 * familiarity)));
@@ -300,7 +300,7 @@ void Route::setWaypointFamiliarity(size_t pos, double familiarity)
 
 }
 //----------------------------------------------------------------------------
-void Route::addPoint(float x, float y, bool error)
+void RouteArdin::addPoint(float x, float y, bool error)
 {
     const static uint8_t errorColour[3] = {0xFF, 0, 0};
     const static uint8_t correctColour[3] = {0, 0xFF, 0};
@@ -320,7 +320,7 @@ void Route::addPoint(float x, float y, bool error)
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
-std::tuple<float, float, float> Route::operator[](size_t waypoint) const
+std::tuple<float, float, float> RouteArdin::operator[](size_t waypoint) const
 {
     const float x = m_Waypoints[waypoint][0];
     const float y = m_Waypoints[waypoint][1];

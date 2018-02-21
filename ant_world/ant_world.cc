@@ -27,13 +27,13 @@
 // Libantworld includes
 #include "common.h"
 #include "renderer.h"
+#include "route_ardin.h"
+#include "snapshot_processor_ardin.h"
 
 // Antworld includes
 #include "mb_memory.h"
 #include "perfect_memory.h"
 #include "parameters.h"
-#include "route.h"
-#include "snapshot_processor_ardin.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -176,12 +176,10 @@ int main(int argc, char *argv[])
                       Parameters::displayRenderWidth, Parameters::displayRenderHeight);
 
     // Create route object and load route file specified by command line
-    Route route(0.2f, 800);
+    RouteArdin route(0.2f, 800);
     if(argc > 1) {
         route.load(argv[1]);
     }
-
-
 
     // Create memory
     MBMemory memory;
@@ -541,10 +539,10 @@ int main(int argc, char *argv[])
                          GL_BGR, GL_UNSIGNED_BYTE, snapshot.data);
 
             // Process snapshot
-            const cv::Mat &finalSnapshotFloat = snapshotProcessor.process(snapshot);
+            snapshotProcessor.process(snapshot);
 
             // Present to memory
-            gennResult = memory.present(finalSnapshotFloat, trainSnapshot);
+            gennResult = memory.present(snapshotProcessor.getFinalSnapshotFloat(), trainSnapshot);
 
         }
 

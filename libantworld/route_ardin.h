@@ -11,14 +11,14 @@
 #include <GL/glu.h>
 
 //----------------------------------------------------------------------------
-// Route
+// RouteArdin
 //----------------------------------------------------------------------------
-class Route
+class RouteArdin
 {
 public:
-    Route(float arrowLength, unsigned int maxRouteEntries);
-    Route(float arrowLength, unsigned int maxRouteEntries, const std::string &filename);
-    ~Route();
+    RouteArdin(float arrowLength, unsigned int maxRouteEntries);
+    RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename);
+    ~RouteArdin();
 
     //------------------------------------------------------------------------
     // Public API

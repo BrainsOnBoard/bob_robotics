@@ -16,7 +16,7 @@ SnapshotProcessorArdin::SnapshotProcessorArdin(unsigned int displayScale, unsign
     assert(m_DisplayScale % 4 == 0);
 }
 //----------------------------------------------------------------------------
-const cv::Mat &SnapshotProcessorArdin::process(const cv::Mat &snapshot)
+void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
 {
     // **TODO** theoretically this processing could all be done on the GPU but
     // a) we're currently starting from a snapshot in host memory
@@ -71,11 +71,6 @@ const cv::Mat &SnapshotProcessorArdin::process(const cv::Mat &snapshot)
                 0.0, 0.0, CV_INTER_CUBIC);
     m_FinalSnapshot.convertTo(m_FinalSnapshotFloat, CV_32FC1, 1.0 / 255.0);
 
-    cv::imwrite("snapshot.png", m_FinalSnapshot);
-
     // Normalise snapshot using L2 norm
     cv::normalize(m_FinalSnapshotFloat, m_FinalSnapshotFloat);
-
-    // Return reference to final snapshot
-    return m_FinalSnapshotFloat;
 }
