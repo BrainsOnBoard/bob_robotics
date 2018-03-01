@@ -10,6 +10,7 @@
 // Standard C includes
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 
 // GeNN includes
 #include "sparseProjection.h"
