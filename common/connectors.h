@@ -259,10 +259,42 @@ void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, f
     std::copy(tempInd.begin(), tempInd.end(), &projection.ind[0]);
 }
 //----------------------------------------------------------------------------
+template <typename Generator, typename IndexType>
+void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, float probability,
+                                    RaggedProjection<IndexType> &projection, Generator &gen)
+{
+    // Create RNG to draw probabilities
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    // Loop through pre neurons
+    for(unsigned int i = 0; i < numPre; i++)
+    {
+        // Start with a row length of zero
+        projection.rowLength[i] = 0;
+
+        // Get pointer to first index of row
+        IndexType *index = &projection.ind[(i * projection.maxRowLength)];
+
+        // Loop through post neurons
+        for(unsigned int j = 0; j < numPost; j++)
+        {
+            // If there should be a connection here, add one to temporary array
+            if(dis(gen) < probability)
+            {
+                // Add synapse
+                index[projection.rowLength[i]++] = j;
+            }
+        }
+    }
+}
+//----------------------------------------------------------------------------
 template <typename Generator>
-void buildFixedProbabilityConnector(unsigned int numWords, float probability,
+void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, float probability,
                                     uint32_t *bitfield, Generator &gen)
 {
+    // **THINK** I'm unsure about this calculation but it's used to allocate the memory and copy it!
+    const unsigned int numWords = (numPre * numPost) / 32 + 1;
+
     // Create RNG to draw probabilities
     std::uniform_real_distribution<> dis(0.0, 1.0);
 
