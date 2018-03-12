@@ -169,6 +169,18 @@ void sortRows(unsigned int numPre, SparseProjection &sparseProjection)
     }
 }
 //----------------------------------------------------------------------------
+template<typename IndexType>
+void sortRows(unsigned int numPre, RaggedProjection<IndexType> &sparseProjection)
+{
+    // Loop through rows and sort indices
+    for(unsigned int i = 0; i < numPre; i++) {
+        IndexType *indexStart = &sparseProjection.ind[(i * sparseProjection.maxRowLength)];
+        IndexType *indexEnd = indexStart + sparseProjection.rowLength[i];
+
+        std::sort(indexStart, indexEnd);
+    }
+}
+//----------------------------------------------------------------------------
 template<typename T>
 void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
@@ -437,6 +449,54 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 
     // Check structure is valid
     assert(projection.indInG[numPre] == numConnections);
+}
+//----------------------------------------------------------------------------
+template <typename Generator, typename IndexType>
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+                                                   RaggedProjection<IndexType> &projection, Generator &gen)
+{
+    // Initially populate indInG with row lengths
+    // **NOTE** we are STARTING at the 2nd row because the first row always starts at zero and
+    // FINISHING at second from last row because all remaining connections must go in last row
+    unsigned int remainingConnections = numConnections;
+    unsigned int matrixSize = numPre * numPost;
+    std::generate_n(&projection.rowLength[0], numPre,
+                    [&remainingConnections, &matrixSize, numPost, &gen]()
+                    {
+                        const double probability = (double)numPost / (double)matrixSize;
+
+                        // Create distribution to sample row length
+                        std::binomial_distribution<unsigned int> rowLengthDist(remainingConnections, probability);
+
+                        // Sample row length;
+                        const unsigned int rowLength = rowLengthDist(gen);
+
+                        // Update counters
+                        remainingConnections -= rowLength;
+                        matrixSize -= numPost;
+
+                        return rowLength;
+                    });
+
+    // Create distribution to sample row length
+    // **NOTE** these distributions operate on a CLOSED interval hence -1
+    std::uniform_int_distribution<unsigned int> postsynapticNeuronDist(0, numPost - 1);
+
+    // Loop through rows
+    for(unsigned int i = 0; i < numPre; i++) {
+        // Get pointer to first index of row
+        IndexType *index = &projection.ind[(i * projection.maxRowLength)];
+
+        assert(projection.rowLength[i] < projection.maxRowLength);
+        
+        // Pick a random postsynaptic neuron to connect each one
+        for(unsigned int j = 0; j < projection.rowLength[i]; j++) {
+            index[j] = postsynapticNeuronDist(gen);
+        }
+    }
+
+     // Sort rows so indices are increasing
+    sortRows(numPre, projection);
 }
 //----------------------------------------------------------------------------
 unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
