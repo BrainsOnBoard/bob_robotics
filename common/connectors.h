@@ -392,7 +392,6 @@ template <typename Generator>
 void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
                                                    SparseProjection &projection, AllocateFn allocate, Generator &gen)
 {
-    std::cout << "Num pre:" << numPre << ", num post:" << numPost << ", num connections:" << numConnections << std::endl;
     // Allocate sparse projection
     allocate(numConnections);
 
@@ -455,12 +454,11 @@ template <typename Generator, typename IndexType>
 void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
                                                    RaggedProjection<IndexType> &projection, Generator &gen)
 {
-    // Initially populate indInG with row lengths
-    // **NOTE** we are STARTING at the 2nd row because the first row always starts at zero and
-    // FINISHING at second from last row because all remaining connections must go in last row
+    // Calculate row lengths
+    // **NOTE** we are FINISHING at second from last row because all remaining connections must go in last row
     unsigned int remainingConnections = numConnections;
     unsigned int matrixSize = numPre * numPost;
-    std::generate_n(&projection.rowLength[0], numPre,
+    std::generate_n(&projection.rowLength[0], numPre - 1,
                     [&remainingConnections, &matrixSize, numPost, &gen]()
                     {
                         const double probability = (double)numPost / (double)matrixSize;
@@ -477,6 +475,9 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 
                         return rowLength;
                     });
+
+    // Insert remaining connections into last row
+    projection.rowLength[numPre - 1] = remainingConnections;
 
     // Create distribution to sample row length
     // **NOTE** these distributions operate on a CLOSED interval hence -1
