@@ -339,7 +339,14 @@ unsigned int calcFixedProbabilityConnectorMaxConnections(unsigned int numPre, un
 
     return binomialInverseCDF(quantile, numPost, probability);
 }
+//----------------------------------------------------------------------------
+unsigned int calcFixedProbabilityConnectorMaxSourceConnections(unsigned int numPre, unsigned int numPost, double probability)
+{
+    // Calculate suitable quantile for 0.9999 change when drawing numPost times
+    const double quantile = pow(0.9999, 1.0 / (double)numPost);
 
+    return binomialInverseCDF(quantile, numPre, probability);
+}
 //----------------------------------------------------------------------------
 template <typename Generator>
 void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
