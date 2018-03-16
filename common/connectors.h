@@ -457,6 +457,52 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
     assert(projection.indInG[numPre] == numConnections);
 }
 //----------------------------------------------------------------------------
+template <typename Generator>
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+                                                   uint32_t *bitfield, Generator &gen)
+{
+    // Calculate row lengths
+    // **NOTE** we are FINISHING at second from last row because all remaining connections must go in last row
+    unsigned int remainingConnections = numConnections;
+    unsigned int matrixSize = numPre * numPost;
+    std::vector<unsigned int> rowLengths(numPre);
+    std::generate(rowLengths.begin(), rowLengths.end(),
+                  [&remainingConnections, &matrixSize, numPost, &gen]()
+                  {
+                      const double probability = (double)numPost / (double)matrixSize;
+
+                      // Create distribution to sample row length
+                      std::binomial_distribution<unsigned int> rowLengthDist(remainingConnections, probability);
+
+                      // Sample row length;
+                      const unsigned int rowLength = rowLengthDist(gen);
+
+                      // Update counters
+                      remainingConnections -= rowLength;
+                      matrixSize -= numPost;
+
+                      return rowLength;
+                  });
+
+    // Insert remaining connections into last row
+    rowLengths.back() = remainingConnections;
+
+    // Create distribution to sample row length
+    // **NOTE** these distributions operate on a CLOSED interval hence -1
+    std::uniform_int_distribution<unsigned int> postsynapticNeuronDist(0, numPost - 1);
+
+    // Loop through rows
+    for(unsigned int i = 0; i < numPre; i++) {
+        // Loop through synapses in row
+        for(unsigned int j = 0; j < rowLengths[i]; j++) {
+
+            // Set random bit in this row
+            const unsigned int gid = (i * numPost) + postsynapticNeuronDist(gen);
+            bitfield[gid / 32] |= (1 << (gid % 32));
+        }
+    }
+}
+//----------------------------------------------------------------------------
 template <typename Generator, typename IndexType>
 void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
                                                    RaggedProjection<IndexType> &projection, Generator &gen)
