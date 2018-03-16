@@ -27,7 +27,7 @@ typedef void (*AllocateFn)(unsigned int);
 // Adopted from numerical recipes in C p227
 double betacf(double a, double b, double x)
 {
-    const int maxIterations = 100;
+    const int maxIterations = 200;
     const double epsilon = 3.0E-7;
     const double fpMin = 1.0E-30;
 
@@ -45,7 +45,7 @@ double betacf(double a, double b, double x)
     double h = d;
     int m;
     for(m = 1; m <= maxIterations; m++) {
-        const int m2 = 2 * m;
+        const double m2 = 2.0 * m;
         const double aa1 = m * (b - m) * x / ((qam + m2) * (a + m2));
         d = 1.0 + aa1 * d;
 
@@ -515,5 +515,5 @@ unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned
     // There are numConnections connections amongst the numPre*numPost possible connections.
     // Each of the numConnections connections has an independent p=float(numPost)/(numPre*numPost)
     // probability of being selected, and the number of synapses in the sub-row is binomially distributed
-    return binomialInverseCDF(quantile, numConnections, (double)numPost / (double)(numPre * numPost));
+    return binomialInverseCDF(quantile, numConnections, (double)numPost / ((double)numPre * (double)numPost));
 }
