@@ -517,3 +517,14 @@ unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned
     // probability of being selected, and the number of synapses in the sub-row is binomially distributed
     return binomialInverseCDF(quantile, numConnections, (double)numPost / ((double)numPre * (double)numPost));
 }
+//----------------------------------------------------------------------------
+unsigned int calcFixedNumberTotalWithReplacementConnectorMaxSourceConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+{
+    // Calculate suitable quantile for 0.9999 change when drawing numPre times
+    const double quantile = pow(0.9999, 1.0 / (double)numPost);
+
+    // There are numConnections connections amongst the numPre*numPost possible connections.
+    // Each of the numConnections connections has an independent p=float(numPost)/(numPre*numPost)
+    // probability of being selected, and the number of synapses in the sub-row is binomially distributed
+    return binomialInverseCDF(quantile, numConnections, (double)numPre / ((double)numPre * (double)numPost));
+}
