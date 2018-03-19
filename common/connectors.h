@@ -458,13 +458,13 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 }
 //----------------------------------------------------------------------------
 template <typename Generator>
-void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, size_t numConnections,
                                                    uint32_t *bitfield, Generator &gen)
 {
     // Calculate row lengths
     // **NOTE** we are FINISHING at second from last row because all remaining connections must go in last row
-    unsigned int remainingConnections = numConnections;
-    unsigned int matrixSize = numPre * numPost;
+    size_t remainingConnections = numConnections;
+    size_t matrixSize = (size_t)numPre * (size_t)numPost;
     std::vector<unsigned int> rowLengths(numPre);
     std::generate(rowLengths.begin(), rowLengths.end(),
                   [&remainingConnections, &matrixSize, numPost, &gen]()
@@ -472,30 +472,32 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
                       const double probability = (double)numPost / (double)matrixSize;
 
                       // Create distribution to sample row length
-                      std::binomial_distribution<unsigned int> rowLengthDist(remainingConnections, probability);
+                      std::binomial_distribution<size_t> rowLengthDist(remainingConnections, probability);
 
                       // Sample row length;
-                      const unsigned int rowLength = rowLengthDist(gen);
+                      const size_t rowLength = rowLengthDist(gen);
 
                       // Update counters
                       remainingConnections -= rowLength;
                       matrixSize -= numPost;
 
-                      return rowLength;
+                      return (unsigned int)rowLength;
                   });
 
     // Insert remaining connections into last row
-    rowLengths.back() = remainingConnections;
+    rowLengths.back() = (unsigned int)remainingConnections;
 
     // Create distribution to sample row length
     // **NOTE** these distributions operate on a CLOSED interval hence -1
     std::uniform_int_distribution<unsigned int> postsynapticNeuronDist(0, numPost - 1);
 
+    // Zero bitfield
+    std::fill_n(bitfield, (numPre * numPost) / 32 + 1, 0);
+
     // Loop through rows
     for(unsigned int i = 0; i < numPre; i++) {
         // Loop through synapses in row
         for(unsigned int j = 0; j < rowLengths[i]; j++) {
-
             // Set random bit in this row
             const unsigned int gid = (i * numPost) + postsynapticNeuronDist(gen);
             bitfield[gid / 32] |= (1 << (gid % 32));
@@ -504,33 +506,33 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 }
 //----------------------------------------------------------------------------
 template <typename Generator, typename IndexType>
-void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, size_t numConnections,
                                                    RaggedProjection<IndexType> &projection, Generator &gen)
 {
     // Calculate row lengths
     // **NOTE** we are FINISHING at second from last row because all remaining connections must go in last row
-    unsigned int remainingConnections = numConnections;
-    unsigned int matrixSize = numPre * numPost;
+    size_t remainingConnections = numConnections;
+    size_t matrixSize = (size_t)numPre * (size_t)numPost;
     std::generate_n(&projection.rowLength[0], numPre - 1,
                     [&remainingConnections, &matrixSize, numPost, &gen]()
                     {
                         const double probability = (double)numPost / (double)matrixSize;
 
                         // Create distribution to sample row length
-                        std::binomial_distribution<unsigned int> rowLengthDist(remainingConnections, probability);
+                        std::binomial_distribution<size_t> rowLengthDist(remainingConnections, probability);
 
                         // Sample row length;
-                        const unsigned int rowLength = rowLengthDist(gen);
+                        const size_t rowLength = rowLengthDist(gen);
 
                         // Update counters
                         remainingConnections -= rowLength;
                         matrixSize -= numPost;
 
-                        return rowLength;
+                        return (unsigned int)rowLength;
                     });
 
     // Insert remaining connections into last row
-    projection.rowLength[numPre - 1] = remainingConnections;
+    projection.rowLength[numPre - 1] = (unsigned int)remainingConnections;
 
     // Create distribution to sample row length
     // **NOTE** these distributions operate on a CLOSED interval hence -1
@@ -541,7 +543,11 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
         // Get pointer to first index of row
         IndexType *index = &projection.ind[(i * projection.maxRowLength)];
 
-        assert(projection.rowLength[i] < projection.maxRowLength);
+        if(projection.rowLength[i] > projection.maxRowLength) {
+            printf("Row length %u greate than max %u\n", projection.rowLength[i], projection.maxRowLength);
+            assert(false);
+        }
+        //assert(projection.rowLength[i] <= projection.maxRowLength);
         
         // Pick a random postsynaptic neuron to connect each one
         for(unsigned int j = 0; j < projection.rowLength[i]; j++) {
