@@ -14,6 +14,7 @@
 
 // GeNN includes
 #include "sparseProjection.h"
+#include "utils.h"
 
 //----------------------------------------------------------------------------
 // Typedefines
@@ -275,27 +276,34 @@ template <typename Generator, typename IndexType>
 void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, float probability,
                                     RaggedProjection<IndexType> &projection, Generator &gen)
 {
+    const double probabilityReciprocal = 1.0 / std::log(1.0f - probability);
+
     // Create RNG to draw probabilities
     std::uniform_real_distribution<> dis(0.0, 1.0);
 
-    // Loop through pre neurons
-    for(unsigned int i = 0; i < numPre; i++)
-    {
-        // Start with a row length of zero
-        projection.rowLength[i] = 0;
+    // Zero row lengths
+    std::fill_n(projection.rowLength, numPre, 0);
 
-        // Get pointer to first index of row
-        IndexType *index = &projection.ind[(i * projection.maxRowLength)];
+    // Loop through potential synapses
+    const int64_t maxConnections = (int64_t)numPre * (int64_t)numPost;
+    for(int64_t s = -1;; s++) {
+        // Skip to next connection
+        s += (1 + (int64_t)(std::log(dis(gen)) * probabilityReciprocal));
 
-        // Loop through post neurons
-        for(unsigned int j = 0; j < numPost; j++)
-        {
-            // If there should be a connection here, add one to temporary array
-            if(dis(gen) < probability)
-            {
-                // Add synapse
-                index[projection.rowLength[i]++] = j;
-            }
+        // If we haven't skipped past end of matrix
+        if(s < maxConnections) {
+            // Convert synapse number to pre and post index
+            const auto prePost = std::div(s, numPost);
+
+            // Get pointer to start of this presynaptic neuron's connection row
+            IndexType *rowIndices = &projection.ind[prePost.quot * projection.maxRowLength];
+
+            // Add synapse
+            rowIndices[projection.rowLength[prePost.quot]++] = prePost.rem;
+            assert(projection.rowLength[prePost.quot] <= projection.maxRowLength);
+        }
+        else {
+            break;
         }
     }
 }
@@ -305,30 +313,33 @@ void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, f
                                     uint32_t *bitfield, Generator &gen)
 {
     // **THINK** I'm unsure about this calculation but it's used to allocate the memory and copy it!
-    const unsigned int numWords = (numPre * numPost) / 32 + 1;
+    const size_t numWords = ((size_t)numPre * (size_t)numPost) / 32 + 1;
+
+    const double probabilityReciprocal = 1.0 / std::log(1.0f - probability);
 
     // Create RNG to draw probabilities
     std::uniform_real_distribution<> dis(0.0, 1.0);
 
-    // Loop through words that make up bitfield
-    for(unsigned int i = 0; i < numWords; i++) {
-        // Initially zero word
-        uint32_t word = 0;
+    // Zero bitfield
+    std::fill_n(bitfield, numWords, 0);
 
-        // Loop through bits
-        for(unsigned int i = 0; i < 32; i++) {
-            // Shift word up
-            word <<= 1;
+    // Loop through potential synapses
+    const int64_t maxConnections = (int64_t)numPre * (int64_t)numPost;
+    for(int64_t s = -1;; s++) {
+        // Skip to next connection
+        s += (1 + (int64_t)(std::log(dis(gen)) * probabilityReciprocal));
 
-            // Set lowest bit if
-            if(dis(gen) < probability)
-            {
-                word |= 0x1;
-            }
+        // If we haven't skipped past end of matrix
+        if(s < maxConnections) {
+            // Convert synapse number to pre and post index
+            const auto prePost = std::div(s, numPost);
+
+            const size_t gid = (prePost.quot * (size_t)numPost) + prePost.rem;
+            setB(bitfield[gid / 32], gid % 32);
         }
-
-        // Write word into bitfield
-        bitfield[i] = word;
+        else {
+            break;
+        }
     }
 }
 //----------------------------------------------------------------------------
@@ -483,7 +494,6 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 
                         return (unsigned int)rowLength;
                     });
-
     // Insert remaining connections into last row
     rowLengths.back() = (unsigned int)remainingConnections;
 
