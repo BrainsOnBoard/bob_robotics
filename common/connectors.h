@@ -466,23 +466,23 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
     size_t remainingConnections = numConnections;
     size_t matrixSize = (size_t)numPre * (size_t)numPost;
     std::vector<unsigned int> rowLengths(numPre);
-    std::generate(rowLengths.begin(), rowLengths.end(),
-                  [&remainingConnections, &matrixSize, numPost, &gen]()
-                  {
-                      const double probability = (double)numPost / (double)matrixSize;
+    std::generate_n(rowLengths.begin(), numPre - 1,
+                    [&remainingConnections, &matrixSize, numPost, &gen]()
+                    {
+                        const double probability = (double)numPost / (double)matrixSize;
 
-                      // Create distribution to sample row length
-                      std::binomial_distribution<size_t> rowLengthDist(remainingConnections, probability);
+                        // Create distribution to sample row length
+                        std::binomial_distribution<size_t> rowLengthDist(remainingConnections, probability);
 
-                      // Sample row length;
-                      const size_t rowLength = rowLengthDist(gen);
+                        // Sample row length;
+                        const size_t rowLength = rowLengthDist(gen);
 
-                      // Update counters
-                      remainingConnections -= rowLength;
-                      matrixSize -= numPost;
+                        // Update counters
+                        remainingConnections -= rowLength;
+                        matrixSize -= numPost;
 
-                      return (unsigned int)rowLength;
-                  });
+                        return (unsigned int)rowLength;
+                    });
 
     // Insert remaining connections into last row
     rowLengths.back() = (unsigned int)remainingConnections;
