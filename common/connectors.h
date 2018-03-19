@@ -489,17 +489,17 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 
     // Create distribution to sample row length
     // **NOTE** these distributions operate on a CLOSED interval hence -1
-    std::uniform_int_distribution<unsigned int> postsynapticNeuronDist(0, numPost - 1);
+    std::uniform_int_distribution<size_t> postsynapticNeuronDist(0, numPost - 1);
 
     // Zero bitfield
-    std::fill_n(bitfield, (numPre * numPost) / 32 + 1, 0);
+    std::fill_n(bitfield, ((size_t)numPre * (size_t)numPost) / 32 + 1, 0);
 
     // Loop through rows
     for(unsigned int i = 0; i < numPre; i++) {
         // Loop through synapses in row
         for(unsigned int j = 0; j < rowLengths[i]; j++) {
             // Set random bit in this row
-            const unsigned int gid = (i * numPost) + postsynapticNeuronDist(gen);
+            const size_t gid = ((size_t)i * (size_t)numPost) + postsynapticNeuronDist(gen);
             bitfield[gid / 32] |= (1 << (gid % 32));
         }
     }
