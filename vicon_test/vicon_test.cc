@@ -8,7 +8,7 @@
 
 int main()
 {
-    Vicon::UDPClient<Vicon::ObjectData> vicon(51001, 100);
+    Vicon::UDPClient<Vicon::ObjectData> vicon(51001);
 
     while(vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(std::chrono::seconds(1));

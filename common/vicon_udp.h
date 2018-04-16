@@ -38,20 +38,24 @@ typedef double Vector[3];
 class ObjectData
 {
 public:
-    ObjectData() : m_Translation{0.0, 0.0, 0.0}, m_Rotation{0.0, 0.0, 0.0}
+    ObjectData() : m_FrameNumber{0}, m_Translation{0.0, 0.0, 0.0}, m_Rotation{0.0, 0.0, 0.0}
     {
     }
 
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const Vector &translation, const Vector &rotation, double)
+    void update(uint32_t frameNumber, const Vector &translation, const Vector &rotation)
     {
+        // Cache frame number
+        m_FrameNumber = frameNumber;
+
         // Copy vectors into class
         std::copy(std::begin(translation), std::end(translation), std::begin(m_Translation));
         std::copy(std::begin(rotation), std::end(rotation), std::begin(m_Rotation));
     }
 
+    uint32_t getFrameNumber() const { return m_FrameNumber; }
     const Vector &getTranslation() const{ return m_Translation; }
     const Vector &getRotation() const{ return m_Rotation; }
 
@@ -59,6 +63,7 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
+    uint32_t m_FrameNumber;
     Vector m_Translation;
     Vector m_Rotation;
 };
@@ -77,24 +82,48 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const Vector &translation, const Vector &rotation, double dt)
+    void update(uint32_t frameNumber, const Vector &translation, const Vector &rotation)
     {
-        // Calculate velocity
+        // Calculate time since last frame
+        const uint32_t deltaFrames = frameNumber - getFrameNumber();
+        const double deltaMs = s_FrameMs * (double)deltaFrames;
+
+        // Calculate exponential smoothing factor
+        const double alpha = 1.0 - std::exp(-deltaMs / s_SmoothingMs);
+
+        // Calculate instantaneous velocity
         const Vector &oldTranslation = getTranslation();
-        std::transform(std::begin(translation), std::end(translation), std::begin(oldTranslation), std::begin(m_Velocity),
-                       [dt](double curr, double prev){ return (curr - prev) / dt; });
+        Vector instVelocity;
+        std::transform(std::begin(translation), std::end(translation), std::begin(oldTranslation), std::begin(instVelocity),
+                       [deltaMs](double curr, double prev){ return (curr - prev) / deltaMs; });
+
+        // Exponentially smooth velocity
+        std::transform(std::begin(instVelocity), std::end(instVelocity), std::begin(m_Velocity), std::begin(m_Velocity),
+                       [alpha](double inst, double prev){ return (alpha * inst) + ((1.0 - alpha) * prev); });
 
         // Superclass
-        ObjectData::update(translation, rotation, dt);
+        ObjectData::update(frameNumber, translation, rotation);
     }
 
     const Vector &getVelocity() const{ return m_Velocity; }
+
+    //----------------------------------------------------------------------------
+    // Static API
+    //----------------------------------------------------------------------------
+    static void setSampleRateHz(double sampleRateHz){ s_FrameMs = 1000.0 / sampleRateHz; };
+    static void setSmoothingMs(double smoothingMs){ s_SmoothingMs = smoothingMs; }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     Vector m_Velocity;
+
+    //----------------------------------------------------------------------------
+    // Static members
+    //----------------------------------------------------------------------------
+    static double s_FrameMs;
+    static double s_SmoothingMs;
 };
 
 //----------------------------------------------------------------------------
@@ -106,9 +135,9 @@ class UDPClient
 {
 public:
     UDPClient(){}
-    UDPClient(unsigned int port, double sampleRate)
+    UDPClient(unsigned int port)
     {
-        if(!connect(port, sampleRate)) {
+        if(!connect(port)) {
             throw std::runtime_error("Cannot connect");
         }
     }
@@ -125,11 +154,8 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(unsigned int port, double sampleRate)
+    bool connect(unsigned int port)
     {
-        // Calculate timestep
-        m_DT = 1.0 / sampleRate;
-
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
@@ -175,11 +201,6 @@ public:
         return m_ObjectData.size();
     }
 
-    uint32_t getFrameNumber() const
-    {
-        return m_FrameNumber;
-    }
-
     ObjectDataType getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -195,7 +216,7 @@ private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, const Vector &translation, const Vector &rotation)
+    void updateObjectData(unsigned int id, uint32_t frameNumber, const Vector &translation, const Vector &rotation)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -206,7 +227,7 @@ private:
         }
 
         // Update object data with translation and rotation
-        m_ObjectData[id].update(translation, rotation, m_DT);
+        m_ObjectData[id].update(frameNumber, translation, rotation);
     }
 
     void readThread(int socket)
@@ -239,9 +260,6 @@ private:
                 uint32_t frameNumber;
                 memcpy(&frameNumber, &buffer[0], sizeof(uint32_t));
 
-                // Atomically store frame number
-                m_FrameNumber = frameNumber;
-
                 // Read items in block
                 const unsigned int itemsInBlock = (unsigned int)buffer[4];
 
@@ -265,7 +283,7 @@ private:
                     memcpy(&rotation[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, translation, rotation);
+                    updateObjectData(objectID, frameNumber, translation, rotation);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;
@@ -280,13 +298,10 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    std::atomic<uint32_t> m_FrameNumber;
     std::atomic<bool> m_ShouldQuit;
     std::thread m_ReadThread;
 
     std::mutex m_ObjectDataMutex;
     std::vector<ObjectDataType> m_ObjectData;
-
-    double m_DT;
 };
 } // namespace Vicon
