@@ -19,7 +19,7 @@
 
 int main(int argc, char *argv[])
 {
-    const float speedScale = 6.0f;
+    const float speedScale = 5.0f;
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
 
     // Create joystick interface
