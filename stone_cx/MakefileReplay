@@ -1,5 +1,5 @@
-EXECUTABLE      := simulator
-SOURCES         := simulator.cc simulatorCommon.cc visualizationCommon.cc
+EXECUTABLE      := simulatorReplay
+SOURCES         := simulatorReplay.cc simulatorCommon.cc visualizationCommon.cc
 LINK_FLAGS      := `pkg-config --libs opencv`
 CXXFLAGS       := `pkg-config --cflags opencv`
 CPU_ONLY=1
