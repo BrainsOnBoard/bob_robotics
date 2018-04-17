@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         }
         // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {
-            driveMotorFromCPU1(motor, RobotParameters::motorSteerThreshold, (numTicks % 100) == 0);
+            driveMotorFromCPU1(motor, (numTicks % 100) == 0);
         }
         
         // Record time at end of tick

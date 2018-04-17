@@ -10,7 +10,7 @@
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
 
-void driveMotorFromCPU1(MotorI2C &motor, float steerThreshold, bool display)
+void driveMotorFromCPU1(MotorI2C &motor, bool display)
 {
     // Sum left and right motor activity
     const scalar leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
