@@ -160,15 +160,21 @@ public:
         // Read joystick axis state and drive robot manually
         const float joystickX = getAxisState(0);
         const float joystickY = getAxisState(1);
-        
-        // If length of joystick vector places it in deadzone, stop motors
-        const float r = sqrt((joystickX * joystickX) + (joystickY * joystickY));
-        if(r < deadzone) {
+        const bool deadX = (fabs(joystickX) < deadzone);
+        const bool deadY = (fabs(joystickY) < deadzone);
+
+        if(deadX && deadY) {
             motor.tank(0.0f, 0.0f);
         }
-        // Otherwise
+        else if(deadX) {
+            motor.tank(-joystickY, -joystickY);
+        }
+        else if(deadY) {
+            motor.tank(joystickX, -joystickX);
+        }
         else {
-            // Also calculate theta
+            // If length of joystick vector places it in deadzone, stop motors
+            const float r = sqrt((joystickX * joystickX) + (joystickY * joystickY));
             const float theta = atan2(joystickX, -joystickY);
             const float twoTheta = 2.0f * theta;
             
