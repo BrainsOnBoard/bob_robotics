@@ -84,12 +84,15 @@ public:
     //----------------------------------------------------------------------------
     void update(uint32_t frameNumber, const Vector &translation, const Vector &rotation)
     {
+        constexpr double frameMs = 1000.0 / 100.0;
+        constexpr double smoothingMs = 30.0;
+        
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
-        const double deltaMs = s_FrameMs * (double)deltaFrames;
+        const double deltaMs = frameMs * (double)deltaFrames;
 
         // Calculate exponential smoothing factor
-        const double alpha = 1.0 - std::exp(-deltaMs / s_SmoothingMs);
+        const double alpha = 1.0 - std::exp(-deltaMs / smoothingMs);
 
         // Calculate instantaneous velocity
         const Vector &oldTranslation = getTranslation();
@@ -107,23 +110,11 @@ public:
 
     const Vector &getVelocity() const{ return m_Velocity; }
 
-    //----------------------------------------------------------------------------
-    // Static API
-    //----------------------------------------------------------------------------
-    static void setSampleRateHz(double sampleRateHz){ s_FrameMs = 1000.0 / sampleRateHz; };
-    static void setSmoothingMs(double smoothingMs){ s_SmoothingMs = smoothingMs; }
-
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     Vector m_Velocity;
-
-    //----------------------------------------------------------------------------
-    // Static members
-    //----------------------------------------------------------------------------
-    static double s_FrameMs;
-    static double s_SmoothingMs;
 };
 
 //----------------------------------------------------------------------------
