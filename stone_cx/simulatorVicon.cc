@@ -94,14 +94,13 @@ int main(int argc, char *argv[])
 
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
-            speedTN2[j] = (sin(headingAngleTL + preferredAngleTN2[j]) * velocity[0]) +
-                (cos(headingAngleTL + preferredAngleTN2[j]) * velocity[1]);
+            speedTN2[j] = (sin(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[0]) +
+                (cos(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[1]);
         }
 
         if(numTicks % 100 == 0) {
             std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2 << ")" << std::endl;
         }
-        //std::cout << "Heading:" << headingAngleTL << std::endl;
 
         // Step network
         stepTimeCPU();
