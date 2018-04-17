@@ -21,13 +21,5 @@ void driveMotorFromCPU1(MotorI2C &motor, float steerThreshold, bool display)
     if(display) {
         std::cout << "Steer:" << steering << std::endl;
     }
-    if(steering > steerThreshold) {
-        motor.tank(1.0f, -1.0f);
-    }
-    else if(steering < -steerThreshold) {
-        motor.tank(-1.0f, 1.0f);
-    }
-    else {
-        motor.tank(1.0f, 1.0f);
-    }
+    motor.tank(1.0f + (4.0f * steering), 1.0f - (4.0f * steering));
 }
