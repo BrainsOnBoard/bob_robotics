@@ -3,15 +3,13 @@
 #include <chrono>
 #include <thread>
 
-// OpenCV includes
-
-
 // Common includes
 #include "../common/joystick.h"
 #include "../common/lm9ds1_imu.h"
 #include "../common/motor_i2c.h"
 #include "../common/opencv_optical_flow.h"
 #include "../common/opencv_unwrap_360.h"
+#include "../common/see3cam_cu40.h"
 #include "../common/timer.h"
 
 
@@ -20,6 +18,7 @@
 
 // Model includes
 #include "parameters.h"
+#include "robotCommon.h"
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
@@ -65,24 +64,42 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 
 void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std::atomic<float> &speed, unsigned int &numFrames)
 {
-    const cv::Size cameraRes(640, 480);
+    const float tau = 10.0f;
     const cv::Size unwrapRes(90, 10);
 
+#ifdef USE_SEE3_CAM
+    const std::string deviceString = "/dev/video" + std::to_string(cameraDevice);
+    See3CAM_CU40 cam(deviceString, See3CAM_CU40::Resolution::_672x380);
+
+    // Calculate de-bayerered size
+    const cv::Size camRes(cam.getWidth() / 2, cam.getHeight() / 2);
+
+    // Create unwrapper to unwrap camera output
+    auto unwrapper = cam.createUnwrapper(camRes, unwrapRes);
+#else
     // Open video capture device and check it matches desired camera resolution
     cv::VideoCapture capture(cameraDevice);
-    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == cameraRes.width);
-    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == cameraRes.height);
+
+    const cv::Size camRes(640, 480);
+    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == camRes.width);
+    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == camRes.height);
 
     // Create unwrapper
-    OpenCVUnwrap360 unwrapper(cameraRes, unwrapRes,
+    OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
                               0.5, 0.416, 0.173, 0.377, -Parameters::pi);
+#endif
 
     // Create optical flow calculator
     OpenCVOpticalFlow opticalFlow(unwrapRes);
 
-    // Create images
-    cv::Mat originalImage(cameraRes, CV_8UC3);
-    cv::Mat outputImage(unwrapRes, CV_8UC3);
+       // Create images
+#ifdef USE_SEE3_CAM
+    cv::Mat greyscaleInput(camRes, CV_8UC1);
+#else
+    cv::Mat rgbInput(camRes, CV_8UC3);
+    cv::Mat greyscaleInput(camRes, CV_8UC1);
+#endif
+    cv::Mat outputImage(unwrapRes, CV_8UC1);
 
     // Build a velocity filter whose preferred angle is going straight (0 degrees)
     cv::Mat velocityFilter(1, unwrapRes.width, CV_32FC1);
@@ -90,18 +107,30 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
     cv::Mat flowXSum(1, unwrapRes.width, CV_32FC1);
     cv::Mat flowSum(1, 1, CV_32FC1);
-    
-    // Read frames until should quit
-    while(!shouldQuit) {
-        // Read from camera
-        if(!capture.read(originalImage)) {
-            std::cerr << "Cannot read from camera" << std::endl;
-            continue;
+
+    // Calculate filter coefficient
+    const float alpha = 1.0f - std::exp(-1.0f / tau);
+
+    // While quit signal isn't set
+    float prevSpeed = 0.0f;
+    for(numFrames = 0; !shouldQuit; numFrames++) {
+#ifdef USE_SEE3_CAM
+        // Read directly into greyscale
+        if(!cam.captureSuperPixelGreyscale(greyscaleInput)) {
+            return;
         }
-
+#else
+        // Read from camera and convert to greyscale
+        if(!capture.read(rgbInput)) {
+            return;
+        }
+        cv::cvtColor(rgbInput, greyscaleInput, CV_BGR2GRAY);
+#endif
+  
         // Unwrap
-        unwrapper.unwrap(originalImage, outputImage);
+        unwrapper.unwrap(greyscaleInput, outputImage);
 
+        // Calculate optical flow
         if(opticalFlow.calculate(outputImage)) {
             // Reduce horizontal flow - summing along columns
             cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, CV_REDUCE_SUM);
@@ -111,9 +140,10 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
             // Reduce filtered flow - summing along rows
             cv::reduce(flowXSum, flowSum, 1, CV_REDUCE_SUM);
-    
-            // Calculate speed and set atomic value
-            speed = flowSum.at<float>(0, 0);
+
+            // Filter speed and set atomic
+            prevSpeed = (alpha * flowSum.at<float>(0, 0)) + ((1.0f - alpha) * prevSpeed);
+            speed = prevSpeed;
         }
     }
     
@@ -123,7 +153,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
 int main(int argc, char *argv[])
 {
-    const float velocityScale = 1.0f / 500.0f;
+    const float velocityScale = 1.0f / 30.0f;
     
     // Create joystick interface
     Joystick joystick;
@@ -164,12 +194,16 @@ int main(int argc, char *argv[])
     std::atomic<float> opticalFlowSpeed{0.0f};
     std::thread opticalFlowThread(&opticalFlowThreadFunc, (argc > 1) ? std::atoi(argv[1]) : 0, 
                                   std::ref(shouldQuit), std::ref(opticalFlowSpeed), std::ref(numCameraFrames));
-    
+
+#ifdef RECORD_SENSORS
+    std::ofstream data("data.csv");
+#endif
     // Loop until second joystick button is pressed
     bool outbound = true;
     unsigned int numTicks = 0;
     unsigned int numOverflowTicks = 0;
     int64_t totalMicroseconds = 0;
+    bool ignoreFlow = false;
     for(;; numTicks++) {
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
@@ -181,14 +215,19 @@ int main(int argc, char *argv[])
         if(joystick.isButtonDown(1)) {
             break;
         }
-        
+
         // Update heading from IMU
         headingAngleTL = imuHeading;
-        
+                
         // Update speed from IMU
         // **NOTE** robot is incapable of holonomic motion!
-        speedTN2[Parameters::HemisphereLeft] = speedTN2[Parameters::HemisphereRight] = (opticalFlowSpeed * velocityScale);
+        const float flow =  ignoreFlow ? 0.0f : (opticalFlowSpeed * velocityScale);
+        speedTN2[Parameters::HemisphereLeft] = speedTN2[Parameters::HemisphereRight] = flow;
         
+#ifdef RECORD_SENSORS
+
+        data << imuHeading << ", " << flow << std::endl;
+#endif
         // Step network
         stepTimeCPU();
         
@@ -199,13 +238,17 @@ int main(int argc, char *argv[])
             
             // If first button is pressed switch to returning home
             if(joystick.isButtonDown(0)) {
+                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
                 outbound = false;
             }
+
+            ignoreFlow = (fabs(joystick.getAxisState(0)) > fabs(joystick.getAxisState(1)));
         }
         // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {
-            driveMotorFromCPU1(motor, RobotParameters::motorSteerThreshold, (numTicks % 100) == 0);
+            const float steer = driveMotorFromCPU1(motor, (numTicks % 100) == 0);
+            ignoreFlow = (steer > 0.5f);
         }
         
         // Record time at end of tick
@@ -234,8 +277,8 @@ int main(int argc, char *argv[])
     
     // Show stats
     std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
-    std::cout << "IMU sample rate: " << (double)numIMUSamples / ((double)numTicks * DT * 0.001) << "Hz, ";
-    std::cout << "Camera frame rate: " << (double)numCameraFrames / ((double)numTicks * DT * 0.001) << "FPS" << std::endl;
+    std::cout << "IMU samples: " << numIMUSamples << ", ";
+    std::cout << "Camera frames: " << numCameraFrames << std::endl;
     
     // Stop motor
     motor.tank(0.0f, 0.0f);

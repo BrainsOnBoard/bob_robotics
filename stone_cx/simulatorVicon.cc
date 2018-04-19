@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         }
 
         if(numTicks % 100 == 0) {
-            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2 << ")" << std::endl;
+            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")" << std::endl;
         }
 
         // Step network
