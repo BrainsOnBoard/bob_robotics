@@ -14,11 +14,11 @@
 class OpenCVOpticalFlow
 {
 public:
-    OpenCVOpticalFlow()
+    OpenCVOpticalFlow() : m_Frame(0)
     {
     }
 
-    OpenCVOpticalFlow(const cv::Size &inputRes)
+    OpenCVOpticalFlow(const cv::Size &inputRes) : m_Frame(0)
     {
         create(inputRes);
     }
