@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <cmath>
 
 // Standard C includes
 #include <cassert>
@@ -86,7 +87,7 @@ public:
     {
         constexpr double frameMs = 1000.0 / 100.0;
         constexpr double smoothingMs = 30.0;
-        
+
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
         const double deltaMs = frameMs * (double)deltaFrames;
@@ -153,7 +154,7 @@ public:
             std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
             return false;
         }
-        
+
         // Set socket to have 1s read timeout
         // **NOTE** this is largely to allow read thread to be stopped
 #ifdef _WIN32
