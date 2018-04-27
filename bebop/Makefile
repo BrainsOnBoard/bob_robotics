@@ -1,7 +1,7 @@
 # AR SDK
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
-CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include \
+CXXFLAGS+=-O2 -I$(AR_STAGING_PATH)/usr/include \
 	-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags \
 	-Wno-deprecated-declarations
 
