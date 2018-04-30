@@ -8,7 +8,7 @@
 Vicon::UDPClient<Vicon::ObjectData> *vicon;
 
 void
-readCallback(uint id, Vicon::ObjectData data)
+readCallback(uint id, Vicon::ObjectData data, void *unused)
 {
     const auto &translation = data.getTranslation();
     const auto &rotation = data.getRotation();
@@ -26,7 +26,7 @@ main()
     std::cout << "Connected to Vicon system" << std::endl;
 
     // set function to call on new position
-    vicon->setReadCallback(readCallback);
+    vicon->setReadCallback(readCallback, nullptr);
 
     // wait for keypress + return
     char c;

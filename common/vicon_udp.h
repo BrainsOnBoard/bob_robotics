@@ -125,7 +125,7 @@ private:
 template<typename ObjectDataType>
 class UDPClient
 {
-    using UDPClientCallback = void (*)(uint id, ObjectDataType data);
+    using UDPClientCallback = void (*)(uint id, ObjectDataType data, void *userData);
 
 public:
     UDPClient(){}
@@ -206,9 +206,10 @@ public:
         }
     }
 
-    void setReadCallback(UDPClientCallback callback)
+    void setReadCallback(UDPClientCallback callback, void *userData)
     {
         m_ReadCallback = callback;
+        m_ReadUserData = userData;
     }
 
 private:
@@ -231,7 +232,7 @@ private:
         // Execute callback function, if set. Note that we copy by value here,
         // which is presumably less efficient, but is thread safe
         if (m_ReadCallback) {
-            m_ReadCallback(id, m_ObjectData[id]);
+            m_ReadCallback(id, m_ObjectData[id], m_ReadUserData);
         }
     }
 
@@ -306,6 +307,7 @@ private:
     std::atomic<bool> m_ShouldQuit;
     std::thread m_ReadThread;
     UDPClientCallback m_ReadCallback = nullptr;
+    void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;
     std::vector<ObjectDataType> m_ObjectData;
