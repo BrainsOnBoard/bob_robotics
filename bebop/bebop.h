@@ -95,6 +95,7 @@ public:
     void set_roll(i8 right);
     void set_up_down(i8 up);
     void set_yaw(i8 right);
+    void stop_moving();
     void take_photo();
 
 private:

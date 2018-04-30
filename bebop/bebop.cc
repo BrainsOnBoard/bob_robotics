@@ -237,6 +237,20 @@ Bebop::set_yaw(i8 right)
 }
 
 /*
+ * Stops the drone from moving along all axes.
+ */
+void
+Bebop::stop_moving()
+{
+    if (isconnected) {
+        set_pitch(0);
+        set_roll(0);
+        set_yaw(0);
+        set_up_down(0);
+    }
+}
+
+/*
  * Tells the drone to take a photo and store it.
  */
 void
