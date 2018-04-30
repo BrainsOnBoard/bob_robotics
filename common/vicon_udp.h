@@ -136,7 +136,7 @@ public:
         }
     }
 
-    ~UDPClient()
+    virtual ~UDPClient()
     {
         // Set quit flag and join read thread
         if(m_ReadThread.joinable()) {
