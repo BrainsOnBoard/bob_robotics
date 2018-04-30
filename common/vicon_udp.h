@@ -125,6 +125,8 @@ private:
 template<typename ObjectDataType>
 class UDPClient
 {
+    using UDPClientCallback = void (*)(uint id, ObjectDataType data);
+
 public:
     UDPClient(){}
     UDPClient(unsigned int port)
@@ -204,6 +206,11 @@ public:
         }
     }
 
+    void setReadCallback(UDPClientCallback callback)
+    {
+        m_ReadCallback = callback;
+    }
+
 private:
     //----------------------------------------------------------------------------
     // Private API
@@ -220,6 +227,12 @@ private:
 
         // Update object data with translation and rotation
         m_ObjectData[id].update(frameNumber, translation, rotation);
+
+        // Execute callback function, if set. Note that we copy by value here,
+        // which is presumably less efficient, but is thread safe
+        if (m_ReadCallback) {
+            m_ReadCallback(id, m_ObjectData[id]);
+        }
     }
 
     void readThread(int socket)
@@ -292,6 +305,7 @@ private:
     //----------------------------------------------------------------------------
     std::atomic<bool> m_ShouldQuit;
     std::thread m_ReadThread;
+    UDPClientCallback m_ReadCallback = nullptr;
 
     std::mutex m_ObjectDataMutex;
     std::vector<ObjectDataType> m_ObjectData;
