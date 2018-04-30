@@ -8,7 +8,7 @@
 Vicon::UDPClient<Vicon::ObjectData> *vicon;
 
 void
-readCallback(uint id, Vicon::ObjectData data, void *unused)
+readCallback(uint id, const Vicon::ObjectData &data, void *unused)
 {
     const auto &translation = data.getTranslation();
     const auto &rotation = data.getRotation();

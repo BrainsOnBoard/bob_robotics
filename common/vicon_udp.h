@@ -125,7 +125,7 @@ private:
 template<typename ObjectDataType>
 class UDPClient
 {
-    using UDPClientCallback = void (*)(uint id, ObjectDataType data, void *userData);
+    using UDPClientCallback = void (*)(uint id, const ObjectDataType &data, void *userData);
 
 public:
     UDPClient(){}
