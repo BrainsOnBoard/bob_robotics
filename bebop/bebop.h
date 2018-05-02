@@ -83,7 +83,7 @@ checkError(eARCONTROLLER_ERROR err)
 class Bebop
 {
 public:
-    ARCONTROLLER_Device_t *cdev = nullptr;
+    ARCONTROLLER_Device_t *m_Device = nullptr;
 
     Bebop();
     ~Bebop();
@@ -99,13 +99,13 @@ public:
     void takePhoto();
 
 private:
-    Semaphore sem;
-    bool isconnected = false;
+    Semaphore m_Semaphore;
+    bool m_IsConnected = false;
 
 #ifndef DUMMY_DRONE
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
     inline eARCONTROLLER_DEVICE_STATE getState();
-    inline void createControllerDevice(DiscoveryDevice &ddev);
+    inline void createControllerDevice(DiscoveryDevice &device);
     inline void addEventHandlers();
     void batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,

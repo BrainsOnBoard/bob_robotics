@@ -335,10 +335,10 @@ sBebopVideoStream::tart_mplayer()
  * Set video stream callback for Bebop object.
  */
 BebopVideoStream::BebopVideoStream(Bebop *bebop)
-  : cdev(bebop->cdev)
+  : m_Device(bebop->m_Device)
 {
     checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
-            cdev, configCallback, frameCallback, nullptr, this));
+            m_Device, configCallback, frameCallback, nullptr, this));
 }
 
 /*
@@ -360,7 +360,7 @@ void
 BebopVideoStream::startStreaming()
 {
     checkError(
-            cdev->aRDrone3->sendMediaStreamingVideoEnable(cdev->aRDrone3, 1));
+            m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 1));
 }
 
 /*
@@ -387,7 +387,7 @@ void
 BebopVideoStream::stopStreaming()
 {
     checkError(
-            cdev->aRDrone3->sendMediaStreamingVideoEnable(cdev->aRDrone3, 0));
+            m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 0));
 }
 
 /*

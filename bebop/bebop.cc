@@ -80,7 +80,7 @@ Bebop::connect()
 {
 #ifndef DUMMY_DRONE
     // send start signal
-    checkError(ARCONTROLLER_Device_Start(cdev));
+    checkError(ARCONTROLLER_Device_Start(m_Device));
 
     // wait for start
     eARCONTROLLER_DEVICE_STATE state;
@@ -94,7 +94,7 @@ Bebop::connect()
 #else
     cout << "Drone started" << endl;
 #endif
-    isconnected = true;
+    m_IsConnected = true;
 }
 
 /*
@@ -104,11 +104,11 @@ void
 Bebop::disconnect()
 {
 #ifndef DUMMY_DRONE
-    if (cdev) {
+    if (m_Device) {
         // send stop signal
-        checkError(ARCONTROLLER_Device_Stop(cdev));
+        checkError(ARCONTROLLER_Device_Stop(m_Device));
 
-        if (isconnected) {
+        if (m_IsConnected) {
             // wait for stop
             eARCONTROLLER_DEVICE_STATE state;
             do {
@@ -121,10 +121,10 @@ Bebop::disconnect()
         }
 
         // free pointer
-        ARCONTROLLER_Device_Delete(&cdev);
-        cdev = nullptr;
+        ARCONTROLLER_Device_Delete(&m_Device);
+        m_Device = nullptr;
 
-        isconnected = false;
+        m_IsConnected = false;
     }
 #endif
 }
@@ -135,10 +135,10 @@ Bebop::disconnect()
 void
 Bebop::takeOff()
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         cout << "Taking off..." << endl;
 #ifndef NO_FLY
-        checkError(cdev->aRDrone3->sendPilotingTakeOff(cdev->aRDrone3));
+        checkError(m_Device->aRDrone3->sendPilotingTakeOff(m_Device->aRDrone3));
 #endif
     }
 }
@@ -149,10 +149,10 @@ Bebop::takeOff()
 void
 Bebop::land()
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         cout << "Landing..." << endl;
 #ifndef NO_FLY
-        checkError(cdev->aRDrone3->sendPilotingLanding(cdev->aRDrone3));
+        checkError(m_Device->aRDrone3->sendPilotingLanding(m_Device->aRDrone3));
 #endif
     }
 }
@@ -163,7 +163,7 @@ Bebop::land()
 void
 Bebop::setPitch(i8 pitch)
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         if (pitch > 100 || pitch < -100) {
             throw invalid_argument("Pitch must be between 100 and -100");
         }
@@ -171,8 +171,8 @@ Bebop::setPitch(i8 pitch)
 #ifdef NO_FLY
         cout << "Setting pitch to " << (int) pitch << endl;
 #else
-        checkError(cdev->aRDrone3->setPilotingPCMDPitch(cdev->aRDrone3, pitch));
-        checkError(cdev->aRDrone3->setPilotingPCMDFlag(cdev->aRDrone3, 1));
+        checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, pitch));
+        checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
 #endif
     }
 }
@@ -183,7 +183,7 @@ Bebop::setPitch(i8 pitch)
 void
 Bebop::setRoll(i8 right)
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         if (right > 100 || right < -100) {
             throw invalid_argument("Roll must be between 100 and -100");
         }
@@ -191,8 +191,8 @@ Bebop::setRoll(i8 right)
 #ifdef NO_FLY
         cout << "Setting roll to " << (int) right << endl;
 #else
-        checkError(cdev->aRDrone3->setPilotingPCMDRoll(cdev->aRDrone3, right));
-        checkError(cdev->aRDrone3->setPilotingPCMDFlag(cdev->aRDrone3, 1));
+        checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, right));
+        checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
 #endif
     }
 }
@@ -203,7 +203,7 @@ Bebop::setRoll(i8 right)
 void
 Bebop::setUpDown(i8 up)
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         if (up > 100 || up < -100) {
             throw invalid_argument(
                     "Up/down value must be between 100 and -100");
@@ -212,7 +212,7 @@ Bebop::setUpDown(i8 up)
 #ifdef NO_FLY
         cout << "Setting up/down to " << (int) up << endl;
 #else
-        checkError(cdev->aRDrone3->setPilotingPCMDGaz(cdev->aRDrone3, up));
+        checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, up));
 #endif
     }
 }
@@ -223,7 +223,7 @@ Bebop::setUpDown(i8 up)
 void
 Bebop::setYaw(i8 right)
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         if (right > 100 || right < -100) {
             throw invalid_argument("Yaw must be between 100 and -100");
         }
@@ -231,7 +231,7 @@ Bebop::setYaw(i8 right)
 #ifdef NO_FLY
         cout << "Setting yaw to " << (int) right << endl;
 #else
-        checkError(cdev->aRDrone3->setPilotingPCMDYaw(cdev->aRDrone3, right));
+        checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, right));
 #endif
     }
 }
@@ -242,7 +242,7 @@ Bebop::setYaw(i8 right)
 void
 Bebop::stopMoving()
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         setPitch(0);
         setRoll(0);
         setYaw(0);
@@ -256,10 +256,10 @@ Bebop::stopMoving()
 void
 Bebop::takePhoto()
 {
-    if (isconnected) {
+    if (m_IsConnected) {
         cout << "Taking photo" << endl;
 #ifndef DUMMY_DRONE
-        checkError(cdev->aRDrone3->sendMediaRecordPicture(cdev->aRDrone3, 0));
+        checkError(m_Device->aRDrone3->sendMediaRecordPicture(m_Device->aRDrone3, 0));
 #endif
     }
 }
@@ -272,7 +272,7 @@ Bebop::takePhoto()
 inline eARCONTROLLER_DEVICE_STATE
 Bebop::getStateUpdate()
 {
-    sem.wait();
+    m_Semaphore.wait();
     return getState();
 }
 
@@ -283,7 +283,7 @@ inline eARCONTROLLER_DEVICE_STATE
 Bebop::getState()
 {
     auto err = ARCONTROLLER_OK;
-    auto state = ARCONTROLLER_Device_GetState(cdev, &err);
+    auto state = ARCONTROLLER_Device_GetState(m_Device, &err);
     checkError(err);
     return state;
 }
@@ -295,7 +295,7 @@ inline void
 Bebop::createControllerDevice(DiscoveryDevice &ddev)
 {
     auto err = ARCONTROLLER_OK;
-    cdev = ARCONTROLLER_Device_New(ddev.dev, &err);
+    m_Device = ARCONTROLLER_Device_New(ddev.dev, &err);
     checkError(err);
 }
 
@@ -307,9 +307,9 @@ inline void
 Bebop::addEventHandlers()
 {
     checkError(ARCONTROLLER_Device_AddStateChangedCallback(
-            cdev, stateChanged, this));
+            m_Device, stateChanged, this));
     checkError(ARCONTROLLER_Device_AddCommandReceivedCallback(
-            cdev, commandReceived, this));
+            m_Device, commandReceived, this));
 }
 
 /*
@@ -362,7 +362,7 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                     void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
-    bebop->sem.notify(); // trigger semaphore used by get_state_update()
+    bebop->m_Semaphore.notify(); // trigger semaphore used by get_state_update()
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:

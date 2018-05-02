@@ -121,7 +121,7 @@ public:
     void startMplayer();
 
 private:
-    ARCONTROLLER_Device_t *cdev;
+    ARCONTROLLER_Device_t *m_Device;
     VideoDecoder *decoder = nullptr;
     FILE *pipe = nullptr;
     userVideoCallback m_UserCallback = nullptr;
