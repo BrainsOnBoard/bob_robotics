@@ -73,6 +73,8 @@ checkError(eARCONTROLLER_ERROR err)
     }
 }
 
+using flightEventHandler = void (*)(bool takeoff);
+
 /*
  * Main class for interfacing with drone. Handles connection/disconnection and
  * sending steering commands.
@@ -97,10 +99,12 @@ public:
     void setYaw(i8 right);
     void stopMoving();
     void takePhoto();
+    void setFlightEventHandler(flightEventHandler);
 
 private:
     Semaphore m_Semaphore;
     bool m_IsConnected = false;
+    flightEventHandler m_FlightEventHandler = nullptr;
 
 #ifndef DUMMY_DRONE
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
