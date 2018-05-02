@@ -17,33 +17,33 @@ public:
         "#define DW(V, W) (1.0 / $(tauW)) * (($(a) * (V - $(eL))) - W)\n"
         "const scalar i = $(Isyn) + $(iOffset);\n"
         "// If voltage is above artificial spike height\n"
-        "if($(v) >= $(vSpike)) {\n"
-        "   $(v) = $(vReset);\n"
+        "if($(V) >= $(vSpike)) {\n"
+        "   $(V) = $(vReset);\n"
         "}\n"
         "// Calculate RK4 terms\n"
-        "const scalar v1 = DV($(v), $(w));\n"
-        "const scalar w1 = DW($(v), $(w));\n"
-        "const scalar v2 = DV($(v) + (DT * 0.5 * v1), $(w) + (DT * 0.5 * w1));\n"
-        "const scalar w2 = DW($(v) + (DT * 0.5 * v1), $(w) + (DT * 0.5 * w1));\n"
-        "const scalar v3 = DV($(v) + (DT * 0.5 * v2), $(w) + (DT * 0.5 * w2));\n"
-        "const scalar w3 = DW($(v) + (DT * 0.5 * v2), $(w) + (DT * 0.5 * w2));\n"
-        "const scalar v4 = DV($(v) + (DT * v3), $(w) + (DT * w3));\n"
-        "const scalar w4 = DW($(v) + (DT * v3), $(w) + (DT * w3));\n"
+        "const scalar v1 = DV($(V), $(W));\n"
+        "const scalar w1 = DW($(V), $(W));\n"
+        "const scalar v2 = DV($(V) + (DT * 0.5 * v1), $(W) + (DT * 0.5 * w1));\n"
+        "const scalar w2 = DW($(V) + (DT * 0.5 * v1), $(W) + (DT * 0.5 * w1));\n"
+        "const scalar v3 = DV($(V) + (DT * 0.5 * v2), $(W) + (DT * 0.5 * w2));\n"
+        "const scalar w3 = DW($(V) + (DT * 0.5 * v2), $(W) + (DT * 0.5 * w2));\n"
+        "const scalar v4 = DV($(V) + (DT * v3), $(W) + (DT * w3));\n"
+        "const scalar w4 = DW($(V) + (DT * v3), $(W) + (DT * w3));\n"
         "// Update V\n"
-        "$(v) += (DT / 6.0) * (v1 + (2.0f * (v2 + v3)) + v4);\n"
+        "$(V) += (DT / 6.0) * (v1 + (2.0f * (v2 + v3)) + v4);\n"
         "// If we're not above peak, update w\n"
         "// **NOTE** it's not safe to do this at peak as wn may well be huge\n"
-        "if($(v) <= -40.0) {\n"
-        "   $(w) += (DT / 6.0) * (w1 + (2.0 * (w2 + w3)) + w4);\n"
+        "if($(V) <= -40.0) {\n"
+        "   $(W) += (DT / 6.0) * (w1 + (2.0 * (w2 + w3)) + w4);\n"
         "}\n"
     );
 
-    SET_THRESHOLD_CONDITION_CODE("$(v) > -40");
+    SET_THRESHOLD_CONDITION_CODE("$(V) > -40");
 
     SET_RESET_CODE(
         "// **NOTE** we reset v to arbitrary plotting peak rather than to actual reset voltage\n"
-        "$(v) = $(vSpike);\n"
-        "$(w) += ($(b) * 1000.0);");
+        "$(V) = $(vSpike);\n"
+        "$(W) += ($(b) * 1000.0);");
 
     SET_PARAM_NAMES({
         "c",        // Membrane capacitance [pF]
@@ -59,6 +59,6 @@ public:
         "iOffset",  // Offset current
     });
 
-    SET_VARS({{"v", "scalar"}, {"w", "scalar"}});
+    SET_VARS({{"V", "scalar"}, {"W", "scalar"}});
 };
 IMPLEMENT_MODEL(AdExp);
