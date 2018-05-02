@@ -50,7 +50,7 @@ public:
     void discover();
 
 private:
-    static inline void check_err(eARDISCOVERY_ERROR err)
+    static inline void checkError(eARDISCOVERY_ERROR err)
     {
         if (err != ARDISCOVERY_OK) {
             throw std::runtime_error(std::string("Discovery error: ") +
@@ -65,7 +65,7 @@ private:
  * err != ARCONTROLLER_OK.
  */
 inline void
-check_err(eARCONTROLLER_ERROR err)
+checkError(eARCONTROLLER_ERROR err)
 {
     if (err != ARCONTROLLER_OK) {
         throw runtime_error(string("Controller error: ") +
@@ -89,35 +89,35 @@ public:
     ~Bebop();
     void connect();
     void disconnect();
-    void take_off();
+    void takeOff();
     void land();
-    void set_pitch(i8 pitch);
-    void set_roll(i8 right);
-    void set_up_down(i8 up);
-    void set_yaw(i8 right);
-    void stop_moving();
-    void take_photo();
+    void setPitch(i8 pitch);
+    void setRoll(i8 right);
+    void setUpDown(i8 up);
+    void setYaw(i8 right);
+    void stopMoving();
+    void takePhoto();
 
 private:
     Semaphore sem;
     bool isconnected = false;
 
 #ifndef DUMMY_DRONE
-    inline eARCONTROLLER_DEVICE_STATE get_state_update();
-    inline eARCONTROLLER_DEVICE_STATE get_state();
-    inline void create_cdev(DiscoveryDevice &ddev);
-    inline void add_event_handlers();
-    void battery_changed(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    static int print_callback(eARSAL_PRINT_LEVEL level,
-                              const char *tag,
-                              const char *format,
-                              va_list va);
-    static void state_changed(eARCONTROLLER_DEVICE_STATE newstate,
-                              eARCONTROLLER_ERROR err,
-                              void *data);
-    static void cmd_received(eARCONTROLLER_DICTIONARY_KEY key,
-                             ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+    inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
+    inline eARCONTROLLER_DEVICE_STATE getState();
+    inline void createControllerDevice(DiscoveryDevice &ddev);
+    inline void addEventHandlers();
+    void batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    static int printCallback(eARSAL_PRINT_LEVEL level,
+                             const char *tag,
+                             const char *format,
+                             va_list va);
+    static void stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
+                             eARCONTROLLER_ERROR err,
                              void *data);
+    static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
+                                ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                                void *data);
 #endif // !DUMMY_DRONE
 };     // class Bebop
 } // namespace Parrot

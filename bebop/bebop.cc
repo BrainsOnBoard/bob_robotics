@@ -11,7 +11,7 @@ DiscoveryDevice::DiscoveryDevice()
 {
     auto err = ARDISCOVERY_OK;
     dev = ARDISCOVERY_Device_New(&err);
-    check_err(err);
+    checkError(err);
 }
 
 /*
@@ -28,11 +28,11 @@ DiscoveryDevice::~DiscoveryDevice()
 void
 DiscoveryDevice::discover()
 {
-    check_err(ARDISCOVERY_Device_InitWifi(dev,
-                                          ARDISCOVERY_PRODUCT_BEBOP_2,
-                                          "bebop",
-                                          BEBOP_IP_ADDRESS,
-                                          BEBOP_DISCOVERY_PORT));
+    checkError(ARDISCOVERY_Device_InitWifi(dev,
+                                           ARDISCOVERY_PRODUCT_BEBOP_2,
+                                           "bebop",
+                                           BEBOP_IP_ADDRESS,
+                                           BEBOP_DISCOVERY_PORT));
 }
 #endif // DUMMY_DRONE
 
@@ -50,17 +50,17 @@ Bebop::Bebop()
 #endif
 
     // silence annoying messages printed by library
-    ARSAL_Print_SetCallback(print_callback);
+    ARSAL_Print_SetCallback(printCallback);
 
     // try to discover drone on local network
     DiscoveryDevice ddev;
     ddev.discover();
 
     // object to interface with drone
-    create_cdev(ddev);
+    createControllerDevice(ddev);
 
     // to handle changes in state, incoming commands
-    add_event_handlers();
+    addEventHandlers();
 #endif // DUMMY_DRONE
 }
 
@@ -80,12 +80,12 @@ Bebop::connect()
 {
 #ifndef DUMMY_DRONE
     // send start signal
-    check_err(ARCONTROLLER_Device_Start(cdev));
+    checkError(ARCONTROLLER_Device_Start(cdev));
 
     // wait for start
     eARCONTROLLER_DEVICE_STATE state;
     do {
-        state = get_state_update();
+        state = getStateUpdate();
     } while (state == ARCONTROLLER_DEVICE_STATE_STARTING);
 
     if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
@@ -106,13 +106,13 @@ Bebop::disconnect()
 #ifndef DUMMY_DRONE
     if (cdev) {
         // send stop signal
-        check_err(ARCONTROLLER_Device_Stop(cdev));
+        checkError(ARCONTROLLER_Device_Stop(cdev));
 
         if (isconnected) {
             // wait for stop
             eARCONTROLLER_DEVICE_STATE state;
             do {
-                state = get_state_update();
+                state = getStateUpdate();
             } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
 
             if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
@@ -133,12 +133,12 @@ Bebop::disconnect()
  * Send take-off command.
  */
 void
-Bebop::take_off()
+Bebop::takeOff()
 {
     if (isconnected) {
         cout << "Taking off..." << endl;
 #ifndef NO_FLY
-        check_err(cdev->aRDrone3->sendPilotingTakeOff(cdev->aRDrone3));
+        checkError(cdev->aRDrone3->sendPilotingTakeOff(cdev->aRDrone3));
 #endif
     }
 }
@@ -152,7 +152,7 @@ Bebop::land()
     if (isconnected) {
         cout << "Landing..." << endl;
 #ifndef NO_FLY
-        check_err(cdev->aRDrone3->sendPilotingLanding(cdev->aRDrone3));
+        checkError(cdev->aRDrone3->sendPilotingLanding(cdev->aRDrone3));
 #endif
     }
 }
@@ -161,7 +161,7 @@ Bebop::land()
  * Set drone's pitch, for moving forwards and backwards.
  */
 void
-Bebop::set_pitch(i8 pitch)
+Bebop::setPitch(i8 pitch)
 {
     if (isconnected) {
         if (pitch > 100 || pitch < -100) {
@@ -171,8 +171,8 @@ Bebop::set_pitch(i8 pitch)
 #ifdef NO_FLY
         cout << "Setting pitch to " << (int) pitch << endl;
 #else
-        check_err(cdev->aRDrone3->setPilotingPCMDPitch(cdev->aRDrone3, pitch));
-        check_err(cdev->aRDrone3->setPilotingPCMDFlag(cdev->aRDrone3, 1));
+        checkError(cdev->aRDrone3->setPilotingPCMDPitch(cdev->aRDrone3, pitch));
+        checkError(cdev->aRDrone3->setPilotingPCMDFlag(cdev->aRDrone3, 1));
 #endif
     }
 }
@@ -181,7 +181,7 @@ Bebop::set_pitch(i8 pitch)
  * Set drone's roll, for banking left and right.
  */
 void
-Bebop::set_roll(i8 right)
+Bebop::setRoll(i8 right)
 {
     if (isconnected) {
         if (right > 100 || right < -100) {
@@ -191,8 +191,8 @@ Bebop::set_roll(i8 right)
 #ifdef NO_FLY
         cout << "Setting roll to " << (int) right << endl;
 #else
-        check_err(cdev->aRDrone3->setPilotingPCMDRoll(cdev->aRDrone3, right));
-        check_err(cdev->aRDrone3->setPilotingPCMDFlag(cdev->aRDrone3, 1));
+        checkError(cdev->aRDrone3->setPilotingPCMDRoll(cdev->aRDrone3, right));
+        checkError(cdev->aRDrone3->setPilotingPCMDFlag(cdev->aRDrone3, 1));
 #endif
     }
 }
@@ -201,7 +201,7 @@ Bebop::set_roll(i8 right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::set_up_down(i8 up)
+Bebop::setUpDown(i8 up)
 {
     if (isconnected) {
         if (up > 100 || up < -100) {
@@ -212,7 +212,7 @@ Bebop::set_up_down(i8 up)
 #ifdef NO_FLY
         cout << "Setting up/down to " << (int) up << endl;
 #else
-        check_err(cdev->aRDrone3->setPilotingPCMDGaz(cdev->aRDrone3, up));
+        checkError(cdev->aRDrone3->setPilotingPCMDGaz(cdev->aRDrone3, up));
 #endif
     }
 }
@@ -221,7 +221,7 @@ Bebop::set_up_down(i8 up)
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
-Bebop::set_yaw(i8 right)
+Bebop::setYaw(i8 right)
 {
     if (isconnected) {
         if (right > 100 || right < -100) {
@@ -231,7 +231,7 @@ Bebop::set_yaw(i8 right)
 #ifdef NO_FLY
         cout << "Setting yaw to " << (int) right << endl;
 #else
-        check_err(cdev->aRDrone3->setPilotingPCMDYaw(cdev->aRDrone3, right));
+        checkError(cdev->aRDrone3->setPilotingPCMDYaw(cdev->aRDrone3, right));
 #endif
     }
 }
@@ -240,13 +240,13 @@ Bebop::set_yaw(i8 right)
  * Stops the drone from moving along all axes.
  */
 void
-Bebop::stop_moving()
+Bebop::stopMoving()
 {
     if (isconnected) {
-        set_pitch(0);
-        set_roll(0);
-        set_yaw(0);
-        set_up_down(0);
+        setPitch(0);
+        setRoll(0);
+        setYaw(0);
+        setUpDown(0);
     }
 }
 
@@ -254,12 +254,12 @@ Bebop::stop_moving()
  * Tells the drone to take a photo and store it.
  */
 void
-Bebop::take_photo()
+Bebop::takePhoto()
 {
     if (isconnected) {
         cout << "Taking photo" << endl;
 #ifndef DUMMY_DRONE
-        check_err(cdev->aRDrone3->sendMediaRecordPicture(cdev->aRDrone3, 0));
+        checkError(cdev->aRDrone3->sendMediaRecordPicture(cdev->aRDrone3, 0));
 #endif
     }
 }
@@ -270,21 +270,21 @@ Bebop::take_photo()
  * state.
  */
 inline eARCONTROLLER_DEVICE_STATE
-Bebop::get_state_update()
+Bebop::getStateUpdate()
 {
     sem.wait();
-    return get_state();
+    return getState();
 }
 
 /*
  * Returns the drone's connection state.
  */
 inline eARCONTROLLER_DEVICE_STATE
-Bebop::get_state()
+Bebop::getState()
 {
     auto err = ARCONTROLLER_OK;
     auto state = ARCONTROLLER_Device_GetState(cdev, &err);
-    check_err(err);
+    checkError(err);
     return state;
 }
 
@@ -292,11 +292,11 @@ Bebop::get_state()
  * Create the struct used by the ARSDK to interface with the drone.
  */
 inline void
-Bebop::create_cdev(DiscoveryDevice &ddev)
+Bebop::createControllerDevice(DiscoveryDevice &ddev)
 {
     auto err = ARCONTROLLER_OK;
     cdev = ARCONTROLLER_Device_New(ddev.dev, &err);
-    check_err(err);
+    checkError(err);
 }
 
 /*
@@ -304,21 +304,21 @@ Bebop::create_cdev(DiscoveryDevice &ddev)
  * from the drone.
  */
 inline void
-Bebop::add_event_handlers()
+Bebop::addEventHandlers()
 {
-    check_err(ARCONTROLLER_Device_AddStateChangedCallback(
-            cdev, state_changed, this));
-    check_err(ARCONTROLLER_Device_AddCommandReceivedCallback(
-            cdev, cmd_received, this));
+    checkError(ARCONTROLLER_Device_AddStateChangedCallback(
+            cdev, stateChanged, this));
+    checkError(ARCONTROLLER_Device_AddCommandReceivedCallback(
+            cdev, commandReceived, this));
 }
 
 /*
- * Invoked by cmd_received().
+ * Invoked by commandReceived().
  *
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::battery_changed(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
@@ -344,10 +344,10 @@ Bebop::battery_changed(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
  * Empty function used to suppress default ARSDK console messages.
  */
 int
-Bebop::print_callback(eARSAL_PRINT_LEVEL level,
-                      const char *tag,
-                      const char *format,
-                      va_list va)
+Bebop::printCallback(eARSAL_PRINT_LEVEL level,
+                     const char *tag,
+                     const char *format,
+                     va_list va)
 {
     // do nothing
     return 0;
@@ -357,9 +357,9 @@ Bebop::print_callback(eARSAL_PRINT_LEVEL level,
  * Invoked when the drone's connection state changes.
  */
 void
-Bebop::state_changed(eARCONTROLLER_DEVICE_STATE newstate,
-                     eARCONTROLLER_ERROR err,
-                     void *data)
+Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
+                    eARCONTROLLER_ERROR err,
+                    void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
     bebop->sem.notify(); // trigger semaphore used by get_state_update()
@@ -389,9 +389,9 @@ Bebop::state_changed(eARCONTROLLER_DEVICE_STATE newstate,
  * Invoked when a command is received from drone.
  */
 void
-Bebop::cmd_received(eARCONTROLLER_DICTIONARY_KEY key,
-                    ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
-                    void *data)
+Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
+                       ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                       void *data)
 {
     if (!dict) {
         return;
@@ -400,7 +400,7 @@ Bebop::cmd_received(eARCONTROLLER_DICTIONARY_KEY key,
     if (key ==
         ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED) {
         Bebop *bebop = reinterpret_cast<Bebop *>(data);
-        bebop->battery_changed(dict);
+        bebop->batteryChanged(dict);
     }
 }
 #endif // !DUMMY_DRONE

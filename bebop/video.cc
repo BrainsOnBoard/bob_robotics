@@ -337,8 +337,8 @@ sBebopVideoStream::tart_mplayer()
 BebopVideoStream::BebopVideoStream(Bebop *bebop)
   : cdev(bebop->cdev)
 {
-    check_err(ARCONTROLLER_Device_SetVideoStreamCallbacks(
-            cdev, config_callback, frame_callback, nullptr, this));
+    checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
+            cdev, configCallback, frameCallback, nullptr, this));
 }
 
 /*
@@ -346,9 +346,9 @@ BebopVideoStream::BebopVideoStream(Bebop *bebop)
  */
 BebopVideoStream::~BebopVideoStream()
 {
-    stop_streaming();
-    kill_mplayer();
-    delete_pipe();
+    stopStreaming();
+    killMplayer();
+    deletePipe();
     delete decoder;
     decoder = nullptr;
 }
@@ -357,9 +357,10 @@ BebopVideoStream::~BebopVideoStream()
  * Send the command to start video streaming.
  */
 void
-BebopVideoStream::start_streaming()
+BebopVideoStream::startStreaming()
 {
-    check_err(cdev->aRDrone3->sendMediaStreamingVideoEnable(cdev->aRDrone3, 1));
+    checkError(
+            cdev->aRDrone3->sendMediaStreamingVideoEnable(cdev->aRDrone3, 1));
 }
 
 /*
@@ -369,13 +370,13 @@ BebopVideoStream::start_streaming()
  * userdata is optional extra data to pass to cb() (i.e. object pointer)
  */
 void
-BebopVideoStream::start_streaming(user_video_callback cb, void *userdata)
+BebopVideoStream::startStreaming(userVideoCallback cb, void *userdata)
 {
     if (!decoder) {
         decoder = new VideoDecoder();
-        user_callback = cb;
-        user_video_callback_data = userdata;
-        start_streaming();
+        m_UserCallback = cb;
+        m_UserVideoCallbackData = userdata;
+        startStreaming();
     }
 }
 
@@ -383,27 +384,28 @@ BebopVideoStream::start_streaming(user_video_callback cb, void *userdata)
  * Send the command to stop video streaming.
  */
 void
-BebopVideoStream::stop_streaming()
+BebopVideoStream::stopStreaming()
 {
-    check_err(cdev->aRDrone3->sendMediaStreamingVideoEnable(cdev->aRDrone3, 0));
+    checkError(
+            cdev->aRDrone3->sendMediaStreamingVideoEnable(cdev->aRDrone3, 0));
 }
 
 /*
  * Start streaming and show the stream in mplayer.
  */
 void
-BebopVideoStream::start_mplayer()
+BebopVideoStream::startMplayer()
 {
-    launch_mplayer();
-    open_pipe();
-    start_streaming();
+    launchMplayer();
+    openPipe();
+    startStreaming();
 }
 
 /*
  * Invoked when we receive a packet containing H264 params.
  */
 eARCONTROLLER_ERROR
-BebopVideoStream::config_callback(ARCONTROLLER_Stream_Codec_t codec, void *data)
+BebopVideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
 {
     auto vid = reinterpret_cast<BebopVideoStream *>(data);
 
@@ -438,7 +440,7 @@ BebopVideoStream::config_callback(ARCONTROLLER_Stream_Codec_t codec, void *data)
  * Invoked when we receive a packet containing an H264-encoded frame.
  */
 eARCONTROLLER_ERROR
-BebopVideoStream::frame_callback(ARCONTROLLER_Frame_t *frame, void *data)
+BebopVideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 {
     auto vid = reinterpret_cast<BebopVideoStream *>(data);
 
@@ -447,7 +449,7 @@ BebopVideoStream::frame_callback(ARCONTROLLER_Frame_t *frame, void *data)
         bool ok = vid->decoder->Decode(frame);
         if (ok) {
             const u8 *raw = vid->decoder->GetFrameRGBRawCstPtr();
-            vid->user_callback(raw, vid->user_video_callback_data);
+            vid->m_UserCallback(raw, vid->m_UserVideoCallbackData);
         }
 
         return ARCONTROLLER_OK;

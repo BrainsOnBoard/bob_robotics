@@ -108,30 +108,30 @@ public:
 #endif // !DUMMY_DRONE
 
 // start BebopVideoStream
-using user_video_callback = void (*)(const u8 *frame, void *userdata);
+using userVideoCallback = void (*)(const u8 *frame, void *userdata);
 
 class BebopVideoStream
 {
 public:
     BebopVideoStream(Bebop *bebop);
     ~BebopVideoStream();
-    void start_streaming();
-    void start_streaming(user_video_callback cb, void *userdata);
-    void stop_streaming();
-    void start_mplayer();
+    void startStreaming();
+    void startStreaming(userVideoCallback cb, void *userdata);
+    void stopStreaming();
+    void startMplayer();
 
 private:
     ARCONTROLLER_Device_t *cdev;
     VideoDecoder *decoder = nullptr;
     FILE *pipe = nullptr;
-    user_video_callback user_callback = nullptr;
-    void *user_video_callback_data;
+    userVideoCallback m_UserCallback = nullptr;
+    void *m_UserVideoCallbackData;
     pid_t mplayer = 0;
 
     /*
      * Create and open named pipe for streaming to mplayer.
      */
-    inline void open_pipe()
+    inline void openPipe()
     {
         if (mkfifo(VIDEO_FIFO, 0644) < 0) {
             throw runtime_error("Could not create pipe");
@@ -147,7 +147,7 @@ private:
     /*
      * Close file handle for named pipe and delete it.
      */
-    inline void delete_pipe()
+    inline void deletePipe()
     {
         if (pipe) {
             fclose(pipe);
@@ -158,7 +158,7 @@ private:
     /*
      * Fork process and start mplayer (in xterm).
      */
-    inline void launch_mplayer()
+    inline void launchMplayer()
     {
         if ((mplayer = fork()) == 0) {
             execlp("xterm",
@@ -179,7 +179,7 @@ private:
     /*
      * Send SIGKILL to mplayer child process.
      */
-    inline void kill_mplayer()
+    inline void killMplayer()
     {
         if (mplayer) {
             kill(mplayer, SIGKILL);
@@ -189,15 +189,14 @@ private:
     /*
      * Invoked when we receive a packet containing H264 params.
      */
-    static eARCONTROLLER_ERROR config_callback(
-            ARCONTROLLER_Stream_Codec_t codec,
-            void *data);
+    static eARCONTROLLER_ERROR configCallback(ARCONTROLLER_Stream_Codec_t codec,
+                                              void *data);
 
     /*
      * Invoked when we receive a packet containing an H264-encoded frame.
      */
-    static eARCONTROLLER_ERROR frame_callback(ARCONTROLLER_Frame_t *frame,
-                                              void *data);
+    static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame,
+                                             void *data);
 };
 // end BebopVideoStream
 } // namespace Parrot
