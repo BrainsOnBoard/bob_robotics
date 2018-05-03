@@ -12,8 +12,8 @@ all: bebop.o xbox.o video.o
 bebop.o: bebop.cc bebop.h semaphore.h
 	$(CXX) $(CXXFLAGS) -c -o bebop.o bebop.cc
 
-xbox.o: bebop_xbox.cc bebop_xbox.h xbox.h
-	$(CXX) $(CXXFLAGS) -c -o xbox.o bebop_xbox.cc
+xbox.o: xbox.cc xbox.h xbox_generic.h
+	$(CXX) $(CXXFLAGS) -c -o xbox.o xbox.cc
 
 video.o: video.cc video.h
 	$(CXX) $(CXXFLAGS) -c -o video.o video.cc

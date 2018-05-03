@@ -1,4 +1,4 @@
-#include "xbox.h"
+#include "xbox_generic.h"
 
 using namespace std;
 using namespace Xbox;

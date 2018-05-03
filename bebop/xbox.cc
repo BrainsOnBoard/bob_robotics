@@ -1,4 +1,4 @@
-#include "bebop_xbox.h"
+#include "xbox.h"
 
 namespace Parrot {
 BebopXbox::BebopXbox(Bebop *bebop)
