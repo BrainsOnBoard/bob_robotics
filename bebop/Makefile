@@ -7,13 +7,19 @@ CXXFLAGS+=-O2 -I$(AR_STAGING_PATH)/usr/include \
 
 .PHONY: all clean
 
-all: bebop.o video.o
+all: bebop.o xbox.o video.o
 
 bebop.o: bebop.cc bebop.h semaphore.h
 	$(CXX) $(CXXFLAGS) -c -o bebop.o bebop.cc
 
+xbox.o: bebop_xbox.cc bebop_xbox.h xbox.h
+	$(CXX) $(CXXFLAGS) -c -o xbox.o bebop_xbox.cc
+
 video.o: video.cc video.h
 	$(CXX) $(CXXFLAGS) -c -o video.o video.cc
 
+xbox_test:
+	$(CXX) -o xbox_test -pthread xbox_test.cc
+
 clean:
-	rm -rf *.o
+	rm -f xbox_test *.o
