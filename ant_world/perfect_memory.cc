@@ -38,5 +38,5 @@ std::tuple<unsigned int, unsigned int, unsigned int> PerfectMemory::presentThrea
     }
 
     // Return tuple of similarity
-    return std::make_tuple(0, 0, (int)(sqrt(minSquareFamiliarity) * 0.01f));
+    return std::make_tuple(0, 0, (int)(sqrt(minSquareFamiliarity) * 0.005f));
 }

@@ -21,8 +21,8 @@ namespace Parameters
     constexpr unsigned int testStepLimit = 1000;
 
     // Network dimensions
-    constexpr unsigned int inputWidth = 36;
-    constexpr unsigned int inputHeight = 10;
+    constexpr unsigned int inputWidth = 720;
+    constexpr unsigned int inputHeight = 1;
     constexpr unsigned int numPN = inputWidth * inputHeight;
     constexpr unsigned int numKC = 20000;
     constexpr unsigned int numEN = 1;
@@ -57,11 +57,11 @@ namespace Parameters
     constexpr float worldColour[] = {0.0f, 1.0f, 0.0f};
 
     // Size of snapshots for initial pre-processing
-    constexpr unsigned int intermediateSnapshotWidth = 74;
-    constexpr unsigned int intermediateSnapshotHeight = 19;
+    constexpr unsigned int intermediateSnapshotWidth = 180;
+    constexpr unsigned int intermediateSnapshotHeight = 50;
 
     // How much larger than intermediate snapshots, rendering is performed at
-    constexpr unsigned int displayScale = 8;
+    constexpr unsigned int displayScale = 4;
 
     // From these calculate display size
     constexpr unsigned int displayRenderWidth = intermediateSnapshotWidth * displayScale;

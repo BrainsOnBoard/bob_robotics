@@ -29,6 +29,7 @@
 #include "renderer.h"
 #include "route_ardin.h"
 #include "snapshot_processor_ardin.h"
+#include "snapshot_processor_hog.h"
 
 // Antworld includes
 #include "mb_memory.h"
@@ -182,17 +183,19 @@ int main(int argc, char *argv[])
     }
 
     // Create memory
-    MBMemory memory;
-    //PerfectMemory memory;
+    //MBMemory memory;
+    PerfectMemory memory;
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
 
     // Create snapshot processor to perform image processing on snapshot
-    SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
-                                             Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
-                                             Parameters::inputWidth, Parameters::inputHeight);
+    //SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
+    //                                         Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
+    //                                         Parameters::inputWidth, Parameters::inputHeight);
 
+    SnapshotProcessorHOG snapshotProcessor(Parameters::displayScale, 
+                                           Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight);
     // Initialize ant position
     float antX = 5.0f;
     float antY = 5.0f;
