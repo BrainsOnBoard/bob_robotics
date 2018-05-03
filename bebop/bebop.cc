@@ -78,6 +78,10 @@ Bebop::~Bebop()
 void
 Bebop::connect()
 {
+    if (m_IsConnected) {
+        return;
+    }
+
 #ifndef DUMMY_DRONE
     // send start signal
     checkError(ARCONTROLLER_Device_Start(m_Device));
