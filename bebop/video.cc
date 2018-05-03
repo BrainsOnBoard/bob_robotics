@@ -319,16 +319,16 @@ BebopVideoStream::BebopVideoStream(Bebop *bebop)
 {}
 
 void
-BebopVideoStream::start_streaming()
+BebopVideoStream::startStreaming()
 {}
 void
-BebopVideoStream::start_streaming(user_video_callback, void *)
+BebopVideoStream::startStreaming(userVideoCallback, void *)
 {}
 void
-BebopVideoStream::stop_streaming()
+BebopVideoStream::stopStreaming()
 {}
 void
-sBebopVideoStream::tart_mplayer()
+BebopVideoStream::startMplayer()
 {}
 #else
 /*
