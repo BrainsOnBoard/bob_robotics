@@ -4,9 +4,9 @@ using namespace std;
 using namespace Xbox;
 
 void
-handle_button(js_event &js)
+handleButton(js_event &js)
 {
-    const char *name = Controller::get_button_name(js.number);
+    const char *name = Controller::getButtonName(js.number);
     if (js.value) {
         cout << "Button pushed: " << name << " (" << (int) js.number << ")"
              << endl;
@@ -17,9 +17,9 @@ handle_button(js_event &js)
 }
 
 void
-handle_axis(js_event &js)
+handleAxis(js_event &js)
 {
-    const char *name = Controller::get_axis_name(js.number);
+    const char *name = Controller::getAxisName(js.number);
     cout << "Axis " << name << " (" << (int) js.number << "): " << js.value
          << endl;
 }
@@ -34,10 +34,10 @@ callback(js_event *js, void *)
 
     switch (js->type) {
     case JS_EVENT_BUTTON:
-        handle_button(*js);
+        handleButton(*js);
         break;
     case JS_EVENT_AXIS:
-        handle_axis(*js);
+        handleAxis(*js);
     }
 }
 
@@ -54,7 +54,7 @@ main()
     }
 
     cout << "Opened joystick" << endl;
-    cont.start_thread(callback, nullptr);
+    cont.startThread(callback, nullptr);
 
     cin.ignore();
 
