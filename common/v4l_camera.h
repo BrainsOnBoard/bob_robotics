@@ -224,7 +224,7 @@ public:
         return true;
     }
 
-    bool getControlValue(uint32_t id, int32_t &value)
+    bool getControlValue(uint32_t id, int32_t &value) const
     {
         // Fill control structure
         v4l2_control control;
