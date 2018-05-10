@@ -8,6 +8,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <cmath>
 
 // Standard C includes
 #include <cassert>
@@ -86,7 +87,7 @@ public:
     {
         constexpr double frameMs = 1000.0 / 100.0;
         constexpr double smoothingMs = 30.0;
-        
+
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
         const double deltaMs = frameMs * (double)deltaFrames;
@@ -124,6 +125,8 @@ private:
 template<typename ObjectDataType>
 class UDPClient
 {
+    using UDPClientCallback = void (*)(uint id, const ObjectDataType &data, void *userData);
+
 public:
     UDPClient(){}
     UDPClient(unsigned int port)
@@ -133,7 +136,7 @@ public:
         }
     }
 
-    ~UDPClient()
+    virtual ~UDPClient()
     {
         // Set quit flag and join read thread
         if(m_ReadThread.joinable()) {
@@ -153,7 +156,7 @@ public:
             std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
             return false;
         }
-        
+
         // Set socket to have 1s read timeout
         // **NOTE** this is largely to allow read thread to be stopped
 #ifdef _WIN32
@@ -203,6 +206,12 @@ public:
         }
     }
 
+    void setReadCallback(UDPClientCallback callback, void *userData)
+    {
+        m_ReadCallback = callback;
+        m_ReadUserData = userData;
+    }
+
 private:
     //----------------------------------------------------------------------------
     // Private API
@@ -219,6 +228,12 @@ private:
 
         // Update object data with translation and rotation
         m_ObjectData[id].update(frameNumber, translation, rotation);
+
+        // Execute callback function, if set. Note that we copy by value here,
+        // which is presumably less efficient, but is thread safe
+        if (m_ReadCallback) {
+            m_ReadCallback(id, m_ObjectData[id], m_ReadUserData);
+        }
     }
 
     void readThread(int socket)
@@ -291,6 +306,8 @@ private:
     //----------------------------------------------------------------------------
     std::atomic<bool> m_ShouldQuit;
     std::thread m_ReadThread;
+    UDPClientCallback m_ReadCallback = nullptr;
+    void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;
     std::vector<ObjectDataType> m_ObjectData;

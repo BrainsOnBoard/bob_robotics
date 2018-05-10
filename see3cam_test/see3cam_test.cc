@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
             }
         });
 
-    // Tweak exposure down to improve frame rate
-    //cam.setExposure(100);
-    cam.setBrightness(20);
+    // Get initial brightness and exposure
+    int32_t brightness = cam.getBrightness();
+    int32_t exposure = cam.getExposure();
 
     // Create window
     const unsigned int rawWidth = cam.getWidth() / 2;
@@ -66,7 +66,8 @@ int main(int argc, char *argv[])
     const unsigned int unwrapWidth = 450;
     const unsigned int unwrapHeight = 50;
 
-    Mode mode = Mode::Clamp;
+    Mode mode = Mode::Greyscale;
+    
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
                                          cv::Size(unwrapWidth, unwrapHeight));
@@ -76,9 +77,9 @@ int main(int argc, char *argv[])
     cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapWidth, unwrapHeight);
 
-    cv::Mat output(rawHeight, rawWidth, CV_8UC3);
-    cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC3);
-
+    cv::Mat output(rawHeight, rawWidth, CV_8UC1);
+    cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
+    
     {
         Timer<> timer("Total time:");
 
@@ -134,6 +135,34 @@ int main(int argc, char *argv[])
                 char filename[255];
                 sprintf(filename, "image_%u.png", frame);
                 cv::imwrite(filename, unwrapped);
+            }
+            else if(key ==  '-') {
+                if(brightness > 1) {
+                    brightness--;
+                    cam.setBrightness(brightness);
+                    std::cout << "Brightness:" << brightness << std::endl;
+                }
+            }
+            else if(key == '+') {
+                if(brightness < 40) {
+                    brightness++;
+                    cam.setBrightness(brightness);
+                    std::cout << "Brightness:" << brightness << std::endl;
+                }
+            }
+            else if(key == ',') {
+                if(exposure > 1) {
+                    exposure--;
+                    cam.setExposure(exposure);
+                    std::cout << "Exposure:" << exposure << std::endl;
+                }
+            }
+            else if(key == '.') {
+                if(exposure < 9999) {
+                    exposure++;
+                    cam.setExposure(exposure);
+                    std::cout << "Exposure:" << exposure << std::endl;
+                }
             }
             else if(key == 27) {
                 break;

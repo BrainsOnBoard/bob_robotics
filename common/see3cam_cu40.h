@@ -189,6 +189,28 @@ public:
     {
         return setControlValue(V4L2_CID_EXPOSURE_ABSOLUTE, std::max(m_ExposureControl.minimum, std::min(m_ExposureControl.maximum, exposure)));
     }
+    
+    int32_t getBrightness() const
+    {
+        int32_t brightness;
+        if(getControlValue(V4L2_CID_BRIGHTNESS, brightness)) {
+            return brightness;
+        }
+        else {
+            throw std::runtime_error("Cannot get brightness");
+        }
+    }
+    
+    int32_t getExposure() const
+    {
+        int32_t exposure;
+        if(getControlValue(V4L2_CID_EXPOSURE_ABSOLUTE, exposure)) {
+            return exposure;
+        }
+        else {
+            throw std::runtime_error("Cannot get brightness");
+        }
+    }
 
     unsigned int getWidth() const
     {
