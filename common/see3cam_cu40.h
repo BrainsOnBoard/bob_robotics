@@ -184,7 +184,7 @@ public:
     bool readFrame(cv::Mat &outFrame)
     {
         if (outFrame.cols == 0) {
-            outFrame.create(getSize(), CV_8UC3);
+            outFrame.create(m_OutputSize, CV_8UC3);
         }
         return captureSuperPixelWBU30(outFrame);
     }
@@ -232,6 +232,11 @@ public:
     }
     
     cv::Size getSize() const{ return cv::Size(getWidth(), getHeight()); }
+
+    void setOutputSize(cv::Size outSize)
+    {
+        m_OutputSize = outSize;
+    }
 
     unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }
     unsigned int getSuperPixelHeight() const{ return getHeight() / 2; }
@@ -385,6 +390,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     Resolution m_Resolution;
+    cv::Size m_OutputSize;
     v4l2_queryctrl m_BrightnessControl;
     v4l2_queryctrl m_ExposureControl;
 
