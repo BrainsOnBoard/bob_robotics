@@ -6,6 +6,7 @@
 // Common includes
 #include "opencv_unwrap_360.h"
 #include "v4l_camera.h"
+#include "../videoin/videoinput.h"
 
 /* NEON version of captureSuperPixel - fun but doesn't actually help performance
 // Create tables to use for shuffling BGIR data into BGR
@@ -54,7 +55,7 @@ for(unsigned int y = 0; y < inputHeight; y += 2) {
 //------------------------------------------------------------------------
 // See3CAM_CU40
 //------------------------------------------------------------------------
-class See3CAM_CU40 : public Video4LinuxCamera
+class See3CAM_CU40 : public Video4LinuxCamera, public VideoIn::VideoInput
 {
 public:
     enum class Resolution : uint64_t
@@ -178,6 +179,14 @@ public:
         else {
             return false;
         }
+    }
+
+    bool readFrame(cv::Mat &outFrame)
+    {
+        if (outFrame.cols == 0) {
+            outFrame.create(getSize(), CV_8UC3);
+        }
+        return captureSuperPixelWBU30(outFrame);
     }
 
     bool setBrightness(int32_t brightness)
