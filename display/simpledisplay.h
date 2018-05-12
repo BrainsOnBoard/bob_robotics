@@ -28,7 +28,7 @@ public:
       : m_VideoInput(videoInput)
     {}
 
-    ~SimpleDisplay()
+    virtual ~SimpleDisplay()
     {
         close();
     }
@@ -43,6 +43,16 @@ public:
     }
 
     /*
+     * Gets the next frame from the video stream.
+     */
+    virtual void getNextFrame(cv::Mat &frame)
+    {
+        if (!m_VideoInput->readFrame(frame)) {
+            throw std::runtime_error("Error reading from video input");
+        }
+    }
+
+    /*
      * Run the display on the main thread.
      */
     void run()
@@ -54,10 +64,7 @@ public:
 
         cv::Mat frame;
         while (m_Running) {
-            if (!m_VideoInput->readFrame(frame)) {
-                throw std::runtime_error("Error reading from video input");
-            }
-
+            getNextFrame(frame);
             cv::imshow(WINDOW_NAME, frame);
 
             // quit when user presses esc
@@ -87,7 +94,6 @@ public:
     }
 
 private:
-    T m_VideoInput;
     std::unique_ptr<std::thread> m_DisplayThread;
     bool m_Running = true;
 
@@ -101,5 +107,8 @@ private:
     {
         reinterpret_cast<SimpleDisplay *>(userData)->run();
     }
+
+protected:
+    T m_VideoInput;
 };
 }
