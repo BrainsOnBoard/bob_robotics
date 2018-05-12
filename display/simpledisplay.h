@@ -5,11 +5,10 @@
  *
  * You can optionally run the display on a separate thread by invoking the
  * startThread() method.
- * 
+ *
  * Should be built with OpenCV and -pthread.
  */
 
-#include "../videoin/videoinput.h"
 #include <opencv2/opencv.hpp>
 
 #include <memory>
@@ -17,16 +16,16 @@
 #include <thread>
 
 namespace Display {
+template<class T>
 class SimpleDisplay
 {
 public:
     /*
-     * We use a shared_ptr to make sure that the
-     * camera object will not be destroyed before this object has finished with
-     * it.
+     * We use a template so that a regular pointer or a smart pointer object (to
+     * a VideoIn::VideoInput) can be given as an argument.
      */
-    SimpleDisplay(std::shared_ptr<VideoIn::VideoInput> vid)
-      : m_VideoInput(vid)
+    SimpleDisplay(T videoInput)
+      : m_VideoInput(videoInput)
     {}
 
     ~SimpleDisplay()
@@ -88,7 +87,7 @@ public:
     }
 
 private:
-    std::shared_ptr<VideoIn::VideoInput> m_VideoInput;
+    T m_VideoInput;
     std::unique_ptr<std::thread> m_DisplayThread;
     bool m_Running = true;
 

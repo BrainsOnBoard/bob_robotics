@@ -35,8 +35,8 @@ main(int argc, char **argv)
     }
 
     // show display
-    auto pCam = std::shared_ptr<VideoInput>(cam);
-    Display::SimpleDisplay display(pCam);
+    auto pCam = std::unique_ptr<VideoInput>(cam);
+    Display::SimpleDisplay<std::unique_ptr<VideoInput> &> display(pCam);
     display.run();
 
     /*
