@@ -9,8 +9,13 @@ class OpenCVInput
   , public VideoInput
 {
 public:
+    OpenCVInput()
+      : OpenCVInput(0)
+    {}
+
     template<class T>
-    OpenCVInput(T dev) : cv::VideoCapture(dev)
+    OpenCVInput(T dev)
+      : cv::VideoCapture(dev)
     {}
 
     bool readFrame(cv::Mat &outFrame)
