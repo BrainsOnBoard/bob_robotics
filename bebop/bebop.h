@@ -8,9 +8,10 @@ extern "C"
 #include <libARSAL/ARSAL.h>
 }
 
-#include "semaphore.h"
 #include <iostream>
 #include <string>
+
+#include "../common/semaphore.h"
 
 // these values are hardcoded for Bebop drones
 #define BEBOP_IP_ADDRESS "192.168.42.1"
