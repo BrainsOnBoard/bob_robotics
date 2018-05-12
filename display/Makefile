@@ -1,5 +1,5 @@
 TARGET=simpledisplay_test
-CXXFLAGS=-g `pkg-config --cflags opencv`
+CXXFLAGS=-std=c++11 -g `pkg-config --cflags opencv`
 LDFLAGS=-pthread `pkg-config --libs opencv`
 
 .PHONY: clean
