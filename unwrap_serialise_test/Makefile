@@ -2,13 +2,13 @@
 
 CXXFLAGS=-g -I../src `pkg-config --cflags --libs opencv`
 
-all: yaml_read_test yaml_write_test
+all: deserialise_test serialise_test
 
-yaml_read_test: yaml_read_test.cc ../common/opencv_unwrap_360.h
+deserialise_test: deserialise_test.cc ../common/opencv_unwrap_360.h
 	$(CXX) -o $@ $< $(CXXFLAGS)
 
-yaml_write_test: yaml_write_test.cc ../common/opencv_unwrap_360.h
+serialise_test: serialise_test.cc ../common/opencv_unwrap_360.h
 	$(CXX) -o $@ $< $(CXXFLAGS)
 
 clean:
-	rm -f yaml_read_test yaml_write_test{,.yaml}
+	rm -f deserialise_test serialise_test{,.yaml}
