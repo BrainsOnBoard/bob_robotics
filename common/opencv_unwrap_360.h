@@ -140,6 +140,7 @@ public:
     int m_InnerPixel, m_OuterPixel;
     int m_OffsetDegrees;
     bool m_Flip;
+    cv::Size m_CameraResolution, m_UnwrappedResolution;
 
     // Begin static methods
     static OpenCVUnwrap360 *loadFromFile(const std::string &filePath,
@@ -187,5 +188,4 @@ private:
     std::string m_FilePath;
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
-    cv::Size m_CameraResolution, m_UnwrappedResolution;
 };
