@@ -75,9 +75,11 @@ int main(int argc, char *argv[])
 
     Mode mode = Mode::Greyscale;
     
-    // Create unwrapper to unwrap camera output
+    // Create unwrapper to unwrap camera output and mask to use for autoexposure calculation
     auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
                                          cv::Size(unwrapWidth, unwrapHeight));
+
+    auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
     cv::namedWindow("Raw", CV_WINDOW_NORMAL);
     cv::resizeWindow("Raw", rawWidth, rawHeight);
@@ -86,8 +88,7 @@ int main(int argc, char *argv[])
 
     cv::Mat output(rawHeight, rawWidth, CV_8UC1);
     cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
-    
-    const cv::Mat mask = cv::imread("../common/see3cam_cu40_mask.png", cv::IMREAD_GRAYSCALE);
+
     {
         Timer<> timer("Total time:");
 
@@ -145,7 +146,7 @@ int main(int argc, char *argv[])
                 cv::imwrite(filename, unwrapped);
             }
             else if(key == 'a') {
-                cam.autoExposure(mask);
+                cam.autoExposure(autoExposureMask);
             }
             else if(key ==  '-') {
                 if(brightness > 1) {

@@ -89,9 +89,6 @@ public:
         // Cache resolution
         m_Resolution = res;
 
-        // Create additional frame to hold demosaiced frames
-        m_Demosaiced16.create(getHeight(), getWidth(), CV_16UC3);
-
         // If camera was opened successfully
         if(Video4LinuxCamera::open(device, getWidth(), getHeight(), V4L2_PIX_FMT_Y16))
         {
@@ -185,7 +182,9 @@ public:
         }
     }
     
-    float calculateImageEntropy(const cv::Mat &mask = cv::Mat())
+    // Calculates entropy, either from whole frame or within subset specified by mask
+    // **NOTE** this uses full 10-bit sensor range for calculation
+    float calculateImageEntropy(const cv::Mat &mask)
     {
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
@@ -204,7 +203,7 @@ public:
             assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
             const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
 
-            // 10-bit RGB histograms
+            // Zero a 10-bit RGB histogram for each colour channel
             unsigned int hist[3][1024];
             std::fill_n(hist[0], 1024, 0);
             std::fill_n(hist[1], 1024, 0);
@@ -223,7 +222,8 @@ public:
                     const uint16_t r = *inR16Start;
                     inR16Start += 2;
                     
-                    // If we don't have a mask or this pixel isn't masked
+                    // If no mask is in use or this pixel isn't masked
+                    // **NOTE** divide by two as x and y are in terms of Bayer pixels
                     if(noMask || mask.at<uint8_t>(y / 2, x / 2) > 0) {
                         // Increment histogram bins
                         hist[0][r]++;
@@ -239,7 +239,7 @@ public:
             // Check pixel count
             assert(!noMask || numPixels == (inputWidth * inputHeight / 4));
             
-            // Calculate entropy in each colour channel
+            // Sum together entropy for each colour channel
             float entropy = 0.0f;
             for(unsigned int c = 0; c < 3; c++) {
                 entropy -= std::accumulate(std::begin(hist[c]), std::end(hist[c]), 0.0f,
@@ -261,7 +261,10 @@ public:
         }
     }
     
-    void autoExposure(const cv::Mat &mask = cv::Mat(), int brightnessExposureConstant=5)
+    // Automatically configure camera exposure and brightness to optimise image quality
+    // Use of mask inspired by "Nourani-Vatani & Roberts (2007). Automatic Camera Exposure Control."
+    // Uses image-entropy based algorithm described by "Lu, Zhang et al. (2010). Camera parameters auto-adjusting technique for robust robot vision."
+    void autoExposure(const cv::Mat &mask, int brightnessExposureConstant=5)
     {
         // Configure initial brightness and exposure values
         int32_t brightness = m_BrightnessControl.minimum;
@@ -295,7 +298,7 @@ public:
                 std::cout << "Optimal exposure and brightness settings found: exposure=" << previousExposure << ", brightness=" << previousBrightness << std::endl;
                 setExposure(previousExposure);
                 setBrightness(previousBrightness);
-                return;                
+                return;
             }
             // Otherwise
             else {
@@ -380,6 +383,26 @@ public:
     {
         return OpenCVUnwrap360(camRes, unwrapRes,
                                0.5, 0.461111, 0.183333, 0.4, 1.570796327, true);
+    }
+
+    static cv::Mat createBubblescopeMask(const cv::Size &camRes)
+    {
+        cv::Mat mask(camRes, CV_8UC1, cv::Scalar(0,0,0));
+
+        // Calculate mask dimensions in pixels
+        // **YUCK** as these constants are duplicated from createUnwrapper they should be stuck elsewhere
+        const int centreXPixel = (int)round((double)camRes.width * 0.5);
+        const int centreYPixel = (int)round((double)camRes.height * 0.461111);
+        const int innerPixel = (int)round((double)camRes.height * 0.183333);
+        const int outerPixel = (int)round((double)camRes.height * 0.4);
+
+        // Draw outer white circle of mask
+        cv::circle(mask, cv::Point(centreXPixel, centreYPixel), outerPixel, cv::Scalar::all(255), CV_FILLED);
+
+        // Draw inner black circle
+        cv::circle(mask, cv::Point(centreXPixel, centreYPixel), innerPixel, cv::Scalar::all(0), CV_FILLED);
+
+        return mask;
     }
 
 private:
@@ -524,6 +547,4 @@ private:
     cv::Size m_OutputSize;
     v4l2_queryctrl m_BrightnessControl;
     v4l2_queryctrl m_ExposureControl;
-
-    cv::Mat m_Demosaiced16;
 };
