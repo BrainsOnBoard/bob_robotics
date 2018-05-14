@@ -2,7 +2,7 @@
 
 // Standard C++ includes
 #include <string>
-#include <stringstream>
+#include <sstream>
 
 // Standard C includes
 #include <cassert>
@@ -76,17 +76,18 @@ public:
 
     bool startRecording(const std::string &recordingName)
     {
+        // Create message
         std::stringstream message;
-        char message[500];
-        sprintf(message, 
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"
-            "<CaptureStart>\n"
-            "    <Name VALUE=\"%s\"/>\n"
-            "    <DatabasePath VALUE=\"%s\"/>\n"
-            "    <PacketID VALUE=\"%u\"/>\n"
-            "</CaptureStart>", recordingName.c_str(), m_CapturePath.c_str(), m_CapturePacketID++);
+        message << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>" << std::endl;
+        message << "<CaptureStart>" << std::endl;
+        message << "<Name VALUE=\"" << recordingName << "\"/>" << std::endl;
+        message << "<DatabasePath VALUE=\"" << m_CapturePath << "\"/>" << std::endl;
+        message << "<PacketID VALUE=\"" << m_CapturePacketID++ << "\"/>" << std::endl;
+        message << "</CaptureStart>" << std::endl;
         
-        if(::sendto(m_Socket, message, strlen(message), 0,
+        // Send message  to tracker
+        std::string messageString = message.str();
+        if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
                     reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0) 
         {
             std::cerr << "Cannot send start message:" << strerror(errno) << std::endl;
@@ -99,16 +100,18 @@ public:
     
     bool stopRecording(const std::string &recordingName)
     {
-        char message[500];
-        sprintf(message,
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n"
-            "<CaptureStop>\n"
-            "    <Name VALUE=\"%s\"/>\n"
-            "    <DatabasePath VALUE=\"%s\"/>\n"
-            "    <PacketID VALUE=\"%u\"/>\n"
-            "</CaptureStop>", recordingName.c_str(), m_CapturePath.c_str(), m_CapturePacketID++);
+        // Create message
+        std::stringstream message;
+        message << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>" << std::endl;
+        message << "<CaptureStop>" << std::endl;
+        message << "<Name VALUE=\"" << recordingName << "\"/>" << std::endl;
+        message << "<DatabasePath VALUE=\"" << m_CapturePath << "\"/>" << std::endl;
+        message << "<PacketID VALUE=\"" << m_CapturePacketID++ << "\"/>" << std::endl;
+        message << "</CaptureStop>" << std::endl;
 
-        if(::sendto(m_Socket, message, strlen(message), 0,
+        // Send message  to tracker
+        std::string messageString = message.str();
+        if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
                     reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
         {
             std::cerr << "Cannot send stop message:" << strerror(errno) << std::endl;
