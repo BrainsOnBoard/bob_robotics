@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <chrono>
 #include <thread>
+#include <numeric>
 
 // OpenCV includes
 #include <opencv2/imgproc/imgproc.hpp>
