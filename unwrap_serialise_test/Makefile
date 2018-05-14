@@ -2,7 +2,7 @@
 
 CXXFLAGS=-g -I../src `pkg-config --cflags --libs opencv`
 
-# all: yaml_read_test yaml_write_test
+all: yaml_read_test yaml_write_test
 
 yaml_read_test: yaml_read_test.cc ../common/opencv_unwrap_360.h
 	$(CXX) -o $@ $< $(CXXFLAGS)

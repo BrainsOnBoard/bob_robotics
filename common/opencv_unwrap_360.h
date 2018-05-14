@@ -106,6 +106,35 @@ public:
         cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
     }
 
+    void writeFile()
+    {
+        std::cout << "Writing to " << m_FilePath << "..." << std::endl;
+        cv::FileStorage fs(m_FilePath, cv::FileStorage::WRITE);
+
+        // resolution
+        fs << "unwrappedResolution" << m_UnwrappedResolution;
+
+        // centre
+        cv::Point2d centre = {
+            (double) m_CentrePixel.x / (double) m_CameraResolution.width,
+            (double) m_CentrePixel.y / (double) m_CameraResolution.height
+        };
+        fs << "centre" << centre;
+
+        // radii
+        fs << "inner"
+           << (double) m_InnerPixel / (double) m_CameraResolution.height;
+        fs << "outer"
+           << (double) m_OuterPixel / (double) m_CameraResolution.height;
+
+        // other
+        fs << "offsetDegrees" << m_OffsetDegrees;
+        fs << "flip" << m_Flip;
+
+        // close file
+        fs.release();
+    }
+
     // Public members
     cv::Point m_CentrePixel;
     int m_InnerPixel, m_OuterPixel;
@@ -132,13 +161,15 @@ public:
         double outer = (double) fs["outer"];
 
         // other params
+        int offsetDegrees = (int) fs["offsetDegrees"];
         bool flip;
         fs["flip"] >> flip;
-        int offsetDegrees = (int) fs["offsetDegrees"];
 
         // close YAML file
         fs.release();
 
+        // create new unwrapper on the heap - user is responsible for deleting
+        // it
         return new OpenCVUnwrap360(cameraResolution,
                                    unwrappedResolution,
                                    centre[0],

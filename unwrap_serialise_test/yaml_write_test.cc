@@ -1,18 +1,17 @@
-#include "image/camparams.h"
+#include "../common/opencv_unwrap_360.h"
 #include <iostream>
 
 int
 main(int argc, char **argv)
 {
-    Image::CamParams params;
-    params.m_FilePath = "yaml_write_test.yaml";
-    params.m_SizeSource.width = 1280;
-    params.m_SizeSource.height = 400;
-    params.m_Center.x = 582;
-    params.m_Center.y = 82;
-    params.m_RadiusInner = 35;
-    params.m_RadiusOuter = 76;
-    params.m_Flipped = false;
-    params.m_DegreeOffset = 0;
-    params.write();
+    OpenCVUnwrap360 unwrapper(cv::Size(1280, 720),
+                              cv::Size(1280, 400),
+                              0.45468750000000002,
+                              0.20499999999999999,
+                              0.087499999999999994,
+                              0.19,
+                              0,
+                              false,
+                              "yaml_write_test.yaml");
+    unwrapper.writeFile();
 }
