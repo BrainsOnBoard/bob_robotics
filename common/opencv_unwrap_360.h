@@ -2,6 +2,7 @@
 
 // Standard C includes
 #include <cassert>
+#define _USE_MATH_DEFINES
 #include <cmath>
 
 // OpenCV includes
@@ -19,11 +20,11 @@ public:
 
     OpenCVUnwrap360(const cv::Size &cameraResolution, const cv::Size &unwrappedResolution,
                     double centreX = 0.5, double centreY = 0.5, double inner = 0.1, double outer = 0.5,
-                    double offsetRadians = 0.0, bool flip = false)
+                    int offsetDegrees = 0, bool flip = false)
     {
         create(cameraResolution, unwrappedResolution,
                centreX, centreY, inner, outer,
-               offsetRadians, flip);
+               offsetDegrees, flip);
     }
 
     //------------------------------------------------------------------------
@@ -31,7 +32,7 @@ public:
     //------------------------------------------------------------------------
     void create(const cv::Size &cameraResolution, const cv::Size &unwrappedResolution,
                 double centreX = 0.5, double centreY = 0.5, double inner = 0.1, double outer = 0.5,
-                double offsetRadians = 0.0, bool flip = false)
+                int offsetDegrees = 0, bool flip = false)
     {
         // convert relative (0.0 to 1.0) to absolute pixel values
         const int centreXPixel = (int)round((double)cameraResolution.width * centreX);
@@ -44,7 +45,7 @@ public:
         m_UnwrapMapY.create(unwrappedResolution, CV_32FC1);
 
         // Build unwrap maps
-        const float pi = 3.141592653589793238462643383279502884f;
+        double offsetRadians = offsetDegrees * M_PI / 180.0;
         for (int i = 0; i < unwrappedResolution.height; i++) {
             for (int j = 0; j < unwrappedResolution.width; j++) {
                 // Get i as a fraction of unwrapped height, flipping if desires
@@ -54,7 +55,7 @@ public:
 
                 // Convert i and j to polar
                 const float r = iFrac * (outerPixel - innerPixel) + innerPixel;
-                const float th = (((float)j / (float)unwrappedResolution.width) * 2.0f * pi) + offsetRadians;
+                const float th = (((float)j / (float)unwrappedResolution.width) * 2.0f * M_PI) + offsetRadians;
 
                 // Remap onto sphere
                 const float x = centreXPixel - r * sin(th);

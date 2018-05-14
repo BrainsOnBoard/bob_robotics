@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
     // Create unwrapper
     OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
-                              0.5, 0.416, 0.173, 0.377, -pi);
+                              0.5, 0.416, 0.173, 0.377, -180);
 #endif
 
     // Create optical flow calculator

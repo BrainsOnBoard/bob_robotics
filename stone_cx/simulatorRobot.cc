@@ -86,7 +86,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
     // Create unwrapper
     OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
-                              0.5, 0.416, 0.173, 0.377, -Parameters::pi);
+                              0.5, 0.416, 0.173, 0.377, -180);
 #endif
 
     // Create optical flow calculator
