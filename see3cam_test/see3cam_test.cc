@@ -1,11 +1,17 @@
+#include <map>
+#include <numeric>
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 // Common includes
 #include "../common/opencv_unwrap_360.h"
+#include "../common/pid.h"
 #include "../common/timer.h"
 #include "../common/see3cam_cu40.h"
 
+namespace
+{
 enum class Mode
 {
     Clamp,
@@ -29,6 +35,7 @@ void setMode(Mode newMode, Mode &mode, cv::Mat &output, cv::Mat &unwrapped) {
 
     // Update mode
     mode = newMode;
+}
 }
 
 int main(int argc, char *argv[])
@@ -59,7 +66,7 @@ int main(int argc, char *argv[])
     // Get initial brightness and exposure
     int32_t brightness = cam.getBrightness();
     int32_t exposure = cam.getExposure();
-
+   
     // Create window
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
@@ -80,6 +87,7 @@ int main(int argc, char *argv[])
     cv::Mat output(rawHeight, rawWidth, CV_8UC1);
     cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
     
+    const cv::Mat mask = cv::imread("../common/see3cam_cu40_mask.png", cv::IMREAD_GRAYSCALE);
     {
         Timer<> timer("Total time:");
 
@@ -135,6 +143,9 @@ int main(int argc, char *argv[])
                 char filename[255];
                 sprintf(filename, "image_%u.png", frame);
                 cv::imwrite(filename, unwrapped);
+            }
+            else if(key == 'a') {
+                cam.autoExposure(mask);
             }
             else if(key ==  '-') {
                 if(brightness > 1) {

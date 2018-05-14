@@ -1,5 +1,9 @@
 #pragma once
 
+// Standard C++ includes
+#include <chrono>
+#include <thread>
+
 // OpenCV includes
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -177,6 +181,133 @@ public:
         }
         else {
             return false;
+        }
+    }
+    
+    float calculateImageEntropy(const cv::Mat &mask = cv::Mat())
+    {
+        const unsigned int inputWidth = getWidth();
+        const unsigned int inputHeight = getHeight();
+     
+        // Check validity of mask
+        const bool noMask = (mask.cols == 0 && mask.rows == 0);
+        assert(noMask || (mask.cols == (inputWidth / 2) && mask.rows == (inputHeight / 2)));
+        assert(noMask || mask.type() == CV_8UC1);
+        
+        // Read data and size (in bytes) from camera
+        // **NOTE** these pointers are only valid within one frame
+        void *data = nullptr;
+        uint32_t sizeBytes = 0;
+        if(Video4LinuxCamera::capture(data, sizeBytes)) {
+            // Check frame size is correct
+            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            const uint16_t *bayerData = reinterpret_cast<uint16_t*>(data);
+
+            // 10-bit RGB histograms
+            unsigned int hist[3][1024];
+            std::fill_n(hist[0], 1024, 0);
+            std::fill_n(hist[1], 1024, 0);
+            std::fill_n(hist[2], 1024, 0);
+            
+            // Loop through bayer pixels
+            unsigned int numPixels = 0;
+            for(unsigned int y = 0; y < inputHeight; y += 2) {
+                // Get pointers to start of both rows of Bayer data and output RGB data
+                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+                const uint16_t *inR16Start = &bayerData[((y + 1) * inputWidth) + 1];
+                for(unsigned int x = 0; x < inputWidth; x += 2) {
+                    // Read Bayer pixels
+                    const uint16_t b = *(inBG16Start++);
+                    const uint16_t g = *(inBG16Start++);
+                    const uint16_t r = *inR16Start;
+                    inR16Start += 2;
+                    
+                    // If we don't have a mask or this pixel isn't masked
+                    if(noMask || mask.at<uint8_t>(y / 2, x / 2) > 0) {
+                        // Increment histogram bins
+                        hist[0][r]++;
+                        hist[1][g]++;
+                        hist[2][b]++;
+                        
+                        // Increment totals
+                        numPixels++;
+                    }
+                }
+            }
+            
+            // Check pixel count
+            assert(!noMask || numPixels == (inputWidth * inputHeight / 4));
+            
+            // Calculate entropy in each colour channel
+            float entropy = 0.0f;
+            for(unsigned int c = 0; c < 3; c++) {
+                entropy -= std::accumulate(std::begin(hist[c]), std::end(hist[c]), 0.0f,
+                                                      [numPixels](float acc, unsigned int h)
+                                                      {
+                                                          if(h == 0) {
+                                                              return acc;
+                                                          }
+                                                          else {
+                                                              const float p = (float)h / (float)numPixels;
+                                                              return acc + (p * std::log(p));
+                                                          }
+                                                      });
+            }
+            return entropy;
+        }
+        else {
+            throw std::runtime_error("Cannot read from camera");
+        }
+    }
+    
+    void autoExposure(const cv::Mat &mask = cv::Mat(), int brightnessExposureConstant=5)
+    {
+        // Configure initial brightness and exposure values
+        int32_t brightness = m_BrightnessControl.minimum;
+        int32_t exposure = std::max(m_ExposureControl.minimum, brightness * brightnessExposureConstant);
+        assert(exposure < m_ExposureControl.maximum);
+        
+        // Loop until we've 
+        int32_t previousBrightness = 0;
+        int32_t previousExposure = 0;
+        float previousEntropy = 0.0f;
+        while(brightness < m_BrightnessControl.maximum && exposure < m_ExposureControl.maximum) {
+            // Set exposure and brightness
+            setExposure(exposure);
+            setBrightness(brightness);
+            
+            // Wait for change to take effect
+            // **NOTE** delay  found experimentally
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            
+            // Throw away frame so new frame is captured AFTER setting change
+            // **NOTE** this is required because of double-buffering in Video4LinuxCamera
+            void *data = nullptr;
+            uint32_t sizeBytes = 0;
+            capture(data, sizeBytes);
+            
+            // Calculate image entropy
+            const float entropy = calculateImageEntropy(mask);
+            
+            // If we have passed entropy peak
+            if(entropy < previousEntropy) {                
+                std::cout << "Optimal exposure and brightness settings found: exposure=" << previousExposure << ", brightness=" << previousBrightness << std::endl;
+                setExposure(previousExposure);
+                setBrightness(previousBrightness);
+                return;                
+            }
+            // Otherwise
+            else {
+                // Update previous state
+                previousEntropy = entropy;
+                previousBrightness = brightness;
+                previousExposure = exposure;
+            
+                // Follow path
+                // **NOTE** step size found experimentally
+                brightness += (entropy < 15.0f) ? 8 : 2;
+                exposure = (brightness * brightnessExposureConstant);
+            }
         }
     }
 
