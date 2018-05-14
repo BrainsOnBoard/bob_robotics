@@ -2,9 +2,6 @@
 #include <condition_variable>
 #include <mutex>
 
-namespace Parrot {
-using namespace std;
-
 /*
  * A C++11 semaphore implementation (after:
  * https://stackoverflow.com/questions/4792449/c0x-has-no-semaphores-how-to-synchronize-threads)
@@ -19,7 +16,7 @@ public:
      */
     void notify()
     {
-        unique_lock<mutex> lock(mtx);
+        std::unique_lock<std::mutex> lock(mtx);
         fired = true;
         cv.notify_one();
     }
@@ -29,7 +26,7 @@ public:
      */
     void wait()
     {
-        unique_lock<mutex> lock(mtx);
+        std::unique_lock<std::mutex> lock(mtx);
         while (!fired) {
             cv.wait(lock);
         }
@@ -37,8 +34,7 @@ public:
     }
 
 private:
-    mutex mtx;
-    condition_variable cv;
+    std::mutex mtx;
+    std::condition_variable cv;
     bool fired = false;
 };
-}
