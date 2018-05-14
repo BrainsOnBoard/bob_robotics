@@ -1,0 +1,9 @@
+%YAML:1.0
+---
+resolution: [1280, 400]
+center: [0.5, 0.524414]
+radius:
+  inner: 0.0244141
+  outer: 0.5
+flipped: false
+degreeoffset: 0

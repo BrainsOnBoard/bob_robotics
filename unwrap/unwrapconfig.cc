@@ -44,8 +44,8 @@ main(int argc, char **argv)
 
     // create unwrapper
     // TODO: option to load appropriate params from different file
-    std::unique_ptr<OpenCVUnwrap360> unwrapper(
-            OpenCVUnwrap360::loadFromFile("webcam.yaml", cv::Size(1280, 720)));
+    std::unique_ptr<OpenCVUnwrap360> unwrapper(OpenCVUnwrap360::loadFromFile(
+            "defaultparams/webcam.yaml", cv::Size(1280, 720)));
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for
                                  // calibration (either 1 or 5)
@@ -67,18 +67,16 @@ main(int argc, char **argv)
         imshow("unwrapped", unwrap);
 
         // draw calibration cross at what we've chose as the center
-        drawCalibrationLine(
-                imorig,
-                cv::Point(unwrapper->m_CentrePixel.x - CROSS_SIZE,
-                          unwrapper->m_CentrePixel.y),
-                cv::Point(unwrapper->m_CentrePixel.x + CROSS_SIZE,
-                          unwrapper->m_CentrePixel.y));
-        drawCalibrationLine(
-                imorig,
-                cv::Point(unwrapper->m_CentrePixel.x,
-                          unwrapper->m_CentrePixel.y - CROSS_SIZE),
-                cv::Point(unwrapper->m_CentrePixel.x,
-                          unwrapper->m_CentrePixel.y + CROSS_SIZE));
+        drawCalibrationLine(imorig,
+                            cv::Point(unwrapper->m_CentrePixel.x - CROSS_SIZE,
+                                      unwrapper->m_CentrePixel.y),
+                            cv::Point(unwrapper->m_CentrePixel.x + CROSS_SIZE,
+                                      unwrapper->m_CentrePixel.y));
+        drawCalibrationLine(imorig,
+                            cv::Point(unwrapper->m_CentrePixel.x,
+                                      unwrapper->m_CentrePixel.y - CROSS_SIZE),
+                            cv::Point(unwrapper->m_CentrePixel.x,
+                                      unwrapper->m_CentrePixel.y + CROSS_SIZE));
 
         // draw inner and outer circles, showing the area which we will
         // unwrap
