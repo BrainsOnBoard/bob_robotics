@@ -1,17 +1,17 @@
 #include "../common/opencv_unwrap_360.h"
 #include <iostream>
+#include <memory>
 
 int
 main(int argc, char **argv)
 {
-    OpenCVUnwrap360::loadFromFile("yaml_read_test.yaml", cv::Size(1280, 400));
-    // Image::CamParams params("yaml_read_test.yaml");
-    // std::cout << "Size: " << params.m_SizeSource << std::endl
-    //           << "Centre: " << params.m_Center << std::endl
-    //           << "Inner radius: " << params.m_RadiusInner << std::endl
-    //           << "Outer radius: " << params.m_RadiusOuter << std::endl
-    //           << "Flipped: " << params.m_Flipped << std::endl
-    //           << "Offset: " << params.m_DegreeOffset << " deg" << std::endl;
+    std::unique_ptr<OpenCVUnwrap360> unwrapper(OpenCVUnwrap360::loadFromFile(
+            "yaml_read_test.yaml", cv::Size(1280, 400)));
+    std::cout << "Centre: " << unwrapper->m_CentrePixel << std::endl
+              << "Inner radius: " << unwrapper->m_InnerPixel << std::endl
+              << "Outer radius: " << unwrapper->m_OuterPixel << std::endl
+              << "Flipped: " << unwrapper->m_Flip << std::endl
+              << "Offset: " << unwrapper->m_OffsetDegrees << " deg" << std::endl;
 
     return 0;
 }
