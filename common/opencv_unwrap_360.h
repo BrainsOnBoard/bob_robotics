@@ -71,6 +71,47 @@ public:
         cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
     }
 
+    static OpenCVUnwrap360 *loadFromFile(const std::string &filePath, const cv::Size &cameraResolution)
+    {
+        // open YAML file
+        cv::FileStorage fs(filePath, cv::FileStorage::READ);
+
+        // resolution
+        cv::Size unwrappedResolution;
+        fs["unwrappedResolution"] >> unwrappedResolution;
+
+        // centre
+        std::vector<double> centre(2);
+        fs["centre"] >> centre;
+
+        // inner and outer radius
+        double inner = (double) fs["inner"];
+        double outer = (double) fs["outer"];
+
+        // other params
+        bool flip;
+        fs["flip"] >> flip;
+        int offsetDegrees = (int) fs["offsetDegrees"];
+
+        // std::cout << "unwrappedResolution: " << unwrappedResolution << std::endl
+        //           << "centre: [" << centre[0] << " " << centre[1] << "]" << std::endl
+        //           << "inner: " << inner << std::endl
+        //           << "flip: " << flip << std::endl
+        //           << "offsetDegrees: " << offsetDegrees << std::endl;
+
+        // close YAML file
+        fs.release();
+
+        return new OpenCVUnwrap360(cameraResolution,
+                                   unwrappedResolution,
+                                   centre[0],
+                                   centre[1],
+                                   inner,
+                                   outer,
+                                   offsetDegrees,
+                                   flip);
+    }
+
 private:
     //------------------------------------------------------------------------
     // Private members
