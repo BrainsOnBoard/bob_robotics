@@ -1,3 +1,6 @@
+# Visual Studio code user files
+/.vscode/
+
 # Ignore object files
 **/*.o
 **/*.obj
