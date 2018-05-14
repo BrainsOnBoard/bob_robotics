@@ -6,6 +6,7 @@
 #include "../common/analogue_csv_recorder.h"
 #include "../common/joystick.h"
 #include "../common/motor_i2c.h"
+#include "../common/vicon_capture_control.h"
 #include "../common/vicon_udp.h"
 
 // GeNN generated code includes
@@ -31,6 +32,9 @@ int main(int argc, char *argv[])
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
 
+    // Create VICON capture control interface
+    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
+                                              "c:\\users\\ad374\\Desktop");
     // Initialise GeNN
     allocateMem();
     initialize();
@@ -63,6 +67,13 @@ int main(int argc, char *argv[])
         std::this_thread::sleep_for(std::chrono::seconds(1));
         std::cout << "Waiting for object..." << std::endl;
     }
+
+    // Start capture
+    if(!viconCaptureControl.startRecording("test")) {
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -122,6 +133,7 @@ int main(int argc, char *argv[])
             if(joystick.isButtonDown(0)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
+                std::cout << "Turn around VICON frame:" << objectData.getFrameNumber() << std::endl;
                 outbound = false;
             }
         }
@@ -155,6 +167,11 @@ int main(int argc, char *argv[])
     // Stop motor
     motor.tank(0.0f, 0.0f);
     
+    // Stop capture
+    if(!viconCaptureControl.stopRecording("test")) {
+        return EXIT_FAILURE;
+    }
+
     // Exit
     return EXIT_SUCCESS;
 }
