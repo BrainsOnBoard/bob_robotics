@@ -178,7 +178,8 @@ public:
                                    inner,
                                    outer,
                                    offsetDegrees,
-                                   flip);
+                                   flip,
+                                   filePath);
     }
 
 private:
