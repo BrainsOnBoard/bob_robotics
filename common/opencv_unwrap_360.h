@@ -2,7 +2,6 @@
 
 // Standard C includes
 #include <cassert>
-#define _USE_MATH_DEFINES
 #include <cmath>
 
 // OpenCV includes
@@ -74,10 +73,11 @@ public:
     void create()
     {
         // Build unwrap maps
-        double offsetRadians = m_OffsetDegrees * M_PI / 180.0;
+        const float pi = 3.141592653589793238462643383279502884f;
+        double offsetRadians = m_OffsetDegrees * pi / 180.0;
         for (int i = 0; i < m_UnwrappedResolution.height; i++) {
             for (int j = 0; j < m_UnwrappedResolution.width; j++) {
-                // Get i as a fraction of unwrapped height, flipping if desires
+                // Get i as a fraction of unwrapped height, flipping if desired
                 const float iFrac =
                         m_Flip ? 1.0 - ((float) i /
                                         (float) m_UnwrappedResolution.height)
@@ -89,7 +89,7 @@ public:
                         iFrac * (m_OuterPixel - m_InnerPixel) + m_InnerPixel;
                 const float th =
                         (((float) j / (float) m_UnwrappedResolution.width) *
-                         2.0f * M_PI) +
+                         2.0f * pi) +
                         offsetRadians;
 
                 // Remap onto sphere
