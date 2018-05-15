@@ -75,6 +75,17 @@ public:
     {
     }
 
+    See3CAM_CU40(const std::string &device,
+                 Resolution res,
+                 const cv::Size &outputSize,
+                 int32_t brightness,
+                 bool resetToDefaults = true)
+      : See3CAM_CU40(device, res, resetToDefaults)
+    {
+        setOutputSize(outputSize);
+        setBrightness(brightness);
+    }
+
     See3CAM_CU40(const std::string &device, Resolution res, bool resetToDefaults = true)
     {
         if(!open(device, res, resetToDefaults)) {

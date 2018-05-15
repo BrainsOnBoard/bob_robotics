@@ -14,6 +14,13 @@ public:
     {}
 
     template<class T>
+    OpenCVInput(T dev, const cv::Size &outSize)
+      : OpenCVInput(dev)
+    {
+        setOutputSize(outSize);
+    }
+
+    template<class T>
     OpenCVInput(T dev)
       : cv::VideoCapture(dev)
     {}
