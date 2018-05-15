@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "common/opencv_unwrap_360.h"
+#include "videoin/sensible.h"
 #include "videoin/opencvinput.h"
 
 const int CROSS_SIZE = 20; // size of calibration cross
@@ -29,8 +30,8 @@ main(int argc, char **argv)
     // TODO: add option to calibrate see3cam too
     VideoIn::VideoInput *cam;
     if (argc == 1) {
-        // if no args supplied, use default webcam
-        cam = new VideoIn::OpenCVInput;
+        // if no args supplied, use default
+        cam = VideoIn::getSensibleCamera();
     } else {
         try {
             // if the arg is an int, the user is specifying a camera...
@@ -42,16 +43,12 @@ main(int argc, char **argv)
         }
     }
 
-    cv::Size cameraResolution(1440, 1440);
-    cam->setOutputSize(cameraResolution);
+    // so pointer is freed on exit
+    std::unique_ptr<VideoIn::VideoInput> pcam(cam);
 
     // create unwrapper and load params from file
-    // TODO: option to load appropriate params from different file
-    const std::string filePath = "pixpro_usb.yaml";
-    OpenCVUnwrap360 unwrapper(cameraResolution);
-    cv::FileStorage fs("defaultparams/" + filePath, cv::FileStorage::READ);
-    unwrapper << fs;
-    fs.release();
+    OpenCVUnwrap360 unwrapper;
+    cam->createDefaultUnwrapper(unwrapper);
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for
                                  // calibration (either 1 or 5)
@@ -170,6 +167,7 @@ main(int argc, char **argv)
 
     if (dirtyFlag) {
         // write params to file
+        std::string filePath = cam->getCameraName() + ".yaml"; // I don't like this
         std::cout << "Writing to " << filePath << "..." << std::endl;
         cv::FileStorage outfs(filePath, cv::FileStorage::WRITE);
         unwrapper >> outfs;
