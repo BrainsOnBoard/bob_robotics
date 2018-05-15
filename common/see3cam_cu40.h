@@ -384,6 +384,11 @@ public:
         m_OutputSize = outSize;
     }
 
+    const std::string getCameraName()
+    {
+        return "see3cam";
+    }
+
     unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }
     unsigned int getSuperPixelHeight() const{ return getHeight() / 2; }
     cv::Size getSuperPixelSize() const{ return cv::Size(getSuperPixelWidth(), getSuperPixelHeight()); }

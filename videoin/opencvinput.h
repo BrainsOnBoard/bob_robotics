@@ -14,10 +14,13 @@ public:
     {}
 
     template<class T>
-    OpenCVInput(T dev, const cv::Size &outSize)
+    OpenCVInput(T dev,
+                const cv::Size &outSize,
+                const std::string &cameraName = "webcam")
       : OpenCVInput(dev)
     {
         setOutputSize(outSize);
+        m_CameraName = "webcam";
     }
 
     template<class T>
@@ -31,10 +34,18 @@ public:
         return outFrame.cols != 0;
     }
 
+    const std::string getCameraName()
+    {
+        return m_CameraName;
+    }
+
     void setOutputSize(const cv::Size &outSize)
     {
         set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
         set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
     }
+
+protected:
+    std::string m_CameraName;
 };
 }
