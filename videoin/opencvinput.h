@@ -24,7 +24,7 @@ public:
         return outFrame.cols != 0;
     }
 
-    void setOutputSize(cv::Size outSize)
+    void setOutputSize(const cv::Size &outSize)
     {
         set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
         set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);

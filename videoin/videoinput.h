@@ -9,7 +9,7 @@ public:
     virtual ~VideoInput()
     {}
     virtual bool readFrame(cv::Mat &outFrame) = 0;
-    virtual void setOutputSize(cv::Size outSize)
+    virtual void setOutputSize(const cv::Size &outSize)
     {}
 };
 }
