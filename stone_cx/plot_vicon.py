@@ -1,17 +1,8 @@
 # Import modules
-import csv
-import enum
-import glob
 import itertools
-import os
 import re
 import matplotlib.pyplot as plt
 import numpy as np
-
-class ViconEvent(enum.Enum):
-    TrialStart  = 0
-    HomeStart   = 1
-    TrialEnd    = 2
 
 def load_vicon_csv(filename):
     with open(filename, "rb") as csv_file:
@@ -51,10 +42,18 @@ def load_vicon_csv(filename):
 
 # Load Vicon data file
 vicon_data = load_vicon_csv("pi.csv")
-robot_data = vicon_data["jamie_robot"]
+robot_data = vicon_data["norbot"]
+
+outbound_end_frame = 981849 - 977162
+outbound_mask = (robot_data[0,:] < outbound_end_frame)
+inbound_mask = np.logical_not(outbound_mask)
 
 fig, axis = plt.subplots()
 
-axis.plot(robot_data[4,:], robot_data[5,:])
+axis.plot(robot_data[4,outbound_mask], robot_data[5,outbound_mask], color="red", label="Outbound")
+axis.plot(robot_data[4,inbound_mask], robot_data[5,inbound_mask], color="blue", label="Inbound")
+axis.set_xlabel("X")
+axis.set_ylabel("Y")
+axis.legend()
 
 plt.show()
