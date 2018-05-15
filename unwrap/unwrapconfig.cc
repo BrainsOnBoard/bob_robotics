@@ -47,9 +47,9 @@ main(int argc, char **argv)
 
     // create unwrapper and load params from file
     // TODO: option to load appropriate params from different file
-    const std::string filePath = "defaultparams/pixpro_usb.yaml";
+    const std::string filePath = "pixpro_usb.yaml";
     OpenCVUnwrap360 unwrapper(cameraResolution);
-    cv::FileStorage fs(filePath, cv::FileStorage::READ);
+    cv::FileStorage fs("defaultparams/" + filePath, cv::FileStorage::READ);
     unwrapper << fs;
     fs.release();
 
