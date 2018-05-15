@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <chrono>
 #include <thread>
+#include <numeric>
 
 // OpenCV includes
 #include <opencv2/imgproc/imgproc.hpp>
@@ -382,7 +383,7 @@ public:
     static OpenCVUnwrap360 createUnwrapper(const cv::Size &camRes, const cv::Size &unwrapRes)
     {
         return OpenCVUnwrap360(camRes, unwrapRes,
-                               0.5, 0.461111, 0.183333, 0.4, 1.570796327, true);
+                               0.5, 0.461111, 0.183333, 0.4, 180, true);
     }
 
     static cv::Mat createBubblescopeMask(const cv::Size &camRes)
