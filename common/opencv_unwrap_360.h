@@ -106,11 +106,8 @@ public:
         cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
     }
 
-    void writeFile()
+    void operator >>(cv::FileStorage &fs)
     {
-        std::cout << "Writing to " << m_FilePath << "..." << std::endl;
-        cv::FileStorage fs(m_FilePath, cv::FileStorage::WRITE);
-
         // resolution
         fs << "unwrappedResolution" << m_UnwrappedResolution;
 
@@ -130,9 +127,6 @@ public:
         // other
         fs << "offsetDegrees" << m_OffsetDegrees;
         fs << "flip" << m_Flip;
-
-        // close file
-        fs.release();
     }
 
     // Public members
