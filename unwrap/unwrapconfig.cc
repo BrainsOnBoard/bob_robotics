@@ -1,8 +1,8 @@
 #include <memory>
 #include <opencv2/opencv.hpp>
 
-#include "../common/opencv_unwrap_360.h"
-#include "../videoin/opencvinput.h"
+#include "common/opencv_unwrap_360.h"
+#include "videoin/opencvinput.h"
 
 const int CROSS_SIZE = 20; // size of calibration cross
 
@@ -42,16 +42,22 @@ main(int argc, char **argv)
         }
     }
 
-    // create unwrapper
+    cv::Size cameraResolution(1440, 1440);
+    cam->setOutputSize(cameraResolution);
+
+    // create unwrapper and load params from file
     // TODO: option to load appropriate params from different file
-    std::unique_ptr<OpenCVUnwrap360> unwrapper(OpenCVUnwrap360::loadFromFile(
-            "defaultparams/webcam.yaml", cv::Size(1280, 720)));
+    const std::string filePath = "defaultparams/pixpro_usb.yaml";
+    OpenCVUnwrap360 unwrapper(cameraResolution);
+    cv::FileStorage fs(filePath, cv::FileStorage::READ);
+    unwrapper << fs;
+    fs.release();
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for
                                  // calibration (either 1 or 5)
 
     cv::Mat imorig;
-    cv::Mat unwrap(unwrapper->m_UnwrappedResolution, CV_8UC3);
+    cv::Mat unwrap(unwrapper.m_UnwrappedResolution, CV_8UC3);
     bool dirtyFlag = false;
 
     // display remapped camera output on loop until user presses escape
@@ -61,33 +67,33 @@ main(int argc, char **argv)
             return 1;
         }
 
-        unwrapper->unwrap(imorig, unwrap);
+        unwrapper.unwrap(imorig, unwrap);
 
         // show unwrapped image
         imshow("unwrapped", unwrap);
 
         // draw calibration cross at what we've chose as the center
         drawCalibrationLine(imorig,
-                            cv::Point(unwrapper->m_CentrePixel.x - CROSS_SIZE,
-                                      unwrapper->m_CentrePixel.y),
-                            cv::Point(unwrapper->m_CentrePixel.x + CROSS_SIZE,
-                                      unwrapper->m_CentrePixel.y));
+                            cv::Point(unwrapper.m_CentrePixel.x - CROSS_SIZE,
+                                      unwrapper.m_CentrePixel.y),
+                            cv::Point(unwrapper.m_CentrePixel.x + CROSS_SIZE,
+                                      unwrapper.m_CentrePixel.y));
         drawCalibrationLine(imorig,
-                            cv::Point(unwrapper->m_CentrePixel.x,
-                                      unwrapper->m_CentrePixel.y - CROSS_SIZE),
-                            cv::Point(unwrapper->m_CentrePixel.x,
-                                      unwrapper->m_CentrePixel.y + CROSS_SIZE));
+                            cv::Point(unwrapper.m_CentrePixel.x,
+                                      unwrapper.m_CentrePixel.y - CROSS_SIZE),
+                            cv::Point(unwrapper.m_CentrePixel.x,
+                                      unwrapper.m_CentrePixel.y + CROSS_SIZE));
 
         // draw inner and outer circles, showing the area which we will
         // unwrap
         circle(imorig,
-               unwrapper->m_CentrePixel,
-               unwrapper->m_InnerPixel,
+               unwrapper.m_CentrePixel,
+               unwrapper.m_InnerPixel,
                cv::Scalar(0x00, 0x00, 0xff),
                2);
         circle(imorig,
-               unwrapper->m_CentrePixel,
-               unwrapper->m_OuterPixel,
+               unwrapper.m_CentrePixel,
+               unwrapper.m_OuterPixel,
                cv::Scalar(0xff, 0x00, 0x00),
                2);
 
@@ -111,51 +117,51 @@ main(int argc, char **argv)
                     pixelJump = BIG_PX_JUMP;
                 break;
             case 'w': // make inner circle bigger
-                unwrapper->m_InnerPixel += pixelJump;
-                unwrapper->create();
+                unwrapper.m_InnerPixel += pixelJump;
+                unwrapper.updateMaps();
                 dirtyFlag = true;
                 break;
             case 's': // make inner circle smaller
-                if (unwrapper->m_InnerPixel > 0) {
-                    unwrapper->m_InnerPixel -= pixelJump;
-                    unwrapper->m_InnerPixel =
-                            std::max(0, unwrapper->m_InnerPixel);
-                    unwrapper->create();
+                if (unwrapper.m_InnerPixel > 0) {
+                    unwrapper.m_InnerPixel -= pixelJump;
+                    unwrapper.m_InnerPixel =
+                            std::max(0, unwrapper.m_InnerPixel);
+                    unwrapper.updateMaps();
                     dirtyFlag = true;
                 }
                 break;
             case 'q': // make outer circle bigger
-                unwrapper->m_OuterPixel += pixelJump;
-                unwrapper->create();
+                unwrapper.m_OuterPixel += pixelJump;
+                unwrapper.updateMaps();
                 dirtyFlag = true;
                 break;
             case 'a': // make outer circle smaller
-                if (unwrapper->m_OuterPixel > 0) {
-                    unwrapper->m_OuterPixel -= pixelJump;
-                    unwrapper->m_OuterPixel =
-                            std::max(0, unwrapper->m_OuterPixel);
-                    unwrapper->create();
+                if (unwrapper.m_OuterPixel > 0) {
+                    unwrapper.m_OuterPixel -= pixelJump;
+                    unwrapper.m_OuterPixel =
+                            std::max(0, unwrapper.m_OuterPixel);
+                    unwrapper.updateMaps();
                     dirtyFlag = true;
                 }
                 break;
             case KB_UP: // move centre up
-                unwrapper->m_CentrePixel.y -= pixelJump;
-                unwrapper->create();
+                unwrapper.m_CentrePixel.y -= pixelJump;
+                unwrapper.updateMaps();
                 dirtyFlag = true;
                 break;
             case KB_DOWN: // move centre down
-                unwrapper->m_CentrePixel.y += pixelJump;
-                unwrapper->create();
+                unwrapper.m_CentrePixel.y += pixelJump;
+                unwrapper.updateMaps();
                 dirtyFlag = true;
                 break;
             case KB_LEFT: // move centre left
-                unwrapper->m_CentrePixel.x -= pixelJump;
-                unwrapper->create();
+                unwrapper.m_CentrePixel.x -= pixelJump;
+                unwrapper.updateMaps();
                 dirtyFlag = true;
                 break;
             case KB_RIGHT: // move centre right
-                unwrapper->m_CentrePixel.x += pixelJump;
-                unwrapper->create();
+                unwrapper.m_CentrePixel.x += pixelJump;
+                unwrapper.updateMaps();
                 dirtyFlag = true;
                 break;
             }
@@ -164,9 +170,10 @@ main(int argc, char **argv)
 
     if (dirtyFlag) {
         // write params to file
-        // in particular we want to remember our calibration settings so we
-        // don't have to recalibrate the next time we start the program
-        unwrapper->writeFile();
+        std::cout << "Writing to " << filePath << "..." << std::endl;
+        cv::FileStorage outfs(filePath, cv::FileStorage::WRITE);
+        unwrapper >> outfs;
+        outfs.release();
     }
 
     return 0;
