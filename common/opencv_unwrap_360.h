@@ -16,6 +16,10 @@ public:
     OpenCVUnwrap360()
     {}
 
+    OpenCVUnwrap360(const cv::Size &cameraResolution)
+      : m_CameraResolution(cameraResolution)
+    {}
+
     OpenCVUnwrap360(const cv::Size &cameraResolution,
                     const cv::Size &unwrappedResolution,
                     double centreX = 0.5,
@@ -23,9 +27,7 @@ public:
                     double inner = 0.1,
                     double outer = 0.5,
                     int offsetDegrees = 0,
-                    bool flip = false,
-                    const std::string &filePath = "unknown_camera.yaml")
-      : m_FilePath(filePath)
+                    bool flip = false)
     {
         create(cameraResolution,
                unwrappedResolution,
@@ -67,10 +69,10 @@ public:
         m_Flip = flip;
 
         // Build unwrap maps
-        create();
+        updateMaps();
     }
 
-    void create()
+    void updateMaps()
     {
         // Build unwrap maps
         const float pi = 3.141592653589793238462643383279502884f;
@@ -106,11 +108,11 @@ public:
         cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
     }
 
-    void writeFile()
+    /*
+     * Serialise this object.
+     */
+    void operator>>(cv::FileStorage &fs)
     {
-        std::cout << "Writing to " << m_FilePath << "..." << std::endl;
-        cv::FileStorage fs(m_FilePath, cv::FileStorage::WRITE);
-
         // resolution
         fs << "unwrappedResolution" << m_UnwrappedResolution;
 
@@ -130,24 +132,18 @@ public:
         // other
         fs << "offsetDegrees" << m_OffsetDegrees;
         fs << "flip" << m_Flip;
-
-        // close file
-        fs.release();
     }
 
-    // Public members
-    cv::Point m_CentrePixel;
-    int m_InnerPixel, m_OuterPixel;
-    int m_OffsetDegrees;
-    bool m_Flip;
-    cv::Size m_CameraResolution, m_UnwrappedResolution;
-
-    // Begin static methods
-    static OpenCVUnwrap360 *loadFromFile(const std::string &filePath,
-                                         const cv::Size &cameraResolution)
+    /*
+     * Deserialise from a cv::FileStorage object (e.g. read from file)
+     */
+    void operator<<(cv::FileStorage &fs)
     {
-        // open YAML file
-        cv::FileStorage fs(filePath, cv::FileStorage::READ);
+        /*
+         * We need to already know the camera resolution otherwise we won't be
+         * able to convert the parameters from relative to absolute values.
+         */
+        assert(!m_CameraResolution.empty());
 
         // resolution
         cv::Size unwrappedResolution;
@@ -166,27 +162,28 @@ public:
         bool flip;
         fs["flip"] >> flip;
 
-        // close YAML file
-        fs.release();
-
-        // create new unwrapper on the heap - user is responsible for deleting
-        // it
-        return new OpenCVUnwrap360(cameraResolution,
-                                   unwrappedResolution,
-                                   centre[0],
-                                   centre[1],
-                                   inner,
-                                   outer,
-                                   offsetDegrees,
-                                   flip,
-                                   filePath);
+        // create our unwrap maps
+        create(m_CameraResolution,
+               unwrappedResolution,
+               centre[0],
+               centre[1],
+               inner,
+               outer,
+               offsetDegrees,
+               flip);
     }
+
+    // Public members
+    cv::Point m_CentrePixel;
+    int m_InnerPixel, m_OuterPixel;
+    int m_OffsetDegrees;
+    bool m_Flip;
+    cv::Size m_CameraResolution, m_UnwrappedResolution;
 
 private:
     //------------------------------------------------------------------------
     // Private members
     //------------------------------------------------------------------------
-    std::string m_FilePath;
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
 };
