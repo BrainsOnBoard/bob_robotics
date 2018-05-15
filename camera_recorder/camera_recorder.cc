@@ -17,6 +17,9 @@ int main()
     const std::string device = "/dev/video0";
     See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_1280x720);
 
+    // Delete old images
+    system("rm -f image_*.png");
+
     // Calculate camera input dimensions
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
