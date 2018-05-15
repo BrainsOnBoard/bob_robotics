@@ -66,6 +66,14 @@ public:
         set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
     }
 
+    cv::Size getOutputSize() const
+    {
+        cv::Size outSize;
+        outSize.width = (int) get(cv::CAP_PROP_FRAME_WIDTH);
+        outSize.height = (int) get(cv::CAP_PROP_FRAME_HEIGHT);
+        return outSize;
+    }
+
 protected:
     std::string m_CameraName;
 };

@@ -17,5 +17,6 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) = 0;
     virtual const std::string getCameraName() = 0;
+    virtual cv::Size getOutputSize() const = 0;
 };
 }

@@ -382,6 +382,11 @@ public:
     
     cv::Size getSize() const{ return cv::Size(getWidth(), getHeight()); }
 
+    cv::Size getOutputSize() const
+    {
+        return m_OutputSize;
+    }
+
     void setOutputSize(const cv::Size &outSize)
     {
         m_OutputSize = outSize;
