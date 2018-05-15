@@ -1,27 +1,34 @@
+// Standard C++ includes
+#include <fstream>
+
+// GeNN robotics includes
 #include "../common/joystick.h"
 #include "../common/motor_i2c.h"
 #include "../common/opencv_unwrap_360.h"
 #include "../common/see3cam_cu40.h"
+#include "../common/vicon_capture_control.h"
+#include "../common/vicon_udp.h"
 
 int main()
 {
+    constexpr unsigned int recordingInterval = 10;
     constexpr float joystickDeadzone = 0.25f;
-    
+
     const std::string device = "/dev/video0";
     See3CAM_CU40 cam(device, See3CAM_CU40::Resolution::_1280x720);
 
-    cam.setExposure(300);
-    cam.setBrightness(30);
-    
-    // Create joystick interface
-    Joystick joystick;
-    
-
-// Create window
+    // Calculate camera input dimensions
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
     const unsigned int unwrapWidth = 450;
     const unsigned int unwrapHeight = 50;
+
+    // Create bubblescope mask and use to calibrate camera exposure
+    const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(cv::Size(rawWidth, rawHeight));
+    cam.autoExposure(bubblescopeMask);
+
+    // Create joystick interface
+    Joystick joystick;
 
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
@@ -29,28 +36,73 @@ int main()
     // Create motor interface
     MotorI2C motor;
 
- cv::Mat output(rawHeight, rawWidth, CV_8UC1);
+    cv::Mat output(rawHeight, rawWidth, CV_8UC1);
     cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
 
+#ifdef VICON_CAPTURE
+    // Create Vicon UDP interface
+    Vicon::UDPClient<Vicon::ObjectData> vicon(51001);
+
+    // Create Vicon capture control interface
+    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
+                                              "c:\\users\\ad374\\Desktop");
+
+    // Wait for tracking
+    while(vicon.getNumObjects() == 0) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << "Waiting for object" << std::endl;
+    }
+
+    // Start capture
+    if(!viconCaptureControl.startRecording("camera_recorder")) {
+        return EXIT_FAILURE;
+    }
+
+    // Open file to log capture data and write header
+    std::ofstream data("vicon.csv");
+    data << "Filename, Frame, X, Y, Z, Rx, Ry, Rz" << std::endl;
+#endif  // VICON_CAPTURE
+
+    // Loop through time
     for(unsigned int x = 0;;x++) {
         // Read joystick
         joystick.read();
         
         // Use joystick to drive motor
         joystick.drive(motor, joystickDeadzone);
-        
-	if( cam.captureSuperPixelGreyscale(output))
-        {
-           unwrapper.unwrap(output, unwrapped);
 
-           if((x %  10) == 0) {
-               char filename[255];
-               sprintf(filename, "image_%u.png", x);
+        // If recording interval has elapsed
+        if((x %  recordingInterval) == 0) {
+            // If we successfully captured a frame
+            if(cam.captureSuperPixelGreyscale(output))
+            {
+                // Unwrap frame
+                unwrapper.unwrap(output, unwrapped);
 
-               cv::imwrite(filename,  unwrapped);
-           }
+                // Write image file
+                char filename[255];
+                sprintf(filename, "image_%u.png", x);
+                cv::imwrite(filename,  unwrapped);
+
+#ifdef VICON_CAPTURE
+                // Get tracking data
+                auto objectData = vicon.getObjectData(0);
+                const auto &translation = objectData.getTranslation();
+                const auto &rotation = objectData.getRotation();
+
+                // Write to CSV
+                data << filename << ", " << objectData.getFrameNumber() << ", " << translation[0] << ", " << translation[1] << ", " << translation[2] << ", " << rotation[0] << ", " << rotation[1] << ", " << rotation[2] << std::endl;
+#endif  // VICON_CAPTURE
+            }
         }
     } while(!joystick.isButtonDown(1));
-    
-    return 0;
+
+#ifdef VICON_CAPTURE
+    // Stop capture
+    if(!viconCaptureControl.stopRecording("camera_recorder")) {
+        return EXIT_FAILURE;
+    }
+#endif  // VICON_CAPTURE
+
+    return EXIT_SUCCESS;
 }
