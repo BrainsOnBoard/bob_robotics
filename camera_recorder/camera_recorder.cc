@@ -23,7 +23,7 @@ int main()
     // Calculate camera input dimensions
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
-    const unsigned int unwrapWidth = 450;
+    const unsigned int unwrapWidth = 180;
     const unsigned int unwrapHeight = 50;
 
     // Create bubblescope mask and use to calibrate camera exposure
@@ -66,39 +66,39 @@ int main()
     data << "Filename, Frame, X, Y, Z, Rx, Ry, Rz" << std::endl;
 #endif  // VICON_CAPTURE
 
-    // Loop through time
-    for(unsigned int x = 0;;x++) {
+    // Loop through time until joystick button pressed
+    for(unsigned int x = 0; !joystick.isButtonDown(1); x++) {
         // Read joystick
         joystick.read();
         
         // Use joystick to drive motor
         joystick.drive(motor, joystickDeadzone);
 
-        // If recording interval has elapsed
-        if((x %  recordingInterval) == 0) {
-            // If we successfully captured a frame
-            if(cam.captureSuperPixelGreyscale(output))
-            {
-                // Unwrap frame
-                unwrapper.unwrap(output, unwrapped);
+        // If we successfully captured a frame
+        if(cam.captureSuperPixelGreyscale(output))
+        {
+           // Unwrap frame
+           unwrapper.unwrap(output, unwrapped);
 
-                // Write image file
-                char filename[255];
-                sprintf(filename, "image_%u.png", x);
-                cv::imwrite(filename,  unwrapped);
+           // If recording interval has elapsed
+           if((x % recordingInterval) == 0) {
+               // Write image file
+               char filename[255];
+               sprintf(filename, "image_%u.png", x);
+               cv::imwrite(filename,  unwrapped);
 
 #ifdef VICON_CAPTURE
-                // Get tracking data
-                auto objectData = vicon.getObjectData(0);
-                const auto &translation = objectData.getTranslation();
-                const auto &rotation = objectData.getRotation();
+               // Get tracking data
+               auto objectData = vicon.getObjectData(0);
+               const auto &translation = objectData.getTranslation();
+               const auto &rotation = objectData.getRotation();
 
-                // Write to CSV
-                data << filename << ", " << objectData.getFrameNumber() << ", " << translation[0] << ", " << translation[1] << ", " << translation[2] << ", " << rotation[0] << ", " << rotation[1] << ", " << rotation[2] << std::endl;
+               // Write to CSV
+               data << filename << ", " << objectData.getFrameNumber() << ", " << translation[0] << ", " << translation[1] << ", " << translation[2] << ", " << rotation[0] << ", " << rotation[1] << ", " << rotation[2] << std::endl;
 #endif  // VICON_CAPTURE
-            }
+           }
         }
-    } while(!joystick.isButtonDown(1));
+    }
 
 #ifdef VICON_CAPTURE
     // Stop capture
