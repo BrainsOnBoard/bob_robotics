@@ -5,4 +5,4 @@ centre: [0.506944, 0.510417]
 inner: 0
 outer: 0.541667
 offsetDegrees: 0
-flip: false
+flip: true
