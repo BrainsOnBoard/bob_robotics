@@ -67,10 +67,10 @@ public:
         m_Flip = flip;
 
         // Build unwrap maps
-        create();
+        updateMaps();
     }
 
-    void create()
+    void updateMaps()
     {
         // Build unwrap maps
         const float pi = 3.141592653589793238462643383279502884f;
