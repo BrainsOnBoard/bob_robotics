@@ -77,9 +77,9 @@ getSensibleCamera()
                             cv::Size(640, 360),
                             20);
     case 1: // PixPro
-        return new OpenCVInput(deviceNum, cv::Size(1440, 1440));
-    default:
-        return new OpenCVInput(deviceNum, cv::Size(1280, 720));
+        return new OpenCVInput(deviceNum, cv::Size(1440, 1440), "pixpro_usb");
+    default: // webcam with panoramic lens
+        return new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360");
     }
 }
 }

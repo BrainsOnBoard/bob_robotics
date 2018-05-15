@@ -13,6 +13,9 @@
 #include "v4l_camera.h"
 #include "../videoin/videoinput.h"
 
+// default unwrap params
+#include "../unwrap/defaultparams/see3cam.h"
+
 /* NEON version of captureSuperPixel - fun but doesn't actually help performance
 // Create tables to use for shuffling BGIR data into BGR
 //                              b0, g0, r0| b1, g1, r1| b2, g2
@@ -387,6 +390,11 @@ public:
     const std::string getCameraName()
     {
         return "see3cam";
+    }
+
+    const std::string getDefaultUnwrapParams()
+    {
+        return SEE3CAM_UNWRAP_PARAMS;
     }
 
     unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }

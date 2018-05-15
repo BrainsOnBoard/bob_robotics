@@ -1,7 +1,13 @@
 #pragma once
 
-#include "videoinput.h"
 #include <opencv2/opencv.hpp>
+
+#include "videoinput.h"
+
+// default unwrap parameters for different cameras
+#include "../unwrap/defaultparams/webcam360.h"
+#include "../unwrap/defaultparams/pixpro_usb.h"
+#include "../unwrap/defaultparams/pixpro_wifi.h"
 
 namespace VideoIn {
 class OpenCVInput
@@ -16,11 +22,11 @@ public:
     template<class T>
     OpenCVInput(T dev,
                 const cv::Size &outSize,
-                const std::string &cameraName = "webcam")
+                const std::string &cameraName = "unknown_camera")
       : OpenCVInput(dev)
     {
         setOutputSize(outSize);
-        m_CameraName = "webcam";
+        m_CameraName = cameraName;
     }
 
     template<class T>
@@ -38,6 +44,21 @@ public:
     {
         return m_CameraName;
     }
+
+    const std::string getDefaultUnwrapParams()
+    {
+        if (m_CameraName == "webcam360") {
+            return WEBCAM360_UNWRAP_PARAMS;
+        }
+        if (m_CameraName == "pixpro_usb") {
+            return PIXPRO_USB_UNWRAP_PARAMS;
+        }
+        if (m_CameraName == "pixpro_wifi") {
+            return PIXPRO_WIFI_UNWRAP_PARAMS;
+        }
+        return "";
+    }
+
 
     void setOutputSize(const cv::Size &outSize)
     {
