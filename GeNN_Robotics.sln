@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoystickTest", "joystick\JoystickTest.vcxproj", "{7BCC5991-C250-41D3-AC4B-C834F9C74288}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapSerialiseTest", "unwrap_serialise_test\serialise\UnwrapSerialiseTest.vcxproj", "{FA7D7725-5971-493C-9321-561A61BC7979}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapDeserialiseTest", "unwrap_serialise_test\deserialise\UnwrapDeserialiseTest.vcxproj", "{94A556CD-50D6-4B40-BCFA-97BB54F3854C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +25,22 @@ Global
 		{7BCC5991-C250-41D3-AC4B-C834F9C74288}.Release|x64.Build.0 = Release|x64
 		{7BCC5991-C250-41D3-AC4B-C834F9C74288}.Release|x86.ActiveCfg = Release|Win32
 		{7BCC5991-C250-41D3-AC4B-C834F9C74288}.Release|x86.Build.0 = Release|Win32
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Debug|x64.ActiveCfg = Debug|x64
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Debug|x64.Build.0 = Debug|x64
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Debug|x86.ActiveCfg = Debug|Win32
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Debug|x86.Build.0 = Debug|Win32
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Release|x64.ActiveCfg = Release|x64
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Release|x64.Build.0 = Release|x64
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Release|x86.ActiveCfg = Release|Win32
+		{FA7D7725-5971-493C-9321-561A61BC7979}.Release|x86.Build.0 = Release|Win32
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Debug|x64.ActiveCfg = Debug|x64
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Debug|x64.Build.0 = Debug|x64
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Debug|x86.ActiveCfg = Debug|Win32
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Debug|x86.Build.0 = Debug|Win32
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Release|x64.ActiveCfg = Release|x64
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Release|x64.Build.0 = Release|x64
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Release|x86.ActiveCfg = Release|Win32
+		{94A556CD-50D6-4B40-BCFA-97BB54F3854C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
