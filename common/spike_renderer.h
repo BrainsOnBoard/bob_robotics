@@ -34,6 +34,8 @@ public:
         m_SpikeImageFloat.convertTo(m_SpikeImage, CV_8UC1, 255.0);
     }
 
+
+    cv::Mat &getSpikeImage(){ return m_SpikeImage; }
     const cv::Mat &getSpikeImage() const{ return m_SpikeImage; }
 
 private:
