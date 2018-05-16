@@ -14,7 +14,7 @@ inline bool
 fileExists(const std::string &filePath)
 {
 #ifdef _WIN32
-    return PathFileExists((LPCWSTR) filePath.c_str());
+    return PathFileExistsA(filePath.c_str());
 #else
     struct stat buffer;
     return (stat(filePath.c_str(), &buffer) == 0);
