@@ -2,8 +2,8 @@
 #include <opencv2/opencv.hpp>
 
 #include "common/opencv_unwrap_360.h"
-#include "videoin/sensible.h"
-#include "videoin/opencvinput.h"
+#include "video/sensible.h"
+#include "video/opencvinput.h"
 
 const int CROSS_SIZE = 20; // size of calibration cross
 
@@ -28,23 +28,23 @@ int
 main(int argc, char **argv)
 {
     // TODO: add option to calibrate see3cam too
-    VideoIn::VideoInput *cam;
+    Video::Input *cam;
     if (argc == 1) {
         // if no args supplied, use default
-        cam = VideoIn::getSensibleCamera();
+        cam = Video::getSensibleCamera();
     } else {
         try {
             // if the arg is an int, the user is specifying a camera...
             int dev = std::stoi(argv[1]);
-            cam = new VideoIn::OpenCVInput(dev);
+            cam = new Video::OpenCVInput(dev);
         } catch (std::invalid_argument &e) {
             // ...else it's a filename/URL
-            cam = new VideoIn::OpenCVInput(argv[1]);
+            cam = new Video::OpenCVInput(argv[1]);
         }
     }
 
     // so pointer is freed on exit
-    std::unique_ptr<VideoIn::VideoInput> pcam(cam);
+    std::unique_ptr<Video::Input> pcam(cam);
 
     // create unwrapper and load params from file
     OpenCVUnwrap360 unwrapper;

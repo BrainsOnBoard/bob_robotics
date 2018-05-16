@@ -11,10 +11,10 @@
  * Quit by pressing escape.
  */
 
-#include "../videoin/opencvinput.h"
+#include "../video/opencvinput.h"
 #include "simpledisplay.h"
 
-using namespace VideoIn;
+using namespace Video;
 
 int
 main(int argc, char **argv)
@@ -35,8 +35,8 @@ main(int argc, char **argv)
     }
 
     // show display
-    auto pCam = std::unique_ptr<VideoInput>(cam);
-    Display::SimpleDisplay<std::unique_ptr<VideoInput> &> display(pCam);
+    auto pCam = std::unique_ptr<Input>(cam);
+    Display::SimpleDisplay<std::unique_ptr<Input> &> display(pCam);
     display.run();
 
     /*

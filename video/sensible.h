@@ -5,14 +5,14 @@
 #include <opencv2/opencv.hpp>
 
 #include "opencvinput.h"
-#include "videoinput.h"
+#include "input.h"
 #ifndef _WIN32
 #include "common/see3cam_cu40.h"
 #include "os/video.h"
 #endif
 
-namespace VideoIn {
-VideoInput *
+namespace Video {
+Input *
 getSensibleCamera()
 {
 #ifdef _WIN32

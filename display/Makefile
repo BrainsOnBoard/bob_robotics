@@ -2,10 +2,12 @@ TARGET=simpledisplay_test
 CXXFLAGS=-std=c++11 -g `pkg-config --cflags opencv`
 LDFLAGS=-pthread `pkg-config --libs opencv`
 
-.PHONY: clean
+.PHONY: all clean
 
 $(TARGET): $(TARGET).cc simpledisplay.h
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+
+all: $(TARGET)
 
 clean:
 	rm -f ./$(TARGET)

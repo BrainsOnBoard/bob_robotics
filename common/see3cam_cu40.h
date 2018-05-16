@@ -11,7 +11,7 @@
 // Common includes
 #include "opencv_unwrap_360.h"
 #include "v4l_camera.h"
-#include "../videoin/videoinput.h"
+#include "../video/input.h"
 
 // Linux device name
 #define SEE3CAM_DEVICE_NAME "See3CAM_CU40"
@@ -63,7 +63,9 @@ for(unsigned int y = 0; y < inputHeight; y += 2) {
 //------------------------------------------------------------------------
 // See3CAM_CU40
 //------------------------------------------------------------------------
-class See3CAM_CU40 : public Video4LinuxCamera, public VideoIn::VideoInput
+class See3CAM_CU40
+  : public Video4LinuxCamera
+  , public Video::Input
 {
 public:
     enum class Resolution : uint64_t

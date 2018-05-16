@@ -13,11 +13,11 @@
 #include "../common/opencv_unwrap_360.h"
 #include "../os/filesystem.h"
 
-namespace VideoIn {
-class VideoInput
+namespace Video {
+class Input
 {
 public:
-    virtual ~VideoInput()
+    virtual ~Input()
     {}
 
     virtual void setOutputSize(const cv::Size &outSize)

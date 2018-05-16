@@ -2,15 +2,15 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "videoinput.h"
+#include "input.h"
 
 #define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
 #define WEBCAM360_DEVICE_NAME "USB 2.0 Camera"
 
-namespace VideoIn {
+namespace Video {
 class OpenCVInput
   : public cv::VideoCapture
-  , public VideoInput
+  , public Input
 {
 public:
     OpenCVInput()
