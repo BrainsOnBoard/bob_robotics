@@ -34,6 +34,17 @@ getCameraName(int deviceNumber)
         return "";
     }
 
+    /*
+     * Strip colon and everything after from name. Newer kernels seem to add
+     * a colon plus the name repeated for some reason.
+     */
+    for (__u8 *c = video_cap.card; c; c++) {
+        if (*c == ':') {
+            *c = '\0';
+            break;
+        }
+    }
+
     return std::string((char *) video_cap.card);
 }
 

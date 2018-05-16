@@ -31,15 +31,6 @@ getSensibleCamera()
     int deviceNum = -1, prefCamNum = -1;
     size_t lowestIndex = prefCameras.size();
     for (OS::Video::CameraDevice cam : cameras) {
-        /*
-         * Strip anything after colon from name. Newer kernels seem to add
-         * a colon plus the name repeated for some reason.
-         */
-        size_t colon = cam.name.find(':');
-        if (colon != std::string::npos) {
-            cam.name = cam.name.substr(0, colon);
-        }
-
         // Iterate through prefCameras looking for matches
         for (size_t i = 0; i < lowestIndex; i++) {
             if (cam.name == prefCameras[i]) {
