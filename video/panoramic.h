@@ -22,8 +22,7 @@ public:
     {
 #ifdef _WIN32
         // for Windows we currently just select the first camera
-        int deviceNum = 0;
-        int prefCamNum = -1;
+        m_Camera = std::unique_ptr<Input>(new OpenCVInput);
 #else
         // get vector of video input devices on system
         auto cameras = OS::Video::getCameras();
@@ -61,7 +60,6 @@ public:
         }
         std::cout << "Selected camera #" << deviceNum << ": "
                   << OS::Video::getCameraName(deviceNum) << std::endl;
-#endif
 
         if (deviceNum == -1) {
             throw std::runtime_error("No camera found");
@@ -83,6 +81,7 @@ public:
             cam = new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360");
         }
         m_Camera = std::unique_ptr<Input>(cam);
+#endif
     }
 
     void setOutputSize(const cv::Size &outSize)
