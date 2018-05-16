@@ -111,7 +111,7 @@ public:
     /*
      * Serialise this object.
      */
-    void operator>>(cv::FileStorage &fs)
+    OpenCVUnwrap360 &operator>>(cv::FileStorage &fs)
     {
         // resolution
         fs << "unwrappedResolution" << m_UnwrappedResolution;
@@ -132,6 +132,8 @@ public:
         // other
         fs << "offsetDegrees" << m_OffsetDegrees;
         fs << "flip" << m_Flip;
+
+        return *this;
     }
 
     /*
@@ -139,7 +141,7 @@ public:
      * 
      * **TODO**: Check that we are actually reading values from the file
      */
-    void operator<<(cv::FileStorage &fs)
+    cv::FileStorage &operator<<(cv::FileStorage &fs)
     {
         /*
          * We need to already know the camera resolution otherwise we won't be
@@ -173,6 +175,8 @@ public:
                outer,
                offsetDegrees,
                flip);
+        
+        return fs;
     }
 
     // Public members
