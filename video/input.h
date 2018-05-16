@@ -66,8 +66,12 @@ public:
         fs.release();
     }
 
+    virtual const std::string getCameraName() const
+    {
+        return "unknown_camera";
+    }
+
     virtual bool readFrame(cv::Mat &outFrame) = 0;
-    virtual const std::string getCameraName() const = 0;
     virtual cv::Size getOutputSize() const = 0;
 };
 }
