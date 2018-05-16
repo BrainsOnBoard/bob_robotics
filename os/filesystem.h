@@ -1,9 +1,11 @@
+#pragma once
+
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 
 namespace OS::FileSystem {
-bool
+inline __attribute__((always_inline)) bool
 fileExists(const std::string &filePath)
 {
     struct stat buffer;
