@@ -24,9 +24,9 @@ getSensibleCamera()
     auto cameras = OS::Video::getCameras();
 
     // list of preferred cameras in priority order
-    static const std::array<std::string, 3> prefCameras{ "See3CAM_CU40",
-                                                         "PIXPRO SP360 4K",
-                                                         "USB 2.0 Camera" };
+    static const std::array<std::string, 3> prefCameras{ SEE3CAM_DEVICE_NAME,
+                                                         PIXPRO_USB_DEVICE_NAME,
+                                                         WEBCAM360_DEVICE_NAME };
 
     int deviceNum = -1, prefCamNum = -1;
     size_t lowestIndex = prefCameras.size();

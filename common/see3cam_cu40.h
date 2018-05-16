@@ -16,6 +16,9 @@
 // default unwrap params
 #include "../unwrap/defaultparams/see3cam.h"
 
+// Linux device name
+#define SEE3CAM_DEVICE_NAME "See3CAM_CU40"
+
 /* NEON version of captureSuperPixel - fun but doesn't actually help performance
 // Create tables to use for shuffling BGIR data into BGR
 //                              b0, g0, r0| b1, g1, r1| b2, g2

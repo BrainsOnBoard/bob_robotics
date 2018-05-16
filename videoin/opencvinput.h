@@ -9,6 +9,9 @@
 #include "../unwrap/defaultparams/pixpro_usb.h"
 #include "../unwrap/defaultparams/pixpro_wifi.h"
 
+#define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
+#define WEBCAM360_DEVICE_NAME "USB 2.0 Camera"
+
 namespace VideoIn {
 class OpenCVInput
   : public cv::VideoCapture
