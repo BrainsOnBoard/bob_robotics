@@ -27,9 +27,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\deserialise_test.yaml">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>
