@@ -2,7 +2,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "common/opencv_unwrap_360.h"
-#include "video/sensible.h"
+#include "video/panoramic.h"
 #include "video/opencvinput.h"
 
 const int CROSS_SIZE = 20; // size of calibration cross
@@ -31,7 +31,7 @@ main(int argc, char **argv)
     Video::Input *cam;
     if (argc == 1) {
         // if no args supplied, use default
-        cam = Video::getSensibleCamera();
+        cam = new Video::PanoramicCamera();
     } else {
         try {
             // if the arg is an int, the user is specifying a camera...
