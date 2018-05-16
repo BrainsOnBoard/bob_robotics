@@ -1,6 +1,6 @@
 TARGET := unwrapconfig
 
-.PHONY: clean install headers
+.PHONY: clean all install
 
 $(TARGET): $(TARGET).cc ../common/opencv_unwrap_360.h
 	$(CXX) -o $(TARGET) -g -I.. $(TARGET).cc `pkg-config --cflags --libs opencv`
@@ -8,8 +8,7 @@ $(TARGET): $(TARGET).cc ../common/opencv_unwrap_360.h
 clean:
 	rm -f unwrapconfig
 
+all: $(TARGET)
+
 install: $(TARGET)
 	install -Dm 755 unwrapconfig /usr/local/bin
-
-headers:
-	sh defaultparams/yaml2h.sh

@@ -135,7 +135,9 @@ public:
     }
 
     /*
-     * Deserialise from a cv::FileStorage object (e.g. read from file)
+     * Deserialise from a cv::FileStorage object (e.g. read from file).
+     * 
+     * **TODO**: Check that we are actually reading values from the file
      */
     void operator<<(cv::FileStorage &fs)
     {

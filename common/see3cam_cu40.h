@@ -13,9 +13,6 @@
 #include "v4l_camera.h"
 #include "../videoin/videoinput.h"
 
-// default unwrap params
-#include "../unwrap/defaultparams/see3cam.h"
-
 // Linux device name
 #define SEE3CAM_DEVICE_NAME "See3CAM_CU40"
 
@@ -395,14 +392,9 @@ public:
         m_OutputSize = outSize;
     }
 
-    const std::string getCameraName()
+    const std::string getCameraName() const
     {
         return "see3cam";
-    }
-
-    const std::string getDefaultUnwrapParams()
-    {
-        return SEE3CAM_UNWRAP_PARAMS;
     }
 
     unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }
