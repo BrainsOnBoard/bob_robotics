@@ -13,7 +13,7 @@ class SpikeRenderer
 {
 public:
     SpikeRenderer(unsigned int *&spkCnt, unsigned int *&spk, unsigned int width, unsigned int height, double tau)
-    :   m_SpikeImage(height, width, CV_8UC1), m_SpikeImageFloat(height, width, CV_32FC1), m_Decay(std::exp(-1.0f / tau)),
+    :   m_SpikeImage(height, width, CV_8UC1), m_SpikeImageFloat(height, width, CV_32FC1, 0.0f), m_Decay(std::exp(-1.0f / tau)),
         m_SpkCnt(spkCnt), m_Spk(spk)
     {
 
