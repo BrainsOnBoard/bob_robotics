@@ -4,7 +4,7 @@ LDFLAGS=-pthread `pkg-config --libs opencv`
 
 .PHONY: all clean
 
-$(TARGET): $(TARGET).cc ../simpledisplay.h
+$(TARGET): simpledisplay/test.cc ../simpledisplay.h
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
 
 all: $(TARGET)
