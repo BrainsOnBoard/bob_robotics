@@ -71,7 +71,22 @@ public:
         return "unknown_camera";
     }
 
-    virtual bool readFrame(cv::Mat &outFrame) = 0;
-    virtual cv::Size getOutputSize() const = 0;
+    virtual bool readFrame(cv::Mat &outFrame)
+    {
+        return false;
+    }
+
+    virtual cv::Size getOutputSize() const
+    {
+        return cv::Size();
+    }
+
+protected:
+    /*
+     * Default constructor is protected to stop users directly creating objects
+     * of this class.
+     */
+    Input()
+    {}
 };
 }
