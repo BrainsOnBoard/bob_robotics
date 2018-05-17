@@ -33,20 +33,9 @@ main(int argc, char **argv)
             cam = new OpenCVInput(argv[1]);
         }
     }
+    std::unique_ptr<Input> pcam(cam);
 
     // show display
-    auto pCam = std::unique_ptr<Input>(cam);
-    Display::SimpleDisplay<std::unique_ptr<Input> &> display(pCam);
+    Display::SimpleDisplay display(cam);
     display.run();
-
-    /*
-     * NOTE: If you wanted the display to run on a background thread instead,
-     * you would call:
-     *     display.startThread();
-     *
-     * When the SimpleDisplay object is destroyed, the display will close.
-     *
-     * If you want to join the object's background thread, call:
-     *     display.joinThread();
-     * */
 }

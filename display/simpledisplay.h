@@ -9,22 +9,23 @@
  * Should be built with OpenCV and -pthread.
  */
 
+// C++ includes
+#include <stdexcept>
+
+// opencv
 #include <opencv2/opencv.hpp>
 
-#include <memory>
-#include <stdexcept>
-#include <thread>
+// GeNN robotics includes
+#include "../video/input.h"
 
 namespace Display {
-template<class T>
 class SimpleDisplay
 {
 public:
     /*
-     * We use a template so that a regular pointer or a smart pointer object (to
-     * a VideoIn::VideoInput) can be given as an argument.
+     * Takes a Video::Input object to display on screen.
      */
-    SimpleDisplay(T videoInput)
+    SimpleDisplay(Video::Input *videoInput)
       : m_VideoInput(videoInput)
     {}
 
@@ -39,7 +40,6 @@ public:
     void close()
     {
         m_Running = false;
-        joinThread();
     }
 
     /*
@@ -74,41 +74,11 @@ public:
         }
     }
 
-    /*
-     * Run the display on a background thread.
-     */
-    void startThread()
-    {
-        m_DisplayThread =
-                std::unique_ptr<std::thread>(new std::thread(runThread, this));
-    }
-
-    /*
-     * Join the background thread.
-     */
-    void joinThread()
-    {
-        if (m_DisplayThread) {
-            m_DisplayThread->join();
-        }
-    }
-
 private:
-    std::unique_ptr<std::thread> m_DisplayThread;
     bool m_Running = true;
-
     static constexpr const char *WINDOW_NAME = "OpenCV display";
 
-    /*
-     * Wrapper function needed because one cannot pass an object's method to a
-     * thread object.
-     */
-    static void runThread(void *userData)
-    {
-        reinterpret_cast<SimpleDisplay *>(userData)->run();
-    }
-
 protected:
-    T m_VideoInput;
+    Video::Input *m_VideoInput;
 };
 }
