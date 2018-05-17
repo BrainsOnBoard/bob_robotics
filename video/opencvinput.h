@@ -21,16 +21,17 @@ public:
     OpenCVInput(T dev,
                 const cv::Size &outSize,
                 const std::string &cameraName = "unknown_camera")
-      : OpenCVInput(dev)
+      : OpenCVInput(dev, cameraName)
     {
         setOutputSize(outSize);
-        m_CameraName = cameraName;
     }
 
     template<class T>
-    OpenCVInput(T dev)
+    OpenCVInput(T dev, const std::string &cameraName = "unknown_camera")
       : cv::VideoCapture(dev)
-    {}
+    {
+        m_CameraName = cameraName;
+    }
 
     const std::string getCameraName() const
     {
