@@ -22,13 +22,6 @@ namespace Video {
 class SimpleDisplay
 {
 public:
-    /*
-     * Takes a Video::Input object to display on screen.
-     */
-    SimpleDisplay(Input *videoInput)
-      : m_VideoInput(videoInput)
-    {}
-
     virtual ~SimpleDisplay()
     {
         close();
@@ -45,9 +38,9 @@ public:
     /*
      * Gets the next frame from the video stream.
      */
-    virtual void getNextFrame(cv::Mat &frame)
+    virtual void getNextFrame(Input &videoInput, cv::Mat &outFrame)
     {
-        if (!m_VideoInput->readFrame(frame)) {
+        if (!videoInput.readFrame(outFrame)) {
             throw std::runtime_error("Error reading from video input");
         }
     }
@@ -55,7 +48,7 @@ public:
     /*
      * Run the display on the main thread.
      */
-    void run()
+    void run(Input &videoInput)
     {
         // set opencv window to display full screen
         cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
@@ -64,7 +57,7 @@ public:
 
         cv::Mat frame;
         while (m_Running) {
-            getNextFrame(frame);
+            getNextFrame(videoInput, frame);
             cv::imshow(WINDOW_NAME, frame);
 
             // quit when user presses esc
@@ -77,8 +70,5 @@ public:
 private:
     bool m_Running = true;
     static constexpr const char *WINDOW_NAME = "OpenCV display";
-
-protected:
-    Input *m_VideoInput;
 };
 }
