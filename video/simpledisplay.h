@@ -16,16 +16,16 @@
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "../video/input.h"
+#include "input.h"
 
-namespace Display {
+namespace Video {
 class SimpleDisplay
 {
 public:
     /*
      * Takes a Video::Input object to display on screen.
      */
-    SimpleDisplay(Video::Input *videoInput)
+    SimpleDisplay(Input *videoInput)
       : m_VideoInput(videoInput)
     {}
 
@@ -79,6 +79,6 @@ private:
     static constexpr const char *WINDOW_NAME = "OpenCV display";
 
 protected:
-    Video::Input *m_VideoInput;
+    Input *m_VideoInput;
 };
 }
