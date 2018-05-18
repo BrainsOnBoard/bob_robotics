@@ -25,7 +25,7 @@ public:
     {
 #ifdef _WIN32
         // for Windows we currently just select the first camera
-        m_Camera = std::unique_ptr<Input>(new OpenCVInput(0, "webcam360"));
+        m_Camera = std::unique_ptr<Input>(new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
 #else
         // get vector of video input devices on system
         auto cameras = OS::Video::getCameras();
