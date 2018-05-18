@@ -35,7 +35,7 @@ main(int argc, char **argv)
             // if the arg is an int, the user is specifying a camera...
             int dev = std::stoi(argv[1]);
             cam = new Video::OpenCVInput(dev);
-        } catch (std::invalid_argument &e) {
+        } catch (std::invalid_argument &) {
             // ...else it's a filename/URL
             cam = new Video::OpenCVInput(argv[1]);
         }
