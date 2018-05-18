@@ -2,6 +2,8 @@
 #include <string>
 
 #ifdef _WIN32
+#include "windows_include.h"
+
 #include <shlwapi.h>
 #pragma comment(lib, "shlwapi.lib")
 #else
