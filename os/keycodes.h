@@ -13,7 +13,7 @@ enum Key
 #else
 enum Key
 {
-    Left = 51,
+    Left = 0xff51,
     Up,
     Right,
     Down,
