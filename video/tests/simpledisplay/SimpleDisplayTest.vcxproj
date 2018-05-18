@@ -80,7 +80,7 @@
       <AdditionalLibraryDirectories>$(OPENCV_DIR)\$(Platform)\vc15\lib;</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /d /y $(OPENCV_DIR)\$(Platform)\vc15\bin\opencv_world341d.dll $(TargetDir)</Command>
+      <Command>xcopy /d /y "$(OPENCV_DIR)\$(Platform)\vc15\bin\opencv_world341d.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

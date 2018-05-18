@@ -1,12 +1,15 @@
 #pragma once
 
+// C++ includes
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+// opencv
 #include <opencv2/opencv.hpp>
 
+// local includes
 #include "input.h"
 #include "opencvinput.h"
 #ifndef _WIN32

@@ -1,18 +1,16 @@
+// C++ includes
 #include <memory>
+
+// opencv
 #include <opencv2/opencv.hpp>
 
+// GeNN robotics includes
 #include "common/opencv_unwrap_360.h"
-#include "video/panoramic.h"
+#include "os/keycodes.h"
 #include "video/opencvinput.h"
+#include "video/panoramic.h"
 
 const int CROSS_SIZE = 20; // size of calibration cross
-
-// keyboard key codes
-const int KB_LEFT = 81;
-const int KB_UP = 82;
-const int KB_RIGHT = 83;
-const int KB_DOWN = 84;
-const int KB_ESC = 27;
 
 // number of pixels to move/resize things by in calibration mode
 const int BIG_PX_JUMP = 5;
@@ -98,76 +96,76 @@ main(int argc, char **argv)
         imshow("calibration", imorig);
 
         // read keypress in
-        int key = cv::waitKey(1) & 0xff;
-        /*if (key != 0xff)
-            cout << "key: " << key << endl;*/
+        int key = cv::waitKeyEx(1);
+
+        // no key pressed
+        if (key == -1) {
+            continue;
+        }
+
         switch (key) {
-        case KB_ESC: // quit program
+        case ' ': // toggle 1px/5px jumps when moving/resizing
+            if (pixelJump == BIG_PX_JUMP)
+                pixelJump = 1;
+            else
+                pixelJump = BIG_PX_JUMP;
+            break;
+        case 'w': // make inner circle bigger
+            unwrapper.m_InnerPixel += pixelJump;
+            unwrapper.updateMaps();
+            dirtyFlag = true;
+            break;
+        case 's': // make inner circle smaller
+            if (unwrapper.m_InnerPixel > 0) {
+                unwrapper.m_InnerPixel -= pixelJump;
+                unwrapper.m_InnerPixel = std::max(0, unwrapper.m_InnerPixel);
+                unwrapper.updateMaps();
+                dirtyFlag = true;
+            }
+            break;
+        case 'q': // make outer circle bigger
+            unwrapper.m_OuterPixel += pixelJump;
+            unwrapper.updateMaps();
+            dirtyFlag = true;
+            break;
+        case 'a': // make outer circle smaller
+            if (unwrapper.m_OuterPixel > 0) {
+                unwrapper.m_OuterPixel -= pixelJump;
+                unwrapper.m_OuterPixel = std::max(0, unwrapper.m_OuterPixel);
+                unwrapper.updateMaps();
+                dirtyFlag = true;
+            }
+            break;
+        case OS::KeyCodes::Up: // move centre up
+            unwrapper.m_CentrePixel.y -= pixelJump;
+            unwrapper.updateMaps();
+            dirtyFlag = true;
+            break;
+        case OS::KeyCodes::Down: // move centre down
+            unwrapper.m_CentrePixel.y += pixelJump;
+            unwrapper.updateMaps();
+            dirtyFlag = true;
+            break;
+        case OS::KeyCodes::Left: // move centre left
+            unwrapper.m_CentrePixel.x -= pixelJump;
+            unwrapper.updateMaps();
+            dirtyFlag = true;
+            break;
+        case OS::KeyCodes::Right: // move centre right
+            unwrapper.m_CentrePixel.x += pixelJump;
+            unwrapper.updateMaps();
+            dirtyFlag = true;
+            break;
+        case OS::KeyCodes::Escape: // quit program
             runLoop = false;
             break;
-        default:
-            switch (key) {
-            case ' ': // toggle 1px/5px jumps when moving/resizing
-                if (pixelJump == BIG_PX_JUMP)
-                    pixelJump = 1;
-                else
-                    pixelJump = BIG_PX_JUMP;
-                break;
-            case 'w': // make inner circle bigger
-                unwrapper.m_InnerPixel += pixelJump;
-                unwrapper.updateMaps();
-                dirtyFlag = true;
-                break;
-            case 's': // make inner circle smaller
-                if (unwrapper.m_InnerPixel > 0) {
-                    unwrapper.m_InnerPixel -= pixelJump;
-                    unwrapper.m_InnerPixel =
-                            std::max(0, unwrapper.m_InnerPixel);
-                    unwrapper.updateMaps();
-                    dirtyFlag = true;
-                }
-                break;
-            case 'q': // make outer circle bigger
-                unwrapper.m_OuterPixel += pixelJump;
-                unwrapper.updateMaps();
-                dirtyFlag = true;
-                break;
-            case 'a': // make outer circle smaller
-                if (unwrapper.m_OuterPixel > 0) {
-                    unwrapper.m_OuterPixel -= pixelJump;
-                    unwrapper.m_OuterPixel =
-                            std::max(0, unwrapper.m_OuterPixel);
-                    unwrapper.updateMaps();
-                    dirtyFlag = true;
-                }
-                break;
-            case KB_UP: // move centre up
-                unwrapper.m_CentrePixel.y -= pixelJump;
-                unwrapper.updateMaps();
-                dirtyFlag = true;
-                break;
-            case KB_DOWN: // move centre down
-                unwrapper.m_CentrePixel.y += pixelJump;
-                unwrapper.updateMaps();
-                dirtyFlag = true;
-                break;
-            case KB_LEFT: // move centre left
-                unwrapper.m_CentrePixel.x -= pixelJump;
-                unwrapper.updateMaps();
-                dirtyFlag = true;
-                break;
-            case KB_RIGHT: // move centre right
-                unwrapper.m_CentrePixel.x += pixelJump;
-                unwrapper.updateMaps();
-                dirtyFlag = true;
-                break;
-            }
         }
     }
 
     if (dirtyFlag) {
         // write params to file
-        std::string filePath = cam->getCameraName() + ".yaml"; // I don't like this
+        std::string filePath =
+                cam->getCameraName() + ".yaml"; // I don't like this
         std::cout << "Writing to " << filePath << "..." << std::endl;
         cv::FileStorage outfs(filePath, cv::FileStorage::WRITE);
         unwrapper >> outfs;
