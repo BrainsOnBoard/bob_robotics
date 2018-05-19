@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-CXXFLAGS=-g -I../.. `pkg-config --cflags --libs opencv`
+CXXFLAGS=-g -std=c++11 -I../.. `pkg-config --cflags --libs opencv`
 
 all: deserialise_test serialise_test
 

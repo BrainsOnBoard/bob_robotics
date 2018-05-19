@@ -10,7 +10,8 @@
 #include <string>
 #include <vector>
 
-namespace OS::Video {
+namespace OS {
+namespace Video {
 struct CameraDevice
 {
     int number;
@@ -68,4 +69,5 @@ getCameras()
     }
     return cameras;
 }
-}
+} // Video
+} // OS

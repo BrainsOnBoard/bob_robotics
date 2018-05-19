@@ -1,6 +1,7 @@
 #pragma once
 
-namespace OS::KeyCodes {
+namespace OS {
+namespace KeyCodes {
 #ifdef _WIN32
 enum Key
 {
@@ -20,4 +21,5 @@ enum Key
     Escape = 0x1b
 };
 #endif
-}
+} // KeyCodes
+} // OS
