@@ -73,17 +73,24 @@ public:
         Input *cam;
         switch (prefCamNum) {
         case 0: // SeeCam
-            cam = new See3CAM_CU40("/dev/video" + std::to_string(deviceNum),
-                                   See3CAM_CU40::Resolution::_1280x720,
-                                   cv::Size(640, 360),
-                                   20);
+        {
+            See3CAM_CU40 *see3cam = new See3CAM_CU40("/dev/video" + std::to_string(deviceNum),
+                                                     See3CAM_CU40::Resolution::_1280x720);
+            // Run auto exposure algorithm
+            const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(see3cam->getSuperPixelSize());
+            see3cam->autoExposure(bubblescopeMask);
+            cam = see3cam;
             break;
+        }
         case 1: // PixPro
-            cam = new OpenCVInput(
-                    deviceNum, cv::Size(1440, 1440), "pixpro_usb");
+        {
+            cam = new OpenCVInput(deviceNum, cv::Size(1440, 1440), "pixpro_usb");
             break;
+        }
         default: // webcam with panoramic lens
+        {
             cam = new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360");
+        }
         }
         m_Camera = std::unique_ptr<Input>(cam);
 #endif
@@ -94,9 +101,9 @@ public:
         m_Camera->setOutputSize(outSize);
     }
 
-    void createDefaultUnwrapper(ImgProc::OpenCVUnwrap360 &unwrapper)
+    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
     {
-        m_Camera->createDefaultUnwrapper(unwrapper);
+        return m_Camera->createDefaultUnwrapper(unwrapRes);
     }
 
     bool readFrame(cv::Mat &outFrame)

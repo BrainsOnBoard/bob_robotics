@@ -9,7 +9,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 // Common includes
-#include "../imgproc/opencv_unwrap_360.h"
 #include "input.h"
 #include "v4l_camera.h"
 
@@ -80,26 +79,40 @@ public:
     };
 
     See3CAM_CU40()
-    {}
-
-    See3CAM_CU40(const std::string &device,
-                 Resolution res,
-                 const cv::Size &outputSize,
-                 int32_t brightness,
-                 bool resetToDefaults = true)
-      : See3CAM_CU40(device, res, resetToDefaults)
     {
-        setOutputSize(outputSize);
-        setBrightness(brightness);
     }
 
-    See3CAM_CU40(const std::string &device,
-                 Resolution res,
-                 bool resetToDefaults = true)
+    See3CAM_CU40(const std::string &device, Resolution res, bool resetToDefaults = true)
     {
         if (!open(device, res, resetToDefaults)) {
             throw std::runtime_error("Cannot open See3CAM_CU40");
         }
+    }
+
+    //------------------------------------------------------------------------
+    // Video::Input virtuals
+    //------------------------------------------------------------------------
+    virtual void setOutputSize(const cv::Size &outSize) override
+    {
+        throw std::runtime_error("See3CAM_CU40 doesn't currently support changing resolution at runtime");
+    }
+
+    virtual const std::string getCameraName() const override
+    {
+        return "see3cam";
+    }
+
+    virtual bool readFrame(cv::Mat &outFrame) override
+    {
+        if (outFrame.cols == 0) {
+            outFrame.create(getSuperPixelSize(), CV_8UC3);
+        }
+        return captureSuperPixelWBU30(outFrame);
+    }
+
+    virtual cv::Size getOutputSize() const override
+    {
+        return getSuperPixelSize();
     }
 
     //------------------------------------------------------------------------
@@ -352,14 +365,6 @@ public:
         }
     }
 
-    bool readFrame(cv::Mat &outFrame)
-    {
-        if (outFrame.cols == 0) {
-            outFrame.create(m_OutputSize, CV_8UC3);
-        }
-        return captureSuperPixelWBU30(outFrame);
-    }
-
     bool setBrightness(int32_t brightness)
     {
         return setControlValue(
@@ -411,25 +416,11 @@ public:
         return cv::Size(getWidth(), getHeight());
     }
 
-    cv::Size getOutputSize() const
-    {
-        return m_OutputSize;
-    }
-
-    void setOutputSize(const cv::Size &outSize)
-    {
-        m_OutputSize = outSize;
-    }
-
-    const std::string getCameraName() const
-    {
-        return "see3cam";
-    }
-
     unsigned int getSuperPixelWidth() const
     {
         return getWidth() / 2;
     }
+
     unsigned int getSuperPixelHeight() const
     {
         return getHeight() / 2;
@@ -438,17 +429,10 @@ public:
     {
         return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
     }
-
+    
     //------------------------------------------------------------------------
     // Static API
     //------------------------------------------------------------------------
-    static ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &camRes,
-                                           const cv::Size &unwrapRes)
-    {
-        return ImgProc::OpenCVUnwrap360(
-                camRes, unwrapRes, 0.5, 0.461111, 0.183333, 0.4, 90, true);
-    }
-
     static cv::Mat createBubblescopeMask(const cv::Size &camRes)
     {
         cv::Mat mask(camRes, CV_8UC1, cv::Scalar(0, 0, 0));
@@ -640,7 +624,6 @@ private:
     // Members
     //------------------------------------------------------------------------
     Resolution m_Resolution;
-    cv::Size m_OutputSize;
     v4l2_queryctrl m_BrightnessControl;
     v4l2_queryctrl m_ExposureControl;
 }; // See3Cam_CU40

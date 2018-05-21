@@ -24,10 +24,10 @@ public:
     virtual void setOutputSize(const cv::Size &outSize)
     {}
 
-    virtual void createDefaultUnwrapper(ImgProc::OpenCVUnwrap360 &unwrapper)
+    virtual ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
     {
-        // tell the unwrapper this camera's resolution
-        unwrapper.m_CameraResolution = getOutputSize();
+        // Create unwrapper
+        ImgProc::OpenCVUnwrap360 unwrapper(getOutputSize(), unwrapRes);
 
         const std::string name = getCameraName();
         const std::string fileName = name + ".yaml";
@@ -65,6 +65,7 @@ public:
         cv::FileStorage fs(filePath, cv::FileStorage::READ);
         unwrapper << fs;
         fs.release();
+        return unwrapper;
     }
 
     virtual const std::string getCameraName() const

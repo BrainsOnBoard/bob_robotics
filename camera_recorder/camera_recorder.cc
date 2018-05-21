@@ -3,14 +3,15 @@
 
 // GeNN robotics includes
 #include "../common/joystick.h"
-#include "../common/motor_i2c.h"
 #include "../common/vicon_capture_control.h"
 #include "../common/vicon_udp.h"
 #include "../imgproc/opencv_unwrap_360.h"
+#include "../robots/motor_i2c.h"
 #include "../video/see3cam_cu40.h"
 
 using namespace GeNNRobotics;
 using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Robots;
 using namespace GeNNRobotics::Video;
 
 int main()
@@ -25,26 +26,23 @@ int main()
     system("rm -f image_*.png");
 
     // Calculate camera input dimensions
-    const unsigned int rawWidth = cam.getWidth() / 2;
-    const unsigned int rawHeight = cam.getHeight() / 2;
-    const unsigned int unwrapWidth = 180;
-    const unsigned int unwrapHeight = 50;
+    const cv::Size unwrapSize(180, 50);
 
     // Create bubblescope mask and use to calibrate camera exposure
-    const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(cv::Size(rawWidth, rawHeight));
+    const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(cam.getSuperPixelSize());
     cam.autoExposure(bubblescopeMask);
 
     // Create joystick interface
     Joystick joystick;
 
     // Create unwrapper to unwrap camera output
-    auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
-                                         cv::Size(unwrapWidth, unwrapHeight));
+    auto unwrapper = cam.createDefaultUnwrapper(unwrapSize);
+    
     // Create motor interface
     MotorI2C motor;
 
-    cv::Mat output(rawHeight, rawWidth, CV_8UC1);
-    cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
+    cv::Mat output(cam.getSuperPixelSize(), CV_8UC1);
+    cv::Mat unwrapped(unwrapSize, CV_8UC1);
 
 #ifdef VICON_CAPTURE
     // Create Vicon UDP interface
