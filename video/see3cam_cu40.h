@@ -106,7 +106,7 @@ public:
     virtual bool readFrame(cv::Mat &outFrame) override
     {
         if (outFrame.cols == 0) {
-            outFrame.create(m_OutputSize, CV_8UC3);
+            outFrame.create(getSuperPixelSize(), CV_8UC3);
         }
         return captureSuperPixelWBU30(outFrame);
     }
@@ -632,7 +632,6 @@ private:
     // Members
     //------------------------------------------------------------------------
     Resolution m_Resolution;
-    cv::Size m_OutputSize;
     v4l2_queryctrl m_BrightnessControl;
     v4l2_queryctrl m_ExposureControl;
 }; // See3Cam_CU40
