@@ -80,8 +80,6 @@ public:
     };
 
     See3CAM_CU40()
-    {}
-
     {
     }
 
@@ -419,12 +417,19 @@ public:
         return cv::Size(getWidth(), getHeight());
     }
 
-    
-    cv::Size getSize() const{ return cv::Size(getWidth(), getHeight()); }
+    unsigned int getSuperPixelWidth() const
+    {
+        return getWidth() / 2;
+    }
 
-    unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }
-    unsigned int getSuperPixelHeight() const{ return getHeight() / 2; }
-    cv::Size getSuperPixelSize() const{ return cv::Size(getSuperPixelWidth(), getSuperPixelHeight()); }
+    unsigned int getSuperPixelHeight() const
+    {
+        return getHeight() / 2;
+    }
+    cv::Size getSuperPixelSize() const
+    {
+        return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
+    }
     
     //------------------------------------------------------------------------
     // Static API
