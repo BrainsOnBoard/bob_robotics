@@ -24,6 +24,8 @@
 #include "spline.h"
 #include "visualizationCommon.h"
 
+using namespace GeNN_Robotics;
+
 int main()
 {
     // Simulation rendering parameters

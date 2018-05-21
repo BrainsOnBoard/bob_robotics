@@ -3,6 +3,7 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // LIF
 //----------------------------------------------------------------------------
@@ -46,3 +47,4 @@ public:
     SET_VARS({{"V", "scalar"}, {"RefracTime", "scalar"}});
 };
 IMPLEMENT_MODEL(LIF);
+} // GeNN_Robotics

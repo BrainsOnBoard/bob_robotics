@@ -6,7 +6,7 @@ int main()
     constexpr float joystickDeadzone = 0.25f;
     
     // Create joystick interface
-    Joystick joystick;
+    GeNN_Robotics::Joystick joystick;
     
     // Create motor interface
     GeNN_Robotics::Robots::MotorI2C motor;

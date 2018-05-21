@@ -18,6 +18,8 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
+using namespace GeNN_Robotics;
+
 int main(int argc, char *argv[])
 {
     const float speedScale = 5.0f;

@@ -3,6 +3,7 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // STDPDopamine
 //----------------------------------------------------------------------------
@@ -111,3 +112,4 @@ public:
 };
 
 IMPLEMENT_MODEL(STDPDopamine);
+} // GeNN_Robotics

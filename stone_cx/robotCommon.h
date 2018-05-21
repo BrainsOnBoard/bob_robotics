@@ -8,4 +8,4 @@ class MotorI2C;
 }
 
 // Functions
-float driveMotorFromCPU1(MotorI2C &motor, bool display = false);
+float driveMotorFromCPU1(GeNN_Robotics::Robotics::MotorI2C &motor, bool display = false);

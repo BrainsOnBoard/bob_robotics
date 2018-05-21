@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <algorithm>
 
+namespace GeNN_Robotics {
 //------------------------------------------------------------------------
 // PID
 //------------------------------------------------------------------------
@@ -66,3 +67,4 @@ private:
     const float m_OutMin;
     const float m_OutMax;
 };
+} // GeNN_Robotics

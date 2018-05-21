@@ -25,6 +25,7 @@
     #include <unistd.h>
 #endif
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // Vicon Typedefines
 //----------------------------------------------------------------------------
@@ -313,3 +314,4 @@ private:
     std::vector<ObjectDataType> m_ObjectData;
 };
 } // namespace Vicon
+} // GeNN_Robotics

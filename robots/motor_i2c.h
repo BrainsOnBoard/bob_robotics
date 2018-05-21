@@ -80,7 +80,7 @@ private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
-    I2CInterface m_I2C;
+    GeNN_Robotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
 }; // MotorI2C

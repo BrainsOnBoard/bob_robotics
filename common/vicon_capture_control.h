@@ -20,6 +20,7 @@
     #include <unistd.h>
 #endif
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // Vicon Typedefines
 //----------------------------------------------------------------------------
@@ -134,3 +135,4 @@ private:
     sockaddr_in m_RemoteAddress;
 };
 } // namespace Vicon
+} // GeNN_Robotics

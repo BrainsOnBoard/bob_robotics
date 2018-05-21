@@ -13,7 +13,7 @@ endif
 
 all: $(TARGET) unwrapfile
 
-$(TARGET): $(TARGET)_src/$(TARGET).cc ../common/opencv_unwrap_360.h
+$(TARGET): $(TARGET)_src/$(TARGET).cc
 	$(CXX) -o $(TARGET) $(TARGET)_src/$(TARGET).cc $(CXXFLAGS)
 
 unwrapfile: unwrapfile_src/unwrapfile.cc

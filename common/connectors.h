@@ -15,6 +15,7 @@
 // GeNN includes
 #include "sparseProjection.h"
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // Typedefines
 //----------------------------------------------------------------------------
@@ -417,3 +418,4 @@ unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned
     // probability of being selected, and the number of synapses in the sub-row is binomially distributed
     return binomialInverseCDF(quantile, numConnections, (double)numPost / (double)(numPre * numPost));
 }
+} // GeNN_Robotics

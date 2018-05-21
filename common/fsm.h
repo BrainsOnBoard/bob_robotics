@@ -3,6 +3,7 @@
 // Standard C includes
 #include <cassert>
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // FSM
 //----------------------------------------------------------------------------
@@ -104,3 +105,4 @@ private:
     // Are we mid way through a state update?
     bool m_Updating;
 };
+} // GeNN_Robotics

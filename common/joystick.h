@@ -22,6 +22,7 @@
 
 using namespace GeNN_Robotics::Robots;
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // Joystick
 //----------------------------------------------------------------------------
@@ -218,3 +219,4 @@ private:
     std::vector<int16_t> m_AxisState;
     std::vector<uint8_t> m_ButtonState;
 };
+} // GeNN_Robotics

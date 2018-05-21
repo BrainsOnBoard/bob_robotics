@@ -19,6 +19,8 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
+using namespace GeNN_Robotics;
+
 //---------------------------------------------------------------------------
 // Anonymous namespace
 //---------------------------------------------------------------------------

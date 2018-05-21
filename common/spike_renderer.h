@@ -6,6 +6,7 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+namespace GeNN_Robotics {
 //------------------------------------------------------------------------
 // SpikeRenderer
 //------------------------------------------------------------------------
@@ -50,3 +51,4 @@ private:
     unsigned int *&m_SpkCnt;
     unsigned int *&m_Spk;
 };
+} // GeNN_Robotics

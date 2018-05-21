@@ -3,6 +3,7 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace GeNN_Robotics {
 //----------------------------------------------------------------------------
 // AdExp
 //----------------------------------------------------------------------------
@@ -62,3 +63,4 @@ public:
     SET_VARS({{"V", "scalar"}, {"W", "scalar"}});
 };
 IMPLEMENT_MODEL(AdExp);
+} // GeNN_Robotics

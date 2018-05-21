@@ -10,6 +10,8 @@
 // Model includes
 #include "parameters.h"
 
+using namespace GeNN_Robotics;
+
 //---------------------------------------------------------------------------
 // Standard LIF model extended to take an additional
 // input current from an extra global variable

@@ -1,16 +1,19 @@
+// C++ includes
 #include <chrono>
+#include <cstdlib>
 #include <iostream>
 #include <thread>
 
-#include <cstdlib>
-
+// GeNN robotics includes
 #include "../common/vicon_capture_control.h"
 #include "../common/vicon_udp.h"
 
+using namespace GeNN_Robotics::Vicon;
+
 int main()
 {
-    Vicon::UDPClient<Vicon::ObjectData> vicon(51001);
-    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
+    UDPClient<ObjectData> vicon(51001);
+    CaptureControl viconCaptureControl("192.168.1.100", 3003,
                                               "c:\\users\\ad374\\Desktop");
     while(vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
