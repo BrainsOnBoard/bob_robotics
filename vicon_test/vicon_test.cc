@@ -8,7 +8,7 @@
 #include "../common/vicon_capture_control.h"
 #include "../common/vicon_udp.h"
 
-using namespace GeNN_Robotics::Vicon;
+using namespace GeNNRobotics::Vicon;
 
 int main()
 {

@@ -21,9 +21,9 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
-using namespace GeNN_Robotics;
-using namespace GeNN_Robotics::ImgProc;
-using namespace GeNN_Robotics::Video;
+using namespace GeNNRobotics;
+using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Video;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace

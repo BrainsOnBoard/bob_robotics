@@ -13,7 +13,7 @@
 // Model includes
 #include "parameters.h"
 
-using namespace GeNN_Robotics;
+using namespace GeNNRobotics;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace

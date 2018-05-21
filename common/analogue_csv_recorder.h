@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // AnalogueRecorder
 //----------------------------------------------------------------------------
@@ -33,4 +33,4 @@ private:
     T *m_Variable;
     unsigned int m_PopSize;
 };
-} // GeNN_Robotics
+} // GeNNRobotics

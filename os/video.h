@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace OS {
 namespace Video {
 struct CameraDevice
@@ -74,4 +74,4 @@ getCameras()
 }
 } // Video
 } // OS
-} // GeNN_Robotics
+} // GeNNRobotics

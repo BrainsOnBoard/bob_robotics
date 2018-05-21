@@ -3,7 +3,7 @@
 // Standard C includes
 #include <cmath>
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // VonMisesDistribution
 //----------------------------------------------------------------------------
@@ -81,4 +81,4 @@ private:
     const T m_Kappa;
     T m_R;
 };
-} // GeNN_Robotics
+} // GeNNRobotics

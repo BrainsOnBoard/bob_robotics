@@ -6,7 +6,7 @@
 // GeNN robotics includes
 #include "motor.h"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 class MotorDummy : public Motor
 {
@@ -18,4 +18,4 @@ public:
     }
 }; // MotorDummy
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

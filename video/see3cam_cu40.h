@@ -61,7 +61,7 @@ full of RGB data uint8x16_t out8 = vcombine_u8(outA, outB);
     }
 }*/
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Video {
 //------------------------------------------------------------------------
 // See3CAM_CU40
@@ -645,4 +645,4 @@ private:
     v4l2_queryctrl m_ExposureControl;
 }; // See3Cam_CU40
 } // Video
-} // GeNN_Robotics
+} // GeNNRobotics

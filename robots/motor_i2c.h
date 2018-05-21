@@ -11,7 +11,7 @@
 #include "../common/i2c_interface.h"
 #include "motor.h"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
 // MotorI2C
@@ -80,9 +80,9 @@ private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
-    GeNN_Robotics::I2CInterface m_I2C;
+    GeNNRobotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
 }; // MotorI2C
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

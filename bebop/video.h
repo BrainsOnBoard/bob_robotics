@@ -59,7 +59,7 @@ extern "C"
 #define VIDEO_WIDTH 856
 #define VIDEO_HEIGHT 480
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 #ifndef DUMMY_DRONE
 class VideoDecoder
@@ -208,4 +208,4 @@ private:
 };
 // end BebopVideoStream
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

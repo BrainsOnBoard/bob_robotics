@@ -9,11 +9,11 @@
 // opencv
 #include <opencv2/opencv.hpp>
 
-// GeNN_Robotics includes
+// GeNNRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../os/filesystem.h"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Video {
 class Input
 {
@@ -91,4 +91,4 @@ protected:
     {}
 }; // Input
 } // Video
-} // GeNN_Robotics
+} // GeNNRobotics

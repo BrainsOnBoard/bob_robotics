@@ -17,7 +17,7 @@
 #include "see3cam_cu40.h"
 #endif
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Video {
 class PanoramicCamera : public Input
 {
@@ -118,4 +118,4 @@ private:
     std::unique_ptr<Input> m_Camera;
 }; // PanoramicCamera
 } // Video
-} // GeNN_Robotics
+} // GeNNRobotics

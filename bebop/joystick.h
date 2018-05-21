@@ -3,7 +3,7 @@
 #include "bebop.h"
 #include "../joystick/joystick.h"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 using ButtonEvent = bool (*)(Joystick::Event *js);
 
@@ -26,4 +26,4 @@ private:
     static void EventCallback(Joystick::Event *js, void *data);
 }; // BebopJoystick
 }  // Robots
-}  // GeNN_Robotics
+}  // GeNNRobotics

@@ -19,7 +19,7 @@
 // GeNN robotics includes
 #include "motor.h"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
 // MotorSurveyor
@@ -87,4 +87,4 @@ private:
     int m_Socket;
 }; // MotorSurveyor
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

@@ -18,7 +18,7 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
-using namespace GeNN_Robotics;
+using namespace GeNNRobotics;
 
 int main(int argc, char *argv[])
 {

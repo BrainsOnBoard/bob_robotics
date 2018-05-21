@@ -8,7 +8,7 @@
 // local includes
 #include "processfiles.h"
 
-using namespace GeNN_Robotics::OS::FileSystem;
+using namespace GeNNRobotics::OS::FileSystem;
 
 enum FileType {
     skip,

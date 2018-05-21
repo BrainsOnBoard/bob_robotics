@@ -2,7 +2,7 @@
 #include <condition_variable>
 #include <mutex>
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 /*
  * A C++11 semaphore implementation (after:
  * https://stackoverflow.com/questions/4792449/c0x-has-no-semaphores-how-to-synchronize-threads)
@@ -39,4 +39,4 @@ private:
     std::condition_variable cv;
     bool fired = false;
 };
-} // GeNN_Robotics
+} // GeNNRobotics

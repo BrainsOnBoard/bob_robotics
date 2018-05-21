@@ -2,7 +2,7 @@
 #include <iostream>
 #include <memory>
 
-// GeNN_Robotics includes
+// GeNNRobotics includes
 #include "common/opencv_unwrap_360.h"
 
 int

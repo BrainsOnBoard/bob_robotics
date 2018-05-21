@@ -1,6 +1,6 @@
 #pragma once
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
 // Motor
@@ -18,4 +18,4 @@ public:
     virtual void tank(float left, float right) = 0;
 }; // Motor
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

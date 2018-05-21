@@ -8,7 +8,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/superres/optical_flow.hpp>
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace ImgProc {
 //----------------------------------------------------------------------------
 // OpenCVOpticalFlow
@@ -104,4 +104,4 @@ private:
     cv::Mat m_FlowY;
 }; // OpenCVOpticalFlow
 }  // ImgProc
-}  // GeNN_Robotics
+}  // GeNNRobotics

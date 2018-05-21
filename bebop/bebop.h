@@ -12,7 +12,7 @@ extern "C"
 #include <iostream>
 #include <string>
 
-// GeNN_Robotics controllers
+// GeNNRobotics controllers
 #include "../common/semaphore.h"
 
 // these values are hardcoded for Bebop drones
@@ -33,7 +33,7 @@ extern "C"
 typedef unsigned char u8;
 typedef signed char i8;
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 using namespace std;
 
@@ -128,4 +128,4 @@ private:
 #endif // !DUMMY_DRONE
 };     // Bebop
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

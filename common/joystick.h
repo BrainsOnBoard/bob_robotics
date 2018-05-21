@@ -20,9 +20,9 @@
 // GeNN robotics includes
 #include "../robots/motor.h"
 
-using namespace GeNN_Robotics::Robots;
+using namespace GeNNRobotics::Robots;
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // Joystick
 //----------------------------------------------------------------------------
@@ -219,4 +219,4 @@ private:
     std::vector<int16_t> m_AxisState;
     std::vector<uint8_t> m_ButtonState;
 };
-} // GeNN_Robotics
+} // GeNNRobotics

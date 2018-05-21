@@ -10,7 +10,7 @@
 // Common includes
 #include "i2c_interface.h"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // LM9DS1
 //----------------------------------------------------------------------------
@@ -813,4 +813,4 @@ private:
     I2CInterface m_AccelGyroI2C;
     I2CInterface m_MagnetoI2C;
 };
-} // GeNN_Robotics
+} // GeNNRobotics

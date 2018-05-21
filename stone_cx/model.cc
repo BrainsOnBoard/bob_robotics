@@ -6,7 +6,7 @@
 // Stone CX includes
 #include "parameters.h"
 
-using GeNN_Robotics;
+using GeNNRobotics;
 
 //---------------------------------------------------------------------------
 // Continuous

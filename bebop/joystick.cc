@@ -1,7 +1,7 @@
 #include "joystick.h"
 #include <stdexcept>
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
@@ -71,4 +71,4 @@ BebopJoystick::EventCallback(Joystick::Event *js, void *data)
     }
 }
 } // Robots
-} // GeNN_Robotics
+} // GeNNRobotics

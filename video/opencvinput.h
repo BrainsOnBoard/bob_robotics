@@ -7,7 +7,7 @@
 #define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
 #define WEBCAM360_DEVICE_NAME "USB 2.0 Camera"
 
-namespace GeNN_Robotics {
+namespace GeNNRobotics {
 namespace Video {
 class OpenCVInput
   : public cv::VideoCapture
@@ -63,4 +63,4 @@ protected:
     std::string m_CameraName;
 }; // OpenCVInput
 } // Video
-} // GeNN_Robotics
+} // GeNNRobotics

@@ -24,7 +24,7 @@
 #include "spline.h"
 #include "visualizationCommon.h"
 
-using namespace GeNN_Robotics;
+using namespace GeNNRobotics;
 
 int main()
 {
