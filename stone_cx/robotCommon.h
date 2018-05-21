@@ -1,11 +1,11 @@
 #pragma once
 
 namespace GeNNRobotics {
-namespace Robotics {
+namespace Robots {
 // Forward declarations
 class MotorI2C;
 }
 }
 
 // Functions
-float driveMotorFromCPU1(GeNNRobotics::Robotics::MotorI2C &motor, bool display = false);
+float driveMotorFromCPU1(GeNNRobotics::Robots::MotorI2C &motor, bool display = false);

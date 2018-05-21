@@ -6,10 +6,10 @@
 // Common includes
 #include "../common/joystick.h"
 #include "../common/lm9ds1_imu.h"
-#include "../common/motor_i2c.h"
 #include "../common/timer.h"
 #include "../imgproc/opencv_optical_flow.h"
 #include "../imgproc/opencv_unwrap_360.h"
+#include "../robots/motor_i2c.h"
 #include "../video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -23,6 +23,7 @@
 
 using namespace GeNNRobotics;
 using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Robots;
 using namespace GeNNRobotics::Video;
 
 //---------------------------------------------------------------------------
@@ -68,17 +69,15 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std::atomic<float> &speed, unsigned int &numFrames)
 {
     const float tau = 10.0f;
-    const cv::Size unwrapRes(90, 10);
+    const cv::Size unwrapRes(90, 30);
 
 #ifdef USE_SEE3_CAM
     const std::string deviceString = "/dev/video" + std::to_string(cameraDevice);
     See3CAM_CU40 cam(deviceString, See3CAM_CU40::Resolution::_672x380);
 
-    // Calculate de-bayerered size
-    const cv::Size camRes(cam.getWidth() / 2, cam.getHeight() / 2);
-
     // Create unwrapper to unwrap camera output
-    auto unwrapper = cam.createUnwrapper(camRes, unwrapRes);
+    const cv::Size camRes = cam.getOutputSize();
+    auto unwrapper = cam.createDefaultUnwrapper(unwrapRes);
 #else
     // Open video capture device and check it matches desired camera resolution
     cv::VideoCapture capture(cameraDevice);
