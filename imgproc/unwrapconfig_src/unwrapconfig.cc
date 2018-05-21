@@ -47,7 +47,7 @@ main(int argc, char **argv)
     std::unique_ptr<Video::Input> pcam(cam);
 
     // create unwrapper and load params from file
-    OpenCVUnwrap360 unwrapper;
+    ImgProc::OpenCVUnwrap360 unwrapper;
     cam->createDefaultUnwrapper(unwrapper);
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for

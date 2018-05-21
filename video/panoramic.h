@@ -94,7 +94,7 @@ public:
         m_Camera->setOutputSize(outSize);
     }
 
-    void createDefaultUnwrapper(OpenCVUnwrap360 &unwrapper)
+    void createDefaultUnwrapper(ImgProc::OpenCVUnwrap360 &unwrapper)
     {
         m_Camera->createDefaultUnwrapper(unwrapper);
     }
