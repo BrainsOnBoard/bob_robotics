@@ -14,6 +14,7 @@
 #include <unistd.h>
 #endif
 
+namespace GeNN_Robotics {
 namespace OS {
 namespace FileSystem {
 /*
@@ -68,3 +69,4 @@ void getFileParts(std::string filePath, std::string &path, std::string &name)
 }
 } // FileSystem
 } // OS
+} // GeNN_Robotics

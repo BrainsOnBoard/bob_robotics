@@ -19,12 +19,14 @@
 #define FFMPEG_PATH "/usr/bin/ffmpeg"
 #endif
 
+using namespace GeNN_Robotics::OS::FileSystem;
+
 /* unwrap a JPEG file */
 void
 processjpeg(const char *filepath)
 {
     std::string path, name;
-    OS::FileSystem::getFileParts(filepath, path, name);
+    getFileParts(filepath, path, name);
 
     // read image into memory
     cv::Mat im = cv::imread(filepath, CV_LOAD_IMAGE_COLOR);
@@ -57,7 +59,7 @@ void
 processmp4(const char *filepath)
 {
     std::string path, name;
-    OS::FileSystem::getFileParts(filepath, path, name);
+    getFileParts(filepath, path, name);
 
     // open video file
     cv::VideoCapture cap(filepath);

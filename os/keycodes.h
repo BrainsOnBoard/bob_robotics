@@ -1,5 +1,6 @@
 #pragma once
 
+namespace GeNN_Robotics {
 namespace OS {
 namespace KeyCodes {
 #ifdef _WIN32
@@ -23,3 +24,4 @@ enum Key
 #endif
 } // KeyCodes
 } // OS
+} // GeNN_Robotics

@@ -8,6 +8,8 @@
 // local includes
 #include "processfiles.h"
 
+using namespace GeNN_Robotics::OS::FileSystem;
+
 enum FileType {
     skip,
     image,
@@ -31,12 +33,12 @@ int main(int argc, char** argv)
             continue;
         }
 
-        if (!OS::FileSystem::fileExists(argv[i])) {
+        if (!fileExists(argv[i])) {
             cerr << "Error: File " << argv[i] << " does not exist" << endl;
             return 1;
         }
 
-        ext = OS::FileSystem::getExtension(argv[i]);
+        ext = getExtension(argv[i]);
         if (ext == ".MP4") {
             anyvideo = true;
             ftype[i - 1] = video;
@@ -48,7 +50,7 @@ int main(int argc, char** argv)
         }
     }
 
-    if (copysound && anyvideo && !OS::FileSystem::fileExists(FFMPEG_PATH)) {
+    if (copysound && anyvideo && !fileExists(FFMPEG_PATH)) {
         cerr << "Warning: ffmpeg not found, sound will not be copied for videos" << endl;
         copysound = false;
     }
