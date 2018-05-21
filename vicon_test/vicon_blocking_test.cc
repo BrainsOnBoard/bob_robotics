@@ -5,7 +5,7 @@
 #include <thread>
 
 // GeNN robotics includes
-#include "../common/vicon_udp.h"
+#include "../vicon/udp.h"
 
 using namespace GeNNRobotics::Vicon;
 

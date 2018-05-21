@@ -5,9 +5,9 @@
 // Common includes
 #include "../common/analogue_csv_recorder.h"
 #include "../common/joystick.h"
-#include "../common/vicon_capture_control.h"
-#include "../common/vicon_udp.h"
 #include "../robots/motor_i2c.h"
+#include "../vicon/capture_control.h"
+#include "../vicon/udp.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"

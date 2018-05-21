@@ -3,10 +3,10 @@
 
 // GeNN robotics includes
 #include "../common/joystick.h"
-#include "../common/vicon_capture_control.h"
-#include "../common/vicon_udp.h"
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../robots/motor_i2c.h"
+#include "../vicon/capture_control.h"
+#include "../vicon/udp.h"
 #include "../video/see3cam_cu40.h"
 
 using namespace GeNNRobotics;
