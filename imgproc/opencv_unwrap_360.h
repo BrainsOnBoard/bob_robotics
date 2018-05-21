@@ -7,6 +7,8 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+namespace GeNNRobotics {
+namespace ImgProc {
 //----------------------------------------------------------------------------
 // OpenCVUnwrap360
 //----------------------------------------------------------------------------
@@ -14,10 +16,6 @@ class OpenCVUnwrap360
 {
 public:
     OpenCVUnwrap360()
-    {}
-
-    OpenCVUnwrap360(const cv::Size &cameraResolution)
-      : m_CameraResolution(cameraResolution)
     {}
 
     OpenCVUnwrap360(const cv::Size &cameraResolution,
@@ -113,9 +111,6 @@ public:
      */
     OpenCVUnwrap360 &operator>>(cv::FileStorage &fs)
     {
-        // resolution
-        fs << "unwrappedResolution" << m_UnwrappedResolution;
-
         // centre
         cv::Point2d centre = {
             (double) m_CentrePixel.x / (double) m_CameraResolution.width,
@@ -147,12 +142,9 @@ public:
          * We need to already know the camera resolution otherwise we won't be
          * able to convert the parameters from relative to absolute values.
          */
-        assert(!m_CameraResolution.empty());
-
-        // resolution
-        cv::Size unwrappedResolution;
-        fs["unwrappedResolution"] >> unwrappedResolution;
-
+        assert(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
+        assert(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
+        
         // centre
         std::vector<double> centre(2);
         fs["centre"] >> centre;
@@ -168,7 +160,7 @@ public:
 
         // create our unwrap maps
         create(m_CameraResolution,
-               unwrappedResolution,
+               m_UnwrappedResolution,
                centre[0],
                centre[1],
                inner,
@@ -184,12 +176,15 @@ public:
     int m_InnerPixel, m_OuterPixel;
     int m_OffsetDegrees;
     bool m_Flip;
-    cv::Size m_CameraResolution, m_UnwrappedResolution;
-
+    
 private:
     //------------------------------------------------------------------------
     // Private members
     //------------------------------------------------------------------------
+    cv::Size m_CameraResolution;
+    cv::Size m_UnwrappedResolution;
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
-};
+}; // OpenCVUnwrap360
+}  // ImgProc
+}  // GeNNRobotics

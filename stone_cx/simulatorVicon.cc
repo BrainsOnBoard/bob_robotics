@@ -5,9 +5,9 @@
 // Common includes
 #include "../common/analogue_csv_recorder.h"
 #include "../common/joystick.h"
-#include "../common/motor_i2c.h"
 #include "../common/vicon_capture_control.h"
 #include "../common/vicon_udp.h"
+#include "../robots/motor_i2c.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -18,6 +18,8 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
+using namespace GeNNRobotics;
+
 int main(int argc, char *argv[])
 {
     const float speedScale = 5.0f;
@@ -27,7 +29,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    MotorI2C motor;
+    Robots::MotorI2C motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);

@@ -7,6 +7,7 @@
 #include <list>
 #include <vector>
 
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // SpikeRecorder
 //----------------------------------------------------------------------------
@@ -167,3 +168,4 @@ private:
     unsigned int *m_Spk;
     unsigned int m_PopSize;
 };
+} // GeNNRobotics

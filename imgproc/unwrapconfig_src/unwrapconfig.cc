@@ -5,10 +5,12 @@
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "common/opencv_unwrap_360.h"
+#include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
+
+using namespace GeNNRobotics;
 
 const int CROSS_SIZE = 20; // size of calibration cross
 
@@ -45,14 +47,14 @@ main(int argc, char **argv)
     std::unique_ptr<Video::Input> pcam(cam);
 
     // create unwrapper and load params from file
-    OpenCVUnwrap360 unwrapper;
-    cam->createDefaultUnwrapper(unwrapper);
+    const cv::Size unwrapRes(1280, 400);
+    ImgProc::OpenCVUnwrap360 unwrapper = cam->createDefaultUnwrapper(unwrapRes);
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for
                                  // calibration (either 1 or 5)
 
-    cv::Mat imorig;
-    cv::Mat unwrap(unwrapper.m_UnwrappedResolution, CV_8UC3);
+    cv::Mat imorig(cam->getOutputSize(), CV_8UC3);
+    cv::Mat unwrap(unwrapRes, CV_8UC3);
     bool dirtyFlag = false;
 
     // display remapped camera output on loop until user presses escape

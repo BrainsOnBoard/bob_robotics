@@ -3,6 +3,7 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // Sigmoid
 //----------------------------------------------------------------------------
@@ -23,3 +24,4 @@ public:
     SET_VARS({{"r", "scalar"}});
 };
 IMPLEMENT_MODEL(Sigmoid);
+} // GeNNRobotics

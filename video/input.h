@@ -9,10 +9,11 @@
 // opencv
 #include <opencv2/opencv.hpp>
 
-// common includes
-#include "../common/opencv_unwrap_360.h"
+// GeNNRobotics includes
+#include "../imgproc/opencv_unwrap_360.h"
 #include "../os/filesystem.h"
 
+namespace GeNNRobotics {
 namespace Video {
 class Input
 {
@@ -23,10 +24,10 @@ public:
     virtual void setOutputSize(const cv::Size &outSize)
     {}
 
-    virtual void createDefaultUnwrapper(OpenCVUnwrap360 &unwrapper)
+    virtual ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
     {
-        // tell the unwrapper this camera's resolution
-        unwrapper.m_CameraResolution = getOutputSize();
+        // Create unwrapper
+        ImgProc::OpenCVUnwrap360 unwrapper(getOutputSize(), unwrapRes);
 
         const std::string name = getCameraName();
         const std::string fileName = name + ".yaml";
@@ -36,7 +37,7 @@ public:
         if (!OS::FileSystem::fileExists(filePath)) {
             // next check if there is a local GeNN_Robotics folder (i.e. git
             // submodule)
-            static const std::string paramsDir = "/unwrap/defaultparams/";
+            static const std::string paramsDir = "/imgproc/unwrapparams/";
             filePath = "GeNN_Robotics" + paramsDir + fileName;
             if (!OS::FileSystem::fileExists(filePath)) {
                 // lastly look for environment variable pointing to
@@ -64,6 +65,7 @@ public:
         cv::FileStorage fs(filePath, cv::FileStorage::READ);
         unwrapper << fs;
         fs.release();
+        return unwrapper;
     }
 
     virtual const std::string getCameraName() const
@@ -88,5 +90,6 @@ protected:
      */
     Input()
     {}
-};
-}
+}; // Input
+} // Video
+} // GeNNRobotics

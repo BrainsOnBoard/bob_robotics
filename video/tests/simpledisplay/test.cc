@@ -14,7 +14,7 @@
 #include "video/opencvinput.h"
 #include "video/simpledisplay.h"
 
-using namespace Video;
+using namespace GeNNRobotics::Video;
 
 int
 main(int argc, char **argv)

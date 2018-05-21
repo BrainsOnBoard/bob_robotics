@@ -5,10 +5,14 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Common includes
-#include "../common/opencv_unwrap_360.h"
 #include "../common/pid.h"
 #include "../common/timer.h"
-#include "../common/see3cam_cu40.h"
+#include "../imgproc/opencv_unwrap_360.h"
+#include "../video/see3cam_cu40.h"
+
+using namespace GeNNRobotics;
+using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Video;
 
 namespace
 {
@@ -52,7 +56,7 @@ int main(int argc, char *argv[])
             std::cout << control.name << " (" << std::hex << control.id << std::dec << ")" << std::endl;
             if(control.type == V4L2_CTRL_TYPE_INTEGER) {
                 std::cout << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value << std::endl;
-
+ 
                 int32_t currentValue;
                 if(cam.getControlValue(control.id, currentValue)){
                     std::cout << "\tCurrent value=" << currentValue << std::endl;
@@ -71,14 +75,11 @@ int main(int argc, char *argv[])
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
     const unsigned int unwrapWidth = 450;
-    const unsigned int unwrapHeight = 50;
+    const unsigned int unwrapHeight = 140;
 
     Mode mode = Mode::Greyscale;
+    OpenCVUnwrap360 unwrapper = cam.createDefaultUnwrapper(cv::Size(unwrapWidth, unwrapHeight));
     
-    // Create unwrapper to unwrap camera output and mask to use for autoexposure calculation
-    auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
-                                         cv::Size(unwrapWidth, unwrapHeight));
-
     auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
     cv::namedWindow("Raw", CV_WINDOW_NORMAL);
@@ -186,4 +187,3 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-

@@ -1,14 +1,18 @@
+// C++ includes
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
 
+// GeNN robotics includes
 #include "../common/vicon_udp.h"
 
-Vicon::UDPClient<Vicon::ObjectData> *vicon;
+using namespace GeNNRobotics::Vicon;
+
+UDPClient<ObjectData> *vicon;
 
 void
-readCallback(uint id, const Vicon::ObjectData &data, void *unused)
+readCallback(uint id, const ObjectData &data, void *unused)
 {
     const auto &translation = data.getTranslation();
     const auto &rotation = data.getRotation();
@@ -22,7 +26,7 @@ int
 main()
 {
     // connect to Vicon system
-    vicon = new Vicon::UDPClient<Vicon::ObjectData>(51001);
+    vicon = new UDPClient<ObjectData>(51001);
     std::cout << "Connected to Vicon system" << std::endl;
 
     // set function to call on new position

@@ -7,8 +7,8 @@
 // Common includes
 #include "../common/joystick.h"
 #include "../common/lm9ds1_imu.h"
-#include "../common/motor_i2c.h"
 #include "../common/timer.h"
+#include "../robots/motor_i2c.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -18,6 +18,8 @@
 #include "robotCommon.h"
 #include "robotParameters.h"
 #include "simulatorCommon.h"
+
+using namespace GeNNRobotics;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace
@@ -58,7 +60,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
     
     // Create motor interface
-    MotorI2C motor;
+    Robots::MotorI2C motor;
     
     // Initialise GeNN
     allocateMem();
