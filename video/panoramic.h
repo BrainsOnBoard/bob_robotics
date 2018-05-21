@@ -101,9 +101,9 @@ public:
         m_Camera->setOutputSize(outSize);
     }
 
-    void createDefaultUnwrapper(ImgProc::OpenCVUnwrap360 &unwrapper)
+    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
     {
-        m_Camera->createDefaultUnwrapper(unwrapper);
+        return m_Camera->createDefaultUnwrapper(unwrapRes);
     }
 
     bool readFrame(cv::Mat &outFrame)

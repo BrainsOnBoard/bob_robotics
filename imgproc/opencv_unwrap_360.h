@@ -18,10 +18,6 @@ public:
     OpenCVUnwrap360()
     {}
 
-    OpenCVUnwrap360(const cv::Size &cameraResolution)
-      : m_CameraResolution(cameraResolution)
-    {}
-
     OpenCVUnwrap360(const cv::Size &cameraResolution,
                     const cv::Size &unwrappedResolution,
                     double centreX = 0.5,
@@ -115,9 +111,6 @@ public:
      */
     OpenCVUnwrap360 &operator>>(cv::FileStorage &fs)
     {
-        // resolution
-        fs << "unwrappedResolution" << m_UnwrappedResolution;
-
         // centre
         cv::Point2d centre = {
             (double) m_CentrePixel.x / (double) m_CameraResolution.width,
@@ -150,11 +143,8 @@ public:
          * able to convert the parameters from relative to absolute values.
          */
         assert(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
-
-        // resolution
-        cv::Size unwrappedResolution;
-        fs["unwrappedResolution"] >> unwrappedResolution;
-
+        assert(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
+        
         // centre
         std::vector<double> centre(2);
         fs["centre"] >> centre;
@@ -170,7 +160,7 @@ public:
 
         // create our unwrap maps
         create(m_CameraResolution,
-               unwrappedResolution,
+               m_UnwrappedResolution,
                centre[0],
                centre[1],
                inner,
@@ -186,12 +176,13 @@ public:
     int m_InnerPixel, m_OuterPixel;
     int m_OffsetDegrees;
     bool m_Flip;
-    cv::Size m_CameraResolution, m_UnwrappedResolution;
-
+    
 private:
     //------------------------------------------------------------------------
     // Private members
     //------------------------------------------------------------------------
+    cv::Size m_CameraResolution;
+    cv::Size m_UnwrappedResolution;
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
 }; // OpenCVUnwrap360
