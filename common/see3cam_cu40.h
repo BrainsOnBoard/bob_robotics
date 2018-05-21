@@ -80,22 +80,37 @@ public:
     {
     }
 
-    See3CAM_CU40(const std::string &device,
-                 Resolution res,
-                 const cv::Size &outputSize,
-                 int32_t brightness,
-                 bool resetToDefaults = true)
-      : See3CAM_CU40(device, res, resetToDefaults)
-    {
-        setOutputSize(outputSize);
-        setBrightness(brightness);
-    }
-
     See3CAM_CU40(const std::string &device, Resolution res, bool resetToDefaults = true)
     {
         if(!open(device, res, resetToDefaults)) {
             throw std::runtime_error("Cannot open See3CAM_CU40");
         }
+    }
+
+    //------------------------------------------------------------------------
+    // Video::Input virtuals
+    //------------------------------------------------------------------------
+    virtual void setOutputSize(const cv::Size &outSize) override
+    {
+        throw std::runtime_error("See3CAM_CU40 doesn't currently support changing resolution at runtime");
+    }
+
+    virtual const std::string getCameraName() const override
+    {
+        return "see3cam";
+    }
+
+    virtual bool readFrame(cv::Mat &outFrame) override
+    {
+        if (outFrame.cols == 0) {
+            outFrame.create(m_OutputSize, CV_8UC3);
+        }
+        return captureSuperPixelWBU30(outFrame);
+    }
+
+    virtual cv::Size getOutputSize() const override
+    {
+        return getSuperPixelSize();
     }
 
     //------------------------------------------------------------------------
@@ -332,14 +347,6 @@ public:
         }
     }
 
-    bool readFrame(cv::Mat &outFrame)
-    {
-        if (outFrame.cols == 0) {
-            outFrame.create(m_OutputSize, CV_8UC3);
-        }
-        return captureSuperPixelWBU30(outFrame);
-    }
-
     bool setBrightness(int32_t brightness)
     {
         return setControlValue(V4L2_CID_BRIGHTNESS, std::max(m_BrightnessControl.minimum, std::min(m_BrightnessControl.maximum, brightness)));
@@ -383,21 +390,6 @@ public:
     }
     
     cv::Size getSize() const{ return cv::Size(getWidth(), getHeight()); }
-
-    cv::Size getOutputSize() const
-    {
-        return m_OutputSize;
-    }
-
-    void setOutputSize(const cv::Size &outSize)
-    {
-        m_OutputSize = outSize;
-    }
-
-    const std::string getCameraName() const
-    {
-        return "see3cam";
-    }
 
     unsigned int getSuperPixelWidth() const{ return getWidth() / 2; }
     unsigned int getSuperPixelHeight() const{ return getHeight() / 2; }

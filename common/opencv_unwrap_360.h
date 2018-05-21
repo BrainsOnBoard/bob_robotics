@@ -147,7 +147,7 @@ public:
          * We need to already know the camera resolution otherwise we won't be
          * able to convert the parameters from relative to absolute values.
          */
-        assert(!m_CameraResolution.empty());
+        assert(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
 
         // resolution
         cv::Size unwrappedResolution;

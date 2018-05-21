@@ -69,13 +69,11 @@ public:
         switch (prefCamNum) {
         case 0: // SeeCam
             cam = new See3CAM_CU40("/dev/video" + std::to_string(deviceNum),
-                                   See3CAM_CU40::Resolution::_1280x720,
-                                   cv::Size(640, 360),
-                                   20);
+                                   See3CAM_CU40::Resolution::_1280x720);
+            cam->autoExposure();
             break;
         case 1: // PixPro
-            cam = new OpenCVInput(
-                    deviceNum, cv::Size(1440, 1440), "pixpro_usb");
+            cam = new OpenCVInput(deviceNum, cv::Size(1440, 1440), "pixpro_usb");
             break;
         default: // webcam with panoramic lens
             cam = new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360");
