@@ -5,13 +5,15 @@ VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoystickTest", "joystick\JoystickTest.vcxproj", "{7BCC5991-C250-41D3-AC4B-C834F9C74288}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapSerialiseTest", "unwrap\tests\serialise\UnwrapSerialiseTest.vcxproj", "{FA7D7725-5971-493C-9321-561A61BC7979}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapSerialiseTest", "imgproc\tests\serialise\UnwrapSerialiseTest.vcxproj", "{FA7D7725-5971-493C-9321-561A61BC7979}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapDeserialiseTest", "unwrap\tests\deserialise\UnwrapDeserialiseTest.vcxproj", "{94A556CD-50D6-4B40-BCFA-97BB54F3854C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapDeserialiseTest", "imgproc\tests\deserialise\UnwrapDeserialiseTest.vcxproj", "{94A556CD-50D6-4B40-BCFA-97BB54F3854C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlottingExample", "visual\examples\PlottingExample.vcxproj", "{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleDisplayTest", "video\tests\simpledisplay\SimpleDisplayTest.vcxproj", "{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapConfig", "imgproc\unwrapconfig_src\UnwrapConfig.vcxproj", "{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,14 @@ Global
 		{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}.Debug|x86.Build.0 = Debug|Win32
 		{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}.Release|x64.ActiveCfg = Debug|x64
 		{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}.Release|x86.ActiveCfg = Debug|Win32
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x64.ActiveCfg = Debug|x64
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x64.Build.0 = Debug|x64
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x86.ActiveCfg = Debug|Win32
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x86.Build.0 = Debug|Win32
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x64.ActiveCfg = Release|x64
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x64.Build.0 = Release|x64
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x86.ActiveCfg = Release|Win32
+		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

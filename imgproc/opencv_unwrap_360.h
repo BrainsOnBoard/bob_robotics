@@ -7,6 +7,8 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+namespace GeNNRobotics {
+namespace ImgProc {
 //----------------------------------------------------------------------------
 // OpenCVUnwrap360
 //----------------------------------------------------------------------------
@@ -76,12 +78,12 @@ public:
     {
         // Build unwrap maps
         const float pi = 3.141592653589793238462643383279502884f;
-        double offsetRadians = m_OffsetDegrees * pi / 180.0;
+        float offsetRadians = m_OffsetDegrees * pi / 180.0f;
         for (int i = 0; i < m_UnwrappedResolution.height; i++) {
             for (int j = 0; j < m_UnwrappedResolution.width; j++) {
                 // Get i as a fraction of unwrapped height, flipping if desired
                 const float iFrac =
-                        m_Flip ? 1.0 - ((float) i /
+                        m_Flip ? 1.0f - ((float) i /
                                         (float) m_UnwrappedResolution.height)
                                : ((float) i /
                                   (float) m_UnwrappedResolution.height);
@@ -192,4 +194,6 @@ private:
     //------------------------------------------------------------------------
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
-};
+}; // OpenCVUnwrap360
+}  // ImgProc
+}  // GeNNRobotics

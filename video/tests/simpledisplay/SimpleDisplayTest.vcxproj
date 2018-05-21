@@ -70,7 +70,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>..\..\..;$(OPENCV_DIR)\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -80,7 +79,7 @@
       <AdditionalLibraryDirectories>$(OPENCV_DIR)\$(Platform)\vc15\lib;</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /d /y $(OPENCV_DIR)\$(Platform)\vc15\bin\opencv_world341d.dll $(TargetDir)</Command>
+      <Command>xcopy /d /y "$(OPENCV_DIR)\$(Platform)\vc15\bin\opencv_world341d.dll" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

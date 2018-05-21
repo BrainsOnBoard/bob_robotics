@@ -3,6 +3,7 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // ExpCurr
 //----------------------------------------------------------------------------
@@ -23,3 +24,4 @@ public:
         {"init", [](const vector<double> &pars, double dt){ return (pars[0] * (1.0 - std::exp(-dt / pars[0]))) * (1.0 / dt); }}});
 };
 IMPLEMENT_MODEL(ExpCurr);
+} // GeNNRobotics

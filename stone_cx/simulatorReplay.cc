@@ -24,6 +24,8 @@
 #include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
+using namespace GeNNRobotics;
+
 namespace
 {
 double readDoubleField(std::istringstream &lineStream)

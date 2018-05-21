@@ -1,19 +1,23 @@
 #pragma once
 
+// C++ includes
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+// opencv
 #include <opencv2/opencv.hpp>
 
+// local includes
 #include "input.h"
 #include "opencvinput.h"
 #ifndef _WIN32
-#include "../common/see3cam_cu40.h"
 #include "../os/video.h"
+#include "see3cam_cu40.h"
 #endif
 
+namespace GeNNRobotics {
 namespace Video {
 class PanoramicCamera : public Input
 {
@@ -22,7 +26,8 @@ public:
     {
 #ifdef _WIN32
         // for Windows we currently just select the first camera
-        m_Camera = std::unique_ptr<Input>(new OpenCVInput(0, "webcam360"));
+        m_Camera = std::unique_ptr<Input>(
+                new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
 #else
         // get vector of video input devices on system
         auto cameras = OS::Video::getCameras();
@@ -87,7 +92,7 @@ public:
         m_Camera->setOutputSize(outSize);
     }
 
-    void createDefaultUnwrapper(OpenCVUnwrap360 &unwrapper)
+    void createDefaultUnwrapper(ImgProc::OpenCVUnwrap360 &unwrapper)
     {
         m_Camera->createDefaultUnwrapper(unwrapper);
     }
@@ -109,5 +114,6 @@ public:
 
 private:
     std::unique_ptr<Input> m_Camera;
-};
-}
+}; // PanoramicCamera
+} // Video
+} // GeNNRobotics

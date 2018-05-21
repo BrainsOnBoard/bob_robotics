@@ -3,7 +3,8 @@
 #include "bebop.h"
 #include "../joystick/joystick.h"
 
-namespace Parrot {
+namespace GeNNRobotics {
+namespace Robots {
 using ButtonEvent = bool (*)(Joystick::Event *js);
 
 class BebopJoystick
@@ -13,7 +14,7 @@ public:
     BebopJoystick(Bebop *bebop);
 
 private:
-    Parrot::Bebop *m_Bebop;
+    Bebop *m_Bebop;
     Joystick::Joystick m_Joystick;
     static constexpr float maxbank = 50;
     static constexpr float maxup = 50;
@@ -23,5 +24,6 @@ private:
     void OnAxisEvent(Joystick::Event *js);
 
     static void EventCallback(Joystick::Event *js, void *data);
-};
-}
+}; // BebopJoystick
+}  // Robots
+}  // GeNNRobotics

@@ -7,11 +7,10 @@
 #include "../common/joystick.h"
 #include "../common/lm9ds1_imu.h"
 #include "../common/motor_i2c.h"
-#include "../common/opencv_optical_flow.h"
-#include "../common/opencv_unwrap_360.h"
-#include "../common/see3cam_cu40.h"
 #include "../common/timer.h"
-
+#include "../imgproc/opencv_optical_flow.h"
+#include "../imgproc/opencv_unwrap_360.h"
+#include "../video/see3cam_cu40.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -21,6 +20,10 @@
 #include "robotCommon.h"
 #include "robotParameters.h"
 #include "simulatorCommon.h"
+
+using namespace GeNNRobotics;
+using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Video;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace

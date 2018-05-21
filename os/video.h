@@ -1,16 +1,20 @@
 #pragma once
 
+// C++ includes
+#include <iostream>
+#include <string>
+#include <vector>
+
+// Linux includes
 #include <fcntl.h>
 #include <linux/videodev2.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include <iostream>
-#include <string>
-#include <vector>
-
-namespace OS::Video {
+namespace GeNNRobotics {
+namespace OS {
+namespace Video {
 struct CameraDevice
 {
     int number;
@@ -68,4 +72,6 @@ getCameras()
     }
     return cameras;
 }
-}
+} // Video
+} // OS
+} // GeNNRobotics

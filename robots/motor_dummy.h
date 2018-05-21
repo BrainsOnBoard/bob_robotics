@@ -1,9 +1,13 @@
 #pragma once
 
-#include "motor.h"
+// C++ includes
 #include <iostream>
 
-/* this is the superclass for other Motor devices */
+// GeNN robotics includes
+#include "motor.h"
+
+namespace GeNNRobotics {
+namespace Robots {
 class MotorDummy : public Motor
 {
 public:
@@ -12,4 +16,6 @@ public:
         std::cout << "Dummy motor: left: " << left << "; right: " << right
                   << std::endl;
     }
-};
+}; // MotorDummy
+} // Robots
+} // GeNNRobotics

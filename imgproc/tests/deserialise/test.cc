@@ -1,6 +1,9 @@
-#include "common/opencv_unwrap_360.h"
+// C++ includes
 #include <iostream>
 #include <memory>
+
+// GeNNRobotics includes
+#include "common/opencv_unwrap_360.h"
 
 int
 main(int argc, char **argv)

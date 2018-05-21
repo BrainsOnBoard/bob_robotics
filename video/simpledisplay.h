@@ -18,6 +18,7 @@
 // GeNN robotics includes
 #include "input.h"
 
+namespace GeNNRobotics {
 namespace Video {
 class SimpleDisplay
 {
@@ -70,5 +71,6 @@ public:
 private:
     bool m_Running = true;
     static constexpr const char *WINDOW_NAME = "OpenCV display";
-};
-}
+}; // SimpleDisplay
+} // Video
+} // GeNNRobotics
