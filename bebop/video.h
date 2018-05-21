@@ -24,6 +24,13 @@ extern "C"
 #include <libswscale/swscale.h>
 }
 
+// These constants no longer seem to be defined on my machine - AD
+#ifndef CODEC_CAP_TRUNCATED
+#define CODEC_CAP_TRUNCATED AV_CODEC_CAP_TRUNCATED
+#define CODEC_FLAG_TRUNCATED AV_CODEC_FLAG_TRUNCATED
+#define CODEC_FLAG2_CHUNKS AV_CODEC_FLAG2_CHUNKS
+#endif // CODEC_CAP_TRUNCATED
+
 // https://github.com/libav/libav/commit/104e10fb426f903ba9157fdbfe30292d0e4c3d72
 // https://github.com/libav/libav/blob/33d18982fa03feb061c8f744a4f0a9175c1f63ab/doc/APIchanges#L697
 #if (LIBAVCODEC_VERSION_INT < AV_VERSION_INT(54, 25, 0))
