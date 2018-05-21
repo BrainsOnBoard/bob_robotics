@@ -10,6 +10,8 @@
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 
+using namespace GeNN_Robotics;
+
 const int CROSS_SIZE = 20; // size of calibration cross
 
 // number of pixels to move/resize things by in calibration mode

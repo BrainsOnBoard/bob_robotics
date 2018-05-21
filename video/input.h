@@ -13,6 +13,7 @@
 #include "../common/opencv_unwrap_360.h"
 #include "../os/filesystem.h"
 
+namespace GeNN_Robotics {
 namespace Video {
 class Input
 {
@@ -88,5 +89,6 @@ protected:
      */
     Input()
     {}
-};
-}
+}; // Input
+} // Video
+} // GeNN_Robotics

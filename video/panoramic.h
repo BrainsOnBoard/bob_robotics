@@ -13,10 +13,11 @@
 #include "input.h"
 #include "opencvinput.h"
 #ifndef _WIN32
-#include "../common/see3cam_cu40.h"
 #include "../os/video.h"
+#include "see3cam_cu40.h"
 #endif
 
+namespace GeNN_Robotics {
 namespace Video {
 class PanoramicCamera : public Input
 {
@@ -25,7 +26,8 @@ public:
     {
 #ifdef _WIN32
         // for Windows we currently just select the first camera
-        m_Camera = std::unique_ptr<Input>(new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
+        m_Camera = std::unique_ptr<Input>(
+                new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
 #else
         // get vector of video input devices on system
         auto cameras = OS::Video::getCameras();
@@ -114,5 +116,6 @@ public:
 
 private:
     std::unique_ptr<Input> m_Camera;
-};
-}
+}; // PanoramicCamera
+} // Video
+} // GeNN_Robotics

@@ -8,7 +8,9 @@
 #include "../common/opencv_unwrap_360.h"
 #include "../common/pid.h"
 #include "../common/timer.h"
-#include "../common/see3cam_cu40.h"
+#include "../video/see3cam_cu40.h"
+
+using namespace GeNN_Robotics::Video;
 
 namespace
 {
@@ -186,4 +188,3 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-
