@@ -7,6 +7,8 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+namespace GeNN_Robotics {
+namespace ImgProc {
 //----------------------------------------------------------------------------
 // OpenCVUnwrap360
 //----------------------------------------------------------------------------
@@ -192,4 +194,6 @@ private:
     //------------------------------------------------------------------------
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
-};
+}; // OpenCVUnwrap360
+}  // ImgProc
+}  // GeNN_Robotics

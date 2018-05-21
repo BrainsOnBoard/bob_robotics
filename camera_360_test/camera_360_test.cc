@@ -6,8 +6,10 @@
 #include <cmath>
 
 // Common includes
-#include "../common/opencv_unwrap_360.h"
 #include "../common/timer.h"
+#include "../imgproc/opencv_unwrap_360.h"
+
+using namespace GeNN_Robotics::ImgProc;
 
 int main(int argc, char *argv[])
 {

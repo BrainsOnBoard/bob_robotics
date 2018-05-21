@@ -9,8 +9,8 @@
 // opencv
 #include <opencv2/opencv.hpp>
 
-// common includes
-#include "../common/opencv_unwrap_360.h"
+// GeNN_Robotics includes
+#include "../imgproc/opencv_unwrap_360.h"
 #include "../os/filesystem.h"
 
 namespace GeNN_Robotics {
@@ -24,7 +24,7 @@ public:
     virtual void setOutputSize(const cv::Size &outSize)
     {}
 
-    virtual void createDefaultUnwrapper(OpenCVUnwrap360 &unwrapper)
+    virtual void createDefaultUnwrapper(ImgProc::OpenCVUnwrap360 &unwrapper)
     {
         // tell the unwrapper this camera's resolution
         unwrapper.m_CameraResolution = getOutputSize();
@@ -37,7 +37,7 @@ public:
         if (!OS::FileSystem::fileExists(filePath)) {
             // next check if there is a local GeNN_Robotics folder (i.e. git
             // submodule)
-            static const std::string paramsDir = "/unwrap/defaultparams/";
+            static const std::string paramsDir = "/imgproc/unwrapparams/";
             filePath = "GeNN_Robotics" + paramsDir + fileName;
             if (!OS::FileSystem::fileExists(filePath)) {
                 // lastly look for environment variable pointing to

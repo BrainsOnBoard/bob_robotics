@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "common/opencv_unwrap_360.h"
+#include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"

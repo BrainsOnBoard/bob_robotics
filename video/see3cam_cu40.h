@@ -9,7 +9,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 // Common includes
-#include "../common/opencv_unwrap_360.h"
+#include "../imgproc/opencv_unwrap_360.h"
 #include "input.h"
 #include "v4l_camera.h"
 
@@ -442,10 +442,10 @@ public:
     //------------------------------------------------------------------------
     // Static API
     //------------------------------------------------------------------------
-    static OpenCVUnwrap360 createUnwrapper(const cv::Size &camRes,
+    static ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &camRes,
                                            const cv::Size &unwrapRes)
     {
-        return OpenCVUnwrap360(
+        return ImgProc::OpenCVUnwrap360(
                 camRes, unwrapRes, 0.5, 0.461111, 0.183333, 0.4, 90, true);
     }
 

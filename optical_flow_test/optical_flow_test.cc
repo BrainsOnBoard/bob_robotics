@@ -6,11 +6,12 @@
 #include <cmath>
 
 // Common includes
-#include "../common/opencv_optical_flow.h"
-#include "../common/opencv_unwrap_360.h"
 #include "../common/timer.h"
+#include "../imgproc/opencv_optical_flow.h"
+#include "../imgproc/opencv_unwrap_360.h"
 #include "../video/see3cam_cu40.h"
 
+using namespace GeNN_Robotics::ImgProc;
 using namespace GeNN_Robotics::Video;
 
 #define USE_SEE3_CAM

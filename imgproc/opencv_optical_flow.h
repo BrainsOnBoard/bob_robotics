@@ -8,6 +8,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/superres/optical_flow.hpp>
 
+namespace GeNN_Robotics {
+namespace ImgProc {
 //----------------------------------------------------------------------------
 // OpenCVOpticalFlow
 //----------------------------------------------------------------------------
@@ -100,4 +102,6 @@ private:
     cv::Ptr<cv::superres::FarnebackOpticalFlow> m_OpticalFlow = cv::superres::createOptFlow_Farneback();
     cv::Mat m_FlowX;
     cv::Mat m_FlowY;
-};
+}; // OpenCVOpticalFlow
+}  // ImgProc
+}  // GeNN_Robotics
