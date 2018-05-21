@@ -18,7 +18,9 @@
 #include <linux/joystick.h>
 
 // GeNN robotics includes
-#include "motor.h"
+#include "../robots/motor.h"
+
+using namespace GeNN_Robotics::Robots;
 
 //----------------------------------------------------------------------------
 // Joystick

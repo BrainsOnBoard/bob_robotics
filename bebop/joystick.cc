@@ -1,7 +1,8 @@
 #include "joystick.h"
 #include <stdexcept>
 
-namespace Parrot {
+namespace GeNN_Robotics {
+namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
 {
@@ -61,8 +62,7 @@ BebopJoystick::OnAxisEvent(Joystick::Event *js)
 void
 BebopJoystick::EventCallback(Joystick::Event *js, void *data)
 {
-    Parrot::BebopJoystick *cont =
-            reinterpret_cast<Parrot::BebopJoystick *>(data);
+    BebopJoystick *cont = reinterpret_cast<BebopJoystick *>(data);
 
     if (js->isAxis) {
         cont->OnButtonEvent(js);
@@ -70,4 +70,5 @@ BebopJoystick::EventCallback(Joystick::Event *js, void *data)
         cont->OnAxisEvent(js);
     }
 }
-}
+} // Robots
+} // GeNN_Robotics

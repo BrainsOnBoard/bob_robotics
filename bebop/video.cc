@@ -1,6 +1,7 @@
 #include "video.h"
 
-namespace Parrot {
+namespace GeNN_Robotics {
+namespace Robots {
 #ifndef DUMMY_DRONE
 // start VideoDecoder class
 const char *VideoDecoder::LOG_TAG = "Decoder";
@@ -465,4 +466,5 @@ BebopVideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 }
 #endif // DUMMY_DRONE
 // end BebopVideoStream class
-} // namespace Parrot
+} // Robots
+} // GeNN_Robotics

@@ -1,6 +1,7 @@
 #include "bebop.h"
 
-namespace Parrot {
+namespace GeNN_Robotics {
+namespace Robots {
 using namespace std;
 
 #ifndef DUMMY_DRONE
@@ -421,4 +422,5 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     }
 }
 #endif // !DUMMY_DRONE
-} // namespace Parrot
+} // Robots
+} // GeNN_Robotics

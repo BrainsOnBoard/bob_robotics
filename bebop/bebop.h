@@ -8,9 +8,11 @@ extern "C"
 #include <libARSAL/ARSAL.h>
 }
 
+// C++ includes
 #include <iostream>
 #include <string>
 
+// GeNN_Robotics controllers
 #include "../common/semaphore.h"
 
 // these values are hardcoded for Bebop drones
@@ -31,9 +33,9 @@ extern "C"
 typedef unsigned char u8;
 typedef signed char i8;
 
-namespace Parrot {
+namespace GeNN_Robotics {
+namespace Robots {
 using namespace std;
-using namespace Parrot;
 
 #ifndef DUMMY_DRONE
 /*
@@ -124,5 +126,6 @@ private:
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
 #endif // !DUMMY_DRONE
-};     // class Bebop
-} // namespace Parrot
+};     // Bebop
+} // Robots
+} // GeNN_Robotics

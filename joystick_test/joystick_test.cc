@@ -1,5 +1,5 @@
 #include "../common/joystick.h"
-#include "../common/motor_i2c.h"
+#include "../robots/motor_i2c.h"
 
 int main()
 {
@@ -9,7 +9,7 @@ int main()
     Joystick joystick;
     
     // Create motor interface
-    MotorI2C motor;
+    GeNN_Robotics::Robots::MotorI2C motor;
 
     do {
         // Read joystick
