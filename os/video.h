@@ -24,9 +24,8 @@ struct CameraDevice
 const std::string
 getCameraName(int deviceNumber)
 {
-    int fd;
-    if ((fd = open(("/dev/video" + std::to_string(deviceNumber)).c_str(),
-                   O_RDONLY)) == -1) {
+    int fd = open(("/dev/video" + std::to_string(deviceNumber)).c_str(), O_RDONLY);
+    if (fd == -1) {
         return "";
     }
 
@@ -56,8 +55,6 @@ std::vector<CameraDevice>
 getCameras()
 {
     std::vector<CameraDevice> cameras;
-    int fd;
-    struct v4l2_capability video_cap;
     for (int i = 0; i < 64; i++) {
         const std::string name = getCameraName(i);
         if (name == "") {
@@ -68,7 +65,6 @@ getCameras()
         dev.number = i;
         dev.name = name;
         cameras.push_back(dev);
-        close(fd);
     }
     return cameras;
 }
