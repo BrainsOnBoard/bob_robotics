@@ -3,10 +3,11 @@
 // GeNN includes
 #include "modelSpec.h"
 
+//----------------------------------------------------------------------------
+// GeNNRobotics::GeNNModels::STDPDopamine
+//----------------------------------------------------------------------------
 namespace GeNNRobotics {
-//----------------------------------------------------------------------------
-// STDPDopamine
-//----------------------------------------------------------------------------
+namespace GeNNModels {
 class STDPDopamine : public WeightUpdateModels::Base
 {
 public:
@@ -112,4 +113,6 @@ public:
 };
 
 IMPLEMENT_MODEL(STDPDopamine);
+} // GeNNModels
 } // GeNNRobotics
+

@@ -3,11 +3,12 @@
 // GeNN includes
 #include "modelSpec.h"
 
-namespace GeNNRobotics {
 //----------------------------------------------------------------------------
-// AdExp
+// GeNNRobotics::GeNNModels::AdExp
 //----------------------------------------------------------------------------
 //! Adaptive exponential - solved using RK4
+namespace GeNNRobotics {
+namespace GeNNModels {
 class AdExp : public NeuronModels::Base
 {
 public:
@@ -63,4 +64,5 @@ public:
     SET_VARS({{"V", "scalar"}, {"W", "scalar"}});
 };
 IMPLEMENT_MODEL(AdExp);
+} // GeNNModels
 } // GeNNRobotics

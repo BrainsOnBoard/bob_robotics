@@ -1,11 +1,13 @@
 #pragma once
 
+// Standard C++ includes
 #include <fstream>
 
+//----------------------------------------------------------------------------
+// GeNNRobotics::GeNNUtils::AnalogueRecorder
+//----------------------------------------------------------------------------
 namespace GeNNRobotics {
-//----------------------------------------------------------------------------
-// AnalogueRecorder
-//----------------------------------------------------------------------------
+namespace GeNNUtils {
 template<typename T>
 class AnalogueCSVRecorder
 {
@@ -33,4 +35,5 @@ private:
     T *m_Variable;
     unsigned int m_PopSize;
 };
+} // GeNNUtils
 } // GeNNRobotics

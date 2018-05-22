@@ -6,10 +6,11 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+//------------------------------------------------------------------------
+// GeNNRobotics::GeNNUtils::SpikeRenderer
+//------------------------------------------------------------------------
 namespace GeNNRobotics {
-//------------------------------------------------------------------------
-// SpikeRenderer
-//------------------------------------------------------------------------
+namespace GeNNUtils {
 class SpikeRenderer
 {
 public:
@@ -51,4 +52,5 @@ private:
     unsigned int *&m_SpkCnt;
     unsigned int *&m_Spk;
 };
+} // GeNNUtils
 } // GeNNRobotics

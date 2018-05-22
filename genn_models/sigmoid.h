@@ -3,11 +3,12 @@
 // GeNN includes
 #include "modelSpec.h"
 
-namespace GeNNRobotics {
 //----------------------------------------------------------------------------
-// Sigmoid
+// GeNNRobotics::GeNNModels::Sigmoid
 //----------------------------------------------------------------------------
 //! Non-spiking sigmoid unit
+namespace GeNNRobotics {
+namespace GeNNModels {
 class Sigmoid : public NeuronModels::Base
 {
 public:
@@ -24,4 +25,6 @@ public:
     SET_VARS({{"r", "scalar"}});
 };
 IMPLEMENT_MODEL(Sigmoid);
+} // GeNNModels
 } // GeNNRobotics
+

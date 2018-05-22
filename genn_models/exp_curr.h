@@ -3,11 +3,12 @@
 // GeNN includes
 #include "modelSpec.h"
 
-namespace GeNNRobotics {
 //----------------------------------------------------------------------------
-// ExpCurr
+// GeNNRobotics::GeNNModels::ExpCurr
 //----------------------------------------------------------------------------
 //! Current-based synapse model with direct current injection
+namespace GeNNRobotics {
+namespace GeNNModels {
 class ExpCurr : public PostsynapticModels::Base
 {
 public:
@@ -24,4 +25,5 @@ public:
         {"init", [](const vector<double> &pars, double dt){ return (pars[0] * (1.0 - std::exp(-dt / pars[0]))) * (1.0 / dt); }}});
 };
 IMPLEMENT_MODEL(ExpCurr);
+} // GeNNModels
 } // GeNNRobotics

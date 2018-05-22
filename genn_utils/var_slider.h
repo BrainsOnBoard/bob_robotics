@@ -10,10 +10,11 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+//------------------------------------------------------------------------
+// GeNNRobotics::GeNNUtils::VarSlide
+//------------------------------------------------------------------------
 namespace GeNNRobotics {
-//------------------------------------------------------------------------
-// VarSlide
-//------------------------------------------------------------------------
+namespace GeNNUtils {
 template<typename T>
 class VarSlider
 {
@@ -61,4 +62,5 @@ private:
 
     std::function<void(T)> m_SetValueFunction;
 };
+} // GeNNUtils
 } // GeNNRobotics

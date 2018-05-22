@@ -3,11 +3,12 @@
 // GeNN includes
 #include "modelSpec.h"
 
-namespace GeNNRobotics {
 //----------------------------------------------------------------------------
-// LIF
+// GeNNRobotics::GeNNModels::LIF
 //----------------------------------------------------------------------------
 //! Leaky integrate-and-fire neuron solved algebraically
+namespace GeNNRobotics {
+namespace GeNNModels {
 class LIF : public NeuronModels::Base
 {
 public:
@@ -47,4 +48,6 @@ public:
     SET_VARS({{"V", "scalar"}, {"RefracTime", "scalar"}});
 };
 IMPLEMENT_MODEL(LIF);
+} // GeNNModels
 } // GeNNRobotics
+
