@@ -252,7 +252,7 @@ private:
             // If there was an error
             if(bytesReceived == -1) {
                 // If this was a timeout, continue
-                if(errno == EAGAIN) {
+                if(errno == EAGAIN || errno == EINTR) {
                     continue;
                 }
                 // Otherwise, display error and stop
