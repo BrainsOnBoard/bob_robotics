@@ -2,10 +2,10 @@
 #include "modelSpec.h"
 
 // Common includes
-#include "../common/connectors.h"
-#include "../common/exp_curr.h"
-#include "../common/lif.h"
-#include "../common/stdp_dopamine.h"
+#include "../genn_models/exp_curr.h"
+#include "../genn_models/lif.h"
+#include "../genn_models/stdp_dopamine.h"
+#include "../genn_utils/connectors.h"
 
 // Model includes
 #include "parameters.h"
@@ -115,10 +115,10 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Postsynaptic model parameters
     //---------------------------------------------------------------------------
-    ExpCurr::ParamValues pnToKCPostsynapticParams(
+    GeNNModels::ExpCurr::ParamValues pnToKCPostsynapticParams(
         3.0);   // 0 - Synaptic time constant (ms)
 
-    ExpCurr::ParamValues kcToENPostsynapticParams(
+    GeNNModels::ExpCurr::ParamValues kcToENPostsynapticParams(
         8.0);   // 0 - Synaptic time constant (ms)
 
     //---------------------------------------------------------------------------
@@ -126,7 +126,7 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(Parameters::pnToKCWeight);
 
-    STDPDopamine::ParamValues kcToENWeightUpdateParams(
+    GeNNModels::STDPDopamine::ParamValues kcToENWeightUpdateParams(
         15.0,                       // 0 - Potentiation time constant (ms)
         15.0,                       // 1 - Depression time constant (ms)
         40.0,                       // 2 - Synaptic tag time constant (ms)
@@ -136,7 +136,7 @@ void modelDefinition(NNmodel &model)
         0.0,                        // 6 - Minimum weight
         Parameters::kcToENWeight);  // 7 - Maximum weight
 
-    STDPDopamine::VarValues kcToENWeightUpdateInitVars(
+    GeNNModels::STDPDopamine::VarValues kcToENWeightUpdateInitVars(
         Parameters::kcToENWeight,   // Synaptic weight
         0.0,                        // Synaptic tag
         0.0);                       // Time of last synaptic tag update
@@ -146,13 +146,13 @@ void modelDefinition(NNmodel &model)
     model.addNeuronPopulation<LIFExtCurrent>("KC", Parameters::numKC, kcParams, lifInit);
     model.addNeuronPopulation<LIFExtCurrent>("EN", Parameters::numEN, enParams, lifInit);
 
-    auto pnToKC = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, ExpCurr>(
+    auto pnToKC = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, GeNNModels::ExpCurr>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
         "PN", "KC",
         {}, pnToKCWeightUpdateParams,
         pnToKCPostsynapticParams, {});
 
-    model.addSynapsePopulation<STDPDopamine, ExpCurr>(
+    model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
         "kcToEN", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY,
         "KC", "EN",
         kcToENWeightUpdateParams, kcToENWeightUpdateInitVars,
@@ -160,8 +160,8 @@ void modelDefinition(NNmodel &model)
 
 
     // Calculate max connections
-    const unsigned int maxConn = calcFixedNumberPreConnectorMaxConnections(Parameters::numPN, Parameters::numKC,
-                                                                           Parameters::numPNSynapsesPerKC);
+    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(Parameters::numPN, Parameters::numKC,
+                                                                                      Parameters::numPNSynapsesPerKC);
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);

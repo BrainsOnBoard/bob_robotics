@@ -12,8 +12,8 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "../common/analogue_csv_recorder.h"
 #include "../common/von_mises_distribution.h"
+#include "../genn_utils/analogue_csv_recorder.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
