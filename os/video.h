@@ -15,11 +15,7 @@
 namespace GeNNRobotics {
 namespace OS {
 namespace Video {
-struct CameraDevice
-{
-    int number;
-    std::string name;
-};
+typedef std::pair<int, std::string> CameraDevice;
 
 const std::string
 getCameraName(int deviceNumber)
@@ -29,7 +25,7 @@ getCameraName(int deviceNumber)
         return "";
     }
 
-    struct v4l2_capability video_cap;
+    v4l2_capability video_cap;
     if (ioctl(fd, VIDIOC_QUERYCAP, &video_cap) == -1) {
         std::cerr << "Warning: Could not get video device capabilities"
                   << std::endl;
@@ -57,14 +53,9 @@ getCameras()
     std::vector<CameraDevice> cameras;
     for (int i = 0; i < 64; i++) {
         const std::string name = getCameraName(i);
-        if (name == "") {
-            continue;
+        if (!name.empty()) {
+            cameras.emplace_back(i, name);
         }
-
-        CameraDevice dev;
-        dev.number = i;
-        dev.name = name;
-        cameras.push_back(dev);
     }
     return cameras;
 }
