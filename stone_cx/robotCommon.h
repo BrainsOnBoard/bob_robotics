@@ -1,7 +1,11 @@
 #pragma once
 
+namespace GeNNRobotics {
+namespace Robots {
 // Forward declarations
 class MotorI2C;
+}
+}
 
 // Functions
-void driveMotorFromCPU1(MotorI2C &motor, float steerThreshold, bool display = false);
+float driveMotorFromCPU1(GeNNRobotics::Robots::MotorI2C &motor, bool display = false);

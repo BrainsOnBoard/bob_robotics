@@ -1,0 +1,14 @@
+EXECUTABLE      := simulatorRobotDeadReckon
+SOURCES         := simulatorRobotDeadReckon.cc simulatorCommon.cc robotCommon.cc
+CXXFLAGS       := -pthread
+CPU_ONLY=1
+
+ifdef RECORD_ELECTROPHYS
+    CXXFLAGS += -DRECORD_ELECTROPHYS
+endif
+
+ifdef RECORD_SENSORS
+    CXXFLAGS += -DRECORD_SENSORS
+endif
+
+include $(GENN_PATH)/userproject/include/makefile_common_gnu.mk

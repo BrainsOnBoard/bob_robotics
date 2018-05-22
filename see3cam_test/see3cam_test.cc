@@ -1,11 +1,21 @@
+#include <map>
+#include <numeric>
+
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 // Common includes
-#include "../common/opencv_unwrap_360.h"
+#include "../common/pid.h"
 #include "../common/timer.h"
-#include "../common/see3cam_cu40.h"
+#include "../imgproc/opencv_unwrap_360.h"
+#include "../video/see3cam_cu40.h"
 
+using namespace GeNNRobotics;
+using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Video;
+
+namespace
+{
 enum class Mode
 {
     Clamp,
@@ -30,6 +40,7 @@ void setMode(Mode newMode, Mode &mode, cv::Mat &output, cv::Mat &unwrapped) {
     // Update mode
     mode = newMode;
 }
+}
 
 int main(int argc, char *argv[])
 {
@@ -45,7 +56,7 @@ int main(int argc, char *argv[])
             std::cout << control.name << " (" << std::hex << control.id << std::dec << ")" << std::endl;
             if(control.type == V4L2_CTRL_TYPE_INTEGER) {
                 std::cout << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value << std::endl;
-
+ 
                 int32_t currentValue;
                 if(cam.getControlValue(control.id, currentValue)){
                     std::cout << "\tCurrent value=" << currentValue << std::endl;
@@ -56,28 +67,28 @@ int main(int argc, char *argv[])
             }
         });
 
-    // Tweak exposure down to improve frame rate
-    //cam.setExposure(100);
-    cam.setBrightness(20);
-
+    // Get initial brightness and exposure
+    int32_t brightness = cam.getBrightness();
+    int32_t exposure = cam.getExposure();
+   
     // Create window
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
     const unsigned int unwrapWidth = 450;
-    const unsigned int unwrapHeight = 50;
+    const unsigned int unwrapHeight = 140;
 
-    Mode mode = Mode::Clamp;
-    // Create unwrapper to unwrap camera output
-    auto unwrapper = cam.createUnwrapper(cv::Size(rawWidth, rawHeight),
-                                         cv::Size(unwrapWidth, unwrapHeight));
+    Mode mode = Mode::Greyscale;
+    OpenCVUnwrap360 unwrapper = cam.createDefaultUnwrapper(cv::Size(unwrapWidth, unwrapHeight));
+    
+    auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
     cv::namedWindow("Raw", CV_WINDOW_NORMAL);
     cv::resizeWindow("Raw", rawWidth, rawHeight);
     cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapWidth, unwrapHeight);
 
-    cv::Mat output(rawHeight, rawWidth, CV_8UC3);
-    cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC3);
+    cv::Mat output(rawHeight, rawWidth, CV_8UC1);
+    cv::Mat unwrapped(unwrapHeight, unwrapWidth, CV_8UC1);
 
     {
         Timer<> timer("Total time:");
@@ -135,6 +146,37 @@ int main(int argc, char *argv[])
                 sprintf(filename, "image_%u.png", frame);
                 cv::imwrite(filename, unwrapped);
             }
+            else if(key == 'a') {
+                cam.autoExposure(autoExposureMask);
+            }
+            else if(key ==  '-') {
+                if(brightness > 1) {
+                    brightness--;
+                    cam.setBrightness(brightness);
+                    std::cout << "Brightness:" << brightness << std::endl;
+                }
+            }
+            else if(key == '+') {
+                if(brightness < 40) {
+                    brightness++;
+                    cam.setBrightness(brightness);
+                    std::cout << "Brightness:" << brightness << std::endl;
+                }
+            }
+            else if(key == ',') {
+                if(exposure > 1) {
+                    exposure--;
+                    cam.setExposure(exposure);
+                    std::cout << "Exposure:" << exposure << std::endl;
+                }
+            }
+            else if(key == '.') {
+                if(exposure < 9999) {
+                    exposure++;
+                    cam.setExposure(exposure);
+                    std::cout << "Exposure:" << exposure << std::endl;
+                }
+            }
             else if(key == 27) {
                 break;
             }
@@ -145,4 +187,3 @@ int main(int argc, char *argv[])
     }
     return 0;
 }
-

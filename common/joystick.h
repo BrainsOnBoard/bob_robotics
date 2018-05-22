@@ -9,6 +9,7 @@
 // Standard C includes
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 
 // POSIX includes
 #include <sys/stat.h>
@@ -17,8 +18,11 @@
 #include <linux/joystick.h>
 
 // GeNN robotics includes
-#include "motor.h"
+#include "../robots/motor.h"
 
+using namespace GeNNRobotics::Robots;
+
+namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // Joystick
 //----------------------------------------------------------------------------
@@ -75,13 +79,13 @@ public:
         for(uint8_t &s : m_ButtonState) {
             s &= ~(StatePress | StateRelease);
         }
-        
+
         // **TODO** clear all press and release bits
         while(true) {
             // Attempt to read event from joystick device (non-blocking)
             js_event event;
             const ssize_t bytesRead = ::read(m_Joystick, &event, sizeof(js_event));
-            
+
             // If there was an error
             if(bytesRead == -1) {
                 // If there are no more events, return true
@@ -109,7 +113,7 @@ public:
                     if(event.value == 0) {
                         // Clear down
                         s &= ~StateDown;
-                        
+
                         // Set release
                         s |= StateRelease;
                     }
@@ -129,49 +133,55 @@ public:
                 return false;
             }
         }
-        
+
     }
-    
-    bool isButtonDown(uint8_t button) 
+
+    bool isButtonDown(uint8_t button)
     {
         return ((m_ButtonState[button] & StateDown) != 0);
     }
-    
-    bool isButtonPressed(uint8_t button) 
+
+    bool isButtonPressed(uint8_t button)
     {
         return ((m_ButtonState[button] & StatePress) != 0);
     }
-    
-    bool isButtonReleased(uint8_t button) 
+
+    bool isButtonReleased(uint8_t button)
     {
         return ((m_ButtonState[button] & StateRelease) != 0);
     }
 
-    float getAxisState(uint8_t axis) 
+    float getAxisState(uint8_t axis)
     {
         return (float)m_AxisState[axis] / (float)std::numeric_limits<int16_t>::max();
     }
-    
+
     void drive(Motor &motor, float deadzone)
     {
         constexpr float pi = 3.141592653589793238462643383279502884f;
         constexpr float halfPi = pi / 2.0f;
-        
+
         // Read joystick axis state and drive robot manually
         const float joystickX = getAxisState(0);
         const float joystickY = getAxisState(1);
-        
-        // If length of joystick vector places it in deadzone, stop motors
-        const float r = sqrt((joystickX * joystickX) + (joystickY * joystickY));
-        if(r < deadzone) {
+        const bool deadX = (fabs(joystickX) < deadzone);
+        const bool deadY = (fabs(joystickY) < deadzone);
+
+        if(deadX && deadY) {
             motor.tank(0.0f, 0.0f);
         }
-        // Otherwise
+        else if(deadX) {
+            motor.tank(-joystickY, -joystickY);
+        }
+        else if(deadY) {
+            motor.tank(joystickX, -joystickX);
+        }
         else {
-            // Also calculate theta
+            // If length of joystick vector places it in deadzone, stop motors
+            const float r = sqrt((joystickX * joystickX) + (joystickY * joystickY));
             const float theta = atan2(joystickX, -joystickY);
             const float twoTheta = 2.0f * theta;
-            
+
             // Drive motor
             if(theta >= 0.0f && theta < halfPi) {
                 motor.tank(r, r * cos(twoTheta));
@@ -184,9 +194,9 @@ public:
             }
             else if(theta < -halfPi && theta >= -pi) {
                 motor.tank(-r, -r * cos(twoTheta));
-                
+
             }
-            
+
         }
     }
 
@@ -200,12 +210,13 @@ private:
         StatePress      = (1 << 1),
         StateRelease    = (1 << 2)
     };
-    
+
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     int m_Joystick;
-    
+
     std::vector<int16_t> m_AxisState;
     std::vector<uint8_t> m_ButtonState;
 };
+} // GeNNRobotics

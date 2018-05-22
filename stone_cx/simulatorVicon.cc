@@ -3,40 +3,40 @@
 #include <numeric>
 
 // Common includes
-#include "../common/analogue_csv_recorder.h"
 #include "../common/joystick.h"
-#include "../common/motor_i2c.h"
-#include "../common/vicon_udp.h"
+#include "../genn_utils/analogue_csv_recorder.h"
+#include "../robots/motor_i2c.h"
+#include "../vicon/capture_control.h"
+#include "../vicon/udp.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
 
 // Model includes
 #include "parameters.h"
+#include "robotCommon.h"
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
-
-enum class ViconEvent : unsigned int
-{
-    TrialStart,
-    HomeStart,
-    TrialEnd,
-};
+using namespace GeNNRobotics;
 
 int main(int argc, char *argv[])
 {
-    float speedScale = 1.0f / 400.0f;
-  
+    const float speedScale = 5.0f;
+    const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
+
     // Create joystick interface
     Joystick joystick;
 
     // Create motor interface
-    MotorI2C motor;
+    Robots::MotorI2C motor;
 
     // Create VICON UDP interface
-    Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001, 100);
+    Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
 
+    // Create VICON capture control interface
+    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
+                                              "c:\\users\\ad374\\Desktop");
     // Initialise GeNN
     allocateMem();
     initialize();
@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
     initstone_cx();
 
 #ifdef RECORD_ELECTROPHYS
-    AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
 #endif  // RECORD_ELECTROPHYS
     
     // Wait for VICON system to track some objects
@@ -70,9 +70,12 @@ int main(int argc, char *argv[])
         std::cout << "Waiting for object..." << std::endl;
     }
 
-    std::ofstream eventStream("events.csv", std::ios_base::app);
-    eventStream << "Frame number, event id" << std::endl;    
-    eventStream << vicon.getFrameNumber() << "," << static_cast<unsigned int>(ViconEvent::TrialStart) << std::endl;
+    // Start capture
+    if(!viconCaptureControl.startRecording("test")) {
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -96,23 +99,21 @@ int main(int argc, char *argv[])
         const auto &velocity = objectData.getVelocity();
         const auto &rotation = objectData.getRotation();
         
-        // Calculate scalar speed and apply to both TN2 hemisphere
-        // **NOTE** robot is incapable of holonomic motion!
-        float speed = sqrt(std::accumulate(std::begin(velocity), std::end(velocity), 0.0f,
-                                           [](float acc, double v){ return acc + (float)(v * v); }));
-
-        speed *= speedScale;
-        speedTN2[Parameters::HemisphereLeft] = speed;
-        speedTN2[Parameters::HemisphereRight] = speed;
-
-
-        // Get yaw from VICON and pass to TL neurons
-        // **TODO** check axes and add enum
-        headingAngleTL = rotation[2] + Parameters::pi;
-        if(numTicks % 100 == 0) {
-            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed:" << speed << std::endl;
+        // Update TL input
+        headingAngleTL = -rotation[2];
+        if(headingAngleTL < 0.0) {
+            headingAngleTL = (2.0 * Parameters::pi) + headingAngleTL;
         }
-        //std::cout << "Heading:" << headingAngleTL << std::endl;
+
+        // Project velocity onto each TN2 cell's preferred angle and use as speed input
+        for(unsigned int j = 0; j < Parameters::numTN2; j++) {
+            speedTN2[j] = (sin(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[0]) +
+                (cos(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[1]);
+        }
+
+        if(numTicks % 100 == 0) {
+            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")" << std::endl;
+        }
 
         // Step network
         stepTimeCPU();
@@ -132,14 +133,15 @@ int main(int argc, char *argv[])
             
             // If first button is pressed switch to returning home
             if(joystick.isButtonDown(0)) {
+                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
+                std::cout << "Turn around VICON frame:" << objectData.getFrameNumber() << std::endl;
                 outbound = false;
-                eventStream << vicon.getFrameNumber() << "," << static_cast<unsigned int>(ViconEvent::HomeStart) << std::endl;
             }
         }
         // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {
-            driveMotorFromCPU1(motor, RobotParameters::motorSteerThreshold, (numTicks % 100) == 0);
+            driveMotorFromCPU1(motor, (numTicks % 100) == 0);
         }
         
         // Record time at end of tick
@@ -163,11 +165,15 @@ int main(int argc, char *argv[])
     
     // Show overflow stats
     std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS" << std::endl;
-    eventStream << vicon.getFrameNumber() << "," << static_cast<unsigned int>(ViconEvent::TrialEnd) << std::endl;
-    
+
     // Stop motor
     motor.tank(0.0f, 0.0f);
     
+    // Stop capture
+    if(!viconCaptureControl.stopRecording("test")) {
+        return EXIT_FAILURE;
+    }
+
     // Exit
     return EXIT_SUCCESS;
 }

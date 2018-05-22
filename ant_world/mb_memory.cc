@@ -5,16 +5,18 @@
 #include <fstream>
 #include <random>
 
-// Common includes
-#include "../common/connectors.h"
-#include "../common/spike_csv_recorder.h"
+// GeNN robotics includes
 #include "../common/timer.h"
+#include "../genn_utils/connectors.h"
+#include "../genn_utils/spike_csv_recorder.h"
 
 // GeNN generated code includes
 #include "ant_world_CODE/definitions.h"
 
 // Antworld includes
 #include "parameters.h"
+
+using namespace GeNNRobotics;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -55,8 +57,8 @@ MBMemory::MBMemory()
     {
         Timer<> timer("Building connectivity:");
 
-        buildFixedNumberPreConnector(Parameters::numPN, Parameters::numKC,
-                                     Parameters::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
+        GeNNUtils::buildFixedNumberPreConnector(Parameters::numPN, Parameters::numKC,
+                                                Parameters::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
     }
 
     // Final setup
@@ -105,9 +107,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(flo
     // Open CSV output files
 #ifdef RECORD_SPIKES
     const float startTimeMs = t;
-    SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
-    SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
-    SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
+    GeNNUtils::SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
+    GeNNUtils::SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
+    GeNNUtils::SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
 
     std::bitset<Parameters::numPN> pnSpikeBitset;
     std::bitset<Parameters::numKC> kcSpikeBitset;

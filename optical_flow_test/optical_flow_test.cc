@@ -6,10 +6,13 @@
 #include <cmath>
 
 // Common includes
-#include "../common/opencv_optical_flow.h"
-#include "../common/opencv_unwrap_360.h"
-#include "../common/see3cam_cu40.h"
 #include "../common/timer.h"
+#include "../imgproc/opencv_optical_flow.h"
+#include "../imgproc/opencv_unwrap_360.h"
+#include "../video/see3cam_cu40.h"
+
+using namespace GeNNRobotics::ImgProc;
+using namespace GeNNRobotics::Video;
 
 #define USE_SEE3_CAM
 
@@ -61,7 +64,7 @@ int main(int argc, char *argv[])
 
     // Create unwrapper
     OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
-                              0.5, 0.416, 0.173, 0.377, -pi);
+                              0.5, 0.416, 0.173, 0.377, -180);
 #endif
 
     // Create optical flow calculator
