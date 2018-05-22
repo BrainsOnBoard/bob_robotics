@@ -19,110 +19,72 @@
 
 namespace GeNNRobotics {
 namespace Video {
-class PanoramicCamera : public Input
+
+inline std::unique_ptr<Input> getPanoramicCamera()
 {
-public:
-    PanoramicCamera()
-    {
 #ifdef _WIN32
-        // for Windows we currently just select the first camera
-        m_Camera = std::unique_ptr<Input>(
-                new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
+    // for Windows we currently just select the first camera
+    return std::unique_ptr<Input>(new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
 #else
-        // get vector of video input devices on system
-        auto cameras = OS::Video::getCameras();
+    // get vector of video input devices on system
+    auto cameras = OS::Video::getCameras();
 
-        // list of preferred cameras in priority order
-        static const std::array<std::string, 3> prefCameras{
-            SEE3CAM_DEVICE_NAME, PIXPRO_USB_DEVICE_NAME, WEBCAM360_DEVICE_NAME
-        };
+    // list of preferred cameras in priority order
+    static const std::array<std::string, 3> prefCameras{
+        SEE3CAM_DEVICE_NAME, PIXPRO_USB_DEVICE_NAME, WEBCAM360_DEVICE_NAME
+    };
 
-        int deviceNum = -1, prefCamNum = -1;
-        size_t lowestIndex = prefCameras.size();
-        for (OS::Video::CameraDevice cam : cameras) {
-            // Iterate through prefCameras looking for matches
-            for (size_t i = 0; i < lowestIndex; i++) {
-                if (cam.name == prefCameras[i]) {
-                    deviceNum = cam.number;
-                    prefCamNum = i;
-                    lowestIndex = i;
-                    break;
-                }
-            }
-
-            // If we matched the most preferred camera then we're done
-            if (prefCamNum == 0) {
+    int deviceNum = -1, prefCamNum = -1;
+    size_t lowestIndex = prefCameras.size();
+    for (const auto &cam : cameras) {
+        // Iterate through prefCameras looking for matches
+        for (size_t i = 0; i < lowestIndex; i++) {
+            if (cam.second == prefCameras[i]) {
+                deviceNum = cam.first;
+                prefCamNum = i;
+                lowestIndex = i;
                 break;
             }
-
-            /*
-             * Even if we didn't match any preferred camera, at least this is a
-             * camera, so use as fallback
-             */
-            if (deviceNum == -1) {
-                deviceNum = cam.number;
-            }
         }
-        std::cout << "Selected camera #" << deviceNum << ": "
-                  << OS::Video::getCameraName(deviceNum) << std::endl;
 
+        // If we matched the most preferred camera then we're done
+        if (prefCamNum == 0) {
+            break;
+        }
+
+        /*
+        * Even if we didn't match any preferred camera, at least this is a
+        * camera, so use as fallback
+        */
         if (deviceNum == -1) {
-            throw std::runtime_error("No camera found");
+            deviceNum = cam.first;
         }
+    }
+    std::cout << "Selected camera #" << deviceNum << ": "
+            << OS::Video::getCameraName(deviceNum) << std::endl;
 
-        Input *cam;
-        switch (prefCamNum) {
-        case 0: // SeeCam
-        {
-            See3CAM_CU40 *see3cam = new See3CAM_CU40("/dev/video" + std::to_string(deviceNum),
-                                                     See3CAM_CU40::Resolution::_1280x720);
-            // Run auto exposure algorithm
-            const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(see3cam->getSuperPixelSize());
-            see3cam->autoExposure(bubblescopeMask);
-            cam = see3cam;
-            break;
-        }
-        case 1: // PixPro
-        {
-            cam = new OpenCVInput(deviceNum, cv::Size(1440, 1440), "pixpro_usb");
-            break;
-        }
-        default: // webcam with panoramic lens
-        {
-            cam = new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360");
-        }
-        }
-        m_Camera = std::unique_ptr<Input>(cam);
+    if (deviceNum == -1) {
+        throw std::runtime_error("No camera found");
+    }
+
+    // SeeCam
+    if(prefCamNum == 0) {
+        See3CAM_CU40 *see3cam = new See3CAM_CU40("/dev/video" + std::to_string(deviceNum),
+                                                See3CAM_CU40::Resolution::_1280x720);
+        // Run auto exposure algorithm
+        const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(see3cam->getSuperPixelSize());
+        see3cam->autoExposure(bubblescopeMask);
+        return std::unique_ptr<Input>(see3cam);
+    }
+    // PixPro
+    else if(prefCamNum == 1) {
+        return std::unique_ptr<Input>(new OpenCVInput(deviceNum, cv::Size(1440, 1440), "pixpro_usb"));
+    }
+    // Default
+    else {
+        return std::unique_ptr<Input>(new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360"));
+    }
 #endif
-    }
-
-    void setOutputSize(const cv::Size &outSize)
-    {
-        m_Camera->setOutputSize(outSize);
-    }
-
-    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
-    {
-        return m_Camera->createDefaultUnwrapper(unwrapRes);
-    }
-
-    bool readFrame(cv::Mat &outFrame)
-    {
-        return m_Camera->readFrame(outFrame);
-    }
-
-    const std::string getCameraName() const
-    {
-        return m_Camera->getCameraName();
-    }
-
-    virtual cv::Size getOutputSize() const
-    {
-        return m_Camera->getOutputSize();
-    }
-
-private:
-    std::unique_ptr<Input> m_Camera;
-}; // PanoramicCamera
+}
 } // Video
 } // GeNNRobotics

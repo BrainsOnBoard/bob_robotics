@@ -28,38 +28,35 @@ int
 main(int argc, char **argv)
 {
     // TODO: add option to calibrate see3cam too
-    Video::Input *cam;
+    std::unique_ptr<Video::Input> pcam;
     if (argc == 1) {
         // if no args supplied, use default
-        cam = new Video::PanoramicCamera();
+        pcam = Video::getPanoramicCamera();
     } else {
         try {
             // if the arg is an int, the user is specifying a camera...
             int dev = std::stoi(argv[1]);
-            cam = new Video::OpenCVInput(dev);
+            pcam.reset(new Video::OpenCVInput(dev));
         } catch (std::invalid_argument &) {
             // ...else it's a filename/URL
-            cam = new Video::OpenCVInput(argv[1]);
+            pcam.reset(new Video::OpenCVInput(argv[1]));
         }
     }
 
-    // so pointer is freed on exit
-    std::unique_ptr<Video::Input> pcam(cam);
-
     // create unwrapper and load params from file
     const cv::Size unwrapRes(1280, 400);
-    ImgProc::OpenCVUnwrap360 unwrapper = cam->createDefaultUnwrapper(unwrapRes);
+    ImgProc::OpenCVUnwrap360 unwrapper = pcam->createDefaultUnwrapper(unwrapRes);
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for
                                  // calibration (either 1 or 5)
 
-    cv::Mat imorig(cam->getOutputSize(), CV_8UC3);
+    cv::Mat imorig(pcam->getOutputSize(), CV_8UC3);
     cv::Mat unwrap(unwrapRes, CV_8UC3);
     bool dirtyFlag = false;
 
     // display remapped camera output on loop until user presses escape
     for (bool runLoop = true; runLoop;) {
-        if (!cam->readFrame(imorig)) {
+        if (!pcam->readFrame(imorig)) {
             std::cerr << "Error: Could not read from webcam" << std::endl;
             return 1;
         }
@@ -167,7 +164,7 @@ main(int argc, char **argv)
     if (dirtyFlag) {
         // write params to file
         std::string filePath =
-                cam->getCameraName() + ".yaml"; // I don't like this
+                pcam->getCameraName() + ".yaml"; // I don't like this
         std::cout << "Writing to " << filePath << "..." << std::endl;
         cv::FileStorage outfs(filePath, cv::FileStorage::WRITE);
         unwrapper >> outfs;
