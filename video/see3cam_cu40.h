@@ -176,8 +176,8 @@ public:
         // quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
-        assert(output.cols == inputWidth / 2);
-        assert(output.rows == inputHeight / 2);
+        assert(output.cols == (int) inputWidth / 2);
+        assert(output.rows == (int) inputHeight / 2);
         assert(output.type() == CV_8UC1);
 
         // Read data and size (in bytes) from camera
@@ -229,8 +229,8 @@ public:
 
         // Check validity of mask
         const bool noMask = (mask.cols == 0 && mask.rows == 0);
-        assert(noMask || (mask.cols == (inputWidth / 2) &&
-                          mask.rows == (inputHeight / 2)));
+        assert(noMask || (mask.cols == (int) (inputWidth / 2) &&
+                          mask.rows == (int) (inputHeight / 2)));
         assert(noMask || mask.type() == CV_8UC1);
 
         // Read data and size (in bytes) from camera
@@ -579,8 +579,8 @@ private:
         // quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
-        assert(output.cols == inputWidth / 2);
-        assert(output.rows == inputHeight / 2);
+        assert(output.cols == (int) inputWidth / 2);
+        assert(output.rows == (int) inputHeight / 2);
         assert(output.type() == CV_8UC3);
 
         // Read data and size (in bytes) from camera
