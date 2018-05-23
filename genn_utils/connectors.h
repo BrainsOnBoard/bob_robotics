@@ -288,7 +288,7 @@ void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, f
 
     // Loop through potential synapses
     const int64_t maxConnections = (int64_t)numPre * (int64_t)numPost;
-    for(int64_t s = -1;; s++) {
+    for(int64_t s = -1;;) {
         // Skip to next connection
         s += (1 + (int64_t)(std::log(dis(gen)) * probabilityReciprocal));
 
