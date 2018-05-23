@@ -11,12 +11,16 @@
 // GeNN robotics includes
 #include "robots/motor.h"
 #include "video/input.h"
+
+// local includes
+#include "node.h"
 #include "socket.h"
 
 namespace GeNNRobotics {
 namespace Net {
 class Client
-  : public Robots::Motor
+  : public Node
+  , public Robots::Motor
   , public Video::Input
   , Socket
 {
@@ -27,6 +31,7 @@ public:
     void tank(float left, float right) override;
     cv::Size getOutputSize() const override;
     bool readFrame(cv::Mat &frame) override;
+    Socket *getSocket() const override;
 
 private:
     cv::Size m_CameraResolution;
@@ -52,7 +57,7 @@ Client::Client(const std::string host)
     destAddress.sin_addr = addr;
 
     // Connect socket
-    if (connect(getSocket(),
+    if (connect(Socket::getSocket(),
                 reinterpret_cast<sockaddr *>(&destAddress),
                 sizeof(destAddress)) < 0) {
         throw std::runtime_error("Cannot connect socket to " + host + ":" +
@@ -71,17 +76,23 @@ Client::~Client()
     WSACleanup();
 }
 
+Socket *
+Client::getSocket() const
+{
+    return nullptr;
+}
+
 void
 Client::startStreaming()
 {
-    send("IMS\n");
+    send("IMG START\n");
     auto command = readCommand();
-    if (command[0] != "IMP" || command.size() != 3) {
+    if (command[0] != "IMG" || command[1] != "PARAMS" || command.size() != 4) {
         throw bad_command_error();
     }
 
-    m_CameraResolution.width = stoi(command[1]);
-    m_CameraResolution.height = stoi(command[2]);
+    m_CameraResolution.width = stoi(command[2]);
+    m_CameraResolution.height = stoi(command[3]);
 }
 
 cv::Size

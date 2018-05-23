@@ -3,54 +3,44 @@
 // C++ includes
 #include <memory>
 #include <string>
-#include <thread>
-#include <vector>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "robots/motor.h"
+#include "../robots/motor.h"
+#include "../video/input.h"
+
+// local includes
+#include "node.h"
 #include "socket.h"
-#include "video/input.h"
 
 namespace GeNNRobotics {
 namespace Net {
 class Server;
 
-class Server
+class Server : public Node
 {
 public:
-    static void runServer(Video::Input *videoinput, std::shared_ptr<Robots::Motor> &motor);
-
-    Server(Video::Input *videoinput, std::shared_ptr<Robots::Motor> motor,
+    Server(std::shared_ptr<Robots::Motor> motor,
            int port = Socket::DefaultListenPort);
     virtual ~Server();
+    Socket *getSocket() const override;
+    void run();
 
 private:
-    Video::Input *m_VideoInput;
     socket_t m_ListenSocket = INVALID_SOCKET;
     std::shared_ptr<Socket> m_Socket;
     std::shared_ptr<Robots::Motor> m_Motor;
-    bool m_SendingImages = false;
-    std::unique_ptr<std::thread> m_ImageThread;
-    cv::Mat m_Frame;
-    std::vector<uchar> m_FrameBuffer;
 
     bool parseCommand();
-    void run();
-    void sendFrame();
-    static void runImageThread(Server *server);
 };
 
 /*
  * Create a server to send motor commands
  */
-Server::Server(Video::Input *videoinput,
-               std::shared_ptr<Robots::Motor> motor,
-               int port)
-  : m_VideoInput(videoinput)
-  , m_Motor(motor)
+Server::Server(std::shared_ptr<Robots::Motor> motor, int port)
+  : m_Motor(motor)
 {
     struct sockaddr_in addr;
     int on = 1;
@@ -94,11 +84,6 @@ error:
 /* Stop listening */
 Server::~Server()
 {
-    if (m_SendingImages && m_ImageThread) {
-        m_SendingImages = false;
-        m_ImageThread->join();
-    }
-
     if (m_ListenSocket != INVALID_SOCKET) {
         close(m_ListenSocket);
     }
@@ -107,16 +92,10 @@ Server::~Server()
     WSACleanup();
 }
 
-void
-Server::sendFrame()
+Socket *
+Server::getSocket() const
 {
-    if (!m_VideoInput->readFrame(m_Frame)) {
-        throw std::runtime_error("Could not read from camera");
-    }
-
-    cv::imencode(".jpg", m_Frame, m_FrameBuffer);
-    m_Socket->send("IMG " + std::to_string(m_FrameBuffer.size()) + "\n");
-    m_Socket->send(m_FrameBuffer.data(), m_FrameBuffer.size());
+    return m_Socket.get();
 }
 
 bool
@@ -138,20 +117,13 @@ Server::parseCommand()
         // send motor command
         m_Motor->tank(left, right);
         return true;
-    } else if (command[0] == "IMS") {
-        // ACK the command and tell client the camera resolution
-        cv::Size res = m_VideoInput->getOutputSize();
-        m_Socket->send("IMP " + std::to_string(res.width) + " " +
-                       std::to_string(res.height) + "\n");
-
-        m_SendingImages = true;
-        m_ImageThread = std::unique_ptr<std::thread>(
-                new std::thread(runImageThread, this));
-
-        return true;
-    } else if (command[0] == "BYE") {
+    }
+    if (command[0] == "BYE") {
         // client closing connection
         return false;
+    }
+    if (tryRunHandler(command)) {
+        return true;
     }
 
     // no other commands supported
@@ -190,21 +162,6 @@ Server::run()
             std::cout << "Connection closed [" + std::string(e.what()) + "]"
                       << std::endl;
         }
-    }
-}
-
-void
-Server::runServer(Video::Input *videoinput, std::shared_ptr<Robots::Motor> &motor)
-{
-    Server server(videoinput, motor);
-    server.run();
-}
-
-void
-Server::runImageThread(Server *server)
-{
-    while (server->m_SendingImages) {
-        server->sendFrame();
     }
 }
 } // Net
