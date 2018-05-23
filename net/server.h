@@ -11,8 +11,8 @@
 
 // GeNN robotics includes
 #include "robots/motor.h"
-#include "video/input.h"
 #include "socket.h"
+#include "video/input.h"
 
 namespace GeNNRobotics {
 namespace Net {
@@ -21,14 +21,14 @@ class Server;
 class Server
 {
 public:
-    static void runServer(std::shared_ptr<Robots::Motor> &motor);
+    static void runServer(Video::Input *videoinput, std::shared_ptr<Robots::Motor> &motor);
 
-    Server(std::shared_ptr<Robots::Motor> motor,
+    Server(Video::Input *videoinput, std::shared_ptr<Robots::Motor> motor,
            int port = Socket::DefaultListenPort);
     virtual ~Server();
 
 private:
-    std::unique_ptr<Video::Input> m_Camera, m_Eye;
+    Video::Input *m_VideoInput;
     socket_t m_ListenSocket = INVALID_SOCKET;
     std::shared_ptr<Socket> m_Socket;
     std::shared_ptr<Robots::Motor> m_Motor;
@@ -46,8 +46,11 @@ private:
 /*
  * Create a server to send motor commands
  */
-Server::Server(std::shared_ptr<Robots::Motor> motor, int port)
-  : m_Motor(motor)
+Server::Server(Video::Input *videoinput,
+               std::shared_ptr<Robots::Motor> motor,
+               int port)
+  : m_VideoInput(videoinput)
+  , m_Motor(motor)
 {
     struct sockaddr_in addr;
     int on = 1;
@@ -107,7 +110,7 @@ Server::~Server()
 void
 Server::sendFrame()
 {
-    if (!m_Eye->readFrame(m_Frame)) {
+    if (!m_VideoInput->readFrame(m_Frame)) {
         throw std::runtime_error("Could not read from camera");
     }
 
@@ -136,16 +139,8 @@ Server::parseCommand()
         m_Motor->tank(left, right);
         return true;
     } else if (command[0] == "IMS") {
-        if (m_Eye) {
-            throw std::runtime_error("Camera already opened");
-        }
-
-        // get default panoramic camera
-        m_Camera = Video::getPanoramicCamera();
-        m_Eye = std::unique_ptr<Video::Input>(new Eye::BeeEye(m_Camera.get()));
-
         // ACK the command and tell client the camera resolution
-        cv::Size res = m_Eye->getOutputSize();
+        cv::Size res = m_VideoInput->getOutputSize();
         m_Socket->send("IMP " + std::to_string(res.width) + " " +
                        std::to_string(res.height) + "\n");
 
@@ -199,9 +194,9 @@ Server::run()
 }
 
 void
-Server::runServer(std::shared_ptr<Robots::Motor> &motor)
+Server::runServer(Video::Input *videoinput, std::shared_ptr<Robots::Motor> &motor)
 {
-    Server server(motor);
+    Server server(videoinput, motor);
     server.run();
 }
 
