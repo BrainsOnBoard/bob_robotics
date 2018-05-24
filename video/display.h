@@ -43,9 +43,7 @@ public:
 
         cv::Mat frame;
         while (m_DoRun) {
-            if (!m_VideoInput->readFrame(frame)) {
-                throw std::runtime_error("Error reading from video input");
-            }
+            readNextFrame(frame);
             cv::imshow(WINDOW_NAME, frame);
 
             // quit when user presses esc
@@ -55,8 +53,15 @@ public:
         }
     }
 
-private:
+protected:
     Input *m_VideoInput;
+
+    virtual void readNextFrame(cv::Mat &frame)
+    {
+        if (!m_VideoInput->readFrame(frame)) {
+            throw std::runtime_error("Error reading from video input");
+        }
+    }
 }; // Display
 } // Video
 } // GeNNRobotics
