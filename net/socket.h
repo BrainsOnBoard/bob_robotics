@@ -47,7 +47,7 @@ public:
 class Socket
 {
 public:
-    static const size_t DefaultBufferSize = 512;
+    static const size_t DefaultBufferSize = 1024*8;
     static const int DefaultListenPort = 2000;
     static const bool PrintDebug = false;
 
