@@ -1,3 +1,7 @@
+/*
+ * An abstract class inherited by Server and Client classes.
+ */
+
 #pragma once
 
 // C++ includes
@@ -15,7 +19,6 @@
 
 namespace GeNNRobotics {
 namespace Net {
-using Command = std::vector<std::string>;    
 using CommandHandler = void (*)(Command &command,
                                 void *userData);
 using HandlerItem = std::pair<CommandHandler, void *>;
@@ -25,6 +28,10 @@ class Node : public Threadable
 public:
     virtual Socket *getSocket() const = 0;
 
+    /*
+     * Add a handler for a specified type of command (e.g. if it's an IMG command,
+     * it should be handled by Video::NetSource).
+     */
     void addHandler(std::string command,
                     CommandHandler handler,
                     void *userData = nullptr)
@@ -32,6 +39,9 @@ public:
         m_Handlers.emplace(command, HandlerItem(handler, userData));
     }
 
+    /*
+     * Repeatedly read and parse commands from the socket until stopped.
+     */
     void run() override
     {
         while (m_DoRun) {

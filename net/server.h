@@ -18,8 +18,6 @@
 
 namespace GeNNRobotics {
 namespace Net {
-class Server;
-
 class Server : public Node
 {
 public:
@@ -32,7 +30,7 @@ protected:
 
 private:
     socket_t m_ListenSocket = INVALID_SOCKET;
-    std::shared_ptr<Socket> m_Socket;
+    std::unique_ptr<Socket> m_Socket;
 };
 
 /*
@@ -79,7 +77,6 @@ error:
     exit(1);
 }
 
-/* Stop listening */
 Server::~Server()
 {
     stop();
@@ -92,6 +89,9 @@ Server::~Server()
     WSACleanup();
 }
 
+/*
+ * Get the socket of the current connection.
+ */
 Socket *
 Server::getSocket() const
 {
@@ -113,7 +113,7 @@ Server::run()
     while (m_DoRun) {
         // wait for incoming TCP connection
         std::cout << "Waiting for incoming connection..." << std::endl;
-        m_Socket = std::shared_ptr<Socket>(new Socket(
+        m_Socket = std::unique_ptr<Socket>(new Socket(
                 accept(m_ListenSocket, (sockaddr *) &addr, &addrlen)));
         m_Socket->send("HEY\n");
 

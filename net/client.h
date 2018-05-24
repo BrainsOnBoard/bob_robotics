@@ -1,3 +1,9 @@
+/*
+ * General-purpose TCP client, to be used with corresponding Net::Server object.
+ * Various sink/source-type objects are used for either sending or receiving
+ * data from the server.
+ */
+
 #pragma once
 
 // C++ includes
@@ -19,20 +25,17 @@ class Client
   , Socket
 {
 public:
-    Client(const std::string host);
+    Client(const std::string host, int port = DefaultListenPort);
     ~Client();
     Socket *getSocket() const override;
-
-private:
-    cv::Size m_CameraResolution;
-    float m_OldLeft = std::numeric_limits<float>::quiet_NaN();
-    float m_OldRight = std::numeric_limits<float>::quiet_NaN();
-    std::vector<uchar> m_FrameBuffer;
 };
 
-/* Create client, connect to host on MAIN_PORT over TCP */
-Client::Client(const std::string host)
+/*
+ * Create client, connect to host over TCP
+ */
+Client::Client(const std::string host, int port)
 {
+    // Needed for Windows
     WSAStartup();
 
     // Create socket
@@ -43,7 +46,7 @@ Client::Client(const std::string host)
     addr.s_addr = inet_addr(host.c_str());
     sockaddr_in destAddress;
     destAddress.sin_family = AF_INET;
-    destAddress.sin_port = htons(DefaultListenPort);
+    destAddress.sin_port = htons(port);
     destAddress.sin_addr = addr;
 
     // Connect socket
@@ -51,7 +54,7 @@ Client::Client(const std::string host)
                 reinterpret_cast<sockaddr *>(&destAddress),
                 sizeof(destAddress)) < 0) {
         throw std::runtime_error("Cannot connect socket to " + host + ":" +
-                                 std::to_string(DefaultListenPort));
+                                 std::to_string(port));
     }
 
     std::cout << "Opened socket" << std::endl;
@@ -59,10 +62,14 @@ Client::Client(const std::string host)
 
 Client::~Client()
 {
-    stop();
-    WSACleanup();
+    stop(); // stop thread if needed
+    WSACleanup(); // cleanup for Windows
 }
 
+/*
+ * Overridden Node method; used to get current socket, which for the Client
+ * object is always itself.
+ */
 Socket *
 Client::getSocket() const
 {

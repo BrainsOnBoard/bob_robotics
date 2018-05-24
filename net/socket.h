@@ -1,3 +1,8 @@
+/*
+ * This class provides methods for sending and receiving data from a network
+ * socket.
+ */
+
 #pragma once
 
 // C includes
@@ -21,6 +26,8 @@
 
 namespace GeNNRobotics {
 namespace Net {
+using Command = std::vector<std::string>;    
+    
 class socket_error : public std::runtime_error
 {
 public:
@@ -44,10 +51,16 @@ public:
     static const int DefaultListenPort = 2000;
     static const bool PrintDebug = false;
 
+    /*
+     * Initialise class without m_Socket set. It can be set later with setSocket().
+     */
     Socket(bool print = PrintDebug)
       : m_Print(print)
     {}
 
+    /*
+     * Initialise class with specified socket.
+     */
     Socket(socket_t sock, bool print = PrintDebug)
       : m_Print(print)
     {
@@ -61,28 +74,37 @@ public:
         }
     }
 
+    /*
+     * Get the current socket handle this object holds.
+     */
     socket_t getSocket() const
     {
         return m_Socket;
     }
 
-    std::vector<std::string> readCommand()
+    /*
+     * Read a plaintext command, splitting it into separate words.
+     */
+    Command readCommand()
     {
         std::string line = readLine();
         std::istringstream iss(line);
-        std::vector<std::string> results(
+        Command results(
                 std::istream_iterator<std::string>{ iss },
                 std::istream_iterator<std::string>());
         return results;
     }
 
+    /*
+     * Read a specified number of bytes into a buffer.
+     */
     void read(void *buffer, size_t len)
     {
         std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
 
-        size_t start = 0;
         // initially, copy over any leftover bytes in m_Buffer
+        size_t start = 0;
         if (m_BufferBytes > 0) {
             size_t tocopy = std::min(len, m_BufferBytes);
             memcpy(buffer, &m_Buffer[m_BufferStart], tocopy);
@@ -91,6 +113,7 @@ public:
             debitBytes(tocopy);
         }
 
+        // keep reading from socket until we have enough bytes
         while (len > 0) {
             size_t nbytes = readOnce((char *) buffer, start, len);
             start += nbytes;
@@ -99,7 +122,7 @@ public:
     }
 
     /*
-     * Read a single line in. This function's probably not terribly robust.
+     * Read a single line in, stopping at a newline char.
      */
     std::string readLine()
     {
@@ -137,6 +160,9 @@ public:
         }
     }
 
+    /*
+     * Send a buffer of specified length through the socket.
+     */
     void send(const void *buffer, size_t len)
     {
         std::lock_guard<std::mutex> guard(m_SendMutex);
@@ -148,6 +174,9 @@ public:
         }
     }
 
+    /*
+     * Send a string over the socket.
+     */
     void send(const std::string &msg)
     {
         send(msg.c_str(), msg.length());
@@ -157,6 +186,9 @@ public:
         }
     }
 
+    /*
+     * Set the current socket;
+     */
     void setSocket(socket_t sock)
     {
         std::lock_guard<std::mutex> guard(m_ReadMutex);
@@ -173,6 +205,9 @@ private:
     bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
 
+    /*
+     * Debit the byte store by specified amount.
+     */
     void debitBytes(size_t nbytes)
     {
         m_BufferStart += nbytes;
@@ -182,6 +217,9 @@ private:
         m_BufferBytes -= nbytes;
     }
 
+    /*
+     * Check that the current socket is valid.
+     */
     void checkSocket()
     {
         if (m_Socket == INVALID_SOCKET) {
@@ -189,6 +227,9 @@ private:
         }
     }
 
+    /*
+     * Make a single call to read/recv.
+     */
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
 #ifdef _MSC_VER
@@ -206,6 +247,9 @@ private:
         return (size_t) len;
     }
 
+    /*
+     * Get the last error message.
+     */
     static std::string errorMessage()
     {
         return " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")";
