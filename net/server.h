@@ -27,7 +27,7 @@ public:
            int port = Socket::DefaultListenPort);
     virtual ~Server();
     Socket *getSocket() const override;
-    void serve();
+    void run() override;
 
 protected:
     bool parseCommand(Command &command) override;
@@ -135,15 +135,14 @@ Server::parseCommand(Command &command)
  * one connection at a time.
  */
 void
-Server::serve()
+Server::run()
 {
     // for incoming connection
     sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
 
-    // loop for ever
-
-    while (true) {
+    // loop until stopped
+    while (m_DoRun) {
         // wait for incoming TCP connection
         std::cout << "Waiting for incoming connection..." << std::endl;
         m_Socket = std::shared_ptr<Socket>(new Socket(
@@ -156,7 +155,7 @@ Server::serve()
         std::cout << "Incoming connection from " << saddr << std::endl;
 
         try {
-            run();
+            Node::run();
         } catch (socket_error &e) {
             std::cout << "Connection closed [" + std::string(e.what()) + "]"
                       << std::endl;

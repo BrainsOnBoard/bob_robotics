@@ -40,11 +40,6 @@ public:
         return true;
     }
 
-    void run()
-    {
-        m_Node->run();
-    }
-
 private:
     Net::Node *m_Node;
     cv::Size m_CameraResolution;

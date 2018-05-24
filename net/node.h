@@ -7,6 +7,9 @@
 #include <utility>
 #include <vector>
 
+// GeNN robotics includes
+#include "common/threadable.h"
+
 // local includes
 #include "socket.h"
 
@@ -17,7 +20,7 @@ using CommandHandler = void (*)(Command &command,
                                 void *userData);
 using HandlerItem = std::pair<CommandHandler, void *>;
 
-class Node
+class Node : public Threadable
 {
 public:
     virtual Socket *getSocket() const = 0;
@@ -29,9 +32,9 @@ public:
         m_Handlers.emplace(command, HandlerItem(handler, userData));
     }
 
-    void run()
+    void run() override
     {
-        while (true) {
+        while (m_DoRun) {
             Socket *sock = getSocket();
             auto command = sock->readCommand();
             if (!parseCommand(command)) {
