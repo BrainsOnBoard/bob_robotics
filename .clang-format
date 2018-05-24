@@ -7,3 +7,4 @@ SpaceAfterCStyleCast: true
 PointerAlignment: Right
 ContinuationIndentWidth: 8
 AlwaysBreakAfterDefinitionReturnType: None
+ColumnLimit: 0
