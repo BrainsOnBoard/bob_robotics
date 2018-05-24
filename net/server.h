@@ -23,26 +23,22 @@ class Server;
 class Server : public Node
 {
 public:
-    Server(std::shared_ptr<Robots::Motor> motor,
-           int port = Socket::DefaultListenPort);
+    Server(int port = Socket::DefaultListenPort);
     virtual ~Server();
     Socket *getSocket() const override;
     void run() override;
 
 protected:
-    bool parseCommand(Command &command) override;
 
 private:
     socket_t m_ListenSocket = INVALID_SOCKET;
     std::shared_ptr<Socket> m_Socket;
-    std::shared_ptr<Robots::Motor> m_Motor;
 };
 
 /*
  * Create a server to send motor commands
  */
-Server::Server(std::shared_ptr<Robots::Motor> motor, int port)
-  : m_Motor(motor)
+Server::Server(int port)
 {
     struct sockaddr_in addr;
     int on = 1;
@@ -100,36 +96,6 @@ Socket *
 Server::getSocket() const
 {
     return m_Socket.get();
-}
-
-bool
-Server::parseCommand(Command &command)
-{
-    // driving command (e.g. TNK 0.5 0.5)
-    if (command[0] == "TNK") {
-        // second space separates left and right parameters
-        if (command.size() != 3) {
-            throw bad_command_error();
-        }
-
-        // parse strings to floats
-        const float left = stof(command[1]);
-        const float right = stof(command[2]);
-
-        // send motor command
-        m_Motor->tank(left, right);
-        return true;
-    }
-    if (command[0] == "BYE") {
-        // client closing connection
-        return false;
-    }
-    if (tryRunHandler(command)) {
-        return true;
-    }
-
-    // no other commands supported
-    throw bad_command_error();
 }
 
 /*

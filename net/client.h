@@ -8,10 +8,6 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
-#include "../robots/motor.h"
-#include "../video/input.h"
-
 // local includes
 #include "node.h"
 #include "socket.h"
@@ -20,17 +16,12 @@ namespace GeNNRobotics {
 namespace Net {
 class Client
   : public Node
-  , public Robots::Motor
   , Socket
 {
 public:
     Client(const std::string host);
     ~Client();
-    void tank(float left, float right) override;
     Socket *getSocket() const override;
-
-protected:
-    bool parseCommand(Command &command) override;
 
 private:
     cv::Size m_CameraResolution;
@@ -76,38 +67,6 @@ Socket *
 Client::getSocket() const
 {
     return (Socket *) this;
-}
-
-bool
-Client::parseCommand(Command &command)
-{
-    if (command[0] == "BYE") {
-        // client closing connection
-        return false;
-    }
-    if (command[0] == "HEY" || tryRunHandler(command)) {
-        return true;
-    }
-
-    // no other commands supported
-    throw bad_command_error();
-}
-
-/* Motor command: send TNK command over TCP */
-void
-Client::tank(float left, float right)
-{
-    // don't send a command if it's the same as the last one
-    if (left == m_OldLeft && right == m_OldRight) {
-        return;
-    }
-
-    // send steering command
-    send("TNK " + std::to_string(left) + " " + std::to_string(right) + "\n");
-
-    // store current left/right values to compare next time
-    m_OldLeft = left;
-    m_OldRight = right;
 }
 } // Net
 } // GeNNRobotics

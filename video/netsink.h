@@ -20,24 +20,24 @@ namespace Video {
 class NetSink
 {
 public:
-    NetSink(Input *input, Net::Node *node)
-      : m_Input(input)
-      , m_Node(node)
+    NetSink(Net::Node *node, Input *input)
+      : m_Node(node)
+      , m_Input(input)
     {
         node->addHandler("IMG", handleCommand, this);
     }
 
 private:
+    Net::Node *m_Node;
     Input *m_Input;
     std::unique_ptr<std::thread> m_ImageThread;
-    Net::Node *m_Node;
 
     void handleCommand(std::vector<std::string> &command)
     {
         // ACK the command and tell client the camera resolution
         cv::Size res = m_Input->getOutputSize();
         m_Node->getSocket()->send("IMG PARAMS " + std::to_string(res.width) + " " +
-                       std::to_string(res.height) + "\n");
+                                  std::to_string(res.height) + "\n");
 
         m_ImageThread = std::unique_ptr<std::thread>(
                 new std::thread([=] { runImageSink(); }));

@@ -17,7 +17,7 @@
 #include <vector>
 
 // GeNN robotics includes
-#include "os/net.h"
+#include "../os/net.h"
 
 namespace GeNNRobotics {
 namespace Net {

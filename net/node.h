@@ -8,7 +8,7 @@
 #include <vector>
 
 // GeNN robotics includes
-#include "common/threadable.h"
+#include "../common/threadable.h"
 
 // local includes
 #include "socket.h"
@@ -44,7 +44,20 @@ public:
     }
 
 protected:
-    virtual bool parseCommand(Command &command) = 0;
+    virtual bool parseCommand(Command &command)
+    {
+        if (command[0] == "BYE") {
+            return false;
+        }
+        if (command[0] == "HEY") {
+            return true;
+        }
+        if (tryRunHandler(command)) {
+            return true;
+        } else {
+            throw bad_command_error();
+        }
+    }
 
     bool tryRunHandler(Command &command)
     {
