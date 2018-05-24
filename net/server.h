@@ -3,6 +3,7 @@
 // C++ includes
 #include <memory>
 #include <string>
+#include <vector>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -26,14 +27,15 @@ public:
            int port = Socket::DefaultListenPort);
     virtual ~Server();
     Socket *getSocket() const override;
-    void run();
+    void serve();
+
+protected:
+    bool parseCommand(Command &command) override;
 
 private:
     socket_t m_ListenSocket = INVALID_SOCKET;
     std::shared_ptr<Socket> m_Socket;
     std::shared_ptr<Robots::Motor> m_Motor;
-
-    bool parseCommand();
 };
 
 /*
@@ -99,10 +101,8 @@ Server::getSocket() const
 }
 
 bool
-Server::parseCommand()
+Server::parseCommand(Command &command)
 {
-    std::vector<std::string> command = m_Socket->readCommand();
-
     // driving command (e.g. TNK 0.5 0.5)
     if (command[0] == "TNK") {
         // second space separates left and right parameters
@@ -135,7 +135,7 @@ Server::parseCommand()
  * one connection at a time.
  */
 void
-Server::run()
+Server::serve()
 {
     // for incoming connection
     sockaddr_in addr;
@@ -156,8 +156,7 @@ Server::run()
         std::cout << "Incoming connection from " << saddr << std::endl;
 
         try {
-            while (parseCommand())
-                ;
+            run();
         } catch (socket_error &e) {
             std::cout << "Connection closed [" + std::string(e.what()) + "]"
                       << std::endl;

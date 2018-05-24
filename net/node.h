@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 // local includes
@@ -11,20 +12,38 @@
 
 namespace GeNNRobotics {
 namespace Net {
-using CommandHandler = void (*)(std::vector<std::string> &command, void *userData);
-typedef std::pair<CommandHandler, void *> HandlerItem;
+using Command = std::vector<std::string>;    
+using CommandHandler = void (*)(Command &command,
+                                void *userData);
+using HandlerItem = std::pair<CommandHandler, void *>;
 
 class Node
 {
 public:
     virtual Socket *getSocket() const = 0;
-    void addHandler(std::string command, CommandHandler handler, void *userData = nullptr)
+
+    void addHandler(std::string command,
+                    CommandHandler handler,
+                    void *userData = nullptr)
     {
         m_Handlers.emplace(command, HandlerItem(handler, userData));
     }
 
+    void run()
+    {
+        while (true) {
+            Socket *sock = getSocket();
+            auto command = sock->readCommand();
+            if (!parseCommand(command)) {
+                break;
+            }
+        }
+    }
+
 protected:
-    bool tryRunHandler(std::vector<std::string> &command)
+    virtual bool parseCommand(Command &command) = 0;
+
+    bool tryRunHandler(Command &command)
     {
         HandlerItem handler;
         try {

@@ -59,7 +59,7 @@ private:
         Net::Socket *sock = m_Node->getSocket();
         while (m_Input->readFrame(frame)) {
             cv::imencode(".jpg", frame, buffer);
-            sock->send("IMG " + std::to_string(buffer.size()) + "\n");
+            sock->send("IMG FRAME " + std::to_string(buffer.size()) + "\n");
             sock->send(buffer.data(), buffer.size());
         }
     }

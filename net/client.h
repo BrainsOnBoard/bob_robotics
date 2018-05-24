@@ -9,8 +9,8 @@
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "robots/motor.h"
-#include "video/input.h"
+#include "../robots/motor.h"
+#include "../video/input.h"
 
 // local includes
 #include "node.h"
@@ -21,17 +21,16 @@ namespace Net {
 class Client
   : public Node
   , public Robots::Motor
-  , public Video::Input
   , Socket
 {
 public:
     Client(const std::string host);
     ~Client();
-    void startStreaming();
     void tank(float left, float right) override;
-    cv::Size getOutputSize() const override;
-    bool readFrame(cv::Mat &frame) override;
     Socket *getSocket() const override;
+
+protected:
+    bool parseCommand(Command &command) override;
 
 private:
     cv::Size m_CameraResolution;
@@ -65,12 +64,8 @@ Client::Client(const std::string host)
     }
 
     std::cout << "Opened socket" << std::endl;
-
-    // first command is HEY
-    readLine();
 }
 
-/* Destructor: send BYE message and close connection */
 Client::~Client()
 {
     WSACleanup();
@@ -79,41 +74,22 @@ Client::~Client()
 Socket *
 Client::getSocket() const
 {
-    return nullptr;
-}
-
-void
-Client::startStreaming()
-{
-    send("IMG START\n");
-    auto command = readCommand();
-    if (command[0] != "IMG" || command[1] != "PARAMS" || command.size() != 4) {
-        throw bad_command_error();
-    }
-
-    m_CameraResolution.width = stoi(command[2]);
-    m_CameraResolution.height = stoi(command[3]);
-}
-
-cv::Size
-Client::getOutputSize() const
-{
-    return m_CameraResolution;
+    return (Socket *) this;
 }
 
 bool
-Client::readFrame(cv::Mat &frame)
+Client::parseCommand(Command &command)
 {
-    auto command = readCommand();
-    if (command[0] != "IMG" || command.size() != 2) {
-        throw bad_command_error();
+    if (command[0] == "BYE") {
+        // client closing connection
+        return false;
+    }
+    if (command[0] == "HEY" || tryRunHandler(command)) {
+        return true;
     }
 
-    size_t nbytes = stoi(command[1]);
-    m_FrameBuffer.resize(nbytes);
-    read(m_FrameBuffer.data(), nbytes);
-    cv::imdecode(m_FrameBuffer, cv::IMREAD_UNCHANGED, &frame);
-    return true;
+    // no other commands supported
+    throw bad_command_error();
 }
 
 /* Motor command: send TNK command over TCP */

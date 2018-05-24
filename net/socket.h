@@ -148,7 +148,6 @@ public:
         }
     }
 
-    /* Send a message, return false on error */
     void send(const std::string &msg)
     {
         send(msg.c_str(), msg.length());
