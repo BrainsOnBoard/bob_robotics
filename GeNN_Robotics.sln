@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapDeserialiseTest", "im
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlottingExample", "visual\examples\PlottingExample.vcxproj", "{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleDisplayTest", "video\tests\simpledisplay\SimpleDisplayTest.vcxproj", "{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DisplayTest", "video\display_test\DisplayTest.vcxproj", "{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapConfig", "imgproc\unwrapconfig_src\UnwrapConfig.vcxproj", "{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}"
 EndProject
