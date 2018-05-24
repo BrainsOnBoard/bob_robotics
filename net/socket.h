@@ -78,7 +78,7 @@ public:
 
     void read(void *buffer, size_t len)
     {
-        std::lock_guard<std::mutex> guard(m_Mutex);
+        std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
 
         size_t start = 0;
@@ -103,7 +103,7 @@ public:
      */
     std::string readLine()
     {
-        std::lock_guard<std::mutex> guard(m_Mutex);
+        std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
 
         std::ostringstream oss;
@@ -124,7 +124,7 @@ public:
 
                     std::string outstring = oss.str();
                     if (m_Print) {
-                        std::cout << ">>> " << outstring << std::endl;
+                        std::cout << "<<< " << outstring << std::endl;
                     }
                     return outstring;
                 }
@@ -139,10 +139,10 @@ public:
 
     void send(const void *buffer, size_t len)
     {
-        // std::lock_guard<std::mutex> guard(m_Mutex);
+        std::lock_guard<std::mutex> guard(m_SendMutex);
         checkSocket();
 
-        int ret = ::send(m_Socket, buffer, (socklen_t) len, MSG_NOSIGNAL);
+        int ret = ::send(m_Socket, (sendbuff_t) buffer, (bufflen_t) len, MSG_NOSIGNAL);
         if (ret == -1) {
             throw socket_error("Could not send " + errorMessage());
         }
@@ -153,12 +153,14 @@ public:
         send(msg.c_str(), msg.length());
 
         if (m_Print) {
-            std::cout << "<<< " << msg;
+            std::cout << ">>> " << msg;
         }
     }
 
     void setSocket(socket_t sock)
     {
+        std::lock_guard<std::mutex> guard(m_ReadMutex);
+
         m_Socket = sock;
         checkSocket();
     }
@@ -167,7 +169,7 @@ private:
     char m_Buffer[DefaultBufferSize];
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
-    std::mutex m_Mutex;
+    std::mutex m_ReadMutex, m_SendMutex;
     bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
 
@@ -189,7 +191,14 @@ private:
 
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
-        int len = OS::Net::readBlocking(m_Socket, &buffer[start], maxlen);
+#ifdef _MSC_VER
+        int len = recv(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen, 0);
+#else
+        int len;
+        while ((len = read(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen)) == 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+#endif
         if (len == -1) {
             throw socket_error("Could not read from socket " + errorMessage());
         }

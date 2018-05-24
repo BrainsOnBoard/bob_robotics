@@ -7,19 +7,20 @@
 
 #define MSG_NOSIGNAL 0
 #define INET_ADDRSTRLEN 22
-typedef int socklen_t;
 
-typedef const char buff_t;
-typedef char mybuff_t;
+typedef int socklen_t;
+typedef int bufflen_t;
+typedef char *readbuff_t;
+typedef const char *sendbuff_t;
 #else
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
-typedef unsigned char buff_t;
-typedef unsigned char mybuff_t;
-
+typedef size_t bufflen_t;
+typedef void *readbuff_t;
+typedef const void *sendbuff_t;
 #define INVALID_SOCKET -1
 #endif
 
@@ -52,27 +53,3 @@ typedef int socket_t;
 #define WSACleanup()                                                           \
     {}
 #endif
-
-// C++ includes
-#include <chrono>
-#include <thread>
-
-namespace GeNNRobotics {
-namespace OS {
-namespace Net {
-int
-readBlocking(socket_t sock, void *buff, size_t bufflen)
-{
-#ifdef _MSC_VER
-    return recv(sock, buff, DefaultBufferSize, 0);
-#else
-    int len;
-    while ((len = read(sock, buff, bufflen)) == 0) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    return len;
-#endif
-}
-} // Net
-} // OS
-} // GeNNRobotics
