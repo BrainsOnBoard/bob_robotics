@@ -86,6 +86,8 @@ error:
 /* Stop listening */
 Server::~Server()
 {
+    stop();
+
     if (m_ListenSocket != INVALID_SOCKET) {
         close(m_ListenSocket);
     }

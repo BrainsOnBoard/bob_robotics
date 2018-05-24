@@ -68,6 +68,7 @@ Client::Client(const std::string host)
 
 Client::~Client()
 {
+    stop();
     WSACleanup();
 }
 
