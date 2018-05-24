@@ -12,53 +12,40 @@
 // C++ includes
 #include <stdexcept>
 
-// opencv
+// OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
+#include "../common/threadable.h"
+
+// local includes
 #include "input.h"
 
 namespace GeNNRobotics {
 namespace Video {
-class SimpleDisplay
+class Display : public Threadable
 {
+#define WINDOW_NAME "OpenCV display"
+
 public:
-    virtual ~SimpleDisplay()
-    {
-        close();
-    }
-
-    /*
-     * Quit display and stop background thread properly if needed.
-     */
-    void close()
-    {
-        m_Running = false;
-    }
-
-    /*
-     * Gets the next frame from the video stream.
-     */
-    virtual void getNextFrame(Input &videoInput, cv::Mat &outFrame)
-    {
-        if (!videoInput.readFrame(outFrame)) {
-            throw std::runtime_error("Error reading from video input");
-        }
-    }
+    Display(Input *videoInput)
+      : m_VideoInput(videoInput)
+    {}
 
     /*
      * Run the display on the main thread.
      */
-    void run(Input &videoInput)
+    void run() override
     {
         // set opencv window to display full screen
         cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
-        setWindowProperty(
-                WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+        setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
 
         cv::Mat frame;
-        while (m_Running) {
-            getNextFrame(videoInput, frame);
+        while (m_DoRun) {
+            if (!m_VideoInput->readFrame(frame)) {
+                throw std::runtime_error("Error reading from video input");
+            }
             cv::imshow(WINDOW_NAME, frame);
 
             // quit when user presses esc
@@ -69,8 +56,7 @@ public:
     }
 
 private:
-    bool m_Running = true;
-    static constexpr const char *WINDOW_NAME = "OpenCV display";
-}; // SimpleDisplay
+    Input *m_VideoInput;
+}; // Display
 } // Video
 } // GeNNRobotics

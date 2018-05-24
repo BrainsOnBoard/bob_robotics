@@ -18,12 +18,9 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\simpledisplay.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test.cc">
+    <ClCompile Include="display_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
