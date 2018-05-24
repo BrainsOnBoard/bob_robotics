@@ -195,7 +195,7 @@ private:
         int len = recv(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen, 0);
 #else
         int len;
-        while ((len = read(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen)) == 0) {
+        while ((len = ::read(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen)) == 0) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 #endif
