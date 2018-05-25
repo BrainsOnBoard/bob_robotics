@@ -7,7 +7,7 @@ namespace GeNNRobotics {
 namespace Robots {
 using ButtonEvent = bool (*)(HID::Event *js);
 
-class BebopJoystick
+class BebopJoystick : HID::Joystick
 {
 public:
     ButtonEvent m_ButtonCallback = nullptr;
@@ -15,15 +15,13 @@ public:
 
 private:
     Bebop *m_Bebop;
-    HID::Joystick m_Joystick;
     static constexpr float maxbank = 50;
     static constexpr float maxup = 50;
     static constexpr float maxyaw = 100;
 
-    void OnButtonEvent(HID::Event *js);
-    void OnAxisEvent(HID::Event *js);
-
-    static void EventCallback(HID::Event *js, void *data);
+    void onButtonEvent(HID::Event *js);
+    void onAxisEvent(HID::Event *js);
+    void eventCallback(HID::Event *js);
 }; // BebopJoystick
 }  // Robots
 }  // GeNNRobotics

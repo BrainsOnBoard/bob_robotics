@@ -1,9 +1,14 @@
 #pragma once
 
+// C++ includes
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <thread>
+
+// GeNN robotics includes
+#include "../common/threadable.h"
 
 namespace GeNNRobotics {
 namespace HID {
@@ -109,71 +114,43 @@ struct Event
 };
 
 // For callbacks when a controller event occurs (button is pressed, axis moves)
-using Callback = void (*)(Event *js, void *userData);
+using Callback = std::function<void(Event *)>;
 
-class JoystickBase
+class JoystickBase : public Threadable
 {
 private:
+    Callback m_Callback = nullptr;
     Event m_JsEvent;
-
-protected:
-    bool m_Closing = false;
 
 public:
     virtual bool read(Event &js) = 0;
-
-    virtual ~JoystickBase()
-    {
-        close();
-    }
 
     bool read()
     {
         return read(m_JsEvent);
     }
 
-    /*
-     * Start the read thread in the background. Call callback when an event
-     * occurs.
-     */
-    void startThread(Callback callback, void *data)
+    void run() override
     {
-        if (!m_Thread) {
-            m_Thread = std::unique_ptr<std::thread>(
-                    new std::thread(runThread, this, callback, data));
+        while (read()) {
+            m_Callback(&m_JsEvent);
+        }
+        if (!m_DoRun) {
+            m_Callback(nullptr);
         }
     }
 
-    virtual void close()
+    void setCallback(Callback callback)
     {
-        if (m_Closing) {
-            return;
-        }
-        m_Closing = true;
-
-        if (m_Thread) {
-            m_Thread->join();
-        }
+        m_Callback = callback;
     }
 
-private:
-    std::unique_ptr<std::thread> m_Thread;
+protected:
+    JoystickBase()
+    {}
 
-    /*
-     * This function is invoked by the read thread. It repeatedly polls the
-     * controller, calling the callback function as appropriate. If an error
-     * occurs, the callback is called with a nullptr in place of the js_event
-     * struct.
-     */
-    static void runThread(JoystickBase *c, Callback callback, void *userData)
-    {
-        while (c->read()) {
-            callback(&c->m_JsEvent, userData);
-        }
-        if (!c->m_Closing) {
-            callback(nullptr, userData);
-        }
-    }
+    JoystickBase(Callback callback) : m_Callback(callback)
+    {}
 }; // JoystickBase
 } // HID
 } // GeNNRobotics

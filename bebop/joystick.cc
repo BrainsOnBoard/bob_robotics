@@ -9,11 +9,11 @@ namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
 {
-    m_Joystick.startThread(EventCallback, this);
+    setCallback([=](HID::Event *js) { eventCallback(js); });
 }
 
 void
-BebopJoystick::OnButtonEvent(HID::Event *js)
+BebopJoystick::onButtonEvent(HID::Event *js)
 {
     if (m_ButtonCallback && m_ButtonCallback(js)) {
         return;
@@ -33,7 +33,7 @@ BebopJoystick::OnButtonEvent(HID::Event *js)
 }
 
 void
-BebopJoystick::OnAxisEvent(HID::Event *js)
+BebopJoystick::onAxisEvent(HID::Event *js)
 {
     float f;
 
@@ -60,14 +60,12 @@ BebopJoystick::OnAxisEvent(HID::Event *js)
 }
 
 void
-BebopJoystick::EventCallback(HID::Event *js, void *data)
+BebopJoystick::eventCallback(HID::Event *js)
 {
-    BebopJoystick *cont = reinterpret_cast<BebopJoystick *>(data);
-
-    if (js->isAxis) {
-        cont->OnButtonEvent(js);
+    if (!js->isAxis) {
+        onButtonEvent(js);
     } else {
-        cont->OnAxisEvent(js);
+        onAxisEvent(js);
     }
 }
 } // Robots

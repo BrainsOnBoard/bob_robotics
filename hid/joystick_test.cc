@@ -3,10 +3,8 @@
 
 using namespace GeNNRobotics;
 
-HID::Joystick joystick;
-
 void
-callback(HID::Event *js, void *)
+callback(HID::Event *js)
 {
     if (!js) {
         std::cerr << "Error reading from joystick" << std::endl;
@@ -34,13 +32,11 @@ main()
     std::cout << "Joystick test program" << std::endl;
     std::cout << "Press return to quit" << std::endl << std::endl;
 
+    HID::Joystick joystick(callback);
     std::cout << "Opened joystick" << std::endl;
-    joystick.startThread(callback, nullptr);
+    joystick.runInBackground();
 
+    // wait until keypress
     std::cin.ignore();
-
-    joystick.close();
-    std::cout << "Controller closed" << std::endl;
-
     return 0;
 }

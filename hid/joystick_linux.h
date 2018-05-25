@@ -52,7 +52,7 @@ public:
      * Open connection to controller. Return true if connected successfully,
      * false otherwise.
      */
-    Joystick()
+    Joystick(Callback callback = nullptr) : JoystickBase(callback)
     {
         m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
         if (m_Fd < 0) {
@@ -63,9 +63,8 @@ public:
     /*
      * Close connection to controller.
      */
-    void close() override
+    ~Joystick()
     {
-        JoystickBase::close();
         ::close(m_Fd);
     }
 
@@ -75,7 +74,7 @@ public:
      */
     bool read(Event &js) override
     {
-        while (!m_Closing) {
+        while (m_DoRun) {
             const ssize_t bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
             if (bytes > 0) {
                 break;
@@ -86,7 +85,7 @@ public:
 
             usleep(sleepmillis * 1000);
         }
-        if (m_Closing) {
+        if (!m_DoRun) {
             return false;
         }
 
