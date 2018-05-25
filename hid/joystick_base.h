@@ -41,21 +41,21 @@ struct Event
     {
         switch (axis()) {
         case Axis::LeftStickHorizontal:
-            return "LSTICKH";
+            return "left stick horizontal";
         case Axis::LeftStickVertical:
-            return "LSTICKV";
+            return "left stick vertical";
         case Axis::RightStickHorizontal:
-            return "RSTICKH";
+            return "right stick horizontal";
         case Axis::RightStickVertical:
-            return "RSTICKV";
+            return "right stick vertical";
         case Axis::LeftTrigger:
-            return "LTRIGGER";
+            return "left trigger";
         case Axis::RightTrigger:
-            return "RTRIGGER";
+            return "right trigger";
         case Axis::DpadHorizontal:
-            return "DPADH";
+            return "D-pad horizontal";
         case Axis::DpadVertical:
-            return "DPADV";
+            return "D-pad vertical";
         case Axis::NOTAXIS:
             return "(not axis)";
         default:
@@ -85,21 +85,21 @@ struct Event
         case Button::RB:
             return "RB";
         case Button::Back:
-            return "BACK";
+            return "back";
         case Button::Start:
-            return "START";
+            return "start";
         case Button::LeftStickButton:
-            return "LSTICK";
+            return "left stick";
         case Button::RightStickButton:
-            return "RSTICK";
+            return "right stick";
         case Button::Left:
-            return "LEFT";
+            return "left";
         case Button::Right:
-            return "RIGHT";
+            return "right";
         case Button::Up:
-            return "UP";
+            return "up";
         case Button::Down:
-            return "DOWN";
+            return "down";
         case Button::NOTBUTTON:
             return "(not button)";
         default:
