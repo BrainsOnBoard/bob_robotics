@@ -3,19 +3,24 @@
 // C++ includes
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <vector>
 
-// opencv
+// OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNNRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"
+#include "../net/node.h"
+#include "../net/socket.h"
 #include "../os/filesystem.h"
 
 namespace GeNNRobotics {
 namespace Video {
-class Input
+class Input : public Net::Handler
 {
 public:
     virtual ~Input()
@@ -90,6 +95,42 @@ protected:
      */
     Input()
     {}
+
+private:
+    std::unique_ptr<std::thread> m_ImageThread;
+
+    void onCommandReceived(Net::Node &node, Net::Command &command) override
+    {
+        if (command[1] != "START") {
+            throw Net::bad_command_error();
+        }
+
+        // ACK the command and tell client the camera resolution
+        cv::Size res = getOutputSize();
+        node.getSocket()->send("IMG PARAMS " + std::to_string(res.width) + " " +
+                               std::to_string(res.height) + "\n");
+
+        // start thread to transmit images in background
+        m_ImageThread = std::unique_ptr<std::thread>(
+                new std::thread([=](Net::Node *n) { runImageSink(n); }, &node));
+    }
+
+    std::string getHandledCommandName() const override
+    {
+        return "IMG";
+    }
+
+    void runImageSink(Net::Node *node)
+    {
+        cv::Mat frame;
+        std::vector<uchar> buffer;
+        Net::Socket *sock = node->getSocket();
+        while (readFrame(frame)) {
+            cv::imencode(".jpg", frame, buffer);
+            sock->send("IMG FRAME " + std::to_string(buffer.size()) + "\n");
+            sock->send(buffer.data(), buffer.size());
+        }
+    }
 }; // Input
 } // Video
 } // GeNNRobotics

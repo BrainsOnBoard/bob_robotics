@@ -17,7 +17,7 @@
 
 namespace GeNNRobotics {
 namespace Video {
-class NetSource : public Input, public Net::Handler
+class NetSource : public Input
 {
 public:
     cv::Size getOutputSize() const override
