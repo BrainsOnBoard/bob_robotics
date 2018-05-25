@@ -6,12 +6,6 @@ using namespace GeNNRobotics;
 HID::Joystick joystick;
 
 void
-handleButton(unsigned int number, int16_t value)
-{
-
-}
-
-void
 callback(HID::Event *js, void *)
 {
     if (!js) {
@@ -39,11 +33,6 @@ main()
 {
     std::cout << "Joystick test program" << std::endl;
     std::cout << "Press return to quit" << std::endl << std::endl;
-
-    if (!joystick.open()) {
-        std::cerr << "Error: Could not open joystick" << std::endl;
-        return 1;
-    }
 
     std::cout << "Opened joystick" << std::endl;
     joystick.startThread(callback, nullptr);

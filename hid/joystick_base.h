@@ -120,7 +120,6 @@ protected:
     bool m_Closing = false;
 
 public:
-    virtual bool open() = 0;
     virtual bool read(Event &js) = 0;
 
     virtual ~JoystickBase()

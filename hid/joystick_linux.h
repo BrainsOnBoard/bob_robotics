@@ -1,11 +1,16 @@
 #pragma once
 
+// C includes
 #include <cstdint>
+
+// Linux includes
 #include <fcntl.h>
-#include <iostream>
 #include <linux/joystick.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+// C++ includes
+#include <iostream>
 
 namespace GeNNRobotics {
 namespace HID {
@@ -47,10 +52,12 @@ public:
      * Open connection to controller. Return true if connected successfully,
      * false otherwise.
      */
-    bool open()
+    Joystick()
     {
         m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
-        return m_Fd >= 0;
+        if (m_Fd < 0) {
+            throw std::runtime_error("Could not open joystick");
+        }
     }
 
     /*

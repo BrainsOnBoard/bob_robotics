@@ -9,9 +9,6 @@ namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
 {
-    if (!m_Joystick.open()) {
-        throw std::runtime_error("Could not find joystick");
-    }
     m_Joystick.startThread(EventCallback, this);
 }
 

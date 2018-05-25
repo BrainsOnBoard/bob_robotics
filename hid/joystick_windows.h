@@ -52,6 +52,7 @@ private:
     bool Change();
 
 public:
+    Joystick();
     XINPUT_STATE Read();
     bool open();
     bool read(Event &js);
@@ -69,15 +70,16 @@ Joystick::Read()
     return _controllerState;
 }
 
-bool
-Joystick::open()
+Joystick::Joystick()
 {
     // Zeroise the state
     ZeroMemory(&_controllerState, sizeof(XINPUT_STATE));
 
     // Get the state
     DWORD Result = XInputGetState(_controllerNum, &_controllerState);
-    return Result == ERROR_SUCCESS;
+    if (Result != ERROR_SUCCESS) {
+        throw std::runtime_error("Could not open joystick");        
+    }
 }
 
 bool
