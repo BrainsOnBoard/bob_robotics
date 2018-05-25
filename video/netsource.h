@@ -17,16 +17,9 @@
 
 namespace GeNNRobotics {
 namespace Video {
-class NetSource : public Input
+class NetSource : public Input, public Net::Handler
 {
 public:
-    NetSource(Net::Node *node)
-      : m_Node(node)
-    {
-        node->addHandler("IMG", handleCommand, this);
-        node->getSocket()->send("IMG START\n");
-    }
-
     cv::Size getOutputSize() const override
     {
         return m_CameraResolution;
@@ -41,13 +34,17 @@ public:
     }
 
 private:
-    Net::Node *m_Node;
     cv::Size m_CameraResolution;
     std::vector<uchar> m_Buffer;
     std::mutex m_BufferMutex;
     Semaphore m_Semaphore;
 
-    void handleCommand(Net::Command &command)
+    void onConnected(Net::Node &node) override
+    {
+        node.getSocket()->send("IMG START\n");
+    }
+
+    void onCommandReceived(Net::Node &node, Net::Command &command) override
     {
         if (command[1] == "PARAMS") {
             m_CameraResolution.width = stoi(command[2]);
@@ -56,16 +53,16 @@ private:
             std::lock_guard<std::mutex> guard(m_BufferMutex);
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
-            m_Node->getSocket()->read(m_Buffer.data(), nbytes);
+            node.getSocket()->read(m_Buffer.data(), nbytes);
             m_Semaphore.notify();
         } else {
             throw Net::bad_command_error();
         }
     }
 
-    static void handleCommand(Net::Command &command, void *userData)
+    std::string getHandledCommandName() const override
     {
-        reinterpret_cast<NetSource *>(userData)->handleCommand(command);
+        return "IMG";
     }
 }; // NetSource
 } // Video

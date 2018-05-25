@@ -17,46 +17,43 @@
 
 namespace GeNNRobotics {
 namespace Video {
-class NetSink
+class NetSink : public Net::Handler
 {
 public:
-    NetSink(Net::Node *node, Input *input)
-      : m_Node(node)
-      , m_Input(input)
-    {
-        node->addHandler("IMG", handleCommand, this);
-    }
+    NetSink(Input *input)
+      : m_Input(input)
+    {}
 
-private:
-    Net::Node *m_Node;
-    Input *m_Input;
-    std::unique_ptr<std::thread> m_ImageThread;
-
-    void handleCommand(std::vector<std::string> &command)
-    {
-        // ACK the command and tell client the camera resolution
-        cv::Size res = m_Input->getOutputSize();
-        m_Node->getSocket()->send("IMG PARAMS " + std::to_string(res.width) + " " +
-                                  std::to_string(res.height) + "\n");
-
-        m_ImageThread = std::unique_ptr<std::thread>(
-                new std::thread([=] { runImageSink(); }));
-    }
-
-    static void handleCommand(std::vector<std::string> &command, void *userData)
+    void onCommandReceived(Net::Node &node, Net::Command &command)
     {
         if (command[1] != "START") {
             throw Net::bad_command_error();
         }
 
-        reinterpret_cast<NetSink *>(userData)->handleCommand(command);
+        // ACK the command and tell client the camera resolution
+        cv::Size res = m_Input->getOutputSize();
+        node.getSocket()->send("IMG PARAMS " + std::to_string(res.width) + " " +
+                               std::to_string(res.height) + "\n");
+
+        // start thread to transmit images in background
+        m_ImageThread = std::unique_ptr<std::thread>(
+                new std::thread([=](Net::Node *n) { runImageSink(n); }, &node));
     }
 
-    void runImageSink()
+    std::string getHandledCommandName() const
+    {
+        return "IMG";
+    }
+
+private:
+    Input *m_Input;
+    std::unique_ptr<std::thread> m_ImageThread;
+
+    void runImageSink(Net::Node *node)
     {
         cv::Mat frame;
         std::vector<uchar> buffer;
-        Net::Socket *sock = m_Node->getSocket();
+        Net::Socket *sock = node->getSocket();
         while (m_Input->readFrame(frame)) {
             cv::imencode(".jpg", frame, buffer);
             sock->send("IMG FRAME " + std::to_string(buffer.size()) + "\n");

@@ -116,6 +116,7 @@ Server::run()
         m_Socket = std::unique_ptr<Socket>(new Socket(
                 accept(m_ListenSocket, (sockaddr *) &addr, &addrlen)));
         m_Socket->send("HEY\n");
+        notifyHandlers();
 
         // convert IP to string
         char saddr[INET_ADDRSTRLEN];

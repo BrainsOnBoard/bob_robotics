@@ -11,19 +11,15 @@
 
 namespace GeNNRobotics {
 namespace Robots {
-class MotorNetSource
+class MotorNetSource : public Net::Handler
 {
 public:
-    MotorNetSource(Net::Node *node, Motor *motor)
+    MotorNetSource(Motor *motor)
       : m_Motor(motor)
     {
-        node->addHandler("TNK", handleCommand, this);
     }
 
-private:
-    Motor *m_Motor;
-
-    void handleCommand(Net::Command &command)
+    void onCommandReceived(Net::Node &node, Net::Command &command) override
     {
         // second space separates left and right parameters
         if (command.size() != 3) {
@@ -38,10 +34,13 @@ private:
         m_Motor->tank(left, right);
     }
 
-    static void handleCommand(Net::Command &command, void *userData)
+    std::string getHandledCommandName() const override
     {
-        reinterpret_cast<MotorNetSource *>(userData)->handleCommand(command);
+        return "TNK";
     }
+
+private:
+    Motor *m_Motor;
 }; // MotorNetSource
 } // Robots
 } // GeNNRobotics

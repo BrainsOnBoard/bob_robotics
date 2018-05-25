@@ -8,7 +8,6 @@
 #include <map>
 #include <stdexcept>
 #include <string>
-#include <utility>
 #include <vector>
 
 // GeNN robotics includes
@@ -19,9 +18,15 @@
 
 namespace GeNNRobotics {
 namespace Net {
-using CommandHandler = void (*)(Command &command,
-                                void *userData);
-using HandlerItem = std::pair<CommandHandler, void *>;
+class Node; // forward declaration
+
+class Handler
+{
+public:
+    virtual std::string getHandledCommandName() const = 0;
+    virtual void onCommandReceived(Node &node, Command &command) = 0;
+    virtual void onConnected(Node &node) {}
+};
 
 class Node : public Threadable
 {
@@ -32,11 +37,12 @@ public:
      * Add a handler for a specified type of command (e.g. if it's an IMG command,
      * it should be handled by Video::NetSource).
      */
-    void addHandler(std::string command,
-                    CommandHandler handler,
-                    void *userData = nullptr)
+    void addHandler(Handler &handler)
     {
-        m_Handlers.emplace(command, HandlerItem(handler, userData));
+        m_Handlers.emplace(handler.getHandledCommandName(), handler);
+        if (m_IsConnected) {
+            handler.onConnected(*this);
+        }
     }
 
     /*
@@ -54,6 +60,16 @@ public:
     }
 
 protected:
+    bool m_IsConnected = false;
+
+    void notifyHandlers()
+    {
+        m_IsConnected = true;
+        for (auto handler : m_Handlers) {
+            handler.second.onConnected(*this);
+        }
+    }
+
     virtual bool parseCommand(Command &command)
     {
         if (command[0] == "BYE") {
@@ -71,19 +87,17 @@ protected:
 
     bool tryRunHandler(Command &command)
     {
-        HandlerItem handler;
         try {
-            handler = m_Handlers.at(command[0]);
+            Handler &handler = m_Handlers.at(command[0]);
+            handler.onCommandReceived(std::ref(*this), command);
+            return true;
         } catch (std::out_of_range &) {
             return false;
         }
-
-        handler.first(command, handler.second);
-        return true;
     }
 
 private:
-    std::map<std::string, HandlerItem> m_Handlers;
+    std::map<std::string, Handler &> m_Handlers;
 
 }; // Node
 } // Net
