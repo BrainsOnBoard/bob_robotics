@@ -25,11 +25,11 @@ BebopJoystick::OnButtonEvent(HID::Event *js)
         return;
     }
 
-    switch (js->number) {
-    case HID::A:
+    switch (js->button()) {
+    case HID::Button::A:
         m_Bebop->takeOff();
         break;
-    case HID::B:
+    case HID::Button::B:
         m_Bebop->land();
         break;
     }
@@ -40,22 +40,22 @@ BebopJoystick::OnAxisEvent(HID::Event *js)
 {
     float f;
 
-    switch (js->number) {
-    case HID::RightStickHorizontal:
+    switch (js->axis()) {
+    case HID::Axis::RightStickHorizontal:
         f = maxbank * (float) (js->value) /
             (float) numeric_limits<__s16>::max();
         m_Bebop->setRoll((i8) f);
         break;
-    case HID::RightStickVertical:
+    case HID::Axis::RightStickVertical:
         f = maxbank * (float) (-js->value) /
             (float) numeric_limits<__s16>::max();
         m_Bebop->setPitch((i8) f);
         break;
-    case HID::LeftStickHorizontal:
+    case HID::Axis::LeftStickHorizontal:
         f = maxyaw * (float) (js->value) / (float) numeric_limits<__s16>::max();
         m_Bebop->setYaw((i8) f);
         break;
-    case HID::LeftStickVertical:
+    case HID::Axis::LeftStickVertical:
         f = maxup * (float) (-js->value) / (float) numeric_limits<__s16>::max();
         m_Bebop->setUpDown((i8) f);
         break;

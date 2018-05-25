@@ -8,22 +8,7 @@ HID::Joystick joystick;
 void
 handleButton(unsigned int number, int16_t value)
 {
-    std::string name = joystick.getButtonName(number);
-    if (value) {
-        std::cout << "Button pushed: " << name << " (" << (int) number << ")"
-                  << std::endl;
-    } else {
-        std::cout << "Button released: " << name << " (" << (int) number << ")"
-                  << std::endl;
-    }
-}
 
-void
-handleAxis(unsigned int number, int16_t value)
-{
-    std::string name = joystick.getAxisName(number);
-    std::cout << "Axis " << name << " (" << (int) number << "): " << value
-              << std::endl;
 }
 
 void
@@ -34,10 +19,18 @@ callback(HID::Event *js, void *)
         exit(1);
     }
 
+    if (js->isInitial) {
+        std::cout << "[initial] ";
+    }
+
     if (js->isAxis) {
-        handleAxis(js->number, js->value);
+        std::string name = js->axisName();
+        std::cout << "Axis " << name << " (" << js->number << "): "
+                  << js->value << std::endl;
     } else {
-        handleButton(js->number, js->value);
+        std::string name = js->buttonName();
+        std::cout << "Button " << name << " (" << js->number << (js->value ? ") pushed" : ") released")
+                  << std::endl;
     }
 }
 

@@ -14,7 +14,7 @@ namespace HID {
  * Controller buttons. The left stick and right stick are also buttons (you can
  * click them.)
  */
-enum Button
+enum class Button
 {
     A = 0,
     B = 1,
@@ -30,7 +30,8 @@ enum Button
     Left = 11,
     Right = 12,
     Up = 13,
-    Down = 14
+    Down = 14,
+    NOTBUTTON
 };
 } // HID
 } // GeNNRobotics
@@ -88,8 +89,8 @@ public:
 
         // if it's an axis event for the left or right stick, account for
         // deadzone
-        if (js.isAxis && js.number >= LeftStickHorizontal &&
-            js.number <= RightStickVertical &&
+        if (js.isAxis && js.number >= (uint) Axis::LeftStickHorizontal &&
+            js.number <= (uint) Axis::RightStickVertical &&
             abs(m_JsEvent.value) < deadzone) {
             js.value = 0;
         } else {

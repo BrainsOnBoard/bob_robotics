@@ -12,7 +12,7 @@ namespace HID {
  * slightly strange in that it's also treated as buttons (i.e. pressing up gives
  * both a button event and an axis event).
  */
-enum Axis
+enum class Axis
 {
     LeftStickHorizontal = 0,
     LeftStickVertical = 1,
@@ -21,7 +21,8 @@ enum Axis
     LeftTrigger = 2,
     RightTrigger = 5,
     DpadHorizontal = 6,
-    DpadVertical = 7
+    DpadVertical = 7,
+    NOTAXIS
 };
 
 struct Event
@@ -30,6 +31,81 @@ struct Event
     int16_t value;
     bool isAxis;
     bool isInitial;
+
+    Axis axis() const
+    {
+        return !isAxis ? Axis::NOTAXIS : static_cast<Axis>(number);
+    }
+
+    std::string axisName() const
+    {
+        switch (axis()) {
+        case Axis::LeftStickHorizontal:
+            return "LSTICKH";
+        case Axis::LeftStickVertical:
+            return "LSTICKV";
+        case Axis::RightStickHorizontal:
+            return "RSTICKH";
+        case Axis::RightStickVertical:
+            return "RSTICKV";
+        case Axis::LeftTrigger:
+            return "LTRIGGER";
+        case Axis::RightTrigger:
+            return "RTRIGGER";
+        case Axis::DpadHorizontal:
+            return "DPADH";
+        case Axis::DpadVertical:
+            return "DPADV";
+        case Axis::NOTAXIS:
+            return "(not axis)";
+        default:
+            return "(unknown)";
+        }
+    }
+
+    Button button() const
+    {
+        return isAxis ? Button::NOTBUTTON : static_cast<Button>(number);
+    }
+
+    std::string buttonName() const
+    {
+        // these values should be defined before this header is included
+        switch (button()) {
+        case Button::A:
+            return "A";
+        case Button::B:
+            return "B";
+        case Button::X:
+            return "X";
+        case Button::Y:
+            return "Y";
+        case Button::LB:
+            return "LB";
+        case Button::RB:
+            return "RB";
+        case Button::Back:
+            return "BACK";
+        case Button::Start:
+            return "START";
+        case Button::LeftStickButton:
+            return "LSTICK";
+        case Button::RightStickButton:
+            return "RSTICK";
+        case Button::Left:
+            return "LEFT";
+        case Button::Right:
+            return "RIGHT";
+        case Button::Up:
+            return "UP";
+        case Button::Down:
+            return "DOWN";
+        case Button::NOTBUTTON:
+            return "(not button)";
+        default:
+            return "(unknown)";        
+        }
+    }
 };
 
 // For callbacks when a controller event occurs (button is pressed, axis moves)
@@ -55,71 +131,6 @@ public:
     bool read()
     {
         return read(m_JsEvent);
-    }
-
-    /*
-     * Get the name of the button corresponding to number.
-     */
-    std::string getButtonName(unsigned int number)
-    {
-        // these values should be defined before this header is included
-        switch (number) {
-        case A:
-            return "A";
-        case B:
-            return "B";
-        case X:
-            return "X";
-        case Y:
-            return "Y";
-        case LB:
-            return "LB";
-        case RB:
-            return "RB";
-        case Back:
-            return "BACK";
-        case Start:
-            return "START";
-        case LeftStickButton:
-            return "LSTICK";
-        case RightStickButton:
-            return "RSTICK";
-        case Left:
-            return "LEFT";
-        case Right:
-            return "RIGHT";
-        case Up:
-            return "UP";
-        case Down:
-            return "DOWN";
-        }
-        return "(unknown)";
-    }
-
-    /*
-     * Get the name of the axis corresponding to number.
-     */
-    std::string getAxisName(unsigned int number)
-    {
-        switch (number) {
-        case LeftStickHorizontal:
-            return "LSTICKH";
-        case LeftStickVertical:
-            return "LSTICKV";
-        case RightStickHorizontal:
-            return "RSTICKH";
-        case RightStickVertical:
-            return "RSTICKV";
-        case LeftTrigger:
-            return "LTRIGGER";
-        case RightTrigger:
-            return "RTRIGGER";
-        case DpadHorizontal:
-            return "DPADH";
-        case DpadVertical:
-            return "DPADV";
-        }
-        return "(unknown)";
     }
 
     /*
