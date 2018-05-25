@@ -1,7 +1,9 @@
 #include "joystick.h"
 #include <string>
 
-Joystick::Joystick joystick;
+using namespace GeNNRobotics;
+
+HID::Joystick joystick;
 
 void
 handleButton(unsigned int number, int16_t value)
@@ -25,7 +27,7 @@ handleAxis(unsigned int number, int16_t value)
 }
 
 void
-callback(Joystick::Event *js, void *)
+callback(HID::Event *js, void *)
 {
     if (!js) {
         std::cerr << "Error reading from joystick" << std::endl;

@@ -1,5 +1,8 @@
-#include "joystick.h"
+// C++ includes
 #include <stdexcept>
+
+// local includes
+#include "joystick.h"
 
 namespace GeNNRobotics {
 namespace Robots {
@@ -13,7 +16,7 @@ BebopJoystick::BebopJoystick(Bebop *bebop)
 }
 
 void
-BebopJoystick::OnButtonEvent(Joystick::Event *js)
+BebopJoystick::OnButtonEvent(HID::Event *js)
 {
     if (m_ButtonCallback && m_ButtonCallback(js)) {
         return;
@@ -23,36 +26,36 @@ BebopJoystick::OnButtonEvent(Joystick::Event *js)
     }
 
     switch (js->number) {
-    case Joystick::A:
+    case HID::A:
         m_Bebop->takeOff();
         break;
-    case Joystick::B:
+    case HID::B:
         m_Bebop->land();
         break;
     }
 }
 
 void
-BebopJoystick::OnAxisEvent(Joystick::Event *js)
+BebopJoystick::OnAxisEvent(HID::Event *js)
 {
     float f;
 
     switch (js->number) {
-    case Joystick::RightStickHorizontal:
+    case HID::RightStickHorizontal:
         f = maxbank * (float) (js->value) /
             (float) numeric_limits<__s16>::max();
         m_Bebop->setRoll((i8) f);
         break;
-    case Joystick::RightStickVertical:
+    case HID::RightStickVertical:
         f = maxbank * (float) (-js->value) /
             (float) numeric_limits<__s16>::max();
         m_Bebop->setPitch((i8) f);
         break;
-    case Joystick::LeftStickHorizontal:
+    case HID::LeftStickHorizontal:
         f = maxyaw * (float) (js->value) / (float) numeric_limits<__s16>::max();
         m_Bebop->setYaw((i8) f);
         break;
-    case Joystick::LeftStickVertical:
+    case HID::LeftStickVertical:
         f = maxup * (float) (-js->value) / (float) numeric_limits<__s16>::max();
         m_Bebop->setUpDown((i8) f);
         break;
@@ -60,7 +63,7 @@ BebopJoystick::OnAxisEvent(Joystick::Event *js)
 }
 
 void
-BebopJoystick::EventCallback(Joystick::Event *js, void *data)
+BebopJoystick::EventCallback(HID::Event *js, void *data)
 {
     BebopJoystick *cont = reinterpret_cast<BebopJoystick *>(data);
 

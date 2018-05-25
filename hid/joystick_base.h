@@ -5,7 +5,8 @@
 #include <string>
 #include <thread>
 
-namespace Joystick {
+namespace GeNNRobotics {
+namespace HID {
 /*
  * Controller axes. Note that the triggers are axes as is the dpad. The dpad is
  * slightly strange in that it's also treated as buttons (i.e. pressing up gives
@@ -163,5 +164,6 @@ private:
             callback(nullptr, userData);
         }
     }
-};
-}
+}; // JoystickBase
+} // HID
+} // GeNNRobotics

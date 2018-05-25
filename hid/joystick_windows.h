@@ -12,7 +12,8 @@
 #include <sys/stat.h>
 #include <thread>
 
-namespace Joystick {
+namespace GeNNRobotics {
+namespace HID {
 enum Button
 {
     A = XINPUT_GAMEPAD_A,
@@ -30,11 +31,13 @@ enum Button
     Up = XINPUT_GAMEPAD_DPAD_UP,
     Down = XINPUT_GAMEPAD_DPAD_DOWN
 };
-}
+} // HID
+} // GeNNRobotics
 
 #include "joystick_base.h"
 
-namespace Joystick {
+namespace GeNNRobotics {
+namespace HID {
 class Joystick : public JoystickBase
 {
 private:
@@ -175,4 +178,5 @@ Joystick::read(Event &js)
     }
     return true;
 }
-}
+} // HID
+} // GeNNRobotics

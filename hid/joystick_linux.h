@@ -7,7 +7,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace Joystick {
+namespace GeNNRobotics {
+namespace HID {
 
 /*
  * Controller buttons. The left stick and right stick are also buttons (you can
@@ -31,11 +32,13 @@ enum Button
     Up = 13,
     Down = 14
 };
-}
+} // HID
+} // GeNNRobotics
 
 #include "joystick_base.h"
 
-namespace Joystick {
+namespace GeNNRobotics {
+namespace HID {
 class Joystick : public JoystickBase
 {
 public:
@@ -102,5 +105,6 @@ private:
     static const int16_t deadzone = 10000; // size of deadzone for axes (i.e.
                                            // region within which not activated)
     static const long sleepmillis = 25; // number of milliseconds between polls
-};
-}
+}; // Joystick
+} // HID
+} // GeNNRobotics
