@@ -102,7 +102,7 @@ Joystick::Change()
 // read the buttons on the controller and report which button(s) are
 // pressed/unpressed
 bool
-Joystick::read(Event &js)
+Joystick::read(Event &js) override
 {
     while (Change()) {
         unsigned int buttState = Read().Gamepad.wButtons;

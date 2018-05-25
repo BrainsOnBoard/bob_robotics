@@ -63,7 +63,7 @@ public:
     /*
      * Close connection to controller.
      */
-    void close()
+    void close() override
     {
         JoystickBase::close();
         ::close(m_Fd);
@@ -73,7 +73,7 @@ public:
      * Read controller event into js struct. Returns true if read successfully,
      * false if an error occurs.
      */
-    bool read(Event &js)
+    bool read(Event &js) override
     {
         while (!m_Closing) {
             const ssize_t bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
