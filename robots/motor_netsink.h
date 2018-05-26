@@ -11,8 +11,8 @@ namespace Robots {
 class MotorNetSink : public Motor
 {
 public:
-    MotorNetSink(Net::Node *node)
-      : m_Node(node)
+    MotorNetSink(Net::Node &node)
+      : m_Node(&node)
     {}
 
     /* Motor command: send TNK command over TCP */
