@@ -11,6 +11,10 @@
  * Quit by pressing escape.
  */
 
+// Windows headers
+#include "os/windows_include.h"
+
+// GeNN robotics includes
 #include "video/opencvinput.h"
 #include "video/display.h"
 
