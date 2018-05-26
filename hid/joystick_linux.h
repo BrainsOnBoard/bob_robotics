@@ -1,19 +1,25 @@
 #pragma once
 
+// C includes
 #include <cstdint>
+
+// Linux includes
 #include <fcntl.h>
-#include <iostream>
 #include <linux/joystick.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace Joystick {
+// C++ includes
+#include <iostream>
+
+namespace GeNNRobotics {
+namespace HID {
 
 /*
  * Controller buttons. The left stick and right stick are also buttons (you can
  * click them.)
  */
-enum Button
+enum class Button
 {
     A = 0,
     B = 1,
@@ -29,13 +35,16 @@ enum Button
     Left = 11,
     Right = 12,
     Up = 13,
-    Down = 14
+    Down = 14,
+    NOTBUTTON
 };
-}
+} // HID
+} // GeNNRobotics
 
 #include "joystick_base.h"
 
-namespace Joystick {
+namespace GeNNRobotics {
+namespace HID {
 class Joystick : public JoystickBase
 {
 public:
@@ -43,18 +52,19 @@ public:
      * Open connection to controller. Return true if connected successfully,
      * false otherwise.
      */
-    bool open()
+    Joystick(Callback callback = nullptr) : JoystickBase(callback)
     {
         m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
-        return m_Fd >= 0;
+        if (m_Fd < 0) {
+            throw std::runtime_error("Could not open joystick");
+        }
     }
 
     /*
      * Close connection to controller.
      */
-    void close()
+    ~Joystick()
     {
-        JoystickBase::close();
         ::close(m_Fd);
     }
 
@@ -62,9 +72,9 @@ public:
      * Read controller event into js struct. Returns true if read successfully,
      * false if an error occurs.
      */
-    bool read(Event &js)
+    bool read(Event &js) override
     {
-        while (!m_Closing) {
+        while (m_DoRun) {
             const ssize_t bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
             if (bytes > 0) {
                 break;
@@ -75,7 +85,7 @@ public:
 
             usleep(sleepmillis * 1000);
         }
-        if (m_Closing) {
+        if (!m_DoRun) {
             return false;
         }
 
@@ -85,8 +95,8 @@ public:
 
         // if it's an axis event for the left or right stick, account for
         // deadzone
-        if (js.isAxis && js.number >= LeftStickHorizontal &&
-            js.number <= RightStickVertical &&
+        if (js.isAxis && js.number >= (uint) Axis::LeftStickHorizontal &&
+            js.number <= (uint) Axis::RightStickVertical &&
             abs(m_JsEvent.value) < deadzone) {
             js.value = 0;
         } else {
@@ -102,5 +112,6 @@ private:
     static const int16_t deadzone = 10000; // size of deadzone for axes (i.e.
                                            // region within which not activated)
     static const long sleepmillis = 25; // number of milliseconds between polls
-};
-}
+}; // Joystick
+} // HID
+} // GeNNRobotics
