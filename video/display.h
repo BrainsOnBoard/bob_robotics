@@ -10,6 +10,7 @@
  */
 
 // C++ includes
+#include <memory>
 #include <stdexcept>
 
 // OpenCV
@@ -17,6 +18,7 @@
 
 // GeNN robotics includes
 #include "../common/threadable.h"
+#include "../imgproc/opencv_unwrap_360.h"
 
 // local includes
 #include "input.h"
@@ -28,8 +30,32 @@ class Display : public Threadable
 #define WINDOW_NAME "OpenCV display"
 
 public:
+    /*
+     * Create a new display with unwrapping disabled.
+     */
     Display(Input &videoInput)
       : m_VideoInput(&videoInput)
+    {}
+
+    Display(std::unique_ptr<Input> &videoInput)
+      : m_VideoInput(videoInput.get())
+    {}
+
+    /*
+     * Create a new display with unwrapping enabled if the Video::Input supports
+     * it.
+     */
+    Display(Input &videoInput, cv::Size unwrapRes)
+      : m_VideoInput(&videoInput)
+    {
+        if (videoInput.needsUnwrapping()) {
+            m_Unwrapper = std::unique_ptr<ImgProc::OpenCVUnwrap360>(
+                new ImgProc::OpenCVUnwrap360(videoInput.createDefaultUnwrapper(unwrapRes)));
+        }
+    }
+
+    Display(std::unique_ptr<Input> &videoInput, cv::Size unwrapRes)
+      : Display(*videoInput.get(), unwrapRes)
     {}
 
     /*
@@ -41,10 +67,16 @@ public:
         cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
         setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
 
-        cv::Mat frame;
+        cv::Mat frame, unwrapped;
         while (m_DoRun) {
             readNextFrame(frame);
-            cv::imshow(WINDOW_NAME, frame);
+
+            if (m_Unwrapper) {
+                m_Unwrapper->unwrap(frame, unwrapped);
+                cv::imshow(WINDOW_NAME, unwrapped);
+            } else {
+                cv::imshow(WINDOW_NAME, frame);
+            }
 
             // quit when user presses esc
             if ((cv::waitKey(1) & 0xff) == 27) {
@@ -54,6 +86,7 @@ public:
     }
 
 protected:
+    std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     Input *m_VideoInput;
 
     virtual void readNextFrame(cv::Mat &frame)
