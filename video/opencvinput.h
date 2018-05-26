@@ -34,12 +34,12 @@ public:
         m_CameraName = cameraName;
     }
 
-    const std::string getCameraName() const
+    const std::string getCameraName() const override
     {
         return m_CameraName;
     }
 
-    cv::Size getOutputSize() const
+    cv::Size getOutputSize() const override
     {
         cv::Size outSize;
         outSize.width = (int) get(cv::CAP_PROP_FRAME_WIDTH);
@@ -47,13 +47,13 @@ public:
         return outSize;
     }
 
-    bool readFrame(cv::Mat &outFrame)
+    bool readFrame(cv::Mat &outFrame) override
     {
         (*this) >> outFrame;
         return outFrame.cols != 0;
     }
 
-    void setOutputSize(const cv::Size &outSize)
+    void setOutputSize(const cv::Size &outSize) override
     {
         set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
         set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
