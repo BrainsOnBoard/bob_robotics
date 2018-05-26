@@ -431,7 +431,7 @@ public:
         return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
     }
 
-    bool needsUnwrapping() const
+    bool needsUnwrapping() override
     {
         return true;
     }

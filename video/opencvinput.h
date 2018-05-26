@@ -47,12 +47,6 @@ public:
         return outSize;
     }
 
-    bool needsUnwrapping() const override
-    {
-        // only panoramic cameras are defined with the camera name specified
-        return m_CameraName != DefaultCameraName;
-    }
-
     bool readFrame(cv::Mat &outFrame) override
     {
         (*this) >> outFrame;

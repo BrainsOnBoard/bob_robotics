@@ -82,9 +82,10 @@ public:
         return cv::Size();
     }
 
-    virtual bool needsUnwrapping() const
+    virtual bool needsUnwrapping()
     {
-        return false;
+        // only panoramic cameras are defined with the camera name specified
+        return getCameraName() != DefaultCameraName;
     }
 
     virtual bool readFrame(cv::Mat &outFrame) = 0;
