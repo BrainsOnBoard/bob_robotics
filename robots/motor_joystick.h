@@ -15,25 +15,22 @@ class MotorJoystick : public HID::Joystick
 {
 public:
     MotorJoystick(Motor &motor)
-      : m_Motor(&motor)
+      : MotorJoystick(&motor)
     {}
 
     MotorJoystick(Motor *motor)
       : m_Motor(motor)
-    {}
+    {
+        setCallback([=](HID::Event &js) { joystickCallback(js); });
+    }
 
 private:
     Motor *m_Motor;
     float m_X = 0;
     float m_Y = 0;
 
-    void JoystickCallback(HID::Event &js)
+    void joystickCallback(HID::Event &js)
     {
-        // only interested in the joystick
-        if (!js.isAxis) {
-            return;
-        }
-
         // only interested in left joystick
         float x = m_X;
         float y = m_Y;

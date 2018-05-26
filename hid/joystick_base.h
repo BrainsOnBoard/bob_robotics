@@ -8,6 +8,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <thread>
 
@@ -146,6 +147,10 @@ public:
 
     void run() override
     {
+        if (!m_Callback) {
+            throw std::runtime_error("Callback function for joystick not set");
+        }
+
         while (read()) {
             m_Callback(m_JsEvent);
         }
