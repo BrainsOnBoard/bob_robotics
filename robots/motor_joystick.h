@@ -11,7 +11,7 @@
 
 namespace GeNNRobotics {
 namespace Robots {
-class MotorJoystick : HID::Joystick
+class MotorJoystick : public HID::Joystick
 {
 public:
     MotorJoystick(Motor &motor)
