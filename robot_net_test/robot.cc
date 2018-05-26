@@ -8,6 +8,9 @@
  * Use the corresponding "computer" program to connect to the server.
  */
 
+// Windows headers
+#include "os/windows_include.h"
+
 // If we're compiling on Windows, we know we don't need I2C
 #ifdef _WIN32
 #define NO_I2C_ROBOT

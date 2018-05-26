@@ -4,6 +4,9 @@
  * screen. Press escape to exit.
  */
 
+// Windows headers
+#include "os/windows_include.h"
+
 // C++ includes
 #include <iostream>
 
