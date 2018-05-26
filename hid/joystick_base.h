@@ -1,9 +1,12 @@
 #pragma once
 
-// C++ includes
+// C includes
 #include <cstdint>
+
+// C++ includes
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <thread>
@@ -66,6 +69,16 @@ struct Event
             return "(not axis)";
         default:
             return "(unknown)";
+        }
+    }
+
+    float axisValue() const
+    {
+        if (isAxis) {
+            return static_cast<float>(value) /
+                    static_cast<float>(std::numeric_limits<int16_t>::max());
+        } else {
+            return std::numeric_limits<float>::quiet_NaN();
         }
     }
 

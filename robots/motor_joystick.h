@@ -39,10 +39,10 @@ private:
         float y = m_Y;
         switch (js.axis()) {
         case HID::Axis::LeftStickVertical:
-            y = js.value / (float) std::numeric_limits<int16_t>::max();
+            y = js.axisValue();
             break;
         case HID::Axis::LeftStickHorizontal:
-            x = js.value / (float) std::numeric_limits<int16_t>::max();
+            x = js.axisValue();
             break;
         default:
             return;

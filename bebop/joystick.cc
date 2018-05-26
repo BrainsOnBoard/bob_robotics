@@ -1,8 +1,4 @@
-// C includes
-#include <cstdint>
-
 // C++ includes
-#include <limits>
 #include <stdexcept>
 
 // local includes
@@ -40,21 +36,19 @@ BebopJoystick::onAxisEvent(HID::Event &js)
 
     switch (js.axis()) {
     case HID::Axis::RightStickHorizontal:
-        f = maxbank * (float) (js.value) /
-            (float) numeric_limits<int16_t>::max();
+        f = maxbank * js.axisValue();
         m_Bebop->setRoll((i8) f);
         break;
     case HID::Axis::RightStickVertical:
-        f = maxbank * (float) (-js.value) /
-            (float) numeric_limits<int16_t>::max();
+        f = -maxbank * js.axisValue();
         m_Bebop->setPitch((i8) f);
         break;
     case HID::Axis::LeftStickHorizontal:
-        f = maxyaw * (float) (js.value) / (float) numeric_limits<int16_t>::max();
+        f = maxyaw * js.axisValue();
         m_Bebop->setYaw((i8) f);
         break;
     case HID::Axis::LeftStickVertical:
-        f = maxup * (float) (-js.value) / (float) numeric_limits<int16_t>::max();
+        f = -maxup * js.axisValue();
         m_Bebop->setUpDown((i8) f);
         break;
     }
