@@ -37,6 +37,17 @@ public:
                flip);
     }
 
+    OpenCVUnwrap360(const OpenCVUnwrap360 &unwrap)
+    {
+        m_CameraResolution = unwrap.m_CameraResolution;
+        m_UnwrappedResolution = unwrap.m_UnwrappedResolution;
+        m_CentrePixel = unwrap.m_CentrePixel;
+        m_InnerPixel = unwrap.m_InnerPixel;
+        m_OuterPixel = unwrap.m_OuterPixel;
+        m_OffsetDegrees = unwrap.m_OffsetDegrees;
+        m_Flip = unwrap.m_Flip;
+    }
+
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
