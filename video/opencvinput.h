@@ -21,14 +21,14 @@ public:
     template<class T>
     OpenCVInput(T dev,
                 const cv::Size &outSize,
-                const std::string &cameraName = "unknown_camera")
+                const std::string &cameraName = DefaultCameraName)
       : OpenCVInput(dev, cameraName)
     {
         setOutputSize(outSize);
     }
 
     template<class T>
-    OpenCVInput(T dev, const std::string &cameraName = "unknown_camera")
+    OpenCVInput(T dev, const std::string &cameraName = DefaultCameraName)
       : cv::VideoCapture(dev)
     {
         m_CameraName = cameraName;
@@ -45,6 +45,12 @@ public:
         outSize.width = (int) get(cv::CAP_PROP_FRAME_WIDTH);
         outSize.height = (int) get(cv::CAP_PROP_FRAME_HEIGHT);
         return outSize;
+    }
+
+    bool needsUnwrapping() const override
+    {
+        // only panoramic cameras are defined with the camera name specified
+        return m_CameraName != DefaultCameraName;
     }
 
     bool readFrame(cv::Mat &outFrame) override

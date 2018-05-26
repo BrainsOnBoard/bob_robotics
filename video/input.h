@@ -15,6 +15,8 @@
 
 namespace GeNNRobotics {
 namespace Video {
+#define DefaultCameraName "unknown_camera"
+
 class Input
 {
 public:
@@ -67,12 +69,17 @@ public:
 
     virtual const std::string getCameraName() const
     {
-        return "unknown_camera";
+        return DefaultCameraName;
     }
 
     virtual cv::Size getOutputSize() const
     {
         return cv::Size();
+    }
+
+    virtual bool needsUnwrapping() const
+    {
+        return false;
     }
 
     virtual bool readFrame(cv::Mat &outFrame) = 0;

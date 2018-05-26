@@ -425,11 +425,17 @@ public:
     {
         return getHeight() / 2;
     }
+
     cv::Size getSuperPixelSize() const
     {
         return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
     }
-    
+
+    bool needsUnwrapping() const
+    {
+        return true;
+    }
+
     //------------------------------------------------------------------------
     // Static API
     //------------------------------------------------------------------------
