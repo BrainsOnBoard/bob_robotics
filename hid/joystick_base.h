@@ -3,6 +3,7 @@
 // C++ includes
 #include <cstdint>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
@@ -114,7 +115,7 @@ struct Event
 };
 
 // For callbacks when a controller event occurs (button is pressed, axis moves)
-using Callback = std::function<void(Event *)>;
+using Callback = std::function<void(Event &)>;
 
 class JoystickBase : public Threadable
 {
@@ -133,11 +134,10 @@ public:
     void run() override
     {
         while (read()) {
-            m_Callback(&m_JsEvent);
+            m_Callback(m_JsEvent);
         }
-        if (!m_DoRun) {
-            m_Callback(nullptr);
-        }
+
+        std::cerr << "Error reading from joystick" << std::endl;
     }
 
     void setCallback(Callback callback)

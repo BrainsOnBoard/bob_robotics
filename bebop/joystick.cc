@@ -1,4 +1,8 @@
+// C includes
+#include <cstdint>
+
 // C++ includes
+#include <limits>
 #include <stdexcept>
 
 // local includes
@@ -9,20 +13,17 @@ namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
 {
-    setCallback([=](HID::Event *js) { eventCallback(js); });
+    setCallback([=](HID::Event &js) { eventCallback(js); });
 }
 
 void
-BebopJoystick::onButtonEvent(HID::Event *js)
+BebopJoystick::onButtonEvent(HID::Event &js)
 {
     if (m_ButtonCallback && m_ButtonCallback(js)) {
         return;
     }
-    if (!js->value) {
-        return;
-    }
 
-    switch (js->button()) {
+    switch (js.button()) {
     case HID::Button::A:
         m_Bebop->takeOff();
         break;
@@ -33,36 +34,36 @@ BebopJoystick::onButtonEvent(HID::Event *js)
 }
 
 void
-BebopJoystick::onAxisEvent(HID::Event *js)
+BebopJoystick::onAxisEvent(HID::Event &js)
 {
     float f;
 
-    switch (js->axis()) {
+    switch (js.axis()) {
     case HID::Axis::RightStickHorizontal:
-        f = maxbank * (float) (js->value) /
-            (float) numeric_limits<__s16>::max();
+        f = maxbank * (float) (js.value) /
+            (float) numeric_limits<int16_t>::max();
         m_Bebop->setRoll((i8) f);
         break;
     case HID::Axis::RightStickVertical:
-        f = maxbank * (float) (-js->value) /
-            (float) numeric_limits<__s16>::max();
+        f = maxbank * (float) (-js.value) /
+            (float) numeric_limits<int16_t>::max();
         m_Bebop->setPitch((i8) f);
         break;
     case HID::Axis::LeftStickHorizontal:
-        f = maxyaw * (float) (js->value) / (float) numeric_limits<__s16>::max();
+        f = maxyaw * (float) (js.value) / (float) numeric_limits<int16_t>::max();
         m_Bebop->setYaw((i8) f);
         break;
     case HID::Axis::LeftStickVertical:
-        f = maxup * (float) (-js->value) / (float) numeric_limits<__s16>::max();
+        f = maxup * (float) (-js.value) / (float) numeric_limits<int16_t>::max();
         m_Bebop->setUpDown((i8) f);
         break;
     }
 }
 
 void
-BebopJoystick::eventCallback(HID::Event *js)
+BebopJoystick::eventCallback(HID::Event &js)
 {
-    if (!js->isAxis) {
+    if (!js.isAxis) {
         onButtonEvent(js);
     } else {
         onAxisEvent(js);
