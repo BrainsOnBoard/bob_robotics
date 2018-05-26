@@ -34,6 +34,14 @@ public:
         fired = false;
     }
 
+    void waitOnce()
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+        while (!fired) {
+            cv.wait(lock);
+        }
+    }
+
 private:
     std::mutex mtx;
     std::condition_variable cv;

@@ -48,6 +48,6 @@ main(int argc, char **argv)
     joystick.runInBackground();
 
     // display video stream
-    Video::Display display(video);
+    Video::Display display(video, cv::Size(1240, 500));
     display.run(); // run until terminated
 }

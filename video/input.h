@@ -113,7 +113,8 @@ private:
         // ACK the command and tell client the camera resolution
         cv::Size res = getOutputSize();
         node.getSocket()->send("IMG PARAMS " + std::to_string(res.width) + " " +
-                               std::to_string(res.height) + "\n");
+                               std::to_string(res.height) + " " +
+                               getCameraName() + "\n");
 
         // start thread to transmit images in background
         m_ImageThread = std::unique_ptr<std::thread>(
