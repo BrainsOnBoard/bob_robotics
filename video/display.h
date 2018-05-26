@@ -19,6 +19,7 @@
 // GeNN robotics includes
 #include "../common/threadable.h"
 #include "../imgproc/opencv_unwrap_360.h"
+#include "../os/keycodes.h"
 
 // local includes
 #include "input.h"
@@ -49,6 +50,7 @@ public:
       : m_VideoInput(&videoInput)
     {
         if (videoInput.needsUnwrapping()) {
+            m_ShowUnwrapped = true;
             m_Unwrapper = std::unique_ptr<ImgProc::OpenCVUnwrap360>(
                 new ImgProc::OpenCVUnwrap360(videoInput.createDefaultUnwrapper(unwrapRes)));
         }
@@ -71,16 +73,19 @@ public:
         while (m_DoRun) {
             readNextFrame(frame);
 
-            if (m_Unwrapper) {
+            if (m_Unwrapper && m_ShowUnwrapped) {
                 m_Unwrapper->unwrap(frame, unwrapped);
                 cv::imshow(WINDOW_NAME, unwrapped);
             } else {
                 cv::imshow(WINDOW_NAME, frame);
             }
 
-            // quit when user presses esc
-            if ((cv::waitKey(1) & 0xff) == 27) {
-                break;
+            switch (cv::waitKeyEx(1)) {
+                case 'u': // toggle unwrapping
+                    m_ShowUnwrapped = !m_ShowUnwrapped;
+                    break;
+                case OS::KeyCodes::Escape:
+                    m_DoRun = false;
             }
         }
     }
@@ -88,6 +93,7 @@ public:
 protected:
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     Input *m_VideoInput;
+    bool m_ShowUnwrapped = false;
 
     virtual void readNextFrame(cv::Mat &frame)
     {
