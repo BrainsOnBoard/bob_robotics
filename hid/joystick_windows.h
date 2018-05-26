@@ -55,7 +55,7 @@ public:
     Joystick(Callback callback = nullptr);
     XINPUT_STATE Read();
     bool open();
-    bool read(Event &js);
+    bool read(Event &js) override;
 };
 
 Joystick::Joystick(Callback callback) : JoystickBase(callback)
@@ -102,7 +102,7 @@ Joystick::Change()
 // read the buttons on the controller and report which button(s) are
 // pressed/unpressed
 bool
-Joystick::read(Event &js) override
+Joystick::read(Event &js)
 {
     while (Change()) {
         unsigned int buttState = Read().Gamepad.wButtons;
@@ -127,50 +127,50 @@ Joystick::read(Event &js) override
                 int rThumbXState2 = Read().Gamepad.sThumbRX;
                 int rThumbYState2 = -Read().Gamepad.sThumbRY;
                 if (lThumbXState2 != lThumbXState1) {
-                    js.number = static_cast<unsigned int>(LeftStickHorizontal);
+                    js.number = static_cast<unsigned int>(Axis::LeftStickHorizontal);
                     js.value = lThumbXState2;
                     js.isAxis = true;
                     lThumbXState1 = lThumbXState2;
                     break;
                 }
                 if (lThumbYState2 != lThumbYState1) {
-                    js.number = static_cast<unsigned int>(LeftStickVertical);
+                    js.number = static_cast<unsigned int>(Axis::LeftStickVertical);
                     js.value = lThumbYState2;
                     js.isAxis = true;
                     lThumbYState1 = lThumbYState2;
                     break;
                 }
                 if (rThumbXState2 != rThumbXState1) {
-                    js.number = static_cast<unsigned int>(RightStickHorizontal);
+                    js.number = static_cast<unsigned int>(Axis::RightStickHorizontal);
                     js.value = rThumbXState2;
                     js.isAxis = true;
                     rThumbXState1 = rThumbXState2;
                     break;
                 }
                 if (rThumbYState2 != rThumbYState1) {
-                    js.number = static_cast<unsigned int>(RightStickVertical);
+                    js.number = static_cast<unsigned int>(Axis::RightStickVertical);
                     js.value = rThumbYState2;
                     js.isAxis = true;
                     rThumbYState1 = rThumbYState2;
                     break;
                 }
                 if (lTrigState >= 1) {
-                    js.number = static_cast<unsigned int>(LeftTrigger);
+                    js.number = static_cast<unsigned int>(Axis::LeftTrigger);
                     js.value = lTrigState;
                     js.isAxis = true;
                     break;
                 }
                 if (rTrigState >= 1) {
-                    js.number = static_cast<unsigned int>(RightTrigger);
+                    js.number = static_cast<unsigned int>(Axis::RightTrigger);
                     js.value = rTrigState;
                     js.isAxis = true;
                     break;
                 } else {
-                    if (js.number == static_cast<unsigned int>(LeftTrigger) && lTrigState < 1) {
+                    if (js.number == static_cast<unsigned int>(Axis::LeftTrigger) && lTrigState < 1) {
                         js.value = 0;
                         break;
                     }
-                    if (js.number == static_cast<unsigned int>(RightTrigger) && rTrigState < 1) {
+                    if (js.number == static_cast<unsigned int>(Axis::RightTrigger) && rTrigState < 1) {
                         js.value = 0;
                         break;
                     }
