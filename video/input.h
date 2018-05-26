@@ -21,9 +21,6 @@ public:
     virtual ~Input()
     {}
 
-    virtual void setOutputSize(const cv::Size &outSize)
-    {}
-
     virtual ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
     {
         // Create unwrapper
@@ -73,15 +70,15 @@ public:
         return "unknown_camera";
     }
 
-    virtual bool readFrame(cv::Mat &outFrame)
-    {
-        return false;
-    }
-
     virtual cv::Size getOutputSize() const
     {
         return cv::Size();
     }
+
+    virtual bool readFrame(cv::Mat &outFrame) = 0;
+
+    virtual void setOutputSize(const cv::Size &outSize)
+    {}
 
 protected:
     /*
