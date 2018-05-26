@@ -28,8 +28,8 @@ class Display : public Threadable
 #define WINDOW_NAME "OpenCV display"
 
 public:
-    Display(Input *videoInput)
-      : m_VideoInput(videoInput)
+    Display(Input &videoInput)
+      : m_VideoInput(&videoInput)
     {}
 
     /*
