@@ -20,13 +20,12 @@
 
 namespace GeNNRobotics {
 namespace Video {
+#define DefaultCameraName "unknown_camera"
+
 class Input : public Net::Handler
 {
 public:
     virtual ~Input()
-    {}
-
-    virtual void setOutputSize(const cv::Size &outSize)
     {}
 
     virtual ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
@@ -75,18 +74,23 @@ public:
 
     virtual const std::string getCameraName() const
     {
-        return "unknown_camera";
-    }
-
-    virtual bool readFrame(cv::Mat &outFrame)
-    {
-        return false;
+        return DefaultCameraName;
     }
 
     virtual cv::Size getOutputSize() const
     {
         return cv::Size();
     }
+
+    virtual bool needsUnwrapping() const
+    {
+        return false;
+    }
+
+    virtual bool readFrame(cv::Mat &outFrame) = 0;
+
+    virtual void setOutputSize(const cv::Size &outSize)
+    {}
 
 protected:
     /*
