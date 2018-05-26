@@ -37,6 +37,9 @@ public:
                flip);
     }
 
+    /*
+	 * Copy constructor.
+	 */
     OpenCVUnwrap360(const OpenCVUnwrap360 &unwrap)
     {
         m_CameraResolution = unwrap.m_CameraResolution;
@@ -46,6 +49,9 @@ public:
         m_OuterPixel = unwrap.m_OuterPixel;
         m_OffsetDegrees = unwrap.m_OffsetDegrees;
         m_Flip = unwrap.m_Flip;
+
+        // generate maps
+        createMaps();
     }
 
     //------------------------------------------------------------------------
@@ -67,10 +73,6 @@ public:
         m_InnerPixel = (int) round((double) cameraResolution.height * inner);
         m_OuterPixel = (int) round((double) cameraResolution.height * outer);
 
-        // Create x and y pixel maps
-        m_UnwrapMapX.create(unwrappedResolution, CV_32FC1);
-        m_UnwrapMapY.create(unwrappedResolution, CV_32FC1);
-
         // Save params
         m_CameraResolution = cameraResolution;
         m_UnwrappedResolution = unwrappedResolution;
@@ -78,7 +80,7 @@ public:
         m_Flip = flip;
 
         // Build unwrap maps
-        updateMaps();
+        createMaps();
     }
 
     void updateMaps()
@@ -91,7 +93,7 @@ public:
                 // Get i as a fraction of unwrapped height, flipping if desired
                 const float iFrac =
                         m_Flip ? 1.0f - ((float) i /
-                                        (float) m_UnwrappedResolution.height)
+                                         (float) m_UnwrappedResolution.height)
                                : ((float) i /
                                   (float) m_UnwrappedResolution.height);
 
@@ -155,7 +157,7 @@ public:
          */
         assert(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
         assert(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
-        
+
         // centre
         std::vector<double> centre(2);
         fs["centre"] >> centre;
@@ -178,7 +180,7 @@ public:
                outer,
                offsetDegrees,
                flip);
-        
+
         return fs;
     }
 
@@ -187,7 +189,7 @@ public:
     int m_InnerPixel, m_OuterPixel;
     int m_OffsetDegrees;
     bool m_Flip;
-    
+
 private:
     //------------------------------------------------------------------------
     // Private members
@@ -196,6 +198,13 @@ private:
     cv::Size m_UnwrappedResolution;
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
+
+    void createMaps()
+    {
+        m_UnwrapMapX.create(m_UnwrappedResolution, CV_32FC1);
+        m_UnwrapMapY.create(m_UnwrappedResolution, CV_32FC1);
+        updateMaps();
+    }
 }; // OpenCVUnwrap360
-}  // ImgProc
-}  // GeNNRobotics
+} // ImgProc
+} // GeNNRobotics
