@@ -34,8 +34,12 @@ public:
 
     virtual void waitToFinish()
     {
-        if (m_Thread && m_Thread->joinable()) {
-            m_Thread->join();
+        if (m_Thread) {
+            if (m_Thread->joinable()) {
+                m_Thread->join();
+            } else {
+                m_Thread->detach();
+            }
         }
     }
 
