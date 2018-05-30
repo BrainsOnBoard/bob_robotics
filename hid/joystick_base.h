@@ -129,12 +129,12 @@ struct Event
 };
 
 // For callbacks when a controller event occurs (button is pressed, axis moves)
-using Callback = std::function<void(Event &)>;
+using JoystickHandler = std::function<void(Event &)>;
 
 class JoystickBase : public Threadable
 {
 private:
-    Callback m_Callback = nullptr;
+    JoystickHandler m_Handler = nullptr;
     Event m_JsEvent;
 
 public:
@@ -147,27 +147,27 @@ public:
 
     void run() override
     {
-        if (!m_Callback) {
+        if (!m_Handler) {
             throw std::runtime_error("Callback function for joystick not set");
         }
 
         while (read()) {
-            m_Callback(m_JsEvent);
+            m_Handler(m_JsEvent);
         }
 
-        std::cerr << "Error reading from joystick" << std::endl;
+        // std::cerr << "Error reading from joystick" << std::endl;
     }
 
-    void setCallback(Callback callback)
+    void setCallback(JoystickHandler handler)
     {
-        m_Callback = callback;
+        m_Handler = handler;
     }
 
 protected:
     JoystickBase()
     {}
 
-    JoystickBase(Callback callback) : m_Callback(callback)
+    JoystickBase(JoystickHandler handler) : m_Handler(handler)
     {}
 }; // JoystickBase
 } // HID

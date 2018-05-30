@@ -52,13 +52,13 @@ private:
     bool Change();
 
 public:
-    Joystick(Callback callback = nullptr);
+    Joystick(JoystickHandler handler = nullptr);
     XINPUT_STATE Read();
     bool open();
     bool read(Event &js) override;
 };
 
-Joystick::Joystick(Callback callback) : JoystickBase(callback)
+Joystick::Joystick(JoystickHandler handler) : JoystickBase(handler)
 {
     // Zeroise the state
     ZeroMemory(&_controllerState, sizeof(XINPUT_STATE));

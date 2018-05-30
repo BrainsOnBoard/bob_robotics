@@ -52,7 +52,7 @@ public:
      * Open connection to controller. Return true if connected successfully,
      * false otherwise.
      */
-    Joystick(Callback callback = nullptr) : JoystickBase(callback)
+    Joystick(JoystickHandler handler = nullptr) : JoystickBase(handler)
     {
         m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
         if (m_Fd < 0) {
