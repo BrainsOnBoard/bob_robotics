@@ -20,6 +20,14 @@ namespace Video {
 class NetSource : public Input
 {
 public:
+    NetSource()
+    {}
+
+    NetSource(Net::Node &node)
+    {
+        node.addHandler(*this);
+    }
+
     const std::string getCameraName() const override
     {
         return m_CameraName;

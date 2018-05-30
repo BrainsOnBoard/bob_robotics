@@ -40,8 +40,7 @@ main(int argc, char **argv)
     client.runInBackground();
 
     // read video stream from network
-    Video::NetSource video;
-    client.addHandler(video);
+    Video::NetSource video(client);
 
     // transmit motor commands over network
     Robots::MotorNetSink motor(client);
