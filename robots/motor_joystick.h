@@ -21,7 +21,7 @@ public:
     MotorJoystick(Motor *motor)
       : m_Motor(motor)
     {
-        setCallback([=](HID::Event &js) { joystickCallback(js); });
+        addHandler([=](HID::Event &js) { return joystickCallback(js); });
     }
 
 private:
@@ -29,7 +29,7 @@ private:
     float m_X = 0;
     float m_Y = 0;
 
-    void joystickCallback(HID::Event &js)
+    bool joystickCallback(HID::Event &js)
     {
         // only interested in left joystick
         float x = m_X;
@@ -42,7 +42,7 @@ private:
             x = js.axisValue();
             break;
         default:
-            return;
+            return false;
         }
 
         // Code below is adapted from Jamie's joystick.h - AD
@@ -62,6 +62,9 @@ private:
         } else if (theta < -pi / 2 && theta >= -pi) {
             m_Motor->tank(-r, -r * cos(twoTheta));
         }
+
+        // signal that we have handled the event
+        return true;
     }
 };
 }

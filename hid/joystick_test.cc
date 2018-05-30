@@ -7,7 +7,7 @@
 
 using namespace GeNNRobotics;
 
-void
+bool
 callback(HID::Event &js)
 {
     if (js.isInitial) {
@@ -23,6 +23,9 @@ callback(HID::Event &js)
         std::cout << "Button " << name << " (" << js.number << (js.value ? ") pushed" : ") released")
                   << std::endl;
     }
+
+    // we handle all buttons and axes, so return true
+    return true;
 }
 
 int

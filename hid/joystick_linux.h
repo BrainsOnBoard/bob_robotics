@@ -52,12 +52,14 @@ public:
      * Open connection to controller. Return true if connected successfully,
      * false otherwise.
      */
-    Joystick(JoystickHandler handler = nullptr) : JoystickBase(handler)
+    Joystick()
     {
-        m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
-        if (m_Fd < 0) {
-            throw std::runtime_error("Could not open joystick");
-        }
+        open();
+    }
+
+    Joystick(const JoystickHandler handler) : JoystickBase(handler)
+    {
+        open();
     }
 
     /*
@@ -112,6 +114,14 @@ private:
     static const int16_t deadzone = 10000; // size of deadzone for axes (i.e.
                                            // region within which not activated)
     static const long sleepmillis = 25; // number of milliseconds between polls
+
+    void open()
+    {
+        m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
+        if (m_Fd < 0) {
+            throw std::runtime_error("Could not open joystick");
+        }
+    }
 }; // Joystick
 } // HID
 } // GeNNRobotics

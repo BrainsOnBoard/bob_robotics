@@ -50,15 +50,27 @@ private:
     int rThumbYState1 = 0;
 
     bool Change();
+    void open();    
 
 public:
-    Joystick(JoystickHandler handler = nullptr);
+    Joystick();
+    Joystick(const JoystickHandler handler);
     XINPUT_STATE Read();
-    bool open();
     bool read(Event &js) override;
 };
 
-Joystick::Joystick(JoystickHandler handler) : JoystickBase(handler)
+Joystick()
+{
+    open();
+}
+
+Joystick::Joystick(const JoystickHandler handler) : JoystickBase(handler)
+{
+    open();
+}
+
+void
+open()
 {
     // Zeroise the state
     ZeroMemory(&_controllerState, sizeof(XINPUT_STATE));

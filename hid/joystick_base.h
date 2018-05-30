@@ -7,10 +7,9 @@
 #include <functional>
 #include <iostream>
 #include <limits>
-#include <memory>
 #include <stdexcept>
 #include <string>
-#include <thread>
+#include <vector>
 
 // GeNN robotics includes
 #include "../common/threadable.h"
@@ -129,12 +128,12 @@ struct Event
 };
 
 // For callbacks when a controller event occurs (button is pressed, axis moves)
-using JoystickHandler = std::function<void(Event &)>;
+using JoystickHandler = std::function<bool(Event &)>;
 
 class JoystickBase : public Threadable
 {
 private:
-    JoystickHandler m_Handler = nullptr;
+    std::vector<JoystickHandler> m_Handlers;
     Event m_JsEvent;
 
 public:
@@ -147,27 +146,31 @@ public:
 
     void run() override
     {
-        if (!m_Handler) {
-            throw std::runtime_error("Callback function for joystick not set");
+        if (m_Handlers.size() == 0) {
+            throw std::runtime_error("No handlers for joystick set");
         }
 
         while (read()) {
-            m_Handler(m_JsEvent);
+            for (auto handler : m_Handlers) {
+                if (handler(m_JsEvent)) {
+                    break;
+                }
+            }
         }
 
         // std::cerr << "Error reading from joystick" << std::endl;
     }
 
-    void setCallback(JoystickHandler handler)
+    void addHandler(const JoystickHandler handler)
     {
-        m_Handler = handler;
+        m_Handlers.insert(m_Handlers.begin(), handler);
     }
 
 protected:
     JoystickBase()
     {}
 
-    JoystickBase(JoystickHandler handler) : m_Handler(handler)
+    JoystickBase(const JoystickHandler handler) : m_Handlers({ handler })
     {}
 }; // JoystickBase
 } // HID
