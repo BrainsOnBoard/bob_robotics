@@ -38,26 +38,29 @@ public:
       : m_VideoInput(&videoInput)
     {}
 
-    Display(std::unique_ptr<Input> &videoInput)
-      : m_VideoInput(videoInput.get())
-    {}
-
     /*
      * Create a new display with unwrapping enabled if the Video::Input supports
      * it.
      */
-    Display(Input &videoInput, cv::Size unwrapRes)
+    template <typename... Ts>
+    Display(Input &videoInput, Ts&&... unwrapRes)
       : m_VideoInput(&videoInput)
     {
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
+            auto unwrapper = videoInput.createDefaultUnwrapper(std::forward<Ts>(unwrapRes)...);
             m_Unwrapper = std::unique_ptr<ImgProc::OpenCVUnwrap360>(
-                new ImgProc::OpenCVUnwrap360(std::move(videoInput.createDefaultUnwrapper(unwrapRes))));
+                new ImgProc::OpenCVUnwrap360(std::move(unwrapper)));
         }
     }
 
-    Display(std::unique_ptr<Input> &videoInput, cv::Size unwrapRes)
-      : Display(*videoInput.get(), unwrapRes)
+    /*
+     * Create a new display from a std::unique_ptr to Input (e.g. from
+     * getPanoramicCamera()).
+     */
+    template <typename... Ts>
+    Display(std::unique_ptr<Input> &videoInput, Ts&&... unwrapRes)
+      : Display(*videoInput.get(), std::forward<Ts>(unwrapRes)...)
     {}
 
     /*

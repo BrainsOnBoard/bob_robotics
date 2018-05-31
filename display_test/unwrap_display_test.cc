@@ -13,6 +13,6 @@ int
 main(int argc, char **argv)
 {
     auto cam = getPanoramicCamera();
-    Display display(cam, cv::Size(1240, 600));
+    Display display(cam, 1240, 600);
     display.run();
 }
