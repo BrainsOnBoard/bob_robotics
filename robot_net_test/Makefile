@@ -1,5 +1,5 @@
 CXXFLAGS := -std=c++11 -g -Wall -I.. `pkg-config --cflags opencv`
-LDFLAGS := -pthread `pkg-config --libs opencv`
+LDFLAGS := -pthread -lm -lstdc++ `pkg-config --libs opencv`
 
 # optionally disable I2C
 ifdef NO_I2C_ROBOT
