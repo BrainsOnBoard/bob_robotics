@@ -92,11 +92,6 @@ public:
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
-    virtual void setOutputSize(const cv::Size &outSize) override
-    {
-        throw std::runtime_error("See3CAM_CU40 doesn't currently support changing resolution at runtime");
-    }
-
     virtual const std::string getCameraName() const override
     {
         return "see3cam";
