@@ -109,12 +109,12 @@ struct Event
             return "start";
 #ifndef _WIN32
         // this button is not available in Windows
-        case Button::XboxButton:
+        case Button::Xbox:
             return "Xbox";
 #endif
-        case Button::LeftStickButton:
+        case Button::LeftStick:
             return "left stick";
-        case Button::RightStickButton:
+        case Button::RightStick:
             return "right stick";
         case Button::Left:
             return "left";
