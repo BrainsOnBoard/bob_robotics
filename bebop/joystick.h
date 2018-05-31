@@ -21,13 +21,13 @@ public:
 
 private:
     Bebop *m_Bebop;
-    static constexpr float maxbank = 50;
-    static constexpr float maxup = 50;
-    static constexpr float maxyaw = 100;
+    static constexpr float MaxBank = 50; // maximum % of speed for pitch/rool
+    static constexpr float MaxUp = 50; // maximum % of speed for up/down motion
+    static constexpr float MaxYaw = 100; // maximum % of speed for yaw
 
-    void onButtonEvent(HID::Event &js);
-    void onAxisEvent(HID::Event &js);
-    void eventCallback(HID::Event &js);
+    bool onButtonEvent(HID::Event &js);
+    bool onAxisEvent(HID::Event &js);
+    bool eventCallback(HID::Event &js);
 }; // BebopJoystick
 }  // Robots
 }  // GeNNRobotics

@@ -9,6 +9,7 @@ extern "C"
 }
 
 // C++ includes
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -29,9 +30,6 @@ extern "C"
 #ifdef DUMMY_DRONE
 #define NO_FLY
 #endif
-
-typedef unsigned char u8;
-typedef signed char i8;
 
 namespace GeNNRobotics {
 namespace Robots {
@@ -96,10 +94,10 @@ public:
     void disconnect();
     void takeOff();
     void land();
-    void setPitch(i8 pitch);
-    void setRoll(i8 right);
-    void setUpDown(i8 up);
-    void setYaw(i8 right);
+    void setPitch(int8_t pitch);
+    void setRoll(int8_t right);
+    void setUpDown(int8_t up);
+    void setYaw(int8_t right);
     void stopMoving();
     void takePhoto();
     void setFlightEventHandler(flightEventHandler);

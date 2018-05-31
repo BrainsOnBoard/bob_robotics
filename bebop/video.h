@@ -13,6 +13,7 @@
 #pragma once
 
 #ifndef DUMMY_DRONE
+// ARSDK includes
 extern "C"
 {
 #include "libARController/ARCONTROLLER_Error.h"
@@ -48,12 +49,20 @@ extern "C"
 #endif
 #endif // !DUMMY_DRONE
 
-#include "bebop.h"
+// C includes
+#include <cstdint>
+
+// C++ includes
 #include <algorithm>
-#include <signal.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+// POSIX includes
+#include <signal.h>
+
+// local includes
+#include "bebop.h"
 
 #define VIDEO_FIFO "/tmp/bebop_vid"
 #define VIDEO_WIDTH 856
