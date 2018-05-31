@@ -9,9 +9,7 @@
 
 namespace GeNNRobotics {
 namespace Video {
-class OpenCVInput
-  : public cv::VideoCapture
-  , public Input
+class OpenCVInput : public Input
 {
 public:
     OpenCVInput()
@@ -19,8 +17,7 @@ public:
     {}
 
     template<class T>
-    OpenCVInput(T dev,
-                const cv::Size &outSize,
+    OpenCVInput(T dev, const cv::Size &outSize,
                 const std::string &cameraName = "unknown_camera")
       : OpenCVInput(dev, cameraName)
     {
@@ -29,37 +26,59 @@ public:
 
     template<class T>
     OpenCVInput(T dev, const std::string &cameraName = "unknown_camera")
-      : cv::VideoCapture(dev)
+      : m_Device(dev), m_CameraName(cameraName)
     {
-        m_CameraName = cameraName;
+
     }
 
-    const std::string getCameraName() const
+    //------------------------------------------------------------------------
+    // Video::Input virtuals
+    //------------------------------------------------------------------------
+    virtual const std::string getCameraName() const override
     {
         return m_CameraName;
     }
 
-    cv::Size getOutputSize() const
+    virtual cv::Size getOutputSize() const override
     {
         cv::Size outSize;
-        outSize.width = (int) get(cv::CAP_PROP_FRAME_WIDTH);
-        outSize.height = (int) get(cv::CAP_PROP_FRAME_HEIGHT);
+        outSize.width = (int)m_Device.get(cv::CAP_PROP_FRAME_WIDTH);
+        outSize.height = (int)m_Device.get(cv::CAP_PROP_FRAME_HEIGHT);
         return outSize;
     }
 
-    bool readFrame(cv::Mat &outFrame)
+    virtual bool readFrame(cv::Mat &outFrame) override
     {
-        (*this) >> outFrame;
-        return outFrame.cols != 0;
+        return m_Device.read(outFrame);
     }
 
-    void setOutputSize(const cv::Size &outSize)
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
     {
-        set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
-        set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
+        // If reading (RGB frame) was succesful
+        if(m_Device.read(m_IntermediateFrame)) {
+            // If output frame isn't correct size, create it
+            if(outFrame.size() != m_IntermediateFrame.size()) {
+                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
+            }
+
+            // Convert intermediate frame to greyscale
+            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
-protected:
+    virtual void setOutputSize(const cv::Size &outSize) override
+    {
+        m_Device.set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
+        m_Device.set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
+    }
+
+private:
+    cv::Mat m_IntermediateFrame;
+    cv::VideoCapture m_Device;
     std::string m_CameraName;
 }; // OpenCVInput
 } // Video
