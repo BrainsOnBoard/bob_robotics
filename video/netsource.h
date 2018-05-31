@@ -25,7 +25,15 @@ public:
 
     NetSource(Net::Node &node)
     {
-        node.addHandler(*this);
+        // handle incoming IMG commands
+        node.addCommandHandler("IMG", [this] (Net::Node &node, const Net::Command &command) {
+            onCommandReceived(node, command);
+        });
+
+        // when connected, send command to start streaming
+        node.addConnectedHandler([this] (Net::Node &node) {
+            node.getSocket()->send("IMG START\n");
+        });
     }
 
     const std::string getCameraName() const override
@@ -59,12 +67,7 @@ private:
     std::mutex m_BufferMutex;
     Semaphore m_ParamsSemaphore, m_ReadSemaphore;
 
-    void onConnected(Net::Node &node) override
-    {
-        node.getSocket()->send("IMG START\n");
-    }
-
-    void onCommandReceived(Net::Node &node, Net::Command &command) override
+    void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
         if (command[1] == "PARAMS") {
             m_CameraResolution.width = stoi(command[2]);
@@ -80,11 +83,6 @@ private:
         } else {
             throw Net::bad_command_error();
         }
-    }
-
-    std::string getHandledCommandName() const override
-    {
-        return "IMG";
     }
 }; // NetSource
 } // Video

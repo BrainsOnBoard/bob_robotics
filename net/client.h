@@ -59,7 +59,7 @@ Client::Client(const std::string host, int port)
 
     std::cout << "Opened socket" << std::endl;
 
-    notifyHandlers();
+    notifyConnectedHandlers();
 }
 
 Client::~Client()

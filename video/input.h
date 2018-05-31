@@ -22,14 +22,14 @@ namespace GeNNRobotics {
 namespace Video {
 #define DefaultCameraName "unknown_camera"
 
-class Input : public Net::Handler
+class Input
 {
 public:
     virtual ~Input()
     {}
 
-    template <typename... Ts>
-    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(Ts&&... args)
+    template<typename... Ts>
+    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(Ts &&... args)
     {
         cv::Size unwrapRes(std::forward<Ts>(args)...);
 
@@ -54,8 +54,8 @@ public:
                 const char *env = std::getenv(envVarName);
                 if (!env) {
                     throw std::runtime_error(std::string(envVarName) +
-                            " environment variable is not set and unwrap "
-                            "parameters file could not be found locally");
+                                             " environment variable is not set and unwrap "
+                                             "parameters file could not be found locally");
                 }
 
                 filePath = filesystem::path(env) / paramsDir / fileName;
@@ -98,6 +98,14 @@ public:
         throw std::runtime_error("This camera's resolution cannot be changed at runtime");
     }
 
+    void streamToNetwork(Net::Node &node)
+    {
+        // handle incoming IMG commands
+        node.addCommandHandler("IMG", [this] (Net::Node &node, const Net::Command& command) {
+            onCommandReceived(node, command);
+        });
+    }
+
 protected:
     /*
      * Default constructor is protected to stop users directly creating objects
@@ -109,7 +117,7 @@ protected:
 private:
     std::thread m_ImageThread;
 
-    void onCommandReceived(Net::Node &node, Net::Command &command) override
+    void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
         if (command[1] != "START") {
             throw Net::bad_command_error();
@@ -123,11 +131,6 @@ private:
 
         // start thread to transmit images in background
         m_ImageThread = std::thread([this](Net::Node *n) { runImageSink(n); }, &node);
-    }
-
-    std::string getHandledCommandName() const override
-    {
-        return "IMG";
     }
 
     void runImageSink(Net::Node *node)

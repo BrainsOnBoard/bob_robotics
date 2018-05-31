@@ -35,7 +35,7 @@ main()
 
     // get default camera
     auto cam = Video::getPanoramicCamera();
-    server.addHandler(*cam.get()); // stream camera over network
+    cam->streamToNetwork(server); // stream camera over network
 
 #ifdef NO_I2C_ROBOT
     // output motor commands to terminal
@@ -45,8 +45,8 @@ main()
     Robots::MotorI2C motor;
 #endif
 
-    // let the motor object handle received motor commands
-    server.addHandler(motor);
+    // read motor commands from network
+    motor.readFromNetwork(server);
 
     // run server on main thread
     server.run();

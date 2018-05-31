@@ -12,7 +12,7 @@ namespace Robots {
 // Motor
 //----------------------------------------------------------------------------
 // Interface for driving tank-like wheeled robots
-class Motor : public Net::Handler
+class Motor
 {
 public:
     virtual ~Motor()
@@ -23,7 +23,16 @@ public:
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) = 0;
 
-    void onCommandReceived(Net::Node &node, Net::Command &command) override
+    void readFromNetwork(Net::Node &node)
+    {
+        // handle incoming TNK commands
+        node.addCommandHandler("TNK", [this] (Net::Node &node, const Net::Command &command) {
+            onCommandReceived(node, command);
+        });
+    }
+
+private:
+    void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
         // second space separates left and right parameters
         if (command.size() != 3) {
@@ -36,11 +45,6 @@ public:
 
         // send motor command
         tank(left, right);
-    }
-
-    std::string getHandledCommandName() const override
-    {
-        return "TNK";
     }
 }; // Motor
 } // Robots
