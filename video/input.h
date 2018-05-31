@@ -74,14 +74,24 @@ public:
         return "unknown_camera";
     }
 
-    virtual bool readFrame(cv::Mat &outFrame)
-    {
-        return false;
-    }
+    virtual bool readFrame(cv::Mat &outFrame) = 0;
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
     {
-        return false;
+        // If reading (RGB frame) was succesful
+        if(readFrame(m_IntermediateFrame)) {
+            // If output frame isn't correct size, create it
+            if(outFrame.size() != m_IntermediateFrame.size()) {
+                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
+            }
+
+            // Convert intermediate frame to greyscale
+            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     virtual cv::Size getOutputSize() const
@@ -96,6 +106,9 @@ protected:
      */
     Input()
     {}
+
+private:
+    cv::Mat m_IntermediateFrame;
 }; // Input
 } // Video
 } // GeNNRobotics
