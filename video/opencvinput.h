@@ -52,24 +52,6 @@ public:
         return m_Device.read(outFrame);
     }
 
-    virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
-    {
-        // If reading (RGB frame) was succesful
-        if(m_Device.read(m_IntermediateFrame)) {
-            // If output frame isn't correct size, create it
-            if(outFrame.size() != m_IntermediateFrame.size()) {
-                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
-            }
-
-            // Convert intermediate frame to greyscale
-            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
     virtual void setOutputSize(const cv::Size &outSize) override
     {
         m_Device.set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
@@ -77,7 +59,6 @@ public:
     }
 
 private:
-    cv::Mat m_IntermediateFrame;
     cv::VideoCapture m_Device;
     std::string m_CameraName;
 }; // OpenCVInput
