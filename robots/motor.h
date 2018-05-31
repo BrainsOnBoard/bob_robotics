@@ -4,6 +4,7 @@
 #include <string>
 
 // GeNN robotics includes
+#include "../hid/joystick.h"
 #include "../net/node.h"
 
 namespace GeNNRobotics {
@@ -18,9 +19,11 @@ public:
     virtual ~Motor()
     {}
 
-    //----------------------------------------------------------------------------
-    // Declared virtuals
-    //----------------------------------------------------------------------------
+    void addJoystick(HID::Joystick &joystick)
+    {
+        joystick.addHandler([this] (HID::Event &js) { return onJoystickEvent(js); });
+    }
+
     virtual void tank(float left, float right)
     {
         std::cout << "Dummy motor: left: " << left << "; right: " << right
@@ -36,6 +39,9 @@ public:
     }
 
 private:
+    float m_X = 0;
+    float m_Y = 0;
+
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
         // second space separates left and right parameters
@@ -49,6 +55,44 @@ private:
 
         // send motor command
         tank(left, right);
+    }
+
+    bool onJoystickEvent(HID::Event &js)
+    {
+        // only interested in left joystick
+        float x = m_X;
+        float y = m_Y;
+        switch (js.axis()) {
+        case HID::Axis::LeftStickVertical:
+            y = js.axisValue();
+            break;
+        case HID::Axis::LeftStickHorizontal:
+            x = js.axisValue();
+            break;
+        default:
+            return false;
+        }
+
+        // Code below is adapted from Jamie's joystick.h - AD
+        // If length of joystick vector places it in deadzone, stop motors
+        const float r = sqrt((x * x) + (y * y));
+        const float theta = atan2(x, -y);
+        const float twoTheta = 2.0f * theta;
+
+        // Drive motor
+        const float pi = 3.141592653589793238462643383279502884f;
+        if (theta >= 0.0f && theta < pi / 2) {
+            tank(r, r * cos(twoTheta));
+        } else if (theta >= pi / 2 && theta < pi) {
+            tank(-r * cos(twoTheta), -r);
+        } else if (theta < 0.0f && theta >= -pi / 2) {
+            tank(r * cos(twoTheta), r);
+        } else if (theta < -pi / 2 && theta >= -pi) {
+            tank(-r, -r * cos(twoTheta));
+        }
+
+        // signal that we have handled the event
+        return true;
     }
 }; // Motor
 } // Robots

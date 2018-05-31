@@ -11,8 +11,8 @@
 #include <iostream>
 
 // GeNN robotics includes
+#include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/motor_joystick.h"
 #include "robots/motor_netsink.h"
 #include "video/display.h"
 #include "video/netsource.h"
@@ -46,7 +46,8 @@ main(int argc, char **argv)
     Robots::MotorNetSink motor(client);
 
     // add joystick for controlling Motor
-    Robots::MotorJoystick joystick(motor);
+    HID::Joystick joystick;
+    motor.addJoystick(joystick); // send joystick events to motor
     joystick.runInBackground();
 
     // display video stream
