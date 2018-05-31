@@ -1,14 +1,14 @@
 // C++ includes
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 // GeNN robotics includes
-#include "os/filesystem.h"
+#include "third_party/path.h"
 
 // local includes
 #include "processfiles.h"
-
-using namespace GeNNRobotics::OS::FileSystem;
 
 enum FileType {
     skip,
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
     FileType ftype[argc - 1];
     bool anyvideo;
-    string ext;
+    std::string ext;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--no-sound") == 0) {
             copysound = false;
@@ -33,16 +33,20 @@ int main(int argc, char** argv)
             continue;
         }
 
-        if (!fileExists(argv[i])) {
-            cerr << "Error: File " << argv[i] << " does not exist" << endl;
+        filesystem::path inputFile(argv[i]);
+        if (!inputFile.exists()) {
+            cerr << "Error: File " << inputFile.str() << " does not exist" << endl;
             return 1;
         }
 
-        ext = getExtension(argv[i]);
-        if (ext == ".MP4") {
+        // Get extension and convert to lower case
+        ext = inputFile.extension();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+        if (ext == ".mp4") {
             anyvideo = true;
             ftype[i - 1] = video;
-        } else if (ext == ".JPG" || ext == ".JPEG" || ext == ".JPE")
+        } else if (ext == ".jpg" || ext == ".jpeg" || ext == ".jpe")
             ftype[i - 1] = image;
         else {
             cerr << "Warning : Only JPEG files and MP4 videos are supported -- skipping " << argv[i] << endl;
@@ -50,7 +54,7 @@ int main(int argc, char** argv)
         }
     }
 
-    if (copysound && anyvideo && !fileExists(FFMPEG_PATH)) {
+    if (copysound && anyvideo && !filesystem::path(FFMPEG_PATH).exists()) {
         cerr << "Warning: ffmpeg not found, sound will not be copied for videos" << endl;
         copysound = false;
     }

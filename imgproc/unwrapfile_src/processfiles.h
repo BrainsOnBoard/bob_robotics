@@ -6,7 +6,7 @@
 #include <vector>
 
 // GeNN robotics includes
-#include "os/filesystem.h"
+#include "third_party/path.h"
 
 // local includes
 #include "unwrap.h"
@@ -19,17 +19,14 @@
 #define FFMPEG_PATH "/usr/bin/ffmpeg"
 #endif
 
-using namespace GeNNRobotics::OS::FileSystem;
 
 /* unwrap a JPEG file */
-void
-processjpeg(const char *filepath)
+void processjpeg(const char *filepathRaw)
 {
-    std::string path, name;
-    getFileParts(filepath, path, name);
+    filesystem::path filepath(filepathRaw);
 
     // read image into memory
-    cv::Mat im = cv::imread(filepath, CV_LOAD_IMAGE_COLOR);
+    cv::Mat im = cv::imread(filepath.str(), CV_LOAD_IMAGE_COLOR);
 
     // matrix to store unwrapped image
     cv::Mat imunwrap(unwrap_height, unwrap_width, im.type());
@@ -39,30 +36,28 @@ processjpeg(const char *filepath)
     cv::Mat map_y(unwrap_height, unwrap_width, CV_32FC1);
 
     // perform unwrapping
-    if (!processframe(filepath, imunwrap, im, map_x, map_y)) {
+    if (!processframe(filepath.str().c_str(), imunwrap, im, map_x, map_y)) {
         return;
     }
 
     // save file
-    std::string outfilename = path + "unwrapped_" + name;
-    std::cout << "Saving image to " << outfilename << "..." << std::endl;
+    filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
+    std::cout << "Saving image to " << outfilename.str() << "..." << std::endl;
     std::vector<int> params;
     params.push_back(CV_IMWRITE_JPEG_QUALITY);
     params.push_back(100);
-    cv::imwrite(outfilename, imunwrap, params);
+    cv::imwrite(outfilename.str(), imunwrap, params);
 }
 
 bool copysound = true;
 
 /* unwrap an MP4 video */
-void
-processmp4(const char *filepath)
+void processmp4(const char *filepathRaw)
 {
-    std::string path, name;
-    getFileParts(filepath, path, name);
+    filesystem::path filepath(filepathRaw);
 
     // open video file
-    cv::VideoCapture cap(filepath);
+    cv::VideoCapture cap(filepath.str());
 
     // read in first frame
     cv::Mat fr;
@@ -76,21 +71,21 @@ processmp4(const char *filepath)
     cv::Mat imunwrap(unwrap_height, unwrap_width, fr.type());
 
     // try unwrapping first frame and return if fail
-    if (!processframe(filepath, imunwrap, fr, map_x, map_y)) {
+    if (!processframe(filepath.str().c_str(), imunwrap, fr, map_x, map_y)) {
         cap.release();
         return;
     }
 
     // final filename for unwrapped video
-    std::string outfilename = path + "unwrapped_" + name;
+    filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
 
     // temporary file name to which we write initially
-    std::string tempfilename = copysound ? path + ".TEMP.MP4" : outfilename;
+    filesystem::path tempfilename = copysound ? filepath.parent_path() / ".TEMP.MP4": outfilename;
 
     // start writing to file
     std::cout << "Saving video to " << outfilename << "..." << std::endl;
     cv::VideoWriter writer(
-            tempfilename, 0x21, cap.get(CV_CAP_PROP_FPS), imunwrap.size());
+            tempfilename.str(), 0x21, cap.get(CV_CAP_PROP_FPS), imunwrap.size());
     if (!writer.isOpened()) {
         std::cerr << "Error: Could not open file for writing" << std::endl;
         return;
@@ -116,10 +111,10 @@ processmp4(const char *filepath)
 
     if (copysound) {
         // attempt to copy audio stream from original to new file with ffmpeg
-        int stat = system((FFMPEG_PATH " -y -i \"" + tempfilename + "\" -i \"" +
-                           std::string(filepath) +
+        int stat = system((FFMPEG_PATH " -y -i \"" + tempfilename.str() + "\" -i \"" +
+                           filepath.str() +
                            "\" -map 0:v -map 1:a -c copy -shortest \"" +
-                           outfilename + "\" >/dev/null 2>&1")
+                           outfilename.str() + "\" >/dev/null 2>&1")
                                   .c_str());
         if (stat != 0) {
             std::cerr << "Error (" << stat
@@ -129,10 +124,10 @@ processmp4(const char *filepath)
              * just rename the temporary file to the output file, so there won't
              * be audio but at least there'll be video
              */
-            rename(tempfilename.c_str(), outfilename.c_str());
+            rename(tempfilename.str().c_str(), outfilename.str().c_str());
         } else {
             // successfully copied audio, so delete temporary file
-            remove(tempfilename.c_str());
+            remove(tempfilename.str().c_str());
         }
     }
 }
