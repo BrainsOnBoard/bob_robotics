@@ -8,13 +8,10 @@
 // Common includes
 #include "../common/timer.h"
 #include "../imgproc/opencv_optical_flow.h"
-#include "../imgproc/opencv_unwrap_360.h"
-#include "../video/see3cam_cu40.h"
+#include "../video/panoramic.h"
 
 using namespace GeNNRobotics::ImgProc;
 using namespace GeNNRobotics::Video;
-
-#define USE_SEE3_CAM
 
 // Anonymous namespace
 namespace
@@ -42,42 +39,19 @@ int main(int argc, char *argv[])
 {
     const unsigned int device = (argc > 1) ? std::atoi(argv[1]) : 0;
 
-    const cv::Size unwrapRes(90, 10);
+    const cv::Size unwrapRes(180, 50);
     const unsigned int outputScale = 10;
 
-#ifdef USE_SEE3_CAM
-    const std::string deviceString = "/dev/video" + std::to_string(device);
-    See3CAM_CU40 cam(deviceString, See3CAM_CU40::Resolution::_672x380);
-
-    // Calculate de-bayerered size
-    const cv::Size camRes(cam.getWidth() / 2, cam.getHeight() / 2);
-
-    // Create unwrapper to unwrap camera output
-    auto unwrapper = cam.createUnwrapper(camRes, unwrapRes);
-#else
-    // Open video capture device and check it matches desired camera resolution
-    cv::VideoCapture capture(device);
-
-    const cv::Size camRes(640, 480);
-    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == camRes.width);
-    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == camRes.height);
-
-    // Create unwrapper
-    OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
-                              0.5, 0.416, 0.173, 0.377, -180);
-#endif
+    // Create panoramic camera and suitable unwrapper
+    auto cam = getPanoramicCamera();
+    auto unwrapper = cam->createDefaultUnwrapper(unwrapRes);
+    const auto camRes = cam->getOutputSize();
 
     // Create optical flow calculator
     OpenCVOpticalFlow opticalFlow(unwrapRes);
 
     // Create images
-#ifdef USE_SEE3_CAM
     cv::Mat greyscaleInput(camRes, CV_8UC1);
-#else
-    cv::Mat rgbInput(camRes, CV_8UC3);
-    cv::Mat greyscaleInput(camRes, CV_8UC1);
-#endif
-
     cv::Mat outputImage(unwrapRes, CV_8UC3);
 
     // Create windows
@@ -97,22 +71,15 @@ int main(int argc, char *argv[])
     cv::Mat flowSum(1, 1, CV_32FC1);
 
     {
-        Timer<> timer("Total time:");
+        GeNNRobotics::Timer<> timer("Total time:");
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
-#ifdef USE_SEE3_CAM
-            // Read directly into greyscale
-            if(!cam.captureSuperPixelGreyscale(greyscaleInput)) {
+            // Read greyscale frame from camera
+            if(!cam->readGreyscaleFrame(greyscaleInput)) {
                 return EXIT_FAILURE;
             }
-#else
-            // Read from camera and convert to greyscale
-            if(!capture.read(rgbInput)) {
-                return EXIT_FAILURE;
-            }
-            cv::cvtColor(rgbInput, greyscaleInput, CV_BGR2GRAY);
-#endif
+
             // Unwrap
             unwrapper.unwrap(greyscaleInput, outputImage);
 
