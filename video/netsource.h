@@ -38,7 +38,7 @@ public:
         return m_CameraResolution;
     }
 
-    bool needsUnwrapping() override
+    const bool needsUnwrapping() override
     {
         m_ParamsSemaphore.waitOnce();
         return Input::needsUnwrapping();

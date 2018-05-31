@@ -83,7 +83,7 @@ public:
         return cv::Size();
     }
 
-    virtual bool needsUnwrapping()
+    const virtual bool needsUnwrapping()
     {
         // only panoramic cameras are defined with the camera name specified
         return getCameraName() != DefaultCameraName;
