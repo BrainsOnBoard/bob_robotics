@@ -11,7 +11,7 @@
 
 // GeNNRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"
-#include "../os/filesystem.h"
+#include "../third_party/path.h"
 
 namespace GeNNRobotics {
 namespace Video {
@@ -31,15 +31,16 @@ public:
 
         const std::string name = getCameraName();
         const std::string fileName = name + ".yaml";
-        std::string filePath = fileName;
+        filesystem::path filePath(fileName);
 
         // first check if file exists in working directory
-        if (!OS::FileSystem::fileExists(filePath)) {
+        if (!filePath.exists()) {
             // next check if there is a local GeNN_Robotics folder (i.e. git
             // submodule)
-            static const std::string paramsDir = "/imgproc/unwrapparams/";
-            filePath = "GeNN_Robotics" + paramsDir + fileName;
-            if (!OS::FileSystem::fileExists(filePath)) {
+            const filesystem::path paramsDir = filesystem::path("imgproc") / "unwrapparams";
+
+            filePath = filesystem::path("GeNN_Robotics") / paramsDir / fileName;
+            if (!filePath.exists()) {
                 // lastly look for environment variable pointing to
                 // GeNN_Robotics
                 static const char *envVarName = "GENN_ROBOTICS_PATH";
@@ -51,8 +52,8 @@ public:
                             "parameters file could not be found locally");
                 }
 
-                filePath = env + paramsDir + fileName;
-                if (!OS::FileSystem::fileExists(filePath)) {
+                filePath = filesystem::path(env) / paramsDir / fileName;
+                if (!filePath.exists()) {
                     throw std::runtime_error(
                             "Could not find unwrap parameters file for " +
                             name);
@@ -61,8 +62,8 @@ public:
         }
 
         // read unwrap parameters from file
-        std::cout << "Loading unwrap parameters from " << filePath << std::endl;
-        cv::FileStorage fs(filePath, cv::FileStorage::READ);
+        std::cout << "Loading unwrap parameters from " << filePath.str() << std::endl;
+        cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
         unwrapper << fs;
         fs.release();
         return unwrapper;
