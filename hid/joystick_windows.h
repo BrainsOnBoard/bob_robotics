@@ -59,7 +59,7 @@ public:
     bool read(Event &js) override;
 };
 
-Joystick()
+Joystick::Joystick()
 {
     open();
 }
@@ -70,7 +70,7 @@ Joystick::Joystick(const JoystickHandler handler) : JoystickBase(handler)
 }
 
 void
-open()
+Joystick::open()
 {
     // Zeroise the state
     ZeroMemory(&_controllerState, sizeof(XINPUT_STATE));
