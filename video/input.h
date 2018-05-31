@@ -79,6 +79,11 @@ public:
         return false;
     }
 
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame)
+    {
+        return false;
+    }
+
     virtual cv::Size getOutputSize() const
     {
         return cv::Size();
