@@ -35,10 +35,8 @@ void buildFilter(cv::Mat &filter, float preferredAngle)
 }
 }   // Anonymous namespace
 
-int main(int argc, char *argv[])
+int main()
 {
-    const unsigned int device = (argc > 1) ? std::atoi(argv[1]) : 0;
-
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;
 
