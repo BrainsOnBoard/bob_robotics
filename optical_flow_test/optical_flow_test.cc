@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 {
     const unsigned int device = (argc > 1) ? std::atoi(argv[1]) : 0;
 
-    const cv::Size unwrapRes(180, 50);
+    const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;
 
     // Create panoramic camera and suitable unwrapper
