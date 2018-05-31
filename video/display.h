@@ -52,7 +52,7 @@ public:
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
             m_Unwrapper = std::unique_ptr<ImgProc::OpenCVUnwrap360>(
-                new ImgProc::OpenCVUnwrap360(videoInput.createDefaultUnwrapper(unwrapRes)));
+                new ImgProc::OpenCVUnwrap360(std::move(videoInput.createDefaultUnwrapper(unwrapRes))));
         }
     }
 
