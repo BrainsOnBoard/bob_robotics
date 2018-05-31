@@ -35,9 +35,6 @@ public:
  */
 Client::Client(const std::string host, int port)
 {
-    // Needed for Windows
-    WSAStartup();
-
     // Create socket
     setSocket(socket(AF_INET, SOCK_STREAM, 0));
 
@@ -65,7 +62,6 @@ Client::Client(const std::string host, int port)
 Client::~Client()
 {
     stop(); // stop thread if needed
-    WSACleanup(); // cleanup for Windows
 }
 
 /*

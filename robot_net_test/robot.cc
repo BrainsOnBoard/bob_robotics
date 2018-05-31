@@ -18,6 +18,7 @@
 
 // GeNN robotics includes
 #include "net/server.h"
+#include "os/net.h"
 #include "robots/motor.h"
 #include "video/panoramic.h"
 
@@ -30,6 +31,9 @@ using namespace GeNNRobotics;
 int
 main()
 {
+    // start networking API on Windows
+    WSAStartup();
+
     // listen for incoming connection on default port
     Net::Server server;
 
@@ -50,4 +54,7 @@ main()
 
     // run server on main thread
     server.run();
+
+    // shutdown networking API on Windows
+    WSACleanup();
 }

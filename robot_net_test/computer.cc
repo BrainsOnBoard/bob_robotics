@@ -13,6 +13,7 @@
 // GeNN robotics includes
 #include "hid/joystick.h"
 #include "net/client.h"
+#include "os/net.h"
 #include "robots/motor_netsink.h"
 #include "video/display.h"
 #include "video/netsource.h"
@@ -35,6 +36,9 @@ main(int argc, char **argv)
         }
     }
 
+    // start networking API on Windows
+    WSAStartup();
+
     // make connection to robot on default port
     Net::Client client(robotIP);
     client.runInBackground();
@@ -53,4 +57,7 @@ main(int argc, char **argv)
     // display video stream
     Video::Display display(video, 1240, 500);
     display.run(); // run until terminated
+
+    // shutdown networking API on Windows
+    WSACleanup();
 }

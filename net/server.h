@@ -41,9 +41,6 @@ Server::Server(int port)
     struct sockaddr_in addr;
     int on = 1;
 
-    // needed for Windows
-    WSAStartup();
-
     m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (m_ListenSocket == INVALID_SOCKET) {
         goto error;
@@ -84,9 +81,6 @@ Server::~Server()
     if (m_ListenSocket != INVALID_SOCKET) {
         close(m_ListenSocket);
     }
-
-    // needed for Windows
-    WSACleanup();
 }
 
 /*
