@@ -28,8 +28,11 @@ public:
     virtual ~Input()
     {}
 
-    virtual ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
+    template <typename... Ts>
+    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(Ts&&... args)
     {
+        cv::Size unwrapRes(std::forward<Ts>(args)...);
+
         // Create unwrapper
         ImgProc::OpenCVUnwrap360 unwrapper(getOutputSize(), unwrapRes);
 
@@ -50,8 +53,7 @@ public:
                 static const char *envVarName = "GENN_ROBOTICS_PATH";
                 const char *env = std::getenv(envVarName);
                 if (!env) {
-                    throw std::runtime_error(
-                            std::string(envVarName) +
+                    throw std::runtime_error(std::string(envVarName) +
                             " environment variable is not set and unwrap "
                             "parameters file could not be found locally");
                 }
