@@ -21,7 +21,11 @@ public:
     //----------------------------------------------------------------------------
     // Declared virtuals
     //----------------------------------------------------------------------------
-    virtual void tank(float left, float right) = 0;
+    virtual void tank(float left, float right)
+    {
+        std::cout << "Dummy motor: left: " << left << "; right: " << right
+                  << std::endl;
+    }
 
     void readFromNetwork(Net::Node &node)
     {
