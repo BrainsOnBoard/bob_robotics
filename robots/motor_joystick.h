@@ -21,7 +21,7 @@ public:
     MotorJoystick(Motor *motor)
       : m_Motor(motor)
     {
-        addHandler([=](HID::Event &js) { return joystickCallback(js); });
+        addHandler([this](HID::Event &js) { return joystickCallback(js); });
     }
 
 private:
