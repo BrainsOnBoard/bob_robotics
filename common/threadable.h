@@ -23,7 +23,7 @@ public:
 
     virtual void runInBackground()
     {
-        m_Thread = std::unique_ptr<std::thread>(new std::thread([=] { run(); }));
+        m_Thread = std::thread([this] { run(); });
     }
 
     virtual void stop()
@@ -34,17 +34,15 @@ public:
 
     virtual void waitToFinish()
     {
-        if (m_Thread) {
-            if (m_Thread->joinable()) {
-                m_Thread->join();
-            } else {
-                m_Thread->detach();
-            }
+        if (m_Thread.joinable()) {
+            m_Thread.join();
+        } else {
+            m_Thread.detach();
         }
     }
 
 private:
-    std::unique_ptr<std::thread> m_Thread;
+    std::thread m_Thread;
 
 protected:
     bool m_DoRun = true;

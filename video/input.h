@@ -103,7 +103,7 @@ protected:
     {}
 
 private:
-    std::unique_ptr<std::thread> m_ImageThread;
+    std::thread m_ImageThread;
 
     void onCommandReceived(Net::Node &node, Net::Command &command) override
     {
@@ -118,8 +118,7 @@ private:
                                getCameraName() + "\n");
 
         // start thread to transmit images in background
-        m_ImageThread = std::unique_ptr<std::thread>(
-                new std::thread([=](Net::Node *n) { runImageSink(n); }, &node));
+        m_ImageThread = std::thread([this](Net::Node *n) { runImageSink(n); }, &node);
     }
 
     std::string getHandledCommandName() const override
