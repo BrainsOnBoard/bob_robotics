@@ -95,7 +95,7 @@ main(int argc, char **argv)
         imshow("calibration", imorig);
 
         // read keypress in
-        int key = cv::waitKeyEx(1);
+        int key = cv::waitKeyEx(1) & OS::KeyMask;
 
         // no key pressed
         if (key == -1) {

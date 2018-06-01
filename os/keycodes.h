@@ -1,9 +1,15 @@
 #pragma once
 
+// C++ includes
+#include <limits>
+
 namespace GeNNRobotics {
 namespace OS {
-namespace KeyCodes {
+
 #ifdef _WIN32
+static const int KeyMask = std::numeric_limits<int>::max();
+
+namespace KeyCodes {
 enum Key
 {
     Left = 0x250000,
@@ -12,7 +18,11 @@ enum Key
     Down = 0x280000,
     Escape = 0x1b
 };
+} // KeyCodes
 #else
+static const int KeyMask = 0xffff;
+
+namespace KeyCodes {
 enum Key
 {
     Left = 0xff51,
@@ -21,7 +31,8 @@ enum Key
     Down,
     Escape = 0x1b
 };
-#endif
 } // KeyCodes
+#endif
+
 } // OS
 } // GeNNRobotics
