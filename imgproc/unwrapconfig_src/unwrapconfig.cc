@@ -1,7 +1,10 @@
+// windows.h
+#include "os/windows_include.h"
+
 // C++ includes
 #include <memory>
 
-// opencv
+// OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
