@@ -82,7 +82,7 @@ public:
 
     virtual cv::Size getOutputSize() const
     {
-        return cv::Size();
+        throw std::runtime_error("This camera does not support getting its resolution");
     }
 
     const virtual bool needsUnwrapping()
