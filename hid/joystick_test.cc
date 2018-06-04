@@ -33,11 +33,19 @@ int
 main()
 {
     std::cout << "Joystick test program" << std::endl;
-    std::cout << "Press return to quit" << std::endl
-              << std::endl;
+    std::cout << "Press return to quit" << std::endl << std::endl;
 
     Joystick joystick;
     std::cout << "Opened joystick" << std::endl;
+
+    // get initial axis states
+    for (int i = 0; i < static_cast<int>(JAxis::LENGTH); i++) {
+        JAxis axis = static_cast<JAxis>(i);
+        std::cout << "[initial] ";
+        onAxisEvent(axis, joystick.getAxisState(axis));
+    }
+
+    // add handlers for button and axis events
     joystick.addHandler(onAxisEvent);
     joystick.addHandler(onButtonEvent);
     joystick.runInBackground();

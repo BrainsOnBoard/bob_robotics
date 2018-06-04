@@ -53,6 +53,13 @@ public:
         if (m_Fd < 0) {
             throw std::runtime_error("Could not open joystick");
         }
+
+        // get initial states
+        while (read() && m_JsEvent.type & JS_EVENT_INIT) {
+            if (m_JsEvent.type & JS_EVENT_AXIS) {
+                setAxisState();
+            }
+        }
     }
 
     /*
@@ -61,6 +68,11 @@ public:
     ~Joystick()
     {
         ::close(m_Fd);
+    }
+
+    virtual float getAxisState(JAxis axis) const override
+    {
+        return m_AxisStates[static_cast<size_t>(axis)];
     }
 
     virtual void run() override
@@ -79,7 +91,8 @@ public:
             return false;
         }
 
-        if (m_JsEvent.type & JS_EVENT_AXIS) {
+        if (m_JsEvent.type == JS_EVENT_AXIS) {
+            setAxisState();
             raiseAxisEvent(static_cast<JAxis>(m_JsEvent.number), m_JsEvent.value);
         } else {
             raiseButtonEvent(static_cast<JButton>(m_JsEvent.number), m_JsEvent.value);
@@ -119,7 +132,8 @@ public:
     }
 
 private:
-    int m_Fd = 0;       // file descriptor for joystick device
+    int m_Fd = 0; // file descriptor for joystick device
+    std::array<float, static_cast<unsigned long>(JAxis::LENGTH)> m_AxisStates;
     js_event m_JsEvent; // struct to contain joystick event
     static constexpr float int16_maxf = static_cast<float>(std::numeric_limits<int16_t>::max());
     static constexpr float int16_absminf = -static_cast<float>(std::numeric_limits<int16_t>::min());
@@ -134,10 +148,15 @@ private:
                                          std::to_string(errno) + std::string(": ") +
                                          std::strerror(errno) + ")");
             }
-        } while (bytes && (m_JsEvent.type & JS_EVENT_INIT ||
-            (m_JsEvent.type == JS_EVENT_BUTTON && m_JsEvent.number > 10))); // ignore init events
+        } while (m_JsEvent.type & JS_EVENT_BUTTON && m_JsEvent.number > 10);
 
         return bytes > 0;
+    }
+
+    void setAxisState()
+    {
+        auto axis = m_JsEvent.number;
+        m_AxisStates[axis] = getAxisValue(static_cast<JAxis>(axis), m_JsEvent.value);
     }
 }; // Joystick
 } // HID

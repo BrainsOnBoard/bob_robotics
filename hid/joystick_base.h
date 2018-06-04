@@ -4,6 +4,7 @@
 #include <cstdint>
 
 // C++ includes
+#include <array>
 #include <functional>
 #include <string>
 #include <vector>
@@ -25,21 +26,24 @@ enum class JAxis
     LeftTrigger = 2,
     RightTrigger = 5,
     DpadHorizontal = 6,
-    DpadVertical = 7
+    DpadVertical = 7,
+    LENGTH
 };
 
 template <typename Joystick, typename JButton>
 class JoystickBase : public Threadable
 {
-using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
-using AxisHandler = std::function<bool(JAxis axis, float value)>;
+    using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+    using AxisHandler = std::function<bool(JAxis axis, float value)>;
 
 private:
     std::vector<ButtonHandler> m_ButtonHandlers;
     std::vector<AxisHandler> m_AxisHandlers;
 
 public:
+    // Virtual methods
     virtual bool update() = 0;
+    virtual float getAxisState(JAxis axis) const = 0;
 
     void addHandler(AxisHandler handler)
     {
@@ -113,7 +117,7 @@ public:
         case JButton::Down:
             return "down";
         default:
-            return "(unknown)";        
+            return "(unknown)";
         }
     }
 
