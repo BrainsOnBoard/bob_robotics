@@ -46,7 +46,7 @@ public:
         return m_CameraResolution;
     }
 
-    const bool needsUnwrapping() override
+    bool needsUnwrapping() const override
     {
         m_ParamsPromise.get_future().wait();
         return Input::needsUnwrapping();
@@ -72,7 +72,7 @@ private:
     std::vector<uchar> m_Buffer;
     std::mutex m_BufferMutex;
     bool m_NewFrame = false;
-    std::promise<void> m_ParamsPromise;
+    mutable std::promise<void> m_ParamsPromise;
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {

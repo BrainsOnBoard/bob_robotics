@@ -114,6 +114,14 @@ public:
         return true;
     }
 
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
+    {
+        if (outFrame.cols == 0) {
+            outFrame.create(getSuperPixelSize(), CV_8UC1);
+        }
+        return captureSuperPixelGreyscale(outFrame);
+    }
+
     virtual cv::Size getOutputSize() const override
     {
         return getSuperPixelSize();
@@ -435,7 +443,7 @@ public:
         return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
     }
 
-    const bool needsUnwrapping() override
+    bool needsUnwrapping() const override
     {
         return true;
     }

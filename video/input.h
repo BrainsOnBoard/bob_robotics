@@ -82,16 +82,34 @@ public:
 
     virtual cv::Size getOutputSize() const
     {
-        throw std::runtime_error("This camera does not support getting its resolution");
+        throw std::runtime_error("This camera does not allow you to get its resolution");
     }
 
-    const virtual bool needsUnwrapping()
+    virtual bool readFrame(cv::Mat &outFrame) = 0;
+
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame)
+    {
+        // If reading (RGB frame) was succesful
+        if(readFrame(m_IntermediateFrame)) {
+            // If output frame isn't correct size, create it
+            if(outFrame.size() != m_IntermediateFrame.size()) {
+                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
+            }
+
+            // Convert intermediate frame to greyscale
+            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    virtual bool needsUnwrapping() const
     {
         // only panoramic cameras are defined with the camera name specified
         return getCameraName() != DefaultCameraName;
     }
-
-    virtual bool readFrame(cv::Mat &outFrame) = 0;
 
     virtual void setOutputSize(const cv::Size &size)
     {
@@ -116,6 +134,7 @@ protected:
 
 private:
     std::thread m_ImageThread;
+    cv::Mat m_IntermediateFrame;    
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
