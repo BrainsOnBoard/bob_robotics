@@ -2,6 +2,12 @@
 
 // C includes
 #include <cstdint>
+#include <cstring>
+
+// C++ includes
+#include <iostream>
+#include <limits>
+#include <thread>
 
 // Linux includes
 #include <fcntl.h>
@@ -9,17 +15,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// C++ includes
-#include <iostream>
+// local includes
+#include "joystick_base.h"
 
 namespace GeNNRobotics {
 namespace HID {
-
 /*
  * Controller buttons. The left stick and right stick are also buttons (you can
  * click them.)
  */
-enum class Button
+enum class JButton
 {
     A = 0,
     B = 1,
@@ -35,31 +40,19 @@ enum class Button
     Left = 11,
     Right = 12,
     Up = 13,
-    Down = 14,
-    NOTBUTTON
+    Down = 14
 };
-} // HID
-} // GeNNRobotics
 
-#include "joystick_base.h"
-
-namespace GeNNRobotics {
-namespace HID {
-class Joystick : public JoystickBase
+class Joystick : public JoystickBase<Joystick, JButton>
 {
 public:
-    /*
-     * Open connection to controller. Return true if connected successfully,
-     * false otherwise.
-     */
     Joystick()
     {
-        open();
-    }
-
-    Joystick(const JoystickHandler handler) : JoystickBase(handler)
-    {
-        open();
+        // open joystick device
+        m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
+        if (m_Fd < 0) {
+            throw std::runtime_error("Could not open joystick");
+        }
     }
 
     /*
@@ -70,57 +63,81 @@ public:
         ::close(m_Fd);
     }
 
-    /*
-     * Read controller event into js struct. Returns true if read successfully,
-     * false if an error occurs.
-     */
-    bool read(Event &js) override
+    virtual void run() override
     {
         while (m_DoRun) {
-            const ssize_t bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
-            if (bytes > 0) {
-                break;
+            while (!update()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
             }
-            if (errno != EAGAIN) {
-                return false;
-            }
-
-            usleep(sleepmillis * 1000);
         }
-        if (!m_DoRun) {
+    }
+
+    virtual bool update() override
+    {
+        // see if a new event is in buffer
+        if (!read()) {
             return false;
         }
 
-        js.isInitial = m_JsEvent.type & JS_EVENT_INIT;
-        js.isAxis = (m_JsEvent.type & ~JS_EVENT_INIT) == JS_EVENT_AXIS;
-        js.number = m_JsEvent.number;
-
-        // if it's an axis event for the left or right stick, account for
-        // deadzone
-        if (js.isAxis && js.number >= (uint) Axis::LeftStickHorizontal &&
-            js.number <= (uint) Axis::RightStickVertical &&
-            abs(m_JsEvent.value) < deadzone) {
-            js.value = 0;
+        if (m_JsEvent.type & JS_EVENT_AXIS) {
+            raiseAxisEvent(static_cast<JAxis>(m_JsEvent.number), m_JsEvent.value);
         } else {
-            js.value = m_JsEvent.value;
+            raiseButtonEvent(static_cast<JButton>(m_JsEvent.number), m_JsEvent.value);
         }
-
         return true;
+    }
+
+    static float getAxisValue(JAxis axis, int16_t value)
+    {
+        switch (axis) {
+        case JAxis::LeftStickHorizontal:
+        case JAxis::LeftStickVertical:
+        case JAxis::RightStickHorizontal:
+        case JAxis::RightStickVertical:
+            if (value > 0) {
+                return static_cast<float>(value) / int16_maxf;
+            } else {
+                return static_cast<float>(value) / int16_absminf;
+            }
+        case JAxis::LeftTrigger:
+        case JAxis::RightTrigger:
+            return (static_cast<float>(value) + int16_absminf) /
+                   static_cast<float>(std::numeric_limits<uint16_t>::max());
+        case JAxis::DpadHorizontal:
+        case JAxis::DpadVertical:
+            switch (value) {
+            case std::numeric_limits<int16_t>::max():
+                return 1.0f;
+            case 0:
+                return 0.0f;
+            default:
+                return -1.0f;
+            }
+        default:
+            return std::numeric_limits<float>::quiet_NaN();
+        }
     }
 
 private:
     int m_Fd = 0;       // file descriptor for joystick device
     js_event m_JsEvent; // struct to contain joystick event
-    static const int16_t deadzone = 10000; // size of deadzone for axes (i.e.
-                                           // region within which not activated)
-    static const long sleepmillis = 25; // number of milliseconds between polls
+    static constexpr float int16_maxf = static_cast<float>(std::numeric_limits<int16_t>::max());
+    static constexpr float int16_absminf = -static_cast<float>(std::numeric_limits<int16_t>::min());
 
-    void open()
+    bool read()
     {
-        m_Fd = ::open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
-        if (m_Fd < 0) {
-            throw std::runtime_error("Could not open joystick");
-        }
+        ssize_t bytes;
+        do {
+            bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
+            if (errno && errno != EAGAIN) {
+                throw std::runtime_error("Error reading from joystick (" +
+                                         std::to_string(errno) + std::string(": ") +
+                                         std::strerror(errno) + ")");
+            }
+        } while (bytes && (m_JsEvent.type & JS_EVENT_INIT ||
+            (m_JsEvent.type == JS_EVENT_BUTTON && m_JsEvent.number > 10))); // ignore init events
+
+        return bytes > 0;
     }
 }; // Joystick
 } // HID

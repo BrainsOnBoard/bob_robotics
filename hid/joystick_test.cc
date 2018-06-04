@@ -5,26 +5,27 @@
 // local includes
 #include "joystick.h"
 
-using namespace GeNNRobotics;
+using namespace GeNNRobotics::HID;
 
 bool
-callback(HID::Event &js)
+onAxisEvent(JAxis axis, float value)
 {
-    if (js.isInitial) {
-        std::cout << "[initial] ";
-    }
+    std::string name = Joystick::getName(axis);
+    std::cout << "Axis " << name << " (" << static_cast<int>(axis) << "): "
+              << value << std::endl;
+    
+    // we handle all axis events
+    return true;
+}
 
-    if (js.isAxis) {
-        std::string name = js.axisName();
-        std::cout << "Axis " << name << " (" << js.number << "): "
-                  << js.value << std::endl;
-    } else {
-        std::string name = js.buttonName();
-        std::cout << "Button " << name << " (" << js.number << (js.value ? ") pushed" : ") released")
-                  << std::endl;
-    }
+bool
+onButtonEvent(JButton button, bool pressed)
+{
+    std::string name = Joystick::getName(button);
+    std::cout << "Button " << name << " (" << static_cast<int>(button)
+              << (pressed ? ") pushed" : ") released") << std::endl;
 
-    // we handle all buttons and axes, so return true
+    // we handle all button events
     return true;
 }
 
@@ -32,10 +33,13 @@ int
 main()
 {
     std::cout << "Joystick test program" << std::endl;
-    std::cout << "Press return to quit" << std::endl << std::endl;
+    std::cout << "Press return to quit" << std::endl
+              << std::endl;
 
-    HID::Joystick joystick(callback);
+    Joystick joystick;
     std::cout << "Opened joystick" << std::endl;
+    joystick.addHandler(onAxisEvent);
+    joystick.addHandler(onButtonEvent);
     joystick.runInBackground();
 
     // wait until keypress

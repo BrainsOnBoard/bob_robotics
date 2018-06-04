@@ -5,9 +5,6 @@
 
 // C++ includes
 #include <functional>
-#include <iostream>
-#include <limits>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -17,11 +14,9 @@
 namespace GeNNRobotics {
 namespace HID {
 /*
- * Controller axes. Note that the triggers are axes as is the dpad. The dpad is
- * slightly strange in that it's also treated as buttons (i.e. pressing up gives
- * both a button event and an axis event).
+ * Controller axes, including thumbsticks, triggers and D-pad.
  */
-enum class Axis
+enum class JAxis
 {
     LeftStickHorizontal = 0,
     LeftStickVertical = 1,
@@ -30,153 +25,121 @@ enum class Axis
     LeftTrigger = 2,
     RightTrigger = 5,
     DpadHorizontal = 6,
-    DpadVertical = 7,
-    NOTAXIS
+    DpadVertical = 7
 };
 
-struct Event
+template <typename Joystick, typename JButton>
+class JoystickBase : public Threadable
 {
-    unsigned int number;
-    int16_t value;
-    bool isAxis;
-    bool isInitial;
+using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+using AxisHandler = std::function<bool(JAxis axis, float value)>;
 
-    Axis axis() const
+private:
+    std::vector<ButtonHandler> m_ButtonHandlers;
+    std::vector<AxisHandler> m_AxisHandlers;
+
+public:
+    virtual bool update() = 0;
+
+    void addHandler(AxisHandler handler)
     {
-        return !isAxis ? Axis::NOTAXIS : static_cast<Axis>(number);
+        m_AxisHandlers.insert(m_AxisHandlers.begin(), handler);
     }
 
-    std::string axisName() const
+    void addHandler(ButtonHandler handler)
     {
-        switch (axis()) {
-        case Axis::LeftStickHorizontal:
+        m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
+    }
+
+    static std::string getName(JAxis axis)
+    {
+        switch (axis) {
+        case JAxis::LeftStickHorizontal:
             return "left stick horizontal";
-        case Axis::LeftStickVertical:
+        case JAxis::LeftStickVertical:
             return "left stick vertical";
-        case Axis::RightStickHorizontal:
+        case JAxis::RightStickHorizontal:
             return "right stick horizontal";
-        case Axis::RightStickVertical:
+        case JAxis::RightStickVertical:
             return "right stick vertical";
-        case Axis::LeftTrigger:
+        case JAxis::LeftTrigger:
             return "left trigger";
-        case Axis::RightTrigger:
+        case JAxis::RightTrigger:
             return "right trigger";
-        case Axis::DpadHorizontal:
+        case JAxis::DpadHorizontal:
             return "D-pad horizontal";
-        case Axis::DpadVertical:
+        case JAxis::DpadVertical:
             return "D-pad vertical";
-        case Axis::NOTAXIS:
-            return "(not axis)";
         default:
             return "(unknown)";
         }
     }
 
-    float axisValue() const
-    {
-        if (isAxis) {
-            return static_cast<float>(value) /
-                    static_cast<float>(std::numeric_limits<int16_t>::max());
-        } else {
-            return std::numeric_limits<float>::quiet_NaN();
-        }
-    }
-
-    Button button() const
-    {
-        return isAxis ? Button::NOTBUTTON : static_cast<Button>(number);
-    }
-
-    std::string buttonName() const
+    static std::string getName(JButton button)
     {
         // these values should be defined before this header is included
-        switch (button()) {
-        case Button::A:
+        switch (button) {
+        case JButton::A:
             return "A";
-        case Button::B:
+        case JButton::B:
             return "B";
-        case Button::X:
+        case JButton::X:
             return "X";
-        case Button::Y:
+        case JButton::Y:
             return "Y";
-        case Button::LB:
+        case JButton::LB:
             return "LB";
-        case Button::RB:
+        case JButton::RB:
             return "RB";
-        case Button::Back:
+        case JButton::Back:
             return "back";
-        case Button::Start:
+        case JButton::Start:
             return "start";
 #ifndef _WIN32
         // this button is not available in Windows
-        case Button::Xbox:
+        case JButton::Xbox:
             return "Xbox";
 #endif
-        case Button::LeftStick:
+        case JButton::LeftStick:
             return "left stick";
-        case Button::RightStick:
+        case JButton::RightStick:
             return "right stick";
-        case Button::Left:
+        case JButton::Left:
             return "left";
-        case Button::Right:
+        case JButton::Right:
             return "right";
-        case Button::Up:
+        case JButton::Up:
             return "up";
-        case Button::Down:
+        case JButton::Down:
             return "down";
-        case Button::NOTBUTTON:
-            return "(not button)";
         default:
             return "(unknown)";        
         }
-    }
-};
-
-// For callbacks when a controller event occurs (button is pressed, axis moves)
-using JoystickHandler = std::function<bool(Event &)>;
-
-class JoystickBase : public Threadable
-{
-private:
-    std::vector<JoystickHandler> m_Handlers;
-    Event m_JsEvent;
-
-public:
-    virtual bool read(Event &js) = 0;
-
-    bool read()
-    {
-        return read(m_JsEvent);
-    }
-
-    void run() override
-    {
-        if (m_Handlers.size() == 0) {
-            throw std::runtime_error("No handlers for joystick set");
-        }
-
-        while (read()) {
-            for (auto handler : m_Handlers) {
-                if (handler(m_JsEvent)) {
-                    break;
-                }
-            }
-        }
-
-        // std::cerr << "Error reading from joystick" << std::endl;
-    }
-
-    void addHandler(const JoystickHandler handler)
-    {
-        m_Handlers.insert(m_Handlers.begin(), handler);
     }
 
 protected:
     JoystickBase()
     {}
 
-    JoystickBase(const JoystickHandler handler) : m_Handlers({ handler })
-    {}
+    void raiseAxisEvent(JAxis axis, int16_t value)
+    {
+        float fvalue = Joystick::getAxisValue(axis, value);
+        for (auto handler : m_AxisHandlers) {
+            if (handler(axis, fvalue)) {
+                break;
+            }
+        }
+    }
+
+    void raiseButtonEvent(JButton button, bool pressed)
+    {
+        for (auto handler : m_ButtonHandlers) {
+            if (handler(button, pressed)) {
+                break;
+            }
+        }
+    }
+
 }; // JoystickBase
 } // HID
 } // GeNNRobotics
