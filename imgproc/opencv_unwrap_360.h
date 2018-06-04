@@ -7,11 +7,11 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+//----------------------------------------------------------------------------
+// GeNNRobotics::ImgProc::OpenCVUnwrap360
+//----------------------------------------------------------------------------
 namespace GeNNRobotics {
 namespace ImgProc {
-//----------------------------------------------------------------------------
-// OpenCVUnwrap360
-//----------------------------------------------------------------------------
 class OpenCVUnwrap360
 {
 public:
@@ -109,8 +109,9 @@ public:
     /*
      * Serialise this object.
      */
-    OpenCVUnwrap360 &operator>>(cv::FileStorage &fs)
+    void write(cv::FileStorage& fs) const
     {
+        fs << "{";
         // centre
         cv::Point2d centre = {
             (double) m_CentrePixel.x / (double) m_CameraResolution.width,
@@ -127,8 +128,7 @@ public:
         // other
         fs << "offsetDegrees" << m_OffsetDegrees;
         fs << "flip" << m_Flip;
-
-        return *this;
+        fs << "}";
     }
 
     /*
@@ -136,7 +136,7 @@ public:
      * 
      * **TODO**: Check that we are actually reading values from the file
      */
-    cv::FileStorage &operator<<(cv::FileStorage &fs)
+    void read(const cv::FileNode &node)
     {
         /*
          * We need to already know the camera resolution otherwise we won't be
@@ -147,16 +147,16 @@ public:
         
         // centre
         std::vector<double> centre(2);
-        fs["centre"] >> centre;
+        node["centre"] >> centre;
 
         // inner and outer radius
-        double inner = (double) fs["inner"];
-        double outer = (double) fs["outer"];
+        double inner = (double) node["inner"];
+        double outer = (double) node["outer"];
 
         // other params
-        int offsetDegrees = (int) fs["offsetDegrees"];
+        int offsetDegrees = (int) node["offsetDegrees"];
         bool flip;
-        fs["flip"] >> flip;
+        node["flip"] >> flip;
 
         // create our unwrap maps
         create(m_CameraResolution,
@@ -167,8 +167,6 @@ public:
                outer,
                offsetDegrees,
                flip);
-        
-        return fs;
     }
 
     // Public members
@@ -186,5 +184,22 @@ private:
     cv::Mat m_UnwrapMapX;
     cv::Mat m_UnwrapMapY;
 }; // OpenCVUnwrap360
+
+inline void write(cv::FileStorage &fs, const std::string&, const OpenCVUnwrap360 &config)
+{
+    config.write(fs);
+}
+
+inline void read(const cv::FileNode &node, OpenCVUnwrap360 &x, OpenCVUnwrap360 defaultValue = OpenCVUnwrap360())
+{
+    if(node.empty()) {
+        x = defaultValue;
+    }
+    else {
+        x.read(node);
+    }
+}
+
+
 }  // ImgProc
 }  // GeNNRobotics
