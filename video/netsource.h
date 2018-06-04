@@ -1,6 +1,7 @@
 #pragma once
 
 // C++ includes
+#include <future>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -9,7 +10,6 @@
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "../common/semaphore.h"
 #include "../net/node.h"
 
 // local includes
@@ -48,7 +48,7 @@ public:
 
     const bool needsUnwrapping() override
     {
-        m_ParamsSemaphore.waitOnce();
+        m_ParamsPromise.get_future().wait();
         return Input::needsUnwrapping();
     }
 
@@ -72,7 +72,7 @@ private:
     std::vector<uchar> m_Buffer;
     std::mutex m_BufferMutex;
     bool m_NewFrame = false;
-    Semaphore m_ParamsSemaphore;
+    std::promise<void> m_ParamsPromise;
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
@@ -80,7 +80,7 @@ private:
             m_CameraResolution.width = stoi(command[2]);
             m_CameraResolution.height = stoi(command[3]);
             m_CameraName = command[4];
-            m_ParamsSemaphore.notify();
+            m_ParamsPromise.set_value();
         } else if (command[1] == "FRAME") {
             std::lock_guard<std::mutex> guard(m_BufferMutex);
             size_t nbytes = stoi(command[2]);

@@ -74,13 +74,13 @@ public:
 
         cv::Mat frame, unwrapped;
         while (m_DoRun) {
-            readNextFrame(frame);
-
-            if (m_Unwrapper && m_ShowUnwrapped) {
-                m_Unwrapper->unwrap(frame, unwrapped);
-                cv::imshow(WINDOW_NAME, unwrapped);
-            } else {
-                cv::imshow(WINDOW_NAME, frame);
+            if (readNextFrame(frame)) {
+                if (m_Unwrapper && m_ShowUnwrapped) {
+                    m_Unwrapper->unwrap(frame, unwrapped);
+                    cv::imshow(WINDOW_NAME, unwrapped);
+                } else {
+                    cv::imshow(WINDOW_NAME, frame);
+                }
             }
 
             switch (cv::waitKeyEx(1)) {
@@ -98,11 +98,9 @@ protected:
     Input *m_VideoInput;
     bool m_ShowUnwrapped = false;
 
-    virtual void readNextFrame(cv::Mat &frame)
+    virtual bool readNextFrame(cv::Mat &frame)
     {
-        if (!m_VideoInput->readFrame(frame)) {
-            throw std::runtime_error("Error reading from video input");
-        }
+        return m_VideoInput->readFrame(frame);
     }
 }; // Display
 } // Video
