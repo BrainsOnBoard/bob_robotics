@@ -45,6 +45,13 @@ main()
         onAxisEvent(axis, joystick.getAxisState(axis));
     }
 
+    // get initial button states
+    for (int i = 0; i < static_cast<int>(JButton::LENGTH); i++) {
+        JButton button = static_cast<JButton>(i);
+        std::cout << "[initial] ";
+        onButtonEvent(button, joystick.isButtonDown(button));
+    }
+
     // add handlers for button and axis events
     joystick.addHandler(onAxisEvent);
     joystick.addHandler(onButtonEvent);

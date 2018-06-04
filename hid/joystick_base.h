@@ -30,7 +30,14 @@ enum class JAxis
     LENGTH
 };
 
-template <typename Joystick, typename JButton>
+enum ButtonState
+{
+    StateDown = (1 << 0),
+    StatePressed = (1 << 1),
+    StateReleased = (1 << 2)
+};
+
+template<typename Joystick, typename JButton>
 class JoystickBase : public Threadable
 {
     using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
@@ -53,6 +60,26 @@ public:
     void addHandler(ButtonHandler handler)
     {
         m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
+    }
+
+    unsigned char getButtonState(JButton button) const
+    {
+        return m_ButtonState[static_cast<size_t>(button)];
+    }
+
+    bool isButtonDown(JButton button) const
+    {
+        return getButtonState(button) & StateDown;
+    }
+
+    bool isButtonPressed(JButton button) const
+    {
+        return getButtonState(button) & StatePressed;
+    }
+
+    bool isButtonReleased(JButton button) const
+    {
+        return getButtonState(button) & StateReleased;
     }
 
     static std::string getName(JAxis axis)
@@ -122,6 +149,8 @@ public:
     }
 
 protected:
+    std::array<unsigned char, static_cast<unsigned long>(JButton::LENGTH)> m_ButtonState;
+
     JoystickBase()
     {}
 

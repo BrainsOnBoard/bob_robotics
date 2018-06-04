@@ -40,7 +40,8 @@ enum class JButton
     Left = 11,
     Right = 12,
     Up = 13,
-    Down = 14
+    Down = 14,
+    LENGTH
 };
 
 class Joystick : public JoystickBase<Joystick, JButton>
@@ -58,6 +59,9 @@ public:
         while (read() && m_JsEvent.type & JS_EVENT_INIT) {
             if (m_JsEvent.type & JS_EVENT_AXIS) {
                 setAxisState();
+            } else {
+                // initially set button values to either Down (1) or 0
+                m_ButtonState[m_JsEvent.number] = m_JsEvent.value;
             }
         }
     }
@@ -72,7 +76,7 @@ public:
 
     virtual float getAxisState(JAxis axis) const override
     {
-        return m_AxisStates[static_cast<size_t>(axis)];
+        return m_AxisState[static_cast<size_t>(axis)];
     }
 
     virtual void run() override
@@ -92,9 +96,27 @@ public:
         }
 
         if (m_JsEvent.type == JS_EVENT_AXIS) {
+            // update current axis's state
             setAxisState();
+
+            // run axis event handlers
             raiseAxisEvent(static_cast<JAxis>(m_JsEvent.number), m_JsEvent.value);
         } else {
+            // unset Pressed and Released bits for buttons
+            for (auto &s : m_ButtonState) {
+                s &= StateDown;
+            }
+
+            // update current button's state
+            uint8_t &s = m_ButtonState[m_JsEvent.number];
+            if (m_JsEvent.value) {
+                s |= (StateDown | StatePressed); // set StateDown and StatePressed
+            } else {                
+                s &= ~StateDown;    // clear StateDown
+                s |= StateReleased; // set StateReleased
+            }
+
+            // run button event handlers
             raiseButtonEvent(static_cast<JButton>(m_JsEvent.number), m_JsEvent.value);
         }
         return true;
@@ -133,10 +155,8 @@ public:
 
 private:
     int m_Fd = 0; // file descriptor for joystick device
-    std::array<float, static_cast<unsigned long>(JAxis::LENGTH)> m_AxisStates;
+    std::array<float, static_cast<unsigned long>(JAxis::LENGTH)> m_AxisState;
     js_event m_JsEvent; // struct to contain joystick event
-    static constexpr float int16_maxf = static_cast<float>(std::numeric_limits<int16_t>::max());
-    static constexpr float int16_absminf = -static_cast<float>(std::numeric_limits<int16_t>::min());
 
     bool read()
     {
@@ -148,6 +168,7 @@ private:
                                          std::to_string(errno) + std::string(": ") +
                                          std::strerror(errno) + ")");
             }
+            // ignore D-pad button events; handled as axis events
         } while (m_JsEvent.type & JS_EVENT_BUTTON && m_JsEvent.number > 10);
 
         return bytes > 0;
@@ -156,8 +177,11 @@ private:
     void setAxisState()
     {
         auto axis = m_JsEvent.number;
-        m_AxisStates[axis] = getAxisValue(static_cast<JAxis>(axis), m_JsEvent.value);
+        m_AxisState[axis] = getAxisValue(static_cast<JAxis>(axis), m_JsEvent.value);
     }
+
+    static constexpr float int16_maxf = static_cast<float>(std::numeric_limits<int16_t>::max());
+    static constexpr float int16_absminf = -static_cast<float>(std::numeric_limits<int16_t>::min());
 }; // Joystick
 } // HID
 } // GeNNRobotics
