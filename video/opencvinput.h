@@ -1,7 +1,12 @@
 #pragma once
 
+// C++ includes
+#include <stdexcept>
+
+// OpenCV
 #include <opencv2/opencv.hpp>
 
+// local includes
 #include "input.h"
 
 #define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
@@ -49,8 +54,16 @@ public:
 
     bool readFrame(cv::Mat &outFrame) override
     {
+        // Read frame
         (*this) >> outFrame;
-        return outFrame.cols != 0;
+
+        // An empty frame means an error has occurred
+        if (outFrame.cols == 0) {
+            throw std::runtime_error("Could not read frame");
+        }
+
+        // If there's no error, then we have updated frame and so return true        
+        return true;
     }
 
     void setOutputSize(const cv::Size &outSize) override

@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <chrono>
 #include <numeric>
+#include <stdexcept>
 #include <thread>
 
 // OpenCV includes
@@ -99,10 +100,18 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
+        // If outFrame is empty, first make it the appropriate size
         if (outFrame.cols == 0) {
             outFrame.create(getSuperPixelSize(), CV_8UC3);
         }
-        return captureSuperPixelWBU30(outFrame);
+        
+        // Try to read from camera and throw error if it fails
+        if (!captureSuperPixelWBU30(outFrame)) {
+            throw std::runtime_error("Could not read from See3Cam");
+        }
+
+        // If there's no error, then we have updated frame and so return true
+        return true;
     }
 
     virtual cv::Size getOutputSize() const override

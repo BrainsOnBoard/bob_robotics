@@ -26,12 +26,12 @@ public:
     NetSource(Net::Node &node)
     {
         // handle incoming IMG commands
-        node.addCommandHandler("IMG", [this] (Net::Node &node, const Net::Command &command) {
+        node.addCommandHandler("IMG", [this](Net::Node &node, const Net::Command &command) {
             onCommandReceived(node, command);
         });
 
         // when connected, send command to start streaming
-        node.addConnectedHandler([this] (Net::Node &node) {
+        node.addConnectedHandler([](Net::Node &node) {
             node.getSocket()->send("IMG START\n");
         });
     }
@@ -54,8 +54,14 @@ public:
 
     bool readFrame(cv::Mat &frame) override
     {
-        m_ReadSemaphore.wait();
         std::lock_guard<std::mutex> guard(m_BufferMutex);
+
+        // The return value indicates whether there is a new frame or not
+        if (!m_NewFrame) {
+            return false;
+        }
+
+        // Decode the JPEG stored in the buffer
         cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &frame);
         return true;
     }
@@ -65,7 +71,8 @@ private:
     cv::Size m_CameraResolution;
     std::vector<uchar> m_Buffer;
     std::mutex m_BufferMutex;
-    Semaphore m_ParamsSemaphore, m_ReadSemaphore;
+    bool m_NewFrame = false;
+    Semaphore m_ParamsSemaphore;
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
@@ -79,7 +86,7 @@ private:
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
             node.getSocket()->read(m_Buffer.data(), nbytes);
-            m_ReadSemaphore.notify();
+            m_NewFrame = true;
         } else {
             throw Net::bad_command_error();
         }
