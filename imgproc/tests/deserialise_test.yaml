@@ -1,8 +1,8 @@
 %YAML:1.0
 ---
-unwrappedResolution: [ 1280, 400 ]
-centre: [ 4.5468750000000002e-01, 2.0499999999999999e-01 ]
-inner: 8.7499999999999994e-02
-outer: 1.9000000000000000e-01
-offsetDegrees: 0
-flip: 0
+unwrapper:
+    centre: [ 4.5468750000000002e-01, 2.0499999999999999e-01 ]
+    inner: 8.7499999999999994e-02
+    outer: 1.9000000000000000e-01
+    offsetDegrees: 0
+    flip: 0

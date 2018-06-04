@@ -70,7 +70,7 @@ public:
         // read unwrap parameters from file
         std::cout << "Loading unwrap parameters from " << filePath.str() << std::endl;
         cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
-        unwrapper << fs;
+        fs["unwrapper"] >> unwrapper;
         fs.release();
         return unwrapper;
     }
