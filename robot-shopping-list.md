@@ -27,5 +27,5 @@ Jetson port)
 * 3xPP9 battery clips (one for mains power, 2 for battery)
 * 4x50mm long M3 stand-offs
 * 4x40mm long M3 stand-offs
-* Parallax robot kit with arduino shield
+* Parallax robot kit with arduino shield - https://www.parallax.com/product/32335
 
