@@ -74,7 +74,7 @@ public:
         ::close(m_Fd);
     }
 
-    virtual float getAxisState(JAxis axis) const override
+    virtual float getState(JAxis axis) const override
     {
         return m_AxisState[static_cast<size_t>(axis)];
     }
@@ -100,7 +100,7 @@ public:
             setAxisState();
 
             // run axis event handlers
-            raiseAxisEvent(static_cast<JAxis>(m_JsEvent.number), m_JsEvent.value);
+            raiseEvent(static_cast<JAxis>(m_JsEvent.number), m_JsEvent.value);
         } else {
             // unset Pressed and Released bits for buttons
             for (auto &s : m_ButtonState) {
@@ -117,7 +117,7 @@ public:
             }
 
             // run button event handlers
-            raiseButtonEvent(static_cast<JButton>(m_JsEvent.number), m_JsEvent.value);
+            raiseEvent(static_cast<JButton>(m_JsEvent.number), m_JsEvent.value);
         }
         return true;
     }

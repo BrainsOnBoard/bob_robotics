@@ -50,7 +50,7 @@ private:
 public:
     // Virtual methods
     virtual bool update() = 0;
-    virtual float getAxisState(JAxis axis) const = 0;
+    virtual float getState(JAxis axis) const = 0;
 
     void addHandler(AxisHandler handler)
     {
@@ -62,24 +62,24 @@ public:
         m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
     }
 
-    unsigned char getButtonState(JButton button) const
+    unsigned char getState(JButton button) const
     {
         return m_ButtonState[static_cast<size_t>(button)];
     }
 
-    bool isButtonDown(JButton button) const
+    bool isDown(JButton button) const
     {
-        return getButtonState(button) & StateDown;
+        return getState(button) & StateDown;
     }
 
-    bool isButtonPressed(JButton button) const
+    bool isPressed(JButton button) const
     {
-        return getButtonState(button) & StatePressed;
+        return getState(button) & StatePressed;
     }
 
-    bool isButtonReleased(JButton button) const
+    bool isReleased(JButton button) const
     {
-        return getButtonState(button) & StateReleased;
+        return getState(button) & StateReleased;
     }
 
     static std::string getName(JAxis axis)
@@ -154,7 +154,7 @@ protected:
     JoystickBase()
     {}
 
-    void raiseAxisEvent(JAxis axis, int16_t value)
+    void raiseEvent(JAxis axis, int16_t value)
     {
         float fvalue = Joystick::getAxisValue(axis, value);
         for (auto handler : m_AxisHandlers) {
@@ -164,7 +164,7 @@ protected:
         }
     }
 
-    void raiseButtonEvent(JButton button, bool pressed)
+    void raiseEvent(JButton button, bool pressed)
     {
         for (auto handler : m_ButtonHandlers) {
             if (handler(button, pressed)) {

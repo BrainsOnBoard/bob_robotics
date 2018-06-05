@@ -42,14 +42,14 @@ main()
     for (int i = 0; i < static_cast<int>(JAxis::LENGTH); i++) {
         JAxis axis = static_cast<JAxis>(i);
         std::cout << "[initial] ";
-        onAxisEvent(axis, joystick.getAxisState(axis));
+        onAxisEvent(axis, joystick.getState(axis));
     }
 
     // get initial button states
     for (int i = 0; i < static_cast<int>(JButton::LENGTH); i++) {
         JButton button = static_cast<JButton>(i);
         std::cout << "[initial] ";
-        onButtonEvent(button, joystick.isButtonDown(button));
+        onButtonEvent(button, joystick.isDown(button));
     }
 
     // add handlers for button and axis events
