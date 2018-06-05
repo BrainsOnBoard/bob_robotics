@@ -4,9 +4,11 @@
 #include "modelSpec.h"
 
 //----------------------------------------------------------------------------
-// AlphaCurr
+// GeNNRobotics::GeNNModels::AlphaCurr
 //----------------------------------------------------------------------------
 //! Current-based synapse model with alpha shaping
+namespace GeNNRobotics {
+namespace GeNNModels {
 class AlphaCurr : public PostsynapticModels::Base
 {
 public:
@@ -27,3 +29,5 @@ public:
         {"init", [](const vector<double> &pars, double){ return (std::exp(1) / pars[0]); }}});
 };
 IMPLEMENT_MODEL(AlphaCurr);
+} // GeNNModels
+} // GeNNRobotics
