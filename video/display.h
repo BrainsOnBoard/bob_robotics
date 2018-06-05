@@ -10,8 +10,10 @@
  */
 
 // C++ includes
+#include <chrono>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -38,19 +40,24 @@ public:
       : m_VideoInput(&videoInput)
     {}
 
+    virtual ~Display()
+    {
+        close();
+    }
+
     /*
      * Create a new display with unwrapping enabled if the Video::Input supports
      * it.
      */
-    template <typename... Ts>
-    Display(Input &videoInput, Ts&&... unwrapRes)
+    template<typename... Ts>
+    Display(Input &videoInput, Ts &&... unwrapRes)
       : m_VideoInput(&videoInput)
     {
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
             auto unwrapper = videoInput.createDefaultUnwrapper(std::forward<Ts>(unwrapRes)...);
             m_Unwrapper = std::unique_ptr<ImgProc::OpenCVUnwrap360>(
-                new ImgProc::OpenCVUnwrap360(std::move(unwrapper)));
+                    new ImgProc::OpenCVUnwrap360(std::move(unwrapper)));
         }
     }
 
@@ -58,50 +65,78 @@ public:
      * Create a new display from a std::unique_ptr to Input (e.g. from
      * getPanoramicCamera()).
      */
-    template <typename... Ts>
-    Display(std::unique_ptr<Input> &videoInput, Ts&&... unwrapRes)
+    template<typename... Ts>
+    Display(std::unique_ptr<Input> &videoInput, Ts &&... unwrapRes)
       : Display(*videoInput.get(), std::forward<Ts>(unwrapRes)...)
     {}
+
+    bool isOpen() const
+    {
+        return m_Open;
+    }
 
     /*
      * Run the display on the main thread.
      */
     void run() override
     {
-        // set opencv window to display full screen
-        cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
-        setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
 
         cv::Mat frame, unwrapped;
         while (m_DoRun) {
-            if (readNextFrame(frame)) {
-                if (m_Unwrapper && m_ShowUnwrapped) {
-                    m_Unwrapper->unwrap(frame, unwrapped);
-                    cv::imshow(WINDOW_NAME, unwrapped);
-                } else {
-                    cv::imshow(WINDOW_NAME, frame);
-                }
-            }
-
-            switch (cv::waitKeyEx(1)) {
-                case 'u': // toggle unwrapping
-                    m_ShowUnwrapped = !m_ShowUnwrapped;
-                    break;
-                case OS::KeyCodes::Escape:
-                    m_DoRun = false;
+            // poll the camera until we get a new frame
+            while (!update()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(25));
             }
         }
     }
 
+    bool update()
+    {
+        if (!m_Open) {
+            // set opencv window to display full screen
+            cv::namedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
+            setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+            m_Open = true;
+        }
+
+        bool newframe = m_VideoInput->readFrame(m_Frame);
+        if (newframe) {
+            // display the frame on screen, unwrapping if requested
+            if (m_Unwrapper && m_ShowUnwrapped) {
+                m_Unwrapper->unwrap(m_Frame, m_Unwrapped);
+                cv::imshow(WINDOW_NAME, m_Unwrapped);
+            } else {
+                cv::imshow(WINDOW_NAME, m_Frame);
+            }
+        }
+
+        // get keyboard input
+        switch (cv::waitKeyEx(1)) {
+        case 'u': // toggle unwrapping
+            m_ShowUnwrapped = !m_ShowUnwrapped;
+            break;
+        case OS::KeyCodes::Escape:
+            close();
+        }
+
+        return newframe;
+    }
+
+    virtual void close()
+    {
+        if (m_Open) {
+            cv::destroyWindow(WINDOW_NAME);
+            m_DoRun = false;
+            m_Open = false;
+        }
+    }
+
 protected:
+    bool m_Open = false;
+    cv::Mat m_Frame, m_Unwrapped;
+    bool m_ShowUnwrapped = false;
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     Input *m_VideoInput;
-    bool m_ShowUnwrapped = false;
-
-    virtual bool readNextFrame(cv::Mat &frame)
-    {
-        return m_VideoInput->readFrame(frame);
-    }
 }; // Display
 } // Video
 } // GeNNRobotics
