@@ -9,7 +9,7 @@ Silicon highway
 ===============
 * Orbitty carrier - 
 http://www.siliconhighwaydirect.co.uk/product-p/asg003.htm
-
+* Jetson TX1 or TX2 - http://www.siliconhighwaydirect.co.uk/product-p/900-82180-0001-000.htm or http://www.siliconhighwaydirect.co.uk/product-p/900-83310-0001-000.htm respetively
 CPC
 ===
 * 10xAA battery clip - BT03718 	23VB103B 	PRO POWER  23VB103B  10x AA 
