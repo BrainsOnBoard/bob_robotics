@@ -135,14 +135,6 @@ public:
             return "left stick";
         case JButton::RightStick:
             return "right stick";
-        case JButton::Left:
-            return "left";
-        case JButton::Right:
-            return "right";
-        case JButton::Up:
-            return "up";
-        case JButton::Down:
-            return "down";
         default:
             return "(unknown)";
         }

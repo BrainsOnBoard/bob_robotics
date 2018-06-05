@@ -37,10 +37,6 @@ enum class JButton
     Xbox = 8,
     LeftStick = 9,
     RightStick = 10,
-    Left = 11,
-    Right = 12,
-    Up = 13,
-    Down = 14,
     LENGTH
 };
 
