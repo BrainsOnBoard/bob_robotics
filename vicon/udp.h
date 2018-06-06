@@ -163,9 +163,9 @@ public:
 #ifdef _WIN32
         DWORD timeout = 1000;
 #else
-        timeval timeout = {
-            .tv_sec = 1,
-            .tv_usec = 0 };
+        timeval timeout;
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
 #endif
         if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
             std::cerr << "Cannot set socket timeout: " << strerror(errno) << std::endl;
@@ -173,10 +173,11 @@ public:
         }
 
         // Create socket address structure
-        sockaddr_in localAddress = {
-            .sin_family = AF_INET,
-            .sin_port = htons(port),
-            .sin_addr = { .s_addr = htonl(INADDR_ANY) }};
+        sockaddr_in localAddress;
+        memset(&localAddress, 0, sizeof(sockaddr_in));
+        localAddress.sin_family = AF_INET;
+        localAddress.sin_port = htons(port);
+        localAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 
         // Bind socket to local port
         if(bind(socket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) < 0) {

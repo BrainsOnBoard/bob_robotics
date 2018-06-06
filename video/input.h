@@ -68,7 +68,7 @@ public:
         // read unwrap parameters from file
         std::cout << "Loading unwrap parameters from " << filePath.str() << std::endl;
         cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
-        unwrapper << fs;
+        fs["unwrapper"] >> unwrapper;
         fs.release();
         return unwrapper;
     }
@@ -83,13 +83,31 @@ public:
         return cv::Size();
     }
 
+    virtual bool readFrame(cv::Mat &outFrame) = 0;
+
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame)
+    {
+        // If reading (RGB frame) was succesful
+        if(readFrame(m_IntermediateFrame)) {
+            // If output frame isn't correct size, create it
+            if(outFrame.size() != m_IntermediateFrame.size()) {
+                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
+            }
+
+            // Convert intermediate frame to greyscale
+            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     virtual bool needsUnwrapping()
     {
         // only panoramic cameras are defined with the camera name specified
         return getCameraName() != DefaultCameraName;
     }
-
-    virtual bool readFrame(cv::Mat &outFrame) = 0;
 
     virtual void setOutputSize(const cv::Size &outSize)
     {}
@@ -103,6 +121,7 @@ protected:
     {}
 
 private:
+    cv::Mat m_IntermediateFrame;
     std::unique_ptr<std::thread> m_ImageThread;
 
     void onCommandReceived(Net::Node &node, Net::Command &command) override

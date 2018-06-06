@@ -3,20 +3,20 @@
 #include <memory>
 
 // GeNNRobotics includes
-#include "common/opencv_unwrap_360.h"
+#include "imgproc/opencv_unwrap_360.h"
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     // create unwrapper object for a camera of specified resolution
     cv::Size cameraResolution(1280, 400);
-    OpenCVUnwrap360 unwrapper(cameraResolution);
+    cv::Size unwrapResolution(180, 50);
+    GeNNRobotics::ImgProc::OpenCVUnwrap360 unwrapper(cameraResolution, unwrapResolution);
 
     // open file containing unwrap params
     cv::FileStorage fs("deserialise_test.yaml", cv::FileStorage::READ);
 
-    // read params from file
-    unwrapper << fs;
+    // read params from root node of file
+    fs["unwrapper"] >> unwrapper;
 
     // close file
     fs.release();

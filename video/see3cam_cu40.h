@@ -110,6 +110,14 @@ public:
         return captureSuperPixelWBU30(outFrame);
     }
 
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
+    {
+        if (outFrame.cols == 0) {
+            outFrame.create(getSuperPixelSize(), CV_8UC1);
+        }
+        return captureSuperPixelGreyscale(outFrame);
+    }
+
     virtual cv::Size getOutputSize() const override
     {
         return getSuperPixelSize();

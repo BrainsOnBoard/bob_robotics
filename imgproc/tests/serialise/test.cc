@@ -2,20 +2,20 @@
 #include <iostream>
 
 // GeNNRobotics includes
-#include "common/opencv_unwrap_360.h"
+#include "imgproc/opencv_unwrap_360.h"
 
 int
 main(int argc, char **argv)
 {
     // create new unwrapper with desired params
-    OpenCVUnwrap360 unwrapper(cv::Size(1280, 720),
-                              cv::Size(1280, 400),
-                              0.45468750000000002,
-                              0.20499999999999999,
-                              0.087499999999999994,
-                              0.19,
-                              0,
-                              false);
+    GeNNRobotics::ImgProc::OpenCVUnwrap360 unwrapper(cv::Size(1280, 720),
+                                                     cv::Size(1280, 400),
+                                                     0.45468750000000002,
+                                                     0.20499999999999999,
+                                                     0.087499999999999994,
+                                                     0.19,
+                                                     0,
+                                                     false);
 
     // open file for writing
     const std::string fileName = "serialise_test.yaml";
@@ -23,7 +23,7 @@ main(int argc, char **argv)
     cv::FileStorage fs(fileName, cv::FileStorage::WRITE);
 
     // write unwrap parameters to file
-    unwrapper >> fs;
+    fs << "unwrapper" << unwrapper;
 
     // close file
     fs.release();

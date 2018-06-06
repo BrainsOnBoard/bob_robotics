@@ -167,7 +167,7 @@ main(int argc, char **argv)
                 pcam->getCameraName() + ".yaml"; // I don't like this
         std::cout << "Writing to " << filePath << "..." << std::endl;
         cv::FileStorage outfs(filePath, cv::FileStorage::WRITE);
-        unwrapper >> outfs;
+        outfs << "unwrapper" << unwrapper;
         outfs.release();
     }
 

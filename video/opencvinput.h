@@ -9,9 +9,7 @@
 
 namespace GeNNRobotics {
 namespace Video {
-class OpenCVInput
-  : public cv::VideoCapture
-  , public Input
+class OpenCVInput : public Input
 {
 public:
     OpenCVInput()
@@ -29,37 +27,39 @@ public:
 
     template<class T>
     OpenCVInput(T dev, const std::string &cameraName = DefaultCameraName)
-      : cv::VideoCapture(dev)
+      : m_Device(cv::VideoCapture(dev)), m_CameraName(cameraName)
     {
-        m_CameraName = cameraName;
     }
 
-    const std::string getCameraName() const override
+    //------------------------------------------------------------------------
+    // Video::Input virtuals
+    //------------------------------------------------------------------------
+    virtual const std::string getCameraName() const override
     {
         return m_CameraName;
     }
 
-    cv::Size getOutputSize() const override
+    virtual cv::Size getOutputSize() const override
     {
         cv::Size outSize;
-        outSize.width = (int) get(cv::CAP_PROP_FRAME_WIDTH);
-        outSize.height = (int) get(cv::CAP_PROP_FRAME_HEIGHT);
+        outSize.width = (int)m_Device.get(cv::CAP_PROP_FRAME_WIDTH);
+        outSize.height = (int)m_Device.get(cv::CAP_PROP_FRAME_HEIGHT);
         return outSize;
     }
 
-    bool readFrame(cv::Mat &outFrame) override
+    virtual bool readFrame(cv::Mat &outFrame) override
     {
-        (*this) >> outFrame;
-        return outFrame.cols != 0;
+        return m_Device.read(outFrame);
     }
 
-    void setOutputSize(const cv::Size &outSize) override
+    virtual void setOutputSize(const cv::Size &outSize) override
     {
-        set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
-        set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
+        m_Device.set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
+        m_Device.set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
     }
 
-protected:
+private:
+    cv::VideoCapture m_Device;
     std::string m_CameraName;
 }; // OpenCVInput
 } // Video
