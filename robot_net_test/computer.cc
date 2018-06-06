@@ -39,24 +39,31 @@ main(int argc, char **argv)
     // start networking API on Windows
     WSAStartup();
 
-    // make connection to robot on default port
-    Net::Client client(robotIP);
-    client.runInBackground();
+    // use a separate scope so that socket is closed before WSACleanup is called
+    {
+        // make connection to robot on default port
+        Net::Client client(robotIP);
+        client.runInBackground();
 
-    // read video stream from network
-    Video::NetSource video(client);
+        // read video stream from network
+        Video::NetSource video(client);
 
-    // transmit motor commands over network
-    Robots::MotorNetSink motor(client);
+        // transmit motor commands over network
+        Robots::MotorNetSink motor(client);
 
-    // add joystick for controlling Motor
-    HID::Joystick joystick;
-    motor.addJoystick(joystick); // send joystick events to motor
-    joystick.runInBackground();
+        // add joystick for controlling Motor
+        HID::Joystick joystick;
+        motor.addJoystick(joystick); // send joystick events to motor
 
-    // display video stream
-    Video::Display display(video, 1240, 500);
-    display.run(); // run until terminated
+        // display video stream
+        Video::Display display(video, 1240, 500);
+
+        // poll joystick and video stream repeatedly
+        do {
+            joystick.update();
+            display.update();
+        } while (display.isOpen());
+    }
 
     // shutdown networking API on Windows
     WSACleanup();
