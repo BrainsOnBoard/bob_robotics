@@ -4,14 +4,17 @@
 #include "../net/node.h"
 
 // local includes
-#include "motor.h"
+#include "tank.h"
 
 namespace GeNNRobotics {
 namespace Robots {
-class MotorNetSink : public Motor
+//----------------------------------------------------------------------------
+// GeNNRobotics::Robots::TankNetSink
+//----------------------------------------------------------------------------
+class TankNetSink : public Tank
 {
 public:
-    MotorNetSink(Net::Node &node)
+    TankNetSink(Net::Node &node)
       : m_Node(&node)
     {}
 

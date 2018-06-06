@@ -18,7 +18,7 @@
 #include <linux/joystick.h>
 
 // GeNN robotics includes
-#include "../robots/motor.h"
+#include "../robots/tank.h"
 
 using namespace GeNNRobotics::Robots;
 
@@ -156,7 +156,7 @@ public:
         return (float)m_AxisState[axis] / (float)std::numeric_limits<int16_t>::max();
     }
 
-    void drive(Motor &motor, float deadzone)
+    void drive(Tank &motor, float deadzone)
     {
         constexpr float pi = 3.141592653589793238462643383279502884f;
         constexpr float halfPi = pi / 2.0f;

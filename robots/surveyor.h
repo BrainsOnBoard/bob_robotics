@@ -17,17 +17,17 @@
 #endif
 
 // GeNN robotics includes
-#include "motor.h"
+#include "tank.h"
 
 namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// MotorSurveyor
+// GeNNRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
-class MotorSurveyor : public Motor
+class Surveyor : public Tank
 {
 public:
-    MotorSurveyor(const std::string &address, unsigned int port)
+    Surveyor(const std::string &address, unsigned int port)
     {
         // Create socket
         m_Socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -50,7 +50,7 @@ public:
         }
     }
 
-    ~MotorSurveyor()
+    ~Surveyor()
     {
         if (m_Socket > 0) {
             close(m_Socket);
@@ -58,7 +58,7 @@ public:
     }
 
     //----------------------------------------------------------------------------
-    // Motor virtuals
+    // Tank virtuals
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) override
     {
@@ -85,6 +85,6 @@ private:
     // Private members
     //----------------------------------------------------------------------------
     int m_Socket;
-}; // MotorSurveyor
+}; // Surveyor
 } // Robots
 } // GeNNRobotics

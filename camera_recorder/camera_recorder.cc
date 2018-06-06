@@ -4,7 +4,7 @@
 // GeNN robotics includes
 #include "../common/joystick.h"
 #include "../imgproc/opencv_unwrap_360.h"
-#include "../robots/motor_i2c.h"
+#include "../robots/norbot.h"
 #include "../vicon/capture_control.h"
 #include "../vicon/udp.h"
 #include "../video/see3cam_cu40.h"
@@ -39,7 +39,7 @@ int main()
     auto unwrapper = cam.createUnwrapper(unwrapSize);
     
     // Create motor interface
-    MotorI2C motor;
+    Norbot motor;
 
     cv::Mat output(cam.getSuperPixelSize(), CV_8UC1);
     cv::Mat unwrapped(unwrapSize, CV_8UC1);

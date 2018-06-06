@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
-#include "../robots/motor.h"
+#include "../robots/tank.h"
 #include "../video/input.h"
 
 // local includes

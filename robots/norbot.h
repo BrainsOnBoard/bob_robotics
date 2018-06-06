@@ -9,24 +9,24 @@
 
 // Common includes
 #include "../common/i2c_interface.h"
-#include "motor.h"
+#include "tank.h"
 
 namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// MotorI2C
+// GeNNRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
-class MotorI2C : public Motor
+class Norbot : public Tank
 {
 public:
-    MotorI2C(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
+    Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
       : m_I2C(path, slaveAddress)
       , m_Left(0.0f)
       , m_Right(0.0f)
     {}
 
     //----------------------------------------------------------------------------
-    // Motor virtuals
+    // Tank virtuals
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) override
     {
@@ -83,6 +83,6 @@ private:
     GeNNRobotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
-}; // MotorI2C
+}; // Norbot
 } // Robots
 } // GeNNRobotics

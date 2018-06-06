@@ -19,11 +19,11 @@
 // GeNN robotics includes
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/motor.h"
+#include "robots/tank.h"
 #include "video/panoramic.h"
 
 #ifndef NO_I2C_ROBOT
-#include "robots/motor_i2c.h"
+#include "robots/norbot.h"
 #endif
 
 using namespace GeNNRobotics;
@@ -43,10 +43,10 @@ main()
 
 #ifdef NO_I2C_ROBOT
     // output motor commands to terminal
-    Robots::Motor motor;
+    Robots::Tank motor;
 #else
     // use Arduino robot
-    Robots::MotorI2C motor;
+    Robots::Norbot motor;
 #endif
 
     // read motor commands from network
