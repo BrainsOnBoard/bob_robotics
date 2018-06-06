@@ -24,25 +24,25 @@ public:
     virtual void runInBackground()
     {
         m_Thread = std::thread([this] { run(); });
+        m_ThreadRunning = true;
     }
 
     virtual void stop()
     {
         m_DoRun = false;
-        waitToFinish();
-    }
-
-    virtual void waitToFinish()
-    {
-        if (m_Thread.joinable()) {
-            m_Thread.join();
-        } else {
-            m_Thread.detach();
+        if (m_ThreadRunning) {
+            if (m_Thread.joinable()) {
+                m_Thread.join();
+            } else {
+                m_Thread.detach();
+            }
+            m_ThreadRunning = false;
         }
     }
 
 private:
     std::thread m_Thread;
+    bool m_ThreadRunning = false;
 
 protected:
     bool m_DoRun = true;
