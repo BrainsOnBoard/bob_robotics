@@ -36,7 +36,7 @@ int main()
     Joystick joystick;
 
     // Create unwrapper to unwrap camera output
-    auto unwrapper = cam.createDefaultUnwrapper(unwrapSize);
+    auto unwrapper = cam.createUnwrapper(unwrapSize);
     
     // Create motor interface
     MotorI2C motor;

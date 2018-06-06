@@ -21,7 +21,7 @@ int main()
 
     // Create panoramic camera and suitable unwrapper
     auto cam = getPanoramicCamera();
-    auto unwrapper = cam->createDefaultUnwrapper(unwrapRes);
+    auto unwrapper = cam->createUnwrapper(unwrapRes);
     const auto cameraRes = cam->getOutputSize();
 
     // Create images

@@ -77,7 +77,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
     // Create unwrapper to unwrap camera output
     const cv::Size camRes = cam.getOutputSize();
-    auto unwrapper = cam.createDefaultUnwrapper(unwrapRes);
+    auto unwrapper = cam.createUnwrapper(unwrapRes);
 #else
     // Open video capture device and check it matches desired camera resolution
     cv::VideoCapture capture(cameraDevice);

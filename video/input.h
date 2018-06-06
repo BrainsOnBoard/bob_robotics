@@ -37,7 +37,7 @@ public:
     }
 
     template<typename... Ts>
-    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(Ts &&... args)
+    ImgProc::OpenCVUnwrap360 createUnwrapper(Ts &&... args)
     {
         cv::Size unwrapRes(std::forward<Ts>(args)...);
 
