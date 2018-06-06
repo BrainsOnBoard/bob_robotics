@@ -1,5 +1,5 @@
 ## Robot test programs
-This folder contains a basic example for connecting to an Arduino robot (Nor-bot :-)), controlling it with a joystick and viewing the camera stream. Whether the stream is unwrapped can be toggled by pressing U. Press escape to exit the program with an inglorious flurry of uncaught exceptions ;-)
+This folder contains a basic example for connecting to an Arduino robot (Nor-bot :-)), controlling it with a joystick and viewing the camera stream. Whether the stream is unwrapped can be toggled by pressing U. Press escape to exit the program.
 
 ### Building on Linux
 The example programs can be built on Linux with a simple `make`. If you want to build the robot-side program without I2C (e.g. if you're testing it on a desktop machine), build with:
