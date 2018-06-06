@@ -11,12 +11,9 @@
 
 namespace GeNNRobotics {
 namespace Robots {
-using ButtonEvent = std::function<bool(HID::Event &js)>;
-
 class BebopJoystick : HID::Joystick
 {
 public:
-    ButtonEvent m_ButtonCallback = nullptr;
     BebopJoystick(Bebop *bebop);
 
 private:
@@ -25,9 +22,8 @@ private:
     static constexpr float MaxUp = 50; // maximum % of speed for up/down motion
     static constexpr float MaxYaw = 100; // maximum % of speed for yaw
 
-    bool onButtonEvent(HID::Event &js);
-    bool onAxisEvent(HID::Event &js);
-    bool eventCallback(HID::Event &js);
+    bool onAxisEvent(HID::JAxis axis, float value);
+    bool onButtonEvent(HID::JButton button, bool pressed);
 }; // BebopJoystick
 }  // Robots
 }  // GeNNRobotics

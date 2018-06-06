@@ -1,13 +1,13 @@
 #pragma once
 
 // C includes
+#include <cmath>
 #include <cstdint>
 
 // C++ includes
+#include <array>
 #include <functional>
-#include <iostream>
 #include <limits>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -16,12 +16,21 @@
 
 namespace GeNNRobotics {
 namespace HID {
+#define DefaultDeadZone 0.25f
+
+// helper macros
+#define toIndex(value) static_cast<size_t>(value)
+#define toAxis(value) static_cast<JAxis>(value)
+#define toButton(value) static_cast<JButton>(value)
+
+// maximum values
+#define int16_maxf static_cast<float>(std::numeric_limits<int16_t>::max())
+#define int16_absminf -static_cast<float>(std::numeric_limits<int16_t>::min())
+
 /*
- * Controller axes. Note that the triggers are axes as is the dpad. The dpad is
- * slightly strange in that it's also treated as buttons (i.e. pressing up gives
- * both a button event and an axis event).
+ * Controller axes, including thumbsticks, triggers and D-pad.
  */
-enum class Axis
+enum class JAxis
 {
     LeftStickHorizontal = 0,
     LeftStickVertical = 1,
@@ -31,152 +40,179 @@ enum class Axis
     RightTrigger = 5,
     DpadHorizontal = 6,
     DpadVertical = 7,
-    NOTAXIS
+    LENGTH
 };
 
-struct Event
+enum ButtonState
 {
-    unsigned int number;
-    int16_t value;
-    bool isAxis;
-    bool isInitial;
+    StateDown = (1 << 0),
+    StatePressed = (1 << 1),
+    StateReleased = (1 << 2)
+};
 
-    Axis axis() const
+template<typename JButton>
+class JoystickBase : public Threadable
+{
+    using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+    using AxisHandler = std::function<bool(JAxis axis, float value)>;
+
+private:
+    std::vector<ButtonHandler> m_ButtonHandlers;
+    std::vector<AxisHandler> m_AxisHandlers;
+    std::array<float, toIndex(JAxis::LENGTH)> m_AxisState;
+    float m_DeadZone;
+
+public:
+    // Virtual methods
+    virtual float axisToFloat(JAxis axis, int16_t value) const = 0;
+    virtual bool update() = 0;
+
+    void addHandler(AxisHandler handler)
     {
-        return !isAxis ? Axis::NOTAXIS : static_cast<Axis>(number);
+        m_AxisHandlers.insert(m_AxisHandlers.begin(), handler);
     }
 
-    std::string axisName() const
+    void addHandler(ButtonHandler handler)
     {
-        switch (axis()) {
-        case Axis::LeftStickHorizontal:
+        m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
+    }
+
+    float getState(JAxis axis) const
+    {
+        return m_AxisState[toIndex(axis)];
+    }
+
+    unsigned char getState(JButton button) const
+    {
+        return m_ButtonState[toIndex(button)];
+    }
+
+    bool isDown(JButton button) const
+    {
+        return getState(button) & StateDown;
+    }
+
+    bool isPressed(JButton button) const
+    {
+        return getState(button) & StatePressed;
+    }
+
+    bool isReleased(JButton button) const
+    {
+        return getState(button) & StateReleased;
+    }
+
+    static std::string getName(JAxis axis)
+    {
+        switch (axis) {
+        case JAxis::LeftStickHorizontal:
             return "left stick horizontal";
-        case Axis::LeftStickVertical:
+        case JAxis::LeftStickVertical:
             return "left stick vertical";
-        case Axis::RightStickHorizontal:
+        case JAxis::RightStickHorizontal:
             return "right stick horizontal";
-        case Axis::RightStickVertical:
+        case JAxis::RightStickVertical:
             return "right stick vertical";
-        case Axis::LeftTrigger:
+        case JAxis::LeftTrigger:
             return "left trigger";
-        case Axis::RightTrigger:
+        case JAxis::RightTrigger:
             return "right trigger";
-        case Axis::DpadHorizontal:
+        case JAxis::DpadHorizontal:
             return "D-pad horizontal";
-        case Axis::DpadVertical:
+        case JAxis::DpadVertical:
             return "D-pad vertical";
-        case Axis::NOTAXIS:
-            return "(not axis)";
         default:
             return "(unknown)";
         }
     }
 
-    float axisValue() const
-    {
-        if (isAxis) {
-            return static_cast<float>(value) /
-                    static_cast<float>(std::numeric_limits<int16_t>::max());
-        } else {
-            return std::numeric_limits<float>::quiet_NaN();
-        }
-    }
-
-    Button button() const
-    {
-        return isAxis ? Button::NOTBUTTON : static_cast<Button>(number);
-    }
-
-    std::string buttonName() const
+    static std::string getName(JButton button)
     {
         // these values should be defined before this header is included
-        switch (button()) {
-        case Button::A:
+        switch (button) {
+        case JButton::A:
             return "A";
-        case Button::B:
+        case JButton::B:
             return "B";
-        case Button::X:
+        case JButton::X:
             return "X";
-        case Button::Y:
+        case JButton::Y:
             return "Y";
-        case Button::LB:
+        case JButton::LB:
             return "LB";
-        case Button::RB:
+        case JButton::RB:
             return "RB";
-        case Button::Back:
+        case JButton::Back:
             return "back";
-        case Button::Start:
+        case JButton::Start:
             return "start";
 #ifndef _WIN32
         // this button is not available in Windows
-        case Button::Xbox:
+        case JButton::Xbox:
             return "Xbox";
 #endif
-        case Button::LeftStick:
+        case JButton::LeftStick:
             return "left stick";
-        case Button::RightStick:
+        case JButton::RightStick:
             return "right stick";
-        case Button::Left:
-            return "left";
-        case Button::Right:
-            return "right";
-        case Button::Up:
-            return "up";
-        case Button::Down:
-            return "down";
-        case Button::NOTBUTTON:
-            return "(not button)";
         default:
-            return "(unknown)";        
+            return "(unknown)";
         }
-    }
-};
-
-// For callbacks when a controller event occurs (button is pressed, axis moves)
-using JoystickHandler = std::function<bool(Event &)>;
-
-class JoystickBase : public Threadable
-{
-private:
-    std::vector<JoystickHandler> m_Handlers;
-    Event m_JsEvent;
-
-public:
-    virtual bool read(Event &js) = 0;
-
-    bool read()
-    {
-        return read(m_JsEvent);
-    }
-
-    void run() override
-    {
-        if (m_Handlers.size() == 0) {
-            throw std::runtime_error("No handlers for joystick set");
-        }
-
-        while (read()) {
-            for (auto handler : m_Handlers) {
-                if (handler(m_JsEvent)) {
-                    break;
-                }
-            }
-        }
-
-        // std::cerr << "Error reading from joystick" << std::endl;
-    }
-
-    void addHandler(const JoystickHandler handler)
-    {
-        m_Handlers.insert(m_Handlers.begin(), handler);
     }
 
 protected:
-    JoystickBase()
+    std::array<unsigned char, toIndex(JButton::LENGTH)> m_ButtonState;
+
+    JoystickBase(float deadZone)
+      : m_DeadZone(deadZone)
     {}
 
-    JoystickBase(const JoystickHandler handler) : m_Handlers({ handler })
-    {}
+    void raiseEvent(JButton button, bool pressed)
+    {
+        for (auto handler : m_ButtonHandlers) {
+            if (handler(button, pressed)) {
+                break;
+            }
+        }
+    }
+
+    void updateAxis(JAxis axis, float value, bool isInitial)
+    {
+        auto &s = m_AxisState[toIndex(axis)];
+        if (s != value) {
+            s = value;
+
+            // run handlers
+            if (!isInitial) {
+                for (auto handler : m_AxisHandlers) {
+                    if (handler(axis, value)) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    void updateAxis(JAxis axis, int16_t value, bool isInitial)
+    {
+        updateAxis(axis, axisToFloat(axis, value), isInitial);
+    }
+
+    void updateAxis(JAxis axisHorz, int16_t hvalue, int16_t vvalue, bool isInitial)
+    {
+        JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
+        float x = axisToFloat(axisHorz, hvalue);
+        float y = axisToFloat(axisVert, vvalue);
+
+        if (sqrt(x * x + y * y) < m_DeadZone) {
+            updateAxis(axisHorz, 0.0f, isInitial);
+            updateAxis(axisVert, 0.0f, isInitial);
+        } else {
+            updateAxis(axisHorz, x, isInitial);
+            updateAxis(axisVert, y, isInitial);
+        }
+    }
+
 }; // JoystickBase
 } // HID
 } // GeNNRobotics

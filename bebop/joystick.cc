@@ -12,32 +12,36 @@ namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
 {
-    addHandler([this](HID::Event &js) { return eventCallback(js); });
+    addHandler([this](HID::JAxis axis, float value) { return onAxisEvent(axis, value); });
+    addHandler([this](HID::JButton button, bool pressed) { return onButtonEvent(button, pressed); });
 }
 
 bool
-BebopJoystick::onButtonEvent(HID::Event &js)
+BebopJoystick::onButtonEvent(HID::JButton button, bool pressed)
 {
-    if (m_ButtonCallback && m_ButtonCallback(js)) {
+    // we only care about button presses
+    if (!pressed) {
         return false;
     }
 
-    switch (js.button()) {
-    case HID::Button::A:
+    // A = take off; B = land
+    switch (button) {
+    case HID::JButton::A:
         m_Bebop->takeOff();
         return true;
         break;
-    case HID::Button::B:
+    case HID::JButton::B:
         m_Bebop->land();
         return true;
         break;
     }
 
+    // otherwise signal that we haven't handled event
     return false;
 }
 
 bool
-BebopJoystick::onAxisEvent(HID::Event &js)
+BebopJoystick::onAxisEvent(HID::JAxis axis, float value)
 {
     float f;
 
@@ -45,40 +49,31 @@ BebopJoystick::onAxisEvent(HID::Event &js)
      * setRoll/Pitch etc. all take values between -100 and 100. We cap these
      * values for the joystick code to make the drone more controllable.
      */
-    switch (js.axis()) {
-    case HID::Axis::RightStickHorizontal:
-        f = round(MaxBank * js.axisValue());
+    switch (axis) {
+    case HID::JAxis::RightStickHorizontal:
+        f = round(MaxBank * value);
         m_Bebop->setRoll(static_cast<int8_t>(f));
         return true;
         break;
-    case HID::Axis::RightStickVertical:
-        f = round(-MaxBank * js.axisValue());
+    case HID::JAxis::RightStickVertical:
+        f = round(-MaxBank * value);
         m_Bebop->setPitch(static_cast<int8_t>(f));
         return true;
         break;
-    case HID::Axis::LeftStickHorizontal:
-        f = round(MaxYaw * js.axisValue());
+    case HID::JAxis::LeftStickHorizontal:
+        f = round(MaxYaw * value);
         m_Bebop->setYaw(static_cast<int8_t>(f));
         return true;
         break;
-    case HID::Axis::LeftStickVertical:
-        f = round(-MaxUp * js.axisValue());
+    case HID::JAxis::LeftStickVertical:
+        f = round(-MaxUp * value);
         m_Bebop->setUpDown(static_cast<int8_t>(f));
         return true;
         break;
     }
 
+    // otherwise signal that we haven't handled event
     return false;
-}
-
-bool
-BebopJoystick::eventCallback(HID::Event &js)
-{
-    if (!js.isAxis) {
-        return onButtonEvent(js);
-    } else {
-        return onAxisEvent(js);
-    }
 }
 } // Robots
 } // GeNNRobotics
