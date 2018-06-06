@@ -1,6 +1,7 @@
 #pragma once
 
 // C includes
+#include <cmath>
 #include <cstdint>
 
 // C++ includes
@@ -14,6 +15,11 @@
 
 namespace GeNNRobotics {
 namespace HID {
+#define DefaultDeadZone 0.25f
+#define toIndex(value) static_cast<size_t>(value)
+#define toAxis(value) static_cast<JAxis>(value)
+#define toButton(value) static_cast<JButton>(value)
+
 /*
  * Controller axes, including thumbsticks, triggers and D-pad.
  */
@@ -37,7 +43,7 @@ enum ButtonState
     StateReleased = (1 << 2)
 };
 
-template<typename Joystick, typename JButton>
+template<typename JButton>
 class JoystickBase : public Threadable
 {
     using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
@@ -46,11 +52,13 @@ class JoystickBase : public Threadable
 private:
     std::vector<ButtonHandler> m_ButtonHandlers;
     std::vector<AxisHandler> m_AxisHandlers;
+    std::array<float, toIndex(JAxis::LENGTH)> m_AxisState;
+    float m_DeadZone;
 
 public:
     // Virtual methods
+    virtual float axisToFloat(JAxis axis, int16_t value) const = 0;
     virtual bool update() = 0;
-    virtual float getState(JAxis axis) const = 0;
 
     void addHandler(AxisHandler handler)
     {
@@ -62,9 +70,14 @@ public:
         m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
     }
 
+    float getState(JAxis axis) const
+    {
+        return m_AxisState[toIndex(axis)];
+    }
+
     unsigned char getState(JButton button) const
     {
-        return m_ButtonState[static_cast<size_t>(button)];
+        return m_ButtonState[toIndex(button)];
     }
 
     bool isDown(JButton button) const
@@ -141,20 +154,11 @@ public:
     }
 
 protected:
-    std::array<unsigned char, static_cast<unsigned long>(JButton::LENGTH)> m_ButtonState;
+    std::array<unsigned char, toIndex(JButton::LENGTH)> m_ButtonState;
 
-    JoystickBase()
+    JoystickBase(float deadZone)
+      : m_DeadZone(deadZone)
     {}
-
-    void raiseEvent(JAxis axis, int16_t value)
-    {
-        float fvalue = Joystick::getAxisValue(axis, value);
-        for (auto handler : m_AxisHandlers) {
-            if (handler(axis, fvalue)) {
-                break;
-            }
-        }
-    }
 
     void raiseEvent(JButton button, bool pressed)
     {
@@ -162,6 +166,43 @@ protected:
             if (handler(button, pressed)) {
                 break;
             }
+        }
+    }
+
+    void updateAxis(JAxis axis, float value, bool isInitial)
+    {
+        auto &s = m_AxisState[toIndex(axis)];
+        if (s != value) {
+            s = value;
+
+            // run handlers
+            if (!isInitial) {
+                for (auto handler : m_AxisHandlers) {
+                    if (handler(axis, value)) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    void updateAxis(JAxis axis, int16_t value, bool isInitial)
+    {
+        updateAxis(axis, axisToFloat(axis, value), isInitial);
+    }
+
+    void updateAxis(JAxis axisHorz, int16_t hvalue, int16_t vvalue, bool isInitial)
+    {
+        JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
+        float x = axisToFloat(axisHorz, hvalue);
+        float y = axisToFloat(axisVert, vvalue);
+
+        if (sqrt(x * x + y * y) < m_DeadZone) {
+            updateAxis(axisHorz, 0.0f, isInitial);
+            updateAxis(axisVert, 0.0f, isInitial);
+        } else {
+            updateAxis(axisHorz, x, isInitial);
+            updateAxis(axisVert, y, isInitial);
         }
     }
 

@@ -55,9 +55,9 @@ main()
     // add handlers for button and axis events
     joystick.addHandler(onAxisEvent);
     joystick.addHandler(onButtonEvent);
-    joystick.runInBackground();
 
-    // wait until keypress
-    std::cin.ignore();
+    // run joystick on main thread
+    joystick.run();
+
     return 0;
 }
