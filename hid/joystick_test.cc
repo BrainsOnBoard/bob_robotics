@@ -29,6 +29,13 @@ onButtonEvent(JButton button, bool pressed)
     return true;
 }
 
+inline void
+initButton(Joystick &joystick, JButton button)
+{
+    std::cout << "[initial] ";
+    onButtonEvent(button, joystick.isDown(button));
+}
+
 int
 main()
 {
@@ -46,11 +53,16 @@ main()
     }
 
     // get initial button states
-    for (int i = 0; i < static_cast<int>(JButton::LENGTH); i++) {
-        JButton button = static_cast<JButton>(i);
-        std::cout << "[initial] ";
-        onButtonEvent(button, joystick.isDown(button));
-    }
+    initButton(joystick, JButton::A);
+    initButton(joystick, JButton::B);
+    initButton(joystick, JButton::X);
+    initButton(joystick, JButton::Y);
+    initButton(joystick, JButton::LB);
+    initButton(joystick, JButton::RB);
+    initButton(joystick, JButton::Back);
+    initButton(joystick, JButton::Start);
+    initButton(joystick, JButton::LeftStick);
+    initButton(joystick, JButton::RightStick);
 
     // add handlers for button and axis events
     joystick.addHandler(onAxisEvent);

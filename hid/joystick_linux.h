@@ -136,7 +136,7 @@ public:
             }
 
             // run button event handlers
-            raiseEvent(static_cast<JButton>(m_JsEvent.number), m_JsEvent.value);
+            raiseEvent(toButton(m_JsEvent.number), m_JsEvent.value);
         }
         return true;
     }
@@ -188,10 +188,6 @@ private:
             updateAxis(axis, value, isInitial);
         }
     }
-
-    static constexpr float int16_maxf = static_cast<float>(std::numeric_limits<int16_t>::max());
-    static constexpr float int16_absminf = -static_cast<float>(std::numeric_limits<int16_t>::min());
-
 }; // Joystick
 } // HID
 } // GeNNRobotics

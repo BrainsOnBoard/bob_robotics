@@ -7,6 +7,7 @@
 // C++ includes
 #include <array>
 #include <functional>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -16,9 +17,15 @@
 namespace GeNNRobotics {
 namespace HID {
 #define DefaultDeadZone 0.25f
+
+// helper macros
 #define toIndex(value) static_cast<size_t>(value)
 #define toAxis(value) static_cast<JAxis>(value)
 #define toButton(value) static_cast<JButton>(value)
+
+// maximum values
+#define int16_maxf static_cast<float>(std::numeric_limits<int16_t>::max())
+#define int16_absminf -static_cast<float>(std::numeric_limits<int16_t>::min())
 
 /*
  * Controller axes, including thumbsticks, triggers and D-pad.
