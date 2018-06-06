@@ -26,7 +26,15 @@ class Input
 {
 public:
     virtual ~Input()
-    {}
+    {
+        if (m_ThreadRunning) {
+            if (m_Thread.joinable()) {
+                m_Thread.join();
+            } else {
+                m_Thread.detach();
+            }
+        }
+    }
 
     template<typename... Ts>
     ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(Ts &&... args)
@@ -133,7 +141,8 @@ protected:
     {}
 
 private:
-    std::thread m_ImageThread;
+    std::thread m_Thread;
+    bool m_ThreadRunning = false;
     cv::Mat m_IntermediateFrame;    
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
@@ -149,7 +158,8 @@ private:
                                getCameraName() + "\n");
 
         // start thread to transmit images in background
-        m_ImageThread = std::thread([this](Net::Node *n) { runImageSink(n); }, &node);
+        m_Thread = std::thread([this](Net::Node *n) { runImageSink(n); }, &node);
+        m_ThreadRunning = true;
     }
 
     void runImageSink(Net::Node *node)
@@ -157,7 +167,7 @@ private:
         cv::Mat frame;
         std::vector<uchar> buffer;
         Net::Socket *sock = node->getSocket();
-        while (readFrame(frame)) {
+        while (m_ThreadRunning && readFrame(frame)) {
             cv::imencode(".jpg", frame, buffer);
             sock->send("IMG FRAME " + std::to_string(buffer.size()) + "\n");
             sock->send(buffer.data(), buffer.size());
