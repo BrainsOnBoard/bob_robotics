@@ -21,7 +21,7 @@ public:
 
     void addJoystick(HID::Joystick &joystick)
     {
-        joystick.addHandler([this] (HID::Event &js) { return onJoystickEvent(js); });
+        joystick.addHandler([this](HID::JAxis axis, float value) { return onJoystickEvent(axis, value); });
     }
 
     virtual void tank(float left, float right)
@@ -57,24 +57,28 @@ private:
         tank(left, right);
     }
 
-    bool onJoystickEvent(HID::Event &js)
+    bool onJoystickEvent(HID::JAxis axis, float value)
     {
         // only interested in left joystick
         float x = m_X;
         float y = m_Y;
-        switch (js.axis()) {
-        case HID::Axis::LeftStickVertical:
-            y = js.axisValue();
+        switch (axis) {
+        case HID::JAxis::LeftStickVertical:
+            y = value;
             break;
-        case HID::Axis::LeftStickHorizontal:
-            x = js.axisValue();
+        case HID::JAxis::LeftStickHorizontal:
+            x = value;
             break;
         default:
             return false;
         }
 
-        // Code below is adapted from Jamie's joystick.h - AD
-        // If length of joystick vector places it in deadzone, stop motors
+        // If joystick is in dead zone, stop robot
+        if (x == 0 && y == 0) {
+            tank(0.0f, 0.0f);
+            return true;
+        }
+
         const float r = sqrt((x * x) + (y * y));
         const float theta = atan2(x, -y);
         const float twoTheta = 2.0f * theta;
