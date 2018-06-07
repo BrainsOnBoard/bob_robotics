@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
 
     // Create joystick interface
-    Joystick joystick(RobotParameters::joystickDeadzone);
+    Joystick joystick;
 
     // Create motor interface
     Robots::Norbot motor;
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
-            motor.drive(joystick);
+            motor.drive(joystick, RobotParameters::joystickDeadzone);
             
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {

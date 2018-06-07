@@ -61,7 +61,7 @@ enum class JButton
 class Joystick : public JoystickBase<JAxis, JButton>
 {
 public:
-    Joystick(float deadZone = DefaultDeadZone)
+    Joystick(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
         // open joystick device

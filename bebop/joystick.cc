@@ -10,7 +10,8 @@
 namespace GeNNRobotics {
 namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
-  : m_Bebop(bebop)
+  : HID::Joystick(0.25f)
+  , m_Bebop(bebop)
 {
     addHandler([this](HID::JAxis axis, float value) { return onAxisEvent(axis, value); });
     addHandler([this](HID::JButton button, bool pressed) { return onButtonEvent(button, pressed); });
