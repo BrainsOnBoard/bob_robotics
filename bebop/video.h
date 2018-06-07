@@ -72,57 +72,7 @@ extern "C"
 namespace GeNNRobotics {
 namespace Robots {
 #ifndef DUMMY_DRONE
-class VideoDecoder
-{
-private:
-    static const char *LOG_TAG;
 
-    bool codec_initialized_;
-    bool first_iframe_recv_;
-    AVFormatContext *format_ctx_ptr_;
-    AVCodecContext *codec_ctx_ptr_;
-    AVCodec *codec_ptr_;
-    AVFrame *frame_ptr_;
-    AVFrame *frame_rgb_ptr_;
-    AVPacket packet_;
-    SwsContext *img_convert_ctx_ptr_;
-    AVInputFormat *input_format_ptr_;
-    uint8_t *frame_rgb_raw_ptr_;
-
-    bool update_codec_params_;
-    std::vector<uint8_t> codec_data_;
-
-    static void ThrowOnCondition(const bool cond, const std::string &message);
-    bool InitCodec();
-    bool ReallocateBuffers();
-    void CleanupBuffers();
-    void Reset();
-
-    void ConvertFrameToRGB();
-
-public:
-    VideoDecoder();
-    ~VideoDecoder();
-
-    bool SetH264Params(uint8_t *sps_buffer_ptr,
-                       uint32_t sps_buffer_size,
-                       uint8_t *pps_buffer_ptr,
-                       uint32_t pps_buffer_size);
-    bool Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_);
-    inline uint32_t GetFrameWidth() const
-    {
-        return codec_initialized_ ? codec_ctx_ptr_->width : 0;
-    }
-    inline uint32_t GetFrameHeight() const
-    {
-        return codec_initialized_ ? codec_ctx_ptr_->height : 0;
-    }
-
-    inline const uint8_t *GetFrameRGBRawCstPtr() const
-    {
-        return frame_rgb_raw_ptr_;
-    }
-};
 #endif // !DUMMY_DRONE
 
 // start BebopVideoStream
@@ -130,6 +80,58 @@ using userVideoCallback = void (*)(const uint8_t *frame, void *userdata);
 
 class BebopVideoStream
 {
+    class VideoDecoder
+    {
+    private:
+        static const char *LOG_TAG;
+
+        bool codec_initialized_;
+        bool first_iframe_recv_;
+        AVFormatContext *format_ctx_ptr_;
+        AVCodecContext *codec_ctx_ptr_;
+        AVCodec *codec_ptr_;
+        AVFrame *frame_ptr_;
+        AVFrame *frame_rgb_ptr_;
+        AVPacket packet_;
+        SwsContext *img_convert_ctx_ptr_;
+        AVInputFormat *input_format_ptr_;
+        uint8_t *frame_rgb_raw_ptr_;
+
+        bool update_codec_params_;
+        std::vector<uint8_t> codec_data_;
+
+        static void ThrowOnCondition(const bool cond, const std::string &message);
+        bool InitCodec();
+        bool ReallocateBuffers();
+        void CleanupBuffers();
+        void Reset();
+
+        void ConvertFrameToRGB();
+
+    public:
+        VideoDecoder();
+        ~VideoDecoder();
+
+        bool SetH264Params(uint8_t *sps_buffer_ptr,
+                           uint32_t sps_buffer_size,
+                           uint8_t *pps_buffer_ptr,
+                           uint32_t pps_buffer_size);
+        bool Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_);
+        inline uint32_t GetFrameWidth() const
+        {
+            return codec_initialized_ ? codec_ctx_ptr_->width : 0;
+        }
+        inline uint32_t GetFrameHeight() const
+        {
+            return codec_initialized_ ? codec_ctx_ptr_->height : 0;
+        }
+
+        inline const uint8_t *GetFrameRGBRawCstPtr() const
+        {
+            return frame_rgb_raw_ptr_;
+        }
+    };
+
 public:
     BebopVideoStream(Bebop *bebop);
     ~BebopVideoStream();

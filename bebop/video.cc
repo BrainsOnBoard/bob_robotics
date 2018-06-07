@@ -4,17 +4,17 @@ namespace GeNNRobotics {
 namespace Robots {
 #ifndef DUMMY_DRONE
 // start VideoDecoder class
-const char *VideoDecoder::LOG_TAG = "Decoder";
+const char *BebopVideoStream::VideoDecoder::LOG_TAG = "Decoder";
 
 void
-VideoDecoder::ThrowOnCondition(const bool cond, const std::string &message)
+BebopVideoStream::VideoDecoder::ThrowOnCondition(const bool cond, const std::string &message)
 {
     if (!cond)
         return;
     throw std::runtime_error(message);
 }
 
-VideoDecoder::VideoDecoder()
+BebopVideoStream::VideoDecoder::VideoDecoder()
   : codec_initialized_(false)
   , first_iframe_recv_(false)
   , format_ctx_ptr_(NULL)
@@ -29,7 +29,7 @@ VideoDecoder::VideoDecoder()
 {}
 
 bool
-VideoDecoder::InitCodec()
+BebopVideoStream::VideoDecoder::InitCodec()
 {
     if (codec_initialized_) {
         return true;
@@ -82,7 +82,7 @@ VideoDecoder::InitCodec()
 }
 
 bool
-VideoDecoder::ReallocateBuffers()
+BebopVideoStream::VideoDecoder::ReallocateBuffers()
 {
     ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Buffer reallocation request");
     if (!codec_initialized_) {
@@ -137,7 +137,7 @@ VideoDecoder::ReallocateBuffers()
 }
 
 void
-VideoDecoder::CleanupBuffers()
+BebopVideoStream::VideoDecoder::CleanupBuffers()
 {
     if (frame_rgb_ptr_) {
         av_free(frame_rgb_ptr_);
@@ -155,7 +155,7 @@ VideoDecoder::CleanupBuffers()
 }
 
 void
-VideoDecoder::Reset()
+BebopVideoStream::VideoDecoder::Reset()
 {
     if (codec_ctx_ptr_) {
         avcodec_close(codec_ctx_ptr_);
@@ -172,14 +172,14 @@ VideoDecoder::Reset()
     ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Reset!");
 }
 
-VideoDecoder::~VideoDecoder()
+BebopVideoStream::VideoDecoder::~VideoDecoder()
 {
     Reset();
     ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Dstr!");
 }
 
 void
-VideoDecoder::ConvertFrameToRGB()
+BebopVideoStream::VideoDecoder::ConvertFrameToRGB()
 {
     if (!codec_ctx_ptr_->width || !codec_ctx_ptr_->height)
         return;
@@ -193,10 +193,10 @@ VideoDecoder::ConvertFrameToRGB()
 }
 
 bool
-VideoDecoder::SetH264Params(uint8_t *sps_buffer_ptr,
-                            uint32_t sps_buffer_size,
-                            uint8_t *pps_buffer_ptr,
-                            uint32_t pps_buffer_size)
+BebopVideoStream::VideoDecoder::SetH264Params(uint8_t *sps_buffer_ptr,
+                                              uint32_t sps_buffer_size,
+                                              uint8_t *pps_buffer_ptr,
+                                              uint32_t pps_buffer_size)
 {
     // This function is called in the same thread as Decode(), so no sync is
     // necessary
@@ -222,7 +222,7 @@ VideoDecoder::SetH264Params(uint8_t *sps_buffer_ptr,
 }
 
 bool
-VideoDecoder::Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_)
+BebopVideoStream::VideoDecoder::Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_)
 {
     if (!codec_initialized_) {
         if (!InitCodec()) {
