@@ -168,7 +168,7 @@ Bebop::land()
  * Set drone's pitch, for moving forwards and backwards.
  */
 void
-Bebop::setPitch(i8 pitch)
+Bebop::setPitch(int8_t pitch)
 {
     if (m_IsConnected) {
         if (pitch > 100 || pitch < -100) {
@@ -188,7 +188,7 @@ Bebop::setPitch(i8 pitch)
  * Set drone's roll, for banking left and right.
  */
 void
-Bebop::setRoll(i8 right)
+Bebop::setRoll(int8_t right)
 {
     if (m_IsConnected) {
         if (right > 100 || right < -100) {
@@ -208,7 +208,7 @@ Bebop::setRoll(i8 right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::setUpDown(i8 up)
+Bebop::setUpDown(int8_t up)
 {
     if (m_IsConnected) {
         if (up > 100 || up < -100) {
@@ -228,7 +228,7 @@ Bebop::setUpDown(i8 up)
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
-Bebop::setYaw(i8 right)
+Bebop::setYaw(int8_t right)
 {
     if (m_IsConnected) {
         if (right > 100 || right < -100) {

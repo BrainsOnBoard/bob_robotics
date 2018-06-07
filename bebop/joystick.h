@@ -1,29 +1,29 @@
 #pragma once
 
+// C++ includes
+#include <functional>
+
+// GeNN robotics includes
+#include "../hid/joystick.h"
+
+// local includes
 #include "bebop.h"
-#include "../joystick/joystick.h"
 
 namespace GeNNRobotics {
 namespace Robots {
-using ButtonEvent = bool (*)(Joystick::Event *js);
-
-class BebopJoystick
+class BebopJoystick : HID::Joystick
 {
 public:
-    ButtonEvent m_ButtonCallback = nullptr;
     BebopJoystick(Bebop *bebop);
 
 private:
     Bebop *m_Bebop;
-    Joystick::Joystick m_Joystick;
-    static constexpr float maxbank = 50;
-    static constexpr float maxup = 50;
-    static constexpr float maxyaw = 100;
+    static constexpr float MaxBank = 50; // maximum % of speed for pitch/rool
+    static constexpr float MaxUp = 50; // maximum % of speed for up/down motion
+    static constexpr float MaxYaw = 100; // maximum % of speed for yaw
 
-    void OnButtonEvent(Joystick::Event *js);
-    void OnAxisEvent(Joystick::Event *js);
-
-    static void EventCallback(Joystick::Event *js, void *data);
+    bool onAxisEvent(HID::JAxis axis, float value);
+    bool onButtonEvent(HID::JButton button, bool pressed);
 }; // BebopJoystick
 }  // Robots
 }  // GeNNRobotics

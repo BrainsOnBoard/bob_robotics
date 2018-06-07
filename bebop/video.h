@@ -13,6 +13,7 @@
 #pragma once
 
 #ifndef DUMMY_DRONE
+// ARSDK includes
 extern "C"
 {
 #include "libARController/ARCONTROLLER_Error.h"
@@ -48,12 +49,20 @@ extern "C"
 #endif
 #endif // !DUMMY_DRONE
 
-#include "bebop.h"
+// C includes
+#include <cstdint>
+
+// C++ includes
 #include <algorithm>
-#include <signal.h>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+// POSIX includes
+#include <signal.h>
+
+// local includes
+#include "bebop.h"
 
 #define VIDEO_FIFO "/tmp/bebop_vid"
 #define VIDEO_WIDTH 856
@@ -77,10 +86,10 @@ private:
     AVPacket packet_;
     SwsContext *img_convert_ctx_ptr_;
     AVInputFormat *input_format_ptr_;
-    u8 *frame_rgb_raw_ptr_;
+    uint8_t *frame_rgb_raw_ptr_;
 
     bool update_codec_params_;
-    std::vector<u8> codec_data_;
+    std::vector<uint8_t> codec_data_;
 
     static void ThrowOnCondition(const bool cond, const std::string &message);
     bool InitCodec();
@@ -94,9 +103,9 @@ public:
     VideoDecoder();
     ~VideoDecoder();
 
-    bool SetH264Params(u8 *sps_buffer_ptr,
+    bool SetH264Params(uint8_t *sps_buffer_ptr,
                        uint32_t sps_buffer_size,
-                       u8 *pps_buffer_ptr,
+                       uint8_t *pps_buffer_ptr,
                        uint32_t pps_buffer_size);
     bool Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_);
     inline uint32_t GetFrameWidth() const
@@ -108,7 +117,7 @@ public:
         return codec_initialized_ ? codec_ctx_ptr_->height : 0;
     }
 
-    inline const u8 *GetFrameRGBRawCstPtr() const
+    inline const uint8_t *GetFrameRGBRawCstPtr() const
     {
         return frame_rgb_raw_ptr_;
     }
@@ -116,7 +125,7 @@ public:
 #endif // !DUMMY_DRONE
 
 // start BebopVideoStream
-using userVideoCallback = void (*)(const u8 *frame, void *userdata);
+using userVideoCallback = void (*)(const uint8_t *frame, void *userdata);
 
 class BebopVideoStream
 {

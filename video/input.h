@@ -3,29 +3,44 @@
 // C++ includes
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <vector>
 
-// opencv
+// OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNNRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"
+#include "../net/node.h"
+#include "../net/socket.h"
 #include "../third_party/path.h"
 
 namespace GeNNRobotics {
 namespace Video {
+#define DefaultCameraName "unknown_camera"
+
 class Input
 {
 public:
     virtual ~Input()
-    {}
-
-    virtual void setOutputSize(const cv::Size &outSize)
-    {}
-
-    virtual ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(const cv::Size &unwrapRes)
     {
+        if (m_ThreadRunning) {
+            if (m_Thread.joinable()) {
+                m_Thread.join();
+            } else {
+                m_Thread.detach();
+            }
+        }
+    }
+
+    template<typename... Ts>
+    ImgProc::OpenCVUnwrap360 createDefaultUnwrapper(Ts &&... args)
+    {
+        cv::Size unwrapRes(std::forward<Ts>(args)...);
+
         // Create unwrapper
         ImgProc::OpenCVUnwrap360 unwrapper(getOutputSize(), unwrapRes);
 
@@ -46,10 +61,9 @@ public:
                 static const char *envVarName = "GENN_ROBOTICS_PATH";
                 const char *env = std::getenv(envVarName);
                 if (!env) {
-                    throw std::runtime_error(
-                            std::string(envVarName) +
-                            " environment variable is not set and unwrap "
-                            "parameters file could not be found locally");
+                    throw std::runtime_error(std::string(envVarName) +
+                                             " environment variable is not set and unwrap "
+                                             "parameters file could not be found locally");
                 }
 
                 filePath = filesystem::path(env) / paramsDir / fileName;
@@ -71,9 +85,10 @@ public:
 
     virtual const std::string getCameraName() const
     {
-        return "unknown_camera";
+        return DefaultCameraName;
     }
 
+    virtual cv::Size getOutputSize() const = 0;
     virtual bool readFrame(cv::Mat &outFrame) = 0;
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
@@ -94,9 +109,23 @@ public:
         }
     }
 
-    virtual cv::Size getOutputSize() const
+    virtual bool needsUnwrapping() const
     {
-        return cv::Size();
+        // only panoramic cameras are defined with the camera name specified
+        return getCameraName() != DefaultCameraName;
+    }
+
+    virtual void setOutputSize(const cv::Size &size)
+    {
+        throw std::runtime_error("This camera's resolution cannot be changed at runtime");
+    }
+
+    void streamToNetwork(Net::Node &node)
+    {
+        // handle incoming IMG commands
+        node.addCommandHandler("IMG", [this] (Net::Node &node, const Net::Command& command) {
+            onCommandReceived(node, command);
+        });
     }
 
 protected:
@@ -108,7 +137,38 @@ protected:
     {}
 
 private:
-    cv::Mat m_IntermediateFrame;
+    std::thread m_Thread;
+    bool m_ThreadRunning = false;
+    cv::Mat m_IntermediateFrame;    
+
+    void onCommandReceived(Net::Node &node, const Net::Command &command)
+    {
+        if (command[1] != "START") {
+            throw Net::bad_command_error();
+        }
+
+        // ACK the command and tell client the camera resolution
+        cv::Size res = getOutputSize();
+        node.getSocket()->send("IMG PARAMS " + std::to_string(res.width) + " " +
+                               std::to_string(res.height) + " " +
+                               getCameraName() + "\n");
+
+        // start thread to transmit images in background
+        m_Thread = std::thread([this](Net::Node *n) { runImageSink(n); }, &node);
+        m_ThreadRunning = true;
+    }
+
+    void runImageSink(Net::Node *node)
+    {
+        cv::Mat frame;
+        std::vector<uchar> buffer;
+        Net::Socket *sock = node->getSocket();
+        while (m_ThreadRunning && readFrame(frame)) {
+            cv::imencode(".jpg", frame, buffer);
+            sock->send("IMG FRAME " + std::to_string(buffer.size()) + "\n");
+            sock->send(buffer.data(), buffer.size());
+        }
+    }
 }; // Input
 } // Video
 } // GeNNRobotics

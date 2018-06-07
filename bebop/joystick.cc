@@ -1,74 +1,79 @@
-#include "joystick.h"
+// C includes
+#include <cmath>
+
+// C++ includes
 #include <stdexcept>
+
+// local includes
+#include "joystick.h"
 
 namespace GeNNRobotics {
 namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : m_Bebop(bebop)
 {
-    if (!m_Joystick.open()) {
-        throw std::runtime_error("Could not find joystick");
-    }
-    m_Joystick.startThread(EventCallback, this);
+    addHandler([this](HID::JAxis axis, float value) { return onAxisEvent(axis, value); });
+    addHandler([this](HID::JButton button, bool pressed) { return onButtonEvent(button, pressed); });
 }
 
-void
-BebopJoystick::OnButtonEvent(Joystick::Event *js)
+bool
+BebopJoystick::onButtonEvent(HID::JButton button, bool pressed)
 {
-    if (m_ButtonCallback && m_ButtonCallback(js)) {
-        return;
-    }
-    if (!js->value) {
-        return;
+    // we only care about button presses
+    if (!pressed) {
+        return false;
     }
 
-    switch (js->number) {
-    case Joystick::A:
+    // A = take off; B = land
+    switch (button) {
+    case HID::JButton::A:
         m_Bebop->takeOff();
+        return true;
         break;
-    case Joystick::B:
+    case HID::JButton::B:
         m_Bebop->land();
+        return true;
         break;
     }
+
+    // otherwise signal that we haven't handled event
+    return false;
 }
 
-void
-BebopJoystick::OnAxisEvent(Joystick::Event *js)
+bool
+BebopJoystick::onAxisEvent(HID::JAxis axis, float value)
 {
     float f;
 
-    switch (js->number) {
-    case Joystick::RightStickHorizontal:
-        f = maxbank * (float) (js->value) /
-            (float) numeric_limits<__s16>::max();
-        m_Bebop->setRoll((i8) f);
+    /*
+     * setRoll/Pitch etc. all take values between -100 and 100. We cap these
+     * values for the joystick code to make the drone more controllable.
+     */
+    switch (axis) {
+    case HID::JAxis::RightStickHorizontal:
+        f = round(MaxBank * value);
+        m_Bebop->setRoll(static_cast<int8_t>(f));
+        return true;
         break;
-    case Joystick::RightStickVertical:
-        f = maxbank * (float) (-js->value) /
-            (float) numeric_limits<__s16>::max();
-        m_Bebop->setPitch((i8) f);
+    case HID::JAxis::RightStickVertical:
+        f = round(-MaxBank * value);
+        m_Bebop->setPitch(static_cast<int8_t>(f));
+        return true;
         break;
-    case Joystick::LeftStickHorizontal:
-        f = maxyaw * (float) (js->value) / (float) numeric_limits<__s16>::max();
-        m_Bebop->setYaw((i8) f);
+    case HID::JAxis::LeftStickHorizontal:
+        f = round(MaxYaw * value);
+        m_Bebop->setYaw(static_cast<int8_t>(f));
+        return true;
         break;
-    case Joystick::LeftStickVertical:
-        f = maxup * (float) (-js->value) / (float) numeric_limits<__s16>::max();
-        m_Bebop->setUpDown((i8) f);
+    case HID::JAxis::LeftStickVertical:
+        f = round(-MaxUp * value);
+        m_Bebop->setUpDown(static_cast<int8_t>(f));
+        return true;
         break;
     }
-}
 
-void
-BebopJoystick::EventCallback(Joystick::Event *js, void *data)
-{
-    BebopJoystick *cont = reinterpret_cast<BebopJoystick *>(data);
-
-    if (js->isAxis) {
-        cont->OnButtonEvent(js);
-    } else {
-        cont->OnAxisEvent(js);
-    }
+    // otherwise signal that we haven't handled event
+    return false;
 }
 } // Robots
 } // GeNNRobotics

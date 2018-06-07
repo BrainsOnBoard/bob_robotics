@@ -1,7 +1,12 @@
 #pragma once
 
+// C++ includes
+#include <stdexcept>
+
+// OpenCV
 #include <opencv2/opencv.hpp>
 
+// local includes
 #include "input.h"
 
 #define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
@@ -18,17 +23,16 @@ public:
 
     template<class T>
     OpenCVInput(T dev, const cv::Size &outSize,
-                const std::string &cameraName = "unknown_camera")
+                const std::string &cameraName = DefaultCameraName)
       : OpenCVInput(dev, cameraName)
     {
         setOutputSize(outSize);
     }
 
     template<class T>
-    OpenCVInput(T dev, const std::string &cameraName = "unknown_camera")
+    OpenCVInput(T dev, const std::string &cameraName = DefaultCameraName)
       : m_Device(dev), m_CameraName(cameraName)
     {
-
     }
 
     //------------------------------------------------------------------------
@@ -49,7 +53,13 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
-        return m_Device.read(outFrame);
+        // Try to read next frame
+        if (!m_Device.read(outFrame)) {
+            throw std::runtime_error("Could not read frame");
+        }
+
+        // If there's no error, then we have updated frame and so return true        
+        return true;
     }
 
     virtual void setOutputSize(const cv::Size &outSize) override

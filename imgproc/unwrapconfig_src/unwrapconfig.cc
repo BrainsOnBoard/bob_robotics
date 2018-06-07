@@ -1,7 +1,10 @@
+// windows.h
+#include "os/windows_include.h"
+
 // C++ includes
 #include <memory>
 
-// opencv
+// OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
@@ -56,17 +59,15 @@ main(int argc, char **argv)
 
     // display remapped camera output on loop until user presses escape
     for (bool runLoop = true; runLoop;) {
-        if (!pcam->readFrame(imorig)) {
-            std::cerr << "Error: Could not read from webcam" << std::endl;
-            return 1;
-        }
+        pcam->readFrame(imorig);
 
+        // unwrap frame
         unwrapper.unwrap(imorig, unwrap);
 
         // show unwrapped image
         imshow("unwrapped", unwrap);
 
-        // draw calibration cross at what we've chose as the center
+        // draw calibration cross in centre
         drawCalibrationLine(imorig,
                             cv::Point(unwrapper.m_CentrePixel.x - CROSS_SIZE,
                                       unwrapper.m_CentrePixel.y),
@@ -78,8 +79,7 @@ main(int argc, char **argv)
                             cv::Point(unwrapper.m_CentrePixel.x,
                                       unwrapper.m_CentrePixel.y + CROSS_SIZE));
 
-        // draw inner and outer circles, showing the area which we will
-        // unwrap
+        // draw inner and outer circles, showing the area which we will unwrap
         circle(imorig,
                unwrapper.m_CentrePixel,
                unwrapper.m_InnerPixel,
@@ -95,7 +95,7 @@ main(int argc, char **argv)
         imshow("calibration", imorig);
 
         // read keypress in
-        int key = cv::waitKeyEx(1);
+        int key = cv::waitKeyEx(1) & OS::KeyMask;
 
         // no key pressed
         if (key == -1) {
@@ -163,8 +163,7 @@ main(int argc, char **argv)
 
     if (dirtyFlag) {
         // write params to file
-        std::string filePath =
-                pcam->getCameraName() + ".yaml"; // I don't like this
+        std::string filePath = pcam->getCameraName() + ".yaml"; // I don't like this
         std::cout << "Writing to " << filePath << "..." << std::endl;
         cv::FileStorage outfs(filePath, cv::FileStorage::WRITE);
         outfs << "unwrapper" << unwrapper;
