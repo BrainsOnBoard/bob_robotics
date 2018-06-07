@@ -130,3 +130,5 @@ private:
     std::promise<void> m_AckPromise;
     bool m_ThreadRunning = false;
 };
+}   // Video
+}   // GeNNRobotics

@@ -42,7 +42,7 @@ main()
     auto cam = Video::getPanoramicCamera();
 
     // stream camera asynchronously over network
-    Video::NetSink netSink(server, cam);
+    Video::NetSink netSink(server, *cam);
 
 #ifdef NO_I2C_ROBOT
     // output motor commands to terminal
