@@ -83,7 +83,7 @@ Bebop::connect()
 
 #ifndef DUMMY_DRONE
     // send start signal
-    checkError(ARCONTROLLER_Device_Start(m_Device));
+    checkError(ARCONTROLLER_Device_Start(m_Device.get()));
 
     // wait for start
     eARCONTROLLER_DEVICE_STATE state;
@@ -109,7 +109,7 @@ Bebop::disconnect()
 #ifndef DUMMY_DRONE
     if (m_Device) {
         // send stop signal
-        checkError(ARCONTROLLER_Device_Stop(m_Device));
+        checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
 
         if (m_IsConnected) {
             // wait for stop
@@ -122,10 +122,6 @@ Bebop::disconnect()
                 std::cerr << "Warning: Could not disconnect from drone" << std::endl;
             }
         }
-
-        // free pointer
-        ARCONTROLLER_Device_Delete(&m_Device);
-        m_Device = nullptr;
 
         m_IsConnected = false;
     }
@@ -313,7 +309,7 @@ inline eARCONTROLLER_DEVICE_STATE
 Bebop::getState()
 {
     auto err = ARCONTROLLER_OK;
-    auto state = ARCONTROLLER_Device_GetState(m_Device, &err);
+    auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
     checkError(err);
     return state;
 }
@@ -325,7 +321,10 @@ inline void
 Bebop::createControllerDevice(DiscoveryDevice &ddev)
 {
     auto err = ARCONTROLLER_OK;
-    m_Device = ARCONTROLLER_Device_New(ddev.dev, &err);
+    m_Device = ControllerPtr(ARCONTROLLER_Device_New(ddev.dev, &err),
+        [](ARCONTROLLER_Device_t *dev) {
+            ARCONTROLLER_Device_Delete(&dev);
+        });
     checkError(err);
 }
 
@@ -337,9 +336,9 @@ inline void
 Bebop::addEventHandlers()
 {
     checkError(ARCONTROLLER_Device_AddStateChangedCallback(
-            m_Device, stateChanged, this));
+            m_Device.get(), stateChanged, this));
     checkError(ARCONTROLLER_Device_AddCommandReceivedCallback(
-            m_Device, commandReceived, this));
+            m_Device.get(), commandReceived, this));
 }
 
 /*

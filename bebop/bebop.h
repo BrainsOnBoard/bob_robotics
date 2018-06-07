@@ -11,6 +11,7 @@ extern "C"
 // C++ includes
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <string>
 
 // GeNNRobotics includes
@@ -85,24 +86,7 @@ using flightEventHandler = void (*)(bool takeoff);
  */
 class Bebop
 {
-public:
-    ARCONTROLLER_Device_t *m_Device = nullptr;
-
-    Bebop();
-    ~Bebop();
-    void addJoystick(HID::Joystick &joystick);
-    void connect();
-    void disconnect();
-    void takeOff();
-    void land();
-    void setPitch(int8_t pitch);
-    void setRoll(int8_t right);
-    void setUpDown(int8_t up);
-    void setYaw(int8_t right);
-    void stopMoving();
-    void takePhoto();
-    void setFlightEventHandler(flightEventHandler);
-
+using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 private:
     Semaphore m_Semaphore;
     bool m_IsConnected = false;
@@ -131,6 +115,24 @@ private:
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
 #endif // !DUMMY_DRONE
+
+public:
+    ControllerPtr m_Device;
+
+    Bebop();
+    ~Bebop();
+    void addJoystick(HID::Joystick &joystick);
+    void connect();
+    void disconnect();
+    void takeOff();
+    void land();
+    void setPitch(int8_t pitch);
+    void setRoll(int8_t right);
+    void setUpDown(int8_t up);
+    void setYaw(int8_t right);
+    void stopMoving();
+    void takePhoto();
+    void setFlightEventHandler(flightEventHandler);
 };     // Bebop
 } // Robots
 } // GeNNRobotics
