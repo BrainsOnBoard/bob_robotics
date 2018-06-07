@@ -28,7 +28,7 @@ public:
             });
     }
 
-    void drive(HID::Joystick &joystick, float deadZone = 0.25f)
+    void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
               joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
