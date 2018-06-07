@@ -8,7 +8,7 @@
 #include "../common/joystick.h"
 #include "../common/lm9ds1_imu.h"
 #include "../common/timer.h"
-#include "../robots/motor_i2c.h"
+#include "../robots/norbot.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
     
     // Create motor interface
-    Robots::MotorI2C motor;
+    Robots::Norbot motor;
     
     // Initialise GeNN
     allocateMem();

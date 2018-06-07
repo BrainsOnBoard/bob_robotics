@@ -5,7 +5,7 @@
 // Common includes
 #include "../common/joystick.h"
 #include "../genn_utils/analogue_csv_recorder.h"
-#include "../robots/motor_i2c.h"
+#include "../robots/norbot.h"
 #include "../vicon/capture_control.h"
 #include "../vicon/udp.h"
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    Robots::MotorI2C motor;
+    Robots::Norbot motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);

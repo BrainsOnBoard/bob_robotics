@@ -3,9 +3,9 @@
 namespace GeNNRobotics {
 namespace Robots {
 // Forward declarations
-class MotorI2C;
+class Norbot;
 }
 }
 
 // Functions
-float driveMotorFromCPU1(GeNNRobotics::Robots::MotorI2C &motor, bool display = false);
+float driveMotorFromCPU1(GeNNRobotics::Robots::Norbot &motor, bool display = false);

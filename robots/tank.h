@@ -10,13 +10,13 @@
 namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// Motor
+// GeNNRobotics::Robots::Tank
 //----------------------------------------------------------------------------
 // Interface for driving tank-like wheeled robots
-class Motor
+class Tank
 {
 public:
-    virtual ~Motor()
+    virtual ~Tank()
     {}
 
     void addJoystick(HID::Joystick &joystick)
@@ -98,6 +98,6 @@ private:
         // signal that we have handled the event
         return true;
     }
-}; // Motor
+}; // Tank
 } // Robots
 } // GeNNRobotics

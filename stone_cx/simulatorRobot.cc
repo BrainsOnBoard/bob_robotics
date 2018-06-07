@@ -9,7 +9,7 @@
 #include "../common/timer.h"
 #include "../imgproc/opencv_optical_flow.h"
 #include "../imgproc/opencv_unwrap_360.h"
-#include "../robots/motor_i2c.h"
+#include "../robots/norbot.h"
 #include "../video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -77,7 +77,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
     // Create unwrapper to unwrap camera output
     const cv::Size camRes = cam.getOutputSize();
-    auto unwrapper = cam.createDefaultUnwrapper(unwrapRes);
+    auto unwrapper = cam.createUnwrapper(unwrapRes);
 #else
     // Open video capture device and check it matches desired camera resolution
     cv::VideoCapture capture(cameraDevice);
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
     
     // Create motor interface
-    MotorI2C motor;
+    Norbot motor;
     
     // Initialise GeNN
     allocateMem();

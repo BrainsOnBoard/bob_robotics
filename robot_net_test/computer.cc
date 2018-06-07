@@ -14,7 +14,7 @@
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
-#include "robots/motor_netsink.h"
+#include "robots/tank_netsink.h"
 #include "video/display.h"
 #include "video/netsource.h"
 
@@ -49,9 +49,9 @@ main(int argc, char **argv)
         Video::NetSource video(client);
 
         // transmit motor commands over network
-        Robots::MotorNetSink motor(client);
+        Robots::TankNetSink motor(client);
 
-        // add joystick for controlling Motor
+        // add joystick for controlling Tank
         HID::Joystick joystick;
         motor.addJoystick(joystick); // send joystick events to motor
 
