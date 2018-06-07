@@ -55,14 +55,16 @@ public:
      * Initialise class without m_Socket set. It can be set later with setSocket().
      */
     Socket(bool print = PrintDebug)
-      : m_Print(print)
-    {}
+      : m_Buffer(DefaultBufferSize), m_Print(print)
+    {
+        m_Buffer.resize(DefaultBufferSize);
+    }
 
     /*
      * Initialise class with specified socket.
      */
     Socket(socket_t sock, bool print = PrintDebug)
-      : m_Print(print)
+      : Socket(print)
     {
         setSocket(sock);
     }
@@ -132,7 +134,7 @@ public:
         std::ostringstream oss;
         while (true) {
             if (m_BufferBytes == 0) {
-                m_BufferBytes += readOnce(m_Buffer,
+                m_BufferBytes += readOnce(m_Buffer.data(),
                                           m_BufferStart,
                                           DefaultBufferSize - m_BufferStart);
             }
@@ -198,7 +200,7 @@ public:
     }
 
 private:
-    char m_Buffer[DefaultBufferSize];
+    std::vector<char> m_Buffer;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
     std::mutex m_ReadMutex, m_SendMutex;
