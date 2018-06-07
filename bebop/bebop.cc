@@ -404,11 +404,70 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         return;
     }
 
-    if (key ==
-        ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED) {
+    if (key == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED) {
         Bebop *bebop = reinterpret_cast<Bebop *>(data);
         bebop->batteryChanged(dict);
     }
+}
+
+bool
+Bebop::onAxisEvent(HID::JAxis axis, float value)
+{
+    float f;
+
+    /* 
+     * setRoll/Pitch etc. all take values between -100 and 100. We cap these 
+     * values for the joystick code to make the drone more controllable. 
+     */
+    switch (axis) {
+    case HID::JAxis::RightStickHorizontal:
+        f = round(MaxBank * value);
+        setRoll(static_cast<int8_t>(f));
+        return true;
+        break;
+    case HID::JAxis::RightStickVertical:
+        f = round(-MaxBank * value);
+        setPitch(static_cast<int8_t>(f));
+        return true;
+        break;
+    case HID::JAxis::LeftStickHorizontal:
+        f = round(MaxYaw * value);
+        setYaw(static_cast<int8_t>(f));
+        return true;
+        break;
+    case HID::JAxis::LeftStickVertical:
+        f = round(-MaxUp * value);
+        setUpDown(static_cast<int8_t>(f));
+        return true;
+        break;
+    }
+
+    // otherwise signal that we haven't handled event
+    return false;
+}
+
+bool
+Bebop::onButtonEvent(HID::JButton button, bool pressed)
+{
+    // we only care about button presses
+    if (!pressed) {
+        return false;
+    }
+
+    // A = take off; B = land
+    switch (button) {
+    case HID::JButton::A:
+        takeOff();
+        return true;
+        break;
+    case HID::JButton::B:
+        land();
+        return true;
+        break;
+    }
+
+    // otherwise signal that we haven't handled event
+    return false;
 }
 
 // start VideoDecoder class
