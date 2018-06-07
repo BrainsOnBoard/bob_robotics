@@ -88,11 +88,7 @@ public:
         return DefaultCameraName;
     }
 
-    virtual cv::Size getOutputSize() const
-    {
-        throw std::runtime_error("This camera does not allow you to get its resolution");
-    }
-
+    virtual cv::Size getOutputSize() const = 0;
     virtual bool readFrame(cv::Mat &outFrame) = 0;
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
