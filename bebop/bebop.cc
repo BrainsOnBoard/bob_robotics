@@ -2,8 +2,6 @@
 
 namespace GeNNRobotics {
 namespace Robots {
-using namespace std;
-
 #ifndef DUMMY_DRONE
 /*
  * Create object in memory.
@@ -44,10 +42,10 @@ DiscoveryDevice::discover()
 Bebop::Bebop()
 {
 #ifdef DUMMY_DRONE
-    cout << "Running in DUMMY_DRONE mode -- will not connect to drone!" << endl;
+    std::cout << "Running in DUMMY_DRONE mode -- will not connect to drone!" << std::endl;
 #else
 #ifdef NO_FLY
-    cout << "Running in NO_FLY mode -- drone will not move!" << endl;
+    std::cout << "Running in NO_FLY mode -- drone will not move!" << std::endl;
 #endif
 
     // silence annoying messages printed by library
@@ -94,10 +92,10 @@ Bebop::connect()
     } while (state == ARCONTROLLER_DEVICE_STATE_STARTING);
 
     if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
-        throw runtime_error("Could not connect to drone");
+        throw std::runtime_error("Could not connect to drone");
     }
 #else
-    cout << "Drone started" << endl;
+    std::cout << "Drone started" << std::endl;
 #endif
     m_IsConnected = true;
 }
@@ -121,7 +119,7 @@ Bebop::disconnect()
             } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
 
             if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
-                cerr << "Warning: Could not disconnect from drone" << endl;
+                std::cerr << "Warning: Could not disconnect from drone" << std::endl;
             }
         }
 
@@ -155,7 +153,7 @@ void
 Bebop::takeOff()
 {
     if (m_IsConnected) {
-        cout << "Taking off..." << endl;
+        std::cout << "Taking off..." << std::endl;
 #ifndef NO_FLY
         checkError(m_Device->aRDrone3->sendPilotingTakeOff(m_Device->aRDrone3));
 #endif
@@ -170,7 +168,7 @@ void
 Bebop::land()
 {
     if (m_IsConnected) {
-        cout << "Landing..." << endl;
+        std::cout << "Landing..." << std::endl;
 #ifndef NO_FLY
         checkError(m_Device->aRDrone3->sendPilotingLanding(m_Device->aRDrone3));
 #endif
@@ -186,11 +184,11 @@ Bebop::setPitch(int8_t pitch)
 {
     if (m_IsConnected) {
         if (pitch > 100 || pitch < -100) {
-            throw invalid_argument("Pitch must be between 100 and -100");
+            throw std::invalid_argument("Pitch must be between 100 and -100");
         }
 
 #ifdef NO_FLY
-        cout << "Setting pitch to " << (int) pitch << endl;
+        std::cout << "Setting pitch to " << (int) pitch << std::endl;
 #else
         checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, pitch));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
@@ -206,11 +204,11 @@ Bebop::setRoll(int8_t right)
 {
     if (m_IsConnected) {
         if (right > 100 || right < -100) {
-            throw invalid_argument("Roll must be between 100 and -100");
+            throw std::invalid_argument("Roll must be between 100 and -100");
         }
 
 #ifdef NO_FLY
-        cout << "Setting roll to " << (int) right << endl;
+        std::cout << "Setting roll to " << (int) right << std::endl;
 #else
         checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, right));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
@@ -226,12 +224,12 @@ Bebop::setUpDown(int8_t up)
 {
     if (m_IsConnected) {
         if (up > 100 || up < -100) {
-            throw invalid_argument(
+            throw std::invalid_argument(
                     "Up/down value must be between 100 and -100");
         }
 
 #ifdef NO_FLY
-        cout << "Setting up/down to " << (int) up << endl;
+        std::cout << "Setting up/down to " << (int) up << std::endl;
 #else
         checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, up));
 #endif
@@ -246,11 +244,11 @@ Bebop::setYaw(int8_t right)
 {
     if (m_IsConnected) {
         if (right > 100 || right < -100) {
-            throw invalid_argument("Yaw must be between 100 and -100");
+            throw std::invalid_argument("Yaw must be between 100 and -100");
         }
 
 #ifdef NO_FLY
-        cout << "Setting yaw to " << (int) right << endl;
+        std::cout << "Setting yaw to " << (int) right << std::endl;
 #else
         checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, right));
 #endif
@@ -278,7 +276,7 @@ void
 Bebop::takePhoto()
 {
     if (m_IsConnected) {
-        cout << "Taking photo" << endl;
+        std::cout << "Taking photo" << std::endl;
 #ifndef DUMMY_DRONE
         checkError(m_Device->aRDrone3->sendMediaRecordPicture(m_Device->aRDrone3, 0));
 #endif
@@ -368,7 +366,7 @@ Bebop::batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 
     if (val) {
         // print battery status
-        cout << "Battery: " << (int) val->value.U8 << "%" << endl;
+        std::cout << "Battery: " << (int) val->value.U8 << "%" << std::endl;
     }
 }
 
@@ -398,22 +396,22 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
-        cout << "Drone stopped" << endl;
+        std::cout << "Drone stopped" << std::endl;
         break;
     case ARCONTROLLER_DEVICE_STATE_STARTING:
-        cout << "Drone starting..." << endl;
+        std::cout << "Drone starting..." << std::endl;
         break;
     case ARCONTROLLER_DEVICE_STATE_RUNNING:
-        cout << "Drone started" << endl;
+        std::cout << "Drone started" << std::endl;
         break;
     case ARCONTROLLER_DEVICE_STATE_PAUSED:
-        cout << "Drone is paused" << endl;
+        std::cout << "Drone is paused" << std::endl;
         break;
     case ARCONTROLLER_DEVICE_STATE_STOPPING:
-        cout << "Drone stopping..." << endl;
+        std::cout << "Drone stopping..." << std::endl;
         break;
     default:
-        cerr << "Unknown state!" << endl;
+        std::cerr << "Unknown state!" << std::endl;
     }
 }
 

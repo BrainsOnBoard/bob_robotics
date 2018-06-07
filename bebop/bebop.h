@@ -34,7 +34,6 @@ extern "C"
 
 namespace GeNNRobotics {
 namespace Robots {
-using namespace std;
 
 #ifndef DUMMY_DRONE
 /*
@@ -70,8 +69,8 @@ inline void
 checkError(eARCONTROLLER_ERROR err)
 {
     if (err != ARCONTROLLER_OK) {
-        throw runtime_error(string("Controller error: ") +
-                            ARCONTROLLER_Error_ToString(err));
+        throw std::runtime_error(std::string("Controller error: ") +
+                                 ARCONTROLLER_Error_ToString(err));
     }
 }
 
