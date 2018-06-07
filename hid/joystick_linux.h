@@ -158,7 +158,7 @@ public:
     }
 
 private:
-    int m_Fd = 0;       // file descriptor for joystick device
+    int m_Fd = -1;       // file descriptor for joystick device
     js_event m_JsEvent; // struct to contain joystick event
     std::array<int16_t, 5> m_AxisState;
 
@@ -167,7 +167,7 @@ private:
         ssize_t bytes;
         do {
             bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
-            if (errno && errno != EAGAIN) {
+            if (bytes == -1 && errno != EAGAIN) {
                 throw std::runtime_error("Error reading from joystick (" +
                                          std::to_string(errno) + std::string(": ") +
                                          std::strerror(errno) + ")");

@@ -80,8 +80,6 @@ public:
      */
     void run() override
     {
-
-        cv::Mat frame, unwrapped;
         while (m_DoRun) {
             // poll the camera until we get a new frame
             while (!update()) {
