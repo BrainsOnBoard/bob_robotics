@@ -105,14 +105,14 @@ public:
         // Read XInput state
         read(m_NewState);
 
-        // Check that something has changed
-        if (m_State.dwPacketNumber == m_NewState.dwPacketNumber) {
-            return false;
-        }
-
         // unset Pressed and Released bits for buttons
         for (auto &s : m_ButtonState) {
             s &= StateDown;
+        }
+
+        // Check that something has changed
+        if (m_State.dwPacketNumber == m_NewState.dwPacketNumber) {
+            return false;
         }
 
         // Check buttons for changes
