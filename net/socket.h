@@ -26,8 +26,8 @@
 
 namespace GeNNRobotics {
 namespace Net {
-using Command = std::vector<std::string>;    
-    
+using Command = std::vector<std::string>;
+
 class socket_error : public std::runtime_error
 {
 public:
@@ -47,7 +47,7 @@ public:
 class Socket
 {
 public:
-    static const size_t DefaultBufferSize = 1024*8;
+    static const size_t DefaultBufferSize = 1024 * 8;
     static const int DefaultListenPort = 2000;
     static const bool PrintDebug = false;
 
@@ -55,7 +55,8 @@ public:
      * Initialise class without m_Socket set. It can be set later with setSocket().
      */
     Socket(bool print = PrintDebug)
-      : m_Buffer(DefaultBufferSize), m_Print(print)
+      : m_Buffer(DefaultBufferSize)
+      , m_Print(print)
     {
         m_Buffer.resize(DefaultBufferSize);
     }
@@ -170,7 +171,7 @@ public:
         std::lock_guard<std::mutex> guard(m_SendMutex);
         checkSocket();
 
-        int ret = ::send(m_Socket, (sendbuff_t) buffer, (bufflen_t) len, MSG_NOSIGNAL);
+        int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
         if (ret == -1) {
             throw socket_error("Could not send " + errorMessage());
         }
@@ -234,19 +235,12 @@ private:
      */
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
-#ifdef _MSC_VER
-        int len = recv(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen, 0);
-#else
-        int len;
-        while ((len = ::read(m_Socket, (readbuff_t) &buffer[start], (bufflen_t) maxlen)) == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-#endif
+        int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
             throw socket_error("Could not read from socket " + errorMessage());
         }
 
-        return (size_t) len;
+        return static_cast<size_t>(len);
     }
 
     /*
