@@ -20,16 +20,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="joystick_windows.h">
+    <ClInclude Include="..\hid\joystick_windows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="joystick_linux.h">
+    <ClInclude Include="..\hid\joystick_linux.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="joystick.h">
+    <ClInclude Include="..\hid\joystick.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="joystick_base.h">
+    <ClInclude Include="..\hid\joystick_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoystickTest", "hid\JoystickTest.vcxproj", "{7BCC5991-C250-41D3-AC4B-C834F9C74288}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoystickTest", "joystick_test\JoystickTest.vcxproj", "{7BCC5991-C250-41D3-AC4B-C834F9C74288}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapSerialiseTest", "imgproc\tests\serialise\UnwrapSerialiseTest.vcxproj", "{FA7D7725-5971-493C-9321-561A61BC7979}"
 EndProject

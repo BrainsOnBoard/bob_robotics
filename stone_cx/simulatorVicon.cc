@@ -3,7 +3,7 @@
 #include <numeric>
 
 // Common includes
-#include "../common/joystick.h"
+#include "../hid/joystick.h"
 #include "../genn_utils/analogue_csv_recorder.h"
 #include "../robots/norbot.h"
 #include "../vicon/capture_control.h"
@@ -19,6 +19,7 @@
 #include "simulatorCommon.h"
 
 using namespace GeNNRobotics;
+using namespace GeNNRobotics::HID;
 
 int main(int argc, char *argv[])
 {
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
 
     // Create joystick interface
-    Joystick joystick;
+    Joystick joystick(RobotParameters::joystickDeadzone);
 
     // Create motor interface
     Robots::Norbot motor;
@@ -87,10 +88,10 @@ int main(int argc, char *argv[])
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
         
         // Read from joystick
-        joystick.read();
+        joystick.update();
         
         // Stop if 2nd button is pressed
-        if(joystick.isButtonDown(1)) {
+        if(joystick.isDown(JButton::B)) {
             break;
         }
         
@@ -129,10 +130,10 @@ int main(int argc, char *argv[])
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
-            joystick.drive(motor, RobotParameters::joystickDeadzone);
+            motor.drive(joystick);
             
             // If first button is pressed switch to returning home
-            if(joystick.isButtonDown(0)) {
+            if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
                 std::cout << "Turn around VICON frame:" << objectData.getFrameNumber() << std::endl;
