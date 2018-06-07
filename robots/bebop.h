@@ -353,7 +353,9 @@ Bebop::takeOff()
 #ifndef NO_FLY
         checkError(m_Device->aRDrone3->sendPilotingTakeOff(m_Device->aRDrone3));
 #endif
-        m_FlightEventHandler(true);
+        if (m_FlightEventHandler) {
+            m_FlightEventHandler(true);
+        }
     }
 }
 
@@ -368,7 +370,9 @@ Bebop::land()
 #ifndef NO_FLY
         checkError(m_Device->aRDrone3->sendPilotingLanding(m_Device->aRDrone3));
 #endif
-        m_FlightEventHandler(false);
+        if (m_FlightEventHandler) {
+            m_FlightEventHandler(false);
+        }
     }
 }
 
