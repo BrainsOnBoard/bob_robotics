@@ -16,8 +16,6 @@
 
 namespace GeNNRobotics {
 namespace HID {
-#define DefaultDeadZone 0.25f
-
 // helper macros
 #define toIndex(value) static_cast<size_t>(value)
 #define toAxis(value) static_cast<JAxis>(value)
@@ -142,7 +140,7 @@ public:
 protected:
     std::array<unsigned char, toIndex(JButton::LENGTH)> m_ButtonState;
 
-    JoystickBase(float deadZone)
+    JoystickBase(float deadZone = 0.0f)
       : m_DeadZone(deadZone)
     {}
 
