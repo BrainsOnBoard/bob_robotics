@@ -8,7 +8,9 @@
 #include "os/windows_include.h"
 
 // C++ includes
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 // GeNN robotics includes
 #include "hid/joystick.h"
@@ -60,8 +62,9 @@ main(int argc, char **argv)
 
         // poll joystick and video stream repeatedly
         do {
-            joystick.update();
-            display.update();
+            if (!joystick.update() && !display.update()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
         } while (display.isOpen());
     }
 
