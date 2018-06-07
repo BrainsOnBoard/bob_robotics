@@ -54,6 +54,7 @@ extern "C"
 
 // C++ includes
 #include <algorithm>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -139,7 +140,7 @@ public:
 
 private:
     ARCONTROLLER_Device_t *m_Device;
-    VideoDecoder *decoder = nullptr;
+    std::unique_ptr<VideoDecoder> decoder;
     FILE *pipe = nullptr;
     userVideoCallback m_UserCallback = nullptr;
     void *m_UserVideoCallbackData;

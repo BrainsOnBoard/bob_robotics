@@ -350,8 +350,6 @@ BebopVideoStream::~BebopVideoStream()
     stopStreaming();
     killMplayer();
     deletePipe();
-    delete decoder;
-    decoder = nullptr;
 }
 
 /*
@@ -373,7 +371,7 @@ void
 BebopVideoStream::startStreaming(userVideoCallback cb, void *userdata)
 {
     if (!decoder) {
-        decoder = new VideoDecoder();
+        decoder.reset(new VideoDecoder());
         m_UserCallback = cb;
         m_UserVideoCallbackData = userdata;
         startStreaming();
