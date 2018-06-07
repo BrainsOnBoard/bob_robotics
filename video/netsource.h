@@ -56,15 +56,14 @@ public:
     {
         std::lock_guard<std::mutex> guard(m_FrameMutex);
 
-        // If no frames have been read, return false
-        if (m_Frame.cols == 0 && m_Frame.rows == 0) {
+        // The return value indicates whether there is a new frame or not
+        if (!m_NewFrame) {
             return false;
         }
-        // Otherwise, copy latest frame to buffer and return true
-        else {
-            m_Frame.copyTo(frame);
-            return true;
-        }
+
+        // Copy latest frame and return true
+        m_Frame.copyTo(frame);
+        return true;
     }
 
 private:
@@ -73,6 +72,7 @@ private:
     std::vector<uchar> m_Buffer;
     cv::Mat m_Frame;
     std::mutex m_FrameMutex;
+    bool m_NewFrame = false;
     mutable std::promise<void> m_ParamsPromise;
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
@@ -83,11 +83,14 @@ private:
             m_CameraName = command[4];
             m_ParamsPromise.set_value();
         } else if (command[1] == "FRAME") {
-            std::lock_guard<std::mutex> guard(m_FrameMutex);
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
             node.getSocket()->read(m_Buffer.data(), nbytes);
-            cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
+            {
+                std::lock_guard<std::mutex> guard(m_FrameMutex);
+                cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
+                m_NewFrame = true;
+            }
         } else {
             throw Net::bad_command_error();
         }
