@@ -151,13 +151,13 @@ private:
     inline void openPipe()
     {
         if (mkfifo(VIDEO_FIFO, 0644) < 0) {
-            throw runtime_error("Could not create pipe");
+            throw std::runtime_error("Could not create pipe");
         }
 
         pipe = fopen(VIDEO_FIFO, "w");
         if (!pipe) {
-            throw runtime_error("Could not open pipe for writing (" +
-                                to_string(errno) + "): " + strerror(errno));
+            throw std::runtime_error("Could not open pipe for writing (" +
+                                std::to_string(errno) + "): " + strerror(errno));
         }
     }
 
@@ -188,7 +188,7 @@ private:
                    "-benchmark",
                    "-really-quiet",
                    NULL);
-            cerr << "Error: Could not start mplayer" << endl;
+            std::cerr << "Error: Could not start mplayer" << std::endl;
             exit(1);
         }
     }
