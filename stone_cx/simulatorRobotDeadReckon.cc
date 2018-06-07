@@ -5,10 +5,10 @@
 #include <thread>
 
 // Common includes
-#include "../common/joystick.h"
+#include "../hid/joystick.h"
 #include "../common/lm9ds1_imu.h"
 #include "../common/timer.h"
-#include "../robots/motor_i2c.h"
+#include "../robots/norbot.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -20,6 +20,7 @@
 #include "simulatorCommon.h"
 
 using namespace GeNNRobotics;
+using namespace GeNNRobotics::HID;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace
@@ -57,10 +58,10 @@ int main(int argc, char *argv[])
     const float velocityScale = 1.0f / 10.0f;
     
     // Create joystick interface
-    Joystick joystick;
+    Joystick joystick(RobotParameters::joystickDeadzone);
     
     // Create motor interface
-    Robots::MotorI2C motor;
+    Robots::Norbot motor;
     
     // Initialise GeNN
     allocateMem();
@@ -103,10 +104,10 @@ int main(int argc, char *argv[])
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
         
         // Read from joystick
-        joystick.read();
+        joystick.update();
         
         // Stop if 2nd button is pressed
-        if(joystick.isButtonDown(1)) {
+        if(joystick.isDown(JButton::B)) {
             break;
         }
 
@@ -129,10 +130,10 @@ int main(int argc, char *argv[])
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
-            joystick.drive(motor, RobotParameters::joystickDeadzone);
+            motor.drive(joystick);
             
             // If first button is pressed switch to returning home
-            if(joystick.isButtonDown(0)) {
+            if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
                 outbound = false;

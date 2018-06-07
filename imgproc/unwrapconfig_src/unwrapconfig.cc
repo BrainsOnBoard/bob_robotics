@@ -48,7 +48,7 @@ main(int argc, char **argv)
 
     // create unwrapper and load params from file
     const cv::Size unwrapRes(1280, 400);
-    ImgProc::OpenCVUnwrap360 unwrapper = pcam->createDefaultUnwrapper(unwrapRes);
+    ImgProc::OpenCVUnwrap360 unwrapper = pcam->createUnwrapper(unwrapRes);
 
     int pixelJump = BIG_PX_JUMP; // number of pixels to move by for
                                  // calibration (either 1 or 5)

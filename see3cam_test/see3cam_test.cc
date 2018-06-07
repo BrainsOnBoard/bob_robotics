@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     const unsigned int unwrapHeight = 140;
 
     Mode mode = Mode::Greyscale;
-    OpenCVUnwrap360 unwrapper = cam.createDefaultUnwrapper(unwrapWidth, unwrapHeight);
+    OpenCVUnwrap360 unwrapper = cam.createUnwrapper(unwrapWidth, unwrapHeight);
     
     auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 

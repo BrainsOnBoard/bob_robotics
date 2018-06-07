@@ -4,12 +4,12 @@
 #include <thread>
 
 // Common includes
-#include "../common/joystick.h"
+#include "../hid/joystick.h"
 #include "../common/lm9ds1_imu.h"
 #include "../common/timer.h"
 #include "../imgproc/opencv_optical_flow.h"
 #include "../imgproc/opencv_unwrap_360.h"
-#include "../robots/motor_i2c.h"
+#include "../robots/norbot.h"
 #include "../video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -22,6 +22,7 @@
 #include "simulatorCommon.h"
 
 using namespace GeNNRobotics;
+using namespace GeNNRobotics::HID;
 using namespace GeNNRobotics::ImgProc;
 using namespace GeNNRobotics::Robots;
 using namespace GeNNRobotics::Video;
@@ -77,7 +78,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 
     // Create unwrapper to unwrap camera output
     const cv::Size camRes = cam.getOutputSize();
-    auto unwrapper = cam.createDefaultUnwrapper(unwrapRes);
+    auto unwrapper = cam.createUnwrapper(unwrapRes);
 #else
     // Open video capture device and check it matches desired camera resolution
     cv::VideoCapture capture(cameraDevice);
@@ -158,10 +159,10 @@ int main(int argc, char *argv[])
     const float velocityScale = 1.0f / 30.0f;
     
     // Create joystick interface
-    Joystick joystick;
+    Joystick joystick(RobotParameters::joystickDeadzone);
     
     // Create motor interface
-    MotorI2C motor;
+    Norbot motor;
     
     // Initialise GeNN
     allocateMem();
@@ -211,10 +212,10 @@ int main(int argc, char *argv[])
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
         
         // Read from joystick
-        joystick.read();
+        joystick.update();
         
         // Stop if 2nd button is pressed
-        if(joystick.isButtonDown(1)) {
+        if(joystick.isDown(JButton::B)) {
             break;
         }
 
@@ -236,16 +237,16 @@ int main(int argc, char *argv[])
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
-            joystick.drive(motor, RobotParameters::joystickDeadzone);
+            motor.drive(joystick);
             
             // If first button is pressed switch to returning home
-            if(joystick.isButtonDown(0)) {
+            if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
                 outbound = false;
             }
 
-            ignoreFlow = (fabs(joystick.getAxisState(0)) > fabs(joystick.getAxisState(1)));
+            ignoreFlow = (fabs(joystick.getState(JAxis::LeftStickHorizontal)) > fabs(joystick.getState(JAxis::LeftStickVertical)));
         }
         // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {

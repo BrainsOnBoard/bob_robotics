@@ -10,18 +10,24 @@
 namespace GeNNRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// Motor
+// GeNNRobotics::Robots::Tank
 //----------------------------------------------------------------------------
 // Interface for driving tank-like wheeled robots
-class Motor
+class Tank
 {
 public:
-    virtual ~Motor()
+    virtual ~Tank()
     {}
 
     void addJoystick(HID::Joystick &joystick)
     {
         joystick.addHandler([this](HID::JAxis axis, float value) { return onJoystickEvent(axis, value); });
+    }
+
+    void drive(HID::Joystick &joystick)
+    {
+        drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
+              joystick.getState(HID::JAxis::LeftStickVertical));
     }
 
     virtual void tank(float left, float right)
@@ -33,7 +39,7 @@ public:
     void readFromNetwork(Net::Node &node)
     {
         // handle incoming TNK commands
-        node.addCommandHandler("TNK", [this] (Net::Node &node, const Net::Command &command) {
+        node.addCommandHandler("TNK", [this](Net::Node &node, const Net::Command &command) {
             onCommandReceived(node, command);
         });
     }
@@ -41,6 +47,31 @@ public:
 private:
     float m_X = 0;
     float m_Y = 0;
+
+    void drive(float x, float y)
+    {
+        // If joystick is in dead zone, stop robot
+        if (x == 0 && y == 0) {
+            tank(0.0f, 0.0f);
+            return;
+        }
+
+        const float r = sqrt((x * x) + (y * y));
+        const float theta = atan2(x, -y);
+        const float twoTheta = 2.0f * theta;
+
+        // Drive motor
+        const float pi = 3.141592653589793238462643383279502884f;
+        if (theta >= 0.0f && theta < pi / 2) {
+            tank(r, r * cos(twoTheta));
+        } else if (theta >= pi / 2 && theta < pi) {
+            tank(-r * cos(twoTheta), -r);
+        } else if (theta < 0.0f && theta >= -pi / 2) {
+            tank(r * cos(twoTheta), r);
+        } else if (theta < -pi / 2 && theta >= -pi) {
+            tank(-r, -r * cos(twoTheta));
+        }
+    }
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
@@ -73,31 +104,10 @@ private:
             return false;
         }
 
-        // If joystick is in dead zone, stop robot
-        if (x == 0 && y == 0) {
-            tank(0.0f, 0.0f);
-            return true;
-        }
-
-        const float r = sqrt((x * x) + (y * y));
-        const float theta = atan2(x, -y);
-        const float twoTheta = 2.0f * theta;
-
-        // Drive motor
-        const float pi = 3.141592653589793238462643383279502884f;
-        if (theta >= 0.0f && theta < pi / 2) {
-            tank(r, r * cos(twoTheta));
-        } else if (theta >= pi / 2 && theta < pi) {
-            tank(-r * cos(twoTheta), -r);
-        } else if (theta < 0.0f && theta >= -pi / 2) {
-            tank(r * cos(twoTheta), r);
-        } else if (theta < -pi / 2 && theta >= -pi) {
-            tank(-r, -r * cos(twoTheta));
-        }
-
-        // signal that we have handled the event
+        // drive robot with joystick
+        drive(x, y);
         return true;
     }
-}; // Motor
+}; // Tank
 } // Robots
 } // GeNNRobotics

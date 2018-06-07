@@ -42,7 +42,7 @@ int main()
 
     // Create panoramic camera and suitable unwrapper
     auto cam = getPanoramicCamera();
-    auto unwrapper = cam->createDefaultUnwrapper(unwrapRes);
+    auto unwrapper = cam->createUnwrapper(unwrapRes);
     const auto camRes = cam->getOutputSize();
 
     // Create optical flow calculator
