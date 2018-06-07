@@ -13,8 +13,9 @@ extern "C"
 #include <iostream>
 #include <string>
 
-// GeNNRobotics controllers
+// GeNNRobotics includes
 #include "../common/semaphore.h"
+#include "../hid/joystick.h"
 
 // these values are hardcoded for Bebop drones
 #define BEBOP_IP_ADDRESS "192.168.42.1"
@@ -90,6 +91,7 @@ public:
 
     Bebop();
     ~Bebop();
+    void addJoystick(HID::Joystick &joystick);
     void connect();
     void disconnect();
     void takeOff();
@@ -106,6 +108,12 @@ private:
     Semaphore m_Semaphore;
     bool m_IsConnected = false;
     flightEventHandler m_FlightEventHandler = nullptr;
+    static constexpr float MaxBank = 50; // maximum % of speed for pitch/rool
+    static constexpr float MaxUp = 50; // maximum % of speed for up/down motion
+    static constexpr float MaxYaw = 100; // maximum % of speed for yaw
+
+    bool onAxisEvent(HID::JAxis axis, float value);
+    bool onButtonEvent(HID::JButton button, bool pressed);
 
 #ifndef DUMMY_DRONE
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();

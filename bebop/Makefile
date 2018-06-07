@@ -7,7 +7,7 @@ CXXFLAGS+=-O2 -g -I$(AR_STAGING_PATH)/usr/include \
 
 .PHONY: all clean
 
-all: bebop.o video.o joystick.o
+all: bebop.o video.o
 
 %.o: src/%.cc
 	$(_PREFIX)$(CXX) -o $@ -c $< $(CXXFLAGS)

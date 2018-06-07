@@ -135,6 +135,20 @@ Bebop::disconnect()
 }
 
 /*
+ * Start controlling this drone with a joystick.
+ */
+void
+Bebop::addJoystick(HID::Joystick &joystick)
+{
+    joystick.addHandler([this](HID::JAxis axis, float value) {
+        return onAxisEvent(axis, value);
+    });
+    joystick.addHandler([this](HID::JButton button, bool pressed) {
+        return onButtonEvent(button, pressed);
+    });
+}
+
+/*
  * Send take-off command.
  */
 void
