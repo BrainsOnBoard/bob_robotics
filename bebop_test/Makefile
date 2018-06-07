@@ -39,4 +39,4 @@ $(TARGET): $(TARGET).cc
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(TARGET).cc $(LDFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f $(TARGET)
