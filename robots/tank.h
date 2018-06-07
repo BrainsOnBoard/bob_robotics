@@ -19,15 +19,16 @@ public:
     virtual ~Tank()
     {}
 
-    void addJoystick(HID::Joystick &joystick)
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
+        m_DeadZone = deadZone;
         joystick.addHandler([this](HID::JAxis axis, float value) { return onJoystickEvent(axis, value); });
     }
 
-    void drive(HID::Joystick &joystick)
+    void drive(HID::Joystick &joystick, float deadZone = m_DeadZone)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-              joystick.getState(HID::JAxis::LeftStickVertical));
+              joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
     }
 
     virtual void tank(float left, float right)
@@ -47,29 +48,37 @@ public:
 private:
     float m_X = 0;
     float m_Y = 0;
+    float m_DeadZone = 0.25f;
 
-    void drive(float x, float y)
+    void drive(float x, float y, float deadZone)
     {
-        // If joystick is in dead zone, stop robot
-        if (x == 0 && y == 0) {
-            tank(0.0f, 0.0f);
-            return;
-        }
-
-        const float r = sqrt((x * x) + (y * y));
-        const float theta = atan2(x, -y);
-        const float twoTheta = 2.0f * theta;
-
-        // Drive motor
         const float pi = 3.141592653589793238462643383279502884f;
-        if (theta >= 0.0f && theta < pi / 2) {
-            tank(r, r * cos(twoTheta));
-        } else if (theta >= pi / 2 && theta < pi) {
-            tank(-r * cos(twoTheta), -r);
-        } else if (theta < 0.0f && theta >= -pi / 2) {
-            tank(r * cos(twoTheta), r);
-        } else if (theta < -pi / 2 && theta >= -pi) {
-            tank(-r, -r * cos(twoTheta));
+        const float halfPi = pi / 2.0f;
+
+        const bool deadX = (fabs(x) < deadZone);
+        const bool deadY = (fabs(y) < deadZone);
+        if (deadX && deadY) {
+            tank(0.0f, 0.0f);
+        } else if (deadX) {
+            tank(-y, -y);
+        } else if (deadY) {
+            tank(x, -x);
+        } else {
+            // If length of joystick vector places it in deadZone, stop motors
+            const float r = sqrt((x * x) + (y * y));
+            const float theta = atan2(x, -y);
+            const float twoTheta = 2.0f * theta;
+
+            // Drive motor
+            if (theta >= 0.0f && theta < halfPi) {
+                tank(r, r * cos(twoTheta));
+            } else if (theta >= halfPi && theta < pi) {
+                tank(-r * cos(twoTheta), -r);
+            } else if (theta < 0.0f && theta >= -halfPi) {
+                tank(r * cos(twoTheta), r);
+            } else if (theta < -halfPi && theta >= -pi) {
+                tank(-r, -r * cos(twoTheta));
+            }
         }
     }
 
@@ -105,7 +114,7 @@ private:
         }
 
         // drive robot with joystick
-        drive(x, y);
+        drive(x, y, m_DeadZone);
         return true;
     }
 }; // Tank

@@ -34,7 +34,7 @@ int main()
     cam.autoExposure(bubblescopeMask);
 
     // Create joystick interface
-    Joystick joystick(joystickDeadzone);
+    Joystick joystick;
 
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(unwrapSize);
@@ -70,7 +70,7 @@ int main()
 #endif  // VICON_CAPTURE
 
     // Loop through time until joystick button pressed
-    motor.addJoystick(joystick);
+    motor.addJoystick(joystick, joystickDeadzone);
     for(unsigned int x = 0; !joystick.isDown(JButton::B); x++) {
         // Read joystick
         joystick.update();
