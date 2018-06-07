@@ -27,22 +27,6 @@ namespace HID {
 #define int16_maxf static_cast<float>(std::numeric_limits<int16_t>::max())
 #define int16_absminf -static_cast<float>(std::numeric_limits<int16_t>::min())
 
-/*
- * Controller axes, including thumbsticks, triggers and D-pad.
- */
-enum class JAxis
-{
-    LeftStickHorizontal = 0,
-    LeftStickVertical = 1,
-    RightStickHorizontal = 3,
-    RightStickVertical = 4,
-    LeftTrigger = 2,
-    RightTrigger = 5,
-    DpadHorizontal = 6,
-    DpadVertical = 7,
-    LENGTH
-};
-
 enum ButtonState
 {
     StateDown = (1 << 0),
@@ -50,7 +34,7 @@ enum ButtonState
     StateReleased = (1 << 2)
 };
 
-template<typename JButton>
+template<typename JAxis, typename JButton>
 class JoystickBase : public Threadable
 {
     using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
@@ -146,11 +130,6 @@ public:
             return "back";
         case JButton::Start:
             return "start";
-#ifndef _WIN32
-        // this button is not available in Windows
-        case JButton::Xbox:
-            return "Xbox";
-#endif
         case JButton::LeftStick:
             return "left stick";
         case JButton::RightStick:

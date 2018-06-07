@@ -23,6 +23,22 @@
 namespace GeNNRobotics {
 namespace HID {
 /*
+ * Controller axes, including thumbsticks, triggers and D-pad.
+ */
+enum class JAxis
+{
+    LeftStickHorizontal = 0,
+    LeftStickVertical = 1,
+    RightStickHorizontal = 3,
+    RightStickVertical = 4,
+    LeftTrigger = 2,
+    RightTrigger = 5,
+    DpadHorizontal = 6,
+    DpadVertical = 7,
+    LENGTH
+};
+
+/*
  * Controller buttons. The left stick and right stick are also buttons (you can
  * click them.)
  */
@@ -42,7 +58,7 @@ enum class JButton
     LENGTH
 };
 
-class Joystick : public JoystickBase<JButton>
+class Joystick : public JoystickBase<JAxis, JButton>
 {
 public:
     Joystick(float deadZone = DefaultDeadZone)
