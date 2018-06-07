@@ -25,7 +25,7 @@ class Client
   , Socket
 {
 public:
-    Client(const std::string host, int port = DefaultListenPort);
+    Client(const std::string &host, int port = DefaultListenPort);
     ~Client();
     Socket *getSocket() const override;
 };
@@ -33,7 +33,7 @@ public:
 /*
  * Create client, connect to host over TCP
  */
-Client::Client(const std::string host, int port)
+Client::Client(const std::string &host, int port)
 {
     // Create socket
     setSocket(socket(AF_INET, SOCK_STREAM, 0));
