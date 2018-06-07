@@ -5,6 +5,7 @@
 #pragma once
 
 // C++ includes
+#include <atomic>
 #include <functional>
 #include <map>
 #include <stdexcept>
@@ -59,9 +60,11 @@ public:
             }
         }
     }
+    
+    bool isConnected() const{ return m_IsConnected; }
 
 protected:
-    bool m_IsConnected = false;
+    std::atomic<bool> m_IsConnected{false};
 
     void notifyConnectedHandlers()
     {
