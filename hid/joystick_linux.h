@@ -158,7 +158,7 @@ public:
     }
 
 private:
-    int m_Fd = 0;       // file descriptor for joystick device
+    int m_Fd = -1;       // file descriptor for joystick device
     js_event m_JsEvent; // struct to contain joystick event
     std::array<int16_t, 5> m_AxisState;
 
