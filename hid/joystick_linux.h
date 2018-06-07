@@ -138,22 +138,24 @@ public:
             return false;
         }
 
-        if (m_JsEvent.type == JS_EVENT_AXIS) {
-            // update axes' states
-            axisEvent();
-        } else {
-            // update current button's state
-            uint8_t &s = m_ButtonState[m_JsEvent.number];
-            if (m_JsEvent.value) {
-                s |= (StateDown | StatePressed); // set StateDown and StatePressed
+        do {
+            if (m_JsEvent.type == JS_EVENT_AXIS) {
+                // update axes' states
+                axisEvent();
             } else {
-                s &= ~StateDown;    // clear StateDown
-                s |= StateReleased; // set StateReleased
-            }
+                // update current button's state
+                uint8_t &s = m_ButtonState[m_JsEvent.number];
+                if (m_JsEvent.value) {
+                    s |= (StateDown | StatePressed); // set StateDown and StatePressed
+                } else {
+                    s &= ~StateDown;    // clear StateDown
+                    s |= StateReleased; // set StateReleased
+                }
 
-            // run button event handlers
-            raiseEvent(toButton(m_JsEvent.number), m_JsEvent.value);
-        }
+                // run button event handlers
+                raiseEvent(toButton(m_JsEvent.number), m_JsEvent.value);
+            }
+        } while (read()); // read all events in buffer
         return true;
     }
 
