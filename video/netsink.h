@@ -1,5 +1,11 @@
 #pragma once
 
+// C++ includes
+#include <future>
+#include <mutex>
+#include <string>
+#include <vector>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -28,8 +34,14 @@ public:
     }
 
     NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &name)
-    :   m_Node(node), m_Input(nullptr), m_FrameSize(frameSize), m_Name(nam)
+    :   m_Node(node), m_Input(nullptr), m_FrameSize(frameSize), m_Name(name)
     {
+        // handle incoming IMG commands
+        m_Node.addCommandHandler("IMG",
+                                 [this](Net::Node &node, const Net::Command& command)
+                                 {
+                                     onCommandReceivedSync(command);
+                                 });
     }
 
     virtual ~NetSink()
@@ -46,23 +58,28 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void streamToNetwork()
-    {
-
-    }
-
     void sendFrame(const cv::Mat &frame)
     {
-        cv::imencode(".jpg", frame, m_Buffer);
-        m_Node->getSocket()->send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
-        m_Node->getSocket()->send(m_Buffer.data(), m_Buffer.size());
+        // Wait for start acknowledgement
+        m_AckPromise.get_future().wait();
+
+        sendFrameInternal(frame);
     }
+
+
 
 private:
     //----------------------------------------------------------------------------
     // Private methods
     //----------------------------------------------------------------------------
-    void onCommandReceivedAsync(const Net::Command &command)
+    void sendFrameInternal(const cv::Mat &frame)
+    {
+        cv::imencode(".jpg", frame, m_Buffer);
+        m_Node.getSocket()->send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
+        m_Node.getSocket()->send(m_Buffer.data(), m_Buffer.size());
+    }
+
+    void onCommandReceived(const Net::Command &command)
     {
         if (command[1] != "START") {
             throw Net::bad_command_error();
@@ -71,18 +88,33 @@ private:
         // ACK the command and tell client the camera resolution
         m_Node.getSocket()->send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
                                  std::to_string(m_FrameSize.height) + " " +
-                                 getCameraName() + "\n");
+                                 m_Name + "\n");
+    }
+
+    void onCommandReceivedAsync(const Net::Command &command)
+    {
+        // Handle command
+        onCommandReceived(command);
 
         // start thread to transmit images in background
         m_ThreadRunning = true;
         m_Thread = std::thread(&NetSink::runAsync, this);
     }
 
+    void onCommandReceivedSync(const Net::Command &command)
+    {
+        // Handle command
+        onCommandReceived(command);
+
+        // Send future
+        m_AckPromise.set_value();
+    }
+
     void runAsync()
     {
         cv::Mat frame;
         while (m_ThreadRunning && m_Input->readFrame(frame)) {
-            sendFrame(frame);
+            sendFrameInternal(frame);
         }
     }
 
@@ -95,5 +127,6 @@ private:
     const std::string m_Name;
     std::thread m_Thread;
     std::vector<uchar> m_Buffer;
+    std::promise<void> m_AckPromise;
     bool m_ThreadRunning = false;
 };

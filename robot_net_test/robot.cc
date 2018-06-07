@@ -20,6 +20,7 @@
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/motor.h"
+#include "video/netsink.h"
 #include "video/panoramic.h"
 
 #ifndef NO_I2C_ROBOT
@@ -39,7 +40,9 @@ main()
 
     // get default camera
     auto cam = Video::getPanoramicCamera();
-    cam->streamToNetwork(server); // stream camera over network
+
+    // stream camera asynchronously over network
+    Video::NetSink netSink(server, cam);
 
 #ifdef NO_I2C_ROBOT
     // output motor commands to terminal
