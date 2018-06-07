@@ -35,43 +35,25 @@ extern "C"
 
 namespace GeNNRobotics {
 namespace Robots {
-
-#ifndef DUMMY_DRONE
-/*
- * Wrapper around ARDISCOVERY_Device_t functionality.
- *
- * This is used for discovering a Bebop drone on the local network.
- */
-class DiscoveryDevice
-{
-public:
-    ARDISCOVERY_Device_t *dev = nullptr;
-
-    DiscoveryDevice();
-    ~DiscoveryDevice();
-    void discover();
-
-private:
-    static inline void checkError(eARDISCOVERY_ERROR err)
-    {
-        if (err != ARDISCOVERY_OK) {
-            throw std::runtime_error(std::string("Discovery error: ") +
-                                     ARDISCOVERY_Error_ToString(err));
-        }
-    }
-};
-#endif // DUMMY_DRONE
-
 /*
  * Simply throws a runtime_error with appropriate message if
  * err != ARCONTROLLER_OK.
  */
-inline void
+void
 checkError(eARCONTROLLER_ERROR err)
 {
     if (err != ARCONTROLLER_OK) {
         throw std::runtime_error(std::string("Controller error: ") +
                                  ARCONTROLLER_Error_ToString(err));
+    }
+}
+
+void
+checkError(eARDISCOVERY_ERROR err)
+{
+    if (err != ARDISCOVERY_OK) {
+        throw std::runtime_error(std::string("Discovery error: ") +
+                                 ARDISCOVERY_Error_ToString(err));
     }
 }
 
@@ -101,7 +83,7 @@ private:
 #ifndef DUMMY_DRONE
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
     inline eARCONTROLLER_DEVICE_STATE getState();
-    inline void createControllerDevice(DiscoveryDevice &device);
+    inline void createControllerDevice();
     inline void addEventHandlers();
     void batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,

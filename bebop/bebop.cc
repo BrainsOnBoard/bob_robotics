@@ -2,39 +2,6 @@
 
 namespace GeNNRobotics {
 namespace Robots {
-#ifndef DUMMY_DRONE
-/*
- * Create object in memory.
- */
-DiscoveryDevice::DiscoveryDevice()
-{
-    auto err = ARDISCOVERY_OK;
-    dev = ARDISCOVERY_Device_New(&err);
-    checkError(err);
-}
-
-/*
- * Free object memory.
- */
-DiscoveryDevice::~DiscoveryDevice()
-{
-    ARDISCOVERY_Device_Delete(&dev);
-}
-
-/*
- * Try to discover drone.
- */
-void
-DiscoveryDevice::discover()
-{
-    checkError(ARDISCOVERY_Device_InitWifi(dev,
-                                           ARDISCOVERY_PRODUCT_BEBOP_2,
-                                           "bebop",
-                                           BEBOP_IP_ADDRESS,
-                                           BEBOP_DISCOVERY_PORT));
-}
-#endif // DUMMY_DRONE
-
 /*
  * Do all initialisation (including discovery) but don't actually
  * connect to drone yet.
@@ -51,12 +18,8 @@ Bebop::Bebop()
     // silence annoying messages printed by library
     ARSAL_Print_SetCallback(printCallback);
 
-    // try to discover drone on local network
-    DiscoveryDevice ddev;
-    ddev.discover();
-
     // object to interface with drone
-    createControllerDevice(ddev);
+    createControllerDevice();
 
     // to handle changes in state, incoming commands
     addEventHandlers();
@@ -318,13 +281,29 @@ Bebop::getState()
  * Create the struct used by the ARSDK to interface with the drone.
  */
 inline void
-Bebop::createControllerDevice(DiscoveryDevice &ddev)
+Bebop::createControllerDevice()
 {
+    // create discovery device
+    static const auto deleter = [](ARDISCOVERY_Device_t *discover) {
+        ARDISCOVERY_Device_Delete(&discover);
+    };
+    auto derr = ARDISCOVERY_OK;
+    std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
+    checkError(derr);
+
+    // try to discover device on network
+    checkError(ARDISCOVERY_Device_InitWifi(discover.get(),
+                                           ARDISCOVERY_PRODUCT_BEBOP_2,
+                                           "bebop",
+                                           BEBOP_IP_ADDRESS,
+                                           BEBOP_DISCOVERY_PORT));
+
+    // create controller object
     auto err = ARCONTROLLER_OK;
-    m_Device = ControllerPtr(ARCONTROLLER_Device_New(ddev.dev, &err),
-        [](ARCONTROLLER_Device_t *dev) {
-            ARCONTROLLER_Device_Delete(&dev);
-        });
+    m_Device = ControllerPtr(ARCONTROLLER_Device_New(discover.get(), &err),
+                             [](ARCONTROLLER_Device_t *dev) {
+                                 ARCONTROLLER_Device_Delete(&dev);
+                             });
     checkError(err);
 }
 
