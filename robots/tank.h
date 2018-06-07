@@ -21,11 +21,14 @@ public:
 
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
-        m_DeadZone = deadZone;
-        joystick.addHandler([this](HID::JAxis axis, float value) { return onJoystickEvent(axis, value); });
+        joystick.addHandler(
+            [this, deadZone](HID::JAxis axis, float value)
+            {
+                return onJoystickEvent(axis, value, deadZone);
+            });
     }
 
-    void drive(HID::Joystick &joystick, float deadZone = m_DeadZone)
+    void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
               joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
@@ -48,7 +51,6 @@ public:
 private:
     float m_X = 0;
     float m_Y = 0;
-    float m_DeadZone = 0.25f;
 
     void drive(float x, float y, float deadZone)
     {
@@ -97,7 +99,7 @@ private:
         tank(left, right);
     }
 
-    bool onJoystickEvent(HID::JAxis axis, float value)
+    bool onJoystickEvent(HID::JAxis axis, float value, float deadZone)
     {
         // only interested in left joystick
         float x = m_X;
@@ -114,7 +116,7 @@ private:
         }
 
         // drive robot with joystick
-        drive(x, y, m_DeadZone);
+        drive(x, y, deadZone);
         return true;
     }
 }; // Tank

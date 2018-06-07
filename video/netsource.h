@@ -54,15 +54,15 @@ public:
 
     bool readFrame(cv::Mat &frame) override
     {
-        std::lock_guard<std::mutex> guard(m_BufferMutex);
+        std::lock_guard<std::mutex> guard(m_FrameMutex);
 
         // The return value indicates whether there is a new frame or not
         if (!m_NewFrame) {
             return false;
         }
 
-        // Decode the JPEG stored in the buffer
-        cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &frame);
+        // Copy latest frame and return true
+        m_Frame.copyTo(frame);
         return true;
     }
 
@@ -70,7 +70,8 @@ private:
     std::string m_CameraName = DefaultCameraName;
     cv::Size m_CameraResolution;
     std::vector<uchar> m_Buffer;
-    std::mutex m_BufferMutex;
+    cv::Mat m_Frame;
+    std::mutex m_FrameMutex;
     bool m_NewFrame = false;
     mutable std::promise<void> m_ParamsPromise;
 
@@ -82,11 +83,14 @@ private:
             m_CameraName = command[4];
             m_ParamsPromise.set_value();
         } else if (command[1] == "FRAME") {
-            std::lock_guard<std::mutex> guard(m_BufferMutex);
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
             node.getSocket()->read(m_Buffer.data(), nbytes);
-            m_NewFrame = true;
+            {
+                std::lock_guard<std::mutex> guard(m_FrameMutex);
+                cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
+                m_NewFrame = true;
+            }
         } else {
             throw Net::bad_command_error();
         }
