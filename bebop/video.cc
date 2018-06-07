@@ -328,9 +328,6 @@ BebopVideoStream::startStreaming(userVideoCallback, void *)
 void
 BebopVideoStream::stopStreaming()
 {}
-void
-BebopVideoStream::startMplayer()
-{}
 #else
 /*
  * Set video stream callback for Bebop object.
@@ -343,13 +340,11 @@ BebopVideoStream::BebopVideoStream(Bebop *bebop)
 }
 
 /*
- * Undo various things that may have been done by this object.
+ * Stop streaming.
  */
 BebopVideoStream::~BebopVideoStream()
 {
     stopStreaming();
-    killMplayer();
-    deletePipe();
 }
 
 /*
@@ -370,8 +365,8 @@ BebopVideoStream::startStreaming()
 void
 BebopVideoStream::startStreaming(userVideoCallback cb, void *userdata)
 {
-    if (!decoder) {
-        decoder.reset(new VideoDecoder());
+    if (!m_Decoder) {
+        m_Decoder.reset(new VideoDecoder());
         m_UserCallback = cb;
         m_UserVideoCallbackData = userdata;
         startStreaming();
@@ -388,48 +383,19 @@ BebopVideoStream::stopStreaming()
 }
 
 /*
- * Start streaming and show the stream in mplayer.
- */
-void
-BebopVideoStream::startMplayer()
-{
-    launchMplayer();
-    openPipe();
-    startStreaming();
-}
-
-/*
  * Invoked when we receive a packet containing H264 params.
  */
 eARCONTROLLER_ERROR
 BebopVideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
 {
-    auto vid = reinterpret_cast<BebopVideoStream *>(data);
-
-    // if we're decoding it ourselves...
-    if (vid->decoder) {
-        bool ok = vid->decoder->SetH264Params(
+    auto vid = static_cast<BebopVideoStream *>(data);
+    if (vid->m_Decoder) {
+        bool ok = vid->m_Decoder->SetH264Params(
                 codec.parameters.h264parameters.spsBuffer,
                 codec.parameters.h264parameters.spsSize,
                 codec.parameters.h264parameters.ppsBuffer,
                 codec.parameters.h264parameters.ppsSize);
-        return ARCONTROLLER_OK;
     }
-
-    if (!vid->pipe)
-        return ARCONTROLLER_OK;
-
-    // ...if we're passing this data onto the pipe
-    fwrite(codec.parameters.h264parameters.spsBuffer,
-           codec.parameters.h264parameters.spsSize,
-           1,
-           vid->pipe);
-    fwrite(codec.parameters.h264parameters.ppsBuffer,
-           codec.parameters.h264parameters.ppsSize,
-           1,
-           vid->pipe);
-    fflush(vid->pipe);
-
     return ARCONTROLLER_OK;
 }
 
@@ -439,25 +405,14 @@ BebopVideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
 eARCONTROLLER_ERROR
 BebopVideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 {
-    auto vid = reinterpret_cast<BebopVideoStream *>(data);
-
-    // if we're decoding it ourselves...
-    if (vid->decoder) {
-        bool ok = vid->decoder->Decode(frame);
+    auto vid = static_cast<BebopVideoStream *>(data);
+    if (vid->m_Decoder) {
+        bool ok = vid->m_Decoder->Decode(frame);
         if (ok) {
-            const uint8_t *raw = vid->decoder->GetFrameRGBRawCstPtr();
+            const uint8_t *raw = vid->m_Decoder->GetFrameRGBRawCstPtr();
             vid->m_UserCallback(raw, vid->m_UserVideoCallbackData);
         }
-
-        return ARCONTROLLER_OK;
     }
-
-    if (!vid->pipe)
-        return ARCONTROLLER_OK;
-
-    // ...if we're passing this data onto the pipe
-    fwrite(frame->data, frame->used, 1, vid->pipe);
-    fflush(vid->pipe);
     return ARCONTROLLER_OK;
 }
 #endif // DUMMY_DRONE

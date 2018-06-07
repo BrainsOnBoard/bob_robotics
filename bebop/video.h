@@ -136,73 +136,12 @@ public:
     void startStreaming();
     void startStreaming(userVideoCallback cb, void *userdata);
     void stopStreaming();
-    void startMplayer();
 
 private:
     ARCONTROLLER_Device_t *m_Device;
-    std::unique_ptr<VideoDecoder> decoder;
-    FILE *pipe = nullptr;
+    std::unique_ptr<VideoDecoder> m_Decoder;
     userVideoCallback m_UserCallback = nullptr;
     void *m_UserVideoCallbackData;
-    pid_t mplayer = 0;
-
-    /*
-     * Create and open named pipe for streaming to mplayer.
-     */
-    inline void openPipe()
-    {
-        if (mkfifo(VIDEO_FIFO, 0644) < 0) {
-            throw std::runtime_error("Could not create pipe");
-        }
-
-        pipe = fopen(VIDEO_FIFO, "w");
-        if (!pipe) {
-            throw std::runtime_error("Could not open pipe for writing (" +
-                                std::to_string(errno) + "): " + strerror(errno));
-        }
-    }
-
-    /*
-     * Close file handle for named pipe and delete it.
-     */
-    inline void deletePipe()
-    {
-        if (pipe) {
-            fclose(pipe);
-        }
-        unlink(VIDEO_FIFO);
-    }
-
-    /*
-     * Fork process and start mplayer (in xterm).
-     */
-    inline void launchMplayer()
-    {
-        if ((mplayer = fork()) == 0) {
-            execlp("xterm",
-                   "xterm",
-                   "-e",
-                   "mplayer",
-                   "-demuxer",
-                   "h264es",
-                   VIDEO_FIFO,
-                   "-benchmark",
-                   "-really-quiet",
-                   NULL);
-            std::cerr << "Error: Could not start mplayer" << std::endl;
-            exit(1);
-        }
-    }
-
-    /*
-     * Send SIGKILL to mplayer child process.
-     */
-    inline void killMplayer()
-    {
-        if (mplayer) {
-            kill(mplayer, SIGKILL);
-        }
-    }
 
     /*
      * Invoked when we receive a packet containing H264 params.
