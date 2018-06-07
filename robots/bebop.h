@@ -268,6 +268,7 @@ Bebop::Bebop()
  */
 Bebop::~Bebop()
 {
+    land();
     disconnect();
 }
 
