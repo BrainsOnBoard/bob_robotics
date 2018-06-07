@@ -128,6 +128,11 @@ public:
 
     virtual bool update() override
     {
+        // unset Pressed and Released bits for buttons
+        for (auto &s : m_ButtonState) {
+            s &= StateDown;
+        }
+
         // see if a new event is in buffer
         if (!read()) {
             return false;
@@ -137,11 +142,6 @@ public:
             // update axes' states
             axisEvent();
         } else {
-            // unset Pressed and Released bits for buttons
-            for (auto &s : m_ButtonState) {
-                s &= StateDown;
-            }
-
             // update current button's state
             uint8_t &s = m_ButtonState[m_JsEvent.number];
             if (m_JsEvent.value) {
