@@ -223,7 +223,7 @@ private:
     void checkSocket()
     {
         if (m_Socket == INVALID_SOCKET) {
-            throw std::runtime_error("Bad socket " + errorMessage());
+            throw socket_error("Bad socket " + errorMessage());
         }
     }
 
