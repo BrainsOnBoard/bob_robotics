@@ -167,9 +167,9 @@ public:
 
     // Public members
     cv::Point m_CentrePixel;
-    int m_InnerPixel, m_OuterPixel;
-    int m_OffsetDegrees;
-    bool m_Flip;
+    int m_InnerPixel = 0, m_OuterPixel = 0;
+    int m_OffsetDegrees = 0;
+    bool m_Flip = false;
 
 private:
     //------------------------------------------------------------------------

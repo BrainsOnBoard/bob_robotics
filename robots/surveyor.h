@@ -36,10 +36,10 @@ public:
         }
 
         // Create socket address structure
-        sockaddr_in destAddress = { .sin_family = AF_INET,
-                                    .sin_port = htons(port),
-                                    .sin_addr = { .s_addr = inet_addr(
-                                                          address.c_str()) } };
+        sockaddr_in destAddress;
+        destAddress.sin_family = AF_INET;
+        destAddress.sin_port = htons(port);
+        destAddress.sin_addr.s_addr = inet_addr(address.c_str());
 
         // Connect socket
         if (connect(m_Socket,

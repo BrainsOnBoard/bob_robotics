@@ -56,8 +56,7 @@ public:
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
             auto unwrapper = videoInput.createUnwrapper(std::forward<Ts>(unwrapRes)...);
-            m_Unwrapper = std::unique_ptr<ImgProc::OpenCVUnwrap360>(
-                    new ImgProc::OpenCVUnwrap360(std::move(unwrapper)));
+            m_Unwrapper.reset(new ImgProc::OpenCVUnwrap360(std::move(unwrapper)));
         }
     }
 
@@ -97,15 +96,11 @@ public:
             m_Open = true;
         }
 
-        bool newframe = m_VideoInput->readFrame(m_Frame);
-        if (newframe) {
-            // display the frame on screen, unwrapping if requested
-            if (m_Unwrapper && m_ShowUnwrapped) {
-                m_Unwrapper->unwrap(m_Frame, m_Unwrapped);
-                cv::imshow(WINDOW_NAME, m_Unwrapped);
-            } else {
-                cv::imshow(WINDOW_NAME, m_Frame);
-            }
+        cv::Mat frame;
+        bool newFrame = readFrame(frame);
+        if (newFrame) {
+            // display the frame on screen
+            cv::imshow(WINDOW_NAME, frame);
         }
 
         // get keyboard input
@@ -117,7 +112,7 @@ public:
             close();
         }
 
-        return newframe;
+        return newFrame;
     }
 
     virtual void close()
@@ -135,6 +130,22 @@ protected:
     bool m_ShowUnwrapped = false;
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     Input *m_VideoInput;
+
+    virtual bool readFrame(cv::Mat &frame)
+    {
+        if (!m_VideoInput->readFrame(m_Frame)) {
+            return false;
+        }
+        
+        // unwrap frame if required
+        if (m_Unwrapper && m_ShowUnwrapped) {
+            m_Unwrapper->unwrap(m_Frame, m_Unwrapped);
+            frame = m_Unwrapped;
+        } else {
+            frame = m_Frame;
+        }
+        return true;
+    }
 }; // Display
 } // Video
 } // GeNNRobotics
