@@ -1,4 +1,4 @@
-#include "../common/joystick.h"
+#include "../hid/joystick.h"
 #include "../robots/motor_i2c.h"
 
 int main()
@@ -6,19 +6,19 @@ int main()
     constexpr float joystickDeadzone = 0.25f;
     
     // Create joystick interface
-    GeNNRobotics::Joystick joystick;
+    GeNNRobotics::HID::Joystick joystick(joystickDeadzone);
     
     // Create motor interface
     GeNNRobotics::Robots::MotorI2C motor;
 
     do {
         // Read joystick
-        joystick.read();
+        joystick.update();
         
         // Use joystick to drive motor
-        joystick.drive(motor, joystickDeadzone);
+        motor.drive(joystick);
 
-    } while(!joystick.isButtonDown(1));
+    } while(!joystick.isDown(GeNNRobotics::HID::JButton::B));
     
     return 0;
 }

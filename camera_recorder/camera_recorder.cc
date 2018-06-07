@@ -2,7 +2,7 @@
 #include <fstream>
 
 // GeNN robotics includes
-#include "../common/joystick.h"
+#include "../hid/joystick.h"
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../robots/motor_i2c.h"
 #include "../vicon/capture_control.h"
@@ -10,6 +10,7 @@
 #include "../video/see3cam_cu40.h"
 
 using namespace GeNNRobotics;
+using namespace GeNNRobotics::HID;
 using namespace GeNNRobotics::ImgProc;
 using namespace GeNNRobotics::Robots;
 using namespace GeNNRobotics::Video;
@@ -33,7 +34,7 @@ int main()
     cam.autoExposure(bubblescopeMask);
 
     // Create joystick interface
-    Joystick joystick;
+    Joystick joystick(joystickDeadzone);
 
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createDefaultUnwrapper(unwrapSize);
@@ -69,12 +70,10 @@ int main()
 #endif  // VICON_CAPTURE
 
     // Loop through time until joystick button pressed
-    for(unsigned int x = 0; !joystick.isButtonDown(1); x++) {
+    motor.addJoystick(joystick);
+    for(unsigned int x = 0; !joystick.isDown(JButton::B); x++) {
         // Read joystick
-        joystick.read();
-        
-        // Use joystick to drive motor
-        joystick.drive(motor, joystickDeadzone);
+        joystick.update();
 
         // If we successfully captured a frame
         if(cam.captureSuperPixelGreyscale(output))
