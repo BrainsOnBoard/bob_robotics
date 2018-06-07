@@ -167,7 +167,7 @@ private:
         ssize_t bytes;
         do {
             bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
-            if (errno && errno != EAGAIN) {
+            if (bytes == -1 && errno != EAGAIN) {
                 throw std::runtime_error("Error reading from joystick (" +
                                          std::to_string(errno) + std::string(": ") +
                                          std::strerror(errno) + ")");
