@@ -27,7 +27,7 @@ public:
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &node, const Net::Command& command)
+                                 [this](Net::Node &, const Net::Command& command)
                                  {
                                      onCommandReceivedAsync(command);
                                  });
@@ -38,7 +38,7 @@ public:
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &node, const Net::Command& command)
+                                 [this](Net::Node &, const Net::Command& command)
                                  {
                                      onCommandReceivedSync(command);
                                  });

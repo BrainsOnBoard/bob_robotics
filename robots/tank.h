@@ -84,7 +84,7 @@ private:
         }
     }
 
-    void onCommandReceived(Net::Node &node, const Net::Command &command)
+    void onCommandReceived(Net::Node &, const Net::Command &command)
     {
         // second space separates left and right parameters
         if (command.size() != 3) {

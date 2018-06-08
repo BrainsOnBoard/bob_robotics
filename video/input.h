@@ -101,7 +101,7 @@ public:
         return getCameraName() != DefaultCameraName;
     }
 
-    virtual void setOutputSize(const cv::Size &size)
+    virtual void setOutputSize(const cv::Size &)
     {
         throw std::runtime_error("This camera's resolution cannot be changed at runtime");
     }
