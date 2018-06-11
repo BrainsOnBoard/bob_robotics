@@ -4,8 +4,7 @@ using namespace GeNNRobotics;
 
 int main()
 {
-    const float deadZone = 0.25f;
-    HID::Joystick joystick(deadZone);
+    HID::Joystick joystick(/*deadZone=*/0.25);
 
     Robots::Bebop drone;
     drone.connect();
@@ -14,7 +13,7 @@ int main()
             joystick.stop();
         }
     });
-    drone.addJoystick(joystick);
+    drone.addJoystick(joystick, /*maxSpeed=*/0.25);
 
     joystick.run();
 }

@@ -195,11 +195,8 @@ private:
     Semaphore m_Semaphore;
     bool m_IsConnected = false;
     FlightEventHandler m_FlightEventHandler = nullptr;
-    static constexpr float MaxBank = 0.25f; // maximum % of speed for pitch/rool
-    static constexpr float MaxUp = 0.25f;   // maximum % of speed for up/down motion
-    static constexpr float MaxYaw = 0.25f;  // maximum % of speed for yaw
 
-    bool onAxisEvent(HID::JAxis axis, float value);
+    bool onAxisEvent(HID::JAxis axis, float value, const float maxSpeed);
     bool onButtonEvent(HID::JButton button, bool pressed);
 
 #ifndef DUMMY_DRONE
@@ -227,7 +224,7 @@ public:
 
     Bebop();
     ~Bebop();
-    void addJoystick(HID::Joystick &joystick);
+    void addJoystick(HID::Joystick &joystick, const float maxSpeed);
     void connect();
     void disconnect();
     void takeOff();
@@ -335,10 +332,14 @@ Bebop::disconnect()
  * Start controlling this drone with a joystick.
  */
 void
-Bebop::addJoystick(HID::Joystick &joystick)
+Bebop::addJoystick(HID::Joystick &joystick, const float maxSpeed = 0.25)
 {
-    joystick.addHandler([this](HID::JAxis axis, float value) {
-        return onAxisEvent(axis, value);
+    if (maxSpeed < 0 || maxSpeed > 1) {
+        throw std::invalid_argument("maxSpeed must be between 0 and 1");
+    }
+
+    joystick.addHandler([this, maxSpeed](HID::JAxis axis, float value) {
+        return onAxisEvent(axis, value, maxSpeed);
     });
     joystick.addHandler([this](HID::JButton button, bool pressed) {
         return onButtonEvent(button, pressed);
@@ -646,7 +647,7 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 }
 
 bool
-Bebop::onAxisEvent(HID::JAxis axis, float value)
+Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
 {
     /* 
      * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
@@ -654,19 +655,19 @@ Bebop::onAxisEvent(HID::JAxis axis, float value)
      */
     switch (axis) {
     case HID::JAxis::RightStickHorizontal:
-        setRoll(MaxBank * value);
+        setRoll(maxSpeed * value);
         return true;
         break;
     case HID::JAxis::RightStickVertical:
-        setPitch(-MaxBank * value);
+        setPitch(-maxSpeed * value);
         return true;
         break;
     case HID::JAxis::LeftStickHorizontal:
-        setYaw(MaxYaw * value);
+        setYaw(maxSpeed * value);
         return true;
         break;
     case HID::JAxis::LeftStickVertical:
-        setUpDown(-MaxUp * value);
+        setUpDown(-maxSpeed * value);
         return true;
         break;
     default:
