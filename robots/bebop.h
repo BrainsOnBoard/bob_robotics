@@ -195,19 +195,24 @@ private:
     Semaphore m_Semaphore;
     bool m_IsConnected = false;
     FlightEventHandler m_FlightEventHandler = nullptr;
-    static constexpr float MaxBank = 50; // maximum % of speed for pitch/rool
-    static constexpr float MaxUp = 50;   // maximum % of speed for up/down motion
-    static constexpr float MaxYaw = 100; // maximum % of speed for yaw
+    static constexpr float MaxBank = 0.25f; // maximum % of speed for pitch/rool
+    static constexpr float MaxUp = 0.25f;   // maximum % of speed for up/down motion
+    static constexpr float MaxYaw = 0.25f;  // maximum % of speed for yaw
 
     bool onAxisEvent(HID::JAxis axis, float value);
     bool onButtonEvent(HID::JButton button, bool pressed);
 
 #ifndef DUMMY_DRONE
-    inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
-    inline eARCONTROLLER_DEVICE_STATE getState();
-    inline void createControllerDevice();
     inline void addEventHandlers();
     void batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    inline void createControllerDevice();
+    inline eARCONTROLLER_DEVICE_STATE getState();
+    inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
+
+    static inline void checkArg(float value);
+    static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
+                                ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                                void *data);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,
                              const char *format,
@@ -215,9 +220,6 @@ private:
     static void stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                              eARCONTROLLER_ERROR err,
                              void *data);
-    static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
-                                ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
-                                void *data);
 #endif // !DUMMY_DRONE
 
 public:
@@ -230,10 +232,10 @@ public:
     void disconnect();
     void takeOff();
     void land();
-    void setPitch(int8_t pitch);
-    void setRoll(int8_t right);
-    void setUpDown(int8_t up);
-    void setYaw(int8_t right);
+    void setPitch(float pitch);
+    void setRoll(float right);
+    void setUpDown(float up);
+    void setYaw(float right);
     void stopMoving();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
@@ -381,17 +383,15 @@ Bebop::land()
  * Set drone's pitch, for moving forwards and backwards.
  */
 void
-Bebop::setPitch(int8_t pitch)
+Bebop::setPitch(float pitch)
 {
+    checkArg(pitch);
     if (m_IsConnected) {
-        if (pitch > 100 || pitch < -100) {
-            throw std::invalid_argument("Pitch must be between 100 and -100");
-        }
-
 #ifdef NO_FLY
-        std::cout << "Setting pitch to " << (int) pitch << std::endl;
+        std::cout << "Setting pitch to " << pitch << std::endl;
 #else
-        checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, pitch));
+        int8_t ipitch = round(pitch * 100.0f);
+        checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, ipitch));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
 #endif
     }
@@ -401,17 +401,15 @@ Bebop::setPitch(int8_t pitch)
  * Set drone's roll, for banking left and right.
  */
 void
-Bebop::setRoll(int8_t right)
+Bebop::setRoll(float right)
 {
+    checkArg(right);    
     if (m_IsConnected) {
-        if (right > 100 || right < -100) {
-            throw std::invalid_argument("Roll must be between 100 and -100");
-        }
-
 #ifdef NO_FLY
-        std::cout << "Setting roll to " << (int) right << std::endl;
+        std::cout << "Setting roll to " << right << std::endl;
 #else
-        checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, right));
+        int8_t iright = round(right * 100.0f);
+        checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, iright));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
 #endif
     }
@@ -421,18 +419,15 @@ Bebop::setRoll(int8_t right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::setUpDown(int8_t up)
+Bebop::setUpDown(float up)
 {
+    checkArg(up);
     if (m_IsConnected) {
-        if (up > 100 || up < -100) {
-            throw std::invalid_argument(
-                    "Up/down value must be between 100 and -100");
-        }
-
 #ifdef NO_FLY
-        std::cout << "Setting up/down to " << (int) up << std::endl;
+        std::cout << "Setting up/down to " << up << std::endl;
 #else
-        checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, up));
+        int8_t iup = round(up * 100.0f);
+        checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, iup));
 #endif
     }
 }
@@ -441,17 +436,15 @@ Bebop::setUpDown(int8_t up)
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
-Bebop::setYaw(int8_t right)
+Bebop::setYaw(float right)
 {
+    checkArg(right);
     if (m_IsConnected) {
-        if (right > 100 || right < -100) {
-            throw std::invalid_argument("Yaw must be between 100 and -100");
-        }
-
 #ifdef NO_FLY
-        std::cout << "Setting yaw to " << (int) right << std::endl;
+        std::cout << "Setting yaw to " << right << std::endl;
 #else
-        checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, right));
+        int8_t iright = round(right * 100.0f);
+        checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, iright));
 #endif
     }
 }
@@ -655,37 +648,31 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 bool
 Bebop::onAxisEvent(HID::JAxis axis, float value)
 {
-    float f;
-
     /* 
-     * setRoll/Pitch etc. all take values between -100 and 100. We cap these 
+     * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
      * values for the joystick code to make the drone more controllable. 
      */
     switch (axis) {
     case HID::JAxis::RightStickHorizontal:
-        f = round(MaxBank * value);
-        setRoll(static_cast<int8_t>(f));
+        setRoll(MaxBank * value);
         return true;
         break;
     case HID::JAxis::RightStickVertical:
-        f = round(-MaxBank * value);
-        setPitch(static_cast<int8_t>(f));
+        setPitch(-MaxBank * value);
         return true;
         break;
     case HID::JAxis::LeftStickHorizontal:
-        f = round(MaxYaw * value);
-        setYaw(static_cast<int8_t>(f));
+        setYaw(MaxYaw * value);
         return true;
         break;
     case HID::JAxis::LeftStickVertical:
-        f = round(-MaxUp * value);
-        setUpDown(static_cast<int8_t>(f));
+        setUpDown(-MaxUp * value);
         return true;
         break;
+    default:
+        // otherwise signal that we haven't handled event
+        return false;
     }
-
-    // otherwise signal that we haven't handled event
-    return false;
 }
 
 bool
@@ -706,10 +693,18 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
         land();
         return true;
         break;
+    default:
+        // otherwise signal that we haven't handled event
+        return false;
     }
+}
 
-    // otherwise signal that we haven't handled event
-    return false;
+void
+Bebop::checkArg(float value)
+{
+    if (value > 1.0f || value < -1.0f) {
+        throw std::invalid_argument("Argument must be between -1.0 and 1.0");
+    }
 }
 
 // start VideoDecoder class
