@@ -206,7 +206,7 @@ private:
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
 
-    static inline void checkArg(float value);
+    static inline void checkArg(const float value);
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
@@ -229,10 +229,10 @@ public:
     void disconnect();
     void takeOff();
     void land();
-    void setPitch(float pitch);
-    void setRoll(float right);
-    void setUpDown(float up);
-    void setYaw(float right);
+    void setPitch(const float pitch);
+    void setRoll(const float right);
+    void setUpDown(const float up);
+    void setYaw(const float right);
     void stopMoving();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
@@ -384,14 +384,14 @@ Bebop::land()
  * Set drone's pitch, for moving forwards and backwards.
  */
 void
-Bebop::setPitch(float pitch)
+Bebop::setPitch(const float pitch)
 {
     checkArg(pitch);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting pitch to " << pitch << std::endl;
 #else
-        int8_t ipitch = round(pitch * 100.0f);
+        const int8_t ipitch = round(pitch * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, ipitch));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
 #endif
@@ -402,14 +402,14 @@ Bebop::setPitch(float pitch)
  * Set drone's roll, for banking left and right.
  */
 void
-Bebop::setRoll(float right)
+Bebop::setRoll(const float right)
 {
     checkArg(right);    
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting roll to " << right << std::endl;
 #else
-        int8_t iright = round(right * 100.0f);
+        const int8_t iright = round(right * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, iright));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
 #endif
@@ -420,14 +420,14 @@ Bebop::setRoll(float right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::setUpDown(float up)
+Bebop::setUpDown(const float up)
 {
     checkArg(up);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting up/down to " << up << std::endl;
 #else
-        int8_t iup = round(up * 100.0f);
+        const int8_t iup = round(up * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, iup));
 #endif
     }
@@ -437,14 +437,14 @@ Bebop::setUpDown(float up)
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
-Bebop::setYaw(float right)
+Bebop::setYaw(const float right)
 {
     checkArg(right);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting yaw to " << right << std::endl;
 #else
-        int8_t iright = round(right * 100.0f);
+        const int8_t iright = round(right * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, iright));
 #endif
     }
@@ -507,7 +507,7 @@ inline eARCONTROLLER_DEVICE_STATE
 Bebop::getState()
 {
     auto err = ARCONTROLLER_OK;
-    auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
+    const auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
     checkError(err);
     return state;
 }
@@ -523,7 +523,7 @@ Bebop::createControllerDevice()
         ARDISCOVERY_Device_Delete(&discover);
     };
     auto derr = ARDISCOVERY_OK;
-    std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
+    const std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
     checkError(derr);
 
     // try to discover device on network
@@ -701,7 +701,7 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
 }
 
 void
-Bebop::checkArg(float value)
+Bebop::checkArg(const float value)
 {
     if (value > 1.0f || value < -1.0f) {
         throw std::invalid_argument("Argument must be between -1.0 and 1.0");
