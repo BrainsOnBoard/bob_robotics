@@ -1,4 +1,11 @@
+// C++ includes
+#include <chrono>
+#include <thread>
+
+// GeNN robotics includes
+#include "hid/joystick.h"
 #include "robots/bebop.h"
+#include "video/display.h"
 
 using namespace GeNNRobotics;
 
@@ -8,12 +15,12 @@ int main()
 
     Robots::Bebop drone;
     drone.connect();
-    drone.setFlightEventHandler([&joystick](bool takeoff) {
-        if (!takeoff) {
-            joystick.stop();
-        }
-    });
-    drone.addJoystick(joystick, /*maxSpeed=*/0.25);
 
-    joystick.run();
+    drone.addJoystick(joystick, /*maxSpeed=*/0.25);
+    Video::Display display(drone.getVideoStream());
+    do {
+        if (!joystick.update() && !display.update()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        }
+    } while (display.isOpen());
 }

@@ -47,11 +47,16 @@ extern "C"
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
+
+// OpenCV
+#include <opencv2/opencv.hpp>
 
 // GeNN robotics includes
 #include "../common/semaphore.h"
 #include "../hid/joystick.h"
+#include "../video/input.h"
 
 // POSIX includes
 #include <signal.h>
@@ -111,9 +116,9 @@ class Bebop
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
-    class VideoStream
+public:
+    class VideoStream : public Video::Input
     {
-        using UserVideoCallback = std::function<void(const uint8_t *frame, void *userdata)>;
         class VideoDecoder
         {
         private:
@@ -167,35 +172,43 @@ class Bebop
         };
 
     public:
-        VideoStream(Bebop *bebop);
-        ~VideoStream();
-        void startStreaming();
-        void startStreaming(UserVideoCallback cb, void *userdata);
-        void stopStreaming();
+        virtual bool readFrame(cv::Mat &) override;
+        virtual cv::Size getOutputSize() const override;
+        void configCallback(ARCONTROLLER_Stream_Codec_t codec);
+        void frameCallback(ARCONTROLLER_Frame_t *frame);
 
     private:
-        ARCONTROLLER_Device_t *m_Device;
-        std::unique_ptr<VideoDecoder> m_Decoder;
-        UserVideoCallback m_UserCallback = nullptr;
-        void *m_UserVideoCallbackData;
-
-        /*
-         * Invoked when we receive a packet containing H264 params.
-         */
-        static eARCONTROLLER_ERROR configCallback(ARCONTROLLER_Stream_Codec_t codec,
-                                                  void *data);
-
-        /*
-         * Invoked when we receive a packet containing an H264-encoded frame.
-         */
-        static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame,
-                                                 void *data);
+        VideoDecoder m_Decoder;
+        cv::Mat m_Frame;
+        std::mutex m_FrameMutex;
+        bool m_NewFrame = false;
     }; // VideoStream
+
+    Bebop();
+    ~Bebop();
+    void addJoystick(HID::Joystick &joystick, const float maxSpeed);
+    void connect();
+    void disconnect();
+    void takeOff();
+    void land();
+    VideoStream &getVideoStream();
+    void setPitch(const float pitch);
+    void setRoll(const float right);
+    void setUpDown(const float up);
+    void setYaw(const float right);
+    void stopMoving();
+    void takePhoto();
+    void setFlightEventHandler(FlightEventHandler);
+
 private:
+    ControllerPtr m_Device;
     Semaphore m_Semaphore;
+    std::unique_ptr<VideoStream> m_VideoStream;
     bool m_IsConnected = false;
     FlightEventHandler m_FlightEventHandler = nullptr;
 
+    void startStreaming();
+    void stopStreaming();
     bool onAxisEvent(HID::JAxis axis, float value, const float maxSpeed);
     bool onButtonEvent(HID::JButton button, bool pressed);
 
@@ -217,26 +230,12 @@ private:
     static void stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                              eARCONTROLLER_ERROR err,
                              void *data);
+    static eARCONTROLLER_ERROR configCallback(ARCONTROLLER_Stream_Codec_t codec,
+                                              void *data);
+    static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame,
+                                             void *data);
 #endif // !DUMMY_DRONE
-
-public:
-    ControllerPtr m_Device;
-
-    Bebop();
-    ~Bebop();
-    void addJoystick(HID::Joystick &joystick, const float maxSpeed);
-    void connect();
-    void disconnect();
-    void takeOff();
-    void land();
-    void setPitch(const float pitch);
-    void setRoll(const float right);
-    void setUpDown(const float up);
-    void setYaw(const float right);
-    void stopMoving();
-    void takePhoto();
-    void setFlightEventHandler(FlightEventHandler);
-}; // Bebop
+};     // Bebop
 
 /*
  * Do all initialisation (including discovery) but don't actually
@@ -268,6 +267,9 @@ Bebop::Bebop()
 Bebop::~Bebop()
 {
     land();
+    if (m_VideoStream) {
+        stopStreaming();
+    }
     disconnect();
 }
 
@@ -380,6 +382,17 @@ Bebop::land()
     }
 }
 
+Bebop::VideoStream &
+Bebop::getVideoStream()
+{
+    if (!m_VideoStream) {
+        startStreaming();
+        m_VideoStream.reset(new Bebop::VideoStream());
+    }
+
+    return *m_VideoStream;
+}
+
 /*
  * Set drone's pitch, for moving forwards and backwards.
  */
@@ -448,6 +461,24 @@ Bebop::setYaw(const float right)
         checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, iright));
 #endif
     }
+}
+
+/*
+ * Send the command to start video streaming.
+ */
+void
+Bebop::startStreaming()
+{
+    checkError(m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 1));
+}
+
+/*
+ * Send the command to stop video streaming.
+ */
+void
+Bebop::stopStreaming()
+{
+    checkError(m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 0));
 }
 
 /*
@@ -553,6 +584,8 @@ Bebop::addEventHandlers()
             m_Device.get(), stateChanged, this));
     checkError(ARCONTROLLER_Device_AddCommandReceivedCallback(
             m_Device.get(), commandReceived, this));
+    checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
+            m_Device.get(), configCallback, frameCallback, nullptr, this));
 }
 
 /*
@@ -706,6 +739,32 @@ Bebop::checkArg(const float value)
     if (value > 1.0f || value < -1.0f) {
         throw std::invalid_argument("Argument must be between -1.0 and 1.0");
     }
+}
+
+/*
+ * Invoked when we receive a packet containing H264 params.
+ */
+eARCONTROLLER_ERROR
+Bebop::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
+{
+    Bebop *bebop = static_cast<Bebop *>(data);
+    if (bebop->m_VideoStream) {
+        bebop->m_VideoStream->configCallback(codec);
+    }
+    return ARCONTROLLER_OK;
+}
+
+/*
+ * Invoked when we receive a packet containing an H264-encoded frame.
+ */
+eARCONTROLLER_ERROR
+Bebop::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
+{
+    Bebop *bebop = static_cast<Bebop *>(data);
+    if (bebop->m_VideoStream) {
+        bebop->m_VideoStream->frameCallback(frame);
+    }
+    return ARCONTROLLER_OK;
 }
 
 // start VideoDecoder class
@@ -1017,109 +1076,48 @@ Bebop::VideoStream::VideoDecoder::Decode(const ARCONTROLLER_Frame_t *bebop_frame
 #endif
 
 // start VideoStream class
-#ifdef DUMMY_DRONE
-/*
- * If DUMMY_DRONE is set, define empty functions.
- */
-Bebop::VideoStream::VideoStream(Bebop *bebop)
-{}
-void
-Bebop::VideoStream::startStreaming()
-{}
-void
-Bebop::VideoStream::startStreaming(UserVideoCallback, void *)
-{}
-void
-Bebop::VideoStream::stopStreaming()
-{}
-#else
-/*
- * Set video stream callback for Bebop object.
- */
-Bebop::VideoStream::VideoStream(Bebop *bebop)
-  : m_Device(bebop->m_Device.get())
+cv::Size
+Bebop::VideoStream::getOutputSize() const
 {
-    checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
-            m_Device, configCallback, frameCallback, nullptr, this));
+    return cv::Size(VIDEO_WIDTH, VIDEO_HEIGHT);
 }
 
-/*
- * Stop streaming.
- */
-Bebop::VideoStream::~VideoStream()
+bool
+Bebop::VideoStream::readFrame(cv::Mat &frame)
 {
-    stopStreaming();
-}
-
-/*
- * Send the command to start video streaming.
- */
-void
-Bebop::VideoStream::startStreaming()
-{
-    checkError(m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 1));
-}
-
-/*
- * Send the command to start video streaming.
- *
- * cb() defines the API user's callback function
- * userdata is optional extra data to pass to cb() (i.e. object pointer)
- */
-void
-Bebop::VideoStream::startStreaming(UserVideoCallback cb, void *userdata)
-{
-    if (!m_Decoder) {
-        m_Decoder.reset(new VideoDecoder());
-        m_UserCallback = cb;
-        m_UserVideoCallbackData = userdata;
-        startStreaming();
+    std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
+    if (!m_NewFrame) {
+        return false;
     }
+
+    m_Frame.copyTo(frame);
+    return true;
 }
 
-/*
- * Send the command to stop video streaming.
- */
 void
-Bebop::VideoStream::stopStreaming()
+Bebop::VideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec)
 {
-    checkError(m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 0));
-}
-
-/*
- * Invoked when we receive a packet containing H264 params.
- */
-eARCONTROLLER_ERROR
-Bebop::VideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
-{
-    auto vid = static_cast<VideoStream *>(data);
-    if (vid->m_Decoder) {
-        bool ok = vid->m_Decoder->SetH264Params(
+    m_Decoder.SetH264Params(
                 codec.parameters.h264parameters.spsBuffer,
                 codec.parameters.h264parameters.spsSize,
                 codec.parameters.h264parameters.ppsBuffer,
                 codec.parameters.h264parameters.ppsSize);
-    }
-    return ARCONTROLLER_OK;
 }
 
-/*
- * Invoked when we receive a packet containing an H264-encoded frame.
- */
-eARCONTROLLER_ERROR
-Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
+void
+Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame)
 {
-    auto vid = static_cast<VideoStream *>(data);
-    if (vid->m_Decoder) {
-        bool ok = vid->m_Decoder->Decode(frame);
-        if (ok) {
-            const uint8_t *raw = vid->m_Decoder->GetFrameRGBRawCstPtr();
-            vid->m_UserCallback(raw, vid->m_UserVideoCallbackData);
-        }
+    if (m_Decoder.Decode(frame)) {
+        // get pointer to RGB buffer
+        const uint8_t *raw = m_Decoder.GetFrameRGBRawCstPtr();
+
+        // convert into BGR cv::Mat
+        std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
+        cv::Mat frameRGB(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) raw);
+        cv::cvtColor(frameRGB, m_Frame, CV_RGB2BGR, 3);
+        m_NewFrame = true;
     }
-    return ARCONTROLLER_OK;
 }
-#endif // DUMMY_DRONE
 // end VideoStream class
 } // Robots
 } // GeNNRobotics
