@@ -22,6 +22,9 @@ namespace Video {
 class Input
 {
 public:
+    virtual ~Input()
+    {}
+
     template<typename... Ts>
     ImgProc::OpenCVUnwrap360 createUnwrapper(Ts &&... args)
     {
