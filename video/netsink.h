@@ -12,6 +12,9 @@
 // GeNN robotics includes
 #include "../net/node.h"
 
+// local includes
+#include "input.h"
+
 //----------------------------------------------------------------------------
 // GeNNRobotics::Video::NetSink
 //----------------------------------------------------------------------------
