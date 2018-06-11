@@ -690,19 +690,18 @@ Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
     case HID::JAxis::RightStickHorizontal:
         setRoll(maxSpeed * value);
         return true;
-        break;
     case HID::JAxis::RightStickVertical:
-        setPitch(-maxSpeed * value);
+        setPitch(maxSpeed * -value);
         return true;
-        break;
-    case HID::JAxis::LeftStickHorizontal:
+    case HID::JAxis::LeftStickVertical:
+        setUpDown(maxSpeed * -value);
+        return true;
+    case HID::JAxis::LeftTrigger:
+        setYaw(maxSpeed * -value);
+        return true;
+    case HID::JAxis::RightTrigger:
         setYaw(maxSpeed * value);
         return true;
-        break;
-    case HID::JAxis::LeftStickVertical:
-        setUpDown(-maxSpeed * value);
-        return true;
-        break;
     default:
         // otherwise signal that we haven't handled event
         return false;
@@ -722,11 +721,9 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
     case HID::JButton::A:
         takeOff();
         return true;
-        break;
     case HID::JButton::B:
         land();
         return true;
-        break;
     default:
         // otherwise signal that we haven't handled event
         return false;
