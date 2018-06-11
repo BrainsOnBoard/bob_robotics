@@ -1,6 +1,7 @@
 EXECUTABLE      := simulatorRobotDeadReckon
-SOURCES         := simulatorRobotDeadReckon.cc simulatorCommon.cc robotCommon.cc
-CXXFLAGS       := -pthread
+SOURCES         := simulatorRobotDeadReckon.cc simulatorCommon.cc robotCommon.cc visualizationCommon.cc
+LINK_FLAGS      := `pkg-config --libs opencv`
+CXXFLAGS        := -pthread `pkg-config --cflags opencv`
 CPU_ONLY=1
 
 ifdef RECORD_ELECTROPHYS
