@@ -18,7 +18,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    std::future<std::tuple<unsigned int, unsigned int, unsigned int>> present(const cv::Mat &snapshotFloat, bool train);
+   std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &snapshotFloat, bool train);
 
 private:
     //------------------------------------------------------------------------

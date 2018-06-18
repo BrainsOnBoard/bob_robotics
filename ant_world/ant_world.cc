@@ -1,7 +1,6 @@
 // Standard C++ includes
 #include <bitset>
 #include <fstream>
-#include <future>
 #include <iostream>
 #include <limits>
 #include <random>
@@ -184,8 +183,8 @@ int main(int argc, char *argv[])
     }
 
     // Create memory
-    MBMemory memory;
-    //PerfectMemory memory;
+    //MBMemory memory;
+    PerfectMemory memory;
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
@@ -228,26 +227,10 @@ int main(int argc, char *argv[])
 
     std::ofstream spin;
 
-    std::future<std::tuple<unsigned int, unsigned int, unsigned int>> gennResult;
+    unsigned int numPNSpikes;
+    unsigned int numKCSpikes;
+    unsigned int numENSpikes;
     while (!glfwWindowShouldClose(window)) {
-        // If there is no valid result (GeNN process has never run), we are ready to take a snapshot
-        bool readyForNextSnapshot = false;
-        bool resultsAvailable = false;
-        unsigned int numPNSpikes;
-        unsigned int numKCSpikes;
-        unsigned int numENSpikes;
-        if(!gennResult.valid()) {
-            readyForNextSnapshot = true;
-        }
-        // Otherwise if GeNN has run and the result is ready for us, s
-        else if(gennResult.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-            std::tie(numPNSpikes, numKCSpikes, numENSpikes) = gennResult.get();
-            std::cout << "\t" << numPNSpikes << " PN spikes, " << numKCSpikes << " KC spikes, " << numENSpikes << " EN spikes" << std::endl;
-
-            readyForNextSnapshot = true;
-            resultsAvailable = true;
-        }
-
         // Update heading and ant position based on keys
         bool trainSnapshot = false;
         bool testSnapshot = false;
@@ -280,162 +263,154 @@ int main(int argc, char *argv[])
             state = State::SpinningTrain;
         }
 
-        // If GeNN is ready to handle next snapshot, trigger snapshots if keys are pressed
-        if(readyForNextSnapshot && keybits.test(KeyTrainSnapshot)) {
+        // Trigger snapshots if keys are pressed
+        if(keybits.test(KeyTrainSnapshot)) {
             trainSnapshot = true;
         }
-        if(readyForNextSnapshot && keybits.test(KeyTestSnapshot)) {
+        if( keybits.test(KeyTestSnapshot)) {
             testSnapshot = true;
         }
 
         // If we're training
         if(state == State::Training) {
-            // If results from previous training snapshot are available, mark them on route
-            if(resultsAvailable) {
-                route.setWaypointFamiliarity(trainPoint - 1,
-                                             (double)numENSpikes / 20.0);
+            // Mark results from previous training snapshot on route
+            route.setWaypointFamiliarity(trainPoint - 1, (double)numENSpikes / 20.0);
+
+            // If GeNN isn't training and we have more route points to train
+            if(trainPoint < route.size()) {
+                // Snap ant to next snapshot point
+                std::tie(antX, antY, antHeading) = route[trainPoint];
+
+                // Update window title
+                std::string windowTitle = "Ant World - Training snaphot " + std::to_string(trainPoint) + "/" + std::to_string(route.size());
+                glfwSetWindowTitle(window, windowTitle.c_str());
+
+                // Set flag to train this snapshot
+                trainSnapshot = true;
+
+                // Go onto next training point
+                trainPoint++;
+            }
+            // Otherwise, if we've reached end of route
+            else {
+                std::cout << "Training complete (" << route.size() << " snapshots)" << std::endl;
+
+                // Go to testing state
+                state = State::Testing;
+
+                // Snap ant back to start of route, facing in starting scan direction
+                std::tie(antX, antY, antHeading) = route[0];
+                antHeading -= halfScanAngle;
+
+                // Add initial replay point to route
+                route.addPoint(antX, antY, false);
+
+                // Reset scan
+                testingScan = 0;
+                bestTestENSpikes = std::numeric_limits<unsigned int>::max();
+
+                // Take snapshot
+                testSnapshot = true;
+            }
+        }
+        // Otherwise, if we're testing
+        else if(state == State::Testing) {
+            // If this is an improvement on previous best spike count
+            if(numENSpikes < bestTestENSpikes) {
+                bestHeading = antHeading;
+                bestTestENSpikes = numENSpikes;
+
+                std::cout << "\tUpdated result: " << bestHeading << " is most familiar heading with " << bestTestENSpikes << " spikes" << std::endl;
             }
 
-            // If GeNN is free to process next snapshot
-            if(readyForNextSnapshot) {
-                // If GeNN isn't training and we have more route points to train
-                if(trainPoint < route.size()) {
-                    // Snap ant to next snapshot point
-                    std::tie(antX, antY, antHeading) = route[trainPoint];
+            // Update window title
+            std::string windowTitle = "Ant World - Testing with " + std::to_string(numErrors) + " errors";
+            glfwSetWindowTitle(window, windowTitle.c_str());
 
-                    // Update window title
-                    std::string windowTitle = "Ant World - Training snaphot " + std::to_string(trainPoint) + "/" + std::to_string(route.size());
-                    glfwSetWindowTitle(window, windowTitle.c_str());
+            // Go onto next scan
+            testingScan++;
 
-                    // Set flag to train this snapshot
-                    trainSnapshot = true;
+            // If scan isn't complete
+            if(testingScan < numScanSteps) {
+                // Scan right
+                antHeading += Parameters::scanStep;
 
-                    // Go onto next training point
-                    trainPoint++;
-                }
-                // Otherwise, if we've reached end of route
-                else {
-                    std::cout << "Training complete (" << route.size() << " snapshots)" << std::endl;
+                // Take test snapshot
+                testSnapshot = true;
+            }
+            else {
+                std::cout << "Scan complete: " << bestHeading << " is most familiar heading with " << bestTestENSpikes << " spikes" << std::endl;
 
-                    // Go to testing state
-                    state = State::Testing;
+                // Snap ant to it's best heading
+                antHeading = bestHeading;
 
-                    // Snap ant back to start of route, facing in starting scan direction
-                    std::tie(antX, antY, antHeading) = route[0];
-                    antHeading -= halfScanAngle;
+                // Increment step count
+                numTestSteps++;
 
-                    // Add initial replay point to route
+                // Move ant forward by snapshot distance
+                antX += Parameters::snapshotDistance * sin(antHeading * degreesToRadians);
+                antY += Parameters::snapshotDistance * cos(antHeading * degreesToRadians);
+
+                // If we've reached destination
+                if(route.atDestination(antX, antY, Parameters::errorDistance)) {
+                    std::cerr << "Destination reached in " << numTestSteps << " steps with " << numErrors << " errors" << std::endl;
+
+                    // Reset state to idle
+                    state = State::Idle;
+
+                    // Add final point to route
                     route.addPoint(antX, antY, false);
 
+                    // Stop
+                    return 0;
+                }
+                // Otherwise, if we've
+                else if(numTestSteps >= Parameters::testStepLimit) {
+                    std::cerr << "Failed to find destination after " << numTestSteps << " steps and " << numErrors << " errors" << std::endl;
+
+                    // Stop
+                    return 0;
+                }
+                // Otherwise
+                else {
+                    // Calculate distance to route
+                    float distanceToRoute;
+                    size_t nearestRouteWaypoint;
+                    std::tie(distanceToRoute, nearestRouteWaypoint) = route.getDistanceToRoute(antX, antY);
+                    std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
+
+                    // If we are further away than error threshold
+                    if(distanceToRoute > Parameters::errorDistance) {
+                        // If we have previously reached further down route than nearest point
+                        // the furthest point reached is our 'best' waypoint otherwise it's the nearest waypoint
+                        const size_t bestWaypoint = (nearestRouteWaypoint < maxTestPoint) ? maxTestPoint : nearestRouteWaypoint;
+
+                        // Snap ant to the waypoint after this (clamping to size of route)
+                        const size_t snapWaypoint = std::min(bestWaypoint + 1, route.size() - 1);
+                        std::tie(antX, antY, antHeading) = route[snapWaypoint];
+
+                        // Update maximum test point reached
+                        maxTestPoint = std::max(maxTestPoint, snapWaypoint);
+
+                        // Add error point to route
+                        route.addPoint(antX, antY, true);
+
+                        // Increment error counter
+                        numErrors++;
+                    }
+                    // Otherwise, update maximum test point reached and add 'correct' point to route
+                    else {
+                        maxTestPoint = std::max(maxTestPoint, nearestRouteWaypoint);
+                        route.addPoint(antX, antY, false);
+                    }
+
                     // Reset scan
+                    antHeading -= halfScanAngle;
                     testingScan = 0;
                     bestTestENSpikes = std::numeric_limits<unsigned int>::max();
 
                     // Take snapshot
                     testSnapshot = true;
-                }
-            }
-        }
-        // Otherwise, if we're testing
-        else if(state == State::Testing) {
-            if(resultsAvailable) {
-                // If this is an improvement on previous best spike count
-                if(numENSpikes < bestTestENSpikes) {
-                    bestHeading = antHeading;
-                    bestTestENSpikes = numENSpikes;
-
-                    std::cout << "\tUpdated result: " << bestHeading << " is most familiar heading with " << bestTestENSpikes << " spikes" << std::endl;
-                }
-
-                // Update window title
-                std::string windowTitle = "Ant World - Testing with " + std::to_string(numErrors) + " errors";
-                glfwSetWindowTitle(window, windowTitle.c_str());
-
-                // Go onto next scan
-                testingScan++;
-
-                // If scan isn't complete
-                if(testingScan < numScanSteps) {
-                    // Scan right
-                    antHeading += Parameters::scanStep;
-
-                    // Take test snapshot
-                    testSnapshot = true;
-                }
-                else {
-                    std::cout << "Scan complete: " << bestHeading << " is most familiar heading with " << bestTestENSpikes << " spikes" << std::endl;
-
-                    // Snap ant to it's best heading
-                    antHeading = bestHeading;
-
-                    // Increment step count
-                    numTestSteps++;
-
-                    // Move ant forward by snapshot distance
-                    antX += Parameters::snapshotDistance * sin(antHeading * degreesToRadians);
-                    antY += Parameters::snapshotDistance * cos(antHeading * degreesToRadians);
-
-                    // If we've reached destination
-                    if(route.atDestination(antX, antY, Parameters::errorDistance)) {
-                        std::cerr << "Destination reached in " << numTestSteps << " steps with " << numErrors << " errors" << std::endl;
-
-                        // Reset state to idle
-                        state = State::Idle;
-
-                        // Add final point to route
-                        route.addPoint(antX, antY, false);
-
-                        // Stop
-                        return 0;
-                    }
-                    // Otherwise, if we've
-                    else if(numTestSteps >= Parameters::testStepLimit) {
-                        std::cerr << "Failed to find destination after " << numTestSteps << " steps and " << numErrors << " errors" << std::endl;
-
-                        // Stop
-                        return 0;
-                    }
-                    // Otherwise
-                    else {
-                        // Calculate distance to route
-                        float distanceToRoute;
-                        size_t nearestRouteWaypoint;
-                        std::tie(distanceToRoute, nearestRouteWaypoint) = route.getDistanceToRoute(antX, antY);
-                        std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
-
-                        // If we are further away than error threshold
-                        if(distanceToRoute > Parameters::errorDistance) {
-                            // If we have previously reached further down route than nearest point
-                            // the furthest point reached is our 'best' waypoint otherwise it's the nearest waypoint
-                            const size_t bestWaypoint = (nearestRouteWaypoint < maxTestPoint) ? maxTestPoint : nearestRouteWaypoint;
-
-                            // Snap ant to the waypoint after this (clamping to size of route)
-                            const size_t snapWaypoint = std::min(bestWaypoint + 1, route.size() - 1);
-                            std::tie(antX, antY, antHeading) = route[snapWaypoint];
-
-                            // Update maximum test point reached
-                            maxTestPoint = std::max(maxTestPoint, snapWaypoint);
-
-                            // Add error point to route
-                            route.addPoint(antX, antY, true);
-
-                            // Increment error counter
-                            numErrors++;
-                        }
-                        // Otherwise, update maximum test point reached and add 'correct' point to route
-                        else {
-                            maxTestPoint = std::max(maxTestPoint, nearestRouteWaypoint);
-                            route.addPoint(antX, antY, false);
-                        }
-
-                        // Reset scan
-                        antHeading -= halfScanAngle;
-                        testingScan = 0;
-                        bestTestENSpikes = std::numeric_limits<unsigned int>::max();
-
-                        // Take snapshot
-                        testSnapshot = true;
-                    }
                 }
             }
         }
@@ -483,37 +458,33 @@ int main(int argc, char *argv[])
             }
         }
         if(state == State::SpinningTrain) {
-            if(resultsAvailable) {
-                spin.open("spin.csv");
+            spin.open("spin.csv");
 
-                // Start testing scan
-                state = State::SpinningTest;
-                antHeading -= halfScanAngle;
-                testingScan = 0;
-                testSnapshot = true;
-            }
+            // Start testing scan
+            state = State::SpinningTest;
+            antHeading -= halfScanAngle;
+            testingScan = 0;
+            testSnapshot = true;
         }
         else if(state == State::SpinningTest) {
-            if(resultsAvailable) {
-                   // Write heading and number of spikes to file
-                spin << antHeading << "," << numENSpikes << std::endl;
+            // Write heading and number of spikes to file
+            spin << antHeading << "," << numENSpikes << std::endl;
 
-                // Go onto next scan
-                testingScan++;
+            // Go onto next scan
+            testingScan++;
 
-                // If scan isn't complete
-                if(testingScan < numSpinSteps) {
-                    // Scan right
-                    antHeading += Parameters::spinStep;
+            // If scan isn't complete
+            if(testingScan < numSpinSteps) {
+                // Scan right
+                antHeading += Parameters::spinStep;
 
-                    // Take test snapshot
-                    testSnapshot = true;
-                }
-                else {
-                    spin.close();
+                // Take test snapshot
+                testSnapshot = true;
+            }
+            else {
+                spin.close();
 
-                    state = State::Idle;
-                }
+                state = State::Idle;
             }
         }
 
@@ -544,8 +515,8 @@ int main(int argc, char *argv[])
             snapshotProcessor.process(snapshot);
 
             // Present to memory
-            gennResult = memory.present(snapshotProcessor.getFinalSnapshotFloat(), trainSnapshot);
-
+            std::tie(numPNSpikes, numKCSpikes, numENSpikes) = memory.present(snapshotProcessor.getFinalSnapshotFloat(), trainSnapshot);
+            std::cout << "\t" << numPNSpikes << " PN spikes, " << numKCSpikes << " KC spikes, " << numENSpikes << " EN spikes" << std::endl;
         }
 
         // Poll for and process events
