@@ -9,9 +9,8 @@
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
-                   unsigned int displayRenderWidth, unsigned int displayRenderHeight)
-:   m_World(worldFilename, worldColour, groundColour), m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
+Renderer::Renderer(unsigned int displayRenderWidth, unsigned int displayRenderHeight)
+:   m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_DisplayRenderWidth(displayRenderWidth), m_DisplayRenderHeight(displayRenderHeight)
 {
@@ -56,6 +55,15 @@ Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour
     generateCubeFaceLookAtMatrices();
 }
 //----------------------------------------------------------------------------
+Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
+                   unsigned int displayRenderWidth, unsigned int displayRenderHeight)
+:   Renderer(displayRenderWidth, displayRenderHeight)
+{
+    if(!loadWorld(worldFilename, worldColour, groundColour)){
+        throw std::runtime_error("Cannot load world");
+    }
+}
+//----------------------------------------------------------------------------
 Renderer::~Renderer()
 {
     glDeleteRenderbuffers(1, &m_DepthBuffer);
@@ -63,13 +71,21 @@ Renderer::~Renderer()
     glDeleteFramebuffers(1, &m_FBO);
 }
 //----------------------------------------------------------------------------
+bool Renderer::loadWorld(const std::string &filename, const GLfloat (&worldColour)[3],
+                    const GLfloat (&groundColour)[3])
+{
+    return m_World.load(filename, worldColour, groundColour);
+}
+//----------------------------------------------------------------------------
+bool Renderer::loadWorldObj(const std::string &objFilename)
+{
+    return m_World.loadObj(objFilename);
+}
+//----------------------------------------------------------------------------
 void Renderer::renderAntView(float antX, float antY, float antHeading)
 {
     // Configure viewport to cubemap-sized square
     glViewport(0, 0, 256, 256);
-
-    // Bind world
-    m_World.bind();
 
     // Bind the cubemap FBO for offscreen rendering
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
@@ -105,8 +121,7 @@ void Renderer::renderAntView(float antX, float antY, float antHeading)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw world
-        // **NOTE** buffers were manually bound previously
-        m_World.render(false);
+        m_World.render();
     }
 
     // Unbind the FBO for onscreen rendering
@@ -134,7 +149,6 @@ void Renderer::renderAntView(float antX, float antY, float antHeading)
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     glDisable(GL_TEXTURE_CUBE_MAP);
-
 }
 //----------------------------------------------------------------------------
 void Renderer::renderTopDownView()

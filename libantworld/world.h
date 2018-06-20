@@ -2,6 +2,7 @@
 
 // Standard C++ includes
 #include <string>
+#include <vector>
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -13,25 +14,47 @@
 class World
 {
 public:
-    World();
-    World(const std::string &filename, const GLfloat (&worldColour)[3],
-          const GLfloat (&groundColour)[3]);
-    ~World();
-
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     bool load(const std::string &filename, const GLfloat (&worldColour)[3],
               const GLfloat (&groundColour)[3]);
-    void bind() const;
-    void render(bool shouldBind = true) const;
+    bool loadObj(const std::string &objFilename);
+
+    void render() const;
 
 private:
     //------------------------------------------------------------------------
+    // Surface
+    //------------------------------------------------------------------------
+    // Encapsulates a single 'surface' - geometry to be rendered in one draw call using one material
+    class Surface
+    {
+    public:
+        Surface();
+        ~Surface();
+
+        void bind() const;
+        void render() const;
+
+        void uploadPositions(const std::vector<GLfloat> &positions);
+        void uploadColours(const std::vector<GLfloat> &positions);
+        void uploadTexCoords(const std::vector<GLfloat> &texCoords);
+
+    private:
+        //------------------------------------------------------------------------
+        // Members
+        //------------------------------------------------------------------------
+        GLuint m_VAO;
+        GLuint m_PositionVBO;
+        GLuint m_ColourVBO;
+        GLuint m_TexCoordVBO;
+        unsigned int m_NumVertices;
+    };
+
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    GLuint m_VAO;
-    GLuint m_PositionVBO;
-    GLuint m_ColourVBO;
-    unsigned int m_NumVertices;
+    // Array of surfaces making up the model
+    std::vector<Surface> m_Surfaces;
 };

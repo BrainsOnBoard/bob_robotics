@@ -1,45 +1,149 @@
 #include "world.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <vector>
+#include <sstream>
+#include <tuple>
+
+// Standard C includes
+#include <cassert>
+
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
+// GeNN robotics includes
+#include "../third_party/path.h"
 
 // Antworld includes
 #include "common.h"
 
 //----------------------------------------------------------------------------
-// World
+// Anonymous namespace
 //----------------------------------------------------------------------------
-World::World() : m_VAO(0), m_PositionVBO(0), m_ColourVBO(0), m_NumVertices(0)
+namespace
 {
-}
-//----------------------------------------------------------------------------
-World::World(const std::string &filename, const GLfloat (&worldColour)[3],
-             const GLfloat (&groundColour)[3])
+template<unsigned int N>
+void readVector(std::istringstream &stream, std::vector<GLfloat> &vector)
 {
-    if(!load(filename, worldColour, groundColour)) {
-        throw std::runtime_error("Cannot load world");
+    // Ensure there is space for vector
+    vector.reserve(vector.size() + N);
+
+    // Read components and push back
+    GLfloat x;
+    for(unsigned int i = 0; i < N; i++) {
+        stream >> x;
+        vector.push_back(x);
     }
+
+    // Check this is the end of the linestream i.e. there aren't extra components
+    assert(stream.eof());
 }
-//----------------------------------------------------------------------------
-World::~World()
+
+void readFace(std::istringstream &lineStream,
+              const std::vector<GLfloat> &rawPositions,
+              const std::vector<GLfloat> &rawTexCoords,
+              std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>> &currentObjSurface)
 {
-    // Delete world objects
-    glDeleteBuffers(1, &m_PositionVBO);
-    glDeleteBuffers(1, &m_ColourVBO);
-    glDeleteVertexArrays(1, &m_VAO);
+     // Get references to current material's positions and texture coordinates
+    auto &surfacePositions = std::get<1>(currentObjSurface);
+    auto &surfaceTexCoords = std::get<2>(currentObjSurface);
+
+    // Reserve memory for triangle's vertex positions and texture coordinates
+    surfacePositions.reserve(surfacePositions.size() + (3 * 3));
+    surfaceTexCoords.reserve(surfaceTexCoords.size() + (3 * 2));
+
+    // Loop through face vertex
+    std::string faceIndexString;
+    std::string indexString;
+    for(unsigned int v = 0; v < 3; v++) {
+        // Read indices i.e. P/T/N into string
+        lineStream >> faceIndexString;
+
+        // Convert into stream for processing
+        std::istringstream faceIndexStream(faceIndexString);
+
+        // Extract index of raw position and texture coordinate
+        std::getline(faceIndexStream, indexString, '/');
+        const int position = stoi(indexString);
+        std::getline(faceIndexStream, indexString, '/');
+        const int texCoord = stoi(indexString);
+
+        // Copy raw positions and texture coordinates into material
+        std::copy_n(&rawPositions[3 * position], 3, std::back_inserter(surfacePositions));
+        std::copy_n(&rawTexCoords[2 * texCoord], 2, std::back_inserter(surfaceTexCoords));
+    }
+
+    // Check this is the end of the linestream i.e. there aren't extra components
+    assert(lineStream.eof());
 }
+
+bool parseMaterials(const filesystem::path &basePath, const std::string &filename, std::map<std::string, cv::Mat> &textures)
+{
+    // Open obj file
+    std::ifstream mtlFile((basePath / filename).str());
+    if(!mtlFile.good()) {
+        std::cerr << "Cannot open mtl file: " << filename << std::endl;
+        return false;
+    }
+
+    // Read lines into strings
+    std::string currentMaterialName;
+    std::string lineString;
+    std::string commandString;
+    std::string parameterString;
+    while(std::getline(mtlFile, lineString)) {
+        // Entirely skip comment lines
+        if(lineString[0] == '#') {
+            continue;
+        }
+
+        // Wrap line in stream for easier parsing
+        std::istringstream lineStream(lineString);
+
+        // Read command from first token
+        lineStream >> commandString;
+        if(commandString == "newmtl") {
+            lineStream >> currentMaterialName;
+            std::cout << "Beginning material: " << currentMaterialName << std::endl;
+        }
+        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
+            || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
+            || commandString == "d" || commandString == "illum")
+        {
+            // ignore lighting properties
+        }
+        else if(commandString == "map_Kd") {
+            assert(!currentMaterialName.empty());
+
+            const std::string textureFilename = lineStream.str();
+            std::cout << "Texture: " << textureFilename << std::endl;
+
+            // Load texture and add to map
+            // **NOTE** using OpenCV so as to reduce need for extra dependencies
+            textures.emplace(currentMaterialName, cv::imread(textureFilename));
+        }
+        else {
+            std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
+        }
+
+    }
+
+    return true;
+}
+}
+
+//----------------------------------------------------------------------------
+// World
 //----------------------------------------------------------------------------
 bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
-    // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_VAO);
-
-    // Generate two vertex buffer objects, one for positions and one for colours
-    glGenBuffers(1, &m_PositionVBO);
-    glGenBuffers(1, &m_ColourVBO);
+    // Create single surface
+    m_Surfaces.clear();
+    m_Surfaces.emplace_back();
+    auto &surface = m_Surfaces.back();
 
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
@@ -51,12 +155,11 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
     const std::streampos numTriangles = input.tellg() / (sizeof(double) * 12);
-    m_NumVertices = numTriangles * 3;
     input.seekg(0);
     std::cout << "World has " << numTriangles << " triangles" << std::endl;
 
-    // Bind vertex array
-    glBindVertexArray(m_VAO);
+    // Bind surface vertex array
+    surface.bind();
 
     {
         // Reserve 3 XYZ positions for each triangle and 6 for the ground
@@ -88,15 +191,8 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
             }
         }
 
-        // Bind positions buffer
-        glBindBuffer(GL_ARRAY_BUFFER, m_PositionVBO);
-
         // Upload positions
-        glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
-
-        // Set vertex pointer and enable client state in VAO
-        glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_VERTEX_ARRAY);
+        surface.uploadPositions(positions);
     }
 
     {
@@ -126,34 +222,214 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
             }
         }
 
-        // Bind colours buffer
-        glBindBuffer(GL_ARRAY_BUFFER, m_ColourVBO);
-
         // Upload colours
-        glBufferData(GL_ARRAY_BUFFER, colours.size() * sizeof(GLfloat), colours.data(), GL_STATIC_DRAW);
-
-        // Set colour pointer and enable client state in VAO
-        glColorPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_COLOR_ARRAY);
+        surface.uploadColours(colours);
     }
 
     return true;
 }
 //----------------------------------------------------------------------------
-void World::bind() const
+bool World::loadObj(const std::string &filename)
+{
+    // Vector of geometry associated with each named surface (in unindexed triangle format)
+    std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
+
+    std::map<std::string, cv::Mat> textures;
+
+    // Parser
+    {
+        // Vectors to hold 'raw' positions and texture coordinates read from obj
+        std::vector<GLfloat> rawPositions;
+        std::vector<GLfloat> rawTexCoords;
+
+        // Open obj file
+        std::ifstream objFile(filename);
+        if(!objFile.good()) {
+            std::cerr << "Cannot open obj file: " << filename << std::endl;
+            return false;
+        }
+
+        // Read lines into strings
+        std::string lineString;
+        std::string commandString;
+        std::string parameterString;
+        while(std::getline(objFile, lineString)) {
+            // Entirely skip comment lines
+            if(lineString[0] == '#') {
+                continue;
+            }
+
+            // Wrap line in stream for easier parsing
+            std::istringstream lineStream(lineString);
+
+            // Read command from first token
+            lineStream >> commandString;
+            if(commandString == "mtllib") {
+                lineStream >> parameterString;
+                std::cout << "Using material file: " << parameterString << std::endl;
+
+                const auto objPath = filesystem::path(filename).make_absolute();
+                parseMaterials(objPath.parent_path(), parameterString, textures);
+            }
+            else if(commandString == "o") {
+                lineStream >> parameterString;
+                std::cout << "Reading object: " << parameterString << std::endl;
+            }
+            else if(commandString == "v") {
+                // Read vertex
+                readVector<3>(lineStream, rawPositions);
+            }
+            else if(commandString == "vt") {
+                // Read texture coordinate
+                readVector<2>(lineStream, rawTexCoords);
+            }
+            else if(commandString == "vn") {
+                // ignore vertex normals for now
+            }
+            else if(commandString == "usemtl") {
+                lineStream >> parameterString;
+                std::cout << "Beginning surface: " << parameterString << std::endl;
+                objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
+            }
+            else if(commandString == "s") {
+                // ignore smoothing
+            }
+            else if(commandString == "f") {
+                // Check that a surface has been begun
+                assert(!objSurfaces.empty());
+
+                // Read face
+                readFace(lineStream, rawPositions, rawTexCoords, objSurfaces.back());
+            }
+            else {
+                std::cerr << "WARNING: unhandled obj tag '" << commandString << "'" << std::endl;
+            }
+
+        }
+
+        std::cout << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, " << objSurfaces.size() << " surfaces" << std::endl;
+    }
+
+    // Remove any existing surfaces
+    m_Surfaces.clear();
+
+    // Allocate new materials array to match those found in obj
+    m_Surfaces.resize(objSurfaces.size());
+
+    // Loop through surfaces
+    for(unsigned int s = 0; s < objSurfaces.size(); s++) {
+        // Bind material
+        m_Surfaces[s].bind();
+
+        // Upload positions and texture coordinates from obj file
+        m_Surfaces[s].uploadPositions(std::get<1>(objSurfaces[s]));
+        m_Surfaces[s].uploadTexCoords(std::get<2>(objSurfaces[s]));
+    }
+
+
+    return true;
+}
+//----------------------------------------------------------------------------
+void World::render() const
+{
+    // Bind and render each material
+    for(auto &surf : m_Surfaces) {
+        surf.bind();
+        surf.render();
+    }
+}
+
+//----------------------------------------------------------------------------
+// World::Surface
+//----------------------------------------------------------------------------
+World::Surface::Surface() : m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0)
+{
+    // Create a vertex array object to bind everything together
+    glGenVertexArrays(1, &m_VAO);
+}
+//----------------------------------------------------------------------------
+World::Surface::~Surface()
+{
+    if(m_PositionVBO != 0) {
+        glDeleteBuffers(1, &m_PositionVBO);
+    }
+
+    if(m_ColourVBO != 0) {
+        glDeleteBuffers(1, &m_ColourVBO);
+    }
+
+    if(m_TexCoordVBO != 0) {
+        glDeleteBuffers(1, &m_TexCoordVBO);
+    }
+
+    glDeleteVertexArrays(1, &m_VAO);
+}
+//----------------------------------------------------------------------------
+void World::Surface::bind() const
 {
     // Bind world VAO
     glBindVertexArray(m_VAO);
 }
 //----------------------------------------------------------------------------
-void World::render(bool shouldBind) const
+void World::Surface::render() const
 {
-    // If we should bind as well, do so
-    if(shouldBind) {
-        bind();
-    }
-
     // Draw world
     glDrawArrays(GL_TRIANGLES, 0, m_NumVertices);
 }
 //----------------------------------------------------------------------------
+void World::Surface::uploadPositions(const std::vector<GLfloat> &positions)
+{
+    // Generate position VBO if required
+    if(m_PositionVBO == 0) {
+        glGenBuffers(1, &m_PositionVBO);
+    }
+
+    // Bind positions buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_PositionVBO);
+
+    // Upload positions
+    glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
+
+    // Set vertex pointer and enable client state in VAO
+    glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    // Calculate number of vertices from positions
+    m_NumVertices = positions.size() / 3;
+}
+//----------------------------------------------------------------------------
+void World::Surface::uploadColours(const std::vector<GLfloat> &colours)
+{
+    // Generate colour VBO if required
+    if(m_ColourVBO == 0) {
+        glGenBuffers(1, &m_ColourVBO);
+    }
+
+    // Bind colours buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_ColourVBO);
+
+    // Upload colours
+    glBufferData(GL_ARRAY_BUFFER, colours.size() * sizeof(GLfloat), colours.data(), GL_STATIC_DRAW);
+
+    // Set colour pointer and enable client state in VAO
+    glColorPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
+    glEnableClientState(GL_COLOR_ARRAY);
+}
+//----------------------------------------------------------------------------
+void World::Surface::uploadTexCoords(const std::vector<GLfloat> &texCoords)
+{
+    // Generate colour VBO if required
+    if(m_TexCoordVBO == 0) {
+        glGenBuffers(1, &m_TexCoordVBO);
+    }
+
+    // Bind colours buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_TexCoordVBO);
+
+    // Upload colours
+    glBufferData(GL_ARRAY_BUFFER, texCoords.size() * sizeof(GLfloat), texCoords.data(), GL_STATIC_DRAW);
+
+    // Set colour pointer and enable client state in VAO
+    glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+}

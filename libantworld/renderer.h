@@ -16,6 +16,7 @@
 class Renderer
 {
 public:
+    Renderer(unsigned int displayRenderWidth, unsigned int displayRenderHeight);
     Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
              unsigned int displayRenderWidth, unsigned int displayRenderHeight);
     ~Renderer();
@@ -23,6 +24,10 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    bool loadWorld(const std::string &filename, const GLfloat (&worldColour)[3],
+                   const GLfloat (&groundColour)[3]);
+    bool loadWorldObj(const std::string &objFilename);
+
     void renderAntView(float antX, float antY, float antHeading);
     void renderTopDownView();
     void render(float antX, float antY, float antHeading);

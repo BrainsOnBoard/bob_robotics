@@ -72,11 +72,10 @@ int main()
     glPointSize(4.0);
 
     // Create renderer
-    Renderer renderer("../libantworld/world5000_gray.bin",
-                      {0.0f, 1.0f, 0.0f},
-                      {0.898f, 0.718f, 0.353f},
-                      width, height);
-
+    Renderer renderer(width, height);
+    renderer.loadWorld("../libantworld/world5000_gray.bin",
+                       {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+    //renderer.loadWorldObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj");
 
     HID::Joystick joystick;
 

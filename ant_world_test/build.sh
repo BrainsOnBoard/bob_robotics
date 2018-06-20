@@ -1,1 +1,4 @@
-g++ ant_world_test.cc -std=c++11 -Wall -Wpedantic -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW -pthread -o ant_world_test
+pushd ../libantworld
+make
+popd
+g++ ant_world_test.cc -std=c++11 -Wall -Wpedantic -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW -pthread `pkg-config --cflags --libs opencv` -o ant_world_test
