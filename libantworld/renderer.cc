@@ -81,9 +81,9 @@ bool Renderer::loadWorld(const std::string &filename, const GLfloat (&worldColou
     return m_World.load(filename, worldColour, groundColour);
 }
 //----------------------------------------------------------------------------
-bool Renderer::loadWorldObj(const std::string &objFilename)
+bool Renderer::loadWorldObj(const std::string &objFilename, int maxTextureSize, GLint textureFormat)
 {
-    return m_World.loadObj(objFilename);
+    return m_World.loadObj(objFilename, maxTextureSize, textureFormat);
 }
 //----------------------------------------------------------------------------
 void Renderer::renderAntView(float antX, float antY, float antHeading)

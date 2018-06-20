@@ -98,7 +98,8 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    bool loadMaterials(const filesystem::path &basePath, const std::string &filename, GLint textureFormat,
+    bool loadMaterials(const filesystem::path &basePath, const std::string &filename,
+                       GLint textureFormat, int maxTextureSize,
                        std::map<std::string, Texture*> &textureNames);
 
     //------------------------------------------------------------------------

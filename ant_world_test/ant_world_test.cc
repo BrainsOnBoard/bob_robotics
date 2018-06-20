@@ -74,7 +74,7 @@ int main()
     }
 
     // Enable VSync
-    glfwSwapInterval(2);
+    glfwSwapInterval(1);
 
     glDebugMessageCallback(handleGLError, nullptr);
 
@@ -83,13 +83,19 @@ int main()
     glEnable(GL_DEPTH_TEST);
     glLineWidth(4.0);
     glPointSize(4.0);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     glEnable(GL_TEXTURE_2D);
 
     // Create renderer
     AntWorld::Renderer renderer(width, height);
     //renderer.loadWorld("../libantworld/world5000_gray.bin",
     //                   {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
-    renderer.loadWorldObj("/tmp/pier/pier_alex_smoothed_decimated_triangles.obj");
+
+    // Load world, keeping texture sizes below 4096 and compressing textures on upload
+    renderer.loadWorldObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj", 4096, GL_COMPRESSED_RGB);
 
     HID::Joystick joystick(0.25f);
 

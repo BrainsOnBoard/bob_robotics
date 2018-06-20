@@ -72,11 +72,6 @@ void readFace(std::istringstream &lineStream,
     // Check this is the end of the linestream i.e. there aren't extra components
     assert(lineStream.eof());
 }
-
-bool isPOT(int x)
-{
-    return ((x & (x - 1)) == 0);
-}
 }
 
 //----------------------------------------------------------------------------
@@ -188,14 +183,8 @@ bool World::loadObj(const std::string &filename, int maxTextureSize, GLint textu
     if(maxTextureSize == -1) {
         maxTextureSize = hardwareMaxTextureSize;
     }
+    // Otherwise, use lowest of hardware or user-specified max texture size
     else {
-        // Check max texture size is a power of two
-        if(!isPOT(maxTextureSize)) {
-            std::cerr << "Maximum texture size must be a power of two" << std::endl;
-            return false;
-        }
-
-        // Use lowest of hardware or user-specified max texture size
         maxTextureSize = std::min(maxTextureSize, hardwareMaxTextureSize);
     }
 
@@ -242,7 +231,9 @@ bool World::loadObj(const std::string &filename, int maxTextureSize, GLint textu
                 lineStream >> parameterString;
 
                 // Parse materials
-                loadMaterials(basePath, parameterString, textureFormat, textureNames);
+                loadMaterials(basePath, parameterString,
+                              textureFormat, maxTextureSize,
+                              textureNames);
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
@@ -322,7 +313,8 @@ void World::render() const
     }
 }
 //----------------------------------------------------------------------------
-bool World::loadMaterials(const filesystem::path &basePath, const std::string &filename, GLint textureFormat,
+bool World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
+                          GLint textureFormat, int maxTextureSize,
                           std::map<std::string, Texture*> &textureNames)
 {
     // Open obj file
@@ -381,18 +373,41 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
             // **NOTE** using OpenCV so as to reduce need for extra dependencies
             cv::Mat texture = cv::imread(texturePath);
 
-            // Flip texture about y-axis as the origin of OpenGL texture coordinates
-            // is in the bottom-left and obj file's is in the top-left
-            cv::flip(texture, texture, 0);
-            std::cout << "\t\t\tWidth:" << texture.cols << ", height:" << texture.rows << std::endl;
+            // If texture couldn't be loaded, give warning
+            if(texture.cols == 0 && texture.rows == 0) {
+                std::cerr << "WARNING:Cannot load texture" << std::endl;
+            }
+            // Otherwise
+            else {
+                std::cout << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows << std::endl;
 
-            // Add a new texture to array and upload data to it in selected format
-            m_Textures.emplace_back(new Texture());
-            m_Textures.back()->upload(texture, textureFormat);
+                // If texture isn't square, use longest side as size
+                int size = texture.cols;
+                if(texture.cols != texture.rows) {
+                    size = std::max(texture.cols, texture.rows);
+                }
 
-            // Add name to map
-            const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
-            assert(inserted);
+                // Clamp size to maximum texture size
+                size = std::min(size, maxTextureSize);
+
+                // Perform resize if required
+                if(size != texture.cols || size != texture.rows) {
+                    std::cout << "\t\t\tResizing to: " << size << "x" << size << std::endl;
+                    cv::resize(texture, texture, cv::Size(size, size), 0, 0, cv::INTER_CUBIC);
+                }
+
+                // Flip texture about y-axis as the origin of OpenGL texture coordinates
+                // is in the bottom-left and obj file's is in the top-left
+                cv::flip(texture, texture, 0);
+
+                // Add a new texture to array and upload data to it in selected format
+                m_Textures.emplace_back(new Texture());
+                m_Textures.back()->upload(texture, textureFormat);
+
+                // Add name to map
+                const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
+                assert(inserted);
+            }
         }
         else {
             std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
@@ -402,6 +417,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
     return true;
 }
+
 //----------------------------------------------------------------------------
 // World::Texture
 //----------------------------------------------------------------------------
