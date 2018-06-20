@@ -79,17 +79,17 @@ int main()
     glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
-    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(4.0);
     glPointSize(4.0);
     glEnable(GL_TEXTURE_2D);
 
     // Create renderer
-    Renderer renderer(width, height);
+    AntWorld::Renderer renderer(width, height);
     //renderer.loadWorld("../libantworld/world5000_gray.bin",
     //                   {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
-    renderer.loadWorldObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj");
+    renderer.loadWorldObj("/tmp/pier/pier_alex_smoothed_decimated_triangles.obj");
 
     HID::Joystick joystick(0.25f);
 
@@ -106,13 +106,17 @@ int main()
         const double deltaTime = currentTime - lastTime;
         lastTime = currentTime;
 
+        char buffer[100];
+        sprintf(buffer, "%d FPS", (int)std::round(1.0 / deltaTime));
+        glfwSetWindowTitle(window, buffer);
+
         // Rotate ant using left stick's horizontal axis
         antHeading += joystick.getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
 
         // Move ant using left stick's vertical axis
         const float forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::LeftStickVertical);
-        antX -= forwardMove * sin(antHeading * degreesToRadians);
-        antY -= forwardMove * cos(antHeading * degreesToRadians);
+        antX -= forwardMove * sin(antHeading * AntWorld::degreesToRadians);
+        antY -= forwardMove * cos(antHeading * AntWorld::degreesToRadians);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
