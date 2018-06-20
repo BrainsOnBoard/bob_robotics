@@ -173,26 +173,26 @@ int main(int argc, char *argv[])
     glfwSetKeyCallback(window, keyCallback);
 
     // Create renderer
-    Renderer renderer("../libantworld/world5000_gray.bin", Parameters::worldColour, Parameters::groundColour,
-                      Parameters::displayRenderWidth, Parameters::displayRenderHeight);
+    AntWorld::Renderer renderer("../libantworld/world5000_gray.bin", Parameters::worldColour, Parameters::groundColour,
+                                Parameters::displayRenderWidth, Parameters::displayRenderHeight);
 
     // Create route object and load route file specified by command line
-    RouteArdin route(0.2f, 800);
+    AntWorld::RouteArdin route(0.2f, 800);
     if(argc > 1) {
         route.load(argv[1]);
     }
 
     // Create memory
-    //MBMemory memory;
-    PerfectMemory memory;
+    MBMemory memory;
+    //PerfectMemory memory;
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
 
     // Create snapshot processor to perform image processing on snapshot
-    SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
-                                             Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
-                                             Parameters::inputWidth, Parameters::inputHeight);
+    AntWorld::SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
+                                                       Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
+                                                       Parameters::inputWidth, Parameters::inputHeight);
 
     // Initialize ant position
     float antX = 5.0f;
@@ -241,12 +241,12 @@ int main(int argc, char *argv[])
             antHeading += Parameters::antTurnSpeed;
         }
         if(keybits.test(KeyUp)) {
-            antX += Parameters::antMoveSpeed * sin(antHeading * degreesToRadians);
-            antY += Parameters::antMoveSpeed * cos(antHeading * degreesToRadians);
+            antX += Parameters::antMoveSpeed * sin(antHeading * AntWorld::degreesToRadians);
+            antY += Parameters::antMoveSpeed * cos(antHeading * AntWorld::degreesToRadians);
         }
         if(keybits.test(KeyDown)) {
-            antX -= Parameters::antMoveSpeed * sin(antHeading * degreesToRadians);
-            antY -= Parameters::antMoveSpeed * cos(antHeading * degreesToRadians);
+            antX -= Parameters::antMoveSpeed * sin(antHeading * AntWorld::degreesToRadians);
+            antY -= Parameters::antMoveSpeed * cos(antHeading * AntWorld::degreesToRadians);
         }
         if(keybits.test(KeyReset)) {
             if(route.size() > 0) {
@@ -348,8 +348,8 @@ int main(int argc, char *argv[])
                 numTestSteps++;
 
                 // Move ant forward by snapshot distance
-                antX += Parameters::snapshotDistance * sin(antHeading * degreesToRadians);
-                antY += Parameters::snapshotDistance * cos(antHeading * degreesToRadians);
+                antX += Parameters::snapshotDistance * sin(antHeading * AntWorld::degreesToRadians);
+                antY += Parameters::snapshotDistance * cos(antHeading * AntWorld::degreesToRadians);
 
                 // If we've reached destination
                 if(route.atDestination(antX, antY, Parameters::errorDistance)) {
@@ -419,8 +419,8 @@ int main(int argc, char *argv[])
             antHeading += randomAngleOffset(gen);
 
             // Move ant forward by snapshot distance
-            antX += Parameters::snapshotDistance * sin(antHeading * degreesToRadians);
-            antY += Parameters::snapshotDistance * cos(antHeading * degreesToRadians);
+            antX += Parameters::snapshotDistance * sin(antHeading * AntWorld::degreesToRadians);
+            antY += Parameters::snapshotDistance * cos(antHeading * AntWorld::degreesToRadians);
 
             // If we've reached destination
             if(route.atDestination(antX, antY, Parameters::errorDistance)) {
