@@ -23,6 +23,17 @@ void handleGLFWError(int errorNumber, const char *message)
 {
     std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
 }
+
+void handleGLError(GLenum source,
+                   GLenum type,
+                   GLuint id,
+                   GLenum severity,
+                   GLsizei length,
+                   const GLchar *message,
+                   const void *userParam)
+{
+    throw std::runtime_error(message);
+}
 }
 
 int main()
@@ -65,19 +76,22 @@ int main()
     // Enable VSync
     glfwSwapInterval(2);
 
+    glDebugMessageCallback(handleGLError, nullptr);
+
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(4.0);
     glPointSize(4.0);
+    glEnable(GL_TEXTURE_2D);
 
     // Create renderer
     Renderer renderer(width, height);
-    renderer.loadWorld("../libantworld/world5000_gray.bin",
-                       {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
-    //renderer.loadWorldObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj");
+    //renderer.loadWorld("../libantworld/world5000_gray.bin",
+    //                   {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+    renderer.loadWorldObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj");
 
-    HID::Joystick joystick;
+    HID::Joystick joystick(0.25f);
 
     float antX = 5.0f;
     float antY = 5.0f;
