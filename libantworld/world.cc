@@ -25,7 +25,7 @@
 namespace
 {
 template<unsigned int N>
-void readVector(std::istringstream &stream, std::vector<GLfloat> &vector)
+void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale)
 {
     // Ensure there is space for vector
     vector.reserve(vector.size() + N);
@@ -34,7 +34,7 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector)
     GLfloat x;
     for(unsigned int i = 0; i < N; i++) {
         stream >> x;
-        vector.push_back(x);
+        vector.push_back(x * scale);
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
@@ -65,10 +65,11 @@ void readFace(std::istringstream &lineStream,
         std::istringstream faceIndexStream(faceIndexString);
 
         // Extract index of raw position and texture coordinate
+        // **NOTE** obj indices start from 1
         std::getline(faceIndexStream, indexString, '/');
-        const int position = stoi(indexString);
+        const int position = stoi(indexString) - 1;
         std::getline(faceIndexStream, indexString, '/');
-        const int texCoord = stoi(indexString);
+        const int texCoord = stoi(indexString) - 1;
 
         // Copy raw positions and texture coordinates into material
         std::copy_n(&rawPositions[3 * position], 3, std::back_inserter(surfacePositions));
@@ -88,6 +89,7 @@ bool parseMaterials(const filesystem::path &basePath, const std::string &filenam
         return false;
     }
 
+    std::cout << "Reading material file: " << filename << std::endl;
     // Read lines into strings
     std::string currentMaterialName;
     std::string lineString;
@@ -106,7 +108,7 @@ bool parseMaterials(const filesystem::path &basePath, const std::string &filenam
         lineStream >> commandString;
         if(commandString == "newmtl") {
             lineStream >> currentMaterialName;
-            std::cout << "Beginning material: " << currentMaterialName << std::endl;
+            std::cout << "\tReading material: " << currentMaterialName << std::endl;
         }
         else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
             || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
@@ -117,12 +119,32 @@ bool parseMaterials(const filesystem::path &basePath, const std::string &filenam
         else if(commandString == "map_Kd") {
             assert(!currentMaterialName.empty());
 
-            const std::string textureFilename = lineStream.str();
-            std::cout << "Texture: " << textureFilename << std::endl;
+            // Skip any whitespace preceeding texture filename
+            while(lineStream.peek() == ' ') {
+                lineStream.get();
+            }
+
+            // Treat remainder of line as texture filename
+            std::string textureFilename;
+            std::getline(lineStream, textureFilename);
+
+            std::cout << "\t\tTexture: " << textureFilename << std::endl;
 
             // Load texture and add to map
+            const std::string texturePath = (basePath / textureFilename).str();
+
+            // Load texture
             // **NOTE** using OpenCV so as to reduce need for extra dependencies
-            textures.emplace(currentMaterialName, cv::imread(textureFilename));
+            cv::Mat texture = cv::imread(texturePath);
+
+            // Flip texture about y-axis as the origin of OpenGL texture coordinates
+            // is in the bottom-left and obj file's is in the top-left
+            cv::flip(texture, texture, 0);
+            std::cout << "\t\t\tWidth:" << texture.cols << ", height:" << texture.rows << std::endl;
+
+            // Add to textures map
+            const bool inserted = textures.insert(std::make_pair(currentMaterialName, texture)).second;
+            assert(inserted);
         }
         else {
             std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
@@ -231,6 +253,10 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
 //----------------------------------------------------------------------------
 bool World::loadObj(const std::string &filename)
 {
+    int maxTextureSize = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    std::cout << "Max texture size: " << maxTextureSize << std::endl;
+
     // Vector of geometry associated with each named surface (in unindexed triangle format)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
 
@@ -266,8 +292,8 @@ bool World::loadObj(const std::string &filename)
             lineStream >> commandString;
             if(commandString == "mtllib") {
                 lineStream >> parameterString;
-                std::cout << "Using material file: " << parameterString << std::endl;
 
+                // Parse materials
                 const auto objPath = filesystem::path(filename).make_absolute();
                 parseMaterials(objPath.parent_path(), parameterString, textures);
             }
@@ -277,18 +303,18 @@ bool World::loadObj(const std::string &filename)
             }
             else if(commandString == "v") {
                 // Read vertex
-                readVector<3>(lineStream, rawPositions);
+                readVector<3>(lineStream, rawPositions, 0.1f);
             }
             else if(commandString == "vt") {
                 // Read texture coordinate
-                readVector<2>(lineStream, rawTexCoords);
+                readVector<2>(lineStream, rawTexCoords, 1.0f);
             }
             else if(commandString == "vn") {
                 // ignore vertex normals for now
             }
             else if(commandString == "usemtl") {
                 lineStream >> parameterString;
-                std::cout << "Beginning surface: " << parameterString << std::endl;
+                std::cout << "\tReading surface: " << parameterString << std::endl;
                 objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
             }
             else if(commandString == "s") {
@@ -307,7 +333,7 @@ bool World::loadObj(const std::string &filename)
 
         }
 
-        std::cout << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
+        std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
         std::cout << objSurfaces.size() << " surfaces, " << textures.size() << " textures" << std::endl;
     }
 
@@ -461,6 +487,13 @@ void World::Surface::uploadTexture(const cv::Mat &texture)
     // Bind texture
     glBindTexture(GL_TEXTURE_2D, m_Texture);
 
+    // Configure texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
     // Upload texture data and generate mipmaps
-    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB8, texture.cols, texture.rows, GL_BGR, GL_UNSIGNED_BYTE, texture.data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB/*GL_RGB*/, texture.cols, texture.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, texture.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
