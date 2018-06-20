@@ -8,7 +8,7 @@ NO_I2C_ROBOT=1 make
 ```
 
 ### Building on Windows
-The programs are available in Visual Studio (2017) projects. Simply clone the `GeNN_Robotics` repository, then open `GeNN_Robotics.sln` in Visual Studio.
+The programs are available in Visual Studio (2017) projects. Simply clone the `BoBRobotics` repository, then open `BoBRobotics.sln` in Visual Studio.
 
 ### Running
 The program to be run on the robot is invoked like so:
