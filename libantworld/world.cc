@@ -173,7 +173,7 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     return true;
 }
 //----------------------------------------------------------------------------
-bool World::loadObj(const std::string &filename, int maxTextureSize, GLint textureFormat)
+bool World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
@@ -241,7 +241,7 @@ bool World::loadObj(const std::string &filename, int maxTextureSize, GLint textu
             }
             else if(commandString == "v") {
                 // Read vertex
-                readVector<3>(lineStream, rawPositions, 0.1f);
+                readVector<3>(lineStream, rawPositions, scale);
             }
             else if(commandString == "vt") {
                 // Read texture coordinate

@@ -31,7 +31,8 @@ public:
     //------------------------------------------------------------------------
     bool loadWorld(const std::string &filename, const GLfloat (&worldColour)[3],
                    const GLfloat (&groundColour)[3]);
-    bool loadWorldObj(const std::string &objFilename, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    bool loadWorldObj(const std::string &objFilename, float scale = 1.0f,
+                      int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
     void renderAntView(float antX, float antY, float antHeading);
     void renderTopDownView();
