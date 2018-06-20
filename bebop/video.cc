@@ -1,6 +1,6 @@
 #include "video.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 #ifndef DUMMY_DRONE
 // start VideoDecoder class
@@ -467,4 +467,4 @@ BebopVideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 #endif // DUMMY_DRONE
 // end BebopVideoStream class
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

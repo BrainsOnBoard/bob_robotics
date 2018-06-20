@@ -10,7 +10,7 @@
 #include <memory>
 #include <thread>
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 class Threadable
 {
 public:

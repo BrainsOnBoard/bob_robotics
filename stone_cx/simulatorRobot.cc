@@ -21,11 +21,11 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
-using namespace GeNNRobotics;
-using namespace GeNNRobotics::HID;
-using namespace GeNNRobotics::ImgProc;
-using namespace GeNNRobotics::Robots;
-using namespace GeNNRobotics::Video;
+using namespace BoBRobotics;
+using namespace BoBRobotics::HID;
+using namespace BoBRobotics::ImgProc;
+using namespace BoBRobotics::Robots;
+using namespace BoBRobotics::Video;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace

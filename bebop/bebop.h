@@ -13,7 +13,7 @@ extern "C"
 #include <iostream>
 #include <string>
 
-// GeNNRobotics controllers
+// BoBRobotics controllers
 #include "../common/semaphore.h"
 
 // these values are hardcoded for Bebop drones
@@ -31,7 +31,7 @@ extern "C"
 #define NO_FLY
 #endif
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 using namespace std;
 
@@ -126,4 +126,4 @@ private:
 #endif // !DUMMY_DRONE
 };     // Bebop
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

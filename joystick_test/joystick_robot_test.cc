@@ -6,10 +6,10 @@ int main()
     constexpr float joystickDeadzone = 0.25f;
     
     // Create joystick interface
-    GeNNRobotics::HID::Joystick joystick(joystickDeadzone);
+    BoBRobotics::HID::Joystick joystick(joystickDeadzone);
     
     // Create motor interface
-    GeNNRobotics::Robots::Norbot robot;
+    BoBRobotics::Robots::Norbot robot;
 
     do {
         // Read joystick
@@ -18,7 +18,7 @@ int main()
         // Use joystick to drive motor
         robot.drive(joystick);
 
-    } while(!joystick.isDown(GeNNRobotics::HID::JButton::B));
+    } while(!joystick.isDown(BoBRobotics::HID::JButton::B));
     
     return 0;
 }

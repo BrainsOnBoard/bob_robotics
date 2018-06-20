@@ -13,7 +13,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace OS {
 namespace Screen {
 #ifndef _WIN32
@@ -47,4 +47,4 @@ getResolution()
 }
 } // Screen
 } // OS
-} // GeNNRobotics
+} // BoBRobotics

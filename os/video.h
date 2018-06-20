@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace OS {
 namespace Video {
 typedef std::pair<int, std::string> CameraDevice;
@@ -61,4 +61,4 @@ getCameras()
 }
 } // Video
 } // OS
-} // GeNNRobotics
+} // BoBRobotics

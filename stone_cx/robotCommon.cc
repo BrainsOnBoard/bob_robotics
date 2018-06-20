@@ -10,7 +10,7 @@
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
 
-float driveMotorFromCPU1(GeNNRobotics::Robots::Norbot &motor, bool display)
+float driveMotorFromCPU1(BoBRobotics::Robots::Norbot &motor, bool display)
 {
     // Sum left and right motor activity
     const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);

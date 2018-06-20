@@ -4,10 +4,10 @@
 #include "modelSpec.h"
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNModels::LIF
+// BoBRobotics::GeNNModels::LIF
 //----------------------------------------------------------------------------
 //! Leaky integrate-and-fire neuron solved algebraically
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNModels {
 class LIF : public NeuronModels::Base
 {
@@ -49,5 +49,5 @@ public:
 };
 IMPLEMENT_MODEL(LIF);
 } // GeNNModels
-} // GeNNRobotics
+} // BoBRobotics
 

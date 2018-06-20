@@ -18,7 +18,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/threadable.h"
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../os/keycodes.h"
@@ -26,7 +26,7 @@
 // local includes
 #include "input.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
 class Display : public Threadable
 {
@@ -148,4 +148,4 @@ protected:
     }
 }; // Display
 } // Video
-} // GeNNRobotics
+} // BoBRobotics

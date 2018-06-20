@@ -16,7 +16,7 @@
 #define NO_I2C_ROBOT
 #endif
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/tank.h"
@@ -27,7 +27,7 @@
 #include "robots/norbot.h"
 #endif
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 int
 main()
