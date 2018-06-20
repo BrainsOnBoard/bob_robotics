@@ -8,6 +8,12 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
+// Forward declarations
+namespace cv
+{
+    class Mat;
+}
+
 //----------------------------------------------------------------------------
 // World
 //----------------------------------------------------------------------------
@@ -41,6 +47,8 @@ private:
         void uploadColours(const std::vector<GLfloat> &positions);
         void uploadTexCoords(const std::vector<GLfloat> &texCoords);
 
+        void uploadTexture(const cv::Mat &texture);
+
     private:
         //------------------------------------------------------------------------
         // Members
@@ -49,6 +57,7 @@ private:
         GLuint m_PositionVBO;
         GLuint m_ColourVBO;
         GLuint m_TexCoordVBO;
+        GLuint m_Texture;
         unsigned int m_NumVertices;
     };
 

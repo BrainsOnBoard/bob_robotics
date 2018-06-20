@@ -94,8 +94,8 @@ bool parseMaterials(const filesystem::path &basePath, const std::string &filenam
     std::string commandString;
     std::string parameterString;
     while(std::getline(mtlFile, lineString)) {
-        // Entirely skip comment lines
-        if(lineString[0] == '#') {
+        // Entirely skip comment or empty lines
+        if(lineString[0] == '#' || lineString.empty()) {
             continue;
         }
 
@@ -254,8 +254,8 @@ bool World::loadObj(const std::string &filename)
         std::string commandString;
         std::string parameterString;
         while(std::getline(objFile, lineString)) {
-            // Entirely skip comment lines
-            if(lineString[0] == '#') {
+            // Entirely skip comment or empty lines
+            if(lineString[0] == '#' || lineString.empty()) {
                 continue;
             }
 
@@ -307,7 +307,8 @@ bool World::loadObj(const std::string &filename)
 
         }
 
-        std::cout << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, " << objSurfaces.size() << " surfaces" << std::endl;
+        std::cout << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
+        std::cout << objSurfaces.size() << " surfaces, " << textures.size() << " textures" << std::endl;
     }
 
     // Remove any existing surfaces
@@ -318,12 +319,21 @@ bool World::loadObj(const std::string &filename)
 
     // Loop through surfaces
     for(unsigned int s = 0; s < objSurfaces.size(); s++) {
+        const auto &objSurface = objSurfaces[s];
+        auto &surface = m_Surfaces[s];
+
         // Bind material
-        m_Surfaces[s].bind();
+        surface.bind();
 
         // Upload positions and texture coordinates from obj file
-        m_Surfaces[s].uploadPositions(std::get<1>(objSurfaces[s]));
-        m_Surfaces[s].uploadTexCoords(std::get<2>(objSurfaces[s]));
+        surface.uploadPositions(std::get<1>(objSurface));
+        surface.uploadTexCoords(std::get<2>(objSurface));
+
+        // Find texture corresponding to this surface
+        const auto tex = textures.find(std::get<0>(objSurface));
+        if(tex != textures.end()) {
+            surface.uploadTexture(tex->second);
+        }
     }
 
 
@@ -342,7 +352,7 @@ void World::render() const
 //----------------------------------------------------------------------------
 // World::Surface
 //----------------------------------------------------------------------------
-World::Surface::Surface() : m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0)
+World::Surface::Surface() : m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_Texture(0)
 {
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_VAO);
@@ -362,6 +372,10 @@ World::Surface::~Surface()
         glDeleteBuffers(1, &m_TexCoordVBO);
     }
 
+    if(m_Texture != 0) {
+        glDeleteTextures(1, &m_Texture);
+    }
+
     glDeleteVertexArrays(1, &m_VAO);
 }
 //----------------------------------------------------------------------------
@@ -369,6 +383,9 @@ void World::Surface::bind() const
 {
     // Bind world VAO
     glBindVertexArray(m_VAO);
+
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 //----------------------------------------------------------------------------
 void World::Surface::render() const
@@ -432,4 +449,18 @@ void World::Surface::uploadTexCoords(const std::vector<GLfloat> &texCoords)
     // Set colour pointer and enable client state in VAO
     glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+//----------------------------------------------------------------------------
+void World::Surface::uploadTexture(const cv::Mat &texture)
+{
+    // Generate texture object if required
+    if(m_Texture == 0) {
+        glGenTextures(1, &m_Texture);
+    }
+
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, m_Texture);
+
+    // Upload texture data and generate mipmaps
+    gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB8, texture.cols, texture.rows, GL_BGR, GL_UNSIGNED_BYTE, texture.data);
 }
