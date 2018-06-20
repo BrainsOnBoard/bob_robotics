@@ -47,7 +47,7 @@ public:
             if (!filePath.exists()) {
                 // lastly look for environment variable pointing to
                 // bob_robotics
-                static const char *envVarName = "GENN_ROBOTICS_PATH";
+                static const char *envVarName = "BOB_ROBOTICS_PATH";
                 const char *env = std::getenv(envVarName);
                 if (!env) {
                     throw std::runtime_error(std::string(envVarName) +
