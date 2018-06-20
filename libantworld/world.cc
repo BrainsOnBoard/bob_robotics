@@ -157,8 +157,12 @@ bool parseMaterials(const filesystem::path &basePath, const std::string &filenam
 }
 
 //----------------------------------------------------------------------------
-// World
+// BoBRobotics::AntWorld::World
 //----------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
@@ -497,3 +501,5 @@ void World::Surface::uploadTexture(const cv::Mat &texture)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB/*GL_RGB*/, texture.cols, texture.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, texture.data);
     glGenerateMipmap(GL_TEXTURE_2D);
 }
+}   // namespace AntWorld
+}   // namespace BoBRobotics

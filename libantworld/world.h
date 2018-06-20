@@ -15,8 +15,12 @@ namespace cv
 }
 
 //----------------------------------------------------------------------------
-// World
+// BoBRobotics::AntWorld::World
 //----------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 class World
 {
 public:
@@ -67,3 +71,5 @@ private:
     // Array of surfaces making up the model
     std::vector<Surface> m_Surfaces;
 };
+}   // namespace AntWorld
+}   // namespace BoBRobotics

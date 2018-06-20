@@ -4,8 +4,12 @@
 #include <stdexcept>
 
 //------------------------------------------------------------------------
-// Renderer
+// BoBRobotics::AntWorld::Renderer
 //------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
@@ -236,3 +240,5 @@ void Renderer::generateCubeFaceLookAtMatrices()
         glGetFloatv(GL_MODELVIEW_MATRIX, m_CubeFaceLookAtMatrices[f]);
     }
 }
+}   // namespace AntWorld
+}   // namespace BoBRobotics

@@ -13,6 +13,11 @@
 //----------------------------------------------------------------------------
 // Renderer
 //----------------------------------------------------------------------------
+// Helper class which combines a world with a rendermesh to allow ant views of world to be rendered to screen
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 class Renderer
 {
 public:
@@ -52,3 +57,5 @@ private:
     const unsigned int m_DisplayRenderWidth;
     const unsigned int m_DisplayRenderHeight;
 };
+}   // namespace AntWorld
+}   // namespace BoBRobotics
