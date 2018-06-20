@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 //------------------------------------------------------------------------
 // Timer
 //------------------------------------------------------------------------
@@ -70,4 +70,4 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
     double &m_Accumulator;
 };
-} // GeNNRobotics
+} // BoBRobotics

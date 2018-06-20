@@ -4,9 +4,9 @@
 #include <fstream>
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNUtils::AnalogueRecorder
+// BoBRobotics::GeNNUtils::AnalogueRecorder
 //----------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNUtils {
 template<typename T>
 class AnalogueCSVRecorder
@@ -36,4 +36,4 @@ private:
     unsigned int m_PopSize;
 };
 } // GeNNUtils
-} // GeNNRobotics
+} // BoBRobotics

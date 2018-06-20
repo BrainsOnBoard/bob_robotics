@@ -10,9 +10,9 @@
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../video/see3cam_cu40.h"
 
-using namespace GeNNRobotics;
-using namespace GeNNRobotics::ImgProc;
-using namespace GeNNRobotics::Video;
+using namespace BoBRobotics;
+using namespace BoBRobotics::ImgProc;
+using namespace BoBRobotics::Video;
 
 namespace
 {

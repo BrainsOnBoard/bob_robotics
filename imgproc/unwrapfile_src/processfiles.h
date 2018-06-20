@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "third_party/path.h"
 
 // local includes

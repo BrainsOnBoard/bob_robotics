@@ -1,6 +1,6 @@
 #pragma once
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 // Forward declarations
 class Norbot;
@@ -8,4 +8,4 @@ class Norbot;
 }
 
 // Functions
-float driveMotorFromCPU1(GeNNRobotics::Robots::Norbot &motor, bool display = false);
+float driveMotorFromCPU1(BoBRobotics::Robots::Norbot &motor, bool display = false);

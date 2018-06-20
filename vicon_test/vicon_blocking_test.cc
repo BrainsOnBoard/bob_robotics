@@ -4,10 +4,10 @@
 #include <iostream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../vicon/udp.h"
 
-using namespace GeNNRobotics::Vicon;
+using namespace BoBRobotics::Vicon;
 
 UDPClient<ObjectData> *vicon;
 

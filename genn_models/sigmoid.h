@@ -4,10 +4,10 @@
 #include "modelSpec.h"
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNModels::Sigmoid
+// BoBRobotics::GeNNModels::Sigmoid
 //----------------------------------------------------------------------------
 //! Non-spiking sigmoid unit
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNModels {
 class Sigmoid : public NeuronModels::Base
 {
@@ -26,5 +26,5 @@ public:
 };
 IMPLEMENT_MODEL(Sigmoid);
 } // GeNNModels
-} // GeNNRobotics
+} // BoBRobotics
 

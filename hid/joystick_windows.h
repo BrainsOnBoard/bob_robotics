@@ -18,7 +18,7 @@
 // local includes
 #include "joystick_base.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace HID {
 /*
  * Controller axes, including thumbsticks, triggers and D-pad.
@@ -176,4 +176,4 @@ private:
     }
 }; // Joystick
 } // HID
-} // GeNNRobotics
+} // BoBRobotics

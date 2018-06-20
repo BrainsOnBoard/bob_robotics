@@ -11,11 +11,11 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNNRobotics includes
+// BoBRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../third_party/path.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
 #define DefaultCameraName "unknown_camera"
 
@@ -39,14 +39,14 @@ public:
 
         // first check if file exists in working directory
         if (!filePath.exists()) {
-            // next check if there is a local GeNN_Robotics folder (i.e. git
+            // next check if there is a local bob_robotics folder (i.e. git
             // submodule)
             const filesystem::path paramsDir = filesystem::path("imgproc") / "unwrapparams";
 
-            filePath = filesystem::path("GeNN_Robotics") / paramsDir / fileName;
+            filePath = filesystem::path("bob_robotics") / paramsDir / fileName;
             if (!filePath.exists()) {
                 // lastly look for environment variable pointing to
-                // GeNN_Robotics
+                // bob_robotics
                 static const char *envVarName = "GENN_ROBOTICS_PATH";
                 const char *env = std::getenv(envVarName);
                 if (!env) {
@@ -113,4 +113,4 @@ private:
     cv::Mat m_IntermediateFrame;
 }; // Input
 } // Video
-} // GeNNRobotics
+} // BoBRobotics

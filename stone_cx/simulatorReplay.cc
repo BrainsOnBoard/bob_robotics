@@ -24,7 +24,7 @@
 #include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 namespace
 {

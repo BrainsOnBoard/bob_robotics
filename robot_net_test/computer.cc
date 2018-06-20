@@ -12,7 +12,7 @@
 #include <iostream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
@@ -20,7 +20,7 @@
 #include "video/display.h"
 #include "video/netsource.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 int
 main(int argc, char **argv)

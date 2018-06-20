@@ -14,11 +14,11 @@
 // Windows headers
 #include "os/windows_include.h"
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "video/opencvinput.h"
 #include "video/display.h"
 
-using namespace GeNNRobotics::Video;
+using namespace BoBRobotics::Video;
 
 int
 main(int argc, char **argv)

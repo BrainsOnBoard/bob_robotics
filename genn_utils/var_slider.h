@@ -11,9 +11,9 @@
 #include <opencv2/opencv.hpp>
 
 //------------------------------------------------------------------------
-// GeNNRobotics::GeNNUtils::VarSlide
+// BoBRobotics::GeNNUtils::VarSlide
 //------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNUtils {
 template<typename T>
 class VarSlider
@@ -63,4 +63,4 @@ private:
     std::function<void(T)> m_SetValueFunction;
 };
 } // GeNNUtils
-} // GeNNRobotics
+} // BoBRobotics

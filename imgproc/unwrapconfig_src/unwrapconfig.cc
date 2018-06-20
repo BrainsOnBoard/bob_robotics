@@ -7,13 +7,13 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 const int CROSS_SIZE = 20; // size of calibration cross
 

@@ -16,7 +16,7 @@
 // Video4Linux includes
 #include <linux/videodev2.h>
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
 //------------------------------------------------------------------------
 // Video4LinuxCamera
@@ -303,4 +303,4 @@ private:
     v4l2_buffer m_BufferInfo[2];
 }; // Video4LinuxCamera
 } // Video
-} // GeNNRobotics
+} // BoBRobotics

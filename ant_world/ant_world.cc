@@ -34,7 +34,7 @@
 #include "perfect_memory.h"
 #include "parameters.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace

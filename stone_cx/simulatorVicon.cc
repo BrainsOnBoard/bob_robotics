@@ -18,8 +18,8 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
-using namespace GeNNRobotics;
-using namespace GeNNRobotics::HID;
+using namespace BoBRobotics;
+using namespace BoBRobotics::HID;
 
 int main(int argc, char *argv[])
 {
