@@ -4,10 +4,10 @@
 #include "modelSpec.h"
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNModels::AdExp
+// BoBRobotics::GeNNModels::AdExp
 //----------------------------------------------------------------------------
 //! Adaptive exponential - solved using RK4
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNModels {
 class AdExp : public NeuronModels::Base
 {
@@ -65,4 +65,4 @@ public:
 };
 IMPLEMENT_MODEL(AdExp);
 } // GeNNModels
-} // GeNNRobotics
+} // BoBRobotics

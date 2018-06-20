@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/threadable.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace HID {
 // helper macros
 #define toIndex(value) static_cast<size_t>(value)
@@ -192,4 +192,4 @@ protected:
 
 }; // JoystickBase
 } // HID
-} // GeNNRobotics
+} // BoBRobotics

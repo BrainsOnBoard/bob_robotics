@@ -20,7 +20,7 @@
 //----------------------------------------------------------------------------
 // Typedefines
 //----------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNUtils {
 typedef void (*AllocateFn)(unsigned int);
 
@@ -594,4 +594,4 @@ unsigned int calcFixedNumberTotalWithReplacementConnectorMaxSourceConnections(un
     return binomialInverseCDF(quantile, numConnections, (double)numPre / ((double)numPre * (double)numPost));
 }
 } // GeNNUtils
-} // GeNNRobotics
+} // BoBRobotics

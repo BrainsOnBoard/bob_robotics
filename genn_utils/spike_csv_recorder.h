@@ -8,10 +8,10 @@
 #include <vector>
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNUtils::SpikeRecorder
+// BoBRobotics::GeNNUtils::SpikeRecorder
 //----------------------------------------------------------------------------
 // Interface for spike recorders
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNUtils {
 class SpikeRecorder
 {
@@ -60,7 +60,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNUtils::SpikeCSVRecorder
+// BoBRobotics::GeNNUtils::SpikeCSVRecorder
 //----------------------------------------------------------------------------
 class SpikeCSVRecorderCached : public SpikeRecorder
 {
@@ -124,7 +124,7 @@ private:
 };
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNUtils::SpikeCSVRecorderDelay
+// BoBRobotics::GeNNUtils::SpikeCSVRecorderDelay
 //----------------------------------------------------------------------------
 class SpikeCSVRecorderDelay : public SpikeRecorder
 {
@@ -170,4 +170,4 @@ private:
     unsigned int m_PopSize;
 };
 } // GeNNUtils
-} // GeNNRobotics
+} // BoBRobotics

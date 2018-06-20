@@ -3,10 +3,10 @@
 #include <iostream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "hid/joystick.h"
 
-using namespace GeNNRobotics::HID;
+using namespace BoBRobotics::HID;
 
 int
 main()

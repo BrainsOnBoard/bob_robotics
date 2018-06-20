@@ -3,14 +3,14 @@
 // C++ includes
 #include <string>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../hid/joystick.h"
 #include "../net/node.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// GeNNRobotics::Robots::Tank
+// BoBRobotics::Robots::Tank
 //----------------------------------------------------------------------------
 // Interface for driving tank-like wheeled robots
 class Tank
@@ -121,4 +121,4 @@ private:
     }
 }; // Tank
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

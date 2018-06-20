@@ -7,14 +7,14 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../hid/joystick.h"
 
 // Libantworld includes
 #include "../libantworld/common.h"
 #include "../libantworld/renderer.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 // Anonymous namespace
 namespace

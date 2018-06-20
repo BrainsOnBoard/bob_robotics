@@ -4,11 +4,11 @@
 #include <iostream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../vicon/capture_control.h"
 #include "../vicon/udp.h"
 
-using namespace GeNNRobotics::Vicon;
+using namespace BoBRobotics::Vicon;
 
 int main()
 {

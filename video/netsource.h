@@ -9,13 +9,13 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../net/node.h"
 
 // local includes
 #include "input.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
 class NetSource : public Input
 {
@@ -97,4 +97,4 @@ private:
     }
 }; // NetSource
 } // Video
-} // GeNNRobotics
+} // BoBRobotics

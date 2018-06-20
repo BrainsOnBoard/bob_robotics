@@ -3,13 +3,13 @@
 // C++ includes
 #include <functional>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../hid/joystick.h"
 
 // local includes
 #include "bebop.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 class BebopJoystick : HID::Joystick
 {
@@ -26,4 +26,4 @@ private:
     bool onButtonEvent(HID::JButton button, bool pressed);
 }; // BebopJoystick
 }  // Robots
-}  // GeNNRobotics
+}  // BoBRobotics

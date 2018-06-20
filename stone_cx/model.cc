@@ -1,12 +1,12 @@
 #include "modelSpec.h"
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../genn_models/sigmoid.h"
 
 // Stone CX includes
 #include "parameters.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 //---------------------------------------------------------------------------
 // Continuous

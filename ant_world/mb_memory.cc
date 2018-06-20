@@ -5,7 +5,7 @@
 #include <fstream>
 #include <random>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/timer.h"
 #include "../genn_utils/connectors.h"
 #include "../genn_utils/spike_csv_recorder.h"
@@ -16,7 +16,7 @@
 // Antworld includes
 #include "parameters.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace

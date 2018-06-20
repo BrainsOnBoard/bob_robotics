@@ -4,9 +4,9 @@
 #include "modelSpec.h"
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::GeNNModels::STDPDopamine
+// BoBRobotics::GeNNModels::STDPDopamine
 //----------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNModels {
 class STDPDopamine : public WeightUpdateModels::Base
 {
@@ -114,5 +114,5 @@ public:
 
 IMPLEMENT_MODEL(STDPDopamine);
 } // GeNNModels
-} // GeNNRobotics
+} // BoBRobotics
 

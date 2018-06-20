@@ -1,15 +1,15 @@
 #pragma once
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../net/node.h"
 
 // local includes
 #include "tank.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// GeNNRobotics::Robots::TankNetSink
+// BoBRobotics::Robots::TankNetSink
 //----------------------------------------------------------------------------
 class TankNetSink : public Tank
 {

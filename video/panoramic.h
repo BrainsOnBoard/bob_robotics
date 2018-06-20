@@ -17,7 +17,7 @@
 #include "see3cam_cu40.h"
 #endif
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
 
 inline std::unique_ptr<Input> getPanoramicCamera()
@@ -87,4 +87,4 @@ inline std::unique_ptr<Input> getPanoramicCamera()
 #endif
 }
 } // Video
-} // GeNNRobotics
+} // BoBRobotics
