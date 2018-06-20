@@ -27,9 +27,6 @@ namespace
 template<unsigned int N>
 void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale)
 {
-    // Ensure there is space for vector
-    vector.reserve(vector.size() + N);
-
     // Read components and push back
     GLfloat x;
     for(unsigned int i = 0; i < N; i++) {
@@ -49,10 +46,6 @@ void readFace(std::istringstream &lineStream,
      // Get references to current material's positions and texture coordinates
     auto &surfacePositions = std::get<1>(currentObjSurface);
     auto &surfaceTexCoords = std::get<2>(currentObjSurface);
-
-    // Reserve memory for triangle's vertex positions and texture coordinates
-    surfacePositions.reserve(surfacePositions.size() + (3 * 3));
-    surfaceTexCoords.reserve(surfaceTexCoords.size() + (3 * 2));
 
     // Loop through face vertex
     std::string faceIndexString;
