@@ -73,79 +73,9 @@ void readFace(std::istringstream &lineStream,
     assert(lineStream.eof());
 }
 
-bool parseMaterials(const filesystem::path &basePath, const std::string &filename, std::map<std::string, cv::Mat> &textures)
+bool isPOT(int x)
 {
-    // Open obj file
-    std::ifstream mtlFile((basePath / filename).str());
-    if(!mtlFile.good()) {
-        std::cerr << "Cannot open mtl file: " << filename << std::endl;
-        return false;
-    }
-
-    std::cout << "Reading material file: " << filename << std::endl;
-    // Read lines into strings
-    std::string currentMaterialName;
-    std::string lineString;
-    std::string commandString;
-    std::string parameterString;
-    while(std::getline(mtlFile, lineString)) {
-        // Entirely skip comment or empty lines
-        if(lineString[0] == '#' || lineString.empty()) {
-            continue;
-        }
-
-        // Wrap line in stream for easier parsing
-        std::istringstream lineStream(lineString);
-
-        // Read command from first token
-        lineStream >> commandString;
-        if(commandString == "newmtl") {
-            lineStream >> currentMaterialName;
-            std::cout << "\tReading material: " << currentMaterialName << std::endl;
-        }
-        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
-            || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
-            || commandString == "d" || commandString == "illum")
-        {
-            // ignore lighting properties
-        }
-        else if(commandString == "map_Kd") {
-            assert(!currentMaterialName.empty());
-
-            // Skip any whitespace preceeding texture filename
-            while(lineStream.peek() == ' ') {
-                lineStream.get();
-            }
-
-            // Treat remainder of line as texture filename
-            std::string textureFilename;
-            std::getline(lineStream, textureFilename);
-
-            std::cout << "\t\tTexture: " << textureFilename << std::endl;
-
-            // Load texture and add to map
-            const std::string texturePath = (basePath / textureFilename).str();
-
-            // Load texture
-            // **NOTE** using OpenCV so as to reduce need for extra dependencies
-            cv::Mat texture = cv::imread(texturePath);
-
-            // Flip texture about y-axis as the origin of OpenGL texture coordinates
-            // is in the bottom-left and obj file's is in the top-left
-            cv::flip(texture, texture, 0);
-            std::cout << "\t\t\tWidth:" << texture.cols << ", height:" << texture.rows << std::endl;
-
-            // Add to textures map
-            const bool inserted = textures.insert(std::make_pair(currentMaterialName, texture)).second;
-            assert(inserted);
-        }
-        else {
-            std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
-        }
-
-    }
-
-    return true;
+    return ((x & (x - 1)) == 0);
 }
 }
 
@@ -248,16 +178,34 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     return true;
 }
 //----------------------------------------------------------------------------
-bool World::loadObj(const std::string &filename)
+bool World::loadObj(const std::string &filename, int maxTextureSize, GLint textureFormat)
 {
-    int maxTextureSize = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    // Get HARDWARE max texture size
+    int hardwareMaxTextureSize = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &hardwareMaxTextureSize);
+
+    // If no max texture size is specified, use hardware maximum
+    if(maxTextureSize == -1) {
+        maxTextureSize = hardwareMaxTextureSize;
+    }
+    else {
+        // Check max texture size is a power of two
+        if(!isPOT(maxTextureSize)) {
+            std::cerr << "Maximum texture size must be a power of two" << std::endl;
+            return false;
+        }
+
+        // Use lowest of hardware or user-specified max texture size
+        maxTextureSize = std::min(maxTextureSize, hardwareMaxTextureSize);
+    }
+
     std::cout << "Max texture size: " << maxTextureSize << std::endl;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
 
-    std::map<std::string, cv::Mat> textures;
+    // Map of material names to texture indices
+    std::map<std::string, Texture*> textureNames;
 
     // Parser
     {
@@ -271,6 +219,9 @@ bool World::loadObj(const std::string &filename)
             std::cerr << "Cannot open obj file: " << filename << std::endl;
             return false;
         }
+
+        // Get base path to load materials etc relative to
+        const auto basePath = filesystem::path(filename).make_absolute().parent_path();
 
         // Read lines into strings
         std::string lineString;
@@ -291,8 +242,7 @@ bool World::loadObj(const std::string &filename)
                 lineStream >> parameterString;
 
                 // Parse materials
-                const auto objPath = filesystem::path(filename).make_absolute();
-                parseMaterials(objPath.parent_path(), parameterString, textures);
+                loadMaterials(basePath, parameterString, textureFormat, textureNames);
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
@@ -331,7 +281,7 @@ bool World::loadObj(const std::string &filename)
         }
 
         std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
-        std::cout << objSurfaces.size() << " surfaces, " << textures.size() << " textures" << std::endl;
+        std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
     }
 
     // Remove any existing surfaces
@@ -353,9 +303,9 @@ bool World::loadObj(const std::string &filename)
         surface.uploadTexCoords(std::get<2>(objSurface));
 
         // Find texture corresponding to this surface
-        const auto tex = textures.find(std::get<0>(objSurface));
-        if(tex != textures.end()) {
-            surface.uploadTexture(tex->second);
+        const auto tex = textureNames.find(std::get<0>(objSurface));
+        if(tex != textureNames.end()) {
+            surface.setTexture(tex->second);
         }
     }
 
@@ -371,11 +321,127 @@ void World::render() const
         surf.render();
     }
 }
+//----------------------------------------------------------------------------
+bool World::loadMaterials(const filesystem::path &basePath, const std::string &filename, GLint textureFormat,
+                          std::map<std::string, Texture*> &textureNames)
+{
+    // Open obj file
+    std::ifstream mtlFile((basePath / filename).str());
+    if(!mtlFile.good()) {
+        std::cerr << "Cannot open mtl file: " << filename << std::endl;
+        return false;
+    }
+
+    std::cout << "Reading material file: " << filename << std::endl;
+
+    // Read lines into strings
+    std::string currentMaterialName;
+    std::string lineString;
+    std::string commandString;
+    std::string parameterString;
+    while(std::getline(mtlFile, lineString)) {
+        // Entirely skip comment or empty lines
+        if(lineString[0] == '#' || lineString.empty()) {
+            continue;
+        }
+
+        // Wrap line in stream for easier parsing
+        std::istringstream lineStream(lineString);
+
+        // Read command from first token
+        lineStream >> commandString;
+        if(commandString == "newmtl") {
+            lineStream >> currentMaterialName;
+            std::cout << "\tReading material: " << currentMaterialName << std::endl;
+        }
+        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
+            || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
+            || commandString == "d" || commandString == "illum")
+        {
+            // ignore lighting properties
+        }
+        else if(commandString == "map_Kd") {
+            assert(!currentMaterialName.empty());
+
+            // Skip any whitespace preceeding texture filename
+            while(lineStream.peek() == ' ') {
+                lineStream.get();
+            }
+
+            // Treat remainder of line as texture filename
+            std::string textureFilename;
+            std::getline(lineStream, textureFilename);
+
+            std::cout << "\t\tTexture: " << textureFilename << std::endl;
+
+            // Load texture and add to map
+            const std::string texturePath = (basePath / textureFilename).str();
+
+            // Load texture
+            // **NOTE** using OpenCV so as to reduce need for extra dependencies
+            cv::Mat texture = cv::imread(texturePath);
+
+            // Flip texture about y-axis as the origin of OpenGL texture coordinates
+            // is in the bottom-left and obj file's is in the top-left
+            cv::flip(texture, texture, 0);
+            std::cout << "\t\t\tWidth:" << texture.cols << ", height:" << texture.rows << std::endl;
+
+            // Add a new texture to array and upload data to it in selected format
+            m_Textures.emplace_back(new Texture());
+            m_Textures.back()->upload(texture, textureFormat);
+
+            // Add name to map
+            const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
+            assert(inserted);
+        }
+        else {
+            std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
+        }
+
+    }
+
+    return true;
+}
+//----------------------------------------------------------------------------
+// World::Texture
+//----------------------------------------------------------------------------
+World::Texture::Texture()
+{
+    glGenTextures(1, &m_Texture);
+}
+//----------------------------------------------------------------------------
+World::Texture::~Texture()
+{
+    glDeleteTextures(1, &m_Texture);
+}
+//----------------------------------------------------------------------------
+void World::Texture::bind() const
+{
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, m_Texture);
+}
+//----------------------------------------------------------------------------
+void World::Texture::upload(const cv::Mat &texture, GLint textureFormat)
+{
+    // Bind texture
+    glBindTexture(GL_TEXTURE_2D, m_Texture);
+
+    // Configure texture filtering
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    // Upload texture data and generate mipmaps
+    glTexImage2D(GL_TEXTURE_2D, 0, textureFormat, texture.cols, texture.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, texture.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
+
 
 //----------------------------------------------------------------------------
 // World::Surface
 //----------------------------------------------------------------------------
-World::Surface::Surface() : m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_Texture(0)
+World::Surface::Surface() : m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_Texture(nullptr)
 {
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_VAO);
@@ -395,10 +461,6 @@ World::Surface::~Surface()
         glDeleteBuffers(1, &m_TexCoordVBO);
     }
 
-    if(m_Texture != 0) {
-        glDeleteTextures(1, &m_Texture);
-    }
-
     glDeleteVertexArrays(1, &m_VAO);
 }
 //----------------------------------------------------------------------------
@@ -407,8 +469,14 @@ void World::Surface::bind() const
     // Bind world VAO
     glBindVertexArray(m_VAO);
 
-    // Bind texture
-    glBindTexture(GL_TEXTURE_2D, m_Texture);
+    // If surface has a texture, bind it
+    if(m_Texture != nullptr) {
+        m_Texture->bind();
+    }
+    // Otherwise make sure no textures are bound
+    else {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 //----------------------------------------------------------------------------
 void World::Surface::render() const
@@ -472,27 +540,6 @@ void World::Surface::uploadTexCoords(const std::vector<GLfloat> &texCoords)
     // Set colour pointer and enable client state in VAO
     glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-}
-//----------------------------------------------------------------------------
-void World::Surface::uploadTexture(const cv::Mat &texture)
-{
-    // Generate texture object if required
-    if(m_Texture == 0) {
-        glGenTextures(1, &m_Texture);
-    }
-
-    // Bind texture
-    glBindTexture(GL_TEXTURE_2D, m_Texture);
-
-    // Configure texture filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    // Upload texture data and generate mipmaps
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB/*GL_RGB*/, texture.cols, texture.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, texture.data);
-    glGenerateMipmap(GL_TEXTURE_2D);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
