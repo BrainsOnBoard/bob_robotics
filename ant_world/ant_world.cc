@@ -20,8 +20,9 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// Common includes
+// GeNN robotics includes
 #include "../common/timer.h"
+#include "../video/opengl.h"
 
 // Libantworld includes
 #include "common.h"
@@ -188,6 +189,10 @@ int main(int argc, char *argv[])
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
+
+    // Create input to read snapshots from screen
+    Video::OpenGL input(0, Parameters::displayRenderWidth + 10,
+                        Parameters::displayRenderWidth, Parameters::displayRenderHeight);
 
     // Create snapshot processor to perform image processing on snapshot
     AntWorld::SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
@@ -508,10 +513,8 @@ int main(int argc, char *argv[])
 
             std::cout << "Snapshot at (" << antX << "," << antY << "," << antHeading << ")" << std::endl;
 
-            // Read pixels from framebuffer
-            // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
-            glReadPixels(0, Parameters::displayRenderWidth + 10, Parameters::displayRenderWidth, Parameters::displayRenderHeight,
-                         GL_BGR, GL_UNSIGNED_BYTE, snapshot.data);
+            // Read snapshot
+            input.readFrame(snapshot);
 
             // Process snapshot
             snapshotProcessor.process(snapshot);
