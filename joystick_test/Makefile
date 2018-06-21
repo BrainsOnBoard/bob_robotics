@@ -1,15 +1,25 @@
 .PHONY: all clean
 
-all: joystick_test joystick_robot_test
+CXXFLAGS=-std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP -pthread -I..
 
-joystick_test: joystick_test.cc
-	$(CXX) -o joystick_test -g -std=c++11 -I.. -lstdc++ -pthread joystick_test.cc
+all: joystick_test joystick_robot_test joystick_polling_test
 
-joystick_robot_test:
-	$(CXX) joystick_robot_test.cc -std=c++11 -DI2C `pkg-config --libs --cflags opencv` -o joystick_robot_test
+joystick_test: joystick_test.cc joystick_test.d
+	$(CXX) -o joystick_test $(CXXFLAGS) joystick_test.cc
 
-joystick_polling_test:
-	$(CXX) -o joystick_polling_test -g -std=c++11 -I.. -lstdc++ -pthread joystick_polling_test.cc
+-include joystick_test.d
+
+joystick_robot_test: joystick_robot_test.cc joystick_robot_test.d
+	$(CXX) joystick_robot_test.cc $(CXXFLAGS) -DI2C `pkg-config --libs --cflags opencv` -o joystick_robot_test
+
+-include joystick_robot_test.d
+
+joystick_polling_test: joystick_polling_test.cc joystick_polling_test.d
+	$(CXX) -o joystick_polling_test $(CXXFLAGS) joystick_polling_test.cc
+
+-include joystick_polling_test.d
+
+%.d: ;
 
 clean:
-	rm -f joystick{,_robot,_polling}_test
+	rm -f joystick_test joystick_robot_test joystick_polling_test *.d
