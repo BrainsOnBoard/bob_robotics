@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     }
 
     // Enable VSync
-    glfwSwapInterval(2);
+    glfwSwapInterval(1);
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
@@ -173,8 +173,8 @@ int main(int argc, char *argv[])
     glfwSetKeyCallback(window, keyCallback);
 
     // Create renderer
-    AntWorld::Renderer renderer("../libantworld/world5000_gray.bin", Parameters::worldColour, Parameters::groundColour,
-                                Parameters::displayRenderWidth, Parameters::displayRenderHeight);
+    AntWorld::Renderer renderer;
+    renderer.getWorld().load("../libantworld/world5000_gray.bin", Parameters::worldColour, Parameters::groundColour);
 
     // Create route object and load route file specified by command line
     AntWorld::RouteArdin route(0.2f, 800);
@@ -492,7 +492,9 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render top down and ants eye view
-        renderer.render(antX, antY, antHeading);
+        renderer.renderAntView(antX, antY, antHeading,
+                               0, Parameters::displayRenderWidth + 10, Parameters::displayRenderWidth, Parameters::displayRenderHeight);
+        renderer.renderTopDownView(0, 0, Parameters::displayRenderWidth, Parameters::displayRenderWidth);
 
         // Render route
         route.render(antX, antY, antHeading);
