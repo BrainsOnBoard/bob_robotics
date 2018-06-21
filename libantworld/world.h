@@ -31,6 +31,9 @@ namespace AntWorld
 class World
 {
 public:
+    World() : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
+    {}
+
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
@@ -40,6 +43,9 @@ public:
                  int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
     void render() const;
+
+    const GLfloat (&getMinBound())[3] { return m_MinBound; }
+    const GLfloat (&getMaxBound())[3] { return m_MaxBound; }
 
 private:
     //------------------------------------------------------------------------
@@ -114,6 +120,10 @@ private:
 
     /// Array of textures making up the model
     std::vector<std::unique_ptr<Texture>> m_Textures;
+
+    // World bounds
+    GLfloat m_MinBound[3];
+    GLfloat m_MaxBound[3];
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

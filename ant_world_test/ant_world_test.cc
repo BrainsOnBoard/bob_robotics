@@ -40,8 +40,8 @@ int main()
 {
     const float turnSpeed = 200.0f;
     const float moveSpeed = 1.0f;
-    const unsigned int width = 592;
-    const unsigned int height = 152;
+    const unsigned int width = 1024;
+    const unsigned int height = 262;
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
@@ -56,7 +56,7 @@ int main()
     glfwWindowHint(GLFW_RESIZABLE, false);
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(width, 592 + height + 10, "Ant World", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(width, height, "Ant world", nullptr, nullptr);
     if(!window)
     {
         glfwTerminate();
@@ -89,14 +89,14 @@ int main()
 
     glEnable(GL_TEXTURE_2D);
 
-    // Create renderer
-    AntWorld::Renderer renderer(width, height);
-    //renderer.loadWorld("../libantworld/world5000_gray.bin",
-    //                   {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+    // Create renderer - increasing cubemap size to improve quality in larger window
+    AntWorld::Renderer renderer(512);
+    renderer.getWorld().load("../libantworld/world5000_gray.bin",
+                             {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Load world, keeping texture sizes below 4096 and compressing textures on upload
-    renderer.loadWorldObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj",
-                          0.1f, 4096, GL_COMPRESSED_RGB);
+    renderer.getWorld().loadObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj",
+                                0.1f, 4096, GL_COMPRESSED_RGB);
 
     HID::Joystick joystick(0.25f);
 
@@ -128,8 +128,9 @@ int main()
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render top down and ants eye view
-        renderer.render(antX, antY, antHeading);
+        // Render ants eye view
+        renderer.renderAntView(antX, antY, antHeading,
+                               0, 0, width, height);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);

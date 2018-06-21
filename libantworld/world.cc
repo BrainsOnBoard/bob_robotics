@@ -109,15 +109,6 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Reserve 3 XYZ positions for each triangle and 6 for the ground
         std::vector<GLfloat> positions((6 + (numTriangles * 3)) * 3);
 
-        // Add first ground triangle vertex positions
-        positions[0] = 0.0f;    positions[1] = 0.0f;    positions[2] = 0.0f;
-        positions[3] = 10.5f;   positions[4] = 10.5f;   positions[5] = 0.0f;
-        positions[6] = 0.0f;    positions[7] = 10.5f;   positions[8] = 0.0f;
-
-        // Add second ground triangle vertex positions
-        positions[9] = 0.0f;    positions[10] = 0.0f;   positions[11] = 0.0f;
-        positions[12] = 10.5f;  positions[13] = 0.0f;   positions[14] = 0.0f;
-        positions[15] = 10.5f;  positions[16] = 10.5f;  positions[17] = 0.0f;
 
         // Loop through components(X, Y and Z)
         for(unsigned int c = 0; c < 3; c++) {
@@ -130,10 +121,25 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                     input.read(reinterpret_cast<char*>(&trianglePosition), sizeof(double));
 
                     // Copy three coordinates from triangle into correct place in vertex array
+                    // **NOTE** after first ground polygons
                     positions[18 + (t * 9) + (v * 3) + c] = (GLfloat)trianglePosition;
+
+                    // If we're reading Z component, update max bound
+                    m_MinBound[c] = std::min(m_MinBound[c], (GLfloat)trianglePosition);
+                    m_MaxBound[c] = std::max(m_MaxBound[c], (GLfloat)trianglePosition);
                 }
             }
         }
+
+        // Add first ground triangle vertex positions
+        positions[0] = m_MinBound[0];   positions[1] = m_MinBound[1];   positions[2] = 0.0f;
+        positions[3] = m_MaxBound[0];   positions[4] = m_MaxBound[1];   positions[5] = 0.0f;
+        positions[6] = m_MinBound[0];   positions[7] = m_MaxBound[1];   positions[8] = 0.0f;
+
+        // Add second ground triangle vertex positions
+        positions[9] = m_MinBound[0];   positions[10] = m_MinBound[1];  positions[11] = 0.0f;
+        positions[12] = m_MaxBound[0];  positions[13] = m_MinBound[1];  positions[14] = 0.0f;
+        positions[15] = m_MaxBound[0];  positions[16] = m_MaxBound[1];  positions[17] = 0.0f;
 
         // Upload positions
         surface.uploadPositions(positions);
@@ -273,6 +279,18 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
 
         std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
         std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
+
+        std::fill_n(&m_MinBound[0], 3, std::numeric_limits<GLfloat>::max());
+        std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<GLfloat>::min());
+        for(unsigned int i = 0; i < rawPositions.size(); i += 3) {
+            for(unsigned int c = 0; c < 3; c++) {
+                m_MinBound[c] = std::min(m_MinBound[c], rawPositions[i + c]);
+                m_MaxBound[c] = std::max(m_MaxBound[c], rawPositions[i + c]);
+            }
+        }
+
+        std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")" << std::endl;
+        std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")" << std::endl;
     }
 
     // Remove any existing surfaces

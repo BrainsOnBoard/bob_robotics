@@ -21,22 +21,20 @@ namespace AntWorld
 class Renderer
 {
 public:
-    Renderer(unsigned int displayRenderWidth, unsigned int displayRenderHeight);
+    Renderer(unsigned int cubemapSize = 256);
     Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
-             unsigned int displayRenderWidth, unsigned int displayRenderHeight);
+             unsigned int cubemapSize = 256);
     ~Renderer();
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool loadWorld(const std::string &filename, const GLfloat (&worldColour)[3],
-                   const GLfloat (&groundColour)[3]);
-    bool loadWorldObj(const std::string &objFilename, float scale = 1.0f,
-                      int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    void renderAntView(float antX, float antY, float antHeading,
+                       GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
+    void renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
 
-    void renderAntView(float antX, float antY, float antHeading);
-    void renderTopDownView();
-    void render(float antX, float antY, float antHeading);
+    World &getWorld(){ return m_World; }
+    const World &getWorld() const{ return m_World; }
 
 private:
     //------------------------------------------------------------------------
@@ -55,8 +53,7 @@ private:
     GLuint m_DepthBuffer;
     GLfloat m_CubeFaceLookAtMatrices[6][16];
 
-    const unsigned int m_DisplayRenderWidth;
-    const unsigned int m_DisplayRenderHeight;
+    const unsigned int m_CubemapSize;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
