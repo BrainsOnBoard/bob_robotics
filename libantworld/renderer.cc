@@ -59,15 +59,6 @@ Renderer::Renderer(unsigned int cubemapSize)
     generateCubeFaceLookAtMatrices();
 }
 //----------------------------------------------------------------------------
-Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
-                   unsigned int cubemapSize)
-:   Renderer(cubemapSize)
-{
-    if(!getWorld().load(worldFilename, worldColour, groundColour)){
-        throw std::runtime_error("Cannot load world");
-    }
-}
-//----------------------------------------------------------------------------
 Renderer::~Renderer()
 {
     glDeleteRenderbuffers(1, &m_DepthBuffer);

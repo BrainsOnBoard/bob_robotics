@@ -22,8 +22,6 @@ class Renderer
 {
 public:
     Renderer(unsigned int cubemapSize = 256);
-    Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
-             unsigned int cubemapSize = 256);
     ~Renderer();
 
     //------------------------------------------------------------------------
