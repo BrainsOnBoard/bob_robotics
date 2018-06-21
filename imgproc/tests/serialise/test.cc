@@ -4,8 +4,7 @@
 // BoBRobotics includes
 #include "imgproc/opencv_unwrap_360.h"
 
-int
-main(int argc, char **argv)
+int main()
 {
     // create new unwrapper with desired params
     BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(cv::Size(1280, 720),

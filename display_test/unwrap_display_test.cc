@@ -9,10 +9,9 @@
 
 using namespace BoBRobotics::Video;
 
-int
-main(int argc, char **argv)
+int main()
 {
     auto cam = getPanoramicCamera();
     Display display(cam, 1240, 600);
-    display.run();
+//     display.run();
 }
