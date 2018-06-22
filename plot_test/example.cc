@@ -2,7 +2,7 @@
  * **NOTE**: This program must be run in release mode not debug mode in Visual Studio. Anaconda doesn't ship the debug versions of the required libs :-(
  */
 
-#include "visual/matplotlibcpp.h"
+#include "third_party/matplotlibcpp.h"
 
 namespace plt = matplotlibcpp;
 
