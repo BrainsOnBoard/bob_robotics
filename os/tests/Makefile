@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP -I../..
+CXXFLAGS=-std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -I../..
 
 .PHONY: all clean
 

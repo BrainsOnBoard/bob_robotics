@@ -1,4 +1,4 @@
-CXXFLAGS+=-std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP `pkg-config --libs --cflags opencv` -pthread
+CXXFLAGS+=-std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP `pkg-config --libs --cflags opencv` -pthread
 
 .PHONY: all clean
 

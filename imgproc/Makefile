@@ -4,7 +4,7 @@ ifeq ($(PREFIX),)
     PREFIX := /usr/local
 endif
 
-CXXFLAGS += -I.. -g -std=c++11 -O2 -Wall -Wpedantic -Wextra -MMD -MP `pkg-config --libs --cflags opencv`
+CXXFLAGS += -I.. -g -std=c++14 -O2 -Wall -Wpedantic -Wextra -MMD -MP `pkg-config --libs --cflags opencv`
 ifdef ffmpeg_path
 	CXXFLAGS += -DFFMPEG_PATH=\"$(ffmpeg_path)\"
 endif

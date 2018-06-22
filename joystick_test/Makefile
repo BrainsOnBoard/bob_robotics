@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-CXXFLAGS=-std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP -pthread -I..
+CXXFLAGS=-std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -pthread -I..
 
 all: joystick_test joystick_robot_test joystick_polling_test
 
