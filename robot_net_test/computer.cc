@@ -21,9 +21,9 @@
 #include "video/netsource.h"
 
 using namespace BoBRobotics;
+using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     std::string robotIP;
     if (argc == 2) {
@@ -63,7 +63,7 @@ main(int argc, char **argv)
         // poll joystick and video stream repeatedly
         do {
             if (!joystick.update() && !display.update()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(50ms);
             }
         } while (display.isOpen());
     }

@@ -24,7 +24,7 @@ inline std::unique_ptr<Input> getPanoramicCamera()
 {
 #ifdef _WIN32
     // for Windows we currently just select the first camera
-    return std::unique_ptr<Input>(new OpenCVInput(0, cv::Size(1280, 720), "webcam360"));
+    return std::make_unique<OpenCVInput>(0, cv::Size(1280, 720), "webcam360");
 #else
     // get vector of video input devices on system
     auto cameras = OS::Video::getCameras();
@@ -61,7 +61,7 @@ inline std::unique_ptr<Input> getPanoramicCamera()
         }
     }
     std::cout << "Selected camera #" << deviceNum << ": "
-            << OS::Video::getCameraName(deviceNum) << std::endl;
+              << OS::Video::getCameraName(deviceNum) << std::endl;
 
     if (deviceNum == -1) {
         throw std::runtime_error("No camera found");
@@ -69,20 +69,20 @@ inline std::unique_ptr<Input> getPanoramicCamera()
 
     // SeeCam
     if(prefCamNum == 0) {
-        See3CAM_CU40 *see3cam = new See3CAM_CU40("/dev/video" + std::to_string(deviceNum),
-                                                See3CAM_CU40::Resolution::_1280x720);
+        auto see3cam = std::make_unique<See3CAM_CU40>("/dev/video" + std::to_string(deviceNum),
+                                                      See3CAM_CU40::Resolution::_1280x720);
         // Run auto exposure algorithm
         const cv::Mat bubblescopeMask = See3CAM_CU40::createBubblescopeMask(see3cam->getSuperPixelSize());
         see3cam->autoExposure(bubblescopeMask);
-        return std::unique_ptr<Input>(see3cam);
+        return see3cam;
     }
     // PixPro
     else if(prefCamNum == 1) {
-        return std::unique_ptr<Input>(new OpenCVInput(deviceNum, cv::Size(1440, 1440), "pixpro_usb"));
+        return std::make_unique<OpenCVInput>(deviceNum, cv::Size(1440, 1440), "pixpro_usb");
     }
     // Default
     else {
-        return std::unique_ptr<Input>(new OpenCVInput(deviceNum, cv::Size(1280, 720), "webcam360"));
+        return std::make_unique<OpenCVInput>(deviceNum, cv::Size(1280, 720), "webcam360");
     }
 #endif
 }
