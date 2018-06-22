@@ -8,7 +8,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../robots/tank.h"
 #include "../video/input.h"
 
@@ -16,7 +16,7 @@
 #include "node.h"
 #include "socket.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Net {
 class Server : public Node
 {
@@ -127,4 +127,4 @@ Server::run()
     }
 }
 } // Net
-} // GeNNRobotics
+} // BoBRobotics

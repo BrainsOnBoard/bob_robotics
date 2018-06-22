@@ -7,7 +7,7 @@
 // local includes
 #include "joystick.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 BebopJoystick::BebopJoystick(Bebop *bebop)
   : HID::Joystick(0.25f)
@@ -77,4 +77,4 @@ BebopJoystick::onAxisEvent(HID::JAxis axis, float value)
     return false;
 }
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

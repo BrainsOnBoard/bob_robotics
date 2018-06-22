@@ -8,15 +8,18 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/semaphore.h"
 #include "../net/node.h"
 
+// local includes
+#include "input.h"
+
 //----------------------------------------------------------------------------
-// GeNNRobotics::Video::NetSink
+// BoBRobotics::Video::NetSink
 //----------------------------------------------------------------------------
 // Object for sending video frames synchronously or asynchronously over network
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
 class NetSink
 {
@@ -134,4 +137,4 @@ private:
     bool m_ThreadRunning = false;
 };
 }   // Video
-}   // GeNNRobotics
+}   // BoBRobotics

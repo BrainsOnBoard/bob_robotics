@@ -7,9 +7,9 @@
 #include <opencv2/opencv.hpp>
 
 //------------------------------------------------------------------------
-// GeNNRobotics::GeNNUtils::SpikeRenderer
+// BoBRobotics::GeNNUtils::SpikeRenderer
 //------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNUtils {
 class SpikeRenderer
 {
@@ -53,4 +53,4 @@ private:
     unsigned int *&m_Spk;
 };
 } // GeNNUtils
-} // GeNNRobotics
+} // BoBRobotics

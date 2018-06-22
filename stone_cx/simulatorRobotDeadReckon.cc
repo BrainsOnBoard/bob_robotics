@@ -23,8 +23,8 @@
 #include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
-using namespace GeNNRobotics;
-using namespace GeNNRobotics::HID;
+using namespace BoBRobotics;
+using namespace BoBRobotics::HID;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace

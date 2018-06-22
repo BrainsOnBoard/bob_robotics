@@ -15,11 +15,12 @@
 
 // GeNN includes
 #include "sparseProjection.h"
+#include "utils.h"
 
 //----------------------------------------------------------------------------
 // Typedefines
 //----------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace GeNNUtils {
 typedef void (*AllocateFn)(unsigned int);
 
@@ -30,7 +31,7 @@ typedef void (*AllocateFn)(unsigned int);
 // Adopted from numerical recipes in C p227
 double betacf(double a, double b, double x)
 {
-    const int maxIterations = 100;
+    const int maxIterations = 200;
     const double epsilon = 3.0E-7;
     const double fpMin = 1.0E-30;
 
@@ -48,7 +49,7 @@ double betacf(double a, double b, double x)
     double h = d;
     int m;
     for(m = 1; m <= maxIterations; m++) {
-        const int m2 = 2 * m;
+        const double m2 = 2.0 * m;
         const double aa1 = m * (b - m) * x / ((qam + m2) * (a + m2));
         d = 1.0 + aa1 * d;
 
@@ -172,6 +173,18 @@ void sortRows(unsigned int numPre, SparseProjection &sparseProjection)
     }
 }
 //----------------------------------------------------------------------------
+template<typename IndexType>
+void sortRows(unsigned int numPre, RaggedProjection<IndexType> &sparseProjection)
+{
+    // Loop through rows and sort indices
+    for(unsigned int i = 0; i < numPre; i++) {
+        IndexType *indexStart = &sparseProjection.ind[(i * sparseProjection.maxRowLength)];
+        IndexType *indexEnd = indexStart + sparseProjection.rowLength[i];
+
+        std::sort(indexStart, indexEnd);
+    }
+}
+//----------------------------------------------------------------------------
 template<typename T>
 void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
@@ -262,32 +275,74 @@ void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, f
     std::copy(tempInd.begin(), tempInd.end(), &projection.ind[0]);
 }
 //----------------------------------------------------------------------------
-template <typename Generator>
-void buildFixedProbabilityConnector(unsigned int numWords, float probability,
-                                    uint32_t *bitfield, Generator &gen)
+template <typename Generator, typename IndexType>
+void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, float probability,
+                                    RaggedProjection<IndexType> &projection, Generator &gen)
 {
+    const double probabilityReciprocal = 1.0 / std::log(1.0f - probability);
+
     // Create RNG to draw probabilities
     std::uniform_real_distribution<> dis(0.0, 1.0);
 
-    // Loop through words that make up bitfield
-    for(unsigned int i = 0; i < numWords; i++) {
-        // Initially zero word
-        uint32_t word = 0;
+    // Zero row lengths
+    std::fill_n(projection.rowLength, numPre, 0);
 
-        // Loop through bits
-        for(unsigned int i = 0; i < 32; i++) {
-            // Shift word up
-            word <<= 1;
+    // Loop through potential synapses
+    const int64_t maxConnections = (int64_t)numPre * (int64_t)numPost;
+    for(int64_t s = -1;;) {
+        // Skip to next connection
+        s += (1 + (int64_t)(std::log(dis(gen)) * probabilityReciprocal));
 
-            // Set lowest bit if
-            if(dis(gen) < probability)
-            {
-                word |= 0x1;
-            }
+        // If we haven't skipped past end of matrix
+        if(s < maxConnections) {
+            // Convert synapse number to pre and post index
+            const auto prePost = std::div(s, numPost);
+
+            // Get pointer to start of this presynaptic neuron's connection row
+            IndexType *rowIndices = &projection.ind[prePost.quot * projection.maxRowLength];
+
+            // Add synapse
+            rowIndices[projection.rowLength[prePost.quot]++] = prePost.rem;
+            assert(projection.rowLength[prePost.quot] <= projection.maxRowLength);
         }
+        else {
+            break;
+        }
+    }
+}
+//----------------------------------------------------------------------------
+template <typename Generator>
+void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, float probability,
+                                    uint32_t *bitfield, Generator &gen)
+{
+    // **THINK** I'm unsure about this calculation but it's used to allocate the memory and copy it!
+    const size_t numWords = ((size_t)numPre * (size_t)numPost) / 32 + 1;
 
-        // Write word into bitfield
-        bitfield[i] = word;
+    const double probabilityReciprocal = 1.0 / std::log(1.0f - probability);
+
+    // Create RNG to draw probabilities
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    // Zero bitfield
+    std::fill_n(bitfield, numWords, 0);
+
+    // Loop through potential synapses
+    const int64_t maxConnections = (int64_t)numPre * (int64_t)numPost;
+    for(int64_t s = -1;; s++) {
+        // Skip to next connection
+        s += (1 + (int64_t)(std::log(dis(gen)) * probabilityReciprocal));
+
+        // If we haven't skipped past end of matrix
+        if(s < maxConnections) {
+            // Convert synapse number to pre and post index
+            const auto prePost = std::div(s, numPost);
+
+            const size_t gid = (prePost.quot * (size_t)numPost) + prePost.rem;
+            setB(bitfield[gid / 32], gid % 32);
+        }
+        else {
+            break;
+        }
     }
 }
 //----------------------------------------------------------------------------
@@ -298,7 +353,14 @@ unsigned int calcFixedProbabilityConnectorMaxConnections(unsigned int numPre, un
 
     return binomialInverseCDF(quantile, numPost, probability);
 }
+//----------------------------------------------------------------------------
+unsigned int calcFixedProbabilityConnectorMaxSourceConnections(unsigned int numPre, unsigned int numPost, double probability)
+{
+    // Calculate suitable quantile for 0.9999 change when drawing numPost times
+    const double quantile = pow(0.9999, 1.0 / (double)numPost);
 
+    return binomialInverseCDF(quantile, numPre, probability);
+}
 //----------------------------------------------------------------------------
 template <typename Generator>
 void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
@@ -351,7 +413,6 @@ template <typename Generator>
 void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
                                                    SparseProjection &projection, AllocateFn allocate, Generator &gen)
 {
-    std::cout << "Num pre:" << numPre << ", num post:" << numPost << ", num connections:" << numConnections << std::endl;
     // Allocate sparse projection
     allocate(numConnections);
 
@@ -410,6 +471,107 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
     assert(projection.indInG[numPre] == numConnections);
 }
 //----------------------------------------------------------------------------
+template <typename Generator>
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, size_t numConnections,
+                                                   uint32_t *bitfield, Generator &gen)
+{
+    // Calculate row lengths
+    // **NOTE** we are FINISHING at second from last row because all remaining connections must go in last row
+    size_t remainingConnections = numConnections;
+    size_t matrixSize = (size_t)numPre * (size_t)numPost;
+    std::vector<unsigned int> rowLengths(numPre);
+    std::generate_n(rowLengths.begin(), numPre - 1,
+                    [&remainingConnections, &matrixSize, numPost, &gen]()
+                    {
+                        const double probability = (double)numPost / (double)matrixSize;
+
+                        // Create distribution to sample row length
+                        std::binomial_distribution<size_t> rowLengthDist(remainingConnections, probability);
+
+                        // Sample row length;
+                        const size_t rowLength = rowLengthDist(gen);
+
+                        // Update counters
+                        remainingConnections -= rowLength;
+                        matrixSize -= numPost;
+
+                        return (unsigned int)rowLength;
+                    });
+    // Insert remaining connections into last row
+    rowLengths.back() = (unsigned int)remainingConnections;
+
+    // Create distribution to sample row length
+    // **NOTE** these distributions operate on a CLOSED interval hence -1
+    std::uniform_int_distribution<size_t> postsynapticNeuronDist(0, numPost - 1);
+
+    // Zero bitfield
+    std::fill_n(bitfield, ((size_t)numPre * (size_t)numPost) / 32 + 1, 0);
+
+    // Loop through rows
+    for(unsigned int i = 0; i < numPre; i++) {
+        // Loop through synapses in row
+        for(unsigned int j = 0; j < rowLengths[i]; j++) {
+            // Set random bit in this row
+            const size_t gid = ((size_t)i * (size_t)numPost) + postsynapticNeuronDist(gen);
+            bitfield[gid / 32] |= (1 << (gid % 32));
+        }
+    }
+}
+//----------------------------------------------------------------------------
+template <typename Generator, typename IndexType>
+void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned int numPost, size_t numConnections,
+                                                   RaggedProjection<IndexType> &projection, Generator &gen)
+{
+    // Calculate row lengths
+    // **NOTE** we are FINISHING at second from last row because all remaining connections must go in last row
+    size_t remainingConnections = numConnections;
+    size_t matrixSize = (size_t)numPre * (size_t)numPost;
+    std::generate_n(&projection.rowLength[0], numPre - 1,
+                    [&remainingConnections, &matrixSize, numPost, &gen]()
+                    {
+                        const double probability = (double)numPost / (double)matrixSize;
+
+                        // Create distribution to sample row length
+                        std::binomial_distribution<size_t> rowLengthDist(remainingConnections, probability);
+
+                        // Sample row length;
+                        const size_t rowLength = rowLengthDist(gen);
+
+                        // Update counters
+                        remainingConnections -= rowLength;
+                        matrixSize -= numPost;
+
+                        return (unsigned int)rowLength;
+                    });
+
+    // Insert remaining connections into last row
+    projection.rowLength[numPre - 1] = (unsigned int)remainingConnections;
+
+    // Create distribution to sample row length
+    // **NOTE** these distributions operate on a CLOSED interval hence -1
+    std::uniform_int_distribution<unsigned int> postsynapticNeuronDist(0, numPost - 1);
+
+    // Loop through rows
+    for(unsigned int i = 0; i < numPre; i++) {
+        // Get pointer to first index of row
+        IndexType *index = &projection.ind[(i * projection.maxRowLength)];
+
+        if(projection.rowLength[i] > projection.maxRowLength) {
+            printf("Row length %u greate than max %u\n", projection.rowLength[i], projection.maxRowLength);
+            assert(false);
+        }
+        //assert(projection.rowLength[i] <= projection.maxRowLength);
+        
+        // Pick a random postsynaptic neuron to connect each one
+        for(unsigned int j = 0; j < projection.rowLength[i]; j++) {
+            index[j] = postsynapticNeuronDist(gen);
+        }
+    }
+
+     // Sort rows so indices are increasing
+    sortRows(numPre, projection);
+}
+//----------------------------------------------------------------------------
 unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
@@ -418,7 +580,18 @@ unsigned int calcFixedNumberTotalWithReplacementConnectorMaxConnections(unsigned
     // There are numConnections connections amongst the numPre*numPost possible connections.
     // Each of the numConnections connections has an independent p=float(numPost)/(numPre*numPost)
     // probability of being selected, and the number of synapses in the sub-row is binomially distributed
-    return binomialInverseCDF(quantile, numConnections, (double)numPost / (double)(numPre * numPost));
+    return binomialInverseCDF(quantile, numConnections, (double)numPost / ((double)numPre * (double)numPost));
+}
+//----------------------------------------------------------------------------
+unsigned int calcFixedNumberTotalWithReplacementConnectorMaxSourceConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+{
+    // Calculate suitable quantile for 0.9999 change when drawing numPre times
+    const double quantile = pow(0.9999, 1.0 / (double)numPost);
+
+    // There are numConnections connections amongst the numPre*numPost possible connections.
+    // Each of the numConnections connections has an independent p=float(numPost)/(numPre*numPost)
+    // probability of being selected, and the number of synapses in the sub-row is binomially distributed
+    return binomialInverseCDF(quantile, numConnections, (double)numPre / ((double)numPre * (double)numPost));
 }
 } // GeNNUtils
-} // GeNNRobotics
+} // BoBRobotics

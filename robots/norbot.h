@@ -11,10 +11,10 @@
 #include "../common/i2c_interface.h"
 #include "tank.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// GeNNRobotics::Robots::Norbot
+// BoBRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
 class Norbot : public Tank
 {
@@ -80,9 +80,9 @@ private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
-    GeNNRobotics::I2CInterface m_I2C;
+    BoBRobotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
 }; // Norbot
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

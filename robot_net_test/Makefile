@@ -1,5 +1,5 @@
-CXXFLAGS := -std=c++11 -g -Wall -Wpedantic -I.. `pkg-config --cflags opencv`
-LDFLAGS := -pthread -lm -lstdc++ `pkg-config --libs opencv`
+CXXFLAGS := -std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP -I.. `pkg-config --cflags opencv`
+LDFLAGS := -pthread -lm `pkg-config --libs opencv`
 
 # optionally disable I2C
 ifdef NO_I2C_ROBOT
@@ -10,11 +10,17 @@ endif
 
 all: computer robot
 
-computer: computer.cc
+computer: computer.cc computer.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
 
-robot: robot.cc
+-include computer.d
+
+robot: robot.cc robot.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+
+-include robot.d
+
+%.d: ;
 
 clean:
-	rm -f computer robot
+	rm -f computer robot computer.d robot.d

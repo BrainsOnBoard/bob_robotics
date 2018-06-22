@@ -21,10 +21,10 @@
 #include <thread>
 #include <vector>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../os/net.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Net {
 using Command = std::vector<std::string>;
 
@@ -252,4 +252,4 @@ private:
     }
 }; // Socket
 } // Net
-} // GeNNRobotics
+} // BoBRobotics

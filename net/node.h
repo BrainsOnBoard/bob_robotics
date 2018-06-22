@@ -12,13 +12,13 @@
 #include <string>
 #include <vector>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/threadable.h"
 
 // local includes
 #include "socket.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Net {
 class Node; // forward declaration
 
@@ -106,4 +106,4 @@ private:
 
 }; // Node
 } // Net
-} // GeNNRobotics
+} // BoBRobotics

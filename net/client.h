@@ -18,7 +18,7 @@
 #include "node.h"
 #include "socket.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Net {
 class Client
   : public Node
@@ -74,4 +74,4 @@ Client::getSocket() const
     return (Socket *) this;
 }
 } // Net
-} // GeNNRobotics
+} // BoBRobotics

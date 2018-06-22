@@ -16,13 +16,13 @@
 #include <unistd.h>
 #endif
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "tank.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// GeNNRobotics::Robots::Surveyor
+// BoBRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
 class Surveyor : public Tank
 {
@@ -87,4 +87,4 @@ private:
     int m_Socket;
 }; // Surveyor
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

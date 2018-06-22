@@ -1,0 +1,1 @@
+g++ ant_world_test.cc -std=c++11 -Wall -Wpedantic -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW -pthread -o ant_world_test
