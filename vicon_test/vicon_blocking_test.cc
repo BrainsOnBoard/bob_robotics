@@ -11,8 +11,7 @@ using namespace BoBRobotics::Vicon;
 
 UDPClient<ObjectData> *vicon;
 
-void
-readCallback(uint id, const ObjectData &data, void *unused)
+void readCallback(uint, const ObjectData &data, void*)
 {
     const auto &translation = data.getTranslation();
     const auto &rotation = data.getRotation();
@@ -22,8 +21,7 @@ readCallback(uint id, const ObjectData &data, void *unused)
               << ", " << rotation[2] << std::endl;
 }
 
-int
-main()
+int main()
 {
     // connect to Vicon system
     vicon = new UDPClient<ObjectData>(51001);

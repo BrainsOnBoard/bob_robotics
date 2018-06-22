@@ -5,7 +5,7 @@
 // BoBRobotics includes
 #include "imgproc/opencv_unwrap_360.h"
 
-int main(int argc, char **argv)
+int main()
 {
     // create unwrapper object for a camera of specified resolution
     cv::Size cameraResolution(1280, 400);

@@ -1,10 +1,9 @@
 #include "os/video.h"
 
-int
-main(int argc, char **argv)
+int main()
 {
     std::cout << "Cameras:" << std::endl;
     for (auto cam : BoBRobotics::OS::Video::getCameras()) {
-        std::cout << "- Device " << cam.number << ": " << cam.name << std::endl;
+        std::cout << "- Device " << cam.first << ": " << cam.second << std::endl;
     }
 }
