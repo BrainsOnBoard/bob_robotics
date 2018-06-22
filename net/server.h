@@ -61,12 +61,8 @@ Server::Server(int port)
     if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
         goto error;
     }
-    if (listen(m_ListenSocket, 10)) {
-        goto error;
-    }
-    std::cout << "Listening on port " << port << std::endl;
-
-    return;
+    
+        return;
 
 error:
     std::cerr << "Error (" << errno << "): Could not bind to port " << port
@@ -99,6 +95,11 @@ Server::getSocket() const
 void
 Server::run()
 {
+    // Start listening
+    if (listen(m_ListenSocket, 10)) {
+        throw std::runtime_error("Error (" + std::to_string(errno) + "): Could not listen");
+    }
+    
     // for incoming connection
     sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);

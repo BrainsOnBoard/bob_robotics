@@ -1,7 +1,6 @@
 #pragma once
 
 // C++ includes
-#include <future>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -10,6 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "../common/semaphore.h"
 #include "../net/node.h"
 
 // local includes
@@ -63,10 +63,13 @@ public:
     //----------------------------------------------------------------------------
     void sendFrame(const cv::Mat &frame)
     {
-        // Wait for start acknowledgement
-        m_AckPromise.get_future().wait();
+        // If node is connected
+        if(m_Node.isConnected()) {
+            // Wait for start acknowledgement
+            m_AckSemaphore.waitOnce();
 
-        sendFrameInternal(frame);
+            sendFrameInternal(frame);
+        }
     }
 
 
@@ -109,8 +112,8 @@ private:
         // Handle command
         onCommandReceived(command);
 
-        // Send future
-        m_AckPromise.set_value();
+        // Raise semaphore
+        m_AckSemaphore.notify();
     }
 
     void runAsync()
@@ -130,7 +133,7 @@ private:
     const std::string m_Name;
     std::thread m_Thread;
     std::vector<uchar> m_Buffer;
-    std::promise<void> m_AckPromise;
+    Semaphore m_AckSemaphore;
     bool m_ThreadRunning = false;
 };
 }   // Video
