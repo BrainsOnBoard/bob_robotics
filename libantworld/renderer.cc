@@ -4,16 +4,19 @@
 #include <stdexcept>
 
 //------------------------------------------------------------------------
-// Renderer
+// BoBRobotics::AntWorld::Renderer
 //------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3],
-                   unsigned int displayRenderWidth, unsigned int displayRenderHeight)
-:   m_World(worldFilename, worldColour, groundColour), m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
+Renderer::Renderer(unsigned int cubemapSize)
+:   m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
-    m_DisplayRenderWidth(displayRenderWidth), m_DisplayRenderHeight(displayRenderHeight)
+    m_CubemapSize(cubemapSize)
 {
      // Create FBO for rendering to cubemap and bind
     glGenFramebuffers(1, &m_FBO);
@@ -27,7 +30,7 @@ Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour
     // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
     for(unsigned int t = 0; t < 6; t++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
-                     256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+                     m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
     }
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -38,7 +41,7 @@ Renderer::Renderer(const std::string &worldFilename, const GLfloat (&worldColour
     // Create depth render buffer
     glGenRenderbuffers(1, &m_DepthBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 256, 256);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_CubemapSize, m_CubemapSize);
 
     // Attach depth buffer to frame buffer
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBuffer);
@@ -63,13 +66,11 @@ Renderer::~Renderer()
     glDeleteFramebuffers(1, &m_FBO);
 }
 //----------------------------------------------------------------------------
-void Renderer::renderAntView(float antX, float antY, float antHeading)
+void Renderer::renderAntView(float antX, float antY, float antHeading,
+                             GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Configure viewport to cubemap-sized square
-    glViewport(0, 0, 256, 256);
-
-    // Bind world
-    m_World.bind();
+    glViewport(0, 0, m_CubemapSize, m_CubemapSize);
 
     // Bind the cubemap FBO for offscreen rendering
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
@@ -79,7 +80,7 @@ void Renderer::renderAntView(float antX, float antY, float antHeading)
     glLoadIdentity();
     gluPerspective(90.0,
                    1.0,
-                   0.001, 14.0);
+                   0.001, 1000.0);
 
     glMatrixMode(GL_MODELVIEW);
 
@@ -105,16 +106,15 @@ void Renderer::renderAntView(float antX, float antY, float antHeading)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw world
-        // **NOTE** buffers were manually bound previously
-        m_World.render(false);
+        m_World.render();
     }
 
     // Unbind the FBO for onscreen rendering
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Set viewport to strip at stop of window
-    glViewport(0, m_DisplayRenderWidth + 10,
-               m_DisplayRenderWidth, m_DisplayRenderHeight);
+    glViewport(viewportX, viewportY,
+               viewportWidth, viewportHeight);
 
     // Bind cubemap texture
     glEnable(GL_TEXTURE_CUBE_MAP);
@@ -134,19 +134,22 @@ void Renderer::renderAntView(float antX, float antY, float antHeading)
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     glDisable(GL_TEXTURE_CUBE_MAP);
-
 }
 //----------------------------------------------------------------------------
-void Renderer::renderTopDownView()
+void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Set viewport to square at bottom of screen
-    glViewport(0, 0, m_DisplayRenderWidth, m_DisplayRenderWidth);
+    glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+
+    // Get world bounds
+    const auto &minBound = getWorld().getMinBound();
+    const auto &maxBound = getWorld().getMaxBound();
 
     // Configure top-down orthographic projection matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(0.0, 10.0,
-               0.0, 10.0);
+    gluOrtho2D(minBound[0], maxBound[0],
+               minBound[1], maxBound[1]);
 
     // Build modelview matrix to centre world
     glMatrixMode(GL_MODELVIEW);
@@ -154,15 +157,6 @@ void Renderer::renderTopDownView()
 
     // Render world
     m_World.render();
-}
-//----------------------------------------------------------------------------
-void Renderer::render(float antX, float antY, float antHeading)
-{
-    // Render ant's eye view at top of the screen
-    renderAntView(antX, antY, antHeading);
-
-    // Render top-down view at bottom of the screen
-    renderTopDownView();
 }
 //----------------------------------------------------------------------------
 void Renderer::generateCubeFaceLookAtMatrices()
@@ -222,3 +216,5 @@ void Renderer::generateCubeFaceLookAtMatrices()
         glGetFloatv(GL_MODELVIEW_MATRIX, m_CubeFaceLookAtMatrices[f]);
     }
 }
+}   // namespace AntWorld
+}   // namespace BoBRobotics

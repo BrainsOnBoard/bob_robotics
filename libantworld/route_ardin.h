@@ -11,8 +11,14 @@
 #include <GL/glu.h>
 
 //----------------------------------------------------------------------------
-// RouteArdin
+// BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
+// Class for reading ant routes exported by Matlab, performing 'straightening'
+// Process from original matlab code and rendering them in ant world
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 class RouteArdin
 {
 public:
@@ -60,3 +66,5 @@ private:
     GLuint m_OverlayPositionVBO;
     GLuint m_OverlayColoursVBO;
 };
+}   // namespace AntWorld
+}   // namespace BoBRobotics
