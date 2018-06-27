@@ -184,7 +184,7 @@ void findFaces(std::istream &inputObjFile,
             faceTexCoordIndices.clear();
             faceNormalIndices.clear();
             do {
-                // Read indices i.e. P/T/N into string
+                // Read indices i.e. P/T[/N] into string
                 lineStream >> faceIndexString;
 
                 // Convert into stream for processing
@@ -196,20 +196,26 @@ void findFaces(std::istream &inputObjFile,
                 facePositionIndices.push_back(stoi(indexString));
                 std::getline(faceIndexStream, indexString, '/');
                 faceTexCoordIndices.push_back(stoi(indexString));
-                std::getline(faceIndexStream, indexString, '/');
-                faceNormalIndices.push_back(stoi(indexString));
+                if(std::getline(faceIndexStream, indexString, '/')) {
+                    faceNormalIndices.push_back(stoi(indexString));
+                }
             } while (!lineStream.eof());
 
             // If all of the face position indices are included in the map
             if (std::all_of(facePositionIndices.cbegin(), facePositionIndices.cend(),
                 [&positionIndices](int pos){ return (positionIndices.find(pos) != positionIndices.cend()); }))
             {
-                // Add indices of texture coordinates and normals to maps
-                // **NOTE** at this point, local ids are zero to be filled during next fass
+                // Add indices of texture coordinates to maps
+                // **NOTE** at this point, remapped ids are zero to be filled during next pass
                 std::transform(faceTexCoordIndices.cbegin(), faceTexCoordIndices.cend(), std::inserter(texCoordIndices, texCoordIndices.end()),
                                [](int id){ return std::make_pair(id, 0); });
-                std::transform(faceNormalIndices.cbegin(), faceNormalIndices.cend(), std::inserter(normalIndices, normalIndices.end()),
-                               [](int id){ return std::make_pair(id, 0); });
+
+                // If any face normals were found, add indices of normals to maps
+                // **NOTE** at this point, remapped ids are zero to be filled during next pass
+                if(!faceNormalIndices.empty()) {
+                    std::transform(faceNormalIndices.cbegin(), faceNormalIndices.cend(), std::inserter(normalIndices, normalIndices.end()),
+                                [](int id){ return std::make_pair(id, 0); });
+                }
                 
                 // Increment number of faces in bounds
                 facesInBounds++;
@@ -295,31 +301,32 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
             faceNormalIndices.clear();
             bool validFace = true;
             do {
-                // Read indices i.e. P/T/N into string
+                // Read indices i.e. P/T[/N] into string
                 lineStream >> faceIndexString;
 
                 // Convert into stream for processing
                 std::istringstream faceIndexStream(faceIndexString);
 
-                // Add remapped position index to vector
+                // Update mapping with remapped position index
                 std::getline(faceIndexStream, indexString, '/');
                 if(!getRemappedIndex(positionIndices, indexString, facePositionIndices)) {
                     validFace = false;
                     break;
                 }
 
-                // Add remapped texture coordinate index to vector
+                // Update mapping with remapped texture coordinate index
                 std::getline(faceIndexStream, indexString, '/');
                 if(!getRemappedIndex(texCoordIndices, indexString, faceTexCoordIndices)) {
                     validFace = false;
                     break;
                 }
 
-                // Add remapped normal index to vector
-                std::getline(faceIndexStream, indexString, '/');
-                if(!getRemappedIndex(normalIndices, indexString, faceNormalIndices)) {
-                    validFace = false;
-                    break;
+                // If normals are present, update mapping with remapped normal index
+                if(std::getline(faceIndexStream, indexString, '/')) {
+                    if(!getRemappedIndex(normalIndices, indexString, faceNormalIndices)) {
+                        validFace = false;
+                        break;
+                    }
                 }
             } while (!lineStream.eof());
 
@@ -327,12 +334,19 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
             if(validFace) {
                 // Check all sizes match
                 assert(facePositionIndices.size() == faceTexCoordIndices.size());
-                assert(faceTexCoordIndices.size() == faceNormalIndices.size());
 
                 // Write new face
                 outputObjFile << "f ";
-                for(size_t i = 0; i < facePositionIndices.size(); i++) {
-                    outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << "/" << faceNormalIndices[i] << " ";
+                if(faceNormalIndices.empty()) {
+                    for(size_t i = 0; i < facePositionIndices.size(); i++) {
+                        outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << " ";
+                    }
+                }
+                else {
+                    assert(faceTexCoordIndices.size() == faceNormalIndices.size());
+                    for(size_t i = 0; i < facePositionIndices.size(); i++) {
+                        outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << "/" << faceNormalIndices[i] << " ";
+                    }
                 }
                 outputObjFile << std::endl;
             }
@@ -391,7 +405,7 @@ int main(int argc, char **argv)
 
         // Advise the kernel of our access pattern.
         // https://stackoverflow.com/questions/17925051/fast-textfile-reading-in-c
-        posix_fadvise(fd, 0, 0, 1);  // FDADVICE_SEQUENTIAL
+        posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 
         // **HACK** apply terrifying GCC hack to build a std::istream from a POSIX handle
         // https://stackoverflow.com/questions/2746168/how-to-construct-a-c-fstream-from-a-posix-file-descriptor
