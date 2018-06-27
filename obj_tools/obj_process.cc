@@ -96,6 +96,7 @@ void findBounds(std::istream &inputObjFile)
     std::cout << "\tMin: (" << minBound[0] << ", " << minBound[1] << ", " << minBound[2] << ")" << std::endl;
     std::cout << "\tMax: (" << maxBound[0] << ", " << maxBound[1] << ", " << maxBound[2] << ")" << std::endl;
 }
+
 void copyPositions(const float(&min)[3], const float(&max)[3], 
                    std::istream &inputObjFile, std::ofstream &outputObjFile,
                    std::map<int, int> &positionIndices)
@@ -180,13 +181,11 @@ void findFaces(std::istream &inputObjFile,
         lineStream >> commandString;
 
         if (commandString == "f") {
+            // Read indices i.e. P/T[/N] into string
             facePositionIndices.clear();
             faceTexCoordIndices.clear();
             faceNormalIndices.clear();
-            do {
-                // Read indices i.e. P/T[/N] into string
-                lineStream >> faceIndexString;
-
+            while(lineStream >> faceIndexString) {
                 // Convert into stream for processing
                 std::istringstream faceIndexStream(faceIndexString);
 
@@ -199,7 +198,7 @@ void findFaces(std::istream &inputObjFile,
                 if(std::getline(faceIndexStream, indexString, '/')) {
                     faceNormalIndices.push_back(stoi(indexString));
                 }
-            } while (!lineStream.eof());
+            }
 
             // If all of the face position indices are included in the map
             if (std::all_of(facePositionIndices.cbegin(), facePositionIndices.cend(),
@@ -296,14 +295,12 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
         }
         // Otherwise, if line is a face
         else if (commandString == "f") {
+            // Read indices i.e. P/T[/N] into string
             facePositionIndices.clear();
             faceTexCoordIndices.clear();
             faceNormalIndices.clear();
             bool validFace = true;
-            do {
-                // Read indices i.e. P/T[/N] into string
-                lineStream >> faceIndexString;
-
+            while(lineStream >> faceIndexString) {
                 // Convert into stream for processing
                 std::istringstream faceIndexStream(faceIndexString);
 
@@ -328,26 +325,30 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                         break;
                     }
                 }
-            } while (!lineStream.eof());
+            }
 
             // If a valid face has been parsed
             if(validFace) {
                 // Check all sizes match
                 assert(facePositionIndices.size() == faceTexCoordIndices.size());
-
+                assert(faceNormalIndices.empty() || faceTexCoordIndices.size() == faceNormalIndices.size());
+                
                 // Write new face
                 outputObjFile << "f ";
-                if(faceNormalIndices.empty()) {
-                    for(size_t i = 0; i < facePositionIndices.size(); i++) {
-                        outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << " ";
+                for(size_t i = 0; i < facePositionIndices.size(); i++) {
+                    if(faceNormalIndices.empty()) {
+                        outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i];
+                    }
+                    else {
+                        outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << "/" << faceNormalIndices[i];
+                    }
+                    
+                    // If this isn't the last face vertex, add whitespace
+                    if(i != (facePositionIndices.size() - 1)) {
+                        outputObjFile << " ";
                     }
                 }
-                else {
-                    assert(faceTexCoordIndices.size() == faceNormalIndices.size());
-                    for(size_t i = 0; i < facePositionIndices.size(); i++) {
-                        outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << "/" << faceNormalIndices[i] << " ";
-                    }
-                }
+                
                 outputObjFile << std::endl;
             }
         }
@@ -371,7 +372,12 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                  // Write new line
                 outputObjFile << "l ";
                 for(size_t i = 0; i < facePositionIndices.size(); i++) {
-                    outputObjFile << facePositionIndices[i] << " ";
+                    outputObjFile << facePositionIndices[i];
+                    
+                    // If this isn't the last line vertex, add whitespace
+                    if(i != (facePositionIndices.size() - 1)) {
+                        outputObjFile << " ";
+                    }
                 }
                 outputObjFile << std::endl;
             }
