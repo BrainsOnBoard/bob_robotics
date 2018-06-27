@@ -1,4 +1,4 @@
-CXXFLAGS= -std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP -I../.. `pkg-config --cflags --libs opencv`
+CXXFLAGS= -std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -I../.. `pkg-config --cflags --libs opencv`
 
 .PHONY: all clean
 

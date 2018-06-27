@@ -20,6 +20,7 @@
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::HID;
+using namespace std::literals;
 
 int main(int argc, char *argv[])
 {
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
     
     // Wait for VICON system to track some objects
     while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object..." << std::endl;
     }
 

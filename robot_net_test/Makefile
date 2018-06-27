@@ -1,4 +1,4 @@
-CXXFLAGS := -std=c++11 -g -Wall -Wpedantic -Wextra -MMD -MP -I.. `pkg-config --cflags opencv`
+CXXFLAGS := -std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -I.. `pkg-config --cflags opencv`
 LDFLAGS := -pthread -lm `pkg-config --libs opencv`
 
 # optionally disable I2C
