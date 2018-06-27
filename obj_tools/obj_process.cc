@@ -9,6 +9,14 @@
 // Standard C includes
 #include <cassert>
 
+// BoB robotics includes
+#include "../third_party/path.h"
+
+#ifdef __GNUC__
+#include <fcntl.h>
+#include <ext/stdio_filebuf.h>
+#endif
+
 //----------------------------------------------------------------------------
 // Anonymous namespace
 //----------------------------------------------------------------------------
@@ -25,12 +33,25 @@ void readVector(std::istringstream &stream, float(&vector)[N])
     }
 }
 
-void copyPositions(const float(&min)[3], const float(&max)[3], 
-                   std::ifstream &inputObjFile, std::ofstream &outputObjFile,
-                   std::map<int, int> &positionIndices)
-{    
+bool getRemappedIndex(const std::map<int, int> &indices, const std::string &indexString,
+                      std::vector<int> &remappedIndices)
+{
+    // If index isn't found, return false
+    const auto index = indices.find(stoi(indexString));
+    if (index == indices.cend()) {
+        return false;
+    }
+    // Otherwise, add remapped index to vector and return true
+    else {
+        remappedIndices.push_back(index->second);
+        return true;
+    }
+}
+
+void findBounds(std::istream &inputObjFile)
+{
     // Initialise bounds
-    float minBound[3]{ 
+    float minBound[3]{
         std::numeric_limits<float>::max(),
         std::numeric_limits<float>::max(),
         std::numeric_limits<float>::max() };
@@ -39,6 +60,46 @@ void copyPositions(const float(&min)[3], const float(&max)[3],
         std::numeric_limits<float>::min(),
         std::numeric_limits<float>::min() };
 
+    std::cout << "1/1 - Finding bounds:" << std::endl;
+    std::string lineString;
+    std::string commandString;
+    for(size_t l = 0; std::getline(inputObjFile, lineString); l++) {
+        // Entirely skip comment or empty lines
+        if (lineString[0] == '#' || lineString.empty()) {
+            continue;
+        }
+
+        // Wrap line in stream for easier parsing
+        std::istringstream lineStream(lineString);
+
+        // Read command from first token
+        lineStream >> commandString;
+
+        // If line is a position
+        if (commandString == "v") {
+            // Read position
+            float position[3];
+            readVector(lineStream, position);
+
+            // Update bounds
+            for (unsigned int i = 0; i < 3; i++) {
+                minBound[i] = std::min(minBound[i], position[i]);
+                maxBound[i] = std::max(maxBound[i], position[i]);
+            }
+        }
+        // Otherwise, if we've hit the faces section there should be no more vertices so break;
+        else if(commandString == "f") {
+            break;
+        }
+    }
+
+    std::cout << "\tMin: (" << minBound[0] << ", " << minBound[1] << ", " << minBound[2] << ")" << std::endl;
+    std::cout << "\tMax: (" << maxBound[0] << ", " << maxBound[1] << ", " << maxBound[2] << ")" << std::endl;
+}
+void copyPositions(const float(&min)[3], const float(&max)[3], 
+                   std::istream &inputObjFile, std::ofstream &outputObjFile,
+                   std::map<int, int> &positionIndices)
+{    
     std::cout << "1/3 - Copy positions:" << std::endl;
     std::string lineString;
     std::string commandString;
@@ -62,12 +123,6 @@ void copyPositions(const float(&min)[3], const float(&max)[3],
             float position[3];
             readVector(lineStream, position);
 
-            // Update bounds
-            for (unsigned int i = 0; i < 3; i++) {
-                minBound[i] = std::min(minBound[i], position[i]);
-                maxBound[i] = std::max(maxBound[i], position[i]);
-            }
-
             // If position is within bounds
             if (position[0] >= min[0] && position[1] >= min[1] && position[2] >= min[2] &&
                 position[0] < max[0] && position[1] < max[1] && position[2] < max[2])
@@ -88,18 +143,19 @@ void copyPositions(const float(&min)[3], const float(&max)[3],
         else if (commandString == "mtllib" || commandString == "o") {
             outputObjFile << lineString << std::endl;
         }
+        // Otherwise, if we've hit the faces section there should be no more vertices so break;
+        else if(commandString == "f") {
+            break;
+        }
     }
    
 
-    std::cout << "\t" << originalPositionID - 1 << " vertices" << std::endl;
-    std::cout << "\tMin: (" << minBound[0] << ", " << minBound[1] << ", " << minBound[2] << ")" << std::endl;
-    std::cout << "\tMax: (" << maxBound[0] << ", " << maxBound[1] << ", " << maxBound[2] << ")" << std::endl;
-
+    std::cout << "\t" << remappedPositionID - 1 << "/" << originalPositionID - 1 << " vertices" << std::endl;
 }
 
-void findTexCoordsAndNormals(std::ifstream &inputObjFile,
-                             const std::map<int, int> &positionIndices,
-                             std::map<int, int> &texCoordIndices, std::map<int, int> &normalIndices)
+void findFaces(std::istream &inputObjFile,
+               const std::map<int, int> &positionIndices,
+               std::map<int, int> &texCoordIndices, std::map<int, int> &normalIndices)
 {
     std::cout << "2/3 - Reading faces to find tex coords and normals:" << std::endl;
     std::string lineString;
@@ -150,9 +206,9 @@ void findTexCoordsAndNormals(std::ifstream &inputObjFile,
             {
                 // Add indices of texture coordinates and normals to maps
                 // **NOTE** at this point, local ids are zero to be filled during next fass
-                std::transform(faceTexCoordIndices.cbegin(), faceTexCoordIndices.cend(), texCoordIndices,
+                std::transform(faceTexCoordIndices.cbegin(), faceTexCoordIndices.cend(), std::inserter(texCoordIndices, texCoordIndices.end()),
                                [](int id){ return std::make_pair(id, 0); });
-                std::transform(faceNormalIndices.cbegin(), faceNormalIndices.cend(), normalIndices,
+                std::transform(faceNormalIndices.cbegin(), faceNormalIndices.cend(), std::inserter(normalIndices, normalIndices.end()),
                                [](int id){ return std::make_pair(id, 0); });
                 
                 // Increment number of faces in bounds
@@ -168,7 +224,7 @@ void findTexCoordsAndNormals(std::ifstream &inputObjFile,
     std::cout << "\t" << normalIndices.size() << " normals" << std::endl;
 }
 
-void completeCopy(std::ifstream &inputObjFile, std::ofstream &outputObjFile,
+void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                   const std::map<int, int> &positionIndices,
                   std::map<int, int> &texCoordIndices, std::map<int, int> &normalIndices)
 {
@@ -232,7 +288,7 @@ void completeCopy(std::ifstream &inputObjFile, std::ofstream &outputObjFile,
             // Increment original normal id
             originalNormalID++;
         }
-        
+        // Otherwise, if line is a face
         else if (commandString == "f") {
             facePositionIndices.clear();
             faceTexCoordIndices.clear();
@@ -245,25 +301,71 @@ void completeCopy(std::ifstream &inputObjFile, std::ofstream &outputObjFile,
                 // Convert into stream for processing
                 std::istringstream faceIndexStream(faceIndexString);
 
-                // Extract indices of position, tex coordinate and normal
-                // **NOTE** obj indices start from 1
+                // Add remapped position index to vector
                 std::getline(faceIndexStream, indexString, '/');
-                const auto position = positionIndices.find(stoi(indexString));
-                if (position == positionIndices.cend()) {
+                if(!getRemappedIndex(positionIndices, indexString, facePositionIndices)) {
                     validFace = false;
                     break;
                 }
 
+                // Add remapped texture coordinate index to vector
                 std::getline(faceIndexStream, indexString, '/');
-                const int texCoord = stoi(indexString);
+                if(!getRemappedIndex(texCoordIndices, indexString, faceTexCoordIndices)) {
+                    validFace = false;
+                    break;
+                }
+
+                // Add remapped normal index to vector
                 std::getline(faceIndexStream, indexString, '/');
-                const int normal = stoi(indexString);
+                if(!getRemappedIndex(normalIndices, indexString, faceNormalIndices)) {
+                    validFace = false;
+                    break;
+                }
             } while (!lineStream.eof());
+
+            // If a valid face has been parsed
+            if(validFace) {
+                // Check all sizes match
+                assert(facePositionIndices.size() == faceTexCoordIndices.size());
+                assert(faceTexCoordIndices.size() == faceNormalIndices.size());
+
+                // Write new face
+                outputObjFile << "f ";
+                for(size_t i = 0; i < facePositionIndices.size(); i++) {
+                    outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << "/" << faceNormalIndices[i] << " ";
+                }
+                outputObjFile << std::endl;
+            }
         }
+        // Otherwise, if this is a line
+        else if(commandString == "l") {
+            facePositionIndices.clear();
+            bool validLine = true;
+            do {
+                // Read index into string
+                lineStream >> faceIndexString;
+
+                // Add remapped position index to vector
+                if(!getRemappedIndex(positionIndices, faceIndexString, facePositionIndices)) {
+                    validLine = false;
+                    break;
+                }
+            } while (!lineStream.eof());
+
+            // If a valid line has been parsed
+            if(validLine) {
+                 // Write new line
+                outputObjFile << "l ";
+                for(size_t i = 0; i < facePositionIndices.size(); i++) {
+                    outputObjFile << facePositionIndices[i] << " ";
+                }
+                outputObjFile << std::endl;
+            }
+        }
+        // Otherwise, if command has already been handled by copyPositions, ignore
         else if (commandString == "mtllib" || commandString == "o" || commandString == "v") {
-            // Ignore previously processed commands
         }
-        // Copy unhandled
+        // Otherwise, copy line directly
         else {
             outputObjFile << lineString << std::endl;
         }
@@ -273,41 +375,82 @@ void completeCopy(std::ifstream &inputObjFile, std::ofstream &outputObjFile,
 
 int main(int argc, char **argv)
 {
-    const char *filename = "3D Model.obj";
-    const float min[3]{0.0f, 0.0f, 0.0f};
-    const float max[3]{100.0f, 100.0f, 100.0f};
 
-
-    // Open obj file
-    std::ifstream inputObjFile(filename);
-    if(!inputObjFile.good()) {
-        std::cerr << "Cannot open obj file: " << filename << std::endl;
-        return false;
+    if(argc < 2) {
+        std::cerr << "At least one argument (object filename) required" << std::endl;
+        return EXIT_FAILURE;
     }
-    
-    std::ofstream outputObjFile("test.obj");
+    else {
+#ifdef __GNUC__
+        // Open file using POSIX API
+        int fd = open(argv[1], O_RDONLY);
+        if(fd == -1) {
+            std::cerr << "Cannot open obj file: " << argv[1] << std::endl;
+            return EXIT_FAILURE;
+        }
 
-    // Copy positions withing bounds to output file
-    std::map<int, int> positionIndices;
-    copyPositions(min, max, inputObjFile, outputObjFile,
-                  positionIndices);
-    
-    std::cout << positionIndices.size() << " vertices within bounds" << std::endl;
-    
-    // Rewind
-    inputObjFile.seekg(0);
-    
-    // Find the texture coordinates and normals required to alongside faces
-    std::map<int, int> texCoordIndices;
-    std::map<int, int> normalIndices;
-    findTexCoordsAndNormals(inputObjFile, positionIndices,
-                            texCoordIndices, normalIndices);
+        // Advise the kernel of our access pattern.
+        // https://stackoverflow.com/questions/17925051/fast-textfile-reading-in-c
+        posix_fadvise(fd, 0, 0, 1);  // FDADVICE_SEQUENTIAL
 
-    // Rewind
-    inputObjFile.seekg(0);
+        // **HACK** apply terrifying GCC hack to build a std::istream from a POSIX handle
+        // https://stackoverflow.com/questions/2746168/how-to-construct-a-c-fstream-from-a-posix-file-descriptor
+        __gnu_cxx::stdio_filebuf<char> filebuf(fd, std::ios::in);
+        std::istream inputObjFile(&filebuf);
+#else
+         // Open obj file
+        std::ifstream inputObjFile(argv[1]);
+#endif
+        if(!inputObjFile.good()) {
+            std::cerr << "Cannot open obj file: " << argv[1] << std::endl;
+            return EXIT_FAILURE;
+        }
 
-    // Complete copy of geometry to output file
-    completeCopy(inputObjFile, outputObjFile,
-                 positionIndices, texCoordIndices, normalIndices);
-    return EXIT_SUCCESS;
+        // If only one argument is passed, find bounds of model
+        if(argc == 2) {
+            findBounds(inputObjFile);
+            return EXIT_SUCCESS;
+        }
+        // Otherwise
+        else if(argc == 8) {
+            // Create an output path for object
+            const auto inputPath = filesystem::path(argv[1]).make_absolute();
+            const auto outputPath = inputPath.parent_path() / ("output_" + inputPath.filename());
+
+            // Open output file
+            std::ofstream outputObjFile(outputPath.str());
+
+            // Parse bounds
+            const float min[3]{ strtof(argv[2], nullptr), strtof(argv[3], nullptr), strtof(argv[4], nullptr) };
+            const float max[3]{ strtof(argv[5], nullptr), strtof(argv[6], nullptr), strtof(argv[7], nullptr) };
+
+            // Copy positions withing bounds to output file
+            std::map<int, int> positionIndices;
+            copyPositions(min, max, inputObjFile, outputObjFile,
+                        positionIndices);
+
+            // Rewind
+            inputObjFile.clear();
+            inputObjFile.seekg(0);
+
+            // Find the faces required for these vertices
+            std::map<int, int> texCoordIndices;
+            std::map<int, int> normalIndices;
+            findFaces(inputObjFile, positionIndices,
+                    texCoordIndices, normalIndices);
+
+            // Rewind
+            inputObjFile.clear();
+            inputObjFile.seekg(0);
+
+            // Complete copy of geometry to output file
+            completeCopy(inputObjFile, outputObjFile,
+                        positionIndices, texCoordIndices, normalIndices);
+            return EXIT_SUCCESS;
+        }
+        else {
+            std::cerr << "Object filename, minX, minY, minZ, maxX, maxY, maxZ arguments required" << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
 }
