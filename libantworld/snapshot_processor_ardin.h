@@ -4,9 +4,13 @@
 #include <opencv2/opencv.hpp>
 
 //----------------------------------------------------------------------------
-// SnapshotProcessor
+// BoBRobotics::AntWorld::SnapshotProcessor
 //----------------------------------------------------------------------------
 // OpenCV-based snapshot processor - uses OpenCV  on CPU to process snapshots
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 class SnapshotProcessorArdin
 {
 public:
@@ -48,3 +52,5 @@ private:
     // CLAHE algorithm for histogram normalization
     cv::Ptr<cv::CLAHE> m_Clahe;
 };
+}   // namespace AntWorld
+}   // namespace BoBRobotics

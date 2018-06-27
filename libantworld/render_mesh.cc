@@ -10,8 +10,12 @@
 #include "common.h"
 
 //----------------------------------------------------------------------------
-// RenderMesh
+// BoBRobotics::AntWorld::RenderMesh
 //----------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 RenderMesh::RenderMesh() : m_VAO(0), m_PositionVBO(0), m_TextureCoordsVBO(0), m_IBO(0), m_NumIndices(0)
 {
 }
@@ -141,3 +145,5 @@ void RenderMesh::render() const
     // Draw render mesh quads
     glDrawElements(GL_QUADS, m_NumIndices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 }
+}   // namespace AntWorld
+}   // namespace BoBRobotics
