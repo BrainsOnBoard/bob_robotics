@@ -95,8 +95,8 @@ int main()
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Load world, keeping texture sizes below 4096 and compressing textures on upload
-    renderer.getWorld().loadObj("/home/j/jk/jk421/Documents/pier/pier_alex_smoothed_decimated_triangles.obj",
-                                0.1f, 4096, GL_COMPRESSED_RGB);
+    //renderer.getWorld().loadObj("object.obj",
+    //                            0.1f, 4096, GL_COMPRESSED_RGB);
 
     HID::Joystick joystick(0.25f);
 
