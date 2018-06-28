@@ -10,6 +10,7 @@
 #include "video/display.h"
 
 using namespace BoBRobotics;
+using namespace std::literals;
 
 int main()
 {
@@ -23,7 +24,7 @@ int main()
         Video::Display display(drone.getVideoStream());
         do {
             if (!joystick.update() && !display.update()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(25));
+                std::this_thread::sleep_for(25ms);
             }
         } while (display.isOpen());
     } catch (std::exception &e) {

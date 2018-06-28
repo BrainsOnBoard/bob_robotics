@@ -1,4 +1,4 @@
-CXXFLAGS+=-std=c++11 -march=native -O2 -I..
+CXXFLAGS+=-std=c++14 -march=native -O2 -I..
 LDFLAGS=-pthread -lstdc++ -lm
 
 # OpenCV
