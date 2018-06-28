@@ -497,8 +497,9 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render top down and ants eye view
-        renderer.renderAntView(antX, antY, antHeading,
-                               0, Parameters::displayRenderWidth + 10, Parameters::displayRenderWidth, Parameters::displayRenderHeight);
+        renderer.renderPanoramicView(antX, antY, 0.01f,
+                                     antHeading, 0.0f, 0.0f,
+                                     0, Parameters::displayRenderWidth + 10, Parameters::displayRenderWidth, Parameters::displayRenderHeight);
         renderer.renderTopDownView(0, 0, Parameters::displayRenderWidth, Parameters::displayRenderWidth);
 
         // Render route
