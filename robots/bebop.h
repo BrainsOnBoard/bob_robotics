@@ -173,7 +173,7 @@ public:
     VideoStream &getVideoStream();
     void setPitch(const float pitch);
     void setRoll(const float right);
-    void setUpDown(const float up);
+    void setAscent(const float up);
     void setYaw(const float right);
     void stopMoving();
     void takePhoto();
@@ -412,7 +412,7 @@ Bebop::setRoll(const float right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::setUpDown(const float up)
+Bebop::setAscent(const float up)
 {
     checkArg(up);
     if (m_IsConnected) {
@@ -470,7 +470,7 @@ Bebop::stopMoving()
         setPitch(0);
         setRoll(0);
         setYaw(0);
-        setUpDown(0);
+        setAscent(0);
     }
 }
 
@@ -673,7 +673,7 @@ Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
         setPitch(maxSpeed * -value);
         return true;
     case HID::JAxis::LeftStickVertical:
-        setUpDown(maxSpeed * -value);
+        setAscent(maxSpeed * -value);
         return true;
     case HID::JAxis::LeftTrigger:
         setYaw(maxSpeed * -value);
