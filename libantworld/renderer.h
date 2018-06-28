@@ -27,8 +27,12 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void renderAntView(float antX, float antY, float antHeading,
-                       GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
+    void renderPanoramicView(float x, float y, float z,
+                             float yaw, float pitch, float roll,
+                             GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
+    void renderFirstPersonView(float x, float y, float z,
+                               float yaw, float pitch, float roll,
+                               GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
     void renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
 
     World &getWorld(){ return m_World; }
@@ -39,6 +43,8 @@ private:
     // Private methods
     //------------------------------------------------------------------------
     void generateCubeFaceLookAtMatrices();
+    void applyFrame(float x, float y, float z,
+                    float yaw, float pitch, float roll);
 
     //------------------------------------------------------------------------
     // Members

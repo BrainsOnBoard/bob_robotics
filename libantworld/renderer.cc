@@ -66,8 +66,9 @@ Renderer::~Renderer()
     glDeleteFramebuffers(1, &m_FBO);
 }
 //----------------------------------------------------------------------------
-void Renderer::renderAntView(float antX, float antY, float antHeading,
-                             GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
+void Renderer::renderPanoramicView(float x, float y, float z,
+                                   float yaw, float pitch, float roll,
+                                   GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Configure viewport to cubemap-sized square
     glViewport(0, 0, m_CubemapSize, m_CubemapSize);
@@ -80,15 +81,14 @@ void Renderer::renderAntView(float antX, float antY, float antHeading,
     glLoadIdentity();
     gluPerspective(90.0,
                    1.0,
-                   0.001, 1000.0);
+                   0.1, 1000.0);
 
     glMatrixMode(GL_MODELVIEW);
 
     // Save ant transform to matrix
     float antMatrix[16];
     glLoadIdentity();
-    glRotatef(antHeading, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-antX, -antY, -0.01f);
+    applyFrame(x, y, z, yaw, pitch, roll);
     glGetFloatv(GL_MODELVIEW_MATRIX, antMatrix);
 
     // Loop through each heading we need to render
@@ -134,6 +134,37 @@ void Renderer::renderAntView(float antX, float antY, float antHeading,
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     glDisable(GL_TEXTURE_CUBE_MAP);
+}
+//----------------------------------------------------------------------------
+void Renderer::renderFirstPersonView(float x, float y, float z,
+                                     float yaw, float pitch, float roll,
+                                     GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
+{
+    // Set viewport to strip at stop of window
+    glViewport(viewportX, viewportY,
+               viewportWidth, viewportHeight);
+
+    // Configure perspective projection matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(90.0,
+                   (GLfloat)viewportWidth / (GLfloat)viewportHeight,
+                   0.1, 1000.0);
+
+    glMatrixMode(GL_MODELVIEW);
+
+    glLoadIdentity();
+    gluLookAt(0.0,  0.0,    0.0,
+              0.0,  1.0,    0.0,
+              0.0,  0.0,    1.0);
+
+    applyFrame(x, y, z, yaw, pitch, roll);
+
+    // Clear colour and depth buffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Draw world
+    m_World.render();
 }
 //----------------------------------------------------------------------------
 void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
@@ -215,6 +246,15 @@ void Renderer::generateCubeFaceLookAtMatrices()
         // Save matrix
         glGetFloatv(GL_MODELVIEW_MATRIX, m_CubeFaceLookAtMatrices[f]);
     }
+}
+//----------------------------------------------------------------------------
+void Renderer::applyFrame(float x, float y, float z,
+                          float yaw, float pitch, float roll)
+{
+    glRotatef(roll, 0.0f, 1.0f, 0.0f);
+    glRotatef(pitch, 1.0f, 0.0f, 0.0f);
+    glRotatef(yaw, 0.0f, 0.0f, 1.0f);
+    glTranslatef(-x, -y, -z);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
