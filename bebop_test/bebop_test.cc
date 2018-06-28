@@ -9,7 +9,7 @@
 #include "robots/bebop.h"
 #include "video/display.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 int main()
 {

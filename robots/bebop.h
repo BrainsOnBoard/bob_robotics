@@ -76,7 +76,7 @@ extern "C"
 #define NO_FLY
 #endif
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 /*
  * Simply throws a runtime_error with appropriate message if
