@@ -90,7 +90,8 @@ int main()
     glEnable(GL_TEXTURE_2D);
 
     // Create renderer - increasing cubemap size to improve quality in larger window
-    AntWorld::Renderer renderer(512);
+    // and pushing back clipping plane to reduce Z fighting
+    AntWorld::Renderer renderer(512, 0.1);
     renderer.getWorld().load("../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
