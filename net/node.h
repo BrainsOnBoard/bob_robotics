@@ -5,19 +5,20 @@
 #pragma once
 
 // C++ includes
+#include <atomic>
 #include <functional>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/threadable.h"
 
 // local includes
 #include "socket.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Net {
 class Node; // forward declaration
 
@@ -59,9 +60,11 @@ public:
             }
         }
     }
+    
+    bool isConnected() const{ return m_IsConnected; }
 
 protected:
-    bool m_IsConnected = false;
+    std::atomic<bool> m_IsConnected{false};
 
     void notifyConnectedHandlers()
     {
@@ -103,4 +106,4 @@ private:
 
 }; // Node
 } // Net
-} // GeNNRobotics
+} // BoBRobotics

@@ -3,7 +3,7 @@
 // C++ includes
 #include <limits>
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace OS {
 
 #ifdef _WIN32
@@ -35,4 +35,4 @@ enum Key
 #endif
 
 } // OS
-} // GeNNRobotics
+} // BoBRobotics

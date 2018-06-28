@@ -9,6 +9,9 @@
 **/*.o
 **/*.obj
 
+# Ignore dependency files
+**/*.d
+
 # Ignore output folders from code generation
 **/*_CODE
 

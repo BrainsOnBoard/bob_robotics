@@ -4,11 +4,12 @@
 #include <iostream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../vicon/capture_control.h"
 #include "../vicon/udp.h"
 
-using namespace GeNNRobotics::Vicon;
+using namespace BoBRobotics::Vicon;
+using namespace std::literals;
 
 int main()
 {
@@ -16,7 +17,7 @@ int main()
     CaptureControl viconCaptureControl("192.168.1.100", 3003,
                                               "c:\\users\\ad374\\Desktop");
     while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
     }
     

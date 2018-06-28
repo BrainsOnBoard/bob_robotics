@@ -5,7 +5,7 @@
 // local includes
 #include "hid/joystick.h"
 
-using namespace GeNNRobotics::HID;
+using namespace BoBRobotics::HID;
 
 bool
 onAxisEvent(JAxis axis, float value)

@@ -20,8 +20,10 @@
 // local includes
 #include "joystick_base.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace HID {
+using namespace std::literals;
+
 /*
  * Controller axes, including thumbsticks, triggers and D-pad.
  */
@@ -121,7 +123,7 @@ public:
     {
         while (m_DoRun) {
             while (!update()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(50ms);
             }
         }
     }
@@ -208,4 +210,4 @@ private:
     }
 }; // Joystick
 } // HID
-} // GeNNRobotics
+} // BoBRobotics

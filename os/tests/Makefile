@@ -1,4 +1,15 @@
-TARGET := list_cameras
+CXXFLAGS=-std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -I../..
 
-$(TARGET): $(TARGET).cc ../video.h
-	$(CXX) -o $@ -g -std=c++11 -I../.. $<
+.PHONY: all clean
+
+all: list_cameras
+
+list_cameras: list_cameras.cc list_cameras.d
+	$(CXX) -o $@ $(CXXFLAGS) $<
+
+-include list_cameras.d
+
+%.d: ;
+
+clean:
+	rm -f list_cameras list_cameras.d

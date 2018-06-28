@@ -30,8 +30,12 @@ float distanceSquared(float x1, float y1, float x2, float y2)
 }   // Anonymous namespace
 
 //----------------------------------------------------------------------------
-// RouteArdin
+// BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     : m_WaypointsVAO(0), m_WaypointsPositionVBO(0), m_WaypointsColourVBO(0),
     m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0), m_RouteMaxPoints(maxRouteEntries),
@@ -333,3 +337,5 @@ std::tuple<float, float, float> RouteArdin::operator[](size_t waypoint) const
         return std::make_tuple(x, y, 0.0f);
     }
 }
+}   // namespace AntWorld
+}   // namespace BoBRobotics

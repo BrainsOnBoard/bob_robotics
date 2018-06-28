@@ -3,14 +3,14 @@
 // C++ includes
 #include <string>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../hid/joystick.h"
 #include "../net/node.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// GeNNRobotics::Robots::Tank
+// BoBRobotics::Robots::Tank
 //----------------------------------------------------------------------------
 // Interface for driving tank-like wheeled robots
 class Tank
@@ -84,7 +84,7 @@ private:
         }
     }
 
-    void onCommandReceived(Net::Node &node, const Net::Command &command)
+    void onCommandReceived(Net::Node &, const Net::Command &command)
     {
         // second space separates left and right parameters
         if (command.size() != 3) {
@@ -121,4 +121,4 @@ private:
     }
 }; // Tank
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

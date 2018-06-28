@@ -96,7 +96,7 @@ xcopy /d /y "$(ANACONDA_DIR)\Library\plugins\platforms\*" "$(TargetDir)\platform
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\matplotlibcpp.h" />
+    <ClInclude Include="..\third_party\matplotlibcpp.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>

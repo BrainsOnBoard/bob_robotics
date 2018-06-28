@@ -2,7 +2,6 @@
 
 // Standard C++ includes
 #include <array>
-#include <future>
 #include <list>
 #include <tuple>
 
@@ -21,14 +20,9 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    std::future<std::tuple<unsigned int, unsigned int, unsigned int>> present(const cv::Mat &snapshotFloat, bool train);
+    std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &snapshotFloat, bool train);
 
 private:
-    //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    std::tuple<unsigned int, unsigned int, unsigned int> presentThread(const cv::Mat &snapshotFloat, bool train);
-
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------

@@ -10,7 +10,7 @@
 // Model includes
 #include "parameters.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
 
 //---------------------------------------------------------------------------
 // Standard LIF model extended to take an additional

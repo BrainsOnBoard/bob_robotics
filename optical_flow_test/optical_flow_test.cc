@@ -10,8 +10,8 @@
 #include "../imgproc/opencv_optical_flow.h"
 #include "../video/panoramic.h"
 
-using namespace GeNNRobotics::ImgProc;
-using namespace GeNNRobotics::Video;
+using namespace BoBRobotics::ImgProc;
+using namespace BoBRobotics::Video;
 
 // Anonymous namespace
 namespace
@@ -69,7 +69,7 @@ int main()
     cv::Mat flowSum(1, 1, CV_32FC1);
 
     {
-        GeNNRobotics::Timer<> timer("Total time:");
+        BoBRobotics::Timer<> timer("Total time:");
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {

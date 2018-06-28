@@ -1,7 +1,7 @@
 // Standard C++ includes
 #include <fstream>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../hid/joystick.h"
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../robots/norbot.h"
@@ -9,11 +9,12 @@
 #include "../vicon/udp.h"
 #include "../video/see3cam_cu40.h"
 
-using namespace GeNNRobotics;
-using namespace GeNNRobotics::HID;
-using namespace GeNNRobotics::ImgProc;
-using namespace GeNNRobotics::Robots;
-using namespace GeNNRobotics::Video;
+using namespace BoBRobotics;
+using namespace BoBRobotics::HID;
+using namespace BoBRobotics::ImgProc;
+using namespace BoBRobotics::Robots;
+using namespace BoBRobotics::Video;
+using namespace std::literals;
 
 int main()
 {
@@ -55,7 +56,7 @@ int main()
 
     // Wait for tracking
     while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
     }
 

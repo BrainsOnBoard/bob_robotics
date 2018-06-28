@@ -18,7 +18,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/threadable.h"
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../os/keycodes.h"
@@ -26,8 +26,10 @@
 // local includes
 #include "input.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Video {
+using namespace std::literals;
+
 class Display : public Threadable
 {
 #define WINDOW_NAME "OpenCV display"
@@ -82,7 +84,7 @@ public:
         while (m_DoRun) {
             // poll the camera until we get a new frame
             while (!update()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(25));
+                std::this_thread::sleep_for(25ms);
             }
         }
     }
@@ -148,4 +150,4 @@ protected:
     }
 }; // Display
 } // Video
-} // GeNNRobotics
+} // BoBRobotics

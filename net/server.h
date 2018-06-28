@@ -8,7 +8,7 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../robots/tank.h"
 #include "../video/input.h"
 
@@ -16,7 +16,7 @@
 #include "node.h"
 #include "socket.h"
 
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace Net {
 class Server : public Node
 {
@@ -47,8 +47,7 @@ Server::Server(int port)
     }
 
 #ifndef _WIN32
-    if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) <
-        0) {
+    if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
         goto error;
     }
 #endif
@@ -61,11 +60,7 @@ Server::Server(int port)
     if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
         goto error;
     }
-    if (listen(m_ListenSocket, 10)) {
-        goto error;
-    }
-    std::cout << "Listening on port " << port << std::endl;
-
+    
     return;
 
 error:
@@ -99,6 +94,11 @@ Server::getSocket() const
 void
 Server::run()
 {
+    // Start listening
+    if (listen(m_ListenSocket, 10)) {
+        throw std::runtime_error("Error (" + std::to_string(errno) + "): Could not listen");
+    }
+    
     // for incoming connection
     sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
@@ -107,8 +107,7 @@ Server::run()
     while (m_DoRun) {
         // wait for incoming TCP connection
         std::cout << "Waiting for incoming connection..." << std::endl;
-        m_Socket = std::unique_ptr<Socket>(new Socket(
-                accept(m_ListenSocket, (sockaddr *) &addr, &addrlen)));
+        m_Socket = std::make_unique<Socket>(accept(m_ListenSocket, (sockaddr *) &addr, &addrlen));
         m_Socket->send("HEY\n");
         notifyConnectedHandlers();
 
@@ -126,4 +125,4 @@ Server::run()
     }
 }
 } // Net
-} // GeNNRobotics
+} // BoBRobotics

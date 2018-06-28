@@ -7,10 +7,9 @@
 #include "video/panoramic.h"
 #include "video/display.h"
 
-using namespace GeNNRobotics::Video;
+using namespace BoBRobotics::Video;
 
-int
-main(int argc, char **argv)
+int main()
 {
     auto cam = getPanoramicCamera();
     Display display(cam, 1240, 600);

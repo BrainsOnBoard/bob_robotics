@@ -8,9 +8,9 @@
 #include <opencv2/opencv.hpp>
 
 //----------------------------------------------------------------------------
-// GeNNRobotics::ImgProc::OpenCVUnwrap360
+// BoBRobotics::ImgProc::OpenCVUnwrap360
 //----------------------------------------------------------------------------
-namespace GeNNRobotics {
+namespace BoBRobotics {
 namespace ImgProc {
 class OpenCVUnwrap360
 {
@@ -205,4 +205,4 @@ inline void read(const cv::FileNode &node, OpenCVUnwrap360 &x, OpenCVUnwrap360 d
 
 
 }  // ImgProc
-}  // GeNNRobotics
+}  // BoBRobotics

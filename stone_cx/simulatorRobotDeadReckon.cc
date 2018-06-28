@@ -4,11 +4,14 @@
 #include <fstream>
 #include <thread>
 
-// Common includes
-#include "../hid/joystick.h"
+// GeNN robotics includes
 #include "../common/lm9ds1_imu.h"
 #include "../common/timer.h"
+#include "../hid/joystick.h"
+#include "../net/server.h"
 #include "../robots/norbot.h"
+#include "../video/netsink.h"
+
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -18,9 +21,10 @@
 #include "robotCommon.h"
 #include "robotParameters.h"
 #include "simulatorCommon.h"
+#include "visualizationCommon.h"
 
-using namespace GeNNRobotics;
-using namespace GeNNRobotics::HID;
+using namespace BoBRobotics;
+using namespace BoBRobotics::HID;
 
 //---------------------------------------------------------------------------
 // Anonymous namespace
@@ -55,8 +59,23 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 
 int main(int argc, char *argv[])
 {
+    // Simulation rendering parameters
+    const unsigned int activityImageWidth = 500;
+    const unsigned int activityImageHeight = 1000;
     const float velocityScale = 1.0f / 10.0f;
+
+    const bool streamActivity = (argc > 1);
+
+    // Create server and sink for sending activity image over network
+    Net::Server server(Net::Socket::DefaultListenPort);
+    Video::NetSink netSink(server, cv::Size(activityImageWidth, activityImageHeight), "activity");
     
+    // If command line arguments are specified, run server
+    if(streamActivity) {
+        std::cout << "Streaming activity over network" << std::endl;
+        server.runInBackground();
+    }
+
     // Create joystick interface
     Joystick joystick;
     
@@ -91,6 +110,8 @@ int main(int argc, char *argv[])
     std::thread imuThread(&imuThreadFunc, 
                           std::ref(shouldQuit), std::ref(imuHeading), std::ref(numIMUSamples));
     
+    cv::Mat activityImage(activityImageHeight, activityImageWidth, CV_8UC3, cv::Scalar::all(0));
+
 #ifdef RECORD_SENSORS
     std::ofstream data("data.csv");
 #endif
@@ -127,6 +148,15 @@ int main(int argc, char *argv[])
         // Step network
         stepTimeCPU();
         
+        // If we should be streaming activity
+        if(streamActivity) {
+            // Render network activity
+            visualize(activityImage);
+
+            // Send activity image
+            netSink.sendFrame(activityImage);
+        }
+
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor

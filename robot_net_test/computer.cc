@@ -12,7 +12,7 @@
 #include <iostream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
@@ -20,10 +20,10 @@
 #include "video/display.h"
 #include "video/netsource.h"
 
-using namespace GeNNRobotics;
+using namespace BoBRobotics;
+using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     std::string robotIP;
     if (argc == 2) {
@@ -63,7 +63,7 @@ main(int argc, char **argv)
         // poll joystick and video stream repeatedly
         do {
             if (!joystick.update() && !display.update()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(50ms);
             }
         } while (display.isOpen());
     }

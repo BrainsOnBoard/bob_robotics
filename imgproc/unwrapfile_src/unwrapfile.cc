@@ -3,8 +3,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <vector>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "third_party/path.h"
 
 // local includes
@@ -23,7 +24,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    FileType ftype[argc - 1];
+    std::vector<FileType> ftype(argc - 1);
     bool anyvideo;
     std::string ext;
     for (int i = 1; i < argc; i++) {
