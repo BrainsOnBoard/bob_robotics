@@ -21,7 +21,7 @@ namespace AntWorld
 class Renderer
 {
 public:
-    Renderer(unsigned int cubemapSize = 256);
+    Renderer(unsigned int cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0);
     ~Renderer();
 
     //------------------------------------------------------------------------
@@ -58,6 +58,8 @@ private:
     GLfloat m_CubeFaceLookAtMatrices[6][16];
 
     const unsigned int m_CubemapSize;
+    const double m_NearClip;
+    const double m_FarClip;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

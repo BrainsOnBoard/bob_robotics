@@ -13,10 +13,10 @@ namespace AntWorld
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(unsigned int cubemapSize)
+Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip)
 :   m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
-    m_CubemapSize(cubemapSize)
+    m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
      // Create FBO for rendering to cubemap and bind
     glGenFramebuffers(1, &m_FBO);
@@ -81,7 +81,7 @@ void Renderer::renderPanoramicView(float x, float y, float z,
     glLoadIdentity();
     gluPerspective(90.0,
                    1.0,
-                   0.1, 1000.0);
+                   m_NearClip, m_FarClip);
 
     glMatrixMode(GL_MODELVIEW);
 
@@ -149,7 +149,7 @@ void Renderer::renderFirstPersonView(float x, float y, float z,
     glLoadIdentity();
     gluPerspective(90.0,
                    (GLfloat)viewportWidth / (GLfloat)viewportHeight,
-                   0.1, 1000.0);
+                   m_NearClip, m_FarClip);
 
     glMatrixMode(GL_MODELVIEW);
 
