@@ -39,7 +39,7 @@ void handleGLError(GLenum source,
 int main()
 {
     const float turnSpeed = 200.0f;
-    const float moveSpeed = 1.0f;
+    const float moveSpeed = 3.0f;
     const unsigned int width = 1024;
     const unsigned int height = 262;
 
@@ -98,11 +98,20 @@ int main()
     //renderer.getWorld().loadObj("object.obj",
     //                            0.1f, 4096, GL_COMPRESSED_RGB);
 
+
+    // Create HID device for controlling movement
     HID::Joystick joystick(0.25f);
 
-    float antX = 5.0f;
-    float antY = 5.0f;
-    float antHeading = 270.0f;
+    // Get world bounds and initially centre agent in world
+    const auto &worldMin = renderer.getWorld().getMinBound();
+    const auto &worldMax = renderer.getWorld().getMaxBound();
+    float x = worldMin[0] + ((worldMax[0] - worldMin[0]) * 0.5f);
+    float y = worldMin[1] + ((worldMax[1] - worldMin[1]) * 0.5f);
+    float z = worldMin[2] + ((worldMax[2] - worldMin[2]) * 0.5f);
+    float yaw = 0.0f;
+    float pitch = 0.0f;
+
+    bool ant = true;
     double lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         // Poll joystick
@@ -117,20 +126,36 @@ int main()
         sprintf(buffer, "%d FPS", (int)std::round(1.0 / deltaTime));
         glfwSetWindowTitle(window, buffer);
 
-        // Rotate ant using left stick's horizontal axis
-        antHeading += joystick.getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
+        // Control yaw and pitch with left stick
+        yaw += joystick.getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
+        pitch += joystick.getState(HID::JAxis::LeftStickVertical) * deltaTime * turnSpeed;
 
-        // Move ant using left stick's vertical axis
-        const float forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::LeftStickVertical);
-        antX -= forwardMove * sin(antHeading * AntWorld::degreesToRadians);
-        antY -= forwardMove * cos(antHeading * AntWorld::degreesToRadians);
+        // Switch between human and ant mode using X
+        if(joystick.isPressed(HID::JButton::X)) {
+            ant = !ant;
+        }
+
+
+        // Use right trigger to control forward movement speed
+        const float forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::RightTrigger);
+
+        // Calculate movement delta in 3D space
+        x += forwardMove * sin(yaw * AntWorld::degreesToRadians) * cos(pitch * AntWorld::degreesToRadians);
+        y += forwardMove * cos(yaw * AntWorld::degreesToRadians) * cos(pitch * AntWorld::degreesToRadians);
+        z -= forwardMove * sin(pitch * AntWorld::degreesToRadians);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render ants eye view
-        renderer.renderAntView(antX, antY, antHeading,
-                               0, 0, width, height);
+        // Render first person
+        if(ant) {
+            renderer.renderPanoramicView(x, y, z, yaw, pitch, 0.0f,
+                                         0, 0, width, height);
+        }
+        else {
+            renderer.renderFirstPersonView(x, y, z, yaw, pitch, 0.0f,
+                                           0, 0, width, height);
+        }
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
