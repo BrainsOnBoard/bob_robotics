@@ -126,14 +126,12 @@ public:
 
             bool codec_initialized_;
             bool first_iframe_recv_;
-            AVFormatContext *format_ctx_ptr_;
             AVCodecContext *codec_ctx_ptr_;
             AVCodec *codec_ptr_;
             AVFrame *frame_ptr_;
             AVFrame *frame_rgb_ptr_;
             AVPacket packet_;
             SwsContext *img_convert_ctx_ptr_;
-            AVInputFormat *input_format_ptr_;
             uint8_t *frame_rgb_raw_ptr_;
 
             bool update_codec_params_;
@@ -778,13 +776,11 @@ Bebop::VideoStream::VideoDecoder::ThrowOnCondition(const bool cond, const std::s
 Bebop::VideoStream::VideoDecoder::VideoDecoder()
   : codec_initialized_(false)
   , first_iframe_recv_(false)
-  , format_ctx_ptr_(NULL)
   , codec_ctx_ptr_(NULL)
   , codec_ptr_(NULL)
   , frame_ptr_(NULL)
   , frame_rgb_ptr_(NULL)
   , img_convert_ctx_ptr_(NULL)
-  , input_format_ptr_(NULL)
   , frame_rgb_raw_ptr_(NULL)
   , update_codec_params_(false)
 {}
