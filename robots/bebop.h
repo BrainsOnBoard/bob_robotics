@@ -6,10 +6,10 @@ extern "C"
 // ARSDK includes
 #include <libARController/ARCONTROLLER_Error.h>
 #include <libARController/ARCONTROLLER_Frame.h>
-#include <libARSAL/ARSAL_Print.h>
 #include <libARController/ARController.h>
 #include <libARDiscovery/ARDiscovery.h>
 #include <libARSAL/ARSAL.h>
+#include <libARSAL/ARSAL_Print.h>
 
 // ffmpeg includes
 #include <libavcodec/avcodec.h>
@@ -119,67 +119,48 @@ class Bebop
 public:
     class VideoStream : public Video::Input
     {
-        class VideoDecoder
-        {
-        private:
-            static const char *LOG_TAG;
-
-            bool codec_initialized_;
-            bool first_iframe_recv_;
-            AVCodecContext *codec_ctx_ptr_;
-            AVCodec *codec_ptr_;
-            AVFrame *frame_ptr_;
-            AVFrame *frame_rgb_ptr_;
-            AVPacket packet_;
-            SwsContext *img_convert_ctx_ptr_;
-            uint8_t *frame_rgb_raw_ptr_;
-
-            bool update_codec_params_;
-            std::vector<uint8_t> codec_data_;
-
-            static void ThrowOnCondition(const bool cond, const std::string &message);
-            bool InitCodec();
-            bool ReallocateBuffers();
-            void CleanupBuffers();
-            void Reset();
-
-            void ConvertFrameToRGB();
-
-        public:
-            VideoDecoder();
-            ~VideoDecoder();
-
-            bool SetH264Params(uint8_t *sps_buffer_ptr,
-                               uint32_t sps_buffer_size,
-                               uint8_t *pps_buffer_ptr,
-                               uint32_t pps_buffer_size);
-            bool Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_);
-            inline uint32_t GetFrameWidth() const
-            {
-                return codec_initialized_ ? codec_ctx_ptr_->width : 0;
-            }
-            inline uint32_t GetFrameHeight() const
-            {
-                return codec_initialized_ ? codec_ctx_ptr_->height : 0;
-            }
-
-            inline const uint8_t *GetFrameRGBRawCstPtr() const
-            {
-                return frame_rgb_raw_ptr_;
-            }
-        };
-
     public:
+        ~VideoStream();
         virtual bool readFrame(cv::Mat &) override;
         virtual cv::Size getOutputSize() const override;
         void configCallback(ARCONTROLLER_Stream_Codec_t codec);
         void frameCallback(ARCONTROLLER_Frame_t *frame);
+        bool setH264Params(uint8_t *sps_buffer_ptr,
+                           uint32_t sps_buffer_size,
+                           uint8_t *pps_buffer_ptr,
+                           uint32_t pps_buffer_size);
+        bool decode(const ARCONTROLLER_Frame_t *framePtr);
+        inline uint32_t getFrameWidth() const
+        {
+            return m_CodecInitialised ? m_CodecContextPtr->width : 0;
+        }
+        inline uint32_t getFrameHeight() const
+        {
+            return m_CodecInitialised ? m_CodecContextPtr->height : 0;
+        }
 
     private:
-        VideoDecoder m_Decoder;
         cv::Mat m_Frame;
         std::mutex m_FrameMutex;
         bool m_NewFrame = false;
+        bool m_CodecInitialised = false;
+        bool m_FirstFrameReceived = false;
+        AVCodecContext *m_CodecContextPtr = nullptr;
+        AVCodec *m_CodecPtr = nullptr;
+        AVFrame *m_FramePtr = nullptr;
+        AVFrame *m_FrameRGBPtr = nullptr;
+        AVPacket m_Packet;
+        SwsContext *m_ImgConvertContextPtr = nullptr;
+        uint8_t *m_FrameRGBRawPtr = nullptr;
+        bool m_UpdateCodecParams = false;
+        std::vector<uint8_t> m_CodecData;
+
+        static void throwOnCondition(const bool cond, const std::string &message);
+        bool initCodec();
+        bool reallocateBuffers();
+        void cleanupBuffers();
+        void reset();
+        void convertFrameToRGB();
     }; // VideoStream
 
     Bebop();
@@ -415,7 +396,7 @@ Bebop::setPitch(const float pitch)
 void
 Bebop::setRoll(const float right)
 {
-    checkArg(right);    
+    checkArg(right);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting roll to " << right << std::endl;
@@ -762,33 +743,18 @@ Bebop::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
     return ARCONTROLLER_OK;
 }
 
-// start VideoDecoder class
-const char *Bebop::VideoStream::VideoDecoder::LOG_TAG = "Decoder";
-
 void
-Bebop::VideoStream::VideoDecoder::ThrowOnCondition(const bool cond, const std::string &message)
+Bebop::VideoStream::throwOnCondition(const bool cond, const std::string &message)
 {
     if (!cond)
         return;
     throw std::runtime_error(message);
 }
 
-Bebop::VideoStream::VideoDecoder::VideoDecoder()
-  : codec_initialized_(false)
-  , first_iframe_recv_(false)
-  , codec_ctx_ptr_(NULL)
-  , codec_ptr_(NULL)
-  , frame_ptr_(NULL)
-  , frame_rgb_ptr_(NULL)
-  , img_convert_ctx_ptr_(NULL)
-  , frame_rgb_raw_ptr_(NULL)
-  , update_codec_params_(false)
-{}
-
 bool
-Bebop::VideoStream::VideoDecoder::InitCodec()
+Bebop::VideoStream::initCodec()
 {
-    if (codec_initialized_) {
+    if (m_CodecInitialised) {
         return true;
     }
 
@@ -798,95 +764,94 @@ Bebop::VideoStream::VideoDecoder::InitCodec()
         av_register_all();
         av_log_set_level(AV_LOG_QUIET);
 
-        codec_ptr_ = avcodec_find_decoder(AV_CODEC_ID_H264);
-        ThrowOnCondition(codec_ptr_ == NULL, "Codec H264 not found!");
+        m_CodecPtr = avcodec_find_decoder(AV_CODEC_ID_H264);
+        throwOnCondition(m_CodecPtr == nullptr, "Codec H264 not found!");
 
-        codec_ctx_ptr_ = avcodec_alloc_context3(codec_ptr_);
-        codec_ctx_ptr_->pix_fmt = AV_PIX_FMT_YUV420P;
-        codec_ctx_ptr_->skip_frame = AVDISCARD_DEFAULT;
-        codec_ctx_ptr_->error_concealment = FF_EC_GUESS_MVS | FF_EC_DEBLOCK;
-        codec_ctx_ptr_->skip_loop_filter = AVDISCARD_DEFAULT;
-        codec_ctx_ptr_->workaround_bugs = AVMEDIA_TYPE_VIDEO;
-        codec_ctx_ptr_->codec_id = AV_CODEC_ID_H264;
-        codec_ctx_ptr_->skip_idct = AVDISCARD_DEFAULT;
+        m_CodecContextPtr = avcodec_alloc_context3(m_CodecPtr);
+        m_CodecContextPtr->pix_fmt = AV_PIX_FMT_YUV420P;
+        m_CodecContextPtr->skip_frame = AVDISCARD_DEFAULT;
+        m_CodecContextPtr->error_concealment = FF_EC_GUESS_MVS | FF_EC_DEBLOCK;
+        m_CodecContextPtr->skip_loop_filter = AVDISCARD_DEFAULT;
+        m_CodecContextPtr->workaround_bugs = AVMEDIA_TYPE_VIDEO;
+        m_CodecContextPtr->codec_id = AV_CODEC_ID_H264;
+        m_CodecContextPtr->skip_idct = AVDISCARD_DEFAULT;
         // At the beginning we have no idea about the frame size
-        codec_ctx_ptr_->width = 0;
-        codec_ctx_ptr_->height = 0;
+        m_CodecContextPtr->width = 0;
+        m_CodecContextPtr->height = 0;
 
-        if (codec_ptr_->capabilities & CODEC_CAP_TRUNCATED) {
-            codec_ctx_ptr_->flags |= CODEC_FLAG_TRUNCATED;
+        if (m_CodecPtr->capabilities & CODEC_CAP_TRUNCATED) {
+            m_CodecContextPtr->flags |= CODEC_FLAG_TRUNCATED;
         }
-        codec_ctx_ptr_->flags2 |= CODEC_FLAG2_CHUNKS;
+        m_CodecContextPtr->flags2 |= CODEC_FLAG2_CHUNKS;
 
-        frame_ptr_ = av_frame_alloc();
-        ThrowOnCondition(!frame_ptr_, "Can not allocate memory for frames!");
+        m_FramePtr = av_frame_alloc();
+        throwOnCondition(!m_FramePtr, "Can not allocate memory for frames!");
 
-        ThrowOnCondition(avcodec_open2(codec_ctx_ptr_, codec_ptr_, NULL) < 0,
+        throwOnCondition(avcodec_open2(m_CodecContextPtr, m_CodecPtr, nullptr) < 0,
                          "Can not open the decoder!");
 
-        av_init_packet(&packet_);
+        av_init_packet(&m_Packet);
     } catch (const std::runtime_error &e) {
-        ARSAL_PRINT(ARSAL_PRINT_ERROR, LOG_TAG, "%s", e.what());
-        Reset();
+        std::cerr << "Error: " << e.what() << std::endl;
+        reset();
         return false;
     }
 
-    codec_initialized_ = true;
-    first_iframe_recv_ = false;
-    ARSAL_PRINT(
-            ARSAL_PRINT_INFO, LOG_TAG, "H264 Codec is partially initialized!");
+    m_CodecInitialised = true;
+    m_FirstFrameReceived = false;
+    std::cout << "H264 Codec is partially initialized!" << std::endl;
     return true;
 }
 
 bool
-Bebop::VideoStream::VideoDecoder::ReallocateBuffers()
+Bebop::VideoStream::reallocateBuffers()
 {
-    ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Buffer reallocation request");
-    if (!codec_initialized_) {
+    std::cout << "Buffer reallocation request" << std::endl;
+    if (!m_CodecInitialised) {
         return false;
     }
 
     try {
-        ThrowOnCondition(codec_ctx_ptr_->width == 0 ||
-                                 codec_ctx_ptr_->width == 0,
+        throwOnCondition(m_CodecContextPtr->width == 0 ||
+                                 m_CodecContextPtr->width == 0,
                          std::string("Invalid frame size:") +
-                                 std::to_string(codec_ctx_ptr_->width) + " x " +
-                                 std::to_string(codec_ctx_ptr_->width));
+                                 std::to_string(m_CodecContextPtr->width) + " x " +
+                                 std::to_string(m_CodecContextPtr->width));
 
         const uint32_t num_bytes = avpicture_get_size(
-                AV_PIX_FMT_RGB24, codec_ctx_ptr_->width, codec_ctx_ptr_->width);
-        frame_rgb_ptr_ = av_frame_alloc();
+                AV_PIX_FMT_RGB24, m_CodecContextPtr->width, m_CodecContextPtr->width);
+        m_FrameRGBPtr = av_frame_alloc();
 
-        ThrowOnCondition(!frame_rgb_ptr_,
+        throwOnCondition(!m_FrameRGBPtr,
                          "Can not allocate memory for frames!");
 
-        frame_rgb_raw_ptr_ =
+        m_FrameRGBRawPtr =
                 reinterpret_cast<uint8_t *>(av_malloc(num_bytes * sizeof(uint8_t)));
-        ThrowOnCondition(
-                frame_rgb_raw_ptr_ == NULL,
+        throwOnCondition(
+                m_FrameRGBRawPtr == nullptr,
                 std::string("Can not allocate memory for the buffer: ") +
                         std::to_string(num_bytes));
-        ThrowOnCondition(0 == avpicture_fill(reinterpret_cast<AVPicture *>(
-                                                     frame_rgb_ptr_),
-                                             frame_rgb_raw_ptr_,
+        throwOnCondition(0 == avpicture_fill(reinterpret_cast<AVPicture *>(
+                                                     m_FrameRGBPtr),
+                                             m_FrameRGBRawPtr,
                                              AV_PIX_FMT_RGB24,
-                                             codec_ctx_ptr_->width,
-                                             codec_ctx_ptr_->height),
+                                             m_CodecContextPtr->width,
+                                             m_CodecContextPtr->height),
                          "Failed to initialize the picture data structure.");
 
-        img_convert_ctx_ptr_ = sws_getContext(codec_ctx_ptr_->width,
-                                              codec_ctx_ptr_->height,
-                                              codec_ctx_ptr_->pix_fmt,
-                                              codec_ctx_ptr_->width,
-                                              codec_ctx_ptr_->height,
-                                              AV_PIX_FMT_RGB24,
-                                              SWS_FAST_BILINEAR,
-                                              NULL,
-                                              NULL,
-                                              NULL);
+        m_ImgConvertContextPtr = sws_getContext(m_CodecContextPtr->width,
+                                                m_CodecContextPtr->height,
+                                                m_CodecContextPtr->pix_fmt,
+                                                m_CodecContextPtr->width,
+                                                m_CodecContextPtr->height,
+                                                AV_PIX_FMT_RGB24,
+                                                SWS_FAST_BILINEAR,
+                                                nullptr,
+                                                nullptr,
+                                                nullptr);
     } catch (const std::runtime_error &e) {
-        ARSAL_PRINT(ARSAL_PRINT_ERROR, LOG_TAG, "%s", e.what());
-        Reset(); // reset() is intentional
+        std::cerr << "Error: " << e.what() << std::endl;
+        reset(); // reset() is intentional
         return false;
     }
 
@@ -894,105 +859,102 @@ Bebop::VideoStream::VideoDecoder::ReallocateBuffers()
 }
 
 void
-Bebop::VideoStream::VideoDecoder::CleanupBuffers()
+Bebop::VideoStream::cleanupBuffers()
 {
-    if (frame_rgb_ptr_) {
-        av_free(frame_rgb_ptr_);
+    if (m_FrameRGBPtr) {
+        av_free(m_FrameRGBPtr);
     }
 
-    if (frame_rgb_raw_ptr_) {
-        av_free(frame_rgb_raw_ptr_);
+    if (m_FrameRGBRawPtr) {
+        av_free(m_FrameRGBRawPtr);
     }
 
-    if (img_convert_ctx_ptr_) {
-        sws_freeContext(img_convert_ctx_ptr_);
+    if (m_ImgConvertContextPtr) {
+        sws_freeContext(m_ImgConvertContextPtr);
     }
 
-    ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Buffer cleanup!");
+    std::cout << "Buffer cleanup!" << std::endl;
 }
 
 void
-Bebop::VideoStream::VideoDecoder::Reset()
+Bebop::VideoStream::reset()
 {
-    if (codec_ctx_ptr_) {
-        avcodec_close(codec_ctx_ptr_);
+    if (m_CodecContextPtr) {
+        avcodec_close(m_CodecContextPtr);
     }
 
-    if (frame_ptr_) {
-        av_free(frame_ptr_);
+    if (m_FramePtr) {
+        av_free(m_FramePtr);
     }
 
-    CleanupBuffers();
+    cleanupBuffers();
 
-    codec_initialized_ = false;
-    first_iframe_recv_ = false;
-    ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Reset!");
+    m_CodecInitialised = false;
+    m_FirstFrameReceived = false;
+    std::cout << "Reset!" << std::endl;
 }
 
-Bebop::VideoStream::VideoDecoder::~VideoDecoder()
+Bebop::VideoStream::~VideoStream()
 {
-    Reset();
-    ARSAL_PRINT(ARSAL_PRINT_INFO, LOG_TAG, "Dstr!");
+    reset();
 }
 
 void
-Bebop::VideoStream::VideoDecoder::ConvertFrameToRGB()
+Bebop::VideoStream::convertFrameToRGB()
 {
-    if (!codec_ctx_ptr_->width || !codec_ctx_ptr_->height)
+    if (!m_CodecContextPtr->width || !m_CodecContextPtr->height)
         return;
-    sws_scale(img_convert_ctx_ptr_,
-              frame_ptr_->data,
-              frame_ptr_->linesize,
+    sws_scale(m_ImgConvertContextPtr,
+              m_FramePtr->data,
+              m_FramePtr->linesize,
               0,
-              codec_ctx_ptr_->height,
-              frame_rgb_ptr_->data,
-              frame_rgb_ptr_->linesize);
+              m_CodecContextPtr->height,
+              m_FrameRGBPtr->data,
+              m_FrameRGBPtr->linesize);
 }
 
 bool
-Bebop::VideoStream::VideoDecoder::SetH264Params(uint8_t *sps_buffer_ptr,
-                                         uint32_t sps_buffer_size,
-                                         uint8_t *pps_buffer_ptr,
-                                         uint32_t pps_buffer_size)
+Bebop::VideoStream::setH264Params(uint8_t *sps_buffer_ptr,
+                                  uint32_t sps_buffer_size,
+                                  uint8_t *pps_buffer_ptr,
+                                  uint32_t pps_buffer_size)
 {
-    // This function is called in the same thread as Decode(), so no sync is
+    // This function is called in the same thread as decode(), so no sync is
     // necessary
     // TODO: Exact sizes + more error checkings
-    update_codec_params_ = (sps_buffer_ptr && pps_buffer_ptr &&
-                            sps_buffer_size && pps_buffer_size &&
-                            (pps_buffer_size < 32) && (sps_buffer_size < 32));
+    m_UpdateCodecParams = (sps_buffer_ptr && pps_buffer_ptr &&
+                           sps_buffer_size && pps_buffer_size &&
+                           (pps_buffer_size < 32) && (sps_buffer_size < 32));
 
-    if (update_codec_params_) {
-        codec_data_.resize(sps_buffer_size + pps_buffer_size);
+    if (m_UpdateCodecParams) {
+        m_CodecData.resize(sps_buffer_size + pps_buffer_size);
         std::copy(sps_buffer_ptr,
                   sps_buffer_ptr + sps_buffer_size,
-                  codec_data_.begin());
+                  m_CodecData.begin());
         std::copy(pps_buffer_ptr,
                   pps_buffer_ptr + pps_buffer_size,
-                  codec_data_.begin() + sps_buffer_size);
+                  m_CodecData.begin() + sps_buffer_size);
     } else {
         // invalid data
-        codec_data_.clear();
+        m_CodecData.clear();
     }
 
-    return update_codec_params_;
+    return m_UpdateCodecParams;
 }
 
 bool
-Bebop::VideoStream::VideoDecoder::Decode(const ARCONTROLLER_Frame_t *bebop_frame_ptr_)
+Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
 {
-    if (!codec_initialized_) {
-        if (!InitCodec()) {
-            ARSAL_PRINT(ARSAL_PRINT_WARNING,
-                        LOG_TAG,
-                        "Codec initialization failed!");
+    if (!m_CodecInitialised) {
+        if (!initCodec()) {
+            std::cerr << "Codec initialization failed!" << std::endl;
             return false;
         }
     }
 
     /*
      * For VideoStream2, we trick avcodec whenever we receive a new SPS/PPS
-     * info from the Bebop. SetH264Params() function will fill a buffer with
+     * info from the Bebop. setH264Params() function will fill a buffer with
      * SPS/PPS data, then these are passed to avcodec_decode_video2() here, once
      * for each SPS/PPS update. Apparantly, avcodec_decode_video2() function
      * picks up the changes and apply them to upcoming video packets.
@@ -1001,64 +963,56 @@ Bebop::VideoStream::VideoDecoder::Decode(const ARCONTROLLER_Frame_t *bebop_frame
      * http://developer.parrot.com/blog/2016/ARSDK-3-8-release/
      *
      * */
-    if (update_codec_params_ && codec_data_.size()) {
-        ARSAL_PRINT(ARSAL_PRINT_INFO,
-                    LOG_TAG,
-                    "Updating H264 codec parameters (Buffer Size: %lu) ...",
-                    codec_data_.size());
-        packet_.data = &codec_data_[0];
-        packet_.size = codec_data_.size();
+    if (m_UpdateCodecParams && m_CodecData.size()) {
+        std::cout << "Updating H264 codec parameters (Buffer Size: "
+                  << m_CodecData.size() << ") ..." << std::endl;
+        m_Packet.data = &m_CodecData[0];
+        m_Packet.size = m_CodecData.size();
         int32_t frame_finished = 0;
         const int32_t len = avcodec_decode_video2(
-                codec_ctx_ptr_, frame_ptr_, &frame_finished, &packet_);
-        if (len >= 0 && len == packet_.size) {
+                m_CodecContextPtr, m_FramePtr, &frame_finished, &m_Packet);
+        if (len >= 0 && len == m_Packet.size) {
             // success, skip this step until next codec update
-            update_codec_params_ = false;
+            m_UpdateCodecParams = false;
         } else {
-            ARSAL_PRINT(ARSAL_PRINT_ERROR,
-                        LOG_TAG,
-                        "Unexpected error while updating H264 parameters.");
+            std::cerr << "Unexpected error while updating H264 parameters."
+                      << std::endl;
             return false;
         }
     }
 
-    if (!bebop_frame_ptr_->data || !bebop_frame_ptr_->used) {
-        ARSAL_PRINT(
-                ARSAL_PRINT_ERROR, LOG_TAG, "Invalid frame data. Skipping.");
+    if (!framePtr->data || !framePtr->used) {
+        std::cerr << "Invalid frame data. Skipping." << std::endl;
         return false;
     }
 
-    packet_.data = bebop_frame_ptr_->data;
-    packet_.size = bebop_frame_ptr_->used;
+    m_Packet.data = framePtr->data;
+    m_Packet.size = framePtr->used;
 
-    const uint32_t width_prev = GetFrameWidth();
-    const uint32_t height_prev = GetFrameHeight();
+    const uint32_t width_prev = getFrameWidth();
+    const uint32_t height_prev = getFrameHeight();
 
     int32_t frame_finished = 0;
-    while (packet_.size > 0) {
+    while (m_Packet.size > 0) {
         const int32_t len = avcodec_decode_video2(
-                codec_ctx_ptr_, frame_ptr_, &frame_finished, &packet_);
+                m_CodecContextPtr, m_FramePtr, &frame_finished, &m_Packet);
         if (len >= 0) {
             if (frame_finished) {
-                if ((GetFrameWidth() != width_prev) ||
-                    (GetFrameHeight() != height_prev)) {
-                    ARSAL_PRINT(ARSAL_PRINT_ERROR,
-                                LOG_TAG,
-                                "Frame size changed to %u x %u",
-                                GetFrameWidth(),
-                                GetFrameHeight());
-                    if (!ReallocateBuffers()) {
-                        ARSAL_PRINT(ARSAL_PRINT_ERROR,
-                                    LOG_TAG,
-                                    "Buffer reallocation failed!");
+                if ((getFrameWidth() != width_prev) ||
+                    (getFrameHeight() != height_prev)) {
+                    std::cerr << "Frame size changed to "
+                              << getFrameWidth() << " x "
+                              << getFrameHeight() << std::endl;
+                    if (!reallocateBuffers()) {
+                        std::cerr << "Buffer reallocation failed!" << std::endl;
                     }
                 }
-                ConvertFrameToRGB();
+                convertFrameToRGB();
             }
 
-            if (packet_.data) {
-                packet_.size -= len;
-                packet_.data += len;
+            if (m_Packet.data) {
+                m_Packet.size -= len;
+                m_Packet.data += len;
             }
         } else {
             return false;
@@ -1090,23 +1044,20 @@ Bebop::VideoStream::readFrame(cv::Mat &frame)
 void
 Bebop::VideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec)
 {
-    m_Decoder.SetH264Params(
-                codec.parameters.h264parameters.spsBuffer,
-                codec.parameters.h264parameters.spsSize,
-                codec.parameters.h264parameters.ppsBuffer,
-                codec.parameters.h264parameters.ppsSize);
+    setH264Params(
+            codec.parameters.h264parameters.spsBuffer,
+            codec.parameters.h264parameters.spsSize,
+            codec.parameters.h264parameters.ppsBuffer,
+            codec.parameters.h264parameters.ppsSize);
 }
 
 void
 Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame)
 {
-    if (m_Decoder.Decode(frame)) {
-        // get pointer to RGB buffer
-        const uint8_t *raw = m_Decoder.GetFrameRGBRawCstPtr();
-
+    if (decode(frame)) {
         // convert into BGR cv::Mat
         std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
-        cv::Mat frameRGB(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) raw);
+        cv::Mat frameRGB(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) m_FrameRGBRawPtr);
         cv::cvtColor(frameRGB, m_Frame, CV_RGB2BGR, 3);
         m_NewFrame = true;
     }
