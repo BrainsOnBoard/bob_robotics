@@ -52,6 +52,9 @@ public:
             std::cerr << "Error in setup:" << strerror(errno) << std::endl;
             // the error is usually permission error for which we can
             // temporarily use < $sudo chmod 666 /dev/i2c-1 >
+            // AlexC: OK, this is not a good idea - the group of the i2c nodes
+            // on Jetson is i2c - so usermod -a -G i2c <username> then reboot 
+            // is the safer (and permanent) way to solve this... 
             return false;
         }
 
