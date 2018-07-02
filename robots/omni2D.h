@@ -34,10 +34,9 @@ public:
               joystick.getState(HID::JAxis::LeftStickVertical),joystick.getState(HID::JAxis::RightStickHorizontal), deadZone);
     }
 
-    virtual void Omni2D(float forward, float sideways, float turn)
+    virtual void omni2D(float forward, float sideways, float turn)
     {
-        std::cout << "Dummy motor: forward: " << forward << "; sideways: " << sideways
-                  << "; turn: " << turn << std::endl;
+        std::cout << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn << std::endl;
     }
 
     void readFromNetwork(Net::Node &node)
@@ -68,7 +67,7 @@ private:
         //const float twoTheta = 2.0f * theta;
 
         // Drive motor
-        Omni2D(x*!deadX, y*!deadY, rot*!deadRot);
+        omni2D(x*!deadX, y*!deadY, rot*!deadRot);
         
     }
 
@@ -85,7 +84,7 @@ private:
         const float turn = stof(command[3]);
 
         // send motor command
-        Omni2D(left, right, turn);
+        omni2D(left, right, turn);
     }
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone)

@@ -9,7 +9,7 @@
 
 // Common includes
 #include "../common/i2c_interface.h"
-#include "Omni2D.h"
+#include "omni2D.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -29,18 +29,18 @@ public:
     //----------------------------------------------------------------------------
     // Omni2D virtuals
     //----------------------------------------------------------------------------
-    virtual void Omni2D(float forwards, float sideways, float turn) override
+    virtual void omni2D(float forwards, float sideways, float turn) override
     {
         // Cache left and right
-        m_Forwards = forwards;
+        m_Forward = forwards;
         m_Sideways = sideways;
         m_Turn = turn;
         
 		// resolve to motor speeds
-		float m1 = (m_Forwards + m_Sideways - 0.17*m_Turn)*33.3; 
-		float m2 = (m_Forwards - m_Sideways + 0.17*m_Turn)*33.3; 
-		float m3 = (m_Forwards - m_Sideways - 0.17*m_Turn)*33.3; 
-		float m4 = (m_Forwards + m_Sideways + 0.17*m_Turn)*33.3; 
+		float m1 = (m_Forward + m_Sideways - 0.17*m_Turn)*33.3; 
+		float m2 = (m_Forward - m_Sideways + 0.17*m_Turn)*33.3; 
+		float m3 = (m_Forward - m_Sideways - 0.17*m_Turn)*33.3; 
+		float m4 = (m_Forward + m_Sideways + 0.17*m_Turn)*33.3; 
 		// bounds checking after resolving...
 		m1 = m1>1.0f ? 1.0f : m1;
 		m2 = m2>1.0f ? 1.0f : m2;
@@ -75,7 +75,7 @@ public:
 
     float getForwards() const
     {
-        return m_Forwards;
+        return m_Forward;
     }
 
     float getSideways() const
@@ -103,7 +103,7 @@ private:
     // Private members
     //----------------------------------------------------------------------------
     BoBRobotics::I2CInterface m_I2C;
-    float m_Forwards;
+    float m_Forward;
     float m_Sideways;
     float m_Turn;
 }; // Mecanum
