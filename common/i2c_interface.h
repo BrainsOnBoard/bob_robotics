@@ -52,7 +52,7 @@ public:
             std::cerr << "Error in setup:" << strerror(errno) << std::endl;
             // the error is usually permission error which, on Ubuntu, can be fixed by
             // creating a file /etc/udev/rules.d/90-i2c.rules and adding the following line:
-            // KERNEL==”i2c-[0-7]”,MODE=”0666″
+            // KERNEL=="i2c-[0-7]",MODE="0666"
             return false;
         }
 
