@@ -105,10 +105,11 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     glEnableClientState(GL_COLOR_ARRAY);
 }
 //----------------------------------------------------------------------------
-RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
+RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,
+                       const std::string &filename, bool realign)
     : RouteArdin(arrowLength, maxRouteEntries)
 {
-    if(!load(filename)) {
+    if(!load(filename, realign)) {
         throw std::runtime_error("Cannot load route");
     }
 }
@@ -131,7 +132,7 @@ RouteArdin::~RouteArdin()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool RouteArdin::load(const std::string &filename)
+bool RouteArdin::load(const std::string &filename, bool realign)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
@@ -190,18 +191,20 @@ bool RouteArdin::load(const std::string &filename)
     }
 
     // Loop through waypoints other than first
-    for(unsigned int i = 1; i < m_Waypoints.size(); i++)
-    {
-        // Get previous and current waypoiny
-        const auto &prevWaypoint = m_Waypoints[i - 1];
-        auto &waypoint = m_Waypoints[i];
+    if(realign) {
+        for(unsigned int i = 1; i < m_Waypoints.size(); i++)
+        {
+            // Get previous and current waypoiny
+            const auto &prevWaypoint = m_Waypoints[i - 1];
+            auto &waypoint = m_Waypoints[i];
 
-        // Convert the segment heading back to radians
-        const float headingRadians = degreesToRadians * m_HeadingDegrees[i - 1];
+            // Convert the segment heading back to radians
+            const float headingRadians = degreesToRadians * m_HeadingDegrees[i - 1];
 
-        // Realign segment to this angle
-        waypoint[0] = prevWaypoint[0] + (0.1f * cos(headingRadians));
-        waypoint[1] = prevWaypoint[1] - (0.1f * sin(headingRadians));
+            // Realign segment to this angle
+            waypoint[0] = prevWaypoint[0] + (0.1f * cos(headingRadians));
+            waypoint[1] = prevWaypoint[1] - (0.1f * sin(headingRadians));
+        }
     }
 
     // Create a vertex array object to bind everything together

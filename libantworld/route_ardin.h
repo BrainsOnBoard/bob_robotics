@@ -23,13 +23,13 @@ class RouteArdin
 {
 public:
     RouteArdin(float arrowLength, unsigned int maxRouteEntries);
-    RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename);
+    RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename, bool realign = true);
     ~RouteArdin();
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename);
+    bool load(const std::string &filename, bool realign = true);
     void render(float antX, float antY, float antHeading) const;
 
     bool atDestination(float x, float y, float threshold) const;

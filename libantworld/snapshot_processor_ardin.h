@@ -15,7 +15,7 @@ class SnapshotProcessorArdin
 {
 public:
     SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                           unsigned int outputWidth, unsigned int outputHeight);
+                           unsigned int outputWidth, unsigned int outputHeight, bool normalise = true);
 
     //------------------------------------------------------------------------
     // Public API
@@ -40,6 +40,9 @@ private:
     // Dimensions of final output
     const unsigned int m_OutputWidth;
     const unsigned int m_OutputHeight;
+
+    // Should floating point output be normalised
+    const bool m_Normalise;
 
     // Host OpenCV array to hold intermediate resolution greyscale snapshot
     cv::Mat m_IntermediateSnapshotGreyscale;
