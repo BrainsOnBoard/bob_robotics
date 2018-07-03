@@ -8,7 +8,7 @@
 #include <cstdint>
 
 // Common includes
-#include "../common/i2c_interface.h"
+#include "../common/serial_interface.h"
 #include "omni2D.h"
 
 namespace BoBRobotics {
@@ -19,8 +19,8 @@ namespace Robots {
 class Mecanum : public Omni2D
 {
 public:
-    Mecanum(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
-      : m_I2C(path, slaveAddress)
+    Mecanum(const char *path = "/dev/ttyACM0")
+      : m_Serial(path)
       , m_Forward(0.0f)
       , m_Sideways(0.0f)
       , m_Turn(0.0f)
@@ -37,10 +37,13 @@ public:
         m_Turn = turn;
         
 		// resolve to motor speeds
-		float m1 = (m_Forward + m_Sideways - 0.17*m_Turn)*33.3; 
-		float m2 = (m_Forward - m_Sideways + 0.17*m_Turn)*33.3; 
-		float m3 = (m_Forward - m_Sideways - 0.17*m_Turn)*33.3; 
-		float m4 = (m_Forward + m_Sideways + 0.17*m_Turn)*33.3; 
+		float m1 = (-m_Sideways - m_Forward - m_Turn); 
+		float m2 = (-m_Sideways + m_Forward + m_Turn); 
+		float m3 = (-m_Sideways + m_Forward - m_Turn); 
+		float m4 = (-m_Sideways - m_Forward + m_Turn); 
+		
+		//std::cout << m1 << m2 << m3 << m4 << std::endl;
+		
 		// bounds checking after resolving...
 		m1 = m1>1.0f ? 1.0f : m1;
 		m2 = m2>1.0f ? 1.0f : m2;
@@ -50,9 +53,8 @@ public:
 		m2 = m2<-1.0f ? -1.0f : m2;
 		m3 = m3<-1.0f ? -1.0f : m3;
 		m4 = m4<-1.0f ? -1.0f : m4;
-
-        // Convert standard (-1,1) values to bytes in order to send to I2C slave
-        uint8_t buffer[4] = { floatToI2C(m1), floatToI2C(m2), floatToI2C(m3), floatToI2C(m4) };
+		
+		uint8_t buffer[9] = {m1>0, m2>0, m3>0, m4>0, (uint8_t) (fabs(m1)*254.0f), (uint8_t) (fabs(m2)*254.0f), (uint8_t) (fabs(m3)*254.0f), (uint8_t) (fabs(m4)*254.0f), 255};
 
         // Send buffer
         write(buffer);
@@ -64,13 +66,13 @@ public:
     template<typename T, size_t N>
     void read(T (&data)[N])
     {
-        m_I2C.read(data);
+        m_Serial.read(data);
     }
 
     template<typename T, size_t N>
     void write(const T (&data)[N])
     {
-        m_I2C.write(data);
+        m_Serial.write(data);
     }
 
     float getForwards() const
@@ -102,7 +104,7 @@ private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
-    BoBRobotics::I2CInterface m_I2C;
+    BoBRobotics::SerialInterface m_Serial;
     float m_Forward;
     float m_Sideways;
     float m_Turn;
