@@ -5,6 +5,8 @@
  *    ./display_test 1          # read from camera
  * Or:
  *    ./display_test video.avi  # read from video file
+ * Or:
+ *    ./display_test r  		# stream from RPi camera
  *
  * If no arguments are given, the default camera device is used.
  *
@@ -33,9 +35,9 @@ main(int argc, char **argv)
         try {
             // if the arg is an int, the user is specifying a camera...
             int dev = std::stoi(argv[1]);
-            //OpenCVInput cam(dev);
-            //Display display(cam);
-            //display.run();
+            OpenCVInput cam(dev);
+            Display display(cam);
+            display.run();
         } catch (std::invalid_argument &) {
             // ...else it's a filename/URL/RPiCam
 			if (*argv[1] == 'r') {
@@ -44,9 +46,9 @@ main(int argc, char **argv)
 		        Display display(cam);
 		        display.run();
 			} else {
-		        //OpenCVInput cam(argv[1]);
-		        //Display display(cam);
-		        //display.run();
+		        OpenCVInput cam(argv[1]);
+		        Display display(cam);
+		        display.run();
 			}
         }
     }
