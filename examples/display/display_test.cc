@@ -16,6 +16,7 @@
 
 // BoB robotics includes
 #include "video/opencvinput.h"
+#include "video/rpi_cam.h"
 #include "video/display.h"
 
 using namespace BoBRobotics::Video;
@@ -32,14 +33,21 @@ main(int argc, char **argv)
         try {
             // if the arg is an int, the user is specifying a camera...
             int dev = std::stoi(argv[1]);
-            OpenCVInput cam(dev);
-            Display display(cam);
-            display.run();
+            //OpenCVInput cam(dev);
+            //Display display(cam);
+            //display.run();
         } catch (std::invalid_argument &) {
-            // ...else it's a filename/URL
-            OpenCVInput cam(argv[1]);
-            Display display(cam);
-            display.run();
+            // ...else it's a filename/URL/RPiCam
+			if (*argv[1] == 'r') {
+				// RPicam
+				RPiCamera cam(50091);
+		        Display display(cam);
+		        display.run();
+			} else {
+		        //OpenCVInput cam(argv[1]);
+		        //Display display(cam);
+		        //display.run();
+			}
         }
     }
 }
