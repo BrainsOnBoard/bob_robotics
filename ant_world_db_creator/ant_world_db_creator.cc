@@ -1,4 +1,5 @@
 // Standard C++ includes
+#include <fstream>
 #include <iostream>
 
 // OpenGL includes
@@ -43,7 +44,6 @@ int main(int argc, char *argv[])
 {
     const float pathStepM = 1.0f / 100.0f;
     const float gridSizeM = 100.0f / 100.0f;
-    const float gridAngles[] = {0.0f, 90.0f, 180.0f, 270.0f};
 
     const unsigned int renderWidth = 180;
     const unsigned int renderHeight = 50;
@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     AntWorld::RouteContinuous route(0.2f, 800);
 
     // If we should be following a route
+    std::ofstream csvStream;
     std::string routeTitle;
     if(followRoute) {
         // Load route
@@ -115,7 +116,12 @@ int main(int argc, char *argv[])
              routeTitle = routeTitle.substr(0, pos);
         }
 
-        std::cout << routeTitle;
+        csvStream.open(routeTitle + ".csv");
+        csvStream << "X [mm], Y [mm], Heading [degrees], Filename" << std::endl;
+    }
+    else {
+        csvStream.open("grid.csv");
+        csvStream << "X [mm], Y [mm], Filename" << std::endl;
     }
 
     // Create renderer
@@ -139,7 +145,6 @@ int main(int argc, char *argv[])
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
-    size_t currentGridAngle = 0;
     while (!glfwWindowShouldClose(window)) {
         // If we should be following route, get position from route
         float x = 0.0f;
@@ -151,7 +156,6 @@ int main(int argc, char *argv[])
         else {
             x = worldMin[0] + ((float)currentGridX * gridSizeM);
             y = worldMin[1] + ((float)currentGridY * gridSizeM);
-            heading = gridAngles[currentGridAngle];
         }
 
         // Clear colour and depth buffer
@@ -171,11 +175,16 @@ int main(int argc, char *argv[])
         char filename[255];
         if(followRoute) {
             sprintf(filename, "%s_%zu.png", routeTitle.c_str(), routePosition);
+
+            csvStream << x << ", " << y << ", " << heading << ", " << filename << std::endl;
         }
         else {
-            sprintf(filename, "grid_%zu_%zu_%zu.png", currentGridX, currentGridY, currentGridAngle);
+            sprintf(filename, "grid_%zu_%zu.png", currentGridX, currentGridY);
+
+            csvStream << x << ", " << y << ", " << filename << std::endl;
         }
 
+        cv::flip(snapshot, snapshot, 0);
         cv::imwrite(filename, snapshot);
 
         // Poll for and process events
@@ -192,14 +201,9 @@ int main(int argc, char *argv[])
             }
         }
         else {
-            // Go onto next grid angle
-            currentGridAngle++;
 
-            // If all angles have been scanned, move to next X
-            if(currentGridAngle >= (sizeof(gridAngles) / sizeof(float))) {
-                currentGridX++;
-                currentGridAngle = 0;
-            }
+            // Move to next X
+            currentGridX++;
 
             // If we've reached the X edge of the world, move to start of next Y
             if((worldMin[0] + ((float)currentGridX * gridSizeM)) > worldMax[0]) {
