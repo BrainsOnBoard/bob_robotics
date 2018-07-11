@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     // Create route object and load route file specified by command line
     AntWorld::RouteArdin route(0.2f, 800);
     if(argc > 1) {
-        route.load(argv[1]);
+        route.load(argv[1], true);
     }
 
     // Create memory
