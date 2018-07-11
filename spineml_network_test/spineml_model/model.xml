@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LL:SpineML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.shef.ac.uk/SpineMLNetworkLayer" xmlns:LL="http://www.shef.ac.uk/SpineMLLowLevelNetworkLayer" xsi:schemaLocation="http://www.shef.ac.uk/SpineMLLowLevelNetworkLayer SpineMLLowLevelNetworkLayer.xsd http://www.shef.ac.uk/SpineMLNetworkLayer SpineMLNetworkLayer.xsd" name="Test BoBRobotics">
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="-0.02"/>
+                <yPos value="-0.02"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="0" green="0" blue="0"/>
+                <size value="1"/>
+                <tag value="1"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="input" size="10944" url="LIN.xml">
+            <Property name="tau" dimension="s">
+                <FixedValue value="1"/>
+            </Property>
+            <Property name="c" dimension="?">
+                <FixedValue value="0"/>
+            </Property>
+            <Property name="a" dimension="?"/>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+    </LL:Population>
+    <LL:Population>
+        <LL:Annotation>
+            <SpineCreator>
+                <xPos value="0.3"/>
+                <yPos value="3.22"/>
+                <animSpeed value="0.2"/>
+                <aspectRatio value="1.66667"/>
+                <colour red="0" green="0" blue="0"/>
+                <size value="1"/>
+                <tag value="2"/>
+                <x3D value="0"/>
+                <y3D value="0"/>
+                <z3D value="0"/>
+                <is_visualised value="0"/>
+            </SpineCreator>
+        </LL:Annotation>
+        <LL:Neuron name="robot" size="3" url="LIN.xml">
+            <Property name="tau" dimension="s">
+                <FixedValue value="1"/>
+            </Property>
+            <Property name="c" dimension="?">
+                <ValueList>
+                    <Value index="0" value="0.5"/>
+                    <Value index="1" value="0"/>
+                    <Value index="2" value="0"/>
+                </ValueList>
+            </Property>
+            <Property name="a" dimension="?"/>
+        </LL:Neuron>
+        <Layout url="none.xml" seed="123" minimum_distance="0"/>
+    </LL:Population>
+</LL:SpineML>
