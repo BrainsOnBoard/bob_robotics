@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
     const float pathStepM = 1.0f / 100.0f;
     const float gridSizeM = 100.0f / 100.0f;
 
-    const unsigned int renderWidth = 180;
-    const unsigned int renderHeight = 50;
+    const unsigned int renderWidth = 200;
+    const unsigned int renderHeight = 40;
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
@@ -117,15 +117,16 @@ int main(int argc, char *argv[])
         }
 
         csvStream.open(routeTitle + ".csv");
-        csvStream << "X [mm], Y [mm], Heading [degrees], Filename" << std::endl;
     }
     else {
-        csvStream.open("grid.csv");
-        csvStream << "X [mm], Y [mm], Filename" << std::endl;
+        csvStream.open("world5000_grid.csv");
     }
 
+    // Write CSV header
+    csvStream << "X [mm], Y [mm], Heading [degrees], Filename" << std::endl;
+
     // Create renderer
-    AntWorld::Renderer renderer;
+    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360.0);
     renderer.getWorld().load("../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
@@ -174,15 +175,12 @@ int main(int argc, char *argv[])
 
         char filename[255];
         if(followRoute) {
-            sprintf(filename, "%s_%zu.png", routeTitle.c_str(), routePosition);
-
-            csvStream << x << ", " << y << ", " << heading << ", " << filename << std::endl;
+            sprintf(filename, "%s_%04zu.png", routeTitle.c_str(), routePosition);
         }
         else {
-            sprintf(filename, "grid_%zu_%zu.png", currentGridX, currentGridY);
-
-            csvStream << x << ", " << y << ", " << filename << std::endl;
+            sprintf(filename, "world5000_grid_%04zu_%04zu.png", currentGridX, currentGridY);
         }
+        csvStream << x << ", " << y << ", " << heading << ", " << filename << std::endl;
 
         cv::flip(snapshot, snapshot, 0);
         cv::imwrite(filename, snapshot);

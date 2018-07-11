@@ -118,7 +118,7 @@ int main()
     // Read snapshot
     input.readFrame(map);
 
-    cv::imwrite("map.png", map);
+    cv::imwrite("world5000.png", map);
 
     return EXIT_SUCCESS;
 }
