@@ -2,6 +2,7 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <string>
 #include <fstream>
 #include <iostream>
 
@@ -113,6 +114,7 @@ int main(int argc, char *argv[])
     // If we should be following a route
     std::ofstream csvStream;
     std::string routeTitle;
+    filesystem::path savePath;
     if(followRoute) {
         // Load route
         route.load(argv[1]);
@@ -126,10 +128,18 @@ int main(int argc, char *argv[])
              routeTitle = routeTitle.substr(0, pos);
         }
 
-        csvStream.open(routeTitle + ".csv");
+        savePath = routeTitle;
+        if (!savePath.exists()) {
+            filesystem::create_directory(savePath);
+        }
+        csvStream.open((savePath / (routeTitle + ".csv")).str());
     }
     else {
-        csvStream.open("world5000_grid.csv");
+        savePath = "world5000_grid";
+        if (!savePath.exists()) {
+            filesystem::create_directory(savePath);
+        }
+        csvStream.open((savePath / "world5000_grid.csv").str());
     }
 
     // Write CSV header
@@ -202,7 +212,7 @@ int main(int argc, char *argv[])
                   << heading << ", " << filename << std::endl;
 
         cv::flip(snapshot, snapshot, 0);
-        cv::imwrite(filename, snapshot);
+        cv::imwrite((savePath / filename).str(), snapshot);
 
         // Poll for and process events
         glfwPollEvents();
