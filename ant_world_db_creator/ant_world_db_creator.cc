@@ -1,3 +1,6 @@
+// Standard C includes
+#include <cmath>
+
 // Standard C++ includes
 #include <fstream>
 #include <iostream>
@@ -43,7 +46,8 @@ void handleGLError(GLenum source,
 int main(int argc, char *argv[])
 {
     const float pathStepM = 1.0f / 100.0f;
-    const float gridSizeM = 100.0f / 100.0f;
+    const float gridSpacingM = 10.0f / 100.0f;
+    const float gridMaxM = 2.5f; // gives a 5m^2 grid
 
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
@@ -137,16 +141,22 @@ int main(int argc, char *argv[])
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Get world bounds
-    const auto &worldMin = renderer.getWorld().getMinBound();
-    const auto &worldMax = renderer.getWorld().getMaxBound();
+    const auto &worldMinBound = renderer.getWorld().getMinBound();
+    const auto &worldMaxBound = renderer.getWorld().getMaxBound();
+
+    // Define the origin as the centre of the world, to nearest whole mm
+    const float originX = round(1000.f * (worldMaxBound[0] - worldMinBound[0]) / 2.0f) / 1000.0f;
+    const float originY = round(1000.f * (worldMaxBound[1] - worldMinBound[1]) / 2.0f) / 1000.0f;
+
+    // The extent of the grid is the origin +-gridMaxM
+    const float worldMin[] = {originX - gridMaxM, originY - gridMaxM};
+    const float worldMax[] = {originX + gridMaxM, originY + gridMaxM};
 
     // Create input to read snapshots from screen
     Video::OpenGL input(0, 0, renderWidth, renderHeight);
 
-
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
-
 
     // While the window isn't forcibly being closed
     size_t routePosition = 0;
@@ -162,8 +172,8 @@ int main(int argc, char *argv[])
             std::tie(x, y, heading) = route.getPosition((float)routePosition * pathStepM);
         }
         else {
-            x = worldMin[0] + ((float)currentGridX * gridSizeM);
-            y = worldMin[1] + ((float)currentGridY * gridSizeM);
+            x = worldMin[0] + ((float)currentGridX * gridSpacingM);
+            y = worldMin[1] + ((float)currentGridY * gridSpacingM);
         }
 
         // Clear colour and depth buffer
@@ -186,7 +196,7 @@ int main(int argc, char *argv[])
         }
         else {
             sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
-                    1000 * (int) x, 1000 * (int) y, 1000 * (int) z);
+                    (int) round(x * 1000.0f), (int) round(y * 1000), (int) round(z * 1000));
         }
         csvStream << x * 1000.0f << ", " << y * 1000.0f << ", " << z * 1000.0f << ", "
                   << heading << ", " << filename << std::endl;
@@ -213,13 +223,13 @@ int main(int argc, char *argv[])
             currentGridX++;
 
             // If we've reached the X edge of the world, move to start of next Y
-            if((worldMin[0] + ((float)currentGridX * gridSizeM)) > worldMax[0]) {
+            if((worldMin[0] + ((float)currentGridX * gridSpacingM)) > worldMax[0]) {
                 currentGridY++;
                 currentGridX = 0;
             }
 
             // If we've reached the Y edge of the world, stop
-            if((worldMin[1] + ((float)currentGridY * gridSizeM)) > worldMax[1]) {
+            if((worldMin[1] + ((float)currentGridY * gridSpacingM)) > worldMax[1]) {
                 break;
             }
         }
