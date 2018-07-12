@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     }
 
     // Write CSV header
-    csvStream << "X [mm], Y [mm], Heading [degrees], Filename" << std::endl;
+    csvStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0);
@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
+    const float z = 0.01f; // agent's height is fixed
     while (!glfwWindowShouldClose(window)) {
         // If we should be following route, get position from route
         float x = 0.0f;
@@ -163,7 +164,7 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
-        renderer.renderPanoramicView(x, y, 0.01f,
+        renderer.renderPanoramicView(x, y, z,
                                      heading, 0.0f, 0.0f,
                                      0, 0, renderWidth, renderHeight);
 
@@ -178,9 +179,11 @@ int main(int argc, char *argv[])
             sprintf(filename, "%s_%04zu.png", routeTitle.c_str(), routePosition);
         }
         else {
-            sprintf(filename, "world5000_grid_%04zu_%04zu.png", currentGridX, currentGridY);
+            sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
+                    1000 * (int) x, 1000 * (int) y, 1000 * (int) z);
         }
-        csvStream << x << ", " << y << ", " << heading << ", " << filename << std::endl;
+        csvStream << x * 1000.0f << ", " << y * 1000.0f << ", " << z * 1000.0f << ", "
+                  << heading << ", " << filename << std::endl;
 
         cv::flip(snapshot, snapshot, 0);
         cv::imwrite(filename, snapshot);
@@ -215,5 +218,7 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    csvStream.close(); // close CSV file handle
     return EXIT_SUCCESS;
 }
