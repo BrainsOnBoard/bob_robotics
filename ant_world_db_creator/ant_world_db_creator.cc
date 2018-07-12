@@ -45,8 +45,14 @@ int main(int argc, char *argv[])
     const float pathStepM = 1.0f / 100.0f;
     const float gridSizeM = 100.0f / 100.0f;
 
-    const unsigned int renderWidth = 200;
-    const unsigned int renderHeight = 40;
+    /*
+     * I've set the width of the image to be the same as the (raw) unwrapped
+     * images we get from the robot gantry, but the height is greater (cf. 58)
+     * because I wanted to keep the aspect ratio as it was (200x40).
+     *      -- AD
+     */
+    const unsigned int renderWidth = 720;
+    const unsigned int renderHeight = 144;
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
