@@ -67,7 +67,7 @@ Renderer::~Renderer()
     glDeleteFramebuffers(1, &m_FBO);
 }
 //----------------------------------------------------------------------------
-void Renderer::renderPanoramicView(float x, float y, float z,
+void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                    degree_t yaw, degree_t pitch, degree_t roll,
                                    GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
@@ -137,7 +137,7 @@ void Renderer::renderPanoramicView(float x, float y, float z,
     glDisable(GL_TEXTURE_CUBE_MAP);
 }
 //----------------------------------------------------------------------------
-void Renderer::renderFirstPersonView(float x, float y, float z,
+void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                                      degree_t yaw, degree_t pitch, degree_t roll,
                                      GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
@@ -249,13 +249,13 @@ void Renderer::generateCubeFaceLookAtMatrices()
     }
 }
 //----------------------------------------------------------------------------
-void Renderer::applyFrame(float x, float y, float z,
+void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
                           degree_t yaw, degree_t pitch, degree_t roll)
 {
     glRotated(roll.value(), 0.0, 1.0, 0.0);
     glRotated(pitch.value(), 1.0, 0.0, 0.0);
     glRotated(yaw.value(), 0.0, 0.0, 1.0);
-    glTranslatef(-x, -y, -z);
+    glTranslated(-x.value(), -y.value(), -z.value());
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

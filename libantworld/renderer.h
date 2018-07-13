@@ -15,6 +15,7 @@
 
 using namespace units::literals;
 using namespace units::angle;
+using namespace units::length;
 
 //----------------------------------------------------------------------------
 // Renderer
@@ -34,10 +35,10 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void renderPanoramicView(float x, float y, float z,
+    void renderPanoramicView(meter_t x, meter_t y, meter_t z,
                              degree_t yaw, degree_t pitch, degree_t roll,
                              GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
-    void renderFirstPersonView(float x, float y, float z,
+    void renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                                degree_t yaw, degree_t pitch, degree_t roll,
                                GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
     void renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
@@ -49,7 +50,7 @@ private:
     // Private methods
     //------------------------------------------------------------------------
     void generateCubeFaceLookAtMatrices();
-    void applyFrame(float x, float y, float z,
+    void applyFrame(meter_t x, meter_t y, meter_t z,
                     degree_t yaw, degree_t pitch, degree_t roll);
 
     //------------------------------------------------------------------------

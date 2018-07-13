@@ -21,9 +21,11 @@ using namespace BoBRobotics;
 using namespace units::literals;
 using namespace units::math;
 using namespace units::dimensionless;
-using namespace units::time;
 using namespace units::angle;
 using namespace units::angular_velocity;
+using namespace units::length;
+using namespace units::velocity;
+using namespace units::time;
 
 // Anonymous namespace
 namespace
@@ -52,8 +54,8 @@ inline second_t getCurrentTime()
 
 int main()
 {
-    const degrees_per_second_t turnSpeed = 200_deg_per_s;
-    const float moveSpeed = 3.0f;
+    const auto turnSpeed = 200_deg_per_s;
+    const auto moveSpeed = 3_mps;
     const unsigned int width = 1024;
     const unsigned int height = 262;
 
@@ -120,9 +122,9 @@ int main()
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();
     const auto &worldMax = renderer.getWorld().getMaxBound();
-    float x = worldMin[0] + ((worldMax[0] - worldMin[0]) * 0.5f);
-    float y = worldMin[1] + ((worldMax[1] - worldMin[1]) * 0.5f);
-    float z = worldMin[2] + ((worldMax[2] - worldMin[2]) * 0.5f);
+    auto x = units::make_unit<meter_t>(worldMin[0] + ((worldMax[0] - worldMin[0]) * 0.5f));
+    auto y = units::make_unit<meter_t>(worldMin[1] + ((worldMax[1] - worldMin[1]) * 0.5f));
+    auto z = units::make_unit<meter_t>(worldMin[2] + ((worldMax[2] - worldMin[2]) * 0.5f));
     degree_t yaw = 0_deg;
     degree_t pitch = 0_deg;
 
@@ -152,12 +154,13 @@ int main()
 
 
         // Use right trigger to control forward movement speed
-        const float forwardMove = moveSpeed * deltaTime.value() * joystick.getState(HID::JAxis::RightTrigger);
+        const meter_t forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::RightTrigger);
 
         // Calculate movement delta in 3D space
-        x += forwardMove * (float) (sin(yaw) * cos(pitch));
-        y += forwardMove * (float) (cos(yaw) * cos(pitch));
-        z -= forwardMove * (float) sin(pitch);
+        auto cosPitch = cos(pitch);
+        x += forwardMove * sin(yaw) * cosPitch;
+        y += forwardMove * cos(yaw) * cosPitch;
+        z -= forwardMove * sin(pitch);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
