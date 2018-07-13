@@ -21,7 +21,8 @@ namespace AntWorld
 class Renderer
 {
 public:
-    Renderer(unsigned int cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0);
+    Renderer(unsigned int cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
+             float horizontalFOV = 296.0f, float verticalFOV = 15.0f);
     ~Renderer();
 
     //------------------------------------------------------------------------
@@ -37,7 +38,6 @@ public:
 
     World &getWorld(){ return m_World; }
     const World &getWorld() const{ return m_World; }
-
 private:
     //------------------------------------------------------------------------
     // Private methods
