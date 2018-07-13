@@ -10,7 +10,9 @@ DEPS		:=$(SOURCES:.cc=.d)
 CXXFLAGS	:= -std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP `pkg-config --cflags opencv`
 ARFLAGS		:= -rcs
 
-.PHONY: clean
+.PHONY: all clean
+
+all: libantworld.a
 
 libantworld.a: $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS)
