@@ -14,7 +14,7 @@ namespace AntWorld
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
 Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip)
-:   m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
+:   m_RenderMesh(360.0f, 75.0f, 15.0f, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
