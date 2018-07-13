@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
      *      -- AD
      */
     const unsigned int renderWidth = 720;
-    const unsigned int renderHeight = 144;
+    const unsigned int renderHeight = 150;
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
