@@ -22,7 +22,7 @@ class Renderer
 {
 public:
     Renderer(unsigned int cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
-             float horizontalFOV = 296.0f, float verticalFOV = 15.0f);
+             float horizontalFOV = 296.0f, float verticalFOV = 75.0f);
     ~Renderer();
 
     //------------------------------------------------------------------------
