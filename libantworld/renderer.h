@@ -10,6 +10,12 @@
 #include "render_mesh.h"
 #include "world.h"
 
+// Third-party includes
+#include "../third_party/units.h"
+
+using namespace units::literals;
+using namespace units::angle;
+
 //----------------------------------------------------------------------------
 // Renderer
 //----------------------------------------------------------------------------
@@ -22,17 +28,17 @@ class Renderer
 {
 public:
     Renderer(unsigned int cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
-             float horizontalFOV = 296.0f, float verticalFOV = 75.0f);
+             degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
     ~Renderer();
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     void renderPanoramicView(float x, float y, float z,
-                             float yaw, float pitch, float roll,
+                             degree_t yaw, degree_t pitch, degree_t roll,
                              GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
     void renderFirstPersonView(float x, float y, float z,
-                               float yaw, float pitch, float roll,
+                               degree_t yaw, degree_t pitch, degree_t roll,
                                GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
     void renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
 
@@ -44,7 +50,7 @@ private:
     //------------------------------------------------------------------------
     void generateCubeFaceLookAtMatrices();
     void applyFrame(float x, float y, float z,
-                    float yaw, float pitch, float roll);
+                    degree_t yaw, degree_t pitch, degree_t roll);
 
     //------------------------------------------------------------------------
     // Members

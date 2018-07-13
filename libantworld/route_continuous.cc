@@ -7,12 +7,14 @@
 #include <limits>
 #include <tuple>
 
-// Standard C++ includes
+// Standard C includes
 #include <cassert>
-#include <cmath>
 
 // Libantworld includes
 #include "common.h"
+
+using namespace units::math;
+using namespace units::dimensionless;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -172,7 +174,7 @@ bool RouteContinuous::load(const std::string &filename)
     std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
     // Reserve headings
     const unsigned int numSegments = m_Waypoints.size() - 1;
-    m_HeadingDegrees.reserve(numSegments);
+    m_Headings.reserve(numSegments);
 
     // Reserve array of cumulative distances
     m_CumulativeDistance.reserve(m_Waypoints.size());
@@ -185,8 +187,8 @@ bool RouteContinuous::load(const std::string &filename)
         const auto &segmentEnd = m_Waypoints[i + 1];
 
         // Add segment heading to array
-        m_HeadingDegrees.push_back(radiansToDegrees * atan2(segmentStart[1] - segmentEnd[1],
-                                                            segmentEnd[0] - segmentStart[0]));
+        m_Headings.push_back(atan2((scalar_t) (segmentStart[1] - segmentEnd[1]),
+                                   (scalar_t) (segmentEnd[0] - segmentStart[0])));
 
         // Calculate segment length and
         const float segmentLength = sqrt(distanceSquared(segmentStart[0], segmentStart[1],
@@ -282,7 +284,7 @@ std::tuple<float, size_t> RouteContinuous::getDistanceToRoute(float x, float y) 
     return std::make_tuple(sqrt(minimumDistanceSquared), nearestWaypoint);
 }
 //----------------------------------------------------------------------------
-std::tuple<float, float, float> RouteContinuous::getPosition(float distance) const
+std::tuple<float, float, degree_t> RouteContinuous::getPosition(float distance) const
 {
     // Clamp distance at 0
     distance = std::max(0.0f, distance);
@@ -314,7 +316,7 @@ std::tuple<float, float, float> RouteContinuous::getPosition(float distance) con
     const float y = prevWaypointY + proportion * (nextWaypointY - prevWaypointY);
 
     // Return position
-    return std::make_tuple(x, y, 90.0f + m_HeadingDegrees[prevWaypointIndex]);
+    return std::make_tuple(x, y, 90_deg + m_Headings[prevWaypointIndex]);
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)

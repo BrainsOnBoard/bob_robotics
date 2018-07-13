@@ -8,6 +8,12 @@
 // OpenGL includes
 #include <GL/glew.h>
 
+// Third-party includes
+#include "../third_party/units.h"
+
+using namespace units::literals;
+using namespace units::angle;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous
 //----------------------------------------------------------------------------
@@ -31,7 +37,7 @@ public:
 
     bool atDestination(float x, float y, float threshold) const;
     std::tuple<float, size_t> getDistanceToRoute(float x, float y) const;
-    std::tuple<float, float, float> getPosition(float distance) const;
+    std::tuple<float, float, degree_t> getPosition(float distance) const;
 
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(float x, float y, bool error);
@@ -54,7 +60,7 @@ private:
     const unsigned int m_RouteMaxPoints;
 
     std::vector<std::array<float, 2>> m_Waypoints;
-    std::vector<float> m_HeadingDegrees;
+    std::vector<degree_t> m_Headings;
     std::vector<float> m_CumulativeDistance;
     GLuint m_OverlayVAO;
     GLuint m_OverlayPositionVBO;

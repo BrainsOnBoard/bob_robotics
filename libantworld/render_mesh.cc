@@ -4,10 +4,12 @@
 #include <vector>
 
 // Standard C includes
-#include <cmath>
+// #include <cmath>
 
 // Antworld includes
 #include "common.h"
+
+using namespace units::math; // cmath functions for unit types
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMesh
@@ -20,7 +22,7 @@ RenderMesh::RenderMesh() : m_VAO(0), m_PositionVBO(0), m_TextureCoordsVBO(0), m_
 {
 }
 //----------------------------------------------------------------------------
-RenderMesh::RenderMesh(float horizontalFOV, float verticalFOV, float startLongitude,
+RenderMesh::RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
                        unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
 {
     // We need a vertical for each segment and one extra
@@ -44,30 +46,30 @@ RenderMesh::RenderMesh(float horizontalFOV, float verticalFOV, float startLongit
         textureCoords.reserve(numVertices * 2);
 
         const float segmentWidth = 1.0f / (float)numHorizontalSegments;
-        const float startLatitude = -horizontalFOV / 2.0f;
-        const float latitudeStep = horizontalFOV / (float)numHorizontalSegments;
+        const degree_t startLatitude = -horizontalFOV / 2.0;
+        const degree_t latitudeStep = horizontalFOV / numHorizontalSegments;
 
         const float segmentHeight = 1.0f / (float)numVerticalSegments;
-        const float longitudeStep = -verticalFOV / (float)numVerticalSegments;
+        const degree_t longitudeStep = -verticalFOV / numVerticalSegments;
 
         // Loop through vertices
         for(unsigned int j = 0; j < numVerticalVerts; j++) {
             // Calculate screenspace segment y position
             const float y = segmentHeight * (float)j;
 
-            // Calculate angle of hoirzontal and calculate it's sin and cos
-            const float longitude = startLongitude + ((float)j * longitudeStep);
-            const float sinLongitude = sin(longitude * degreesToRadians);
-            const float cosLongitude = cos(longitude * degreesToRadians);
+            // Calculate angle of horizontal and calculate its sin and cos
+            const degree_t longitude = startLongitude + longitudeStep * j;
+            const GLfloat sinLongitude = sin(longitude);
+            const GLfloat cosLongitude = cos(longitude);
 
             for(unsigned int i = 0; i < numHorizontalVerts; i++) {
                 // Calculate screenspace segment x position
                 const float x = segmentWidth * (float)i;
 
                 // Calculate angle of vertical and calculate it's sin and cos
-                const float latitude = startLatitude + ((float)i * latitudeStep);
-                const float sinLatitude = sin(latitude * degreesToRadians);
-                const float cosLatitude = cos(latitude * degreesToRadians);
+                const degree_t latitude = startLatitude + latitudeStep * i;
+                const GLfloat sinLatitude = sin(latitude);
+                const GLfloat cosLatitude = cos(latitude);
 
                 // Add vertex position
                 positions.push_back(x);

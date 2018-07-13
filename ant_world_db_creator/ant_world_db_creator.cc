@@ -41,7 +41,6 @@ void handleGLError(GLenum source,
 {
     throw std::runtime_error(message);
 }
-
 }
 
 int main(int argc, char *argv[])
@@ -146,7 +145,7 @@ int main(int argc, char *argv[])
     csvStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
 
     // Create renderer
-    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360.0f);
+    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     renderer.getWorld().load("../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
@@ -177,7 +176,7 @@ int main(int argc, char *argv[])
         // If we should be following route, get position from route
         float x = 0.0f;
         float y = 0.0f;
-        float heading = 0.0f;
+        degree_t heading = 0_deg;
         if(followRoute) {
             std::tie(x, y, heading) = route.getPosition((float)routePosition * pathStepM);
         }
@@ -191,7 +190,7 @@ int main(int argc, char *argv[])
 
         // Render first person
         renderer.renderPanoramicView(x, y, z,
-                                     heading, 0.0f, 0.0f,
+                                     heading, 0_deg, 0_deg,
                                      0, 0, renderWidth, renderHeight);
 
         // Swap front and back buffers
@@ -209,7 +208,7 @@ int main(int argc, char *argv[])
                     (int) round(x * 1000.0f), (int) round(y * 1000), (int) round(z * 1000));
         }
         csvStream << x * 1000.0f << ", " << y * 1000.0f << ", " << z * 1000.0f << ", "
-                  << heading << ", " << filename << std::endl;
+                  << heading.value() << ", " << filename << std::endl;
 
         cv::flip(snapshot, snapshot, 0);
         cv::imwrite((savePath / filename).str(), snapshot);

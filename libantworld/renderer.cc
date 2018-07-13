@@ -14,8 +14,8 @@ namespace AntWorld
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
 Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip,
-                   float horizontalFOV, float verticalFOV)
-:   m_RenderMesh(horizontalFOV, verticalFOV, 15.0f, 40, 10),
+                   degree_t horizontalFOV, degree_t verticalFOV)
+:   m_RenderMesh(horizontalFOV, verticalFOV, 15_deg, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
@@ -68,7 +68,7 @@ Renderer::~Renderer()
 }
 //----------------------------------------------------------------------------
 void Renderer::renderPanoramicView(float x, float y, float z,
-                                   float yaw, float pitch, float roll,
+                                   degree_t yaw, degree_t pitch, degree_t roll,
                                    GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Configure viewport to cubemap-sized square
@@ -138,7 +138,7 @@ void Renderer::renderPanoramicView(float x, float y, float z,
 }
 //----------------------------------------------------------------------------
 void Renderer::renderFirstPersonView(float x, float y, float z,
-                                     float yaw, float pitch, float roll,
+                                     degree_t yaw, degree_t pitch, degree_t roll,
                                      GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Set viewport to strip at stop of window
@@ -250,11 +250,11 @@ void Renderer::generateCubeFaceLookAtMatrices()
 }
 //----------------------------------------------------------------------------
 void Renderer::applyFrame(float x, float y, float z,
-                          float yaw, float pitch, float roll)
+                          degree_t yaw, degree_t pitch, degree_t roll)
 {
-    glRotatef(roll, 0.0f, 1.0f, 0.0f);
-    glRotatef(pitch, 1.0f, 0.0f, 0.0f);
-    glRotatef(yaw, 0.0f, 0.0f, 1.0f);
+    glRotated(roll.value(), 0.0, 1.0, 0.0);
+    glRotated(pitch.value(), 1.0, 0.0, 0.0);
+    glRotated(yaw.value(), 0.0, 0.0, 1.0);
     glTranslatef(-x, -y, -z);
 }
 }   // namespace AntWorld
