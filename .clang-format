@@ -1,0 +1,10 @@
+IndentWidth: 4
+AccessModifierOffset: -4
+BasedOnStyle: mozilla
+IndentCaseLabels: false
+AllowShortFunctionsOnASingleLine: false
+SpaceAfterCStyleCast: true
+PointerAlignment: Right
+ContinuationIndentWidth: 8
+AlwaysBreakAfterDefinitionReturnType: None
+ColumnLimit: 0

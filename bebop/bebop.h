@@ -8,9 +8,13 @@ extern "C"
 #include <libARSAL/ARSAL.h>
 }
 
-#include "semaphore.h"
+// C++ includes
+#include <cstdint>
 #include <iostream>
 #include <string>
+
+// BoBRobotics controllers
+#include "../common/semaphore.h"
 
 // these values are hardcoded for Bebop drones
 #define BEBOP_IP_ADDRESS "192.168.42.1"
@@ -27,12 +31,9 @@ extern "C"
 #define NO_FLY
 #endif
 
-typedef unsigned char u8;
-typedef signed char i8;
-
-namespace Parrot {
+namespace BoBRobotics {
+namespace Robots {
 using namespace std;
-using namespace Parrot;
 
 #ifndef DUMMY_DRONE
 /*
@@ -93,10 +94,10 @@ public:
     void disconnect();
     void takeOff();
     void land();
-    void setPitch(i8 pitch);
-    void setRoll(i8 right);
-    void setUpDown(i8 up);
-    void setYaw(i8 right);
+    void setPitch(int8_t pitch);
+    void setRoll(int8_t right);
+    void setUpDown(int8_t up);
+    void setYaw(int8_t right);
     void stopMoving();
     void takePhoto();
     void setFlightEventHandler(flightEventHandler);
@@ -123,5 +124,6 @@ private:
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
 #endif // !DUMMY_DRONE
-};     // class Bebop
-} // namespace Parrot
+};     // Bebop
+} // Robots
+} // BoBRobotics

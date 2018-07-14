@@ -1,7 +1,11 @@
 #pragma once
 
+namespace BoBRobotics {
+namespace Robots {
 // Forward declarations
-class MotorI2C;
+class Norbot;
+}
+}
 
 // Functions
-void driveMotorFromCPU1(MotorI2C &motor, bool display = false);
+float driveMotorFromCPU1(BoBRobotics::Robots::Norbot &motor, bool display = false);

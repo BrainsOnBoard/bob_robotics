@@ -1,14 +1,17 @@
+// C++ includes
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
 
-#include "../common/vicon_udp.h"
+// BoB robotics includes
+#include "../vicon/udp.h"
 
-Vicon::UDPClient<Vicon::ObjectData> *vicon;
+using namespace BoBRobotics::Vicon;
 
-void
-readCallback(uint id, const Vicon::ObjectData &data, void *unused)
+UDPClient<ObjectData> *vicon;
+
+void readCallback(uint, const ObjectData &data, void*)
 {
     const auto &translation = data.getTranslation();
     const auto &rotation = data.getRotation();
@@ -18,11 +21,10 @@ readCallback(uint id, const Vicon::ObjectData &data, void *unused)
               << ", " << rotation[2] << std::endl;
 }
 
-int
-main()
+int main()
 {
     // connect to Vicon system
-    vicon = new Vicon::UDPClient<Vicon::ObjectData>(51001);
+    vicon = new UDPClient<ObjectData>(51001);
     std::cout << "Connected to Vicon system" << std::endl;
 
     // set function to call on new position

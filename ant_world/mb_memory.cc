@@ -5,16 +5,18 @@
 #include <fstream>
 #include <random>
 
-// Common includes
-#include "../common/connectors.h"
-#include "../common/spike_csv_recorder.h"
+// BoB robotics includes
 #include "../common/timer.h"
+#include "../genn_utils/connectors.h"
+#include "../genn_utils/spike_csv_recorder.h"
 
 // GeNN generated code includes
 #include "ant_world_CODE/definitions.h"
 
 // Antworld includes
 #include "parameters.h"
+
+using namespace BoBRobotics;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -55,8 +57,8 @@ MBMemory::MBMemory()
     {
         Timer<> timer("Building connectivity:");
 
-        buildFixedNumberPreConnector(Parameters::numPN, Parameters::numKC,
-                                     Parameters::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
+        GeNNUtils::buildFixedNumberPreConnector(Parameters::numPN, Parameters::numKC,
+                                                Parameters::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
     }
 
     // Final setup
@@ -66,8 +68,12 @@ MBMemory::MBMemory()
     }
 }
 //----------------------------------------------------------------------------
-std::future<std::tuple<unsigned int, unsigned int, unsigned int>> MBMemory::present(const cv::Mat &snapshotFloat, bool train)
+std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &snapshotFloat, bool train)
 {
+    std::mt19937 gen;
+
+    Timer<> timer("\tSimulation:");
+
 #ifndef CPU_ONLY
     // Upload final snapshot to GPU
     m_SnapshotFloatGPU.upload(snapshotFloat);
@@ -82,17 +88,6 @@ std::future<std::tuple<unsigned int, unsigned int, unsigned int>> MBMemory::pres
     float *snapshotData = reinterpret_cast<float*>(snapshotFloat.data);
 #endif
 
-    // Start simulation, applying reward if we are training
-    return std::async(std::launch::async, &MBMemory::presentThread,
-                      this, snapshotData, snapshotStep, train);
-}
-//----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(float *inputData, unsigned int inputDataStep, bool reward)
-{
-    std::mt19937 gen;
-
-    Timer<> timer("\tSimulation:");
-
     // Convert simulation regime parameters to timesteps
     const unsigned long long rewardTimestep = iT + convertMsToTimesteps(Parameters::rewardTimeMs);
     const unsigned int presentDuration = convertMsToTimesteps(Parameters::presentDurationMs);
@@ -105,16 +100,16 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(flo
     // Open CSV output files
 #ifdef RECORD_SPIKES
     const float startTimeMs = t;
-    SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
-    SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
-    SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
+    GeNNUtils::SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
+    GeNNUtils::SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
+    GeNNUtils::SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
 
     std::bitset<Parameters::numPN> pnSpikeBitset;
     std::bitset<Parameters::numKC> kcSpikeBitset;
 #endif  // RECORD_SPIKES
 
     // Update input data step
-    IextStepPN = inputDataStep;
+    IextStepPN = snapshotStep;
 
     // Loop through timesteps
     unsigned int numPNSpikes = 0;
@@ -124,7 +119,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(flo
     {
         // If we should be presenting an image
         if(iT < endPresentTimestep) {
-            IextPN = inputData;
+            IextPN = snapshotData;
         }
         // Otherwise update offset to point to block of zeros
         else {
@@ -132,7 +127,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(flo
         }
 
         // If we should reward in this timestep, inject dopamine
-        if(reward && iT == rewardTimestep) {
+        if(train && iT == rewardTimestep) {
             injectDopaminekcToEN = true;
         }
 
@@ -203,7 +198,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::presentThread(flo
     std::ofstream activeNeuronStream("active_neurons.csv", std::ios_base::app);
     activeNeuronStream << pnSpikeBitset.count() << "," << kcSpikeBitset.count() << "," << numENSpikes << std::endl;
 #endif  // RECORD_SPIKES
-    if(reward) {
+    if(train) {
         constexpr unsigned int numWeights = Parameters::numKC * Parameters::numEN;
 
 #ifndef CPU_ONLY

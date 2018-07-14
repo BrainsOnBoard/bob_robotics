@@ -4,14 +4,18 @@
 #include <opencv2/opencv.hpp>
 
 //----------------------------------------------------------------------------
-// SnapshotProcessor
+// BoBRobotics::AntWorld::SnapshotProcessor
 //----------------------------------------------------------------------------
 // OpenCV-based snapshot processor - uses OpenCV  on CPU to process snapshots
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 class SnapshotProcessorArdin
 {
 public:
     SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                           unsigned int outputWidth, unsigned int outputHeight);
+                           unsigned int outputWidth, unsigned int outputHeight, bool normalise = true);
 
     //------------------------------------------------------------------------
     // Public API
@@ -37,6 +41,9 @@ private:
     const unsigned int m_OutputWidth;
     const unsigned int m_OutputHeight;
 
+    // Should floating point output be normalised
+    const bool m_Normalise;
+
     // Host OpenCV array to hold intermediate resolution greyscale snapshot
     cv::Mat m_IntermediateSnapshotGreyscale;
 
@@ -48,3 +55,5 @@ private:
     // CLAHE algorithm for histogram normalization
     cv::Ptr<cv::CLAHE> m_Clahe;
 };
+}   // namespace AntWorld
+}   // namespace BoBRobotics

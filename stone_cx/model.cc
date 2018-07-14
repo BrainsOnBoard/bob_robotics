@@ -1,10 +1,12 @@
 #include "modelSpec.h"
 
-// Common includes
-#include "../common/sigmoid.h"
+// BoB robotics includes
+#include "../genn_models/sigmoid.h"
 
 // Stone CX includes
 #include "parameters.h"
+
+using namespace BoBRobotics;
 
 //---------------------------------------------------------------------------
 // Continuous
@@ -98,7 +100,7 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Neuron parameters
     //---------------------------------------------------------------------------
-    Sigmoid::VarValues sigmoidInit(0.0);
+    GeNNModels::Sigmoid::VarValues sigmoidInit(0.0);
 
     // TN2
     TN2Linear::VarValues tn2Init(
@@ -115,12 +117,12 @@ void modelDefinition(NNmodel &model)
         0.0);   // Preference angle (radians)
 
     // CL1
-    Sigmoid::ParamValues cl1Params(
+    GeNNModels::Sigmoid::ParamValues cl1Params(
         3.0,     // Multiplicative scale
         -0.5);   // Additive scale
 
     // TB1
-    Sigmoid::ParamValues tb1Params(
+    GeNNModels::Sigmoid::ParamValues tb1Params(
         5.0,    // Multiplicative scale
         0.0);   // Additive scale
 
@@ -136,12 +138,12 @@ void modelDefinition(NNmodel &model)
         0.5);   // i
 
     // Pontine
-    Sigmoid::ParamValues pontineParams(
+    GeNNModels::Sigmoid::ParamValues pontineParams(
         5.0,     // Multiplicative scale
         2.5);   // Additive scale
 
     // CPU1 **NOTE** these are the values from https://github.com/InsectRobotics/path-integration/blob/master/cx_rate.py#L231-L232
-    Sigmoid::ParamValues cpu1Params(
+    GeNNModels::Sigmoid::ParamValues cpu1Params(
         7.5,     // Multiplicative scale
         -1.0);   // Additive scale
 
@@ -161,11 +163,11 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     model.addNeuronPopulation<TN2Linear>("TN2", Parameters::numTN2, {}, tn2Init);
     model.addNeuronPopulation<TLSigmoid>("TL", Parameters::numTL, tlParams, tlInit);
-    model.addNeuronPopulation<Sigmoid>("CL1", Parameters::numCL1, cl1Params, sigmoidInit);
-    model.addNeuronPopulation<Sigmoid>("TB1", Parameters::numTB1, tb1Params, sigmoidInit);
+    model.addNeuronPopulation<GeNNModels::Sigmoid>("CL1", Parameters::numCL1, cl1Params, sigmoidInit);
+    model.addNeuronPopulation<GeNNModels::Sigmoid>("TB1", Parameters::numTB1, tb1Params, sigmoidInit);
     model.addNeuronPopulation<CPU4Sigmoid>("CPU4", Parameters::numCPU4, cpu4Params, cpu4Init);
-    model.addNeuronPopulation<Sigmoid>("Pontine", Parameters::numPontine, pontineParams, sigmoidInit);
-    model.addNeuronPopulation<Sigmoid>("CPU1", Parameters::numCPU1, cpu1Params, sigmoidInit);
+    model.addNeuronPopulation<GeNNModels::Sigmoid>("Pontine", Parameters::numPontine, pontineParams, sigmoidInit);
+    model.addNeuronPopulation<GeNNModels::Sigmoid>("CPU1", Parameters::numCPU1, cpu1Params, sigmoidInit);
 
     //---------------------------------------------------------------------------
     // Synapse populations

@@ -16,6 +16,7 @@
 // I2C includes
 #include <linux/i2c-dev.h>
 
+namespace BoBRobotics {
 //----------------------------------------------------------------------------
 // I2CInterface
 //----------------------------------------------------------------------------
@@ -49,8 +50,9 @@ public:
         m_I2C = open(path, O_RDWR);
         if (m_I2C < 0) {
             std::cerr << "Error in setup:" << strerror(errno) << std::endl;
-            // the error is usually permission error for which we can
-            // temporarily use < $sudo chmod 666 /dev/i2c-1 >
+            // the error is usually permission error which, on Ubuntu, can be fixed by
+            // creating a file /etc/udev/rules.d/90-i2c.rules and adding the following line:
+            // KERNEL=="i2c-[0-7]",MODE="0666"
             return false;
         }
 
@@ -145,3 +147,4 @@ private:
     //---------------------------------------------------------------------
     int m_I2C;                                      // i2c file
 };
+} // BoBRobotics

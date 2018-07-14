@@ -3,10 +3,11 @@
 #include <numeric>
 
 // Common includes
-#include "../common/analogue_csv_recorder.h"
-#include "../common/joystick.h"
-#include "../common/motor_i2c.h"
-#include "../common/vicon_udp.h"
+#include "../hid/joystick.h"
+#include "../genn_utils/analogue_csv_recorder.h"
+#include "../robots/norbot.h"
+#include "../vicon/capture_control.h"
+#include "../vicon/udp.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -17,6 +18,10 @@
 #include "robotParameters.h"
 #include "simulatorCommon.h"
 
+using namespace BoBRobotics;
+using namespace BoBRobotics::HID;
+using namespace std::literals;
+
 int main(int argc, char *argv[])
 {
     const float speedScale = 5.0f;
@@ -26,11 +31,14 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    MotorI2C motor;
+    Robots::Norbot motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
 
+    // Create VICON capture control interface
+    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
+                                              "c:\\users\\ad374\\Desktop");
     // Initialise GeNN
     allocateMem();
     initialize();
@@ -51,18 +59,25 @@ int main(int argc, char *argv[])
     initstone_cx();
 
 #ifdef RECORD_ELECTROPHYS
-    AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
 #endif  // RECORD_ELECTROPHYS
     
     // Wait for VICON system to track some objects
     while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object..." << std::endl;
     }
+
+    // Start capture
+    if(!viconCaptureControl.startRecording("test")) {
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -74,10 +89,10 @@ int main(int argc, char *argv[])
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
         
         // Read from joystick
-        joystick.read();
+        joystick.update();
         
         // Stop if 2nd button is pressed
-        if(joystick.isButtonDown(1)) {
+        if(joystick.isDown(JButton::B)) {
             break;
         }
         
@@ -99,7 +114,7 @@ int main(int argc, char *argv[])
         }
 
         if(numTicks % 100 == 0) {
-            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2 << ")" << std::endl;
+            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")" << std::endl;
         }
 
         // Step network
@@ -116,12 +131,13 @@ int main(int argc, char *argv[])
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
-            joystick.drive(motor, RobotParameters::joystickDeadzone);
+            motor.drive(joystick, RobotParameters::joystickDeadzone);
             
             // If first button is pressed switch to returning home
-            if(joystick.isButtonDown(0)) {
+            if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
+                std::cout << "Turn around VICON frame:" << objectData.getFrameNumber() << std::endl;
                 outbound = false;
             }
         }
@@ -155,6 +171,11 @@ int main(int argc, char *argv[])
     // Stop motor
     motor.tank(0.0f, 0.0f);
     
+    // Stop capture
+    if(!viconCaptureControl.stopRecording("test")) {
+        return EXIT_FAILURE;
+    }
+
     // Exit
     return EXIT_SUCCESS;
 }

@@ -1,12 +1,16 @@
 #include "snapshot_processor_ardin.h"
 
 //----------------------------------------------------------------------------
-// SnapshotProcessorArdin
+// BoBRobotics::AntWorld::SnapshotProcessorArdin
 //----------------------------------------------------------------------------
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 SnapshotProcessorArdin::SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                                               unsigned int outputWidth, unsigned int outputHeight)
+                                               unsigned int outputWidth, unsigned int outputHeight, bool normalise)
 :   m_DisplayScale(displayScale), m_IntermediateWidth(intermediateWidth), m_IntermediateHeight(intermediateHeight),
-    m_OutputWidth(outputWidth), m_OutputHeight(outputHeight),
+    m_OutputWidth(outputWidth), m_OutputHeight(outputHeight), m_Normalise(normalise),
     m_IntermediateSnapshotGreyscale(intermediateHeight, intermediateWidth, CV_8UC1),
     m_FinalSnapshot(outputHeight, outputWidth, CV_8UC1),
     m_FinalSnapshotFloat(outputHeight, outputWidth, CV_32FC1),
@@ -72,5 +76,9 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
     m_FinalSnapshot.convertTo(m_FinalSnapshotFloat, CV_32FC1, 1.0 / 255.0);
 
     // Normalise snapshot using L2 norm
-    cv::normalize(m_FinalSnapshotFloat, m_FinalSnapshotFloat);
+    if(m_Normalise) {
+        cv::normalize(m_FinalSnapshotFloat, m_FinalSnapshotFloat);
+    }
 }
+}   // namespace AntWorld
+}   // namespace BoBRobotics

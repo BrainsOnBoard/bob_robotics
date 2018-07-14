@@ -10,6 +10,7 @@
 // Common includes
 #include "i2c_interface.h"
 
+namespace BoBRobotics {
 //----------------------------------------------------------------------------
 // LM9DS1
 //----------------------------------------------------------------------------
@@ -812,3 +813,4 @@ private:
     I2CInterface m_AccelGyroI2C;
     I2CInterface m_MagnetoI2C;
 };
+} // BoBRobotics

@@ -1,6 +1,7 @@
 #include "video.h"
 
-namespace Parrot {
+namespace BoBRobotics {
+namespace Robots {
 #ifndef DUMMY_DRONE
 // start VideoDecoder class
 const char *VideoDecoder::LOG_TAG = "Decoder";
@@ -103,7 +104,7 @@ VideoDecoder::ReallocateBuffers()
                          "Can not allocate memory for frames!");
 
         frame_rgb_raw_ptr_ =
-                reinterpret_cast<u8 *>(av_malloc(num_bytes * sizeof(u8)));
+                reinterpret_cast<uint8_t *>(av_malloc(num_bytes * sizeof(uint8_t)));
         ThrowOnCondition(
                 frame_rgb_raw_ptr_ == NULL,
                 std::string("Can not allocate memory for the buffer: ") +
@@ -192,9 +193,9 @@ VideoDecoder::ConvertFrameToRGB()
 }
 
 bool
-VideoDecoder::SetH264Params(u8 *sps_buffer_ptr,
+VideoDecoder::SetH264Params(uint8_t *sps_buffer_ptr,
                             uint32_t sps_buffer_size,
-                            u8 *pps_buffer_ptr,
+                            uint8_t *pps_buffer_ptr,
                             uint32_t pps_buffer_size)
 {
     // This function is called in the same thread as Decode(), so no sync is
@@ -319,16 +320,16 @@ BebopVideoStream::BebopVideoStream(Bebop *bebop)
 {}
 
 void
-BebopVideoStream::start_streaming()
+BebopVideoStream::startStreaming()
 {}
 void
-BebopVideoStream::start_streaming(user_video_callback, void *)
+BebopVideoStream::startStreaming(userVideoCallback, void *)
 {}
 void
-BebopVideoStream::stop_streaming()
+BebopVideoStream::stopStreaming()
 {}
 void
-sBebopVideoStream::tart_mplayer()
+BebopVideoStream::startMplayer()
 {}
 #else
 /*
@@ -448,7 +449,7 @@ BebopVideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
     if (vid->decoder) {
         bool ok = vid->decoder->Decode(frame);
         if (ok) {
-            const u8 *raw = vid->decoder->GetFrameRGBRawCstPtr();
+            const uint8_t *raw = vid->decoder->GetFrameRGBRawCstPtr();
             vid->m_UserCallback(raw, vid->m_UserVideoCallbackData);
         }
 
@@ -465,4 +466,5 @@ BebopVideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 }
 #endif // DUMMY_DRONE
 // end BebopVideoStream class
-} // namespace Parrot
+} // Robots
+} // BoBRobotics

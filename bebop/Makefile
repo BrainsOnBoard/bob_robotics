@@ -1,19 +1,16 @@
 # AR SDK
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
-CXXFLAGS+=-O2 -I$(AR_STAGING_PATH)/usr/include \
+CXXFLAGS+=-O2 -g -I$(AR_STAGING_PATH)/usr/include \
 	-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags \
-	-Wno-deprecated-declarations
+	-Wno-deprecated-declarations -std=c++14
 
 .PHONY: all clean
 
-all: bebop.o video.o
+all: bebop.o video.o joystick.o
 
-bebop.o: bebop.cc bebop.h semaphore.h
-	$(CXX) $(CXXFLAGS) -c -o bebop.o bebop.cc
-
-video.o: video.cc video.h
-	$(CXX) $(CXXFLAGS) -c -o video.o video.cc
+%.o: src/%.cc
+	$(_PREFIX)$(CXX) -o $@ -c $< $(CXXFLAGS)
 
 clean:
-	rm -rf *.o
+	rm -f *.o

@@ -14,7 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "../common/analogue_csv_recorder.h"
+#include "../genn_utils/analogue_csv_recorder.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -23,6 +23,8 @@
 #include "parameters.h"
 #include "simulatorCommon.h"
 #include "visualizationCommon.h"
+
+using namespace BoBRobotics;
 
 namespace
 {
@@ -75,11 +77,11 @@ int main()
     cv::Mat activityImage(activityImageHeight, activityImageWidth, CV_8UC3, cv::Scalar::all(0));
 
 #ifdef RECORD_ELECTROPHYS
-    AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
 #endif  // RECORD_ELECTROPHYS
 
     std::ifstream replayData("data.csv");

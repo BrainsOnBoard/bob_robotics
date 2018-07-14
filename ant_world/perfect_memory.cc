@@ -10,13 +10,7 @@
 //----------------------------------------------------------------------------
 // PerfectMemory
 //----------------------------------------------------------------------------
-std::future<std::tuple<unsigned int, unsigned int, unsigned int>> PerfectMemory::present(const cv::Mat &snapshotFloat, bool train)
-{
-    return std::async(std::launch::async, &PerfectMemory::presentThread,
-                      this, snapshotFloat, train);
-}
-//----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> PerfectMemory::presentThread(const cv::Mat &snapshotFloat, bool train)
+std::tuple<unsigned int, unsigned int, unsigned int> PerfectMemory::present(const cv::Mat &snapshotFloat, bool train)
 {
     // Loop through snapshots
     float minSquareFamiliarity = std::numeric_limits<float>::max();

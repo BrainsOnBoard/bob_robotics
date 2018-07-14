@@ -1,24 +1,75 @@
-#include "../common/joystick.h"
-#include "../common/motor_i2c.h"
+// C++ includes
+#include <iostream>
+#include <string>
 
-int main()
+// local includes
+#include "hid/joystick.h"
+
+using namespace BoBRobotics::HID;
+
+bool
+onAxisEvent(JAxis axis, float value)
 {
-    constexpr float joystickDeadzone = 0.25f;
+    std::string name = Joystick::getName(axis);
+    std::cout << "Axis " << name << " (" << static_cast<int>(axis) << "): "
+              << value << std::endl;
     
-    // Create joystick interface
+    // we handle all axis events
+    return true;
+}
+
+bool
+onButtonEvent(JButton button, bool pressed)
+{
+    std::string name = Joystick::getName(button);
+    std::cout << "Button " << name << " (" << static_cast<int>(button)
+              << (pressed ? ") pushed" : ") released") << std::endl;
+
+    // we handle all button events
+    return true;
+}
+
+inline void
+initButton(Joystick &joystick, JButton button)
+{
+    std::cout << "[initial] ";
+    onButtonEvent(button, joystick.isDown(button));
+}
+
+int
+main()
+{
+    std::cout << "Joystick test program" << std::endl;
+    std::cout << "Press return to quit" << std::endl << std::endl;
+
     Joystick joystick;
-    
-    // Create motor interface
-    MotorI2C motor;
+    std::cout << "Opened joystick" << std::endl;
 
-    do {
-        // Read joystick
-        joystick.read();
-        
-        // Use joystick to drive motor
-        joystick.drive(motor, joystickDeadzone);
+    // get initial axis states
+    for (int i = 0; i < static_cast<int>(JAxis::LENGTH); i++) {
+        JAxis axis = static_cast<JAxis>(i);
+        std::cout << "[initial] ";
+        onAxisEvent(axis, joystick.getState(axis));
+    }
 
-    } while(!joystick.isButtonDown(1));
-    
+    // get initial button states
+    initButton(joystick, JButton::A);
+    initButton(joystick, JButton::B);
+    initButton(joystick, JButton::X);
+    initButton(joystick, JButton::Y);
+    initButton(joystick, JButton::LB);
+    initButton(joystick, JButton::RB);
+    initButton(joystick, JButton::Back);
+    initButton(joystick, JButton::Start);
+    initButton(joystick, JButton::LeftStick);
+    initButton(joystick, JButton::RightStick);
+
+    // add handlers for button and axis events
+    joystick.addHandler(onAxisEvent);
+    joystick.addHandler(onButtonEvent);
+
+    // run joystick on main thread
+    joystick.run();
+
     return 0;
 }

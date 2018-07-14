@@ -6,25 +6,23 @@
 #include <cmath>
 
 // Common includes
-#include "../common/opencv_unwrap_360.h"
 #include "../common/timer.h"
+#include "../imgproc/opencv_unwrap_360.h"
+#include "../video/panoramic.h"
 
-int main(int argc, char *argv[])
+using namespace BoBRobotics;
+using namespace BoBRobotics::ImgProc;
+using namespace BoBRobotics::Video;
+
+int main()
 {
-    const unsigned int device = (argc > 1) ? std::atoi(argv[1]) : 0;
-
-    const cv::Size cameraRes(640, 480);
-    const cv::Size unwrapRes(90, 10);
+    const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;
 
-    // Open video capture device and check it matches desired camera resolution
-    cv::VideoCapture capture(device);
-    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == cameraRes.width);
-    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == cameraRes.height);
-
-    // Create unwrapper
-    OpenCVUnwrap360 unwrapper(cameraRes, unwrapRes,
-                              0.5, 0.416, 0.173, 0.377, -3.141592654);
+    // Create panoramic camera and suitable unwrapper
+    auto cam = getPanoramicCamera();
+    auto unwrapper = cam->createUnwrapper(unwrapRes);
+    const auto cameraRes = cam->getOutputSize();
 
     // Create images
     cv::Mat originalImage(cameraRes, CV_8UC3);
@@ -44,7 +42,7 @@ int main(int argc, char *argv[])
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
             // Read from camera
-            if(!capture.read(originalImage)) {
+            if(!cam->readFrame(originalImage)) {
                 return EXIT_FAILURE;
             }
 

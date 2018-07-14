@@ -5,8 +5,13 @@
 #include <GL/glu.h>
 
 //----------------------------------------------------------------------------
-// RenderMesh
+// BoBRobotics::AntWorld::RenderMesh
 //----------------------------------------------------------------------------
+// Class for generating piece of curved geometry used for rendering cubemap to screen
+namespace BoBRobotics
+{
+namespace AntWorld
+{
 class RenderMesh
 {
 public:
@@ -29,5 +34,6 @@ private:
     GLuint m_TextureCoordsVBO;
     GLuint m_IBO;
     unsigned int m_NumIndices;
-
 };
+}   // namespace AntWorld
+}   // namespace BoBRobotics
