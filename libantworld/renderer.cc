@@ -180,8 +180,8 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     // Configure top-down orthographic projection matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(minBound[0], maxBound[0],
-               minBound[1], maxBound[1]);
+    gluOrtho2D(minBound[0].value(), maxBound[0].value(),
+               minBound[1].value(), maxBound[1].value());
 
     // Build modelview matrix to centre world
     glMatrixMode(GL_MODELVIEW);

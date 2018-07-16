@@ -10,6 +10,9 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
+// BoB robotics includes
+#include "../common/geometry.h"
+
 // Forward declarations
 namespace cv
 {
@@ -20,6 +23,8 @@ namespace filesystem
 {
     class path;
 }
+
+using namespace BoBRobotics::Geometry;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::World
@@ -44,8 +49,19 @@ public:
 
     void render() const;
 
-    const GLfloat (&getMinBound())[3] { return m_MinBound; }
-    const GLfloat (&getMaxBound())[3] { return m_MaxBound; }
+    const Vector3m getMinBound()
+    {
+        return Vector3m(makeM(m_MinBound[0]),
+                        makeM(m_MinBound[1]),
+                        makeM(m_MinBound[2]));
+    }
+
+    const Vector3m getMaxBound()
+    {
+        return Vector3m(makeM(m_MaxBound[0]),
+                        makeM(m_MaxBound[1]),
+                        makeM(m_MaxBound[2]));
+    }
 
 private:
     //------------------------------------------------------------------------

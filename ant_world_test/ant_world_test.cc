@@ -18,13 +18,6 @@
 #include "../third_party/units.h"
 
 using namespace BoBRobotics;
-using namespace units::literals;
-using namespace units::math;
-using namespace units::dimensionless;
-using namespace units::angle;
-using namespace units::angular_velocity;
-using namespace units::length;
-using namespace units::velocity;
 using namespace units::time;
 
 // Anonymous namespace
@@ -122,9 +115,9 @@ int main()
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();
     const auto &worldMax = renderer.getWorld().getMaxBound();
-    auto x = units::make_unit<meter_t>(worldMin[0] + ((worldMax[0] - worldMin[0]) * 0.5f));
-    auto y = units::make_unit<meter_t>(worldMin[1] + ((worldMax[1] - worldMin[1]) * 0.5f));
-    auto z = units::make_unit<meter_t>(worldMin[2] + ((worldMax[2] - worldMin[2]) * 0.5f));
+    meter_t x = worldMin[0] + (worldMax[0] - worldMin[0]) / 2.0;
+    meter_t y = worldMin[1] + (worldMax[1] - worldMin[1]) / 2.0;
+    meter_t z = worldMin[2] + (worldMax[2] - worldMin[2]) / 2.0;
     degree_t yaw = 0_deg;
     degree_t pitch = 0_deg;
 
@@ -151,7 +144,6 @@ int main()
         if(joystick.isPressed(HID::JButton::X)) {
             ant = !ant;
         }
-
 
         // Use right trigger to control forward movement speed
         const meter_t forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::RightTrigger);
