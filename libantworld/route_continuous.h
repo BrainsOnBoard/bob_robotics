@@ -36,7 +36,7 @@ public:
 
     bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
     std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
-    std::tuple<Vector2m, degree_t> getPosition(meter_t distance) const;
+    std::tuple<meter_t, meter_t, degree_t> getPosition(meter_t distance) const;
 
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(meter_t x, meter_t y, bool error);

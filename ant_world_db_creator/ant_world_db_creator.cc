@@ -168,27 +168,27 @@ int main(int argc, char *argv[])
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
-    Vector2m position;
-    millimeter_t x, y;
-    const millimeter_t z = 1_cm; // agent's height is fixed
+    meter_t x, y;
+    millimeter_t xMM, yMM;
+    const millimeter_t zMM = 1_cm; // agent's height is fixed
     degree_t heading = 0_deg;
 
     // While the window isn't forcibly being closed
     while (!glfwWindowShouldClose(window)) {
         // If we should be following route, get position from route
         if(followRoute) {
-            std::tie(position, heading) = route.getPosition(pathStep * routePosition);
+            std::tie(x, y, heading) = route.getPosition(pathStep * routePosition);
         }
         else {
-            position.X = worldMin.X + gridSpacing * currentGridX;
-            position.Y = worldMin.Y + gridSpacing * currentGridY;
+            x = worldMin.X + gridSpacing * currentGridX;
+            y = worldMin.Y + gridSpacing * currentGridY;
         }
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
-        renderer.renderPanoramicView(position.X, position.Y, z,
+        renderer.renderPanoramicView(x, y, zMM,
                                      heading, 0_deg, 0_deg,
                                      0, 0, renderWidth, renderHeight);
 
@@ -199,8 +199,8 @@ int main(int argc, char *argv[])
         input.readFrame(snapshot);
 
         // Convert to mm
-        x = position.X;
-        y = position.Y;
+        xMM = x;
+        yMM = y;
 
         // Get image file name
         char filename[255];
@@ -209,11 +209,11 @@ int main(int argc, char *argv[])
         }
         else {
             sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
-                    (int) round(x), (int) round(y), (int) round(z));
+                    (int) round(xMM), (int) round(y), (int) round(zMM));
         }
 
         // Write image file info to CSV file
-        csvStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
+        csvStream << xMM.value() << ", " << yMM.value() << ", " << zMM.value() << ", "
                   << heading.value() << ", " << filename << std::endl;
 
         // Write image file
