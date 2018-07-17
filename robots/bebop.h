@@ -268,13 +268,6 @@ private:
 #ifndef DUMMY_DRONE
     inline void addEventHandlers();
     void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    inline void onMaxSpeedChanged(const std::string &label,
-                                  ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
-                                  const char *currentKey, const char *minKey,
-                                  const char *maxKey);
-    inline void onMaxTiltChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    inline void onMaxYawSpeedChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    inline void onMaxVerticalSpeedChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
