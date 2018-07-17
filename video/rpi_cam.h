@@ -78,7 +78,7 @@ public:
 		while (recv(m_Socket, buffer, 72*19, 0) > 0) {
 			// fill in the outFrame
 			//std::cout << (int) buffer[0] << std::endl;        
-			int j = 1;
+			int j = 0;
 			for (int i = 0; i < 72*19-1; ++i) {
                 m_Frame.at<float>(i%72,buffer[0]+floor(i/72)) = float(buffer[j])/255.0f;
 				++j;

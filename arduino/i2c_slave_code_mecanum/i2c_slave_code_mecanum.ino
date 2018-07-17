@@ -67,9 +67,11 @@ byte m4mask = 8;
 int has_serial = 1;
 uint8_t in_data[8];
 
+int cnt = 0;
+
 void serialEvent(){
 
-  Serial.println("Serial in!");
+  //Serial.println("Serial in!");
 
   // buffer for data
 
@@ -134,23 +136,28 @@ void serialEvent(){
 void loop() {
 
   if (has_serial == 0) {
-    rearRightMotor->setSpeed(0);
-    rearRightMotor->run(FORWARD);
-    rearLeftMotor->setSpeed(0);
-    rearLeftMotor->run(FORWARD);
-    frontRightMotor->setSpeed(0);
-    frontRightMotor->run(FORWARD);
-    frontLeftMotor->setSpeed(0);
-    frontLeftMotor->run(FORWARD);
-
-    rearRightMotor->run(RELEASE);
-    rearLeftMotor->run(RELEASE);
-    frontRightMotor->run(RELEASE);
-    frontLeftMotor->run(RELEASE);
+    cnt++;
+    if (cnt > 10) {
+      rearRightMotor->setSpeed(0);
+      rearRightMotor->run(FORWARD);
+      rearLeftMotor->setSpeed(0);
+      rearLeftMotor->run(FORWARD);
+      frontRightMotor->setSpeed(0);
+      frontRightMotor->run(FORWARD);
+      frontLeftMotor->setSpeed(0);
+      frontLeftMotor->run(FORWARD);
+  
+      rearRightMotor->run(RELEASE);
+      rearLeftMotor->run(RELEASE);
+      frontRightMotor->run(RELEASE);
+      frontLeftMotor->run(RELEASE);
+    }
+  } else {
+    cnt = 0;
   }
   has_serial = 0;
 
   //Serial.println("loop...");
-  delay(1);
+  delay(3);
  
 }

@@ -1,7 +1,7 @@
 CXXFLAGS= -std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -I.. #`pkg-config --cflags opencv`
 LDFLAGS= -pthread `pkg-config --libs opencv`
 # ACope - pkg-config for CV3 borked on bob-sim UNCOMMENT TO USE
-#LDFLAGS= -pthread -L/usr/lib/x86_64-linux-gnu -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio
+LDFLAGS= -pthread -L/usr/lib/x86_64-linux-gnu -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio
 
 .PHONY: all clean
 
