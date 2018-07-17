@@ -134,10 +134,10 @@ public:
         AVCodecContext *m_CodecContextPtr = nullptr;
         AVCodec *m_CodecPtr = nullptr;
         AVFrame *m_FramePtr = nullptr;
-        AVFrame *m_FrameRGBPtr = nullptr;
+        AVFrame *m_FrameBGRPtr = nullptr;
         AVPacket m_Packet;
         SwsContext *m_ImgConvertContextPtr = nullptr;
-        uint8_t *m_FrameRGBRawPtr = nullptr;
+        uint8_t *m_FrameBGRRawPtr = nullptr;
         bool m_UpdateCodecParams = false;
         std::vector<uint8_t> m_CodecData;
 
@@ -146,7 +146,7 @@ public:
         bool reallocateBuffers();
         void cleanupBuffers();
         void reset();
-        void convertFrameToRGB();
+        void convertFrameToBGR();
         bool setH264Params(uint8_t *sps_buffer_ptr,
                            uint32_t sps_buffer_size,
                            uint8_t *pps_buffer_ptr,
@@ -786,22 +786,21 @@ Bebop::VideoStream::reallocateBuffers()
                                  std::to_string(m_CodecContextPtr->width));
 
         const uint32_t num_bytes = avpicture_get_size(
-                AV_PIX_FMT_RGB24, m_CodecContextPtr->width, m_CodecContextPtr->width);
-        m_FrameRGBPtr = av_frame_alloc();
+                AV_PIX_FMT_BGR24, m_CodecContextPtr->width, m_CodecContextPtr->width);
+        m_FrameBGRPtr = av_frame_alloc();
 
-        throwOnCondition(!m_FrameRGBPtr,
+        throwOnCondition(!m_FrameBGRPtr,
                          "Can not allocate memory for frames!");
 
-        m_FrameRGBRawPtr =
-                reinterpret_cast<uint8_t *>(av_malloc(num_bytes * sizeof(uint8_t)));
+        m_FrameBGRRawPtr = reinterpret_cast<uint8_t *>(av_malloc(num_bytes * sizeof(uint8_t)));
         throwOnCondition(
-                m_FrameRGBRawPtr == nullptr,
+                m_FrameBGRRawPtr == nullptr,
                 std::string("Can not allocate memory for the buffer: ") +
                         std::to_string(num_bytes));
         throwOnCondition(0 == avpicture_fill(reinterpret_cast<AVPicture *>(
-                                                     m_FrameRGBPtr),
-                                             m_FrameRGBRawPtr,
-                                             AV_PIX_FMT_RGB24,
+                                                     m_FrameBGRPtr),
+                                             m_FrameBGRRawPtr,
+                                             AV_PIX_FMT_BGR24,
                                              m_CodecContextPtr->width,
                                              m_CodecContextPtr->height),
                          "Failed to initialize the picture data structure.");
@@ -811,7 +810,7 @@ Bebop::VideoStream::reallocateBuffers()
                                                 m_CodecContextPtr->pix_fmt,
                                                 m_CodecContextPtr->width,
                                                 m_CodecContextPtr->height,
-                                                AV_PIX_FMT_RGB24,
+                                                AV_PIX_FMT_BGR24,
                                                 SWS_FAST_BILINEAR,
                                                 nullptr,
                                                 nullptr,
@@ -828,12 +827,12 @@ Bebop::VideoStream::reallocateBuffers()
 void
 Bebop::VideoStream::cleanupBuffers()
 {
-    if (m_FrameRGBPtr) {
-        av_free(m_FrameRGBPtr);
+    if (m_FrameBGRPtr) {
+        av_free(m_FrameBGRPtr);
     }
 
-    if (m_FrameRGBRawPtr) {
-        av_free(m_FrameRGBRawPtr);
+    if (m_FrameBGRRawPtr) {
+        av_free(m_FrameBGRRawPtr);
     }
 
     if (m_ImgConvertContextPtr) {
@@ -870,7 +869,7 @@ Bebop::VideoStream::~VideoStream()
 }
 
 void
-Bebop::VideoStream::convertFrameToRGB()
+Bebop::VideoStream::convertFrameToBGR()
 {
     if (!m_CodecContextPtr->width || !m_CodecContextPtr->height)
         return;
@@ -879,8 +878,8 @@ Bebop::VideoStream::convertFrameToRGB()
               m_FramePtr->linesize,
               0,
               m_CodecContextPtr->height,
-              m_FrameRGBPtr->data,
-              m_FrameRGBPtr->linesize);
+              m_FrameBGRPtr->data,
+              m_FrameBGRPtr->linesize);
 }
 
 bool
@@ -977,7 +976,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
                         std::cerr << "Buffer reallocation failed!" << std::endl;
                     }
                 }
-                convertFrameToRGB();
+                convertFrameToBGR();
             }
 
             if (m_Packet.data) {
@@ -1027,10 +1026,8 @@ Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 {
     auto stream = reinterpret_cast<VideoStream *>(data);
     if (stream->decode(frame)) {
-        // convert into BGR cv::Mat
         std::lock_guard<decltype(stream->m_FrameMutex)> guard(stream->m_FrameMutex);
-        cv::Mat frameRGB(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) stream->m_FrameRGBRawPtr);
-        cv::cvtColor(frameRGB, stream->m_Frame, CV_RGB2BGR, 3);
+        stream->m_Frame = cv::Mat(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) stream->m_FrameBGRRawPtr);
         stream->m_NewFrame = true;
     }
     return ARCONTROLLER_OK;

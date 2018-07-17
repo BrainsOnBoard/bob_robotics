@@ -35,7 +35,7 @@ TARGET := bebop_test
 
 all: $(TARGET)
 
-$(TARGET): $(TARGET).cc
+$(TARGET): $(TARGET).cc ../robots/bebop.h
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(TARGET).cc $(LDFLAGS)
 
 clean:
