@@ -42,21 +42,25 @@ extern "C"
 #endif
 #endif // !DUMMY_DRONE
 
-// C++ includes
+// Standard C++ includes
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <tuple>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/semaphore.h"
 #include "../hid/joystick.h"
 #include "../video/input.h"
+
+// Third-party includes
+#include "../third_party/units.h"
 
 // POSIX includes
 #include <signal.h>
@@ -75,6 +79,11 @@ extern "C"
 #ifdef DUMMY_DRONE
 #define NO_FLY
 #endif
+
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::angular_velocity;
+using namespace units::velocity;
 
 namespace BoBRobotics {
 namespace Robots {
@@ -102,6 +111,9 @@ checkError(eARDISCOVERY_ERROR err)
 
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
+template <class T>
+using Limits = std::tuple<T, T>;
+
 /*
  * Main class for interfacing with drone. Handles connection/disconnection and
  * sending steering commands.
@@ -111,7 +123,7 @@ using FlightEventHandler = std::function<void(bool takeoff)>;
  */
 class Bebop
 {
-    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
+using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
 public:
     class VideoStream : public Video::Input
@@ -169,20 +181,84 @@ public:
     void takeOff();
     void land();
     VideoStream &getVideoStream();
+    inline degree_t getMaximumTilt();
+    inline Limits<degree_t> &getTiltLimits();
+    inline meters_per_second_t getMaximumVerticalSpeed();
+    inline Limits<meters_per_second_t> &getVerticalSpeedLimits();
+    inline degrees_per_second_t getMaximumYawSpeed();
+    inline Limits<degrees_per_second_t> &getYawSpeedLimits();
     void setPitch(const float pitch);
     void setRoll(const float right);
-    void setAscent(const float up);
+    void setVerticalSpeed(const float up);
     void setYawSpeed(const float right);
     void stopMoving();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
 
 private:
+    template<class UnitType>
+    class LimitValues
+    {
+    public:
+        inline void onChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                              const char *currentKey,
+                              const char *minKey,
+                              const char *maxKey)
+        {
+            ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+            HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+            if (elem) {
+                ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+
+                // get current value
+                HASH_FIND_STR(elem->arguments, currentKey, arg);
+                if (arg) {
+                    m_Current = units::make_unit<UnitType>(arg->value.Float);
+                }
+
+                // get min value
+                HASH_FIND_STR(elem->arguments, minKey, arg);
+                if (arg) {
+                    std::get<0>(m_Limits) = units::make_unit<UnitType>(arg->value.Float);
+                }
+
+                // get max value
+                HASH_FIND_STR(elem->arguments, maxKey, arg);
+                if (arg) {
+                    std::get<1>(m_Limits) = units::make_unit<UnitType>(arg->value.Float);
+                }
+
+                // notify waiting threads
+                m_Semaphore.notify();
+            }
+        }
+
+        inline UnitType getCurrent()
+        {
+            m_Semaphore.waitOnce();
+            return m_Current;
+        }
+
+        inline Limits<UnitType> &getLimits()
+        {
+            m_Semaphore.waitOnce();
+            return m_Limits;
+        }
+
+    private:
+        UnitType m_Current;
+        Limits<UnitType> m_Limits;
+        Semaphore m_Semaphore;
+    };
+
     ControllerPtr m_Device;
     Semaphore m_Semaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     bool m_IsConnected = false;
     FlightEventHandler m_FlightEventHandler = nullptr;
+    LimitValues<degree_t> m_TiltLimits;
+    LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
+    LimitValues<degrees_per_second_t> m_YawSpeedLimits;
 
     void startStreaming();
     void stopStreaming();
@@ -196,6 +272,9 @@ private:
                                   ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                   const char *currentKey, const char *minKey,
                                   const char *maxKey);
+    inline void onMaxTiltChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    inline void onMaxYawSpeedChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    inline void onMaxVerticalSpeedChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
@@ -366,6 +445,42 @@ Bebop::getVideoStream()
     return *m_VideoStream;
 }
 
+inline degree_t
+Bebop::getMaximumTilt()
+{
+    return m_TiltLimits.getCurrent();
+}
+
+inline Limits<degree_t> &
+Bebop::getTiltLimits()
+{
+    return m_TiltLimits.getLimits();
+}
+
+inline meters_per_second_t
+Bebop::getMaximumVerticalSpeed()
+{
+    return m_VerticalSpeedLimits.getCurrent();
+}
+
+inline Limits<meters_per_second_t> &
+Bebop::getVerticalSpeedLimits()
+{
+    return m_VerticalSpeedLimits.getLimits();
+}
+
+inline degrees_per_second_t
+Bebop::getMaximumYawSpeed()
+{
+    return m_YawSpeedLimits.getCurrent();
+}
+
+inline Limits<degrees_per_second_t> &
+Bebop::getYawSpeedLimits()
+{
+    return m_YawSpeedLimits.getLimits();
+}
+
 /*
  * Set drone's pitch, for moving forwards and backwards.
  */
@@ -406,7 +521,7 @@ Bebop::setRoll(const float right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::setAscent(const float up)
+Bebop::setVerticalSpeed(const float up)
 {
     assert(up >= -1.0f && up <= 1.0f);
     if (m_IsConnected) {
@@ -464,7 +579,7 @@ Bebop::stopMoving()
         setPitch(0);
         setRoll(0);
         setYawSpeed(0);
-        setAscent(0);
+        setVerticalSpeed(0);
     }
 }
 
@@ -587,43 +702,6 @@ Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     }
 }
 
-inline void
-Bebop::onMaxSpeedChanged(const std::string &label,
-                         ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
-                         const char *currentKey, const char *minKey, const char *maxKey)
-{
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (elem) {
-        ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-        float current = 0.0f, min = 0.0f, max = 0.0f;
-
-        // get current value
-        HASH_FIND_STR(elem->arguments, currentKey, arg);
-        if (arg) {
-            current = arg->value.Float;
-        }
-
-        // get min value
-        HASH_FIND_STR(elem->arguments, minKey, arg);
-        if (arg) {
-            min = arg->value.Float;
-        }
-
-        // get max value
-        HASH_FIND_STR(elem->arguments, maxKey, arg);
-        if (arg) {
-            max = arg->value.Float;
-        }
-
-        // print
-        std::cout << label << ":" << std::endl
-                  << "  - current: " << current << std::endl
-                  << "  - limits: [" << min << ", " << max << "]" << std::endl
-                  << std::endl;
-    }
-}
-
 /*
  * Empty function used to suppress default ARSDK console messages.
  */
@@ -669,12 +747,13 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
     }
 }
 
-#define MAX_SPEED_CHANGED(LABEL, KEY)                                                                                                                                                                    \
-    {                                                                                                                                                                                                    \
-        bebop->onMaxSpeedChanged(LABEL, dict, \
-            ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##_CURRENT, \
-            ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##_MIN, \
-            ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##_MAX ); \
+#define MAX_SPEED_CHANGED(NAME, KEY)                                         \
+    {                                                                        \
+        bebop->m_##NAME##Limits.onChanged(                                   \
+                dict,                                                        \
+                ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##CHANGED_CURRENT, \
+                ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##CHANGED_MIN,     \
+                ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##CHANGED_MAX);    \
     }
 
 /*
@@ -695,13 +774,13 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         bebop->onBatteryChanged(dict);
         break;
         case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
-        MAX_SPEED_CHANGED("Tilt", PILOTINGSETTINGSSTATE_MAXTILTCHANGED);
+        MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
         break;
         case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED:
-        MAX_SPEED_CHANGED("Rotation speed", SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED);
+        MAX_SPEED_CHANGED(YawSpeed, SPEEDSETTINGSSTATE_MAXROTATIONSPEED);
         break;
         case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
-        MAX_SPEED_CHANGED("Vertical speed", SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED);
+        MAX_SPEED_CHANGED(VerticalSpeed, SPEEDSETTINGSSTATE_MAXVERTICALSPEED);
         break;
         default:
         break;
@@ -723,7 +802,7 @@ Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
         setPitch(maxSpeed * -value);
         return true;
     case HID::JAxis::LeftStickVertical:
-        setAscent(maxSpeed * -value);
+        setVerticalSpeed(maxSpeed * -value);
         return true;
     case HID::JAxis::LeftTrigger:
         setYawSpeed(maxSpeed * -value);
