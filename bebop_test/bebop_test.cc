@@ -20,7 +20,7 @@ int main()
     drone.connect();
 
     try {
-        drone.addJoystick(joystick, /*maxSpeed=*/0.25);
+        drone.addJoystick(joystick, /*maxSpeed=*/1.0);
         Video::Display display(drone.getVideoStream());
         do {
             if (!joystick.update() && !display.update()) {

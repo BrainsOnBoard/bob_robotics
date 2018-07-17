@@ -191,7 +191,11 @@ private:
 
 #ifndef DUMMY_DRONE
     inline void addEventHandlers();
-    void batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    inline void onMaxSpeedChanged(const std::string &label,
+                                  ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                                  const char *currentKey, const char *minKey,
+                                  const char *maxKey);
     inline void createControllerDevice();
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
@@ -307,7 +311,7 @@ Bebop::disconnect()
  * Start controlling this drone with a joystick.
  */
 void
-Bebop::addJoystick(HID::Joystick &joystick, const float maxSpeed = 0.25)
+Bebop::addJoystick(HID::Joystick &joystick, const float maxSpeed = 1.0)
 {
     if (maxSpeed < 0 || maxSpeed > 1) {
         throw std::invalid_argument("maxSpeed must be between 0 and 1");
@@ -561,7 +565,7 @@ Bebop::addEventHandlers()
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
@@ -580,6 +584,43 @@ Bebop::batteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     if (val) {
         // print battery status
         std::cout << "Battery: " << (int) val->value.U8 << "%" << std::endl;
+    }
+}
+
+inline void
+Bebop::onMaxSpeedChanged(const std::string &label,
+                         ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                         const char *currentKey, const char *minKey, const char *maxKey)
+{
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+        float current = 0.0f, min = 0.0f, max = 0.0f;
+
+        // get current value
+        HASH_FIND_STR(elem->arguments, currentKey, arg);
+        if (arg) {
+            current = arg->value.Float;
+        }
+
+        // get min value
+        HASH_FIND_STR(elem->arguments, minKey, arg);
+        if (arg) {
+            min = arg->value.Float;
+        }
+
+        // get max value
+        HASH_FIND_STR(elem->arguments, maxKey, arg);
+        if (arg) {
+            max = arg->value.Float;
+        }
+
+        // print
+        std::cout << label << ":" << std::endl
+                  << "  - current: " << current << std::endl
+                  << "  - limits: [" << min << ", " << max << "]" << std::endl
+                  << std::endl;
     }
 }
 
@@ -628,6 +669,14 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
     }
 }
 
+#define MAX_SPEED_CHANGED(LABEL, KEY)                                                                                                                                                                    \
+    {                                                                                                                                                                                                    \
+        bebop->onMaxSpeedChanged(LABEL, dict, \
+            ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##_CURRENT, \
+            ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##_MIN, \
+            ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_##KEY##_MAX ); \
+    }
+
 /*
  * Invoked when a command is received from drone.
  */
@@ -640,9 +689,22 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         return;
     }
 
-    if (key == ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED) {
-        Bebop *bebop = reinterpret_cast<Bebop *>(data);
-        bebop->batteryChanged(dict);
+    Bebop *bebop = reinterpret_cast<Bebop *>(data);
+    switch (key) {
+        case ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED:
+        bebop->onBatteryChanged(dict);
+        break;
+        case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
+        MAX_SPEED_CHANGED("Tilt", PILOTINGSETTINGSSTATE_MAXTILTCHANGED);
+        break;
+        case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED:
+        MAX_SPEED_CHANGED("Rotation speed", SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED);
+        break;
+        case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
+        MAX_SPEED_CHANGED("Vertical speed", SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED);
+        break;
+        default:
+        break;
     }
 }
 
