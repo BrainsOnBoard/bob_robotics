@@ -120,24 +120,10 @@ public:
     class VideoStream : public Video::Input
     {
     public:
+        VideoStream(Bebop &bebop);
         ~VideoStream();
         virtual bool readFrame(cv::Mat &) override;
         virtual cv::Size getOutputSize() const override;
-        void configCallback(ARCONTROLLER_Stream_Codec_t codec);
-        void frameCallback(ARCONTROLLER_Frame_t *frame);
-        bool setH264Params(uint8_t *sps_buffer_ptr,
-                           uint32_t sps_buffer_size,
-                           uint8_t *pps_buffer_ptr,
-                           uint32_t pps_buffer_size);
-        bool decode(const ARCONTROLLER_Frame_t *framePtr);
-        inline uint32_t getFrameWidth() const
-        {
-            return m_CodecInitialised ? m_CodecContextPtr->width : 0;
-        }
-        inline uint32_t getFrameHeight() const
-        {
-            return m_CodecInitialised ? m_CodecContextPtr->height : 0;
-        }
 
     private:
         cv::Mat m_Frame;
@@ -161,6 +147,22 @@ public:
         void cleanupBuffers();
         void reset();
         void convertFrameToRGB();
+        bool setH264Params(uint8_t *sps_buffer_ptr,
+                           uint32_t sps_buffer_size,
+                           uint8_t *pps_buffer_ptr,
+                           uint32_t pps_buffer_size);
+        bool decode(const ARCONTROLLER_Frame_t *framePtr);
+        inline uint32_t getFrameWidth() const
+        {
+            return m_CodecInitialised ? m_CodecContextPtr->width : 0;
+        }
+        inline uint32_t getFrameHeight() const
+        {
+            return m_CodecInitialised ? m_CodecContextPtr->height : 0;
+        }
+
+        static eARCONTROLLER_ERROR configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data);
+        static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
     Bebop();
@@ -209,10 +211,6 @@ private:
     static void stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                              eARCONTROLLER_ERROR err,
                              void *data);
-    static eARCONTROLLER_ERROR configCallback(ARCONTROLLER_Stream_Codec_t codec,
-                                              void *data);
-    static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame,
-                                             void *data);
 #endif // !DUMMY_DRONE
 };     // Bebop
 
@@ -237,6 +235,9 @@ Bebop::Bebop()
 
     // to handle changes in state, incoming commands
     addEventHandlers();
+
+    // initialise video stream object
+    m_VideoStream = std::make_unique<VideoStream>(*this);
 #endif // DUMMY_DRONE
 }
 
@@ -246,9 +247,7 @@ Bebop::Bebop()
 Bebop::~Bebop()
 {
     land();
-    if (m_VideoStream) {
-        stopStreaming();
-    }
+    stopStreaming();
     disconnect();
 }
 
@@ -364,11 +363,7 @@ Bebop::land()
 Bebop::VideoStream &
 Bebop::getVideoStream()
 {
-    if (!m_VideoStream) {
-        startStreaming();
-        m_VideoStream.reset(new Bebop::VideoStream());
-    }
-
+    startStreaming();
     return *m_VideoStream;
 }
 
@@ -563,8 +558,6 @@ Bebop::addEventHandlers()
             m_Device.get(), stateChanged, this));
     checkError(ARCONTROLLER_Device_AddCommandReceivedCallback(
             m_Device.get(), commandReceived, this));
-    checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
-            m_Device.get(), configCallback, frameCallback, nullptr, this));
 }
 
 /*
@@ -717,32 +710,6 @@ Bebop::checkArg(const float value)
     }
 }
 
-/*
- * Invoked when we receive a packet containing H264 params.
- */
-eARCONTROLLER_ERROR
-Bebop::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
-{
-    Bebop *bebop = static_cast<Bebop *>(data);
-    if (bebop->m_VideoStream) {
-        bebop->m_VideoStream->configCallback(codec);
-    }
-    return ARCONTROLLER_OK;
-}
-
-/*
- * Invoked when we receive a packet containing an H264-encoded frame.
- */
-eARCONTROLLER_ERROR
-Bebop::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
-{
-    Bebop *bebop = static_cast<Bebop *>(data);
-    if (bebop->m_VideoStream) {
-        bebop->m_VideoStream->frameCallback(frame);
-    }
-    return ARCONTROLLER_OK;
-}
-
 void
 Bebop::VideoStream::throwOnCondition(const bool cond, const std::string &message)
 {
@@ -872,8 +839,6 @@ Bebop::VideoStream::cleanupBuffers()
     if (m_ImgConvertContextPtr) {
         sws_freeContext(m_ImgConvertContextPtr);
     }
-
-    std::cout << "Buffer cleanup!" << std::endl;
 }
 
 void
@@ -891,7 +856,12 @@ Bebop::VideoStream::reset()
 
     m_CodecInitialised = false;
     m_FirstFrameReceived = false;
-    std::cout << "Reset!" << std::endl;
+}
+
+Bebop::VideoStream::VideoStream(Bebop &bebop)
+{
+    checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
+        bebop.m_Device.get(), configCallback, frameCallback, nullptr, this));
 }
 
 Bebop::VideoStream::~VideoStream()
@@ -1041,26 +1011,29 @@ Bebop::VideoStream::readFrame(cv::Mat &frame)
     return true;
 }
 
-void
-Bebop::VideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec)
+eARCONTROLLER_ERROR
+Bebop::VideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data)
 {
-    setH264Params(
-            codec.parameters.h264parameters.spsBuffer,
-            codec.parameters.h264parameters.spsSize,
-            codec.parameters.h264parameters.ppsBuffer,
-            codec.parameters.h264parameters.ppsSize);
+    auto stream = reinterpret_cast<VideoStream *>(data);
+    stream->setH264Params(codec.parameters.h264parameters.spsBuffer,
+                          codec.parameters.h264parameters.spsSize,
+                          codec.parameters.h264parameters.ppsBuffer,
+                          codec.parameters.h264parameters.ppsSize);
+    return ARCONTROLLER_OK;
 }
 
-void
-Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame)
+eARCONTROLLER_ERROR
+Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
 {
-    if (decode(frame)) {
+    auto stream = reinterpret_cast<VideoStream *>(data);
+    if (stream->decode(frame)) {
         // convert into BGR cv::Mat
-        std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
-        cv::Mat frameRGB(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) m_FrameRGBRawPtr);
-        cv::cvtColor(frameRGB, m_Frame, CV_RGB2BGR, 3);
-        m_NewFrame = true;
+        std::lock_guard<decltype(stream->m_FrameMutex)> guard(stream->m_FrameMutex);
+        cv::Mat frameRGB(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) stream->m_FrameRGBRawPtr);
+        cv::cvtColor(frameRGB, stream->m_Frame, CV_RGB2BGR, 3);
+        stream->m_NewFrame = true;
     }
+    return ARCONTROLLER_OK;
 }
 // end VideoStream class
 } // Robots
