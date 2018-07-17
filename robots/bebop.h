@@ -102,9 +102,6 @@ checkError(eARDISCOVERY_ERROR err)
 
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
-#define VIDEO_WIDTH 856
-#define VIDEO_HEIGHT 480
-
 /*
  * Main class for interfacing with drone. Handles connection/disconnection and
  * sending steering commands.
@@ -995,7 +992,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
 cv::Size
 Bebop::VideoStream::getOutputSize() const
 {
-    return cv::Size(VIDEO_WIDTH, VIDEO_HEIGHT);
+    return cv::Size(getFrameWidth(), getFrameHeight());
 }
 
 bool
@@ -1027,7 +1024,7 @@ Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
     auto stream = reinterpret_cast<VideoStream *>(data);
     if (stream->decode(frame)) {
         std::lock_guard<decltype(stream->m_FrameMutex)> guard(stream->m_FrameMutex);
-        stream->m_Frame = cv::Mat(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, (void *) stream->m_FrameBGRRawPtr);
+        stream->m_Frame = cv::Mat(stream->getOutputSize(), CV_8UC3, (void *) stream->m_FrameBGRRawPtr);
         stream->m_NewFrame = true;
     }
     return ARCONTROLLER_OK;
