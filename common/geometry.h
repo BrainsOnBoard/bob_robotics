@@ -97,14 +97,14 @@ public:
 
 template<class T1, class T2>
 auto
-distance2(T1 v1, T2 v2)
+distance2(const T1 &v1, const T2 &v2)
 {
     return hypot(v2[1] - v1[1], v2[0] - v1[0]);
 }
 
 template<class T>
 meter_t
-distance2(T v1, meter_t x2, meter_t y2)
+distance2(const T &v1, meter_t x2, meter_t y2)
 {
     return hypot(y2 - makeM(v1[1]), x2 - makeM(v1[0]));
 }
