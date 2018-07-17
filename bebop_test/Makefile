@@ -5,10 +5,6 @@ LDFLAGS=-pthread -lstdc++ -lm
 CXXFLAGS+=`pkg-config --cflags opencv`
 LDFLAGS+=`pkg-config --libs opencv`
 
-# python
-CXXFLAGS+=`pkg-config --cflags python3`
-LDFLAGS+=`pkg-config --libs python3`
-
 # various ffmpeg libraries, needed for video decoding
 LDFLAGS+=-lavcodec -lavformat -lavutil -lswscale
 
