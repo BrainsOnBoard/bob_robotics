@@ -138,7 +138,6 @@ public:
         bool m_UpdateCodecParams = false;
         std::vector<uint8_t> m_CodecData;
 
-        static void throwOnCondition(const bool cond, const std::string &message);
         bool initCodec();
         bool reallocateBuffers();
         void cleanupBuffers();
@@ -197,7 +196,6 @@ private:
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
 
-    static inline void checkArg(const float value);
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
@@ -370,7 +368,7 @@ Bebop::getVideoStream()
 void
 Bebop::setPitch(const float pitch)
 {
-    checkArg(pitch);
+    assert(pitch >= -1.0f && pitch <= 1.0f);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting pitch to " << pitch << std::endl;
@@ -388,7 +386,7 @@ Bebop::setPitch(const float pitch)
 void
 Bebop::setRoll(const float right)
 {
-    checkArg(right);
+    assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting roll to " << right << std::endl;
@@ -406,7 +404,7 @@ Bebop::setRoll(const float right)
 void
 Bebop::setAscent(const float up)
 {
-    checkArg(up);
+    assert(up >= -1.0f && up <= 1.0f);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting up/down to " << up << std::endl;
@@ -423,7 +421,7 @@ Bebop::setAscent(const float up)
 void
 Bebop::setYawSpeed(const float right)
 {
-    checkArg(right);
+    assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
 #ifdef NO_FLY
         std::cout << "Setting yaw to " << right << std::endl;
@@ -699,22 +697,6 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
     }
 }
 
-void
-Bebop::checkArg(const float value)
-{
-    if (value > 1.0f || value < -1.0f) {
-        throw std::invalid_argument("Argument must be between -1.0 and 1.0");
-    }
-}
-
-void
-Bebop::VideoStream::throwOnCondition(const bool cond, const std::string &message)
-{
-    if (!cond)
-        return;
-    throw std::runtime_error(message);
-}
-
 bool
 Bebop::VideoStream::initCodec()
 {
@@ -729,7 +711,9 @@ Bebop::VideoStream::initCodec()
         av_log_set_level(AV_LOG_QUIET);
 
         m_CodecPtr = avcodec_find_decoder(AV_CODEC_ID_H264);
-        throwOnCondition(m_CodecPtr == nullptr, "Codec H264 not found!");
+        if (!m_CodecPtr) {
+            throw std::runtime_error("Codec H264 not found!");
+        }
 
         m_CodecContextPtr = avcodec_alloc_context3(m_CodecPtr);
         m_CodecContextPtr->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -739,6 +723,7 @@ Bebop::VideoStream::initCodec()
         m_CodecContextPtr->workaround_bugs = AVMEDIA_TYPE_VIDEO;
         m_CodecContextPtr->codec_id = AV_CODEC_ID_H264;
         m_CodecContextPtr->skip_idct = AVDISCARD_DEFAULT;
+
         // At the beginning we have no idea about the frame size
         m_CodecContextPtr->width = 0;
         m_CodecContextPtr->height = 0;
@@ -749,10 +734,13 @@ Bebop::VideoStream::initCodec()
         m_CodecContextPtr->flags2 |= CODEC_FLAG2_CHUNKS;
 
         m_FramePtr = av_frame_alloc();
-        throwOnCondition(!m_FramePtr, "Can not allocate memory for frames!");
+        if (!m_FramePtr) {
+            throw std::runtime_error("Can not allocate memory for frames!");
+        }
 
-        throwOnCondition(avcodec_open2(m_CodecContextPtr, m_CodecPtr, nullptr) < 0,
-                         "Can not open the decoder!");
+        if (avcodec_open2(m_CodecContextPtr, m_CodecPtr, nullptr) < 0) {
+            throw std::runtime_error("Can not open the decoder!");
+        }
 
         av_init_packet(&m_Packet);
     } catch (const std::runtime_error &e) {
@@ -776,31 +764,34 @@ Bebop::VideoStream::reallocateBuffers()
     }
 
     try {
-        throwOnCondition(m_CodecContextPtr->width == 0 ||
-                                 m_CodecContextPtr->width == 0,
-                         std::string("Invalid frame size:") +
-                                 std::to_string(m_CodecContextPtr->width) + " x " +
-                                 std::to_string(m_CodecContextPtr->width));
+        if (m_CodecContextPtr->width == 0 || m_CodecContextPtr->width == 0) {
+            throw std::runtime_error(std::string("Invalid frame size: ") +
+                                     std::to_string(m_CodecContextPtr->width) + " x " +
+                                     std::to_string(m_CodecContextPtr->width));
+        }
 
         const uint32_t num_bytes = avpicture_get_size(
                 AV_PIX_FMT_BGR24, m_CodecContextPtr->width, m_CodecContextPtr->width);
         m_FrameBGRPtr = av_frame_alloc();
 
-        throwOnCondition(!m_FrameBGRPtr,
-                         "Can not allocate memory for frames!");
+        if (!m_FrameBGRPtr) {
+            throw std::runtime_error("Can not allocate memory for frames!");
+        }
 
         m_FrameBGRRawPtr = reinterpret_cast<uint8_t *>(av_malloc(num_bytes * sizeof(uint8_t)));
-        throwOnCondition(
-                m_FrameBGRRawPtr == nullptr,
-                std::string("Can not allocate memory for the buffer: ") +
-                        std::to_string(num_bytes));
-        throwOnCondition(0 == avpicture_fill(reinterpret_cast<AVPicture *>(
-                                                     m_FrameBGRPtr),
-                                             m_FrameBGRRawPtr,
-                                             AV_PIX_FMT_BGR24,
-                                             m_CodecContextPtr->width,
-                                             m_CodecContextPtr->height),
-                         "Failed to initialize the picture data structure.");
+        if (!m_FrameBGRRawPtr) {
+            throw std::runtime_error(std::string("Can not allocate memory for the buffer: ") +
+                                     std::to_string(num_bytes));
+        }
+
+        int ret = avpicture_fill(reinterpret_cast<AVPicture *>(m_FrameBGRPtr),
+                                 m_FrameBGRRawPtr,
+                                 AV_PIX_FMT_BGR24,
+                                 m_CodecContextPtr->width,
+                                 m_CodecContextPtr->height);
+        if (ret == 0) {
+            throw std::runtime_error("Failed to initialize the picture data structure.");
+        }
 
         m_ImgConvertContextPtr = sws_getContext(m_CodecContextPtr->width,
                                                 m_CodecContextPtr->height,
