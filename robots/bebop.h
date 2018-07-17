@@ -173,7 +173,7 @@ public:
     void setPitch(const float pitch);
     void setRoll(const float right);
     void setAscent(const float up);
-    void setYaw(const float right);
+    void setYawSpeed(const float right);
     void stopMoving();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
@@ -421,7 +421,7 @@ Bebop::setAscent(const float up)
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
-Bebop::setYaw(const float right)
+Bebop::setYawSpeed(const float right)
 {
     checkArg(right);
     if (m_IsConnected) {
@@ -461,7 +461,7 @@ Bebop::stopMoving()
     if (m_IsConnected) {
         setPitch(0);
         setRoll(0);
-        setYaw(0);
+        setYawSpeed(0);
         setAscent(0);
     }
 }
@@ -666,10 +666,10 @@ Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
         setAscent(maxSpeed * -value);
         return true;
     case HID::JAxis::LeftTrigger:
-        setYaw(maxSpeed * -value);
+        setYawSpeed(maxSpeed * -value);
         return true;
     case HID::JAxis::RightTrigger:
-        setYaw(maxSpeed * value);
+        setYawSpeed(maxSpeed * value);
         return true;
     default:
         // otherwise signal that we haven't handled event
