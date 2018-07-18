@@ -6,7 +6,7 @@ all: vicon_test vicon_blocking_test vicon_velocity_test
 
 vicon_test: vicon_test.cc vicon_test.d
 	$(CXX) $(CXXFLAGS) vicon_test.cc -o vicon_test
-	
+
 -include vicon_test.d
 
 vicon_blocking_test: vicon_blocking_test.cc vicon_blocking_test.d
@@ -22,4 +22,4 @@ vicon_velocity_test: vicon_velocity_test.cc vicon_velocity_test.d
 %.d: ;
 
 clean:
-	rm -f vicon_test vicon_blocking_test *.d
+	rm -f vicon_test vicon_blocking_test vicon_velocity_test *.d
