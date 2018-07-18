@@ -17,6 +17,11 @@
 #include <linux/i2c-dev.h>
 #include <i2c/smbus.h>
 
+// This extra header is needed after Ubuntu 16.04 (newer kernel?)
+#ifndef I2C_SMBUS_BYTE_DATA
+#include <i2c/smbus.h>
+#endif
+
 namespace GeNNRobotics {
 //----------------------------------------------------------------------------
 // I2CInterface
