@@ -1,6 +1,5 @@
 #pragma once
 
-#ifndef DUMMY_DRONE
 extern "C"
 {
 // ARSDK includes
@@ -40,7 +39,6 @@ extern "C"
 #define av_frame_alloc avcodec_alloc_frame
 #define av_frame_free avcodec_free_frame
 #endif
-#endif // !DUMMY_DRONE
 
 // Standard C++ includes
 #include <cstdint>
@@ -68,17 +66,6 @@ extern "C"
 // these values are hardcoded for Bebop drones
 #define BEBOP_IP_ADDRESS "192.168.42.1"
 #define BEBOP_DISCOVERY_PORT 44444
-
-/*
- * If the DUMMY_DRONE flag is set, we don't connect to drone and just output
- * messages to console when steering commands are sent.
- *
- * If the NO_FLY flag is set, we *do* connect to the drone, but don't let it
- * fly.
- */
-#ifdef DUMMY_DRONE
-#define NO_FLY
-#endif
 
 using namespace units::literals;
 using namespace units::angle;
@@ -264,8 +251,6 @@ private:
     void stopStreaming();
     bool onAxisEvent(HID::JAxis axis, float value, const float maxSpeed);
     bool onButtonEvent(HID::JButton button, bool pressed);
-
-#ifndef DUMMY_DRONE
     inline void addEventHandlers();
     void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
@@ -282,7 +267,6 @@ private:
     static void stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                              eARCONTROLLER_ERROR err,
                              void *data);
-#endif // !DUMMY_DRONE
 };     // Bebop
 
 /*
@@ -291,13 +275,6 @@ private:
  */
 Bebop::Bebop()
 {
-#ifdef DUMMY_DRONE
-    std::cout << "Running in DUMMY_DRONE mode -- will not connect to drone!" << std::endl;
-#else
-#ifdef NO_FLY
-    std::cout << "Running in NO_FLY mode -- drone will not move!" << std::endl;
-#endif
-
     // silence annoying messages printed by library
     ARSAL_Print_SetCallback(printCallback);
 
@@ -309,7 +286,6 @@ Bebop::Bebop()
 
     // initialise video stream object
     m_VideoStream = std::make_unique<VideoStream>(*this);
-#endif // DUMMY_DRONE
 }
 
 /*
@@ -332,7 +308,6 @@ Bebop::connect()
         return;
     }
 
-#ifndef DUMMY_DRONE
     // send start signal
     checkError(ARCONTROLLER_Device_Start(m_Device.get()));
 
@@ -345,9 +320,7 @@ Bebop::connect()
     if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
         throw std::runtime_error("Could not connect to drone");
     }
-#else
-    std::cout << "Drone started" << std::endl;
-#endif
+
     m_IsConnected = true;
 }
 
@@ -357,7 +330,6 @@ Bebop::connect()
 void
 Bebop::disconnect()
 {
-#ifndef DUMMY_DRONE
     if (m_Device) {
         // send stop signal
         checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
@@ -376,7 +348,6 @@ Bebop::disconnect()
 
         m_IsConnected = false;
     }
-#endif
 }
 
 /*
@@ -405,9 +376,8 @@ Bebop::takeOff()
 {
     if (m_IsConnected) {
         std::cout << "Taking off..." << std::endl;
-#ifndef NO_FLY
         checkError(m_Device->aRDrone3->sendPilotingTakeOff(m_Device->aRDrone3));
-#endif
+
         if (m_FlightEventHandler) {
             m_FlightEventHandler(true);
         }
@@ -422,9 +392,8 @@ Bebop::land()
 {
     if (m_IsConnected) {
         std::cout << "Landing..." << std::endl;
-#ifndef NO_FLY
         checkError(m_Device->aRDrone3->sendPilotingLanding(m_Device->aRDrone3));
-#endif
+
         if (m_FlightEventHandler) {
             m_FlightEventHandler(false);
         }
@@ -500,13 +469,9 @@ Bebop::setPitch(const float pitch)
 {
     assert(pitch >= -1.0f && pitch <= 1.0f);
     if (m_IsConnected) {
-#ifdef NO_FLY
-        std::cout << "Setting pitch to " << pitch << std::endl;
-#else
         const int8_t ipitch = round(pitch * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, ipitch));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
-#endif
     }
 }
 
@@ -518,13 +483,9 @@ Bebop::setRoll(const float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
-#ifdef NO_FLY
-        std::cout << "Setting roll to " << right << std::endl;
-#else
         const int8_t iright = round(right * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, iright));
         checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
-#endif
     }
 }
 
@@ -536,12 +497,8 @@ Bebop::setVerticalSpeed(const float up)
 {
     assert(up >= -1.0f && up <= 1.0f);
     if (m_IsConnected) {
-#ifdef NO_FLY
-        std::cout << "Setting up/down to " << up << std::endl;
-#else
         const int8_t iup = round(up * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, iup));
-#endif
     }
 }
 
@@ -553,12 +510,8 @@ Bebop::setYawSpeed(const float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
-#ifdef NO_FLY
-        std::cout << "Setting yaw to " << right << std::endl;
-#else
         const int8_t iright = round(right * 100.0f);
         checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, iright));
-#endif
     }
 }
 
@@ -602,9 +555,7 @@ Bebop::takePhoto()
 {
     if (m_IsConnected) {
         std::cout << "Taking photo" << std::endl;
-#ifndef DUMMY_DRONE
         checkError(m_Device->aRDrone3->sendMediaRecordPicture(m_Device->aRDrone3, 0));
-#endif
     }
 }
 
@@ -618,7 +569,6 @@ Bebop::setFlightEventHandler(FlightEventHandler handler)
     m_FlightEventHandler = handler;
 }
 
-#ifndef DUMMY_DRONE
 /*
  * Waits for the drone to send a state-update command and returns the new
  * state.
@@ -1129,7 +1079,6 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
     }
     return true;
 } // class VideoDecoder
-#endif
 
 // start VideoStream class
 cv::Size
