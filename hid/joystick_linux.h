@@ -63,7 +63,7 @@ enum class JButton
 class Joystick : public JoystickBase<JAxis, JButton>
 {
 public:
-    Joystick(const float deadZone = 0.0f)
+    Joystick(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
         // open joystick device
@@ -91,7 +91,7 @@ public:
         ::close(m_Fd);
     }
 
-    virtual float axisToFloat(const JAxis axis, const int16_t value) const override
+    virtual float axisToFloat(JAxis axis, int16_t value) const override
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:

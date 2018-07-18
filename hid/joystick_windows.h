@@ -75,7 +75,7 @@ public:
         updateAxes(m_State, true);
     }
 
-    virtual float axisToFloat(const JAxis axis, const int16_t value) const override
+    virtual float axisToFloat(JAxis axis, int16_t value) const override
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -148,7 +148,7 @@ private:
     XINPUT_STATE m_State, m_NewState;
     static const int ControllerNum = 0;
 
-    void updateAxes(const XINPUT_STATE &state, const bool isInitial)
+    void updateAxes(XINPUT_STATE &state, bool isInitial)
     {
         updateAxis(JAxis::LeftStickHorizontal, state.Gamepad.sThumbLX, state.Gamepad.sThumbLY, isInitial);
         updateAxis(JAxis::RightStickHorizontal, state.Gamepad.sThumbRX, state.Gamepad.sThumbRY, isInitial);
@@ -160,12 +160,12 @@ private:
         updateAxis(JAxis::DpadHorizontal, getDpadValue((state.Gamepad.wButtons >> 2) & 3), isInitial);
     }
 
-    static float getDpadValue(const WORD buttons)
+    static float getDpadValue(WORD buttons)
     {
         return buttons ? (buttons == 1 ? -1.0f : 1.0f) : 0.0f;
     }
 
-    static void read(const XINPUT_STATE &state)
+    static void read(XINPUT_STATE &state)
     {
         // Zeroise the state
         ZeroMemory(&state, sizeof(state));

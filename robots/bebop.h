@@ -286,8 +286,8 @@ private:
 
     void startStreaming();
     void stopStreaming();
-    bool onAxisEvent(const HID::JAxis axis, const float value);
-    bool onButtonEvent(const HID::JButton button, const bool pressed);
+    bool onAxisEvent(HID::JAxis axis, float value);
+    bool onButtonEvent(HID::JButton button, bool pressed);
     inline void addEventHandlers();
     void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
@@ -415,10 +415,10 @@ Bebop::disconnect()
 void
 Bebop::addJoystick(HID::Joystick &joystick)
 {
-    joystick.addHandler([this](const HID::JAxis axis, const float value) {
+    joystick.addHandler([this](HID::JAxis axis, float value) {
         return onAxisEvent(axis, value);
     });
-    joystick.addHandler([this](const HID::JButton button, const bool pressed) {
+    joystick.addHandler([this](HID::JButton button, bool pressed) {
         return onButtonEvent(button, pressed);
     });
 }
@@ -818,7 +818,7 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 }
 
 bool
-Bebop::onAxisEvent(const HID::JAxis axis, const float value)
+Bebop::onAxisEvent(HID::JAxis axis, float value)
 {
     /* 
      * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
@@ -847,7 +847,7 @@ Bebop::onAxisEvent(const HID::JAxis axis, const float value)
 }
 
 bool
-Bebop::onButtonEvent(const HID::JButton button, const bool pressed)
+Bebop::onButtonEvent(HID::JButton button, bool pressed)
 {
     // we only care about button presses
     if (!pressed) {

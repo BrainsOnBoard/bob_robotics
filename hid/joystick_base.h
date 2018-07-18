@@ -35,8 +35,8 @@ enum ButtonState
 template<typename JAxis, typename JButton>
 class JoystickBase : public Threadable
 {
-    using ButtonHandler = std::function<bool(const JButton button, const bool pressed)>;
-    using AxisHandler = std::function<bool(const JAxis axis, const float value)>;
+    using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+    using AxisHandler = std::function<bool(JAxis axis, float value)>;
 
 private:
     std::vector<ButtonHandler> m_ButtonHandlers;
@@ -46,7 +46,7 @@ private:
 
 public:
     // Virtual methods
-    virtual float axisToFloat(const JAxis axis, const int16_t value) const = 0;
+    virtual float axisToFloat(JAxis axis, int16_t value) const = 0;
     virtual bool update() = 0;
 
     void addHandler(AxisHandler handler)
@@ -59,32 +59,32 @@ public:
         m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
     }
 
-    float getState(const JAxis axis) const
+    float getState(JAxis axis) const
     {
         return m_AxisState[toIndex(axis)];
     }
 
-    unsigned char getState(const JButton button) const
+    unsigned char getState(JButton button) const
     {
         return m_ButtonState[toIndex(button)];
     }
 
-    bool isDown(const JButton button) const
+    bool isDown(JButton button) const
     {
         return getState(button) & StateDown;
     }
 
-    bool isPressed(const JButton button) const
+    bool isPressed(JButton button) const
     {
         return getState(button) & StatePressed;
     }
 
-    bool isReleased(const JButton button) const
+    bool isReleased(JButton button) const
     {
         return getState(button) & StateReleased;
     }
 
-    static std::string getName(const JAxis axis)
+    static std::string getName(JAxis axis)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -108,7 +108,7 @@ public:
         }
     }
 
-    static std::string getName(const JButton button)
+    static std::string getName(JButton button)
     {
         // these values should be defined before this header is included
         switch (button) {
@@ -153,7 +153,7 @@ protected:
         }
     }
 
-    void updateAxis(const JAxis axis, const float value, const bool isInitial)
+    void updateAxis(JAxis axis, float value, bool isInitial)
     {
         auto &s = m_AxisState[toIndex(axis)];
         if (s != value) {
@@ -170,16 +170,16 @@ protected:
         }
     }
 
-    void updateAxis(const JAxis axis, const int16_t value, const bool isInitial)
+    void updateAxis(JAxis axis, int16_t value, bool isInitial)
     {
         updateAxis(axis, axisToFloat(axis, value), isInitial);
     }
 
-    void updateAxis(const JAxis axisHorz, const int16_t hvalue, const int16_t vvalue, const bool isInitial)
+    void updateAxis(JAxis axisHorz, int16_t hvalue, int16_t vvalue, bool isInitial)
     {
-        const JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
-        const float x = axisToFloat(axisHorz, hvalue);
-        const float y = axisToFloat(axisVert, vvalue);
+        JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
+        float x = axisToFloat(axisHorz, hvalue);
+        float y = axisToFloat(axisVert, vvalue);
 
         if (sqrt(x * x + y * y) < m_DeadZone) {
             updateAxis(axisHorz, 0.0f, isInitial);
