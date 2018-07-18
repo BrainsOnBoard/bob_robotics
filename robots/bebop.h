@@ -1,5 +1,34 @@
 #pragma once
 
+// Standard C++ includes
+#include <cstdint>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <tuple>
+
+// OpenCV
+#ifdef KEY_UP
+#undef KEY_UP
+#endif
+#ifdef KEY_DOWN
+#undef KEY_DOWN
+#endif
+#include <opencv2/opencv.hpp>
+
+// BoB robotics includes
+#include "../common/semaphore.h"
+#include "../hid/joystick.h"
+#include "../video/input.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// POSIX includes
+#include <signal.h>
+
 extern "C"
 {
 // ARSDK includes
@@ -39,29 +68,6 @@ extern "C"
 #define av_frame_alloc avcodec_alloc_frame
 #define av_frame_free avcodec_free_frame
 #endif
-
-// Standard C++ includes
-#include <cstdint>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <string>
-#include <tuple>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "../common/semaphore.h"
-#include "../hid/joystick.h"
-#include "../video/input.h"
-
-// Third-party includes
-#include "../third_party/units.h"
-
-// POSIX includes
-#include <signal.h>
 
 // these values are hardcoded for Bebop drones
 #define BEBOP_IP_ADDRESS "192.168.42.1"
