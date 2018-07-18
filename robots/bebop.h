@@ -166,33 +166,48 @@ public:
         static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
-    Bebop();
+    Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
+          meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
+          degree_t maxTilt = DefaultMaximumTilt);
     ~Bebop();
     void addJoystick(HID::Joystick &joystick, const float maxSpeed);
     void connect();
     void disconnect();
-    void takeOff();
-    void land();
-    VideoStream &getVideoStream();
+
+    // speed limits
     inline degree_t getMaximumTilt();
     inline Limits<degree_t> &getTiltLimits();
     inline meters_per_second_t getMaximumVerticalSpeed();
     inline Limits<meters_per_second_t> &getVerticalSpeedLimits();
     inline degrees_per_second_t getMaximumYawSpeed();
     inline Limits<degrees_per_second_t> &getYawSpeedLimits();
+
+    // motor control
+    void takeOff();
+    void land();
     void setPitch(const float pitch);
     void setRoll(const float right);
     void setVerticalSpeed(const float up);
     void setYawSpeed(const float right);
     void stopMoving();
+
+    // misc
+    VideoStream &getVideoStream();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
+
+    // defaults
+    static constexpr auto DefaultMaximumTilt = 8_deg;
+    static constexpr auto DefaultMaximumYawSpeed = 100_deg_per_s;
+    static constexpr auto DefaultMaximumVerticalSpeed = 1_mps;
 
 private:
     template<class UnitType>
     class LimitValues
     {
     public:
+        UnitType m_UserMaximum;
+
         inline void onChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                               const char *currentKey,
                               const char *minKey,
@@ -221,8 +236,18 @@ private:
                     std::get<1>(m_Limits) = units::make_unit<UnitType>(arg->value.Float);
                 }
 
-                // notify waiting threads
-                m_Semaphore.notify();
+                /*
+                 * Notify waiting threads. The if statement is necessary so that
+                 * we don't report the current maximum before we've had a chance
+                 * to set it to the user-preferred value.
+                 */
+                if (m_Current == m_UserMaximum) {
+                    m_Semaphore.notify();
+                }
+
+                // std::cout << "Max: " << m_Current << " ("
+                //           << std::get<0>(m_Limits) << ", "
+                //           << std::get<1>(m_Limits) << ")" << std::endl;
             }
         }
 
@@ -263,6 +288,11 @@ private:
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
 
+    // speed limits
+    inline void setMaximumTilt(degree_t newValue);
+    inline void setMaximumVerticalSpeed(meters_per_second_t newValue);
+    inline void setMaximumYawSpeed(degrees_per_second_t newValue);
+
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
@@ -273,13 +303,20 @@ private:
     static void stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                              eARCONTROLLER_ERROR err,
                              void *data);
-};     // Bebop
+}; // Bebop
+
+// We also have to give definitions for these variables, because c++ is weird
+constexpr degree_t Bebop::DefaultMaximumTilt;
+constexpr degrees_per_second_t Bebop::DefaultMaximumYawSpeed;
+constexpr meters_per_second_t Bebop::DefaultMaximumVerticalSpeed;
 
 /*
  * Do all initialisation (including discovery) but don't actually
  * connect to drone yet.
  */
-Bebop::Bebop()
+Bebop::Bebop(degrees_per_second_t maxYawSpeed,
+             meters_per_second_t maxVerticalSpeed,
+             degree_t maxTilt)
 {
     // silence annoying messages printed by library
     ARSAL_Print_SetCallback(printCallback);
@@ -292,6 +329,11 @@ Bebop::Bebop()
 
     // initialise video stream object
     m_VideoStream = std::make_unique<VideoStream>(*this);
+
+    // store speed limits for later
+    m_YawSpeedLimits.m_UserMaximum = maxYawSpeed;
+    m_VerticalSpeedLimits.m_UserMaximum = maxVerticalSpeed;
+    m_TiltLimits.m_UserMaximum = maxTilt;
 }
 
 /*
@@ -328,6 +370,11 @@ Bebop::connect()
     }
 
     m_IsConnected = true;
+
+    // set speed limits
+    setMaximumYawSpeed(m_YawSpeedLimits.m_UserMaximum);
+    setMaximumVerticalSpeed(m_VerticalSpeedLimits.m_UserMaximum);
+    setMaximumTilt(m_TiltLimits.m_UserMaximum);
 }
 
 /*
@@ -465,6 +512,24 @@ Bebop::getYawSpeedLimits()
         throw std::runtime_error("Not connected to drone");
     }
     return m_YawSpeedLimits.getLimits();
+}
+
+inline void
+Bebop::setMaximumTilt(degree_t newValue)
+{
+    DRONE_COMMAND(sendPilotingSettingsMaxTilt, newValue.value());
+}
+
+inline void
+Bebop::setMaximumVerticalSpeed(meters_per_second_t newValue)
+{
+    DRONE_COMMAND(sendSpeedSettingsMaxVerticalSpeed, newValue.value());
+}
+
+inline void
+Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
+{
+    DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
 }
 
 /*

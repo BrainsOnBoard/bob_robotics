@@ -10,6 +10,7 @@
 #include "video/display.h"
 
 using namespace BoBRobotics;
+using namespace BoBRobotics::Robots;
 using namespace std::literals;
 
 template <class T>
@@ -19,7 +20,7 @@ void print(T limits)
               << std::get<1>(limits) << ")" << std::endl;
 }
 
-void printSpeedLimits(Robots::Bebop &drone)
+void printSpeedLimits(Bebop &drone)
 {
     // max tilt
     auto maxTilt = drone.getMaximumTilt();
@@ -42,15 +43,33 @@ void printSpeedLimits(Robots::Bebop &drone)
 
 int main()
 {
+    // joystick for controlling drone
     HID::Joystick joystick(/*deadZone=*/0.25);
 
-    Robots::Bebop drone;
+    /*
+     * Initialises the drone object and searches for the drone on the network,
+     * but does not connect to the drone yet.
+     * 
+     * NB: Any or all of these parameters can be omitted to use the defaults,
+     *     which is probably almost always what you want. Side note: don't set
+     *     these values to their maximum if you want to be able to control the
+     *     drone.
+     */
+    Bebop drone(/*maxYawSpeed=*/Bebop::DefaultMaximumYawSpeed,
+                /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
+                /*maxTilt=*/Bebop::DefaultMaximumTilt);
+
+    // make connection to drone
     drone.connect();
 
     try {
+        // print maximum speed parameters
         printSpeedLimits(drone);
+
+        // control drone with joystick
         drone.addJoystick(joystick, /*maxSpeed=*/1.0);
 
+        // display the drone's video stream on screen
         Video::Display display(drone.getVideoStream());
         do {
             if (!joystick.update() && !display.update()) {

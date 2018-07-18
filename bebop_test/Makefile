@@ -1,5 +1,5 @@
 CXXFLAGS+=-std=c++14 -march=native -I.. -Wall -Wpedantic
-LDFLAGS=-pthread -lstdc++ -lm
+LDFLAGS=-g -pthread -lstdc++ -lm
 
 # OpenCV
 CXXFLAGS+=`pkg-config --cflags opencv`
