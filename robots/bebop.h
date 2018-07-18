@@ -900,11 +900,11 @@ Bebop::VideoStream::initCodec()
 
         m_FramePtr = av_frame_alloc();
         if (!m_FramePtr) {
-            throw std::runtime_error("Can not allocate memory for frames!");
+            throw std::runtime_error("Cannot allocate memory for frames!");
         }
 
         if (avcodec_open2(m_CodecContextPtr, m_CodecPtr, nullptr) < 0) {
-            throw std::runtime_error("Can not open the decoder!");
+            throw std::runtime_error("Cannot open the decoder!");
         }
 
         av_init_packet(&m_Packet);
@@ -916,14 +916,12 @@ Bebop::VideoStream::initCodec()
 
     m_CodecInitialised = true;
     m_FirstFrameReceived = false;
-    std::cout << "H264 Codec is partially initialized!" << std::endl;
     return true;
 }
 
 bool
 Bebop::VideoStream::reallocateBuffers()
 {
-    std::cout << "Buffer reallocation request" << std::endl;
     if (!m_CodecInitialised) {
         return false;
     }
@@ -940,12 +938,12 @@ Bebop::VideoStream::reallocateBuffers()
         m_FrameBGRPtr = av_frame_alloc();
 
         if (!m_FrameBGRPtr) {
-            throw std::runtime_error("Can not allocate memory for frames!");
+            throw std::runtime_error("Cannot allocate memory for frames!");
         }
 
         m_FrameBGRRawPtr = reinterpret_cast<uint8_t *>(av_malloc(num_bytes * sizeof(uint8_t)));
         if (!m_FrameBGRRawPtr) {
-            throw std::runtime_error(std::string("Can not allocate memory for the buffer: ") +
+            throw std::runtime_error(std::string("Cannot allocate memory for the buffer: ") +
                                      std::to_string(num_bytes));
         }
 
@@ -1086,8 +1084,6 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
      *
      * */
     if (m_UpdateCodecParams && m_CodecData.size()) {
-        std::cout << "Updating H264 codec parameters (Buffer Size: "
-                  << m_CodecData.size() << ") ..." << std::endl;
         m_Packet.data = &m_CodecData[0];
         m_Packet.size = m_CodecData.size();
         int32_t frame_finished = 0;
@@ -1122,9 +1118,6 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
             if (frame_finished) {
                 if ((getFrameWidth() != width_prev) ||
                     (getFrameHeight() != height_prev)) {
-                    std::cerr << "Frame size changed to "
-                              << getFrameWidth() << " x "
-                              << getFrameHeight() << std::endl;
                     if (!reallocateBuffers()) {
                         std::cerr << "Buffer reallocation failed!" << std::endl;
                     }
