@@ -11,12 +11,11 @@
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 
-#define toDeg(RAD) static_cast<degree_t>(RAD)
-
 int main()
 {
-    UDPClient<ObjectData> vicon(51001);
-    CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
+    UDPClient<ObjectDataVelocity> vicon(51001);
+    CaptureControl viconCaptureControl("192.168.1.100", 3003,
+                                              "c:\\users\\ad374\\Desktop");
     while(vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
@@ -27,11 +26,9 @@ int main()
     }
     for(int i = 0; i < 10000; i++) {
         auto objectData = vicon.getObjectData(0);
-        const auto &translation = objectData.getTranslation();
-        const auto &rotation = objectData.getRotation();
+        const auto &velocity = objectData.getVelocity();
 
-        std::cout << translation[0] << ", " << translation[1] << ", " << translation[2] << ", "
-                  << toDeg(rotation[0]) << ", " << toDeg(rotation[1]) << ", " << toDeg(rotation[2]) << std::endl;
+        std::cout << velocity[0] << ", " << velocity[1] << ", " << velocity[2] << std::endl;
     }
     if(!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;
