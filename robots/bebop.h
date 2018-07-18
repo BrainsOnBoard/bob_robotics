@@ -111,7 +111,7 @@ checkError(eARDISCOVERY_ERROR err)
 
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
-template <class T>
+template<class T>
 using Limits = std::tuple<T, T>;
 
 /*
@@ -123,7 +123,7 @@ using Limits = std::tuple<T, T>;
  */
 class Bebop
 {
-using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
+    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
 public:
     class VideoStream : public Video::Input
@@ -441,36 +441,54 @@ Bebop::getVideoStream()
 inline degree_t
 Bebop::getMaximumTilt()
 {
+    if (!m_IsConnected) {
+        throw std::runtime_error("Not connected to drone");
+    }
     return m_TiltLimits.getCurrent();
 }
 
 inline Limits<degree_t> &
 Bebop::getTiltLimits()
 {
+    if (!m_IsConnected) {
+        throw std::runtime_error("Not connected to drone");
+    }
     return m_TiltLimits.getLimits();
 }
 
 inline meters_per_second_t
 Bebop::getMaximumVerticalSpeed()
 {
+    if (!m_IsConnected) {
+        throw std::runtime_error("Not connected to drone");
+    }
     return m_VerticalSpeedLimits.getCurrent();
 }
 
 inline Limits<meters_per_second_t> &
 Bebop::getVerticalSpeedLimits()
 {
+    if (!m_IsConnected) {
+        throw std::runtime_error("Not connected to drone");
+    }
     return m_VerticalSpeedLimits.getLimits();
 }
 
 inline degrees_per_second_t
 Bebop::getMaximumYawSpeed()
 {
+    if (!m_IsConnected) {
+        throw std::runtime_error("Not connected to drone");
+    }
     return m_YawSpeedLimits.getCurrent();
 }
 
 inline Limits<degrees_per_second_t> &
 Bebop::getYawSpeedLimits()
 {
+    if (!m_IsConnected) {
+        throw std::runtime_error("Not connected to drone");
+    }
     return m_YawSpeedLimits.getLimits();
 }
 
@@ -763,19 +781,19 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
     switch (key) {
-        case ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED:
+    case ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED:
         bebop->onBatteryChanged(dict);
         break;
-        case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
         MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
         break;
-        case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED:
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED:
         MAX_SPEED_CHANGED(YawSpeed, SPEEDSETTINGSSTATE_MAXROTATIONSPEED);
         break;
-        case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
         MAX_SPEED_CHANGED(VerticalSpeed, SPEEDSETTINGSSTATE_MAXVERTICALSPEED);
         break;
-        default:
+    default:
         break;
     }
 }
@@ -982,7 +1000,7 @@ Bebop::VideoStream::reset()
 Bebop::VideoStream::VideoStream(Bebop &bebop)
 {
     checkError(ARCONTROLLER_Device_SetVideoStreamCallbacks(
-        bebop.m_Device.get(), configCallback, frameCallback, nullptr, this));
+            bebop.m_Device.get(), configCallback, frameCallback, nullptr, this));
 }
 
 Bebop::VideoStream::~VideoStream()
