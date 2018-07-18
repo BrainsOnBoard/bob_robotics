@@ -85,7 +85,7 @@ namespace Robots {
  * err != ARCONTROLLER_OK.
  */
 void
-checkError(const eARCONTROLLER_ERROR err)
+checkError(eARCONTROLLER_ERROR err)
 {
     if (err != ARCONTROLLER_OK) {
         throw std::runtime_error(std::string("Controller error: ") +
@@ -94,7 +94,7 @@ checkError(const eARCONTROLLER_ERROR err)
 }
 
 void
-checkError(const eARDISCOVERY_ERROR err)
+checkError(eARDISCOVERY_ERROR err)
 {
     if (err != ARDISCOVERY_OK) {
         throw std::runtime_error(std::string("Discovery error: ") +
@@ -154,10 +154,10 @@ public:
         void cleanupBuffers();
         void reset();
         void convertFrameToBGR();
-        bool setH264Params(const uint8_t *sps_buffer_ptr,
-                           const uint32_t sps_buffer_size,
-                           const uint8_t *pps_buffer_ptr,
-                           const uint32_t pps_buffer_size);
+        bool setH264Params(uint8_t *sps_buffer_ptr,
+                           uint32_t sps_buffer_size,
+                           uint8_t *pps_buffer_ptr,
+                           uint32_t pps_buffer_size);
         bool decode(const ARCONTROLLER_Frame_t *framePtr);
         inline uint32_t getFrameWidth() const
         {
@@ -172,9 +172,9 @@ public:
         static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
-    Bebop(const degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
-          const meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
-          const degree_t maxTilt = DefaultMaximumTilt);
+    Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
+          meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
+          degree_t maxTilt = DefaultMaximumTilt);
     ~Bebop();
     void addJoystick(HID::Joystick &joystick);
     void connect();
@@ -200,7 +200,7 @@ public:
     // misc
     VideoStream &getVideoStream();
     void takePhoto();
-    void setFlightEventHandler(const FlightEventHandler);
+    void setFlightEventHandler(FlightEventHandler);
 
     // defaults
     static constexpr auto DefaultMaximumTilt = 8_deg;
@@ -214,7 +214,7 @@ private:
     public:
         UnitType m_UserMaximum;
 
-        inline void onChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+        inline void onChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                               const char *currentKey,
                               const char *minKey,
                               const char *maxKey)
@@ -289,15 +289,15 @@ private:
     bool onAxisEvent(HID::JAxis axis, float value);
     bool onButtonEvent(HID::JButton button, bool pressed);
     inline void addEventHandlers();
-    void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
 
     // speed limits
-    inline void setMaximumTilt(const degree_t newValue);
-    inline void setMaximumVerticalSpeed(const meters_per_second_t newValue);
-    inline void setMaximumYawSpeed(const degrees_per_second_t newValue);
+    inline void setMaximumTilt(degree_t newValue);
+    inline void setMaximumVerticalSpeed(meters_per_second_t newValue);
+    inline void setMaximumYawSpeed(degrees_per_second_t newValue);
 
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
@@ -320,9 +320,9 @@ constexpr meters_per_second_t Bebop::DefaultMaximumVerticalSpeed;
  * Do all initialisation (including discovery) but don't actually
  * connect to drone yet.
  */
-Bebop::Bebop(const degrees_per_second_t maxYawSpeed,
-             const meters_per_second_t maxVerticalSpeed,
-             const degree_t maxTilt)
+Bebop::Bebop(degrees_per_second_t maxYawSpeed,
+             meters_per_second_t maxVerticalSpeed,
+             degree_t maxTilt)
 {
     // silence annoying messages printed by library
     ARSAL_Print_SetCallback(printCallback);
@@ -517,19 +517,19 @@ Bebop::getYawSpeedLimits()
 }
 
 inline void
-Bebop::setMaximumTilt(const degree_t newValue)
+Bebop::setMaximumTilt(degree_t newValue)
 {
     DRONE_COMMAND(sendPilotingSettingsMaxTilt, newValue.value());
 }
 
 inline void
-Bebop::setMaximumVerticalSpeed(const meters_per_second_t newValue)
+Bebop::setMaximumVerticalSpeed(meters_per_second_t newValue)
 {
     DRONE_COMMAND(sendSpeedSettingsMaxVerticalSpeed, newValue.value());
 }
 
 inline void
-Bebop::setMaximumYawSpeed(const degrees_per_second_t newValue)
+Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
 {
     DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
 }
@@ -633,7 +633,7 @@ Bebop::takePhoto()
  * by its parameter.
  */
 void
-Bebop::setFlightEventHandler(const FlightEventHandler handler)
+Bebop::setFlightEventHandler(FlightEventHandler handler)
 {
     m_FlightEventHandler = handler;
 }
@@ -710,7 +710,7 @@ Bebop::addEventHandlers()
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
@@ -1028,22 +1028,22 @@ Bebop::VideoStream::~VideoStream()
 void
 Bebop::VideoStream::convertFrameToBGR()
 {
-    if (m_CodecContextPtr->width && m_CodecContextPtr->height) {
-        sws_scale(m_ImgConvertContextPtr,
-                  m_FramePtr->data,
-                  m_FramePtr->linesize,
-                  0,
-                  m_CodecContextPtr->height,
-                  m_FrameBGRPtr->data,
-                  m_FrameBGRPtr->linesize);
-    }
+    if (!m_CodecContextPtr->width || !m_CodecContextPtr->height)
+        return;
+    sws_scale(m_ImgConvertContextPtr,
+              m_FramePtr->data,
+              m_FramePtr->linesize,
+              0,
+              m_CodecContextPtr->height,
+              m_FrameBGRPtr->data,
+              m_FrameBGRPtr->linesize);
 }
 
 bool
-Bebop::VideoStream::setH264Params(const uint8_t *sps_buffer_ptr,
-                                  const uint32_t sps_buffer_size,
-                                  const uint8_t *pps_buffer_ptr,
-                                  const uint32_t pps_buffer_size)
+Bebop::VideoStream::setH264Params(uint8_t *sps_buffer_ptr,
+                                  uint32_t sps_buffer_size,
+                                  uint8_t *pps_buffer_ptr,
+                                  uint32_t pps_buffer_size)
 {
     // This function is called in the same thread as decode(), so no sync is
     // necessary
