@@ -67,7 +67,7 @@ int main()
         printSpeedLimits(drone);
 
         // control drone with joystick
-        drone.addJoystick(joystick, /*maxSpeed=*/1.0);
+        drone.addJoystick(joystick);
 
         // display the drone's video stream on screen
         Video::Display display(drone.getVideoStream());

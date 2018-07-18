@@ -170,7 +170,7 @@ public:
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
     ~Bebop();
-    void addJoystick(HID::Joystick &joystick, const float maxSpeed);
+    void addJoystick(HID::Joystick &joystick);
     void connect();
     void disconnect();
 
@@ -280,7 +280,7 @@ private:
 
     void startStreaming();
     void stopStreaming();
-    bool onAxisEvent(HID::JAxis axis, float value, const float maxSpeed);
+    bool onAxisEvent(HID::JAxis axis, float value);
     bool onButtonEvent(HID::JButton button, bool pressed);
     inline void addEventHandlers();
     void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
@@ -407,14 +407,10 @@ Bebop::disconnect()
  * Start controlling this drone with a joystick.
  */
 void
-Bebop::addJoystick(HID::Joystick &joystick, const float maxSpeed = 1.0)
+Bebop::addJoystick(HID::Joystick &joystick)
 {
-    if (maxSpeed < 0 || maxSpeed > 1) {
-        throw std::invalid_argument("maxSpeed must be between 0 and 1");
-    }
-
-    joystick.addHandler([this, maxSpeed](HID::JAxis axis, float value) {
-        return onAxisEvent(axis, value, maxSpeed);
+    joystick.addHandler([this](HID::JAxis axis, float value) {
+        return onAxisEvent(axis, value);
     });
     joystick.addHandler([this](HID::JButton button, bool pressed) {
         return onButtonEvent(button, pressed);
@@ -816,7 +812,7 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 }
 
 bool
-Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
+Bebop::onAxisEvent(HID::JAxis axis, float value)
 {
     /* 
      * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
@@ -824,19 +820,19 @@ Bebop::onAxisEvent(HID::JAxis axis, float value, const float maxSpeed)
      */
     switch (axis) {
     case HID::JAxis::RightStickHorizontal:
-        setRoll(maxSpeed * value);
+        setRoll(value);
         return true;
     case HID::JAxis::RightStickVertical:
-        setPitch(maxSpeed * -value);
+        setPitch(-value);
         return true;
     case HID::JAxis::LeftStickVertical:
-        setVerticalSpeed(maxSpeed * -value);
+        setVerticalSpeed(-value);
         return true;
     case HID::JAxis::LeftTrigger:
-        setYawSpeed(maxSpeed * -value);
+        setYawSpeed(-value);
         return true;
     case HID::JAxis::RightTrigger:
-        setYawSpeed(maxSpeed * value);
+        setYawSpeed(value);
         return true;
     default:
         // otherwise signal that we haven't handled event
