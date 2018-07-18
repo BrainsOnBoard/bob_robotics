@@ -101,6 +101,12 @@ using FlightEventHandler = std::function<void(bool takeoff)>;
 template<class T>
 using Limits = std::tuple<T, T>;
 
+#define DRONE_COMMAND_NO_ARG(COMMAND) \
+    checkError(m_Device->aRDrone3->COMMAND(m_Device->aRDrone3));
+
+#define DRONE_COMMAND(COMMAND, ARG) \
+    checkError(m_Device->aRDrone3->COMMAND(m_Device->aRDrone3, ARG));
+
 /*
  * Main class for interfacing with drone. Handles connection/disconnection and
  * sending steering commands.
@@ -376,7 +382,7 @@ Bebop::takeOff()
 {
     if (m_IsConnected) {
         std::cout << "Taking off..." << std::endl;
-        checkError(m_Device->aRDrone3->sendPilotingTakeOff(m_Device->aRDrone3));
+        DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
 
         if (m_FlightEventHandler) {
             m_FlightEventHandler(true);
@@ -392,7 +398,7 @@ Bebop::land()
 {
     if (m_IsConnected) {
         std::cout << "Landing..." << std::endl;
-        checkError(m_Device->aRDrone3->sendPilotingLanding(m_Device->aRDrone3));
+        DRONE_COMMAND_NO_ARG(sendPilotingLanding);
 
         if (m_FlightEventHandler) {
             m_FlightEventHandler(false);
@@ -469,9 +475,8 @@ Bebop::setPitch(const float pitch)
 {
     assert(pitch >= -1.0f && pitch <= 1.0f);
     if (m_IsConnected) {
-        const int8_t ipitch = round(pitch * 100.0f);
-        checkError(m_Device->aRDrone3->setPilotingPCMDPitch(m_Device->aRDrone3, ipitch));
-        checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
+        DRONE_COMMAND(setPilotingPCMDPitch, round(pitch * 100.0f));
+        DRONE_COMMAND(setPilotingPCMDFlag, 1);
     }
 }
 
@@ -483,9 +488,8 @@ Bebop::setRoll(const float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
-        const int8_t iright = round(right * 100.0f);
-        checkError(m_Device->aRDrone3->setPilotingPCMDRoll(m_Device->aRDrone3, iright));
-        checkError(m_Device->aRDrone3->setPilotingPCMDFlag(m_Device->aRDrone3, 1));
+        DRONE_COMMAND(setPilotingPCMDRoll, round(right * 100.0f));
+        DRONE_COMMAND(setPilotingPCMDFlag, 1);
     }
 }
 
@@ -497,8 +501,7 @@ Bebop::setVerticalSpeed(const float up)
 {
     assert(up >= -1.0f && up <= 1.0f);
     if (m_IsConnected) {
-        const int8_t iup = round(up * 100.0f);
-        checkError(m_Device->aRDrone3->setPilotingPCMDGaz(m_Device->aRDrone3, iup));
+        DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
     }
 }
 
@@ -510,8 +513,7 @@ Bebop::setYawSpeed(const float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
-        const int8_t iright = round(right * 100.0f);
-        checkError(m_Device->aRDrone3->setPilotingPCMDYaw(m_Device->aRDrone3, iright));
+        DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
     }
 }
 
@@ -521,7 +523,7 @@ Bebop::setYawSpeed(const float right)
 void
 Bebop::startStreaming()
 {
-    checkError(m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 1));
+    DRONE_COMMAND(sendMediaStreamingVideoEnable, 1);
 }
 
 /*
@@ -530,7 +532,7 @@ Bebop::startStreaming()
 void
 Bebop::stopStreaming()
 {
-    checkError(m_Device->aRDrone3->sendMediaStreamingVideoEnable(m_Device->aRDrone3, 0));
+    DRONE_COMMAND(sendMediaStreamingVideoEnable, 0);
 }
 
 /*
@@ -555,7 +557,7 @@ Bebop::takePhoto()
 {
     if (m_IsConnected) {
         std::cout << "Taking photo" << std::endl;
-        checkError(m_Device->aRDrone3->sendMediaRecordPicture(m_Device->aRDrone3, 0));
+        DRONE_COMMAND(sendMediaRecordPicture, 0);
     }
 }
 
