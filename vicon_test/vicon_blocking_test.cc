@@ -13,12 +13,12 @@ UDPClient<ObjectData> *vicon;
 
 void readCallback(uint, const ObjectData &data, void*)
 {
-    const auto &translation = data.getTranslation();
-    const auto &rotation = data.getRotation();
+    const auto &position = data.getPosition();
+    const auto &attitude = data.getAttitude();
 
-    std::cout << translation[0] << ", " << translation[1] << ", "
-              << translation[2] << ", " << rotation[0] << ", " << rotation[1]
-              << ", " << rotation[2] << std::endl;
+    std::cout << position[0] << ", " << position[1] << ", "
+              << position[2] << ", " << attitude[0] << ", " << attitude[1]
+              << ", " << attitude[2] << std::endl;
 }
 
 int main()

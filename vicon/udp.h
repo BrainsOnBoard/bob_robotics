@@ -48,41 +48,41 @@ using Velocity3 = Vector<meters_per_second_t>;
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
 //----------------------------------------------------------------------------
-//! Simplest object data class - just tracks position and translation
+//! Simplest object data class - just tracks position and attitude
 class ObjectData
 {
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
-      , m_Translation{ 0_m, 0_m, 0_m }
-      , m_Rotation{ 0_rad, 0_rad, 0_rad }
+      , m_Position{ 0_m, 0_m, 0_m }
+      , m_Attitude{ 0_rad, 0_rad, 0_rad }
     {
     }
 
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, const Point3 &translation, const Attitude &rotation)
+    void update(uint32_t frameNumber, const Point3 &position, const Attitude &attitude)
     {
         // Cache frame number
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        std::copy(std::begin(translation), std::end(translation), std::begin(m_Translation));
-        std::copy(std::begin(rotation), std::end(rotation), std::begin(m_Rotation));
+        std::copy(std::begin(position), std::end(position), std::begin(m_Position));
+        std::copy(std::begin(attitude), std::end(attitude), std::begin(m_Attitude));
     }
 
     uint32_t getFrameNumber() const { return m_FrameNumber; }
-    const Point3 &getTranslation() const{ return m_Translation; }
-    const Attitude &getRotation() const{ return m_Rotation; }
+    const Point3 &getPosition() const{ return m_Position; }
+    const Attitude &getAttitude() const{ return m_Attitude; }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
-    Point3 m_Translation;
-    Attitude m_Rotation;
+    Point3 m_Position;
+    Attitude m_Attitude;
 };
 
 //----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, const Point3 &translation, const Attitude &rotation)
+    void update(uint32_t frameNumber, const Point3 &position, const Attitude &attitude)
     {
         constexpr second_t frameS = 10_ms;
         constexpr second_t smoothingS = 30_ms;
@@ -112,13 +112,13 @@ public:
         const double alpha = 1.0 - exp(-deltaS / smoothingS);
 
         // Calculate instantaneous velocity
-        const auto &oldTranslation = getTranslation();
+        const auto &oldPosition = getPosition();
         Velocity3 instVelocity;
         const auto calcVelocity = [deltaS](meter_t curr, meter_t prev) {
             return (curr - prev) / deltaS;
         };
-        std::transform(std::begin(translation), std::end(translation),
-                       std::begin(oldTranslation), std::begin(instVelocity),
+        std::transform(std::begin(position), std::end(position),
+                       std::begin(oldPosition), std::begin(instVelocity),
                        calcVelocity);
 
         // Exponentially smooth velocity
@@ -128,7 +128,7 @@ public:
         std::transform(std::begin(instVelocity), std::end(instVelocity), std::begin(m_Velocity), std::begin(m_Velocity), smoothVelocity);
 
         // Superclass
-        ObjectData::update(frameNumber, translation, rotation);
+        ObjectData::update(frameNumber, position, attitude);
     }
 
     const Velocity3 &getVelocity() const
@@ -242,7 +242,7 @@ private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, uint32_t frameNumber, const Point3 &translation, const Attitude &rotation)
+    void updateObjectData(unsigned int id, uint32_t frameNumber, const Point3 &position, const Attitude &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -252,8 +252,8 @@ private:
             m_ObjectData.resize(id + 1);
         }
 
-        // Update object data with translation and rotation
-        m_ObjectData[id].update(frameNumber, translation, rotation);
+        // Update object data with position and attitude
+        m_ObjectData[id].update(frameNumber, position, attitude);
 
         // Execute callback function, if set. Note that we copy by value here,
         // which is presumably less efficient, but is thread safe
@@ -306,17 +306,17 @@ private:
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
                     assert(itemDataSize == 72);
 
-                    // Read object translation + convert to metres
-                    Vector<millimeter_t> translationMM;
-                    memcpy(&translationMM[0], &buffer[itemOffset + 27], 3 * sizeof(double));
-                    Point3 translation {translationMM[0], translationMM[1], translationMM[2]};
+                    // Read object position + convert to metres
+                    Vector<millimeter_t> positionMM;
+                    memcpy(&positionMM[0], &buffer[itemOffset + 27], 3 * sizeof(double));
+                    Point3 position {positionMM[0], positionMM[1], positionMM[2]};
 
-                    // Read object rotation
-                    Attitude rotation;
-                    memcpy(&rotation[0], &buffer[itemOffset + 51], 3 * sizeof(double));
+                    // Read object attitude
+                    Attitude attitude;
+                    memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, frameNumber, translation, rotation);
+                    updateObjectData(objectID, frameNumber, position, attitude);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;

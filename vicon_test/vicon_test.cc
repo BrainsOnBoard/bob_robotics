@@ -27,11 +27,11 @@ int main()
     }
     for(int i = 0; i < 10000; i++) {
         auto objectData = vicon.getObjectData(0);
-        const auto &translation = objectData.getTranslation();
-        const auto &rotation = objectData.getRotation();
+        const auto &position = objectData.getPosition();
+        const auto &attitude = objectData.getAttitude();
 
-        std::cout << translation[0] << ", " << translation[1] << ", " << translation[2] << ", "
-                  << toDeg(rotation[0]) << ", " << toDeg(rotation[1]) << ", " << toDeg(rotation[2]) << std::endl;
+        std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
+                  << toDeg(attitude[0]) << ", " << toDeg(attitude[1]) << ", " << toDeg(attitude[2]) << std::endl;
     }
     if(!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;
