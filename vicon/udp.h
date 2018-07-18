@@ -28,6 +28,7 @@
 // BoB robotics includes
 #include "../common/geometry.h"
 
+using namespace units::time;
 using namespace units::velocity;
 using namespace BoBRobotics::Geometry;
 
@@ -40,7 +41,7 @@ namespace Vicon
 template <class T>
 using Vector = T[3];
 
-using Point3 = Vector<millimeter_t>;
+using Point3 = Vector<meter_t>;
 using Attitude = Vector<radian_t>;
 using Velocity3 = Vector<meters_per_second_t>;
 
@@ -100,21 +101,21 @@ public:
     //----------------------------------------------------------------------------
     void update(uint32_t frameNumber, const Point3 &translation, const Attitude &rotation)
     {
-        constexpr auto frameMs = 10_ms;
-        constexpr auto smoothingMs = 30_ms;
+        constexpr second_t frameS = 10_ms;
+        constexpr second_t smoothingS = 30_ms;
 
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
-        const auto deltaMs = frameMs * deltaFrames;
+        const second_t deltaS = frameS * deltaFrames;
 
         // Calculate exponential smoothing factor
-        const double alpha = 1.0 - exp(-deltaMs / smoothingMs);
+        const double alpha = 1.0 - exp(-deltaS / smoothingS);
 
         // Calculate instantaneous velocity
         const auto &oldTranslation = getTranslation();
         Velocity3 instVelocity;
-        const auto calcVelocity = [deltaMs](millimeter_t curr, millimeter_t prev) {
-            return (curr - prev) / deltaMs;
+        const auto calcVelocity = [deltaS](meter_t curr, meter_t prev) {
+            return (curr - prev) / deltaS;
         };
         std::transform(std::begin(translation), std::end(translation),
                        std::begin(oldTranslation), std::begin(instVelocity),
@@ -305,9 +306,10 @@ private:
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
                     assert(itemDataSize == 72);
 
-                    // Read object translation
-                    Point3 translation;
-                    memcpy(&translation[0], &buffer[itemOffset + 27], 3 * sizeof(double));
+                    // Read object translation + convert to metres
+                    Vector<millimeter_t> translationMM;
+                    memcpy(&translationMM[0], &buffer[itemOffset + 27], 3 * sizeof(double));
+                    Point3 translation {translationMM[0], translationMM[1], translationMM[2]};
 
                     // Read object rotation
                     Attitude rotation;
