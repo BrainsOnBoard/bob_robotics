@@ -229,7 +229,7 @@ private:
             }
         }
 
-        inline UnitType getCurrent()
+        inline UnitType getCurrent() const
         {
             m_Semaphore.waitOnce();
             return m_Current;
@@ -244,7 +244,7 @@ private:
     private:
         UnitType m_Current;
         Limits<UnitType> m_Limits;
-        Semaphore m_Semaphore;
+        mutable Semaphore m_Semaphore;
     };
 
     ControllerPtr m_Device;
