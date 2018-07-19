@@ -69,7 +69,9 @@ int main()
         // display the drone's video stream on screen
         Video::Display display(drone.getVideoStream());
         do {
-            if (!joystick.update() && !display.update()) {
+            bool joyUpdated = joystick.update();
+            bool dispUpdated = display.update();
+            if (!joyUpdated && !dispUpdated) {
                 std::this_thread::sleep_for(25ms);
             }
         } while (display.isOpen());
