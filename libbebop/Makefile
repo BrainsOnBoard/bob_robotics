@@ -15,12 +15,17 @@ endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 
+OBJECTS := bebop.o video.o
+
 .PHONY: all clean
 
-all: bebop.o
+all: bebop.a
 
-bebop.o: bebop.cc
-	$(CXX) $(CXXFLAGS) -c -o bebop.o bebop.cc
+bebop.a: $(OBJECTS)
+	$(AR) -rcs $@ $(OBJECTS)
+
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f bebop.o
+	rm -f *.o bebop.a

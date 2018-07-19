@@ -86,6 +86,19 @@ template<class T>
 using Limits = std::tuple<T, T>;
 
 /*
+ * Simply throws a runtime_error with appropriate message if
+ * err != ARCONTROLLER_OK.
+ */
+inline void
+checkError(eARCONTROLLER_ERROR err)
+{
+    if (err != ARCONTROLLER_OK) {
+        throw std::runtime_error(std::string("Controller error: ") +
+                                 ARCONTROLLER_Error_ToString(err));
+    }
+}
+
+/*
  * Main class for interfacing with drone. Handles connection/disconnection and
  * sending steering commands.
  *

@@ -1,5 +1,5 @@
 CXXFLAGS+=-std=c++14 -march=native -I.. -Wall -Wpedantic
-LDFLAGS=-g -pthread -lstdc++ -lm ../libbebop/bebop.o
+LDFLAGS=-g -pthread -lstdc++ -lm ../libbebop/bebop.a
 
 # OpenCV
 CXXFLAGS+=`pkg-config --cflags opencv`
