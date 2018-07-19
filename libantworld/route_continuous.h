@@ -8,10 +8,12 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// BoB robotics includes
-#include "../common/geometry.h"
+// Third-party includes
+#include "../third_party/units.h"
 
-using namespace BoBRobotics::Geometry;
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::length;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous

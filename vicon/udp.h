@@ -8,7 +8,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <cmath>
 
 // Standard C includes
 #include <cassert>
@@ -25,12 +24,15 @@
     #include <unistd.h>
 #endif
 
-// BoB robotics includes
-#include "../common/geometry.h"
+// Third-party includes
+#include "../third_party/units.h"
 
+using namespace units::literals;
+using namespace units::math;
+using namespace units::angle;
+using namespace units::length;
 using namespace units::time;
 using namespace units::velocity;
-using namespace BoBRobotics::Geometry;
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
