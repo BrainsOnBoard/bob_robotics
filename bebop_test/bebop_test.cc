@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "hid/joystick.h"
 #include "robots/bebop.h"
 #include "video/display.h"
