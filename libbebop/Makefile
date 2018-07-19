@@ -1,4 +1,4 @@
-CXXFLAGS+=-std=c++14 -g -O2 -march=native -Wall -Wpedantic -I..
+CXXFLAGS+=-std=c++14 -g -O2 -march=native -Wall -Wpedantic -I.. -MMD -MP
 
 # OpenCV
 CXXFLAGS+=`pkg-config --cflags opencv`
@@ -15,7 +15,9 @@ endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 
-OBJECTS := bebop.o video.o
+SOURCES := bebop.cc video.cc
+OBJECTS := $(SOURCES:.cc=.o)
+DEPS	:= $(SOURCES:.cc=.d)
 
 .PHONY: all clean
 
@@ -24,8 +26,12 @@ all: bebop.a
 bebop.a: $(OBJECTS)
 	$(AR) -rcs $@ $(OBJECTS)
 
-%.o: %.cc
+-include $(DEPS)
+
+%.o: %.cc %.d
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+%.d: ;
+
 clean:
-	rm -f *.o bebop.a
+	rm -f $(OBJECTS) $(DEPS) bebop.a

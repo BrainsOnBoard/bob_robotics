@@ -1,4 +1,4 @@
-CXXFLAGS+=-std=c++14 -march=native -I.. -Wall -Wpedantic
+CXXFLAGS+=-std=c++14 -march=native -I.. -Wall -Wpedantic -MMD -MP
 LDFLAGS=-g -pthread -lstdc++ -lm ../libbebop/bebop.a
 
 # OpenCV
@@ -34,8 +34,12 @@ TARGET := bebop_test
 
 all: $(TARGET)
 
-$(TARGET): $(TARGET).cc libbebop
+$(TARGET): $(TARGET).cc $(TARGET).d libbebop
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(TARGET).cc $(LDFLAGS)
+
+-include $(TARGET).d
+
+$(TARGET).d: ;
 
 libbebop:
 	$(MAKE) -C ../libbebop
