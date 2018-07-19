@@ -99,18 +99,22 @@ int main(int argc, char *argv[])
         // Read data from VICON system
         auto objectData = vicon.getObjectData(0);
         const auto &velocity = objectData.getVelocity();
-        const auto &rotation = objectData.getRotation();
+        const auto &attitude = objectData.getAttitude();
         
-        // Update TL input
-        headingAngleTL = -rotation[2];
+        /*
+         * Update TL input
+         * **TODO**: We could update definitions.h etc. to use physical unit types,
+         * and then this would all gel together nicely.
+         */
+        headingAngleTL = -attitude[2].value();
         if(headingAngleTL < 0.0) {
             headingAngleTL = (2.0 * Parameters::pi) + headingAngleTL;
         }
 
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
-            speedTN2[j] = (sin(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[0]) +
-                (cos(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[1]);
+            speedTN2[j] = (sin(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[0].value()) +
+                (cos(headingAngleTL + preferredAngleTN2[j]) * speedScale * velocity[1].value());
         }
 
         if(numTicks % 100 == 0) {
