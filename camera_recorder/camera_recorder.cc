@@ -95,10 +95,12 @@ int main()
                const auto &position = objectData.getPosition();
                const auto &attitude = objectData.getAttitude();
 
+               #define toMM(X) static_cast<millimeter_t>(X).value()
+
                // Write to CSV
                data << filename << ", " << objectData.getFrameNumber() << ", "
-                    << position[0].value() << ", " << position[1].value() << ", "
-                    << position[2].value() << ", " << attitude[0].value() << ", "
+                    << toMM(position[0]) << ", " << toMM(position[1]) << ", "
+                    << toMM(position[2]) << ", " << attitude[0].value() << ", "
                     << attitude[1].value() << ", " << attitude[2].value() << std::endl;
 #endif  // VICON_CAPTURE
            }
