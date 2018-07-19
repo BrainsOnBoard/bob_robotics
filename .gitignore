@@ -2,7 +2,7 @@
 *~
 
 # Visual Studio code user files
-/.vscode/
+/.vscode/*.json
 *.code-workspace
 
 # Ignore object files
