@@ -149,8 +149,6 @@ public:
           degree_t maxTilt = DefaultMaximumTilt);
     ~Bebop();
     void addJoystick(HID::Joystick &joystick);
-    void connect();
-    void disconnect();
 
     // speed limits
     degree_t getMaximumTilt();
@@ -250,12 +248,13 @@ private:
     ControllerPtr m_Device;
     Semaphore m_Semaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
-    bool m_IsConnected = false;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
 
+    inline void connect();
+    inline void disconnect();
     void startStreaming();
     void stopStreaming();
     bool onAxisEvent(HID::JAxis axis, float value);

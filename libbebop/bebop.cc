@@ -72,6 +72,9 @@ Bebop::Bebop(degrees_per_second_t maxYawSpeed,
     m_YawSpeedLimits.m_UserMaximum = maxYawSpeed;
     m_VerticalSpeedLimits.m_UserMaximum = maxVerticalSpeed;
     m_TiltLimits.m_UserMaximum = maxTilt;
+
+    // connect to drone
+    connect();
 }
 
 /*
@@ -90,10 +93,6 @@ Bebop::~Bebop()
 void
 Bebop::connect()
 {
-    if (m_IsConnected) {
-        return;
-    }
-
     // send start signal
     checkError(ARCONTROLLER_Device_Start(m_Device.get()));
 
@@ -106,8 +105,6 @@ Bebop::connect()
     if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
         throw std::runtime_error("Could not connect to drone");
     }
-
-    m_IsConnected = true;
 
     // set speed limits
     setMaximumYawSpeed(m_YawSpeedLimits.m_UserMaximum);
@@ -125,19 +122,15 @@ Bebop::disconnect()
         // send stop signal
         checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
 
-        if (m_IsConnected) {
-            // wait for stop
-            eARCONTROLLER_DEVICE_STATE state;
-            do {
-                state = getStateUpdate();
-            } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
+        // wait for stop
+        eARCONTROLLER_DEVICE_STATE state;
+        do {
+            state = getStateUpdate();
+        } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
 
-            if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
-                std::cerr << "Warning: Could not disconnect from drone" << std::endl;
-            }
+        if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
+            std::cerr << "Warning: Could not disconnect from drone" << std::endl;
         }
-
-        m_IsConnected = false;
     }
 }
 
@@ -161,13 +154,11 @@ Bebop::addJoystick(HID::Joystick &joystick)
 void
 Bebop::takeOff()
 {
-    if (m_IsConnected) {
-        std::cout << "Taking off..." << std::endl;
-        DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
+    std::cout << "Taking off..." << std::endl;
+    DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
 
-        if (m_FlightEventHandler) {
-            m_FlightEventHandler(true);
-        }
+    if (m_FlightEventHandler) {
+        m_FlightEventHandler(true);
     }
 }
 
@@ -177,13 +168,11 @@ Bebop::takeOff()
 void
 Bebop::land()
 {
-    if (m_IsConnected) {
-        std::cout << "Landing..." << std::endl;
-        DRONE_COMMAND_NO_ARG(sendPilotingLanding);
+    std::cout << "Landing..." << std::endl;
+    DRONE_COMMAND_NO_ARG(sendPilotingLanding);
 
-        if (m_FlightEventHandler) {
-            m_FlightEventHandler(false);
-        }
+    if (m_FlightEventHandler) {
+        m_FlightEventHandler(false);
     }
 }
 
@@ -197,54 +186,36 @@ Bebop::getVideoStream()
 degree_t
 Bebop::getMaximumTilt()
 {
-    if (!m_IsConnected) {
-        throw std::runtime_error("Not connected to drone");
-    }
     return m_TiltLimits.getCurrent();
 }
 
 Limits<degree_t> &
 Bebop::getTiltLimits()
 {
-    if (!m_IsConnected) {
-        throw std::runtime_error("Not connected to drone");
-    }
     return m_TiltLimits.getLimits();
 }
 
 meters_per_second_t
 Bebop::getMaximumVerticalSpeed()
 {
-    if (!m_IsConnected) {
-        throw std::runtime_error("Not connected to drone");
-    }
     return m_VerticalSpeedLimits.getCurrent();
 }
 
 Limits<meters_per_second_t> &
 Bebop::getVerticalSpeedLimits()
 {
-    if (!m_IsConnected) {
-        throw std::runtime_error("Not connected to drone");
-    }
     return m_VerticalSpeedLimits.getLimits();
 }
 
 degrees_per_second_t
 Bebop::getMaximumYawSpeed()
 {
-    if (!m_IsConnected) {
-        throw std::runtime_error("Not connected to drone");
-    }
     return m_YawSpeedLimits.getCurrent();
 }
 
 Limits<degrees_per_second_t> &
 Bebop::getYawSpeedLimits()
 {
-    if (!m_IsConnected) {
-        throw std::runtime_error("Not connected to drone");
-    }
     return m_YawSpeedLimits.getLimits();
 }
 
@@ -273,10 +244,8 @@ void
 Bebop::setPitch(float pitch)
 {
     assert(pitch >= -1.0f && pitch <= 1.0f);
-    if (m_IsConnected) {
-        DRONE_COMMAND(setPilotingPCMDPitch, round(pitch * 100.0f));
-        DRONE_COMMAND(setPilotingPCMDFlag, 1);
-    }
+    DRONE_COMMAND(setPilotingPCMDPitch, round(pitch * 100.0f));
+    DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
 
 /*
@@ -286,10 +255,8 @@ void
 Bebop::setRoll(float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
-    if (m_IsConnected) {
-        DRONE_COMMAND(setPilotingPCMDRoll, round(right * 100.0f));
-        DRONE_COMMAND(setPilotingPCMDFlag, 1);
-    }
+    DRONE_COMMAND(setPilotingPCMDRoll, round(right * 100.0f));
+    DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
 
 /*
@@ -299,9 +266,7 @@ void
 Bebop::setVerticalSpeed(float up)
 {
     assert(up >= -1.0f && up <= 1.0f);
-    if (m_IsConnected) {
-        DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
-    }
+    DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
 }
 
 /*
@@ -311,9 +276,7 @@ void
 Bebop::setYawSpeed(float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
-    if (m_IsConnected) {
-        DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
-    }
+    DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
 /*
@@ -340,12 +303,10 @@ Bebop::stopStreaming()
 void
 Bebop::stopMoving()
 {
-    if (m_IsConnected) {
-        setPitch(0);
-        setRoll(0);
-        setYawSpeed(0);
-        setVerticalSpeed(0);
-    }
+    setPitch(0);
+    setRoll(0);
+    setYawSpeed(0);
+    setVerticalSpeed(0);
 }
 
 /*
@@ -354,10 +315,7 @@ Bebop::stopMoving()
 void
 Bebop::takePhoto()
 {
-    if (m_IsConnected) {
-        std::cout << "Taking photo" << std::endl;
-        DRONE_COMMAND(sendMediaRecordPicture, 0);
-    }
+    DRONE_COMMAND(sendMediaRecordPicture, 0);
 }
 
 /*

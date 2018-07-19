@@ -47,8 +47,7 @@ int main()
     HID::Joystick joystick(/*deadZone=*/0.25);
 
     /*
-     * Initialises the drone object and searches for the drone on the network,
-     * but does not connect to the drone yet.
+     * Connects to the drone.
      * 
      * NB: Any or all of these parameters can be omitted to use the defaults,
      *     which is probably almost always what you want. Side note: don't set
@@ -59,8 +58,6 @@ int main()
                 /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
                 /*maxTilt=*/Bebop::DefaultMaximumTilt);
 
-    // make connection to drone
-    drone.connect();
 
     try {
         // print maximum speed parameters
