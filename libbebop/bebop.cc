@@ -270,7 +270,7 @@ Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
  * Set drone's pitch, for moving forwards and backwards.
  */
 void
-Bebop::setPitch(const float pitch)
+Bebop::setPitch(float pitch)
 {
     assert(pitch >= -1.0f && pitch <= 1.0f);
     if (m_IsConnected) {
@@ -283,7 +283,7 @@ Bebop::setPitch(const float pitch)
  * Set drone's roll, for banking left and right.
  */
 void
-Bebop::setRoll(const float right)
+Bebop::setRoll(float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {
@@ -296,7 +296,7 @@ Bebop::setRoll(const float right)
  * Set drone's up/down motion for ascending/descending.
  */
 void
-Bebop::setVerticalSpeed(const float up)
+Bebop::setVerticalSpeed(float up)
 {
     assert(up >= -1.0f && up <= 1.0f);
     if (m_IsConnected) {
@@ -308,7 +308,7 @@ Bebop::setVerticalSpeed(const float up)
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
-Bebop::setYawSpeed(const float right)
+Bebop::setYawSpeed(float right)
 {
     assert(right >= -1.0f && right <= 1.0f);
     if (m_IsConnected) {

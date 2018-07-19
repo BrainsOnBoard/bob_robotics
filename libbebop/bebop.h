@@ -163,10 +163,10 @@ public:
     // motor control
     void takeOff();
     void land();
-    void setPitch(const float pitch);
-    void setRoll(const float right);
-    void setVerticalSpeed(const float up);
-    void setYawSpeed(const float right);
+    void setPitch(float pitch);
+    void setRoll(float right);
+    void setVerticalSpeed(float up);
+    void setYawSpeed(float right);
     void stopMoving();
 
     // misc
