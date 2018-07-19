@@ -164,11 +164,11 @@ public:
     void addJoystick(HID::Joystick &joystick);
 
     // speed limits
-    degree_t getMaximumTilt();
+    degree_t getMaximumTilt() const;
     Limits<degree_t> &getTiltLimits();
-    meters_per_second_t getMaximumVerticalSpeed();
+    meters_per_second_t getMaximumVerticalSpeed() const;
     Limits<meters_per_second_t> &getVerticalSpeedLimits();
-    degrees_per_second_t getMaximumYawSpeed();
+    degrees_per_second_t getMaximumYawSpeed() const;
     Limits<degrees_per_second_t> &getYawSpeedLimits();
 
     // motor control
@@ -273,7 +273,7 @@ private:
     bool onAxisEvent(HID::JAxis axis, float value);
     bool onButtonEvent(HID::JButton button, bool pressed);
     inline void addEventHandlers();
-    void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
     inline void createControllerDevice();
     inline eARCONTROLLER_DEVICE_STATE getState();
     inline eARCONTROLLER_DEVICE_STATE getStateUpdate();

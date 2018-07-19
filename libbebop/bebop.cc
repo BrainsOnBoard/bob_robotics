@@ -171,7 +171,7 @@ Bebop::getVideoStream()
 }
 
 degree_t
-Bebop::getMaximumTilt()
+Bebop::getMaximumTilt() const
 {
     return m_TiltLimits.getCurrent();
 }
@@ -183,7 +183,7 @@ Bebop::getTiltLimits()
 }
 
 meters_per_second_t
-Bebop::getMaximumVerticalSpeed()
+Bebop::getMaximumVerticalSpeed() const
 {
     return m_VerticalSpeedLimits.getCurrent();
 }
@@ -195,7 +195,7 @@ Bebop::getVerticalSpeedLimits()
 }
 
 degrees_per_second_t
-Bebop::getMaximumYawSpeed()
+Bebop::getMaximumYawSpeed() const
 {
     return m_YawSpeedLimits.getCurrent();
 }
@@ -387,7 +387,7 @@ Bebop::addEventHandlers()
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
