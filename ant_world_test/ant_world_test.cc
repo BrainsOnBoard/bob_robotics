@@ -19,6 +19,7 @@
 
 using namespace BoBRobotics;
 using namespace units::time;
+using namespace units::math;
 
 // Anonymous namespace
 namespace
