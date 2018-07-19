@@ -19,6 +19,7 @@
 #include "../libantworld/route_continuous.h"
 
 using namespace BoBRobotics;
+using namespace units::math;
 
 // Anonymous namespace
 namespace
@@ -153,11 +154,11 @@ int main(int argc, char *argv[])
     // Define the origin as the centre of the world, to nearest whole mm
     const millimeter_t originX = (worldMaxBound[0] - worldMinBound[0]) / 2.0;
     const millimeter_t originY = (worldMaxBound[1] - worldMinBound[1]) / 2.0;
-    const Vector2m origin(round(originX), round(originY));
+    const meter_t origin[] {round(originX), round(originY)};
 
     // The extent of the grid is the origin +-gridMax
-    const Vector2m worldMin(origin.X - gridMax, origin.Y - gridMax);
-    const Vector2m worldMax(origin.X + gridMax, origin.Y + gridMax);
+    const meter_t worldMin[] {origin[0] - gridMax, origin[1] - gridMax};
+    const meter_t worldMax[] {origin[0] + gridMax, origin[1] + gridMax};
 
     // Create input to read snapshots from screen
     Video::OpenGL input(0, 0, renderWidth, renderHeight);
@@ -180,8 +181,8 @@ int main(int argc, char *argv[])
             std::tie(x, y, heading) = route.getPosition(pathStep * routePosition);
         }
         else {
-            x = worldMin.X + gridSpacing * currentGridX;
-            y = worldMin.Y + gridSpacing * currentGridY;
+            x = worldMin[0] + gridSpacing * currentGridX;
+            y = worldMin[1] + gridSpacing * currentGridY;
         }
 
         // Clear colour and depth buffer
@@ -209,7 +210,7 @@ int main(int argc, char *argv[])
         }
         else {
             sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
-                    (int) round(xMM), (int) round(y), (int) round(zMM));
+                    (int) round(xMM), (int) round(yMM), (int) round(zMM));
         }
 
         // Write image file info to CSV file
