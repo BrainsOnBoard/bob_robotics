@@ -230,7 +230,7 @@ Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
 void
 Bebop::setPitch(float pitch)
 {
-    assert(pitch >= -1.0f && pitch <= 1.0f);
+    pitch = std::min(1.0f, std::max(-1.0f, pitch)); // cap value
     DRONE_COMMAND(setPilotingPCMDPitch, round(pitch * 100.0f));
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
@@ -241,7 +241,7 @@ Bebop::setPitch(float pitch)
 void
 Bebop::setRoll(float right)
 {
-    assert(right >= -1.0f && right <= 1.0f);
+    right = std::min(1.0f, std::max(-1.0f, right)); // cap value
     DRONE_COMMAND(setPilotingPCMDRoll, round(right * 100.0f));
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
@@ -252,7 +252,7 @@ Bebop::setRoll(float right)
 void
 Bebop::setVerticalSpeed(float up)
 {
-    assert(up >= -1.0f && up <= 1.0f);
+    up = std::min(1.0f, std::max(-1.0f, up)); // cap value
     DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
 }
 
@@ -262,7 +262,7 @@ Bebop::setVerticalSpeed(float up)
 void
 Bebop::setYawSpeed(float right)
 {
-    assert(right >= -1.0f && right <= 1.0f);
+    right = std::min(1.0f, std::max(-1.0f, right)); // cap value
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
