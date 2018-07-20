@@ -9,9 +9,9 @@
 
 using namespace BoBRobotics::Vicon;
 
-UDPClient<ObjectData> *vicon;
+using ObjectDataType = ObjectData<millimeter_t, degree_t>;
 
-void readCallback(uint, const ObjectData &data, void*)
+void readCallback(uint, const ObjectDataType &data, void*)
 {
     const auto &position = data.getPosition();
     const auto &attitude = data.getAttitude();
@@ -24,16 +24,15 @@ void readCallback(uint, const ObjectData &data, void*)
 int main()
 {
     // connect to Vicon system
-    vicon = new UDPClient<ObjectData>(51001);
+    UDPClient<ObjectDataType> vicon(51001);
     std::cout << "Connected to Vicon system" << std::endl;
 
     // set function to call on new position
-    vicon->setReadCallback(readCallback, nullptr);
+    vicon.setReadCallback(readCallback, nullptr);
 
     // wait for keypress + return
     char c;
     std::cin >> c;
 
-    delete vicon;
     return EXIT_SUCCESS;
 }

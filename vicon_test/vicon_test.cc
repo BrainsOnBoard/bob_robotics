@@ -11,11 +11,9 @@
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 
-#define toDeg(RAD) static_cast<degree_t>(RAD)
-
 int main()
 {
-    UDPClient<ObjectData> vicon(51001);
+    UDPClient<ObjectData<millimeter_t, degree_t>> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
     while(vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
@@ -31,7 +29,7 @@ int main()
         const auto &attitude = objectData.getAttitude();
 
         std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
-                  << toDeg(attitude[0]) << ", " << toDeg(attitude[1]) << ", " << toDeg(attitude[2]) << std::endl;
+                  << attitude[0] << ", " << attitude[1] << ", " << attitude[2] << std::endl;
     }
     if(!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;

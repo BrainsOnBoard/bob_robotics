@@ -48,7 +48,7 @@ int main()
 
 #ifdef VICON_CAPTURE
     // Create Vicon UDP interface
-    Vicon::UDPClient<Vicon::ObjectData> vicon(51001);
+    Vicon::UDPClient<Vicon::ObjectData<millimeter_t, radian_t>> vicon(51001);
 
     // Create Vicon capture control interface
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
@@ -95,12 +95,10 @@ int main()
                const auto &position = objectData.getPosition();
                const auto &attitude = objectData.getAttitude();
 
-               #define toMM(X) static_cast<millimeter_t>(X).value()
-
                // Write to CSV
                data << filename << ", " << objectData.getFrameNumber() << ", "
-                    << toMM(position[0]) << ", " << toMM(position[1]) << ", "
-                    << toMM(position[2]) << ", " << attitude[0].value() << ", "
+                    << position[0].value() << ", " << position[1].value() << ", "
+                    << position[2].value() << ", " << attitude[0].value() << ", "
                     << attitude[1].value() << ", " << attitude[2].value() << std::endl;
 #endif  // VICON_CAPTURE
            }

@@ -43,16 +43,18 @@ namespace Vicon
 template <class T>
 using Vector = T[3];
 
-using Point3 = Vector<meter_t>;
-using Attitude = Vector<radian_t>;
-using Velocity3 = Vector<meters_per_second_t>;
-
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
+template <class LengthUnit = meter_t, class AngleUnit = radian_t>
 class ObjectData
 {
+static_assert(units::traits::is_length_unit<LengthUnit>::value,
+              "LengthUnit must be a length type (e.g. meter_t)");
+static_assert(units::traits::is_angle_unit<AngleUnit>::value,
+              "AngleUnit must be an angle type (e.g. radian_t)");
+
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
@@ -64,35 +66,40 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, const Point3 &position, const Attitude &attitude)
+    void update(uint32_t frameNumber, LengthUnit x, LengthUnit y, LengthUnit z,
+                AngleUnit yaw, AngleUnit pitch, AngleUnit roll)
     {
         // Cache frame number
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        std::copy(std::begin(position), std::end(position), std::begin(m_Position));
-        std::copy(std::begin(attitude), std::end(attitude), std::begin(m_Attitude));
+        m_Position[0] = x; m_Position[1] = y; m_Position[2] = z;
+        m_Attitude[0] = yaw; m_Attitude[1] = pitch; m_Attitude[2] = roll;
     }
 
     uint32_t getFrameNumber() const { return m_FrameNumber; }
-    const Point3 &getPosition() const{ return m_Position; }
-    const Attitude &getAttitude() const{ return m_Attitude; }
+    const Vector<LengthUnit> &getPosition() const{ return m_Position; }
+    const Vector<AngleUnit> &getAttitude() const{ return m_Attitude; }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
-    Point3 m_Position;
-    Attitude m_Attitude;
+    Vector<LengthUnit> m_Position;
+    Vector<AngleUnit> m_Attitude;
 };
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectDataVelocity
 //----------------------------------------------------------------------------
 //! Object data class which also calculate (un-filtered) velocity
-class ObjectDataVelocity : public ObjectData
+template <class LengthUnit = meter_t, class AngleUnit = radian_t, class VelocityUnit = meters_per_second_t>
+class ObjectDataVelocity : public ObjectData<LengthUnit, AngleUnit>
 {
+static_assert(units::traits::is_velocity_unit<VelocityUnit>::value,
+              "VelocityUnit must be a velocity type (e.g. meters_per_second_t)");
+
 public:
     ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
     {
@@ -101,22 +108,24 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, const Point3 &position, const Attitude &attitude)
+    void update(uint32_t frameNumber, LengthUnit x, LengthUnit y, LengthUnit z,
+                AngleUnit yaw, AngleUnit pitch, AngleUnit roll)
     {
+        const Vector<LengthUnit> position {x, y, z};
         constexpr second_t frameS = 10_ms;
         constexpr second_t smoothingS = 30_ms;
 
         // Calculate time since last frame
-        const uint32_t deltaFrames = frameNumber - getFrameNumber();
+        const uint32_t deltaFrames = frameNumber - this->getFrameNumber();
         const second_t deltaS = frameS * deltaFrames;
 
         // Calculate exponential smoothing factor
         const double alpha = 1.0 - exp(-deltaS / smoothingS);
 
         // Calculate instantaneous velocity
-        const auto &oldPosition = getPosition();
-        Velocity3 instVelocity;
-        const auto calcVelocity = [deltaS](meter_t curr, meter_t prev) {
+        const auto &oldPosition = this->getPosition();
+        Vector<VelocityUnit> instVelocity;
+        const auto calcVelocity = [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
         };
         std::transform(std::begin(position), std::end(position),
@@ -124,16 +133,18 @@ public:
                        calcVelocity);
 
         // Exponentially smooth velocity
-        const auto smoothVelocity = [alpha](meters_per_second_t inst, meters_per_second_t prev) {
+        const auto smoothVelocity = [alpha](auto inst, auto prev) {
             return (alpha * inst) + ((1.0 - alpha) * prev);
         };
-        std::transform(std::begin(instVelocity), std::end(instVelocity), std::begin(m_Velocity), std::begin(m_Velocity), smoothVelocity);
+        std::transform(std::begin(instVelocity), std::end(instVelocity),
+                       std::begin(m_Velocity), std::begin(m_Velocity),
+                       smoothVelocity);
 
         // Superclass
-        ObjectData::update(frameNumber, position, attitude);
+        ObjectData<LengthUnit, AngleUnit>::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
-    const Velocity3 &getVelocity() const
+    const Vector<VelocityUnit> &getVelocity() const
     {
         return m_Velocity;
     }
@@ -142,14 +153,14 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Velocity3 m_Velocity;
+    Vector<VelocityUnit> m_Velocity;
 };
 
 //----------------------------------------------------------------------------
 // Vicon::UDPClient
 //----------------------------------------------------------------------------
 // Receiver for Vicon UDP streams
-template<typename ObjectDataType>
+template<typename ObjectDataType = ObjectData<>>
 class UDPClient
 {
     using UDPClientCallback = void (*)(uint id, const ObjectDataType &data, void *userData);
@@ -244,7 +255,9 @@ private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, uint32_t frameNumber, const Point3 &position, const Attitude &attitude)
+    void updateObjectData(unsigned int id, uint32_t frameNumber,
+                          const Vector<millimeter_t> &position,
+                          const Vector<radian_t> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -255,7 +268,8 @@ private:
         }
 
         // Update object data with position and attitude
-        m_ObjectData[id].update(frameNumber, position, attitude);
+        m_ObjectData[id].update(frameNumber, position[0], position[1], position[2],
+                                attitude[0], attitude[1], attitude[2]);
 
         // Execute callback function, if set. Note that we copy by value here,
         // which is presumably less efficient, but is thread safe
@@ -308,13 +322,12 @@ private:
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
                     assert(itemDataSize == 72);
 
-                    // Read object position + convert to metres
-                    Vector<millimeter_t> positionMM;
-                    memcpy(&positionMM[0], &buffer[itemOffset + 27], 3 * sizeof(double));
-                    Point3 position {positionMM[0], positionMM[1], positionMM[2]};
+                    // Read object position
+                    Vector<millimeter_t> position;
+                    memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
                     // Read object attitude
-                    Attitude attitude;
+                    Vector<radian_t> attitude;
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
