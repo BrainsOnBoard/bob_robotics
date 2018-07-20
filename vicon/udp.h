@@ -48,7 +48,7 @@ using Vector = T[3];
 //! Simplest object data class - just tracks position and attitude
 template <class LengthUnit = meter_t, class AngleUnit = radian_t>
 class ObjectData
-  : HasPosition<LengthUnit>, HasAttitude<AngleUnit>
+  : public HasPosition<LengthUnit>, public HasAttitude<AngleUnit>
 {
 static_assert(units::traits::is_length_unit<LengthUnit>::value,
               "LengthUnit must be a length type (e.g. meter_t)");

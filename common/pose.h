@@ -39,6 +39,7 @@ public:
  */
 template<class LengthUnit>
 class Positionable
+  : public HasPosition<LengthUnit>
 {
 public:
     virtual void setPosition(LengthUnit x, LengthUnit y, LengthUnit z) = 0;
@@ -49,6 +50,7 @@ public:
  */
 template<class AngleUnit>
 class Rotatable
+  : public HasAttitude<AngleUnit>
 {
 public:
     virtual void setAttitude(AngleUnit yaw, AngleUnit pitch, AngleUnit roll) = 0;

@@ -57,9 +57,9 @@ public:
         return false;
     }
 
-private:
+protected:
     //----------------------------------------------------------------------------
-    // Private members
+    // Protected members
     //----------------------------------------------------------------------------
     const GLint m_ReadX;
     const GLint m_ReadY;

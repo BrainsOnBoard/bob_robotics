@@ -9,11 +9,12 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../third_party/path.h"
 #include "../video/opengl.h"
 
 // Libantworld includes
+#include "../libantworld/agent.h"
 #include "../libantworld/common.h"
 #include "../libantworld/renderer.h"
 #include "../libantworld/route_continuous.h"
@@ -43,9 +44,9 @@ void handleGLError(GLenum source,
 
 int main(int argc, char *argv[])
 {
-    const meter_t pathStep = 1_cm;
-    const meter_t gridSpacing = 10_cm;
-    const meter_t gridMax = 2.5_m; // gives a 5m^2 grid
+    const millimeter_t pathStep = 1_cm;
+    const millimeter_t gridSpacing = 10_cm;
+    const millimeter_t gridMax = 2.5_m; // gives a 5m^2 grid
 
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
@@ -147,6 +148,9 @@ int main(int argc, char *argv[])
     renderer.getWorld().load("../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
+    // Create agent object
+    AntWorld::AntAgent<millimeter_t, degree_t> agent(window, renderer, renderWidth, renderHeight);
+
     // Get world bounds
     const auto &worldMinBound = renderer.getWorld().getMinBound();
     const auto &worldMaxBound = renderer.getWorld().getMaxBound();
@@ -154,14 +158,11 @@ int main(int argc, char *argv[])
     // Define the origin as the centre of the world, to nearest whole mm
     const millimeter_t originX = (worldMaxBound[0] - worldMinBound[0]) / 2.0;
     const millimeter_t originY = (worldMaxBound[1] - worldMinBound[1]) / 2.0;
-    const meter_t origin[] {round(originX), round(originY)};
+    const millimeter_t origin[] {round(originX), round(originY)};
 
     // The extent of the grid is the origin +-gridMax
-    const meter_t worldMin[] {origin[0] - gridMax, origin[1] - gridMax};
-    const meter_t worldMax[] {origin[0] + gridMax, origin[1] + gridMax};
-
-    // Create input to read snapshots from screen
-    Video::OpenGL input(0, 0, renderWidth, renderHeight);
+    const millimeter_t worldMin[] {origin[0] - gridMax, origin[1] - gridMax};
+    const millimeter_t worldMax[] {origin[0] + gridMax, origin[1] + gridMax};
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
@@ -169,9 +170,9 @@ int main(int argc, char *argv[])
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
-    meter_t x, y;
-    millimeter_t xMM, yMM;
-    const millimeter_t zMM = 1_cm; // agent's height is fixed
+    millimeter_t x = 0_mm;
+    millimeter_t y = 0_mm;
+    const millimeter_t z = 1_cm; // agent's height is fixed
     degree_t heading = 0_deg;
 
     // While the window isn't forcibly being closed
@@ -185,23 +186,10 @@ int main(int argc, char *argv[])
             y = worldMin[1] + gridSpacing * currentGridY;
         }
 
-        // Clear colour and depth buffer
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Render first person
-        renderer.renderPanoramicView(x, y, zMM,
-                                     heading, 0_deg, 0_deg,
-                                     0, 0, renderWidth, renderHeight);
-
-        // Swap front and back buffers
-        glfwSwapBuffers(window);
-
-        // Read snapshot
-        input.readFrame(snapshot);
-
-        // Convert to mm
-        xMM = x;
-        yMM = y;
+        // Update agent's position and read frame in
+        agent.setPosition(x, y, z);
+        agent.setAttitude(heading, 0_deg, 0_deg);
+        agent.readFrame(snapshot);
 
         // Get image file name
         char filename[255];
@@ -210,11 +198,11 @@ int main(int argc, char *argv[])
         }
         else {
             sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
-                    (int) round(xMM), (int) round(yMM), (int) round(zMM));
+                    (int) round(x), (int) round(y), (int) round(z));
         }
 
         // Write image file info to CSV file
-        csvStream << xMM.value() << ", " << yMM.value() << ", " << zMM.value() << ", "
+        csvStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
                   << heading.value() << ", " << filename << std::endl;
 
         // Write image file
