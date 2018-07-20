@@ -259,9 +259,15 @@ private:
             m_ObjectData.resize(id + 1);
         }
 
-        // Update object data with position and attitude
+        /*
+         * Update object data with position and attitude.
+         * 
+         * Note that we reorder the rotation angles we get from the Vicon system
+         * so that they are in the order of yaw, pitch and roll (which seems to
+         * be standard).
+         */
         m_ObjectData[id].update(frameNumber, position[0], position[1], position[2],
-                                attitude[0], attitude[1], attitude[2]);
+                                attitude[2], attitude[0], attitude[1]);
     }
 
     void readThread(int socket)
