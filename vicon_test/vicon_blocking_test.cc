@@ -11,7 +11,7 @@ using namespace BoBRobotics::Vicon;
 
 using ObjectDataType = ObjectData<millimeter_t, degree_t>;
 
-void readCallback(uint, const ObjectDataType &data, void*)
+void readCallback(uint, ObjectDataType &data, void*)
 {
     const auto &position = data.getPosition();
     const auto &attitude = data.getAttitude();

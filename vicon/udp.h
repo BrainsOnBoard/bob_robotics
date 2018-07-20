@@ -24,15 +24,14 @@
     #include <unistd.h>
 #endif
 
-// Third-party includes
-#include "../third_party/units.h"
+// BoB robotics includes
+#include "../common/pose.h"
 
-using namespace units::literals;
 using namespace units::math;
-using namespace units::angle;
-using namespace units::length;
 using namespace units::time;
 using namespace units::velocity;
+
+using namespace BoBRobotics::Pose;
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
@@ -49,6 +48,7 @@ using Vector = T[3];
 //! Simplest object data class - just tracks position and attitude
 template <class LengthUnit = meter_t, class AngleUnit = radian_t>
 class ObjectData
+  : HasPosition<LengthUnit>, HasAttitude<AngleUnit>
 {
 static_assert(units::traits::is_length_unit<LengthUnit>::value,
               "LengthUnit must be a length type (e.g. meter_t)");
@@ -78,8 +78,8 @@ public:
     }
 
     uint32_t getFrameNumber() const { return m_FrameNumber; }
-    const Vector<LengthUnit> &getPosition() const{ return m_Position; }
-    const Vector<AngleUnit> &getAttitude() const{ return m_Attitude; }
+    Vector<LengthUnit> &getPosition() override { return m_Position; }
+    Vector<AngleUnit> &getAttitude() override { return m_Attitude; }
 
 private:
     //----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ private:
 template<typename ObjectDataType = ObjectData<>>
 class UDPClient
 {
-    using UDPClientCallback = void (*)(uint id, const ObjectDataType &data, void *userData);
+    using UDPClientCallback = void (*)(uint id, ObjectDataType &data, void *userData);
 
 public:
     UDPClient(){}
