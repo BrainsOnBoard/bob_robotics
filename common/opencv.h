@@ -10,4 +10,4 @@
 #ifdef KEY_DOWN
 #undef KEY_DOWN
 #endif
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
