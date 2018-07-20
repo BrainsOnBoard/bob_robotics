@@ -3,9 +3,6 @@
 // Standard C++ includes
 #include <vector>
 
-// Standard C includes
-// #include <cmath>
-
 // Antworld includes
 #include "common.h"
 
