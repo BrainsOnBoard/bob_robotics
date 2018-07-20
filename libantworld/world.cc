@@ -11,7 +11,7 @@
 #include <cassert>
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 // GeNN robotics includes
 #include "../third_party/path.h"

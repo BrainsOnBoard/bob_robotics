@@ -1,7 +1,7 @@
 #pragma once
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::SnapshotProcessor

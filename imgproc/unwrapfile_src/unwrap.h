@@ -1,6 +1,6 @@
 #pragma once
 
-#include <opencv2/opencv.hpp> // used for unwrapping
+#include "common/opencv.h" // used for unwrapping
 
 using namespace std;
 using namespace cv;

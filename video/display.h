@@ -16,7 +16,7 @@
 #include <thread>
 
 // OpenCV
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 // BoB robotics includes
 #include "../common/threadable.h"

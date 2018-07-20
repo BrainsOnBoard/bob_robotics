@@ -5,7 +5,7 @@
 #include <tuple>
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 //----------------------------------------------------------------------------
 // MBMemory

@@ -11,7 +11,7 @@
 #endif
 
 // OpenCV
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 namespace BoBRobotics {
 namespace OS {

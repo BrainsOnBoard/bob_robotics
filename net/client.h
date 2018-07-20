@@ -12,7 +12,7 @@
 #include <vector>
 
 // OpenCV
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 // local includes
 #include "node.h"

@@ -11,7 +11,7 @@
 #include <cstdlib>
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 // Common includes
 #include "../genn_utils/analogue_csv_recorder.h"

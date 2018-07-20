@@ -12,7 +12,7 @@
 #include <cmath>
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 // OpenGL includes
 #include <GL/glew.h>

@@ -7,7 +7,7 @@
 #include <vector>
 
 // OpenCV
-#include <opencv2/opencv.hpp>
+#include "../common/opencv.h"
 
 // BoB robotics includes
 #include "../net/node.h"
