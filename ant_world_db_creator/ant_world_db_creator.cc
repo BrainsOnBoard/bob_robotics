@@ -1,4 +1,8 @@
+// Standard C includes
+#include <cmath>
+
 // Standard C++ includes
+#include <string>
 #include <fstream>
 #include <iostream>
 
@@ -43,10 +47,17 @@ void handleGLError(GLenum source,
 int main(int argc, char *argv[])
 {
     const float pathStepM = 1.0f / 100.0f;
-    const float gridSizeM = 100.0f / 100.0f;
+    const float gridSpacingM = 10.0f / 100.0f;
+    const float gridMaxM = 2.5f; // gives a 5m^2 grid
 
-    const unsigned int renderWidth = 200;
-    const unsigned int renderHeight = 40;
+    /*
+     * I've set the width of the image to be the same as the (raw) unwrapped
+     * images we get from the robot gantry, but the height is greater (cf. 58)
+     * because I wanted to keep the aspect ratio as it was (200x40).
+     *      -- AD
+     */
+    const unsigned int renderWidth = 720;
+    const unsigned int renderHeight = 150;
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
@@ -103,6 +114,7 @@ int main(int argc, char *argv[])
     // If we should be following a route
     std::ofstream csvStream;
     std::string routeTitle;
+    filesystem::path savePath;
     if(followRoute) {
         // Load route
         route.load(argv[1]);
@@ -116,36 +128,51 @@ int main(int argc, char *argv[])
              routeTitle = routeTitle.substr(0, pos);
         }
 
-        csvStream.open(routeTitle + ".csv");
+        savePath = routeTitle;
+        if (!savePath.exists()) {
+            filesystem::create_directory(savePath);
+        }
+        csvStream.open((savePath / (routeTitle + ".csv")).str());
     }
     else {
-        csvStream.open("world5000_grid.csv");
+        savePath = "world5000_grid";
+        if (!savePath.exists()) {
+            filesystem::create_directory(savePath);
+        }
+        csvStream.open((savePath / "world5000_grid.csv").str());
     }
 
     // Write CSV header
-    csvStream << "X [mm], Y [mm], Heading [degrees], Filename" << std::endl;
+    csvStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
 
     // Create renderer
-    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360.0);
+    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360.0f);
     renderer.getWorld().load("../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Get world bounds
-    const auto &worldMin = renderer.getWorld().getMinBound();
-    const auto &worldMax = renderer.getWorld().getMaxBound();
+    const auto &worldMinBound = renderer.getWorld().getMinBound();
+    const auto &worldMaxBound = renderer.getWorld().getMaxBound();
+
+    // Define the origin as the centre of the world, to nearest whole mm
+    const float originX = round(1000.f * (worldMaxBound[0] - worldMinBound[0]) / 2.0f) / 1000.0f;
+    const float originY = round(1000.f * (worldMaxBound[1] - worldMinBound[1]) / 2.0f) / 1000.0f;
+
+    // The extent of the grid is the origin +-gridMaxM
+    const float worldMin[] = {originX - gridMaxM, originY - gridMaxM};
+    const float worldMax[] = {originX + gridMaxM, originY + gridMaxM};
 
     // Create input to read snapshots from screen
     Video::OpenGL input(0, 0, renderWidth, renderHeight);
 
-
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
-
 
     // While the window isn't forcibly being closed
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
+    const float z = 0.01f; // agent's height is fixed
     while (!glfwWindowShouldClose(window)) {
         // If we should be following route, get position from route
         float x = 0.0f;
@@ -155,15 +182,15 @@ int main(int argc, char *argv[])
             std::tie(x, y, heading) = route.getPosition((float)routePosition * pathStepM);
         }
         else {
-            x = worldMin[0] + ((float)currentGridX * gridSizeM);
-            y = worldMin[1] + ((float)currentGridY * gridSizeM);
+            x = worldMin[0] + ((float)currentGridX * gridSpacingM);
+            y = worldMin[1] + ((float)currentGridY * gridSpacingM);
         }
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
-        renderer.renderPanoramicView(x, y, 0.01f,
+        renderer.renderPanoramicView(x, y, z,
                                      heading, 0.0f, 0.0f,
                                      0, 0, renderWidth, renderHeight);
 
@@ -178,12 +205,14 @@ int main(int argc, char *argv[])
             sprintf(filename, "%s_%04zu.png", routeTitle.c_str(), routePosition);
         }
         else {
-            sprintf(filename, "world5000_grid_%04zu_%04zu.png", currentGridX, currentGridY);
+            sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
+                    (int) round(x * 1000.0f), (int) round(y * 1000), (int) round(z * 1000));
         }
-        csvStream << x << ", " << y << ", " << heading << ", " << filename << std::endl;
+        csvStream << x * 1000.0f << ", " << y * 1000.0f << ", " << z * 1000.0f << ", "
+                  << heading << ", " << filename << std::endl;
 
         cv::flip(snapshot, snapshot, 0);
-        cv::imwrite(filename, snapshot);
+        cv::imwrite((savePath / filename).str(), snapshot);
 
         // Poll for and process events
         glfwPollEvents();
@@ -204,16 +233,18 @@ int main(int argc, char *argv[])
             currentGridX++;
 
             // If we've reached the X edge of the world, move to start of next Y
-            if((worldMin[0] + ((float)currentGridX * gridSizeM)) > worldMax[0]) {
+            if((worldMin[0] + ((float)currentGridX * gridSpacingM)) > worldMax[0]) {
                 currentGridY++;
                 currentGridX = 0;
             }
 
             // If we've reached the Y edge of the world, stop
-            if((worldMin[1] + ((float)currentGridY * gridSizeM)) > worldMax[1]) {
+            if((worldMin[1] + ((float)currentGridY * gridSpacingM)) > worldMax[1]) {
                 break;
             }
         }
     }
+
+    csvStream.close(); // close CSV file handle
     return EXIT_SUCCESS;
 }
