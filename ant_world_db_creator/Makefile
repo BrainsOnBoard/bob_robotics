@@ -1,4 +1,4 @@
-CXXFLAGS := -std=c++14 -Wall -Wpedantic -g -L../libantworld ../libantworld/agent.o -lantworld -lglfw \
+CXXFLAGS := -std=c++14 -Wall -Wpedantic -g -L../libantworld -lantworld -lglfw \
 		-lGL -lGLU -lGLEW -lm -lstdc++ -pthread `pkg-config --cflags --libs opencv`
 TARGETS = ant_world_db_creator ant_world_map_creator
 
