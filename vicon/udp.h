@@ -324,11 +324,11 @@ private:
 
                     // Read object position
                     Vector3<double> position;
-                    memcpy(&position[0], &buffer[itemOffset + 27], sizeof(position));
+                    memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
                     // Read object attitude
                     Vector3<double> attitude;
-                    memcpy(&attitude[0], &buffer[itemOffset + 51], sizeof(attitude));
+                    memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
                     updateObjectData(objectID, frameNumber, position, attitude);
