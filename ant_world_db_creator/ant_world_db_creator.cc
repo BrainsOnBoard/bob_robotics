@@ -20,6 +20,9 @@
 #include "../libantworld/route_continuous.h"
 
 using namespace BoBRobotics;
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
 using namespace units::math;
 
 // Anonymous namespace
