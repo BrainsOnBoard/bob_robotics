@@ -22,6 +22,7 @@
 
 // GeNN robotics includes
 #include "../common/timer.h"
+#include "../third_party/units.h"
 #include "../video/opengl.h"
 
 // Libantworld includes
@@ -36,6 +37,9 @@
 #include "parameters.h"
 
 using namespace BoBRobotics;
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -200,9 +204,9 @@ int main(int argc, char *argv[])
                                                        Parameters::inputWidth, Parameters::inputHeight);
 
     // Initialize ant position
-    float antX = 5.0f;
-    float antY = 5.0f;
-    float antHeading = 270.0f;
+    meter_t antX = 5.0_m;
+    meter_t antY = 5.0_m;
+    degree_t antHeading = 270.0_deg;
     if(route.size() > 0) {
         std::tie(antX, antY, antHeading) = route[0];
     }
@@ -219,16 +223,16 @@ int main(int argc, char *argv[])
     unsigned int numErrors = 0;
     unsigned int numTestSteps = 0;
 
-    float bestHeading = 0.0f;
+    degree_t bestHeading = 0.0_deg;
     unsigned int bestTestENSpikes = std::numeric_limits<unsigned int>::max();
 
     // Calculate scan parameters
-    constexpr double halfScanAngle = Parameters::scanAngle / 2.0;
-    constexpr unsigned int numScanSteps = (unsigned int)round(Parameters::scanAngle / Parameters::scanStep);
-    constexpr unsigned int numSpinSteps = (unsigned int)round(Parameters::scanAngle / Parameters::spinStep);
+    const degree_t halfScanAngle = Parameters::scanAngle / 2.0;
+    const unsigned int numScanSteps = (unsigned int)units::math::round(Parameters::scanAngle / Parameters::scanStep);
+    const unsigned int numSpinSteps = (unsigned int)units::math::round(Parameters::scanAngle / Parameters::spinStep);
 
     // When random walking, distribution of angles to turn by
-    std::uniform_real_distribution<float> randomAngleOffset(-halfScanAngle, halfScanAngle);
+    std::uniform_real_distribution<float> randomAngleOffset(-halfScanAngle.value(), halfScanAngle.value());
 
     std::ofstream spin;
 
@@ -246,21 +250,21 @@ int main(int argc, char *argv[])
             antHeading += Parameters::antTurnSpeed;
         }
         if(keybits.test(KeyUp)) {
-            antX += Parameters::antMoveSpeed * sin(antHeading * AntWorld::degreesToRadians);
-            antY += Parameters::antMoveSpeed * cos(antHeading * AntWorld::degreesToRadians);
+            antX += Parameters::antMoveSpeed * units::math::sin(antHeading);
+            antY += Parameters::antMoveSpeed * units::math::cos(antHeading);
         }
         if(keybits.test(KeyDown)) {
-            antX -= Parameters::antMoveSpeed * sin(antHeading * AntWorld::degreesToRadians);
-            antY -= Parameters::antMoveSpeed * cos(antHeading * AntWorld::degreesToRadians);
+            antX -= Parameters::antMoveSpeed * units::math::sin(antHeading);
+            antY -= Parameters::antMoveSpeed * units::math::cos(antHeading);
         }
         if(keybits.test(KeyReset)) {
             if(route.size() > 0) {
                 std::tie(antX, antY, antHeading) = route[0];
             }
             else {
-                antX = 5.0f;
-                antY = 5.0f;
-                antHeading = 270.0f;
+                antX = 5.0_m;
+                antY = 5.0_m;
+                antHeading = 270.0_deg;
             }
         }
         if(keybits.test(KeySpin) && state == State::Idle) {
@@ -353,8 +357,8 @@ int main(int argc, char *argv[])
                 numTestSteps++;
 
                 // Move ant forward by snapshot distance
-                antX += Parameters::snapshotDistance * sin(antHeading * AntWorld::degreesToRadians);
-                antY += Parameters::snapshotDistance * cos(antHeading * AntWorld::degreesToRadians);
+                antX += Parameters::snapshotDistance * units::math::sin(antHeading);
+                antY += Parameters::snapshotDistance * units::math::cos(antHeading);
 
                 // If we've reached destination
                 if(route.atDestination(antX, antY, Parameters::errorDistance)) {
@@ -379,7 +383,7 @@ int main(int argc, char *argv[])
                 // Otherwise
                 else {
                     // Calculate distance to route
-                    float distanceToRoute;
+                    meter_t distanceToRoute;
                     size_t nearestRouteWaypoint;
                     std::tie(distanceToRoute, nearestRouteWaypoint) = route.getDistanceToRoute(antX, antY);
                     std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
@@ -421,11 +425,11 @@ int main(int argc, char *argv[])
         }
         else if(state == State::RandomWalk) {
             // Pick random heading
-            antHeading += randomAngleOffset(gen);
+            antHeading += units::make_unit<degree_t>(randomAngleOffset(gen));
 
             // Move ant forward by snapshot distance
-            antX += Parameters::snapshotDistance * sin(antHeading * AntWorld::degreesToRadians);
-            antY += Parameters::snapshotDistance * cos(antHeading * AntWorld::degreesToRadians);
+            antX += Parameters::snapshotDistance * units::math::sin(antHeading);
+            antY += Parameters::snapshotDistance * units::math::cos(antHeading);
 
             // If we've reached destination
             if(route.atDestination(antX, antY, Parameters::errorDistance)) {
@@ -440,7 +444,7 @@ int main(int argc, char *argv[])
             // Otherwise
             else {
                 // Calculate distance to route
-                float distanceToRoute;
+                meter_t distanceToRoute;
                 size_t nearestRouteWaypoint;
                 std::tie(distanceToRoute, nearestRouteWaypoint) = route.getDistanceToRoute(antX, antY);
 
@@ -497,8 +501,8 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render top down and ants eye view
-        renderer.renderPanoramicView(antX, antY, 0.01f,
-                                     antHeading, 0.0f, 0.0f,
+        renderer.renderPanoramicView(antX, antY, 0.01_m,
+                                     antHeading, 0.0_deg, 0.0_deg,
                                      0, Parameters::displayRenderWidth + 10, Parameters::displayRenderWidth, Parameters::displayRenderHeight);
         renderer.renderTopDownView(0, 0, Parameters::displayRenderWidth, Parameters::displayRenderWidth);
 

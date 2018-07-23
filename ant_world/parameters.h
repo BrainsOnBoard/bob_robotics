@@ -1,10 +1,17 @@
 #pragma once
 
+// Third-party includes
+#include "../third_party/units.h"
+
 //------------------------------------------------------------------------
 // Parameters
 //------------------------------------------------------------------------
 namespace Parameters
 {
+    using namespace units::angle;
+    using namespace units::length;
+    using namespace units::literals;
+
     constexpr double timestepMs = 1.0;
 
     // Regime parameters
@@ -13,11 +20,11 @@ namespace Parameters
     constexpr double postStimuliDurationMs = 200.0;
 
     // Testing parameters
-    constexpr double scanAngle = 120.0;
-    constexpr double scanStep = 2.0;
-    constexpr double spinStep = 0.5;
-    constexpr double snapshotDistance = 10.0 / 100.0;
-    constexpr double errorDistance = 20.0 / 100.0;
+    constexpr degree_t scanAngle = 120.0_deg;
+    constexpr degree_t scanStep = 2.0_deg;
+    constexpr degree_t spinStep = 0.5_deg;
+    constexpr meter_t snapshotDistance = 10.0_cm;
+    constexpr meter_t errorDistance = 20.0_cm;
     constexpr unsigned int testStepLimit = 1000;
 
     // Network dimensions
@@ -68,7 +75,7 @@ namespace Parameters
     constexpr unsigned int displayRenderHeight = intermediateSnapshotHeight * displayScale;
 
     // Ant parameters
-    // How fast does the ant move?
-    constexpr float antTurnSpeed = 4.0f;
-    constexpr float antMoveSpeed = 0.05f;
+    // How fast does the ant move each timestep?
+    constexpr degree_t antTurnSpeed = 4.0_deg;
+    constexpr meter_t antMoveSpeed = 0.05_m;
 }
