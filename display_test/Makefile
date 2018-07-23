@@ -1,17 +1,18 @@
-CXXFLAGS= -std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -I.. `pkg-config --cflags opencv`
-LDFLAGS= -pthread `pkg-config --libs opencv`
+include ../common/flags.mk
+
+CXXFLAGS += -I..
 
 .PHONY: all clean
 
 all: display_test unwrap_display_test
 
 display_test: display_test.cc display_test.d
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 -include display_test.d
 
 unwrap_display_test: unwrap_display_test.cc unwrap_display_test.d
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 -include unwrap_display_test.d
 

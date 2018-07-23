@@ -1,7 +1,9 @@
+include ../common/flags.mk
+
 EXECUTABLE      := ant_world
 SOURCES         := ant_world.cc mb_memory.cc perfect_memory.cc
-LINK_FLAGS      := -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW  `pkg-config --libs opencv`
-CXXFLAGS        := -I../libantworld -pthread -Wall -Wpedantic -Wextra  `pkg-config --cflags opencv`
+LINK_FLAGS      += -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+CXXFLAGS        += -I../libantworld
 
 ifdef RECORD_SPIKES
     CXXFLAGS += -DRECORD_SPIKES

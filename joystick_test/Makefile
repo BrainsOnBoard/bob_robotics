@@ -1,21 +1,23 @@
-.PHONY: all clean
+include ../common/flags.mk
 
-CXXFLAGS=-std=c++14 -g -Wall -Wpedantic -Wextra -MMD -MP -pthread -I..
+CXXFLAGS += -I..
+
+.PHONY: all clean
 
 all: joystick_test joystick_robot_test joystick_polling_test
 
 joystick_test: joystick_test.cc joystick_test.d
-	$(CXX) -o joystick_test $(CXXFLAGS) joystick_test.cc
+	$(CXX) -o joystick_test $(CXXFLAGS) $(LINK_FLAGS) joystick_test.cc
 
 -include joystick_test.d
 
 joystick_robot_test: joystick_robot_test.cc joystick_robot_test.d
-	$(CXX) joystick_robot_test.cc $(CXXFLAGS) -DI2C `pkg-config --libs --cflags opencv` -o joystick_robot_test
+	$(CXX) joystick_robot_test.cc $(CXXFLAGS) $(LINK_FLAGS) -DI2C `pkg-config --libs --cflags opencv` -o joystick_robot_test
 
 -include joystick_robot_test.d
 
 joystick_polling_test: joystick_polling_test.cc joystick_polling_test.d
-	$(CXX) -o joystick_polling_test $(CXXFLAGS) joystick_polling_test.cc
+	$(CXX) -o joystick_polling_test $(CXXFLAGS) $(LINK_FLAGS) joystick_polling_test.cc
 
 -include joystick_polling_test.d
 
