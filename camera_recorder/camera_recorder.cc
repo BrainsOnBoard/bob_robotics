@@ -48,7 +48,7 @@ int main()
 
 #ifdef VICON_CAPTURE
     // Create Vicon UDP interface
-    Vicon::UDPClient<Vicon::ObjectData<millimeter_t, radian_t>> vicon(51001);
+    Vicon::UDPClient<> vicon(51001);
 
     // Create Vicon capture control interface
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
@@ -92,8 +92,8 @@ int main()
 #ifdef VICON_CAPTURE
                // Get tracking data
                auto objectData = vicon.getObjectData(0);
-               const auto &position = objectData.getPosition();
-               const auto &attitude = objectData.getAttitude();
+               const auto &position = objectData.getPosition<>();
+               const auto &attitude = objectData.getAttitude<>();
 
                // Write to CSV
                data << filename << ", " << objectData.getFrameNumber() << ", "
