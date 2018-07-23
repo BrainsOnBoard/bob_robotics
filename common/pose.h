@@ -1,5 +1,8 @@
 #pragma once
 
+// Standard C++ includes
+#include <tuple>
+
 // Third-party includes
 #include "../third_party/units.h"
 
@@ -12,48 +15,43 @@ namespace Pose {
 
 // A generic vector template
 template<class T>
-using Vector3 = T[3];
+using Triple = std::tuple<T, T, T>;
+
+// A generic template for unit arrays
+template<class T>
+using Array3 = T[3];
 
 /*
- * A class for objects which can return their position in space.
+ * Returns a triple of unit-type objects.
  */
-template<class LengthUnit>
-class HasPosition
+template<class OutputUnit, class ArrayType>
+inline constexpr Triple<OutputUnit>
+makeUnitTriple(const ArrayType &values)
 {
-public:
-    virtual Vector3<LengthUnit> &getPosition() = 0;
-}; // HasPosition
+    return std::make_tuple(static_cast<OutputUnit>(values[0]),
+                           static_cast<OutputUnit>(values[1]),
+                           static_cast<OutputUnit>(values[2]));
+}
 
-/* 
- * A class for objects which can return their attitude (rotation).
- */
-template<class AngleUnit>
-class HasAttitude
-{
-public:
-    virtual Vector3<AngleUnit> &getAttitude() = 0;
-};
+// A little macro for defining our helper functions
+#define DEFINE_GET_FUNCTION(NAME, NUMBER)        \
+    template<class T>                            \
+    inline constexpr auto &NAME(const T &triple) \
+    {                                            \
+        return std::get<NUMBER>(triple);         \
+    }
 
-/*
- * A class for objects whose position in space can be set.
- */
-template<class LengthUnit>
-class Positionable
-  : public HasPosition<LengthUnit>
-{
-public:
-    virtual void setPosition(LengthUnit x, LengthUnit y, LengthUnit z) = 0;
-};
+// Helper functions for position triples
+DEFINE_GET_FUNCTION(getX, 0)
+DEFINE_GET_FUNCTION(getY, 1)
+DEFINE_GET_FUNCTION(getZ, 2)
 
-/*
- * A class for objects which can be rotated in space.
- */
-template<class AngleUnit>
-class Rotatable
-  : public HasAttitude<AngleUnit>
-{
-public:
-    virtual void setAttitude(AngleUnit yaw, AngleUnit pitch, AngleUnit roll) = 0;
-};
+// Helper functions for rotation triples
+DEFINE_GET_FUNCTION(getYaw, 0)
+DEFINE_GET_FUNCTION(getPitch, 1)
+DEFINE_GET_FUNCTION(getRoll, 2)
+
+// Undefine macro now we're done with it
+#undef DEFINE_GET_FUNCTION
 } // Pose
 } // BoBRobotics

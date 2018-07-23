@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object
-    AntWorld::AntAgent<millimeter_t, degree_t> agent(window, renderer, renderWidth, renderHeight);
+    AntWorld::AntAgent agent(window, renderer, renderWidth, renderHeight);
 
     // Get world bounds
     const auto &worldMinBound = renderer.getWorld().getMinBound();
