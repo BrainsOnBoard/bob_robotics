@@ -60,7 +60,10 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
-        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2], m_Attitude[0], m_Attitude[1], m_Attitude[2], 0, 0, m_ReadWidth, m_ReadHeight);
+        const auto size = getOutputSize();
+        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2],
+                                       m_Attitude[0], m_Attitude[1], m_Attitude[2],
+                                       0, 0, size.width, size.height);
 
         // Swap front and back buffers
         glfwSwapBuffers(m_Window);
