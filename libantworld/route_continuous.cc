@@ -13,26 +13,10 @@
 // Libantworld includes
 #include "common.h"
 
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::length;
 using namespace units::math;
-
-inline constexpr meter_t makeM(const GLfloat value)
-{
-    return units::make_unit<meter_t>(value);
-}
-
-template<class T1, class T2>
-auto
-distance2(const T1 &v1, const T2 &v2)
-{
-    return hypot(v2[1] - v1[1], v2[0] - v1[0]);
-}
-
-template<class T>
-meter_t
-distance2(const T &v1, meter_t x2, meter_t y2)
-{
-    return hypot(y2 - makeM(v1[1]), x2 - makeM(v1[0]));
-}
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous

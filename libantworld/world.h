@@ -13,9 +13,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-using namespace units::literals;
-using namespace units::length;
-
 // Forward declarations
 namespace cv
 {
@@ -32,6 +29,9 @@ namespace filesystem
 //----------------------------------------------------------------------------
 namespace BoBRobotics
 {
+using namespace units::literals;
+using namespace units::length;
+
 namespace AntWorld
 {
 using Point3 = meter_t[3];
@@ -126,11 +126,6 @@ private:
     bool loadMaterials(const filesystem::path &basePath, const std::string &filename,
                        GLint textureFormat, int maxTextureSize,
                        std::map<std::string, Texture*> &textureNames);
-    
-    static inline constexpr meter_t makeM(const GLfloat value)
-    {
-        return units::make_unit<meter_t>(value);
-    }
 
     //------------------------------------------------------------------------
     // Members

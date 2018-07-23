@@ -12,24 +12,9 @@
 // Libantworld includes
 #include "common.h"
 
-using namespace units::math;
-using namespace units::dimensionless;
-
-//----------------------------------------------------------------------------
-// Anonymous namespace
-//----------------------------------------------------------------------------
-namespace
-{
-float sqr(float x)
-{
-    return (x * x);
-}
-//----------------------------------------------------------------------------
-float distanceSquared(float x1, float y1, float x2, float y2)
-{
-    return sqr(x2 - x1) + sqr(y2 - y1);
-}
-}   // Anonymous namespace
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteArdin
@@ -185,11 +170,11 @@ bool RouteArdin::load(const std::string &filename, bool realign)
         const auto &segmentEnd = m_Waypoints[i + 1];
 
         // Calculate segment heading (NB: using unit.h's atan2, not cmath's)
-        const degree_t heading = atan2((scalar_t) (segmentStart[1] - segmentEnd[1]),
-                                       (scalar_t) (segmentEnd[0] - segmentStart[0]));
+        const degree_t heading = units::math::atan2(makeM(segmentStart[1] - segmentEnd[1]),
+                                                    makeM(segmentEnd[0] - segmentStart[0]));
 
         // Round to nearest whole number and add to headings array
-        m_Headings.push_back(round(heading * 0.5) * 2.0);
+        m_Headings.push_back(units::math::round(heading * 0.5) * 2.0);
     }
 
     // Loop through waypoints other than first
@@ -204,8 +189,8 @@ bool RouteArdin::load(const std::string &filename, bool realign)
             const radian_t heading = m_Headings[i - 1];
 
             // Realign segment to this angle
-            waypoint[0] = prevWaypoint[0] + (0.1f * cos(heading));
-            waypoint[1] = prevWaypoint[1] - (0.1f * sin(heading));
+            waypoint[0] = prevWaypoint[0] + (0.1f * units::math::cos(heading));
+            waypoint[1] = prevWaypoint[1] - (0.1f * units::math::sin(heading));
         }
     }
 
@@ -240,7 +225,7 @@ bool RouteArdin::load(const std::string &filename, bool realign)
     return true;
 }
 //----------------------------------------------------------------------------
-void RouteArdin::render(float antX, float antY, float antHeading) const
+void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
 {
     // Bind route VAO
     glBindVertexArray(m_WaypointsVAO);
@@ -258,14 +243,14 @@ void RouteArdin::render(float antX, float antY, float antHeading) const
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(antX, antY, 0.1f);
-    glRotatef(-antHeading, 0.0f, 0.0f, 1.0f);
+    glTranslatef(antX.value(), antY.value(), 0.1f);
+    glRotatef(-antHeading.value(), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
 }
 //----------------------------------------------------------------------------
-bool RouteArdin::atDestination(float x, float y, float threshold) const
+bool RouteArdin::atDestination(meter_t x, meter_t y, meter_t threshold) const
 {
     // If route's empty, there is no destination so return false
     if(m_Waypoints.empty()) {
@@ -273,28 +258,28 @@ bool RouteArdin::atDestination(float x, float y, float threshold) const
     }
     // Otherwise return true if
     else {
-        return (distanceSquared(x, y, m_Waypoints.back()[0], m_Waypoints.back()[1]) < sqr(threshold));
+        return (distance2(m_Waypoints.back(), x, y) < threshold);
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<float, size_t> RouteArdin::getDistanceToRoute(float x, float y) const
+std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(meter_t x, meter_t y) const
 {
     // Loop through segments
-    float minimumDistanceSquared = std::numeric_limits<float>::max();
+    meter_t minimumDistance = std::numeric_limits<meter_t>::max();
     size_t nearestWaypoint;
     for(unsigned int s = 0; s < m_Waypoints.size(); s++)
     {
-        const float distanceToWaypointSquared = distanceSquared(x, y, m_Waypoints[s][0], m_Waypoints[s][1]);
+        const meter_t distanceToWaypoint = distance2(m_Waypoints[s], x, y);
 
         // If this is closer than current minimum, update minimum and nearest waypoint
-        if(distanceToWaypointSquared < minimumDistanceSquared) {
-            minimumDistanceSquared = distanceToWaypointSquared;
+        if(distanceToWaypoint < minimumDistance) {
+            minimumDistance = distanceToWaypoint;
             nearestWaypoint = s;
         }
     }
 
     // Return the minimum distance to the path and the segment in which this occured
-    return std::make_tuple(sqrt(minimumDistanceSquared), nearestWaypoint);
+    return std::make_tuple(minimumDistance, nearestWaypoint);
 }
 //----------------------------------------------------------------------------
 void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
@@ -309,12 +294,12 @@ void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
 
 }
 //----------------------------------------------------------------------------
-void RouteArdin::addPoint(float x, float y, bool error)
+void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
 {
     const static uint8_t errorColour[3] = {0xFF, 0, 0};
     const static uint8_t correctColour[3] = {0, 0xFF, 0};
 
-    const float position[2] = {x, y};
+    const float position[2] = { (float)x.value(), (float)y.value() };
 
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RouteColourVBO);
@@ -329,10 +314,10 @@ void RouteArdin::addPoint(float x, float y, bool error)
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
-std::tuple<float, float, degree_t> RouteArdin::operator[](size_t waypoint) const
+std::tuple<meter_t, meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
 {
-    const float x = m_Waypoints[waypoint][0];
-    const float y = m_Waypoints[waypoint][1];
+    const meter_t x = makeM(m_Waypoints[waypoint][0]);
+    const meter_t y = makeM(m_Waypoints[waypoint][1]);
 
     // If this isn't the last waypoint, return the heading of the segment from this waypoint
     if(waypoint < m_Headings.size()) {
