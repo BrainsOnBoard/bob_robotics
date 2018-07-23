@@ -6,13 +6,7 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-using namespace units::literals;
-using namespace units::angle;
-using namespace units::length;
-
 namespace BoBRobotics {
-namespace Pose {
-
 // A generic template for unit arrays
 template<class T>
 using Vector3 = std::array<T, 3>;
@@ -28,5 +22,4 @@ makeUnitArray(const ArrayType &values)
              static_cast<OutputUnit>(values[1]),
              static_cast<OutputUnit>(values[2]) };
 }
-} // Pose
 } // BoBRobotics
