@@ -1,5 +1,5 @@
-#include "../hid/joystick.h"
-#include "../robots/norbot.h"
+#include "hid/joystick.h"
+#include "robots/norbot.h"
 
 int main()
 {

@@ -2,7 +2,9 @@
 #include <cmath>
 
 // Common includes
-#include "../common/lm9ds1_imu.h"
+#include "common/lm9ds1_imu.h"
+
+using namespace BoBRobotics;
 
 int main()
 {

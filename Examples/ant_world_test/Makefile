@@ -1,7 +1,8 @@
-include ../common/flags.mk
+include ../../common/flags.mk
+CXXFLAGS += -I../..
+LINK_FLAGS += -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 
 TARGET = ant_world_test
-CXXFLAGS += -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 
 .PHONY: all clean libantworld
 
@@ -16,4 +17,4 @@ $(TARGET): libantworld
 -include ant_world_test.d
 
 libantworld:
-	$(MAKE) -C ../libantworld
+	$(MAKE) -C ../../libantworld

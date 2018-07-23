@@ -1,5 +1,5 @@
-include ../common/flags.mk
-CXXFLAGS += -I..
+include ../../common/flags.mk
+CXXFLAGS += -I../..
 
 .PHONY: all clean
 

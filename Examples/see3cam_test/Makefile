@@ -1,4 +1,5 @@
-include ../common/flags.mk
+include ../../common/flags.mk
+CXXFLAGS += -I../..
 
 see3cam_test:
 	$(CXX) see3cam_test.cc $(CXXFLAGS) $(LINK_FLAGS) -o see3cam_test

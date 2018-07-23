@@ -5,10 +5,10 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Common includes
-#include "../common/pid.h"
-#include "../common/timer.h"
-#include "../imgproc/opencv_unwrap_360.h"
-#include "../video/see3cam_cu40.h"
+#include "common/pid.h"
+#include "common/timer.h"
+#include "imgproc/opencv_unwrap_360.h"
+#include "video/see3cam_cu40.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;

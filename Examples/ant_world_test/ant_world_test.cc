@@ -8,14 +8,14 @@
 #include <GLFW/glfw3.h>
 
 // BoB robotics includes
-#include "../hid/joystick.h"
+#include "hid/joystick.h"
 
 // Libantworld includes
-#include "../libantworld/common.h"
-#include "../libantworld/renderer.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 using namespace BoBRobotics;
 using namespace units::time;

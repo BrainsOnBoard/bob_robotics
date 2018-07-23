@@ -1,4 +1,5 @@
-include ../common/flags.mk
+include ../../common/flags.mk
+CXXFLAGS += -I../..
 
 lm_9ds1_test:
 	$(CXX) lm9ds1_test.cc $(CXXFLAGS) $(LINK_FLAGS) -o lm9ds1_test

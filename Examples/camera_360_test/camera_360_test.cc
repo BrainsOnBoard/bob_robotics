@@ -6,9 +6,9 @@
 #include <cmath>
 
 // Common includes
-#include "../common/timer.h"
-#include "../imgproc/opencv_unwrap_360.h"
-#include "../video/panoramic.h"
+#include "common/timer.h"
+#include "imgproc/opencv_unwrap_360.h"
+#include "video/panoramic.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
