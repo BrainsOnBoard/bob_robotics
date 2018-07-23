@@ -233,7 +233,7 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
     glBindVertexArray(m_WaypointsVAO);
 
     glPushMatrix();
-    glTranslated(0.0, 0.0, 0.1);
+    glTranslatef(0.0f, 0.0f, 0.1f);
     glDrawArrays(GL_POINTS, 0, m_Waypoints.size());
 
     // If there are any route points, bind
@@ -245,8 +245,8 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslated(antX.value(), antY.value(), 0.1);
-    glRotated(-antHeading.value(), 0.0, 0.0, 1.0);
+    glTranslatef(antX.value(), antY.value(), 0.1);
+    glRotatef(-antHeading.value(), 0.0, 0.0, 1.0);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
