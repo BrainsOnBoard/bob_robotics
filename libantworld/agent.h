@@ -29,15 +29,15 @@ public:
     {}
 
     template<class LengthUnit = meter_t>
-    Triple<LengthUnit> getPosition() const
+    Vector3<LengthUnit> getPosition() const
     {
-        return makeUnitTriple<LengthUnit>(m_Position);
+        return makeUnitArray<LengthUnit>(m_Position);
     }
 
     template<class AngleUnit = degree_t>
-    Triple<AngleUnit> getAttitude() const
+    Vector3<AngleUnit> getAttitude() const
     {
-        return makeUnitTriple<AngleUnit>(m_Attitude);
+        return makeUnitArray<AngleUnit>(m_Attitude);
     }
 
     void setPosition(meter_t x, meter_t y, meter_t z)
@@ -73,8 +73,8 @@ public:
     }
 
 private:
-    Array3<degree_t> m_Attitude{ 0_deg, 0_deg, 0_deg };
-    Array3<meter_t> m_Position{ 0_m, 0_m, 0_m };
+    Vector3<degree_t> m_Attitude{ 0_deg, 0_deg, 0_deg };
+    Vector3<meter_t> m_Position{ 0_m, 0_m, 0_m };
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
 }; // AntAgent

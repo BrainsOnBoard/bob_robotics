@@ -28,8 +28,8 @@ main()
         auto objectData = vicon.getObjectData(0);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
-        std::cout << getX(position) << ", " << getY(position) << ", " << getZ(position) << ", "
-                  << getYaw(attitude) << ", " << getPitch(attitude) << ", " << getRoll(attitude) << std::endl;
+        std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
+                  << attitude[0] << ", " << attitude[1] << ", " << attitude[2] << std::endl;
     }
     if (!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;

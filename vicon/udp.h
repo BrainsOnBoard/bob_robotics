@@ -77,15 +77,15 @@ public:
     }
 
     template <class LengthUnit = millimeter_t>
-    Triple<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition()
     {
-        return makeUnitTriple<LengthUnit>(m_Position);
+        return makeUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
-    Triple<radian_t> getAttitude()
+    Vector3<AngleUnit> getAttitude()
     {
-        return makeUnitTriple<AngleUnit>(m_Attitude);
+        return makeUnitArray<AngleUnit>(m_Attitude);
     }
 
 private:
@@ -93,8 +93,8 @@ private:
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
-    Array3<millimeter_t> m_Position;
-    Array3<radian_t> m_Attitude;
+    Vector3<millimeter_t> m_Position;
+    Vector3<radian_t> m_Attitude;
 };
 
 //----------------------------------------------------------------------------
@@ -113,7 +113,7 @@ public:
     void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
-        const Triple<millimeter_t> position {x, y, z};
+        const Vector3<millimeter_t> position {x, y, z};
         constexpr millisecond_t frameS = 10_ms;
         constexpr millisecond_t smoothingS = 30_ms;
 
@@ -126,13 +126,13 @@ public:
 
         // Calculate instantaneous velocity
         const auto oldPosition = getPosition<>();
-        Array3<meters_per_second_t> instVelocity;
+        Vector3<meters_per_second_t> instVelocity;
         const auto calcVelocity = [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
         };
-        instVelocity[0] = calcVelocity(getX(position), getX(oldPosition));
-        instVelocity[1] = calcVelocity(getY(position), getZ(oldPosition));
-        instVelocity[2] = calcVelocity(getZ(position), getZ(oldPosition));
+        std::transform(std::begin(position), std::end(position),
+                       std::begin(oldPosition), std::begin(instVelocity),
+                       calcVelocity);
 
         // Exponentially smooth velocity
         const auto smoothVelocity = [alpha](auto inst, auto prev) {
@@ -147,16 +147,16 @@ public:
     }
 
     template <class VelocityUnit = meters_per_second_t>
-    Triple<VelocityUnit> getVelocity() const
+    Vector3<VelocityUnit> getVelocity() const
     {
-        return makeUnitTriple<VelocityUnit>(m_Velocity);
+        return makeUnitArray<VelocityUnit>(m_Velocity);
     }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Array3<meters_per_second_t> m_Velocity;
+    Vector3<meters_per_second_t> m_Velocity;
 };
 
 //----------------------------------------------------------------------------
@@ -251,8 +251,8 @@ private:
     // Private API
     //----------------------------------------------------------------------------
     void updateObjectData(unsigned int id, uint32_t frameNumber,
-                          const Array3<double> &position,
-                          const Array3<double> &attitude)
+                          const Vector3<double> &position,
+                          const Vector3<double> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -323,11 +323,11 @@ private:
                     assert(itemDataSize == 72);
 
                     // Read object position
-                    Array3<double> position;
+                    Vector3<double> position;
                     memcpy(&position[0], &buffer[itemOffset + 27], sizeof(position));
 
                     // Read object attitude
-                    Array3<double> attitude;
+                    Vector3<double> attitude;
                     memcpy(&attitude[0], &buffer[itemOffset + 51], sizeof(attitude));
 
                     // Update item
