@@ -79,7 +79,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\;$(ANACONDA_DIR)\include;$(ANACONDA_DIR)\Lib\site-packages\numpy\core\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..;$(ANACONDA_DIR)\include;$(ANACONDA_DIR)\Lib\site-packages\numpy\core\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
