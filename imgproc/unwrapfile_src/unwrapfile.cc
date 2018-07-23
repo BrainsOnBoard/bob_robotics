@@ -20,7 +20,7 @@ enum FileType {
 int main(int argc, char** argv)
 {
     if (argc == 1) {
-        cout << "usage: punwrap [--no-sound] [file(s)]" << endl;
+        std::cout << "usage: punwrap [--no-sound] [file(s)]" << std::endl;
         return 0;
     }
 
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
         filesystem::path inputFile(argv[i]);
         if (!inputFile.exists()) {
-            cerr << "Error: File " << inputFile.str() << " does not exist" << endl;
+            std::cerr << "Error: File " << inputFile.str() << " does not exist" << std::endl;
             return 1;
         }
 
@@ -50,13 +50,13 @@ int main(int argc, char** argv)
         } else if (ext == ".jpg" || ext == ".jpeg" || ext == ".jpe")
             ftype[i - 1] = image;
         else {
-            cerr << "Warning : Only JPEG files and MP4 videos are supported -- skipping " << argv[i] << endl;
+            std::cerr << "Warning : Only JPEG files and MP4 videos are supported -- skipping " << argv[i] << std::endl;
             ftype[i - 1] = skip;
         }
     }
 
     if (copysound && anyvideo && !filesystem::path(FFMPEG_PATH).exists()) {
-        cerr << "Warning: ffmpeg not found, sound will not be copied for videos" << endl;
+        std::cerr << "Warning: ffmpeg not found, sound will not be copied for videos" << std::endl;
         copysound = false;
     }
 
