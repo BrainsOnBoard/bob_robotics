@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
             routePosition++;
 
             // If we've gone over end of route, stop
-            if(routePosition * pathStep > route.getLength()) {
+            if((routePosition * pathStep) > route.getLength()) {
                 break;
             }
         }
@@ -228,13 +228,13 @@ int main(int argc, char *argv[])
             currentGridX++;
 
             // If we've reached the X edge of the world, move to start of next Y
-            if(worldMin[0] + currentGridX * gridSpacing > worldMax[0]) {
+            if(worldMin[0] + (currentGridX * gridSpacing) > worldMax[0]) {
                 currentGridY++;
                 currentGridX = 0;
             }
 
             // If we've reached the Y edge of the world, stop
-            if(worldMin[1] + currentGridY * gridSpacing > worldMax[1]) {
+            if(worldMin[1] + (currentGridY * gridSpacing) > worldMax[1]) {
                 break;
             }
         }
