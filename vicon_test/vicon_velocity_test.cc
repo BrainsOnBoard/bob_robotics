@@ -11,10 +11,9 @@
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 
-int
-main()
+int main()
 {
-    UDPClient<> vicon(51001);
+    UDPClient<ObjectDataVelocity> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
     while (vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
@@ -26,10 +25,9 @@ main()
     }
     for (int i = 0; i < 10000; i++) {
         auto objectData = vicon.getObjectData(0);
-        const auto position = objectData.getPosition<>();
-        const auto attitude = objectData.getAttitude<degree_t>();
-        std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
-                  << attitude[0] << ", " << attitude[1] << ", " << attitude[2] << std::endl;
+        const auto &velocity = objectData.getVelocity();
+
+        std::cout << velocity[0] << ", " << velocity[1] << ", " << velocity[2] << std::endl;
     }
     if (!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;

@@ -8,6 +8,13 @@
 // OpenGL includes
 #include <GL/glew.h>
 
+// Third-party includes
+#include "../third_party/units.h"
+
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::length;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous
 //----------------------------------------------------------------------------
@@ -27,15 +34,15 @@ public:
     // Public API
     //------------------------------------------------------------------------
     bool load(const std::string &filename);
-    void render(float antX, float antY, float antHeading) const;
+    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
-    bool atDestination(float x, float y, float threshold) const;
-    std::tuple<float, size_t> getDistanceToRoute(float x, float y) const;
-    std::tuple<float, float, float> getPosition(float distance) const;
+    bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
+    std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
+    std::tuple<meter_t, meter_t, degree_t> getPosition(meter_t distance) const;
 
     void setWaypointFamiliarity(size_t pos, double familiarity);
-    void addPoint(float x, float y, bool error);
-    float getLength() const{ return m_CumulativeDistance.back(); }
+    void addPoint(meter_t x, meter_t y, bool error);
+    meter_t getLength() const{ return m_CumulativeDistance.back(); }
 
     size_t size() const{ return m_Waypoints.size(); }
 
@@ -53,9 +60,9 @@ private:
     unsigned int m_RouteNumPoints;
     const unsigned int m_RouteMaxPoints;
 
-    std::vector<std::array<float, 2>> m_Waypoints;
-    std::vector<float> m_HeadingDegrees;
-    std::vector<float> m_CumulativeDistance;
+    std::vector<std::array<GLfloat, 2>> m_Waypoints;
+    std::vector<degree_t> m_Headings;
+    std::vector<meter_t> m_CumulativeDistance;
     GLuint m_OverlayVAO;
     GLuint m_OverlayPositionVBO;
     GLuint m_OverlayColoursVBO;

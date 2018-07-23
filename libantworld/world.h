@@ -10,6 +10,12 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
+// Third-party includes
+#include "../third_party/units.h"
+
+using namespace units::literals;
+using namespace units::length;
+
 // Forward declarations
 namespace cv
 {
@@ -28,24 +34,33 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+using Point3 = meter_t[3];
+
 class World
 {
 public:
-    World() : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
+    World()
+      : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
+      , m_MinBoundM{0_m, 0_m, 0_m}, m_MaxBoundM{0_m, 0_m, 0_m}
     {}
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename, const GLfloat (&worldColour)[3],
-              const GLfloat (&groundColour)[3]);
-    bool loadObj(const std::string &objFilename, float scale = 1.0f,
-                 int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    bool load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
+    bool loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
     void render() const;
 
-    const GLfloat (&getMinBound())[3] { return m_MinBound; }
-    const GLfloat (&getMaxBound())[3] { return m_MaxBound; }
+    const Point3 &getMinBound()
+    {
+        return m_MinBoundM;
+    }
+
+    const Point3 &getMaxBound()
+    {
+        return m_MaxBoundM;
+    }
 
 private:
     //------------------------------------------------------------------------
@@ -111,6 +126,11 @@ private:
     bool loadMaterials(const filesystem::path &basePath, const std::string &filename,
                        GLint textureFormat, int maxTextureSize,
                        std::map<std::string, Texture*> &textureNames);
+    
+    static inline constexpr meter_t makeM(const GLfloat value)
+    {
+        return units::make_unit<meter_t>(value);
+    }
 
     //------------------------------------------------------------------------
     // Members
@@ -124,6 +144,8 @@ private:
     // World bounds
     GLfloat m_MinBound[3];
     GLfloat m_MaxBound[3];
+    Point3 m_MinBoundM;
+    Point3 m_MaxBoundM;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

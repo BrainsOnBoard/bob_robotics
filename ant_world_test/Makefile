@@ -1,5 +1,5 @@
 TARGET = ant_world_test
-CXXFLAGS := -std=c++14 -Wall -Wpedantic -L../libantworld -lantworld -lglfw \
+CXXFLAGS := -std=c++14 -g -Wall -Wpedantic -L../libantworld -lantworld -lglfw \
 		-lGL -lGLU -lGLEW -lstdc++ -lm -pthread `pkg-config --cflags --libs opencv`
 
 .PHONY: all clean libantworld

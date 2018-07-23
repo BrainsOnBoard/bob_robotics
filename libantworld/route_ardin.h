@@ -10,6 +10,12 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
+// Third-party includes
+#include "../third_party/units.h"
+
+using namespace units::literals;
+using namespace units::angle;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
@@ -42,7 +48,7 @@ public:
     //------------------------------------------------------------------------
     // Operators
     //------------------------------------------------------------------------
-    std::tuple<float, float, float> operator[](size_t waypoint) const;
+    std::tuple<float, float, degree_t> operator[](size_t waypoint) const;
 
 private:
     //------------------------------------------------------------------------
@@ -56,10 +62,9 @@ private:
     GLuint m_RoutePositionVBO;
     GLuint m_RouteColourVBO;
     unsigned int m_RouteNumPoints;
-    const unsigned int m_RouteMaxPoints;
 
     std::vector<std::array<float, 2>> m_Waypoints;
-    std::vector<float> m_HeadingDegrees;
+    std::vector<degree_t> m_Headings;
     std::set<size_t> m_TrainedSnapshots;
 
     GLuint m_OverlayVAO;

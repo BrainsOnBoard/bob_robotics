@@ -6,12 +6,14 @@
 #include <limits>
 #include <tuple>
 
-// Standard C++ includes
+// Standard C includes
 #include <cassert>
-#include <cmath>
 
 // Libantworld includes
 #include "common.h"
+
+using namespace units::math;
+using namespace units::dimensionless;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -38,7 +40,7 @@ namespace AntWorld
 {
 RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     : m_WaypointsVAO(0), m_WaypointsPositionVBO(0), m_WaypointsColourVBO(0),
-    m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0), m_RouteMaxPoints(maxRouteEntries),
+    m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0),
     m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0)
 {
     const GLfloat arrowPositions[] = {
@@ -174,7 +176,7 @@ bool RouteArdin::load(const std::string &filename, bool realign)
 
     // Reserve headings
     const unsigned int numSegments = m_Waypoints.size() - 1;
-    m_HeadingDegrees.reserve(numSegments);
+    m_Headings.reserve(numSegments);
 
     // Loop through route segments
     for(unsigned int i = 0; i < numSegments; i++) {
@@ -182,12 +184,12 @@ bool RouteArdin::load(const std::string &filename, bool realign)
         const auto &segmentStart = m_Waypoints[i];
         const auto &segmentEnd = m_Waypoints[i + 1];
 
-        // Calculate segment heading
-        const float headingDegrees = radiansToDegrees * atan2(segmentStart[1] - segmentEnd[1],
-                                                              segmentEnd[0] - segmentStart[0]);
+        // Calculate segment heading (NB: using unit.h's atan2, not cmath's)
+        const degree_t heading = atan2((scalar_t) (segmentStart[1] - segmentEnd[1]),
+                                       (scalar_t) (segmentEnd[0] - segmentStart[0]));
 
         // Round to nearest whole number and add to headings array
-        m_HeadingDegrees.push_back(round(headingDegrees * 0.5f) * 2.0f);
+        m_Headings.push_back(round(heading * 0.5) * 2.0);
     }
 
     // Loop through waypoints other than first
@@ -199,11 +201,11 @@ bool RouteArdin::load(const std::string &filename, bool realign)
             auto &waypoint = m_Waypoints[i];
 
             // Convert the segment heading back to radians
-            const float headingRadians = degreesToRadians * m_HeadingDegrees[i - 1];
+            const radian_t heading = m_Headings[i - 1];
 
             // Realign segment to this angle
-            waypoint[0] = prevWaypoint[0] + (0.1f * cos(headingRadians));
-            waypoint[1] = prevWaypoint[1] - (0.1f * sin(headingRadians));
+            waypoint[0] = prevWaypoint[0] + (0.1f * cos(heading));
+            waypoint[1] = prevWaypoint[1] - (0.1f * sin(heading));
         }
     }
 
@@ -327,17 +329,17 @@ void RouteArdin::addPoint(float x, float y, bool error)
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
-std::tuple<float, float, float> RouteArdin::operator[](size_t waypoint) const
+std::tuple<float, float, degree_t> RouteArdin::operator[](size_t waypoint) const
 {
     const float x = m_Waypoints[waypoint][0];
     const float y = m_Waypoints[waypoint][1];
 
     // If this isn't the last waypoint, return the heading of the segment from this waypoint
-    if(waypoint < m_HeadingDegrees.size()) {
-        return std::make_tuple(x, y, 90.0f + m_HeadingDegrees[waypoint]);
+    if(waypoint < m_Headings.size()) {
+        return std::make_tuple(x, y, 90_deg + m_Headings[waypoint]);
     }
     else {
-        return std::make_tuple(x, y, 0.0f);
+        return std::make_tuple(x, y, 0_deg);
     }
 }
 }   // namespace AntWorld

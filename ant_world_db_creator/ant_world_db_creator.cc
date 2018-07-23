@@ -1,6 +1,3 @@
-// Standard C includes
-#include <cmath>
-
 // Standard C++ includes
 #include <string>
 #include <fstream>
@@ -12,16 +9,18 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../third_party/path.h"
 #include "../video/opengl.h"
 
 // Libantworld includes
+#include "../libantworld/agent.h"
 #include "../libantworld/common.h"
 #include "../libantworld/renderer.h"
 #include "../libantworld/route_continuous.h"
 
 using namespace BoBRobotics;
+using namespace units::math;
 
 // Anonymous namespace
 namespace
@@ -41,14 +40,13 @@ void handleGLError(GLenum source,
 {
     throw std::runtime_error(message);
 }
-
 }
 
 int main(int argc, char *argv[])
 {
-    const float pathStepM = 1.0f / 100.0f;
-    const float gridSpacingM = 10.0f / 100.0f;
-    const float gridMaxM = 2.5f; // gives a 5m^2 grid
+    const millimeter_t pathStep = 1_cm;
+    const millimeter_t gridSpacing = 10_cm;
+    const millimeter_t gridMax = 2.5_m; // gives a 5m^2 grid
 
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
@@ -106,7 +104,7 @@ int main(int argc, char *argv[])
     glEnable(GL_TEXTURE_2D);
 
     // Should we follow route or grid
-    const bool followRoute = (argc > 1);
+    const bool followRoute = argc > 1;
 
     // Create route object and load route file specified by command line
     AntWorld::RouteContinuous route(0.2f, 800);
@@ -146,71 +144,68 @@ int main(int argc, char *argv[])
     csvStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
 
     // Create renderer
-    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360.0f);
+    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     renderer.getWorld().load("../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+
+    // Create agent object
+    AntWorld::AntAgent agent(window, renderer, renderWidth, renderHeight);
 
     // Get world bounds
     const auto &worldMinBound = renderer.getWorld().getMinBound();
     const auto &worldMaxBound = renderer.getWorld().getMaxBound();
 
     // Define the origin as the centre of the world, to nearest whole mm
-    const float originX = round(1000.f * (worldMaxBound[0] - worldMinBound[0]) / 2.0f) / 1000.0f;
-    const float originY = round(1000.f * (worldMaxBound[1] - worldMinBound[1]) / 2.0f) / 1000.0f;
+    const millimeter_t originX = (worldMaxBound[0] - worldMinBound[0]) / 2.0;
+    const millimeter_t originY = (worldMaxBound[1] - worldMinBound[1]) / 2.0;
+    const millimeter_t origin[] {round(originX), round(originY)};
 
-    // The extent of the grid is the origin +-gridMaxM
-    const float worldMin[] = {originX - gridMaxM, originY - gridMaxM};
-    const float worldMax[] = {originX + gridMaxM, originY + gridMaxM};
-
-    // Create input to read snapshots from screen
-    Video::OpenGL input(0, 0, renderWidth, renderHeight);
+    // The extent of the grid is the origin +-gridMax
+    const millimeter_t worldMin[] {origin[0] - gridMax, origin[1] - gridMax};
+    const millimeter_t worldMax[] {origin[0] + gridMax, origin[1] + gridMax};
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
 
-    // While the window isn't forcibly being closed
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
-    const float z = 0.01f; // agent's height is fixed
+    millimeter_t x = 0_mm;
+    millimeter_t y = 0_mm;
+    const millimeter_t z = 1_cm; // agent's height is fixed
+    degree_t heading = 0_deg;
+
+    // While the window isn't forcibly being closed
     while (!glfwWindowShouldClose(window)) {
         // If we should be following route, get position from route
-        float x = 0.0f;
-        float y = 0.0f;
-        float heading = 0.0f;
         if(followRoute) {
-            std::tie(x, y, heading) = route.getPosition((float)routePosition * pathStepM);
+            std::tie(x, y, heading) = route.getPosition(pathStep * routePosition);
         }
         else {
-            x = worldMin[0] + ((float)currentGridX * gridSpacingM);
-            y = worldMin[1] + ((float)currentGridY * gridSpacingM);
+            x = worldMin[0] + gridSpacing * currentGridX;
+            y = worldMin[1] + gridSpacing * currentGridY;
         }
 
-        // Clear colour and depth buffer
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Update agent's position and read frame in
+        agent.setPosition(x, y, z);
+        agent.setAttitude(heading, 0_deg, 0_deg);
+        agent.readFrame(snapshot);
 
-        // Render first person
-        renderer.renderPanoramicView(x, y, z,
-                                     heading, 0.0f, 0.0f,
-                                     0, 0, renderWidth, renderHeight);
-
-        // Swap front and back buffers
-        glfwSwapBuffers(window);
-
-        // Read snapshot
-        input.readFrame(snapshot);
-
+        // Get image file name
         char filename[255];
         if(followRoute) {
             sprintf(filename, "%s_%04zu.png", routeTitle.c_str(), routePosition);
         }
         else {
             sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
-                    (int) round(x * 1000.0f), (int) round(y * 1000), (int) round(z * 1000));
+                    (int) round(x), (int) round(y), (int) round(z));
         }
-        csvStream << x * 1000.0f << ", " << y * 1000.0f << ", " << z * 1000.0f << ", "
-                  << heading << ", " << filename << std::endl;
 
+        // Write image file info to CSV file
+        csvStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
+                  << heading.value() << ", " << filename << std::endl;
+
+        // Write image file
         cv::flip(snapshot, snapshot, 0);
         cv::imwrite((savePath / filename).str(), snapshot);
 
@@ -223,7 +218,7 @@ int main(int argc, char *argv[])
             routePosition++;
 
             // If we've gone over end of route, stop
-            if(((float)routePosition * pathStepM) > route.getLength()) {
+            if((routePosition * pathStep) > route.getLength()) {
                 break;
             }
         }
@@ -233,13 +228,13 @@ int main(int argc, char *argv[])
             currentGridX++;
 
             // If we've reached the X edge of the world, move to start of next Y
-            if((worldMin[0] + ((float)currentGridX * gridSpacingM)) > worldMax[0]) {
+            if(worldMin[0] + (currentGridX * gridSpacing) > worldMax[0]) {
                 currentGridY++;
                 currentGridX = 0;
             }
 
             // If we've reached the Y edge of the world, stop
-            if((worldMin[1] + ((float)currentGridY * gridSpacingM)) > worldMax[1]) {
+            if(worldMin[1] + (currentGridY * gridSpacing) > worldMax[1]) {
                 break;
             }
         }

@@ -14,7 +14,12 @@
 #include "../libantworld/common.h"
 #include "../libantworld/renderer.h"
 
+// Third-party includes
+#include "../third_party/units.h"
+
 using namespace BoBRobotics;
+using namespace units::time;
+using namespace units::math;
 
 // Anonymous namespace
 namespace
@@ -34,12 +39,17 @@ void handleGLError(GLenum source,
 {
     throw std::runtime_error(message);
 }
+
+inline second_t getCurrentTime()
+{
+    return units::make_unit<second_t>(glfwGetTime());
+}
 }
 
 int main()
 {
-    const float turnSpeed = 200.0f;
-    const float moveSpeed = 3.0f;
+    const auto turnSpeed = 200_deg_per_s;
+    const auto moveSpeed = 3_mps;
     const unsigned int width = 1024;
     const unsigned int height = 262;
 
@@ -106,25 +116,25 @@ int main()
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();
     const auto &worldMax = renderer.getWorld().getMaxBound();
-    float x = worldMin[0] + ((worldMax[0] - worldMin[0]) * 0.5f);
-    float y = worldMin[1] + ((worldMax[1] - worldMin[1]) * 0.5f);
-    float z = worldMin[2] + ((worldMax[2] - worldMin[2]) * 0.5f);
-    float yaw = 0.0f;
-    float pitch = 0.0f;
+    meter_t x = worldMin[0] + (worldMax[0] - worldMin[0]) / 2.0;
+    meter_t y = worldMin[1] + (worldMax[1] - worldMin[1]) / 2.0;
+    meter_t z = worldMin[2] + (worldMax[2] - worldMin[2]) / 2.0;
+    degree_t yaw = 0_deg;
+    degree_t pitch = 0_deg;
 
     bool ant = true;
-    double lastTime = glfwGetTime();
+    second_t lastTime = getCurrentTime();
     while (!glfwWindowShouldClose(window)) {
         // Poll joystick
         joystick.update();
 
         // Calculate time
-        const double currentTime = glfwGetTime();
-        const double deltaTime = currentTime - lastTime;
+        const second_t currentTime = getCurrentTime();
+        const second_t deltaTime = currentTime - lastTime;
         lastTime = currentTime;
 
         char buffer[100];
-        sprintf(buffer, "%d FPS", (int)std::round(1.0 / deltaTime));
+        sprintf(buffer, "%d FPS", (int)std::round(1.0 / deltaTime.value()));
         glfwSetWindowTitle(window, buffer);
 
         // Control yaw and pitch with left stick
@@ -136,25 +146,25 @@ int main()
             ant = !ant;
         }
 
-
         // Use right trigger to control forward movement speed
-        const float forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::RightTrigger);
+        const meter_t forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::RightTrigger);
 
         // Calculate movement delta in 3D space
-        x += forwardMove * sin(yaw * AntWorld::degreesToRadians) * cos(pitch * AntWorld::degreesToRadians);
-        y += forwardMove * cos(yaw * AntWorld::degreesToRadians) * cos(pitch * AntWorld::degreesToRadians);
-        z -= forwardMove * sin(pitch * AntWorld::degreesToRadians);
+        auto cosPitch = cos(pitch);
+        x += forwardMove * sin(yaw) * cosPitch;
+        y += forwardMove * cos(yaw) * cosPitch;
+        z -= forwardMove * sin(pitch);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
         if(ant) {
-            renderer.renderPanoramicView(x, y, z, yaw, pitch, 0.0f,
+            renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
                                          0, 0, width, height);
         }
         else {
-            renderer.renderFirstPersonView(x, y, z, yaw, pitch, 0.0f,
+            renderer.renderFirstPersonView(x, y, z, yaw, pitch, 0_deg,
                                            0, 0, width, height);
         }
 
