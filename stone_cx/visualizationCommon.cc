@@ -4,7 +4,7 @@
 #include <cmath>
 
 // OpenCV includes
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"

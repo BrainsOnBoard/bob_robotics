@@ -9,7 +9,7 @@
 #include <vector>
 
 // OpenCV
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // BoBRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"

@@ -9,7 +9,7 @@
 #include <cstdlib>
 
 // OpenCV includes
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // Common includes
 #include "../common/von_mises_distribution.h"

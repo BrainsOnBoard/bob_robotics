@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 // OpenCV
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // local includes
 #include "input.h"

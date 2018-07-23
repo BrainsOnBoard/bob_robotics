@@ -8,7 +8,7 @@
 #include <cmath>
 
 // OpenCV includes
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 //------------------------------------------------------------------------
 // BoBRobotics::GeNNUtils::VarSlide

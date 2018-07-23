@@ -6,7 +6,7 @@
 #include <tuple>
 
 // OpenCV includes
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // Antworld includes
 #include "parameters.h"

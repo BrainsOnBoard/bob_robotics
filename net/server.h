@@ -6,7 +6,7 @@
 #include <vector>
 
 // OpenCV
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // BoB robotics includes
 #include "../robots/tank.h"

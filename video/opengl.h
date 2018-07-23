@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 
 // OpenCV includes
-#include "../common/opencv.h"
+#include <opencv2/opencv.hpp>
 
 // BoB robotics includes
 #include "input.h"
