@@ -11,12 +11,12 @@ endif
 all: computer robot
 
 computer:
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+	$(CXX) -o $@ computer.cc $(CXXFLAGS) $(LINK_FLAGS)
 
 -include computer.d
 
 robot:
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+	$(CXX) -o $@ robot.cc $(CXXFLAGS) $(LINK_FLAGS)
 
 -include robot.d
 
