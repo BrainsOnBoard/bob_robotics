@@ -39,9 +39,6 @@ namespace BoBRobotics {
 //----------------------------------------------------------------------------
 namespace Vicon
 {
-template <class T>
-using Vector = T[3];
-
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
 //----------------------------------------------------------------------------
@@ -78,16 +75,16 @@ public:
     }
 
     uint32_t getFrameNumber() const { return m_FrameNumber; }
-    Vector<LengthUnit> &getPosition() override { return m_Position; }
-    Vector<AngleUnit> &getAttitude() override { return m_Attitude; }
+    Vector3<LengthUnit> &getPosition() override { return m_Position; }
+    Vector3<AngleUnit> &getAttitude() override { return m_Attitude; }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
-    Vector<LengthUnit> m_Position;
-    Vector<AngleUnit> m_Attitude;
+    Vector3<LengthUnit> m_Position;
+    Vector3<AngleUnit> m_Attitude;
 };
 
 //----------------------------------------------------------------------------
@@ -111,7 +108,7 @@ public:
     void update(uint32_t frameNumber, LengthUnit x, LengthUnit y, LengthUnit z,
                 AngleUnit yaw, AngleUnit pitch, AngleUnit roll)
     {
-        const Vector<LengthUnit> position {x, y, z};
+        const Vector3<LengthUnit> position {x, y, z};
         constexpr second_t frameS = 10_ms;
         constexpr second_t smoothingS = 30_ms;
 
@@ -124,7 +121,7 @@ public:
 
         // Calculate instantaneous velocity
         const auto &oldPosition = this->getPosition();
-        Vector<VelocityUnit> instVelocity;
+        Vector3<VelocityUnit> instVelocity;
         const auto calcVelocity = [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
         };
@@ -144,7 +141,7 @@ public:
         ObjectData<LengthUnit, AngleUnit>::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
-    const Vector<VelocityUnit> &getVelocity() const
+    const Vector3<VelocityUnit> &getVelocity() const
     {
         return m_Velocity;
     }
@@ -153,7 +150,7 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Vector<VelocityUnit> m_Velocity;
+    Vector3<VelocityUnit> m_Velocity;
 };
 
 //----------------------------------------------------------------------------
@@ -248,8 +245,8 @@ private:
     // Private API
     //----------------------------------------------------------------------------
     void updateObjectData(unsigned int id, uint32_t frameNumber,
-                          const Vector<millimeter_t> &position,
-                          const Vector<radian_t> &attitude)
+                          const Vector3<millimeter_t> &position,
+                          const Vector3<radian_t> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -315,11 +312,11 @@ private:
                     assert(itemDataSize == 72);
 
                     // Read object position
-                    Vector<millimeter_t> position;
+                    Vector3<millimeter_t> position;
                     memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
                     // Read object attitude
-                    Vector<radian_t> attitude;
+                    Vector3<radian_t> attitude;
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item

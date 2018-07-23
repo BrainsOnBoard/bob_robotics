@@ -26,15 +26,15 @@ class AntAgent
 {
 public:
     AntAgent(GLFWwindow *window, Renderer &renderer, GLsizei readWidth, GLsizei readHeight);
-    Vector<LengthUnit> &getPosition() override;
-    Vector<AngleUnit> &getAttitude() override;
+    Vector3<LengthUnit> &getPosition() override;
+    Vector3<AngleUnit> &getAttitude() override;
     void setPosition(LengthUnit x, LengthUnit y, LengthUnit z) override;
     void setAttitude(AngleUnit yaw, AngleUnit pitch, AngleUnit roll) override;
     bool readFrame(cv::Mat &frame) override;
 
 private:
-    Vector<AngleUnit> m_Attitude{ 0_rad, 0_rad, 0_rad };
-    Vector<LengthUnit> m_Position{ 0_m, 0_m, 0_m };
+    Vector3<AngleUnit> m_Attitude{ 0_rad, 0_rad, 0_rad };
+    Vector3<LengthUnit> m_Position{ 0_m, 0_m, 0_m };
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
 }; // AntAgent
@@ -52,14 +52,14 @@ AntAgent<LengthUnit, AngleUnit>::AntAgent(GLFWwindow *window, Renderer &renderer
 {}
 
 template<class LengthUnit, class AngleUnit>
-Vector<LengthUnit> &
+Vector3<LengthUnit> &
 AntAgent<LengthUnit, AngleUnit>::getPosition()
 {
     return m_Position;
 }
 
 template<class LengthUnit, class AngleUnit>
-Vector<AngleUnit> &
+Vector3<AngleUnit> &
 AntAgent<LengthUnit, AngleUnit>::getAttitude()
 {
     return m_Attitude;

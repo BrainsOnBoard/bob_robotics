@@ -12,7 +12,7 @@ namespace Pose {
 
 // A generic vector template
 template<class T>
-using Vector = T[3];
+using Vector3 = T[3];
 
 /*
  * A class for objects which can return their position in space.
@@ -21,7 +21,7 @@ template<class LengthUnit>
 class HasPosition
 {
 public:
-    virtual Vector<LengthUnit> &getPosition() = 0;
+    virtual Vector3<LengthUnit> &getPosition() = 0;
 }; // HasPosition
 
 /* 
@@ -31,7 +31,7 @@ template<class AngleUnit>
 class HasAttitude
 {
 public:
-    virtual Vector<AngleUnit> &getAttitude() = 0;
+    virtual Vector3<AngleUnit> &getAttitude() = 0;
 };
 
 /*
