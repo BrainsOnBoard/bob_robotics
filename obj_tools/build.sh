@@ -1,1 +1,0 @@
-g++ obj_process.cc -std=c++14 -Wall -Wpedantic -O3 -o obj_process

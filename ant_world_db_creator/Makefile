@@ -10,11 +10,15 @@ all: $(TARGETS)
 clean:
 	rm -f ant_world_db_creator ant_world_map_creator
 
-ant_world_db_creator: ant_world_db_creator.cc libantworld
+ant_world_db_creator: libantworld
 	$(CXX) -o $@ ant_world_db_creator.cc $(CXXFLAGS) $(LINK_FLAGS)
 
-ant_world_map_creator: ant_world_map_creator.cc libantworld
+-include ant_world_db_creator.d
+
+ant_world_map_creator: libantworld
 	$(CXX) -o $@ ant_world_map_creator.cc $(CXXFLAGS) $(LINK_FLAGS)
+
+-include -ant_world_map_creator
 
 libantworld:
 	$(MAKE) -C ../libantworld

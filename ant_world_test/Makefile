@@ -10,8 +10,10 @@ all: $(TARGET)
 clean:
 	rm -f ant_world_test
 
-$(TARGET): $(TARGET).cc libantworld
+$(TARGET): libantworld
 	$(CXX) -o $@ $(TARGET).cc $(CXXFLAGS) $(LINK_FLAGS)
+
+-include ant_world_test.d
 
 libantworld:
 	$(MAKE) -C ../libantworld
