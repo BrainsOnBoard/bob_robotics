@@ -27,18 +27,15 @@
 // BoB robotics includes
 #include "../common/pose.h"
 
-using namespace units::math;
-using namespace units::time;
-using namespace units::velocity;
-
-using namespace BoBRobotics::Pose;
-
-namespace BoBRobotics {
-//----------------------------------------------------------------------------
-// Vicon Typedefines
-//----------------------------------------------------------------------------
+namespace BoBRobotics
+{
 namespace Vicon
 {
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
+using namespace units::time;
+using namespace units::velocity;
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
 //----------------------------------------------------------------------------
@@ -122,7 +119,7 @@ public:
         const auto deltaS = frameS * deltaFrames;
 
         // Calculate exponential smoothing factor
-        const double alpha = 1.0 - exp(-deltaS / smoothingS);
+        const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
         // Calculate instantaneous velocity
         const auto oldPosition = getPosition<>();
