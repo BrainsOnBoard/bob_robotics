@@ -9,4 +9,9 @@ ifdef DEBUG
 	CXXFLAGS += -g -O0 -DDEBUG
 endif
 
-LINK_FLAGS += -lm -lstd++
+LINK_FLAGS += -lm -lstdc++ -pthread
+
+ifndef NO_OPENCV
+	CXXFLAGS += `pkg-config --cflags opencv`
+	LINK_FLAGS += `pkg-config --libs opencv`
+endif
