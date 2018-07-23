@@ -187,6 +187,27 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
+    unsigned int getNumObjects()
+    {
+        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        return m_ObjectData.size();
+    }
+
+    ObjectDataType getObjectData(unsigned int id)
+    {
+        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        if(id < m_ObjectData.size()) {
+            return m_ObjectData[id];
+        }
+        else {
+            throw std::runtime_error("Invalid object id: " + std::to_string(id));
+        }
+    }
+
+private:
+    //----------------------------------------------------------------------------
+    // Private API
+    //----------------------------------------------------------------------------
     bool connect(unsigned int port)
     {
         // Create socket
@@ -229,27 +250,6 @@ public:
         return true;
     }
 
-    unsigned int getNumObjects()
-    {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        return m_ObjectData.size();
-    }
-
-    ObjectDataType getObjectData(unsigned int id)
-    {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        if(id < m_ObjectData.size()) {
-            return m_ObjectData[id];
-        }
-        else {
-            throw std::runtime_error("Invalid object id: " + std::to_string(id));
-        }
-    }
-
-private:
-    //----------------------------------------------------------------------------
-    // Private API
-    //----------------------------------------------------------------------------
     void updateObjectData(unsigned int id, uint32_t frameNumber,
                           const Array3<double> &position,
                           const Array3<double> &attitude)
