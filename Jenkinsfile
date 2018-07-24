@@ -82,8 +82,11 @@ for(b = 0; b < builderNodes.size; b++) {
                 // Run automatic tests
                 if (isUnix()) {
                     dir("examples") {
+                        // Generate unique name for message
+                        def uniqueMsg = "msg_" + env.NODE_NAME;
+                        
                         // Run tests
-                        sh "./build_all_examples.sh";
+                        sh "./build_all_examples.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
                         
                         // Parse test output for GCC warnings
                         // **NOTE** driving WarningsPublisher from pipeline is entirely undocumented
@@ -93,7 +96,7 @@ for(b = 0; b < builderNodes.size; b++) {
                         // the 'GNU compiler 4 (gcc)' parser at the expense of it not detecting make errors...
                         def parserName = ("mac" in nodeLabel) ? "Apple LLVM Compiler (Clang)" : "GNU compiler 4 (gcc)";
                         step([$class: "WarningsPublisher", 
-                            parserConfigurations: [[parserName: parserName]], 
+                            parserConfigurations: [[parserName: parserName, pattern: uniqueMsg]], 
                             unstableTotalAll: '0', usePreviousBuildAsReference: true]); 
                             
                         // Archive output
