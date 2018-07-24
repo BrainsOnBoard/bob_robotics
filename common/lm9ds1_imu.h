@@ -512,14 +512,14 @@ public:
     {
         readAccelGyroData(AccelGyroReg::OUT_X_L_G, data);
         std::transform(std::begin(data), std::end(data), std::begin(m_GyroBias), std::begin(data),
-                       [this](int16_t v, int16_t bias){ return v - bias; });
+                       [](int16_t v, int16_t bias){ return v - bias; });
     }
     
     void readAccel(int16_t (&data)[3])
     {
         readAccelGyroData(AccelGyroReg::OUT_X_L_XL, data);
         std::transform(std::begin(data), std::end(data), std::begin(m_AccelBias), std::begin(data),
-                       [this](int16_t v, int16_t bias){ return v - bias; });
+                       [](int16_t v, int16_t bias){ return v - bias; });
     }
     
     void readMagneto(int16_t (&data)[3]) 
