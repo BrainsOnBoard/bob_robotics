@@ -22,7 +22,7 @@ void buildFilter(cv::Mat &filter, float preferredAngle)
 {
     // Loop through columns
     float sum = 0.0f;
-    for(unsigned int x = 0; x < filter.cols; x++) {
+    for(int x = 0; x < filter.cols; x++) {
         // Convert column to angle
         const float th = (((float)x / (float)filter.cols) * 2.0f * pi) - pi;
 
