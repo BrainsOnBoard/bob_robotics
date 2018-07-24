@@ -12,7 +12,8 @@ projectcount=0
 for project in "$basename"/*_test; do
     echo -e "\e[34m========== BUILDING $project ==========\e[39m"
     cd "$project"
-    if make clean all -j `nproc`; then
+    make clean
+    if make all -j `nproc`; then
         echo -e "\e[32m========== $project built successfully ==========\e[39m"
         (( goodcount++ ))
     else
