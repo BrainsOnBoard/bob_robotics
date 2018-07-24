@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 // Antworld includes
-#include "parameters.h"
+#include "mb_params.h"
 
 //----------------------------------------------------------------------------
 // PerfectMemory
@@ -26,5 +26,5 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    std::list<std::array<float, Parameters::inputWidth * Parameters::inputHeight>> m_Snapshots;
+    std::list<std::array<float, MBParams::inputWidth * MBParams::inputHeight>> m_Snapshots;
 };
