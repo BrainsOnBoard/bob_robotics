@@ -74,6 +74,10 @@ for(b = 0; b < builderNodes.size; b++) {
     // Create a map to pass in to the 'parallel' step so we can fire all the builds at once
     builders[nodeName] = {
         node(nodeName) {
+            buildStep("Checking out project (" + env.NODE_NAME + ")") {
+                checkout scm
+            }
+            
             buildStep("Building examples (" + env.NODE_NAME + ")") {
                 // Run automatic tests
                 if (isUnix()) {
