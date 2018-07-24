@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 // Standard C includes
 #include <cstdint>
@@ -766,6 +767,8 @@ private:
                 return 0.0175f;
             case GyroScale::DPS2000:
                 return 0.07f;
+            default:
+                throw std::runtime_error("Invalid parameter");
         }
     }
     
@@ -780,6 +783,8 @@ private:
                 return 0.000244f;
             case AccelScale::G16:
                 return 0.000732f;
+            default:
+                throw std::runtime_error("Invalid parameter");
         }
     }
     
@@ -794,6 +799,8 @@ private:
                 return 0.00043f;
             case MagnetoScale::GS16:
                 return 0.00058f;
+            default:
+                throw std::runtime_error("Invalid parameter");
         }
     }
     
