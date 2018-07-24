@@ -12,6 +12,9 @@
 #include <iostream>
 #include <thread>
 
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
 // BoB robotics includes
 #include "hid/joystick.h"
 #include "net/client.h"
