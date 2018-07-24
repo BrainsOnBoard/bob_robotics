@@ -1,14 +1,18 @@
 include ../../common/flags.mk
 CXXFLAGS += -I../..
 
+EXECUTABLE := optical_flow_test
+
 .PHONY: all clean
 
-all: optical_flow_test
+all: $(EXECUTABLE)
 
-optical_flow_test:
-	$(CXX) optical_flow_test.cc $(CXXFLAGS) $(LINK_FLAGS) -o optical_flow_test
+-include $(EXECUTABLE).d
+
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+	$(CXX) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS) -o $(EXECUTABLE)
+
+%d: ;
 
 clean:
-	rm -f optical_flow_test *.d
-
--include optical_flow_test.d
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d

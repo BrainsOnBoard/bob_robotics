@@ -1,22 +1,24 @@
+LIBANTWORLD_PATH := ../../libantworld
+
 include ../../common/flags.mk
 CXXFLAGS += -I../..
-LINK_FLAGS += -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+LINK_FLAGS += -L$(LIBANTWORLD_PATH) -lantworld -lglfw -lGL -lGLU -lGLEW
 
-TARGET = ant_world_test
+EXECUTABLE = ant_world_test
 
 .PHONY: all clean libantworld
 
-all: $(TARGET)
+all: $(EXECUTABLE)
 
-clean:
-	rm -f ant_world_test *.d
+-include $(EXECUTABLE).d
 
-$(TARGET): libantworld
-	$(CXX) -o $@ $(TARGET).cc $(CXXFLAGS) $(LINK_FLAGS)
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d $(LIBANTWORLD_PATH)/libantworld.a
+	$(CXX) -o $@ $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS)
 
--include ant_world_test.d
+$(LIBANTWORLD_PATH)/libantworld.a:
+	$(MAKE) -C $(LIBANTWORLD_PATH)
 
 %.d: ;
 
-libantworld:
-	$(MAKE) -C ../../libantworld
+clean:
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d

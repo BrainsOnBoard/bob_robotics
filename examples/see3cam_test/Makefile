@@ -1,14 +1,18 @@
 include ../../common/flags.mk
 CXXFLAGS += -I../..
 
+EXECUTABLE := see3cam_test
+
 .PHONY: all clean
 
-all: see3cam_test
+all: $(EXECUTABLE)
 
-see3cam_test:
-	$(CXX) see3cam_test.cc $(CXXFLAGS) $(LINK_FLAGS) -o see3cam_test
+-include $(EXECUTABLE).d
+
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+	$(CXX) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS) -o $(EXECUTABLE)
+
+%d: ;
 
 clean:
-	rm -f see3cam_test *.d
-
--include see3cam_test.d
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d

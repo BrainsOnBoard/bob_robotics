@@ -3,14 +3,16 @@ CXXFLAGS += -I../..
 
 .PHONY: all clean
 
-all: camera_360_test
+EXECUTABLE := camera_360_test
 
-camera_360_test:
-	$(CXX) camera_360_test.cc $(CXXFLAGS) $(LINK_FLAGS) -o camera_360_test
+all: $(EXECUTABLE)
 
-clean:
-	rm -f camera_360_test *.d
+-include $(EXECUTABLE).d
+
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+	$(CXX) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS) -o $(EXECUTABLE)
 
 %.d: ;
 
--include camera_360_test.d
+clean:
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d
