@@ -10,6 +10,8 @@ CPP_STANDARD ?= c++14
 CXXFLAGS += -std=$(CPP_STANDARD) -Wall -Wpedantic -Wextra -MMD -MP
 ifdef DEBUG
 	CXXFLAGS += -g -O0 -DDEBUG
+else
+	CXXFLAGS += -O2
 endif
 
 # Linking flags (-lm and -lstdc++ needed for clang)
