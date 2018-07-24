@@ -1,9 +1,5 @@
 #!groovy​
 
-// All the types of build we'll ideally run if suitable nodes exist
-def desiredBuilds = [
-    ["linux", "opencv"] as Set] 
-
 //--------------------------------------------------------------------------
 // Helper functions
 //--------------------------------------------------------------------------
@@ -43,21 +39,16 @@ for(node in jenkins.model.Jenkins.instance.nodes) {
     }
 }
 
-// Loop through the desired builds
+// Loop through all available nodes
 def builderNodes = []
-for(b in desiredBuilds) {
-    // Loop through all available nodes
-    for(n in availableNodes) {
-        // If, after subtracting this node's labels, all build properties are satisfied
-        if((b - n.value).size() == 0) {
-            print "${n.key} -> ${b}";
-            
-            // Add node's name to list of builders and remove it from dictionary of available nodes
-            // **YUCK** for some reason tuples aren't serializable so need to add an arraylist
-            builderNodes.add([n.key, n.value])
-            availableNodes.remove(n.key)
-            break
-        }
+for(n in availableNodes) {
+    // If this node supports opencv (variety is the spice of life w.r.t. testing bob_robotics)
+    if("opencv" in n.value) {
+        print "${n.key} -> ${b}";
+        
+        // Add node's name to list of builders and remove it from dictionary of available nodes
+        // **YUCK** for some reason tuples aren't serializable so need to add an arraylist
+        builderNodes.add([n.key, n.value])
     }
 }
 
