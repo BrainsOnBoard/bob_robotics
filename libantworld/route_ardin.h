@@ -13,9 +13,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-using namespace units::literals;
-using namespace units::angle;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
@@ -25,6 +22,8 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+using namespace units::angle;
+using namespace units::length;
 class RouteArdin
 {
 public:
@@ -36,19 +35,19 @@ public:
     // Public API
     //------------------------------------------------------------------------
     bool load(const std::string &filename, bool realign = true);
-    void render(float antX, float antY, float antHeading) const;
+    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
-    bool atDestination(float x, float y, float threshold) const;
-    std::tuple<float, size_t> getDistanceToRoute(float x, float y) const;
+    bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
+    std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
     void setWaypointFamiliarity(size_t pos, double familiarity);
-    void addPoint(float x, float y, bool error);
+    void addPoint(meter_t x, meter_t y, bool error);
 
     size_t size() const{ return m_Waypoints.size(); }
 
     //------------------------------------------------------------------------
     // Operators
     //------------------------------------------------------------------------
-    std::tuple<float, float, degree_t> operator[](size_t waypoint) const;
+    std::tuple<meter_t, meter_t, degree_t> operator[](size_t waypoint) const;
 
 private:
     //------------------------------------------------------------------------

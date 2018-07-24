@@ -7,9 +7,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-using namespace units::literals;
-using namespace units::angle;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMesh
 //----------------------------------------------------------------------------
@@ -22,7 +19,7 @@ class RenderMesh
 {
 public:
     RenderMesh();
-    RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
+    RenderMesh(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
                unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
     ~RenderMesh();
 

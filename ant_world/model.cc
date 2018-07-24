@@ -8,7 +8,7 @@
 #include "../genn_utils/connectors.h"
 
 // Model includes
-#include "parameters.h"
+#include "mb_params.h"
 
 using namespace BoBRobotics;
 
@@ -70,7 +70,7 @@ IMPLEMENT_MODEL(LIFExtCurrent);
 void modelDefinition(NNmodel &model)
 {
     initGeNN();
-    model.setDT(Parameters::timestepMs);
+    model.setDT(MBParams::timestepMs);
     model.setName("ant_world");
 
     //---------------------------------------------------------------------------
@@ -84,8 +84,8 @@ void modelDefinition(NNmodel &model)
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
         2.0,                                // 5 - TauRefrac
-        Parameters::inputCurrentScale,      // 6 - Scaling factor to apply to external current
-        Parameters::inputWidth);            // 7 - Input width
+        MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
+        MBParams::inputWidth);            // 7 - Input width
 
     LIFExtCurrent::ParamValues kcParams(
         0.2,                                // 0 - C
@@ -94,8 +94,8 @@ void modelDefinition(NNmodel &model)
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
         2.0,                                // 5 - TauRefrac
-        Parameters::inputCurrentScale,      // 6 - Scaling factor to apply to external current
-        Parameters::inputWidth);            // 7 - Input width
+        MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
+        MBParams::inputWidth);            // 7 - Input width
 
     LIFExtCurrent::ParamValues enParams(
         0.2,                                // 0 - C
@@ -104,8 +104,8 @@ void modelDefinition(NNmodel &model)
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
         2.0,                                // 5 - TauRefrac
-        Parameters::inputCurrentScale,      // 6 - Scaling factor to apply to external current
-        Parameters::inputWidth);            // 7 - Input width
+        MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
+        MBParams::inputWidth);            // 7 - Input width
 
     // LIF initial conditions
     LIFExtCurrent::VarValues lifInit(
@@ -124,27 +124,27 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Weight update model parameters
     //---------------------------------------------------------------------------
-    WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(Parameters::pnToKCWeight);
+    WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(MBParams::pnToKCWeight);
 
     GeNNModels::STDPDopamine::ParamValues kcToENWeightUpdateParams(
         15.0,                       // 0 - Potentiation time constant (ms)
         15.0,                       // 1 - Depression time constant (ms)
         40.0,                       // 2 - Synaptic tag time constant (ms)
-        Parameters::tauD,           // 3 - Dopamine time constant (ms)
+        MBParams::tauD,           // 3 - Dopamine time constant (ms)
         -1.0,                       // 4 - Rate of potentiation
         1.0,                        // 5 - Rate of depression
         0.0,                        // 6 - Minimum weight
-        Parameters::kcToENWeight);  // 7 - Maximum weight
+        MBParams::kcToENWeight);  // 7 - Maximum weight
 
     GeNNModels::STDPDopamine::VarValues kcToENWeightUpdateInitVars(
-        Parameters::kcToENWeight,   // Synaptic weight
+        MBParams::kcToENWeight,   // Synaptic weight
         0.0,                        // Synaptic tag
         0.0);                       // Time of last synaptic tag update
 
     // Create neuron populations
-    model.addNeuronPopulation<LIFExtCurrent>("PN", Parameters::numPN, pnParams, lifInit);
-    model.addNeuronPopulation<LIFExtCurrent>("KC", Parameters::numKC, kcParams, lifInit);
-    model.addNeuronPopulation<LIFExtCurrent>("EN", Parameters::numEN, enParams, lifInit);
+    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, lifInit);
+    model.addNeuronPopulation<LIFExtCurrent>("KC", MBParams::numKC, kcParams, lifInit);
+    model.addNeuronPopulation<LIFExtCurrent>("EN", MBParams::numEN, enParams, lifInit);
 
     auto pnToKC = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, GeNNModels::ExpCurr>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
@@ -160,8 +160,8 @@ void modelDefinition(NNmodel &model)
 
 
     // Calculate max connections
-    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(Parameters::numPN, Parameters::numKC,
-                                                                                      Parameters::numPNSynapsesPerKC);
+    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(MBParams::numPN, MBParams::numKC,
+                                                                                      MBParams::numPNSynapsesPerKC);
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);

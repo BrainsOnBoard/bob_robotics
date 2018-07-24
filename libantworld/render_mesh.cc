@@ -6,6 +6,7 @@
 // Antworld includes
 #include "common.h"
 
+using namespace units::angle;
 using namespace units::math; // cmath functions for unit types
 
 //----------------------------------------------------------------------------

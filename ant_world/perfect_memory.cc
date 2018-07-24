@@ -28,7 +28,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> PerfectMemory::present(cons
 
     if(train) {
         m_Snapshots.emplace_back();
-        std::copy_n(snapshotFloat.data, Parameters::inputWidth * Parameters::inputHeight, std::begin(m_Snapshots.back()));
+        std::copy_n(snapshotFloat.data, MBParams::inputWidth * MBParams::inputHeight, std::begin(m_Snapshots.back()));
     }
 
     // Return tuple of similarity

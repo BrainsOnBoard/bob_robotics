@@ -13,26 +13,10 @@
 // Libantworld includes
 #include "common.h"
 
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::length;
 using namespace units::math;
-
-inline constexpr meter_t makeM(const GLfloat value)
-{
-    return units::make_unit<meter_t>(value);
-}
-
-template<class T1, class T2>
-auto
-distance2(const T1 &v1, const T2 &v2)
-{
-    return hypot(v2[1] - v1[1], v2[0] - v1[0]);
-}
-
-template<class T>
-meter_t
-distance2(const T &v1, meter_t x2, meter_t y2)
-{
-    return hypot(y2 - makeM(v1[1]), x2 - makeM(v1[0]));
-}
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous
@@ -233,7 +217,7 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
     glBindVertexArray(m_WaypointsVAO);
 
     glPushMatrix();
-    glTranslated(0.0, 0.0, 0.1);
+    glTranslatef(0.0f, 0.0f, 0.1f);
     glDrawArrays(GL_POINTS, 0, m_Waypoints.size());
 
     // If there are any route points, bind
@@ -245,8 +229,8 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslated(antX.value(), antY.value(), 0.1);
-    glRotated(-antHeading.value(), 0.0, 0.0, 1.0);
+    glTranslatef(antX.value(), antY.value(), 0.1);
+    glRotatef(-antHeading.value(), 0.0, 0.0, 1.0);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 

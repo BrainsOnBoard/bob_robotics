@@ -22,6 +22,7 @@
 
 // GeNN robotics includes
 #include "../common/timer.h"
+#include "../third_party/units.h"
 #include "../video/opengl.h"
 
 // Libantworld includes
@@ -33,9 +34,13 @@
 // Antworld includes
 #include "mb_memory.h"
 #include "perfect_memory.h"
-#include "parameters.h"
+#include "mb_params.h"
+#include "sim_params.h"
 
 using namespace BoBRobotics;
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -141,7 +146,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_RESIZABLE, false);
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(Parameters::displayRenderWidth, Parameters::displayRenderHeight + Parameters::displayRenderWidth + 10,
+    GLFWwindow *window = glfwCreateWindow(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10,
                                           "Ant World", nullptr, nullptr);
     if(!window)
     {
@@ -175,7 +180,7 @@ int main(int argc, char *argv[])
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load("../libantworld/world5000_gray.bin", Parameters::worldColour, Parameters::groundColour);
+    renderer.getWorld().load("../libantworld/world5000_gray.bin", SimParams::worldColour, SimParams::groundColour);
 
     // Create route object and load route file specified by command line
     AntWorld::RouteArdin route(0.2f, 800);
@@ -188,21 +193,21 @@ int main(int argc, char *argv[])
     //PerfectMemory memory;
 
     // Host OpenCV array to hold pixels read from screen
-    cv::Mat snapshot(Parameters::displayRenderHeight, Parameters::displayRenderWidth, CV_8UC3);
+    cv::Mat snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3);
 
     // Create input to read snapshots from screen
-    Video::OpenGL input(0, Parameters::displayRenderWidth + 10,
-                        Parameters::displayRenderWidth, Parameters::displayRenderHeight);
+    Video::OpenGL input(0, SimParams::displayRenderWidth + 10,
+                        SimParams::displayRenderWidth, SimParams::displayRenderHeight);
 
     // Create snapshot processor to perform image processing on snapshot
-    AntWorld::SnapshotProcessorArdin snapshotProcessor(Parameters::displayScale,
-                                                       Parameters::intermediateSnapshotWidth, Parameters::intermediateSnapshotHeight,
-                                                       Parameters::inputWidth, Parameters::inputHeight);
+    AntWorld::SnapshotProcessorArdin snapshotProcessor(SimParams::displayScale,
+                                                       SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight,
+                                                       MBParams::inputWidth, MBParams::inputHeight);
 
     // Initialize ant position
-    float antX = 5.0f;
-    float antY = 5.0f;
-    float antHeading = 270.0f;
+    meter_t antX = 5.0_m;
+    meter_t antY = 5.0_m;
+    degree_t antHeading = 270.0_deg;
     if(route.size() > 0) {
         std::tie(antX, antY, antHeading) = route[0];
     }
@@ -219,16 +224,16 @@ int main(int argc, char *argv[])
     unsigned int numErrors = 0;
     unsigned int numTestSteps = 0;
 
-    float bestHeading = 0.0f;
+    degree_t bestHeading = 0.0_deg;
     unsigned int bestTestENSpikes = std::numeric_limits<unsigned int>::max();
 
     // Calculate scan parameters
-    constexpr double halfScanAngle = Parameters::scanAngle / 2.0;
-    constexpr unsigned int numScanSteps = (unsigned int)round(Parameters::scanAngle / Parameters::scanStep);
-    constexpr unsigned int numSpinSteps = (unsigned int)round(Parameters::scanAngle / Parameters::spinStep);
+    const degree_t halfScanAngle = SimParams::scanAngle / 2.0;
+    const unsigned int numScanSteps = (unsigned int)units::math::round(SimParams::scanAngle / SimParams::scanStep);
+    const unsigned int numSpinSteps = (unsigned int)units::math::round(SimParams::scanAngle / SimParams::spinStep);
 
     // When random walking, distribution of angles to turn by
-    std::uniform_real_distribution<float> randomAngleOffset(-halfScanAngle, halfScanAngle);
+    std::uniform_real_distribution<float> randomAngleOffset(-halfScanAngle.value(), halfScanAngle.value());
 
     std::ofstream spin;
 
@@ -240,27 +245,27 @@ int main(int argc, char *argv[])
         bool trainSnapshot = false;
         bool testSnapshot = false;
         if(keybits.test(KeyLeft)) {
-            antHeading -= Parameters::antTurnSpeed;
+            antHeading -= SimParams::antTurnStep;
         }
         if(keybits.test(KeyRight)) {
-            antHeading += Parameters::antTurnSpeed;
+            antHeading += SimParams::antTurnStep;
         }
         if(keybits.test(KeyUp)) {
-            antX += Parameters::antMoveSpeed * sin(antHeading * AntWorld::degreesToRadians);
-            antY += Parameters::antMoveSpeed * cos(antHeading * AntWorld::degreesToRadians);
+            antX += SimParams::antMoveStep * units::math::sin(antHeading);
+            antY += SimParams::antMoveStep * units::math::cos(antHeading);
         }
         if(keybits.test(KeyDown)) {
-            antX -= Parameters::antMoveSpeed * sin(antHeading * AntWorld::degreesToRadians);
-            antY -= Parameters::antMoveSpeed * cos(antHeading * AntWorld::degreesToRadians);
+            antX -= SimParams::antMoveStep * units::math::sin(antHeading);
+            antY -= SimParams::antMoveStep * units::math::cos(antHeading);
         }
         if(keybits.test(KeyReset)) {
             if(route.size() > 0) {
                 std::tie(antX, antY, antHeading) = route[0];
             }
             else {
-                antX = 5.0f;
-                antY = 5.0f;
-                antHeading = 270.0f;
+                antX = 5.0_m;
+                antY = 5.0_m;
+                antHeading = 270.0_deg;
             }
         }
         if(keybits.test(KeySpin) && state == State::Idle) {
@@ -338,7 +343,7 @@ int main(int argc, char *argv[])
             // If scan isn't complete
             if(testingScan < numScanSteps) {
                 // Scan right
-                antHeading += Parameters::scanStep;
+                antHeading += SimParams::scanStep;
 
                 // Take test snapshot
                 testSnapshot = true;
@@ -353,11 +358,11 @@ int main(int argc, char *argv[])
                 numTestSteps++;
 
                 // Move ant forward by snapshot distance
-                antX += Parameters::snapshotDistance * sin(antHeading * AntWorld::degreesToRadians);
-                antY += Parameters::snapshotDistance * cos(antHeading * AntWorld::degreesToRadians);
+                antX += SimParams::snapshotDistance * units::math::sin(antHeading);
+                antY += SimParams::snapshotDistance * units::math::cos(antHeading);
 
                 // If we've reached destination
-                if(route.atDestination(antX, antY, Parameters::errorDistance)) {
+                if(route.atDestination(antX, antY, SimParams::errorDistance)) {
                     std::cerr << "Destination reached in " << numTestSteps << " steps with " << numErrors << " errors" << std::endl;
 
                     // Reset state to idle
@@ -370,7 +375,7 @@ int main(int argc, char *argv[])
                     return 0;
                 }
                 // Otherwise, if we've
-                else if(numTestSteps >= Parameters::testStepLimit) {
+                else if(numTestSteps >= SimParams::testStepLimit) {
                     std::cerr << "Failed to find destination after " << numTestSteps << " steps and " << numErrors << " errors" << std::endl;
 
                     // Stop
@@ -379,13 +384,13 @@ int main(int argc, char *argv[])
                 // Otherwise
                 else {
                     // Calculate distance to route
-                    float distanceToRoute;
+                    meter_t distanceToRoute;
                     size_t nearestRouteWaypoint;
                     std::tie(distanceToRoute, nearestRouteWaypoint) = route.getDistanceToRoute(antX, antY);
                     std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
 
                     // If we are further away than error threshold
-                    if(distanceToRoute > Parameters::errorDistance) {
+                    if(distanceToRoute > SimParams::errorDistance) {
                         // If we have previously reached further down route than nearest point
                         // the furthest point reached is our 'best' waypoint otherwise it's the nearest waypoint
                         const size_t bestWaypoint = (nearestRouteWaypoint < maxTestPoint) ? maxTestPoint : nearestRouteWaypoint;
@@ -421,14 +426,14 @@ int main(int argc, char *argv[])
         }
         else if(state == State::RandomWalk) {
             // Pick random heading
-            antHeading += randomAngleOffset(gen);
+            antHeading += units::make_unit<degree_t>(randomAngleOffset(gen));
 
             // Move ant forward by snapshot distance
-            antX += Parameters::snapshotDistance * sin(antHeading * AntWorld::degreesToRadians);
-            antY += Parameters::snapshotDistance * cos(antHeading * AntWorld::degreesToRadians);
+            antX += SimParams::snapshotDistance * units::math::sin(antHeading);
+            antY += SimParams::snapshotDistance * units::math::cos(antHeading);
 
             // If we've reached destination
-            if(route.atDestination(antX, antY, Parameters::errorDistance)) {
+            if(route.atDestination(antX, antY, SimParams::errorDistance)) {
                 std::cout << "Destination reached with " << numErrors << " errors" << std::endl;
 
                 // Reset state to idle
@@ -440,12 +445,12 @@ int main(int argc, char *argv[])
             // Otherwise
             else {
                 // Calculate distance to route
-                float distanceToRoute;
+                meter_t distanceToRoute;
                 size_t nearestRouteWaypoint;
                 std::tie(distanceToRoute, nearestRouteWaypoint) = route.getDistanceToRoute(antX, antY);
 
                 // If we are further away than error threshold
-                if(distanceToRoute > Parameters::errorDistance) {
+                if(distanceToRoute > SimParams::errorDistance) {
                     // Snap ant to next snapshot position
                     // **HACK** this is dubious but looks very much like what the original model was doing in figure 1i
                     std::tie(antX, antY, antHeading) = route[nearestRouteWaypoint + 1];
@@ -481,7 +486,7 @@ int main(int argc, char *argv[])
             // If scan isn't complete
             if(testingScan < numSpinSteps) {
                 // Scan right
-                antHeading += Parameters::spinStep;
+                antHeading += SimParams::spinStep;
 
                 // Take test snapshot
                 testSnapshot = true;
@@ -497,10 +502,10 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render top down and ants eye view
-        renderer.renderPanoramicView(antX, antY, 0.01f,
-                                     antHeading, 0.0f, 0.0f,
-                                     0, Parameters::displayRenderWidth + 10, Parameters::displayRenderWidth, Parameters::displayRenderHeight);
-        renderer.renderTopDownView(0, 0, Parameters::displayRenderWidth, Parameters::displayRenderWidth);
+        renderer.renderPanoramicView(antX, antY, 0.01_m,
+                                     antHeading, 0.0_deg, 0.0_deg,
+                                     0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
+        renderer.renderTopDownView(0, 0, SimParams::displayRenderWidth, SimParams::displayRenderWidth);
 
         // Render route
         route.render(antX, antY, antHeading);

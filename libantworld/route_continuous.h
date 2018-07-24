@@ -11,10 +11,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-using namespace units::literals;
-using namespace units::angle;
-using namespace units::length;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous
 //----------------------------------------------------------------------------
@@ -23,6 +19,8 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+using namespace units::angle;
+using namespace units::length;
 class RouteContinuous
 {
 public:
