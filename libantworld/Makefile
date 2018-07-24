@@ -5,6 +5,10 @@ OBJECTS		:=$(SOURCES:.cc=.o)
 DEPS		:=$(SOURCES:.cc=.d)
 ARFLAGS		:= -rcs
 
+ifndef DEBUG
+	CXXFLAGS += -O2
+endif
+
 .PHONY: all clean
 
 all: libantworld.a
