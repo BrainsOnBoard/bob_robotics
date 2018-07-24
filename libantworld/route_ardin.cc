@@ -189,8 +189,8 @@ bool RouteArdin::load(const std::string &filename, bool realign)
             const radian_t heading = m_Headings[i - 1];
 
             // Realign segment to this angle
-            waypoint[0] = prevWaypoint[0] + (0.1f * units::math::cos(heading));
-            waypoint[1] = prevWaypoint[1] - (0.1f * units::math::sin(heading));
+            waypoint[0] = prevWaypoint[0] + (0.1 * units::math::cos(heading));
+            waypoint[1] = prevWaypoint[1] - (0.1 * units::math::sin(heading));
         }
     }
 
