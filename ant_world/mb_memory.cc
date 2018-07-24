@@ -14,7 +14,7 @@
 #include "ant_world_CODE/definitions.h"
 
 // Antworld includes
-#include "parameters.h"
+#include "mb_params.h"
 
 using namespace BoBRobotics;
 
@@ -25,7 +25,7 @@ namespace
 {
 unsigned int convertMsToTimesteps(double ms)
 {
-    return (unsigned int)std::round(ms / Parameters::timestepMs);
+    return (unsigned int)std::round(ms / MBParams::timestepMs);
 }
 }   // Anonymous namespace
 
@@ -34,7 +34,7 @@ unsigned int convertMsToTimesteps(double ms)
 //----------------------------------------------------------------------------
 MBMemory::MBMemory()
 #ifndef CPU_ONLY
-    : m_SnapshotFloatGPU(Parameters::inputWidth, Parameters::inputHeight, CV_32FC1)
+    : m_SnapshotFloatGPU(MBParams::inputWidth, MBParams::inputHeight, CV_32FC1)
 #endif  // CPU_ONLY
 {
 
@@ -57,8 +57,8 @@ MBMemory::MBMemory()
     {
         Timer<> timer("Building connectivity:");
 
-        GeNNUtils::buildFixedNumberPreConnector(Parameters::numPN, Parameters::numKC,
-                                                Parameters::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
+        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC,
+                                                MBParams::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
     }
 
     // Final setup
@@ -89,9 +89,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
 #endif
 
     // Convert simulation regime parameters to timesteps
-    const unsigned long long rewardTimestep = iT + convertMsToTimesteps(Parameters::rewardTimeMs);
-    const unsigned int presentDuration = convertMsToTimesteps(Parameters::presentDurationMs);
-    const unsigned int postStimuliDuration = convertMsToTimesteps(Parameters::postStimuliDurationMs);
+    const unsigned long long rewardTimestep = iT + convertMsToTimesteps(MBParams::rewardTimeMs);
+    const unsigned int presentDuration = convertMsToTimesteps(MBParams::presentDurationMs);
+    const unsigned int postStimuliDuration = convertMsToTimesteps(MBParams::postStimuliDurationMs);
 
     const unsigned int duration = presentDuration + postStimuliDuration;
     const unsigned long long endPresentTimestep = iT + presentDuration;
@@ -104,8 +104,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     GeNNUtils::SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
     GeNNUtils::SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
 
-    std::bitset<Parameters::numPN> pnSpikeBitset;
-    std::bitset<Parameters::numKC> kcSpikeBitset;
+    std::bitset<MBParams::numPN> pnSpikeBitset;
+    std::bitset<MBParams::numKC> kcSpikeBitset;
 #endif  // RECORD_SPIKES
 
     // Update input data step
@@ -152,10 +152,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
         // If a dopamine spike has been injected this timestep
         if(injectDopaminekcToEN) {
             // Decay global dopamine traces
-            dkcToEN = dkcToEN * std::exp(-(t - tDkcToEN) / Parameters::tauD);
+            dkcToEN = dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD);
 
             // Add effect of dopamine spike
-            dkcToEN += Parameters::dopamineStrength;
+            dkcToEN += MBParams::dopamineStrength;
 
             // Update last reward time
             tDkcToEN = t;
@@ -188,10 +188,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
 
     std::ofstream terminalStream("terminal_synaptic_state.csv");
     terminalStream << "Weight, Eligibility" << std::endl;
-    for(unsigned int s = 0; s < Parameters::numKC * Parameters::numEN; s++) {
+    for(unsigned int s = 0; s < MBParams::numKC * MBParams::numEN; s++) {
         terminalStream << gkcToEN[s] << "," << ckcToEN[s] * std::exp(-(t - tCkcToEN[s]) / 40.0) << std::endl;
     }
-    std::cout << "Final dopamine level:" << dkcToEN * std::exp(-(t - tDkcToEN) / Parameters::tauD) << std::endl;
+    std::cout << "Final dopamine level:" << dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD) << std::endl;
 #endif  // RECORD_TERMINAL_SYNAPSE_STATE
 
 #ifdef RECORD_SPIKES
@@ -199,7 +199,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     activeNeuronStream << pnSpikeBitset.count() << "," << kcSpikeBitset.count() << "," << numENSpikes << std::endl;
 #endif  // RECORD_SPIKES
     if(train) {
-        constexpr unsigned int numWeights = Parameters::numKC * Parameters::numEN;
+        constexpr unsigned int numWeights = MBParams::numKC * MBParams::numEN;
 
 #ifndef CPU_ONLY
         CHECK_CUDA_ERRORS(cudaMemcpy(gkcToEN, d_gkcToEN, numWeights * sizeof(scalar), cudaMemcpyDeviceToHost));

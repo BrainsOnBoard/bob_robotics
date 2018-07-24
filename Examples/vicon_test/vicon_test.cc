@@ -10,6 +10,7 @@
 
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;
+using namespace units::angle;
 
 int
 main()

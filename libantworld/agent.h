@@ -14,10 +14,12 @@
 #include "../common/pose.h"
 #include "../video/opengl.h"
 
-using namespace BoBRobotics::Pose;
-
 namespace BoBRobotics {
 namespace AntWorld {
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
+
 class AntAgent
   : Video::OpenGL
 {
@@ -73,8 +75,8 @@ public:
     }
 
 private:
-    Vector3<degree_t> m_Attitude{ 0_deg, 0_deg, 0_deg };
-    Vector3<meter_t> m_Position{ 0_m, 0_m, 0_m };
+    Vector3<degree_t> m_Attitude{{ 0_deg, 0_deg, 0_deg }};
+    Vector3<meter_t> m_Position{{ 0_m, 0_m, 0_m }};
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
 }; // AntAgent

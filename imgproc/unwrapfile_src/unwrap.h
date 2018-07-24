@@ -2,9 +2,6 @@
 
 #include <opencv2/opencv.hpp> // used for unwrapping
 
-using namespace std;
-using namespace cv;
-
 // parameters for unwrapping
 const int unwrap_width = 1920;
 const int unwrap_height = 590;
@@ -14,7 +11,7 @@ const float r_inner = 0;
 const float r_outer = 0.49;
 
 /* get x and y maps for unwrapping */
-void getmaps(Mat &map_x, Mat &map_y, Size ssrc)
+void getmaps(cv::Mat &map_x, cv::Mat &map_y, cv::Size ssrc)
 {
     // convert relative (0.0 to 1.0) to absolute pixel values
     float ccent_x = round((float) ssrc.width * cent_x);
@@ -36,20 +33,20 @@ void getmaps(Mat &map_x, Mat &map_y, Size ssrc)
 }
 
 /* unwrap image im with OpenCV's remap function */
-inline void unwrap(Mat &imunwrap, Mat &im, Mat &map_x, Mat &map_y)
+inline void unwrap(cv::Mat &imunwrap, cv::Mat &im, cv::Mat &map_x, cv::Mat &map_y)
 {
-    remap(im, imunwrap, map_x, map_y, INTER_NEAREST);
+    cv::remap(im, imunwrap, map_x, map_y, cv::INTER_NEAREST);
 }
 
 /* process a single frame (first frame of video, or a single image) */
-bool processframe(const char* filepath, Mat &imunwrap, Mat &im, Mat &map_x, Mat map_y)
+bool processframe(const char* filepath, cv::Mat &imunwrap, cv::Mat &im, cv::Mat &map_x, cv::Mat map_y)
 {
     if (!im.data) {
-        cerr << "Error: Could not read data" << endl;
+        std::cerr << "Error: Could not read data" << std::endl;
         return false;
     }
     if (im.rows != im.cols) {
-        cerr << "File is not panoramic -- skipping " << filepath << endl;
+        std::cerr << "File is not panoramic -- skipping " << filepath << std::endl;
         return false;
     }
 

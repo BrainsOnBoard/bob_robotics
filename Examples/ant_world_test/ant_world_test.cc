@@ -18,8 +18,10 @@
 #include "third_party/units.h"
 
 using namespace BoBRobotics;
-using namespace units::time;
+using namespace units::angle;
+using namespace units::length;
 using namespace units::math;
+using namespace units::time;
 
 // Anonymous namespace
 namespace

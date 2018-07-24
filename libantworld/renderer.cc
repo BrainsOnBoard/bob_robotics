@@ -252,10 +252,10 @@ void Renderer::generateCubeFaceLookAtMatrices()
 void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
                           degree_t yaw, degree_t pitch, degree_t roll)
 {
-    glRotated(roll.value(), 0.0, 1.0, 0.0);
-    glRotated(pitch.value(), 1.0, 0.0, 0.0);
-    glRotated(yaw.value(), 0.0, 0.0, 1.0);
-    glTranslated(-x.value(), -y.value(), -z.value());
+    glRotatef(roll.value(), 0.0, 1.0f, 0.0);
+    glRotatef(pitch.value(), 1.0f, 0.0, 0.0);
+    glRotatef(yaw.value(), 0.0, 0.0, 1.0f);
+    glTranslatef(-x.value(), -y.value(), -z.value());
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
