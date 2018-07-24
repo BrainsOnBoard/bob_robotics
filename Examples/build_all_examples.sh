@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 basename=$(dirname "$0")
 
