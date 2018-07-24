@@ -3,7 +3,6 @@
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>
-#include <limits>
 
 // Standard C includes
 #include <cstdint>
@@ -767,8 +766,6 @@ private:
                 return 0.0175f;
             case GyroScale::DPS2000:
                 return 0.07f;
-            default:
-                return std::numeric_limits<float>::quiet_NaN();
         }
     }
     
@@ -783,8 +780,6 @@ private:
                 return 0.000244f;
             case AccelScale::G16:
                 return 0.000732f;
-            default:
-                return std::numeric_limits<float>::quiet_NaN();
         }
     }
     
@@ -799,8 +794,6 @@ private:
                 return 0.00043f;
             case MagnetoScale::GS16:
                 return 0.00058f;
-            default:
-                return std::numeric_limits<float>::quiet_NaN();
         }
     }
     
