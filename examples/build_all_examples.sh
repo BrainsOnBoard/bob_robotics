@@ -26,3 +26,7 @@ done
 echo -e "\e[34m
 BUILD COMPLETED
 [$goodcount/$projectcount of the projects built successfully]\e[39m"
+
+if [ $goodcount -lt $projectcount ]; then
+	exit 1
+fi
