@@ -7,4 +7,4 @@
 * Right trigger: rotate clockwise
 
 ## Build requirements
-This module requires Parrot's SDK; full instructions are [in the documentation](https://github.com/BrainsOnBoard/bob_robotics/tree/master/documentation/requirements.md).
+This module requires Parrot's SDK; full instructions are [in the documentation](../documentation/requirements.md).
