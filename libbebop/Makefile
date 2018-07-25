@@ -1,7 +1,4 @@
-CXXFLAGS+=-std=c++14 -g -O2 -march=native -Wall -Wpedantic -I.. -MMD -MP
-
-# OpenCV
-CXXFLAGS+=`pkg-config --cflags opencv`
+include ../common/flags.mk
 
 # The current version of the avcodec code uses some deprecated functions, so
 # let's ignore compiler warnings about this. I should probably fix the code up
