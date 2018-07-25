@@ -3,12 +3,13 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace BoBRobotics {
+namespace GeNNModels {
+
 //----------------------------------------------------------------------------
 // BoBRobotics::GeNNModels::Sigmoid
 //----------------------------------------------------------------------------
 //! Non-spiking sigmoid unit
-namespace BoBRobotics {
-namespace GeNNModels {
 class Sigmoid : public NeuronModels::Base
 {
 public:

@@ -3,12 +3,13 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace BoBRobotics {
+namespace GeNNModels {
+
 //----------------------------------------------------------------------------
 // BoBRobotics::GeNNModels::AlphaCurr
 //----------------------------------------------------------------------------
 //! Current-based synapse model with alpha shaping
-namespace BoBRobotics {
-namespace GeNNModels {
 class AlphaCurr : public PostsynapticModels::Base
 {
 public:

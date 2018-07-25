@@ -3,11 +3,12 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace BoBRobotics {
+namespace GeNNModels {
+
 //----------------------------------------------------------------------------
 // BoBRobotics::GeNNModels::STDPDopamine
 //----------------------------------------------------------------------------
-namespace BoBRobotics {
-namespace GeNNModels {
 class STDPDopamine : public WeightUpdateModels::Base
 {
 public:
