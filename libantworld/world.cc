@@ -13,7 +13,7 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../third_party/path.h"
 
 // Antworld includes

@@ -7,7 +7,7 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../third_party/path.h"
 #include "../video/opengl.h"
 

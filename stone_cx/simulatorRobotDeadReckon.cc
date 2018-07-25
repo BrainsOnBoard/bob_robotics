@@ -4,7 +4,7 @@
 #include <fstream>
 #include <thread>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/lm9ds1_imu.h"
 #include "../common/timer.h"
 #include "../hid/joystick.h"
