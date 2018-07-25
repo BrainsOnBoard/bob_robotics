@@ -98,13 +98,16 @@ checkError(eARCONTROLLER_ERROR err)
     }
 }
 
-/*
- * Main class for interfacing with drone. Handles connection/disconnection and
- * sending steering commands.
- *
- * Video stream functionality is implemented in video.h by BebopVideoStream
- * class.
+//------------------------------------------------------------------------------
+// BoBRobotics::Robots::Bebop
+//------------------------------------------------------------------------------
+/*!
+ * \brief Main class for interfacing with drone.
+ * 
+ * This class handles connection/disconnection and sending steering commands.
+ * It also provides an interface to access the drone's video stream.
  */
+//------------------------------------------------------------------------------
 class Bebop
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;

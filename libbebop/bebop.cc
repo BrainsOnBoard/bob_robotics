@@ -35,7 +35,7 @@ constexpr degree_t Bebop::DefaultMaximumTilt;
 constexpr degrees_per_second_t Bebop::DefaultMaximumYawSpeed;
 constexpr meters_per_second_t Bebop::DefaultMaximumVerticalSpeed;
 
-/*
+/*!
  * Do all initialisation (including discovery) but don't actually
  * connect to drone yet.
  */
@@ -64,8 +64,8 @@ Bebop::Bebop(degrees_per_second_t maxYawSpeed,
     connect();
 }
 
-/*
- * Disconnect properly from drone when object destroyed.
+/*!
+ * Lands the drone and disconnects properly when the object is destroyed.
  */
 Bebop::~Bebop()
 {
@@ -74,7 +74,7 @@ Bebop::~Bebop()
     disconnect();
 }
 
-/*
+/*!
  * Try to make connection to drone.
  */
 void
@@ -99,7 +99,7 @@ Bebop::connect()
     setMaximumTilt(m_TiltLimits.m_UserMaximum);
 }
 
-/*
+/*!
  * Try to disconnect from drone.
  */
 void
@@ -121,7 +121,7 @@ Bebop::disconnect()
     }
 }
 
-/*
+/*!
  * Start controlling this drone with a joystick.
  */
 void
@@ -135,7 +135,7 @@ Bebop::addJoystick(HID::Joystick &joystick)
     });
 }
 
-/*
+/*!
  * Send take-off command.
  */
 void
@@ -149,7 +149,7 @@ Bebop::takeOff()
     }
 }
 
-/*
+/*!
  * Send land command.
  */
 void
@@ -224,7 +224,7 @@ Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
     DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
 }
 
-/*
+/*!
  * Set drone's pitch, for moving forwards and backwards.
  */
 void
@@ -235,7 +235,7 @@ Bebop::setPitch(float pitch)
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
 
-/*
+/*!
  * Set drone's roll, for banking left and right.
  */
 void
@@ -246,7 +246,7 @@ Bebop::setRoll(float right)
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
 
-/*
+/*!
  * Set drone's up/down motion for ascending/descending.
  */
 void
@@ -256,7 +256,7 @@ Bebop::setVerticalSpeed(float up)
     DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
 }
 
-/*
+/*!
  * Set drone's yaw. The drone will turn really slowly.
  */
 void
@@ -266,7 +266,7 @@ Bebop::setYawSpeed(float right)
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
-/*
+/*!
  * Send the command to start video streaming.
  */
 void
@@ -275,7 +275,7 @@ Bebop::startStreaming()
     DRONE_COMMAND(sendMediaStreamingVideoEnable, 1);
 }
 
-/*
+/*!
  * Send the command to stop video streaming.
  */
 void
@@ -284,7 +284,7 @@ Bebop::stopStreaming()
     DRONE_COMMAND(sendMediaStreamingVideoEnable, 0);
 }
 
-/*
+/*!
  * Stops the drone from moving along all axes.
  */
 void
@@ -296,7 +296,7 @@ Bebop::stopMoving()
     setVerticalSpeed(0);
 }
 
-/*
+/*!
  * Tells the drone to take a photo and store it.
  */
 void
@@ -305,7 +305,7 @@ Bebop::takePhoto()
     DRONE_COMMAND(sendMediaRecordPicture, 0);
 }
 
-/*
+/*!
  * Adds an event handler for when the drone is taking off or landing, indicated
  * by its parameter.
  */
@@ -315,7 +315,7 @@ Bebop::setFlightEventHandler(FlightEventHandler handler)
     m_FlightEventHandler = handler;
 }
 
-/*
+/*!
  * Waits for the drone to send a state-update command and returns the new
  * state.
  */
@@ -326,7 +326,7 @@ Bebop::getStateUpdate()
     return getState();
 }
 
-/*
+/*!
  * Returns the drone's connection state.
  */
 inline eARCONTROLLER_DEVICE_STATE
@@ -338,7 +338,7 @@ Bebop::getState()
     return state;
 }
 
-/*
+/*!
  * Create the struct used by the ARSDK to interface with the drone.
  */
 inline void
@@ -368,7 +368,7 @@ Bebop::createControllerDevice()
     checkError(err);
 }
 
-/*
+/*!
  * Add callbacks for when connection state changes or a command is received
  * from the drone.
  */
@@ -381,7 +381,7 @@ Bebop::addEventHandlers()
             m_Device.get(), commandReceived, this));
 }
 
-/*
+/*!
  * Invoked by commandReceived().
  *
  * Prints the battery state whenever it changes.
@@ -409,7 +409,7 @@ Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
     }
 }
 
-/*
+/*!
  * Empty function used to suppress default ARSDK console messages.
  */
 int
@@ -422,7 +422,7 @@ Bebop::printCallback(eARSAL_PRINT_LEVEL level,
     return 0;
 }
 
-/*
+/*!
  * Invoked when the drone's connection state changes.
  */
 void
@@ -454,7 +454,7 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
     }
 }
 
-/*
+/*!
  * Invoked when a command is received from drone.
  */
 void
