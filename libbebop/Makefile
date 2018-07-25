@@ -21,9 +21,9 @@ DEPS	:= $(SOURCES:.cc=.d)
 
 .PHONY: all clean
 
-all: bebop.a
+all: libbebop.a
 
-bebop.a: $(OBJECTS)
+libbebop.a: $(OBJECTS)
 	$(AR) -rcs $@ $(OBJECTS)
 
 -include $(DEPS)
