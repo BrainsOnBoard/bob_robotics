@@ -1,23 +1,10 @@
-### Bebop module
-This folder contains the code for both controlling Bebop 2 drones (i.e. sending move commands) and streaming the video feed from it. These two things are split into two files to allow for compiling just the controller code by itself (and thus not having to install the extra dependencies for the video code). Some of the video code is taken from [the Bebop ROS module](https://github.com/AutonomyLab/bebop_autonomy).
-
-One can build the module as follows:
-```sh
-# controller code only
-make bebop.o
-
-# video code only
-make video.o
-
-# both controller and video code
-make
-```
-
-The idea is that this makefile can be called by the makefile for a project that requires the module, i.e.:
-```Makefile
-bebop_module:
-	make -C $(GENN_ROBOTICS_PATH)/bebop
-```
+## Default drone joystick controls
+* A button: take off
+* B button: land
+* Left stick (vertical): up/down
+* Right stick: backwards/forwards + left/right
+* Left trigger: rotate anti-clockwise
+* Right trigger: rotate clockwise
 
 ## Building Parrot's SDK
 This module requires that Parrot's SDK is installed and that the ARSDK_ROOT environment variable points to the folder where it was downloaded.
@@ -41,4 +28,3 @@ repo sync
 echo export ARSDK_ROOT=$PWD >> ~/.bashrc
 source ~/.bashrc
 ```
-
