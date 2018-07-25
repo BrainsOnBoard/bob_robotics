@@ -18,9 +18,11 @@ DEPS	:= $(SOURCES:.cc=.d)
 
 .PHONY: all clean
 
-all: libbebop.a
+TARGET := libbebop.a
 
-libbebop.a: $(OBJECTS)
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
 	$(AR) -rcs $@ $(OBJECTS)
 
 -include $(DEPS)
@@ -31,4 +33,4 @@ libbebop.a: $(OBJECTS)
 %.d: ;
 
 clean:
-	rm -f $(OBJECTS) $(DEPS) bebop.a
+	rm -f $(OBJECTS) $(DEPS) $(TARGET)
