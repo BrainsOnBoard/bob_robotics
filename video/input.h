@@ -29,6 +29,11 @@ public:
     virtual ~Input()
     {}
 
+    /*!
+     * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
+     * 
+     * @param args The resolution of the unwrapped image, as cv::Size or two ints
+     */
     template<typename... Ts>
     ImgProc::OpenCVUnwrap360 createUnwrapper(Ts &&... args)
     {
@@ -76,17 +81,25 @@ public:
         return unwrapper;
     }
 
+    /*!
+     * \brief Get the name of this type of camera as a (short) string
+     * 
+     * Note that this is used to load the appropriate unwrapping parameters
+     * (we look for a file called [camera name].yaml).
+     */
     virtual const std::string getCameraName() const
     {
         return DefaultCameraName;
     }
 
-    virtual cv::Size getOutputSize() const = 0;
-    virtual bool readFrame(cv::Mat &outFrame) = 0;
-
+    /*!
+     * \brief Try to read a frame in greyscale from this video source
+     * 
+     * @return Whether a new frame was read
+     */
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
     {
-        // If reading (RGB frame) was succesful
+        // If reading (colour frame) was succesful
         if(readFrame(m_IntermediateFrame)) {
             // If output frame isn't correct size, create it
             if(outFrame.size() != m_IntermediateFrame.size()) {
@@ -102,16 +115,28 @@ public:
         }
     }
 
+    //! Whether this video source needs unwrapping with an ImgProc::OpenCVUnwrap360
     virtual bool needsUnwrapping() const
     {
         // only panoramic cameras are defined with the camera name specified
         return getCameraName() != DefaultCameraName;
     }
 
+    //! Set the output resolution of this video stream
     virtual void setOutputSize(const cv::Size &)
     {
         throw std::runtime_error("This camera's resolution cannot be changed at runtime");
     }
+
+    //! Get the current output resolution of this video stream
+    virtual cv::Size getOutputSize() const = 0;
+
+    /*!
+     * \brief Try to read a frame in colour from this video source
+     * 
+     * @return Whether a new frame was read
+     */
+    virtual bool readFrame(cv::Mat &outFrame) = 0;
 
 private:
     cv::Mat m_IntermediateFrame;

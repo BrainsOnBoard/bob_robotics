@@ -38,21 +38,26 @@ class Display : public Threadable
 #define WINDOW_NAME "OpenCV display"
 
 public:
-    /*
-     * Create a new display with unwrapping disabled.
+    /*!
+     * \brief Create a new display with unwrapping disabled
+     * 
+     * @param videoInput The video source to display
      */
     Display(Input &videoInput)
       : m_VideoInput(&videoInput)
     {}
 
+    //! Close display window and destroy this object
     virtual ~Display()
     {
         close();
     }
 
-    /*
-     * Create a new display with unwrapping enabled if the Video::Input supports
-     * it.
+    /*!
+     * \brief Create a new display with unwrapping enabled if the videoInput supports it
+     * 
+     * @param videoInput The video source to display
+     * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
      */
     template<typename... Ts>
     Display(Input &videoInput, Ts &&... unwrapRes)
@@ -65,23 +70,25 @@ public:
         }
     }
 
-    /*
-     * Create a new display from a std::unique_ptr to Input (e.g. from
-     * getPanoramicCamera()).
+    /*!
+     * \brief Create a new display from a std::unique_ptr to Input (e.g. from
+     *        getPanoramicCamera())
+     * 
+     * @param videoInput The video source to display
+     * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
      */
     template<typename... Ts>
     Display(std::unique_ptr<Input> &videoInput, Ts &&... unwrapRes)
       : Display(*videoInput.get(), std::forward<Ts>(unwrapRes)...)
     {}
 
+    //! Return true if the display window is open
     bool isOpen() const
     {
         return m_Open;
     }
 
-    /*
-     * Run the display on the main thread.
-     */
+    //! Run the display on the current thread
     void run() override
     {
         while (m_DoRun) {
@@ -92,6 +99,11 @@ public:
         }
     }
 
+    /*!
+     * \brief Try to read a new frame from the video source and display it
+     * 
+     * \return Whether a new frame was successfully read
+     */
     bool update()
     {
         if (!m_Open) {
@@ -120,6 +132,7 @@ public:
         return newFrame;
     }
 
+    //! Close the display and stop the background thread if needed
     virtual void close()
     {
         if (m_Open) {

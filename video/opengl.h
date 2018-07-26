@@ -18,12 +18,18 @@ namespace Video {
 class OpenGL : public Input
 {
 public:
-    // **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
-    // from bottom left of screen which would require window size etc to convert
+    /*!
+     * \brief Create a Video::Input for reading from an OpenGL window
+     * 
+     * @param readX, readY The starting coordinates to read from (from bottom left of screen)
+     * @param readWidth, readHeight Size of image
+     * 
+     * **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
+     * from bottom left of screen which would require window size etc. to convert
+     */
     OpenGL(GLint readX,  GLint readY,  GLsizei readWidth,  GLsizei readHeight)
-    :   m_ReadX(readX), m_ReadY(readY), m_ReadWidth(readWidth), m_ReadHeight(readHeight)
-    {
-    }
+      : m_ReadX(readX), m_ReadY(readY), m_ReadWidth(readWidth), m_ReadHeight(readHeight)
+    {}
 
     //----------------------------------------------------------------------------
     // Input virtuals

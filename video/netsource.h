@@ -24,6 +24,11 @@ namespace Video {
 class NetSource : public Input
 {
 public:
+    /*!
+     * \brief Create an object to read video transmitted over the network
+     * 
+     * @param node The network connection from which to read images
+     */
     NetSource(Net::Node &node)
     {
         // handle incoming IMG commands
