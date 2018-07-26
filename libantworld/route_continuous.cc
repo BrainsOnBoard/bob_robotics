@@ -176,7 +176,7 @@ bool RouteContinuous::load(const std::string &filename)
                                    makeM(segmentEnd[0] - segmentStart[0])));
 
         // Calculate segment length and
-        const meter_t segmentLength(distance2(segmentStart, segmentEnd));
+        const meter_t segmentLength(distance(segmentStart, segmentEnd));
         m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
     }
 
@@ -244,7 +244,7 @@ bool RouteContinuous::atDestination(meter_t x, meter_t y, meter_t threshold) con
     }
     // Otherwise return true if
     else {
-        return distance2(m_Waypoints.back(), x, y) < threshold;
+        return distance(m_Waypoints.back(), x, y) < threshold;
     }
 }
 //----------------------------------------------------------------------------
@@ -255,7 +255,7 @@ std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter
     size_t nearestWaypoint;
     for(unsigned int s = 0; s < m_Waypoints.size(); s++)
     {
-        const meter_t distanceToWaypoint = distance2(m_Waypoints[s], x, y);
+        const meter_t distanceToWaypoint = distance(m_Waypoints[s], x, y);
 
         // If this is closer than current minimum, update minimum and nearest waypoint
         if(distanceToWaypoint < minimumDistance) {

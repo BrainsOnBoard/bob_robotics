@@ -16,13 +16,13 @@ inline constexpr units::length::meter_t makeM(const GLfloat value)
 }
 
 template<class T1, class T2>
-auto distance2(const T1 &v1, const T2 &v2)
+auto distance(const T1 &v1, const T2 &v2)
 {
     return hypot(v2[1] - v1[1], v2[0] - v1[0]);
 }
 
 template<class T>
-units::length::meter_t distance2(const T &v1, units::length::meter_t x2, units::length::meter_t y2)
+units::length::meter_t distance(const T &v1, units::length::meter_t x2, units::length::meter_t y2)
 {
     return units::math::hypot(y2 - makeM(v1[1]), x2 - makeM(v1[0]));
 }

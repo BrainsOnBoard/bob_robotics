@@ -258,7 +258,7 @@ bool RouteArdin::atDestination(meter_t x, meter_t y, meter_t threshold) const
     }
     // Otherwise return true if
     else {
-        return (distance2(m_Waypoints.back(), x, y) < threshold);
+        return (distance(m_Waypoints.back(), x, y) < threshold);
     }
 }
 //----------------------------------------------------------------------------
@@ -269,7 +269,7 @@ std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(meter_t x, meter_t y)
     size_t nearestWaypoint;
     for(unsigned int s = 0; s < m_Waypoints.size(); s++)
     {
-        const meter_t distanceToWaypoint = distance2(m_Waypoints[s], x, y);
+        const meter_t distanceToWaypoint = distance(m_Waypoints[s], x, y);
 
         // If this is closer than current minimum, update minimum and nearest waypoint
         if(distanceToWaypoint < minimumDistance) {
