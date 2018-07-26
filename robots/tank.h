@@ -12,7 +12,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Tank
 //----------------------------------------------------------------------------
-// Interface for driving tank-like wheeled robots
+//! Interface for driving wheeled robots with tank steering
 class Tank
 {
 public:
