@@ -83,7 +83,7 @@ public:
         return getState(button) & StateReleased;
     }
 
-    static std::string getName(JAxis axis)
+    static constexpr std::string getName(JAxis axis)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -107,7 +107,7 @@ public:
         }
     }
 
-    static std::string getName(JButton button)
+    static constexpr std::string getName(JButton button)
     {
         // these values should be defined before this header is included
         switch (button) {
