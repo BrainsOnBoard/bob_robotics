@@ -28,53 +28,43 @@ class Client
   , Socket
 {
 public:
-    Client(const std::string &host, int port = DefaultListenPort);
-    ~Client();
-    Socket *getSocket() const override;
-};
+    //! Create client and connect to host over TCP
+    Client(const std::string &host, int port = DefaultListenPort)
+    {
+        // Create socket
+        setSocket(socket(AF_INET, SOCK_STREAM, 0));
 
-/*
- * Create client, connect to host over TCP
- */
-Client::Client(const std::string &host, int port)
-{
-    // Create socket
-    setSocket(socket(AF_INET, SOCK_STREAM, 0));
+        // Create socket address structure
+        in_addr addr;
+        addr.s_addr = inet_addr(host.c_str());
+        sockaddr_in destAddress;
+        destAddress.sin_family = AF_INET;
+        destAddress.sin_port = htons(port);
+        destAddress.sin_addr = addr;
 
-    // Create socket address structure
-    in_addr addr;
-    addr.s_addr = inet_addr(host.c_str());
-    sockaddr_in destAddress;
-    destAddress.sin_family = AF_INET;
-    destAddress.sin_port = htons(port);
-    destAddress.sin_addr = addr;
+        // Connect socket
+        if (connect(Socket::getSocket(),
+                    reinterpret_cast<sockaddr *>(&destAddress),
+                    sizeof(destAddress)) < 0) {
+            throw std::runtime_error("Cannot connect socket to " + host + ":" +
+                                    std::to_string(port));
+        }
 
-    // Connect socket
-    if (connect(Socket::getSocket(),
-                reinterpret_cast<sockaddr *>(&destAddress),
-                sizeof(destAddress)) < 0) {
-        throw std::runtime_error("Cannot connect socket to " + host + ":" +
-                                 std::to_string(port));
+        std::cout << "Opened socket" << std::endl;
+
+        notifyConnectedHandlers();
     }
 
-    std::cout << "Opened socket" << std::endl;
+    ~Client()
+    {
+        stop(); // stop thread if needed
+    }
 
-    notifyConnectedHandlers();
-}
-
-Client::~Client()
-{
-    stop(); // stop thread if needed
-}
-
-/*
- * Overridden Node method; used to get current socket, which for the Client
- * object is always itself.
- */
-Socket *
-Client::getSocket() const
-{
-    return (Socket *) this;
-}
+    //! Used to get current socket, which for the Client object is always itself
+    Socket *getSocket() const override
+    {
+        return (Socket *) this;
+    }
+}; // Client
 } // Net
 } // BoBRobotics
