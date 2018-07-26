@@ -18,7 +18,10 @@ namespace BoBRobotics {
 namespace Net {
 class Node; // forward declaration
 
+//! A callback function to handle incoming commands over the network
 using CommandHandler = std::function<void(Node &, const Command &)>;
+
+//! A callback function which is notified when a connection is made
 using ConnectedHandler = std::function<void(Node &)>;
 
 //----------------------------------------------------------------------------

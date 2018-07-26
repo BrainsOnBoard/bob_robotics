@@ -26,6 +26,8 @@
 
 namespace BoBRobotics {
 namespace Net {
+
+//! Represents a command read from the network
 using Command = std::vector<std::string>;
 
 //! An exception thrown if an error signal is given by a Socket
