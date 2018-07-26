@@ -63,7 +63,7 @@ enum class JButton
     LENGTH
 };
 
-class JoystickWindows : public JoystickBase<JAxis, JButton>
+class JoystickWindows : public JoystickBase<JoystickWindows, JAxis, JButton>
 {
 public:
     JoystickWindows(float deadZone = 0.0f)
@@ -79,25 +79,6 @@ public:
 
         // Set initial axis states
         updateAxes(m_State, true);
-    }
-
-    virtual float axisToFloat(JAxis axis, int16_t value) const override
-    {
-        switch (axis) {
-        case JAxis::LeftStickHorizontal:
-        case JAxis::RightStickHorizontal:
-            return value < 0 ? static_cast<float>(value) / int16_absminf
-                             : static_cast<float>(value) / int16_maxf;
-        case JAxis::LeftStickVertical:
-        case JAxis::RightStickVertical:
-            return value < 0 ? static_cast<float>(-value) / int16_absminf
-                             : static_cast<float>(-value) / int16_maxf;
-        case JAxis::LeftTrigger:
-        case JAxis::RightTrigger:
-            return static_cast<float>(value) / 255.0f;
-        default:
-            return static_cast<float>(value);
-        }
     }
 
     virtual void run() override
@@ -148,6 +129,25 @@ public:
         m_State = m_NewState;
 
         return true;
+    }
+
+    static constexpr float axisToFloat(JAxis axis, int16_t value) const override
+    {
+        switch (axis) {
+        case JAxis::LeftStickHorizontal:
+        case JAxis::RightStickHorizontal:
+            return value < 0 ? static_cast<float>(value) / int16_absminf
+                             : static_cast<float>(value) / int16_maxf;
+        case JAxis::LeftStickVertical:
+        case JAxis::RightStickVertical:
+            return value < 0 ? static_cast<float>(-value) / int16_absminf
+                             : static_cast<float>(-value) / int16_maxf;
+        case JAxis::LeftTrigger:
+        case JAxis::RightTrigger:
+            return static_cast<float>(value) / 255.0f;
+        default:
+            return static_cast<float>(value);
+        }
     }
 
 private:

@@ -32,7 +32,7 @@ enum ButtonState
     StateReleased = (1 << 2)
 };
 
-template<typename JAxis, typename JButton>
+template<typename Joystick, typename JAxis, typename JButton>
 class JoystickBase : public Threadable
 {
     using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
@@ -46,7 +46,6 @@ private:
 
 public:
     // Virtual methods
-    virtual float axisToFloat(JAxis axis, int16_t value) const = 0;
     virtual bool update() = 0;
 
     void addHandler(AxisHandler handler)
@@ -172,14 +171,14 @@ protected:
 
     void updateAxis(JAxis axis, int16_t value, bool isInitial)
     {
-        updateAxis(axis, axisToFloat(axis, value), isInitial);
+        updateAxis(axis, Joystick::axisToFloat(axis, value), isInitial);
     }
 
     void updateAxis(JAxis axisHorz, int16_t hvalue, int16_t vvalue, bool isInitial)
     {
         JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
-        float x = axisToFloat(axisHorz, hvalue);
-        float y = axisToFloat(axisVert, vvalue);
+        float x = Joystick::axisToFloat(axisHorz, hvalue);
+        float y = Joystick::axisToFloat(axisVert, vvalue);
 
         if (sqrt(x * x + y * y) < m_DeadZone) {
             updateAxis(axisHorz, 0.0f, isInitial);

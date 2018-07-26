@@ -66,7 +66,7 @@ enum class JButton
     LENGTH
 };
 
-class JoystickLinux : public JoystickBase<JAxis, JButton>
+class JoystickLinux : public JoystickBase<JoystickLinux, JAxis, JButton>
 {
 public:
     JoystickLinux(float deadZone = 0.0f)
@@ -95,34 +95,6 @@ public:
     ~JoystickLinux()
     {
         ::close(m_Fd);
-    }
-
-    virtual float axisToFloat(JAxis axis, int16_t value) const override
-    {
-        switch (axis) {
-        case JAxis::LeftStickHorizontal:
-        case JAxis::LeftStickVertical:
-        case JAxis::RightStickHorizontal:
-        case JAxis::RightStickVertical:
-            return value > 0 ? static_cast<float>(value) / int16_maxf
-                             : static_cast<float>(value) / int16_absminf;
-        case JAxis::LeftTrigger:
-        case JAxis::RightTrigger:
-            return (static_cast<float>(value) + int16_absminf) /
-                   static_cast<float>(std::numeric_limits<uint16_t>::max());
-        case JAxis::DpadHorizontal:
-        case JAxis::DpadVertical:
-            switch (value) {
-            case std::numeric_limits<int16_t>::max():
-                return 1.0f;
-            case 0:
-                return 0.0f;
-            default:
-                return -1.0f;
-            }
-        default:
-            return std::numeric_limits<float>::quiet_NaN();
-        }
     }
 
     virtual void run() override
@@ -167,8 +139,36 @@ public:
         return true;
     }
 
+    static constexpr float axisToFloat(JAxis axis, int16_t value)
+    {
+        switch (axis) {
+        case JAxis::LeftStickHorizontal:
+        case JAxis::LeftStickVertical:
+        case JAxis::RightStickHorizontal:
+        case JAxis::RightStickVertical:
+            return value > 0 ? static_cast<float>(value) / int16_maxf
+                             : static_cast<float>(value) / int16_absminf;
+        case JAxis::LeftTrigger:
+        case JAxis::RightTrigger:
+            return (static_cast<float>(value) + int16_absminf) /
+                    static_cast<float>(std::numeric_limits<uint16_t>::max());
+        case JAxis::DpadHorizontal:
+        case JAxis::DpadVertical:
+            switch (value) {
+            case std::numeric_limits<int16_t>::max():
+                return 1.0f;
+            case 0:
+                return 0.0f;
+            default:
+                return -1.0f;
+            }
+        default:
+            return std::numeric_limits<float>::quiet_NaN();
+        }
+    }
+
 private:
-    int m_Fd = -1;       // file descriptor for joystick device
+    int m_Fd = -1;      // file descriptor for joystick device
     js_event m_JsEvent; // struct to contain joystick event
     std::array<int16_t, 5> m_AxisState;
 
