@@ -1,0 +1,11 @@
+/*! \mainpage BoB robotics Documentation
+ *
+ * BoB robotics is a C++ framework for robotics, developed as part of the
+ * [Brains on Board](http://brainsonboard.co.uk) project (funded by the EPSRC;
+ * grant code: [EP/P006094/1](http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/P006094/1)).
+ *
+ * It provides simple interfaces for a range of hardware devices used on the
+ * project, as well as software tools relevant for our research interests, which
+ * include bio-inspired robotics, computational neuroscience and vision-based
+ * navigation.
+ */ 
