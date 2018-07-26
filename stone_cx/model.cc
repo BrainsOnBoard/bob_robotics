@@ -7,6 +7,7 @@
 #include "parameters.h"
 
 using namespace BoBRobotics;
+using namespace BoBRobotics::StoneCX;
 
 //---------------------------------------------------------------------------
 // Continuous

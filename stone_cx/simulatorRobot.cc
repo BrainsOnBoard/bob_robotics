@@ -22,6 +22,7 @@
 #include "simulatorCommon.h"
 
 using namespace BoBRobotics;
+using namespace BoBRobotics::StoneCX;
 using namespace BoBRobotics::HID;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Robots;

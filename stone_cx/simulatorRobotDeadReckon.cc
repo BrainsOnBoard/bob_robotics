@@ -24,6 +24,7 @@
 #include "visualizationCommon.h"
 
 using namespace BoBRobotics;
+using namespace BoBRobotics::StoneCX;
 using namespace BoBRobotics::HID;
 
 //---------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 #pragma once
 
+namespace BoBRobotics {
+namespace StoneCX {
 //------------------------------------------------------------------------
 // Parameters
 //------------------------------------------------------------------------
@@ -24,4 +26,6 @@ namespace Parameters
         HemisphereRight,
         HemisphereMax,
     };  
+}
+}
 }
