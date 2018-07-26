@@ -24,9 +24,6 @@ namespace Video {
 class NetSource : public Input
 {
 public:
-    NetSource()
-    {}
-
     NetSource(Net::Node &node)
     {
         // handle incoming IMG commands
