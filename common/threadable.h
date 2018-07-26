@@ -1,16 +1,21 @@
-/*
- * A simple abstract class representing a common interface for running processes
- * either in the foreground or background (e.g. displaying camera, handling
- * joystick etc.).
- */
-
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <memory>
 #include <thread>
 
 namespace BoBRobotics {
+//----------------------------------------------------------------------------
+// BoBRobotics::Threadable
+//----------------------------------------------------------------------------
+/*!
+ * \brief An abstract class allowing methods to run on the current thread or a
+ *        backround thread
+ *
+ * A simple abstract class representing a common interface for running processes
+ * either in the foreground or background (e.g. displaying camera, handling
+ * joystick etc.).
+ */
 class Threadable
 {
 public:

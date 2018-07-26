@@ -7,13 +7,11 @@
 #include "../third_party/units.h"
 
 namespace BoBRobotics {
-// A generic template for unit arrays
+//! A generic template for unit arrays
 template<class T>
 using Vector3 = std::array<T, 3>;
 
-/*
- * Returns a triple of unit-type objects.
- */
+//! Returns a triple of unit-type objects.
 template<class OutputUnit, class ArrayType>
 inline constexpr Vector3<OutputUnit>
 makeUnitArray(const ArrayType &values)

@@ -23,14 +23,14 @@
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
-// I2CInterface
+// BoBRobotics::I2CInterface
 //----------------------------------------------------------------------------
+//! Class for communicating over I2C
 class I2CInterface
 {
 public:
     I2CInterface() : m_I2C(0)
-    {
-    }
+    {}
 
     I2CInterface(const char *path, int slaveAddress) : m_I2C(0)
     {

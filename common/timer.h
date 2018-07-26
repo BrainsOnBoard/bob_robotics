@@ -7,8 +7,9 @@
 
 namespace BoBRobotics {
 //------------------------------------------------------------------------
-// Timer
+// BoBRobotics::Timer
 //------------------------------------------------------------------------
+//! A generic timer which can give the current elapsed time
 template<typename A = std::milli>
 class Timer
 {
@@ -40,6 +41,10 @@ private:
     std::string m_Title;
 };
 
+//------------------------------------------------------------------------
+// BoBRobotics::TimerAccumulate
+//------------------------------------------------------------------------
+//! A timer which adds its elapsed time to an accumulator variable on destruction
 template<typename A = std::milli>
 class TimerAccumulate
 {

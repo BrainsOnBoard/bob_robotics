@@ -13,8 +13,9 @@
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
-// LM9DS1
+// BoBRobotics::LM9DS1
 //----------------------------------------------------------------------------
+//! Interface for the SparkFun 9DoF IMU
 class LM9DS1
 {
 public:
