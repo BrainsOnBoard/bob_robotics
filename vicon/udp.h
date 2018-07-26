@@ -36,6 +36,7 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::time;
 using namespace units::velocity;
+
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
 //----------------------------------------------------------------------------
@@ -157,9 +158,9 @@ private:
 };
 
 //----------------------------------------------------------------------------
-// Vicon::UDPClient
+// BoBRobotics::Vicon::UDPClient
 //----------------------------------------------------------------------------
-// Receiver for Vicon UDP streams
+//! Receiver for Vicon UDP streams
 template<typename ObjectDataType = ObjectData>
 class UDPClient
 {

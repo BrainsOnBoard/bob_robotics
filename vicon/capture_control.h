@@ -21,12 +21,12 @@
 #endif
 
 namespace BoBRobotics {
-//----------------------------------------------------------------------------
-// Vicon Typedefines
-//----------------------------------------------------------------------------
 namespace Vicon
 {
-// Transmitter for sending capture control packets
+//----------------------------------------------------------------------------
+// BoBRobotics::Vicon::CaptureControl
+//----------------------------------------------------------------------------
+//! Transmitter for sending capture control packets to the Vicon motion-tracking system
 class CaptureControl
 {
 
