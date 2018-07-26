@@ -10,8 +10,8 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
-// Third-party includes
-#include "../third_party/units.h"
+// BoB robotics includes
+#include "../common/pose.h"
 
 // Forward declarations
 namespace cv
@@ -34,8 +34,6 @@ using namespace units::length;
 
 namespace AntWorld
 {
-using Point3 = meter_t[3];
-
 class World
 {
 public:
@@ -52,12 +50,12 @@ public:
 
     void render() const;
 
-    const Point3 &getMinBound()
+    const Vector3<meter_t> &getMinBound()
     {
         return m_MinBoundM;
     }
 
-    const Point3 &getMaxBound()
+    const Vector3<meter_t> &getMaxBound()
     {
         return m_MaxBoundM;
     }
@@ -139,8 +137,8 @@ private:
     // World bounds
     GLfloat m_MinBound[3];
     GLfloat m_MaxBound[3];
-    Point3 m_MinBoundM;
-    Point3 m_MaxBoundM;
+    Vector3<meter_t> m_MinBoundM;
+    Vector3<meter_t> m_MaxBoundM;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
