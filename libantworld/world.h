@@ -24,9 +24,6 @@ namespace filesystem
     class path;
 }
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::World
-//----------------------------------------------------------------------------
 namespace BoBRobotics
 {
 using namespace units::literals;
@@ -34,6 +31,10 @@ using namespace units::length;
 
 namespace AntWorld
 {
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::World
+//----------------------------------------------------------------------------
+//! Provides a means for loading a world stored on disk into OpenGL
 class World
 {
 public:

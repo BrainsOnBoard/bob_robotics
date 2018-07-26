@@ -20,6 +20,10 @@ using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
 
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::AntAgent
+//----------------------------------------------------------------------------
+//! A simple agent with a position and a panoramic view of the current AntWorld
 class AntAgent
   : public Video::OpenGL
 {

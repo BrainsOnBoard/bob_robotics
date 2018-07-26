@@ -11,16 +11,17 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RouteContinuous
-//----------------------------------------------------------------------------
-// Class for reading ant routes exported by Matlab and rendering them in ant world
 namespace BoBRobotics
 {
 namespace AntWorld
 {
 using namespace units::angle;
 using namespace units::length;
+
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RouteContinuous
+//----------------------------------------------------------------------------
+//! Class for reading ant routes exported by Matlab and rendering them in ant world
 class RouteContinuous
 {
 public:

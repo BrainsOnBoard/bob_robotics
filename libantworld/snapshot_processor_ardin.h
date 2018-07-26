@@ -3,14 +3,14 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::SnapshotProcessor
-//----------------------------------------------------------------------------
-// OpenCV-based snapshot processor - uses OpenCV  on CPU to process snapshots
 namespace BoBRobotics
 {
 namespace AntWorld
 {
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::SnapshotProcessor
+//----------------------------------------------------------------------------
+//! OpenCV-based snapshot processor - uses OpenCV on CPU to process snapshots
 class SnapshotProcessorArdin
 {
 public:

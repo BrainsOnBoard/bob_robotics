@@ -13,17 +13,21 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RouteArdin
-//----------------------------------------------------------------------------
-// Class for reading ant routes exported by Matlab, performing 'straightening'
-// Process from original matlab code and rendering them in ant world
 namespace BoBRobotics
 {
 namespace AntWorld
 {
 using namespace units::angle;
 using namespace units::length;
+
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RouteArdin
+//----------------------------------------------------------------------------
+/*!
+ * \brief Class for reading ant routes exported by Matlab, performing 'straightening'
+ *
+ * Processed from original Matlab code and rendering them in ant world
+ */
 class RouteArdin
 {
 public:

@@ -13,11 +13,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-
-//----------------------------------------------------------------------------
-// Renderer
-//----------------------------------------------------------------------------
-// Helper class which combines a world with a rendermesh to allow ant views of world to be rendered to screen
 namespace BoBRobotics
 {
 namespace AntWorld
@@ -25,6 +20,11 @@ namespace AntWorld
 using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
+
+//----------------------------------------------------------------------------
+// Renderer
+//----------------------------------------------------------------------------
+//! Helper class which combines a world with a rendermesh to allow ant views of world to be rendered to screen
 class Renderer
 {
 public:

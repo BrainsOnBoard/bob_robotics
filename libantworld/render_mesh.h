@@ -7,14 +7,14 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RenderMesh
-//----------------------------------------------------------------------------
-// Class for generating piece of curved geometry used for rendering cubemap to screen
 namespace BoBRobotics
 {
 namespace AntWorld
 {
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RenderMesh
+//----------------------------------------------------------------------------
+//! Class for generating piece of curved geometry used for rendering cubemap to screen
 class RenderMesh
 {
 public:
