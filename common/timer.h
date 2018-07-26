@@ -14,10 +14,11 @@ template<typename A = std::milli>
 class Timer
 {
 public:
+    //! Create a new Timer with the specified name
     Timer(const std::string &title) : m_Start(std::chrono::high_resolution_clock::now()), m_Title(title)
-    {
-    }
+    {}
 
+    //! Stop the timer and print current elapsed time to terminal
     ~Timer()
     {
         std::cout << m_Title << get() << std::endl;
@@ -26,6 +27,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    //! Get the elapsed time since this object was created
     double get() const
     {
         auto now = std::chrono::high_resolution_clock::now();
@@ -50,8 +52,7 @@ class TimerAccumulate
 {
 public:
     TimerAccumulate(double &accumulator) : m_Start(std::chrono::high_resolution_clock::now()), m_Accumulator(accumulator)
-    {
-    }
+    {}
 
     ~TimerAccumulate()
     {
@@ -61,6 +62,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    //! Get the elapsed time since this object was created
     double get() const
     {
         auto now = std::chrono::high_resolution_clock::now();

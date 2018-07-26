@@ -19,19 +19,23 @@ namespace BoBRobotics {
 class Threadable
 {
 public:
+    //! Stop the background thread (if needed)
     virtual ~Threadable()
     {
         stop();
     }
 
+    //! Run on the current thread, blocking until process ends
     virtual void run() = 0;
 
+    //! Run the process on a background thread
     virtual void runInBackground()
     {
         m_Thread = std::thread([this] { run(); });
         m_ThreadRunning = true;
     }
 
+    //! Stop the background thread
     virtual void stop()
     {
         m_DoRun = false;
