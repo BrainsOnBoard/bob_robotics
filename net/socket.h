@@ -31,20 +31,20 @@ namespace Net {
 using Command = std::vector<std::string>;
 
 //! An exception thrown if an error signal is given by a Socket
-class socket_error : public std::runtime_error
+class SocketError : public std::runtime_error
 {
 public:
-    socket_error(std::string msg)
+    SocketError(std::string msg)
       : std::runtime_error("Socket error: " + msg)
     {}
 };
 
 //! An exception thrown if a command received over the network is badly formed
-class bad_command_error : public socket_error
+class BadCommandError : public SocketError
 {
 public:
-    bad_command_error()
-      : socket_error("Bad command received")
+    BadCommandError()
+      : SocketError("Bad command received")
     {}
 };
 
@@ -182,7 +182,7 @@ public:
 
         int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
         if (ret == -1) {
-            throw socket_error("Could not send " + errorMessage());
+            throw SocketError("Could not send " + errorMessage());
         }
     }
 
@@ -231,7 +231,7 @@ private:
     void checkSocket()
     {
         if (m_Socket == INVALID_SOCKET) {
-            throw socket_error("Bad socket " + errorMessage());
+            throw SocketError("Bad socket " + errorMessage());
         }
     }
 
@@ -242,7 +242,7 @@ private:
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
-            throw socket_error("Could not read from socket " + errorMessage());
+            throw SocketError("Could not read from socket " + errorMessage());
         }
 
         return static_cast<size_t>(len);

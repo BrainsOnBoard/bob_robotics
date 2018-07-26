@@ -90,7 +90,7 @@ protected:
         if (tryRunHandler(command)) {
             return true;
         } else {
-            throw bad_command_error();
+            throw BadCommandError();
         }
     }
 

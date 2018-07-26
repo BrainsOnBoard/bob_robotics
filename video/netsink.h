@@ -102,7 +102,7 @@ private:
     void onCommandReceived(const Net::Command &command)
     {
         if (command[1] != "START") {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
 
         // ACK the command and tell client the camera resolution

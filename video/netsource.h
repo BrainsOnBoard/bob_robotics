@@ -98,7 +98,7 @@ private:
                 m_NewFrame = true;
             }
         } else {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
     }
 }; // NetSource

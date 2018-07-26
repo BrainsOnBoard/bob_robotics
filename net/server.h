@@ -111,7 +111,7 @@ public:
 
             try {
                 Node::run();
-            } catch (socket_error &e) {
+            } catch (SocketError &e) {
                 std::cout << "Connection closed [" + std::string(e.what()) + "]"
                           << std::endl;
             }

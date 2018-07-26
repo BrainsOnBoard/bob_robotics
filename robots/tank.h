@@ -88,7 +88,7 @@ private:
     {
         // second space separates left and right parameters
         if (command.size() != 3) {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
 
         // parse strings to floats
