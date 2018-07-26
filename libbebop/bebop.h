@@ -188,9 +188,14 @@ public:
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
 
-    // defaults
+    /* Default speed limits */
+    //! Default maximum tilt for pitch and roll.
     static constexpr auto DefaultMaximumTilt = 8_deg;
+
+    //! Default maximum yaw speed.
     static constexpr auto DefaultMaximumYawSpeed = 100_deg_per_s;
+
+    //! Default maximum vertical speed.
     static constexpr auto DefaultMaximumVerticalSpeed = 1_mps;
 
 private:
