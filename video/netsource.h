@@ -30,12 +30,12 @@ public:
     NetSource(Net::Node &node)
     {
         // handle incoming IMG commands
-        node.addCommandHandler("IMG", [this](Net::Node &node, const Net::Command &command) {
+        node.addCommandHandler("IMG", [this](auto &node, auto &command) {
             onCommandReceived(node, command);
         });
 
         // when connected, send command to start streaming
-        node.addConnectedHandler([](Net::Node &node) {
+        node.addConnectedHandler([](auto &node) {
             node.getSocket()->send("IMG START\n");
         });
     }
