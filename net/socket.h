@@ -5,11 +5,11 @@
 
 #pragma once
 
-// C includes
+// Standard C includes
 #include <cerrno>
 #include <cstring>
 
-// C++ includes
+// Standard C++ includes
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -28,6 +28,7 @@ namespace BoBRobotics {
 namespace Net {
 using Command = std::vector<std::string>;
 
+//! An exception thrown if an error signal is given by a Socket
 class socket_error : public std::runtime_error
 {
 public:
@@ -36,6 +37,7 @@ public:
     {}
 };
 
+//! An exception thrown if a command received over the network is badly formed
 class bad_command_error : public socket_error
 {
 public:
@@ -44,6 +46,20 @@ public:
     {}
 };
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Net::Server
+//----------------------------------------------------------------------------
+/*!
+ * \brief A class for operating on sockets in a platform-independent way
+ * 
+ * In Windows, this class represents an underlying SOCKET pointer and in *nix,
+ * it represents a socket's file handle. This class provides convenience methods
+ * for sending and receiving data from the socket.
+ * 
+ * A typical (plaintext) command sent over a socket looks like this:
+ *     TNK 0.5 0.5
+ * where the first word indicates the command name and the other words are parameters.
+ */
 class Socket
 {
 public:

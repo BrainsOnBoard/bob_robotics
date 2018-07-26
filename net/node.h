@@ -1,10 +1,6 @@
-/*
- * An abstract class inherited by Server and Client classes.
- */
-
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <atomic>
 #include <functional>
 #include <map>
@@ -15,7 +11,7 @@
 // BoB robotics includes
 #include "../common/threadable.h"
 
-// local includes
+// Local includes
 #include "socket.h"
 
 namespace BoBRobotics {
@@ -25,6 +21,10 @@ class Node; // forward declaration
 using CommandHandler = std::function<void(Node &, const Command &)>;
 using ConnectedHandler = std::function<void(Node &)>;
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Net::Node
+//----------------------------------------------------------------------------
+//! An abstract class representing a network connection, inherited by Server and Client classes
 class Node : public Threadable
 {
 public:

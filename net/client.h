@@ -1,12 +1,6 @@
-/*
- * General-purpose TCP client, to be used with corresponding Net::Server object.
- * Various sink/source-type objects are used for either sending or receiving
- * data from the server.
- */
-
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <limits>
 #include <string>
 #include <vector>
@@ -14,12 +8,21 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// local includes
+// Local includes
 #include "node.h"
 #include "socket.h"
 
 namespace BoBRobotics {
 namespace Net {
+//----------------------------------------------------------------------------
+// BoBRobotics::Net::Client
+//----------------------------------------------------------------------------
+/*!
+ * \brief General-purpose TCP client
+ * 
+ * To be used with corresponding Server object. Various sink/source-type
+ * objects are used for either sending or receiving data from the server.
+ */
 class Client
   : public Node
   , Socket

@@ -18,6 +18,15 @@
 
 namespace BoBRobotics {
 namespace Net {
+//----------------------------------------------------------------------------
+// BoBRobotics::Net::Server
+//----------------------------------------------------------------------------
+/*!
+ * \brief A general-purpose TCP server
+ * 
+ * To be used with corresponding Client object. Various sink/source-type
+ * objects are used for either sending or receiving data to the client.
+ */
 class Server : public Node
 {
 public:
@@ -33,9 +42,6 @@ private:
     std::unique_ptr<Socket> m_Socket;
 };
 
-/*
- * Create a server to send motor commands
- */
 Server::Server(int port)
 {
     struct sockaddr_in addr;
