@@ -99,7 +99,7 @@ public:
      */
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
     {
-        // If reading (colour frame) was succesful
+        // If reading (colour frame) was successful
         if(readFrame(m_IntermediateFrame)) {
             // If output frame isn't correct size, create it
             if(outFrame.size() != m_IntermediateFrame.size()) {
