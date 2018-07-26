@@ -31,7 +31,7 @@ using Joystick = JoystickWindows;
 /*
  * Controller axes, including thumbsticks, triggers and D-pad.
  */
-enum class JAxis
+enum class JAxisWindows
 {
     LeftStickHorizontal = 0,
     LeftStickVertical = 1,
@@ -43,12 +43,13 @@ enum class JAxis
     DpadVertical = 7,
     LENGTH
 };
+using JAxis = JAxisWindows;
 
 /*
  * Controller buttons. The left stick and right stick are also buttons (you can
  * click them.)
  */
-enum class JButton
+enum class JButtonWindows
 {
     Start = 4,
     Back,
@@ -62,13 +63,15 @@ enum class JButton
     Y,
     LENGTH
 };
+using JButton = JButtonWindows;
 
 /*!
- * \brief Class for reading from joystick on Windows.
+ * \brief Class for reading from joysticks on Windows.
  * 
  * *NOTE*: This class should not be used directly; see example in joystick_test.
  */
-class JoystickWindows : public JoystickBase<JoystickWindows, JAxis, JButton>
+class JoystickWindows
+  : public JoystickBase<JoystickWindows, JAxisWindows, JButtonWindows>
 {
 public:
     JoystickWindows(float deadZone = 0.0f)

@@ -33,7 +33,7 @@ using Joystick = JoystickLinux;
 /*
  * Controller axes, including thumbsticks, triggers and D-pad.
  */
-enum class JAxis
+enum class JAxisLinux
 {
     LeftStickHorizontal = 0,
     LeftStickVertical = 1,
@@ -45,12 +45,13 @@ enum class JAxis
     DpadVertical = 7,
     LENGTH
 };
+using JAxis = JAxisLinux;
 
 /*
  * Controller buttons. The left stick and right stick are also buttons (you can
  * click them.)
  */
-enum class JButton
+enum class JButtonLinux
 {
     A = 0,
     B = 1,
@@ -65,13 +66,15 @@ enum class JButton
     RightStick = 10,
     LENGTH
 };
+using JButton = JButtonLinux;
 
 /*!
- * \brief Class for reading from joystick on Linux.
+ * \brief Class for reading from joysticks on Linux.
  * 
  * *NOTE*: This class should not be used directly; see example in joystick_test.
  */
-class JoystickLinux : public JoystickBase<JoystickLinux, JAxis, JButton>
+class JoystickLinux
+  : public JoystickBase<JoystickLinux, JAxisLinux, JButtonLinux>
 {
 public:
     JoystickLinux(float deadZone = 0.0f)
