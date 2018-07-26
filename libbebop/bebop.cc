@@ -36,7 +36,9 @@ checkError(eARDISCOVERY_ERROR err)
 namespace BoBRobotics {
 namespace Robots {
 
-// We also have to give definitions for these variables, because c++ is weird
+/** BEGIN PUBLIC MEMBERS **/
+
+// We also have to give declarations for these variables, because c++ is weird
 constexpr degree_t Bebop::DefaultMaximumTilt;
 constexpr degrees_per_second_t Bebop::DefaultMaximumYawSpeed;
 constexpr meters_per_second_t Bebop::DefaultMaximumVerticalSpeed;
@@ -77,53 +79,6 @@ Bebop::~Bebop()
     land();
     stopStreaming();
     disconnect();
-}
-
-/*
- * Try to make connection to drone.
- */
-void
-Bebop::connect()
-{
-    // send start signal
-    checkError(ARCONTROLLER_Device_Start(m_Device.get()));
-
-    // wait for start
-    eARCONTROLLER_DEVICE_STATE state;
-    do {
-        state = getStateUpdate();
-    } while (state == ARCONTROLLER_DEVICE_STATE_STARTING);
-
-    if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
-        throw std::runtime_error("Could not connect to drone");
-    }
-
-    // set speed limits
-    setMaximumYawSpeed(m_YawSpeedLimits.m_UserMaximum);
-    setMaximumVerticalSpeed(m_VerticalSpeedLimits.m_UserMaximum);
-    setMaximumTilt(m_TiltLimits.m_UserMaximum);
-}
-
-/*
- * Try to disconnect from drone.
- */
-void
-Bebop::disconnect()
-{
-    if (m_Device) {
-        // send stop signal
-        checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
-
-        // wait for stop
-        eARCONTROLLER_DEVICE_STATE state;
-        do {
-            state = getStateUpdate();
-        } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
-
-        if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
-            std::cerr << "Warning: Could not disconnect from drone" << std::endl;
-        }
-    }
 }
 
 /*!
@@ -237,24 +192,6 @@ Bebop::getYawSpeedLimits()
     return m_YawSpeedLimits.getLimits();
 }
 
-inline void
-Bebop::setMaximumTilt(degree_t newValue)
-{
-    DRONE_COMMAND(sendPilotingSettingsMaxTilt, newValue.value());
-}
-
-inline void
-Bebop::setMaximumVerticalSpeed(meters_per_second_t newValue)
-{
-    DRONE_COMMAND(sendSpeedSettingsMaxVerticalSpeed, newValue.value());
-}
-
-inline void
-Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
-{
-    DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
-}
-
 /*!
  * \brief Set drone's pitch, for moving forwards and backwards.
  */
@@ -297,24 +234,6 @@ Bebop::setYawSpeed(float right)
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
-/*
- * \brief Send the command to start video streaming.
- */
-void
-Bebop::startStreaming()
-{
-    DRONE_COMMAND(sendMediaStreamingVideoEnable, 1);
-}
-
-/*
- * Send the command to stop video streaming.
- */
-void
-Bebop::stopStreaming()
-{
-    DRONE_COMMAND(sendMediaStreamingVideoEnable, 0);
-}
-
 /*!
  * \brief Stop the drone from moving along all axes.
  */
@@ -345,27 +264,54 @@ Bebop::setFlightEventHandler(FlightEventHandler handler)
     m_FlightEventHandler = handler;
 }
 
+/** END PUBLIC MEMBERS **/
+/** BEGIN PRIVATE MEMBERS **/
+
 /*
- * Wait for the drone to send a state-update command and return the new
- * state.
+ * Try to make connection to drone.
  */
-inline eARCONTROLLER_DEVICE_STATE
-Bebop::getStateUpdate()
+void
+Bebop::connect()
 {
-    m_Semaphore.wait();
-    return getState();
+    // send start signal
+    checkError(ARCONTROLLER_Device_Start(m_Device.get()));
+
+    // wait for start
+    eARCONTROLLER_DEVICE_STATE state;
+    do {
+        state = getStateUpdate();
+    } while (state == ARCONTROLLER_DEVICE_STATE_STARTING);
+
+    if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
+        throw std::runtime_error("Could not connect to drone");
+    }
+
+    // set speed limits
+    setMaximumYawSpeed(m_YawSpeedLimits.m_UserMaximum);
+    setMaximumVerticalSpeed(m_VerticalSpeedLimits.m_UserMaximum);
+    setMaximumTilt(m_TiltLimits.m_UserMaximum);
 }
 
 /*
- * Return the drone's connection state.
+ * Try to disconnect from drone.
  */
-inline eARCONTROLLER_DEVICE_STATE
-Bebop::getState()
+void
+Bebop::disconnect()
 {
-    auto err = ARCONTROLLER_OK;
-    const auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
-    checkError(err);
-    return state;
+    if (m_Device) {
+        // send stop signal
+        checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
+
+        // wait for stop
+        eARCONTROLLER_DEVICE_STATE state;
+        do {
+            state = getStateUpdate();
+        } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
+
+        if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
+            std::cerr << "Warning: Could not disconnect from drone" << std::endl;
+        }
+    }
 }
 
 /*
@@ -409,6 +355,65 @@ Bebop::addEventHandlers()
             m_Device.get(), stateChanged, this));
     checkError(ARCONTROLLER_Device_AddCommandReceivedCallback(
             m_Device.get(), commandReceived, this));
+}
+
+inline void
+Bebop::setMaximumTilt(degree_t newValue)
+{
+    DRONE_COMMAND(sendPilotingSettingsMaxTilt, newValue.value());
+}
+
+inline void
+Bebop::setMaximumVerticalSpeed(meters_per_second_t newValue)
+{
+    DRONE_COMMAND(sendSpeedSettingsMaxVerticalSpeed, newValue.value());
+}
+
+inline void
+Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
+{
+    DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
+}
+
+/*
+ * Send the command to start video streaming.
+ */
+void
+Bebop::startStreaming()
+{
+    DRONE_COMMAND(sendMediaStreamingVideoEnable, 1);
+}
+
+/*
+ * Send the command to stop video streaming.
+ */
+void
+Bebop::stopStreaming()
+{
+    DRONE_COMMAND(sendMediaStreamingVideoEnable, 0);
+}
+
+/*
+ * Wait for the drone to send a state-update command and return the new
+ * state.
+ */
+inline eARCONTROLLER_DEVICE_STATE
+Bebop::getStateUpdate()
+{
+    m_Semaphore.wait();
+    return getState();
+}
+
+/*
+ * Return the drone's connection state.
+ */
+inline eARCONTROLLER_DEVICE_STATE
+Bebop::getState()
+{
+    auto err = ARCONTROLLER_OK;
+    const auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
+    checkError(err);
+    return state;
 }
 
 /*
@@ -571,5 +576,7 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
         return false;
     }
 }
+
+/** END PRIVATE MEMBERS **/
 } // Robots
 } // GeNNRobotics
