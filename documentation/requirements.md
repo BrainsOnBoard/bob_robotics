@@ -7,7 +7,7 @@ On Linux, the earliest supported version of gcc is 4.9. For Windows, Visual Stud
 ## Environment variables
 The ``BOB_ROBOTICS_PATH`` environment variable is used to help programs built with BoB robotics modules to find where this repository is on your machine. (Currently this is only needed so that the panoramic unwrapping code can find [the unwrapping parameters for different types of camera](../imgproc/unwrapparams).)
 
-On Linux and Mac, you can have this variable automatically set by adding it to your .bashrc file as follows:
+On Linux and Mac, you can have this variable automatically set by adding it to your .profile file as follows:
 ```sh
 echo export BOB_ROBOTICS_PATH=/path/to/bob_robotics >> $HOME/.profile
 ```
@@ -69,7 +69,7 @@ repo sync
 # build SDK
 ./build.sh -p arsdk-native -t build-sdk -j
 
-# add ARSDK_ROOT environment variable to your .bashrc
-echo export ARSDK_ROOT=$PWD >> ~/.bashrc
-source ~/.bashrc
+# add ARSDK_ROOT environment variable to your .profile
+echo export ARSDK_ROOT=$PWD >> ~/.profile
+source ~/.profile
 ```
