@@ -16,6 +16,7 @@
 
 namespace BoBRobotics {
 namespace HID {
+
 // helper macros
 #define toIndex(value) static_cast<size_t>(value)
 #define toAxis(value) static_cast<JAxis>(value)
@@ -32,6 +33,15 @@ enum ButtonState
     StateReleased = (1 << 2)
 };
 
+/*!
+ * \brief Generic joystick class from which JoystickLinux and JoystickWindows
+ *        classes inherit.
+ * 
+ * The class provides the basic, platform-independent functionality required
+ * by JoystickLinux and JoystickWindows.
+ * 
+ * *NOTE*: This class should not be used directly; see example in joystick_test.
+ */
 template<typename Joystick, typename JAxis, typename JButton>
 class JoystickBase : public Threadable
 {

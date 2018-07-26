@@ -66,6 +66,11 @@ enum class JButton
     LENGTH
 };
 
+/*!
+ * \brief Class for reading from joystick on Linux.
+ * 
+ * *NOTE*: This class should not be used directly; see example in joystick_test.
+ */
 class JoystickLinux : public JoystickBase<JoystickLinux, JAxis, JButton>
 {
 public:

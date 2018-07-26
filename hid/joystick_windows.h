@@ -63,6 +63,11 @@ enum class JButton
     LENGTH
 };
 
+/*!
+ * \brief Class for reading from joystick on Windows.
+ * 
+ * *NOTE*: This class should not be used directly; see example in joystick_test.
+ */
 class JoystickWindows : public JoystickBase<JoystickWindows, JAxis, JButton>
 {
 public:
