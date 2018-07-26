@@ -80,8 +80,11 @@ using namespace units::velocity;
 
 namespace BoBRobotics {
 namespace Robots {
+
+//! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
+//! Represents maximum and minimum values for drone speed settings
 template<class T>
 using Limits = std::tuple<T, T>;
 
@@ -102,7 +105,7 @@ checkError(eARCONTROLLER_ERROR err)
 // BoBRobotics::Robots::Bebop
 //------------------------------------------------------------------------------
 /*!
- * \brief Main class for interfacing with drone.
+ * \brief An interface to Parrot Bebop 2 drones
  * 
  * This class handles connection/disconnection and sending steering commands.
  * It also provides an interface to access the drone's video stream.
@@ -113,6 +116,7 @@ class Bebop
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
 public:
+    //! Interface to the drone's built-in camera
     class VideoStream : public Video::Input
     {
     public:
@@ -188,7 +192,6 @@ public:
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
 
-    /* Default speed limits */
     //! Default maximum tilt for pitch and roll.
     static constexpr auto DefaultMaximumTilt = 8_deg;
 
