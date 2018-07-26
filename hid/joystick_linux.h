@@ -183,7 +183,7 @@ private:
                                          std::strerror(errno) + ")");
             }
             // ignore D-pad button events; handled as axis events
-        } while (m_JsEvent.type & JS_EVENT_BUTTON && m_JsEvent.number > 10);
+        } while (bytes > 0 && (m_JsEvent.type & JS_EVENT_BUTTON) && m_JsEvent.number > 10);
 
         return bytes > 0;
     }
