@@ -76,13 +76,13 @@ public:
     template <class LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition()
     {
-        return makeUnitArray<LengthUnit>(m_Position);
+        return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
     Vector3<AngleUnit> getAttitude()
     {
-        return makeUnitArray<AngleUnit>(m_Attitude);
+        return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
 private:
@@ -146,7 +146,7 @@ public:
     template <class VelocityUnit = meters_per_second_t>
     Vector3<VelocityUnit> getVelocity() const
     {
-        return makeUnitArray<VelocityUnit>(m_Velocity);
+        return convertUnitArray<VelocityUnit>(m_Velocity);
     }
 
 private:

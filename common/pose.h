@@ -11,10 +11,10 @@ namespace BoBRobotics {
 template<class T>
 using Vector3 = std::array<T, 3>;
 
-//! Returns a triple of unit-type objects.
+//! Converts the input array to a unit-type of OutputUnit
 template<class OutputUnit, class ArrayType>
 inline constexpr Vector3<OutputUnit>
-makeUnitArray(const ArrayType &values)
+convertUnitArray(const ArrayType &values)
 {
     return { static_cast<OutputUnit>(values[0]),
              static_cast<OutputUnit>(values[1]),

@@ -33,13 +33,13 @@ public:
     template<class LengthUnit = meter_t>
     Vector3<LengthUnit> getPosition() const
     {
-        return makeUnitArray<LengthUnit>(m_Position);
+        return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template<class AngleUnit = degree_t>
     Vector3<AngleUnit> getAttitude() const
     {
-        return makeUnitArray<AngleUnit>(m_Attitude);
+        return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
     void setPosition(meter_t x, meter_t y, meter_t z)
