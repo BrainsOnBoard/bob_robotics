@@ -6,7 +6,7 @@
 
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "robots/bebop.h"
+#include "libbebop/bebop.h"
 #include "video/display.h"
 
 using namespace BoBRobotics;
