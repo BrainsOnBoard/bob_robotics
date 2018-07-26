@@ -22,15 +22,12 @@ namespace BoBRobotics {
 namespace HID {
 using namespace std::literals;
 
-/*
- * Alias Joystick to JoystickWindows, for writing platform-independent code.
- */
 class JoystickWindows;
+
+//! Joystick is set to JoystickLinux on Linux and JoystickWindows on Windows
 using Joystick = JoystickWindows;
 
-/*
- * Controller axes, including thumbsticks, triggers and D-pad.
- */
+//! Controller axes, including thumbsticks, triggers and D-pad (Windows)
 enum class JAxisWindows
 {
     LeftStickHorizontal = 0,
@@ -43,11 +40,14 @@ enum class JAxisWindows
     DpadVertical = 7,
     LENGTH
 };
+
+//! JAxis is set to JAxisLinux on Linux and JAxisWindows on Windows
 using JAxis = JAxisWindows;
 
-/*
- * Controller buttons. The left stick and right stick are also buttons (you can
- * click them.)
+/*!
+ * \brief Controller buttons (Windows)
+ * 
+ * The left stick and right stick are also buttons (you can click them).
  */
 enum class JButtonWindows
 {
@@ -63,6 +63,8 @@ enum class JButtonWindows
     Y,
     LENGTH
 };
+
+//! JButton is set to JButtonLinux on Linux and JButtonWindows on Windows
 using JButton = JButtonWindows;
 
 /*!
@@ -74,6 +76,7 @@ class JoystickWindows
   : public JoystickBase<JoystickWindows, JAxisWindows, JButtonWindows>
 {
 public:
+    //! Open default joystick device with (optionally) specified dead zone
     JoystickWindows(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
@@ -89,6 +92,7 @@ public:
         updateAxes(m_State, true);
     }
 
+    //! Block and keep updating the joystick on the current thread
     virtual void run() override
     {
         while (m_DoRun) {
@@ -139,6 +143,7 @@ public:
         return true;
     }
 
+    //! Convert a raw 16-bit int value for an axis to a float
     static constexpr float axisToFloat(JAxis axis, int16_t value) const override
     {
         switch (axis) {

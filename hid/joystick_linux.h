@@ -24,15 +24,12 @@ namespace BoBRobotics {
 namespace HID {
 using namespace std::literals;
 
-/*
- * Alias Joystick to JoystickLinux, for writing platform-independent code.
- */
 class JoystickLinux;
+
+//! Joystick is set to JoystickLinux on Linux and JoystickWindows on Windows
 using Joystick = JoystickLinux;
 
-/*
- * Controller axes, including thumbsticks, triggers and D-pad.
- */
+//! Controller axes, including thumbsticks, triggers and D-pad (Linux)
 enum class JAxisLinux
 {
     LeftStickHorizontal = 0,
@@ -45,11 +42,14 @@ enum class JAxisLinux
     DpadVertical = 7,
     LENGTH
 };
+
+//! JAxis is set to JAxisLinux on Linux and JAxisWindows on Windows
 using JAxis = JAxisLinux;
 
-/*
- * Controller buttons. The left stick and right stick are also buttons (you can
- * click them.)
+/*!
+ * \brief Controller buttons (Linux)
+ * 
+ * The left stick and right stick are also buttons (you can click them).
  */
 enum class JButtonLinux
 {
@@ -66,6 +66,8 @@ enum class JButtonLinux
     RightStick = 10,
     LENGTH
 };
+
+//! JButton is set to JButtonLinux on Linux and JButtonWindows on Windows
 using JButton = JButtonLinux;
 
 /*!
@@ -77,6 +79,7 @@ class JoystickLinux
   : public JoystickBase<JoystickLinux, JAxisLinux, JButtonLinux>
 {
 public:
+    //! Open default joystick device with (optionally) specified dead zone
     JoystickLinux(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
@@ -97,14 +100,13 @@ public:
         }
     }
 
-    /*
-     * Close connection to controller.
-     */
+    //! Close connection to controller
     ~JoystickLinux()
     {
         ::close(m_Fd);
     }
 
+    //! Block and keep updating the joystick on the current thread
     virtual void run() override
     {
         while (m_DoRun) {
@@ -147,6 +149,7 @@ public:
         return true;
     }
 
+    //! Convert a raw 16-bit int value for an axis to a float
     static constexpr float axisToFloat(JAxis axis, int16_t value)
     {
         switch (axis) {

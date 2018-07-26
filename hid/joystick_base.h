@@ -26,16 +26,17 @@ namespace HID {
 #define int16_maxf static_cast<float>(std::numeric_limits<int16_t>::max())
 #define int16_absminf -static_cast<float>(std::numeric_limits<int16_t>::min())
 
+//! The current state of a joystick button
 enum ButtonState
 {
-    StateDown = (1 << 0),
-    StatePressed = (1 << 1),
-    StateReleased = (1 << 2)
+    StateDown = (1 << 0), //!< Whether the button is being pressed down
+    StatePressed = (1 << 1), //!< Whether the button has been pressed since last update()
+    StateReleased = (1 << 2) //!< Whether the button has been released since last update()
 };
 
 /*!
- * \brief Generic joystick class from which JoystickLinux and JoystickWindows
- *        classes inherit.
+ * \brief Generic joystick class for Xbox 360 controller, from which
+ *        JoystickLinux and JoystickWindows classes inherit.
  * 
  * The class provides the basic, platform-independent functionality required
  * by JoystickLinux and JoystickWindows.
@@ -45,7 +46,22 @@ enum ButtonState
 template<typename Joystick, typename JAxis, typename JButton>
 class JoystickBase : public Threadable
 {
+    /*!
+     * \brief A delegate to handle joystick button presses
+     * 
+     * @param button Which button was pressed/released
+     * @param pressed Whether button was pressed/released
+     * @return True if the function has handled the event, false otherwise
+     */
     using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+
+    /*!
+     * \brief A delegate to handle joystick axis events (i.e. moving joysticks)
+     * 
+     * @param axis Which axis was pressed/released
+     * @param value Value from -1.0f to 1.0f representing new position of axis
+     * @return True if the function has handled the event, false otherwise
+     */
     using AxisHandler = std::function<bool(JAxis axis, float value)>;
 
 private:
@@ -55,44 +71,60 @@ private:
     float m_DeadZone;
 
 public:
-    // Virtual methods
+    /*!
+     * \brief Try to read from the joystick
+     * 
+     * @return True if one or more events were read from joystick
+     */
     virtual bool update() = 0;
 
+    //! Add a function to handle joystick axis events
     void addHandler(AxisHandler handler)
     {
         m_AxisHandlers.insert(m_AxisHandlers.begin(), handler);
     }
 
+    //! Add a function to handle joystick button events
     void addHandler(ButtonHandler handler)
     {
         m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
     }
 
+    //! Get the current value for a specified joystick axis
     float getState(JAxis axis) const
     {
         return m_AxisState[toIndex(axis)];
     }
 
+    /*!
+     * \brief Get the current state for a specified joystick button
+     * 
+     * \see ButtonState
+     */
     unsigned char getState(JButton button) const
     {
         return m_ButtonState[toIndex(button)];
     }
 
+    //! Whether button is currently being pressed
     bool isDown(JButton button) const
     {
         return getState(button) & StateDown;
     }
 
+    //! Whether button has been pressed since last update()
     bool isPressed(JButton button) const
     {
         return getState(button) & StatePressed;
     }
 
+    //! Whether button has been released since last update()
     bool isReleased(JButton button) const
     {
         return getState(button) & StateReleased;
     }
 
+    //! Get the name of a specified joystick axis
     static constexpr std::string getName(JAxis axis)
     {
         switch (axis) {
@@ -117,9 +149,9 @@ public:
         }
     }
 
+    //! Get the name of a specified joystick button
     static constexpr std::string getName(JButton button)
     {
-        // these values should be defined before this header is included
         switch (button) {
         case JButton::A:
             return "A";
