@@ -15,12 +15,12 @@
 // local includes
 #include "input.h"
 
+namespace BoBRobotics {
+namespace Video {
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::NetSink
 //----------------------------------------------------------------------------
-// Object for sending video frames synchronously or asynchronously over network
-namespace BoBRobotics {
-namespace Video {
+//! Object for sending video frames synchronously or asynchronously over network
 class NetSink
 {
 public:

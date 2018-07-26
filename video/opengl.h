@@ -9,11 +9,12 @@
 // BoB robotics includes
 #include "input.h"
 
+namespace BoBRobotics {
+namespace Video {
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::OpenGL
 //----------------------------------------------------------------------------
-namespace BoBRobotics {
-namespace Video {
+//! Read a video stream from an OpenGL buffer
 class OpenGL : public Input
 {
 public:

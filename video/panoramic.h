@@ -1,15 +1,15 @@
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-// opencv
+// OpenCV
 #include <opencv2/opencv.hpp>
 
-// local includes
+// Local includes
 #include "input.h"
 #include "opencvinput.h"
 #ifndef _WIN32
@@ -20,6 +20,7 @@
 namespace BoBRobotics {
 namespace Video {
 
+//! Try to find a panoramic camera on the current machine and return it
 inline std::unique_ptr<Input> getPanoramicCamera()
 {
 #ifdef _WIN32

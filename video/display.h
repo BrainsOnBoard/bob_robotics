@@ -1,15 +1,4 @@
-/*
- * This is a simple class for displaying a VideoInput (e.g. a webcam) on screen.
- * An example of its use is given in simpledisplay_test.cc (build with make).
- * The user can quit by pressing escape.
- *
- * You can optionally run the display on a separate thread by invoking the
- * startThread() method.
- *
- * Should be built with OpenCV and -pthread.
- */
-
-// C++ includes
+// Standard C++ includes
 #include <chrono>
 #include <memory>
 #include <stdexcept>
@@ -23,13 +12,27 @@
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../os/keycodes.h"
 
-// local includes
+// Local includes
 #include "input.h"
 
 namespace BoBRobotics {
 namespace Video {
 using namespace std::literals;
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::Display
+//----------------------------------------------------------------------------
+/*!
+ * \brief Display a video source on screen
+ *
+ * This is a simple class for displaying a VideoInput (e.g. a webcam) on screen.
+ * An example of its use is given in examples/display_test.
+ *
+ * You can optionally run the display on a separate thread by invoking the
+ * runInBackground() method.
+ *
+ * Should be built with OpenCV and -pthread.
+ */
 class Display : public Threadable
 {
 #define WINDOW_NAME "OpenCV display"

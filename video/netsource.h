@@ -17,6 +17,10 @@
 
 namespace BoBRobotics {
 namespace Video {
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::NetSource
+//----------------------------------------------------------------------------
+//! Object for receiving video transmitted over the network by a NetSink
 class NetSource : public Input
 {
 public:

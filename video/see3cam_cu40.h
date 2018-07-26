@@ -64,8 +64,9 @@ full of RGB data uint8x16_t out8 = vcombine_u8(outA, outB);
 namespace BoBRobotics {
 namespace Video {
 //------------------------------------------------------------------------
-// See3CAM_CU40
+// BoBRobotics::Video::See3CAM_CU40
 //------------------------------------------------------------------------
+//! Read video from a See3CAM_CU40
 class See3CAM_CU40
   : public Video4LinuxCamera
   , public Input

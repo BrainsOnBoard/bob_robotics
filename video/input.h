@@ -1,6 +1,6 @@
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -19,6 +19,10 @@ namespace BoBRobotics {
 namespace Video {
 #define DefaultCameraName "unknown_camera"
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::Input
+//----------------------------------------------------------------------------
+//! An abstract class representing a video input stream
 class Input
 {
 public:

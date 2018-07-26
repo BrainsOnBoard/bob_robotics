@@ -14,6 +14,10 @@
 
 namespace BoBRobotics {
 namespace Video {
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::OpenCVInput
+//----------------------------------------------------------------------------
+//! A thin wrapper for reading from any video source supported by OpenCV
 class OpenCVInput : public Input
 {
 public:
