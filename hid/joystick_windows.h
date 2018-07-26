@@ -23,6 +23,12 @@ namespace HID {
 using namespace std::literals;
 
 /*
+ * Alias Joystick to JoystickWindows, for writing platform-independent code.
+ */
+class JoystickWindows;
+using Joystick = JoystickWindows;
+
+/*
  * Controller axes, including thumbsticks, triggers and D-pad.
  */
 enum class JAxis
@@ -57,10 +63,10 @@ enum class JButton
     LENGTH
 };
 
-class Joystick : public JoystickBase<JAxis, JButton>
+class JoystickWindows : public JoystickBase<JAxis, JButton>
 {
 public:
-    Joystick(float deadZone = 0.0f)
+    JoystickWindows(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
         // Read XInput state

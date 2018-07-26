@@ -25,6 +25,12 @@ namespace HID {
 using namespace std::literals;
 
 /*
+ * Alias Joystick to JoystickLinux, for writing platform-independent code.
+ */
+class JoystickLinux;
+using Joystick = JoystickLinux;
+
+/*
  * Controller axes, including thumbsticks, triggers and D-pad.
  */
 enum class JAxis
@@ -60,10 +66,10 @@ enum class JButton
     LENGTH
 };
 
-class Joystick : public JoystickBase<JAxis, JButton>
+class JoystickLinux : public JoystickBase<JAxis, JButton>
 {
 public:
-    Joystick(float deadZone = 0.0f)
+    JoystickLinux(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
         // open joystick device
@@ -86,7 +92,7 @@ public:
     /*
      * Close connection to controller.
      */
-    ~Joystick()
+    ~JoystickLinux()
     {
         ::close(m_Fd);
     }
@@ -208,6 +214,6 @@ private:
             updateAxis(axis, value, isInitial);
         }
     }
-}; // Joystick
+}; // JoystickLinux
 } // HID
 } // BoBRobotics
