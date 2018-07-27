@@ -536,4 +536,4 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
     }
 }
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

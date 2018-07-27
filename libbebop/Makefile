@@ -1,7 +1,4 @@
-CXXFLAGS+=-std=c++14 -g -O2 -march=native -Wall -Wpedantic -I.. -MMD -MP
-
-# OpenCV
-CXXFLAGS+=`pkg-config --cflags opencv`
+include ../common/flags.mk
 
 # The current version of the avcodec code uses some deprecated functions, so
 # let's ignore compiler warnings about this. I should probably fix the code up
@@ -21,9 +18,11 @@ DEPS	:= $(SOURCES:.cc=.d)
 
 .PHONY: all clean
 
-all: bebop.a
+TARGET := libbebop.a
 
-bebop.a: $(OBJECTS)
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
 	$(AR) -rcs $@ $(OBJECTS)
 
 -include $(DEPS)
@@ -34,4 +33,4 @@ bebop.a: $(OBJECTS)
 %.d: ;
 
 clean:
-	rm -f $(OBJECTS) $(DEPS) bebop.a
+	rm -f $(OBJECTS) $(DEPS) $(TARGET)

@@ -1,12 +1,12 @@
-CXXFLAGS+=-std=c++14 -march=native -I.. -Wall -Wpedantic -MMD -MP
-LDFLAGS=-g -pthread -lstdc++ -lm ../libbebop/bebop.a
+include ../../common/flags.mk
+CXXFLAGS += -I../..
 
-# OpenCV
-CXXFLAGS+=`pkg-config --cflags opencv`
-LDFLAGS+=`pkg-config --libs opencv`
+# libbebop
+LIBBEBOP_PATH := ../../libbebop
+LINK_FLAGS += -L$(LIBBEBOP_PATH) -lbebop
 
 # various ffmpeg libraries, needed for video decoding
-LDFLAGS+=-lavcodec -lavformat -lavutil -lswscale
+LINK_FLAGS+=-lavcodec -lavformat -lavutil -lswscale
 
 # AR SDK
 # We set the rpath so that compiled programs can find the folder with the ARSDK
@@ -19,7 +19,7 @@ AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include \
 	-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
-LDFLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
+LINK_FLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
 	$(AR_LIB_PATH)/libarcontroller.so $(AR_LIB_PATH)/libarnetworkal.so \
 	$(AR_LIB_PATH)/libarcommands.so $(AR_LIB_PATH)/libmux.so \
 	$(AR_LIB_PATH)/libpomp.so $(AR_LIB_PATH)/libjson-c.so.2 \
@@ -28,21 +28,21 @@ LDFLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
 	$(AR_LIB_PATH)/libsdp.so $(AR_LIB_PATH)/libulog.so \
 	$(AR_LIB_PATH)/libarmedia.so $(AR_LIB_PATH)/libfutils.so
 
-.PHONY: all clean libbebop
+.PHONY: all clean
 
-TARGET := bebop_test
+EXECUTABLE := bebop_test
 
-all: $(TARGET)
+all: $(EXECUTABLE)
 
-$(TARGET): $(TARGET).cc $(TARGET).d libbebop
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(TARGET).cc $(LDFLAGS)
+-include $(EXECUTABLE).d
 
--include $(TARGET).d
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d $(LIBBEBOP_PATH)/libbebop.a
+	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(EXECUTABLE).cc $(LINK_FLAGS)
 
-$(TARGET).d: ;
+$(EXECUTABLE).d: ;
 
-libbebop:
-	$(MAKE) -C ../libbebop
+$(LIBBEBOP_PATH)/libbebop.a:
+	$(MAKE) -C $(LIBBEBOP_PATH)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d

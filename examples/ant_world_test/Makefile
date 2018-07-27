@@ -2,9 +2,9 @@ LIBANTWORLD_PATH := ../../libantworld
 
 include ../../common/flags.mk
 CXXFLAGS += -I../..
-LINK_FLAGS += -L$(LIBANTWORLD_PATH) -lantworld -lglfw -lGL -lGLU -lGLEW
+LINK_FLAGS := -L$(LIBANTWORLD_PATH) -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_FLAGS)
 
-EXECUTABLE = ant_world_test
+EXECUTABLE := ant_world_test
 
 .PHONY: all clean libantworld
 
