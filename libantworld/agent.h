@@ -56,7 +56,7 @@ public:
         m_Attitude[2] = roll;
     }
 
-    bool readFrame(cv::Mat &frame)
+    virtual bool readFrame(cv::Mat &frame) override
     {
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
