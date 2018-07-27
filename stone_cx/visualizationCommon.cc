@@ -69,8 +69,8 @@ cv::Scalar getBlues(unsigned char gray)
 }
 }   // Anonymous namespace
 
-using namespace BoBRobotics::StoneCX;
-
+namespace BoBRobotics {
+namespace StoneCX {
 void visualize(cv::Mat &activityImage)
 {
     // Draw compass system activity
@@ -91,3 +91,5 @@ void visualize(cv::Mat &activityImage)
     drawPopulationActivity(rCPU1, Parameters::numCPU1, "CPU1", cv::Point(10, 510),
                            getGreens, activityImage, 8);
 }
+} // StoneCX
+} // BoBRobotics

@@ -42,6 +42,8 @@ void buildTBToCPUConnector(unsigned int numPre, unsigned int numPost,
 }
 }   // Anonymous namespace
 
+namespace BoBRobotics {
+namespace StoneCX {
 void buildConnectivity()
 {
     // TL_CL1
@@ -107,3 +109,5 @@ void buildConnectivity()
         CPontine_CPU1.ind[i + 8] = 5 + i;
     }
 }
+} // StoneCX
+} // BoBRobotics
