@@ -10,7 +10,7 @@
 #include <GLFW/glfw3.h>
 
 // BoB robotics includes
-#include "../third_party/path.h"
+#include "../common/image_database_recorder.h"
 #include "../video/opengl.h"
 
 // Libantworld includes
@@ -18,6 +18,9 @@
 #include "../libantworld/common.h"
 #include "../libantworld/renderer.h"
 #include "../libantworld/route_continuous.h"
+
+// Third-party includes
+#include "../third_party/path.h"
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -43,7 +46,6 @@ int main(int argc, char *argv[])
 {
     const millimeter_t pathStep = 1_cm;
     const millimeter_t gridSpacing = 10_cm;
-    const millimeter_t gridMax = 2.5_m; // gives a 5m^2 grid
 
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
@@ -106,39 +108,22 @@ int main(int argc, char *argv[])
     // Create route object and load route file specified by command line
     AntWorld::RouteContinuous route(0.2f, 800);
 
-    // If we should be following a route
-    std::ofstream csvStream;
-    std::string routeTitle;
-    filesystem::path savePath;
-    if(followRoute) {
+    std::string databaseName;
+    if (followRoute) {
         // Load route
         route.load(argv[1]);
 
         // Get filename from route path
-        routeTitle = filesystem::path(argv[1]).filename();
+        databaseName = filesystem::path(argv[1]).filename();
 
         // If it exists, remove extension
-        const size_t pos = routeTitle.find_last_of(".");
+        const size_t pos = databaseName.find_last_of(".");
         if (pos != std::string::npos) {
-             routeTitle = routeTitle.substr(0, pos);
+             databaseName = databaseName.substr(0, pos);
         }
-
-        savePath = routeTitle;
-        if (!savePath.exists()) {
-            filesystem::create_directory(savePath);
-        }
-        csvStream.open((savePath / (routeTitle + ".csv")).str());
+    } else {
+        databaseName = "world5000_grid";
     }
-    else {
-        savePath = "world5000_grid";
-        if (!savePath.exists()) {
-            filesystem::create_directory(savePath);
-        }
-        csvStream.open((savePath / "world5000_grid.csv").str());
-    }
-
-    // Write CSV header
-    csvStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
@@ -151,6 +136,9 @@ int main(int argc, char *argv[])
     // Get world bounds
     const auto &worldMinBound = renderer.getWorld().getMinBound();
     const auto &worldMaxBound = renderer.getWorld().getMaxBound();
+
+    // Create ImageDatabaseRecorder
+    ImageDatabaseRecorder<decltype(agent)> database(databaseName, followRoute, agent);
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
@@ -174,27 +162,8 @@ int main(int argc, char *argv[])
             y = worldMinBound[1] + (gridSpacing * currentGridY);
         }
 
-        // Update agent's position and read frame in
-        agent.setPosition(x, y, z);
-        agent.setAttitude(heading, 0_deg, 0_deg);
-        agent.readFrame(snapshot);
-
-        // Get image file name
-        char filename[255];
-        if(followRoute) {
-            sprintf(filename, "%s_%04zu.png", routeTitle.c_str(), routePosition);
-        }
-        else {
-            sprintf(filename, "world5000_grid_%05d_%05d_%05d.png",
-                    (int) round(x), (int) round(y), (int) round(z));
-        }
-
-        // Write image file info to CSV file
-        csvStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
-                  << heading.value() << ", " << filename << std::endl;
-
-        // Write image file
-        cv::imwrite((savePath / filename).str(), snapshot);
+        // Write to image database
+        database.savePosition(x, y, z, heading);
 
         // Poll for and process events
         glfwPollEvents();
@@ -227,6 +196,5 @@ int main(int argc, char *argv[])
         }
     }
 
-    csvStream.close(); // close CSV file handle
     return EXIT_SUCCESS;
 }
