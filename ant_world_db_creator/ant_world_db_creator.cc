@@ -158,35 +158,26 @@ int main(int argc, char *argv[])
     const auto &worldMinBound = renderer.getWorld().getMinBound();
     const auto &worldMaxBound = renderer.getWorld().getMaxBound();
 
-    // Define the origin as the centre of the world, to nearest whole mm
-    const millimeter_t originX = (worldMaxBound[0] - worldMinBound[0]) / 2.0;
-    const millimeter_t originY = (worldMaxBound[1] - worldMinBound[1]) / 2.0;
-    const millimeter_t origin[] {round(originX), round(originY)};
-
-    // The extent of the grid is the origin +-gridMax
-    const millimeter_t worldMin[] {origin[0] - gridMax, origin[1] - gridMax};
-    const millimeter_t worldMax[] {origin[0] + gridMax, origin[1] + gridMax};
-
     // Host OpenCV array to hold pixels read from screen
     cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
 
     size_t routePosition = 0;
     size_t currentGridX = 0;
     size_t currentGridY = 0;
-    millimeter_t x = 0_mm;
-    millimeter_t y = 0_mm;
     const millimeter_t z = 1_cm; // agent's height is fixed
     degree_t heading = 0_deg;
 
     // While the window isn't forcibly being closed
     while (!glfwWindowShouldClose(window)) {
         // If we should be following route, get position from route
+        millimeter_t x = 0_mm;
+        millimeter_t y = 0_mm;
         if(followRoute) {
             std::tie(x, y, heading) = route.getPosition(pathStep * routePosition);
         }
         else {
-            x = worldMin[0] + gridSpacing * currentGridX;
-            y = worldMin[1] + gridSpacing * currentGridY;
+            x = worldMinBound[0] + (gridSpacing * currentGridX);
+            y = worldMinBound[1] + (gridSpacing * currentGridY);
         }
 
         // Update agent's position and read frame in
@@ -231,13 +222,13 @@ int main(int argc, char *argv[])
             currentGridX++;
 
             // If we've reached the X edge of the world, move to start of next Y
-            if(worldMin[0] + (currentGridX * gridSpacing) > worldMax[0]) {
+            if(worldMinBound[0] + (currentGridX * gridSpacing) > worldMaxBound[0]) {
                 currentGridY++;
                 currentGridX = 0;
             }
 
             // If we've reached the Y edge of the world, stop
-            if(worldMin[1] + (currentGridY * gridSpacing) > worldMax[1]) {
+            if(worldMinBound[1] + (currentGridY * gridSpacing) > worldMaxBound[1]) {
                 break;
             }
         }
