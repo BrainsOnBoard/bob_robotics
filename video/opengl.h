@@ -48,6 +48,9 @@ public:
         // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
         glReadPixels(m_ReadX, m_ReadY, m_ReadWidth, m_ReadHeight,
                      GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
+        
+        // Flip image vertically
+        cv::flip(outFrame, outFrame, 0);
 
         return true;
     }

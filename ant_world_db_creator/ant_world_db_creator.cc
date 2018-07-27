@@ -194,7 +194,6 @@ int main(int argc, char *argv[])
                   << heading.value() << ", " << filename << std::endl;
 
         // Write image file
-        cv::flip(snapshot, snapshot, 0);
         cv::imwrite((savePath / filename).str(), snapshot);
 
         // Poll for and process events
