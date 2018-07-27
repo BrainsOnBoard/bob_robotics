@@ -21,7 +21,7 @@ using namespace units::length;
 using namespace units::literals;
 
 class AntAgent
-  : Video::OpenGL
+  : public Video::OpenGL
 {
 public:
     AntAgent(GLFWwindow *window, Renderer &renderer, GLsizei readWidth, GLsizei readHeight)
