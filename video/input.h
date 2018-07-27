@@ -1,11 +1,15 @@
 #pragma once
 
-// C++ includes
+// Standard C includes
 #include <cstdlib>
+
+// Standard C++ includes
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 // OpenCV
@@ -95,6 +99,13 @@ public:
         }
         else {
             return false;
+        }
+    }
+
+    virtual void readFrameSync(cv::Mat &outFrame)
+    {
+        while (!readFrame(outFrame)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 
