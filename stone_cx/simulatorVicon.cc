@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     Robots::Norbot motor;
 
     // Create VICON UDP interface
-    Vicon::UDPClient<Vicon::ObjectDataVelocity<>> vicon(51001);
+    Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
 
     // Create VICON capture control interface
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
