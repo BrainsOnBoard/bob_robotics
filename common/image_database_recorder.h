@@ -18,6 +18,8 @@
 namespace BoBRobotics {
 using namespace units::length;
 using namespace units::angle;
+using namespace units::math;
+using namespace units::literals;
 
 template<class AgentType>
 class ImageDatabaseRecorder
@@ -30,7 +32,7 @@ public:
         filesystem::create_directory(databasePath);
 
         // Write CSV header
-        m_CSVStream.open(databasePath / (databaseName + ".csv"));
+        m_CSVStream.open((databasePath / (databaseName + ".csv")).str());
         m_CSVStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
     }
 
@@ -41,7 +43,7 @@ public:
 
         // Get image file name
         char filename[255];
-        if (isRoute) {
+        if (m_IsRoute) {
             snprintf(filename, 255, "%s_%04d", m_DatabaseName.c_str(), m_RouteCount++);
         } else {
             snprintf(filename, 255, "%s_%05d_%05d_%05d.png",
@@ -50,8 +52,8 @@ public:
         auto imagePath = filesystem::path(m_DatabaseName) / filename;
 
         // Write current view to imagePath
-        agent.readFrameSync(m_OutFrame);
-        cv::imwrite(imagePath, m_OutFrame);
+        m_Agent.readFrameSync(m_OutFrame);
+        cv::imwrite(imagePath.str(), m_OutFrame);
 
         // Write image file info to CSV file
         m_CSVStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
@@ -63,6 +65,7 @@ private:
     std::string m_DatabaseName;
     std::ofstream m_CSVStream;
     cv::Mat m_OutFrame;
+    bool m_IsRoute;
     int m_RouteCount = 0;
 }; // ImageDatabaseRecorder
 } // BoBRobotics
