@@ -138,10 +138,10 @@ int main(int argc, char *argv[])
     const auto &worldMaxBound = renderer.getWorld().getMaxBound();
 
     // Create ImageDatabaseRecorder
-    ImageDatabaseRecorder<decltype(agent)> database(databaseName, followRoute, agent);
+    ImageDatabaseRecorder database(databaseName, followRoute);
 
     // Host OpenCV array to hold pixels read from screen
-    cv::Mat snapshot(renderHeight, renderWidth, CV_8UC3);
+    cv::Mat frame(renderHeight, renderWidth, CV_8UC3);
 
     size_t routePosition = 0;
     size_t currentGridX = 0;
@@ -162,8 +162,15 @@ int main(int argc, char *argv[])
             y = worldMinBound[1] + (gridSpacing * currentGridY);
         }
 
+        // Update pose
+        agent.setPosition(x, y, z);
+        agent.setAttitude(heading, 0_deg, 0_deg);
+
+        // Read frame
+        agent.readFrame(frame);
+
         // Write to image database
-        database.savePosition(x, y, z, heading);
+        database.saveImage(frame, x, y, z, heading);
 
         // Poll for and process events
         glfwPollEvents();

@@ -21,12 +21,11 @@ using namespace units::angle;
 using namespace units::math;
 using namespace units::literals;
 
-template<class AgentType>
 class ImageDatabaseRecorder
 {
 public:
-    ImageDatabaseRecorder(std::string databaseName, bool isRoute, AgentType &agent)
-      : m_Agent(agent), m_DatabaseName(databaseName), m_IsRoute(isRoute)
+    ImageDatabaseRecorder(std::string databaseName, bool isRoute)
+      : m_DatabaseName(databaseName), m_IsRoute(isRoute)
     {
         filesystem::path databasePath = databaseName;
         filesystem::create_directory(databasePath);
@@ -36,11 +35,8 @@ public:
         m_CSVStream << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
     }
 
-    void savePosition(millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading = 0_deg)
+    void saveImage(cv::Mat &frame, millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading)
     {
-        m_Agent.setPosition(x, y, z);
-        m_Agent.setAttitude(heading, 0_deg, 0_deg);
-
         // Get image file name
         char filename[255];
         if (m_IsRoute) {
@@ -52,8 +48,7 @@ public:
         auto imagePath = filesystem::path(m_DatabaseName) / filename;
 
         // Write current view to imagePath
-        m_Agent.readFrameSync(m_OutFrame);
-        cv::imwrite(imagePath.str(), m_OutFrame);
+        cv::imwrite(imagePath.str(), frame);
 
         // Write image file info to CSV file
         m_CSVStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
@@ -61,10 +56,8 @@ public:
     }
 
 private:
-    AgentType m_Agent;
     std::string m_DatabaseName;
     std::ofstream m_CSVStream;
-    cv::Mat m_OutFrame;
     bool m_IsRoute;
     int m_RouteCount = 0;
 }; // ImageDatabaseRecorder
