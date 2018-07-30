@@ -15,7 +15,6 @@
 #include "third_party/path.h"
 
 // Local includes
-#include "config.h"
 #include "perfect_memory_base.h"
 
 namespace BoBRobotics {
@@ -27,9 +26,10 @@ template<unsigned int scanStep>
 class PerfectMemory : public PerfectMemoryBase<scanStep>
 {
 public:
-    PerfectMemory(const Config &config)
-    :   PerfectMemoryBase<scanStep>(config),
-        m_DiffScratchImage(config.getUnwrapRes(), CV_8UC1)
+    PerfectMemory(const cv::Size unwrapRes, const std::string outputPath = "snapshots",
+                  const std::string filenamePrefix = "snapshot_")
+      : PerfectMemoryBase<scanStep>(unwrapRes, outputPath, filenamePrefix)
+      , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {
         std::cout << "Creating perfect memory for raw images" << std::endl;
     }

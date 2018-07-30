@@ -13,7 +13,7 @@
 #include <opencv2/opencv.hpp>
 
 // Local includes
-#include "config.h"
+//#include "config.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -24,24 +24,14 @@ template<unsigned int scanStep>
 class PerfectMemoryBase
 {
 public:
-    PerfectMemoryBase(const Config &config)
-    :   SnapshotRes(config.getUnwrapRes()), m_OutputPath(config.getOutputPath()),
-        m_ScratchMaskImage(config.getUnwrapRes(), CV_8UC1),
-        m_ScratchRollImage(config.getUnwrapRes(), CV_8UC1)
-    {
-        // Load mask image if specified
-        if(!config.getMaskImageFilename().empty()) {
-            m_MaskImage = cv::imread(config.getMaskImageFilename(), cv::IMREAD_GRAYSCALE);
-            assert(m_MaskImage.cols == SnapshotRes.width);
-            assert(m_MaskImage.rows == SnapshotRes.height);
-            assert(m_MaskImage.type() == CV_8UC1);
-        }
-    }
-
-    //------------------------------------------------------------------------
-    // Constants
-    //------------------------------------------------------------------------
-    const cv::Size SnapshotRes;
+    PerfectMemoryBase(const cv::Size unwrapRes, const std::string outputPath = "snapshots",
+                      const std::string filenamePrefix = "snapshot_")
+      : m_UnwrapRes(unwrapRes)
+      , m_OutputPath(outputPath)
+      , m_FilenamePrefix(filenamePrefix)
+      , m_ScratchMaskImage(unwrapRes, CV_8UC1)
+      , m_ScratchRollImage(unwrapRes, CV_8UC1)
+    {}
 
     //------------------------------------------------------------------------
     // Declared virtuals
@@ -59,8 +49,8 @@ public:
             if(filename.exists()) {
                 // Load image
                 cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
-                assert(image.cols == SnapshotRes.width);
-                assert(image.rows == SnapshotRes.height);
+                assert(image.cols == m_UnwrapRes.width);
+                assert(image.rows == m_UnwrapRes.height);
                 assert(image.type() == CV_8UC1);
 
                 // Add snapshot
@@ -73,10 +63,18 @@ public:
         std::cout << "Loaded " << getNumSnapshots() << " snapshots" << std::endl;
     }
 
+    void setMaskImage(const std::string path)
+    {
+        m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
+        assert(m_MaskImage.cols == m_UnwrapRes.width);
+        assert(m_MaskImage.rows == m_UnwrapRes.height);
+        assert(m_MaskImage.type() == CV_8UC1);
+    }
+
     size_t train(const cv::Mat &image)
     {
-        assert(image.cols == SnapshotRes.width);
-        assert(image.rows == SnapshotRes.height);
+        assert(image.cols == m_UnwrapRes.width);
+        assert(image.rows == m_UnwrapRes.height);
         assert(image.type() == CV_8UC1);
 
         // Add snapshot
@@ -91,8 +89,8 @@ public:
 
     std::tuple<float, size_t, float> findSnapshot(const cv::Mat &image) const
     {
-        assert(image.cols == SnapshotRes.width);
-        assert(image.rows == SnapshotRes.height);
+        assert(image.cols == m_UnwrapRes.width);
+        assert(image.rows == m_UnwrapRes.height);
         assert(image.type() == CV_8UC1);
 
         // Clone mask and image so they can be rolled inplace
@@ -126,13 +124,13 @@ public:
         }
 
         // If best column is more than 180 degrees away, flip
-        if(bestCol > (SnapshotRes.width / 2)) {
-            bestCol -= SnapshotRes.width;
+        if(bestCol > (m_UnwrapRes.width / 2)) {
+            bestCol -= m_UnwrapRes.width;
         }
 
         // Convert column into angle
         constexpr float pi = 3.141592653589793238462643383279502884f;
-        const float bestAngle = ((float)bestCol / (float)SnapshotRes.width) * (2.0 * pi);
+        const float bestAngle = ((float)bestCol / (float)m_UnwrapRes.width) * (2.0 * pi);
 
         // Return result
         return std::make_tuple(bestAngle, bestSnapshot, minDifferenceSquared);
@@ -191,7 +189,9 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const filesystem::path &m_OutputPath;
+    const cv::Size m_UnwrapRes;
+    const filesystem::path m_OutputPath;
+    const std::string m_FilenamePrefix;
     cv::Mat m_MaskImage;
 
     mutable cv::Mat m_ScratchMaskImage;

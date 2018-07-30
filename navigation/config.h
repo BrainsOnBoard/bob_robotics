@@ -8,8 +8,10 @@
 #include "net/socket.h"
 #include "third_party/path.h"
 
+namespace BoBRobotics {
+namespace Navigation {
 //------------------------------------------------------------------------
-// Config
+// BoBRobotics::Navigation::Config
 //------------------------------------------------------------------------
 class Config
 {
@@ -210,7 +212,7 @@ private:
     std::string m_ViconCaptureControlHost;
     int m_ViconCaptureControlPort;
     std::string m_ViconCaptureControlPath;
-};
+}; // Config
 
 static void write(cv::FileStorage &fs, const std::string&, const Config &config)
 {
@@ -226,3 +228,5 @@ static void read(const cv::FileNode &node, Config &x, const Config& defaultValue
         x.read(node);
     }
 }
+} // Navigation
+} // BoBRobotics
