@@ -68,7 +68,6 @@ public:
             // Add snapshot
             addSnapshot(image);
         }
-        std::cout << "Loaded " << getNumSnapshots() << " snapshots" << std::endl;
     }
 
     void setMaskImage(const std::string path)
