@@ -58,7 +58,7 @@ public:
 private:
     std::string m_DatabaseName;
     std::ofstream m_CSVStream;
-    bool m_IsRoute;
+    const bool m_IsRoute;
     int m_RouteCount = 0;
 }; // ImageDatabaseRecorder
 } // BoBRobotics
