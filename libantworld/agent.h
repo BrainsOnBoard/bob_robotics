@@ -21,7 +21,7 @@ using namespace units::length;
 using namespace units::literals;
 
 class AntAgent
-  : Video::OpenGL
+  : public Video::OpenGL
 {
 public:
     AntAgent(GLFWwindow *window, Renderer &renderer, GLsizei readWidth, GLsizei readHeight)
@@ -56,7 +56,7 @@ public:
         m_Attitude[2] = roll;
     }
 
-    bool readFrame(cv::Mat &frame)
+    virtual bool readFrame(cv::Mat &frame) override
     {
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
