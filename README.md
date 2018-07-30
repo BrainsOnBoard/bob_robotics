@@ -1,6 +1,8 @@
 # BoB robotics
 This repository contains code for interfacing with various robot platforms and other associated hardware, as well as code for running simulations and visualising data. Some examples of use for different BoB robotics "modules" are included, in various \*\_test folders.
 
+Fuller documentation is available at https://brainsonboard.github.io/bob_robotics/.
+
 **Note** this repository is public so should only be used for utility code and example models - larger models should go in their own repositories and only be made public upon publication.
 
 ## Prerequistites
