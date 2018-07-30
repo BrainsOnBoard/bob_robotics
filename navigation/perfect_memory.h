@@ -22,13 +22,13 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemory
 //------------------------------------------------------------------------
-template<unsigned int scanStep>
-class PerfectMemory : public PerfectMemoryBase<scanStep>
+class PerfectMemory : public PerfectMemoryBase
 {
 public:
-    PerfectMemory(const cv::Size unwrapRes, const std::string outputPath = "snapshots",
+    PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1,
+                  const std::string outputPath = "snapshots",
                   const std::string filenamePrefix = "snapshot_")
-      : PerfectMemoryBase<scanStep>(unwrapRes, outputPath, filenamePrefix)
+      : PerfectMemoryBase(unwrapRes, scanStep, outputPath, filenamePrefix)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {
         std::cout << "Creating perfect memory for raw images" << std::endl;

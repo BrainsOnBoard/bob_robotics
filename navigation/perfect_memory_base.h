@@ -20,13 +20,14 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
-template<unsigned int scanStep>
 class PerfectMemoryBase
 {
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const std::string outputPath = "snapshots",
+    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep,
+                      const std::string outputPath = "snapshots",
                       const std::string filenamePrefix = "snapshot_")
       : m_UnwrapRes(unwrapRes)
+      , m_ScanStep(scanStep)
       , m_OutputPath(outputPath)
       , m_FilenamePrefix(filenamePrefix)
       , m_ScratchMaskImage(unwrapRes, CV_8UC1)
@@ -102,7 +103,7 @@ public:
         int bestCol = 0;
         size_t bestSnapshot = std::numeric_limits<size_t>::max();
         const size_t numSnapshots = getNumSnapshots();
-        for(int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
+        for(int i = 0; i < m_ScratchRollImage.cols; i += m_ScanStep) {
             // Loop through snapshots
             for(size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
@@ -116,10 +117,10 @@ public:
                 }
             }
 
-            // Roll image and corresponding mask left by scanstep
-            rollImage(m_ScratchRollImage);
+            // Roll image and corresponding mask left by m_ScanStep
+            rollImage(m_ScratchRollImage, m_ScanStep);
             if(!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage);
+                rollImage(m_ScratchMaskImage, m_ScanStep);
             }
         }
 
@@ -165,10 +166,10 @@ private:
     // Private static methods
     //------------------------------------------------------------------------
     // 'Rolls' an image scanStep to the left
-    static void rollImage(cv::Mat &image)
+    static void rollImage(cv::Mat &image, unsigned int scanStep)
     {
-        // Buffer to hold scanstep of pixels
-        std::array<uint8_t, scanStep> rollBuffer;
+        // Buffer to hold scanStep of pixels
+        uint8_t *rollBuffer = new uint8_t[scanStep];
 
         // Loop through rows
         for(int y = 0; y < image.rows; y++) {
@@ -176,20 +177,24 @@ private:
             uint8_t *rowPtr = image.ptr(y);
 
             // Copy scanStep pixels at left hand size of row into buffer
-            std::copy_n(rowPtr, scanStep, rollBuffer.begin());
+            std::copy_n(rowPtr, scanStep, rollBuffer);
 
             // Copy rest of row back over pixels we've copied to buffer
             std::copy_n(rowPtr + scanStep, image.cols - scanStep, rowPtr);
 
             // Copy buffer back into row
-            std::copy(rollBuffer.begin(), rollBuffer.end(), rowPtr + (image.cols - scanStep));
+            std::copy(rollBuffer, &rollBuffer[scanStep], rowPtr + (image.cols - scanStep));
         }
+
+        // ** YUCK **
+        delete rollBuffer;
     }
 
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
+    const unsigned int m_ScanStep;
     const filesystem::path m_OutputPath;
     const std::string m_FilenamePrefix;
     cv::Mat m_MaskImage;
