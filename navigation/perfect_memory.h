@@ -26,7 +26,7 @@ class PerfectMemory : public PerfectMemoryBase
 {
 public:
     PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                  const std::string outputPath = "snapshots",
+                  const filesystem::path outputPath = "snapshots",
                   const std::string filenamePrefix = "snapshot_")
       : PerfectMemoryBase(unwrapRes, scanStep, outputPath, filenamePrefix)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)

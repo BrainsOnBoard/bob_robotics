@@ -27,7 +27,7 @@ class PerfectMemoryBase
 {
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep,
-                      const std::string outputPath = "snapshots",
+                      const filesystem::path outputPath = "snapshots",
                       const std::string filenamePrefix = "snapshot_")
       : m_UnwrapRes(unwrapRes)
       , m_ScanStep(scanStep)
@@ -46,23 +46,27 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void load()
+    void loadSnapshots()
+    {
+        loadSnapshots(m_OutputPath);
+    }
+
+    void loadSnapshots(const filesystem::path &routePath)
     {
         for(size_t i = 0;;i++) {
-            const auto filename = getSnapshotPath(i);
-            if(filename.exists()) {
-                // Load image
-                cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
-                assert(image.cols == m_UnwrapRes.width);
-                assert(image.rows == m_UnwrapRes.height);
-                assert(image.type() == CV_8UC1);
-
-                // Add snapshot
-                addSnapshot(image);
-            }
-            else {
+            const auto filename = routePath / getRouteDatabaseFilename(i);
+            if(!filename.exists()) {
                 break;
-	    }
+            }
+
+            // Load image
+            cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
+            assert(image.cols == m_UnwrapRes.width);
+            assert(image.rows == m_UnwrapRes.height);
+            assert(image.type() == CV_8UC1);
+
+            // Add snapshot
+            addSnapshot(image);
         }
         std::cout << "Loaded " << getNumSnapshots() << " snapshots" << std::endl;
     }
