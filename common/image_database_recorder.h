@@ -3,9 +3,11 @@
 
 // Standard C++ includes
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <tuple>
 
 // OpenCV
@@ -38,17 +40,17 @@ public:
     void saveImage(cv::Mat &frame, millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading)
     {
         // Get image file name
-        char filename[255];
+        std::string filename;
         if (m_IsRoute) {
-            snprintf(filename, 255, "%s_%04d", m_DatabaseName.c_str(), m_RouteCount++);
+            char buf[255];
+            snprintf(buf, 255, "%s_%04d.png", m_DatabaseName.c_str(), m_RouteCount++);
+            filename = std::string(buf);
         } else {
-            snprintf(filename, 255, "%s_%05d_%05d_%05d.png",
-                     m_DatabaseName.c_str(), (int) round(x), (int) round(y), (int) round(z));
+            filename = m_DatabaseName + "_" + zeroPad(x) + "_" + zeroPad(y) + "_" + zeroPad(z) + ".png";
         }
-        auto imagePath = filesystem::path(m_DatabaseName) / filename;
 
-        // Write current view to imagePath
-        cv::imwrite(imagePath.str(), frame);
+        // Write current view to file
+        cv::imwrite((filesystem::path(m_DatabaseName) / filename).str(), frame);
 
         // Write image file info to CSV file
         m_CSVStream << x.value() << ", " << y.value() << ", " << z.value() << ", "
@@ -60,5 +62,14 @@ private:
     std::ofstream m_CSVStream;
     const bool m_IsRoute;
     int m_RouteCount = 0;
+
+    static std::string zeroPad(millimeter_t value)
+    {
+        int ival = static_cast<int>(round(value));
+        char num[12];
+        snprintf(&num[1], 11, "%05d", abs(ival));
+        num[0] = (ival < 0) ? '-' : '+';
+        return std::string(num);
+    }
 }; // ImageDatabaseRecorder
 } // BoBRobotics
