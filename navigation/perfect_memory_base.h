@@ -12,6 +12,9 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// BoB robotics includes
+#include "common/image_database.h"
+
 // Local includes
 //#include "config.h"
 
@@ -159,7 +162,7 @@ private:
     //------------------------------------------------------------------------
     filesystem::path getSnapshotPath(size_t index) const
     {
-        return m_OutputPath / ("snapshot_" + std::to_string(index) + ".png");
+        return m_OutputPath / getRouteDatabaseFilename(index);
     }
 
     //------------------------------------------------------------------------
