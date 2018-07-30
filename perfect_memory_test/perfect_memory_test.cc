@@ -6,7 +6,17 @@
 
 int main()
 {
+    // Class to run perfect memory algorithm
     BoBRobotics::Navigation::PerfectMemory pm(cv::Size(720, 150));
+
+    // Load snapshots
     pm.loadSnapshots("../ant_world_db_creator/ant1_route1");
-    std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
+    std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl << std::endl;
+
+    // Treat snapshot #10 as test data
+    const auto snap = pm.getSnapshot(10);
+    const auto result = pm.findSnapshot(snap);
+    std::cout << "Heading: " << std::get<0>(result) << std::endl;
+    std::cout << "Best-matching snapshot: " << std::get<1>(result) << std::endl;
+    std::cout << "Difference score: " << std::get<2>(result) << std::endl;
 }
