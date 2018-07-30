@@ -73,13 +73,12 @@ extern "C"
 #define BEBOP_IP_ADDRESS "192.168.42.1"
 #define BEBOP_DISCOVERY_PORT 44444
 
+namespace BoBRobotics {
+namespace Robots {
 using namespace units::literals;
 using namespace units::angle;
 using namespace units::angular_velocity;
 using namespace units::velocity;
-
-namespace BoBRobotics {
-namespace Robots {
 
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;

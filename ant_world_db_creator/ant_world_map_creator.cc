@@ -7,7 +7,7 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../third_party/path.h"
 #include "../video/opengl.h"
 
@@ -26,13 +26,7 @@ void handleGLFWError(int errorNumber, const char *message)
     std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
 }
 
-void handleGLError(GLenum source,
-                   GLenum type,
-                   GLuint id,
-                   GLenum severity,
-                   GLsizei length,
-                   const GLchar *message,
-                   const void *userParam)
+void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
 {
     throw std::runtime_error(message);
 }

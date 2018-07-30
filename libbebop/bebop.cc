@@ -579,4 +579,4 @@ Bebop::onButtonEvent(HID::JButton button, bool pressed)
 
 /** END PRIVATE MEMBERS **/
 } // Robots
-} // GeNNRobotics
+} // BoBRobotics

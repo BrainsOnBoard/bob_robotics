@@ -3,6 +3,10 @@
 #
 # Just put "include ../common/flags.mk" in your makefile.
 
+# Which processor architecture to build for
+ARCH ?= native
+CXXFLAGS += -march=$(ARCH)
+
 # This variable is for GeNN (GeNN currently defaults to c++11, which won't work with some of our code)
 CPP_STANDARD ?= c++14
 

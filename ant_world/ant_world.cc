@@ -20,7 +20,7 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../common/timer.h"
 #include "../third_party/units.h"
 #include "../video/opengl.h"
