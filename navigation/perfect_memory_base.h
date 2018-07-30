@@ -27,12 +27,10 @@ class PerfectMemoryBase
 {
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep,
-                      const filesystem::path outputPath = "snapshots",
-                      const std::string filenamePrefix = "snapshot_")
+                      const filesystem::path outputPath = "snapshots")
       : m_UnwrapRes(unwrapRes)
       , m_ScanStep(scanStep)
       , m_OutputPath(outputPath)
-      , m_FilenamePrefix(filenamePrefix)
       , m_ScratchMaskImage(unwrapRes, CV_8UC1)
       , m_ScratchRollImage(unwrapRes, CV_8UC1)
     {}
@@ -202,7 +200,6 @@ private:
     const cv::Size m_UnwrapRes;
     const unsigned int m_ScanStep;
     const filesystem::path m_OutputPath;
-    const std::string m_FilenamePrefix;
     cv::Mat m_MaskImage;
 
     mutable cv::Mat m_ScratchMaskImage;

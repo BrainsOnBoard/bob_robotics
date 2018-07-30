@@ -26,9 +26,8 @@ class PerfectMemory : public PerfectMemoryBase
 {
 public:
     PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                  const filesystem::path outputPath = "snapshots",
-                  const std::string filenamePrefix = "snapshot_")
-      : PerfectMemoryBase(unwrapRes, scanStep, outputPath, filenamePrefix)
+                  const filesystem::path outputPath = "snapshots")
+      : PerfectMemoryBase(unwrapRes, scanStep, outputPath)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {
         std::cout << "Creating perfect memory for raw images" << std::endl;
