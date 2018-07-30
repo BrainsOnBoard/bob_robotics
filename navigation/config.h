@@ -16,7 +16,7 @@ class Config
 public:
     Config() : m_UseHOG(false), m_Train(true), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
         m_UnwrapRes(180, 50), m_MaskImageFilename("mask.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
-        m_JoystickDeadzone(0.25f), m_MoveTimesteps(10), m_ServerListenPort(GeNNRobotics::Net::Socket::DefaultListenPort),
+        m_JoystickDeadzone(0.25f), m_MoveTimesteps(10), m_ServerListenPort(BoBRobotics::Net::Socket::DefaultListenPort),
         m_TurnThresholds{{0.1f, 0.5f}, {0.2f, 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), 
         m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
     {
