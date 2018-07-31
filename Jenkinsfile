@@ -66,10 +66,7 @@ for(b = 0; b < builderNodes.size; b++) {
                         
                         // Build tests and set build status based on return code
                         def statusCode = sh script:"./build_all_examples.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
-                        if(statusCode == 0) {
-                            setBuildStatus("Building examples", "SUCESSS");
-                        }
-                        else {
+                        if(statusCode != 0) {                            
                             setBuildStatus("Building examples", "FAILURE");
                         }
                         
