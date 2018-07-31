@@ -19,7 +19,6 @@
 #include "../third_party/units.h"
 
 // Local includes
-//#include "config.h"
 #include "navigation_base.h"
 
 namespace BoBRobotics {
@@ -49,35 +48,6 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void loadSnapshots(bool resizeImages = false)
-    {
-        loadSnapshotsFromPath(getOutputPath(), resizeImages);
-    }
-
-    void loadSnapshotsFromPath(const filesystem::path &routePath, bool resizeImages = false)
-    {
-        for(size_t i = 0;;i++) {
-            const auto filename = routePath / getRouteDatabaseFilename(i);
-            if(!filename.exists()) {
-                break;
-            }
-
-            // Load image
-            cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
-            assert(image.type() == CV_8UC1);
-            const auto &unwrapRes = getUnwrapResolution();
-            if (resizeImages) {
-                cv::resize(image, image, unwrapRes);
-            } else {
-                assert(image.cols == unwrapRes.width);
-                assert(image.rows == unwrapRes.height);
-            }
-
-            // Add snapshot
-            addSnapshot(image);
-        }
-    }
-
     virtual void train(const cv::Mat &image, bool saveImage) override
     {
         const auto &unwrapRes = getUnwrapResolution();
