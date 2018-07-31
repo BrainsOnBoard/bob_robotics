@@ -28,7 +28,7 @@ LINK_FLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
 	$(AR_LIB_PATH)/libsdp.so $(AR_LIB_PATH)/libulog.so \
 	$(AR_LIB_PATH)/libarmedia.so $(AR_LIB_PATH)/libfutils.so
 
-.PHONY: all clean
+.PHONY: all clean $(LIBBEBOP_PATH)/libbebop.a
 
 EXECUTABLE := bebop_test
 
