@@ -2,7 +2,7 @@ include ../common/flags.mk
 
 EXECUTABLE      := ant_world
 SOURCES         := ant_world.cc mb_memory.cc perfect_memory.cc
-LINK_FLAGS      += -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+LINK_FLAGS      := -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_FLAGS)
 CXXFLAGS        += -I../libantworld
 
 ifdef RECORD_SPIKES
