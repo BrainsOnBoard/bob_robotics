@@ -3,21 +3,6 @@
 //--------------------------------------------------------------------------
 // Helper functions
 //--------------------------------------------------------------------------
-// Wrapper around setting of GitHUb commit status curtesy of https://groups.google.com/forum/#!topic/jenkinsci-issues/p-UFjxKkXRI
-// **NOTE** since that forum post, stage now takes a Closure as the last argument hence slight modification 
-void buildStep(String message, Closure closure) {
-    stage(message)
-    {
-        try {
-            setBuildStatus(message, "PENDING");
-            closure();
-        } catch (Exception e) {
-            print "I caught te: ${e.message}"
-            setBuildStatus(message, "FAILURE");
-        }
-    }
-}
-
 void setBuildStatus(String message, String state) {
     // **NOTE** ManuallyEnteredCommitContextSource set to match the value used by bits of Jenkins outside pipeline control
     step([
@@ -66,19 +51,27 @@ for(b = 0; b < builderNodes.size; b++) {
     // Create a map to pass in to the 'parallel' step so we can fire all the builds at once
     builders[nodeName] = {
         node(nodeName) {
-            buildStep("Checking out project (" + env.NODE_NAME + ")") {
+            stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
             }
             
-            buildStep("Building examples (" + env.NODE_NAME + ")") {
+            stage("Building examples (" + env.NODE_NAME + ")") {
                 // Run automatic tests
                 if (isUnix()) {
                     dir("examples") {
                         // Generate unique name for message
                         def uniqueMsg = "msg_" + env.NODE_NAME;
                         
-                        // Run tests
-                        sh "./build_all_examples.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
+                        setBuildStatus("Building examples", "PENDING");
+                        
+                        // Build tests and set build status based on return code
+                        def statusCode = sh script:"./build_all_examples.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+                        if(statusCode == 0) {
+                            setBuildStatus("Building examples", "SUCESSS");
+                        }
+                        else {
+                            setBuildStatus("Building examples", "FAILURE");
+                        }
                         
                         // Parse test output for GCC warnings
                         // **NOTE** driving WarningsPublisher from pipeline is entirely undocumented
