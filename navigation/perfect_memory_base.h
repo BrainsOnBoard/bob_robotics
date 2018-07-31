@@ -13,13 +13,14 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#include "common/image_database.h"
+#include "../common/image_database.h"
 
 // Third-party includes
-#include "third_party/units.h"
+#include "../third_party/units.h"
 
 // Local includes
 //#include "config.h"
+#include "navigation_base.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -30,15 +31,13 @@ using namespace units::angle;
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
 class PerfectMemoryBase
+  : public NavigationBase
 {
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep,
+    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
                       const filesystem::path outputPath = "snapshots")
-      : m_UnwrapRes(unwrapRes)
+      : NavigationBase(unwrapRes, outputPath)
       , m_ScanStep(scanStep)
-      , m_OutputPath(outputPath)
-      , m_ScratchMaskImage(unwrapRes, CV_8UC1)
-      , m_ScratchRollImage(unwrapRes, CV_8UC1)
     {}
 
     //------------------------------------------------------------------------
@@ -52,7 +51,7 @@ public:
     //------------------------------------------------------------------------
     void loadSnapshots(bool resizeImages = false)
     {
-        loadSnapshotsFromPath(m_OutputPath, resizeImages);
+        loadSnapshotsFromPath(getOutputPath(), resizeImages);
     }
 
     void loadSnapshotsFromPath(const filesystem::path &routePath, bool resizeImages = false)
@@ -66,11 +65,12 @@ public:
             // Load image
             cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
             assert(image.type() == CV_8UC1);
+            const auto &unwrapRes = getUnwrapResolution();
             if (resizeImages) {
-                cv::resize(image, image, m_UnwrapRes);
+                cv::resize(image, image, unwrapRes);
             } else {
-                assert(image.cols == m_UnwrapRes.width);
-                assert(image.rows == m_UnwrapRes.height);
+                assert(image.cols == unwrapRes.width);
+                assert(image.rows == unwrapRes.height);
             }
 
             // Add snapshot
@@ -78,38 +78,26 @@ public:
         }
     }
 
-    void setMaskImage(const std::string path)
+    virtual void train(const cv::Mat &image) override
     {
-        m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
-        assert(m_MaskImage.cols == m_UnwrapRes.width);
-        assert(m_MaskImage.rows == m_UnwrapRes.height);
-        assert(m_MaskImage.type() == CV_8UC1);
-    }
-
-    size_t train(const cv::Mat &image)
-    {
-        assert(image.cols == m_UnwrapRes.width);
-        assert(image.rows == m_UnwrapRes.height);
+        const auto &unwrapRes = getUnwrapResolution();
+        assert(image.cols == unwrapRes.width);
+        assert(image.rows == unwrapRes.height);
         assert(image.type() == CV_8UC1);
 
         // Add snapshot
-        const size_t index = addSnapshot(image);
-        
-        // Save snapshot
-        cv::imwrite(getSnapshotPath(index).str(), image);
-        
-        // Return index to snapshot
-        return index;
+        addSnapshot(image);
     }
 
     std::tuple<radian_t, size_t, float> getHeading(const cv::Mat &image) const
     {
-        assert(image.cols == m_UnwrapRes.width);
-        assert(image.rows == m_UnwrapRes.height);
+        const auto &unwrapRes = getUnwrapResolution();
+        assert(image.cols == unwrapRes.width);
+        assert(image.rows == unwrapRes.height);
         assert(image.type() == CV_8UC1);
 
         // Clone mask and image so they can be rolled inplace
-        m_MaskImage.copyTo(m_ScratchMaskImage);
+        getMaskImage().copyTo(m_ScratchMaskImage);
         image.copyTo(m_ScratchRollImage);
 
         // Scan across image columns
@@ -139,12 +127,12 @@ public:
         }
 
         // If best column is more than 180 degrees away, flip
-        if(bestCol > (m_UnwrapRes.width / 2)) {
-            bestCol -= m_UnwrapRes.width;
+        if(bestCol > (unwrapRes.width / 2)) {
+            bestCol -= unwrapRes.width;
         }
 
         // Convert column into angle
-        const radian_t bestAngle = units::make_unit<turn_t>((double)bestCol / (double)m_UnwrapRes.width);
+        const radian_t bestAngle = units::make_unit<turn_t>((double)bestCol / (double)unwrapRes.width);
 
         // Return result
         return std::make_tuple(bestAngle, bestSnapshot, minDifferenceSquared);
@@ -160,19 +148,13 @@ protected:
     // Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifferenceSquared(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
 
-    //------------------------------------------------------------------------
-    // Protected methods
-    //------------------------------------------------------------------------
-    // Gets mask image
-    const cv::Mat &getMaskImage() const{ return m_MaskImage; }
-
 private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
     filesystem::path getSnapshotPath(size_t index) const
     {
-        return m_OutputPath / getRouteDatabaseFilename(index);
+        return getOutputPath() / getRouteDatabaseFilename(index);
     }
 
     //------------------------------------------------------------------------
@@ -206,10 +188,7 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const cv::Size m_UnwrapRes;
     const unsigned int m_ScanStep;
-    const filesystem::path m_OutputPath;
-    cv::Mat m_MaskImage;
 
     mutable cv::Mat m_ScratchMaskImage;
     mutable cv::Mat m_ScratchRollImage;

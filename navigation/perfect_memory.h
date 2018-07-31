@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // Third-party includes
-#include "third_party/path.h"
+#include "../third_party/path.h"
 
 // Local includes
 #include "perfect_memory_base.h"
