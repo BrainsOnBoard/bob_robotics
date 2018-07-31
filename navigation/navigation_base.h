@@ -31,7 +31,7 @@ public:
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image) = 0;
+    virtual void train(const cv::Mat &image, bool saveImage) = 0;
 
     //------------------------------------------------------------------------
     // Public API
@@ -60,8 +60,13 @@ public:
             }
 
             // Add snapshot
-            train(image);
+            train(image, false);
         }
+    }
+
+    void saveSnapshot(const size_t index, const cv::Mat &image)
+    {
+        cv::imwrite(getSnapshotPath(index).str(), image);
     }
 
     void setMaskImage(const std::string path)
@@ -80,7 +85,7 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    filesystem::path getSnapshotPath(size_t index) const
+    filesystem::path getSnapshotPath(const size_t index) const
     {
         return m_OutputPath / getRouteDatabaseFilename(index);
     }

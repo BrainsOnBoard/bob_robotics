@@ -78,7 +78,7 @@ public:
         }
     }
 
-    virtual void train(const cv::Mat &image) override
+    virtual void train(const cv::Mat &image, bool saveImage) override
     {
         const auto &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);
@@ -86,7 +86,12 @@ public:
         assert(image.type() == CV_8UC1);
 
         // Add snapshot
-        addSnapshot(image);
+        const size_t index = addSnapshot(image);
+
+        // Write image to disk, if desired
+        if (saveImage) {
+            saveSnapshot(index, image);
+        }
     }
 
     std::tuple<radian_t, size_t, float> getHeading(const cv::Mat &image) const
