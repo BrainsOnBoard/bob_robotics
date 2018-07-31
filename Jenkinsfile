@@ -12,6 +12,7 @@ void buildStep(String message, Closure closure) {
             setBuildStatus(message, "PENDING");
             closure();
         } catch (Exception e) {
+            print "I caught te: ${e.message}"
             setBuildStatus(message, "FAILURE");
         }
     }
