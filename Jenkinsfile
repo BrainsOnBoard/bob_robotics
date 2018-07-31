@@ -44,7 +44,7 @@ def builderNodes = []
 for(n in availableNodes) {
     // If this node supports opencv (variety is the spice of life w.r.t. testing bob_robotics)
     if("opencv" in n.value) {
-        print "${n.key} -> ${b}";
+        print "${n.key}";
         
         // Add node's name to list of builders and remove it from dictionary of available nodes
         // **YUCK** for some reason tuples aren't serializable so need to add an arraylist
