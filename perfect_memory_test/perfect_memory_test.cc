@@ -15,7 +15,7 @@ int main()
 
     // Treat snapshot #10 as test data
     const auto snap = pm.getSnapshot(10);
-    const auto result = pm.findSnapshot(snap);
+    const auto result = pm.getHeading(snap);
     std::cout << "Heading: " << std::get<0>(result) << std::endl;
     std::cout << "Best-matching snapshot: " << std::get<1>(result) << std::endl;
     std::cout << "Difference score: " << std::get<2>(result) << std::endl;

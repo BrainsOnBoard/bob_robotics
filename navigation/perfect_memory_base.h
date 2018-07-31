@@ -15,11 +15,17 @@
 // BoB robotics includes
 #include "common/image_database.h"
 
+// Third-party includes
+#include "third_party/units.h"
+
 // Local includes
 //#include "config.h"
 
 namespace BoBRobotics {
 namespace Navigation {
+using namespace units::literals;
+using namespace units::angle;
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
@@ -96,7 +102,7 @@ public:
         return index;
     }
 
-    std::tuple<float, size_t, float> findSnapshot(const cv::Mat &image) const
+    std::tuple<radian_t, size_t, float> getHeading(const cv::Mat &image) const
     {
         assert(image.cols == m_UnwrapRes.width);
         assert(image.rows == m_UnwrapRes.height);
@@ -138,8 +144,7 @@ public:
         }
 
         // Convert column into angle
-        constexpr float pi = 3.141592653589793238462643383279502884f;
-        const float bestAngle = ((float)bestCol / (float)m_UnwrapRes.width) * (2.0 * pi);
+        const radian_t bestAngle = units::make_unit<turn_t>((double)bestCol / (double)m_UnwrapRes.width);
 
         // Return result
         return std::make_tuple(bestAngle, bestSnapshot, minDifferenceSquared);
