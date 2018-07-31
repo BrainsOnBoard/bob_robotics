@@ -7,10 +7,10 @@
 int main()
 {
     // Class to run perfect memory algorithm
-    BoBRobotics::Navigation::PerfectMemory pm(cv::Size(720, 150));
+    BoBRobotics::Navigation::PerfectMemory pm(cv::Size(180, 50));
 
     // Load snapshots
-    pm.loadSnapshots("../ant_world_db_creator/ant1_route1");
+    pm.loadSnapshotsFromPath("../ant_world_db_creator/ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl << std::endl;
 
     // Treat snapshot #10 as test data

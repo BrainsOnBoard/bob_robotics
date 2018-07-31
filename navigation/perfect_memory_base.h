@@ -44,12 +44,12 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void loadSnapshots()
+    void loadSnapshots(bool resizeImages = false)
     {
-        loadSnapshots(m_OutputPath);
+        loadSnapshotsFromPath(m_OutputPath, resizeImages);
     }
 
-    void loadSnapshots(const filesystem::path &routePath)
+    void loadSnapshotsFromPath(const filesystem::path &routePath, bool resizeImages = false)
     {
         for(size_t i = 0;;i++) {
             const auto filename = routePath / getRouteDatabaseFilename(i);
@@ -59,9 +59,13 @@ public:
 
             // Load image
             cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
-            assert(image.cols == m_UnwrapRes.width);
-            assert(image.rows == m_UnwrapRes.height);
             assert(image.type() == CV_8UC1);
+            if (resizeImages) {
+                cv::resize(image, image, m_UnwrapRes);
+            } else {
+                assert(image.cols == m_UnwrapRes.width);
+                assert(image.rows == m_UnwrapRes.height);
+            }
 
             // Add snapshot
             addSnapshot(image);

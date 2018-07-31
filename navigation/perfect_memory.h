@@ -1,7 +1,6 @@
 #pragma once
 
 // Standard C++ includes
-#include <iostream>
 #include <vector>
 
 // Standard C includes
@@ -29,9 +28,7 @@ public:
                   const filesystem::path outputPath = "snapshots")
       : PerfectMemoryBase(unwrapRes, scanStep, outputPath)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
-    {
-        std::cout << "Creating perfect memory for raw images" << std::endl;
-    }
+    {}
 
     //------------------------------------------------------------------------
     // Declared virtuals
