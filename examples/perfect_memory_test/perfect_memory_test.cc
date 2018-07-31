@@ -10,7 +10,7 @@ int main()
     BoBRobotics::Navigation::PerfectMemory pm(cv::Size(180, 50));
 
     // Load snapshots
-    pm.loadSnapshotsFromPath("../ant_world_db_creator/ant1_route1", true);
+    pm.loadSnapshotsFromPath("../../ant_world_db_creator/ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl << std::endl;
 
     // Treat snapshot #10 as test data
