@@ -75,7 +75,7 @@ int main()
     for(unsigned int x = 0; !joystick.isDown(JButton::B); x++) {
         // Read joystick
         joystick.update();
-
+        //motor.drive(joystick);
         // If we successfully captured a frame
         if(cam.captureSuperPixelGreyscale(output))
         {

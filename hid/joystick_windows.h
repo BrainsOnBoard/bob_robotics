@@ -130,7 +130,7 @@ public:
                 }
 
                 // run button event handlers
-                raiseEvent(toButton(i), pressed);
+                raiseButtonEvent(toButton(i), pressed);
             }
         }
 

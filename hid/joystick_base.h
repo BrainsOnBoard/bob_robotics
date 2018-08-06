@@ -185,7 +185,7 @@ protected:
       : m_DeadZone(deadZone)
     {}
 
-    void raiseEvent(JButton button, bool pressed)
+    void raiseButtonEvent(JButton button, bool pressed)
     {
         for (auto handler : m_ButtonHandlers) {
             if (handler(button, pressed)) {
@@ -193,19 +193,14 @@ protected:
             }
         }
     }
-
-    void updateAxis(JAxis axis, float value, bool isInitial)
+    
+    void raiseAxisEvent(JAxis axis, float value, bool isInitial)
     {
-        auto &s = m_AxisState[toIndex(axis)];
-        if (s != value) {
-            s = value;
-
-            // run handlers
-            if (!isInitial) {
-                for (auto handler : m_AxisHandlers) {
-                    if (handler(axis, value)) {
-                        break;
-                    }
+        // run handlers
+        if (!isInitial) {
+            for (auto handler : m_AxisHandlers) {
+                if (handler(axis, value)) {
+                    break;
                 }
             }
         }
@@ -213,24 +208,23 @@ protected:
 
     void updateAxis(JAxis axis, int16_t value, bool isInitial)
     {
-        updateAxis(axis, Joystick::axisToFloat(axis, value), isInitial);
+        raiseAxisEvent(axis, Joystick::axisToFloat(axis, value), isInitial);
     }
 
     void updateAxis(JAxis axisHorz, int16_t hvalue, int16_t vvalue, bool isInitial)
     {
         JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
-        float x = Joystick::axisToFloat(axisHorz, hvalue);
-        float y = Joystick::axisToFloat(axisVert, vvalue);
+        const float x = Joystick::axisToFloat(axisHorz, hvalue);
+        const float y = Joystick::axisToFloat(axisVert, vvalue);
 
         if (sqrt(x * x + y * y) < m_DeadZone) {
-            updateAxis(axisHorz, 0.0f, isInitial);
-            updateAxis(axisVert, 0.0f, isInitial);
+            raiseAxisEvent(axisHorz, 0.0f, isInitial);
+            raiseAxisEvent(axisVert, 0.0f, isInitial);
         } else {
-            updateAxis(axisHorz, x, isInitial);
-            updateAxis(axisVert, y, isInitial);
+            raiseAxisEvent(axisHorz, x, isInitial);
+            raiseAxisEvent(axisVert, y, isInitial);
         }
     }
-
 }; // JoystickBase
 } // HID
 } // BoBRobotics

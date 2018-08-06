@@ -143,7 +143,7 @@ public:
                 }
 
                 // run button event handlers
-                raiseEvent(toButton(m_JsEvent.number), m_JsEvent.value);
+                raiseButtonEvent(toButton(m_JsEvent.number), m_JsEvent.value);
             }
         } while (read()); // read all events in buffer
         return true;
