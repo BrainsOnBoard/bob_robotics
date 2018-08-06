@@ -193,14 +193,19 @@ protected:
             }
         }
     }
-    
+
     void raiseAxisEvent(JAxis axis, float value, bool isInitial)
     {
-        // run handlers
-        if (!isInitial) {
-            for (auto handler : m_AxisHandlers) {
-                if (handler(axis, value)) {
-                    break;
+        auto &s = m_AxisState[toIndex(axis)];
+        if (s != value) {
+            s = value;
+
+            // run handlers
+            if (!isInitial) {
+                for (auto handler : m_AxisHandlers) {
+                    if (handler(axis, value)) {
+                        break;
+                    }
                 }
             }
         }
