@@ -2,7 +2,7 @@ NO_OPENCV := 1
 include ../../common/flags.mk
 CXXFLAGS += -I../..
 
-ifeq (1,$(shell ../../common/is_ubuntu_1604_or_older.sh; echo $$?))
+ifeq (0,$(shell ../../common/is_i2c_tools_new.sh; echo $$?))
 LINK_FLAGS += -li2c
 endif
 
