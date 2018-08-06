@@ -1,10 +1,10 @@
+NO_OPENCV := 1
+include ../../common/flags.mk
 CXXFLAGS += -I../..
 
 ifeq (1,$(shell ../../common/is_ubuntu_1604_or_older.sh; echo $$?))
 LINK_FLAGS += -li2c
 endif
-
-include ../../common/flags.mk
 
 EXECUTABLE := lm9ds1_test
 
