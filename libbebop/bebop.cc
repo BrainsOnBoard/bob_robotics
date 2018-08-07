@@ -448,10 +448,10 @@ Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
  * Empty function used to suppress default ARSDK console messages.
  */
 int
-Bebop::printCallback(eARSAL_PRINT_LEVEL level,
-                     const char *tag,
-                     const char *format,
-                     va_list va)
+Bebop::printCallback(eARSAL_PRINT_LEVEL,
+                     const char*,
+                     const char*,
+                     va_list)
 {
     // do nothing
     return 0;
@@ -462,7 +462,7 @@ Bebop::printCallback(eARSAL_PRINT_LEVEL level,
  */
 void
 Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
-                    eARCONTROLLER_ERROR err,
+                    eARCONTROLLER_ERROR,
                     void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
