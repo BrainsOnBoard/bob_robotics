@@ -1,4 +1,4 @@
-# Arden et al. Model of navigation
+# Ardin et al. Model of navigation
 Published model of navigation using a spiking model of the ant mushroom body:
 * ``genn-buildmodel.sh model.cc`` to build network model
 * ``make`` to build simulator. Spikes can be recorded with ``RECORD_SPIKES=1`` option and synaptic weights with ``RECORD_TERMINAL_SYNAPSE_STATE=1`` option.
