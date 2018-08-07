@@ -10,17 +10,17 @@
 #include <GLFW/glfw3.h>
 
 // BoB robotics includes
-#include "../common/image_database_recorder.h"
-#include "../video/opengl.h"
+#include "common/image_database_recorder.h"
+#include "video/opengl.h"
 
 // Libantworld includes
-#include "../libantworld/agent.h"
-#include "../libantworld/common.h"
-#include "../libantworld/renderer.h"
-#include "../libantworld/route_continuous.h"
+#include "libantworld/agent.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
+#include "libantworld/route_continuous.h"
 
 // Third-party includes
-#include "../third_party/path.h"
+#include "third_party/path.h"
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
-    renderer.getWorld().load("../libantworld/world5000_gray.bin",
+    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object

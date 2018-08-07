@@ -10,7 +10,7 @@
 #include <cassert>
 
 // BoB robotics includes
-#include "../third_party/path.h"
+#include "third_party/path.h"
 
 #ifdef __GNUC__
 #include <fcntl.h>

@@ -8,13 +8,13 @@
 #include <GLFW/glfw3.h>
 
 // BoB robotics includes
-#include "../third_party/path.h"
-#include "../video/opengl.h"
+#include "third_party/path.h"
+#include "video/opengl.h"
 
 // Libantworld includes
-#include "../libantworld/common.h"
-#include "../libantworld/renderer.h"
-#include "../libantworld/route_continuous.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
+#include "libantworld/route_continuous.h"
 
 using namespace BoBRobotics;
 
@@ -89,7 +89,7 @@ int main()
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load("../libantworld/world5000_gray.bin",
+    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create input to read snapshots from screen
