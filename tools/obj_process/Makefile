@@ -1,5 +1,5 @@
 NO_OPENCV := 1
-include ../common/flags.mk
+include ../../common/flags.mk
 CXXFLAGS += -I../..
 
 obj_process:
