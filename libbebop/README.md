@@ -7,4 +7,4 @@
 * Right trigger: rotate clockwise
 
 ## Build requirements
-This module requires Parrot's SDK; full instructions are [in the documentation](../documentation/requirements.md).
+This module requires Parrot's SDK; full instructions are [in the documentation](../docs_source/requirements.md).
