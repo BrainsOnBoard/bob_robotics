@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     std::vector<FileType> ftype(argc - 1);
     bool anyvideo = false;
     bool copysound = true;
-    std::string configName = "unwrapfile_default";
+    std::string configName = "pixpro_usb";
     cv::Size unwrappedResolution(1920, 590);
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--no-sound") == 0) {
