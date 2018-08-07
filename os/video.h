@@ -33,6 +33,9 @@ getCameraName(int deviceNumber)
         return "";
     }
 
+    // Close file descriptor
+    close(fd);
+
     /*
      * Strip colon and everything after from name. Newer kernels seem to add
      * a colon plus the name repeated for some reason.
