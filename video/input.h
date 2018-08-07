@@ -1,19 +1,14 @@
 #pragma once
 
 // Standard C++ includes
-#include <cstdlib>
-#include <iostream>
-#include <memory>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // BoBRobotics includes
 #include "../imgproc/opencv_unwrap_360.h"
-#include "../third_party/path.h"
 
 namespace BoBRobotics {
 namespace Video {
@@ -39,46 +34,9 @@ public:
     {
         cv::Size unwrapRes(std::forward<Ts>(args)...);
 
-        // Create unwrapper
-        ImgProc::OpenCVUnwrap360 unwrapper(getOutputSize(), unwrapRes);
-
-        const std::string name = getCameraName();
-        const std::string fileName = name + ".yaml";
-        filesystem::path filePath(fileName);
-
-        // first check if file exists in working directory
-        if (!filePath.exists()) {
-            // next check if there is a local bob_robotics folder (i.e. git
-            // submodule)
-            const filesystem::path paramsDir = filesystem::path("imgproc") / "unwrapparams";
-
-            filePath = filesystem::path("bob_robotics") / paramsDir / fileName;
-            if (!filePath.exists()) {
-                // lastly look for environment variable pointing to
-                // bob_robotics
-                static const char *envVarName = "BOB_ROBOTICS_PATH";
-                const char *env = std::getenv(envVarName);
-                if (!env) {
-                    throw std::runtime_error(std::string(envVarName) +
-                                             " environment variable is not set and unwrap "
-                                             "parameters file could not be found locally");
-                }
-
-                filePath = filesystem::path(env) / paramsDir / fileName;
-                if (!filePath.exists()) {
-                    throw std::runtime_error(
-                            "Could not find unwrap parameters file for " +
-                            name);
-                }
-            }
-        }
-
-        // read unwrap parameters from file
-        std::cout << "Loading unwrap parameters from " << filePath.str() << std::endl;
-        cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
-        fs["unwrapper"] >> unwrapper;
-        fs.release();
-        return unwrapper;
+        // Create unwrapper and return
+        return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes,
+                                        getCameraName());
     }
 
     /*!
