@@ -11,7 +11,7 @@
 #include "genn_utils/spike_csv_recorder.h"
 
 // GeNN generated code includes
-#include "ant_world_CODE/definitions.h"
+#include "ardin_mb_CODE/definitions.h"
 
 // Antworld includes
 #include "mb_params.h"

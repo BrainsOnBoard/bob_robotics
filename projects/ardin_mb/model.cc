@@ -71,7 +71,7 @@ void modelDefinition(NNmodel &model)
 {
     initGeNN();
     model.setDT(MBParams::timestepMs);
-    model.setName("ant_world");
+    model.setName("ardin_mb");
 
     //---------------------------------------------------------------------------
     // Neuron model parameters
