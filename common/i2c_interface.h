@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+extern "C"
+{
 // I2C includes
 #include <linux/i2c-dev.h>
 
@@ -20,6 +22,7 @@
 #ifndef I2C_SMBUS_BYTE_DATA
 #include <i2c/smbus.h>
 #endif
+}
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
