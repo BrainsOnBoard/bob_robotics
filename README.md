@@ -7,7 +7,7 @@ Fuller documentation is available at https://brainsonboard.github.io/bob_robotic
 **Note** this repository is public so should only be used for utility code and example models - larger models should go in their own repositories and only be made public upon publication.
 
 ## Prerequistites
-A full list of requirements for different projects can be found [in the documentation](https://github.com/BrainsOnBoard/bob_robotics/documentation/requirements.md).
+A full list of requirements for different projects can be found [in the documentation](docs_source/requirements.md).
 
 The main requirements are as follows:
 * GeNN 3.X - Stable releases of GeNN can be downloaded from https://github.com/genn-team/genn/releases. However some models in this repository may require the lastest version from the Github repository: https://github.com/genn-team/genn. It should also be passed to genn-buildmodel using the -i command line argument when building networks using the models in the [genn\_models](genn_models) folder i.e. ``genn-buildmodel.sh -i $BOB_ROBOTICS_PATH`` on \*nix or ``genn-buildmodel.bat -i %BOB_ROBOTICS_PATH%`` on Windows.
