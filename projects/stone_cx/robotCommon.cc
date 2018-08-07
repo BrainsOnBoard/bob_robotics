@@ -5,7 +5,7 @@
 #include <numeric>
 
 // Common includes
-#include "../robots/norbot.h"
+#include "robots/norbot.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"

@@ -1,8 +1,8 @@
 EXECUTABLE      := simulator
 SOURCES         := simulator.cc simulatorCommon.cc visualizationCommon.cc
 LINK_FLAGS      := `pkg-config --libs opencv`
-CXXFLAGS       := `pkg-config --cflags opencv`
-CPU_ONLY=1
+CXXFLAGS        := `pkg-config --cflags opencv` -I../..
+CPU_ONLY        := 1
 
 ifdef RECORD_ELECTROPHYS
     CXXFLAGS += -DRECORD_ELECTROPHYS

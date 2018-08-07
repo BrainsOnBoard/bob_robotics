@@ -5,7 +5,7 @@
 #include <numeric>
 
 // Common includes
-#include "../genn_utils/connectors.h"
+#include "genn_utils/connectors.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"

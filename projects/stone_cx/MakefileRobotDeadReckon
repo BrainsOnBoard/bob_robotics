@@ -1,7 +1,7 @@
-EXECUTABLE      := simulatorRobot
-SOURCES         := simulatorRobot.cc simulatorCommon.cc robotCommon.cc
+EXECUTABLE      := simulatorRobotDeadReckon
+SOURCES         := simulatorRobotDeadReckon.cc simulatorCommon.cc robotCommon.cc visualizationCommon.cc
 LINK_FLAGS      := `pkg-config --libs opencv`
-CXXFLAGS        := `pkg-config --cflags opencv` -pthread
+CXXFLAGS        := -pthread `pkg-config --cflags opencv` -I../..
 CPU_ONLY        =1
 CPP_STANDARD    =c++14
 
@@ -11,10 +11,6 @@ endif
 
 ifdef RECORD_SENSORS
     CXXFLAGS += -DRECORD_SENSORS
-endif
-
-ifdef USE_SEE3_CAM
-    CXXFLAGS += -DUSE_SEE3_CAM
 endif
 
 include $(GENN_PATH)/userproject/include/makefile_common_gnu.mk

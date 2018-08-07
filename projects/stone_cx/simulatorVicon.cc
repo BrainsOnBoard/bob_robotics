@@ -3,11 +3,11 @@
 #include <numeric>
 
 // Common includes
-#include "../hid/joystick.h"
-#include "../genn_utils/analogue_csv_recorder.h"
-#include "../robots/norbot.h"
-#include "../vicon/capture_control.h"
-#include "../vicon/udp.h"
+#include "hid/joystick.h"
+#include "genn_utils/analogue_csv_recorder.h"
+#include "robots/norbot.h"
+#include "vicon/capture_control.h"
+#include "vicon/udp.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"

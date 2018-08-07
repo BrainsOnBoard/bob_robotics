@@ -2,8 +2,8 @@ include ../common/flags.mk
 
 EXECUTABLE      := ardin_mb
 SOURCES         := ardin_mb.cc mb_memory.cc perfect_memory.cc
-LINK_FLAGS      := -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_FLAGS)
-CXXFLAGS        += -I../libantworld
+LINK_FLAGS      += -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_FLAGS)
+CXXFLAGS        += -I../libantworld -I../..
 
 ifdef RECORD_SPIKES
     CXXFLAGS += -DRECORD_SPIKES

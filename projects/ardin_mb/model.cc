@@ -2,10 +2,10 @@
 #include "modelSpec.h"
 
 // Common includes
-#include "../genn_models/exp_curr.h"
-#include "../genn_models/lif.h"
-#include "../genn_models/stdp_dopamine.h"
-#include "../genn_utils/connectors.h"
+#include "../../genn_models/exp_curr.h"
+#include "../../genn_models/lif.h"
+#include "../../genn_models/stdp_dopamine.h"
+#include "../../genn_utils/connectors.h"
 
 // Model includes
 #include "mb_params.h"

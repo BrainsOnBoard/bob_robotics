@@ -5,12 +5,12 @@
 #include <thread>
 
 // BoB robotics includes
-#include "../common/lm9ds1_imu.h"
-#include "../common/timer.h"
-#include "../hid/joystick.h"
-#include "../net/server.h"
-#include "../robots/norbot.h"
-#include "../video/netsink.h"
+#include "common/lm9ds1_imu.h"
+#include "common/timer.h"
+#include "hid/joystick.h"
+#include "net/server.h"
+#include "robots/norbot.h"
+#include "video/netsink.h"
 
 
 // GeNN generated code includes

@@ -6,9 +6,9 @@
 #include <random>
 
 // BoB robotics includes
-#include "../common/timer.h"
-#include "../genn_utils/connectors.h"
-#include "../genn_utils/spike_csv_recorder.h"
+#include "common/timer.h"
+#include "genn_utils/connectors.h"
+#include "genn_utils/spike_csv_recorder.h"
 
 // GeNN generated code includes
 #include "ant_world_CODE/definitions.h"

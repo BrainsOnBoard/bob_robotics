@@ -4,13 +4,13 @@
 #include <thread>
 
 // Common includes
-#include "../hid/joystick.h"
-#include "../common/lm9ds1_imu.h"
-#include "../common/timer.h"
-#include "../imgproc/opencv_optical_flow.h"
-#include "../imgproc/opencv_unwrap_360.h"
-#include "../robots/norbot.h"
-#include "../video/see3cam_cu40.h"
+#include "hid/joystick.h"
+#include "common/lm9ds1_imu.h"
+#include "common/timer.h"
+#include "imgproc/opencv_optical_flow.h"
+#include "imgproc/opencv_unwrap_360.h"
+#include "robots/norbot.h"
+#include "video/see3cam_cu40.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
