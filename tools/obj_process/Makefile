@@ -2,7 +2,18 @@ NO_OPENCV := 1
 include ../../common/flags.mk
 CXXFLAGS += -I../..
 
-obj_process:
-	$(CXX) obj_process.cc $(CXXFLAGS) -O3 -o obj_process
+EXECUTABLE := obj_process
 
--include obj_process.d
+.PHONY: all clean
+
+all: $(EXECUTABLE)
+
+-include $(EXECUTABLE).d
+
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+	$(CXX) $(EXECUTABLE).cc $(CXXFLAGS) -O3 -o $(EXECUTABLE)
+
+%.d: ;
+
+clean:
+	rm -rf $(EXECUTABLE) $(EXECUTABLE).d
