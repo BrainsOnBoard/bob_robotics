@@ -1,5 +1,6 @@
-include ../common/flags.mk
-LINK_FLAGS += -L../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+include ../../common/flags.mk
+CXXFLAGS += -I../..
+LINK_FLAGS += -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 
 TARGETS = ant_world_db_creator ant_world_map_creator
 
@@ -21,4 +22,4 @@ ant_world_map_creator: libantworld
 -include -ant_world_map_creator
 
 libantworld:
-	$(MAKE) -C ../libantworld
+	$(MAKE) -C ../../libantworld

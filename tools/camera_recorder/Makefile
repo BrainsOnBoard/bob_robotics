@@ -1,4 +1,4 @@
-include ../common/flags.mk
+include ../../common/flags.mk
 CXXFLAGS += -I../..
 
 .PHONY: all
