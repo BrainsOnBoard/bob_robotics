@@ -21,15 +21,15 @@
 #include <GLFW/glfw3.h>
 
 // BoB robotics includes
-#include "../common/timer.h"
-#include "../third_party/units.h"
-#include "../video/opengl.h"
+#include "common/timer.h"
+#include "third_party/units.h"
+#include "video/opengl.h"
 
 // Libantworld includes
-#include "common.h"
-#include "renderer.h"
-#include "route_ardin.h"
-#include "snapshot_processor_ardin.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
+#include "libantworld/route_ardin.h"
+#include "libantworld/snapshot_processor_ardin.h"
 
 // Antworld includes
 #include "mb_memory.h"
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load("../libantworld/world5000_gray.bin", SimParams::worldColour, SimParams::groundColour);
+    renderer.getWorld().load("../../libantworld/world5000_gray.bin", SimParams::worldColour, SimParams::groundColour);
 
     // Create route object and load route file specified by command line
     AntWorld::RouteArdin route(0.2f, 800);
