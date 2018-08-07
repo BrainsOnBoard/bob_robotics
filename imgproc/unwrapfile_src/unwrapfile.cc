@@ -30,7 +30,7 @@ enum class FileType {
 };
 
 /* unwrap a JPEG file */
-void processjpeg(const char *filepathRaw, const cv::Size &unwrappedResolution, const filesystem::path &configPath)
+void processjpeg(const char *filepathRaw, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     const filesystem::path filepath(filepathRaw);
 
@@ -41,10 +41,7 @@ void processjpeg(const char *filepathRaw, const cv::Size &unwrappedResolution, c
     cv::Mat imunwrap(unwrappedResolution, im.type());
 
     // Create unwrapper
-    BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(im.size(), unwrappedResolution);
-    cv::FileStorage fs(configPath.str(), cv::FileStorage::READ);
-    fs["unwrapper"] >> unwrapper;
-    fs.release();
+    BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(im.size(), unwrappedResolution, cameraName);
 
     // Unwrap image
     unwrapper.unwrap(im, imunwrap);
@@ -59,7 +56,7 @@ void processjpeg(const char *filepathRaw, const cv::Size &unwrappedResolution, c
 }
 
 /* unwrap an MP4 video */
-void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrappedResolution, const filesystem::path &configPath)
+void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     filesystem::path filepath(filepathRaw);
 
@@ -74,10 +71,7 @@ void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrapp
     cv::Mat imunwrap(unwrappedResolution, fr.type());
 
     // Create unwrapper
-    BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution);
-    cv::FileStorage fs(configPath.str(), cv::FileStorage::READ);
-    fs["unwrapper"] >> unwrapper;
-    fs.release();
+    BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
 
     // Unwrap first frame
     unwrapper.unwrap(fr, imunwrap);
@@ -141,14 +135,14 @@ void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrapp
 int main(int argc, char** argv)
 {
     if (argc == 1) {
-        std::cout << "usage: unwrapfile [--no-sound] [--config CONFIG] [--unwrapped-resolution WIDTH HEIGHT] [file(s)]" << std::endl;
+        std::cout << "usage: unwrapfile [--no-sound] [--camera CAMERA_NAME] [--unwrapped-resolution WIDTH HEIGHT] [file(s)]" << std::endl;
         return 0;
     }
 
     std::vector<FileType> ftype(argc - 1);
     bool anyvideo = false;
     bool copysound = true;
-    std::string configName = "pixpro_usb";
+    std::string cameraName = "pixpro_usb";
     cv::Size unwrappedResolution(1920, 590);
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--no-sound") == 0) {
@@ -157,12 +151,12 @@ int main(int argc, char** argv)
             continue;
         }
 
-        if(strcmp(argv[i], "--config") == 0) {
+        if(strcmp(argv[i], "--camera") == 0) {
             // Check there's another parameter to read
             assert(i < (argc - 2));
 
-            // Read NEXT parameter as config name and skip over it
-            configName = argv[i + 1];
+            // Read NEXT parameter as camera name and skip over it
+            cameraName = argv[i + 1];
             i++;
             continue;
         }
@@ -203,33 +197,14 @@ int main(int argc, char** argv)
         copysound = false;
     }
 
-    const std::string configFilename = configName + ".yaml";
-    filesystem::path configPath(configFilename);
-
-    // first check if file exists in working directory
-    if (!configPath.exists()) {
-        // next look for environment variable pointing to
-        // bob_robotics
-        static const char *envVarName = "BOB_ROBOTICS_PATH";
-        const char *env = std::getenv(envVarName);
-        if (!env) {
-            throw std::runtime_error(std::string(envVarName) +" environment variable is not set and unwrap parameters file could not be found locally");
-        }
-
-        configPath = filesystem::path(env) / "imgproc" / "unwrapparams" / configFilename;
-        if (!configPath.exists()) {
-            throw std::runtime_error("Could not find unwrap parameters file for " + configName);
-        }
-    }
-
-    std::cout << "Config: " << configName << std::endl;
+    std::cout << "Camera: " << cameraName << std::endl;
     std::cout << "Unwrapped resolution: " << unwrappedResolution << std::endl;
     // Process arguments
     for (int i = 0; i < argc - 1; i++) {
         if (ftype[i] == FileType::image)
-            processjpeg(argv[i + 1], unwrappedResolution, configPath);
+            processjpeg(argv[i + 1], unwrappedResolution, cameraName);
         else if (ftype[i] == FileType::video)
-            processmp4(argv[i + 1], copysound, unwrappedResolution, configPath);
+            processmp4(argv[i + 1], copysound, unwrappedResolution, cameraName);
     }
 
     return 0;
