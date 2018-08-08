@@ -265,17 +265,20 @@ protected:
 
     void setState(JAxis axis, float value, bool isInitial)
     {
-        // Set state
-        m_AxisState[toIndex(axis)] = value;
+        // If the state's changed
+        // **NOTE** this is more for XINPUT which doesn't raise events
+        if (m_AxisState[toIndex(axis)] != value) {
+            m_AxisState[toIndex(axis)] = value;
 
-        if(!isInitial) {
-            // Get state after deadzone is taken into account
-            const float processedState = getState(axis);
+            if (!isInitial) {
+                // Get state after deadzone is taken into account
+                const float processedState = getState(axis);
 
-            // run handlers
-            for (auto handler : m_AxisHandlers) {
-                if (handler(axis, processedState)) {
-                    break;
+                // run handlers
+                for (auto handler : m_AxisHandlers) {
+                    if (handler(axis, processedState)) {
+                        break;
+                    }
                 }
             }
         }
