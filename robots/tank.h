@@ -102,21 +102,19 @@ private:
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone)
     {
         // only interested in left joystick
-        float x = m_X;
-        float y = m_Y;
         switch (axis) {
         case HID::JAxis::LeftStickVertical:
-            y = value;
+            m_Y = value;
             break;
         case HID::JAxis::LeftStickHorizontal:
-            x = value;
+            m_X = value;
             break;
         default:
             return false;
         }
 
         // drive robot with joystick
-        drive(x, y, deadZone);
+        drive(m_X, m_Y, deadZone);
         return true;
     }
 }; // Tank

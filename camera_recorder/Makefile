@@ -4,10 +4,14 @@ include ../common/flags.mk
 
 all: camera_recorder camera_recorder_vicon
 
-camera_recorder: camera_recorder.cc
+-include camera_recorder.d
+
+camera_recorder: camera_recorder.cc camera_recorder.d
 	$(CXX) camera_recorder.cc $(CXXFLAGS) -DI2C $(LINK_FLAGS) -o camera_recorder
 
-camera_recorder_vicon: camera_recorder.cc
-	$(CXX) camera_recorder.cc $(CXXFLAGS) -DVICON_CAPTURE $(LINK_FLAGS) -o camera_recorder_vicon_tracking
+-include camera_recorder_vicon.d
 
--include camera_recorder.d
+camera_recorder_vicon: camera_recorder.cc camera_recorder_vicon.d
+	$(CXX) camera_recorder.cc $(CXXFLAGS) -DVICON_CAPTURE $(LINK_FLAGS) -o camera_recorder_vicon
+
+%.d: ;
