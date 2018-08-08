@@ -10,10 +10,12 @@ all: camera_recorder camera_recorder_vicon
 camera_recorder: camera_recorder.cc camera_recorder.d
 	$(CXX) camera_recorder.cc $(CXXFLAGS) -DI2C $(LINK_FLAGS) -o camera_recorder
 
-camera_recorder_vicon: camera_recorder.cc camera_recorder.d
-	$(CXX) camera_recorder.cc $(CXXFLAGS) -DVICON_CAPTURE $(LINK_FLAGS) -o camera_recorder_vicon_tracking
+-include camera_recorder_vicon.d
+
+camera_recorder_vicon: camera_recorder.cc camera_recorder_vicon.d
+	$(CXX) camera_recorder.cc $(CXXFLAGS) -DVICON_CAPTURE $(LINK_FLAGS) -o camera_recorder_vicon
 
 %.d: ;
 
 clean:
-	rm -rf camera_recorder camera_recorder_vicon camera_recorder.d
+	rm -rf camera_recorder camera_recorder_vicon *.d
