@@ -9,4 +9,4 @@ for lib in "$basename"/../lib*; do
     make -C "$lib" clean
 done
 
-build_all examples "$basename"/*_test
+build_all examples "$basename"/*
