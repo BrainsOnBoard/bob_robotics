@@ -76,7 +76,7 @@ class JoystickWindows : public JoystickBase<JAxisWindows, JButtonWindows>
 public:
     //! Open default joystick device with (optionally) specified dead zone
     JoystickWindows(float deadZone = 0.0f)
-      : JoystickBase(deadZone), m_LastPacketNumber(DWORD_MAX)
+      : JoystickBase(deadZone), m_LastPacketNumber(-1)
     {
         // Read XInput state
         XINPUT_STATE state;
@@ -84,11 +84,11 @@ public:
 
         // Set initial button states
         for (size_t i = toIndex(JButton::Start); i < toIndex(JButton::LENGTH); i++) {
-            setState(toButton(i), ((m_State.Gamepad.wButtons >> i) & 1) ? StateDown : 0);
+            setState(toButton(i), ((state.Gamepad.wButtons >> i) & 1) ? StateDown : 0, true);
         }
 
         // Set initial axis states
-        updateAxes(m_State, true);
+        updateAxes(state, true);
     }
 
     //------------------------------------------------------------------------
@@ -110,8 +110,8 @@ public:
 
         // Check buttons for changes
         for (size_t i = toIndex(JButton::Start); i < toIndex(JButton::LENGTH); i++) {
-            const bool down = (((m_NewState.Gamepad.wButtons >> i) & 1) != 0);
-            if (down != isDown(toButton(i)) {
+            const bool down = (((state.Gamepad.wButtons >> i) & 1) != 0);
+            if (down != isDown(toButton(i))) {
                 // ... then this button has been pressed or released
                 if (down) {
                     setPressed(toButton(i), false);
@@ -141,7 +141,7 @@ private:
 
         // Triggers
         setState(JAxis::LeftTrigger, axisToFloat(JAxis::LeftTrigger, static_cast<int16_t>(state.Gamepad.bLeftTrigger)), isInitial);
-        setState(JAxis::RightTrigger, axisToFloat(JAxis::RightTrigger, static_cast<int16_t>(state.Gamepad.bRightrigger)), isInitial);
+        setState(JAxis::RightTrigger, axisToFloat(JAxis::RightTrigger, static_cast<int16_t>(state.Gamepad.bRightTrigger)), isInitial);
 
         // D-pad
         setState(JAxis::DpadVertical, getDpadValue(state.Gamepad.wButtons & 3), isInitial);
@@ -152,7 +152,7 @@ private:
     // Static methods
     //------------------------------------------------------------------------
     //! Convert a raw 16-bit int value for an axis to a float
-    static constexpr float axisToFloat(JAxis axis, int16_t value) const override
+    static constexpr float axisToFloat(JAxis axis, int16_t value)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
