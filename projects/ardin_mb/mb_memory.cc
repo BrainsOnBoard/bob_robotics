@@ -64,7 +64,7 @@ MBMemory::MBMemory()
     // Final setup
     {
         Timer<> timer("Sparse init:");
-        initant_world();
+        initardin_mb();
     }
 }
 //----------------------------------------------------------------------------
