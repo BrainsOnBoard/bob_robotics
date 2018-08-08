@@ -1,7 +1,7 @@
 #include "modelSpec.h"
 
 // BoB robotics includes
-#include "../../genn_models/sigmoid.h"
+#include "genn_models/sigmoid.h"
 
 // Stone CX includes
 #include "parameters.h"
