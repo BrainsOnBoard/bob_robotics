@@ -36,10 +36,10 @@ class PerfectMemoryBase
 private:
     class BestMatchingSnapshotProcessor
     {
-        public:
+    public:
         inline void operator()(float difference, int col, size_t snapshot)
         {
-            if(difference < m_MinDifference) {
+            if (difference < m_MinDifference) {
                 m_MinDifference = difference;
                 m_BestCol = col;
                 m_BestSnapshot = snapshot;
@@ -49,7 +49,7 @@ private:
         inline auto result(const cv::Size &unwrapRes)
         {
             // If best column is more than 180 degrees away, flip
-            if(m_BestCol > (unwrapRes.width / 2)) {
+            if (m_BestCol > (unwrapRes.width / 2)) {
                 m_BestCol -= unwrapRes.width;
             }
 
@@ -60,31 +60,46 @@ private:
             return std::make_tuple(bestAngle, m_BestSnapshot, m_MinDifference);
         }
 
-        private:
+    protected:
         float m_MinDifference = std::numeric_limits<float>::infinity();
         int m_BestCol;
         size_t m_BestSnapshot;
     };
 
-
     class RIDFValueLogger
       : public BestMatchingSnapshotProcessor
     {
-        public:
+    public:
         inline void operator()(float difference, int col, size_t snapshot)
         {
+            if (snapshot != m_CurrentSnapshot) {
+                snapshotUpdate();
+                m_CurrentSnapshot = snapshot;
+                m_CurrentDifferences.clear();
+            }
+
             BestMatchingSnapshotProcessor::operator()(difference, col, snapshot);
-            m_Differences.push_back(difference);
+            m_CurrentDifferences.push_back(difference);
         }
 
         inline auto result(const cv::Size &unwrapRes)
         {
+            snapshotUpdate();
             const auto res = BestMatchingSnapshotProcessor::result(unwrapRes);
-            return std::make_tuple(std::get<0>(res), std::get<1>(res), std::get<2>(res), std::move(m_Differences));
+            return std::make_tuple(std::get<0>(res), std::get<1>(res), std::get<2>(res), std::move(m_BestDifferences));
         }
 
-        private:
-        std::vector<float> m_Differences;
+    private:
+        std::vector<float> m_BestDifferences, m_CurrentDifferences;
+        size_t m_CurrentSnapshot = 0;
+
+        void snapshotUpdate()
+        {
+            if (m_BestSnapshot == m_CurrentSnapshot) {
+                m_BestDifferences.resize(m_CurrentDifferences.size());
+                std::copy(m_CurrentDifferences.begin(), m_CurrentDifferences.end(), m_BestDifferences.begin());
+            }
+        }
     };
 
     template<typename T>
