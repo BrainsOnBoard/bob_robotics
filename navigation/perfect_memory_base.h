@@ -75,7 +75,7 @@ public:
         image.copyTo(m_ScratchRollImage);
 
         // Scan across image columns
-        float minDifferenceSquared = std::numeric_limits<float>::max();
+        float minDifference = std::numeric_limits<float>::max();
         int bestCol = 0;
         size_t bestSnapshot = std::numeric_limits<size_t>::max();
         const size_t numSnapshots = getNumSnapshots();
@@ -84,11 +84,11 @@ public:
             // Loop through snapshots
             for(size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
-                const float differenceSquared = calcSnapshotDifferenceSquared(m_ScratchRollImage, m_ScratchMaskImage, s);
+                const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
 
                 // If this is an improvement - update
-                if(differenceSquared < minDifferenceSquared) {
-                    minDifferenceSquared = differenceSquared;
+                if(difference < minDifference) {
+                    minDifference = difference;
                     bestCol = i;
                     bestSnapshot = s;
                 }
@@ -110,7 +110,7 @@ public:
         const radian_t bestAngle = units::make_unit<turn_t>((double)bestCol / (double)unwrapRes.width);
 
         // Return result
-        return std::make_tuple(bestAngle, bestSnapshot, minDifferenceSquared);
+        return std::make_tuple(bestAngle, bestSnapshot, minDifference);
     }
 
 protected:
@@ -121,7 +121,7 @@ protected:
     virtual size_t addSnapshot(const cv::Mat &image) = 0;
 
     // Calculate difference between memory and snapshot with index
-    virtual float calcSnapshotDifferenceSquared(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
+    virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
 
 private:
     //------------------------------------------------------------------------
