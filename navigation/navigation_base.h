@@ -53,14 +53,9 @@ public:
             throw std::runtime_error("Path " + routePath.str() + " does not exist");
         }
 
-        for(size_t i = 0;;i++) {
-            const auto filename = routePath / getRouteDatabaseFilename(i);
-            if(!filename.exists()) {
-                break;
-            }
-
+        if (routePath.is_file()) { // loading single file
             // Load image
-            cv::Mat image = cv::imread(filename.str(), cv::IMREAD_GRAYSCALE);
+            cv::Mat image = cv::imread(routePath.str(), cv::IMREAD_GRAYSCALE);
             assert(image.type() == CV_8UC1);
             if (resizeImages) {
                 cv::resize(image, image, m_UnwrapRes);
@@ -71,6 +66,15 @@ public:
 
             // Add snapshot
             train(image, false);
+        } else { // is directory
+            for (size_t i = 0;; i++) {
+                const auto filename = routePath / getRouteDatabaseFilename(i);
+                try {
+                    loadSnapshotsFromPath(filename, resizeImages);
+                } catch (std::runtime_error &) {
+                    return;
+                }
+            }
         }
     }
 

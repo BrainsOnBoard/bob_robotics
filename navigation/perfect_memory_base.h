@@ -136,7 +136,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image, bool saveImage) override
+    virtual void train(const cv::Mat &image, bool saveImage = false) override
     {
         const auto &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);
