@@ -22,20 +22,27 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemory
 //------------------------------------------------------------------------
-class PerfectMemory : public PerfectMemoryBase
+template<typename RIDFProcessor = BestMatchingSnapshot>
+class PerfectMemory
+  : public PerfectMemoryBase<RIDFProcessor>
 {
 public:
-    PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                  const filesystem::path outputPath = "snapshots")
-      : PerfectMemoryBase(unwrapRes, scanStep, outputPath)
+    PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
+      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {}
 
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    virtual size_t getNumSnapshots() const override { return m_Snapshots.size(); }
-    virtual const cv::Mat &getSnapshot(size_t index) const override{ return m_Snapshots[index]; }
+    virtual size_t getNumSnapshots() const override
+    {
+        return m_Snapshots.size();
+    }
+    virtual const cv::Mat &getSnapshot(size_t index) const override
+    {
+        return m_Snapshots[index];
+    }
 
 protected:
     //! Add a snapshot to memory and return its index
@@ -55,10 +62,10 @@ protected:
         cv::absdiff(m_Snapshots[snapshot], image, m_DiffScratchImage);
 
         // Get raw access to image difference values
-        const uint8_t *rawDiff = reinterpret_cast<const uint8_t*>(m_DiffScratchImage.data);
+        const uint8_t *rawDiff = reinterpret_cast<const uint8_t *>(m_DiffScratchImage.data);
 
         // If there's no mask
-        if(imageMask.empty()) {
+        if (imageMask.empty()) {
             const int len = m_DiffScratchImage.cols * m_DiffScratchImage.rows;
             float sumDifference = std::accumulate(rawDiff, rawDiff + len, 0.0f);
 
@@ -68,15 +75,15 @@ protected:
         // Otherwise
         else {
             // Get raw access to rotated mask associated with image and non-rotated mask associated with snapshot
-            const uint8_t *rawImageMask = reinterpret_cast<const uint8_t*>(imageMask.data);
-            const uint8_t *rawSnapshotMask = reinterpret_cast<const uint8_t*>(this->getMaskImage().data);
+            const uint8_t *rawImageMask = reinterpret_cast<const uint8_t *>(imageMask.data);
+            const uint8_t *rawSnapshotMask = reinterpret_cast<const uint8_t *>(this->getMaskImage().data);
 
             // Loop through pixels
             float sumDifference = 0.0f;
             unsigned int numUnmaskedPixels = 0;
-            for(int i = 0; i < (m_DiffScratchImage.cols * m_DiffScratchImage.rows); i++) {
+            for (int i = 0; i < (m_DiffScratchImage.cols * m_DiffScratchImage.rows); i++) {
                 // If this pixel is masked by neither of the masks
-                if(rawImageMask[i] != 0 && rawSnapshotMask[i] != 0) {
+                if (rawImageMask[i] != 0 && rawSnapshotMask[i] != 0) {
                     // Accumulate sum of differences
                     sumDifference += (float) rawDiff[i];
 

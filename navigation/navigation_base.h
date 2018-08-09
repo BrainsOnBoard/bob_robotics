@@ -22,7 +22,8 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::NavigationBase
 //------------------------------------------------------------------------
-class NavigationBase {
+class NavigationBase
+{
 public:
     NavigationBase(const cv::Size unwrapRes,
                    const unsigned int scanStep,
@@ -96,9 +97,18 @@ public:
         return m_RollBuffer.size();
     }
 
-    const cv::Mat &getMaskImage() const { return m_MaskImage; }
-    const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
-    const filesystem::path &getOutputPath() const { return m_OutputPath; }
+    const cv::Mat &getMaskImage() const
+    {
+        return m_MaskImage;
+    }
+    const cv::Size &getUnwrapResolution() const
+    {
+        return m_UnwrapRes;
+    }
+    const filesystem::path &getOutputPath() const
+    {
+        return m_OutputPath;
+    }
 
 private:
     //------------------------------------------------------------------------
@@ -127,7 +137,7 @@ protected:
         const size_t scanStep = m_RollBuffer.size();
 
         // Loop through rows
-        for(int y = 0; y < image.rows; y++) {
+        for (int y = 0; y < image.rows; y++) {
             // Get pointer to start of row
             uint8_t *rowPtr = image.ptr(y);
 

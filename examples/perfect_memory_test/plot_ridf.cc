@@ -15,11 +15,12 @@ namespace plt = matplotlibcpp;
 
 using namespace BoBRobotics;
 
-int main()
+int
+main()
 {
     // Class to run perfect memory algorithm
     cv::Size imSize(180, 50);
-    Navigation::PerfectMemory pm(imSize);
+    Navigation::PerfectMemory<> pm(imSize);
 
     // Load a single snapshot
     cv::Mat snap = cv::imread("../../ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
@@ -44,7 +45,7 @@ int main()
     // Calculate x values (angles)
     std::vector<float> x(ridf.size());
     for (size_t i = 0; i < x.size(); i++) {
-        x[i] = -180.0f + (float) i *  360.0f / (x.size() - 1);
+        x[i] = -180.0f + (float) i * 360.0f / (x.size() - 1);
     }
 
     // Plot RIDF

@@ -5,6 +5,7 @@
 #include <cstdint>
 
 // Standard C++ includes
+#include <array>
 #include <iostream>
 #include <limits>
 #include <tuple>
@@ -30,44 +31,45 @@ using namespace units::angle;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
+class BestMatchingSnapshot
+{
+public:
+    inline void operator()(float difference, int col, size_t snapshot)
+    {
+        if (difference < m_MinDifference) {
+            m_MinDifference = difference;
+            m_BestCol = col;
+            m_BestSnapshot = snapshot;
+        }
+    }
+
+    inline auto result(const cv::Size &unwrapRes)
+    {
+        // If best column is more than 180 degrees away, flip
+        if (m_BestCol > (unwrapRes.width / 2)) {
+            m_BestCol -= unwrapRes.width;
+        }
+
+        // Convert column into angle
+        const radian_t bestAngle = units::make_unit<turn_t>((double) m_BestCol / (double) unwrapRes.width);
+
+        // Bundle up result as a tuple
+        return std::make_tuple(bestAngle, m_BestSnapshot, m_MinDifference);
+    }
+
+protected:
+    float m_MinDifference = std::numeric_limits<float>::infinity();
+    int m_BestCol;
+    size_t m_BestSnapshot;
+};
+
+template<typename RIDFProcessor = BestMatchingSnapshot>
 class PerfectMemoryBase
   : public NavigationBase
 {
 private:
-    class BestMatchingSnapshotProcessor
-    {
-    public:
-        inline void operator()(float difference, int col, size_t snapshot)
-        {
-            if (difference < m_MinDifference) {
-                m_MinDifference = difference;
-                m_BestCol = col;
-                m_BestSnapshot = snapshot;
-            }
-        }
-
-        inline auto result(const cv::Size &unwrapRes)
-        {
-            // If best column is more than 180 degrees away, flip
-            if (m_BestCol > (unwrapRes.width / 2)) {
-                m_BestCol -= unwrapRes.width;
-            }
-
-            // Convert column into angle
-            const radian_t bestAngle = units::make_unit<turn_t>((double) m_BestCol / (double) unwrapRes.width);
-
-            // Bundle up result as a tuple
-            return std::make_tuple(bestAngle, m_BestSnapshot, m_MinDifference);
-        }
-
-    protected:
-        float m_MinDifference = std::numeric_limits<float>::infinity();
-        int m_BestCol;
-        size_t m_BestSnapshot;
-    };
-
     class RIDFValueLogger
-      : public BestMatchingSnapshotProcessor
+      : public RIDFProcessor
     {
     public:
         inline void operator()(float difference, int col, size_t snapshot)
@@ -78,14 +80,14 @@ private:
                 m_CurrentDifferences.clear();
             }
 
-            BestMatchingSnapshotProcessor::operator()(difference, col, snapshot);
+            RIDFProcessor::operator()(difference, col, snapshot);
             m_CurrentDifferences.push_back(difference);
         }
 
         inline auto result(const cv::Size &unwrapRes)
         {
             snapshotUpdate();
-            const auto res = BestMatchingSnapshotProcessor::result(unwrapRes);
+            const auto res = RIDFProcessor::result(unwrapRes);
             return std::make_tuple(std::get<0>(res), std::get<1>(res), std::get<2>(res), std::move(m_BestDifferences));
         }
 
@@ -95,7 +97,7 @@ private:
 
         void snapshotUpdate()
         {
-            if (m_BestSnapshot == m_CurrentSnapshot) {
+            if (RIDFProcessor::m_BestSnapshot == m_CurrentSnapshot) {
                 m_BestDifferences.resize(m_CurrentDifferences.size());
                 std::copy(m_CurrentDifferences.begin(), m_CurrentDifferences.end(), m_BestDifferences.begin());
             }
@@ -117,9 +119,9 @@ private:
         // Scan across image columns
         const size_t numSnapshots = getNumSnapshots();
         const size_t scanStep = getScanStep();
-        for(int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
+        for (int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
             // Loop through snapshots
-            for(size_t s = 0; s < numSnapshots; s++) {
+            for (size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
                 const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
                 processor(difference, i, s);
@@ -127,7 +129,7 @@ private:
 
             // Roll image and corresponding mask left by scanStep
             rollImage(m_ScratchRollImage);
-            if(!m_ScratchMaskImage.empty()) {
+            if (!m_ScratchMaskImage.empty()) {
                 rollImage(m_ScratchMaskImage);
             }
         }
@@ -137,8 +139,7 @@ private:
     }
 
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                      const filesystem::path outputPath = "snapshots")
+    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
       : NavigationBase(unwrapRes, scanStep, outputPath)
     {}
 
@@ -169,7 +170,7 @@ public:
 
     auto getHeading(const cv::Mat &image) const
     {
-        return runRIDF(image, BestMatchingSnapshotProcessor());
+        return runRIDF(image, RIDFProcessor());
     }
 
     auto getRIDF(const cv::Mat &image) const
