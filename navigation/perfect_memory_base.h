@@ -35,8 +35,7 @@ class PerfectMemoryBase
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
                       const filesystem::path outputPath = "snapshots")
-      : NavigationBase(unwrapRes, outputPath)
-      , m_ScanStep(scanStep)
+      : NavigationBase(unwrapRes, scanStep, outputPath)
     {}
 
     //------------------------------------------------------------------------
@@ -80,7 +79,8 @@ public:
         int bestCol = 0;
         size_t bestSnapshot = std::numeric_limits<size_t>::max();
         const size_t numSnapshots = getNumSnapshots();
-        for(int i = 0; i < m_ScratchRollImage.cols; i += m_ScanStep) {
+        const size_t scanStep = getScanStep();
+        for(int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
             // Loop through snapshots
             for(size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
@@ -94,10 +94,10 @@ public:
                 }
             }
 
-            // Roll image and corresponding mask left by m_ScanStep
-            rollImage(m_ScratchRollImage, m_ScanStep);
+            // Roll image and corresponding mask left by scanStep
+            rollImage(m_ScratchRollImage);
             if(!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage, m_ScanStep);
+                rollImage(m_ScratchMaskImage);
             }
         }
 
@@ -133,38 +133,8 @@ private:
     }
 
     //------------------------------------------------------------------------
-    // Private static methods
-    //------------------------------------------------------------------------
-    // 'Rolls' an image scanStep to the left
-    static void rollImage(cv::Mat &image, unsigned int scanStep)
-    {
-        // Buffer to hold scanStep of pixels
-        uint8_t *rollBuffer = new uint8_t[scanStep];
-
-        // Loop through rows
-        for(int y = 0; y < image.rows; y++) {
-            // Get pointer to start of row
-            uint8_t *rowPtr = image.ptr(y);
-
-            // Copy scanStep pixels at left hand size of row into buffer
-            std::copy_n(rowPtr, scanStep, rollBuffer);
-
-            // Copy rest of row back over pixels we've copied to buffer
-            std::copy_n(rowPtr + scanStep, image.cols - scanStep, rowPtr);
-
-            // Copy buffer back into row
-            std::copy(rollBuffer, &rollBuffer[scanStep], rowPtr + (image.cols - scanStep));
-        }
-
-        // ** YUCK **
-        delete rollBuffer;
-    }
-
-    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const unsigned int m_ScanStep;
-
     mutable cv::Mat m_ScratchMaskImage;
     mutable cv::Mat m_ScratchRollImage;
 }; // PerfectMemoryBase

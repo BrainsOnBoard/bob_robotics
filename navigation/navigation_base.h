@@ -4,6 +4,9 @@
 #include <cassert>
 #include <cstdint>
 
+// Standard C++ includes
+#include <vector>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -21,8 +24,10 @@ namespace Navigation {
 class NavigationBase {
 public:
     NavigationBase(const cv::Size unwrapRes,
+                   const unsigned int scanStep,
                    const filesystem::path outputPath = "snapshots")
       : m_UnwrapRes(unwrapRes)
+      , m_RollBuffer(scanStep)
       , m_OutputPath(outputPath)
       , m_ScratchMaskImage(unwrapRes, CV_8UC1)
       , m_ScratchRollImage(unwrapRes, CV_8UC1)
@@ -77,6 +82,11 @@ public:
         assert(m_MaskImage.type() == CV_8UC1);
     }
 
+    inline size_t getScanStep() const
+    {
+        return m_RollBuffer.size();
+    }
+
     const cv::Mat &getMaskImage() const { return m_MaskImage; }
     const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
     const filesystem::path &getOutputPath() const { return m_OutputPath; }
@@ -94,11 +104,34 @@ private:
     // Members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
+    std::vector<uint8_t> m_RollBuffer;
     const filesystem::path m_OutputPath;
     cv::Mat m_MaskImage;
 
     mutable cv::Mat m_ScratchMaskImage;
     mutable cv::Mat m_ScratchRollImage;
+
+protected:
+    //! 'Rolls' an image to the left
+    void rollImage(cv::Mat &image) const
+    {
+        const size_t scanStep = m_RollBuffer.size();
+
+        // Loop through rows
+        for(int y = 0; y < image.rows; y++) {
+            // Get pointer to start of row
+            uint8_t *rowPtr = image.ptr(y);
+
+            // Copy pixels at left hand size of row into buffer
+            std::copy_n(rowPtr, scanStep, (uint8_t *) m_RollBuffer.data());
+
+            // Copy rest of row back over pixels we've copied to buffer
+            std::copy_n(rowPtr + scanStep, image.cols - scanStep, rowPtr);
+
+            // Copy buffer back into row
+            std::copy(m_RollBuffer.begin(), m_RollBuffer.end(), rowPtr + (image.cols - scanStep));
+        }
+    }
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics
