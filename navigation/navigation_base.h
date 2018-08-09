@@ -5,6 +5,7 @@
 #include <cstdint>
 
 // Standard C++ includes
+#include <stdexcept>
 #include <vector>
 
 // OpenCV
@@ -48,6 +49,10 @@ public:
 
     void loadSnapshotsFromPath(const filesystem::path &routePath, bool resizeImages = false)
     {
+        if (!routePath.exists()) {
+            throw std::runtime_error("Path " + routePath.str() + " does not exist");
+        }
+
         for(size_t i = 0;;i++) {
             const auto filename = routePath / getRouteDatabaseFilename(i);
             if(!filename.exists()) {
