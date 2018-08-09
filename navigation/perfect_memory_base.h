@@ -8,6 +8,7 @@
 #include <iostream>
 #include <limits>
 #include <tuple>
+#include <vector>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -32,6 +33,73 @@ using namespace units::angle;
 class PerfectMemoryBase
   : public NavigationBase
 {
+private:
+    class BestMatchingSnapshotProcessor
+    {
+        public:
+        inline void operator()(float difference, int col, size_t snapshot)
+        {
+            if(difference < m_MinDifference) {
+                m_MinDifference = difference;
+                m_BestCol = col;
+                m_BestSnapshot = snapshot;
+            }
+        }
+
+        inline auto result(const cv::Size &unwrapRes)
+        {
+            // If best column is more than 180 degrees away, flip
+            if(m_BestCol > (unwrapRes.width / 2)) {
+                m_BestCol -= unwrapRes.width;
+            }
+
+            // Convert column into angle
+            const radian_t bestAngle = units::make_unit<turn_t>((double) m_BestCol / (double) unwrapRes.width);
+
+            // Bundle up result as a tuple
+            return std::make_tuple(bestAngle, m_BestSnapshot, m_MinDifference);
+        }
+
+        private:
+        float m_MinDifference = std::numeric_limits<float>::infinity();
+        int m_BestCol;
+        size_t m_BestSnapshot;
+    };
+
+    template<typename T>
+    auto runRIDF(const cv::Mat &image, T &&processor) const
+    {
+        const auto &unwrapRes = getUnwrapResolution();
+        assert(image.cols == unwrapRes.width);
+        assert(image.rows == unwrapRes.height);
+        assert(image.type() == CV_8UC1);
+
+        // Clone mask and image so they can be rolled inplace
+        getMaskImage().copyTo(m_ScratchMaskImage);
+        image.copyTo(m_ScratchRollImage);
+
+        // Scan across image columns
+        const size_t numSnapshots = getNumSnapshots();
+        const size_t scanStep = getScanStep();
+        for(int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
+            // Loop through snapshots
+            for(size_t s = 0; s < numSnapshots; s++) {
+                // Calculate difference
+                const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
+                processor(difference, i, s);
+            }
+
+            // Roll image and corresponding mask left by scanStep
+            rollImage(m_ScratchRollImage);
+            if(!m_ScratchMaskImage.empty()) {
+                rollImage(m_ScratchMaskImage);
+            }
+        }
+
+        // Return result
+        return processor.result(unwrapRes);
+    }
+
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
                       const filesystem::path outputPath = "snapshots")
@@ -63,54 +131,9 @@ public:
         }
     }
 
-    std::tuple<radian_t, size_t, float> getHeading(const cv::Mat &image) const
+    auto getHeading(const cv::Mat &image) const
     {
-        const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
-
-        // Clone mask and image so they can be rolled inplace
-        getMaskImage().copyTo(m_ScratchMaskImage);
-        image.copyTo(m_ScratchRollImage);
-
-        // Scan across image columns
-        float minDifference = std::numeric_limits<float>::max();
-        int bestCol = 0;
-        size_t bestSnapshot = std::numeric_limits<size_t>::max();
-        const size_t numSnapshots = getNumSnapshots();
-        const size_t scanStep = getScanStep();
-        for(int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
-            // Loop through snapshots
-            for(size_t s = 0; s < numSnapshots; s++) {
-                // Calculate difference
-                const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
-
-                // If this is an improvement - update
-                if(difference < minDifference) {
-                    minDifference = difference;
-                    bestCol = i;
-                    bestSnapshot = s;
-                }
-            }
-
-            // Roll image and corresponding mask left by scanStep
-            rollImage(m_ScratchRollImage);
-            if(!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage);
-            }
-        }
-
-        // If best column is more than 180 degrees away, flip
-        if(bestCol > (unwrapRes.width / 2)) {
-            bestCol -= unwrapRes.width;
-        }
-
-        // Convert column into angle
-        const radian_t bestAngle = units::make_unit<turn_t>((double)bestCol / (double)unwrapRes.width);
-
-        // Return result
-        return std::make_tuple(bestAngle, bestSnapshot, minDifference);
+        return runRIDF(image, BestMatchingSnapshotProcessor());
     }
 
 protected:
