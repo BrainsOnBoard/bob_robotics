@@ -66,6 +66,27 @@ private:
         size_t m_BestSnapshot;
     };
 
+
+    class RIDFValueLogger
+      : public BestMatchingSnapshotProcessor
+    {
+        public:
+        inline void operator()(float difference, int col, size_t snapshot)
+        {
+            BestMatchingSnapshotProcessor::operator()(difference, col, snapshot);
+            m_Differences.push_back(difference);
+        }
+
+        inline auto result(const cv::Size &unwrapRes)
+        {
+            const auto res = BestMatchingSnapshotProcessor::result(unwrapRes);
+            return std::make_tuple(std::get<0>(res), std::get<1>(res), std::get<2>(res), std::move(m_Differences));
+        }
+
+        private:
+        std::vector<float> m_Differences;
+    };
+
     template<typename T>
     auto runRIDF(const cv::Mat &image, T &&processor) const
     {
@@ -134,6 +155,11 @@ public:
     auto getHeading(const cv::Mat &image) const
     {
         return runRIDF(image, BestMatchingSnapshotProcessor());
+    }
+
+    auto getRIDF(const cv::Mat &image) const
+    {
+        return runRIDF(image, RIDFValueLogger());
     }
 
 protected:
