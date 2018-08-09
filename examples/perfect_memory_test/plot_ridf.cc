@@ -1,4 +1,8 @@
+// Standard C includes
+#include <cmath>
+
 // Standard C++ includes
+#include <algorithm>
 #include <iostream>
 
 // BoB robotics includes
@@ -22,12 +26,22 @@ int main()
     cv::resize(snap, snap, imSize);
     pm.train(snap);
 
-    // Compare it with itself
+    // Compare snapshot with itself
     const auto result = pm.getRIDF(snap);
     auto ridf = std::get<3>(result);
 
-    // Copy value for 180 deg to -180 deg
-    ridf.insert(ridf.begin(), ridf[ridf.size() - 1]);
+    // Rotate so the range is from -180 to 180 deg
+    std::rotate(ridf.begin(), ridf.begin() + ceil((double) ridf.size() / 2.0), ridf.end());
+
+    // Copy value from -180 deg to 180 deg
+    ridf.push_back(ridf[0]);
+
+    // Normalise values so they are between 0 and 1
+    std::transform(ridf.begin(), ridf.end(), ridf.begin(), [](float f) {
+        return f / 255.0f;
+    });
+
+    // Calculate x values (angles)
     std::vector<float> x(ridf.size());
     for (size_t i = 0; i < x.size(); i++) {
         x[i] = -180.0f + (float) i *  360.0f / (x.size() - 1);
@@ -35,6 +49,8 @@ int main()
 
     // Plot RIDF
     plt::plot(x, ridf);
+    plt::ylabel("Image difference");
+    plt::xlabel("Angle (deg)");
     plt::xlim(-180, 180);
     plt::show();
 }
