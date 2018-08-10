@@ -85,16 +85,11 @@ public:
             return val / 255.0f;
         });
 
-        // Weights are 1 minus min difference, normalised to sum to 1
+        // Weights are 1 minus min difference
         std::array<float, numSnapshots> weights;
-        float sumWeights = 0.0f;
         for (size_t i = 0; i < numSnapshots; i++) {
             weights[i] = 1.0f - m_MinDifferences[i];
-            sumWeights += weights[i];
         }
-        std::transform(m_MinDifferences.begin(), m_MinDifferences.end(), weights.begin(), [sumWeights](float val) {
-            return val / sumWeights;
-        });
 
         // Turn best column values into headings
         std::array<radian_t, numSnapshots> headings;
