@@ -22,12 +22,12 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::VisualNavigationBase
 //------------------------------------------------------------------------
+//! The base class for visual navigation algorithms (currently just variations on perfect memory)
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes,
-                   const unsigned int scanStep,
-                   const filesystem::path outputPath = "snapshots")
+    VisualNavigationBase(const cv::Size unwrapRes, const unsigned int scanStep,
+                         const filesystem::path outputPath = "snapshots")
       : m_UnwrapRes(unwrapRes)
       , m_RollBuffer(scanStep)
       , m_OutputPath(outputPath)

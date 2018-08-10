@@ -1,3 +1,8 @@
+/*
+ * This header contains small, functor-type classes for calculating the
+ * differences between images, used by PerfectMemory.
+ */
+
 #pragma once
 
 // Standard C includes
@@ -13,6 +18,14 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::AbsDiff
+//------------------------------------------------------------------------
+/*!
+ * \brief For calculating the mean absolute difference between images
+ *
+ * Can be passed to PerfectMemory as a template parameter.
+ */
 class AbsDiff
 {
 public:
@@ -47,6 +60,14 @@ private:
 
 };
 
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::RMSDiff
+//------------------------------------------------------------------------
+/*!
+ * \brief For calculating the root mean square difference between images
+ *
+ * Can be passed to PerfectMemory as a template parameter.
+ */
 class RMSDiff
 {
     public:
@@ -59,6 +80,8 @@ class RMSDiff
     {
         cv::absdiff(image1, image2, differenceImage);
         const uint8_t *ptr = differenceImage.data;
+
+        // Square values of pixels, convert to float and store in m_Differences
         std::transform(ptr, &ptr[image1.rows * image1.cols], m_Differences.begin(), [](const uint8_t diff) {
             const float fdiff = (float) diff;
             return fdiff * fdiff;

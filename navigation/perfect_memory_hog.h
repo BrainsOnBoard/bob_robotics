@@ -24,6 +24,7 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryHOG
 //------------------------------------------------------------------------
+//! Perfect memory algorithm using HOG features instead of raw image matching
 template<typename RIDFProcessor = BestMatchingSnapshot>
 class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor>
 {

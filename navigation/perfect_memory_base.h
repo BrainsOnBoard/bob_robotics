@@ -34,11 +34,16 @@ using namespace units::dimensionless;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
+//! An abstract class which is the base for PerfectMemory and PerfectMemoryHOG
 template<typename RIDFProcessor>
 class PerfectMemoryBase
   : public VisualNavigationBase
 {
 private:
+    /*
+     * This class is used by getRIDF() to log RIDF values (for the best-matching
+     * snapshot) as we go along.
+     */
     class RIDFValueLogger
       : public RIDFProcessor
     {
@@ -75,6 +80,10 @@ private:
         }
     };
 
+    /*
+     * Run an RIDF over the image, comparing against snapshots, and feeding data
+     * into the specified RIDF processor.
+     */
     template<typename T>
     auto runRIDF(const cv::Mat &image, T &&processor) const
     {
@@ -110,14 +119,18 @@ private:
     }
 
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
+    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
+                      const filesystem::path outputPath = "snapshots")
       : VisualNavigationBase(unwrapRes, scanStep, outputPath)
     {}
 
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
+    //! Return the number of snapshots that have been read into memory
     virtual size_t getNumSnapshots() const = 0;
+
+    //! Return a specific snapshot
     virtual const cv::Mat &getSnapshot(size_t index) const = 0;
 
     //------------------------------------------------------------------------
@@ -153,10 +166,10 @@ protected:
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    // Add a snapshot to memory and return its index
+    //! Add a snapshot to memory and return its index
     virtual size_t addSnapshot(const cv::Mat &image) = 0;
 
-    // Calculate difference between memory and snapshot with index
+    //! Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
 
 private:

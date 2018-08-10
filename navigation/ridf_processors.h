@@ -19,6 +19,7 @@ namespace BoBRobotics {
 namespace Navigation {
 using namespace units::angle;
 
+//! Winner-take all: derive heading using only the best-matching snapshot
 class BestMatchingSnapshot
 {
 public:
@@ -56,6 +57,7 @@ private:
     size_t m_BestSnapshot;
 };
 
+//! Dynamic weighting: use weighted average of $n$ best-matching snapshots' headings
 template<size_t numSnapshots>
 class WeightNSnapshots
 {

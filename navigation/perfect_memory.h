@@ -25,6 +25,12 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemory
 //------------------------------------------------------------------------
+/*!
+ * \brief The conventional perfect memory (RIDF) algorithm
+ *
+ * \tparam RIDFProcessor The method used to calculate the heading (e.g. single snapshot v. multi-snapshot)
+ * \tparam Differencer This can be AbsDiff or RMSDiff
+ */
 template<typename RIDFProcessor = BestMatchingSnapshot, typename Differencer = AbsDiff>
 class PerfectMemory
   : public PerfectMemoryBase<RIDFProcessor>
@@ -43,13 +49,13 @@ public:
     {
         return m_Snapshots.size();
     }
+
     virtual const cv::Mat &getSnapshot(size_t index) const override
     {
         return m_Snapshots[index];
     }
 
 protected:
-    //! Add a snapshot to memory and return its index
     virtual size_t addSnapshot(const cv::Mat &image) override
     {
         m_Snapshots.emplace_back();
@@ -59,7 +65,6 @@ protected:
         return (m_Snapshots.size() - 1);
     }
 
-    //! Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
     {
         // Calculate difference between image and stored image
