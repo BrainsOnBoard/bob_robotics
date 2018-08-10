@@ -105,6 +105,10 @@ public:
         // Turn best column values into headings
         std::array<radian_t, numSnapshots> headings;
         std::transform(m_BestCols.begin(), m_BestCols.end(), headings.begin(), [unwrapRes](int col) {
+            // If best column is more than 180 degrees away, flip
+            if (col > (unwrapRes.width / 2)) {
+                col -= unwrapRes.width;
+            }
             return units::make_unit<turn_t>((double) col / (double) unwrapRes.width);
         });
 
