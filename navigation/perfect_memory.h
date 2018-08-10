@@ -15,6 +15,7 @@
 #include "../third_party/path.h"
 
 // Local includes
+#include "differencers.h"
 #include "perfect_memory_base.h"
 #include "ridf_processors.h"
 
@@ -24,13 +25,14 @@ namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemory
 //------------------------------------------------------------------------
-template<typename RIDFProcessor = BestMatchingSnapshot>
+template<typename RIDFProcessor = BestMatchingSnapshot, typename Differencer = AbsDiff>
 class PerfectMemory
   : public PerfectMemoryBase<RIDFProcessor>
 {
 public:
     PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
       : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
+      , m_Differencer(unwrapRes.width * unwrapRes.height)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {}
 
@@ -60,25 +62,22 @@ protected:
     //! Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
     {
-        // Calculate absolute difference between image and stored image
-        cv::absdiff(m_Snapshots[snapshot], image, m_DiffScratchImage);
-
-        // Get raw access to image difference values
-        const uint8_t *rawDiff = reinterpret_cast<const uint8_t *>(m_DiffScratchImage.data);
+        // Calculate difference between image and stored image
+        m_Differencer.calculateDifference(image, m_Snapshots[snapshot], m_DiffScratchImage);
 
         // If there's no mask
         if (imageMask.empty()) {
-            const int len = m_DiffScratchImage.cols * m_DiffScratchImage.rows;
-            float sumDifference = std::accumulate(rawDiff, rawDiff + len, 0.0f);
+            float sumDifference = std::accumulate(m_Differencer.begin(), m_Differencer.end(), 0.0f);
 
             // Return mean
-            return sumDifference / (float) len;
+            return Differencer::mean(sumDifference, m_DiffScratchImage.cols * m_DiffScratchImage.rows);
         }
         // Otherwise
         else {
             // Get raw access to rotated mask associated with image and non-rotated mask associated with snapshot
             const uint8_t *rawImageMask = reinterpret_cast<const uint8_t *>(imageMask.data);
             const uint8_t *rawSnapshotMask = reinterpret_cast<const uint8_t *>(this->getMaskImage().data);
+            const auto differences = m_Differencer.begin();
 
             // Loop through pixels
             float sumDifference = 0.0f;
@@ -87,7 +86,7 @@ protected:
                 // If this pixel is masked by neither of the masks
                 if (rawImageMask[i] != 0 && rawSnapshotMask[i] != 0) {
                     // Accumulate sum of differences
-                    sumDifference += (float) rawDiff[i];
+                    sumDifference += (float) differences[i];
 
                     // Increment unmasked pixels count
                     numUnmaskedPixels++;
@@ -95,7 +94,7 @@ protected:
             }
 
             // Return mean
-            return sumDifference / (float) numUnmaskedPixels;
+            return Differencer::mean(sumDifference, (float) numUnmaskedPixels);
         }
     }
 
@@ -104,6 +103,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     std::vector<cv::Mat> m_Snapshots;
+    mutable Differencer m_Differencer;
     mutable cv::Mat m_DiffScratchImage;
 }; // PerfectMemory
 } // Navigation
