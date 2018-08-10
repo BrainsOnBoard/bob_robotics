@@ -12,73 +12,82 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// BoB robotics includes
+#include "common/rtransform.h"
+
 // Local includes
-#include "config.h"
 #include "perfect_memory_base.h"
+#include "ridf_processors.h"
 
 namespace BoBRobotics {
 namespace Navigation {
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryHOG
 //------------------------------------------------------------------------
-template<unsigned int scanStep>
-class PerfectMemoryHOG : public PerfectMemoryBase<scanStep>
+template<typename RIDFProcessor = BestMatchingSnapshot>
+class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor>
 {
 public:
-    PerfectMemoryHOG(const Config &config)
-    :   PerfectMemoryBase<scanStep>(config),
-        HOGDescriptorSize(config.getHOGDescriptorSize()),
-        m_ScratchDescriptors(HOGDescriptorSize)
+    PerfectMemoryHOG(const cv::Size unwrapRes, const unsigned int scanStep = 1,
+                     const filesystem::path outputPath = "snapshots",
+                     const int HOGPixelsPerCell = 10, int HOGOrientations = 8)
+      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
+      , m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
+                            HOGOrientations / (HOGPixelsPerCell * HOGPixelsPerCell))
     {
         std::cout << "Creating perfect memory for HOG features" << std::endl;
-        
+
         // Configure HOG features
-        m_HOG.winSize = config.getUnwrapRes(); 
-        m_HOG.blockSize = cv::Size(config.getNumHOGPixelsPerCell(), config.getNumHOGPixelsPerCell());
-        m_HOG.blockStride = cv::Size(config.getNumHOGPixelsPerCell(), config.getNumHOGPixelsPerCell());
-        m_HOG.cellSize = cv::Size(config.getNumHOGPixelsPerCell(), config.getNumHOGPixelsPerCell());
-        m_HOG.nbins = config.getNumHOGOrientations();
+        m_HOG.winSize = unwrapRes;
+        m_HOG.blockSize = cv::Size(HOGPixelsPerCell, HOGPixelsPerCell);
+        m_HOG.blockStride = m_HOG.blockSize;
+        m_HOG.cellSize = m_HOG.blockSize;
+        m_HOG.nbins = HOGOrientations;
     }
 
     //------------------------------------------------------------------------
     // Constants
     //------------------------------------------------------------------------
-    const unsigned int HOGDescriptorSize;
+    const unsigned int m_HOGDescriptorSize;
 
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    virtual size_t getNumSnapshots() const override { return m_Snapshots.size(); }
-    virtual const cv::Mat &getSnapshot(size_t index) const override{ throw std::runtime_error("When using HOG features, snapshots aren't stored"); }
+    virtual size_t getNumSnapshots() const override
+    {
+        return m_Snapshots.size();
+    }
+
+    virtual const cv::Mat &getSnapshot(size_t) const override
+    {
+        throw std::runtime_error("When using HOG features, snapshots aren't stored");
+    }
 
 protected:
     // Add a snapshot to memory and return its index
     virtual size_t addSnapshot(const cv::Mat &image) override
     {
-        m_Snapshots.emplace_back(HOGDescriptorSize);
+        m_Snapshots.emplace_back(m_HOGDescriptorSize);
         m_HOG.compute(image, m_Snapshots.back());
-        assert(m_Snapshots.back().size() == HOGDescriptorSize);
+        assert(m_Snapshots.back().size() == m_HOGDescriptorSize);
 
         // Return index of new snapshot
         return (m_Snapshots.size() - 1);
     }
 
     // Calculate difference between memory and snapshot with index
-    virtual float calcSnapshotDifferenceSquared(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
+    virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
     {
         assert(imageMask.empty());
 
         // Calculate HOG descriptors of image
         m_HOG.compute(image, m_ScratchDescriptors);
-        assert(m_ScratchDescriptors.size() == HOGDescriptorSize);
+        assert(m_ScratchDescriptors.size() == m_HOGDescriptorSize);
 
         // Calculate square difference between image HOG descriptors and snapshot
-        std::transform(m_Snapshots[snapshot].begin(), m_Snapshots[snapshot].end(),
-                       m_ScratchDescriptors.begin(), m_ScratchDescriptors.begin(),
-                       [](float a, float b)
-                       {
-                           return (a - b) * (a - b);
-                       });
+        rtransform(m_Snapshots[snapshot], m_ScratchDescriptors, m_ScratchDescriptors, [](float a, float b) {
+            return (a - b) * (a - b);
+        });
 
         // Calculate RMS
         return sqrt(std::accumulate(m_ScratchDescriptors.begin(), m_ScratchDescriptors.end(), 0.0f));

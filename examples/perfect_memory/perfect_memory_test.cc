@@ -4,6 +4,7 @@
 // BoB robotics includes
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_hog.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
@@ -80,5 +81,26 @@ main()
             std::cout << "Snapshot " << i + 1 << ": #" << snapshots[i]
                       << " (" << differences[i] << ")" << std::endl;
         }
+    }
+
+    {
+        std::cout << std::endl << "Testing with HOG..." << std::endl;
+
+        PerfectMemoryHOG<> pm(imSize);
+        loadSnapshots(pm);
+
+        // Time testing phase
+        Timer<> t{ "Time taken for testing: " };
+
+        // Treat snapshot #10 as test data
+        cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
+        cv::resize(snap, snap, imSize);
+        degree_t heading;
+        size_t snapshot;
+        float difference;
+        std::tie(heading, snapshot, difference) = pm.getHeading(snap);
+        std::cout << "Heading: " << heading << std::endl;
+        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
+        std::cout << "Difference score: " << difference << std::endl;
     }
 }
