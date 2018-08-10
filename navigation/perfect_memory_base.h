@@ -67,7 +67,7 @@ public:
         const radian_t bestAngle = units::make_unit<turn_t>((double) m_BestCol / (double) unwrapRes.width);
 
         // Bundle up result as a tuple
-        return std::make_tuple(bestAngle, m_BestSnapshot, m_MinDifference);
+        return std::make_tuple(bestAngle, m_BestSnapshot, m_MinDifference / 255.0f);
     }
 
     inline size_t getBestSnapshot() const
@@ -109,7 +109,12 @@ public:
 
     inline auto result(const cv::Size &unwrapRes)
     {
-        // Normalise weights
+        // Normalise min differences to be between 0 and 1
+        std::transform(m_MinDifferences.begin(), m_MinDifferences.end(), m_MinDifferences.begin(), [](float val) {
+            return val / 255.0f;
+        });
+
+        // Weights are 1 minus min difference, normalised to sum to 1
         std::array<float, numSnapshots> weights;
         float sumWeights = 0.0f;
         for (size_t i = 0; i < numSnapshots; i++) {
