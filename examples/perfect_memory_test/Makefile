@@ -26,4 +26,4 @@ plot_ridf: plot_ridf.cc plot_ridf.d
 %.d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f $(EXECUTABLE) plot_ridf *.d
