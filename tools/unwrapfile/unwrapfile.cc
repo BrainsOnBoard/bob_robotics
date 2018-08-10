@@ -9,7 +9,10 @@
 #include <cstdlib>
 
 // BoB robotics includes
+#include "common/rtransform.h"
 #include "imgproc/opencv_unwrap_360.h"
+
+// Third-party includes
 #include "third_party/path.h"
 
 /*
@@ -180,7 +183,7 @@ int main(int argc, char** argv)
 
         // Get extension and convert to lower case
         std::string ext = inputFile.extension();
-        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        BoBRobotics::rtransform(ext, ::tolower);
         if (ext == "mp4") {
             anyvideo = true;
             ftype[i - 1] = FileType::video;

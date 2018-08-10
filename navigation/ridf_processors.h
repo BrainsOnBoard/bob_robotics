@@ -8,7 +8,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics
-#include "common/range.h"
+#include "common/rtransform.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -84,7 +84,7 @@ public:
     inline auto result(const cv::Size &unwrapRes)
     {
         // Normalise min differences to be between 0 and 1
-        transform(m_MinDifferences, [](float val) {
+        rtransform(m_MinDifferences, [](float val) {
             return val / 255.0f;
         });
 
@@ -96,7 +96,7 @@ public:
 
         // Turn best column values into headings
         std::array<radian_t, numSnapshots> headings;
-        transform(m_BestCols, headings, [unwrapRes](int col) {
+        rtransform(m_BestCols, headings, [unwrapRes](int col) {
             // If best column is more than 180 degrees away, flip
             if (col > (unwrapRes.width / 2)) {
                 col -= unwrapRes.width;

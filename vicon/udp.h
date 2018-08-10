@@ -26,6 +26,7 @@
 
 // BoB robotics includes
 #include "../common/pose.h"
+#include "../common/rtransform.h"
 
 namespace BoBRobotics
 {
@@ -125,20 +126,14 @@ public:
         // Calculate instantaneous velocity
         const auto oldPosition = getPosition<>();
         Vector3<meters_per_second_t> instVelocity;
-        const auto calcVelocity = [deltaS](auto curr, auto prev) {
+        rtransform(position, oldPosition, instVelocity, [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
-        };
-        std::transform(std::begin(position), std::end(position),
-                       std::begin(oldPosition), std::begin(instVelocity),
-                       calcVelocity);
+        });
 
         // Exponentially smooth velocity
-        const auto smoothVelocity = [alpha](auto inst, auto prev) {
+        rtransform(instVelocity, m_Velocity, m_Velocity, [alpha](auto inst, auto prev) {
             return (alpha * inst) + ((1.0 - alpha) * prev);
-        };
-        std::transform(std::begin(instVelocity), std::end(instVelocity),
-                       std::begin(m_Velocity), std::begin(m_Velocity),
-                       smoothVelocity);
+        });
 
         // Superclass
         ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
