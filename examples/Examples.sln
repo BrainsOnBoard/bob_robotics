@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2000
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoystickTest", "joystick_test\JoystickTest.vcxproj", "{7BCC5991-C250-41D3-AC4B-C834F9C74288}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JoystickTest", "joystick\JoystickTest.vcxproj", "{7BCC5991-C250-41D3-AC4B-C834F9C74288}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DisplayTest", "display_test\DisplayTest.vcxproj", "{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DisplayTest", "display\DisplayTest.vcxproj", "{35E91D2B-9A14-43E2-B690-92CEAD7B8F19}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotNetTestRobot", "robot_net_test\robot_proj\RobotNetTestRobot.vcxproj", "{65F77767-AE75-4087-838F-3F591CA844F4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotNetTestRobot", "robot_net\robot_proj\RobotNetTestRobot.vcxproj", "{65F77767-AE75-4087-838F-3F591CA844F4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotNetTestComputer", "robot_net_test\computer_proj\RobotNetTestComputer.vcxproj", "{DA407E54-5EAB-4955-AF55-643B8AB70FC1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotNetTestComputer", "robot_net\computer_proj\RobotNetTestComputer.vcxproj", "{DA407E54-5EAB-4955-AF55-643B8AB70FC1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlottingExample", "plotting_example\PlottingExample.vcxproj", "{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlottingExample", "plotting\PlottingExample.vcxproj", "{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

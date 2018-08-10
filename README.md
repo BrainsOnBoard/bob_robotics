@@ -1,3 +1,4 @@
+[![Build Status](https://gen-ci.inf.sussex.ac.uk/buildStatus/icon?job=BoB%20robotics/bob_robotics/master)](https://gen-ci.inf.sussex.ac.uk/job/BoB%20robotics/job/bob_robotics/job/master/)
 # BoB robotics
 This repository contains code for interfacing with various robot platforms and other associated hardware, as well as code for running simulations and visualising data. Some examples of use for different BoB robotics "modules" are included, in various \*\_test folders.
 

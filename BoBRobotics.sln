@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapConfig", "imgproc\unwrapconfig_src\UnwrapConfig.vcxproj", "{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapConfig", "tools\unwrapconfig\UnwrapConfig.vcxproj", "{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
