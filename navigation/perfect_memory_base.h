@@ -110,8 +110,12 @@ public:
     inline auto result(const cv::Size &unwrapRes)
     {
         // Normalise weights
-        const float sumWeights = std::accumulate(m_MinDifferences.begin(), m_MinDifferences.end(), 0.0f);
         std::array<float, numSnapshots> weights;
+        float sumWeights = 0.0f;
+        for (int i = 0; i < numSnapshots; i++) {
+            weights[i] = 1.0f - m_MinDifferences[i];
+            sumWeights += weights[i];
+        }
         std::transform(m_MinDifferences.begin(), m_MinDifferences.end(), weights.begin(), [sumWeights](float val) {
             return val / sumWeights;
         });
