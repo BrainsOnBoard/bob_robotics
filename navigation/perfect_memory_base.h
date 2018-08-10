@@ -93,7 +93,7 @@ public:
     inline void operator()(float difference, int col, size_t snapshot)
     {
         size_t pos = numSnapshots;
-        for (; pos >= 0 && difference < m_MinDifferences[pos]; pos--);
+        for (; pos > 0 && difference < m_MinDifferences[pos - 1]; pos--);
         if (pos < numSnapshots) {
             // Shift values in the array down one rank
             shiftfrom(m_MinDifferences, pos);

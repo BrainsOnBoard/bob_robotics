@@ -33,7 +33,7 @@ main()
 
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
-        radian_t heading;
+        degree_t heading;
         size_t snapshot;
         float difference;
         std::tie(heading, snapshot, difference) = pm.getHeading(snap);
@@ -52,7 +52,7 @@ main()
 
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
-        radian_t heading;
+        degree_t heading;
         std::array<size_t, numSnapshots> snapshots;
         std::array<float, numSnapshots> differences;
         std::tie(heading, snapshots, differences) = pm.getHeading(snap);
