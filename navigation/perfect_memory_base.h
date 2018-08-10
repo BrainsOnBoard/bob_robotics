@@ -112,7 +112,7 @@ public:
         // Normalise weights
         std::array<float, numSnapshots> weights;
         float sumWeights = 0.0f;
-        for (int i = 0; i < numSnapshots; i++) {
+        for (size_t i = 0; i < numSnapshots; i++) {
             weights[i] = 1.0f - m_MinDifferences[i];
             sumWeights += weights[i];
         }

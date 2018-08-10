@@ -6,25 +6,60 @@
 #include "navigation/perfect_memory.h"
 
 using namespace BoBRobotics;
+using namespace BoBRobotics::Navigation;
 
-int
-main()
+template<typename T>
+void
+loadSnapshots(T &pm)
 {
-    // Class to run perfect memory algorithm
-    Navigation::PerfectMemory<> pm(cv::Size(180, 50));
-
     // Load snapshots
     pm.loadSnapshotsFromPath("../../ant_world_db_creator/ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl
               << std::endl;
+}
 
-    // Time testing phase
-    Timer<> t{ "Time taken for testing:" };
+int
+main()
+{
+    const cv::Size imSize(180, 50);
+    {
+        std::cout << "Testing with best-matching snapshot method..." << std::endl;
+        // Class to run perfect memory algorithm
+        PerfectMemory<> pm(imSize);
+        loadSnapshots(pm);
 
-    // Treat snapshot #10 as test data
-    const auto snap = pm.getSnapshot(10);
-    const auto result = pm.getHeading(snap);
-    std::cout << "Heading: " << std::get<0>(result) << std::endl;
-    std::cout << "Best-matching snapshot: " << std::get<1>(result) << std::endl;
-    std::cout << "Difference score: " << std::get<2>(result) << std::endl;
+        // Time testing phase
+        Timer<> t{ "Time taken for testing: " };
+
+        // Treat snapshot #10 as test data
+        const auto snap = pm.getSnapshot(10);
+        radian_t heading;
+        size_t snapshot;
+        float difference;
+        std::tie(heading, snapshot, difference) = pm.getHeading(snap);
+        std::cout << "Heading: " << heading << std::endl;
+        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
+        std::cout << "Difference score: " << difference << std::endl;
+    }
+
+    {
+        constexpr size_t numSnapshots = 3;
+        std::cout << std::endl <<  "Testing with " << numSnapshots << " weighted snapshots..." << std::endl;
+        PerfectMemory<WeightNSnapshots<numSnapshots>> pm(imSize);
+        loadSnapshots(pm);
+
+        Timer<> t{ "Time taken for testing: " };
+
+        // Treat snapshot #10 as test data
+        const auto snap = pm.getSnapshot(10);
+        radian_t heading;
+        std::array<size_t, numSnapshots> snapshots;
+        std::array<float, numSnapshots> differences;
+        std::tie(heading, snapshots, differences) = pm.getHeading(snap);
+        std::cout << "Heading: " << heading << std::endl;
+        for (size_t i = 0; i < snapshots.size(); i++) {
+            std::cout << "Snapshot " << i + 1 << ": #" << snapshots[i]
+                      << " (" << differences[i] << ")" << std::endl;
+        }
+    }
 }
