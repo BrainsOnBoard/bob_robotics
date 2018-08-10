@@ -23,7 +23,7 @@ main()
     Navigation::PerfectMemory<> pm(imSize);
 
     // Load a single snapshot
-    cv::Mat snap = cv::imread("../../ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
+    cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
     cv::resize(snap, snap, imSize);
     pm.train(snap);
 
