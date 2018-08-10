@@ -23,7 +23,7 @@
 #include "../third_party/units.h"
 
 // Local includes
-#include "navigation_base.h"
+#include "visual_navigation_base.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -36,7 +36,7 @@ using namespace units::dimensionless;
 //------------------------------------------------------------------------
 template<typename RIDFProcessor>
 class PerfectMemoryBase
-  : public NavigationBase
+  : public VisualNavigationBase
 {
 private:
     class RIDFValueLogger
@@ -111,7 +111,7 @@ private:
 
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
-      : NavigationBase(unwrapRes, scanStep, outputPath)
+      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
     {}
 
     //------------------------------------------------------------------------

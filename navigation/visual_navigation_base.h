@@ -20,12 +20,12 @@
 namespace BoBRobotics {
 namespace Navigation {
 //------------------------------------------------------------------------
-// BoBRobotics::Navigation::NavigationBase
+// BoBRobotics::Navigation::VisualNavigationBase
 //------------------------------------------------------------------------
-class NavigationBase
+class VisualNavigationBase
 {
 public:
-    NavigationBase(const cv::Size unwrapRes,
+    VisualNavigationBase(const cv::Size unwrapRes,
                    const unsigned int scanStep,
                    const filesystem::path outputPath = "snapshots")
       : m_UnwrapRes(unwrapRes)
