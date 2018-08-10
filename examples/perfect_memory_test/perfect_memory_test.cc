@@ -14,8 +14,7 @@ loadSnapshots(T &pm)
 {
     // Load snapshots
     pm.loadSnapshotsFromPath("../../ant_world_db_creator/ant1_route1", true);
-    std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl
-              << std::endl;
+    std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
 }
 
 int
@@ -44,7 +43,7 @@ main()
     }
 
     {
-        std::cout << "Testing with RMS image difference..." << std::endl;
+        std::cout << std::endl << "Testing with RMS image difference..." << std::endl;
         PerfectMemory<BestMatchingSnapshot, RMSDiff> pm(imSize);
         loadSnapshots(pm);
 
