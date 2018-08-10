@@ -24,8 +24,28 @@ main()
     const cv::Size imSize(180, 50);
     {
         std::cout << "Testing with best-matching snapshot method..." << std::endl;
-        // Class to run perfect memory algorithm
+
+        // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemory<> pm(imSize);
+        loadSnapshots(pm);
+
+        // Time testing phase
+        Timer<> t{ "Time taken for testing: " };
+
+        // Treat snapshot #10 as test data
+        const auto snap = pm.getSnapshot(10);
+        degree_t heading;
+        size_t snapshot;
+        float difference;
+        std::tie(heading, snapshot, difference) = pm.getHeading(snap);
+        std::cout << "Heading: " << heading << std::endl;
+        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
+        std::cout << "Difference score: " << difference << std::endl;
+    }
+
+    {
+        std::cout << "Testing with RMS image difference..." << std::endl;
+        PerfectMemory<BestMatchingSnapshot, RMSDiff> pm(imSize);
         loadSnapshots(pm);
 
         // Time testing phase
