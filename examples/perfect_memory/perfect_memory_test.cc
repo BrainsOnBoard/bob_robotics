@@ -63,9 +63,9 @@ main()
     }
 
     {
-        constexpr size_t numSnapshots = 3;
-        std::cout << std::endl <<  "Testing with " << numSnapshots << " weighted snapshots..." << std::endl;
-        PerfectMemory<WeightNSnapshots<numSnapshots>> pm(imSize);
+        constexpr size_t numComp = 3;
+        std::cout << std::endl <<  "Testing with " << numComp << " weighted snapshots..." << std::endl;
+        PerfectMemory<WeightSnapshotsDynamic<numComp>> pm(imSize);
         loadSnapshots(pm);
 
         Timer<> t{ "Time taken for testing: " };
@@ -73,8 +73,8 @@ main()
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
         degree_t heading;
-        std::array<size_t, numSnapshots> snapshots;
-        std::array<float, numSnapshots> differences;
+        std::array<size_t, numComp> snapshots;
+        std::array<float, numComp> differences;
         std::tie(heading, snapshots, differences) = pm.getHeading(snap);
         std::cout << "Heading: " << heading << std::endl;
         for (size_t i = 0; i < snapshots.size(); i++) {

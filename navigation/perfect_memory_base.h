@@ -39,85 +39,6 @@ template<typename RIDFProcessor>
 class PerfectMemoryBase
   : public VisualNavigationBase
 {
-private:
-    /*
-     * This class is used by getRIDF() to log RIDF values (for the best-matching
-     * snapshot) as we go along.
-     */
-    class RIDFValueLogger
-      : public RIDFProcessor
-    {
-    public:
-        inline void operator()(float difference, int col, size_t snapshot)
-        {
-            if (snapshot != m_CurrentSnapshot) {
-                snapshotUpdate();
-                m_CurrentSnapshot = snapshot;
-                m_CurrentDifferences.clear();
-            }
-
-            RIDFProcessor::operator()(difference, col, snapshot);
-            m_CurrentDifferences.push_back(difference);
-        }
-
-        inline auto result(const cv::Size &unwrapRes)
-        {
-            snapshotUpdate();
-            const auto res = RIDFProcessor::result(unwrapRes);
-            return std::make_tuple(std::get<0>(res), std::get<1>(res), std::get<2>(res), std::move(m_BestDifferences));
-        }
-
-    private:
-        std::vector<float> m_BestDifferences, m_CurrentDifferences;
-        size_t m_CurrentSnapshot = 0;
-
-        void snapshotUpdate()
-        {
-            if (RIDFProcessor::getBestSnapshot() == m_CurrentSnapshot) {
-                m_BestDifferences.resize(m_CurrentDifferences.size());
-                std::copy(m_CurrentDifferences.begin(), m_CurrentDifferences.end(), m_BestDifferences.begin());
-            }
-        }
-    };
-
-    /*
-     * Run an RIDF over the image, comparing against snapshots, and feeding data
-     * into the specified RIDF processor.
-     */
-    template<typename T>
-    auto runRIDF(const cv::Mat &image, T &&processor) const
-    {
-        const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
-
-        // Clone mask and image so they can be rolled inplace
-        getMaskImage().copyTo(m_ScratchMaskImage);
-        image.copyTo(m_ScratchRollImage);
-
-        // Scan across image columns
-        const size_t numSnapshots = getNumSnapshots();
-        const size_t scanStep = getScanStep();
-        for (int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
-            // Loop through snapshots
-            for (size_t s = 0; s < numSnapshots; s++) {
-                // Calculate difference
-                const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
-                processor(difference, i, s);
-            }
-
-            // Roll image and corresponding mask left by scanStep
-            rollImage(m_ScratchRollImage);
-            if (!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage);
-            }
-        }
-
-        // Return result
-        return processor.result(unwrapRes);
-    }
-
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
                       const filesystem::path outputPath = "snapshots")
@@ -154,12 +75,45 @@ public:
 
     auto getHeading(const cv::Mat &image) const
     {
-        return runRIDF(image, RIDFProcessor());
-    }
+        const auto &unwrapRes = getUnwrapResolution();
+        assert(image.cols == unwrapRes.width);
+        assert(image.rows == unwrapRes.height);
+        assert(image.type() == CV_8UC1);
+        const size_t numSnapshots = getNumSnapshots();
+        assert(numSnapshots > 0);
+        const size_t scanStep = getScanStep();
 
-    auto getRIDF(const cv::Mat &image) const
-    {
-        return runRIDF(image, RIDFValueLogger());
+        // Clone mask and image so they can be rolled in place
+        getMaskImage().copyTo(m_ScratchMaskImage);
+        image.copyTo(m_ScratchRollImage);
+
+        // Create vectors to store RIDF values
+        std::vector<int> bestColumns(numSnapshots);
+        std::vector<float> minDifferences(numSnapshots);
+        std::fill(std::begin(minDifferences), std::end(minDifferences),
+                  std::numeric_limits<float>::infinity());
+
+        // Scan across image columns
+        for (int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
+            // Loop through snapshots
+            for (size_t s = 0; s < numSnapshots; s++) {
+                // Calculate difference
+                const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
+                if (difference < minDifferences[s]) {
+                    bestColumns[s] = i;
+                    minDifferences[s] = difference;
+                }
+            }
+
+            // Roll image and corresponding mask left by scanStep
+            rollImage(m_ScratchRollImage);
+            if (!m_ScratchMaskImage.empty()) {
+                rollImage(m_ScratchMaskImage);
+            }
+        }
+
+        // Return result
+        return RIDFProcessor()(unwrapRes, bestColumns, minDifferences);
     }
 
 protected:
