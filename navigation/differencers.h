@@ -72,9 +72,7 @@ class RMSDiff
 {
     public:
     RMSDiff(const int size) : m_Differences(size)
-    {
-        m_Differences.resize(size);
-    }
+    {}
 
     void calculateDifference(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &differenceImage)
     {
