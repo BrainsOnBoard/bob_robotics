@@ -5,6 +5,7 @@
 #include <cstdint>
 
 // Standard C++ includes
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
@@ -29,7 +30,7 @@ public:
     VisualNavigationBase(const cv::Size unwrapRes, const unsigned int scanStep,
                          const filesystem::path outputPath = "snapshots")
       : m_UnwrapRes(unwrapRes)
-      , m_RollBuffer(scanStep)
+      , m_ScanStep(scanStep)
       , m_SnapshotsPath(outputPath)
       , m_ScratchMaskImage(unwrapRes, CV_8UC1)
       , m_ScratchRollImage(unwrapRes, CV_8UC1)
@@ -103,9 +104,9 @@ public:
     }
 
     //! Number of pixels for each scanning "step" when doing RIDF
-    inline size_t getScanStep() const
+    inline unsigned int getScanStep() const
     {
-        return m_RollBuffer.size();
+        return m_ScanStep;
     }
 
     //! Return mask image
@@ -139,7 +140,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
-    std::vector<uint8_t> m_RollBuffer;
+    const unsigned int m_ScanStep;
     const filesystem::path m_SnapshotsPath;
     cv::Mat m_MaskImage;
 
@@ -150,21 +151,13 @@ protected:
     //! 'Rolls' an image to the left
     void rollImage(cv::Mat &image) const
     {
-        const size_t scanStep = m_RollBuffer.size();
-
         // Loop through rows
         for (int y = 0; y < image.rows; y++) {
             // Get pointer to start of row
             uint8_t *rowPtr = image.ptr(y);
 
-            // Copy pixels at left hand size of row into buffer
-            std::copy_n(rowPtr, scanStep, (uint8_t *) m_RollBuffer.data());
-
-            // Copy rest of row back over pixels we've copied to buffer
-            std::copy_n(rowPtr + scanStep, image.cols - scanStep, rowPtr);
-
-            // Copy buffer back into row
-            std::copy(m_RollBuffer.begin(), m_RollBuffer.end(), rowPtr + (image.cols - scanStep));
+            // Rotate row to left by m_ScanStep pixels
+            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + image.cols);
         }
     }
 }; // PerfectMemoryBase
