@@ -20,8 +20,7 @@ getImageDatabaseFilename(const int x, const int y, const int z)
 {
     const auto zeroPad = [](const auto value) {
         char num[12];
-        snprintf(&num[1], sizeof(num) - 1, "%05d", abs(value));
-        num[0] = (value < 0) ? '-' : '+';
+        snprintf(num, sizeof(num), "%+05d", value);
         return std::string(num);
     };
     return "image_" + zeroPad(x) + "_" + zeroPad(y) + "_" + zeroPad(z) + ".png";
