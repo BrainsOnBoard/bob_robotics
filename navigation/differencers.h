@@ -39,12 +39,12 @@ public:
         m_Ptr = differenceImage.data;
     }
 
-    inline uint8_t *begin()
+    inline const uint8_t *begin() const
     {
         return m_Ptr;
     }
 
-    inline uint8_t *end()
+    inline const uint8_t *end() const
     {
         return m_Ptr + m_Size;
     }
@@ -86,12 +86,12 @@ class RMSDiff
         });
     }
 
-    inline auto begin()
+    inline const auto begin() const
     {
         return m_Differences.begin();
     }
 
-    inline auto end()
+    inline const auto end() const
     {
         return m_Differences.end();
     }
