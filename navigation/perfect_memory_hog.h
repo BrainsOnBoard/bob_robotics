@@ -12,9 +12,6 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "common/rtransform.h"
-
 // Local includes
 #include "perfect_memory_base.h"
 #include "ridf_processors.h"
@@ -86,7 +83,8 @@ protected:
         assert(m_ScratchDescriptors.size() == m_HOGDescriptorSize);
 
         // Calculate square difference between image HOG descriptors and snapshot
-        rtransform(m_Snapshots[snapshot], m_ScratchDescriptors, m_ScratchDescriptors, [](float a, float b) {
+        std::transform(m_Snapshots[snapshot].cbegin(), m_Snapshots[snapshot].cend(),
+                       m_ScratchDescriptors.cbegin(), m_ScratchDescriptors.begin(), [](float a, float b) {
             return (a - b) * (a - b);
         });
 

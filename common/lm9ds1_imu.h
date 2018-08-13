@@ -10,7 +10,6 @@
 
 // Common includes
 #include "i2c_interface.h"
-#include "rtransform.h"
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
@@ -448,8 +447,10 @@ public:
         }
         
         //  Divide biases by number of samples to get means
-        rtransform(accelBias, m_AccelBias, [numSamples](int32_t v){ return v / (int32_t)numSamples; });
-        rtransform(gyroBias, m_GyroBias, [numSamples](int32_t v){ return v / (int32_t)numSamples; });
+        std::transform(std::begin(accelBias), std::end(accelBias), std::begin(m_AccelBias),
+                       [numSamples](int32_t v){ return v / (int32_t)numSamples; });
+        std::transform(std::begin(gyroBias), std::end(gyroBias), std::begin(m_GyroBias),
+                       [numSamples](int32_t v){ return v / (int32_t)numSamples; });
         
         setFIFOEnabled(false);
         setFIFOMode(FIFOMode::Off, 0);
@@ -511,13 +512,15 @@ public:
     void readGyro(int16_t (&data)[3])
     {
         readAccelGyroData(AccelGyroReg::OUT_X_L_G, data);
-        rtransform(data, m_GyroBias, data, [](int16_t v, int16_t bias){ return v - bias; });
+        std::transform(std::begin(data), std::end(data), std::begin(m_GyroBias), std::begin(data),
+                       [](int16_t v, int16_t bias){ return v - bias; });
     }
     
     void readAccel(int16_t (&data)[3])
     {
         readAccelGyroData(AccelGyroReg::OUT_X_L_XL, data);
-        rtransform(data, m_AccelBias, data, [](int16_t v, int16_t bias){ return v - bias; });
+        std::transform(std::begin(data), std::end(data), std::begin(m_AccelBias), std::begin(data),
+                       [](int16_t v, int16_t bias){ return v - bias; });
     }
     
     void readMagneto(int16_t (&data)[3]) 
@@ -529,14 +532,16 @@ public:
     {
         int16_t dataInt[3];
         readGyro(dataInt);
-        rtransform(dataInt, data, [this](int16_t v){ return m_GyroSensitivity * (float)v; });
+        std::transform(std::begin(dataInt), std::end(dataInt), std::begin(data),
+                       [this](int16_t v){ return m_GyroSensitivity * (float)v; });
     }
     
     void readAccel(float (&data)[3]) 
     {
         int16_t dataInt[3];
         readAccel(dataInt);
-        rtransform(dataInt, data, [this](int16_t v){ return m_AccelSensitivity * (float)v; });
+        std::transform(std::begin(dataInt), std::end(dataInt), std::begin(data),
+                       [this](int16_t v){ return m_AccelSensitivity * (float)v; });
     }
     
     void readMagneto(float (&data)[3]) 

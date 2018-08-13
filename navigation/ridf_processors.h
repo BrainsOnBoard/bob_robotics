@@ -11,9 +11,6 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics
-#include "common/rtransform.h"
-
 // Third-party includes
 #include "../third_party/units.h"
 
@@ -87,22 +84,28 @@ struct WeightSnapshotsDynamic
         std::copy_n(std::begin(idx), numComp, std::begin(snapshots));
 
         // Convert best columns to headings
-        std::array<radian_t, numComp> headings;
-        rtransform(snapshots, headings, [&bestCols, &unwrapRes](const size_t s) {
+        auto colsToHeadings = [&bestCols, &unwrapRes](const size_t s) {
             return units::make_unit<turn_t>((double) bestCols[s] / (double) unwrapRes.width);
-        });
+        };
+        std::array<radian_t, numComp> headings;
+        std::transform(snapshots.cbegin(), snapshots.cend(), headings.begin(),
+                       colsToHeadings);
 
         // Normalise min differences to be between 0 and 1
-        std::array<float, numComp> minDifferencesOut;
-        rtransform(snapshots, minDifferencesOut, [&minDifferences](const size_t i) {
+        auto normaliseDiffs = [&minDifferences](const size_t i) {
             return minDifferences[i] / 255.0f;
-        });
+        };
+        std::array<float, numComp> minDifferencesOut;
+        std::transform(snapshots.cbegin(), snapshots.cend(),
+                       minDifferencesOut.begin(), normaliseDiffs);
 
         // Weights are 1 - min differences
-        std::array<float, numComp> weights;
-        rtransform(minDifferencesOut, weights, [](const float f) {
+        const auto diffsToWeights = [](const float f) {
             return 1.0f - f;
-        });
+        };
+        std::array<float, numComp> weights;
+        std::transform(minDifferencesOut.cbegin(), minDifferencesOut.cend(),
+                       weights.begin(), diffsToWeights);
 
         // Best angle is a weighted cirular mean of headings
         const radian_t bestAngle = 0_rad; // = Internal::circularMean(headings, weights);
