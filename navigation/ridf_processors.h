@@ -108,7 +108,7 @@ struct WeightSnapshotsDynamic
                        weights.begin(), diffsToWeights);
 
         // Best angle is a weighted cirular mean of headings
-        const radian_t bestAngle = 0_rad; // = Internal::circularMean(headings, weights);
+        const radian_t bestAngle = Internal::circularMean(headings, weights);
 
         // Bundle result as tuple
         return std::make_tuple(bestAngle, std::move(snapshots), std::move(minDifferencesOut));
