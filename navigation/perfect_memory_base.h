@@ -122,8 +122,8 @@ public:
         std::vector<int> bestColumns(numSnapshots);
         std::vector<float> minDifferences(numSnapshots);
         for (size_t i = 0; i < numSnapshots; i++) {
-            const auto elem = std::min_element(std::begin(differences[i]), std::end(differences[i]));
-            bestColumns[i] = std::distance(std::begin(differences[i]), elem);
+            const auto elem = std::min_element(std::cbegin(differences[i]), std::cend(differences[i]));
+            bestColumns[i] = std::distance(std::cbegin(differences[i]), elem);
             minDifferences[i] = *elem;
         }
 

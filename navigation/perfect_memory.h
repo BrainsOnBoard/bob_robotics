@@ -72,7 +72,7 @@ protected:
 
         // If there's no mask
         if (imageMask.empty()) {
-            float sumDifference = std::accumulate(m_Differencer.begin(), m_Differencer.end(), 0.0f);
+            float sumDifference = std::accumulate(std::cbegin(m_Differencer), std::cend(m_Differencer), 0.0f);
 
             // Return mean
             return Differencer::mean(sumDifference, m_DiffScratchImage.cols * m_DiffScratchImage.rows);
@@ -82,7 +82,7 @@ protected:
             // Get raw access to rotated mask associated with image and non-rotated mask associated with snapshot
             const uint8_t *rawImageMask = reinterpret_cast<const uint8_t *>(imageMask.data);
             const uint8_t *rawSnapshotMask = reinterpret_cast<const uint8_t *>(this->getMaskImage().data);
-            const auto differences = m_Differencer.begin();
+            const auto differences = std::cbegin(m_Differencer);
 
             // Loop through pixels
             float sumDifference = 0.0f;
