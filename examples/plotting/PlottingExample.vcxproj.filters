@@ -23,7 +23,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="example.cc">
+    <ClCompile Include="plotting_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
