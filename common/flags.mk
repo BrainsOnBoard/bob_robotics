@@ -23,6 +23,16 @@ LINK_FLAGS += -lm -lstdc++ -pthread
 
 # Build with OpenCV
 ifndef NO_OPENCV
-	CXXFLAGS += `pkg-config --cflags opencv`
-	LINK_FLAGS += `pkg-config --libs opencv`
+	CXXFLAGS += `pkg-config --cflags --libs opencv`
+endif
+
+ifdef WITH_MATPLOTLIBCPP
+	PYTHON_BIN ?= python
+
+	# This is gross but there doesn't seem to be an easy way to get the include path for numpy
+	PYTHON_VERSION := $(shell $(PYTHON_BIN) --version |& awk '{ print $$2 }' | sed 's/\.[0-9]*$$//g')
+	NUMPY_PATH := /usr/lib/python$(PYTHON_VERSION)/site-packages/numpy/core/include
+
+	PYTHON_MAJOR_VERSION := $(shell echo $(PYTHON_VERSION) | head -c 1)
+	CXXFLAGS += `pkg-config --cflags --libs python$(PYTHON_MAJOR_VERSION)` -I$(NUMPY_PATH)
 endif
