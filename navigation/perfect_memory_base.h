@@ -148,7 +148,7 @@ private:
     //------------------------------------------------------------------------
     filesystem::path getSnapshotPath(size_t index) const
     {
-        return getOutputPath() / getRouteDatabaseFilename(index);
+        return getSnapshotsPath() / getRouteDatabaseFilename(index);
     }
 
     //------------------------------------------------------------------------

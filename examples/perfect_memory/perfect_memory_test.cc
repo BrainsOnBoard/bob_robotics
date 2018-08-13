@@ -14,7 +14,7 @@ void
 loadSnapshots(T &pm)
 {
     // Load snapshots
-    pm.loadSnapshotsFromPath("../../tools/ant_world_db_creator/ant1_route1", true);
+    pm.loadSnapshots("../../tools/ant_world_db_creator/ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
 }
 

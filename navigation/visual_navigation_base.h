@@ -30,7 +30,7 @@ public:
                          const filesystem::path outputPath = "snapshots")
       : m_UnwrapRes(unwrapRes)
       , m_RollBuffer(scanStep)
-      , m_OutputPath(outputPath)
+      , m_SnapshotsPath(outputPath)
       , m_ScratchMaskImage(unwrapRes, CV_8UC1)
       , m_ScratchRollImage(unwrapRes, CV_8UC1)
     {}
@@ -38,52 +38,62 @@ public:
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
+    //! Train the algorithm with the specified image
     virtual void train(const cv::Mat &image, bool saveImage) = 0;
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void loadSnapshots(bool resizeImages = false)
+    void loadSnapshot(const filesystem::path &snapshotPath, bool resizeImage = false)
     {
-        loadSnapshotsFromPath(m_OutputPath, resizeImages);
+        if (!snapshotPath.exists()) {
+            throw std::runtime_error("Path " + snapshotPath.str() + " does not exist");
+        }
+
+        // Load image
+        cv::Mat image = cv::imread(snapshotPath.str(), cv::IMREAD_GRAYSCALE);
+        assert(image.type() == CV_8UC1);
+        if (resizeImage) {
+            cv::resize(image, image, m_UnwrapRes);
+        } else {
+            assert(image.cols == m_UnwrapRes.width);
+            assert(image.rows == m_UnwrapRes.height);
+        }
+
+        // Add snapshot
+        train(image, false);
     }
 
-    void loadSnapshotsFromPath(const filesystem::path &routePath, bool resizeImages = false)
+    //! Load snapshots from default path
+    void loadSnapshots(bool resizeImages = false)
+    {
+        loadSnapshots(m_SnapshotsPath, resizeImages);
+    }
+
+    //! Load snapshots from specified path
+    void loadSnapshots(const filesystem::path &routePath, bool resizeImages = false)
     {
         if (!routePath.exists()) {
             throw std::runtime_error("Path " + routePath.str() + " does not exist");
         }
 
-        if (routePath.is_file()) { // loading single file
-            // Load image
-            cv::Mat image = cv::imread(routePath.str(), cv::IMREAD_GRAYSCALE);
-            assert(image.type() == CV_8UC1);
-            if (resizeImages) {
-                cv::resize(image, image, m_UnwrapRes);
-            } else {
-                assert(image.cols == m_UnwrapRes.width);
-                assert(image.rows == m_UnwrapRes.height);
-            }
-
-            // Add snapshot
-            train(image, false);
-        } else { // is directory
-            for (size_t i = 0;; i++) {
-                const auto filename = routePath / getRouteDatabaseFilename(i);
-                try {
-                    loadSnapshotsFromPath(filename, resizeImages);
-                } catch (std::runtime_error &) {
-                    return;
-                }
+        for (size_t i = 0;; i++) {
+            const auto filename = routePath / getRouteDatabaseFilename(i);
+            try {
+                loadSnapshot(filename, resizeImages);
+            } catch (std::runtime_error &) {
+                return;
             }
         }
     }
 
+    //! Save a snapshot to disk
     void saveSnapshot(const size_t index, const cv::Mat &image)
     {
         cv::imwrite(getSnapshotPath(index).str(), image);
     }
 
+    //! Set mask image (e.g. for masking part of robot)
     void setMaskImage(const std::string path)
     {
         m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
@@ -92,22 +102,28 @@ public:
         assert(m_MaskImage.type() == CV_8UC1);
     }
 
+    //! Number of pixels for each scanning "step" when doing RIDF
     inline size_t getScanStep() const
     {
         return m_RollBuffer.size();
     }
 
+    //! Return mask image
     const cv::Mat &getMaskImage() const
     {
         return m_MaskImage;
     }
+
+    //! Get the resolution of images
     const cv::Size &getUnwrapResolution() const
     {
         return m_UnwrapRes;
     }
-    const filesystem::path &getOutputPath() const
+
+    //! Get output path for snapshots
+    const filesystem::path &getSnapshotsPath() const
     {
-        return m_OutputPath;
+        return m_SnapshotsPath;
     }
 
 private:
@@ -116,7 +132,7 @@ private:
     //------------------------------------------------------------------------
     filesystem::path getSnapshotPath(const size_t index) const
     {
-        return m_OutputPath / getRouteDatabaseFilename(index);
+        return m_SnapshotsPath / getRouteDatabaseFilename(index);
     }
 
     //------------------------------------------------------------------------
@@ -124,7 +140,7 @@ private:
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
     std::vector<uint8_t> m_RollBuffer;
-    const filesystem::path m_OutputPath;
+    const filesystem::path m_SnapshotsPath;
     cv::Mat m_MaskImage;
 
     mutable cv::Mat m_ScratchMaskImage;
