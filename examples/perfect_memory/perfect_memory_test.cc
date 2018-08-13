@@ -22,6 +22,9 @@ int
 main()
 {
     const cv::Size imSize(180, 50);
+    degree_t heading;
+    std::vector<std::vector<float>> allDifferences;
+
     {
         std::cout << "Testing with best-matching snapshot method..." << std::endl;
 
@@ -34,10 +37,9 @@ main()
 
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
-        degree_t heading;
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
         std::cout << "Heading: " << heading << std::endl;
         std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
         std::cout << "Difference score: " << difference << std::endl;
@@ -53,10 +55,9 @@ main()
 
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
-        degree_t heading;
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
         std::cout << "Heading: " << heading << std::endl;
         std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
         std::cout << "Difference score: " << difference << std::endl;
@@ -72,10 +73,9 @@ main()
 
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
-        degree_t heading;
         std::array<size_t, numComp> snapshots;
         std::array<float, numComp> differences;
-        std::tie(heading, snapshots, differences) = pm.getHeading(snap);
+        std::tie(heading, snapshots, differences, allDifferences) = pm.getHeading(snap);
         std::cout << "Heading: " << heading << std::endl;
         for (size_t i = 0; i < snapshots.size(); i++) {
             std::cout << "Snapshot " << i + 1 << ": #" << snapshots[i]
@@ -95,10 +95,9 @@ main()
         // Treat snapshot #10 as test data
         cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
         cv::resize(snap, snap, imSize);
-        degree_t heading;
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference) = pm.getHeading(snap);
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
         std::cout << "Heading: " << heading << std::endl;
         std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
         std::cout << "Difference score: " << difference << std::endl;

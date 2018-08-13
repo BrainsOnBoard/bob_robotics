@@ -28,19 +28,18 @@ main()
     pm.train(snap);
 
     // Compare snapshot with itself
-    const auto result = pm.getRIDF(snap);
-    auto ridf = std::get<3>(result);
+    std::vector<float> ridf = pm.getImageDifferences(snap)[0];
 
     // Rotate so the range is from -180 to 180 deg
     std::rotate(ridf.begin(), ridf.begin() + ceil((double) ridf.size() / 2.0), ridf.end());
 
+    // Normalise values so they are between 0 and 1
+    for (float &f : ridf) {
+        f /= 255.0f;
+    }
+
     // Copy value from -180 deg to 180 deg
     ridf.push_back(ridf[0]);
-
-    // Normalise values so they are between 0 and 1
-    std::transform(ridf.begin(), ridf.end(), ridf.begin(), [](float f) {
-        return f / 255.0f;
-    });
 
     // Calculate x values (angles)
     std::vector<float> x(ridf.size());
@@ -53,5 +52,6 @@ main()
     plt::ylabel("Image difference");
     plt::xlabel("Angle (deg)");
     plt::xlim(-180, 180);
+    plt::ylim(0.0, plt::ylim()[1]);
     plt::show();
 }

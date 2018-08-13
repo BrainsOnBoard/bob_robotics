@@ -73,7 +73,8 @@ public:
         }
     }
 
-    auto getHeading(const cv::Mat &image) const
+    //! Get differences between image and stored snapshots
+    std::vector<std::vector<float>> getImageDifferences(const cv::Mat &image) const
     {
         const auto &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);
@@ -87,22 +88,18 @@ public:
         getMaskImage().copyTo(m_ScratchMaskImage);
         image.copyTo(m_ScratchRollImage);
 
-        // Create vectors to store RIDF values
-        std::vector<int> bestColumns(numSnapshots);
-        std::vector<float> minDifferences(numSnapshots);
-        std::fill(std::begin(minDifferences), std::end(minDifferences),
-                  std::numeric_limits<float>::infinity());
+        // Create vector to store RIDF values
+        std::vector<std::vector<float>> differences(numSnapshots);
+        for (auto &d : differences) {
+            d.resize(m_ScratchRollImage.cols);
+        }
 
         // Scan across image columns
-        for (int i = 0; i < m_ScratchRollImage.cols; i += scanStep) {
+        for (int col = 0; col < m_ScratchRollImage.cols; col += scanStep) {
             // Loop through snapshots
             for (size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
-                const float difference = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
-                if (difference < minDifferences[s]) {
-                    bestColumns[s] = i;
-                    minDifferences[s] = difference;
-                }
+                differences[s][col] = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
             }
 
             // Roll image and corresponding mask left by scanStep
@@ -112,8 +109,27 @@ public:
             }
         }
 
+        return differences;
+    }
+
+    //! Get an estimate for heading based on comparing image with stored snapshots
+    auto getHeading(const cv::Mat &image) const
+    {
+        std::vector<std::vector<float>> differences = getImageDifferences(image);
+        const size_t numSnapshots = getNumSnapshots();
+
+        // Now get the minimum for each snapshot and the column this corresponds to
+        std::vector<int> bestColumns(numSnapshots);
+        std::vector<float> minDifferences(numSnapshots);
+        for (size_t i = 0; i < numSnapshots; i++) {
+            const auto elem = std::min_element(std::begin(differences[i]), std::end(differences[i]));
+            bestColumns[i] = std::distance(std::begin(differences[i]), elem);
+            minDifferences[i] = *elem;
+        }
+
         // Return result
-        return RIDFProcessor()(unwrapRes, bestColumns, minDifferences);
+        return std::tuple_cat(RIDFProcessor()(getUnwrapResolution(), bestColumns, minDifferences),
+                              std::make_tuple(std::move(differences)));
     }
 
 protected:
