@@ -74,14 +74,19 @@ struct WeightSnapshotsDynamic
         std::vector<size_t> idx(minDifferences.size());
         std::iota(std::begin(idx), std::end(idx), 0);
 
-        // Sort indices by minimum difference values
-        std::sort(std::begin(idx), std::end(idx), [&minDifferences](const size_t i1, const size_t i2) {
-            return minDifferences[i1] < minDifferences[i2];
-        });
+        // Build a heap (only partially sorts)
+        auto comparator = [&minDifferences](const size_t i1, const size_t i2) {
+            return minDifferences[i1] >= minDifferences[i2];
+        };
+        std::make_heap(std::begin(idx), std::end(idx), comparator);
 
-        // Copy the best numComp indices to output array
+        // Pop the best numComp indices off the heap into the output array
         std::array<size_t, numComp> snapshots;
-        std::copy_n(std::begin(idx), numComp, std::begin(snapshots));
+        for(size_t &s : snapshots) {
+            std::pop_heap(std::begin(idx), std::end(idx), comparator);
+            s = idx.back();
+            idx.pop_back();
+        }
 
         // Convert best columns to headings
         auto colsToHeadings = [&bestCols, &unwrapRes](const size_t s) {
