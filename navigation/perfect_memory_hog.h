@@ -13,6 +13,7 @@
 #include <opencv2/opencv.hpp>
 
 // Local includes
+#include "differencers.h"
 #include "perfect_memory_base.h"
 #include "ridf_processors.h"
 
@@ -22,7 +23,8 @@ namespace Navigation {
 // BoBRobotics::Navigation::PerfectMemoryHOG
 //------------------------------------------------------------------------
 //! Perfect memory algorithm using HOG features instead of raw image matching
-template<typename RIDFProcessor = BestMatchingSnapshot>
+template<typename RIDFProcessor = BestMatchingSnapshot,
+         typename Differencer = AbsDiff>
 class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor>
 {
 public:
@@ -32,6 +34,7 @@ public:
       : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
       , m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
                             HOGOrientations / (HOGPixelsPerCell * HOGPixelsPerCell))
+      , m_Differencer(m_HOGDescriptorSize)
     {
         std::cout << "Creating perfect memory for HOG features" << std::endl;
 
@@ -82,14 +85,12 @@ protected:
         m_HOG.compute(image, m_ScratchDescriptors);
         assert(m_ScratchDescriptors.size() == m_HOGDescriptorSize);
 
-        // Calculate square difference between image HOG descriptors and snapshot
-        std::transform(m_Snapshots[snapshot].cbegin(), m_Snapshots[snapshot].cend(),
-                       m_ScratchDescriptors.cbegin(), m_ScratchDescriptors.begin(), [](float a, float b) {
-            return (a - b) * (a - b);
-        });
+        // Calculate differences between image HOG descriptors and snapshot
+        auto diffIter = m_Differencer(m_Snapshots[snapshot], m_ScratchDescriptors, m_ScratchDescriptors);
 
         // Calculate RMS
-        return sqrt(std::accumulate(m_ScratchDescriptors.begin(), m_ScratchDescriptors.end(), 0.0f));
+        return Differencer::mean(std::accumulate(diffIter, diffIter + m_HOGDescriptorSize, 0.0f),
+                                 m_HOGDescriptorSize);
     }
 
 private:
@@ -99,6 +100,7 @@ private:
     mutable std::vector<float> m_ScratchDescriptors;
     std::vector<std::vector<float>> m_Snapshots;
     cv::HOGDescriptor m_HOG;
+    mutable Differencer m_Differencer;
 }; // PerfectMemoryHOG
 } // Navigation
 } // BoBRobotics

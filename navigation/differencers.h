@@ -11,6 +11,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <type_traits>
 #include <vector>
 
 // OpenCV
@@ -18,6 +19,29 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+namespace Internal {
+    inline uint8_t *begin(const cv::Mat &image)
+    {
+        return image.data;
+    }
+
+    inline uint8_t *end(const cv::Mat &image)
+    {
+        return &image.data[image.cols * image.rows];
+    }
+
+    template<typename T>
+    inline auto begin(const T &input)
+    {
+        return std::begin(input);
+    }
+
+    template<typename T>
+    inline auto end(const T &input)
+    {
+        return std::end(input);
+    }
+}
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::AbsDiff
 //------------------------------------------------------------------------
@@ -29,35 +53,23 @@ namespace Navigation {
 class AbsDiff
 {
 public:
-    AbsDiff(const int size)
-      : m_Size(size)
-    {}
+    AbsDiff(const int) {}
 
-    inline void calculateDifference(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &differenceImage)
+    template<typename InputArray1, typename InputArray2, typename OutputArray>
+    inline auto operator()(const InputArray1 &src1, const InputArray2 &src2,
+                           OutputArray &dst)
     {
-        cv::absdiff(image1, image2, differenceImage);
-        m_Ptr = differenceImage.data;
-    }
+        // Calculate absdiff
+        cv::absdiff(src1, src2, dst);
 
-    inline const uint8_t *begin() const
-    {
-        return m_Ptr;
-    }
-
-    inline const uint8_t *end() const
-    {
-        return m_Ptr + m_Size;
+        // Return copy of output iterator
+        return Internal::begin(dst);
     }
 
     static inline float mean(const float sum, const float n)
     {
         return sum / n;
     }
-
-private:
-    const int m_Size;
-    uint8_t *m_Ptr;
-
 };
 
 //------------------------------------------------------------------------
@@ -71,29 +83,22 @@ private:
 class RMSDiff
 {
     public:
-    RMSDiff(const int size) : m_Differences(size)
+    RMSDiff(const int imSize) : m_Differences(imSize)
     {}
 
-    void calculateDifference(const cv::Mat &image1, const cv::Mat &image2, cv::Mat &differenceImage)
+    template<typename InputArray1, typename InputArray2, typename OutputArray>
+    inline std::vector<float>::iterator operator()(const InputArray1 &src1,
+                                                   const InputArray2 &src2,
+                                                   OutputArray &dst)
     {
-        cv::absdiff(image1, image2, differenceImage);
-        const uint8_t *ptr = differenceImage.data;
-
-        // Square values of pixels, convert to float and store in m_Differences
-        std::transform(ptr, &ptr[image1.rows * image1.cols], m_Differences.begin(), [](const uint8_t diff) {
-            const float fdiff = (float) diff;
-            return fdiff * fdiff;
-        });
-    }
-
-    inline const auto begin() const
-    {
+        cv::absdiff(src1, src2, dst);
+        const auto sqDiff = [](const auto val)
+        {
+            const float d = (float) val;
+            return d * d;
+        };
+        std::transform(Internal::begin(dst), Internal::end(dst), std::begin(m_Differences), sqDiff);
         return m_Differences.begin();
-    }
-
-    inline const auto end() const
-    {
-        return m_Differences.end();
     }
 
     static inline float mean(const float sum, const float n)

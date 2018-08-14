@@ -68,34 +68,37 @@ protected:
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
     {
         // Calculate difference between image and stored image
-        m_Differencer.calculateDifference(image, m_Snapshots[snapshot], m_DiffScratchImage);
+        const int imSize = image.rows * image.cols;
+        auto diffIter = m_Differencer(image, m_Snapshots[snapshot], m_DiffScratchImage);
 
         // If there's no mask
         if (imageMask.empty()) {
-            float sumDifference = std::accumulate(std::cbegin(m_Differencer), std::cend(m_Differencer), 0.0f);
+            float sumDifference = std::accumulate(diffIter, diffIter + imSize, 0.0f);
 
             // Return mean
-            return Differencer::mean(sumDifference, m_DiffScratchImage.cols * m_DiffScratchImage.rows);
+            return Differencer::mean(sumDifference, imSize);
         }
         // Otherwise
         else {
             // Get raw access to rotated mask associated with image and non-rotated mask associated with snapshot
-            const uint8_t *rawImageMask = reinterpret_cast<const uint8_t *>(imageMask.data);
-            const uint8_t *rawSnapshotMask = reinterpret_cast<const uint8_t *>(this->getMaskImage().data);
-            const auto differences = std::cbegin(m_Differencer);
+            uint8_t *imageMaskPtr = imageMask.data;
+            cv::Mat snapshotMask = this->getMaskImage();
+            uint8_t *snapshotMaskPtr = snapshotMask.data;
 
             // Loop through pixels
             float sumDifference = 0.0f;
             unsigned int numUnmaskedPixels = 0;
-            for (int i = 0; i < (m_DiffScratchImage.cols * m_DiffScratchImage.rows); i++) {
+            const uint8_t *end = &imageMaskPtr[imSize];
+            while(imageMaskPtr < end) {
                 // If this pixel is masked by neither of the masks
-                if (rawImageMask[i] != 0 && rawSnapshotMask[i] != 0) {
+                if (*imageMaskPtr++ != 0 && *snapshotMaskPtr++) {
                     // Accumulate sum of differences
-                    sumDifference += (float) differences[i];
+                    sumDifference += (float) *diffIter;
 
                     // Increment unmasked pixels count
                     numUnmaskedPixels++;
                 }
+                diffIter++;
             }
 
             // Return mean
