@@ -3,7 +3,7 @@ include ../common/flags.mk
 # The current version of the avcodec code uses some deprecated functions, so
 # let's ignore compiler warnings about this. I should probably fix the code up
 # properly, though - AD
-CXXFLAGS+=-Wno-deprecated-declarations
+CXXFLAGS+=-Wno-deprecated-declarations -Wno-implicit-fallthrough
 
 # AR SDK
 ARSDK_ROOT ?= /opt/arsdk3
