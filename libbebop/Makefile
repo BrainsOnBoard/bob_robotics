@@ -7,7 +7,7 @@ CXXFLAGS+=-Wno-deprecated-declarations
 
 # AR SDK
 ifndef ARSDK_ROOT
-	$(error Environment variable ARSDK_ROOT must be defined)
+$(error Environment variable ARSDK_ROOT must be defined)
 endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
