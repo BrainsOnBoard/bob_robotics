@@ -1,12 +1,12 @@
 #pragma once
 
-// Standard C++ includes
-#include <numeric>
-#include <vector>
-
 // Standard C includes
 #include <cassert>
 #include <cstdlib>
+
+// Standard C++ includes
+#include <numeric>
+#include <vector>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
@@ -52,6 +52,7 @@ public:
 
     virtual const cv::Mat &getSnapshot(size_t index) const override
     {
+        assert(index < m_Snapshots.size());
         return m_Snapshots[index];
     }
 
