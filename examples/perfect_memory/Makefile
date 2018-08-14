@@ -16,6 +16,7 @@ $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
 -include plot_ridf.d
 
 plot_ridf: plot_ridf.cc plot_ridf.d
+	@echo Python version: $(PYTHON_VERSION)
 	$(CXX) -o plot_ridf plot_ridf.cc $(CXXFLAGS) $(LINK_FLAGS)
 
 %.d: ;
