@@ -19,8 +19,13 @@ var hierarchy =
       [ "units::unit_value_subtract< U1, U2 >", "structunits_1_1unit__value__subtract.html", null ],
       [ "units::unit_value_t< Units, Num, Denom >", "structunits_1_1unit__value__t.html", null ]
     ] ],
+    [ "BoBRobotics::Navigation::AbsDiff", "classBoBRobotics_1_1Navigation_1_1AbsDiff.html", null ],
     [ "BoBRobotics::LM9DS1::AccelSettings", "structBoBRobotics_1_1LM9DS1_1_1AccelSettings.html", null ],
     [ "BoBRobotics::GeNNUtils::AnalogueCSVRecorder< T >", "classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html", null ],
+    [ "Base", null, [
+      [ "BoBRobotics::GeNNModels::AlphaCurr", "classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html", null ],
+      [ "BoBRobotics::GeNNModels::ExpCurr", "classBoBRobotics_1_1GeNNModels_1_1ExpCurr.html", null ]
+    ] ],
     [ "Base", null, [
       [ "BoBRobotics::GeNNModels::AdExp", "classBoBRobotics_1_1GeNNModels_1_1AdExp.html", null ],
       [ "BoBRobotics::GeNNModels::LIF", "classBoBRobotics_1_1GeNNModels_1_1LIF.html", null ],
@@ -31,14 +36,11 @@ var hierarchy =
       [ "TN2Linear", "classTN2Linear.html", null ]
     ] ],
     [ "Base", null, [
-      [ "BoBRobotics::GeNNModels::AlphaCurr", "classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html", null ],
-      [ "BoBRobotics::GeNNModels::ExpCurr", "classBoBRobotics_1_1GeNNModels_1_1ExpCurr.html", null ]
-    ] ],
-    [ "Base", null, [
       [ "BoBRobotics::GeNNModels::STDPDopamine", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html", null ],
       [ "Continuous", "classContinuous.html", null ]
     ] ],
     [ "BoBRobotics::Robots::Bebop", "classBoBRobotics_1_1Robots_1_1Bebop.html", null ],
+    [ "BoBRobotics::Navigation::BestMatchingSnapshot", "structBoBRobotics_1_1Navigation_1_1BestMatchingSnapshot.html", null ],
     [ "BoBRobotics::Vicon::CaptureControl", "classBoBRobotics_1_1Vicon_1_1CaptureControl.html", null ],
     [ "units::decibel_scale< T >", "structunits_1_1decibel__scale.html", null ],
     [ "BoBRobotics::FSM< S >", "classBoBRobotics_1_1FSM.html", null ],
@@ -126,6 +128,7 @@ var hierarchy =
     [ "BoBRobotics::PID", "classBoBRobotics_1_1PID.html", null ],
     [ "BoBRobotics::AntWorld::Renderer", "classBoBRobotics_1_1AntWorld_1_1Renderer.html", null ],
     [ "BoBRobotics::AntWorld::RenderMesh", "classBoBRobotics_1_1AntWorld_1_1RenderMesh.html", null ],
+    [ "BoBRobotics::Navigation::RMSDiff", "classBoBRobotics_1_1Navigation_1_1RMSDiff.html", null ],
     [ "BoBRobotics::AntWorld::RouteArdin", "classBoBRobotics_1_1AntWorld_1_1RouteArdin.html", null ],
     [ "BoBRobotics::AntWorld::RouteContinuous", "classBoBRobotics_1_1AntWorld_1_1RouteContinuous.html", null ],
     [ "runtime_error", null, [
@@ -163,16 +166,16 @@ var hierarchy =
       [ "BoBRobotics::Robots::TankNetSink", "classBoBRobotics_1_1Robots_1_1TankNetSink.html", null ]
     ] ],
     [ "BoBRobotics::Threadable", "classBoBRobotics_1_1Threadable.html", [
-      [ "BoBRobotics::HID::JoystickBase< Joystick, JAxis, JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", null ],
+      [ "BoBRobotics::HID::JoystickBase< JAxis, JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", null ],
       [ "BoBRobotics::Net::Node", "classBoBRobotics_1_1Net_1_1Node.html", [
         [ "BoBRobotics::Net::Client", "classBoBRobotics_1_1Net_1_1Client.html", null ],
         [ "BoBRobotics::Net::Server", "classBoBRobotics_1_1Net_1_1Server.html", null ]
       ] ],
       [ "BoBRobotics::Video::Display", "classBoBRobotics_1_1Video_1_1Display.html", null ],
-      [ "BoBRobotics::HID::JoystickBase< JoystickLinux, JAxisLinux, JButtonLinux >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
+      [ "BoBRobotics::HID::JoystickBase< JAxisLinux, JButtonLinux >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
         [ "BoBRobotics::HID::JoystickLinux", "classBoBRobotics_1_1HID_1_1JoystickLinux.html", null ]
       ] ],
-      [ "BoBRobotics::HID::JoystickBase< JoystickWindows, JAxisWindows, JButtonWindows >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
+      [ "BoBRobotics::HID::JoystickBase< JAxisWindows, JButtonWindows >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
         [ "BoBRobotics::HID::JoystickWindows", "classBoBRobotics_1_1HID_1_1JoystickWindows.html", null ]
       ] ]
     ] ],
@@ -195,6 +198,13 @@ var hierarchy =
     [ "BoBRobotics::Video::Video4LinuxCamera", "classBoBRobotics_1_1Video_1_1Video4LinuxCamera.html", [
       [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
     ] ],
+    [ "BoBRobotics::Navigation::VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html", [
+      [ "BoBRobotics::Navigation::PerfectMemoryBase< RIDFProcessor >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html", [
+        [ "BoBRobotics::Navigation::PerfectMemory< RIDFProcessor, Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
+        [ "BoBRobotics::Navigation::PerfectMemoryHOG< RIDFProcessor, Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html", null ]
+      ] ]
+    ] ],
     [ "BoBRobotics::VonMisesDistribution< T >", "classBoBRobotics_1_1VonMisesDistribution.html", null ],
+    [ "BoBRobotics::Navigation::WeightSnapshotsDynamic< numComp >", "structBoBRobotics_1_1Navigation_1_1WeightSnapshotsDynamic.html", null ],
     [ "BoBRobotics::AntWorld::World", "classBoBRobotics_1_1AntWorld_1_1World.html", null ]
 ];

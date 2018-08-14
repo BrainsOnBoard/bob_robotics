@@ -25,16 +25,17 @@ var NAVTREE =
 [
   [ "BoB robotics", "index.html", [
     [ "BoB robotics Documentation", "index.html", null ],
-    [ "Arden et al. Model of navigation", "md_ant_world_README.html", null ],
     [ "Build requirements", "md_docs_source_requirements.html", null ],
     [ "Norbot shopping list", "md_docs_source_robot-shopping-list.html", null ],
-    [ "Joystick test", "md_examples_joystick_test_README.html", null ],
+    [ "Joystick test", "md_examples_joystick_README.html", null ],
+    [ "Perfect memory example", "md_examples_perfect_memory_README.html", null ],
     [ "BoB robotics examples", "md_examples_README.html", null ],
-    [ "Robot test programs", "md_examples_robot_net_test_README.html", null ],
-    [ "Vicon test", "md_examples_vicon_test_README.html", null ],
+    [ "Robot test programs", "md_examples_robot_net_README.html", null ],
+    [ "Vicon test", "md_examples_vicon_README.html", null ],
     [ "Default drone joystick controls", "md_libbebop_README.html", null ],
-    [ "BoB robotics", "md_README.html", null ],
-    [ "Stone et al. Model of path integration", "md_stone_cx_README.html", null ],
+    [ "Ardin et al. Model of navigation", "md_projects_ardin_mb_README.html", null ],
+    [ "Stone et al. Model of path integration", "md_projects_stone_cx_README.html", null ],
+    [ "README", "md_README.html", null ],
     [ "Modules", "modules.html", "modules" ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
@@ -71,18 +72,18 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classBoBRobotics_1_1LM9DS1.html#a9fc631db1d442a55bd096cf7a0578f78a380af569aed89ba6de57c1d9d3779bed",
-"classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#af232ab8dc3055aa2ddda4f23fc6021d5",
-"joystick_8h_source.html",
-"structmatplotlibcpp_1_1detail_1_1__interpreter.html#afa69df018d0a76c3525693f09197176f",
-"units_8h.html#a0f82d6523a9809c546fa45f7ba7b3944",
-"units_8h.html#a317dc90a5794c0fa65595dc6f0cb4a46",
-"units_8h.html#a4f309487aaa95f0aeca8c8acfcbb3c50",
-"units_8h.html#a701012cd384355af5093e84872ec4f6c",
-"units_8h.html#a8fb5711b509c507bd74aedd1a030137e",
-"units_8h.html#aaed71fa566d9fec9762a931b388caacc",
-"units_8h.html#acf3a50ea3763f4c4b74d293fbdcf85e4",
-"units_8h.html#aee6a519b19fe2f264ba4d6e77d783c2e"
+"classBoBRobotics_1_1LM9DS1.html#a9fc631db1d442a55bd096cf7a0578f78a47aeb943589019f143b481c1fffaedda",
+"classBoBRobotics_1_1Video_1_1NetSource.html#ac26041de5ba10e51c500e82742c924c5",
+"group__UnitMath.html#ga3e417de9376e1fc58cd07a8465c7e9c6",
+"structmatplotlibcpp_1_1select__npy__type_3_01int64__t_01_4.html",
+"units_8h.html#a10e7ba7719edeceef1294c640914e7b8",
+"units_8h.html#a32b711a1515d642038124088925beb37",
+"units_8h.html#a51186a83525ce332289ef3eff2d7313c",
+"units_8h.html#a71999c1b6e5f5e3635cf0f81bad8fe68",
+"units_8h.html#a91502d8fd717c4f8977da642b1b00e12",
+"units_8h.html#ab09ab48b40986f3170b42fc527b7dd96",
+"units_8h.html#ad0a18801bb11ecdda480ff98b00ad7db",
+"units_8h.html#af021d6a1c707638eb61a666ee52f53df"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['calcsnapshotdifference',['calcSnapshotDifference',['../classBoBRobotics_1_1Navigation_1_1PerfectMemory.html#a356d71a71ea345de27721457660ed0c2',1,'BoBRobotics::Navigation::PerfectMemory::calcSnapshotDifference()'],['../classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html#a965ff2ba47156976ace78859a553d300',1,'BoBRobotics::Navigation::PerfectMemoryBase::calcSnapshotDifference()'],['../classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a4a345b08bd5818210bc8fdc70d4b532a',1,'BoBRobotics::Navigation::PerfectMemoryHOG::calcSnapshotDifference()']]],
   ['ceil',['ceil',['../group__UnitMath.html#gafeea9aa149ff1d941ed830ec389bf7f4',1,'units::math']]],
   ['client',['Client',['../classBoBRobotics_1_1Net_1_1Client.html#a5d45f0b1d1c105ebda9a1d00c9e2a624',1,'BoBRobotics::Net::Client']]],
   ['close',['close',['../classBoBRobotics_1_1Video_1_1Display.html#a5e80ac0505997246ec829f9892faece0',1,'BoBRobotics::Video::Display']]],

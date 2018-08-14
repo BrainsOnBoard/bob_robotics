@@ -8,9 +8,9 @@ var searchData=
   ['jbuttonwindows',['JButtonWindows',['../namespaceBoBRobotics_1_1HID.html#a4b89850960416bd783bd3888c982671c',1,'BoBRobotics::HID']]],
   ['joystick',['Joystick',['../namespaceBoBRobotics_1_1HID.html#acbec2b87006afeb66b5934d1770f55e9',1,'BoBRobotics::HID']]],
   ['joystickbase',['JoystickBase',['../classBoBRobotics_1_1HID_1_1JoystickBase.html',1,'BoBRobotics::HID']]],
-  ['joystickbase_3c_20joysticklinux_2c_20jaxislinux_2c_20jbuttonlinux_20_3e',['JoystickBase&lt; JoystickLinux, JAxisLinux, JButtonLinux &gt;',['../classBoBRobotics_1_1HID_1_1JoystickBase.html',1,'BoBRobotics::HID']]],
-  ['joystickbase_3c_20joystickwindows_2c_20jaxiswindows_2c_20jbuttonwindows_20_3e',['JoystickBase&lt; JoystickWindows, JAxisWindows, JButtonWindows &gt;',['../classBoBRobotics_1_1HID_1_1JoystickBase.html',1,'BoBRobotics::HID']]],
+  ['joystickbase_3c_20jaxislinux_2c_20jbuttonlinux_20_3e',['JoystickBase&lt; JAxisLinux, JButtonLinux &gt;',['../classBoBRobotics_1_1HID_1_1JoystickBase.html',1,'BoBRobotics::HID']]],
+  ['joystickbase_3c_20jaxiswindows_2c_20jbuttonwindows_20_3e',['JoystickBase&lt; JAxisWindows, JButtonWindows &gt;',['../classBoBRobotics_1_1HID_1_1JoystickBase.html',1,'BoBRobotics::HID']]],
   ['joysticklinux',['JoystickLinux',['../classBoBRobotics_1_1HID_1_1JoystickLinux.html',1,'BoBRobotics::HID::JoystickLinux'],['../classBoBRobotics_1_1HID_1_1JoystickLinux.html#a6c7668c23fd1d3294890dde015a22a1f',1,'BoBRobotics::HID::JoystickLinux::JoystickLinux()']]],
   ['joystickwindows',['JoystickWindows',['../classBoBRobotics_1_1HID_1_1JoystickWindows.html',1,'BoBRobotics::HID::JoystickWindows'],['../classBoBRobotics_1_1HID_1_1JoystickWindows.html#a936bd699a9699d80dacbd05e34d257c4',1,'BoBRobotics::HID::JoystickWindows::JoystickWindows()']]],
-  ['joystick_20test',['Joystick test',['../md_examples_joystick_test_README.html',1,'']]]
+  ['joystick_20test',['Joystick test',['../md_examples_joystick_README.html',1,'']]]
 ];

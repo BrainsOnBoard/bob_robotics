@@ -1,8 +1,11 @@
 var searchData=
 [
+  ['perfect_20memory_20example',['Perfect memory example',['../md_examples_perfect_memory_README.html',1,'']]],
   ['path',['path',['../classfilesystem_1_1path.html',1,'filesystem']]],
   ['pebi',['pebi',['../group__UnitManipulators.html#gadcd5da9e80f5098e8ae9fb67196c2abb',1,'units']]],
-  ['perfectmemory',['PerfectMemory',['../classPerfectMemory.html',1,'']]],
+  ['perfectmemory',['PerfectMemory',['../classPerfectMemory.html',1,'PerfectMemory'],['../classBoBRobotics_1_1Navigation_1_1PerfectMemory.html',1,'BoBRobotics::Navigation::PerfectMemory&lt; RIDFProcessor, Differencer &gt;']]],
+  ['perfectmemorybase',['PerfectMemoryBase',['../classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html',1,'BoBRobotics::Navigation']]],
+  ['perfectmemoryhog',['PerfectMemoryHOG',['../classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html',1,'BoBRobotics::Navigation']]],
   ['peta',['peta',['../group__UnitManipulators.html#ga0161cd30954b20e7c7bc5043d428acf2',1,'units']]],
   ['pico',['pico',['../group__UnitManipulators.html#ga85526b34ae64aa914711e963006c2ac7',1,'units']]],
   ['pid',['PID',['../classBoBRobotics_1_1PID.html',1,'BoBRobotics']]],

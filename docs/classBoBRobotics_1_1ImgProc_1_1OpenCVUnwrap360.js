@@ -2,6 +2,7 @@ var classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360 =
 [
     [ "OpenCVUnwrap360", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#a3210329933894747abbf7ed873e9686d", null ],
     [ "OpenCVUnwrap360", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#a0d83b640d9f64088b16358bd602099b6", null ],
+    [ "OpenCVUnwrap360", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#a554958e24a4fbdd74531a51c2326462b", null ],
     [ "create", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#ab40142f98c8b59960d3f101b5362950e", null ],
     [ "read", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#a811d5f506250712955a3f97fa700149a", null ],
     [ "unwrap", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#aca9b3019e345f3970b68718bb5d9d147", null ],

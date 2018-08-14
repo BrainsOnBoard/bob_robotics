@@ -69,7 +69,7 @@ var searchData=
   ['units',['units',['../namespaceunits.html',1,'']]],
   ['units_2eh',['units.h',['../units_8h.html',1,'']]],
   ['unit_20types',['Unit Types',['../group__UnitTypes.html',1,'']]],
-  ['update',['update',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a2debb36558ef9c524f827e014ada6106',1,'BoBRobotics::HID::JoystickBase::update()'],['../classBoBRobotics_1_1HID_1_1JoystickLinux.html#acaf2ae0d754ba41ee7bbfa223d24a425',1,'BoBRobotics::HID::JoystickLinux::update()'],['../classBoBRobotics_1_1HID_1_1JoystickWindows.html#aae31097fb02b20641ae3cfb9d732ac11',1,'BoBRobotics::HID::JoystickWindows::update()'],['../classBoBRobotics_1_1Video_1_1Display.html#aaff25f10a11d2ae6a20ad6709fae3302',1,'BoBRobotics::Video::Display::update()']]],
+  ['update',['update',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a0e3142956e27f8aae54578a52f916518',1,'BoBRobotics::HID::JoystickBase::update()'],['../classBoBRobotics_1_1Video_1_1Display.html#aaff25f10a11d2ae6a20ad6709fae3302',1,'BoBRobotics::Video::Display::update()']]],
   ['velocity',['velocity',['../namespaceunits_1_1velocity.html',1,'units']]],
   ['voltage',['voltage',['../namespaceunits_1_1voltage.html',1,'units']]],
   ['volume',['volume',['../namespaceunits_1_1volume.html',1,'units']]]

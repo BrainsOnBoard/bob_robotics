@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BoB robotics: BoB robotics</title>
+<title>BoB robotics: README</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -88,13 +88,15 @@ $(document).ready(function(){initNavTree('md_README.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">BoB robotics </div>  </div>
+<div class="title">README </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>This repository contains code for interfacing with various robot platforms and other associated hardware, as well as code for running simulations and visualising data. Some examples of use for different BoB robotics "modules" are included, in various *_test folders.</p>
+<div class="textblock"><p><a href="https://gen-ci.inf.sussex.ac.uk/job/BoB%20robotics/job/bob_robotics/job/master/"></a> </p><h1>BoB robotics</h1>
+<p>This repository contains code for interfacing with various robot platforms and other associated hardware, as well as code for running simulations and visualising data.</p>
+<p>Fuller documentation is available at <a href="https://brainsonboard.github.io/bob_robotics/">https://brainsonboard.github.io/bob_robotics/</a>.</p>
 <p><b>Note</b> this repository is public so should only be used for utility code and example models - larger models should go in their own repositories and only be made public upon publication.</p>
 <h2>Prerequistites</h2>
-<p>A full list of requirements for different projects can be found https://github.com/BrainsOnBoard/bob_robotics/documentation/requirements.md "in the documentation".</p>
+<p>A full list of requirements for different projects can be found <a class="el" href="md_docs_source_requirements.html">in the documentation</a>.</p>
 <p>The main requirements are as follows:</p><ul>
 <li>GeNN 3.X - Stable releases of GeNN can be downloaded from <a href="https://github.com/genn-team/genn/releases">https://github.com/genn-team/genn/releases</a>. However some models in this repository may require the lastest version from the Github repository: <a href="https://github.com/genn-team/genn">https://github.com/genn-team/genn</a>. It should also be passed to genn-buildmodel using the -i command line argument when building networks using the models in the [genn_models](genn_models) folder i.e. <code>genn-buildmodel.sh -i $BOB_ROBOTICS_PATH</code> on *nix or <code>genn-buildmodel.bat -i BOB_ROBOTICS_PATH%</code> on Windows.</li>
 <li>Open CV 3.X - OpenCV releases can be downloaded from <a href="https://opencv.org">https://opencv.org</a>. Installation instructions for Jetson TX1 can be found <a href="https://devtalk.nvidia.com/default/topic/965134/opencv-3-1-compilation-on-tx1-lets-collect-the-quot-definitive-quot-cmake-settings-">here</a>.</li>

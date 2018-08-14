@@ -5,6 +5,7 @@ var namespaceBoBRobotics =
     [ "GeNNUtils", "namespaceBoBRobotics_1_1GeNNUtils.html", "namespaceBoBRobotics_1_1GeNNUtils" ],
     [ "HID", "namespaceBoBRobotics_1_1HID.html", "namespaceBoBRobotics_1_1HID" ],
     [ "ImgProc", "namespaceBoBRobotics_1_1ImgProc.html", "namespaceBoBRobotics_1_1ImgProc" ],
+    [ "Navigation", "namespaceBoBRobotics_1_1Navigation.html", "namespaceBoBRobotics_1_1Navigation" ],
     [ "Net", "namespaceBoBRobotics_1_1Net.html", "namespaceBoBRobotics_1_1Net" ],
     [ "Robots", "namespaceBoBRobotics_1_1Robots.html", "namespaceBoBRobotics_1_1Robots" ],
     [ "Vicon", "namespaceBoBRobotics_1_1Vicon.html", "namespaceBoBRobotics_1_1Vicon" ],
