@@ -30,7 +30,7 @@ endif
 ifdef WITH_MATPLOTLIBCPP
 	PYTHON_BIN 			 ?= python
 	PYTHON_CONFIG        := $(PYTHON_BIN)-config
-	PYTHON_VERSION       := $(shell $(PYTHON_BIN) --version 2>&1 | awk '{ print $$2 }' | sed 's/\.[0-9]*$$//g')
+	PYTHON_VERSION       := $(shell $(PYTHON_BIN) --version 2>&1 | awk '{ print $$2 }' | sed -r 's/\.[0-9]+$$//g')
 	PYTHON_NUMPY_INCLUDE ?= $(shell find $$($(PYTHON_CONFIG) --prefix)/lib -type d -path "*/site-packages/numpy/core/include" | grep -m 1 $(PYTHON_VERSION))
 
 	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
