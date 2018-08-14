@@ -23,7 +23,8 @@ LINK_FLAGS += -lm -lstdc++ -pthread
 
 # Build with OpenCV
 ifndef NO_OPENCV
-	CXXFLAGS += `pkg-config --cflags --libs opencv`
+	CXXFLAGS += `pkg-config --cflags opencv`
+	LINK_FLAGS += `pkg-config --libs opencv`
 endif
 
 ifdef WITH_MATPLOTLIBCPP
