@@ -12,9 +12,7 @@ LINK_FLAGS+=-lavcodec -lavformat -lavutil -lswscale
 # We set the rpath so that compiled programs can find the folder with the ARSDK
 # libs in, but apparently setting the rpath is deprecated; I'm sure there is a
 # nicer way to do this.
-ifndef ARSDK_ROOT
-$(error Environment variable ARSDK_ROOT must be defined)
-endif
+ARSDK_ROOT ?= /opt/arsdk3
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include \
