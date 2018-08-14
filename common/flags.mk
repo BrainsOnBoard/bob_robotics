@@ -26,3 +26,16 @@ ifndef NO_OPENCV
 	CXXFLAGS += `pkg-config --cflags opencv`
 	LINK_FLAGS += `pkg-config --libs opencv`
 endif
+
+ifdef WITH_MATPLOTLIBCPP
+	PYTHON_BIN 			 ?= python
+	PYTHON_CONFIG        := $(PYTHON_BIN)-config
+	PYTHON_INCLUDE       ?= $(shell $(PYTHON_CONFIG) --includes)
+
+	# extract python version from PYTHON_INCLUDE
+	PYTHON_VERSION       := $(shell echo $(PYTHON_INCLUDE) | cut -f 1 -d " " | grep -e python... -o)
+	PYTHON_NUMPY_INCLUDE ?= $(shell find $$($(PYTHON_CONFIG) --prefix)/lib -type d -path "*/*-packages/numpy/core/include" | grep -m 1 $(PYTHON_VERSION))
+
+	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
+	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
+endif

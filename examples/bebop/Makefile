@@ -1,5 +1,5 @@
 include ../../common/flags.mk
-CXXFLAGS += -I../..
+CXXFLAGS += -I../.. -Wno-implicit-fallthrough
 
 # libbebop
 LIBBEBOP_PATH := ../../libbebop

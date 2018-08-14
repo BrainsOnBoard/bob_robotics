@@ -3,11 +3,11 @@ include ../common/flags.mk
 # The current version of the avcodec code uses some deprecated functions, so
 # let's ignore compiler warnings about this. I should probably fix the code up
 # properly, though - AD
-CXXFLAGS+=-Wno-deprecated-declarations
+CXXFLAGS+=-Wno-deprecated-declarations -Wno-implicit-fallthrough
 
 # AR SDK
 ifndef ARSDK_ROOT
-	$(error Environment variable ARSDK_ROOT must be defined)
+$(error Environment variable ARSDK_ROOT must be defined)
 endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include

@@ -100,7 +100,7 @@ xcopy /d /y "$(ANACONDA_DIR)\Library\plugins\platforms\*" "$(TargetDir)\platform
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="example.cc" />
+    <ClCompile Include="plotting_test.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
