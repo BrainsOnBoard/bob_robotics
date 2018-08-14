@@ -4,19 +4,22 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RenderMesh
-//----------------------------------------------------------------------------
-// Class for generating piece of curved geometry used for rendering cubemap to screen
+// Third-party includes
+#include "../third_party/units.h"
+
 namespace BoBRobotics
 {
 namespace AntWorld
 {
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RenderMesh
+//----------------------------------------------------------------------------
+//! Class for generating piece of curved geometry used for rendering cubemap to screen
 class RenderMesh
 {
 public:
     RenderMesh();
-    RenderMesh(float horizontalFOV, float verticalFOV, float startLongitude,
+    RenderMesh(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
                unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
     ~RenderMesh();
 

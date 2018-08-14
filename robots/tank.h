@@ -12,7 +12,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Tank
 //----------------------------------------------------------------------------
-// Interface for driving tank-like wheeled robots
+//! Interface for driving wheeled robots with tank steering
 class Tank
 {
 public:
@@ -88,7 +88,7 @@ private:
     {
         // second space separates left and right parameters
         if (command.size() != 3) {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
 
         // parse strings to floats
@@ -102,21 +102,19 @@ private:
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone)
     {
         // only interested in left joystick
-        float x = m_X;
-        float y = m_Y;
         switch (axis) {
         case HID::JAxis::LeftStickVertical:
-            y = value;
+            m_Y = value;
             break;
         case HID::JAxis::LeftStickHorizontal:
-            x = value;
+            m_X = value;
             break;
         default:
             return false;
         }
 
         // drive robot with joystick
-        drive(x, y, deadZone);
+        drive(m_X, m_Y, deadZone);
         return true;
     }
 }; // Tank

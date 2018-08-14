@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 // Standard C includes
 #include <cstdint>
@@ -12,8 +13,9 @@
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
-// LM9DS1
+// BoBRobotics::LM9DS1
 //----------------------------------------------------------------------------
+//! Interface for the SparkFun 9DoF IMU
 class LM9DS1
 {
 public:
@@ -511,14 +513,14 @@ public:
     {
         readAccelGyroData(AccelGyroReg::OUT_X_L_G, data);
         std::transform(std::begin(data), std::end(data), std::begin(m_GyroBias), std::begin(data),
-                       [this](int16_t v, int16_t bias){ return v - bias; });
+                       [](int16_t v, int16_t bias){ return v - bias; });
     }
     
     void readAccel(int16_t (&data)[3])
     {
         readAccelGyroData(AccelGyroReg::OUT_X_L_XL, data);
         std::transform(std::begin(data), std::end(data), std::begin(m_AccelBias), std::begin(data),
-                       [this](int16_t v, int16_t bias){ return v - bias; });
+                       [](int16_t v, int16_t bias){ return v - bias; });
     }
     
     void readMagneto(int16_t (&data)[3]) 
@@ -766,6 +768,8 @@ private:
                 return 0.0175f;
             case GyroScale::DPS2000:
                 return 0.07f;
+            default:
+                throw std::runtime_error("Invalid parameter");
         }
     }
     
@@ -780,6 +784,8 @@ private:
                 return 0.000244f;
             case AccelScale::G16:
                 return 0.000732f;
+            default:
+                throw std::runtime_error("Invalid parameter");
         }
     }
     
@@ -794,6 +800,8 @@ private:
                 return 0.00043f;
             case MagnetoScale::GS16:
                 return 0.00058f;
+            default:
+                throw std::runtime_error("Invalid parameter");
         }
     }
     

@@ -10,6 +10,9 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
+// BoB robotics includes
+#include "../common/pose.h"
+
 // Forward declarations
 namespace cv
 {
@@ -21,31 +24,42 @@ namespace filesystem
     class path;
 }
 
+namespace BoBRobotics
+{
+using namespace units::literals;
+using namespace units::length;
+
+namespace AntWorld
+{
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::World
 //----------------------------------------------------------------------------
-namespace BoBRobotics
-{
-namespace AntWorld
-{
+//! Provides a means for loading a world stored on disk into OpenGL
 class World
 {
 public:
-    World() : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
+    World()
+      : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
+      , m_MinBoundM{0_m, 0_m, 0_m}, m_MaxBoundM{0_m, 0_m, 0_m}
     {}
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename, const GLfloat (&worldColour)[3],
-              const GLfloat (&groundColour)[3]);
-    bool loadObj(const std::string &objFilename, float scale = 1.0f,
-                 int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    bool load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
+    bool loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
     void render() const;
 
-    const GLfloat (&getMinBound())[3] { return m_MinBound; }
-    const GLfloat (&getMaxBound())[3] { return m_MaxBound; }
+    const Vector3<meter_t> &getMinBound()
+    {
+        return m_MinBoundM;
+    }
+
+    const Vector3<meter_t> &getMaxBound()
+    {
+        return m_MaxBoundM;
+    }
 
 private:
     //------------------------------------------------------------------------
@@ -124,6 +138,8 @@ private:
     // World bounds
     GLfloat m_MinBound[3];
     GLfloat m_MaxBound[3];
+    Vector3<meter_t> m_MinBoundM;
+    Vector3<meter_t> m_MaxBoundM;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

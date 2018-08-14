@@ -19,8 +19,9 @@
 namespace BoBRobotics {
 namespace Video {
 //------------------------------------------------------------------------
-// Video4LinuxCamera
+// BoBRobotics::Video::Video4LinuxCamera
 //------------------------------------------------------------------------
+//! An interface for the low-level Video4Linux API
 class Video4LinuxCamera
 {
 public:

@@ -16,6 +16,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
+//! An interface for wheeled, Arduino-based robots developed at the University of Sussex
 class Norbot : public Tank
 {
 public:

@@ -5,9 +5,9 @@
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
-// FSM
+// BoBRobotics::FSM
 //----------------------------------------------------------------------------
-// Finite-state machine class - makes logic of implementing robots etc much cleaner
+//! Finite-state machine class - makes logic of implementing robots etc. much cleaner
 template<typename S>
 class FSM
 {
@@ -21,7 +21,7 @@ public:
         //--------------------------------------------------------------------
         // Enumerations
         //--------------------------------------------------------------------
-        // Types of event that can occur within a state
+        //! Types of event that can occur within a state
         enum class Event
         {
             Enter,
@@ -104,5 +104,5 @@ private:
     
     // Are we mid way through a state update?
     bool m_Updating;
-};
+}; // FSM
 } // BoBRobotics

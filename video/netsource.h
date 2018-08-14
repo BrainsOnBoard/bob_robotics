@@ -17,12 +17,18 @@
 
 namespace BoBRobotics {
 namespace Video {
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::NetSource
+//----------------------------------------------------------------------------
+//! Object for receiving video transmitted over the network by a NetSink
 class NetSource : public Input
 {
 public:
-    NetSource()
-    {}
-
+    /*!
+     * \brief Create an object to read video transmitted over the network
+     * 
+     * @param node The network connection from which to read images
+     */
     NetSource(Net::Node &node)
     {
         // handle incoming IMG commands
@@ -92,7 +98,7 @@ private:
                 m_NewFrame = true;
             }
         } else {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
     }
 }; // NetSource

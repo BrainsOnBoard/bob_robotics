@@ -1,15 +1,4 @@
-/*
- * This is a simple class for displaying a VideoInput (e.g. a webcam) on screen.
- * An example of its use is given in simpledisplay_test.cc (build with make).
- * The user can quit by pressing escape.
- *
- * You can optionally run the display on a separate thread by invoking the
- * startThread() method.
- *
- * Should be built with OpenCV and -pthread.
- */
-
-// C++ includes
+// Standard C++ includes
 #include <chrono>
 #include <memory>
 #include <stdexcept>
@@ -23,33 +12,52 @@
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../os/keycodes.h"
 
-// local includes
+// Local includes
 #include "input.h"
 
 namespace BoBRobotics {
 namespace Video {
 using namespace std::literals;
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::Display
+//----------------------------------------------------------------------------
+/*!
+ * \brief Display a video source on screen
+ *
+ * This is a simple class for displaying a VideoInput (e.g. a webcam) on screen.
+ * An example of its use is given in examples/display_test.
+ *
+ * You can optionally run the display on a separate thread by invoking the
+ * runInBackground() method.
+ *
+ * Should be built with OpenCV and -pthread.
+ */
 class Display : public Threadable
 {
 #define WINDOW_NAME "OpenCV display"
 
 public:
-    /*
-     * Create a new display with unwrapping disabled.
+    /*!
+     * \brief Create a new display with unwrapping disabled
+     * 
+     * @param videoInput The video source to display
      */
     Display(Input &videoInput)
       : m_VideoInput(&videoInput)
     {}
 
+    //! Close display window and destroy this object
     virtual ~Display()
     {
         close();
     }
 
-    /*
-     * Create a new display with unwrapping enabled if the Video::Input supports
-     * it.
+    /*!
+     * \brief Create a new display with unwrapping enabled if the videoInput supports it
+     * 
+     * @param videoInput The video source to display
+     * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
      */
     template<typename... Ts>
     Display(Input &videoInput, Ts &&... unwrapRes)
@@ -62,23 +70,25 @@ public:
         }
     }
 
-    /*
-     * Create a new display from a std::unique_ptr to Input (e.g. from
-     * getPanoramicCamera()).
+    /*!
+     * \brief Create a new display from a std::unique_ptr to Input (e.g. from
+     *        getPanoramicCamera())
+     * 
+     * @param videoInput The video source to display
+     * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
      */
     template<typename... Ts>
     Display(std::unique_ptr<Input> &videoInput, Ts &&... unwrapRes)
       : Display(*videoInput.get(), std::forward<Ts>(unwrapRes)...)
     {}
 
+    //! Return true if the display window is open
     bool isOpen() const
     {
         return m_Open;
     }
 
-    /*
-     * Run the display on the main thread.
-     */
+    //! Run the display on the current thread
     void run() override
     {
         while (m_DoRun) {
@@ -89,6 +99,11 @@ public:
         }
     }
 
+    /*!
+     * \brief Try to read a new frame from the video source and display it
+     * 
+     * \return Whether a new frame was successfully read
+     */
     bool update()
     {
         if (!m_Open) {
@@ -117,6 +132,7 @@ public:
         return newFrame;
     }
 
+    //! Close the display and stop the background thread if needed
     virtual void close()
     {
         if (m_Open) {

@@ -15,35 +15,29 @@
 // local includes
 #include "input.h"
 
+namespace BoBRobotics {
+namespace Video {
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::NetSink
 //----------------------------------------------------------------------------
-// Object for sending video frames synchronously or asynchronously over network
-namespace BoBRobotics {
-namespace Video {
+//! Object for sending video frames synchronously or asynchronously over network
 class NetSink
 {
 public:
-    // Create a NetSink for asynchronous operation
+    /*!
+     * \brief Create a NetSink for asynchronous operation
+     * 
+     * @param node The connection over which to transmit images
+     * @param input The Input source for images
+     */
     NetSink(Net::Node &node, Input &input)
     :   m_Node(node), m_Input(&input), m_FrameSize(input.getOutputSize()), m_Name(input.getCameraName())
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command& command)
+                                 [this](Net::Node &, const Net::Command &command)
                                  {
                                      onCommandReceivedAsync(command);
-                                 });
-    }
-
-    NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &name)
-    :   m_Node(node), m_Input(nullptr), m_FrameSize(frameSize), m_Name(name)
-    {
-        // handle incoming IMG commands
-        m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command& command)
-                                 {
-                                     onCommandReceivedSync(command);
                                  });
     }
 
@@ -58,9 +52,29 @@ public:
             }
         }
     }
+
+    /*!
+     * \brief Create a NetSink for synchronous operation
+     * 
+     * @param node The connection over which to transmit images
+     * @param frameSize The size of the frames output by the video source
+     * @param cameraName The name of the camera (see Input::getCameraName())
+     */
+    NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &cameraName)
+    :   m_Node(node), m_Input(nullptr), m_FrameSize(frameSize), m_Name(cameraName)
+    {
+        // handle incoming IMG commands
+        m_Node.addCommandHandler("IMG",
+                                 [this](Net::Node &, const Net::Command &command)
+                                 {
+                                     onCommandReceivedSync(command);
+                                 });
+    }
+
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
+    //! Send a frame over the network (when operating in synchronous mode)
     void sendFrame(const cv::Mat &frame)
     {
         // If node is connected
@@ -88,7 +102,7 @@ private:
     void onCommandReceived(const Net::Command &command)
     {
         if (command[1] != "START") {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
 
         // ACK the command and tell client the camera resolution

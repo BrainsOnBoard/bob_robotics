@@ -16,6 +16,8 @@
 
 namespace BoBRobotics {
 namespace HID {
+using namespace std::literals;
+
 // helper macros
 #define toIndex(value) static_cast<size_t>(value)
 #define toAxis(value) static_cast<JAxis>(value)
@@ -25,66 +27,142 @@ namespace HID {
 #define int16_maxf static_cast<float>(std::numeric_limits<int16_t>::max())
 #define int16_absminf -static_cast<float>(std::numeric_limits<int16_t>::min())
 
+//! The current state of a joystick button
 enum ButtonState
 {
-    StateDown = (1 << 0),
-    StatePressed = (1 << 1),
-    StateReleased = (1 << 2)
+    StateDown       = (1 << 0), //!< Whether the button is being pressed down
+    StatePressed    = (1 << 1), //!< Whether the button has been pressed since last update()
+    StateReleased   = (1 << 2) //!< Whether the button has been released since last update()
 };
 
+/*!
+ * \brief Generic joystick class for Xbox 360 controller, from which
+ *        JoystickLinux and JoystickWindows classes inherit.
+ * 
+ * The class provides the basic, platform-independent functionality required
+ * by JoystickLinux and JoystickWindows.
+ * 
+ * *NOTE*: This class should not be used directly; see example in joystick_test.
+ */
 template<typename JAxis, typename JButton>
 class JoystickBase : public Threadable
 {
+    /*!
+     * \brief A delegate to handle joystick button presses
+     * 
+     * @param button Which button was pressed/released
+     * @param pressed Whether button was pressed/released
+     * @return True if the function has handled the event, false otherwise
+     */
     using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+
+    /*!
+     * \brief A delegate to handle joystick axis events (i.e. moving joysticks)
+     * 
+     * @param axis Which axis was pressed/released
+     * @param value Value from -1.0f to 1.0f representing new position of axis
+     * @return True if the function has handled the event, false otherwise
+     */
     using AxisHandler = std::function<bool(JAxis axis, float value)>;
 
-private:
-    std::vector<ButtonHandler> m_ButtonHandlers;
-    std::vector<AxisHandler> m_AxisHandlers;
-    std::array<float, toIndex(JAxis::LENGTH)> m_AxisState;
-    float m_DeadZone;
-
 public:
-    // Virtual methods
-    virtual float axisToFloat(JAxis axis, int16_t value) const = 0;
-    virtual bool update() = 0;
+    virtual ~JoystickBase()
+    {
+    }
 
+    //------------------------------------------------------------------------
+    // Threadable virtuals
+    //------------------------------------------------------------------------
+    //! Block and keep updating the joystick on the current thread
+    virtual void run() override
+    {
+        while (m_DoRun) {
+            while (!update()) {
+                std::this_thread::sleep_for(50ms);
+            }
+        }
+    }
+
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
+    /*!
+     * \brief Try to read from the joystick
+     * 
+     * @return True if one or more events were read from joystick
+     */
+    bool update()
+    {
+        // unset Pressed and Released bits for buttons
+        for (auto &s : m_ButtonState) {
+            s &= StateDown;
+        }
+
+        return updateState();
+    }
+
+    //! Add a function to handle joystick axis events
     void addHandler(AxisHandler handler)
     {
         m_AxisHandlers.insert(m_AxisHandlers.begin(), handler);
     }
 
+    //! Add a function to handle joystick button events
     void addHandler(ButtonHandler handler)
     {
         m_ButtonHandlers.insert(m_ButtonHandlers.begin(), handler);
     }
 
+    //! Get the current value for a specified joystick axis
     float getState(JAxis axis) const
     {
-        return m_AxisState[toIndex(axis)];
+        if(axis == JAxis::LeftStickHorizontal) {
+            return getDeadZonedState(JAxis::LeftStickHorizontal, JAxis::LeftStickVertical);
+        }
+        else if(axis == JAxis::LeftStickVertical) {
+            return getDeadZonedState(JAxis::LeftStickVertical, JAxis::LeftStickHorizontal);
+        }
+        else if(axis == JAxis::RightStickHorizontal) {
+            return getDeadZonedState(JAxis::RightStickHorizontal, JAxis::RightStickVertical);
+        }
+        else if(axis == JAxis::RightStickVertical) {
+            return getDeadZonedState(JAxis::RightStickVertical, JAxis::RightStickHorizontal);
+        }
+        else {
+            return m_AxisState[toIndex(axis)];
+        }
     }
 
+    /*!
+     * \brief Get the current state for a specified joystick button
+     * 
+     * \see ButtonState
+     */
     unsigned char getState(JButton button) const
     {
         return m_ButtonState[toIndex(button)];
     }
 
+    //! Whether button is currently being pressed
     bool isDown(JButton button) const
     {
         return getState(button) & StateDown;
     }
 
+    //! Whether button has been pressed since last update()
     bool isPressed(JButton button) const
     {
         return getState(button) & StatePressed;
     }
 
+    //! Whether button has been released since last update()
     bool isReleased(JButton button) const
     {
         return getState(button) & StateReleased;
     }
 
-    static std::string getName(JAxis axis)
+    //! Get the name of a specified joystick axis
+    static constexpr std::string getName(JAxis axis)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -108,9 +186,9 @@ public:
         }
     }
 
-    static std::string getName(JButton button)
+    //! Get the name of a specified joystick button
+    static constexpr std::string getName(JButton button)
     {
-        // these values should be defined before this header is included
         switch (button) {
         case JButton::A:
             return "A";
@@ -138,31 +216,67 @@ public:
     }
 
 protected:
-    std::array<unsigned char, toIndex(JButton::LENGTH)> m_ButtonState;
-
     JoystickBase(float deadZone = 0.0f)
       : m_DeadZone(deadZone)
     {}
 
-    void raiseEvent(JButton button, bool pressed)
+    //------------------------------------------------------------------------
+    // Declared virtuals
+    //------------------------------------------------------------------------
+    virtual bool updateState() = 0;
+
+    //------------------------------------------------------------------------
+    // Protected methods
+    //------------------------------------------------------------------------
+    void setPressed(JButton button, bool isInitial)
     {
-        for (auto handler : m_ButtonHandlers) {
-            if (handler(button, pressed)) {
-                break;
+        // Get state and set StateDown and StatePressed
+        uint8_t state = getState(button);
+        state |= (StateDown | StatePressed);
+
+        // Set new state
+        setState(button, state, isInitial);
+    }
+
+    void setReleased(JButton button, bool isInitial)
+    {
+        // Get state, clear StateDown and set StateReleased
+        uint8_t state = getState(button);
+        state &= ~StateDown;
+        state |= StateReleased;
+
+        // Set new state
+        setState(button, state, isInitial);
+    }
+
+    void setState(JButton button, uint8_t state, bool isInitial)
+    {
+        // Set button state
+        m_ButtonState[toIndex(button)] = state;
+
+        if(!isInitial && (isPressed(button) || isReleased(button))) {
+            for (auto handler : m_ButtonHandlers) {
+                if (handler(button, isPressed(button))) {
+                    break;
+                }
             }
         }
     }
 
-    void updateAxis(JAxis axis, float value, bool isInitial)
+    void setState(JAxis axis, float value, bool isInitial)
     {
-        auto &s = m_AxisState[toIndex(axis)];
-        if (s != value) {
-            s = value;
+        // If the state's changed
+        // **NOTE** this is more for XINPUT which doesn't raise events
+        if (m_AxisState[toIndex(axis)] != value) {
+            m_AxisState[toIndex(axis)] = value;
 
-            // run handlers
             if (!isInitial) {
+                // Get state after deadzone is taken into account
+                const float processedState = getState(axis);
+
+                // run handlers
                 for (auto handler : m_AxisHandlers) {
-                    if (handler(axis, value)) {
+                    if (handler(axis, processedState)) {
                         break;
                     }
                 }
@@ -170,26 +284,35 @@ protected:
         }
     }
 
-    void updateAxis(JAxis axis, int16_t value, bool isInitial)
+private:
+    //------------------------------------------------------------------------
+    // Private methods
+    //------------------------------------------------------------------------
+    float getDeadZonedState(JAxis axis, JAxis axisPerpendicular) const
     {
-        updateAxis(axis, axisToFloat(axis, value), isInitial);
-    }
+        const float state = m_AxisState[toIndex(axis)];
 
-    void updateAxis(JAxis axisHorz, int16_t hvalue, int16_t vvalue, bool isInitial)
-    {
-        JAxis axisVert = toAxis(toIndex(axisHorz) + 1);
-        float x = axisToFloat(axisHorz, hvalue);
-        float y = axisToFloat(axisVert, vvalue);
-
-        if (sqrt(x * x + y * y) < m_DeadZone) {
-            updateAxis(axisHorz, 0.0f, isInitial);
-            updateAxis(axisVert, 0.0f, isInitial);
-        } else {
-            updateAxis(axisHorz, x, isInitial);
-            updateAxis(axisVert, y, isInitial);
+        // If deadzone is enabled
+        if(m_DeadZone > 0.0f) {
+            // If axis and perpendicular axis are within circular deadzone, return 0
+            const float statePerpendicular = m_AxisState[toIndex(axisPerpendicular)];
+            if (sqrt((state * state) + (statePerpendicular * statePerpendicular)) < m_DeadZone) {
+                return 0.0f;
+            }
         }
+
+        // Return axis state
+        return state;
     }
 
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    std::array<uint8_t, toIndex(JButton::LENGTH)> m_ButtonState;
+    std::vector<ButtonHandler> m_ButtonHandlers;
+    std::vector<AxisHandler> m_AxisHandlers;
+    std::array<float, toIndex(JAxis::LENGTH)> m_AxisState;
+    const float m_DeadZone;
 }; // JoystickBase
 } // HID
 } // BoBRobotics

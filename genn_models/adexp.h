@@ -3,12 +3,13 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace BoBRobotics {
+namespace GeNNModels {
+
 //----------------------------------------------------------------------------
 // BoBRobotics::GeNNModels::AdExp
 //----------------------------------------------------------------------------
 //! Adaptive exponential - solved using RK4
-namespace BoBRobotics {
-namespace GeNNModels {
 class AdExp : public NeuronModels::Base
 {
 public:

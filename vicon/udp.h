@@ -8,13 +8,12 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include <cmath>
 
 // Standard C includes
 #include <cassert>
 #include <cstring>
 
-// POSIX includes
+// Networking includes
 #ifdef _WIN32
     #include <winsock2.h>
 #else
@@ -25,49 +24,75 @@
     #include <unistd.h>
 #endif
 
-namespace BoBRobotics {
-//----------------------------------------------------------------------------
-// Vicon Typedefines
-//----------------------------------------------------------------------------
+// BoB robotics includes
+#include "../common/pose.h"
+
+namespace BoBRobotics
+{
 namespace Vicon
 {
-typedef double Vector[3];
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
+using namespace units::time;
+using namespace units::velocity;
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
 //----------------------------------------------------------------------------
-//! Simplest object data class - just tracks position and translation
+//! Simplest object data class - just tracks position and attitude
 class ObjectData
 {
 public:
-    ObjectData() : m_FrameNumber{0}, m_Translation{0.0, 0.0, 0.0}, m_Rotation{0.0, 0.0, 0.0}
+    ObjectData()
+      : m_FrameNumber{ 0 }
+      , m_Position{ 0_mm, 0_mm, 0_mm }
+      , m_Attitude{ 0_rad, 0_rad, 0_rad }
     {
     }
 
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, const Vector &translation, const Vector &rotation)
+    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+                radian_t yaw, radian_t pitch, radian_t roll)
     {
         // Cache frame number
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        std::copy(std::begin(translation), std::end(translation), std::begin(m_Translation));
-        std::copy(std::begin(rotation), std::end(rotation), std::begin(m_Rotation));
+        m_Position[0] = x;
+        m_Position[1] = y;
+        m_Position[2] = z;
+        m_Attitude[0] = yaw;
+        m_Attitude[1] = pitch;
+        m_Attitude[2] = roll;
     }
 
-    uint32_t getFrameNumber() const { return m_FrameNumber; }
-    const Vector &getTranslation() const{ return m_Translation; }
-    const Vector &getRotation() const{ return m_Rotation; }
+    uint32_t getFrameNumber() const
+    {
+        return m_FrameNumber;
+    }
+
+    template <class LengthUnit = millimeter_t>
+    Vector3<LengthUnit> getPosition()
+    {
+        return convertUnitArray<LengthUnit>(m_Position);
+    }
+
+    template <class AngleUnit = radian_t>
+    Vector3<AngleUnit> getAttitude()
+    {
+        return convertUnitArray<AngleUnit>(m_Attitude);
+    }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
-    Vector m_Translation;
-    Vector m_Rotation;
+    Vector3<millimeter_t> m_Position;
+    Vector3<radian_t> m_Attitude;
 };
 
 //----------------------------------------------------------------------------
@@ -77,57 +102,68 @@ private:
 class ObjectDataVelocity : public ObjectData
 {
 public:
-    ObjectDataVelocity() : m_Velocity{0.0, 0.0, 0.0}
-    {
-    }
+    ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
+    {}
 
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, const Vector &translation, const Vector &rotation)
+    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+                radian_t yaw, radian_t pitch, radian_t roll)
     {
-        constexpr double frameMs = 1000.0 / 100.0;
-        constexpr double smoothingMs = 30.0;
+        const Vector3<millimeter_t> position {x, y, z};
+        constexpr millisecond_t frameS = 10_ms;
+        constexpr millisecond_t smoothingS = 30_ms;
 
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
-        const double deltaMs = frameMs * (double)deltaFrames;
+        const auto deltaS = frameS * deltaFrames;
 
         // Calculate exponential smoothing factor
-        const double alpha = 1.0 - std::exp(-deltaMs / smoothingMs);
+        const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
         // Calculate instantaneous velocity
-        const Vector &oldTranslation = getTranslation();
-        Vector instVelocity;
-        std::transform(std::begin(translation), std::end(translation), std::begin(oldTranslation), std::begin(instVelocity),
-                       [deltaMs](double curr, double prev){ return (curr - prev) / deltaMs; });
+        const auto oldPosition = getPosition<>();
+        Vector3<meters_per_second_t> instVelocity;
+        const auto calcVelocity = [deltaS](auto curr, auto prev) {
+            return (curr - prev) / deltaS;
+        };
+        std::transform(std::begin(position), std::end(position),
+                       std::begin(oldPosition), std::begin(instVelocity),
+                       calcVelocity);
 
         // Exponentially smooth velocity
-        std::transform(std::begin(instVelocity), std::end(instVelocity), std::begin(m_Velocity), std::begin(m_Velocity),
-                       [alpha](double inst, double prev){ return (alpha * inst) + ((1.0 - alpha) * prev); });
+        const auto smoothVelocity = [alpha](auto inst, auto prev) {
+            return (alpha * inst) + ((1.0 - alpha) * prev);
+        };
+        std::transform(std::begin(instVelocity), std::end(instVelocity),
+                       std::begin(m_Velocity), std::begin(m_Velocity),
+                       smoothVelocity);
 
         // Superclass
-        ObjectData::update(frameNumber, translation, rotation);
+        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
-    const Vector &getVelocity() const{ return m_Velocity; }
+    template <class VelocityUnit = meters_per_second_t>
+    Vector3<VelocityUnit> getVelocity() const
+    {
+        return convertUnitArray<VelocityUnit>(m_Velocity);
+    }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Vector m_Velocity;
+    Vector3<meters_per_second_t> m_Velocity;
 };
 
 //----------------------------------------------------------------------------
-// Vicon::UDPClient
+// BoBRobotics::Vicon::UDPClient
 //----------------------------------------------------------------------------
-// Receiver for Vicon UDP streams
-template<typename ObjectDataType>
+//! Receiver for Vicon UDP streams
+template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
-    using UDPClientCallback = void (*)(uint id, const ObjectDataType &data, void *userData);
-
 public:
     UDPClient(){}
     UDPClient(unsigned int port)
@@ -204,21 +240,17 @@ public:
             return m_ObjectData[id];
         }
         else {
-            throw std::runtime_error("Invalid object id:" + std::to_string(id));
+            throw std::runtime_error("Invalid object id: " + std::to_string(id));
         }
-    }
-
-    void setReadCallback(UDPClientCallback callback, void *userData)
-    {
-        m_ReadCallback = callback;
-        m_ReadUserData = userData;
     }
 
 private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, uint32_t frameNumber, const Vector &translation, const Vector &rotation)
+    void updateObjectData(unsigned int id, uint32_t frameNumber,
+                          const Vector3<double> &position,
+                          const Vector3<double> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -228,14 +260,20 @@ private:
             m_ObjectData.resize(id + 1);
         }
 
-        // Update object data with translation and rotation
-        m_ObjectData[id].update(frameNumber, translation, rotation);
-
-        // Execute callback function, if set. Note that we copy by value here,
-        // which is presumably less efficient, but is thread safe
-        if (m_ReadCallback) {
-            m_ReadCallback(id, m_ObjectData[id], m_ReadUserData);
-        }
+        /*
+         * Update object data with position and attitude.
+         * 
+         * Note that we reorder the rotation angles we get from the Vicon system
+         * so that they are in the order of yaw, pitch and roll (which seems to
+         * be standard).
+         */
+        m_ObjectData[id].update(frameNumber,
+                                units::make_unit<millimeter_t>(position[0]),
+                                units::make_unit<millimeter_t>(position[1]),
+                                units::make_unit<millimeter_t>(position[2]),
+                                units::make_unit<radian_t>(attitude[2]),
+                                units::make_unit<radian_t>(attitude[0]),
+                                units::make_unit<radian_t>(attitude[1]));
     }
 
     void readThread(int socket)
@@ -282,16 +320,16 @@ private:
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
                     assert(itemDataSize == 72);
 
-                    // Read object translation
-                    double translation[3];
-                    memcpy(&translation[0], &buffer[itemOffset + 27], 3 * sizeof(double));
+                    // Read object position
+                    Vector3<double> position;
+                    memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
-                    // Read object rotation
-                    double rotation[3];
-                    memcpy(&rotation[0], &buffer[itemOffset + 51], 3 * sizeof(double));
+                    // Read object attitude
+                    Vector3<double> attitude;
+                    memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, frameNumber, translation, rotation);
+                    updateObjectData(objectID, frameNumber, position, attitude);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;
@@ -308,7 +346,6 @@ private:
     //----------------------------------------------------------------------------
     std::atomic<bool> m_ShouldQuit;
     std::thread m_ReadThread;
-    UDPClientCallback m_ReadCallback = nullptr;
     void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;

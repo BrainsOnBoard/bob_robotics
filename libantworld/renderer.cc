@@ -13,8 +13,9 @@ namespace AntWorld
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip)
-:   m_RenderMesh(296.0f, 75.0f, 15.0f, 40, 10),
+Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip,
+                   degree_t horizontalFOV, degree_t verticalFOV)
+:   m_RenderMesh(horizontalFOV, verticalFOV, 15_deg, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
@@ -66,8 +67,8 @@ Renderer::~Renderer()
     glDeleteFramebuffers(1, &m_FBO);
 }
 //----------------------------------------------------------------------------
-void Renderer::renderPanoramicView(float x, float y, float z,
-                                   float yaw, float pitch, float roll,
+void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
+                                   degree_t yaw, degree_t pitch, degree_t roll,
                                    GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Configure viewport to cubemap-sized square
@@ -136,8 +137,8 @@ void Renderer::renderPanoramicView(float x, float y, float z,
     glDisable(GL_TEXTURE_CUBE_MAP);
 }
 //----------------------------------------------------------------------------
-void Renderer::renderFirstPersonView(float x, float y, float z,
-                                     float yaw, float pitch, float roll,
+void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
+                                     degree_t yaw, degree_t pitch, degree_t roll,
                                      GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Set viewport to strip at stop of window
@@ -179,8 +180,8 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     // Configure top-down orthographic projection matrix
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(minBound[0], maxBound[0],
-               minBound[1], maxBound[1]);
+    gluOrtho2D(minBound[0].value(), maxBound[0].value(),
+               minBound[1].value(), maxBound[1].value());
 
     // Build modelview matrix to centre world
     glMatrixMode(GL_MODELVIEW);
@@ -248,13 +249,13 @@ void Renderer::generateCubeFaceLookAtMatrices()
     }
 }
 //----------------------------------------------------------------------------
-void Renderer::applyFrame(float x, float y, float z,
-                          float yaw, float pitch, float roll)
+void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
+                          degree_t yaw, degree_t pitch, degree_t roll)
 {
-    glRotatef(roll, 0.0f, 1.0f, 0.0f);
-    glRotatef(pitch, 1.0f, 0.0f, 0.0f);
-    glRotatef(yaw, 0.0f, 0.0f, 1.0f);
-    glTranslatef(-x, -y, -z);
+    glRotatef(roll.value(), 0.0, 1.0f, 0.0);
+    glRotatef(pitch.value(), 1.0f, 0.0, 0.0);
+    glRotatef(yaw.value(), 0.0, 0.0, 1.0f);
+    glTranslatef(-x.value(), -y.value(), -z.value());
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

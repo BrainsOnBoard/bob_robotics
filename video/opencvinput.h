@@ -14,25 +14,44 @@
 
 namespace BoBRobotics {
 namespace Video {
+//----------------------------------------------------------------------------
+// BoBRobotics::Video::OpenCVInput
+//----------------------------------------------------------------------------
+//! A thin wrapper for reading from any video source supported by OpenCV
 class OpenCVInput : public Input
 {
 public:
+    //! Create a new video stream, using the default given by OpenCV
     OpenCVInput()
       : OpenCVInput(0)
     {}
 
+    /*!
+     * \brief Create a video stream for a specific device
+     * 
+     * @param device Integer or string representation of device (passed to
+     *        cv::VideoCapture's constructor)
+     * @param cameraName The short name to use for this camera (see getCameraName())
+     */
     template<class T>
-    OpenCVInput(T dev, const cv::Size &outSize,
+    OpenCVInput(T device, const std::string &cameraName = DefaultCameraName)
+      : m_Device(device), m_CameraName(cameraName)
+    {}
+
+    /*!
+     * \brief Create a video stream for a specific device and a specified resolution
+     * 
+     * @param device Integer or string representation of device (passed to
+     *        cv::VideoCapture's constructor)
+     * @param outSize Output resolution of camera
+     * @param cameraName The short name to use for this camera (see getCameraName())
+     */
+    template<class T>
+    OpenCVInput(T device, const cv::Size &outSize,
                 const std::string &cameraName = DefaultCameraName)
-      : OpenCVInput(dev, cameraName)
+      : OpenCVInput(device, cameraName)
     {
         setOutputSize(outSize);
-    }
-
-    template<class T>
-    OpenCVInput(T dev, const std::string &cameraName = DefaultCameraName)
-      : m_Device(dev), m_CameraName(cameraName)
-    {
     }
 
     //------------------------------------------------------------------------

@@ -5,10 +5,13 @@
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
-// VonMisesDistribution
+// BoBRobotics::VonMisesDistribution
 //----------------------------------------------------------------------------
-//!< Von Mises distribution object with a mean of mu and a concentration of kappa
-//!< Uses the acceptance-rejection sampling algorithm proposed by Best and Fisher (1979)
+/*!
+ * \brief Von Mises distribution object with a mean of mu and a concentration of kappa
+ *
+ * Uses the acceptance-rejection sampling algorithm proposed by Best and Fisher (1979).
+ */
 template<typename T>
 class VonMisesDistribution
 {
@@ -80,5 +83,5 @@ private:
     const T m_Mu;
     const T m_Kappa;
     T m_R;
-};
+}; // VonMisesDistribution
 } // BoBRobotics

@@ -1,11 +1,19 @@
 #pragma once
 
+// Standard C++ includes
+#include <iostream>
+#include <stdexcept>
+
 // Standard C includes
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
+
+// BoBRobotics includes
+#include "../third_party/path.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::ImgProc::OpenCVUnwrap360
@@ -35,6 +43,48 @@ public:
                outer,
                offsetDegrees,
                flip);
+    }
+
+    OpenCVUnwrap360(const cv::Size &cameraResolution,
+                    const cv::Size &unwrappedResolution,
+                    const std::string &cameraName)
+    : m_CameraResolution(cameraResolution), m_UnwrappedResolution(unwrappedResolution)
+    {
+        const std::string fileName = cameraName + ".yaml";
+        filesystem::path filePath(fileName);
+
+        // first check if file exists in working directory
+        if (!filePath.exists()) {
+            // next check if there is a local bob_robotics folder (i.e. git
+            // submodule)
+            const filesystem::path paramsDir = filesystem::path("imgproc") / "unwrapparams";
+
+            filePath = filesystem::path("bob_robotics") / paramsDir / fileName;
+            if (!filePath.exists()) {
+                // lastly look for environment variable pointing to
+                // bob_robotics
+                static const char *envVarName = "BOB_ROBOTICS_PATH";
+                const char *env = std::getenv(envVarName);
+                if (!env) {
+                    throw std::runtime_error(std::string(envVarName) +
+                                             " environment variable is not set and unwrap "
+                                             "parameters file could not be found locally");
+                }
+
+                filePath = filesystem::path(env) / paramsDir / fileName;
+                if (!filePath.exists()) {
+                    throw std::runtime_error(
+                            "Could not find unwrap parameters file for " +
+                            cameraName);
+                }
+            }
+        }
+
+        // read unwrap parameters from file
+        std::cout << "Loading unwrap parameters from " << filePath.str() << std::endl;
+        cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
+        read(fs["unwrapper"]);
+        fs.release();
     }
 
     //------------------------------------------------------------------------

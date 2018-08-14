@@ -3,12 +3,13 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace BoBRobotics {
+namespace GeNNModels {
+
 //----------------------------------------------------------------------------
 // BoBRobotics::GeNNModels::LIF
 //----------------------------------------------------------------------------
 //! Leaky integrate-and-fire neuron solved algebraically
-namespace BoBRobotics {
-namespace GeNNModels {
 class LIF : public NeuronModels::Base
 {
 public:

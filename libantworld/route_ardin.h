@@ -10,15 +10,24 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RouteArdin
-//----------------------------------------------------------------------------
-// Class for reading ant routes exported by Matlab, performing 'straightening'
-// Process from original matlab code and rendering them in ant world
+// Third-party includes
+#include "../third_party/units.h"
+
 namespace BoBRobotics
 {
 namespace AntWorld
 {
+using namespace units::angle;
+using namespace units::length;
+
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RouteArdin
+//----------------------------------------------------------------------------
+/*!
+ * \brief Class for reading ant routes exported by Matlab, performing 'straightening'
+ *
+ * Processed from original Matlab code and rendering them in ant world
+ */
 class RouteArdin
 {
 public:
@@ -30,19 +39,19 @@ public:
     // Public API
     //------------------------------------------------------------------------
     bool load(const std::string &filename, bool realign = true);
-    void render(float antX, float antY, float antHeading) const;
+    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
-    bool atDestination(float x, float y, float threshold) const;
-    std::tuple<float, size_t> getDistanceToRoute(float x, float y) const;
+    bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
+    std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
     void setWaypointFamiliarity(size_t pos, double familiarity);
-    void addPoint(float x, float y, bool error);
+    void addPoint(meter_t x, meter_t y, bool error);
 
     size_t size() const{ return m_Waypoints.size(); }
 
     //------------------------------------------------------------------------
     // Operators
     //------------------------------------------------------------------------
-    std::tuple<float, float, float> operator[](size_t waypoint) const;
+    std::tuple<meter_t, meter_t, degree_t> operator[](size_t waypoint) const;
 
 private:
     //------------------------------------------------------------------------
@@ -56,10 +65,9 @@ private:
     GLuint m_RoutePositionVBO;
     GLuint m_RouteColourVBO;
     unsigned int m_RouteNumPoints;
-    const unsigned int m_RouteMaxPoints;
 
     std::vector<std::array<float, 2>> m_Waypoints;
-    std::vector<float> m_HeadingDegrees;
+    std::vector<degree_t> m_Headings;
     std::set<size_t> m_TrainedSnapshots;
 
     GLuint m_OverlayVAO;

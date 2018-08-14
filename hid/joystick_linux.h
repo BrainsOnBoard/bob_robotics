@@ -22,12 +22,14 @@
 
 namespace BoBRobotics {
 namespace HID {
-using namespace std::literals;
 
-/*
- * Controller axes, including thumbsticks, triggers and D-pad.
- */
-enum class JAxis
+class JoystickLinux;
+
+//! Joystick is set to JoystickLinux on Linux and JoystickWindows on Windows
+using Joystick = JoystickLinux;
+
+//! Controller axes, including thumbsticks, triggers and D-pad (Linux)
+enum class JAxisLinux
 {
     LeftStickHorizontal = 0,
     LeftStickVertical = 1,
@@ -40,11 +42,15 @@ enum class JAxis
     LENGTH
 };
 
-/*
- * Controller buttons. The left stick and right stick are also buttons (you can
- * click them.)
+//! JAxis is set to JAxisLinux on Linux and JAxisWindows on Windows
+using JAxis = JAxisLinux;
+
+/*!
+ * \brief Controller buttons (Linux)
+ * 
+ * The left stick and right stick are also buttons (you can click them).
  */
-enum class JButton
+enum class JButtonLinux
 {
     A = 0,
     B = 1,
@@ -60,10 +66,19 @@ enum class JButton
     LENGTH
 };
 
-class Joystick : public JoystickBase<JAxis, JButton>
+//! JButton is set to JButtonLinux on Linux and JButtonWindows on Windows
+using JButton = JButtonLinux;
+
+/*!
+ * \brief Class for reading from joysticks on Linux.
+ * 
+ * *NOTE*: This class should not be used directly; see example in joystick_test.
+ */
+class JoystickLinux : public JoystickBase<JAxisLinux, JButtonLinux>
 {
 public:
-    Joystick(float deadZone = 0.0f)
+    //! Open default joystick device with (optionally) specified dead zone
+    JoystickLinux(float deadZone = 0.0f)
       : JoystickBase(deadZone)
     {
         // open joystick device
@@ -73,25 +88,80 @@ public:
         }
 
         // get initial states
-        while (read() && m_JsEvent.type & JS_EVENT_INIT) {
-            if (m_JsEvent.type & JS_EVENT_AXIS) {
-                axisEvent();
-            } else {
-                // initially set button values to either Down (1) or 0
-                m_ButtonState[m_JsEvent.number] = m_JsEvent.value;
+        js_event event;
+        while (read(event) && event.type & JS_EVENT_INIT) {
+            if (event.type & JS_EVENT_AXIS) {
+                const JAxis axis = toAxis(event.number);
+                setState(axis, axisToFloat(axis, event.value), true);
+            }
+            else if (event.type & JS_EVENT_BUTTON) {
+                setState(toButton(event.number),
+                         event.value ? StateDown : 0, true);
             }
         }
     }
 
-    /*
-     * Close connection to controller.
-     */
-    ~Joystick()
+    //! Close connection to controller
+    ~JoystickLinux()
     {
         ::close(m_Fd);
     }
 
-    virtual float axisToFloat(JAxis axis, int16_t value) const override
+protected:
+    //------------------------------------------------------------------------
+    // JoystickBase virtuals
+    //------------------------------------------------------------------------
+    virtual bool updateState() override
+    {
+        // see if a new event is in buffer
+        js_event event;
+        if (!read(event)) {
+            return false;
+        }
+
+        do {
+            const bool isInitial = (event.type & JS_EVENT_INIT);
+
+            if (event.type == JS_EVENT_AXIS) {
+                const JAxis axis = toAxis(event.number);
+                setState(axis, axisToFloat(axis, event.value), isInitial);
+            } else {
+                if (event.value) {
+                    setPressed(toButton(event.number), isInitial);
+
+                } else {
+                    setReleased(toButton(event.number), isInitial);
+                }
+            }
+        } while (read(event)); // read all events in buffer
+        return true;
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Private methods
+    //------------------------------------------------------------------------
+    bool read(js_event &event)
+    {
+        ssize_t bytes;
+        do {
+            bytes = ::read(m_Fd, &event, sizeof(js_event));
+            if (bytes == -1 && errno != EAGAIN) {
+                throw std::runtime_error("Error reading from joystick (" +
+                                         std::to_string(errno) + std::string(": ") +
+                                         std::strerror(errno) + ")");
+            }
+            // ignore D-pad button events; handled as axis events
+        } while (bytes > 0 && (event.type & JS_EVENT_BUTTON) && event.number > 10);
+
+        return bytes > 0;
+    }
+
+    //------------------------------------------------------------------------
+    // Static methods
+    //------------------------------------------------------------------------
+    //! Convert a raw 16-bit int value for an axis to a float
+    static constexpr float axisToFloat(JAxis axis, int16_t value)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -103,7 +173,7 @@ public:
         case JAxis::LeftTrigger:
         case JAxis::RightTrigger:
             return (static_cast<float>(value) + int16_absminf) /
-                   static_cast<float>(std::numeric_limits<uint16_t>::max());
+                    static_cast<float>(std::numeric_limits<uint16_t>::max());
         case JAxis::DpadHorizontal:
         case JAxis::DpadVertical:
             switch (value) {
@@ -119,95 +189,10 @@ public:
         }
     }
 
-    virtual void run() override
-    {
-        while (m_DoRun) {
-            while (!update()) {
-                std::this_thread::sleep_for(50ms);
-            }
-        }
-    }
-
-    virtual bool update() override
-    {
-        // unset Pressed and Released bits for buttons
-        for (auto &s : m_ButtonState) {
-            s &= StateDown;
-        }
-
-        // see if a new event is in buffer
-        if (!read()) {
-            return false;
-        }
-
-        do {
-            if (m_JsEvent.type == JS_EVENT_AXIS) {
-                // update axes' states
-                axisEvent();
-            } else {
-                // update current button's state
-                uint8_t &s = m_ButtonState[m_JsEvent.number];
-                if (m_JsEvent.value) {
-                    s |= (StateDown | StatePressed); // set StateDown and StatePressed
-                } else {
-                    s &= ~StateDown;    // clear StateDown
-                    s |= StateReleased; // set StateReleased
-                }
-
-                // run button event handlers
-                raiseEvent(toButton(m_JsEvent.number), m_JsEvent.value);
-            }
-        } while (read()); // read all events in buffer
-        return true;
-    }
-
-private:
-    int m_Fd = -1;       // file descriptor for joystick device
-    js_event m_JsEvent; // struct to contain joystick event
-    std::array<int16_t, 5> m_AxisState;
-
-    bool read()
-    {
-        ssize_t bytes;
-        do {
-            bytes = ::read(m_Fd, &m_JsEvent, sizeof(m_JsEvent));
-            if (bytes == -1 && errno != EAGAIN) {
-                throw std::runtime_error("Error reading from joystick (" +
-                                         std::to_string(errno) + std::string(": ") +
-                                         std::strerror(errno) + ")");
-            }
-            // ignore D-pad button events; handled as axis events
-        } while (m_JsEvent.type & JS_EVENT_BUTTON && m_JsEvent.number > 10);
-
-        return bytes > 0;
-    }
-
-    void axisEvent()
-    {
-        const bool isInitial = m_JsEvent.type & JS_EVENT_INIT;
-        const JAxis axis = toAxis(m_JsEvent.number);
-        const int16_t value = m_JsEvent.value;        
-        if (axis <= JAxis::RightStickVertical) {
-            m_AxisState[m_JsEvent.number] = value;
-        }
-
-        switch (axis) {
-        case JAxis::LeftStickHorizontal:
-            updateAxis(JAxis::LeftStickHorizontal, value, m_AxisState[toIndex(JAxis::LeftStickVertical)], isInitial);
-            break;
-        case JAxis::LeftStickVertical:
-            updateAxis(JAxis::LeftStickHorizontal, m_AxisState[toIndex(JAxis::LeftStickHorizontal)], value, isInitial);
-            break;
-        case JAxis::RightStickHorizontal:
-            updateAxis(JAxis::RightStickHorizontal, value, m_AxisState[toIndex(JAxis::RightStickVertical)], isInitial);
-            break;
-        case JAxis::RightStickVertical:
-            updateAxis(JAxis::RightStickHorizontal, m_AxisState[toIndex(JAxis::RightStickHorizontal)], value, isInitial);
-            break;
-        default:
-            updateAxis(axis, value, isInitial);
-        }
-    }
-}; // Joystick
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    int m_Fd = -1;      // file descriptor for joystick device
+}; // JoystickLinux
 } // HID
 } // BoBRobotics

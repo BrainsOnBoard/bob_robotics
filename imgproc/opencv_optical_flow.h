@@ -68,16 +68,16 @@ public:
 
     void render(cv::Mat &outputImage, unsigned int scale)
     {
-        assert(outputImage.cols == m_FlowX.cols * scale);
-        assert(outputImage.rows == m_FlowX.rows * scale);
+        assert(outputImage.cols == m_FlowX.cols * (int) scale);
+        assert(outputImage.rows == m_FlowX.rows * (int) scale);
 
         // Clear image
         outputImage.setTo(cv::Scalar::all(0));
 
         // Loop through output coordinates
-        for(unsigned int x = 0; x < m_FlowX.cols; x++)
+        for(int x = 0; x < m_FlowX.cols; x++)
         {
-            for(unsigned int y = 0; y < m_FlowX.rows; y++)
+            for(int y = 0; y < m_FlowX.rows; y++)
             {
                 // Draw line showing direction of optical flow
                 const cv::Point start(x * scale, y * scale);

@@ -1,10 +1,6 @@
-/*
- * An abstract class inherited by Server and Client classes.
- */
-
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <atomic>
 #include <functional>
 #include <map>
@@ -15,30 +11,40 @@
 // BoB robotics includes
 #include "../common/threadable.h"
 
-// local includes
+// Local includes
 #include "socket.h"
 
 namespace BoBRobotics {
 namespace Net {
 class Node; // forward declaration
 
+//! A callback function to handle incoming commands over the network
 using CommandHandler = std::function<void(Node &, const Command &)>;
+
+//! A callback function which is notified when a connection is made
 using ConnectedHandler = std::function<void(Node &)>;
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Net::Node
+//----------------------------------------------------------------------------
+//! An abstract class representing a network connection, inherited by Server and Client classes
 class Node : public Threadable
 {
 public:
+    //! Gets the socket currently associated with this connection
     virtual Socket *getSocket() const = 0;
 
-    /*
-     * Add a handler for a specified type of command (e.g. if it's an IMG command,
-     * it should be handled by Video::NetSource).
+    /*!
+     * \brief Add a handler for a specified type of command
+     * 
+     * e.g. if it's an IMG command, it should be handled by Video::NetSource.
      */
     void addCommandHandler(const std::string commandName, const CommandHandler handler)
     {
         m_CommandHandlers.emplace(commandName, handler);
     }
 
+    //! Add a handler which is signalled when a connection is successfully made
     void addConnectedHandler(const ConnectedHandler handler)
     {
         m_ConnectedHandlers.push_back(handler);
@@ -47,9 +53,7 @@ public:
         }
     }
 
-    /*
-     * Repeatedly read and parse commands from the socket until stopped.
-     */
+    //! Repeatedly read and parse commands from the socket until stopped
     void run() override
     {
         while (m_DoRun) {
@@ -61,6 +65,7 @@ public:
         }
     }
     
+    //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
 protected:
@@ -85,7 +90,7 @@ protected:
         if (tryRunHandler(command)) {
             return true;
         } else {
-            throw bad_command_error();
+            throw BadCommandError();
         }
     }
 

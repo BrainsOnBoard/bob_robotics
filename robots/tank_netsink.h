@@ -11,6 +11,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::TankNetSink
 //----------------------------------------------------------------------------
+//! An interface for transmitting tank steering commands over the network
 class TankNetSink : public Tank
 {
 public:

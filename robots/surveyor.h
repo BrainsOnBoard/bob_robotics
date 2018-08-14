@@ -24,6 +24,11 @@ namespace Robots {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
+/*!
+ * \brief An interface for Active Robots' Surveyor line of robots
+ * 
+ * See https://www.active-robots.com/surveyor-rover.html
+ */
 class Surveyor : public Tank
 {
 public:

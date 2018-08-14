@@ -13,27 +13,35 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+extern "C"
+{
 // I2C includes
 #include <linux/i2c-dev.h>
 
+// This extra header is needed after Ubuntu 16.04 (newer kernel?)
+#ifndef I2C_SMBUS_BYTE_DATA
+#include <i2c/smbus.h>
+#endif
+}
+
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
-// I2CInterface
+// BoBRobotics::I2CInterface
 //----------------------------------------------------------------------------
+//! Class for communicating over I2C
 class I2CInterface
 {
 public:
     I2CInterface() : m_I2C(0)
-    {
-    }
-    
+    {}
+
     I2CInterface(const char *path, int slaveAddress) : m_I2C(0)
     {
         if(!setup(path, slaveAddress)) {
             throw std::runtime_error("Cannot open I2C interface");
         }
     }
-    
+
     ~I2CInterface()
     {
         // Close I2C device
@@ -41,11 +49,11 @@ public:
             close(m_I2C);
         }
     }
-    
+
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
-    bool setup(const char *path, int slaveAddress ) 
+    bool setup(const char *path, int slaveAddress )
     {
         m_I2C = open(path, O_RDWR);
         if (m_I2C < 0) {
@@ -65,7 +73,7 @@ public:
             return true;
         }
     }
-    
+
     bool readByteCommand(uint8_t address, uint8_t &byte)
     {
         auto data = i2c_smbus_read_byte_data(m_I2C, address);
@@ -78,7 +86,7 @@ public:
             return true;
         }
     }
-    
+
     bool readByte(uint8_t &byte)
     {
         auto data = i2c_smbus_read_byte(m_I2C);
@@ -91,7 +99,7 @@ public:
             return true;
         }
     }
-    
+
     template<typename T, size_t N>
     bool read(T (&data)[N])
     {
@@ -104,7 +112,7 @@ public:
             return true;
         }
     }
-    
+
     bool writeByteCommand(uint8_t address, uint8_t byte)
     {
         if(i2c_smbus_write_byte_data(m_I2C, address, byte) < 0) {
@@ -115,7 +123,7 @@ public:
             return true;
         }
     }
-    
+
     bool writeByte(uint8_t byte)
     {
         if(i2c_smbus_write_byte(m_I2C, byte) < 0) {
@@ -126,11 +134,11 @@ public:
             return true;
         }
     }
-    
+
     // writes data
     template<typename T, size_t N>
-    bool write(const T (&data)[N]) 
-    {  
+    bool write(const T (&data)[N])
+    {
         const size_t size = sizeof(T) * N;
         if (::write(m_I2C, &data[0], size) != size) {
             std::cerr << "Failed to write to i2c bus" << std::endl;

@@ -5,11 +5,11 @@
 
 #pragma once
 
-// C includes
+// Standard C includes
 #include <cerrno>
 #include <cstring>
 
-// C++ includes
+// Standard C++ includes
 #include <algorithm>
 #include <chrono>
 #include <iostream>
@@ -26,33 +26,53 @@
 
 namespace BoBRobotics {
 namespace Net {
+
+//! Represents a command read from the network
 using Command = std::vector<std::string>;
 
-class socket_error : public std::runtime_error
+//! An exception thrown if an error signal is given by a Socket
+class SocketError : public std::runtime_error
 {
 public:
-    socket_error(std::string msg)
+    SocketError(std::string msg)
       : std::runtime_error("Socket error: " + msg)
     {}
 };
 
-class bad_command_error : public socket_error
+//! An exception thrown if a command received over the network is badly formed
+class BadCommandError : public SocketError
 {
 public:
-    bad_command_error()
-      : socket_error("Bad command received")
+    BadCommandError()
+      : SocketError("Bad command received")
     {}
 };
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Net::Server
+//----------------------------------------------------------------------------
+/*!
+ * \brief A class for operating on sockets in a platform-independent way
+ * 
+ * In Windows, this class represents an underlying SOCKET pointer and in *nix,
+ * it represents a socket's file handle. This class provides convenience methods
+ * for sending and receiving data from the socket.
+ * 
+ * A typical (plaintext) command sent over a socket looks like this:
+ *     TNK 0.5 0.5
+ * where the first word indicates the command name and the other words are parameters.
+ */
 class Socket
 {
 public:
-    static const size_t DefaultBufferSize = 1024 * 8;
-    static const int DefaultListenPort = 2000;
+    static const size_t DefaultBufferSize = 1024 * 8; //! Default buffer size, in bytes
+    static const int DefaultListenPort = 2000; //! Default listening port
     static const bool PrintDebug = false;
 
-    /*
-     * Initialise class without m_Socket set. It can be set later with setSocket().
+    /*!
+     * \brief Initialise class without a Socket set
+     * 
+     * The Socket can be set later with setSocket().
      */
     Socket(bool print = PrintDebug)
       : m_Buffer(DefaultBufferSize)
@@ -61,15 +81,14 @@ public:
         m_Buffer.resize(DefaultBufferSize);
     }
 
-    /*
-     * Initialise class with specified socket.
-     */
+    //! Initialise class with specified socket
     Socket(socket_t sock, bool print = PrintDebug)
       : Socket(print)
     {
         setSocket(sock);
     }
 
+    //! Close the socket
     virtual ~Socket()
     {
         if (m_Socket != INVALID_SOCKET) {
@@ -77,17 +96,13 @@ public:
         }
     }
 
-    /*
-     * Get the current socket handle this object holds.
-     */
+    //! Get the current socket handle this object holds
     socket_t getSocket() const
     {
         return m_Socket;
     }
 
-    /*
-     * Read a plaintext command, splitting it into separate words.
-     */
+    //! Read a plaintext command, splitting it into separate words
     Command readCommand()
     {
         std::string line = readLine();
@@ -98,9 +113,7 @@ public:
         return results;
     }
 
-    /*
-     * Read a specified number of bytes into a buffer.
-     */
+    //! Read a specified number of bytes into a buffer
     void read(void *buffer, size_t len)
     {
         std::lock_guard<std::mutex> guard(m_ReadMutex);
@@ -124,9 +137,7 @@ public:
         }
     }
 
-    /*
-     * Read a single line in, stopping at a newline char.
-     */
+    //! Read a single line in, stopping at a newline char
     std::string readLine()
     {
         std::lock_guard<std::mutex> guard(m_ReadMutex);
@@ -163,9 +174,7 @@ public:
         }
     }
 
-    /*
-     * Send a buffer of specified length through the socket.
-     */
+    //! Send a buffer of specified length through the socket
     void send(const void *buffer, size_t len)
     {
         std::lock_guard<std::mutex> guard(m_SendMutex);
@@ -173,13 +182,11 @@ public:
 
         int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
         if (ret == -1) {
-            throw socket_error("Could not send " + errorMessage());
+            throw SocketError("Could not send " + errorMessage());
         }
     }
 
-    /*
-     * Send a string over the socket.
-     */
+    //! Send a string over the socket.
     void send(const std::string &msg)
     {
         send(msg.c_str(), msg.length());
@@ -189,9 +196,7 @@ public:
         }
     }
 
-    /*
-     * Set the current socket;
-     */
+    //! Set the current socket handle for this connection
     void setSocket(socket_t sock)
     {
         std::lock_guard<std::mutex> guard(m_ReadMutex);
@@ -226,7 +231,7 @@ private:
     void checkSocket()
     {
         if (m_Socket == INVALID_SOCKET) {
-            throw socket_error("Bad socket " + errorMessage());
+            throw SocketError("Bad socket " + errorMessage());
         }
     }
 
@@ -237,7 +242,7 @@ private:
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
-            throw socket_error("Could not read from socket " + errorMessage());
+            throw SocketError("Could not read from socket " + errorMessage());
         }
 
         return static_cast<size_t>(len);

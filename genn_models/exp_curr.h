@@ -3,12 +3,13 @@
 // GeNN includes
 #include "modelSpec.h"
 
+namespace BoBRobotics {
+namespace GeNNModels {
+
 //----------------------------------------------------------------------------
 // BoBRobotics::GeNNModels::ExpCurr
 //----------------------------------------------------------------------------
 //! Current-based synapse model with direct current injection
-namespace BoBRobotics {
-namespace GeNNModels {
 class ExpCurr : public PostsynapticModels::Base
 {
 public:

@@ -9,20 +9,27 @@
 // BoB robotics includes
 #include "input.h"
 
+namespace BoBRobotics {
+namespace Video {
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::OpenGL
 //----------------------------------------------------------------------------
-namespace BoBRobotics {
-namespace Video {
+//! Read a video stream from an OpenGL buffer
 class OpenGL : public Input
 {
 public:
-    // **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
-    // from bottom left of screen which would require window size etc to convert
+    /*!
+     * \brief Create a Video::Input for reading from an OpenGL window
+     * 
+     * @param readX, readY The starting coordinates to read from (from bottom left of screen)
+     * @param readWidth, readHeight Size of image
+     * 
+     * **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
+     * from bottom left of screen which would require window size etc. to convert
+     */
     OpenGL(GLint readX,  GLint readY,  GLsizei readWidth,  GLsizei readHeight)
-    :   m_ReadX(readX), m_ReadY(readY), m_ReadWidth(readWidth), m_ReadHeight(readHeight)
-    {
-    }
+      : m_ReadX(readX), m_ReadY(readY), m_ReadWidth(readWidth), m_ReadHeight(readHeight)
+    {}
 
     //----------------------------------------------------------------------------
     // Input virtuals
@@ -48,6 +55,9 @@ public:
         // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
         glReadPixels(m_ReadX, m_ReadY, m_ReadWidth, m_ReadHeight,
                      GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
+        
+        // Flip image vertically
+        cv::flip(outFrame, outFrame, 0);
 
         return true;
     }
@@ -59,7 +69,7 @@ public:
 
 private:
     //----------------------------------------------------------------------------
-    // Private members
+    // Protected members
     //----------------------------------------------------------------------------
     const GLint m_ReadX;
     const GLint m_ReadY;

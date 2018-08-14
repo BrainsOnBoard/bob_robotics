@@ -13,7 +13,7 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
-// GeNN robotics includes
+// BoB robotics includes
 #include "../third_party/path.h"
 
 // Antworld includes
@@ -143,6 +143,14 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
 
         // Upload positions
         surface.uploadPositions(positions);
+
+        // Convert min/max bounds to metre types (this is admittedly bit gross...)
+        m_MinBoundM[0] = makeM(m_MinBound[0]);
+        m_MinBoundM[1] = makeM(m_MinBound[1]);
+        m_MinBoundM[2] = makeM(m_MinBound[2]);
+        m_MaxBoundM[0] = makeM(m_MaxBound[0]);
+        m_MaxBoundM[1] = makeM(m_MaxBound[1]);
+        m_MaxBoundM[2] = makeM(m_MaxBound[2]);
     }
 
     {
