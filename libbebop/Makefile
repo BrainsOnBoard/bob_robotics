@@ -6,7 +6,9 @@ include ../common/flags.mk
 CXXFLAGS+=-Wno-deprecated-declarations -Wno-implicit-fallthrough
 
 # AR SDK
-ARSDK_ROOT ?= /opt/arsdk3
+ifndef ARSDK_ROOT
+$(error Environment variable ARSDK_ROOT must be defined)
+endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 
