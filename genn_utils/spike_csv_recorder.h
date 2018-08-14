@@ -35,6 +35,9 @@ public:
     SpikeCSVRecorder(const char *filename,  unsigned int *spkCnt, unsigned int *spk)
     : m_Stream(filename), m_SpkCnt(spkCnt), m_Spk(spk)
     {
+        // Set precision 
+        m_Stream.precision(16);
+
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
@@ -68,6 +71,9 @@ public:
     SpikeCSVRecorderCached(const char *filename,  unsigned int *spkCnt, unsigned int *spk)
     : m_Stream(filename), m_SpkCnt(spkCnt), m_Spk(spk)
     {
+        // Set precision
+        m_Stream.precision(16);
+
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
