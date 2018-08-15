@@ -146,7 +146,7 @@ public:
     //----------------------------------------------------------------------------
     virtual void record(double t) override
     {
-        unsigned int *currentSpk = getCurrentSpk();
+        const unsigned int *currentSpk = getCurrentSpk();
         for(unsigned int i = 0; i < getCurrentSpkCnt(); i++)
         {
             m_Stream << t << "," << currentSpk[i] << std::endl;
@@ -157,12 +157,12 @@ private:
     //----------------------------------------------------------------------------
     // Private methods
     //----------------------------------------------------------------------------
-    unsigned int *getCurrentSpk() const
+    const unsigned int *getCurrentSpk() const
     {
         return &m_Spk[m_SpkQueuePtr * m_PopSize];
     }
 
-    unsigned int getCurrentSpkCnt() const
+    const unsigned int getCurrentSpkCnt() const
     {
         return m_SpkCnt[m_SpkQueuePtr];
     }
