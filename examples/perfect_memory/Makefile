@@ -11,7 +11,7 @@ all: $(EXECUTABLE) plot_ridf
 -include $(EXECUTABLE).d
 
 $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
-	$(CXX) -o $(EXECUTABLE) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS)
+	$(CXX) -o $(EXECUTABLE) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS) -O3
 
 -include plot_ridf.d
 
