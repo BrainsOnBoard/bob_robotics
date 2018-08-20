@@ -29,8 +29,14 @@ enum class FileType {
     video
 };
 
+void saveMaxQualityJPG(const std::string &filename, const cv::Mat &image)
+{
+    std::vector<int> params{CV_IMWRITE_JPEG_QUALITY, 100};
+    cv::imwrite(filename, image, params);
+}
+
 /* unwrap a JPEG file */
-void processjpeg(const char *filepathRaw, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapJPEG(const char *filepathRaw, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     const filesystem::path filepath(filepathRaw);
 
@@ -49,14 +55,11 @@ void processjpeg(const char *filepathRaw, const cv::Size &unwrappedResolution, c
     // Save file
     filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
     std::cout << "Saving image to " << outfilename.str() << "..." << std::endl;
-    std::vector<int> params;
-    params.push_back(CV_IMWRITE_JPEG_QUALITY);
-    params.push_back(100);
-    cv::imwrite(outfilename.str(), imunwrap, params);
+    saveMaxQualityJPG(outfilename.str(), imunwrap);
 }
 
 /* unwrap an MP4 video */
-void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     filesystem::path filepath(filepathRaw);
 
@@ -73,9 +76,6 @@ void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrapp
     // Create unwrapper
     BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
 
-    // Unwrap first frame
-    unwrapper.unwrap(fr, imunwrap);
-
     // final filename for unwrapped video
     filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
 
@@ -84,7 +84,7 @@ void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrapp
 
     // start writing to file
     std::cout << "Saving video to " << outfilename << "..." << std::endl;
-    cv::VideoWriter writer(tempfilename.str(), 0x21, cap.get(CV_CAP_PROP_FPS), imunwrap.size());
+    cv::VideoWriter writer(tempfilename.str(), 0x21, cap.get(CV_CAP_PROP_FPS), unwrappedResolution);
     if (!writer.isOpened()) {
         std::cerr << "Error: Could not open file for writing" << std::endl;
         return;
@@ -94,14 +94,11 @@ void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrapp
     writer.write(imunwrap);
 
     // unwrap successive frames and write to file
-    for (;;) {
-        cap >> fr;
-        if (fr.empty()) {
-            break;
-        }
-
+    while(!fr.empty()) {
         unwrapper.unwrap(fr, imunwrap);
         writer.write(imunwrap);
+
+        cap >> fr;
     }
 
     // dispose of writer and reader when finished
@@ -130,24 +127,72 @@ void processmp4(const char *filepathRaw, bool copysound, const cv::Size &unwrapp
         }
     }
 }
+
+/* unwrap an MP4 video, saving frames to JPG */
+void unwrapMP4Frames(const char *filepathRaw, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
+{
+    const filesystem::path filepath(filepathRaw);
+
+    // open video file
+    cv::VideoCapture cap(filepath.str());
+
+    // read in first frame
+    cv::Mat fr;
+    cap >> fr;
+
+    // matrix to store unwrapped image
+    cv::Mat imunwrap(unwrappedResolution, fr.type());
+
+    // Create unwrapper
+    BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
+
+    // Extract title from filename
+    const size_t titlePos = filepath.filename().find_last_of(".");
+    const std::string filetitle = filepath.filename().substr(0, titlePos);
+
+
+    // Loop through frames
+    unsigned int i = 0;
+    for(unsigned int f = 0; !fr.empty(); f++) {
+        if((f % frameInterval) == 0) {
+            // Unwrap frame
+            unwrapper.unwrap(fr, imunwrap);
+
+            // Build frame index string
+            char imageIndexString[10];
+            sprintf(imageIndexString, "%05u", i++);
+
+            // Save frame as jpg
+            const filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filetitle + "_" + imageIndexString + ".jpg");
+            saveMaxQualityJPG(outfilename.str(), imunwrap);
+        }
+
+        // read next frame
+        cap >> fr;
+    }
+
+    // dispose of writer and reader when finished
+    cap.release();
 }
+}   // Anonymous namespace
 
 int main(int argc, char** argv)
 {
     if (argc == 1) {
-        std::cout << "usage: unwrapfile [--no-sound] [--camera CAMERA_NAME] [--unwrapped-resolution WIDTH HEIGHT] [file(s)]" << std::endl;
+        std::cout << "usage: unwrapfile [--no-sound] [--extract-frames SKIP] [--camera CAMERA_NAME] [--unwrapped-resolution WIDTH HEIGHT] [file(s)]" << std::endl;
         return 0;
     }
 
-    std::vector<FileType> ftype(argc - 1);
+    std::vector<FileType> ftype(argc - 1, FileType::skip);
     bool anyvideo = false;
     bool copysound = true;
+    bool extractFrames = true;
+    unsigned int frameInterval = 1;
     std::string cameraName = "pixpro_usb";
     cv::Size unwrappedResolution(1920, 590);
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--no-sound") == 0) {
             copysound = false;
-            ftype[i - 1] = FileType::skip;
             continue;
         }
 
@@ -158,6 +203,18 @@ int main(int argc, char** argv)
             // Read NEXT parameter as camera name and skip over it
             cameraName = argv[i + 1];
             i++;
+            continue;
+        }
+
+        if(strcmp(argv[i], "--extract-frames") == 0) {
+            // Check there's another parameter to read
+            assert(i < (argc - 2));
+
+            // Set extract frames flag, read NEXT parameter as frame interval and skip over it :)
+            extractFrames = true;
+            frameInterval = std::stoi(argv[i + 1]);
+            i++;
+
             continue;
         }
 
@@ -201,10 +258,17 @@ int main(int argc, char** argv)
     std::cout << "Unwrapped resolution: " << unwrappedResolution << std::endl;
     // Process arguments
     for (int i = 0; i < argc - 1; i++) {
-        if (ftype[i] == FileType::image)
-            processjpeg(argv[i + 1], unwrappedResolution, cameraName);
-        else if (ftype[i] == FileType::video)
-            processmp4(argv[i + 1], copysound, unwrappedResolution, cameraName);
+        if (ftype[i] == FileType::image) {
+            unwrapJPEG(argv[i + 1], unwrappedResolution, cameraName);
+        }
+        else if (ftype[i] == FileType::video) {
+            if(extractFrames) {
+                unwrapMP4Frames(argv[i + 1], frameInterval, unwrappedResolution, cameraName);
+            }
+            else {
+                unwrapMP4(argv[i + 1], copysound, unwrappedResolution, cameraName);
+            }
+        }
     }
 
     return 0;
