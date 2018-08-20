@@ -32,8 +32,6 @@ public:
       : m_UnwrapRes(unwrapRes)
       , m_ScanStep(scanStep)
       , m_SnapshotsPath(outputPath)
-      , m_ScratchMaskImage(unwrapRes, CV_8UC1)
-      , m_ScratchRollImage(unwrapRes, CV_8UC1)
     {}
 
     //------------------------------------------------------------------------
@@ -143,23 +141,6 @@ private:
     const unsigned int m_ScanStep;
     const filesystem::path m_SnapshotsPath;
     cv::Mat m_MaskImage;
-
-    mutable cv::Mat m_ScratchMaskImage;
-    mutable cv::Mat m_ScratchRollImage;
-
-protected:
-    //! 'Rolls' an image to the left
-    void rollImage(cv::Mat &image) const
-    {
-        // Loop through rows
-        for (int y = 0; y < image.rows; y++) {
-            // Get pointer to start of row
-            uint8_t *rowPtr = image.ptr(y);
-
-            // Rotate row to left by m_ScanStep pixels
-            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + image.cols);
-        }
-    }
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

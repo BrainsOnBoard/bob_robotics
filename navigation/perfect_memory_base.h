@@ -27,15 +27,66 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::literals;
 using namespace units::angle;
 using namespace units::dimensionless;
+using namespace units::literals;
+
+class InSilicoRotater
+{
+    public:
+    InSilicoRotater(unsigned int scanStep, const cv::Mat &image)
+      : m_CurrentRotation(0)
+      , m_ScanStep(scanStep)
+    {
+        image.copyTo(m_ScratchImage);
+    }
+
+    cv::Mat &getImage()
+    {
+        return m_ScratchImage;
+    }
+
+    bool next()
+    {
+        int next = m_CurrentRotation + m_ScanStep;
+        if (next >= m_ScratchImage.cols) {
+            return false;
+        }
+
+        // Loop through rows
+        for (int y = 0; y < m_ScratchImage.rows; y++) {
+            // Get pointer to start of row
+            uint8_t *rowPtr = m_ScratchImage.ptr(y);
+
+            // Rotate row to left by m_ScanStep pixels
+            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + m_ScratchImage.cols);
+        }
+        m_CurrentRotation = next;
+
+        return true;
+    }
+
+    size_t count() const
+    {
+        return m_CurrentRotation / m_ScanStep;
+    }
+
+    size_t max() const
+    {
+        return m_ScratchImage.cols / m_ScanStep;
+    }
+
+    private:
+    int m_CurrentRotation;
+    const unsigned int m_ScanStep;
+    cv::Mat m_ScratchImage;
+};
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
 //! An abstract class which is the base for PerfectMemory and PerfectMemoryHOG
-template<typename RIDFProcessor>
+template<typename RIDFProcessor, typename Rotater = InSilicoRotater>
 class PerfectMemoryBase
   : public VisualNavigationBase
 {
@@ -80,34 +131,32 @@ public:
         assert(image.cols == unwrapRes.width);
         assert(image.rows == unwrapRes.height);
         assert(image.type() == CV_8UC1);
+
         const size_t numSnapshots = getNumSnapshots();
         assert(numSnapshots > 0);
-        const size_t scanStep = getScanStep();
 
-        // Clone mask and image so they can be rolled in place
-        getMaskImage().copyTo(m_ScratchMaskImage);
-        image.copyTo(m_ScratchRollImage);
+        Rotater rotater(getScanStep(), image);
 
         // Create vector to store RIDF values
         std::vector<std::vector<float>> differences(numSnapshots);
         for (auto &d : differences) {
-            d.resize(m_ScratchRollImage.cols);
+            d.resize(rotater.max());
         }
 
         // Scan across image columns
-        for (int col = 0; col < m_ScratchRollImage.cols; col += scanStep) {
+        do {
             // Loop through snapshots
             for (size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
-                differences[s][col] = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
+                const auto diff = calcSnapshotDifference(rotater.getImage(), m_ScratchMaskImage, s);
+                differences[s][rotater.count()] = diff;
             }
 
-            // Roll image and corresponding mask left by scanStep
-            rollImage(m_ScratchRollImage);
-            if (!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage);
-            }
-        }
+            // **TODO**: Add this feature back in!
+            // if (!m_ScratchMaskImage.empty()) {
+            //     rollImage(m_ScratchMaskImage);
+            // }
+        } while (rotater.next());
 
         return differences;
     }
@@ -155,7 +204,6 @@ private:
     // Members
     //------------------------------------------------------------------------
     mutable cv::Mat m_ScratchMaskImage;
-    mutable cv::Mat m_ScratchRollImage;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

@@ -31,13 +31,15 @@ namespace Navigation {
  * \tparam RIDFProcessor The method used to calculate the heading (e.g. single snapshot v. multi-snapshot)
  * \tparam Differencer This can be AbsDiff or RMSDiff
  */
-template<typename RIDFProcessor = BestMatchingSnapshot, typename Differencer = AbsDiff>
+template<typename RIDFProcessor = BestMatchingSnapshot,
+         typename Differencer = AbsDiff,
+         typename Rotater = InSilicoRotater>
 class PerfectMemory
-  : public PerfectMemoryBase<RIDFProcessor>
+  : public PerfectMemoryBase<RIDFProcessor, Rotater>
 {
 public:
     PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
-      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
+      : PerfectMemoryBase<RIDFProcessor, Rotater>(unwrapRes, scanStep, outputPath)
       , m_Differencer(unwrapRes.width * unwrapRes.height)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {}
@@ -90,7 +92,7 @@ protected:
             float sumDifference = 0.0f;
             unsigned int numUnmaskedPixels = 0;
             const uint8_t *end = &imageMaskPtr[imSize];
-            while(imageMaskPtr < end) {
+            while (imageMaskPtr < end) {
                 // If this pixel is masked by neither of the masks
                 if (*imageMaskPtr++ != 0 && *snapshotMaskPtr++) {
                     // Accumulate sum of differences
