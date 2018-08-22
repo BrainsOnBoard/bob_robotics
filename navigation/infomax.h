@@ -18,7 +18,7 @@
 #include "../third_party/units.h"
 
 // Local includes
-#include "navigation_base.h"
+#include "visual_navigation_base.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -28,14 +28,17 @@ using namespace units::angle;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
-class InfoMax : public NavigationBase
+class InfoMax
+  : public VisualNavigationBase
 {
 public:
-    InfoMax(const cv::Size unwrapRes, float learningRate = 0.0001f, const filesystem::path &outputPath = "snapshots")
-      : NavigationBase(unwrapRes, outputPath)
+    InfoMax(const cv::Size unwrapRes,
+            unsigned int scanStep = 1,
+            float learningRate = 0.0001f,
+            const filesystem::path &outputPath = "snapshots")
+      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height, unwrapRes.width * unwrapRes.height))
-
     {}
 
     virtual void train(const cv::Mat &image, bool saveImage) override

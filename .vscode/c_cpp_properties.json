@@ -7,7 +7,8 @@
                 "${GENN_PATH}/lib/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
                 "/usr/include/python*",
-                "/usr/lib/python*/site-packages/numpy/core/include"
+                "/usr/lib/python*/site-packages/numpy/core/include",
+                "/usr/include/eigen3"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
