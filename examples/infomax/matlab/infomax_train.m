@@ -58,7 +58,7 @@ clear D
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % INFOMAX FUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-w = w ./ repmat (std(w,1,2), 1, H);
+% w = w ./ repmat (std(w,1,2), 1, H);
 
 function weights = infomax_learn2(weights,patts,vars,lrate)
 % Infomax "extended algorithm"
