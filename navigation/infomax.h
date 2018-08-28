@@ -28,24 +28,27 @@ using namespace units::angle;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
+template<typename FloatType = float>
 class InfoMax
   : public VisualNavigationBase
 {
+using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
+
 public:
-    InfoMax(const cv::Size &unwrapRes,
-            const MatrixXf &initialWeights,
-            unsigned int scanStep = 1,
-            float learningRate = 0.0001f,
-            const filesystem::path &outputPath = "snapshots")
+    InfoMax<FloatType>(const cv::Size &unwrapRes,
+                       const MatrixType &initialWeights,
+                       unsigned int scanStep = 1,
+                       FloatType learningRate = 0.0001,
+                       const filesystem::path &outputPath = "snapshots")
       : VisualNavigationBase(unwrapRes, scanStep, outputPath)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
     {}
 
-    InfoMax(const cv::Size &unwrapRes,
-            unsigned int scanStep = 1,
-            float learningRate = 0.0001f,
-            const filesystem::path &outputPath = "snapshots")
+    InfoMax<FloatType>(const cv::Size &unwrapRes,
+                       unsigned int scanStep = 1,
+                       FloatType learningRate = 0.0001,
+                       const filesystem::path &outputPath = "snapshots")
       : VisualNavigationBase(unwrapRes, scanStep, outputPath)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
@@ -67,9 +70,9 @@ public:
         const auto y = tanh(u.array());
 
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
-        const auto id = MatrixXf::Identity(m_Weights.rows(), m_Weights.rows());
+        const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
         const auto sumYU = (y.array() + u.array()).matrix();
-        const float learnRate = m_LearningRate / (float) imageVector.rows();
+        const FloatType learnRate = m_LearningRate / (FloatType) imageVector.rows();
         m_Weights.array() += (learnRate * (id - sumYU * u.transpose()) * m_Weights).array();
 
         if (saveImage) {
@@ -77,7 +80,7 @@ public:
         }
     }
 
-    float decision(const cv::Mat &image) const
+    FloatType decision(const cv::Mat &image) const
     {
         // Convert image to vector of floats
         const auto imageVector = getFloatVector(image);
@@ -86,41 +89,42 @@ public:
         return decs.array().abs().sum();
     }
 
-    MatrixXf &getWeights()
+    MatrixType &getWeights()
     {
         return m_Weights;
     }
 
 private:
     size_t m_SnapshotCount = 0;
-    float m_LearningRate;
-    MatrixXf m_Weights;
+    FloatType m_LearningRate;
+    MatrixType m_Weights;
 
-    static VectorXf getFloatVector(const cv::Mat &image)
+    static auto getFloatVector(const cv::Mat &image)
     {
         Map<Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
-        return map.cast<float>() / 255.0f;
+        return map.cast<FloatType>() / 255.0;
     }
 
-    static MatrixXf getInitialWeights(int numInputs, int numHidden)
+    static auto getInitialWeights(int numInputs, int numHidden)
     {
-        auto weights = MatrixXf(numInputs, numHidden);
+        MatrixType weights(numInputs, numHidden);
+
         std::random_device rd;
         std::default_random_engine generator(0);
-        std::normal_distribution<double> distribution;
+        std::normal_distribution<FloatType> distribution;
         for (int y = 0; y < weights.rows(); y++) {
             for (int x = 0; x < weights.cols(); x++) {
-                const double r = distribution(generator);
+                const FloatType r = distribution(generator);
                 weights(y, x) = r;
             }
 
             // Normalise mean and SD for row so mean == 0 and SD == 1
             auto row = weights.row(y);
             const auto mean = row.mean();
-            const auto sd = sqrt(row.unaryExpr([mean] (double val) {
-                const double diff = mean - val;
-                return diff * diff;
-            }).sum());
+            const auto sd = sqrt(row.unaryExpr([mean](FloatType val) {
+                                        const auto diff = mean - val;
+                                        return diff * diff;
+                                    }).sum());
             row.array() -= mean;
             row.array() /= sd;
         }

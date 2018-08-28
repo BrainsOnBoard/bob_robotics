@@ -22,7 +22,7 @@
 using namespace Eigen;
 using namespace BoBRobotics;
 
-Matrix<float, Dynamic, Dynamic>
+auto
 readTestData(const filesystem::path &filepath)
 {
     // Open file
@@ -36,7 +36,7 @@ readTestData(const filesystem::path &filepath)
     Matrix<double, Dynamic, Dynamic> data(size[0], size[1]);
     is.read(reinterpret_cast<char *>(data.data()), sizeof(double) * data.size());
 
-    return data.cast<float>();
+    return data;
 }
 
 int
@@ -53,7 +53,7 @@ main(int, char **argv)
     const auto image = cv::imread((dataPath / "image.png").str(), CV_LOAD_IMAGE_GRAYSCALE);
 
     // Make our InfoMax runner object
-    Navigation::InfoMax infomax(image.size(), initWeights);
+    Navigation::InfoMax<double> infomax(image.size(), initWeights);
 
     const auto &weights = infomax.getWeights();
     std::cout << "Weights before training: " << std::endl
