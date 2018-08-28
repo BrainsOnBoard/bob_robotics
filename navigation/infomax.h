@@ -98,36 +98,25 @@ private:
     static MatrixXf getInitialWeights(int numInputs, int numHidden)
     {
         auto weights = MatrixXf(numInputs, numHidden);
+        std::random_device rd;
+        std::default_random_engine generator(0);
+        std::normal_distribution<double> distribution;
+        for (int y = 0; y < weights.rows(); y++) {
+            for (int x = 0; x < weights.cols(); x++) {
+                const double r = distribution(generator);
+                weights(y, x) = r;
+            }
 
-        weights << 1, 1, -1, -1,
-                1, 1, -1, -1,
-                1, 1, -1, -1,
-                1, 1, -1, -1;
-
-        // weights << -0.566138712353384, -0.730852005073756, 1.721866181055141, -0.424875463628000,
-        //            0.644414352214218, -1.329257675949620, 1.232168531644962, -0.547325207909560,
-        //            -1.295190603406558, 0.361525498771371, -0.470161404647645, 1.403826509282832,
-        //            -0.119196166074167, -0.541869812265676, 1.648422450902045, -0.987356472562202;
-
-        // std::random_device rd;
-        // std::default_random_engine generator(0);
-        // std::normal_distribution<double> distribution;
-        // for (int y = 0; y < weights.rows(); y++) {
-        //     for (int x = 0; x < weights.cols(); x++) {
-        //         const double r = distribution(generator);
-        //         weights(y, x) = r;
-        //     }
-
-        //     // Normalise mean and SD for row so mean == 0 and SD == 1
-        //     auto row = weights.row(y);
-        //     const auto mean = row.mean();
-        //     const auto sd = sqrt(row.unaryExpr([mean] (double val) {
-        //         const double diff = mean - val;
-        //         return diff * diff;
-        //     }).sum());
-        //     row.array() -= mean;
-        //     row.array() /= sd;
-        // }
+            // Normalise mean and SD for row so mean == 0 and SD == 1
+            auto row = weights.row(y);
+            const auto mean = row.mean();
+            const auto sd = sqrt(row.unaryExpr([mean] (double val) {
+                const double diff = mean - val;
+                return diff * diff;
+            }).sum());
+            row.array() -= mean;
+            row.array() /= sd;
+        }
 
         return weights;
     }
