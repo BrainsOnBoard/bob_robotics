@@ -33,12 +33,23 @@ class InfoMax
 {
 public:
     InfoMax(const cv::Size unwrapRes,
+            MatrixXf initialWeights,
             unsigned int scanStep = 1,
             float learningRate = 0.0001f,
             const filesystem::path &outputPath = "snapshots")
       : VisualNavigationBase(unwrapRes, scanStep, outputPath)
       , m_LearningRate(learningRate)
-      , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height, unwrapRes.width * unwrapRes.height))
+      , m_Weights(initialWeights)
+    {}
+
+    InfoMax(const cv::Size unwrapRes,
+            unsigned int scanStep = 1,
+            float learningRate = 0.0001f,
+            const filesystem::path &outputPath = "snapshots")
+      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
+      , m_LearningRate(learningRate)
+      , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
+                                    unwrapRes.width * unwrapRes.height))
     {}
 
     virtual void train(const cv::Mat &image, bool saveImage) override
