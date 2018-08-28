@@ -1,6 +1,14 @@
+// Standard C includes
+#include <cstdint>
+
 // Standard C++ includes
+#include <array>
+#include <fstream>
 #include <iostream>
 #include <string>
+
+// Eigen
+#include <Eigen/Core>
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -11,36 +19,53 @@
 // Third-party includes
 #include "third_party/path.h"
 
+using namespace Eigen;
 using namespace BoBRobotics;
 
-int main()
+Matrix<float, Dynamic, Dynamic>
+readTestData(const filesystem::path &filepath)
 {
-    const filesystem::path dbPath = "../../tools/ant_world_db_creator/ant1_route1";
-    cv::Size size(2, 2);
+    // Open file
+    std::ifstream is(filepath.str(), std::ios::binary);
 
-    Navigation::InfoMax infomax(size);
+    // Get the size of the data
+    std::array<int32_t, 2> size;
+    is.read(reinterpret_cast<char *>(&size), 2 * sizeof(int32_t));
 
+    // Create data array and fill it
+    Matrix<double, Dynamic, Dynamic> data(size[0], size[1]);
+    is.read(reinterpret_cast<char *>(data.data()), sizeof(double) * data.size());
+
+    return data.cast<float>();
+}
+
+int
+main(int, char **argv)
+{
+    // Path where test *.bin files live
+    const auto dataPath = filesystem::path(argv[0]).parent_path() / "test_data";
+
+    // Load matrices of weights
+    const auto initWeights = readTestData(dataPath / "weights_init.bin");
+    const auto outputWeights = readTestData(dataPath / "weights_out.bin");
+
+    // Load training image
+    const auto image = cv::imread((dataPath / "image.png").str(), CV_LOAD_IMAGE_GRAYSCALE);
+
+    // Make our InfoMax runner object
+    Navigation::InfoMax infomax(image.size(), initWeights);
+
+    const auto &weights = infomax.getWeights();
     std::cout << "Weights before training: " << std::endl
-              << infomax.getWeights() << std::endl << std::endl;
+              << weights << std::endl << std::endl;
 
-    cv::Mat trainData(size, CV_8U);
-    for (int y = 0; y < size.height; y++) {
-        for (int x = 0; x < size.width; x++) {
-            trainData.at<uchar>(y, x) = 1;
-        }
-    }
-    infomax.train(trainData, false);
+    infomax.train(image, false);
 
     std::cout << "Weights after training: " << std::endl
-              << infomax.getWeights() << std::endl;
+              << infomax.getWeights() << std::endl << std::endl;
 
-    // infomax.loadSnapshotsFromPath(dbPath, true);
+    std::cout << "Matlab's weights: " << std::endl
+              << outputWeights << std::endl;
 
-    // // load image
-    // cv::Mat image = cv::imread((dbPath / getRouteDatabaseFilename(10)).str(), CV_LOAD_IMAGE_GRAYSCALE);
-    // cv::resize(image, image, size);
-
-    // const auto decisionValue = infomax.decision(image);
-
-    // std::cout << "Score: " << decisionValue << std::endl;
+    return 0;
 }

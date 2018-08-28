@@ -32,8 +32,8 @@ class InfoMax
   : public VisualNavigationBase
 {
 public:
-    InfoMax(const cv::Size unwrapRes,
-            MatrixXf initialWeights,
+    InfoMax(const cv::Size &unwrapRes,
+            const MatrixXf &initialWeights,
             unsigned int scanStep = 1,
             float learningRate = 0.0001f,
             const filesystem::path &outputPath = "snapshots")
@@ -42,7 +42,7 @@ public:
       , m_Weights(initialWeights)
     {}
 
-    InfoMax(const cv::Size unwrapRes,
+    InfoMax(const cv::Size &unwrapRes,
             unsigned int scanStep = 1,
             float learningRate = 0.0001f,
             const filesystem::path &outputPath = "snapshots")
@@ -54,7 +54,7 @@ public:
 
     virtual void train(const cv::Mat &image, bool saveImage) override
     {
-        assert(image.type() == CV_8U);
+        assert(image.type() == CV_8UC1);
 
         const cv::Size &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);
@@ -62,12 +62,9 @@ public:
 
         // Convert image to vector of floats
         const auto imageVector = getFloatVector(image);
-        std::cout << "imageVector: " << imageVector << std::endl;
 
         const auto u = m_Weights * imageVector;
-
         const auto y = tanh(u.array());
-        std::cout << "y: " << y << std::endl;
 
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
         const auto id = MatrixXf::Identity(m_Weights.rows(), m_Weights.rows());
@@ -75,7 +72,6 @@ public:
         const float learnRate = m_LearningRate / (float) imageVector.rows();
         m_Weights.array() += (learnRate * (id - sumYU * u.transpose()) * m_Weights).array();
 
-        std::cout << "training!" << std::endl;
         if (saveImage) {
             saveSnapshot(m_SnapshotCount++, image);
         }
@@ -103,7 +99,7 @@ private:
     static VectorXf getFloatVector(const cv::Mat &image)
     {
         Map<Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
-        return map.cast<float>();
+        return map.cast<float>() / 255.0f;
     }
 
     static MatrixXf getInitialWeights(int numInputs, int numHidden)
