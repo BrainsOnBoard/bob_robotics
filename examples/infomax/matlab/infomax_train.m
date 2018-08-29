@@ -1,4 +1,4 @@
-function [W,mu]=infomax_train(nhid,D,W)
+function [W,mu,u,y]=infomax_train(nhid,D,W)
 % function [W]=infomax_train(nhid,D,W)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -36,12 +36,16 @@ end
 
 D = im2double(D); % make sure we have the correct input type - uint8 images won't work
 
+if nargout > 1 && size(D,2) > 1
+    error('Cannot get u and y when using multiple patterns');
+end
+
 % learning rate
 mu=0.001;
 % this while loop just reduces the learning rate if the weights blow up
 while true
     try
-        W = infomax_learn2(W',D,[],mu);
+        [W,u,y] = infomax_learn2(W',D,[],mu);
         break;
     catch ex
         if strcmp(ex.identifier,'LearningRule:WeightBlowUpError')
@@ -60,7 +64,7 @@ clear D
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % w = w ./ repmat (std(w,1,2), 1, H);
 
-function weights = infomax_learn2(weights,patts,vars,lrate)
+function [weights,u,y] = infomax_learn2(weights,patts,vars,lrate)
 % Infomax "extended algorithm"
 if nargin < 4
     str = 'A learning rate is required';

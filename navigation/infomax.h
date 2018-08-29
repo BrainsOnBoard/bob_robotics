@@ -69,6 +69,11 @@ public:
         const auto u = m_Weights * imageVector;
         const auto y = tanh(u.array());
 
+#ifdef INFOMAX_DEBUG
+        std::cout << "U: " << std::endl << u << std::endl << std::endl;
+        std::cout << "Y: " << std::endl << y << std::endl << std::endl;
+#endif
+
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
         const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
         const auto sumYU = (y.array() + u.array()).matrix();
