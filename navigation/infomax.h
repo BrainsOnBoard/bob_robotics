@@ -101,7 +101,7 @@ private:
 
     static auto getFloatVector(const cv::Mat &image)
     {
-        Map<Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
+        Map<Matrix<uint8_t, Dynamic, 1>> map(image.data, image.cols * image.rows);
         return map.cast<FloatType>() / 255.0;
     }
 
