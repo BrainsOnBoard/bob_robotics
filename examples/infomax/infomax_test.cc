@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 // Eigen
 #include <Eigen/Core>
@@ -15,7 +16,6 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#define INFOMAX_DEBUG
 #include "navigation/infomax.h"
 
 // Third-party includes
@@ -55,9 +55,9 @@ runTest(const filesystem::path &dataPath, int num)
     // Load matrices of weights
     const auto pref = "test"s + snum + "_"s;
     const auto initWeights = readTestData<>(dataPath / (pref + "weights_init.bin"s));
-    const auto outputWeights = readTestData<>(dataPath / (pref + "weights_out.bin"s));
-    const auto u = readTestData<>(dataPath / (pref + "u.bin"s));
-    const auto y = readTestData<>(dataPath / (pref + "y.bin"s));
+    const auto matlabOutputWeights = readTestData<>(dataPath / (pref + "weights_out.bin"s));
+    const auto matlabU = readTestData<>(dataPath / (pref + "u.bin"s));
+    const auto matlabY = readTestData<>(dataPath / (pref + "y.bin"s));
 
     // Load training image
     auto imageMatrix = readTestData<uint8_t>(dataPath / (pref + "train_image.bin"s));
@@ -68,7 +68,9 @@ runTest(const filesystem::path &dataPath, int num)
     Navigation::InfoMax<double> infomax(image.size(), initWeights);
 
     // Do training
-    infomax.train(image, false);
+    Matrix<double, Dynamic, 1> u, y;
+    std::tie(u, y) = infomax.getUY(image);
+    infomax.train(u, y);
 
     std::cout << "Weights before training: " << std::endl
               << initWeights << std::endl
@@ -78,17 +80,17 @@ runTest(const filesystem::path &dataPath, int num)
               << imageMatrix.cast<int>() << std::endl
               << std::endl;
 
+    std::cout << "U: " << u << std::endl << std::endl;
+    std::cout << "Y: " << y << std::endl << std::endl;
+
+    const auto &weights = infomax.getWeights();
     std::cout << "Weights after training: " << std::endl
-              << infomax.getWeights() << std::endl
+              << weights << std::endl
               << std::endl;
 
-    std::cout << "Matlab's weights: " << std::endl
-              << outputWeights << std::endl << std::endl;
-    std::cout << "Matlab's U: " << std::endl
-              << u << std::endl << std::endl;
-    std::cout << "Matlab's Y: " << std::endl
-              << y << std::endl;
-    std::cout << "==========" << std::endl;
+    std::cout << "Diff U: " << std::endl << matlabU - u << std::endl << std::endl;
+    std::cout << "Diff Y: " << std::endl << matlabY - y << std::endl << std::endl;
+    std::cout << "Diff weights: " << matlabOutputWeights - weights << std::endl << std::endl;
 }
 
 int

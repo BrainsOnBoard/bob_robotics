@@ -7,6 +7,7 @@
 #include <iostream>
 #include <random>
 #include <tuple>
+#include <utility>
 
 // Eigen
 #include <Eigen/Core>
@@ -33,6 +34,7 @@ class InfoMax
   : public VisualNavigationBase
 {
 using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
+using VectorType = Matrix<FloatType, Dynamic, 1>;
 
 public:
     InfoMax<FloatType>(const cv::Size &unwrapRes,
@@ -57,6 +59,26 @@ public:
 
     virtual void train(const cv::Mat &image, bool saveImage) override
     {
+        VectorType u, y;
+        std::tie(u, y) = getUY(image);
+        train(u, y);
+
+        if (saveImage) {
+            saveSnapshot(m_SnapshotCount++, image);
+        }
+    }
+
+    void train(const VectorType &u, const VectorType &y)
+    {
+        // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
+        const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
+        const auto sumYU = (y.array() + u.array()).matrix();
+        const FloatType learnRate = m_LearningRate / (FloatType) u.rows();
+        m_Weights.array() += (learnRate * (id - sumYU * u.transpose()) * m_Weights).array();
+    }
+
+    auto getUY(const cv::Mat &image)
+    {
         assert(image.type() == CV_8UC1);
 
         const cv::Size &unwrapRes = getUnwrapResolution();
@@ -69,20 +91,7 @@ public:
         const auto u = m_Weights * imageVector;
         const auto y = tanh(u.array());
 
-#ifdef INFOMAX_DEBUG
-        std::cout << "U: " << std::endl << u << std::endl << std::endl;
-        std::cout << "Y: " << std::endl << y << std::endl << std::endl;
-#endif
-
-        // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
-        const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
-        const auto sumYU = (y.array() + u.array()).matrix();
-        const FloatType learnRate = m_LearningRate / (FloatType) imageVector.rows();
-        m_Weights.array() += (learnRate * (id - sumYU * u.transpose()) * m_Weights).array();
-
-        if (saveImage) {
-            saveSnapshot(m_SnapshotCount++, image);
-        }
+        return std::make_pair(u, y);
     }
 
     FloatType decision(const cv::Mat &image) const
