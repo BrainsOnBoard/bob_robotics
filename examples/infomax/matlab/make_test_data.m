@@ -7,6 +7,7 @@ rng(42); % fixed seed
 
 writefiles(ones(2),rand(2,1));
 writefiles(ones(4),rand(4,1));
+writefiles(infomax_init2(4,4),rand(4,1));
 
 function writefiles(weights_init,im)
 persistent num;
