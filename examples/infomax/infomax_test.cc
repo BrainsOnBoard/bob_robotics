@@ -99,6 +99,7 @@ main(int, char **argv)
 
     // Run tests
     runTest(dataPath, 1);
+    runTest(dataPath, 2);
 
     return 0;
 }
