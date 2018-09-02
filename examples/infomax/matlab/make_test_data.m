@@ -25,8 +25,15 @@ write([pref 'train_image'],im2uint8(im));
 [weights_out,learning_rate,u,y] = infomax_train(numel(im),im,weights_init);
 write([pref 'u'],u);
 write([pref 'y'],y);
-fprintf('Final learning rate: %g\n\n',learning_rate)
+fprintf('Final learning rate: %g\n',learning_rate)
 write([pref 'weights_out'],weights_out);
+
+nruns = 100;
+for i = 1:nruns-1
+    [weights_out,learning_rate] = infomax_train(numel(im),im,weights_out);
+end
+write([pref 'weights_out_many'],weights_out);
+fprintf('Final learning rate (%d runs): %g\n\n',nruns,learning_rate)
 
 function write(fn,data)
 fid = fopen(fullfile('../test_data',[fn '.bin']),'w');

@@ -49,6 +49,8 @@ readTestData(const filesystem::path &filepath)
 void
 runTest(const filesystem::path &dataPath, int num)
 {
+    const int manyRuns = 100;
+
     const auto snum = std::to_string(num);
     std::cout << "==== Running test " << snum << " ====" << std::endl;
 
@@ -56,6 +58,7 @@ runTest(const filesystem::path &dataPath, int num)
     const auto pref = "test"s + snum + "_"s;
     const auto initWeights = readTestData<>(dataPath / (pref + "weights_init.bin"s));
     const auto matlabOutputWeights = readTestData<>(dataPath / (pref + "weights_out.bin"s));
+    const auto matlabOutputWeightsMany = readTestData<>(dataPath / (pref + "weights_out_many.bin"));
     const auto matlabU = readTestData<>(dataPath / (pref + "u.bin"s));
     const auto matlabY = readTestData<>(dataPath / (pref + "y.bin"s));
 
@@ -91,6 +94,12 @@ runTest(const filesystem::path &dataPath, int num)
     std::cout << "Diff U: " << std::endl << matlabU - u << std::endl << std::endl;
     std::cout << "Diff Y: " << std::endl << matlabY - y << std::endl << std::endl;
     std::cout << "Diff weights: " << matlabOutputWeights - weights << std::endl << std::endl;
+
+    for (int i = 1; i < manyRuns; i++) {
+        infomax.train(image, false);
+    }
+    std::cout << "Diff weights (" << manyRuns << " runs): "
+              << matlabOutputWeightsMany - infomax.getWeights() << std::endl << std::endl;
 }
 
 int
