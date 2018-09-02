@@ -32,32 +32,32 @@ class robotPositioner {
 private:
 
 
-	// tracking and camera variables
-	std::list<std::vector<double>> coordinates;	// goal coordinates
-    UDPClient<ObjectData> *vicon;				// vicon 
-    CaptureControl *viconCaptureControl; 		// vicon capture
-    BoBRobotics::Robots::Norbot *bot; 			// robot interface
-    See3CAM_CU40 *cam;				  			// camera
-    OpenCVUnwrap360 unwrapper;		  			// image unwrapper
-    int imageNumber;				  			// image id number 
-    bool hasCamera;								// a boolean to indicate whether we have camera
+    // tracking and camera variables
+    std::list<std::vector<double>> coordinates;	            // goal coordinates
+    UDPClient<ObjectData> *vicon;		                    // vicon 
+    CaptureControl *viconCaptureControl; 	                // vicon capture
+    BoBRobotics::Robots::Norbot *bot; 		                // robot interface
+    See3CAM_CU40 *cam;			  	                        // camera
+    OpenCVUnwrap360 unwrapper;		 	                    // image unwrapper
+    int imageNumber;		  		                        // image id number 
+    bool hasCamera;				                            // a boolean to indicate whether we have camera
 
   
   	// Robot variables
-    double pos_X;								// robot's x position
-    double pos_Y;								// robot's y position
-    double pos_Z;								// robot's z position
-    double heading;								// heading (angle) of the robot
-    double goalPositionX;						// goal position x
-    double goalPositionY;						// goal position y
-    double goalPositionZ;						// goal position z
-    double bearingFromGoal;						// bearing (angle) from goal coordinate
-    double distanceFromGoal;					// Euclidean distance from goal coordinate
-    double goalAngle; 							// angle to turn after finding the correct location
-    double bearingFinal;						// heading converted to range <-180, 180> from <0, 360>
-   
+    double pos_X;	                                        // robot's x position
+    double pos_Y;	  			                            // robot's y position
+    double pos_Z;	  			                            // robot's z position
+    double heading;			                                // heading (angle) of the robot
+    double goalPositionX;                                   // goal position x
+    double goalPositionY;		 	                        // goal position y
+    double goalPositionZ;		 	                        // goal position z
+    double bearingFromGoal;		   	                        // bearing (angle) from goal coordinate
+    double distanceFromGoal;	   	                        // Euclidean distance from goal coordinate
+    double goalAngle; 			   	                        // angle to turn after finding the correct location
+    double bearingFinal;		                            // heading converted to range <-180, 180> from <0, 360>
 
-    float k1_in, k2_in, alpha_in, beta_in, max_vel;							// used for user input to set k1 and k2 values
+
+    float k1_in, k2_in, alpha_in, beta_in, max_vel;	// used for user input to set k1 and k2 values
 
 
     /**
