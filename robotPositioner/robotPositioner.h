@@ -31,6 +31,7 @@ class robotPositioner {
 
 private:
 
+
 	// tracking and camera variables
 	std::list<std::vector<double>> coordinates;	// goal coordinates
     UDPClient<ObjectData> *vicon;				// vicon 
