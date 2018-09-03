@@ -1,5 +1,6 @@
 include ../../common/flags.mk
 CXXFLAGS += -I../.. `pkg-config --cflags eigen3`
+LINK_FLAGS += -fopenmp
 
 EXECUTABLE := infomax_matlab_comparison
 
