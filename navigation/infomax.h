@@ -40,32 +40,26 @@ public:
     InfoMax<FloatType>(const cv::Size &unwrapRes,
                        const MatrixType &initialWeights,
                        unsigned int scanStep = 1,
-                       FloatType learningRate = 0.0001,
-                       const filesystem::path &outputPath = "snapshots")
-      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
+                       FloatType learningRate = 0.0001)
+      : VisualNavigationBase(unwrapRes, scanStep)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
     {}
 
     InfoMax<FloatType>(const cv::Size &unwrapRes,
                        unsigned int scanStep = 1,
-                       FloatType learningRate = 0.0001,
-                       const filesystem::path &outputPath = "snapshots")
-      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
+                       FloatType learningRate = 0.0001)
+      : VisualNavigationBase(unwrapRes, scanStep)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
                                     unwrapRes.width * unwrapRes.height))
     {}
 
-    virtual void train(const cv::Mat &image, bool saveImage) override
+    virtual void train(const cv::Mat &image) override
     {
         VectorType u, y;
         std::tie(u, y) = getUY(image);
         train(u, y);
-
-        if (saveImage) {
-            saveSnapshot(m_SnapshotCount++, image);
-        }
     }
 
     void train(const VectorType &u, const VectorType &y)

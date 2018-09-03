@@ -96,7 +96,7 @@ runTest(const filesystem::path &dataPath, int num)
     std::cout << "Diff weights: " << matlabOutputWeights - weights << std::endl << std::endl;
 
     for (int i = 1; i < manyRuns; i++) {
-        infomax.train(image, false);
+        infomax.train(image);
     }
     std::cout << "Diff weights (" << manyRuns << " runs): "
               << matlabOutputWeightsMany - infomax.getWeights() << std::endl << std::endl;
