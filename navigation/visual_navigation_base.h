@@ -27,22 +27,21 @@ namespace Navigation {
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes, const unsigned int scanStep,
-                         const filesystem::path outputPath = "snapshots")
+    VisualNavigationBase(const cv::Size unwrapRes, const unsigned int scanStep)
       : m_UnwrapRes(unwrapRes)
       , m_ScanStep(scanStep)
-      , m_SnapshotsPath(outputPath)
     {}
 
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
     //! Train the algorithm with the specified image
-    virtual void train(const cv::Mat &image, bool saveImage) = 0;
+    virtual void train(const cv::Mat &image) = 0;
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    //! Load single snapshot and train
     void loadSnapshot(const filesystem::path &snapshotPath, bool resizeImage = false)
     {
         if (!snapshotPath.exists()) {
@@ -60,13 +59,7 @@ public:
         }
 
         // Add snapshot
-        train(image, false);
-    }
-
-    //! Load snapshots from default path
-    void loadSnapshots(bool resizeImages = false)
-    {
-        loadSnapshots(m_SnapshotsPath, resizeImages);
+        train(image);
     }
 
     //! Load snapshots from specified path
@@ -86,14 +79,8 @@ public:
         }
     }
 
-    //! Save a snapshot to disk
-    void saveSnapshot(const size_t index, const cv::Mat &image)
-    {
-        cv::imwrite(getSnapshotPath(index).str(), image);
-    }
-
     //! Set mask image (e.g. for masking part of robot)
-    void setMaskImage(const std::string path)
+    void setMaskImage(const std::string &path)
     {
         m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
         assert(m_MaskImage.cols == m_UnwrapRes.width);
@@ -119,27 +106,12 @@ public:
         return m_UnwrapRes;
     }
 
-    //! Get output path for snapshots
-    const filesystem::path &getSnapshotsPath() const
-    {
-        return m_SnapshotsPath;
-    }
-
 private:
     //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    filesystem::path getSnapshotPath(const size_t index) const
-    {
-        return m_SnapshotsPath / getRouteDatabaseFilename(index);
-    }
-
-    //------------------------------------------------------------------------
-    // Members
+    // Private members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
     const unsigned int m_ScanStep;
-    const filesystem::path m_SnapshotsPath;
     cv::Mat m_MaskImage;
 }; // PerfectMemoryBase
 } // Navigation

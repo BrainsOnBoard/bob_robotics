@@ -91,9 +91,8 @@ class PerfectMemoryBase
   : public VisualNavigationBase
 {
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                      const filesystem::path outputPath = "snapshots")
-      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
+    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1)
+      : VisualNavigationBase(unwrapRes, scanStep)
     {}
 
     //------------------------------------------------------------------------
@@ -108,7 +107,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image, bool saveImage = false) override
+    virtual void train(const cv::Mat &image) override
     {
         const auto &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);
@@ -116,12 +115,7 @@ public:
         assert(image.type() == CV_8UC1);
 
         // Add snapshot
-        const size_t index = addSnapshot(image);
-
-        // Write image to disk, if desired
-        if (saveImage) {
-            saveSnapshot(index, image);
-        }
+        addSnapshot(image);
     }
 
     //! Get differences between image and stored snapshots
@@ -190,15 +184,6 @@ protected:
 
     //! Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
-
-private:
-    //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    filesystem::path getSnapshotPath(size_t index) const
-    {
-        return getSnapshotsPath() / getRouteDatabaseFilename(index);
-    }
 
     //------------------------------------------------------------------------
     // Members
