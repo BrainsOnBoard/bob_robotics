@@ -25,8 +25,6 @@ using namespace std::literals;
 
 #define PI 3.14159265359
 
-
-
 class robotPositioner {
 
 private:
@@ -41,7 +39,7 @@ private:
     int m_imageNumber;                                        // image id number 
     bool m_hasCamera;                                         // a boolean to indicate whether we have camera
   
-  	// Robot variables
+    // Robot variables
     double m_pos_X;                                           // robot's x position
     double m_pos_Y;                                           // robot's y position
     double m_pos_Z;                                           // robot's z position
@@ -73,7 +71,7 @@ private:
     /**
     * sets up the vicon system so it listens to the broadcast 
     */
-	void setupVicon() {
+    void setupVicon() {
 
         //vicon = new UDPClient<ObjectData>(51001);
         //viconCaptureControl = new CaptureControl( "192.168.1.100", 3003,"c:\\users\\ad374\\Desktop");
@@ -264,8 +262,6 @@ private:
         m_bot->tank(Vl, Vr);
     }
 
-
-
     // captures a frame
     void captureCameraFrame() {
         const cv::Size unwrapSize(180,50);
@@ -281,8 +277,7 @@ private:
         }
     }
 
-
-
+//-----------------PUBLIC API---------------------------------------------------------------------
 public:
 
     // constructor
@@ -389,5 +384,4 @@ public:
 
         }
     }
-
 };
