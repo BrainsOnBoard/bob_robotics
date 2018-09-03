@@ -85,7 +85,7 @@ public:
         const auto u = m_Weights * imageVector;
         const auto y = tanh(u.array());
 
-        return std::make_pair(u, y);
+        return std::make_pair(std::move(u), std::move(y));
     }
 
     FloatType decision(const cv::Mat &image) const
