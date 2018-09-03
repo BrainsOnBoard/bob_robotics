@@ -59,7 +59,7 @@ private:
     unsigned int m_capture_control_port;                      // vicon capture control port number
     double m_robot_r;                                         // robot's wheel radius
     double m_robot_D;                                         // robots' axis length
-    double m_threshold_distance;                              // threshold distance for the robot to start slowing down
+    double m_allowed_heading_error;                           // the amount of error allowed in the final heading
     double m_stopping_distance;                               // if the robot's distance from goal < stopping dist, robot stops
     std::string m_video_device;                               // video device path (usually /dev/device0 )
     double m_k1;                                              // curveness of the path to the goal
@@ -210,12 +210,10 @@ private:
 
             // formula for curvy path
             double w = k*v;
-        
-            // if we are very close, don't do any large turns
-            if (m_distanceFromGoal < m_threshold_distance && closeTo(m_bearingFromGoal, 5) ) { w = 0.001; }
-            
-            // if we are close to the goal, stop the robot
-            if (m_distanceFromGoal < m_stopping_distance && closeTo(m_bearingFromGoal,4)) {
+       
+            // if we are close to the goal and the heading error is less than the allowed, stop the robot
+            if (m_distanceFromGoal < m_stopping_distance && closeTo(m_bearingFromGoal,m_allowed_heading_error)) {
+
                 stopFlag = false;
                 m_bot->tank(0,0);
             } else {
@@ -285,7 +283,7 @@ public:
         unsigned int capture_control_port,
         double       robot_r,
         double       robot_D,
-        double       threshold_distance,
+        double       allowed_heading_error,
         double       stopping_distance,
         std::string  video_device,
         double       k1,
@@ -299,7 +297,7 @@ public:
             m_capture_control_port(capture_control_port),
             m_robot_r(robot_r),
             m_robot_D(robot_D),
-            m_threshold_distance(threshold_distance),
+            m_allowed_heading_error(allowed_heading_error),
             m_stopping_distance(stopping_distance),
             m_video_device(video_device),
             m_k1(k1),
