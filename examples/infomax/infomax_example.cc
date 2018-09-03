@@ -15,5 +15,5 @@ int main()
     InfoMax<> infomax(imSize);
 
     std::cout << "Training InfoMax network..." << std::endl;
-    infomax.loadSnapshots("../../tools/ant_world_db_creator/ant1_route1", true);
+    infomax.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
 }
