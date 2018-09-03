@@ -41,29 +41,16 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    //! Load single snapshot and train
-    void loadSnapshot(const filesystem::path &snapshotPath, bool resizeImage = false)
+    //! Train with image at specified path
+    void train(const filesystem::path &imagePath, bool resizeImage = false)
     {
-        if (!snapshotPath.exists()) {
-            throw std::runtime_error("Path " + snapshotPath.str() + " does not exist");
+        if (!tryTrain(imagePath, resizeImage)) {
+            throw std::runtime_error("Path " + imagePath.str() + " does not exist");
         }
-
-        // Load image
-        cv::Mat image = cv::imread(snapshotPath.str(), cv::IMREAD_GRAYSCALE);
-        assert(image.type() == CV_8UC1);
-        if (resizeImage) {
-            cv::resize(image, image, m_UnwrapRes);
-        } else {
-            assert(image.cols == m_UnwrapRes.width);
-            assert(image.rows == m_UnwrapRes.height);
-        }
-
-        // Add snapshot
-        train(image);
     }
 
-    //! Load snapshots from specified path
-    void loadSnapshots(const filesystem::path &routePath, bool resizeImages = false)
+    //! Train algorithm with specified route
+    void trainRoute(const filesystem::path &routePath, bool resizeImages = false)
     {
         if (!routePath.exists()) {
             throw std::runtime_error("Path " + routePath.str() + " does not exist");
@@ -71,9 +58,7 @@ public:
 
         for (size_t i = 0;; i++) {
             const auto filename = routePath / getRouteDatabaseFilename(i);
-            try {
-                loadSnapshot(filename, resizeImages);
-            } catch (std::runtime_error &) {
+            if (!tryTrain(filename, resizeImages)) {
                 return;
             }
         }
@@ -113,6 +98,28 @@ private:
     const cv::Size m_UnwrapRes;
     const unsigned int m_ScanStep;
     cv::Mat m_MaskImage;
+
+    bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept
+    {
+        if (!imagePath.exists()) {
+            return false;
+        }
+
+        // Load image
+        cv::Mat image = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
+        assert(image.type() == CV_8UC1);
+        if (resizeImage) {
+            cv::resize(image, image, m_UnwrapRes);
+        } else {
+            assert(image.cols == m_UnwrapRes.width);
+            assert(image.rows == m_UnwrapRes.height);
+        }
+
+        // Add snapshot
+        train(image);
+
+        return true;
+    }
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics
