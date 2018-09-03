@@ -1,7 +1,7 @@
 include ../../common/flags.mk
 CXXFLAGS += -I../.. `pkg-config --cflags eigen3`
 
-EXECUTABLE := infomax_test
+EXECUTABLE := infomax_matlab_comparison
 
 .PHONY: all clean
 
