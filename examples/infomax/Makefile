@@ -5,14 +5,17 @@ EXECUTABLE := infomax_matlab_comparison
 
 .PHONY: all clean
 
-all: $(EXECUTABLE)
+-include infomax_example.d
 
--include $(EXECUTABLE).d
+infomax_example: infomax_example.cc infomax_example.d
+	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
 
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
-	$(CXX) -o $(EXECUTABLE) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS)
+-include infomax_matlab_comparison.d
+
+infomax_matlab_comparison: infomax_matlab_comparison.cc infomax_matlab_comparison.d
+	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
 
 %.d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f infomax_matlab_comparison infomax_matlab_comparison.d
