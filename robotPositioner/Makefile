@@ -1,14 +1,14 @@
 
 CC      = g++
-CFLAGS  = -std=c++14
-LDFLAGS = -pthread -lopencv_core -lopencv_imgproc
-SOURCE  = -I/home/ubuntu/local/include/opencv2/imgproc
+CFLAGS  = -std=c++14 -pthread `pkg-config --libs --cflags opencv`
+LDFLAGS = 
+SOURCE  = 
 
 
 all: main clean
 
 main: main.o
-	$(CC) $(SOURCE) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(SOURCE) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 main.o: main.cpp 
 	$(CC) -c $(CFLAGS) $<
