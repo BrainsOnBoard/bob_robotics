@@ -11,10 +11,10 @@ using namespace BoBRobotics::Navigation;
 
 template<typename T>
 void
-loadSnapshots(T &pm)
+trainRoute(T &pm)
 {
     // Load snapshots
-    pm.loadSnapshots("../../tools/ant_world_db_creator/ant1_route1", true);
+    pm.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
 }
 
@@ -30,7 +30,7 @@ main()
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemory<> pm(imSize);
-        loadSnapshots(pm);
+        trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -48,7 +48,7 @@ main()
     {
         std::cout << std::endl << "Testing with RMS image difference..." << std::endl;
         PerfectMemory<BestMatchingSnapshot, RMSDiff> pm(imSize);
-        loadSnapshots(pm);
+        trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -67,7 +67,7 @@ main()
         constexpr size_t numComp = 3;
         std::cout << std::endl <<  "Testing with " << numComp << " weighted snapshots..." << std::endl;
         PerfectMemory<WeightSnapshotsDynamic<numComp>> pm(imSize);
-        loadSnapshots(pm);
+        trainRoute(pm);
 
         Timer<> t{ "Time taken for testing: " };
 
@@ -87,7 +87,7 @@ main()
         std::cout << std::endl << "Testing with HOG..." << std::endl;
 
         PerfectMemoryHOG<> pm(imSize);
-        loadSnapshots(pm);
+        trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
