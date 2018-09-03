@@ -73,9 +73,6 @@ private:
     */
     void setupVicon() {
 
-        //vicon = new UDPClient<ObjectData>(51001);
-        //viconCaptureControl = new CaptureControl( "192.168.1.100", 3003,"c:\\users\\ad374\\Desktop");
-
         // setup vicon and capture control
         m_vicon = new UDPClient<ObjectData>(m_vicon_udp_client_port);
         m_viconCaptureControl = new CaptureControl( 
@@ -217,7 +214,7 @@ private:
             // if we are very close, don't do any large turns
             if (m_distanceFromGoal < m_threshold_distance && closeTo(m_bearingFromGoal, 5) ) { w = 0.001; }
             
-            // if we are about 3cm close, stop the robot
+            // if we are close to the goal, stop the robot
             if (m_distanceFromGoal < m_stopping_distance && closeTo(m_bearingFromGoal,4)) {
                 stopFlag = false;
                 m_bot->tank(0,0);

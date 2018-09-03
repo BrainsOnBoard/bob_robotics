@@ -10,7 +10,7 @@
 // a small example program demonstrating the usage of 'robotPositioner.h'
 int main() {
 
-	unsigned int vicon_udp_client_port = 51001;                 
+    unsigned int vicon_udp_client_port = 51001;                 
     std::string vicon_capture_control_ip_address = "192.168.1.100";  
     std::string vicon_capture_control_executable_path = "c:\\users\\ad374\\Desktop";   
     unsigned int capture_control_port = 3003;
@@ -29,7 +29,7 @@ int main() {
     std::cin >> stopping_distance;
     std::cout << "enter threshold_distance (distance where robot starts to slow down)" << std::endl;
     std::cin >> threshold_distance;
-	std::cout << " enter k1 for the positioner [How curvy is the curve?]" << std::endl;
+    std::cout << " enter k1 for the positioner [How curvy is the curve?]" << std::endl;
     std::cin >> k1;
     std::cout << " enter k2 for the positioner [Speed of steering]" << std::endl;
     std::cin >> k2;
@@ -43,20 +43,20 @@ int main() {
 
 
     robotPositioner robp(
-    	vicon_udp_client_port,                     
+        vicon_udp_client_port,                     
 	    vicon_capture_control_ip_address,
-	    vicon_capture_control_executable_path,
-	    capture_control_port,
-	    robot_r,
-	    robot_D,
-	    threshold_distance, 
-	    stopping_distance,
-	    video_device,
-	    k1,
-	    k2,
-	    alpha,
-	    beta,
-	    max_velocity
+        vicon_capture_control_executable_path,
+        capture_control_port,
+        robot_r,
+        robot_D,
+        threshold_distance, 
+        stopping_distance,
+        video_device,
+        k1,
+        k2,
+        alpha,
+        beta,
+        max_velocity
     );
 
     std::cout << " start robot " << std::endl;
