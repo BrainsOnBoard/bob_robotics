@@ -16,6 +16,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
 // Third-party includes

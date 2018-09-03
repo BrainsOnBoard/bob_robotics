@@ -66,6 +66,23 @@ public:
         train(u, y);
     }
 
+    FloatType decision(const cv::Mat &image) const
+    {
+        // Convert image to vector of floats
+        const auto imageVector = getFloatVector(image);
+
+        const auto decs = m_Weights * imageVector;
+        return decs.array().abs().sum();
+    }
+
+    MatrixType &getWeights()
+    {
+        return m_Weights;
+    }
+
+#ifndef EXPOSE_INFOMAX_INTERNALS
+    private:
+#endif
     void train(const VectorType &u, const VectorType &y)
     {
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
@@ -90,20 +107,6 @@ public:
         const auto y = tanh(u.array());
 
         return std::make_pair(std::move(u), std::move(y));
-    }
-
-    FloatType decision(const cv::Mat &image) const
-    {
-        // Convert image to vector of floats
-        const auto imageVector = getFloatVector(image);
-
-        const auto decs = m_Weights * imageVector;
-        return decs.array().abs().sum();
-    }
-
-    MatrixType &getWeights()
-    {
-        return m_Weights;
     }
 
 private:
