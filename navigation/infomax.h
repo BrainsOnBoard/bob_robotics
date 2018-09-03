@@ -63,7 +63,7 @@ public:
     {
         VectorType u, y;
         std::tie(u, y) = getUY(image);
-        train(u, y);
+        trainUY(u, y);
     }
 
     FloatType decision(const cv::Mat &image) const
@@ -83,7 +83,7 @@ public:
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
 #endif
-    void train(const VectorType &u, const VectorType &y)
+    void trainUY(const VectorType &u, const VectorType &y)
     {
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
         const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());

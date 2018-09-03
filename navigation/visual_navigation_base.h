@@ -42,7 +42,7 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Train with image at specified path
-    void train(const filesystem::path &imagePath, bool resizeImage = false)
+    void trainFromFile(const filesystem::path &imagePath, bool resizeImage = false)
     {
         if (!tryTrain(imagePath, resizeImage)) {
             throw std::runtime_error("Path " + imagePath.str() + " does not exist");
