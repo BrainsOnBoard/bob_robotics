@@ -16,7 +16,7 @@ int main() {
     unsigned int capture_control_port = 3003;
     double robot_r = 6.8;                                   
     double robot_D = 10.4;
-    double threshold_distance; // in mm
+    double allowed_heading_error; 
     double stopping_distance;  // in mm
     std::string video_device = "/dev/video0";                  
     double k1;                                              
@@ -27,8 +27,8 @@ int main() {
 
     std::cout << "enter the allowed error on distance (stopping_distance) " << std::endl;
     std::cin >> stopping_distance;
-    std::cout << "enter threshold_distance (distance where robot starts to slow down)" << std::endl;
-    std::cin >> threshold_distance;
+    std::cout << "enter the amount of allowed heading error" << std::endl;
+    std::cin >> allowed_heading_error;
     std::cout << " enter k1 for the positioner [How curvy is the curve?]" << std::endl;
     std::cin >> k1;
     std::cout << " enter k2 for the positioner [Speed of steering]" << std::endl;
@@ -49,7 +49,7 @@ int main() {
         capture_control_port,
         robot_r,
         robot_D,
-        threshold_distance, 
+        allowed_heading_error, 
         stopping_distance,
         video_device,
         k1,
