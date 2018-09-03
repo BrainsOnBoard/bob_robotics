@@ -40,9 +40,10 @@ class PerfectMemoryBase
   : public VisualNavigationBase
 {
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                      const filesystem::path outputPath = "snapshots")
-      : VisualNavigationBase(unwrapRes, scanStep, outputPath)
+    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1)
+      : VisualNavigationBase(unwrapRes, scanStep)
+      , m_ScratchMaskImage(unwrapRes, CV_8UC1)
+      , m_ScratchRollImage(unwrapRes, CV_8UC1)
     {}
 
     //------------------------------------------------------------------------
@@ -57,7 +58,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image, bool saveImage = false) override
+    virtual void train(const cv::Mat &image) override
     {
         const auto &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);
@@ -65,12 +66,7 @@ public:
         assert(image.type() == CV_8UC1);
 
         // Add snapshot
-        const size_t index = addSnapshot(image);
-
-        // Write image to disk, if desired
-        if (saveImage) {
-            saveSnapshot(index, image);
-        }
+        addSnapshot(image);
     }
 
     //! Get differences between image and stored snapshots
@@ -144,15 +140,7 @@ protected:
 
 private:
     //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    filesystem::path getSnapshotPath(size_t index) const
-    {
-        return getSnapshotsPath() / getRouteDatabaseFilename(index);
-    }
-
-    //------------------------------------------------------------------------
-    // Members
+    // Private members
     //------------------------------------------------------------------------
     mutable cv::Mat m_ScratchMaskImage;
     mutable cv::Mat m_ScratchRollImage;

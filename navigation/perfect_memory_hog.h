@@ -28,10 +28,11 @@ template<typename RIDFProcessor = BestMatchingSnapshot,
 class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor>
 {
 public:
-    PerfectMemoryHOG(const cv::Size unwrapRes, const unsigned int scanStep = 1,
-                     const filesystem::path outputPath = "snapshots",
-                     const int HOGPixelsPerCell = 10, int HOGOrientations = 8)
-      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
+    PerfectMemoryHOG(const cv::Size unwrapRes,
+                     const unsigned int scanStep = 1,
+                     const int HOGPixelsPerCell = 10,
+                     int HOGOrientations = 8)
+      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep)
       , m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
                             HOGOrientations / (HOGPixelsPerCell * HOGPixelsPerCell))
       , m_Differencer(m_HOGDescriptorSize)

@@ -36,8 +36,8 @@ class PerfectMemory
   : public PerfectMemoryBase<RIDFProcessor>
 {
 public:
-    PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1, const filesystem::path outputPath = "snapshots")
-      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep, outputPath)
+    PerfectMemory(const cv::Size unwrapRes, const unsigned int scanStep = 1)
+      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep)
       , m_Differencer(unwrapRes.width * unwrapRes.height)
       , m_DiffScratchImage(unwrapRes, CV_8UC1)
     {}
