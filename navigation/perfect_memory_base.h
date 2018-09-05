@@ -42,8 +42,6 @@ class PerfectMemoryBase
 public:
     PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1)
       : VisualNavigationBase(unwrapRes, scanStep)
-      , m_ScratchMaskImage(unwrapRes, CV_8UC1)
-      , m_ScratchRollImage(unwrapRes, CV_8UC1)
     {}
 
     //------------------------------------------------------------------------
@@ -72,38 +70,22 @@ public:
     //! Get differences between image and stored snapshots
     std::vector<std::vector<float>> getImageDifferences(const cv::Mat &image) const
     {
-        const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
-        const size_t numSnapshots = getNumSnapshots();
-        assert(numSnapshots > 0);
-        const size_t scanStep = getScanStep();
-
-        // Clone mask and image so they can be rolled in place
-        getMaskImage().copyTo(m_ScratchMaskImage);
-        image.copyTo(m_ScratchRollImage);
+        assert(getNumSnapshots() > 0);
 
         // Create vector to store RIDF values
-        std::vector<std::vector<float>> differences(numSnapshots);
+        std::vector<std::vector<float>> differences(getNumSnapshots());
         for (auto &d : differences) {
-            d.resize(m_ScratchRollImage.cols);
+            d.reserve(image.cols / getScanStep());
         }
 
-        // Scan across image columns
-        for (int col = 0; col < m_ScratchRollImage.cols; col += scanStep) {
+        auto saveDifference = [this, &differences] (auto rollImage, auto maskImage) {
             // Loop through snapshots
-            for (size_t s = 0; s < numSnapshots; s++) {
+            for (size_t s = 0; s < getNumSnapshots(); s++) {
                 // Calculate difference
-                differences[s][col] = calcSnapshotDifference(m_ScratchRollImage, m_ScratchMaskImage, s);
+                differences[s].emplace_back(calcSnapshotDifference(rollImage, maskImage, s));
             }
-
-            // Roll image and corresponding mask left by scanStep
-            rollImage(m_ScratchRollImage);
-            if (!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage);
-            }
-        }
+        };
+        rollImageTransform(image, saveDifference);
 
         return differences;
     }
@@ -137,13 +119,6 @@ protected:
 
     //! Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
-
-private:
-    //------------------------------------------------------------------------
-    // Private members
-    //------------------------------------------------------------------------
-    mutable cv::Mat m_ScratchMaskImage;
-    mutable cv::Mat m_ScratchRollImage;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

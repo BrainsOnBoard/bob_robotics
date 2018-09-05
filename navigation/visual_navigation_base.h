@@ -99,6 +99,9 @@ private:
     const unsigned int m_ScanStep;
     cv::Mat m_MaskImage;
 
+    mutable cv::Mat m_ScratchMaskImage;
+    mutable cv::Mat m_ScratchRollImage;
+
     bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept
     {
         if (!imagePath.exists()) {
@@ -132,6 +135,27 @@ protected:
 
             // Rotate row to left by m_ScanStep pixels
             std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + image.cols);
+        }
+    }
+
+protected:
+    template<typename BinaryOp>
+    void rollImageTransform(const cv::Mat &image, BinaryOp fun) const
+    {
+        assert(image.cols == m_UnwrapRes.width);
+        assert(image.rows == m_UnwrapRes.height);
+        assert(image.type() == CV_8UC1);
+
+        image.copyTo(m_ScratchRollImage);
+        m_MaskImage.copyTo(m_ScratchMaskImage);
+
+        for (int col = 0; col < m_ScratchRollImage.cols; col += m_ScanStep) {
+            fun(m_ScratchRollImage, m_ScratchMaskImage);
+
+            rollImage(m_ScratchRollImage);
+            if (!m_ScratchMaskImage.empty()) {
+                rollImage(m_ScratchMaskImage);
+            }
         }
     }
 }; // PerfectMemoryBase
