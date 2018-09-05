@@ -50,3 +50,9 @@ ifdef WITH_MATPLOTLIBCPP
 	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
 endif
+
+ifdef WITH_I2C
+	ifeq (0,$(shell ../../common/is_i2c_tools_new.sh; echo $$?))
+	LINK_FLAGS += -li2c
+	endif
+endif
