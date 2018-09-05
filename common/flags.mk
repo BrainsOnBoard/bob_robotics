@@ -21,6 +21,14 @@ endif
 # Improves build time
 CXXFLAGS += -pipe
 
+# Enable only a subset of functionality in units.h to speed up compile time
+CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
+		-DENABLE_PREDEFINED_LENGTH_UNITS \
+		-DENABLE_PREDEFINED_TIME_UNITS \
+		-DENABLE_PREDEFINED_ANGLE_UNITS \
+		-DENABLE_PREDEFINED_VELOCITY_UNITS \
+		-DENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
