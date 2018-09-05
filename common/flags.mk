@@ -18,6 +18,9 @@ else
 	CXXFLAGS += -O2
 endif
 
+# Improves build time
+CXXFLAGS += -pipe
+
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
