@@ -1,3 +1,4 @@
+WITH_MATPLOTLIBCPP := 1
 include ../../common/flags.mk
 CXXFLAGS += -I../.. `pkg-config --cflags eigen3`
 LINK_FLAGS += -fopenmp
@@ -19,4 +20,4 @@ infomax_matlab_comparison: infomax_matlab_comparison.cc infomax_matlab_compariso
 %.d: ;
 
 clean:
-	rm -f infomax_matlab_comparison infomax_matlab_comparison.d
+	rm -f infomax_matlab_comparison infomax_example *.d

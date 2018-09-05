@@ -4,10 +4,11 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <algorithm>
 #include <iostream>
 #include <random>
 #include <tuple>
-#include <utility>
+#include <vector>
 
 // Eigen
 #include <Eigen/Core>
@@ -75,6 +76,24 @@ public:
         return decs.array().abs().sum();
     }
 
+    auto getHeading(const cv::Mat &image) const
+    {
+        std::vector<FloatType> outputs;
+        outputs.reserve(image.cols / getScanStep());
+        rollImageTransform(image, [this, &outputs] (auto rollImage, auto) {
+            outputs.push_back(decision(rollImage));
+        });
+
+        const auto el = std::min_element(outputs.begin(), outputs.end());
+        int bestIndex = std::distance(outputs.begin(), el);
+        if (bestIndex > image.cols / 2) {
+            bestIndex -= image.cols;
+        }
+        const radian_t heading = units::make_unit<turn_t>((double) bestIndex / (double) image.cols);
+
+        return std::make_tuple(heading, *el, std::move(outputs));
+    }
+
     MatrixType &getWeights()
     {
         return m_Weights;
@@ -136,10 +155,11 @@ private:
             // Normalise mean and SD for row so mean == 0 and SD == 1
             auto row = weights.row(y);
             const auto mean = row.mean();
-            const auto sd = sqrt(row.unaryExpr([mean](FloatType val) {
-                                        const auto diff = mean - val;
-                                        return diff * diff;
-                                    }).sum());
+            const auto diffSq = [mean](FloatType val) {
+                const auto diff = mean - val;
+                return diff * diff;
+            };
+            const auto sd = sqrt(row.unaryExpr(diffSq).sum());
             row.array() -= mean;
             row.array() /= sd;
         }
