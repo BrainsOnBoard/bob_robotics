@@ -45,9 +45,7 @@ public:
       : VisualNavigationBase(unwrapRes, scanStep)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
-    {
-        std::cout << "Using " << nbThreads() << " threads" << std::endl;
-    }
+    {}
 
     InfoMax<FloatType>(const cv::Size &unwrapRes,
                        unsigned int scanStep = 1,
@@ -56,9 +54,7 @@ public:
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
                                     unwrapRes.width * unwrapRes.height))
-    {
-        std::cout << "Using " << nbThreads() << " threads" << std::endl;
-    }
+    {}
 
     virtual void train(const cv::Mat &image) override
     {
