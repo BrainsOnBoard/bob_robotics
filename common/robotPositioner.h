@@ -66,12 +66,12 @@ private:
                                   const millimeter_t robot_d) {
         // v = r * (Vl+Vr)/2
         // w = r * (Vr-Vl)/D
-        double a =  (robot_r/2).value(); //convert to cm
+        double a =  (robot_r/2).value(); 
         double b =  (robot_r/2).value();
         double c = ( robot_r / robot_d).value();
         double d = (-(robot_r / robot_d).value());
 
-        double e=(v.value()); // converting to millimeters/second 
+        double e=v.value(); 
         double f=w.value();
         double Vl,Vr;
 
