@@ -32,7 +32,9 @@ namespace Robots {
 class Surveyor : public Tank
 {
 public:
-    Surveyor(const std::string &address, unsigned int port)
+    Surveyor(const std::string &address, unsigned int port) :
+        m_robotWheelRadius(19_mm),
+        m_robotAxisLength(150_mm)
     {
         // Create socket
         m_Socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -85,11 +87,23 @@ public:
         }
     }
 
+    virtual millimeter_t getRobotWheelRadius() override
+    {
+        return m_robotWheelRadius;
+    }
+
+    virtual millimeter_t getRobotAxisLength() override
+    {
+        return m_robotAxisLength;
+    }
+
 private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
     int m_Socket;
+    millimeter_t m_robotWheelRadius;
+    millimeter_t m_robotAxisLength;
 }; // Surveyor
 } // Robots
 } // BoBRobotics

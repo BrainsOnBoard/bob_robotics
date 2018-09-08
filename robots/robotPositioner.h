@@ -65,7 +65,7 @@ private:
         const double a = (robot_wheel_radius/2).value(); 
         const double b = (robot_wheel_radius/robot_axis_length).value();
     
-        const double c=v.value(); 
+        const double c=v.value()*100; // converting to cm/s 
         const double d=w.value();
 
         // determinant
@@ -109,8 +109,6 @@ public:
 
     RobotPositioner(
         BoBRobotics::Robots::Tank &tank,
-        millimeter_t robot_r,                                         // robot's wheel radius
-        millimeter_t robot_D,                                         // robots' axis length
         millimeter_t stopping_distance,                               // if the robot's distance from goal < stopping dist, robot stops
         degree_t allowed_heading_error,                               // the amount of error allowed in the final heading
         double k1,                                                    // curveness of the path to the goal
@@ -119,8 +117,6 @@ public:
         double beta,                                                  // causes to drop velocity if 'k'(curveness) increases
         meters_per_second_t max_velocity                              // max velocity
         ) : m_bot(tank),
-            m_robot_wheel_radius(robot_r),
-            m_robot_axis_length(robot_D),
             m_stopping_distance(stopping_distance),
             m_allowed_heading_error(allowed_heading_error),
             m_k1(k1),
@@ -128,7 +124,10 @@ public:
             m_alpha(alpha),
             m_beta(beta),
             m_max_velocity(max_velocity) 
-    {/* setup */ }
+    {
+        m_robot_wheel_radius = tank.getRobotWheelRadius();
+        m_robot_axis_length  = tank.getRobotAxisLength();
+    }
 
     //! sets the goal pose (x, y, angle)
     void setGoalPose(millimeter_t pos_x, millimeter_t pos_y, degree_t goal_angle) {

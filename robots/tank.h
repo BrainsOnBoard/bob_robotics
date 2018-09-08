@@ -7,6 +7,9 @@
 #include "../hid/joystick.h"
 #include "../net/node.h"
 
+// third party includes
+#include "../third_party/units.h"
+
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
@@ -38,6 +41,16 @@ public:
     {
         std::cout << "Dummy motor: left: " << left << "; right: " << right
                   << std::endl;
+    }
+
+    virtual units::length::millimeter_t getRobotWheelRadius() 
+    {
+        return units::length::millimeter_t(0);
+    }
+
+    virtual units::length::millimeter_t getRobotAxisLength() 
+    {
+        return units::length::millimeter_t(0);
     }
 
     void readFromNetwork(Net::Node &node)

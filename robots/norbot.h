@@ -11,6 +11,9 @@
 #include "../common/i2c_interface.h"
 #include "tank.h"
 
+// third party includes
+#include "../third_party/units.h"
+
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
@@ -24,6 +27,8 @@ public:
       : m_I2C(path, slaveAddress)
       , m_Left(0.0f)
       , m_Right(0.0f)
+      , m_robotWheelRadius(34_mm)
+      , m_robotAxisLength(104_mm)
     {}
 
     //----------------------------------------------------------------------------
@@ -40,6 +45,16 @@ public:
 
         // Send buffer
         write(buffer);
+    }
+
+    virtual millimeter_t getRobotWheelRadius() override
+    {
+        return m_robotWheelRadius;
+    }
+
+    virtual millimeter_t getRobotAxisLength() override
+    {
+        return m_robotAxisLength;
     }
 
     //----------------------------------------------------------------------------
@@ -84,6 +99,8 @@ private:
     BoBRobotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
+    millimeter_t m_robotWheelRadius;
+    millimeter_t m_robotAxisLength;
 }; // Norbot
 } // Robots
 } // BoBRobotics
