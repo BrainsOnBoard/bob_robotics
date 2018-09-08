@@ -172,6 +172,5 @@ public:
     }
 
 };// RobotPositioner
-
 } // Robots
 } // BoBRobotics
