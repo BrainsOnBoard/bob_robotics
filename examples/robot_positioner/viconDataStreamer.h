@@ -6,8 +6,6 @@
 #include "../../vicon/capture_control.h"
 #include "../../vicon/udp.h"
 
-#include "../../third_party/units.h"
-
 using namespace BoBRobotics::Vicon;
 
 class ViconDataStreamer {
