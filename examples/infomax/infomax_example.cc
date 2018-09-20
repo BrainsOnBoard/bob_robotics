@@ -23,14 +23,14 @@ namespace plt = matplotlibcpp;
 int
 main()
 {
-    const cv::Size imSize{ 25, 90 };
+    const cv::Size imSize{ 90, 25 };
     const filesystem::path routePath = "../../tools/ant_world_db_creator/ant1_route1";
 
     std::cout << "Eigen is using " << Eigen::nbThreads() << " threads." << std::endl
               << std::endl;
 
     // Object to run InfoMax algorithm
-    InfoMax<> infomax(imSize);
+    InfoMax<double> infomax(imSize);
 
     // Train network
     {
@@ -51,6 +51,7 @@ main()
               << static_cast<degree_t>(std::get<0>(result)) << std::endl;
 
     plt::plot(std::get<2>(result));
+    plt::xlim(0, 90);
     plt::show();
 
     return 0;
