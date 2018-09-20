@@ -18,6 +18,17 @@ else
 	CXXFLAGS += -O2
 endif
 
+# Improves build time
+CXXFLAGS += -pipe
+
+# Enable only a subset of functionality in units.h to speed up compile time
+CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
+		-DENABLE_PREDEFINED_LENGTH_UNITS \
+		-DENABLE_PREDEFINED_TIME_UNITS \
+		-DENABLE_PREDEFINED_ANGLE_UNITS \
+		-DENABLE_PREDEFINED_VELOCITY_UNITS \
+		-DENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
@@ -38,4 +49,10 @@ ifdef WITH_MATPLOTLIBCPP
 
 	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
+endif
+
+ifdef WITH_I2C
+	ifeq (0,$(shell ../../common/is_i2c_tools_new.sh; echo $$?))
+	LINK_FLAGS += -li2c
+	endif
 endif
