@@ -27,9 +27,8 @@ namespace Navigation {
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes, const unsigned int scanStep)
+    VisualNavigationBase(const cv::Size unwrapRes)
       : m_UnwrapRes(unwrapRes)
-      , m_ScanStep(scanStep)
     {}
 
     //------------------------------------------------------------------------
@@ -73,12 +72,6 @@ public:
         assert(m_MaskImage.type() == CV_8UC1);
     }
 
-    //! Number of pixels for each scanning "step" when doing RIDF
-    inline unsigned int getScanStep() const
-    {
-        return m_ScanStep;
-    }
-
     //! Return mask image
     const cv::Mat &getMaskImage() const
     {
@@ -96,7 +89,6 @@ private:
     // Private members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
-    const unsigned int m_ScanStep;
     cv::Mat m_MaskImage;
 
     bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept

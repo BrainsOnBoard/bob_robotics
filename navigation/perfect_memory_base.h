@@ -33,11 +33,15 @@ using namespace units::literals;
 
 class InSilicoRotater
 {
-    public:
-    InSilicoRotater(unsigned int scanStep, const cv::Mat &image)
+public:
+    InSilicoRotater(const cv::Size &unwrapRes, const cv::Mat &image, const unsigned int scanStep = 1)
       : m_CurrentRotation(0)
       , m_ScanStep(scanStep)
     {
+        assert(image.cols == unwrapRes.width);
+        assert(image.rows == unwrapRes.height);
+        assert(image.type() == CV_8UC1);
+
         image.copyTo(m_ScratchImage);
     }
 
@@ -76,7 +80,7 @@ class InSilicoRotater
         return m_ScratchImage.cols / m_ScanStep;
     }
 
-    private:
+private:
     int m_CurrentRotation;
     const unsigned int m_ScanStep;
     cv::Mat m_ScratchImage;
@@ -91,8 +95,8 @@ class PerfectMemoryBase
   : public VisualNavigationBase
 {
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1)
-      : VisualNavigationBase(unwrapRes, scanStep)
+    PerfectMemoryBase(const cv::Size unwrapRes)
+      : VisualNavigationBase(unwrapRes)
     {}
 
     //------------------------------------------------------------------------
@@ -119,17 +123,13 @@ public:
     }
 
     //! Get differences between image and stored snapshots
-    std::vector<std::vector<float>> getImageDifferences(const cv::Mat &image) const
+    template<class... Ts>
+    std::vector<std::vector<float>> getImageDifferences(Ts&&... args) const
     {
-        const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
-
         const size_t numSnapshots = getNumSnapshots();
         assert(numSnapshots > 0);
 
-        Rotater rotater(getScanStep(), image);
+        Rotater rotater(getUnwrapResolution(), std::forward<Ts>(args)...);
 
         // Create vector to store RIDF values
         std::vector<std::vector<float>> differences(numSnapshots);
@@ -156,9 +156,10 @@ public:
     }
 
     //! Get an estimate for heading based on comparing image with stored snapshots
-    auto getHeading(const cv::Mat &image) const
+    template<class... Ts>
+    auto getHeading(Ts&&... args) const
     {
-        std::vector<std::vector<float>> differences = getImageDifferences(image);
+        auto differences = getImageDifferences(std::forward<Ts>(args)...);
         const size_t numSnapshots = getNumSnapshots();
 
         // Now get the minimum for each snapshot and the column this corresponds to
