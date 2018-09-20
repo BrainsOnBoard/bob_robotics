@@ -138,6 +138,8 @@ public:
     SpikeCSVRecorderDelay(const char *filename, unsigned int popSize, const unsigned int &spkQueuePtr, const unsigned int *spkCnt, const unsigned int *spk)
     : m_Stream(filename), m_SpkQueuePtr(spkQueuePtr), m_SpkCnt(spkCnt), m_Spk(spk), m_PopSize(popSize)
     {
+        // Set precision
+        m_Stream.precision(16);
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
@@ -186,6 +188,8 @@ public:
     SpikeCSVRecorderDelayCached(const char *filename, unsigned int popSize, const unsigned int &spkQueuePtr, const unsigned int *spkCnt, const unsigned int *spk)
     : m_Stream(filename), m_SpkQueuePtr(spkQueuePtr), m_SpkCnt(spkCnt), m_Spk(spk), m_PopSize(popSize)
     {
+        // Set precision
+        m_Stream.precision(16);
         m_Stream << "Time [ms], Neuron ID" << std::endl;
     }
 
