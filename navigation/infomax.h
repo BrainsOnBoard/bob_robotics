@@ -139,8 +139,7 @@ private:
     {
         MatrixType weights(numInputs, numHidden);
 
-        std::random_device rd;
-        std::default_random_engine generator(0);
+        std::default_random_engine generator;
         std::normal_distribution<FloatType> distribution;
         for (int y = 0; y < weights.rows(); y++) {
             for (int x = 0; x < weights.cols(); x++) {
