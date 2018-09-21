@@ -9,6 +9,7 @@ class InSilicoRotater
 {
 public:
     InSilicoRotater(const cv::Size &unwrapRes,
+                    const cv::Mat &maskImage,
                     const cv::Mat &image,
                     const unsigned int scanStep = 1)
       : m_CurrentRotation(0)
@@ -19,11 +20,17 @@ public:
         assert(image.type() == CV_8UC1);
 
         image.copyTo(m_ScratchImage);
+        maskImage.copyTo(m_ScratchMaskImage);
     }
 
     cv::Mat &getImage()
     {
         return m_ScratchImage;
+    }
+
+    cv::Mat &getMaskImage()
+    {
+        return m_ScratchMaskImage;
     }
 
     bool next()
@@ -33,13 +40,9 @@ public:
             return false;
         }
 
-        // Loop through rows
-        for (int y = 0; y < m_ScratchImage.rows; y++) {
-            // Get pointer to start of row
-            uint8_t *rowPtr = m_ScratchImage.ptr(y);
-
-            // Rotate row to left by m_ScanStep pixels
-            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + m_ScratchImage.cols);
+        rollImage(m_ScratchImage);
+        if (!m_ScratchMaskImage.empty()) {
+            rollImage(m_ScratchMaskImage);
         }
         m_CurrentRotation = next;
 
@@ -59,7 +62,19 @@ public:
 private:
     int m_CurrentRotation;
     const unsigned int m_ScanStep;
-    cv::Mat m_ScratchImage;
+    cv::Mat m_ScratchImage, m_ScratchMaskImage;
+
+    void rollImage(cv::Mat &image)
+    {
+        // Loop through rows
+        for (int y = 0; y < image.rows; y++) {
+            // Get pointer to start of row
+            uint8_t *rowPtr = image.ptr(y);
+
+            // Rotate row to left by m_ScanStep pixels
+            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + image.cols);
+        }
+    }
 };
 } // Navigation
 } // BoBRobotics

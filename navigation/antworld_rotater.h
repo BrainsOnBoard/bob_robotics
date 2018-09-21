@@ -21,6 +21,7 @@ class AntWorldRotater
 {
 public:
     AntWorldRotater(const cv::Size &unwrapRes,
+                    const cv::Mat &maskImage,
                     AntWorld::AntAgent &agent,
                     const degree_t yawStep = 1_deg,
                     const degree_t pitch = 0_deg,
@@ -31,12 +32,21 @@ public:
       , m_Roll(roll)
     {
         assert(agent.getOutputSize() == unwrapRes);
+
+        // This rotater doesn't support mask images
+        assert(maskImage.empty());
+
         loadImage();
     }
 
     cv::Mat &getImage()
     {
         return m_Frame;
+    }
+
+    cv::Mat getMaskImage()
+    {
+        return cv::Mat();
     }
 
     bool next()

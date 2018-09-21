@@ -75,7 +75,8 @@ public:
         const size_t numSnapshots = getNumSnapshots();
         assert(numSnapshots > 0);
 
-        Rotater rotater(getUnwrapResolution(), std::forward<Ts>(args)...);
+        Rotater rotater(getUnwrapResolution(), getMaskImage(),
+                        std::forward<Ts>(args)...);
 
         // Create vector to store RIDF values
         std::vector<std::vector<float>> differences(numSnapshots);
@@ -88,14 +89,11 @@ public:
             // Loop through snapshots
             for (size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
-                const auto diff = calcSnapshotDifference(rotater.getImage(), m_ScratchMaskImage, s);
+                const auto diff = calcSnapshotDifference(rotater.getImage(),
+                                                         rotater.getMaskImage(),
+                                                         s);
                 differences[s][rotater.count()] = diff;
             }
-
-            // **TODO**: Add this feature back in!
-            // if (!m_ScratchMaskImage.empty()) {
-            //     rollImage(m_ScratchMaskImage);
-            // }
         } while (rotater.next());
 
         return differences;
@@ -131,11 +129,6 @@ protected:
 
     //! Calculate difference between memory and snapshot with index
     virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const = 0;
-
-    //------------------------------------------------------------------------
-    // Members
-    //------------------------------------------------------------------------
-    mutable cv::Mat m_ScratchMaskImage;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics
