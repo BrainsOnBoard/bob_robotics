@@ -30,7 +30,7 @@ main()
               << std::endl;
 
     // Object to run InfoMax algorithm
-    InfoMax<double> infomax(imSize);
+    InfoMax<> infomax(imSize);
 
     // Train network
     {
