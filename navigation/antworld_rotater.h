@@ -58,13 +58,12 @@ private:
     AntWorld::AntAgent &m_Agent;
     const degree_t m_YawStep, m_Pitch, m_Roll;
     degree_t m_CurrentYaw = 0_deg;
-    cv::Mat m_FrameRGB, m_Frame;
+    cv::Mat m_Frame;
 
     void loadImage()
     {
         m_Agent.setAttitude(m_CurrentYaw, m_Pitch, m_Roll);
-        m_Agent.readFrame(m_FrameRGB);
-        cv::cvtColor(m_FrameRGB, m_Frame, CV_BGR2GRAY);
+        m_Agent.readGreyscaleFrame(m_Frame);
     }
 }; // AntWorldRotater
 } // Navigation
