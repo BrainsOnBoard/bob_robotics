@@ -24,7 +24,7 @@
 
 using namespace std::literals;
 using namespace Eigen;
-using namespace BoBRobotics;
+using namespace BoBRobotics::Navigation;
 
 template<typename T = double>
 auto
@@ -69,7 +69,7 @@ runTest(const filesystem::path &dataPath, int num)
                         CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
 
     // Make our InfoMax runner object
-    Navigation::InfoMax<double> infomax(image.size(), initWeights);
+    InfoMax<InSilicoRotater, double> infomax(image.size(), initWeights);
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;

@@ -37,8 +37,8 @@ main()
         std::cout << "Training InfoMax network..." << std::endl;
         Timer<> trainingTimer{ "Network trained in: " };
         for (unsigned i = 0; i < 810; i += 10) {
-            const auto filename = getRouteDatabaseFilename(i);
-            infomax.trainFromFile(routePath / filename, true);
+            const filesystem::path filepath = routePath / getRouteDatabaseFilename(i);
+            infomax.VisualNavigationBase::train(filepath, true);
         }
     }
 

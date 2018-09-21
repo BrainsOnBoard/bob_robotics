@@ -20,6 +20,7 @@
 #include "../third_party/units.h"
 
 // Local includes
+#include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
 namespace BoBRobotics {
@@ -30,7 +31,7 @@ using namespace units::angle;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
-template<typename FloatType = float>
+template<typename Rotater = InSilicoRotater, typename FloatType = float>
 class InfoMax
   : public VisualNavigationBase
 {
@@ -38,19 +39,17 @@ using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
 using VectorType = Matrix<FloatType, Dynamic, 1>;
 
 public:
-    InfoMax<FloatType>(const cv::Size &unwrapRes,
-                       const MatrixType &initialWeights,
-                       unsigned int scanStep = 1,
-                       FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes, scanStep)
+    InfoMax<Rotater, FloatType>(const cv::Size &unwrapRes,
+                                const MatrixType &initialWeights,
+                                FloatType learningRate = 0.0001)
+      : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
     {}
 
-    InfoMax<FloatType>(const cv::Size &unwrapRes,
-                       unsigned int scanStep = 1,
-                       FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes, scanStep)
+    InfoMax<Rotater, FloatType>(const cv::Size &unwrapRes,
+                                FloatType learningRate = 0.0001)
+      : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
                                     unwrapRes.width * unwrapRes.height))
@@ -72,20 +71,22 @@ public:
         return decs.array().abs().sum();
     }
 
-    auto getHeading(const cv::Mat &image) const
+    template<class... Ts>
+    auto getHeading(Ts &&... args) const
     {
+        Rotater rotater(getUnwrapResolution(), getMaskImage(), std::forward<Ts>(args)...);
         std::vector<FloatType> outputs;
-        outputs.reserve(image.cols / getScanStep());
-        rollImageTransform(image, [this, &outputs] (auto rollImage, auto) {
-            outputs.push_back(decision(rollImage));
+        outputs.reserve(rotater.max());
+        rotater([this, &outputs] (const cv::Mat &image, auto, auto) {
+            outputs.push_back(decision(image));
         });
 
         const auto el = std::min_element(outputs.begin(), outputs.end());
-        int bestIndex = std::distance(outputs.begin(), el);
-        if (bestIndex > image.cols / 2) {
-            bestIndex -= image.cols;
+        size_t bestIndex = std::distance(outputs.begin(), el);
+        if (bestIndex > outputs.size() / 2) {
+            bestIndex -= outputs.size();
         }
-        const radian_t heading = units::make_unit<turn_t>((double) bestIndex / (double) image.cols);
+        const radian_t heading = units::make_unit<turn_t>((double) bestIndex / (double) outputs.size());
 
         return std::make_tuple(heading, *el, std::move(outputs));
     }
