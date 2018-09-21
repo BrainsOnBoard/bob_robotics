@@ -93,7 +93,7 @@ main()
 
     // Create agent object
     AntWorld::AntAgent agent(window, renderer, renderWidth, renderHeight);
-    agent.setPosition(5_m, 5_m, 10_mm);
+    agent.setPosition(5.5_m, 4_m, 10_mm);
 
     const cv::Size imSize(renderWidth, renderHeight);
     degree_t heading;
