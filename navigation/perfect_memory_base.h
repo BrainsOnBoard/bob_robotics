@@ -16,32 +16,33 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "../common/image_database.h"
-
 // Third-party includes
 #include "../third_party/units.h"
 
+// BoB robotics includes
+#include "../common/image_database.h"
+
 // Local includes
+#include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::literals;
 using namespace units::angle;
 using namespace units::dimensionless;
+using namespace units::literals;
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryBase
 //------------------------------------------------------------------------
 //! An abstract class which is the base for PerfectMemory and PerfectMemoryHOG
-template<typename RIDFProcessor>
+template<typename RIDFProcessor, typename Rotater = InSilicoRotater>
 class PerfectMemoryBase
   : public VisualNavigationBase
 {
 public:
-    PerfectMemoryBase(const cv::Size unwrapRes, const unsigned int scanStep = 1)
-      : VisualNavigationBase(unwrapRes, scanStep)
+    PerfectMemoryBase(const cv::Size unwrapRes)
+      : VisualNavigationBase(unwrapRes)
     {}
 
     //------------------------------------------------------------------------
@@ -67,33 +68,54 @@ public:
         addSnapshot(image);
     }
 
-    //! Get differences between image and stored snapshots
-    std::vector<std::vector<float>> getImageDifferences(const cv::Mat &image) const
+    /*!
+     * \brief Get differences between current view and stored snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step and for the AntWorldRotater, one passes in one or more
+     * angles.
+     */
+    template<class... Ts>
+    std::vector<std::vector<float>> getImageDifferences(Ts &&... args) const
     {
-        assert(getNumSnapshots() > 0);
+        const size_t numSnapshots = getNumSnapshots();
+        assert(numSnapshots > 0);
+
+        Rotater rotater(getUnwrapResolution(), getMaskImage(), std::forward<Ts>(args)...);
 
         // Create vector to store RIDF values
         std::vector<std::vector<float>> differences(getNumSnapshots());
         for (auto &d : differences) {
-            d.reserve(image.cols / getScanStep());
+            d.resize(rotater.max());
         }
 
-        auto saveDifference = [this, &differences] (auto rollImage, auto maskImage) {
+        // Scan across image columns
+        rotater([this, &differences, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
             // Loop through snapshots
-            for (size_t s = 0; s < getNumSnapshots(); s++) {
+            for (size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
-                differences[s].emplace_back(calcSnapshotDifference(rollImage, maskImage, s));
+                const auto diff = calcSnapshotDifference(fr, mask, s);
+                differences[s][i] = diff;
             }
-        };
-        rollImageTransform(image, saveDifference);
+        });
 
         return differences;
     }
 
-    //! Get an estimate for heading based on comparing image with stored snapshots
-    auto getHeading(const cv::Mat &image) const
+    /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step and for the AntWorldRotater, one passes in one or more
+     * angles.
+     */
+    template<class... Ts>
+    auto getHeading(Ts &&... args) const
     {
-        std::vector<std::vector<float>> differences = getImageDifferences(image);
+        auto differences = getImageDifferences(std::forward<Ts>(args)...);
         const size_t numSnapshots = getNumSnapshots();
 
         // Now get the minimum for each snapshot and the column this corresponds to

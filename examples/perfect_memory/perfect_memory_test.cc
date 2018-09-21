@@ -47,7 +47,7 @@ main()
 
     {
         std::cout << std::endl << "Testing with RMS image difference..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, RMSDiff> pm(imSize);
+        PerfectMemory<BestMatchingSnapshot, InSilicoRotater, RMSDiff> pm(imSize);
         trainRoute(pm);
 
         // Time testing phase

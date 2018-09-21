@@ -24,15 +24,15 @@ namespace Navigation {
 //------------------------------------------------------------------------
 //! Perfect memory algorithm using HOG features instead of raw image matching
 template<typename RIDFProcessor = BestMatchingSnapshot,
+         typename Rotater = InSilicoRotater,
          typename Differencer = AbsDiff>
-class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor>
+class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor, Rotater>
 {
 public:
     PerfectMemoryHOG(const cv::Size unwrapRes,
-                     const unsigned int scanStep = 1,
                      const int HOGPixelsPerCell = 10,
                      int HOGOrientations = 8)
-      : PerfectMemoryBase<RIDFProcessor>(unwrapRes, scanStep)
+      : PerfectMemoryBase<RIDFProcessor, Rotater>(unwrapRes)
       , m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
                             HOGOrientations / (HOGPixelsPerCell * HOGPixelsPerCell))
       , m_Differencer(m_HOGDescriptorSize)

@@ -27,9 +27,8 @@ namespace Navigation {
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes, const unsigned int scanStep)
+    VisualNavigationBase(const cv::Size unwrapRes)
       : m_UnwrapRes(unwrapRes)
-      , m_ScanStep(scanStep)
     {}
 
     //------------------------------------------------------------------------
@@ -42,7 +41,7 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Train with image at specified path
-    void trainFromFile(const filesystem::path &imagePath, bool resizeImage = false)
+    void train(const filesystem::path &imagePath, bool resizeImage = false)
     {
         if (!tryTrain(imagePath, resizeImage)) {
             throw std::runtime_error("Path " + imagePath.str() + " does not exist");
@@ -73,12 +72,6 @@ public:
         assert(m_MaskImage.type() == CV_8UC1);
     }
 
-    //! Number of pixels for each scanning "step" when doing RIDF
-    inline unsigned int getScanStep() const
-    {
-        return m_ScanStep;
-    }
-
     //! Return mask image
     const cv::Mat &getMaskImage() const
     {
@@ -96,11 +89,7 @@ private:
     // Private members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
-    const unsigned int m_ScanStep;
     cv::Mat m_MaskImage;
-
-    mutable cv::Mat m_ScratchMaskImage;
-    mutable cv::Mat m_ScratchRollImage;
 
     bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept
     {
@@ -122,41 +111,6 @@ private:
         train(image);
 
         return true;
-    }
-
-protected:
-    //! 'Rolls' an image to the left
-    void rollImage(cv::Mat &image) const noexcept
-    {
-        // Loop through rows
-        for (int y = 0; y < image.rows; y++) {
-            // Get pointer to start of row
-            uint8_t *rowPtr = image.ptr(y);
-
-            // Rotate row to left by m_ScanStep pixels
-            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + image.cols);
-        }
-    }
-
-protected:
-    template<typename BinaryOp>
-    void rollImageTransform(const cv::Mat &image, BinaryOp fun) const
-    {
-        assert(image.cols == m_UnwrapRes.width);
-        assert(image.rows == m_UnwrapRes.height);
-        assert(image.type() == CV_8UC1);
-
-        image.copyTo(m_ScratchRollImage);
-        m_MaskImage.copyTo(m_ScratchMaskImage);
-
-        for (int col = 0; col < m_ScratchRollImage.cols; col += m_ScanStep) {
-            fun(m_ScratchRollImage, m_ScratchMaskImage);
-
-            rollImage(m_ScratchRollImage);
-            if (!m_ScratchMaskImage.empty()) {
-                rollImage(m_ScratchMaskImage);
-            }
-        }
     }
 }; // PerfectMemoryBase
 } // Navigation
