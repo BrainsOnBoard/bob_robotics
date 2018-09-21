@@ -99,20 +99,43 @@ main()
     const cv::Size imSize(renderWidth, renderHeight);
     degree_t heading;
 
-    std::cout << "Testing with best-matching snapshot method..." << std::endl;
+    {
+        std::cout << "Using ant world rotater..." << std::endl;
+        PerfectMemory<BestMatchingSnapshot, AbsDiff, AntWorldRotater> pm(imSize);
+        trainRoute(pm);
 
-    // Default algorithm: find best-matching snapshot, use abs diff
-    PerfectMemory<BestMatchingSnapshot, AbsDiff, AntWorldRotater> pm(imSize);
-    trainRoute(pm);
+        size_t snapshot;
+        float difference;
+        std::vector<std::vector<float>> allDifferences;
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(agent, 2_deg);
+        std::cout << "Heading: " << heading << std::endl;
+        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
+        std::cout << "Difference score: " << difference << std::endl;
 
-    size_t snapshot;
-    float difference;
-    std::vector<std::vector<float>> allDifferences;
-    std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(agent, 2_deg);
-    std::cout << "Heading: " << heading << std::endl;
-    std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-    std::cout << "Difference score: " << difference << std::endl;
+        // Plot RIDF
+        plotRIDF(allDifferences[snapshot]);
+        std::cout << std::endl;
+    }
 
-    // Plot RIDF
-    plotRIDF(allDifferences[snapshot]);
+    {
+        std::cout << "Using in silico rotater..." << std::endl;
+        PerfectMemory<BestMatchingSnapshot, AbsDiff, InSilicoRotater> pm(imSize);
+        trainRoute(pm);
+
+        agent.setAttitude(0_deg, 0_deg, 0_deg);
+        cv::Mat fr;
+        agent.readGreyscaleFrame(fr);
+
+        size_t snapshot;
+        float difference;
+        std::vector<std::vector<float>> allDifferences;
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(fr);
+        std::cout << "Heading: " << heading << std::endl;
+        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
+        std::cout << "Difference score: " << difference << std::endl;
+
+        // Plot RIDF
+        plotRIDF(allDifferences[snapshot]);
+        std::cout << std::endl;
+    }
 }
