@@ -32,8 +32,8 @@ namespace Navigation {
  * \tparam Differencer This can be AbsDiff or RMSDiff
  */
 template<typename RIDFProcessor = BestMatchingSnapshot,
-         typename Differencer = AbsDiff,
-         typename Rotater = InSilicoRotater>
+         typename Rotater = InSilicoRotater,
+         typename Differencer = AbsDiff>
 class PerfectMemory
   : public PerfectMemoryBase<RIDFProcessor, Rotater>
 {

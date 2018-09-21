@@ -24,8 +24,8 @@ namespace Navigation {
 //------------------------------------------------------------------------
 //! Perfect memory algorithm using HOG features instead of raw image matching
 template<typename RIDFProcessor = BestMatchingSnapshot,
-         typename Differencer = AbsDiff,
-         typename Rotater = InSilicoRotater>
+         typename Rotater = InSilicoRotater,
+         typename Differencer = AbsDiff>
 class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor, Rotater>
 {
 public:

@@ -101,7 +101,7 @@ main()
 
     {
         std::cout << "Using ant world rotater..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, AbsDiff, AntWorldRotater> pm(imSize);
+        PerfectMemory<BestMatchingSnapshot, AntWorldRotater> pm(imSize);
         trainRoute(pm);
 
         size_t snapshot;
@@ -119,7 +119,7 @@ main()
 
     {
         std::cout << "Using in silico rotater..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, AbsDiff, InSilicoRotater> pm(imSize);
+        PerfectMemory<BestMatchingSnapshot, InSilicoRotater> pm(imSize);
         trainRoute(pm);
 
         agent.setAttitude(0_deg, 0_deg, 0_deg);
