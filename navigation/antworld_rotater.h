@@ -1,16 +1,17 @@
 #pragma once
 
-// BoB robotics includes
-#include "../common/timer.h"
-#include "../libantworld/agent.h"
+// Standard C includes
+#include <cassert>
 
 // Third-party includes
 #include "../third_party/units.h"
 
+// BoB robotics includes
+#include "../libantworld/agent.h"
+
 namespace BoBRobotics {
 namespace Navigation {
 using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
 
 //------------------------------------------------------------------------
@@ -19,12 +20,17 @@ using namespace units::literals;
 class AntWorldRotater
 {
 public:
-    AntWorldRotater(const cv::Size &, AntWorld::AntAgent &agent, const degree_t yawStep = 1_deg, const degree_t pitch = 0_deg, const degree_t roll = 0_deg)
+    AntWorldRotater(const cv::Size &unwrapRes,
+                    AntWorld::AntAgent &agent,
+                    const degree_t yawStep = 1_deg,
+                    const degree_t pitch = 0_deg,
+                    const degree_t roll = 0_deg)
       : m_Agent(agent)
       , m_YawStep(yawStep)
       , m_Pitch(pitch)
       , m_Roll(roll)
     {
+        assert(agent.getOutputSize() == unwrapRes);
         loadImage();
     }
 
