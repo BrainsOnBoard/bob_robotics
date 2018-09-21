@@ -20,57 +20,43 @@ public:
                     const cv::Mat &maskImage,
                     const cv::Mat &image,
                     const unsigned int scanStep = 1)
-      : m_CurrentRotation(0)
-      , m_ScanStep(scanStep)
+      : m_ScanStep(scanStep)
     {
         assert(image.cols == unwrapRes.width);
         assert(image.rows == unwrapRes.height);
         assert(image.type() == CV_8UC1);
 
-        image.copyTo(m_ScratchImage);
-        maskImage.copyTo(m_ScratchMaskImage);
+        image.copyTo(m_Image);
+        maskImage.copyTo(m_MaskImage);
     }
 
-    cv::Mat &getImage()
+    template<class Func>
+    void operator()(Func func)
     {
-        return m_ScratchImage;
-    }
+        size_t i = 0;
+        while (true) {
+            func(m_Image, m_MaskImage, i);
 
-    cv::Mat &getMaskImage()
-    {
-        return m_ScratchMaskImage;
-    }
+            i += m_ScanStep;
+            if (i >= (size_t) m_Image.cols) {
+                break;
+            }
 
-    bool next()
-    {
-        int next = m_CurrentRotation + m_ScanStep;
-        if (next >= m_ScratchImage.cols) {
-            return false;
+            rollImage(m_Image);
+            if (!m_MaskImage.empty()) {
+                rollImage(m_MaskImage);
+            }
         }
-
-        rollImage(m_ScratchImage);
-        if (!m_ScratchMaskImage.empty()) {
-            rollImage(m_ScratchMaskImage);
-        }
-        m_CurrentRotation = next;
-
-        return true;
-    }
-
-    size_t count() const
-    {
-        return m_CurrentRotation / m_ScanStep;
     }
 
     size_t max() const
     {
-        return m_ScratchImage.cols / m_ScanStep;
+        return m_Image.cols / m_ScanStep;
     }
 
 private:
-    int m_CurrentRotation;
     const unsigned int m_ScanStep;
-    cv::Mat m_ScratchImage, m_ScratchMaskImage;
+    cv::Mat m_Image, m_MaskImage;
 
     void rollImage(cv::Mat &image)
     {

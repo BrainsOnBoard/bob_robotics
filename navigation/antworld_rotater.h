@@ -39,34 +39,18 @@ public:
 
         // This rotater doesn't support mask images
         assert(maskImage.empty());
-
-        loadImage();
     }
 
-    cv::Mat &getImage()
+    template<class Func>
+    void operator()(Func func)
     {
-        return m_Frame;
-    }
-
-    cv::Mat getMaskImage()
-    {
-        return cv::Mat();
-    }
-
-    bool next()
-    {
-        m_CurrentYaw += m_YawStep;
-        if (m_CurrentYaw >= 360_deg) {
-            return false;
+        cv::Mat fr, mask;
+        size_t i = 0;
+        for (degree_t yaw = 0_deg; yaw < 360_deg; yaw += m_YawStep, i++) {
+            m_Agent.setAttitude(yaw, m_Pitch, m_Roll);
+            m_Agent.readGreyscaleFrame(fr);
+            func(fr, mask, i);
         }
-
-        loadImage();
-        return true;
-    }
-
-    size_t count() const
-    {
-        return m_CurrentYaw / m_YawStep;
     }
 
     size_t max() const
@@ -77,14 +61,6 @@ public:
 private:
     AntWorld::AntAgent &m_Agent;
     const degree_t m_YawStep, m_Pitch, m_Roll;
-    degree_t m_CurrentYaw = 0_deg;
-    cv::Mat m_Frame;
-
-    void loadImage()
-    {
-        m_Agent.setAttitude(m_CurrentYaw, m_Pitch, m_Roll);
-        m_Agent.readGreyscaleFrame(m_Frame);
-    }
 }; // AntWorldRotater
 } // Navigation
 } // BoBRobotics

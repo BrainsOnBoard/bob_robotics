@@ -77,13 +77,12 @@ public:
      * angles.
      */
     template<class... Ts>
-    std::vector<std::vector<float>> getImageDifferences(Ts&&... args) const
+    std::vector<std::vector<float>> getImageDifferences(Ts &&... args) const
     {
         const size_t numSnapshots = getNumSnapshots();
         assert(numSnapshots > 0);
 
-        Rotater rotater(getUnwrapResolution(), getMaskImage(),
-                        std::forward<Ts>(args)...);
+        Rotater rotater(getUnwrapResolution(), getMaskImage(), std::forward<Ts>(args)...);
 
         // Create vector to store RIDF values
         std::vector<std::vector<float>> differences(numSnapshots);
@@ -92,16 +91,14 @@ public:
         }
 
         // Scan across image columns
-        do {
+        rotater([this, &differences, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
             // Loop through snapshots
             for (size_t s = 0; s < numSnapshots; s++) {
                 // Calculate difference
-                const auto diff = calcSnapshotDifference(rotater.getImage(),
-                                                         rotater.getMaskImage(),
-                                                         s);
-                differences[s][rotater.count()] = diff;
+                const auto diff = calcSnapshotDifference(fr, mask, s);
+                differences[s][i] = diff;
             }
-        } while (rotater.next());
+        });
 
         return differences;
     }
@@ -116,7 +113,7 @@ public:
      * angles.
      */
     template<class... Ts>
-    auto getHeading(Ts&&... args) const
+    auto getHeading(Ts &&... args) const
     {
         auto differences = getImageDifferences(std::forward<Ts>(args)...);
         const size_t numSnapshots = getNumSnapshots();
