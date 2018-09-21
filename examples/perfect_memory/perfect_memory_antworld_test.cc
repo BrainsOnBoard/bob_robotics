@@ -4,6 +4,7 @@
 // BoB robotics includes
 #include "navigation/antworld_rotater.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/plot.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
@@ -111,4 +112,7 @@ main()
     std::cout << "Heading: " << heading << std::endl;
     std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
     std::cout << "Difference score: " << difference << std::endl;
+
+    // Plot RIDF
+    plotRIDF(allDifferences[snapshot]);
 }
