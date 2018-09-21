@@ -5,6 +5,14 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::InSilicoRotater
+//------------------------------------------------------------------------
+/*!
+ * \brief A "rotater" for PerfectMemoryBase classes which rotates a panoramic
+ *        image by moving columns of pixels from one side of the image to the
+ *        other
+ */
 class InSilicoRotater
 {
 public:

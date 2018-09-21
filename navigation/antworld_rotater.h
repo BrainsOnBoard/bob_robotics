@@ -17,6 +17,10 @@ using namespace units::literals;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::AntWorldRotater
 //------------------------------------------------------------------------
+/*!
+ * \brief A "rotater" for PerfectMemoryBase classes which uses OpenGL to rotate
+ *        in AntWorld
+ */
 class AntWorldRotater
 {
 public:

@@ -29,6 +29,7 @@ namespace Navigation {
  * \brief The conventional perfect memory (RIDF) algorithm
  *
  * \tparam RIDFProcessor The method used to calculate the heading (e.g. single snapshot v. multi-snapshot)
+ * \tparam Rotater Method used to rotate current view (e.g. InSilicoRotater or AntWorldRotater)
  * \tparam Differencer This can be AbsDiff or RMSDiff
  */
 template<typename RIDFProcessor = BestMatchingSnapshot,

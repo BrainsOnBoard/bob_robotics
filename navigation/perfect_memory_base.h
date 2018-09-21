@@ -68,7 +68,14 @@ public:
         addSnapshot(image);
     }
 
-    //! Get differences between image and stored snapshots
+    /*!
+     * \brief Get differences between current view and stored snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step and for the AntWorldRotater, one passes in one or more
+     * angles.
+     */
     template<class... Ts>
     std::vector<std::vector<float>> getImageDifferences(Ts&&... args) const
     {
@@ -99,7 +106,15 @@ public:
         return differences;
     }
 
-    //! Get an estimate for heading based on comparing image with stored snapshots
+    /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step and for the AntWorldRotater, one passes in one or more
+     * angles.
+     */
     template<class... Ts>
     auto getHeading(Ts&&... args) const
     {
