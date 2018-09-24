@@ -91,14 +91,16 @@ public:
         }
 
         // Scan across image columns
-        rotater([this, &differences, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
-            // Loop through snapshots
-            for (size_t s = 0; s < numSnapshots; s++) {
-                // Calculate difference
-                const auto diff = calcSnapshotDifference(fr, mask, s);
-                differences[s][i] = diff;
-            }
-        });
+        rotater(
+            [this, &differences, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i)
+            {
+                // Loop through snapshots
+                for (size_t s = 0; s < numSnapshots; s++) {
+                    // Calculate difference
+                    const auto diff = calcSnapshotDifference(fr, mask, s);
+                    differences[s][i] = diff;
+                }
+            });
 
         return differences;
     }
