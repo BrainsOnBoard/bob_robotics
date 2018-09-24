@@ -23,6 +23,7 @@
 #include "../common/semaphore.h"
 #include "../hid/joystick.h"
 #include "../video/input.h"
+#include "../robots/uav.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -108,6 +109,7 @@ checkError(eARCONTROLLER_ERROR err)
  */
 //------------------------------------------------------------------------------
 class Bebop
+  : public UAV
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
@@ -164,7 +166,6 @@ public:
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
     ~Bebop();
-    void addJoystick(HID::Joystick &joystick);
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -175,13 +176,12 @@ public:
     std::pair<degrees_per_second_t, degrees_per_second_t> &getYawSpeedLimits();
 
     // motor control
-    void takeOff();
-    void land();
-    void setPitch(float pitch);
-    void setRoll(float right);
-    void setVerticalSpeed(float up);
-    void setYawSpeed(float right);
-    void stopMoving();
+    virtual void takeOff() override;
+    virtual void land() override;
+    virtual void setPitch(float pitch) override;
+    virtual void setRoll(float right) override;
+    virtual void setVerticalSpeed(float up) override;
+    virtual void setYawSpeed(float right) override;
 
     // misc
     VideoStream &getVideoStream();
@@ -273,8 +273,6 @@ private:
     inline void disconnect();
     void startStreaming();
     void stopStreaming();
-    bool onAxisEvent(HID::JAxis axis, float value);
-    bool onButtonEvent(HID::JButton button, bool pressed);
     inline void addEventHandlers();
     inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
     inline void createControllerDevice();
