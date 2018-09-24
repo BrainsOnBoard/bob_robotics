@@ -31,7 +31,7 @@ public:
     }
 
     template<class Func>
-    void operator()(Func func)
+    void rotate(Func func)
     {
         size_t i = 0;
         while (true) {
