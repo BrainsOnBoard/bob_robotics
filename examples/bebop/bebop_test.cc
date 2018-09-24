@@ -16,8 +16,8 @@ using namespace std::literals;
 template <class T>
 void print(T limits)
 {
-    std::cout << " (limits: " << std::get<0>(limits) << ", "
-              << std::get<1>(limits) << ")" << std::endl;
+    std::cout << " (limits: " << limits.first << ", "
+              << limits.second << ")" << std::endl;
 }
 
 void printSpeedLimits(Bebop &drone)
@@ -27,7 +27,7 @@ void printSpeedLimits(Bebop &drone)
     auto tiltLimits = drone.getTiltLimits();
     std::cout << "Max tilt: " << maxTilt;
     print(tiltLimits);
-    
+
     // max yaw speed
     auto maxYawSpeed = drone.getMaximumYawSpeed();
     auto yawLimits = drone.getYawSpeedLimits();
@@ -48,7 +48,7 @@ int main()
 
     /*
      * Connects to the drone.
-     * 
+     *
      * NB: Any or all of these parameters can be omitted to use the defaults,
      *     which is probably almost always what you want. Side note: don't set
      *     these values to their maximum if you want to be able to control the

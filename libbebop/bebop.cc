@@ -135,7 +135,7 @@ Bebop::getVideoStream()
 
 /*!
  * \brief Return the current maximum tilt setting.
- * 
+ *
  * This affects pitch and roll.
  */
 degree_t
@@ -148,7 +148,7 @@ Bebop::getMaximumTilt() const
  * \brief Return the minimum and maximum permitted values for the maximum tilt
  *        setting.
  */
-Limits<degree_t> &
+std::pair<degree_t, degree_t> &
 Bebop::getTiltLimits()
 {
     return m_TiltLimits.getLimits();
@@ -167,7 +167,7 @@ Bebop::getMaximumVerticalSpeed() const
  * \brief Return the minimum and maximum permitted values for the maximum
  *        vertical speed setting.
  */
-Limits<meters_per_second_t> &
+std::pair<meters_per_second_t, meters_per_second_t> &
 Bebop::getVerticalSpeedLimits()
 {
     return m_VerticalSpeedLimits.getLimits();
@@ -186,7 +186,7 @@ Bebop::getMaximumYawSpeed() const
  * \brief Return the minimum and maximum permitted values for the maximum yaw
  *        speed setting.
  */
-Limits<degrees_per_second_t> &
+std::pair<degrees_per_second_t, degrees_per_second_t> &
 Bebop::getYawSpeedLimits()
 {
     return m_YawSpeedLimits.getLimits();
@@ -526,9 +526,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 bool
 Bebop::onAxisEvent(HID::JAxis axis, float value)
 {
-    /* 
-     * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
-     * values for the joystick code to make the drone more controllable. 
+    /*
+     * setRoll/Pitch etc. all take values between -1 and 1. We cap these
+     * values for the joystick code to make the drone more controllable.
      */
     switch (axis) {
     case HID::JAxis::RightStickHorizontal:

@@ -8,6 +8,7 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+#include <utility>
 
 // OpenCV
 #ifdef KEY_UP
@@ -83,10 +84,6 @@ using namespace units::velocity;
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
-//! Represents maximum and minimum values for drone speed settings
-template<class T>
-using Limits = std::tuple<T, T>;
-
 /*
  * Simply throws a runtime_error with appropriate message if
  * err != ARCONTROLLER_OK.
@@ -105,7 +102,7 @@ checkError(eARCONTROLLER_ERROR err)
 //------------------------------------------------------------------------------
 /*!
  * \brief An interface to Parrot Bebop 2 drones
- * 
+ *
  * This class handles connection/disconnection and sending steering commands.
  * It also provides an interface to access the drone's video stream.
  */
@@ -171,11 +168,11 @@ public:
 
     // speed limits
     degree_t getMaximumTilt() const;
-    Limits<degree_t> &getTiltLimits();
+    std::pair<degree_t, degree_t> &getTiltLimits();
     meters_per_second_t getMaximumVerticalSpeed() const;
-    Limits<meters_per_second_t> &getVerticalSpeedLimits();
+    std::pair<meters_per_second_t, meters_per_second_t> &getVerticalSpeedLimits();
     degrees_per_second_t getMaximumYawSpeed() const;
-    Limits<degrees_per_second_t> &getYawSpeedLimits();
+    std::pair<degrees_per_second_t, degrees_per_second_t> &getYawSpeedLimits();
 
     // motor control
     void takeOff();
@@ -243,10 +240,6 @@ private:
                 if (m_Current == m_UserMaximum) {
                     m_Semaphore.notify();
                 }
-
-                // std::cout << "Max: " << m_Current << " ("
-                //           << std::get<0>(m_Limits) << ", "
-                //           << std::get<1>(m_Limits) << ")" << std::endl;
             }
         }
 
@@ -256,7 +249,7 @@ private:
             return m_Current;
         }
 
-        inline Limits<UnitType> &getLimits()
+        inline std::pair<UnitType, UnitType> &getLimits()
         {
             m_Semaphore.waitOnce();
             return m_Limits;
@@ -264,7 +257,7 @@ private:
 
     private:
         UnitType m_Current;
-        Limits<UnitType> m_Limits;
+        std::pair<UnitType, UnitType> m_Limits;
         mutable Semaphore m_Semaphore;
     };
 
