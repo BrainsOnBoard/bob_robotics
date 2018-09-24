@@ -15,13 +15,14 @@ void
 plotRIDF(const std::vector<float> &differences)
 {
     // Vector to store modified RIDF
-    std::vector<float> ridf(differences.size() + 1);
+    std::vector<float> ridf;
+    ridf.reserve(differences.size() + 1);
 
     // Rotate so data is in range -180 to 180
     std::rotate_copy(differences.begin(),
                      differences.begin() + ceil((float) differences.size() / 2.0f),
                      differences.end(),
-                     ridf.begin());
+                     std::back_inserter(ridf));
 
     // Normalise to be between 0 and 1
     for (auto &d : ridf) {
@@ -29,12 +30,13 @@ plotRIDF(const std::vector<float> &differences)
     }
 
     // Copy value from -180 to 180 so RIDF is symmetrical
-    ridf.back() = ridf[0];
+    ridf.push_back(ridf[0]);
 
     // Calculate x values (angles)
-    std::vector<float> x(ridf.size());
-    for (size_t i = 0; i < x.size(); i++) {
-        x[i] = -180.0f + (float) i * 360.0f / (x.size() - 1);
+    std::vector<float> x;
+    x.reserve(ridf.size());
+    for (size_t i = 0; i < ridf.size(); i++) {
+        x.push_back(-180.0f + (float) i * 360.0f / (ridf.size() - 1));
     }
 
     // Plot RIDF
