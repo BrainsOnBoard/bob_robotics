@@ -42,7 +42,7 @@ public:
     }
 
     template<class Func>
-    void operator()(Func func)
+    void rotate(Func func)
     {
         cv::Mat fr, mask;
         size_t i = 0;

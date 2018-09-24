@@ -91,7 +91,7 @@ public:
         }
 
         // Scan across image columns
-        rotater(
+        rotater.rotate(
             [this, &differences, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i)
             {
                 // Loop through snapshots
