@@ -77,7 +77,7 @@ public:
      * angles.
      */
     template<class... Ts>
-    std::vector<std::vector<float>> getImageDifferences(Ts &&... args) const
+    const std::vector<std::vector<float>> &getImageDifferences(Ts &&... args) const
     {
         calcImageDifferences(std::forward<Ts>(args)...);
         return m_Differences;
