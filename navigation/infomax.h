@@ -77,7 +77,7 @@ public:
         Rotater rotater(getUnwrapResolution(), getMaskImage(), std::forward<Ts>(args)...);
         std::vector<FloatType> outputs;
         outputs.reserve(rotater.max());
-        rotater([this, &outputs] (const cv::Mat &image, auto, auto) {
+        rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
             outputs.push_back(decision(image));
         });
 
