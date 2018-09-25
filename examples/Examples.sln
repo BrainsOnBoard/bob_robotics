@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RobotNetTestComputer", "rob
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlottingExample", "plotting\PlottingExample.vcxproj", "{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Gantry", "gantry\Gantry.vcxproj", "{97600E98-FBAC-471C-B158-38794F4D199E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -59,6 +61,13 @@ Global
 		{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}.Release|x64.Build.0 = Release|x64
 		{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}.Release|x86.ActiveCfg = Release|Win32
 		{5C8CBBC8-3EDD-495E-AE6A-65B62ADABA74}.Release|x86.Build.0 = Release|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Debug|x64.ActiveCfg = Debug|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Debug|x86.ActiveCfg = Debug|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Debug|x86.Build.0 = Debug|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Release|x64.ActiveCfg = Release|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Release|x64.Build.0 = Release|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Release|x86.ActiveCfg = Release|Win32
+		{97600E98-FBAC-471C-B158-38794F4D199E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
