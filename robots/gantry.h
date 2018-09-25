@@ -1,5 +1,7 @@
 #pragma once
 
+#include "os/windows_include.h"
+
 // Standard C++ includes
 #include <chrono>
 #include <stdexcept>
@@ -7,12 +9,21 @@
 #include <thread>
 
 // Gantry-specifc includes
-#include "../os/windows_include.h"
 #include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
+
+// BoB robotics includes
+#include "common/pose.h"
+
+// Third-party includes
+#include "third_party/units.h"
+
+using namespace units::literals;
 
 namespace BoBRobotics {
 namespace Robots {
 using namespace std::literals;
+using namespace units::math;
+using namespace units::length;
 
 class GantryError : public std::runtime_error
 {
@@ -37,6 +48,10 @@ public:
     {
         // Try to open PCI device
         CheckError(P1240MotDevOpen(BoardId), "Could not open PCI card");
+
+        if (isEmergencyButtonPressed()) {
+            throw std::runtime_error("Emergency button is pressed");
+        }
     }
 
     ~Gantry()
@@ -61,6 +76,44 @@ public:
         waitToStopMoving(ZAxis);
     }
 
+    bool isEmergencyButtonPressed()
+    {
+        DWORD ret;
+        CheckError(P1240MotRdReg(BoardId, 1, RR2, &ret), "Could not read emergency button flag");
+        return ret & 32;
+    }
+
+    Vector3<millimeter_t> getPosition()
+    {
+        Vector3<millimeter_t> pos;
+
+        // Request position from card
+        LONG val;
+        CheckError(P1240GetTheorecticalRegister(BoardId, XAxis, &val), "Could not get x position");
+        pos[0] = (double) val / PulsesPerMillimetreX;
+        CheckError(P1240GetTheorecticalRegister(BoardId, YAxis, &val), "Could not get y position");
+        pos[1] = (double) val / PulsesPerMillimetreY;
+        CheckError(P1240GetTheorecticalRegister(BoardId, ZAxis, &val), "Could not get z position");
+        pos[2] = (double) val / PulsesPerMillimetreZ;
+
+        return pos;
+    }
+
+    void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
+    {
+        if (isEmergencyButtonPressed()) {
+            throw std::runtime_error("Emergency button is pressed");
+        }
+
+        P1240SetDrivingSpeed(BoardId, 0, 1000);
+        P1240SetStartSpeed(BoardId, 0, 125);
+
+        const LONG posX = (LONG) round(x * PulsesPerMillimetreX);
+        const LONG posY = (LONG) round(y * PulsesPerMillimetreY);
+        const LONG posZ = (LONG) round(z * PulsesPerMillimetreZ);
+        CheckError(P1240MotLine(BoardId, AllAxes, AllAxes, posX, posY, posZ, 0), "Could not move gantry");
+    }
+
     bool isMoving(BYTE axis = AllAxes)
     {
         // Indicate whether specified axis/axes busy
@@ -70,13 +123,16 @@ public:
     void waitToStopMoving(BYTE axis = AllAxes)
     {
         // Repeatedly poll card to check whether gantry is moving
-        while (isMoving()) {
+        while (isMoving(axis)) {
             std::this_thread::sleep_for(25ms);
         }
     }
 
 private:
     static constexpr BYTE BoardId = 0;
+    static constexpr auto PulsesPerMillimetreX = 7.49625 / 1_mm;
+    static constexpr auto PulsesPerMillimetreY = 8.19672 / 1_mm;
+    static constexpr auto PulsesPerMillimetreZ = 13.15789 / 1_mm;
 
     static void CheckError(LRESULT err, const std::string &msg)
     {
@@ -84,6 +140,6 @@ private:
             throw GantryError(msg, err);
         }
     }
-};
-}
-}
+}; // Gantry
+} // Robots
+} // BoBRobotics
