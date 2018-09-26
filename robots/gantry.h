@@ -56,6 +56,8 @@ public:
 
     ~Gantry()
     {
+        stopMoving();
+
         // Close PCI device
         P1240MotDevClose(BoardId);
     }
@@ -115,13 +117,19 @@ public:
         CheckError(P1240MotLine(BoardId, AllAxes, AllAxes, posX, posY, posZ, 0), "Could not move gantry");
     }
 
-    bool isMoving(BYTE axis = AllAxes)
+    void stopMoving(BYTE axis = AllAxes) noexcept
+    {
+		// To stop moving immediately, cf. gradually, set the 3rd arg to zero
+        P1240MotStop(BoardId, axis, axis);
+    }
+
+    bool isMoving(BYTE axis = AllAxes) noexcept
     {
         // Indicate whether specified axis/axes busy
         return P1240MotAxisBusy(BoardId, axis);
     }
 
-    void waitToStopMoving(BYTE axis = AllAxes)
+    void waitToStopMoving(BYTE axis = AllAxes) noexcept
     {
         // Repeatedly poll card to check whether gantry is moving
         while (isMoving(axis)) {
