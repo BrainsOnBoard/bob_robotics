@@ -16,7 +16,7 @@ main()
         gantry.waitToStopMoving();
         std::cout << "Gantry moved.\n";
 
-        const auto pos = gantry.getPosition();
+        const auto pos = gantry.getPosition<>();
         std::cout << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
                   << pos[2] << "\n";
     } catch (std::exception &e) {

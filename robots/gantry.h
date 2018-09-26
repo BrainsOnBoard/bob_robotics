@@ -83,9 +83,10 @@ public:
         return ret & 32;
     }
 
-    Vector3<millimeter_t> getPosition()
+    template<class LengthUnit = millimeter_t>
+    Vector3<LengthUnit> getPosition()
     {
-        Vector3<millimeter_t> pos;
+        Vector3<LengthUnit> pos;
 
         // Request position from card
         LONG val;
