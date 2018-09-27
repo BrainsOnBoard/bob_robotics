@@ -1,6 +1,8 @@
 #include <FlightController.hpp>
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <vector>
 
 #include "uav.h"
 
@@ -9,6 +11,10 @@ namespace Robots
 {
 
 namespace BetaFlight {
+
+    std::string currentArmFlags;
+    float currentVoltage = 0.0;
+    float currentAmpDraw = 0.0;
 
 	struct arm_flag {
 		int err_num;
@@ -77,21 +83,26 @@ namespace BetaFlight {
 
 	struct Callbacks {
 		void onIdent(const MyIdent &ident) {
-		    std::cout << "Arming Flag: ";
+		    //std::cout << "Arming Flag: ";
+		    currentArmFlags.resize(0);
 			int flag_data = *((int*) (&ident.raw_data[17]));
 			for (auto af : arm_flags) {
 				if (flag_data & (int) pow(2, af.err_num - 1)){
-					std::cout <<  af.msg << " (Error number " << af.err_num << "), ";
+				currentArmFlags.append(af.msg);
+				    currentArmFlags.append(std::string(" (Error number ") + std::to_string(af.err_num) + std::string("), "));
+					//std::cout <<  af.msg << " (Error number " << af.err_num << "), ";
 				} 
 			}
-			std::cout << std::endl;
+			//std::cout << std::endl;
 
 		}
 		void onAnalog(const Analog &anog){
 			std::cout << "Battery voltage level: " << anog.vbat << " V." << std::endl;
+			currentVoltage = anog.vbat;
 			//std::cout << "Power Meter Summery: " << anog.powerMeterSum << std::endl;
 			//std::cout << "Received Signal Strength Indication: " << anog.rssi << std::endl;
-			std::cout << "Current level: " << anog.amperage << " mA." << std::endl;
+			//std::cout << "Current level: " << anog.amperage << " mA." << std::endl;
+			currentAmpDraw = anog.amperage;
 		}
 	};
 }
@@ -125,16 +136,69 @@ class betaflight_uav : public UAV {
 		
 		virtual void takeOff() override {}
         virtual void land() override {}
-        virtual void setPitch(float pitch) override {}
-        virtual void setRoll(float right) override {}
-        virtual void setVerticalSpeed(float up) override {}
-        virtual void setYawSpeed(float right) override {}
+        virtual void setRoll(float right) override 
+        {
+            right = std::min(1.0f, std::max(-1.0f, right));
+            M_RC_values[0] = 1500 + right*M_ControlScale;
+        }
+        virtual void setPitch(float pitch) override 
+        {
+            pitch = std::min(1.0f, std::max(-1.0f, pitch));
+            M_RC_values[1] = 1500 + pitch*M_ControlScale;
+        }
+        virtual void setVerticalSpeed(float up) override 
+        {
+            up = std::min(1.0f, std::max(-1.0f, up));
+            M_RC_values[2] = 1500 + up*M_ControlScale;
+        }
+        virtual void setYawSpeed(float right) override 
+        {
+            right = std::min(1.0f, std::max(-1.0f, right));
+            M_RC_values[4] = 1500 + right*M_ControlScale;
+        }
+        
+        std::string getArmStateAsString() {
+            return BetaFlight::currentArmFlags.c_str();
+        }
+        
+        float getVoltage() {
+            return BetaFlight::currentVoltage;
+        }
+        
+        float getAmpDraw() {
+            return BetaFlight::currentAmpDraw;
+        }
+        
+        // accessors for M_ControlScale
+        void setControlScale(float scale) {
+            this->M_ControlScale = scale;
+        }
+        
+        float getControlScale() {
+            return this->M_ControlScale;
+        }
+        
+        void sendCommands() {
+            std::vector<uint16_t> auxs;
+            m_Fcu->setRc(M_RC_values[0],M_RC_values[1],M_RC_values[3],M_RC_values[2],M_RC_values[4],M_RC_values[5],M_RC_values[6],M_RC_values[7], auxs);
+        }
+        
+        void armDrone() {
+            M_RC_values[5] = 2000;
+        }
+        
+        void disarmDrone() {
+            M_RC_values[5] = 1000;
+        }
 
 	private:
 		std::string m_Device;
 		int m_Baud;
 		fcu::FlightController* m_Fcu = NULL;
 		BetaFlight::Callbacks m_Cbs;
+		uint16_t M_RC_values[8] = {1500,1500,1040,1500,2000,1000,1500,1500};
+		float M_ControlScale = 200.0f;
+		
 
 
 };

@@ -17,6 +17,23 @@ int main(int argc, char *argv[]){
 	BoBRobotics::Robots::betaflight_uav my_drone(device, baudrate);
 
 	my_drone.subscribe();
+	
+	int count = 0;
+
+    while (1) {
+        if (my_drone.getArmStateAsString().size() > 0) {
+            std::cout << my_drone.getArmStateAsString() << std::endl;
+        }
+        my_drone.sendCommands();
+        ++count;
+        if (count > 3000 && count < 3100) {
+            my_drone.armDrone();
+        }
+        if (count > 60000) {
+            my_drone.disarmDrone();
+        }
+        std::cout << count << std::endl; 
+    }
 
     // Ctrl+C to quit
     std::cin.get();
