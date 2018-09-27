@@ -1,0 +1,3 @@
+[submodule "msp"]
+	path = msp
+	url = https://github.com/BrainsOnBoard/msp.git
