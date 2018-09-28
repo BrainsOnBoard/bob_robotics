@@ -37,6 +37,12 @@ public:
 
         // Give error if emergency button pressed
         checkEmergencyButton();
+
+		// Set params for line interpolation
+        checkError(P1240SetDrivingSpeed(m_BoardId, 0, 1000), "Could not set driving speed");
+        checkError(P1240SetStartSpeed(m_BoardId, 0, 125), "Could not set start speed");
+        checkError(P1240SetAcceleration(m_BoardId, 0, 400), "Could not set acceleration");
+        checkError(P1240SetDeceleration(m_BoardId, 0, 400, 0), "Could not set deceleration");
     }
 
     ~Gantry()
@@ -92,10 +98,6 @@ public:
 
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
-        // Set params for line interpolation
-        checkError(P1240SetDrivingSpeed(m_BoardId, 0, 1000), "Could not set driving speed");
-        checkError(P1240SetStartSpeed(m_BoardId, 0, 125), "Could not set start speed");
-
         const LONG posX = (LONG) round(x * PulsesPerMillimetreX);
         const LONG posY = (LONG) round(y * PulsesPerMillimetreY);
         const LONG posZ = (LONG) round(z * PulsesPerMillimetreZ);
