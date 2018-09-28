@@ -1,5 +1,8 @@
-#include "pch.h"
+// Standard C++ includes
 #include <iostream>
+
+// BoB robotics includes
+#include "robots/gantry.h"
 
 int
 main()
