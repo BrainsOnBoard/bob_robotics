@@ -1,3 +1,12 @@
+/*
+ * Note that there is currently an annoying bug with the gantry's camera.
+ * You have to open a TV tuner program *before* this example, so that the
+ * TV tuner card is set to PAL B mode (cf. NTSC) otherwise the display
+ * will be mangled. There is definitely a way to do this in one of the
+ * Windows video APIs (though seemingly not in OpenCV) and I'll add this
+ * in when I can be bothered. -- AD
+ */
+
 #include "os/windows_include.h"
 
 // Standard C++ includes

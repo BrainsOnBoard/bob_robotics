@@ -25,15 +25,19 @@ namespace BoBRobotics {
 namespace Robots {
 using namespace std::literals;
 using namespace units;
-using namespace units::acceleration;
 using namespace units::math;
 using namespace units::length;
 using namespace units::time;
 using namespace units::velocity;
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Robots::Gantry
+//----------------------------------------------------------------------------
+//! An interface for the robot gantry system at the University of Sussex
 class Gantry
 {
 public:
+	//! Open the PCI device and set drive parameters
     Gantry(BYTE boardId = 0)
       : m_BoardId(0)
     {
@@ -65,6 +69,13 @@ public:
         close();
     }
 
+	/**!
+	 * \brief Returns the gantry to its home position
+	 *
+	 * Home position is (0, 0, 0). The robot gantry will be raised before homing so that it does
+	 * not collide with objects in the arena. The gantry needs to be homed before use so that it
+	 * can reset its estimate of its position. This function blocks until the gantry is homed.
+	 */
     void home()
     {
         m_IsMovingLine = false;
@@ -86,6 +97,7 @@ public:
         checkEmergencyButton();
     }
 
+	//! Check if either of the emergency buttons are pressed down
     bool isEmergencyButtonPressed()
     {
         DWORD ret;
@@ -93,6 +105,7 @@ public:
         return ret & 32;
     }
 
+	//! Get the current position of the gantry in the arena
     template<class LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition()
     {
@@ -106,6 +119,7 @@ public:
         return pulsesToUnit<LengthUnit>(pulses);
     }
 
+	//! Get the gantry's current velocity
     template<class VelocityUnit = meters_per_second_t>
     Vector3<VelocityUnit> getVelocity()
     {
@@ -129,6 +143,11 @@ public:
         return velocity;
     }
 
+	/**!
+	 * \brief Set the position of the gantry in the arena
+	 *
+	 * This function does not block.
+	 */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
         m_IsMovingLine = true;
@@ -138,11 +157,13 @@ public:
         checkError(P1240MotLine(m_BoardId, XYZ_Axis, TRUE, pos[0], pos[1], pos[2], 0), "Could not move gantry");
     }
 
+	//! Stop the gantry moving, optionally specifying a specific axis
     void stopMoving(BYTE axis = XYZ_Axis) noexcept
     {
         P1240MotStop(m_BoardId, axis, axis * SlowStop);
     }
 
+	//! Check if the gantry is moving
     bool isMoving(BYTE axis = XYZ_Axis)
     {
         // Indicate whether specified axis/axes busy
@@ -159,6 +180,7 @@ public:
         }
     }
 
+	//! Wait until the gantry has stopped moving
     void waitToStopMoving(BYTE axis = XYZ_Axis)
     {
         // Repeatedly poll card to check whether gantry is moving
@@ -166,13 +188,17 @@ public:
             std::this_thread::sleep_for(10ms);
         }
 
+		/*
+		 * If the emergency button is pressed, the gantry will have
+         * stopped moving, so we should check the button so we can
+		 * terminate gracefully.
+		 */
         checkEmergencyButton();
     }
 
 private:
     BYTE m_BoardId;
     bool m_IsMovingLine = false;
-    double m_SpeedRatio;
     static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
 
     void close() noexcept
