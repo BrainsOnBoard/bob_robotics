@@ -2,6 +2,9 @@
 
 #include "os/windows_include.h"
 
+// Standard C includes
+#include <cassert>
+
 // Standard C++ includes
 #include <algorithm>
 #include <chrono>
@@ -150,6 +153,10 @@ public:
      */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
+        assert(x >= 0_mm && x <= Limits[0]);
+        assert(y >= 0_mm && y <= Limits[1]);
+        assert(z >= 0_mm && z <= Limits[2]);
+
         m_IsMovingLine = true;
         const Vector3<LONG> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
                                     (LONG) round(y.value() * PulsesPerMillimetre[1]),
@@ -199,7 +206,8 @@ public:
 private:
     BYTE m_BoardId;
     bool m_IsMovingLine = false;
-    static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+    static constexpr Vector3<double> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+    static constexpr Vector3<millimeter_t> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
     void close() noexcept
     {
