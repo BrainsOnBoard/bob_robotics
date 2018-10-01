@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Gantry.cpp">
+    <ClCompile Include="gantry.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
