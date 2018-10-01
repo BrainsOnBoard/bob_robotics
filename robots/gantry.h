@@ -37,7 +37,7 @@ using namespace units::velocity;
 class Gantry
 {
 public:
-	//! Open the PCI device and set drive parameters
+    //! Open the PCI device and set drive parameters
     Gantry(BYTE boardId = 0)
       : m_BoardId(0)
     {
@@ -69,7 +69,7 @@ public:
         close();
     }
 
-	/**!
+    /**!
 	 * \brief Returns the gantry to its home position
 	 *
 	 * Home position is (0, 0, 0). The robot gantry will be raised before homing so that it does
@@ -97,7 +97,7 @@ public:
         checkEmergencyButton();
     }
 
-	//! Check if either of the emergency buttons are pressed down
+    //! Check if either of the emergency buttons are pressed down
     bool isEmergencyButtonPressed()
     {
         DWORD ret;
@@ -105,7 +105,7 @@ public:
         return ret & 32;
     }
 
-	//! Get the current position of the gantry in the arena
+    //! Get the current position of the gantry in the arena
     template<class LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition()
     {
@@ -119,7 +119,7 @@ public:
         return pulsesToUnit<LengthUnit>(pulses);
     }
 
-	//! Get the gantry's current velocity
+    //! Get the gantry's current velocity
     template<class VelocityUnit = meters_per_second_t>
     Vector3<VelocityUnit> getVelocity()
     {
@@ -127,7 +127,7 @@ public:
 
         m_IsMovingLine = m_IsMovingLine && isMoving();
         if (m_IsMovingLine) {
-			/*
+            /*
 			 * The driver seems to behave oddly when trying to read the velocity in line mode: a value is only given
 			 * for the first axis, which apparently corresponds to the "interpolation" axis, not the x-axis (the other
 			 * values are zero). This value seems to vary sensibly over the course of movements, but it's not clear
@@ -143,7 +143,7 @@ public:
         return velocity;
     }
 
-	/**!
+    /**!
 	 * \brief Set the position of the gantry in the arena
 	 *
 	 * This function does not block.
@@ -157,13 +157,13 @@ public:
         checkError(P1240MotLine(m_BoardId, XYZ_Axis, TRUE, pos[0], pos[1], pos[2], 0), "Could not move gantry");
     }
 
-	//! Stop the gantry moving, optionally specifying a specific axis
+    //! Stop the gantry moving, optionally specifying a specific axis
     void stopMoving(BYTE axis = XYZ_Axis) noexcept
     {
         P1240MotStop(m_BoardId, axis, axis * SlowStop);
     }
 
-	//! Check if the gantry is moving
+    //! Check if the gantry is moving
     bool isMoving(BYTE axis = XYZ_Axis)
     {
         // Indicate whether specified axis/axes busy
@@ -180,7 +180,7 @@ public:
         }
     }
 
-	//! Wait until the gantry has stopped moving
+    //! Wait until the gantry has stopped moving
     void waitToStopMoving(BYTE axis = XYZ_Axis)
     {
         // Repeatedly poll card to check whether gantry is moving
@@ -188,7 +188,7 @@ public:
             std::this_thread::sleep_for(10ms);
         }
 
-		/*
+        /*
 		 * If the emergency button is pressed, the gantry will have
          * stopped moving, so we should check the button so we can
 		 * terminate gracefully.
