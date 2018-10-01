@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         motor.addJoystick(joystick); // send joystick events to motor
 
         // display video stream
-        Video::Display display(video, 1240, 500);
+        Video::Display display(video, {1240, 500});
 
         // poll joystick and video stream repeatedly
         do {
