@@ -3,6 +3,7 @@
 #include "os/windows_include.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <chrono>
 #include <sstream>
 #include <stdexcept>
@@ -23,8 +24,12 @@ using namespace units::literals;
 namespace BoBRobotics {
 namespace Robots {
 using namespace std::literals;
+using namespace units;
+using namespace units::acceleration;
 using namespace units::math;
 using namespace units::length;
+using namespace units::time;
+using namespace units::velocity;
 
 class Gantry
 {
@@ -35,28 +40,37 @@ public:
         // Try to open PCI device
         checkError(P1240MotDevOpen(m_BoardId), "Could not open PCI card");
 
-        // Give error if emergency button pressed
-        checkEmergencyButton();
+        try {
+            // Give error if emergency button pressed
+            checkEmergencyButton();
 
-		// Set params for line interpolation
-        checkError(P1240SetDrivingSpeed(m_BoardId, 0, 1000), "Could not set driving speed");
-        checkError(P1240SetStartSpeed(m_BoardId, 0, 125), "Could not set start speed");
-        checkError(P1240SetAcceleration(m_BoardId, 0, 400), "Could not set acceleration");
-        checkError(P1240SetDeceleration(m_BoardId, 0, 400, 0), "Could not set deceleration");
+            // Set params for line interpolation
+            checkError(P1240SetStartSpeed(m_BoardId, IPO_Axis, 125), "Could not set start speed");
+            checkError(P1240SetDrivingSpeed(m_BoardId, IPO_Axis, 1200), "Could not set driving speed");
+            checkError(P1240SetAcceleration(m_BoardId, IPO_Axis, 400), "Could not set acceleration");
+            checkError(P1240SetDeceleration(m_BoardId, IPO_Axis, 400, 0), "Could not set deceleration");
+        } catch (std::exception &) {
+            // In case of error, close PCI device and rethrow exception
+            close();
+            throw;
+        }
     }
 
     ~Gantry()
     {
+        // Stop the gantry moving
         stopMoving();
 
         // Close PCI device
-        P1240MotDevClose(m_BoardId);
+        close();
     }
 
     void home()
     {
+        m_IsMovingLine = false;
+
         // Raise z-axis so we don't bump objects in arena
-        checkError(P1240MotChgDV(m_BoardId, Z_Axis, 1000), "Could not set z-axis speed");
+        checkError(P1240MotChgDV(m_BoardId, Z_Axis, 1200), "Could not set z-axis speed");
         checkError(P1240MotCmove(m_BoardId, Z_Axis, 0 /*up*/), "Could not move z-axis to limit");
         waitToStopMoving(Z_Axis);
 
@@ -82,32 +96,51 @@ public:
     template<class LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition()
     {
-        Vector3<LengthUnit> pos;
-
         // Request position from card
-        LONG val;
-        checkError(P1240GetTheorecticalRegister(m_BoardId, X_Axis, &val), "Could not get x position");
-        pos[0] = (double) val / PulsesPerMillimetreX;
-        checkError(P1240GetTheorecticalRegister(m_BoardId, Y_Axis, &val), "Could not get y position");
-        pos[1] = (double) val / PulsesPerMillimetreY;
-        checkError(P1240GetTheorecticalRegister(m_BoardId, Z_Axis, &val), "Could not get z position");
-        pos[2] = (double) val / PulsesPerMillimetreZ;
+        Vector3<LONG> pulses;
+        checkError(P1240GetTheorecticalRegister(m_BoardId, X_Axis, &pulses[0]), "Could not get x position");
+        checkError(P1240GetTheorecticalRegister(m_BoardId, Y_Axis, &pulses[1]), "Could not get y position");
+        checkError(P1240GetTheorecticalRegister(m_BoardId, Z_Axis, &pulses[2]), "Could not get z position");
 
-        return pos;
+        // Convert to LengthUnit
+        return pulsesToUnit<LengthUnit>(pulses);
+    }
+
+    template<class VelocityUnit = meters_per_second_t>
+    Vector3<VelocityUnit> getVelocity()
+    {
+        Vector3<DWORD> pulseRate;
+
+        m_IsMovingLine = m_IsMovingLine && isMoving();
+        if (m_IsMovingLine) {
+			/*
+			 * The driver seems to behave oddly when trying to read the velocity in line mode: a value is only given
+			 * for the first axis, which apparently corresponds to the "interpolation" axis, not the x-axis (the other
+			 * values are zero). This value seems to vary sensibly over the course of movements, but it's not clear
+			 * how to use this value to get x, y, z values.
+			 */
+            throw std::runtime_error("Getting velocity when moving in line mode is not currently supported");
+        } else {
+            checkError(P1240MotRdMultiReg(m_BoardId, XYZ_Axis, CurV, &pulseRate[0], &pulseRate[1], &pulseRate[2], nullptr), "Error reading velocity");
+        }
+
+        using InitialUnit = unit_t<compound_unit<millimeter, inverse<second>>>;
+        const auto velocity = pulsesToUnit<VelocityUnit, InitialUnit, DWORD>(pulseRate);
+        return velocity;
     }
 
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
-        const LONG posX = (LONG) round(x * PulsesPerMillimetreX);
-        const LONG posY = (LONG) round(y * PulsesPerMillimetreY);
-        const LONG posZ = (LONG) round(z * PulsesPerMillimetreZ);
-        checkError(P1240MotLine(m_BoardId, XYZ_Axis, XYZ_Axis, posX, posY, posZ, 0), "Could not move gantry");
+        m_IsMovingLine = true;
+        const Vector3<LONG> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
+                                    (LONG) round(y.value() * PulsesPerMillimetre[1]),
+                                    (LONG) round(z.value() * PulsesPerMillimetre[2]) };
+        checkError(P1240MotLine(m_BoardId, XYZ_Axis, TRUE, pos[0], pos[1], pos[2], 0), "Could not move gantry");
     }
 
     void stopMoving(BYTE axis = XYZ_Axis) noexcept
     {
-        // To stop moving immediately, cf. gradually, set the 3rd arg to zero
-        P1240MotStop(m_BoardId, axis, axis);
+        P1240MotStop(m_BoardId, axis, axis * SlowStop);
     }
 
     bool isMoving(BYTE axis = XYZ_Axis)
@@ -138,9 +171,15 @@ public:
 
 private:
     BYTE m_BoardId;
-    static constexpr auto PulsesPerMillimetreX = 7.49625 / 1_mm;
-    static constexpr auto PulsesPerMillimetreY = 8.19672 / 1_mm;
-    static constexpr auto PulsesPerMillimetreZ = 13.15789 / 1_mm;
+    bool m_IsMovingLine = false;
+    double m_SpeedRatio;
+    static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+
+    void close() noexcept
+    {
+        // Close PCI device
+        P1240MotDevClose(m_BoardId);
+    }
 
     inline void checkEmergencyButton()
     {
@@ -162,6 +201,16 @@ private:
         std::stringstream sstream;
         sstream << "Gantry error (0x" << std::hex << res << "): " << msg;
         throw std::runtime_error(sstream.str());
+    }
+
+    template<class UnitType, class InitialUnit = millimeter_t, class T>
+    static auto pulsesToUnit(const Vector3<T> &pulses)
+    {
+        Vector3<UnitType> unitArray;
+        std::transform(pulses.begin(), pulses.end(), PulsesPerMillimetre.begin(), unitArray.begin(), [](T pulse, double permm) {
+            return units::make_unit<InitialUnit>((double) pulse / permm);
+        });
+        return unitArray;
     }
 }; // Gantry
 } // Robots

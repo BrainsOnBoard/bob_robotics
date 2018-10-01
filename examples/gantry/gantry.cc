@@ -15,7 +15,12 @@ main()
         std::cout << "Gantry homed.\n";
 
         std::cout << "Moving gantry...\n";
-        gantry.setPosition(500_mm, 500_mm, 200_mm);
+        gantry.setPosition(500_mm, 500_mm, 0_mm);
+        gantry.waitToStopMoving();
+        std::cout << "Gantry moved.\n";
+
+		std::cout << "Moving gantry...\n";
+        gantry.setPosition(500_mm, 500_mm, 500_mm);
         gantry.waitToStopMoving();
         std::cout << "Gantry moved.\n";
 
