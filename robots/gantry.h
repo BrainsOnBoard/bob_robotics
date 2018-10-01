@@ -70,12 +70,12 @@ public:
     }
 
     /**!
-	 * \brief Returns the gantry to its home position
-	 *
-	 * Home position is (0, 0, 0). The robot gantry will be raised before homing so that it does
-	 * not collide with objects in the arena. The gantry needs to be homed before use so that it
-	 * can reset its estimate of its position. This function blocks until the gantry is homed.
-	 */
+     * \brief Returns the gantry to its home position
+     *
+     * Home position is (0, 0, 0). The robot gantry will be raised before homing so that it does
+     * not collide with objects in the arena. The gantry needs to be homed before use so that it
+     * can reset its estimate of its position. This function blocks until the gantry is homed.
+     */
     void home()
     {
         m_IsMovingLine = false;
@@ -128,11 +128,11 @@ public:
         m_IsMovingLine = m_IsMovingLine && isMoving();
         if (m_IsMovingLine) {
             /*
-			 * The driver seems to behave oddly when trying to read the velocity in line mode: a value is only given
-			 * for the first axis, which apparently corresponds to the "interpolation" axis, not the x-axis (the other
-			 * values are zero). This value seems to vary sensibly over the course of movements, but it's not clear
-			 * how to use this value to get x, y, z values.
-			 */
+             * The driver seems to behave oddly when trying to read the velocity in line mode: a value is only given
+             * for the first axis, which apparently corresponds to the "interpolation" axis, not the x-axis (the other
+             * values are zero). This value seems to vary sensibly over the course of movements, but it's not clear
+             * how to use this value to get x, y, z values.
+             */
             throw std::runtime_error("Getting velocity when moving in line mode is not currently supported");
         } else {
             checkError(P1240MotRdMultiReg(m_BoardId, XYZ_Axis, CurV, &pulseRate[0], &pulseRate[1], &pulseRate[2], nullptr), "Error reading velocity");
@@ -144,10 +144,10 @@ public:
     }
 
     /**!
-	 * \brief Set the position of the gantry in the arena
-	 *
-	 * This function does not block.
-	 */
+     * \brief Set the position of the gantry in the arena
+     *
+     * This function does not block.
+     */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
         m_IsMovingLine = true;
@@ -189,10 +189,10 @@ public:
         }
 
         /*
-		 * If the emergency button is pressed, the gantry will have
+         * If the emergency button is pressed, the gantry will have
          * stopped moving, so we should check the button so we can
-		 * terminate gracefully.
-		 */
+         * terminate gracefully.
+         */
         checkEmergencyButton();
     }
 
