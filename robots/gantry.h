@@ -14,6 +14,7 @@
 #include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
 
 // BoB robotics includes
+#include "common/assert.h"
 #include "common/pose.h"
 
 // Third-party includes
@@ -150,6 +151,10 @@ public:
      */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
+        BOB_ASSERT(x >= 0_mm && x <= Limits[0]);
+        BOB_ASSERT(y >= 0_mm && y <= Limits[1]);
+        BOB_ASSERT(z >= 0_mm && z <= Limits[2]);
+
         m_IsMovingLine = true;
         const Vector3<LONG> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
                                     (LONG) round(y.value() * PulsesPerMillimetre[1]),
@@ -199,7 +204,8 @@ public:
 private:
     BYTE m_BoardId;
     bool m_IsMovingLine = false;
-    static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+    static constexpr Vector3<double> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+    static constexpr Vector3<millimeter_t> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
     void close() noexcept
     {
