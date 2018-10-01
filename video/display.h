@@ -59,7 +59,6 @@ public:
      * @param videoInput The video source to display
      * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
      */
-    template<typename... Ts>
     Display(Input &videoInput, const cv::Size &unwrapRes)
       : m_VideoInput(&videoInput)
     {
