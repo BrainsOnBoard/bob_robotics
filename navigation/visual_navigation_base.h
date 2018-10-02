@@ -56,14 +56,14 @@ public:
     {
         assert(image.type() == CV_8UC1);
         if (resizeImage) {
-            cv::resize(image, image, m_UnwrapRes);
+            cv::Mat tmp;
+            cv::resize(image, tmp, m_UnwrapRes);
+            train(tmp);
         } else {
             assert(image.cols == m_UnwrapRes.width);
             assert(image.rows == m_UnwrapRes.height);
+            train(image);
         }
-
-        // Add snapshot
-        train(image);
     }
 
     //! Train algorithm with specified route

@@ -35,16 +35,12 @@ public:
 
         cv::Mat load() const
         {
-            cv::Mat image;
-            cv::imread(path);
-            return image;
+            return cv::imread(path);
         }
 
         cv::Mat loadGreyscale() const
         {
-            cv::Mat image;
-            cv::imread(path, CV_LOAD_IMAGE_GRAYSCALE);
-            return image;
+            return cv::imread(path, cv::IMREAD_GRAYSCALE);;
         }
     };
 
