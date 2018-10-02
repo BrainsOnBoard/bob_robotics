@@ -6,7 +6,7 @@ LINK_FLAGS := -L$(LIBANTWORLD_PATH) -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_F
 
 EXECUTABLE := ant_world_test
 
-.PHONY: all clean libantworld
+.PHONY: all clean $(LIBANTWORLD_PATH)/libantworld.a
 
 all: $(EXECUTABLE)
 

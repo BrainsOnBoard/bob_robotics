@@ -27,13 +27,10 @@ public:
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
      * 
-     * @param args The resolution of the unwrapped image, as cv::Size or two ints
+     * @param args The resolution of the unwrapped image
      */
-    template<typename... Ts>
-    ImgProc::OpenCVUnwrap360 createUnwrapper(Ts &&... args)
+    ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
     {
-        cv::Size unwrapRes(std::forward<Ts>(args)...);
-
         // Create unwrapper and return
         return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes,
                                         getCameraName());

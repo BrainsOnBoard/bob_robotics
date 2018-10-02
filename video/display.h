@@ -59,28 +59,15 @@ public:
      * @param videoInput The video source to display
      * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
      */
-    template<typename... Ts>
-    Display(Input &videoInput, Ts &&... unwrapRes)
+    Display(Input &videoInput, const cv::Size &unwrapRes)
       : m_VideoInput(&videoInput)
     {
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
-            auto unwrapper = videoInput.createUnwrapper(std::forward<Ts>(unwrapRes)...);
-            m_Unwrapper.reset(new ImgProc::OpenCVUnwrap360(std::move(unwrapper)));
+            auto unwrapper = videoInput.createUnwrapper(unwrapRes);
+            m_Unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(std::move(unwrapper));
         }
     }
-
-    /*!
-     * \brief Create a new display from a std::unique_ptr to Input (e.g. from
-     *        getPanoramicCamera())
-     * 
-     * @param videoInput The video source to display
-     * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
-     */
-    template<typename... Ts>
-    Display(std::unique_ptr<Input> &videoInput, Ts &&... unwrapRes)
-      : Display(*videoInput.get(), std::forward<Ts>(unwrapRes)...)
-    {}
 
     //! Return true if the display window is open
     bool isOpen() const

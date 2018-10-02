@@ -39,10 +39,10 @@ main(int argc, char **argv)
         try {
             // if the arg is an int, the user is specifying a camera...
             int dev = std::stoi(argv[1]);
-            pcam.reset(new Video::OpenCVInput(dev));
+            pcam = std::make_unique<Video::OpenCVInput>(dev);
         } catch (std::invalid_argument &) {
             // ...else it's a filename/URL
-            pcam.reset(new Video::OpenCVInput(argv[1]));
+            pcam = std::make_unique<Video::OpenCVInput>(argv[1]);
         }
     }
 
