@@ -20,9 +20,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-// BoB robotics includes
-#include "../common/image_database.h"
-
 // Local includes
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"
