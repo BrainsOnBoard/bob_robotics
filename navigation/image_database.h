@@ -44,8 +44,9 @@ public:
         }
     };
 
-    ImageDatabase(const filesystem::path &databaseName)
-      : m_Path(databaseName)
+    template<class T>
+    ImageDatabase(T &&databaseName)
+      : m_Path(std::forward<T>(databaseName))
     {
         const auto metadataPath = m_Path / "metadata.csv";
 

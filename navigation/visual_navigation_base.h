@@ -67,9 +67,8 @@ public:
     }
 
     //! Train algorithm with specified route
-    void trainRoute(const filesystem::path &routePath, bool resizeImages = false)
+    void trainRoute(const ImageDatabase &imdb, bool resizeImages = false)
     {
-        ImageDatabase imdb(routePath);
         for (const auto &e : imdb) {
             train(e.loadGreyscale(), resizeImages);
         }
