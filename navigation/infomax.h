@@ -140,7 +140,10 @@ private:
     {
         MatrixType weights(numInputs, numHidden);
 
-        std::default_random_engine generator;
+        std::random_device rd;
+        const unsigned seed = rd();
+        std::cout << "Seed for weights is: " << seed << std::endl;
+        std::default_random_engine generator(seed);
         std::normal_distribution<FloatType> distribution;
         for (int y = 0; y < weights.rows(); y++) {
             for (int x = 0; x < weights.cols(); x++) {
