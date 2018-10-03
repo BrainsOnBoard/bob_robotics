@@ -22,6 +22,10 @@ public:
 }; // AssertionFailedException
 } // BoBRobotics
 
+#ifdef NDEBUG
+#define BOB_ASSERT(EXPRESSION) \
+    {}
+#else
 /**!
  * \brief If EXPRESSION evaluates to false, throw AssertionFailedException
  * 
@@ -35,3 +39,4 @@ public:
     if (!EXPRESSION) {                                                                \
         throw BoBRobotics::AssertionFailedException(#EXPRESSION, __FILE__, __LINE__); \
     }
+#endif // NDEBUG
