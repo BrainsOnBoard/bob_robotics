@@ -36,7 +36,7 @@ public:
  * a wall.
  */
 #define BOB_ASSERT(EXPRESSION)                                                        \
-    if (!EXPRESSION) {                                                                \
+    if (!(EXPRESSION)) {                                                              \
         throw BoBRobotics::AssertionFailedException(#EXPRESSION, __FILE__, __LINE__); \
     }
 #endif // NDEBUG
