@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>
@@ -9,7 +12,6 @@
 #include <vector>
 
 // Standard C includes
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 
@@ -303,7 +305,7 @@ void buildFixedProbabilityConnector(unsigned int numPre, unsigned int numPost, f
 
             // Add synapse
             rowIndices[projection.rowLength[prePost.quot]++] = prePost.rem;
-            assert(projection.rowLength[prePost.quot] <= projection.maxRowLength);
+            BOB_ASSERT(projection.rowLength[prePost.quot] <= projection.maxRowLength);
         }
         else {
             break;
@@ -398,7 +400,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     sortRows(numPre, projection);
 
     // Check correct number of connections were added
-    assert(projection.indInG[numPre] == projection.connN);
+    BOB_ASSERT(projection.indInG[numPre] == projection.connN);
 }
 //----------------------------------------------------------------------------
 unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
@@ -468,7 +470,7 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
     sortRows(numPre, projection);
 
     // Check structure is valid
-    assert(projection.indInG[numPre] == numConnections);
+    BOB_ASSERT(projection.indInG[numPre] == numConnections);
 }
 //----------------------------------------------------------------------------
 template <typename Generator>
@@ -558,9 +560,9 @@ void buildFixedNumberTotalWithReplacementConnector(unsigned int numPre, unsigned
 
         if(projection.rowLength[i] > projection.maxRowLength) {
             printf("Row length %u greate than max %u\n", projection.rowLength[i], projection.maxRowLength);
-            assert(false);
+            BOB_ASSERT(false);
         }
-        //assert(projection.rowLength[i] <= projection.maxRowLength);
+        //BOB_ASSERT(projection.rowLength[i] <= projection.maxRowLength);
         
         // Pick a random postsynaptic neuron to connect each one
         for(unsigned int j = 0; j < projection.rowLength[i]; j++) {

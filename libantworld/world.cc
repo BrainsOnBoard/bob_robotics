@@ -7,13 +7,13 @@
 #include <sstream>
 #include <tuple>
 
-// Standard C includes
-#include <cassert>
-
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "../common/assert.h"
+
+// Third-party includes
 #include "../third_party/path.h"
 
 // Antworld includes
@@ -35,7 +35,7 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
-    assert(stream.eof());
+    BOB_ASSERT(stream.eof());
 }
 
 void readFace(std::istringstream &lineStream,
@@ -70,7 +70,7 @@ void readFace(std::istringstream &lineStream,
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
-    assert(lineStream.eof());
+    BOB_ASSERT(lineStream.eof());
 }
 }
 
@@ -274,7 +274,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "f") {
                 // Check that a surface has been begun
-                assert(!objSurfaces.empty());
+                BOB_ASSERT(!objSurfaces.empty());
 
                 // Read face
                 readFace(lineStream, rawPositions, rawTexCoords, objSurfaces.back());
@@ -387,7 +387,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
             // ignore lighting properties
         }
         else if(commandString == "map_Kd") {
-            assert(!currentMaterialName.empty());
+            BOB_ASSERT(!currentMaterialName.empty());
 
             // Skip any whitespace preceeding texture filename
             while(lineStream.peek() == ' ') {
@@ -440,7 +440,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
                 // Add name to map
                 const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
-                assert(inserted);
+                BOB_ASSERT(inserted);
             }
         }
         else {

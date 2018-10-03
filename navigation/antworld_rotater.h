@@ -1,12 +1,10 @@
 #pragma once
 
-// Standard C includes
-#include <cassert>
-
 // Third-party includes
 #include "../third_party/units.h"
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../libantworld/agent.h"
 
 namespace BoBRobotics {
@@ -35,10 +33,10 @@ public:
       , m_Pitch(pitch)
       , m_Roll(roll)
     {
-        assert(agent.getOutputSize() == unwrapRes);
+        BOB_ASSERT(agent.getOutputSize() == unwrapRes);
 
         // This rotater doesn't support mask images
-        assert(maskImage.empty());
+        BOB_ASSERT(maskImage.empty());
     }
 
     template<class Func>

@@ -1,5 +1,9 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
@@ -10,7 +14,6 @@
 #include <vector>
 
 // Standard C includes
-#include <cassert>
 #include <cstring>
 
 // Networking includes
@@ -23,9 +26,6 @@
     #include <sys/types.h>
     #include <unistd.h>
 #endif
-
-// BoB robotics includes
-#include "../common/pose.h"
 
 namespace BoBRobotics
 {
@@ -318,7 +318,7 @@ private:
                     // Read size of item
                     uint16_t itemDataSize;
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
-                    assert(itemDataSize == 72);
+                    BOB_ASSERT(itemDataSize == 72);
 
                     // Read object position
                     Vector3<double> position;

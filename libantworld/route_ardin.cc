@@ -6,9 +6,6 @@
 #include <limits>
 #include <tuple>
 
-// Standard C includes
-#include <cassert>
-
 // Libantworld includes
 #include "common.h"
 

@@ -1,7 +1,6 @@
 #pragma once
 
 // Standard C includes
-#include <cassert>
 #include <cstdint>
 
 // Standard C++ includes
@@ -13,6 +12,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/image_database.h"
 
 // Third-party includes
@@ -67,9 +67,9 @@ public:
     void setMaskImage(const std::string &path)
     {
         m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
-        assert(m_MaskImage.cols == m_UnwrapRes.width);
-        assert(m_MaskImage.rows == m_UnwrapRes.height);
-        assert(m_MaskImage.type() == CV_8UC1);
+        BOB_ASSERT(m_MaskImage.cols == m_UnwrapRes.width);
+        BOB_ASSERT(m_MaskImage.rows == m_UnwrapRes.height);
+        BOB_ASSERT(m_MaskImage.type() == CV_8UC1);
     }
 
     //! Return mask image
@@ -99,12 +99,12 @@ private:
 
         // Load image
         cv::Mat image = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
-        assert(image.type() == CV_8UC1);
+        BOB_ASSERT(image.type() == CV_8UC1);
         if (resizeImage) {
             cv::resize(image, image, m_UnwrapRes);
         } else {
-            assert(image.cols == m_UnwrapRes.width);
-            assert(image.rows == m_UnwrapRes.height);
+            BOB_ASSERT(image.cols == m_UnwrapRes.width);
+            BOB_ASSERT(image.rows == m_UnwrapRes.height);
         }
 
         // Add snapshot

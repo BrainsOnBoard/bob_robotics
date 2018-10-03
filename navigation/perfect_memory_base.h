@@ -1,7 +1,6 @@
 #pragma once
 
 // Standard C includes
-#include <cassert>
 #include <cstdint>
 
 // Standard C++ includes
@@ -21,6 +20,7 @@
 #include "../third_party/units.h"
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/image_database.h"
 
 // Local includes
@@ -61,9 +61,9 @@ public:
     virtual void train(const cv::Mat &image) override
     {
         const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
 
         // Add snapshot
         addSnapshot(image);
@@ -118,7 +118,7 @@ private:
     void calcImageDifferences(Ts &&... args) const
     {
         const size_t numSnapshots = getNumSnapshots();
-        assert(numSnapshots > 0);
+        BOB_ASSERT(numSnapshots > 0);
 
         // Object for rotating over images
         const cv::Size unwrapRes = getUnwrapResolution();

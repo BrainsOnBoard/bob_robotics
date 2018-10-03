@@ -7,8 +7,8 @@
 #include <limits>
 #include <tuple>
 
-// Standard C includes
-#include <cassert>
+// BoB robotics includes
+#include "../common/assert.h"
 
 // Libantworld includes
 #include "common.h"
@@ -322,7 +322,7 @@ void RouteContinuous::addPoint(meter_t x, meter_t y, bool error)
     const float position[2] = {(float) x.value(), (float) y.value()};
 
     // Check we haven't run out of buffer space
-    assert(m_RouteNumPoints < m_RouteMaxPoints);
+    BOB_ASSERT(m_RouteNumPoints < m_RouteMaxPoints);
 
     // Update this vertex's colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RouteColourVBO);

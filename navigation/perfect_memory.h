@@ -1,7 +1,6 @@
 #pragma once
 
 // Standard C includes
-#include <cassert>
 #include <cstdlib>
 
 // Standard C++ includes
@@ -13,6 +12,9 @@
 
 // Third-party includes
 #include "../third_party/path.h"
+
+// BoB robotics includes
+#include "../common/assert.h"
 
 // Local includes
 #include "differencers.h"
@@ -55,7 +57,7 @@ public:
 
     virtual const cv::Mat &getSnapshot(size_t index) const override
     {
-        assert(index < m_Snapshots.size());
+        BOB_ASSERT(index < m_Snapshots.size());
         return m_Snapshots[index];
     }
 
