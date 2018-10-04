@@ -28,19 +28,22 @@ using namespace units::angle;
 class ImageDatabase
 {
 public:
-    struct Entry {
+    struct Entry
+    {
         Vector3<millimeter_t> position;
         degree_t heading;
-        std::string path;
+        filesystem::path path;
 
         cv::Mat load() const
         {
-            return cv::imread(path);
+            assert(path.exists());
+            return cv::imread(path.str());
         }
 
         cv::Mat loadGreyscale() const
         {
-            return cv::imread(path, cv::IMREAD_GRAYSCALE);;
+            assert(path.exists());
+            return cv::imread(path.str(), cv::IMREAD_GRAYSCALE);
         }
     };
 
