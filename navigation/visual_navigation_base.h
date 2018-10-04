@@ -13,7 +13,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#include "../common/image_database.h"
+#include "image_database.h"
 
 // Third-party includes
 #include "../third_party/path.h"
@@ -40,25 +40,25 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    //! Train with image at specified path
-    void train(const filesystem::path &imagePath, bool resizeImage = false)
-    {
-        if (!tryTrain(imagePath, resizeImage)) {
-            throw std::runtime_error("Path " + imagePath.str() + " does not exist");
-        }
-    }
-
     //! Train algorithm with specified route
-    void trainRoute(const filesystem::path &routePath, bool resizeImages = false)
+    void trainRoute(const ImageDatabase &imdb, bool resizeImages = false)
     {
-        if (!routePath.exists()) {
-            throw std::runtime_error("Path " + routePath.str() + " does not exist");
-        }
-
-        for (size_t i = 0;; i++) {
-            const auto filename = routePath / getRouteDatabaseFilename(i);
-            if (!tryTrain(filename, resizeImages)) {
-                return;
+        cv::Mat image;
+        if (resizeImages) {
+            cv::Mat imageResized;
+            for (const auto &e : imdb) {
+                image = e.loadGreyscale();
+                assert(image.type() == CV_8UC1);
+                cv::resize(image, imageResized, m_UnwrapRes);
+                train(imageResized);
+            }
+        } else {
+            for (const auto &e : imdb) {
+                image = e.loadGreyscale();
+                assert(image.type() == CV_8UC1);
+                assert(image.cols == m_UnwrapRes.width);
+                assert(image.rows == m_UnwrapRes.height);
+                train(image);
             }
         }
     }
@@ -90,28 +90,6 @@ private:
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
     cv::Mat m_MaskImage;
-
-    bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept
-    {
-        if (!imagePath.exists()) {
-            return false;
-        }
-
-        // Load image
-        cv::Mat image = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
-        assert(image.type() == CV_8UC1);
-        if (resizeImage) {
-            cv::resize(image, image, m_UnwrapRes);
-        } else {
-            assert(image.cols == m_UnwrapRes.width);
-            assert(image.rows == m_UnwrapRes.height);
-        }
-
-        // Add snapshot
-        train(image);
-
-        return true;
-    }
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics
