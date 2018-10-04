@@ -28,7 +28,7 @@ main()
 		// Open gantry and home it
         Robots::Gantry gantry;
         std::cout << "Homing gantry." << std::endl;
-        gantry.home();
+        gantry.raiseAndHome();
         std::cout << "Gantry homed." << std::endl;
 
 		// Get gantry camera
