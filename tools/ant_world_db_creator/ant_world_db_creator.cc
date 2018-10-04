@@ -111,7 +111,9 @@ int main(int argc, char *argv[])
     std::string databaseName;
     if (followRoute) {
         // Load route
-        route.load(argv[1]);
+        if (!route.load(argv[1])) {
+            return 1;
+        }
 
         // Get filename from route path
         databaseName = filesystem::path(argv[1]).filename();

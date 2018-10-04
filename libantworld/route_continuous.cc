@@ -124,7 +124,7 @@ bool RouteContinuous::load(const std::string &filename)
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file:" << filename << std::endl;
+        std::cerr << "Cannot open route file: " << filename << std::endl;
         return false;
     }
 
