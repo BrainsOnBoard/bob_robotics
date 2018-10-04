@@ -75,7 +75,7 @@ public:
         std::vector<FloatType> outputs;
         outputs.reserve(rotater.max());
         rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
-            outputs.push_back(decision(image));
+            outputs.push_back(this->decision(image));
         });
 
         const auto el = std::min_element(outputs.begin(), outputs.end());
