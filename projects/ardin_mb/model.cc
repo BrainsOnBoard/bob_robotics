@@ -146,6 +146,14 @@ void modelDefinition(NNmodel &model)
     auto pn = model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, lifInit);
     auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
     auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+
+    pn->setVarMode("V", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    kc->setVarMode("V", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    en->setVarMode("V", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    pn->setVarMode("RefracTime", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    kc->setVarMode("RefracTime", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    en->setVarMode("RefracTime", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+
     pn->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
     kc->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
     en->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
