@@ -35,62 +35,46 @@ using namespace units::angle;
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
-template<typename Rotater = InSilicoRotater, typename FloatType = float>
-class InfoMax
-  : public VisualNavigationBase
+template<typename FloatType = float>
+class InfoMax : public VisualNavigationBase
 {
-using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
-using VectorType = Matrix<FloatType, Dynamic, 1>;
+    using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
+    using VectorType = Matrix<FloatType, Dynamic, 1>;
 
 public:
-    InfoMax<Rotater, FloatType>(const cv::Size &unwrapRes,
-                                const MatrixType &initialWeights,
-                                FloatType learningRate = 0.0001)
+    InfoMax(const cv::Size &unwrapRes,
+            const MatrixType &initialWeights,
+            FloatType learningRate = 0.0001)
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
     {}
 
-    InfoMax<Rotater, FloatType>(const cv::Size &unwrapRes,
-                                FloatType learningRate = 0.0001)
+    InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
                                     1 + unwrapRes.width * unwrapRes.height))
     {}
 
+    //------------------------------------------------------------------------
+    // VisualNavigationBase virtuals
+    //------------------------------------------------------------------------
     virtual void train(const cv::Mat &image) override
     {
         calculateUY(image);
         trainUY();
     }
 
-    FloatType decision(const cv::Mat &image) const
+    virtual float test(const cv::Mat &image) const override
     {
         const auto decs = m_Weights * getFloatVector(image);
         return decs.array().abs().sum();
     }
 
-    template<class... Ts>
-    auto getHeading(Ts &&... args) const
-    {
-        Rotater rotater(getUnwrapResolution(), getMaskImage(), std::forward<Ts>(args)...);
-        std::vector<FloatType> outputs;
-        outputs.reserve(rotater.max());
-        rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
-            outputs.push_back(this->decision(image));
-        });
-
-        const auto el = std::min_element(outputs.begin(), outputs.end());
-        size_t bestIndex = std::distance(outputs.begin(), el);
-        if (bestIndex > outputs.size() / 2) {
-            bestIndex -= outputs.size();
-        }
-        const radian_t heading = units::make_unit<turn_t>((double) bestIndex / (double) outputs.size());
-
-        return std::make_tuple(heading, *el, std::move(outputs));
-    }
-
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
     const MatrixType &getWeights() const
     {
         return m_Weights;
@@ -191,5 +175,47 @@ private:
         return (mat.array() * mat.array()).rowwise().mean();
     }
 }; // InfoMax
+
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::InfoMaxRotater
+//------------------------------------------------------------------------
+template<typename Rotater = InSilicoRotater, typename FloatType = float>
+class InfoMaxRotater : public InfoMax<FloatType>
+{
+    using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
+public:
+    InfoMaxRotater(const cv::Size &unwrapRes,
+                   const MatrixType &initialWeights,
+                   FloatType learningRate = 0.0001)
+    :   InfoMax<FloatType>(unwrapRes, initialWeights, learningRate)
+    {}
+
+    InfoMaxRotater(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
+    :   InfoMax<FloatType>(unwrapRes, learningRate)
+    {}
+
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
+    template<class... Ts>
+    auto getHeading(Ts &&... args) const
+    {
+        Rotater rotater(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        std::vector<FloatType> outputs;
+        outputs.reserve(rotater.max());
+        rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
+            outputs.push_back(this->test(image));
+        });
+
+        const auto el = std::min_element(outputs.begin(), outputs.end());
+        size_t bestIndex = std::distance(outputs.begin(), el);
+        if (bestIndex > outputs.size() / 2) {
+            bestIndex -= outputs.size();
+        }
+        const radian_t heading = units::make_unit<turn_t>((double) bestIndex / (double) outputs.size());
+
+        return std::make_tuple(heading, *el, std::move(outputs));
+    }
+};
 } // Navigation
 } // BoBRobotics

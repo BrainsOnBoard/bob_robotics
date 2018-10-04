@@ -37,6 +37,9 @@ public:
     //! Train the algorithm with the specified image
     virtual void train(const cv::Mat &image) = 0;
 
+    //! Test the algorithm with the specified image
+    virtual float test(const cv::Mat &image) const = 0;
+
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
