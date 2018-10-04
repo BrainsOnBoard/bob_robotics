@@ -1,7 +1,6 @@
 #pragma once
 
 // Standard C includes
-#include <cassert>
 #include <cmath>
 
 // Standard C++ includes
@@ -11,6 +10,9 @@
 
 // OpenCV
 #include <opencv2/opencv.hpp>
+
+// BoB robotics includes
+#include "../common/assert.h"
 
 // Local includes
 #include "differencers.h"
@@ -68,7 +70,7 @@ public:
     {
         m_Snapshots.emplace_back(m_HOGDescriptorSize);
         m_HOG.compute(image, m_Snapshots.back());
-        assert(m_Snapshots.back().size() == m_HOGDescriptorSize);
+        BOB_ASSERT(m_Snapshots.back().size() == m_HOGDescriptorSize);
 
         // Return index of new snapshot
         return (m_Snapshots.size() - 1);
@@ -77,11 +79,11 @@ public:
     // Calculate difference between memory and snapshot with index
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &) const
     {
-        assert(imageMask.empty());
+        BOB_ASSERT(imageMask.empty());
 
         // Calculate HOG descriptors of image
         m_HOG.compute(image, m_ScratchDescriptors);
-        assert(m_ScratchDescriptors.size() == m_HOGDescriptorSize);
+        BOB_ASSERT(m_ScratchDescriptors.size() == m_HOGDescriptorSize);
 
         // Calculate differences between image HOG descriptors and snapshot
         auto diffIter = m_Differencer(m_Snapshots[snapshot], m_ScratchDescriptors, m_ScratchDescriptors);

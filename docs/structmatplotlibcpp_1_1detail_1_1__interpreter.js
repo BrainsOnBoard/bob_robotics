@@ -28,6 +28,8 @@ var structmatplotlibcpp_1_1detail_1_1__interpreter =
     [ "s_python_function_xkcd", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#ac94dda0fc02bf1c7c4af3759c46ea8d7", null ],
     [ "s_python_function_xlabel", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a25279a4bc59b40e4f48c7491c6ec5af3", null ],
     [ "s_python_function_xlim", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a078b733c5d391a091049b6ef00488b38", null ],
+    [ "s_python_function_xticks", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a3e7a4c2ecaaf47a965f4909046a7703a", null ],
     [ "s_python_function_ylabel", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#aa90a8153eb9c50bf42a26ea1689fbf19", null ],
-    [ "s_python_function_ylim", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#afa69df018d0a76c3525693f09197176f", null ]
+    [ "s_python_function_ylim", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#afa69df018d0a76c3525693f09197176f", null ],
+    [ "s_python_function_yticks", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#ae1a95f666a22a9a6a49ad26e15635201", null ]
 ];

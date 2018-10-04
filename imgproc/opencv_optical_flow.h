@@ -1,7 +1,9 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 // Standard C includes
-#include <cassert>
 #include <cmath>
 
 // OpenCV includes
@@ -40,9 +42,9 @@ public:
 
     bool calculate(const cv::Mat &input)
     {
-        assert(input.cols == m_Frames[0].cols);
-        assert(input.rows == m_Frames[0].rows);
-        assert(input.type() == CV_8UC1);
+        BOB_ASSERT(input.cols == m_Frames[0].cols);
+        BOB_ASSERT(input.rows == m_Frames[0].rows);
+        BOB_ASSERT(input.type() == CV_8UC1);
 
         // Copy frame into array
         const unsigned int currentFrame = m_Frame % 2;
@@ -68,8 +70,8 @@ public:
 
     void render(cv::Mat &outputImage, unsigned int scale)
     {
-        assert(outputImage.cols == m_FlowX.cols * (int) scale);
-        assert(outputImage.rows == m_FlowX.rows * (int) scale);
+        BOB_ASSERT(outputImage.cols == m_FlowX.cols * (int) scale);
+        BOB_ASSERT(outputImage.rows == m_FlowX.rows * (int) scale);
 
         // Clear image
         outputImage.setTo(cv::Scalar::all(0));

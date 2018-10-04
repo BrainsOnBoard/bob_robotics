@@ -111,7 +111,9 @@ int main(int argc, char *argv[])
     std::string databaseName;
     if (followRoute) {
         // Load route
-        route.load(argv[1]);
+        if (!route.load(argv[1])) {
+            return 1;
+        }
 
         // Get filename from route path
         databaseName = filesystem::path(argv[1]).filename();
@@ -170,7 +172,7 @@ int main(int argc, char *argv[])
         agent.readFrame(frame);
 
         // Write to image database
-        database.saveImage(frame, x, y, z, heading, followRoute);
+        database.addImage(frame, x, y, z, heading, followRoute);
 
         // Poll for and process events
         glfwPollEvents();

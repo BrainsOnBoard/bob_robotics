@@ -1,8 +1,7 @@
 #pragma once
 
 // Standard C includes
-#include <cassert>
-#include <cstdint>
+#include <cstdlib>
 
 // Standard C++ includes
 #include <algorithm>
@@ -19,6 +18,9 @@
 
 // Third-party includes
 #include "../third_party/units.h"
+
+// BoB robotics includes
+#include "../common/assert.h"
 
 // Local includes
 #include "differencers.h"
@@ -48,9 +50,9 @@ public:
     virtual void train(const cv::Mat &image) override
     {
         const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
 
         // Add snapshot
         m_Store.addSnapshot(image);
@@ -59,12 +61,12 @@ public:
     virtual float test(const cv::Mat &image) const override
     {
         const auto &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
 
         const size_t numSnapshots = getNumSnapshots();
-        assert(numSnapshots > 0);
+        BOB_ASSERT(numSnapshots > 0);
 
         // Clear differences (won't free)
         m_Differences.clear();

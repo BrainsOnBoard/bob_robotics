@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -22,9 +25,9 @@ public:
                     const unsigned int scanStep = 1)
       : m_ScanStep(scanStep)
     {
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
-        assert(image.type() == CV_8UC1);
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
 
         image.copyTo(m_Image);
         maskImage.copyTo(m_MaskImage);

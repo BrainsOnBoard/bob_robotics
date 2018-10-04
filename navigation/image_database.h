@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/pose.h"
 
 // Third-party includes
@@ -11,7 +12,6 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C includes
-#include <cassert>
 #include <cstdio>
 
 // Standard C++ includes
@@ -28,25 +28,35 @@ using namespace units::angle;
 class ImageDatabase
 {
 public:
-    struct Entry {
+    struct Entry
+    {
         Vector3<millimeter_t> position;
         degree_t heading;
-        std::string path;
+        filesystem::path path;
 
         cv::Mat load() const
         {
-            return cv::imread(path);
+            BOB_ASSERT(path.exists());
+            return cv::imread(path.str());
         }
 
         cv::Mat loadGreyscale() const
         {
-            return cv::imread(path, cv::IMREAD_GRAYSCALE);;
+            BOB_ASSERT(path.exists());
+            return cv::imread(path.str(), cv::IMREAD_GRAYSCALE);
         }
     };
 
-    template<class T>
-    ImageDatabase(T &&databaseName)
-      : m_Path(std::forward<T>(databaseName))
+    ImageDatabase(const char *databasePath)
+      : ImageDatabase(filesystem::path(databasePath))
+    {}
+
+    ImageDatabase(const std::string &databasePath)
+      : ImageDatabase(filesystem::path(databasePath))
+    {}
+
+    ImageDatabase(const filesystem::path &databasePath)
+      : m_Path(databasePath)
     {
         const auto metadataPath = m_Path / "metadata.csv";
 
@@ -59,42 +69,28 @@ public:
 
         // Otherwise parse metadata file
         std::ifstream file(metadataPath.str());
-        std::string line;
+        std::string line, field;
         std::vector<std::string> fields;
         std::getline(file, line); // skip first line
-        while (!file.eof()) {
-            // Values are separated by commas
+        while (std::getline(file, line)) {
+            std::stringstream lineStream(line);
             fields.clear();
-            std::getline(file, line);
-            size_t start = 0;
-            for (size_t end = 0; end < line.size(); ) {
-                if (line[end] == ',') {
-                    fields.push_back(line.substr(start, end - start));
-                    start = end + 1;
-
-                    // Skip whitespace
-                    while (start < line.size() && line[start] == ' ') {
-                        start++;
-                    }
-                    end = start;
-                } else {
-                    end++;
-                }
+            while (std::getline(lineStream, field, ',')) {
+                ltrim(field); // trim whitespace
+                fields.push_back(field);
             }
-            fields.push_back(line.substr(start));
             if (fields.size() < 5) {
                 break;
             }
 
             // Save details to vector
-            Entry entry {
-                {
-                    millimeter_t(std::stod(fields[0])),
-                    millimeter_t(std::stod(fields[1])),
-                    millimeter_t(std::stod(fields[2]))
-                },
+            Entry entry{
+                { millimeter_t(std::stod(fields[0])),
+                  millimeter_t(std::stod(fields[1])),
+                  millimeter_t(std::stod(fields[2])) },
                 degree_t(std::stod(fields[3])),
-                (m_Path / fields[4]).str()};
+                m_Path / fields[4]
+            };
             m_Database.push_back(entry);
         }
     }
@@ -114,7 +110,7 @@ public:
     auto end() const { return m_Database.cend(); }
     size_t size() const { return m_Database.size(); }
 
-    void saveImage(cv::Mat &frame, millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading, bool isRoute)
+    void addImage(cv::Mat &frame, millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading, bool isRoute)
     {
         // Get image file name
         std::string filename = isRoute ? getFilename(m_Database.size())
@@ -122,7 +118,7 @@ public:
 
         // Update database
         m_DirtyFlag = true;
-        m_Database.push_back(Entry{{x, y, z}, heading, filename});
+        m_Database.push_back(Entry{ { x, y, z }, heading, filename });
 
         // Write current view to file
         cv::imwrite((filesystem::path(m_Path) / filename).str(), frame);
@@ -168,6 +164,12 @@ private:
     const filesystem::path m_Path;
     std::vector<Entry> m_Database;
     bool m_DirtyFlag = false;
+
+    static void ltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+            return !std::isspace(ch);
+        }));
+    }
 }; // ImageDatabase
 } // Navigation
 } // BoB robotics

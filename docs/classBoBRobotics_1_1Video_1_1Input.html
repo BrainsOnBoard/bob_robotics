@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Video_1_1Input.htm
 <p>An abstract class representing a video input stream.  
  <a href="classBoBRobotics_1_1Video_1_1Input.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="input_8h_source.html">input.h</a>&gt;</code></p>
+<p><code>#include &lt;input.h&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for BoBRobotics::Video::Input:</div>
 <div class="dyncontent">
@@ -116,10 +116,9 @@ Inheritance diagram for BoBRobotics::Video::Input:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aaf916df9d220b69a28f5edd70ebc31ca"><td class="memTemplParams" colspan="2">template&lt;typename... Ts&gt; </td></tr>
-<tr class="memitem:aaf916df9d220b69a28f5edd70ebc31ca"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a>&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#aaf916df9d220b69a28f5edd70ebc31ca">createUnwrapper</a> (Ts &amp;&amp;... args)</td></tr>
-<tr class="memdesc:aaf916df9d220b69a28f5edd70ebc31ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> object for this video stream.  <a href="#aaf916df9d220b69a28f5edd70ebc31ca">More...</a><br /></td></tr>
-<tr class="separator:aaf916df9d220b69a28f5edd70ebc31ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a896fca3cc9e7c1393ece3af54c70aeaa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a896fca3cc9e7c1393ece3af54c70aeaa">createUnwrapper</a> (const cv::Size &amp;unwrapRes)</td></tr>
+<tr class="memdesc:a896fca3cc9e7c1393ece3af54c70aeaa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> object for this video stream.  <a href="#a896fca3cc9e7c1393ece3af54c70aeaa">More...</a><br /></td></tr>
+<tr class="separator:a896fca3cc9e7c1393ece3af54c70aeaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9bc851581cec6b88cc8c9ff433b0a9f7"><td class="memItemLeft" align="right" valign="top">virtual const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a9bc851581cec6b88cc8c9ff433b0a9f7">getCameraName</a> () const</td></tr>
 <tr class="memdesc:a9bc851581cec6b88cc8c9ff433b0a9f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the name of this type of camera as a (short) string.  <a href="#a9bc851581cec6b88cc8c9ff433b0a9f7">More...</a><br /></td></tr>
 <tr class="separator:a9bc851581cec6b88cc8c9ff433b0a9f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,13 +144,11 @@ virtual cv::Size&#160;</td><td class="memItemRight" valign="bottom"><a class="el
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An abstract class representing a video input stream. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="aaf916df9d220b69a28f5edd70ebc31ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf916df9d220b69a28f5edd70ebc31ca">&#9670;&nbsp;</a></span>createUnwrapper()</h2>
+<a id="a896fca3cc9e7c1393ece3af54c70aeaa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a896fca3cc9e7c1393ece3af54c70aeaa">&#9670;&nbsp;</a></span>createUnwrapper()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename... Ts&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -159,8 +156,8 @@ template&lt;typename... Ts&gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> BoBRobotics::Video::Input::createUnwrapper </td>
           <td>(</td>
-          <td class="paramtype">Ts &amp;&amp;...&#160;</td>
-          <td class="paramname"><em>args</em></td><td>)</td>
+          <td class="paramtype">const cv::Size &amp;&#160;</td>
+          <td class="paramname"><em>unwrapRes</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -174,7 +171,7 @@ template&lt;typename... Ts&gt; </div>
 <p>Create an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> object for this video stream. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">args</td><td>The resolution of the unwrapped image, as cv::Size or two ints </td></tr>
+    <tr><td class="paramname">args</td><td>The resolution of the unwrapped image </td></tr>
   </table>
   </dd>
 </dl>
@@ -274,7 +271,7 @@ template&lt;typename... Ts&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>video/<a class="el" href="input_8h_source.html">input.h</a></li>
+<li>video/input.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

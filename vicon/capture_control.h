@@ -1,11 +1,13 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 // Standard C++ includes
 #include <string>
 #include <sstream>
 
 // Standard C includes
-#include <cassert>
 #include <cstring>
 #include <ctime>
 

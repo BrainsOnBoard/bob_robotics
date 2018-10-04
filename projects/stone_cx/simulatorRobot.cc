@@ -85,8 +85,8 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     cv::VideoCapture capture(cameraDevice);
 
     const cv::Size camRes(640, 480);
-    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == camRes.width);
-    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == camRes.height);
+    BOB_ASSERT(capture.get(cv::CAP_PROP_FRAME_WIDTH) == camRes.width);
+    BOB_ASSERT(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == camRes.height);
 
     // Create unwrapper
     OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
