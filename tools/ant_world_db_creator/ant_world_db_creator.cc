@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
         agent.readFrame(frame);
 
         // Write to image database
-        database.saveImage(frame, x, y, z, heading, followRoute);
+        database.addImage(frame, x, y, z, heading, followRoute);
 
         // Poll for and process events
         glfwPollEvents();

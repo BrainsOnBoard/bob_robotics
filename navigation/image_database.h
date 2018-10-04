@@ -110,7 +110,7 @@ public:
     auto end() const { return m_Database.cend(); }
     size_t size() const { return m_Database.size(); }
 
-    void saveImage(cv::Mat &frame, millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading, bool isRoute)
+    void addImage(cv::Mat &frame, millimeter_t x, millimeter_t y, millimeter_t z, degree_t heading, bool isRoute)
     {
         // Get image file name
         std::string filename = isRoute ? getFilename(m_Database.size())
