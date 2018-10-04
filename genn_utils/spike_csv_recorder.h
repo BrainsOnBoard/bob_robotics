@@ -164,7 +164,7 @@ private:
         return &m_Spk[m_SpkQueuePtr * m_PopSize];
     }
 
-    const unsigned int getCurrentSpkCnt() const
+    unsigned int getCurrentSpkCnt() const
     {
         return m_SpkCnt[m_SpkQueuePtr];
     }
