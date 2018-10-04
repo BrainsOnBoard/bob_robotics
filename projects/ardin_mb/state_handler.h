@@ -2,6 +2,7 @@
 
 // Standard C++ includes
 #include <bitset>
+#include <random>
 #include <string>
 
 // OpenCV includes
@@ -17,6 +18,9 @@
 #include "libantworld/renderer.h"
 #include "libantworld/route_ardin.h"
 #include "libantworld/snapshot_processor_ardin.h"
+
+// Ardin MB includes
+#include "vector_field.h"
 
 // Forward declarations
 namespace BoBRobotics
@@ -37,6 +41,7 @@ enum class State
     Testing,
     RandomWalk,
     FreeMovement,
+    BuildingVectorField,
 };
 
 //----------------------------------------------------------------------------
@@ -59,6 +64,7 @@ public:
         KeyTrainSnapshot,
         KeyTestSnapshot,
         KeySaveSnapshot,
+        KeyRandomWalk,
         KeyMax
     };
 
@@ -89,10 +95,13 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
+    //! Finite state machine for ant world
     BoBRobotics::FSM<State> m_StateMachine;
+
+    //! Bitset of current key states
     KeyBitset m_KeyBits;
 
-    // Host OpenCV array to hold pixels read from screen
+    //! Host OpenCV array to hold pixels read from screen
     cv::Mat m_Snapshot;
 
     BoBRobotics::AntWorld::Renderer m_Renderer;
@@ -100,8 +109,6 @@ private:
     BoBRobotics::Video::OpenGL m_Input;
 
     BoBRobotics::AntWorld::RouteArdin m_Route;
-
-    //MBMemory m_Memory;
 
     BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
 
@@ -128,11 +135,15 @@ private:
     units::angle::degree_t m_BestTestHeading;
     float m_LowestTestDifference;
 
+    //! RNG used for random walk
+    std::mt19937 m_RNG;
 
-    // Model used for visual navigation
+    //! Distribution of angles to turn for random walk
+    std::uniform_real_distribution<float> m_RandomWalkAngleDistribution;
+
+    //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
 
-    /*unsigned int m_CurrentVectorFieldPoint;
-    unsigned int m_CurrentAngleFrames;
-    std::vector<float> m_VectorFieldNovelty;*/
+    unsigned int m_CurrentVectorFieldPoint;
+    std::vector<float> m_VectorFieldNovelty;
 };

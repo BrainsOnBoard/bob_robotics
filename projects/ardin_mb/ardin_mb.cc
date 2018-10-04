@@ -80,6 +80,10 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int)
         case GLFW_KEY_S:
             stateHandler->setKeyState(StateHandler::KeySaveSnapshot, newKeyState);
             break;
+
+        case GLFW_KEY_W:
+            stateHandler->setKeyState(StateHandler::KeyRandomWalk, newKeyState);
+            break;
     }
 }
 //----------------------------------------------------------------------------

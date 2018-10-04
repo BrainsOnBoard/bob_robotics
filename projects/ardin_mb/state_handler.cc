@@ -20,7 +20,7 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_FloatInput(floatInput), m_VisualNavigation(visualNavigation)
+    m_FloatInput(floatInput), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
 {
     // Load world
     m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
@@ -61,6 +61,10 @@ bool StateHandler::handleEvent(State state, Event event)
         // Process snapshot
         m_SnapshotProcessor.process(m_Snapshot);
 
+        // If random walk key is pressed, transition to correct state
+        if(m_KeyBits.test(KeyRandomWalk)) {
+            m_StateMachine.transition(State::RandomWalk);
+        }
 
         cv::waitKey(1);
     }
@@ -210,6 +214,55 @@ bool StateHandler::handleEvent(State state, Event event)
             }
         }
     }
+    else if(state == State::RandomWalk) {
+        if(event == Event::Enter) {
+            resetAntPosition();
+        }
+        else if(event == Event::Update) {
+            // Pick random heading
+            m_AntHeading += units::make_unit<units::angle::degree_t>(m_RandomWalkAngleDistribution(m_RNG));
+
+            // Move ant forward by snapshot distance
+            m_AntX += SimParams::snapshotDistance * units::math::sin(m_AntHeading);
+            m_AntY += SimParams::snapshotDistance * units::math::cos(m_AntHeading);
+
+            // Increment step count
+            m_NumTestSteps++;
+
+            // If we've reached destination
+            if(m_Route.atDestination(m_AntX, m_AntY, SimParams::errorDistance)) {
+                std::cerr << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors" << std::endl;
+
+                // Add final point to route
+                m_Route.addPoint(m_AntX, m_AntY, false);
+                return false;
+            }
+            // Otherwise
+            else {
+                // Calculate distance to route
+                meter_t distanceToRoute;
+                size_t nearestRouteWaypoint;
+                std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_AntX, m_AntY);
+
+                // If we are further away than error threshold
+                if(distanceToRoute > SimParams::errorDistance) {
+                    // Snap ant to next snapshot position
+                    // **HACK** this is dubious but looks very much like what the original model was doing in figure 1i
+                    std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[nearestRouteWaypoint + 1];
+
+                    // Add error point to route
+                    m_Route.addPoint(m_AntX, m_AntY, true);
+
+                    // Increment error counter
+                    m_NumTestErrors++;
+                }
+                // Otherwise add 'correct' point to route
+                else {
+                    m_Route.addPoint(m_AntX, m_AntY, false);
+                }
+            }
+        }
+    }
     // Otherwise if we're in testing state
     else if(state == State::FreeMovement) {
         if(event == Event::Update) {
@@ -245,17 +298,15 @@ bool StateHandler::handleEvent(State state, Event event)
             }
         }
     }
-
-    /*else if(state == State::BuildingVectorField) {
-        if(event == Event::Enter) {
-            // Reset ant heading and move it to vector field position
+    else if(state == State::BuildingVectorField) {
+        /*if(event == Event::Enter) {
+            // Reset ant heading and move it to first vector field position
             m_AntHeading = 0.0f;
+            m_CurrentVectorFieldPoint = 0;
             std::tie(m_AntX, m_AntY) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
 
             // Clear vector of novelty values
             m_VectorFieldNovelty.clear();
-
-            m_CurrentAngleFrames = (unsigned int)round(100.0f / WorldParams::simulatedFrameMs);
         }
         else if(event == Event::Update) {
             // Decrement frames to spent at current angle
@@ -267,7 +318,7 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_VectorFieldNovelty.push_back(m_Memory.getNovelty());
 
                 // Update heading
-                m_AntHeading += WorldParams::vectorFieldStepDegrees;
+                m_AntHeading += SimParams::vectorFieldStepDegrees;
 
                 // Reset frame count
                 m_CurrentAngleFrames = (unsigned int)round(100.0f / WorldParams::simulatedFrameMs);
@@ -290,14 +341,15 @@ bool StateHandler::handleEvent(State state, Event event)
                     }
                 }
             }
-        }
-    }*/
+        }*/
+    }
     else {
         throw std::runtime_error("Invalid state");
     }
 
     return true;
 }
+//----------------------------------------------------------------------------
 void StateHandler::resetAntPosition()
 {
     if(m_Route.size() > 0) {
@@ -309,11 +361,3 @@ void StateHandler::resetAntPosition()
         m_AntHeading = 270.0_deg;
     }
 }
-/*void StateHandler::onPNPNTrackbar(int value, void *context)
-{
-    StateHandler *stateHandler = reinterpret_cast<StateHandler*>(context);
-
-    float newWeight = percentageToReal(value, -10.0, 0.0);
-    std::cout << newWeight << std::endl;
-    stateHandler->m_Memory.setPNToPNWeight(newWeight);
-}*/
