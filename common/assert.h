@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -18,6 +19,9 @@ public:
     AssertionFailedException(const std::string &test, const std::string &file, int line)
       : std::runtime_error("Assertion failed: "s + test + " (in "s + file + " at line "s + std::to_string(line) + ")"s)
     {
+#ifdef _WIN32
+        std::cerr << what() << std::endl;
+#endif
     }
 }; // AssertionFailedException
 } // BoBRobotics
@@ -28,7 +32,7 @@ public:
 #else
 /**!
  * \brief If EXPRESSION evaluates to false, throw AssertionFailedException
- * 
+ *
  * The advantage of this macro over assert in <cassert> is that it throws an
  * exception rather than just terminating the program. This is especially useful
  * when controlling robots as we want exceptions to be caught so that the robot
