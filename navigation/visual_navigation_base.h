@@ -40,37 +40,26 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    //! Train with image at specified path
-    void train(const filesystem::path &imagePath, bool resizeImage = false)
-    {
-        if (!imagePath.exists()) {
-            throw std::runtime_error("Path " + imagePath.str() + " does not exist");
-        }
-
-        // Load image
-        cv::Mat image = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
-        train(image, resizeImage);
-    }
-
-    void train(const cv::Mat &image, bool resizeImage)
-    {
-        assert(image.type() == CV_8UC1);
-        if (resizeImage) {
-            cv::Mat tmp;
-            cv::resize(image, tmp, m_UnwrapRes);
-            train(tmp);
-        } else {
-            assert(image.cols == m_UnwrapRes.width);
-            assert(image.rows == m_UnwrapRes.height);
-            train(image);
-        }
-    }
-
     //! Train algorithm with specified route
     void trainRoute(const ImageDatabase &imdb, bool resizeImages = false)
     {
-        for (const auto &e : imdb) {
-            train(e.loadGreyscale(), resizeImages);
+        cv::Mat image;
+        if (resizeImages) {
+            cv::Mat imageResized;
+            for (const auto &e : imdb) {
+                image = e.loadGreyscale();
+                assert(image.type() == CV_8UC1);
+                cv::resize(image, imageResized, m_UnwrapRes);
+                train(imageResized);
+            }
+        } else {
+            for (const auto &e : imdb) {
+                image = e.loadGreyscale();
+                assert(image.type() == CV_8UC1);
+                assert(image.cols == m_UnwrapRes.width);
+                assert(image.rows == m_UnwrapRes.height);
+                train(image);
+            }
         }
     }
 
