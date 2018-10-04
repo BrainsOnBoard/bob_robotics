@@ -124,6 +124,11 @@ public:
         cv::imwrite((filesystem::path(m_Path) / filename).str(), frame);
     }
 
+    void abortSave()
+    {
+        m_DirtyFlag = false;
+    }
+
     void saveMetadata()
     {
         const std::string path = (m_Path / "metadata.csv").str();
