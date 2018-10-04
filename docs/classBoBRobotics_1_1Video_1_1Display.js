@@ -2,8 +2,7 @@ var classBoBRobotics_1_1Video_1_1Display =
 [
     [ "Display", "classBoBRobotics_1_1Video_1_1Display.html#aa9cce36e989d77a1d409748d44888f81", null ],
     [ "~Display", "classBoBRobotics_1_1Video_1_1Display.html#ad15c696a81c16361501c88c23724caf4", null ],
-    [ "Display", "classBoBRobotics_1_1Video_1_1Display.html#aec431db199ce6ede7686c04875e2c7c7", null ],
-    [ "Display", "classBoBRobotics_1_1Video_1_1Display.html#a8f53be6ffab36a699627eb747cef6327", null ],
+    [ "Display", "classBoBRobotics_1_1Video_1_1Display.html#a422cc87031d73d9916768c4e19989d79", null ],
     [ "close", "classBoBRobotics_1_1Video_1_1Display.html#a5e80ac0505997246ec829f9892faece0", null ],
     [ "isOpen", "classBoBRobotics_1_1Video_1_1Display.html#a2703492d14af0d269b7cb5dd708381fa", null ],
     [ "readFrame", "classBoBRobotics_1_1Video_1_1Display.html#a5c92b075e1a5003dc45a7f2b2f9d4717", null ],

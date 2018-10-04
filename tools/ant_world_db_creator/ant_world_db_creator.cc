@@ -10,7 +10,7 @@
 #include <GLFW/glfw3.h>
 
 // BoB robotics includes
-#include "common/image_database_recorder.h"
+#include "navigation/image_database.h"
 #include "video/opengl.h"
 
 // Libantworld includes
@@ -111,7 +111,9 @@ int main(int argc, char *argv[])
     std::string databaseName;
     if (followRoute) {
         // Load route
-        route.load(argv[1]);
+        if (!route.load(argv[1])) {
+            return 1;
+        }
 
         // Get filename from route path
         databaseName = filesystem::path(argv[1]).filename();
@@ -137,8 +139,8 @@ int main(int argc, char *argv[])
     const auto &worldMinBound = renderer.getWorld().getMinBound();
     const auto &worldMaxBound = renderer.getWorld().getMaxBound();
 
-    // Create ImageDatabaseRecorder
-    ImageDatabaseRecorder database(databaseName, followRoute);
+    // Create ImageDatabase
+    Navigation::ImageDatabase database(databaseName);
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat frame(renderHeight, renderWidth, CV_8UC3);
@@ -170,7 +172,7 @@ int main(int argc, char *argv[])
         agent.readFrame(frame);
 
         // Write to image database
-        database.saveImage(frame, x, y, z, heading);
+        database.addImage(frame, x, y, z, heading, followRoute);
 
         // Poll for and process events
         glfwPollEvents();

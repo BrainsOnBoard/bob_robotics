@@ -1,5 +1,8 @@
 #include "snapshot_processor_ardin.h"
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::SnapshotProcessorArdin
 //----------------------------------------------------------------------------
@@ -17,7 +20,7 @@ SnapshotProcessorArdin::SnapshotProcessorArdin(unsigned int displayScale, unsign
     m_Clahe(cv::createCLAHE(40.0, cv::Size(8, 8)))
 {
     // Check that the display scale is a multiple of 4
-    assert(m_DisplayScale % 4 == 0);
+    BOB_ASSERT(m_DisplayScale % 4 == 0);
 }
 //----------------------------------------------------------------------------
 void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
@@ -27,8 +30,8 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
     // b) CLAHE seems broken for GPU matrices
 
     // Check snapshot is expected size
-    assert((unsigned int)snapshot.rows == m_IntermediateHeight * m_DisplayScale);
-    assert((unsigned int)snapshot.cols == m_IntermediateWidth * m_DisplayScale);
+    BOB_ASSERT((unsigned int)snapshot.rows == m_IntermediateHeight * m_DisplayScale);
+    BOB_ASSERT((unsigned int)snapshot.cols == m_IntermediateWidth * m_DisplayScale);
 
     // Calculate start and end offset of resize kernel
     const unsigned int kernelStart = m_DisplayScale / 4;

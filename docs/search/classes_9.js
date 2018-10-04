@@ -1,8 +1,10 @@
 var searchData=
 [
   ['i2cinterface',['I2CInterface',['../classBoBRobotics_1_1I2CInterface.html',1,'BoBRobotics']]],
-  ['imagedatabaserecorder',['ImageDatabaseRecorder',['../classBoBRobotics_1_1ImageDatabaseRecorder.html',1,'BoBRobotics']]],
+  ['imagedatabase',['ImageDatabase',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html',1,'BoBRobotics::Navigation']]],
+  ['infomax',['InfoMax',['../classBoBRobotics_1_1Navigation_1_1InfoMax.html',1,'BoBRobotics::Navigation']]],
   ['input',['Input',['../classBoBRobotics_1_1Video_1_1Input.html',1,'BoBRobotics::Video']]],
+  ['insilicorotater',['InSilicoRotater',['../classBoBRobotics_1_1Navigation_1_1InSilicoRotater.html',1,'BoBRobotics::Navigation']]],
   ['is_5facceleration_5funit',['is_acceleration_unit',['../structunits_1_1traits_1_1is__acceleration__unit.html',1,'units::traits']]],
   ['is_5fangle_5funit',['is_angle_unit',['../structunits_1_1traits_1_1is__angle__unit.html',1,'units::traits']]],
   ['is_5fangular_5fvelocity_5funit',['is_angular_velocity_unit',['../structunits_1_1traits_1_1is__angular__velocity__unit.html',1,'units::traits']]],

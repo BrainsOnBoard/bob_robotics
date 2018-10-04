@@ -1,11 +1,13 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 // Standard C++ includes
 #include <iostream>
 #include <stdexcept>
 
 // Standard C includes
-#include <cassert>
 #include <cmath>
 #include <cstdlib>
 
@@ -190,8 +192,8 @@ public:
          * We need to already know the camera resolution otherwise we won't be
          * able to convert the parameters from relative to absolute values.
          */
-        assert(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
-        assert(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
+        BOB_ASSERT(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
+        BOB_ASSERT(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
 
         // centre
         std::vector<double> centre(2);

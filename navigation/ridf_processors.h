@@ -17,6 +17,7 @@
 namespace BoBRobotics {
 namespace Navigation {
 using namespace units::angle;
+using namespace units::dimensionless;
 
 namespace Internal {
 template<typename T1, typename T2>
