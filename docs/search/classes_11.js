@@ -22,6 +22,7 @@ var searchData=
   ['spikecsvrecorder',['SpikeCSVRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorder.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikecsvrecordercached',['SpikeCSVRecorderCached',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderCached.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikecsvrecorderdelay',['SpikeCSVRecorderDelay',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelay.html',1,'BoBRobotics::GeNNUtils']]],
+  ['spikecsvrecorderdelaycached',['SpikeCSVRecorderDelayCached',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelayCached.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikerecorder',['SpikeRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeRecorder.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikerenderer',['SpikeRenderer',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeRenderer.html',1,'BoBRobotics::GeNNUtils']]],
   ['statehandler',['StateHandler',['../classBoBRobotics_1_1FSM_1_1StateHandler.html',1,'BoBRobotics::FSM']]],

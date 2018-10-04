@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Video_1_1Display.h
 <p><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html" title="Display a video source on screen. ">Display</a> a video source on screen.  
  <a href="classBoBRobotics_1_1Video_1_1Display.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="display_8h_source.html">display.h</a>&gt;</code></p>
+<p><code>#include &lt;display.h&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for BoBRobotics::Video::Display:</div>
 <div class="dyncontent">
@@ -120,14 +120,9 @@ Public Member Functions</h2></td></tr>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html#ad15c696a81c16361501c88c23724caf4">~Display</a> ()</td></tr>
 <tr class="memdesc:ad15c696a81c16361501c88c23724caf4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Close display window and destroy this object. <br /></td></tr>
 <tr class="separator:ad15c696a81c16361501c88c23724caf4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec431db199ce6ede7686c04875e2c7c7"><td class="memTemplParams" colspan="2">template&lt;typename... Ts&gt; </td></tr>
-<tr class="memitem:aec431db199ce6ede7686c04875e2c7c7"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html#aec431db199ce6ede7686c04875e2c7c7">Display</a> (<a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &amp;videoInput, Ts &amp;&amp;... unwrapRes)</td></tr>
-<tr class="memdesc:aec431db199ce6ede7686c04875e2c7c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new display with unwrapping enabled if the videoInput supports it.  <a href="#aec431db199ce6ede7686c04875e2c7c7">More...</a><br /></td></tr>
-<tr class="separator:aec431db199ce6ede7686c04875e2c7c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f53be6ffab36a699627eb747cef6327"><td class="memTemplParams" colspan="2">template&lt;typename... Ts&gt; </td></tr>
-<tr class="memitem:a8f53be6ffab36a699627eb747cef6327"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html#a8f53be6ffab36a699627eb747cef6327">Display</a> (std::unique_ptr&lt; <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &gt; &amp;videoInput, Ts &amp;&amp;... unwrapRes)</td></tr>
-<tr class="memdesc:a8f53be6ffab36a699627eb747cef6327"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new display from a std::unique_ptr to <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html" title="An abstract class representing a video input stream. ">Input</a> (e.g. from <a class="el" href="namespaceBoBRobotics_1_1Video.html#a9c9ee1ec1ef35dbfec49de67e67d0add" title="Try to find a panoramic camera on the current machine and return it. ">getPanoramicCamera()</a>)  <a href="#a8f53be6ffab36a699627eb747cef6327">More...</a><br /></td></tr>
-<tr class="separator:a8f53be6ffab36a699627eb747cef6327"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a422cc87031d73d9916768c4e19989d79"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html#a422cc87031d73d9916768c4e19989d79">Display</a> (<a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &amp;videoInput, const cv::Size &amp;unwrapRes)</td></tr>
+<tr class="memdesc:a422cc87031d73d9916768c4e19989d79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new display with unwrapping enabled if the videoInput supports it.  <a href="#a422cc87031d73d9916768c4e19989d79">More...</a><br /></td></tr>
+<tr class="separator:a422cc87031d73d9916768c4e19989d79"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2703492d14af0d269b7cb5dd708381fa"><td class="memItemLeft" align="right" valign="top"><a id="a2703492d14af0d269b7cb5dd708381fa"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html#a2703492d14af0d269b7cb5dd708381fa">isOpen</a> () const</td></tr>
 <tr class="memdesc:a2703492d14af0d269b7cb5dd708381fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return true if the display window is open. <br /></td></tr>
@@ -195,7 +190,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>m_DoRun</b> = true</t
 <p>Should be built with OpenCV and -pthread. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa9cce36e989d77a1d409748d44888f81"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9cce36e989d77a1d409748d44888f81">&#9670;&nbsp;</a></span>Display() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9cce36e989d77a1d409748d44888f81">&#9670;&nbsp;</a></span>Display() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -228,13 +223,11 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>m_DoRun</b> = true</t
 
 </div>
 </div>
-<a id="aec431db199ce6ede7686c04875e2c7c7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aec431db199ce6ede7686c04875e2c7c7">&#9670;&nbsp;</a></span>Display() <span class="overload">[2/3]</span></h2>
+<a id="a422cc87031d73d9916768c4e19989d79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a422cc87031d73d9916768c4e19989d79">&#9670;&nbsp;</a></span>Display() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename... Ts&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -248,7 +241,7 @@ template&lt;typename... Ts&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">Ts &amp;&amp;...&#160;</td>
+          <td class="paramtype">const cv::Size &amp;&#160;</td>
           <td class="paramname"><em>unwrapRes</em>&#160;</td>
         </tr>
         <tr>
@@ -265,53 +258,6 @@ template&lt;typename... Ts&gt; </div>
 </div><div class="memdoc">
 
 <p>Create a new display with unwrapping enabled if the videoInput supports it. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">videoInput</td><td>The video source to display </td></tr>
-    <tr><td class="paramname">unwrapRes</td><td>The size of the target image after unwrapping, as cv::Size or two ints </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a8f53be6ffab36a699627eb747cef6327"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8f53be6ffab36a699627eb747cef6327">&#9670;&nbsp;</a></span>Display() <span class="overload">[3/3]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename... Ts&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">BoBRobotics::Video::Display::Display </td>
-          <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>videoInput</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">Ts &amp;&amp;...&#160;</td>
-          <td class="paramname"><em>unwrapRes</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Create a new display from a std::unique_ptr to <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html" title="An abstract class representing a video input stream. ">Input</a> (e.g. from <a class="el" href="namespaceBoBRobotics_1_1Video.html#a9c9ee1ec1ef35dbfec49de67e67d0add" title="Try to find a panoramic camera on the current machine and return it. ">getPanoramicCamera()</a>) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">videoInput</td><td>The video source to display </td></tr>
@@ -352,7 +298,7 @@ template&lt;typename... Ts&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>video/<a class="el" href="display_8h_source.html">display.h</a></li>
+<li>video/display.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -22,6 +22,7 @@ var hierarchy =
     [ "BoBRobotics::Navigation::AbsDiff", "classBoBRobotics_1_1Navigation_1_1AbsDiff.html", null ],
     [ "BoBRobotics::LM9DS1::AccelSettings", "structBoBRobotics_1_1LM9DS1_1_1AccelSettings.html", null ],
     [ "BoBRobotics::GeNNUtils::AnalogueCSVRecorder< T >", "classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html", null ],
+    [ "BoBRobotics::Navigation::AntWorldRotater", "classBoBRobotics_1_1Navigation_1_1AntWorldRotater.html", null ],
     [ "Base", null, [
       [ "BoBRobotics::GeNNModels::AlphaCurr", "classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html", null ],
       [ "BoBRobotics::GeNNModels::ExpCurr", "classBoBRobotics_1_1GeNNModels_1_1ExpCurr.html", null ]
@@ -43,10 +44,12 @@ var hierarchy =
     [ "BoBRobotics::Navigation::BestMatchingSnapshot", "structBoBRobotics_1_1Navigation_1_1BestMatchingSnapshot.html", null ],
     [ "BoBRobotics::Vicon::CaptureControl", "classBoBRobotics_1_1Vicon_1_1CaptureControl.html", null ],
     [ "units::decibel_scale< T >", "structunits_1_1decibel__scale.html", null ],
+    [ "BoBRobotics::Navigation::ImageDatabase::Entry", "structBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Entry.html", null ],
     [ "BoBRobotics::FSM< S >", "classBoBRobotics_1_1FSM.html", null ],
+    [ "BoBRobotics::Robots::Gantry", "classBoBRobotics_1_1Robots_1_1Gantry.html", null ],
     [ "BoBRobotics::LM9DS1::GyroSettings", "structBoBRobotics_1_1LM9DS1_1_1GyroSettings.html", null ],
     [ "BoBRobotics::I2CInterface", "classBoBRobotics_1_1I2CInterface.html", null ],
-    [ "BoBRobotics::ImageDatabaseRecorder", "classBoBRobotics_1_1ImageDatabaseRecorder.html", null ],
+    [ "BoBRobotics::Navigation::ImageDatabase", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html", null ],
     [ "BoBRobotics::Video::Input", "classBoBRobotics_1_1Video_1_1Input.html", [
       [ "BoBRobotics::Robots::Bebop::VideoStream", "classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html", null ],
       [ "BoBRobotics::Video::NetSource", "classBoBRobotics_1_1Video_1_1NetSource.html", null ],
@@ -56,6 +59,7 @@ var hierarchy =
       ] ],
       [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
     ] ],
+    [ "BoBRobotics::Navigation::InSilicoRotater", "classBoBRobotics_1_1Navigation_1_1InSilicoRotater.html", null ],
     [ "integral_constant", null, [
       [ "units::traits::has_decibel_scale< T >", "structunits_1_1traits_1_1has__decibel__scale.html", null ],
       [ "units::traits::has_linear_scale< T >", "structunits_1_1traits_1_1has__linear__scale.html", null ],
@@ -132,6 +136,7 @@ var hierarchy =
     [ "BoBRobotics::AntWorld::RouteArdin", "classBoBRobotics_1_1AntWorld_1_1RouteArdin.html", null ],
     [ "BoBRobotics::AntWorld::RouteContinuous", "classBoBRobotics_1_1AntWorld_1_1RouteContinuous.html", null ],
     [ "runtime_error", null, [
+      [ "BoBRobotics::AssertionFailedException", "classBoBRobotics_1_1AssertionFailedException.html", null ],
       [ "BoBRobotics::Net::SocketError", "classBoBRobotics_1_1Net_1_1SocketError.html", [
         [ "BoBRobotics::Net::BadCommandError", "classBoBRobotics_1_1Net_1_1BadCommandError.html", null ]
       ] ]
@@ -156,7 +161,8 @@ var hierarchy =
     [ "BoBRobotics::GeNNUtils::SpikeRecorder", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRecorder.html", [
       [ "BoBRobotics::GeNNUtils::SpikeCSVRecorder", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorder.html", null ],
       [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderCached", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderCached.html", null ],
-      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderDelay", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelay.html", null ]
+      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderDelay", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelay.html", null ],
+      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderDelayCached", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelayCached.html", null ]
     ] ],
     [ "BoBRobotics::GeNNUtils::SpikeRenderer", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRenderer.html", null ],
     [ "BoBRobotics::FSM< S >::StateHandler", "classBoBRobotics_1_1FSM_1_1StateHandler.html", null ],
@@ -199,9 +205,10 @@ var hierarchy =
       [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
     ] ],
     [ "BoBRobotics::Navigation::VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html", [
-      [ "BoBRobotics::Navigation::PerfectMemoryBase< RIDFProcessor >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html", [
-        [ "BoBRobotics::Navigation::PerfectMemory< RIDFProcessor, Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
-        [ "BoBRobotics::Navigation::PerfectMemoryHOG< RIDFProcessor, Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html", null ]
+      [ "BoBRobotics::Navigation::InfoMax< Rotater, FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", null ],
+      [ "BoBRobotics::Navigation::PerfectMemoryBase< RIDFProcessor, Rotater >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html", [
+        [ "BoBRobotics::Navigation::PerfectMemory< RIDFProcessor, Rotater, Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
+        [ "BoBRobotics::Navigation::PerfectMemoryHOG< RIDFProcessor, Rotater, Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html", null ]
       ] ]
     ] ],
     [ "BoBRobotics::VonMisesDistribution< T >", "classBoBRobotics_1_1VonMisesDistribution.html", null ],

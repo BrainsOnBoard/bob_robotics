@@ -101,7 +101,7 @@ $(document).ready(function(){initNavTree('classunits_1_1unit__t.html','');});
 <p>Container for values which represent quantities of a given unit.  
  <a href="classunits_1_1unit__t.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="units_8h_source.html">units.h</a>&gt;</code></p>
+<p><code>#include &lt;units.h&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for units::unit_t&lt; Units, T, NonLinearScale &gt;:</div>
 <div class="dyncontent">
@@ -294,7 +294,7 @@ class units::unit_t&lt; Units, T, NonLinearScale &gt;</h3>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class... Args&gt; </div>
 <table class="mlabels">
@@ -343,7 +343,7 @@ template&lt;class... Args&gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class Ty , class  = typename std::enable_if&lt;traits::is_dimensionless_unit&lt;Units&gt;::value &amp;&amp; std::is_arithmetic&lt;Ty&gt;::value&gt;::type&gt; </div>
 <table class="mlabels">
@@ -381,7 +381,7 @@ template&lt;class Ty , class  = typename std::enable_if&lt;traits::is_dimensionl
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class Rep , class Period , class  = std::enable_if_t&lt;std::is_arithmetic&lt;Rep&gt;::value &amp;&amp; traits::is_ratio&lt;Period&gt;::value&gt;&gt; </div>
 <table class="mlabels">
@@ -419,7 +419,7 @@ template&lt;class Rep , class Period , class  = std::enable_if_t&lt;std::is_arit
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -458,7 +458,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class U &gt; </div>
 <table class="mlabels">
@@ -496,7 +496,7 @@ template&lt;class U &gt; </div>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;typename U  = Units, std::enable_if_t&lt; units::traits::is_convertible_unit&lt; U, unit&lt; std::ratio&lt; 1 &gt;, category::time_unit &gt;&gt;::value, int &gt;  = 0&gt; </div>
 <table class="mlabels">
@@ -528,7 +528,7 @@ template&lt;typename U  = Units, std::enable_if_t&lt; units::traits::is_converti
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class Ty , std::enable_if_t&lt; traits::is_dimensionless_unit&lt; Units &gt;::value &amp;&amp;std::is_arithmetic&lt; Ty &gt;::value, int &gt;  = 0&gt; </div>
 <table class="mlabels">
@@ -560,7 +560,7 @@ template&lt;class Ty , std::enable_if_t&lt; traits::is_dimensionless_unit&lt; Un
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class Ty , std::enable_if_t&lt;!traits::is_dimensionless_unit&lt; Units &gt;::value &amp;&amp;std::is_arithmetic&lt; Ty &gt;::value, int &gt;  = 0&gt; </div>
 <table class="mlabels">
@@ -592,7 +592,7 @@ template&lt;class Ty , std::enable_if_t&lt;!traits::is_dimensionless_unit&lt; Un
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -632,7 +632,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -671,7 +671,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -710,7 +710,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -748,7 +748,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class Ty , class  = std::enable_if_t&lt;traits::is_dimensionless_unit&lt;Units&gt;::value &amp;&amp; std::is_arithmetic&lt;Ty&gt;::value&gt;&gt; </div>
 <table class="mlabels">
@@ -786,7 +786,7 @@ template&lt;class Ty , class  = std::enable_if_t&lt;traits::is_dimensionless_uni
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs, std::enable_if_t&lt; std::is_floating_point&lt; T &gt;::value||std::is_floating_point&lt; Ty &gt;::value, int &gt;  = 0&gt; </div>
 <table class="mlabels">
@@ -826,7 +826,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -865,7 +865,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsRhs&gt; </div>
 <table class="mlabels">
@@ -904,7 +904,7 @@ template&lt;class UnitsRhs , typename Ty , template&lt; typename &gt; class NlsR
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;typename Ty , class  = std::enable_if_t&lt;std::is_arithmetic&lt;Ty&gt;::value&gt;&gt; </div>
 <table class="mlabels">
@@ -936,7 +936,7 @@ template&lt;typename Ty , class  = std::enable_if_t&lt;std::is_arithmetic&lt;Ty&
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <div class="memtemplate">
 template&lt;typename Ty , class  = std::enable_if_t&lt;std::is_arithmetic&lt;Ty&gt;::value&gt;&gt; </div>
 <table class="mlabels">
@@ -968,7 +968,7 @@ template&lt;typename Ty , class  = std::enable_if_t&lt;std::is_arithmetic&lt;Ty&
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Units, typename T = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
+template&lt;class Units , typename T  = double, template&lt; typename &gt; class NonLinearScale = linear_scale&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -993,7 +993,7 @@ template&lt;class Units, typename T = double, template&lt; typename &gt; class N
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>third_party/<a class="el" href="units_8h_source.html">units.h</a></li>
+<li>third_party/<a class="el" href="units_8h.html">units.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

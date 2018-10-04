@@ -18,7 +18,8 @@ var searchData=
   ['to',['to',['../classunits_1_1unit__t.html#a848f265210db571a1f7d13aae96c8dd5',1,'units::unit_t']]],
   ['tolinearized',['toLinearized',['../classunits_1_1unit__t.html#a80b7f760f0ed5ff1855ec2f3d8e8c6b1',1,'units::unit_t']]],
   ['torque_5funit',['torque_unit',['../namespaceunits_1_1category.html#ab0889848e7dda7a24d8fb9bc2f6a90e8',1,'units::category']]],
-  ['train',['train',['../classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html#a2ba2408672e6934dad49479fd7df044a',1,'BoBRobotics::Navigation::PerfectMemoryBase::train()'],['../classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#ad9ba3747aa57147b8a9c6efbb083a393',1,'BoBRobotics::Navigation::VisualNavigationBase::train()']]],
+  ['train',['train',['../classBoBRobotics_1_1Navigation_1_1InfoMax.html#afccea9097c1baf5f669729ab8a608989',1,'BoBRobotics::Navigation::InfoMax::train()'],['../classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html#af9567098dbff363121a0b7a25287fe37',1,'BoBRobotics::Navigation::PerfectMemoryBase::train()'],['../classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#af96f0b786f2a3704c9a8cc37230ee33b',1,'BoBRobotics::Navigation::VisualNavigationBase::train()']]],
+  ['trainroute',['trainRoute',['../classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a41469055c5e89f1d1bc3fe0ea36c281b',1,'BoBRobotics::Navigation::VisualNavigationBase']]],
   ['trunc',['trunc',['../group__UnitMath.html#gae0019fd57476802def84991c48fe8e66',1,'units::math']]],
   ['type_20traits',['Type Traits',['../group__TypeTraits.html',1,'']]]
 ];

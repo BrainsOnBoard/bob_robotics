@@ -89,7 +89,6 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Navigation_1_1Visu
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">BoBRobotics::Navigation::VisualNavigationBase Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
@@ -99,51 +98,37 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Navigation_1_1Visu
 <p>The base class for visual navigation algorithms (currently just variations on perfect memory)  
  <a href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="visual__navigation__base_8h_source.html">visual_navigation_base.h</a>&gt;</code></p>
+<p><code>#include &lt;visual_navigation_base.h&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for BoBRobotics::Navigation::VisualNavigationBase:</div>
 <div class="dyncontent">
  <div class="center">
   <img src="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.png" usemap="#BoBRobotics::Navigation::VisualNavigationBase_map" alt=""/>
   <map id="BoBRobotics::Navigation::VisualNavigationBase_map" name="BoBRobotics::Navigation::VisualNavigationBase_map">
-<area href="classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html" title="An abstract class which is the base for PerfectMemory and PerfectMemoryHOG. " alt="BoBRobotics::Navigation::PerfectMemoryBase&lt; RIDFProcessor &gt;" shape="rect" coords="232,56,686,80"/>
-<area href="classBoBRobotics_1_1Navigation_1_1PerfectMemory.html" title="The conventional perfect memory (RIDF) algorithm. " alt="BoBRobotics::Navigation::PerfectMemory&lt; RIDFProcessor, Differencer &gt;" shape="rect" coords="0,112,454,136"/>
-<area href="classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html" title="Perfect memory algorithm using HOG features instead of raw image matching. " alt="BoBRobotics::Navigation::PerfectMemoryHOG&lt; RIDFProcessor, Differencer &gt;" shape="rect" coords="464,112,918,136"/>
+<area href="classBoBRobotics_1_1Navigation_1_1InfoMax.html" alt="BoBRobotics::Navigation::InfoMax&lt; Rotater, FloatType &gt;" shape="rect" coords="0,56,503,80"/>
+<area href="classBoBRobotics_1_1Navigation_1_1PerfectMemoryBase.html" title="An abstract class which is the base for PerfectMemory and PerfectMemoryHOG. " alt="BoBRobotics::Navigation::PerfectMemoryBase&lt; RIDFProcessor, Rotater &gt;" shape="rect" coords="513,56,1016,80"/>
+<area href="classBoBRobotics_1_1Navigation_1_1PerfectMemory.html" title="The conventional perfect memory (RIDF) algorithm. " alt="BoBRobotics::Navigation::PerfectMemory&lt; RIDFProcessor, Rotater, Differencer &gt;" shape="rect" coords="256,112,759,136"/>
+<area href="classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html" title="Perfect memory algorithm using HOG features instead of raw image matching. " alt="BoBRobotics::Navigation::PerfectMemoryHOG&lt; RIDFProcessor, Rotater, Differencer &gt;" shape="rect" coords="769,112,1272,136"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1ce64321e6959ede04e8d49cc764df41"><td class="memItemLeft" align="right" valign="top"><a id="a1ce64321e6959ede04e8d49cc764df41"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>VisualNavigationBase</b> (const cv::Size unwrapRes, const unsigned int scanStep, const <a class="el" href="classfilesystem_1_1path.html">filesystem::path</a> outputPath=&quot;snapshots&quot;)</td></tr>
-<tr class="separator:a1ce64321e6959ede04e8d49cc764df41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad9ba3747aa57147b8a9c6efbb083a393"><td class="memItemLeft" align="right" valign="top"><a id="ad9ba3747aa57147b8a9c6efbb083a393"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#ad9ba3747aa57147b8a9c6efbb083a393">train</a> (const cv::Mat &amp;image, bool saveImage)=0</td></tr>
-<tr class="memdesc:ad9ba3747aa57147b8a9c6efbb083a393"><td class="mdescLeft">&#160;</td><td class="mdescRight">Train the algorithm with the specified image. <br /></td></tr>
-<tr class="separator:ad9ba3747aa57147b8a9c6efbb083a393"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd85ecc02502d967dca2a93cea6f4a28"><td class="memItemLeft" align="right" valign="top"><a id="afd85ecc02502d967dca2a93cea6f4a28"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>loadSnapshot</b> (const <a class="el" href="classfilesystem_1_1path.html">filesystem::path</a> &amp;snapshotPath, bool resizeImage=false)</td></tr>
-<tr class="separator:afd85ecc02502d967dca2a93cea6f4a28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee6e490e54c3e384ec52d6dba35bf977"><td class="memItemLeft" align="right" valign="top"><a id="aee6e490e54c3e384ec52d6dba35bf977"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#aee6e490e54c3e384ec52d6dba35bf977">loadSnapshots</a> (bool resizeImages=false)</td></tr>
-<tr class="memdesc:aee6e490e54c3e384ec52d6dba35bf977"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load snapshots from default path. <br /></td></tr>
-<tr class="separator:aee6e490e54c3e384ec52d6dba35bf977"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fa0cd8c778364a40988d9f30691d49b"><td class="memItemLeft" align="right" valign="top"><a id="a8fa0cd8c778364a40988d9f30691d49b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a8fa0cd8c778364a40988d9f30691d49b">loadSnapshots</a> (const <a class="el" href="classfilesystem_1_1path.html">filesystem::path</a> &amp;routePath, bool resizeImages=false)</td></tr>
-<tr class="memdesc:a8fa0cd8c778364a40988d9f30691d49b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load snapshots from specified path. <br /></td></tr>
-<tr class="separator:a8fa0cd8c778364a40988d9f30691d49b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a241f6e22dd27098d7bc153427e31aca0"><td class="memItemLeft" align="right" valign="top"><a id="a241f6e22dd27098d7bc153427e31aca0"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a241f6e22dd27098d7bc153427e31aca0">saveSnapshot</a> (const size_t index, const cv::Mat &amp;image)</td></tr>
-<tr class="memdesc:a241f6e22dd27098d7bc153427e31aca0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save a snapshot to disk. <br /></td></tr>
-<tr class="separator:a241f6e22dd27098d7bc153427e31aca0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafb7009773a48771e25520041dda82eb"><td class="memItemLeft" align="right" valign="top"><a id="aafb7009773a48771e25520041dda82eb"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#aafb7009773a48771e25520041dda82eb">setMaskImage</a> (const std::string path)</td></tr>
-<tr class="memdesc:aafb7009773a48771e25520041dda82eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set mask image (e.g. for masking part of robot) <br /></td></tr>
-<tr class="separator:aafb7009773a48771e25520041dda82eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31cd1ee6afac0368498e699a1469983b"><td class="memItemLeft" align="right" valign="top"><a id="a31cd1ee6afac0368498e699a1469983b"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a31cd1ee6afac0368498e699a1469983b">getScanStep</a> () const</td></tr>
-<tr class="memdesc:a31cd1ee6afac0368498e699a1469983b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of pixels for each scanning "step" when doing RIDF. <br /></td></tr>
-<tr class="separator:a31cd1ee6afac0368498e699a1469983b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe520c4acf85b9ade5fd4af7d003eb3b"><td class="memItemLeft" align="right" valign="top"><a id="afe520c4acf85b9ade5fd4af7d003eb3b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>VisualNavigationBase</b> (const cv::Size unwrapRes)</td></tr>
+<tr class="separator:afe520c4acf85b9ade5fd4af7d003eb3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af96f0b786f2a3704c9a8cc37230ee33b"><td class="memItemLeft" align="right" valign="top"><a id="af96f0b786f2a3704c9a8cc37230ee33b"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#af96f0b786f2a3704c9a8cc37230ee33b">train</a> (const cv::Mat &amp;image)=0</td></tr>
+<tr class="memdesc:af96f0b786f2a3704c9a8cc37230ee33b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Train the algorithm with the specified image. <br /></td></tr>
+<tr class="separator:af96f0b786f2a3704c9a8cc37230ee33b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41469055c5e89f1d1bc3fe0ea36c281b"><td class="memItemLeft" align="right" valign="top"><a id="a41469055c5e89f1d1bc3fe0ea36c281b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a41469055c5e89f1d1bc3fe0ea36c281b">trainRoute</a> (const <a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase.html">ImageDatabase</a> &amp;imdb, bool resizeImages=false)</td></tr>
+<tr class="memdesc:a41469055c5e89f1d1bc3fe0ea36c281b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Train algorithm with specified route. <br /></td></tr>
+<tr class="separator:a41469055c5e89f1d1bc3fe0ea36c281b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a897ca87fe635b0970e3e12e3a61c616d"><td class="memItemLeft" align="right" valign="top"><a id="a897ca87fe635b0970e3e12e3a61c616d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a897ca87fe635b0970e3e12e3a61c616d">setMaskImage</a> (const std::string &amp;path)</td></tr>
+<tr class="memdesc:a897ca87fe635b0970e3e12e3a61c616d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set mask image (e.g. for masking part of robot) <br /></td></tr>
+<tr class="separator:a897ca87fe635b0970e3e12e3a61c616d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee24f3c0d519a38c7d305105c39422b3"><td class="memItemLeft" align="right" valign="top"><a id="aee24f3c0d519a38c7d305105c39422b3"></a>
 const cv::Mat &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#aee24f3c0d519a38c7d305105c39422b3">getMaskImage</a> () const</td></tr>
 <tr class="memdesc:aee24f3c0d519a38c7d305105c39422b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return mask image. <br /></td></tr>
@@ -152,22 +137,11 @@ const cv::Mat &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class=
 const cv::Size &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a19d481d32e5a3d1d1d013b6c86c3744d">getUnwrapResolution</a> () const</td></tr>
 <tr class="memdesc:a19d481d32e5a3d1d1d013b6c86c3744d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the resolution of images. <br /></td></tr>
 <tr class="separator:a19d481d32e5a3d1d1d013b6c86c3744d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a923da7a8c9029b30cc64827e71dce893"><td class="memItemLeft" align="right" valign="top"><a id="a923da7a8c9029b30cc64827e71dce893"></a>
-const <a class="el" href="classfilesystem_1_1path.html">filesystem::path</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a923da7a8c9029b30cc64827e71dce893">getSnapshotsPath</a> () const</td></tr>
-<tr class="memdesc:a923da7a8c9029b30cc64827e71dce893"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get output path for snapshots. <br /></td></tr>
-<tr class="separator:a923da7a8c9029b30cc64827e71dce893"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
-Protected Member Functions</h2></td></tr>
-<tr class="memitem:a12b4904bbdc3a681c0b016d1e3fadf89"><td class="memItemLeft" align="right" valign="top"><a id="a12b4904bbdc3a681c0b016d1e3fadf89"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a12b4904bbdc3a681c0b016d1e3fadf89">rollImage</a> (cv::Mat &amp;image) const</td></tr>
-<tr class="memdesc:a12b4904bbdc3a681c0b016d1e3fadf89"><td class="mdescLeft">&#160;</td><td class="mdescRight">'Rolls' an image to the left <br /></td></tr>
-<tr class="separator:a12b4904bbdc3a681c0b016d1e3fadf89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The base class for visual navigation algorithms (currently just variations on perfect memory) </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>navigation/<a class="el" href="visual__navigation__base_8h_source.html">visual_navigation_base.h</a></li>
+<li>navigation/visual_navigation_base.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
