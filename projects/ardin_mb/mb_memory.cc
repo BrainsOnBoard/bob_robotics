@@ -74,7 +74,7 @@ float MBMemory::test(const cv::Mat &image) const
 {
     // Get number of EN spikes
     unsigned int numENSpikes = std::get<2>(present(image, false));
-    std::cout << "\t" << numENSpikes << " EN spikes" << std::endl;
+    //std::cout << "\t" << numENSpikes << " EN spikes" << std::endl;
 
     // Largest difference would be expressed by EN firing every timestep
     return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
