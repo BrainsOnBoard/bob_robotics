@@ -49,10 +49,6 @@ MBMemory::MBMemory()
     {
         Timer<> timer("Initialization:");
         initialize();
-
-        // Null unused external input pointers
-        IextKC = nullptr;
-        IextEN = nullptr;
     }
 
     {
@@ -78,6 +74,7 @@ float MBMemory::test(const cv::Mat &image) const
 {
     // Get number of EN spikes
     unsigned int numENSpikes = std::get<2>(present(image, false));
+    std::cout << "\t" << numENSpikes << " EN spikes" << std::endl;
 
     // Largest difference would be expressed by EN firing every timestep
     return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
@@ -88,8 +85,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     BOB_ASSERT(image.cols == MBParams::inputWidth);
     BOB_ASSERT(image.rows == MBParams::inputHeight);
     BOB_ASSERT(image.type() == CV_32FC1);
-
-    Timer<> timer("\tSimulation:");
 
 #ifndef CPU_ONLY
     // Upload final snapshot to GPU
@@ -132,8 +127,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     unsigned int numPNSpikes = 0;
     unsigned int numKCSpikes = 0;
     unsigned int numENSpikes = 0;
-    while(iT < endTimestep)
-    {
+    while(iT < endTimestep) {
         // If we should be presenting an image
         if(iT < endPresentTimestep) {
             IextPN = snapshotData;
@@ -158,8 +152,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
 #else
-        CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntPN, d_glbSpkCntPN, sizeof(unsigned int), cudaMemcpyDeviceToHost));
-        CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntKC, d_glbSpkCntKC, sizeof(unsigned int), cudaMemcpyDeviceToHost));
         CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntEN, d_glbSpkCntEN, sizeof(unsigned int), cudaMemcpyDeviceToHost));
 #endif
 #else
@@ -181,10 +173,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
             injectDopaminekcToEN = false;
         }
 
-        numPNSpikes += spikeCount_PN;
-        numKCSpikes += spikeCount_KC;
         numENSpikes += spikeCount_EN;
 #ifdef RECORD_SPIKES
+        numPNSpikes += spikeCount_PN;
+        numKCSpikes += spikeCount_KC;
         for(unsigned int i = 0; i < spikeCount_PN; i++) {
             pnSpikeBitset.set(spike_PN[i]);
         }
