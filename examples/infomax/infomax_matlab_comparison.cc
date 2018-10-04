@@ -50,7 +50,7 @@ runTest(const filesystem::path &dataPath, int num)
                         CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
 
     // Make our InfoMax runner object
-    InfoMax<InSilicoRotater, double> infomax(image.size(), initWeights);
+    InfoMaxRotater<InSilicoRotater, double> infomax(image.size(), initWeights);
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;

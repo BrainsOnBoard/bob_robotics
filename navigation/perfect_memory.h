@@ -56,7 +56,7 @@ public:
         m_Store.addSnapshot(image);
     }
 
-    virtual float test(const cv::Mat &image) override
+    virtual float test(const cv::Mat &image) const override
     {
         const auto &unwrapRes = getUnwrapResolution();
         assert(image.cols == unwrapRes.width);

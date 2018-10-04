@@ -34,7 +34,7 @@ using namespace units::literals;
 using namespace units::math;
 
 using FloatType = float;
-using InfoMaxType = InfoMax<InSilicoRotater, FloatType>;
+using InfoMaxType = InfoMaxRotater<InSilicoRotater, FloatType>;
 
 void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
                  const std::vector<double> &ally, const std::vector<cv::Mat> &images)
