@@ -27,8 +27,9 @@
 #ifndef TK_SPLINE_H
 #define TK_SPLINE_H
 
+#include "common/assert.h"
+
 #include <cstdio>
-#include <cassert>
 #include <vector>
 #include <algorithm>
 
@@ -129,9 +130,9 @@ band_matrix::band_matrix(int dim, int n_u, int n_l)
 }
 void band_matrix::resize(int dim, int n_u, int n_l)
 {
-    assert(dim>0);
-    assert(n_u>=0);
-    assert(n_l>=0);
+    BOB_ASSERT(dim>0);
+    BOB_ASSERT(n_u>=0);
+    BOB_ASSERT(n_l>=0);
     m_upper.resize(n_u+1);
     m_lower.resize(n_l+1);
     for(size_t i=0; i<m_upper.size(); i++) {
@@ -156,8 +157,8 @@ int band_matrix::dim() const
 double & band_matrix::operator () (int i, int j)
 {
     int k=j-i;       // what band is the entry
-    assert( (i>=0) && (i<dim()) && (j>=0) && (j<dim()) );
-    assert( (-num_lower()<=k) && (k<=num_upper()) );
+    BOB_ASSERT( (i>=0) && (i<dim()) && (j>=0) && (j<dim()) );
+    BOB_ASSERT( (-num_lower()<=k) && (k<=num_upper()) );
     // k=0 -> diogonal, k<0 lower left part, k>0 upper right part
     if(k>=0)   return m_upper[k][i];
     else	    return m_lower[-k][i];
@@ -165,8 +166,8 @@ double & band_matrix::operator () (int i, int j)
 double band_matrix::operator () (int i, int j) const
 {
     int k=j-i;       // what band is the entry
-    assert( (i>=0) && (i<dim()) && (j>=0) && (j<dim()) );
-    assert( (-num_lower()<=k) && (k<=num_upper()) );
+    BOB_ASSERT( (i>=0) && (i<dim()) && (j>=0) && (j<dim()) );
+    BOB_ASSERT( (-num_lower()<=k) && (k<=num_upper()) );
     // k=0 -> diogonal, k<0 lower left part, k>0 upper right part
     if(k>=0)   return m_upper[k][i];
     else	    return m_lower[-k][i];
@@ -174,12 +175,12 @@ double band_matrix::operator () (int i, int j) const
 // second diag (used in LU decomposition), saved in m_lower
 double band_matrix::saved_diag(int i) const
 {
-    assert( (i>=0) && (i<dim()) );
+    BOB_ASSERT( (i>=0) && (i<dim()) );
     return m_lower[0][i];
 }
 double & band_matrix::saved_diag(int i)
 {
-    assert( (i>=0) && (i<dim()) );
+    BOB_ASSERT( (i>=0) && (i<dim()) );
     return m_lower[0][i];
 }
 
@@ -193,7 +194,7 @@ void band_matrix::lu_decompose()
     // preconditioning
     // normalize column i so that a_ii=1
     for(int i=0; i<this->dim(); i++) {
-        assert(this->operator()(i,i)!=0.0);
+        BOB_ASSERT(this->operator()(i,i)!=0.0);
         this->saved_diag(i)=1.0/this->operator()(i,i);
         j_min=std::max(0,i-this->num_lower());
         j_max=std::min(this->dim()-1,i+this->num_upper());
@@ -207,7 +208,7 @@ void band_matrix::lu_decompose()
     for(int k=0; k<this->dim(); k++) {
         i_max=std::min(this->dim()-1,k+this->num_lower());  // num_lower not a mistake!
         for(int i=k+1; i<=i_max; i++) {
-            assert(this->operator()(k,k)!=0.0);
+            BOB_ASSERT(this->operator()(k,k)!=0.0);
             x=-this->operator()(i,k)/this->operator()(k,k);
             this->operator()(i,k)=-x;                         // assembly part of L
             j_max=std::min(this->dim()-1,k+this->num_upper());
@@ -221,7 +222,7 @@ void band_matrix::lu_decompose()
 // solves Ly=b
 std::vector<double> band_matrix::l_solve(const std::vector<double>& b) const
 {
-    assert( this->dim()==(int)b.size() );
+    BOB_ASSERT( this->dim()==(int)b.size() );
     std::vector<double> x(this->dim());
     int j_start;
     double sum;
@@ -236,7 +237,7 @@ std::vector<double> band_matrix::l_solve(const std::vector<double>& b) const
 // solves Rx=y
 std::vector<double> band_matrix::r_solve(const std::vector<double>& b) const
 {
-    assert( this->dim()==(int)b.size() );
+    BOB_ASSERT( this->dim()==(int)b.size() );
     std::vector<double> x(this->dim());
     int j_stop;
     double sum;
@@ -252,7 +253,7 @@ std::vector<double> band_matrix::r_solve(const std::vector<double>& b) const
 std::vector<double> band_matrix::lu_solve(const std::vector<double>& b,
         bool is_lu_decomposed)
 {
-    assert( this->dim()==(int)b.size() );
+    BOB_ASSERT( this->dim()==(int)b.size() );
     std::vector<double>  x,y;
     if(is_lu_decomposed==false) {
         this->lu_decompose();
@@ -272,7 +273,7 @@ void spline::set_boundary(spline::bd_type left, double left_value,
                           spline::bd_type right, double right_value,
                           bool force_linear_extrapolation)
 {
-    assert(m_x.size()==0);          // set_points() must not have happened yet
+    BOB_ASSERT(m_x.size()==0);          // set_points() must not have happened yet
     m_left=left;
     m_right=right;
     m_left_value=left_value;
@@ -284,14 +285,14 @@ void spline::set_boundary(spline::bd_type left, double left_value,
 void spline::set_points(const std::vector<double>& x,
                         const std::vector<double>& y, bool cubic_spline)
 {
-    assert(x.size()==y.size());
-    assert(x.size()>2);
+    BOB_ASSERT(x.size()==y.size());
+    BOB_ASSERT(x.size()>2);
     m_x=x;
     m_y=y;
     int   n=x.size();
     // TODO: maybe sort x and y, rather than returning an error
     for(int i=0; i<n-1; i++) {
-        assert(m_x[i]<m_x[i+1]);
+        BOB_ASSERT(m_x[i]<m_x[i+1]);
     }
 
     if(cubic_spline==true) { // cubic spline interpolation
@@ -318,7 +319,7 @@ void spline::set_points(const std::vector<double>& x,
             A(0,1)=1.0*(x[1]-x[0]);
             rhs[0]=3.0*((y[1]-y[0])/(x[1]-x[0])-m_left_value);
         } else {
-            assert(false);
+            BOB_ASSERT(false);
         }
         if(m_right == spline::second_deriv) {
             // 2*b[n-1] = f''
@@ -333,7 +334,7 @@ void spline::set_points(const std::vector<double>& x,
             A(n-1,n-2)=1.0*(x[n-1]-x[n-2]);
             rhs[n-1]=3.0*(m_right_value-(y[n-1]-y[n-2])/(x[n-1]-x[n-2]));
         } else {
-            assert(false);
+            BOB_ASSERT(false);
         }
 
         // solve the equation system to obtain the parameters b[]
