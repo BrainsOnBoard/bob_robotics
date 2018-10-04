@@ -91,7 +91,7 @@ private:
     const cv::Size m_UnwrapRes;
     cv::Mat m_MaskImage;
 
-    bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept
+    bool tryTrain(const filesystem::path &imagePath, bool resizeImage)
     {
         if (!imagePath.exists()) {
             return false;
