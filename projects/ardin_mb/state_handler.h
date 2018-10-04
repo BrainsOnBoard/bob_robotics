@@ -62,7 +62,8 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, bool floatInput);
 
     //------------------------------------------------------------------------
     // Public API
@@ -105,6 +106,9 @@ private:
     BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
 
     //VectorField m_VectorField;
+
+    // Should floating point snapshots be used
+    const bool m_FloatInput;
 
     // Position and angle of ant
     units::length::meter_t m_AntX;

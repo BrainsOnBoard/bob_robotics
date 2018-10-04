@@ -18,9 +18,11 @@
 #include <GLFW/glfw3.h>
 
 // BoB Robotics includes
+#include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
 // Ardin MB includes
+#include "mb_memory.h"
 #include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
@@ -132,12 +134,14 @@ int main(int argc, char *argv[])
     assert(bobRoboticsPath != nullptr);
 
     // Create memory
-    Navigation::PerfectMemory<> perfectMemory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+    //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
+    MBMemory memory;
 
     // Create state machine and set it as window user pointer
     const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
-    StateHandler stateHandler(worldFilename, routeFilename, perfectMemory);
+    StateHandler stateHandler(worldFilename, routeFilename, memory, true);
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback
