@@ -10,12 +10,12 @@ all: infomax_route_example infomax_matlab_comparison
 -include infomax_matlab_comparison.d
 
 infomax_matlab_comparison: infomax_matlab_comparison.cc infomax_matlab_comparison.d
-	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 -include infomax_route_example.d
 
 infomax_route_example: infomax_route_example.cc infomax_route_example.d
-	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 %.d: ;
 
