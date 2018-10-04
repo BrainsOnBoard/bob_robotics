@@ -52,7 +52,7 @@ public:
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
-                                    unwrapRes.width * unwrapRes.height))
+                                    1 + unwrapRes.width * unwrapRes.height))
     {}
 
     virtual void train(const cv::Mat &image) override
@@ -64,10 +64,7 @@ public:
 
     FloatType decision(const cv::Mat &image) const
     {
-        // Convert image to vector of floats
-        const auto imageVector = getFloatVector(image);
-
-        const auto decs = m_Weights * imageVector;
+        const auto decs = m_Weights * getFloatVector(image);
         return decs.array().abs().sum();
     }
 
@@ -91,7 +88,7 @@ public:
         return std::make_tuple(heading, *el, std::move(outputs));
     }
 
-    MatrixType &getWeights()
+    const MatrixType &getWeights() const
     {
         return m_Weights;
     }
@@ -117,12 +114,56 @@ public:
         assert(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
-        const auto imageVector = getFloatVector(image);
-
-        const auto u = m_Weights * imageVector;
+        const auto u = m_Weights * getFloatVector(image);
         const auto y = tanh(u.array());
 
         return std::make_pair(std::move(u), std::move(y));
+    }
+
+    static MatrixType getInitialWeights(const int numInputs,
+                                        const int numHidden,
+                                        const unsigned seed = std::random_device()())
+    {
+        MatrixType weights(numInputs, numHidden);
+
+        std::cout << "Seed for weights is: " << seed << std::endl;
+        
+        std::default_random_engine generator(seed);
+        std::normal_distribution<FloatType> distribution;
+        for (int i = 0; i < numInputs; i++) {
+            for (int j = 0; j < numHidden; j++) {
+                weights(i, j) = distribution(generator);
+            }
+        }
+
+        // std::cout << "Initial weights" << std::endl
+        //           << weights << std::endl;
+
+        // Normalise mean and SD for row so mean == 0 and SD == 1
+        const auto means = weights.rowwise().mean();
+        // std::cout << "Means" << std::endl
+        //           << means << std::endl;
+
+        weights.colwise() -= means;
+        // std::cout << "Weights after subtracting means" << std::endl << weights << std::endl;
+
+        // const auto newmeans = weights.rowwise().mean();
+        // std::cout << "New means" << std::endl
+        //           << newmeans << std::endl;
+
+        const auto sd = matrixSD(weights);
+        // std::cout << "SD" << std::endl
+        //           << sd << std::endl;
+
+        weights = weights.array().colwise() / sd;
+        // std::cout << "Weights after dividing by SD" << std::endl
+        //           << weights << std::endl;
+
+        // const auto newsd = matrixSD(weights);
+        // std::cout << "New SD" << std::endl
+        //           << newsd << std::endl;
+
+        return weights.transpose();
     }
 
 private:
@@ -136,34 +177,10 @@ private:
         return map.cast<FloatType>() / 255.0;
     }
 
-    static auto getInitialWeights(int numInputs, int numHidden)
+    template<class T>
+    static auto matrixSD(const T &mat)
     {
-        MatrixType weights(numInputs, numHidden);
-
-        std::random_device rd;
-        const unsigned seed = rd();
-        std::cout << "Seed for weights is: " << seed << std::endl;
-        std::default_random_engine generator(seed);
-        std::normal_distribution<FloatType> distribution;
-        for (int y = 0; y < weights.rows(); y++) {
-            for (int x = 0; x < weights.cols(); x++) {
-                const FloatType r = distribution(generator);
-                weights(y, x) = r;
-            }
-
-            // Normalise mean and SD for row so mean == 0 and SD == 1
-            auto row = weights.row(y);
-            const auto mean = row.mean();
-            const auto diffSq = [mean](FloatType val) {
-                const auto diff = mean - val;
-                return diff * diff;
-            };
-            const auto sd = sqrt(row.unaryExpr(diffSq).sum());
-            row.array() -= mean;
-            row.array() /= sd;
-        }
-
-        return weights;
+        return (mat.array() * mat.array()).rowwise().mean();
     }
 }; // InfoMax
 } // Navigation
