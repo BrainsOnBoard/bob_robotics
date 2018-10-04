@@ -48,11 +48,11 @@ public:
     };
 
     ImageDatabase(const char *databasePath)
-      : m_Path(databasePath)
+      : ImageDatabase(filesystem::path(databasePath))
     {}
 
     ImageDatabase(const std::string &databasePath)
-      : m_Path(databasePath)
+      : ImageDatabase(filesystem::path(databasePath))
     {}
 
     ImageDatabase(const filesystem::path &databasePath)
