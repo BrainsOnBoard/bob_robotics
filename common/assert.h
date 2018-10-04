@@ -6,8 +6,6 @@
 #include <string>
 
 namespace BoBRobotics {
-using namespace std::literals;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AssertionFailedException
 //----------------------------------------------------------------------------
@@ -17,7 +15,7 @@ class AssertionFailedException
 {
 public:
     AssertionFailedException(const std::string &test, const std::string &file, int line)
-      : std::runtime_error("Assertion failed: "s + test + " (in "s + file + " at line "s + std::to_string(line) + ")"s)
+      : std::runtime_error("Assertion failed: " + test + " (in " + file + " at line " + std::to_string(line) + ")")
     {
 #ifdef _WIN32
         std::cerr << what() << std::endl;
