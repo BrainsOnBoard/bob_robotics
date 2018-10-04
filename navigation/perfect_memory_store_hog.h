@@ -14,26 +14,24 @@
 
 // Local includes
 #include "differencers.h"
-#include "perfect_memory_base.h"
 #include "ridf_processors.h"
 
 namespace BoBRobotics {
 namespace Navigation {
+namespace PerfectMemoryStore {
+
 //------------------------------------------------------------------------
-// BoBRobotics::Navigation::PerfectMemoryHOG
+// BoBRobotics::Navigation::PerfectMemoryStore::HOG
 //------------------------------------------------------------------------
 //! Perfect memory algorithm using HOG features instead of raw image matching
-template<typename RIDFProcessor = BestMatchingSnapshot,
-         typename Rotater = InSilicoRotater,
-         typename Differencer = AbsDiff>
-class PerfectMemoryHOG : public PerfectMemoryBase<RIDFProcessor, Rotater>
+template<typename Differencer = AbsDiff>
+class HOG
 {
 public:
-    PerfectMemoryHOG(const cv::Size unwrapRes,
+    HOG(const cv::Size unwrapRes,
                      const int HOGPixelsPerCell = 10,
                      int HOGOrientations = 8)
-      : PerfectMemoryBase<RIDFProcessor, Rotater>(unwrapRes)
-      , m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
+      : m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
                             HOGOrientations / (HOGPixelsPerCell * HOGPixelsPerCell))
       , m_Differencer(m_HOGDescriptorSize)
     {
@@ -53,21 +51,20 @@ public:
     const unsigned int m_HOGDescriptorSize;
 
     //------------------------------------------------------------------------
-    // Declared virtuals
+    // Public API
     //------------------------------------------------------------------------
-    virtual size_t getNumSnapshots() const override
+    size_t getNumSnapshots() const
     {
         return m_Snapshots.size();
     }
 
-    virtual const cv::Mat &getSnapshot(size_t) const override
+    const cv::Mat &getSnapshot(size_t) const
     {
         throw std::runtime_error("When using HOG features, snapshots aren't stored");
     }
 
-protected:
     // Add a snapshot to memory and return its index
-    virtual size_t addSnapshot(const cv::Mat &image) override
+    size_t addSnapshot(const cv::Mat &image)
     {
         m_Snapshots.emplace_back(m_HOGDescriptorSize);
         m_HOG.compute(image, m_Snapshots.back());
@@ -78,7 +75,7 @@ protected:
     }
 
     // Calculate difference between memory and snapshot with index
-    virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
+    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &) const
     {
         assert(imageMask.empty());
 
@@ -102,6 +99,7 @@ private:
     std::vector<std::vector<float>> m_Snapshots;
     cv::HOGDescriptor m_HOG;
     mutable Differencer m_Differencer;
-}; // PerfectMemoryHOG
+}; // HOG
+} // PerfectMemoryStore
 } // Navigation
 } // BoBRobotics
