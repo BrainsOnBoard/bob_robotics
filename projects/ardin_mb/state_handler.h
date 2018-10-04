@@ -81,7 +81,7 @@ private:
     //------------------------------------------------------------------------
     // Typedefines
     //------------------------------------------------------------------------
-    // Bitset used for passing which keys have been pressed between key callback and render loop
+    //! Bitset used for passing which keys have been pressed between key callback and render loop
     typedef std::bitset<KeyMax> KeyBitset;
 
     //------------------------------------------------------------------------
@@ -91,8 +91,12 @@ private:
 
     //------------------------------------------------------------------------
     // Private helpers
-     //------------------------------------------------------------------------
+    //------------------------------------------------------------------------
+    //! Move ant back to start of route/arbitrary location
     void resetAntPosition();
+
+    //! Checks whether current position is still on route/at end etc
+    bool checkAntPosition();
 
     //------------------------------------------------------------------------
     // Members
