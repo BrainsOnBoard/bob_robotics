@@ -177,7 +177,7 @@ private:
     void calcImageDifferences(Ts &&... args) const
     {
         const size_t numSnapshots = this->getNumSnapshots();
-        assert(numSnapshots > 0);
+        BOB_ASSERT(numSnapshots > 0);
 
         // Object for rotating over images
         const cv::Size unwrapRes = this->getUnwrapResolution();

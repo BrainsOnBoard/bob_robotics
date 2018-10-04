@@ -51,7 +51,7 @@ public:
 
     const cv::Mat &getSnapshot(size_t index) const
     {
-        assert(index < m_Snapshots.size());
+        BOB_ASSERT(index < m_Snapshots.size());
         return m_Snapshots[index];
     }
 
