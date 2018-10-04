@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/pose.h"
 
 // Third-party includes
@@ -11,7 +12,6 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C includes
-#include <cassert>
 #include <cstdio>
 
 // Standard C++ includes
@@ -36,13 +36,13 @@ public:
 
         cv::Mat load() const
         {
-            assert(path.exists());
+            BOB_ASSERT(path.exists());
             return cv::imread(path.str());
         }
 
         cv::Mat loadGreyscale() const
         {
-            assert(path.exists());
+            BOB_ASSERT(path.exists());
             return cv::imread(path.str(), cv::IMREAD_GRAYSCALE);
         }
     };

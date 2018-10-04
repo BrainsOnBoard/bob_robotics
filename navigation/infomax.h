@@ -1,5 +1,21 @@
 #pragma once
 
+// Eigen
+#include <Eigen/Core>
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// BoB robotics includes
+#include "../common/assert.h"
+
+// Local includes
+#include "insilico_rotater.h"
+#include "visual_navigation_base.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
 // Standard C includes
 #include <cmath>
 
@@ -10,19 +26,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-// Eigen
-#include <Eigen/Core>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// Third-party includes
-#include "../third_party/units.h"
-
-// Local includes
-#include "insilico_rotater.h"
-#include "visual_navigation_base.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -107,11 +110,11 @@ public:
 
     void calculateUY(const cv::Mat &image)
     {
-        assert(image.type() == CV_8UC1);
+        BOB_ASSERT(image.type() == CV_8UC1);
 
         const cv::Size &unwrapRes = getUnwrapResolution();
-        assert(image.cols == unwrapRes.width);
-        assert(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
         m_U = m_Weights * getFloatVector(image);
