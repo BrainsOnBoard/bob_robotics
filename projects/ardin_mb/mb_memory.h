@@ -1,32 +1,38 @@
 #pragma once
 
 // Standard C++ includes
-#include <future>
 #include <tuple>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// BoB robotics includes
+#include "navigation/visual_navigation_base.h"
+
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
-class MBMemory
+class MBMemory : public BoBRobotics::Navigation::VisualNavigationBase
 {
 public:
     MBMemory();
 
     //------------------------------------------------------------------------
-    // Public API
+    // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
-   std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &snapshotFloat, bool train);
+    //! Train the algorithm with the specified image
+    virtual void train(const cv::Mat &image) override;
+
+    //! Test the algorithm with the specified image
+    virtual float test(const cv::Mat &image) const override;
 
 private:
-    //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    std::tuple<unsigned int, unsigned int, unsigned int> presentThread(float *inputData, unsigned int inputDataStep, bool reward);
+    std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
 
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
 #ifndef CPU_ONLY
-    cv::cuda::GpuMat m_SnapshotFloatGPU;
+    mutable cv::cuda::GpuMat m_SnapshotFloatGPU;
 #endif
 };

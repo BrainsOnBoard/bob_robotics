@@ -33,8 +33,9 @@ unsigned int convertMsToTimesteps(double ms)
 // MBMemory
 //----------------------------------------------------------------------------
 MBMemory::MBMemory()
+    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight))
 #ifndef CPU_ONLY
-    : m_SnapshotFloatGPU(MBParams::inputWidth, MBParams::inputHeight, CV_32FC1)
+        , m_SnapshotFloatGPU(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
 #endif  // CPU_ONLY
 {
 
@@ -68,15 +69,31 @@ MBMemory::MBMemory()
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &snapshotFloat, bool train)
+void MBMemory::train(const cv::Mat &image)
 {
-    std::mt19937 gen;
+    present(image, true);
+}
+//----------------------------------------------------------------------------
+float MBMemory::test(const cv::Mat &image) const
+{
+    // Get number of EN spikes
+    unsigned int numENSpikes = std::get<2>(present(image, false));
+
+    // Largest difference would be expressed by EN firing every timestep
+    return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
+}
+//----------------------------------------------------------------------------
+std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train) const
+{
+    BOB_ASSERT(image.cols == MBParams::inputWidth);
+    BOB_ASSERT(image.rows == MBParams::inputHeight);
+    BOB_ASSERT(image.type() == CV_32FC1);
 
     Timer<> timer("\tSimulation:");
 
 #ifndef CPU_ONLY
     // Upload final snapshot to GPU
-    m_SnapshotFloatGPU.upload(snapshotFloat);
+    m_SnapshotFloatGPU.upload(image);
 
     // Extract device pointers and step
     auto snapshotPtrStep = (cv::cuda::PtrStep<float>)m_SnapshotFloatGPU;
@@ -84,8 +101,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     float *snapshotData = snapshotPtrStep.data;
 #else
     // Extract step and data pointer directly from CPU Mat
-    const unsigned int snapshotStep = snapshotFloat.cols;
-    float *snapshotData = reinterpret_cast<float*>(snapshotFloat.data);
+    const unsigned int snapshotStep = image.cols;
+    float *snapshotData = reinterpret_cast<float*>(image.data);
 #endif
 
     // Convert simulation regime parameters to timesteps
