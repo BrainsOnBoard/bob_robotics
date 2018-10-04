@@ -21,9 +21,9 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
-#include "../common/image_database.h"
 
 // Local includes
+#include "image_database.h"
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
