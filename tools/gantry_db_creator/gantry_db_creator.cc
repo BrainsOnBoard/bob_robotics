@@ -1,7 +1,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
-#include "common/image_database_recorder.h"
+#include "navigation/image_database.h"
 #include "os/keycodes.h"
 #include "robots/gantry.h"
 #include "video/display.h"
@@ -37,7 +37,7 @@ main()
         cam.setOutputSize(imSize);
 
 		// Save images into a folder called gantry
-        ImageDatabaseRecorder database("gantry", false);
+        Navigation::ImageDatabase database("gantry");
 
         auto x = xstart;
         auto y = ystart;
@@ -58,7 +58,7 @@ main()
             cv::imshow("Gantry camera", frame);
 
 			// Write to file with metadata
-            database.saveImage(frame, x, y, z, 0_deg);
+            database.addImage(frame, x, y, z, 0_deg, false);
 
 			// Get next position
             if (increaseY) {

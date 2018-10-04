@@ -2,9 +2,6 @@
 
 #include "os/windows_include.h"
 
-// Standard C includes
-#include <cassert>
-
 // Standard C++ includes
 #include <algorithm>
 #include <chrono>
@@ -17,6 +14,7 @@
 #include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
 
 // BoB robotics includes
+#include "common/assert.h"
 #include "common/pose.h"
 
 // Third-party includes
@@ -153,9 +151,9 @@ public:
      */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
-        assert(x >= 0_mm && x <= Limits[0]);
-        assert(y >= 0_mm && y <= Limits[1]);
-        assert(z >= 0_mm && z <= Limits[2]);
+        BOB_ASSERT(x >= 0_mm && x <= Limits[0]);
+        BOB_ASSERT(y >= 0_mm && y <= Limits[1]);
+        BOB_ASSERT(z >= 0_mm && z <= Limits[2]);
 
         m_IsMovingLine = true;
         const Vector3<LONG> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
