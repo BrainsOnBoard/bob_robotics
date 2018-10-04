@@ -54,8 +54,9 @@ runTest(const filesystem::path &dataPath, int num)
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;
-    std::tie(u, y) = infomax.getUY(image);
-    infomax.trainUY(u, y);
+    infomax.calculateUY(image);
+    std::tie(u, y) = infomax.getUY();
+    infomax.trainUY();
 
     std::cout << "Weights before training: " << std::endl
               << initWeights << std::endl

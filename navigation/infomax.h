@@ -8,6 +8,7 @@
 #include <iostream>
 #include <random>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 // Eigen
@@ -115,6 +116,12 @@ public:
         // Convert image to vector of floats
         m_U = m_Weights * getFloatVector(image);
         m_Y = tanh(m_U.array());
+    }
+
+    std::pair<VectorType, VectorType> getUY() const
+    {
+        // Copy the vectors
+        return std::make_pair<>(m_U, m_Y);
     }
 
     static MatrixType getInitialWeights(const int numInputs,
