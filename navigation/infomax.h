@@ -57,9 +57,8 @@ public:
 
     virtual void train(const cv::Mat &image) override
     {
-        VectorType u, y;
-        std::tie(u, y) = getUY(image);
-        trainUY(u, y);
+        calculateUY(image);
+        trainUY();
     }
 
     FloatType decision(const cv::Mat &image) const
@@ -96,16 +95,16 @@ public:
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
 #endif
-    void trainUY(const VectorType &u, const VectorType &y)
+    void trainUY()
     {
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
         const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
-        const auto sumYU = (y.array() + u.array()).matrix();
-        const FloatType learnRate = m_LearningRate / (FloatType) u.rows();
-        m_Weights.array() += (learnRate * (id - sumYU * u.transpose()) * m_Weights).array();
+        const auto sumYU = (m_Y.array() + m_U.array()).matrix();
+        const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
+        m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
     }
 
-    auto getUY(const cv::Mat &image)
+    void calculateUY(const cv::Mat &image)
     {
         assert(image.type() == CV_8UC1);
 
@@ -114,10 +113,8 @@ public:
         assert(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
-        const auto u = m_Weights * getFloatVector(image);
-        const auto y = tanh(u.array());
-
-        return std::make_pair(std::move(u), std::move(y));
+        m_U = m_Weights * getFloatVector(image);
+        m_Y = tanh(m_U.array());
     }
 
     static MatrixType getInitialWeights(const int numInputs,
@@ -127,7 +124,7 @@ public:
         MatrixType weights(numInputs, numHidden);
 
         std::cout << "Seed for weights is: " << seed << std::endl;
-        
+
         std::default_random_engine generator(seed);
         std::normal_distribution<FloatType> distribution;
         for (int i = 0; i < numInputs; i++) {
@@ -170,6 +167,7 @@ private:
     size_t m_SnapshotCount = 0;
     FloatType m_LearningRate;
     MatrixType m_Weights;
+    VectorType m_U, m_Y;
 
     static auto getFloatVector(const cv::Mat &image)
     {
