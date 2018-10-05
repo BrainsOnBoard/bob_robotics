@@ -76,6 +76,11 @@ public:
         return (m_Snapshots.size() - 1);
     }
 
+    void clear()
+    {
+        m_Snapshots.clear();
+    }
+
     // Calculate difference between memory and snapshot with index
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &) const
     {

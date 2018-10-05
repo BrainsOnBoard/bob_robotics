@@ -72,6 +72,12 @@ public:
         return decs.array().abs().sum();
     }
 
+    //! Generates new random weights
+    virtual void clearMemory() override
+    {
+        m_Weights = getInitialWeights(m_Weights.cols(), m_Weights.rows());
+    }
+
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
@@ -115,6 +121,7 @@ public:
                                         const int numHidden,
                                         const unsigned seed = std::random_device()())
     {
+        // Note that we transpose this matrix after normalisation
         MatrixType weights(numInputs, numHidden);
 
         std::cout << "Seed for weights is: " << seed << std::endl;

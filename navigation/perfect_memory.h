@@ -82,6 +82,11 @@ public:
         return *std::min_element(m_Differences.begin(), m_Differences.end());
     }
 
+    virtual void clearMemory() override
+    {
+        m_Store.clear();
+    }
+
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
