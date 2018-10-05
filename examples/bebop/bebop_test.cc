@@ -67,7 +67,7 @@ int main()
         drone.addJoystick(joystick);
 
         // display the drone's video stream on screen
-        Video::Display display(drone.getVideoStream());
+        Video::Display display(drone.getVideoStream(), true);
         do {
             bool joyUpdated = joystick.update();
             bool dispUpdated = display.update();
