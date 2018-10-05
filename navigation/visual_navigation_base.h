@@ -27,7 +27,7 @@ namespace Navigation {
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes)
+    VisualNavigationBase(const cv::Size &unwrapRes)
       : m_UnwrapRes(unwrapRes)
     {}
 

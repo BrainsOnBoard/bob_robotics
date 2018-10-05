@@ -41,7 +41,9 @@ template<typename Store = PerfectMemoryStore::RawImage<>>
 class PerfectMemory : public VisualNavigationBase
 {
 public:
-    PerfectMemory(const cv::Size unwrapRes /**TODO*** forward other parameters*/) : VisualNavigationBase(unwrapRes), m_Store(unwrapRes)
+    PerfectMemory(const cv::Size &unwrapRes)
+      : VisualNavigationBase(unwrapRes)
+      , m_Store(unwrapRes)
     {}
 
     //------------------------------------------------------------------------
