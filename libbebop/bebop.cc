@@ -187,7 +187,7 @@ Bebop::getYawSpeedLimits()
 void
 Bebop::setPitch(float pitch)
 {
-    BOB_ASSERT(pitch >= 0.0f && pitch <= 1.0f);
+    BOB_ASSERT(pitch >= -1.f && pitch <= 1.f);
     DRONE_COMMAND(setPilotingPCMDPitch, round(pitch * 100.0f));
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
@@ -198,7 +198,7 @@ Bebop::setPitch(float pitch)
 void
 Bebop::setRoll(float right)
 {
-    BOB_ASSERT(right >= 0.0f && right <= 1.0f);
+    BOB_ASSERT(right >= -1.f && right <= 1.f);
     DRONE_COMMAND(setPilotingPCMDRoll, round(right * 100.0f));
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
@@ -209,7 +209,7 @@ Bebop::setRoll(float right)
 void
 Bebop::setVerticalSpeed(float up)
 {
-    BOB_ASSERT(up >= 0.0f && up <= 1.0f);
+    BOB_ASSERT(up >= -1.f && up <= 1.f);
     DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
 }
 
@@ -219,7 +219,7 @@ Bebop::setVerticalSpeed(float up)
 void
 Bebop::setYawSpeed(float right)
 {
-    BOB_ASSERT(right >= 0.0f && right <= 1.0f);
+    BOB_ASSERT(right >= -1.f && right <= 1.f);
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
