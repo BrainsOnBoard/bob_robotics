@@ -1,5 +1,6 @@
-WITH_LIBBEBOP := 1
 LIBBEBOP_PATH := ../../libbebop
+WITH_LIBBEBOP := 1
+WITH_MATPLOTLIBCPP := 1
 include ../../common/flags.mk
 CXXFLAGS += -I../..
 
