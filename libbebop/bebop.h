@@ -8,6 +8,7 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+#include <utility>
 
 // OpenCV
 #ifdef KEY_UP
@@ -22,6 +23,7 @@
 #include "../common/semaphore.h"
 #include "../hid/joystick.h"
 #include "../video/input.h"
+#include "../robots/uav.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -83,10 +85,6 @@ using namespace units::velocity;
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
-//! Represents maximum and minimum values for drone speed settings
-template<class T>
-using Limits = std::tuple<T, T>;
-
 /*
  * Simply throws a runtime_error with appropriate message if
  * err != ARCONTROLLER_OK.
@@ -105,12 +103,13 @@ checkError(eARCONTROLLER_ERROR err)
 //------------------------------------------------------------------------------
 /*!
  * \brief An interface to Parrot Bebop 2 drones
- * 
+ *
  * This class handles connection/disconnection and sending steering commands.
  * It also provides an interface to access the drone's video stream.
  */
 //------------------------------------------------------------------------------
 class Bebop
+  : public UAV
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
@@ -167,24 +166,22 @@ public:
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
     ~Bebop();
-    void addJoystick(HID::Joystick &joystick);
 
     // speed limits
     degree_t getMaximumTilt() const;
-    Limits<degree_t> &getTiltLimits();
+    std::pair<degree_t, degree_t> &getTiltLimits();
     meters_per_second_t getMaximumVerticalSpeed() const;
-    Limits<meters_per_second_t> &getVerticalSpeedLimits();
+    std::pair<meters_per_second_t, meters_per_second_t> &getVerticalSpeedLimits();
     degrees_per_second_t getMaximumYawSpeed() const;
-    Limits<degrees_per_second_t> &getYawSpeedLimits();
+    std::pair<degrees_per_second_t, degrees_per_second_t> &getYawSpeedLimits();
 
     // motor control
-    void takeOff();
-    void land();
-    void setPitch(float pitch);
-    void setRoll(float right);
-    void setVerticalSpeed(float up);
-    void setYawSpeed(float right);
-    void stopMoving();
+    virtual void takeOff() override;
+    virtual void land() override;
+    virtual void setPitch(float pitch) override;
+    virtual void setRoll(float right) override;
+    virtual void setVerticalSpeed(float up) override;
+    virtual void setYawSpeed(float right) override;
 
     // misc
     VideoStream &getVideoStream();
@@ -243,10 +240,6 @@ private:
                 if (m_Current == m_UserMaximum) {
                     m_Semaphore.notify();
                 }
-
-                // std::cout << "Max: " << m_Current << " ("
-                //           << std::get<0>(m_Limits) << ", "
-                //           << std::get<1>(m_Limits) << ")" << std::endl;
             }
         }
 
@@ -256,7 +249,7 @@ private:
             return m_Current;
         }
 
-        inline Limits<UnitType> &getLimits()
+        inline std::pair<UnitType, UnitType> &getLimits()
         {
             m_Semaphore.waitOnce();
             return m_Limits;
@@ -264,7 +257,7 @@ private:
 
     private:
         UnitType m_Current;
-        Limits<UnitType> m_Limits;
+        std::pair<UnitType, UnitType> m_Limits;
         mutable Semaphore m_Semaphore;
     };
 
@@ -280,8 +273,6 @@ private:
     inline void disconnect();
     void startStreaming();
     void stopStreaming();
-    bool onAxisEvent(HID::JAxis axis, float value);
-    bool onButtonEvent(HID::JButton button, bool pressed);
     inline void addEventHandlers();
     inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
     inline void createControllerDevice();

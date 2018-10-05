@@ -85,20 +85,6 @@ Bebop::~Bebop()
 }
 
 /*!
- * \brief Start controlling this drone with a joystick.
- */
-void
-Bebop::addJoystick(HID::Joystick &joystick)
-{
-    joystick.addHandler([this](HID::JAxis axis, float value) {
-        return onAxisEvent(axis, value);
-    });
-    joystick.addHandler([this](HID::JButton button, bool pressed) {
-        return onButtonEvent(button, pressed);
-    });
-}
-
-/*!
  * \brief Send take-off command.
  */
 void
@@ -138,7 +124,7 @@ Bebop::getVideoStream()
 
 /*!
  * \brief Return the current maximum tilt setting.
- * 
+ *
  * This affects pitch and roll.
  */
 degree_t
@@ -151,7 +137,7 @@ Bebop::getMaximumTilt() const
  * \brief Return the minimum and maximum permitted values for the maximum tilt
  *        setting.
  */
-Limits<degree_t> &
+std::pair<degree_t, degree_t> &
 Bebop::getTiltLimits()
 {
     return m_TiltLimits.getLimits();
@@ -170,7 +156,7 @@ Bebop::getMaximumVerticalSpeed() const
  * \brief Return the minimum and maximum permitted values for the maximum
  *        vertical speed setting.
  */
-Limits<meters_per_second_t> &
+std::pair<meters_per_second_t, meters_per_second_t> &
 Bebop::getVerticalSpeedLimits()
 {
     return m_VerticalSpeedLimits.getLimits();
@@ -189,7 +175,7 @@ Bebop::getMaximumYawSpeed() const
  * \brief Return the minimum and maximum permitted values for the maximum yaw
  *        speed setting.
  */
-Limits<degrees_per_second_t> &
+std::pair<degrees_per_second_t, degrees_per_second_t> &
 Bebop::getYawSpeedLimits()
 {
     return m_YawSpeedLimits.getLimits();
@@ -235,18 +221,6 @@ Bebop::setYawSpeed(float right)
 {
     BOB_ASSERT(right >= 0.0f && right <= 1.0f);
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
-}
-
-/*!
- * \brief Stop the drone from moving along all axes.
- */
-void
-Bebop::stopMoving()
-{
-    setPitch(0);
-    setRoll(0);
-    setYawSpeed(0);
-    setVerticalSpeed(0);
 }
 
 /*!
@@ -522,64 +496,5 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     }
 }
-
-/*
- * Handle joystick axis events.
- */
-bool
-Bebop::onAxisEvent(HID::JAxis axis, float value)
-{
-    /* 
-     * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
-     * values for the joystick code to make the drone more controllable. 
-     */
-    switch (axis) {
-    case HID::JAxis::RightStickHorizontal:
-        setRoll(value);
-        return true;
-    case HID::JAxis::RightStickVertical:
-        setPitch(-value);
-        return true;
-    case HID::JAxis::LeftStickVertical:
-        setVerticalSpeed(-value);
-        return true;
-    case HID::JAxis::LeftTrigger:
-        setYawSpeed(-value);
-        return true;
-    case HID::JAxis::RightTrigger:
-        setYawSpeed(value);
-        return true;
-    default:
-        // otherwise signal that we haven't handled event
-        return false;
-    }
-}
-
-/*
- * Handle joystick button events.
- */
-bool
-Bebop::onButtonEvent(HID::JButton button, bool pressed)
-{
-    // we only care about button presses
-    if (!pressed) {
-        return false;
-    }
-
-    // A = take off; B = land
-    switch (button) {
-    case HID::JButton::A:
-        takeOff();
-        return true;
-    case HID::JButton::B:
-        land();
-        return true;
-    default:
-        // otherwise signal that we haven't handled event
-        return false;
-    }
-}
-
-/** END PRIVATE MEMBERS **/
 } // Robots
 } // BoBRobotics
