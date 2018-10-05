@@ -28,7 +28,7 @@ public:
         tank(speed, speed);
     }
 
-    virtual void turn(float clockwiseSpeed) override
+    virtual void turnOnTheSpot(float clockwiseSpeed) override
     {
         tank(clockwiseSpeed, -clockwiseSpeed);
     }

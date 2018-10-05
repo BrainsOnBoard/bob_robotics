@@ -27,7 +27,7 @@ public:
     }
 
     //! Sets the yaw speed, stopping motion in all other axes
-    virtual void turn(float clockwiseSpeed) override
+    virtual void turnOnTheSpot(float clockwiseSpeed) override
     {
         setPitch(0.f);
         setRoll(0.f);

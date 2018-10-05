@@ -21,7 +21,7 @@ public:
      *
      * Values must be between -1 and 1 inclusive.
      */
-    virtual void turn(float clockwiseSpeed) = 0;
+    virtual void turnOnTheSpot(float clockwiseSpeed) = 0;
 
     //! Stop the robot moving
     virtual void stopMoving() = 0;
