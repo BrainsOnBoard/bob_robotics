@@ -173,7 +173,7 @@ bool RouteContinuous::load(const std::string &filename)
 
         // Add segment heading to array
         m_Headings.push_back(atan2(makeM(segmentStart[1] - segmentEnd[1]),
-                                   makeM(segmentEnd[0] - segmentStart[0])));
+                                   makeM(segmentStart[0] - segmentEnd[0])));
 
         // Calculate segment length and
         const meter_t segmentLength(distance(segmentStart, segmentEnd));
