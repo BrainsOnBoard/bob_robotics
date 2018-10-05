@@ -284,11 +284,11 @@ Bebop::VideoStream::getOutputSize() const
 bool
 Bebop::VideoStream::readFrame(cv::Mat &frame)
 {
-    std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
     if (!m_NewFrame) {
         return false;
     }
 
+    std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
     m_Frame.copyTo(frame);
     return true;
 }
