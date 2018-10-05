@@ -254,12 +254,12 @@ Bebop::connect()
     checkError(ARCONTROLLER_Device_Start(m_Device.get()));
 
     // wait for start
-    eARCONTROLLER_DEVICE_STATE state;
+    Bebop::State state;
     do {
         state = getStateUpdate();
-    } while (state == ARCONTROLLER_DEVICE_STATE_STARTING);
+    } while (state == Bebop::State::Starting);
 
-    if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
+    if (state != Bebop::State::Running) {
         throw std::runtime_error("Could not connect to drone");
     }
 
@@ -280,12 +280,12 @@ Bebop::disconnect()
         checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
 
         // wait for stop
-        eARCONTROLLER_DEVICE_STATE state;
+        Bebop::State state;
         do {
             state = getStateUpdate();
-        } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
+        } while (state == Bebop::State::Stopping);
 
-        if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
+        if (state != Bebop::State::Stopped) {
             std::cerr << "Warning: Could not disconnect from drone" << std::endl;
         }
     }
@@ -374,7 +374,7 @@ Bebop::stopStreaming()
  * Wait for the drone to send a state-update command and return the new
  * state.
  */
-inline eARCONTROLLER_DEVICE_STATE
+inline Bebop::State
 Bebop::getStateUpdate()
 {
     m_Semaphore.wait();
@@ -384,11 +384,11 @@ Bebop::getStateUpdate()
 /*
  * Return the drone's connection state.
  */
-inline eARCONTROLLER_DEVICE_STATE
+Bebop::State
 Bebop::getState()
 {
     auto err = ARCONTROLLER_OK;
-    const auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
+    const Bebop::State state = static_cast<Bebop::State>(ARCONTROLLER_Device_GetState(m_Device.get(), &err));
     checkError(err);
     return state;
 }
@@ -443,7 +443,7 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                     void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
-    bebop->m_Semaphore.notify(); // trigger semaphore used by get_state_update()
+    bebop->m_Semaphore.notify(); // trigger semaphore used by getStateUpdate()
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
