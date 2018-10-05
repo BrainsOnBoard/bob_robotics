@@ -278,19 +278,19 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
 cv::Size
 Bebop::VideoStream::getOutputSize() const
 {
-    return cv::Size(getFrameWidth(), getFrameHeight());
+    return cv::Size(856, 480);
 }
 
 bool
 Bebop::VideoStream::readFrame(cv::Mat &frame)
 {
-    if (!m_NewFrame) {
+    if (m_NewFrame) {
+        std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
+        m_Frame.copyTo(frame);
+        return true;
+    } else {
         return false;
     }
-
-    std::lock_guard<decltype(m_FrameMutex)> guard(m_FrameMutex);
-    m_Frame.copyTo(frame);
-    return true;
 }
 
 eARCONTROLLER_ERROR
