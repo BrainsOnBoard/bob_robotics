@@ -1,11 +1,16 @@
 #pragma once
 
-// C++ includes
-#include <string>
-
 // BoB robotics includes
 #include "../hid/joystick.h"
 #include "../net/node.h"
+#include "robot.h"
+
+// Standard C includes
+#include <cmath>
+
+// Standard C++ includes
+#include <iostream>
+#include <string>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -14,10 +19,23 @@ namespace Robots {
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
 class Tank
+  : public Robot
 {
 public:
-    virtual ~Tank()
-    {}
+    virtual void moveForward(float speed) override
+    {
+        tank(speed, speed);
+    }
+
+    virtual void turn(float clockwiseSpeed) override
+    {
+        tank(clockwiseSpeed, -clockwiseSpeed);
+    }
+
+    virtual void stopMoving() override
+    {
+        tank(0.f, 0.f);
+    }
 
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
@@ -34,12 +52,14 @@ public:
               joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
     }
 
+    //! Set the left and right motors to the specified speed
     virtual void tank(float left, float right)
     {
         std::cout << "Dummy motor: left: " << left << "; right: " << right
                   << std::endl;
     }
 
+    //! Controls the robot with a network stream
     void readFromNetwork(Net::Node &node)
     {
         // handle incoming TNK commands
