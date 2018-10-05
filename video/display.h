@@ -114,7 +114,7 @@ public:
         }
 
         // get keyboard input
-        switch (cv::waitKeyEx(1)) {
+        switch (cv::waitKeyEx(1) & OS::KeyMask) {
         case 'u': // toggle unwrapping
             m_ShowUnwrapped = !m_ShowUnwrapped;
             break;
