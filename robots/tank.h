@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../hid/joystick.h"
 #include "../net/node.h"
 #include "robot.h"
@@ -55,6 +56,8 @@ public:
     //! Set the left and right motors to the specified speed
     virtual void tank(float left, float right)
     {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
         std::cout << "Dummy motor: left: " << left << "; right: " << right
                   << std::endl;
     }

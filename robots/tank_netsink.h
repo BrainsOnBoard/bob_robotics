@@ -22,6 +22,9 @@ public:
     /* Motor command: send TNK command over TCP */
     void tank(float left, float right) override
     {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
+
         // don't send a command if it's the same as the last one
         if (left == m_OldLeft && right == m_OldRight) {
             return;

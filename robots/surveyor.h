@@ -26,7 +26,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 /*!
  * \brief An interface for Active Robots' Surveyor line of robots
- * 
+ *
  * See https://www.active-robots.com/surveyor-rover.html
  */
 class Surveyor : public Tank
@@ -67,9 +67,8 @@ public:
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) override
     {
-        // Clamp left and right within normalised range
-        left = std::min(1.0f, std::max(-1.0f, left));
-        right = std::min(1.0f, std::max(-1.0f, right));
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
 
         // Scale and convert to int
         int leftInt = (int) std::round(left * 100.0f);
