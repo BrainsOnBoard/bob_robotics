@@ -40,7 +40,7 @@ class Gantry
 public:
     //! Open the PCI device and set drive parameters
     Gantry(BYTE boardId = 0)
-      : m_BoardId(0)
+      : m_BoardId(boardId)
     {
         // Try to open PCI device
         checkError(P1240MotDevOpen(m_BoardId), "Could not open PCI card");
