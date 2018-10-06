@@ -28,7 +28,7 @@ main()
 
         // Return gantry to its home position
         std::cout << "Homing gantry...\n";
-        gantry.home();
+        gantry.raiseAndHome();
         std::cout << "Gantry homed.\n";
 
         // Show gantry camera stream

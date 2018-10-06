@@ -71,13 +71,13 @@ public:
     }
 
     /**!
-     * \brief Returns the gantry to its home position
+     * \brief Returns the gantry to its home position, raising the gantry head first
      *
      * Home position is (0, 0, 0). The robot gantry will be raised before homing so that it does
      * not collide with objects in the arena. The gantry needs to be homed before use so that it
      * can reset its estimate of its position. This function blocks until the gantry is homed.
      */
-    void home()
+    void raiseAndHome()
     {
         m_IsMovingLine = false;
 
@@ -87,15 +87,26 @@ public:
         waitToStopMoving(Z_Axis);
 
         // Home along x- and y-axes
-        checkError(P1240MotHome(m_BoardId, XY_Axis), "Could not home x- and y- axes");
+        home(XY_Axis);
         waitToStopMoving(XY_Axis);
 
         // Home z-axis
-        checkError(P1240MotHome(m_BoardId, Z_Axis), "Could not home z-axis");
+        home(Z_Axis);
         waitToStopMoving(Z_Axis);
 
         // Give error if emergency button pressed
         checkEmergencyButton();
+    }
+
+    /**!
+     * \brief Returns the gantry to its home position
+     *
+     * Home position is (0, 0, 0). The gantry needs to be homed before use so that it
+     * can reset its estimate of its position. This function does not block.
+     */
+    void home(BYTE axis = XYZ_Axis)
+    {
+        checkError(P1240MotHome(m_BoardId, axis), "Could not home axis");
     }
 
     //! Check if either of the emergency buttons are pressed down
