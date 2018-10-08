@@ -492,8 +492,32 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
         MAX_SPEED_CHANGED(VerticalSpeed, SPEEDSETTINGSSTATE_MAXVERTICALSPEED);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED:
+        productVersionReceived(dict);
+        break;
     default:
         break;
+    }
+}
+
+void
+Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *element = nullptr;
+    HASH_FIND_STR (dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, element);
+    if (element)
+    {
+        HASH_FIND_STR (element->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
+        if (arg)
+        {
+            std::cout << "Bebop software version: " << arg->value.String << std::endl;
+        }
+        HASH_FIND_STR (element->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
+        if (arg)
+        {
+            std::cout << "Bebop hardware version: " << arg->value.String << std::endl;
+        }
     }
 }
 } // Robots
