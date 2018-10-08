@@ -110,8 +110,8 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         std::vector<GLfloat> positions((6 + (numTriangles * 3)) * 3);
 
         // Initialise bounds to limits of underlying data types
-        std::fill_n(&m_MinBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::max()));
-        std::fill_n(&m_MaxBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::min()));
+        std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
+        std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<meter_t>::min());
 
         // Loop through components(X, Y and Z)
         for(unsigned int c = 0; c < 3; c++) {
@@ -287,8 +287,8 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
 
         // Initialise bounds to limits of underlying data types
-        std::fill_n(&m_MinBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::max()));
-        std::fill_n(&m_MaxBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::min()));
+        std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
+        std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<meter_t>::min());
         for(unsigned int i = 0; i < rawPositions.size(); i += 3) {
             for(unsigned int c = 0; c < 3; c++) {
                 m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(rawPositions[i + c]));

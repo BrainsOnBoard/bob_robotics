@@ -193,8 +193,8 @@ bool RouteArdin::load(const std::string &filename, bool realign)
     }
 
     // Initialise bounds to limits of underlying data types
-    std::fill_n(&m_MinBound[0], 2, meter_t(std::numeric_limits<meter_t::underlying_type>::max()));
-    std::fill_n(&m_MaxBound[0], 2, meter_t(std::numeric_limits<meter_t::underlying_type>::min()));
+    std::fill_n(&m_MinBound[0], 2, std::numeric_limits<meter_t>::max());
+    std::fill_n(&m_MaxBound[0], 2, std::numeric_limits<meter_t>::min());
 
     // Calculate bounds from waypoints
     for(const auto &w : m_Waypoints) {
