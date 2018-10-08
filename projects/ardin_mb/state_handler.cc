@@ -274,6 +274,7 @@ bool StateHandler::handleEvent(State state, Event event)
             else {
                 // Add novelty to vector field
                 m_VectorField.setNovelty(m_CurrentVectorFieldPoint, m_VectorFieldNovelty);
+                m_VectorFieldNovelty.clear();
 
                 // Go onto next vector field point
                 m_CurrentVectorFieldPoint++;
