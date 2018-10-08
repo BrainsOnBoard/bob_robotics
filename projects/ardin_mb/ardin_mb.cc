@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     // Create state machine and set it as window user pointer
     const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
-    StateHandler stateHandler(worldFilename, routeFilename, memory, true);
+    StateHandler stateHandler(worldFilename, routeFilename, memory);
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback

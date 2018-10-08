@@ -15,7 +15,7 @@
 class MBMemory : public BoBRobotics::Navigation::VisualNavigationBase
 {
 public:
-    MBMemory();
+    MBMemory(bool normaliseInput = true);
 
     //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
@@ -32,7 +32,12 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-#ifndef CPU_ONLY
+    const bool m_NormaliseInput;
+
+#ifdef CPU_ONLY
+    mutable cv::Mat m_SnapshotFloat;
+#else
+    mutable cv::cuda::GpuMat m_SnapshotGPU;
     mutable cv::cuda::GpuMat m_SnapshotFloatGPU;
 #endif
 };

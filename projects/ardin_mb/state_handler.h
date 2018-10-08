@@ -70,7 +70,7 @@ public:
     };
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename,
-                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, bool floatInput);
+                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
 
     //------------------------------------------------------------------------
     // Public API
@@ -125,9 +125,6 @@ private:
 
     //! Class for handling rendering of vector field
     VectorField m_VectorField;
-
-    //! Should floating point snapshots be used? (mushroom body requires them, perfect memory does not)
-    const bool m_FloatInput;
 
     //! X position of ant
     units::length::meter_t m_AntX;

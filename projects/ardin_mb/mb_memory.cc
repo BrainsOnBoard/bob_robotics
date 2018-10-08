@@ -32,10 +32,12 @@ unsigned int convertMsToTimesteps(double ms)
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
-MBMemory::MBMemory()
-    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight))
-#ifndef CPU_ONLY
-        , m_SnapshotFloatGPU(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
+MBMemory::MBMemory(bool normaliseInput)
+    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)), m_NormaliseInput(normaliseInput)
+#ifdef CPU_ONLY
+        , m_SnapshotFloat(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
+#else
+        , m_SnapshotGPU(MBParams::inputHeight, MBParams::inputWidth, CV_8UC1), m_SnapshotFloatGPU(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
 #endif  // CPU_ONLY
 {
 
@@ -84,20 +86,37 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
 {
     BOB_ASSERT(image.cols == MBParams::inputWidth);
     BOB_ASSERT(image.rows == MBParams::inputHeight);
-    BOB_ASSERT(image.type() == CV_32FC1);
+    BOB_ASSERT(image.type() == CV_8UC1);
 
-#ifndef CPU_ONLY
-    // Upload final snapshot to GPU
-    m_SnapshotFloatGPU.upload(image);
+#ifdef CPU_ONLY
+    // Convert to float
+    image.convertTo(m_SnapshotFloat, CV_32FC1, 1.0 / 255.0);
+
+    // Normalise snapshot using L2 norm
+    if(m_NormaliseInput) {
+        cv::normalize(m_SnapshotFloat, m_SnapshotFloat);
+    }
+
+    // Extract step and data pointer directly from CPU Mat
+    const unsigned int snapshotStep = m_SnapshotFloat.cols;
+    float *snapshotData = reinterpret_cast<float*>(m_SnapshotFloat.data);
+#else
+    // Upload (uint8) snapshot to GPU
+    m_SnapshotGPU.upload(image);
+
+    // Convert to float
+    m_SnapshotGPU.convertTo(m_SnapshotFloatGPU, CV_32FC1, 1.0 / 255.0);
+
+    // Normalise snapshot using L2 norm
+    // **YUCK** why doesn't the CUDA version have default parameters!?
+    if(m_NormaliseInput) {
+        cv::cuda::normalize(m_SnapshotFloatGPU, m_SnapshotFloatGPU, 1.0, 0.0, cv::NORM_L2, -1);
+    }
 
     // Extract device pointers and step
     auto snapshotPtrStep = (cv::cuda::PtrStep<float>)m_SnapshotFloatGPU;
     const unsigned int snapshotStep = snapshotPtrStep.step / sizeof(float);
     float *snapshotData = snapshotPtrStep.data;
-#else
-    // Extract step and data pointer directly from CPU Mat
-    const unsigned int snapshotStep = image.cols;
-    float *snapshotData = reinterpret_cast<float*>(image.data);
 #endif
 
     // Convert simulation regime parameters to timesteps

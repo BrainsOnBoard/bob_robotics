@@ -17,11 +17,11 @@ using namespace units::literals;
 // StateHandler
 //----------------------------------------------------------------------------
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
-                           BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, bool floatInput)
+                           BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_VectorField(20_cm), m_FloatInput(floatInput), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+    m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
 {
     // Load world
     m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
@@ -88,7 +88,7 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Train memory with snapshot
-            m_VisualNavigation.train(m_FloatInput ? m_SnapshotProcessor.getFinalSnapshotFloat() : m_SnapshotProcessor.getFinalSnapshot());
+            m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
 
             // Mark results from previous training snapshot on route
             m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
@@ -134,7 +134,7 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Test snapshot
-            const float difference = m_VisualNavigation.test(m_FloatInput ? m_SnapshotProcessor.getFinalSnapshotFloat() : m_SnapshotProcessor.getFinalSnapshot());
+            const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
 
             // If this is an improvement on previous best spike count
             if(difference < m_LowestTestDifference) {
@@ -252,7 +252,7 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Test snapshot
-            const float difference = m_VisualNavigation.test(m_FloatInput ? m_SnapshotProcessor.getFinalSnapshotFloat() : m_SnapshotProcessor.getFinalSnapshot());
+            const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
 
             // Add novelty to vector
             m_VectorFieldNovelty.push_back(difference);
