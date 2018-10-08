@@ -8,22 +8,35 @@
 #include "../third_party/units.h"
 
 // Standard C++ includes
+#include <atomic>
+#include <chrono>
 #include <thread>
 
 namespace BoBRobotics {
 namespace Vicon {
+using namespace std::literals;
+
 template<typename BaseObjectDataType = ObjectData>
 class ObjectDataPlotter
-  : public ObjectData {
+  : public ObjectData
+{
 public:
-    ObjectDataPlotter() : m_PlotThread(run, this)
-    {}
+    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+                radian_t yaw, radian_t pitch, radian_t roll) {
+        BaseObjectDataType::update(frameNumber, x, y, z, yaw, pitch, roll);
+        m_NewData = true;
+    }
 
-    void updatePlot() const
+    bool update()
     {
+        // Atomically retrieve value of m_NewData and set to false
+        if (!m_NewData.exchange(false)) {
+            return false;
+        }
+
+        // Update plot
         const auto position = getPosition<>();
         const auto attitude = getAttitude<>();
-        // std::cout << "x: " << position[0] << ", y: " << position[1] << std::endl;
         const std::vector<double> vx{ position[0].value() };
         const std::vector<double> vy{ position[1].value() };
         const std::vector<double> vu{ units::math::cos(attitude[0]) };
@@ -35,16 +48,10 @@ public:
         matplotlibcpp::xlim(-2500, 2500);
         matplotlibcpp::ylim(-2500, 2500);
         matplotlibcpp::pause(0.01);
+        return true;
     }
-
 private:
-    std::thread m_PlotThread;
-
-    static void run(const ObjectDataPlotter *plotter)
-    {
-        while (true)
-            plotter->updatePlot();
-    }
+    std::atomic<bool> m_NewData = false;
 }; // ObjectDataPlotter
 } // Vicon
 } // BoBRobotics

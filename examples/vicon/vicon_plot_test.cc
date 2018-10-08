@@ -13,6 +13,11 @@ using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 using namespace units::angle;
 
+auto now()
+{
+    return std::chrono::high_resolution_clock::now();
+}
+
 int
 main()
 {
@@ -26,7 +31,15 @@ main()
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
-    std::this_thread::sleep_for(30s);
+
+    // Plot for 30s
+    const auto startTime = now();
+    do {
+        if (!vicon.getObjectData(0).update()) {
+            std::this_thread::sleep_for(25ms);
+        }
+    } while ((now() - startTime) <= 30s);
+
     if (!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;
     }
