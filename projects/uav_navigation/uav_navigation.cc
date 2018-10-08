@@ -73,7 +73,7 @@ public:
         std::cout << "Scanning for " << static_cast<millisecond_t>(halfScanDurationUnits) << std::endl;
 
         auto &camera = m_Drone.getVideoStream();
-        DataVector acwData, cwData;
+        DataVector data;
         bool plotShown = false;
         do {
             const bool joystickUpdate = m_Joystick.update();
@@ -92,34 +92,27 @@ public:
             }
 
             const auto currentTime = now();
-            if ((currentTime - m_StartTime) >= halfScanDuration) {
+            const auto elapsed = currentTime - m_StartTime;
+            if (m_NavigationState == Scanning) {
+                if (elapsed >= 2 * halfScanDuration) {
+                    startReturnToCentre(currentTime);
+                    m_NavigationState = ReturnToCentre;
+                } else {
+                    cv::cvtColor(m_Frame, m_FrameGreyscale, cv::COLOR_RGB2GRAY);
+                    const float match = m_PerfectMemory.test(m_FrameGreyscale);
+                    data.emplace_back(std::make_pair<>(currentTime, match));
+                }
+            } else if (elapsed >= halfScanDuration) {
                 switch (m_NavigationState) {
-                case ScanningAntiClockwise:
-                    startReturnToCentre(currentTime, 1.f);
-                    m_NavigationState = ClockwiseToCentre;
+                case MovingAntiClockwiseOut:
+                    startScanning(currentTime);
                     break;
-                case ClockwiseToCentre:
-                    startScanningClockwise(currentTime);
-                    break;
-                case ScanningClockwise:
-                    startReturnToCentre(currentTime, -1.f);
-                    m_NavigationState = AntiClockwiseToCentre;
-                    break;
-                case AntiClockwiseToCentre:
+                case ReturnToCentre:
                     stopNavigating();
-                    plotNavigationResults(acwData, cwData);
+                    plotNavigationResults(data);
                     plotShown = true;
                 default:
                     break;
-                }
-            } else if (m_NavigationState == ScanningAntiClockwise || m_NavigationState == ScanningClockwise) {
-                cv::cvtColor(m_Frame, m_FrameGreyscale, cv::COLOR_RGB2GRAY);
-                const float match = m_PerfectMemory.test(m_FrameGreyscale);
-                auto datum = std::make_pair<>(currentTime, match);
-                if (m_NavigationState == ScanningAntiClockwise) {
-                    acwData.emplace_back(std::move(datum));
-                } else {
-                    cwData.emplace_back(std::move(datum));
                 }
             }
         } while (m_Drone.getState() == Robots::Bebop::State::Running && (cv::waitKeyEx(1) & OS::KeyMask) != OS::KeyCodes::Escape);
@@ -135,13 +128,12 @@ private:
     enum State
     {
         NotNavigating = 0,
-        ScanningAntiClockwise,
-        ClockwiseToCentre,
-        ScanningClockwise,
-        AntiClockwiseToCentre
+        MovingAntiClockwiseOut,
+        Scanning,
+        ReturnToCentre
     } m_NavigationState = NotNavigating;
     cv::Mat m_Frame, m_FrameGreyscale;
-    TimeType m_StartTime, m_AntiClockwiseStartTime, m_ClockwiseStartTime;
+    TimeType m_StartTime, m_ScanStartTime;
 
     bool onButtonEvent(HID::JButton button, bool pressed)
     {
@@ -185,37 +177,37 @@ private:
 
     void startNavigating()
     {
-        m_StartTime = m_AntiClockwiseStartTime = now();
+        m_StartTime = now();
         m_Drone.turnOnTheSpot(-m_ProportionYawSpeed);
-        m_NavigationState = ScanningAntiClockwise;
+        m_NavigationState = MovingAntiClockwiseOut;
         std::cout << "Scanning anticlockwise" << std::endl;
     }
 
-    void startReturnToCentre(TimeType currentTime, float yawDirection)
+    void startReturnToCentre(TimeType currentTime)
     {
         m_StartTime = currentTime;
-        m_Drone.turnOnTheSpot(yawDirection * m_ProportionYawSpeed);
+        m_NavigationState = ReturnToCentre;
+        m_Drone.turnOnTheSpot(-m_ProportionYawSpeed);
         std::cout << "Returning to centre" << std::endl;
     }
 
-    void startScanningClockwise(TimeType currentTime)
+    void startScanning(TimeType currentTime)
     {
-        m_StartTime = m_ClockwiseStartTime = currentTime;
-        m_NavigationState = ScanningClockwise;
+        m_StartTime = m_ScanStartTime = currentTime;
+        m_NavigationState = Scanning;
+        m_Drone.turnOnTheSpot(m_ProportionYawSpeed);
         std::cout << "Scanning clockwise" << std::endl;
     }
 
-    void plotNavigationResults(DataVector &acwData, DataVector &cwData)
+    void plotNavigationResults(DataVector &data)
     {
         std::vector<float> headings;
-        headings.reserve(acwData.size() + cwData.size());
-        std::transform(acwData.crbegin(), acwData.crend(), std::back_inserter(headings),
+        headings.reserve(data.size());
+        std::transform(data.cbegin(), data.cend(), std::back_inserter(headings),
             [this](const auto &datum) {
-                return -timeToHeading(datum.first, m_AntiClockwiseStartTime);
-            });
-        std::transform(cwData.cbegin(), cwData.cend(), std::back_inserter(headings),
-            [this](const auto &datum) {
-                return timeToHeading(datum.first, m_ClockwiseStartTime);
+                const second_t timeUnits = datum.first - m_ScanStartTime;
+                const degree_t heading = m_YawSpeed * timeUnits - m_HalfScanWidth;
+                return heading.value();
             });
 
         const auto normalise = [](const auto &datum) {
@@ -223,8 +215,7 @@ private:
         };
         std::vector<float> scores;
         scores.reserve(headings.size());
-        std::transform(acwData.crbegin(), acwData.crend(), std::back_inserter(scores), normalise);
-        std::transform(cwData.cbegin(), cwData.cend(), std::back_inserter(scores), normalise);
+        std::transform(data.cbegin(), data.cend(), std::back_inserter(scores), normalise);
 
         const auto bestIter = std::min_element(scores.cbegin(), scores.cend());
         const size_t bestIndex = std::distance(scores.cbegin(), bestIter);
@@ -233,17 +224,8 @@ private:
 
         plt::plot(headings, scores);
 
-        acwData.clear();
-        cwData.clear();
+        data.clear();
     }
-
-    float timeToHeading(TimeType time, TimeType startTime)
-    {
-        const second_t timeUnits = startTime - time;
-        const degree_t heading = m_YawSpeed * timeUnits;
-        return heading.value();
-    }
-
     static TimeType now()
     {
         return std::chrono::high_resolution_clock::now();
