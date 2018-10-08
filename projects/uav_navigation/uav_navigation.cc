@@ -40,7 +40,7 @@ class UAVNavigation
     using DataVector = std::vector<std::pair<TimeType, float>>;
 
 public:
-    UAVNavigation(degree_t halfScanWidth, degrees_per_second_t yawSpeed)
+    UAVNavigation(const degree_t halfScanWidth, const degrees_per_second_t yawSpeed)
       : m_PerfectMemory(m_Drone.getVideoStream().getOutputSize())
       , m_HalfScanWidth(halfScanWidth)
       , m_YawSpeed(yawSpeed)
@@ -129,9 +129,9 @@ private:
     HID::Joystick m_Joystick;
     Robots::Bebop m_Drone;
     Navigation::PerfectMemory<> m_PerfectMemory;
-    degree_t m_HalfScanWidth;
-    degrees_per_second_t m_YawSpeed;
-    float m_ProportionYawSpeed;
+    const degree_t m_HalfScanWidth;
+    const degrees_per_second_t m_YawSpeed;
+    const float m_ProportionYawSpeed;
     enum State
     {
         NotNavigating = 0,
