@@ -151,6 +151,9 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         m_MaxBoundM[0] = makeM(m_MaxBound[0]);
         m_MaxBoundM[1] = makeM(m_MaxBound[1]);
         m_MaxBoundM[2] = makeM(m_MaxBound[2]);
+
+        std::cout << "Min: (" << m_MinBoundM[0] << ", " << m_MinBoundM[1] << ", " << m_MinBoundM[2] << ")" << std::endl;
+        std::cout << "Max: (" << m_MaxBoundM[0] << ", " << m_MaxBoundM[1] << ", " << m_MaxBoundM[2] << ")" << std::endl;
     }
 
     {
