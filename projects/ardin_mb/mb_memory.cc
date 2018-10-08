@@ -123,11 +123,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     // Update input data step
     IextStepPN = snapshotStep;
 
-    // Push default state of neurons to device - ensures they start in resting state
-    pushPNStateToDevice();
-    pushKCStateToDevice();
-    pushENStateToDevice();
-
     // Loop through timesteps
     unsigned int numPNSpikes = 0;
     unsigned int numKCSpikes = 0;
