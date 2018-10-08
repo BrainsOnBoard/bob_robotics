@@ -99,7 +99,7 @@ int main()
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     AntWorld::Renderer renderer(512, 0.1);
-    renderer.getWorld().load("../libantworld/world5000_gray.bin",
+    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Load world, keeping texture sizes below 4096 and compressing textures on upload

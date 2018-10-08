@@ -39,8 +39,7 @@ class World
 {
 public:
     World()
-      : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
-      , m_MinBoundM{0_m, 0_m, 0_m}, m_MaxBoundM{0_m, 0_m, 0_m}
+      : m_MinBound{0_m, 0_m, 0_m}, m_MaxBound{0_m, 0_m, 0_m}
     {}
 
     //------------------------------------------------------------------------
@@ -53,12 +52,12 @@ public:
 
     const Vector3<meter_t> &getMinBound()
     {
-        return m_MinBoundM;
+        return m_MinBound;
     }
 
     const Vector3<meter_t> &getMaxBound()
     {
-        return m_MaxBoundM;
+        return m_MaxBound;
     }
 
 private:
@@ -136,10 +135,8 @@ private:
     std::vector<std::unique_ptr<Texture>> m_Textures;
 
     // World bounds
-    GLfloat m_MinBound[3];
-    GLfloat m_MaxBound[3];
-    Vector3<meter_t> m_MinBoundM;
-    Vector3<meter_t> m_MaxBoundM;
+    Vector3<meter_t> m_MinBound;
+    Vector3<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

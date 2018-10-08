@@ -1,11 +1,11 @@
 // GeNN includes
 #include "modelSpec.h"
 
-// Common includes
-#include "genn_models/exp_curr.h"
-#include "genn_models/lif.h"
-#include "genn_models/stdp_dopamine.h"
-#include "genn_utils/connectors.h"
+// BoB robotics includes
+#include "../../genn_models/exp_curr.h"
+#include "../../genn_models/lif.h"
+#include "../../genn_models/stdp_dopamine.h"
+#include "../../genn_utils/connectors.h"
 
 // Model includes
 #include "mb_params.h"
@@ -69,6 +69,9 @@ IMPLEMENT_MODEL(LIFExtCurrent);
 
 void modelDefinition(NNmodel &model)
 {
+    GENN_PREFERENCES::autoInitSparseVars = true;
+    GENN_PREFERENCES::defaultVarMode = VarMode::LOC_DEVICE_INIT_DEVICE;
+
     initGeNN();
     model.setDT(MBParams::timestepMs);
     model.setName("ardin_mb");
@@ -87,28 +90,26 @@ void modelDefinition(NNmodel &model)
         MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
         MBParams::inputWidth);            // 7 - Input width
 
-    LIFExtCurrent::ParamValues kcParams(
+    GeNNModels::LIF::ParamValues kcParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
-        2.0,                                // 5 - TauRefrac
-        MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
-        MBParams::inputWidth);            // 7 - Input width
+        0.0,                                // 5 - Ioffset
+        2.0);                               // 6 - TauRefrac
 
-    LIFExtCurrent::ParamValues enParams(
+    GeNNModels::LIF::ParamValues enParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
-        2.0,                                // 5 - TauRefrac
-        MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
-        MBParams::inputWidth);            // 7 - Input width
+        0.0,                                // 5 - Ioffset
+        2.0);                               // 6 - TauRefrac
 
     // LIF initial conditions
-    LIFExtCurrent::VarValues lifInit(
+    GeNNModels::LIF::VarValues lifInit(
         -60.0,  // 0 - V
         0.0);   // 1 - RefracTime
 
@@ -142,9 +143,12 @@ void modelDefinition(NNmodel &model)
         0.0);                       // Time of last synaptic tag update
 
     // Create neuron populations
-    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, lifInit);
-    model.addNeuronPopulation<LIFExtCurrent>("KC", MBParams::numKC, kcParams, lifInit);
-    model.addNeuronPopulation<LIFExtCurrent>("EN", MBParams::numEN, enParams, lifInit);
+    auto pn = model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, lifInit);
+    auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
+    auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+    pn->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
+    kc->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
+    en->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 
     auto pnToKC = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, GeNNModels::ExpCurr>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
@@ -152,7 +156,7 @@ void modelDefinition(NNmodel &model)
         {}, pnToKCWeightUpdateParams,
         pnToKCPostsynapticParams, {});
 
-    model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
+    auto kcToEN = model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
         "kcToEN", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY,
         "KC", "EN",
         kcToENWeightUpdateParams, kcToENWeightUpdateInitVars,
@@ -165,6 +169,7 @@ void modelDefinition(NNmodel &model)
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);
+    kcToEN->setWUVarMode("g", VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 
     model.finalize();
 }
