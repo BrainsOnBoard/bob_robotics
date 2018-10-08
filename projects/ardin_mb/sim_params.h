@@ -22,6 +22,8 @@ namespace SimParams
 
     constexpr unsigned int numScanSteps = (unsigned int)(scanAngle / scanStep);
 
+    constexpr unsigned int numVectorFieldSteps = (unsigned int)(360.0_deg / scanStep);
+
     // Rendering parameters
     // What colour should the ground be?
     constexpr float groundColour[] = {0.898f, 0.718f, 0.353f};

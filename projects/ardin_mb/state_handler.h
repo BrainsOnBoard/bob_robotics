@@ -65,6 +65,7 @@ public:
         KeyTestSnapshot,
         KeySaveSnapshot,
         KeyRandomWalk,
+        KeyBuildVectorField,
         KeyMax
     };
 
@@ -122,7 +123,8 @@ private:
     //! Snapshot processor - implements the strange resizing algorithm from original paper
     BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
 
-    //VectorField m_VectorField;
+    //! Class for handling rendering of vector field
+    VectorField m_VectorField;
 
     //! Should floating point snapshots be used? (mushroom body requires them, perfect memory does not)
     const bool m_FloatInput;

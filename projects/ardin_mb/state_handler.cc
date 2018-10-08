@@ -11,6 +11,7 @@
 #include "sim_params.h"
 
 using namespace BoBRobotics;
+using namespace units::literals;
 
 //----------------------------------------------------------------------------
 // StateHandler
@@ -20,11 +21,14 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_FloatInput(floatInput), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+    m_VectorField(20_cm), m_FloatInput(floatInput), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
 {
     // Load world
     m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
 
+    // Create vector field geometry
+    m_VectorField.createVertices(4.5_m, 6.0_m, 20_cm,
+                                 1_m, 9_m, 20_cm);
     // Load route if specified
     if(!routeFilename.empty()) {
         m_Route.load(routeFilename);
@@ -53,7 +57,7 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Route.render(m_AntX, m_AntY, m_AntHeading);
 
         // Render vector field
-        //m_VectorField.render();
+        m_VectorField.render();
 
         // Read pixels from framebuffer
         m_Input.readFrame(m_Snapshot);
@@ -64,6 +68,11 @@ bool StateHandler::handleEvent(State state, Event event)
         // If random walk key is pressed, transition to correct state
         if(m_KeyBits.test(KeyRandomWalk)) {
             m_StateMachine.transition(State::RandomWalk);
+        }
+
+        // If vector field key is pressed, transition to correct state
+        if(m_KeyBits.test(KeyBuildVectorField)) {
+            m_StateMachine.transition(State::BuildingVectorField);
         }
 
         cv::waitKey(1);
@@ -231,49 +240,49 @@ bool StateHandler::handleEvent(State state, Event event)
         }
     }
     else if(state == State::BuildingVectorField) {
-        /*if(event == Event::Enter) {
+        if(event == Event::Enter) {
             // Reset ant heading and move it to first vector field position
-            m_AntHeading = 0.0f;
             m_CurrentVectorFieldPoint = 0;
+            m_AntHeading = 0_deg;
+            m_TestingScan = 0;
             std::tie(m_AntX, m_AntY) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
 
             // Clear vector of novelty values
             m_VectorFieldNovelty.clear();
         }
         else if(event == Event::Update) {
-            // Decrement frames to spent at current angle
-            m_CurrentAngleFrames--;
+            // Test snapshot
+            const float difference = m_VisualNavigation.test(m_FloatInput ? m_SnapshotProcessor.getFinalSnapshotFloat() : m_SnapshotProcessor.getFinalSnapshot());
 
-            // If we have spent long enough facing this direction
-            if(m_CurrentAngleFrames == 0) {
-                // Add novelty to vector
-                m_VectorFieldNovelty.push_back(m_Memory.getNovelty());
+            // Add novelty to vector
+            m_VectorFieldNovelty.push_back(difference);
 
-                // Update heading
-                m_AntHeading += SimParams::vectorFieldStepDegrees;
+            // Go onto next scan
+            m_TestingScan++;
 
-                // Reset frame count
-                m_CurrentAngleFrames = (unsigned int)round(100.0f / WorldParams::simulatedFrameMs);
+            // If scan isn't complete
+            if(m_TestingScan < SimParams::numVectorFieldSteps) {
+                m_AntHeading += SimParams::scanStep;
+            }
+            else {
+                // Add novelty to vector field
+                m_VectorField.setNovelty(m_CurrentVectorFieldPoint, m_VectorFieldNovelty);
 
-                // If we've come full circle
-                if(m_AntHeading > 360.0f) {
-                    // Add novelty to vector field
-                    m_VectorField.setNovelty(m_CurrentVectorFieldPoint, m_VectorFieldNovelty);
+                // Go onto next vector field point
+                m_CurrentVectorFieldPoint++;
 
-                    // Go onto next vector field point
-                    m_CurrentVectorFieldPoint++;
-
-                    // If there are more points to evaluate, re-enter state
-                    if(m_CurrentVectorFieldPoint < m_VectorField.getNumPoints()) {
-                        m_StateMachine.transition(State::BuildingVectorField);
-                    }
-                    // Otherwise go back to free testing
-                    else {
-                        m_StateMachine.transition(State::FreeTesting);
-                    }
+                // If there are more points to evaluate, re-enter state
+                if(m_CurrentVectorFieldPoint < m_VectorField.getNumPoints()) {
+                    m_AntHeading = 0_deg;
+                    m_TestingScan = 0;
+                    std::tie(m_AntX, m_AntY) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
+                }
+                // Otherwise go back to free testing
+                else {
+                    m_StateMachine.transition(State::FreeMovement);
                 }
             }
-        }*/
+        }
     }
     else {
         throw std::runtime_error("Invalid state");
