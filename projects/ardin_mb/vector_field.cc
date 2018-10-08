@@ -94,14 +94,11 @@ std::tuple<meter_t, meter_t> VectorField::getPoint(unsigned int point) const
                            m_StartY + ((float)yGrid * m_GridY));
 }
 //------------------------------------------------------------------------
-void VectorField::setNovelty(unsigned int point, const std::vector<float> &novelty)
+void VectorField::setNovelty(unsigned int point, const std::vector<std::pair<units::angle::degree_t, float>> &novelty)
 {
     // Find most familiar sample
-    const auto mostFamiliar = std::min_element(novelty.cbegin(), novelty.cend());
-
-    // Calculate the angle between each novelty sample
-    const degree_t angleBetweenSample = 360.0_deg / (double)novelty.size();
-    const degree_t mostFamiliarAngle = angleBetweenSample * (double)std::distance(novelty.cbegin(), mostFamiliar);
+    const auto mostFamiliar = std::min_element(novelty.cbegin(), novelty.cend(),
+        [](const auto &a, const auto &b){ return a.second < b.second; });
 
     // Get position of start of this point's vector
     meter_t x;
@@ -109,8 +106,8 @@ void VectorField::setNovelty(unsigned int point, const std::vector<float> &novel
     std::tie(x, y) = getPoint(point);
 
     // Add arrow length in most familiar direction
-    x += m_ArrowLength * units::math::sin(mostFamiliarAngle).value();
-    y += m_ArrowLength * units::math::cos(mostFamiliarAngle).value();
+    x += m_ArrowLength * units::math::sin(mostFamiliar->first).value();
+    y += m_ArrowLength * units::math::cos(mostFamiliar->first).value();
 
     // Update end of this point's field line in buffer
     float position[2]{ (float)x.value(), (float)y.value() };

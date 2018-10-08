@@ -166,5 +166,5 @@ private:
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
 
     unsigned int m_CurrentVectorFieldPoint;
-    std::vector<float> m_VectorFieldNovelty;
+    std::vector<std::pair<units::angle::degree_t, float>> m_VectorFieldNovelty;
 };

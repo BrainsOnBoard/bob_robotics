@@ -47,7 +47,7 @@ public:
     std::tuple<units::length::meter_t, units::length::meter_t> getPoint(unsigned int point) const;
 
     // Sets novelty of a given point
-    void setNovelty(unsigned int point, const std::vector<float> &novelty);
+    void setNovelty(unsigned int point, const std::vector<std::pair<units::angle::degree_t, float>> &novelty);
 
 private:
     //------------------------------------------------------------------------

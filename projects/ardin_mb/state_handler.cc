@@ -262,7 +262,7 @@ bool StateHandler::handleEvent(State state, Event event)
             const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
 
             // Add novelty to vector
-            m_VectorFieldNovelty.push_back(difference);
+            m_VectorFieldNovelty.push_back(std::make_pair(m_AntHeading, difference));
 
             // Go onto next scan
             m_TestingScan++;
