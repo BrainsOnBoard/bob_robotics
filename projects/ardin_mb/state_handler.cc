@@ -26,20 +26,27 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
     // Load world
     m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
 
-    // Create vector field geometry
-    m_VectorField.createVertices(4.5_m, 6.0_m, 20_cm,
-                                 1_m, 9_m, 20_cm);
-    // Load route if specified
+    // If route is specified
     if(!routeFilename.empty()) {
-        m_Route.load(routeFilename);
-        m_StateMachine.transition(State::Training);
-    }
-    else {
-        m_StateMachine.transition(State::FreeMovement);
+        // If loading route is successful
+        if(m_Route.load(routeFilename)) {
+            // Get bounds of route
+            const auto &routeMin = m_Route.getMinBound();
+            const auto &routeMax = m_Route.getMaxBound();
+
+            // Create vector field geometry to cover route bounds
+            m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
+                                         routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+
+            // Start training
+            m_StateMachine.transition(State::Training);
+            return;
+        }
     }
 
     // Move ant to initial position
     resetAntPosition();
+    m_StateMachine.transition(State::FreeMovement);
 }
 //----------------------------------------------------------------------------
 bool StateHandler::handleEvent(State state, Event event)
