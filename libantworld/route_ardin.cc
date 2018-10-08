@@ -23,7 +23,8 @@ namespace AntWorld
 RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     : m_WaypointsVAO(0), m_WaypointsPositionVBO(0), m_WaypointsColourVBO(0),
     m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0),
-    m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0)
+    m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0),
+    m_MinBound{0_m, 0_m}, m_MaxBound{0_m, 0_m}
 {
     const GLfloat arrowPositions[] = {
         0.0f, 0.0f,
@@ -190,6 +191,21 @@ bool RouteArdin::load(const std::string &filename, bool realign)
             waypoint[1] = prevWaypoint[1] - (0.1 * units::math::sin(heading));
         }
     }
+
+    // Initialise bounds to limits of underlying data types
+    std::fill_n(&m_MinBound[0], 2, meter_t(std::numeric_limits<meter_t::underlying_type>::max()));
+    std::fill_n(&m_MaxBound[0], 2, meter_t(std::numeric_limits<meter_t::underlying_type>::min()));
+
+    // Calculate bounds from waypoints
+    for(const auto &w : m_Waypoints) {
+        for(unsigned int c = 0; c < 2; c++) {
+            m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(w[c]));
+            m_MaxBound[c] = units::math::max(m_MaxBound[c], meter_t(w[c]));
+        }
+    }
+
+    std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")" << std::endl;
+    std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")" << std::endl;
 
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_WaypointsVAO);

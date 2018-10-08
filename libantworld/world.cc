@@ -109,7 +109,7 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Reserve 3 XYZ positions for each triangle and 6 for the ground
         std::vector<GLfloat> positions((6 + (numTriangles * 3)) * 3);
 
-        // Initialise bounds to limits
+        // Initialise bounds to limits of underlying data types
         std::fill_n(&m_MinBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::max()));
         std::fill_n(&m_MaxBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::min()));
 
@@ -286,6 +286,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
         std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
 
+        // Initialise bounds to limits of underlying data types
         std::fill_n(&m_MinBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::max()));
         std::fill_n(&m_MaxBound[0], 3, meter_t(std::numeric_limits<meter_t::underlying_type>::min()));
         for(unsigned int i = 0; i < rawPositions.size(); i += 3) {
