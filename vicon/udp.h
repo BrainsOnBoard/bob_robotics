@@ -233,7 +233,7 @@ public:
         return m_ObjectData.size();
     }
 
-    ObjectDataType getObjectData(unsigned int id)
+    ObjectDataType &getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
         if(id < m_ObjectData.size()) {

@@ -25,8 +25,8 @@ main()
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
+    auto &objectData = vicon.getObjectData(0);
     for (int i = 0; i < 10000; i++) {
-        auto objectData = vicon.getObjectData(0);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
         std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "

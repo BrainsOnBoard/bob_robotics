@@ -33,9 +33,10 @@ main()
     }
 
     // Plot for 30s
+    auto &object = vicon.getObjectData(0);
     const auto startTime = now();
     do {
-        if (!vicon.getObjectData(0).update()) {
+        if (!object.update()) {
             std::this_thread::sleep_for(25ms);
         }
     } while ((now() - startTime) <= 30s);

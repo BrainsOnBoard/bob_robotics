@@ -39,7 +39,7 @@ int main()
 
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(unwrapSize);
-    
+
     // Create motor interface
     Norbot motor;
 
@@ -91,9 +91,9 @@ int main()
 
 #ifdef VICON_CAPTURE
                // Get tracking data
-               auto objectData = vicon.getObjectData(0);
-               const auto &position = objectData.getPosition<>();
-               const auto &attitude = objectData.getAttitude<>();
+               auto &objectData = vicon.getObjectData(0);
+               const auto position = objectData.getPosition<>();
+               const auto attitude = objectData.getAttitude<>();
 
                // Write to CSV
                data << filename << ", " << objectData.getFrameNumber() << ", "

@@ -23,8 +23,8 @@ int main()
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
+    auto &objectData = vicon.getObjectData(0);
     for (int i = 0; i < 10000; i++) {
-        auto objectData = vicon.getObjectData(0);
         const auto &velocity = objectData.getVelocity();
 
         std::cout << velocity[0] << ", " << velocity[1] << ", " << velocity[2] << std::endl;
