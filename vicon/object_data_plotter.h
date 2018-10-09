@@ -23,7 +23,12 @@ class ObjectDataPlotter
 {
 public:
     ObjectDataPlotter() = default;
-    ObjectDataPlotter(const ObjectDataPlotter &) {}
+    ObjectDataPlotter(const ObjectDataPlotter &&o2)
+    {
+        const auto pos = o2.getPosition<>();
+        const auto att = o2.getAttitude<>();
+        BaseObjectDataType::update(o2.getFrameNumber(), pos[0], pos[1], pos[2], att[0], att[1], att[2]);
+    }
 
     void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z, radian_t yaw, radian_t pitch, radian_t roll)
     {

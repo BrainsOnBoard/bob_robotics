@@ -48,7 +48,13 @@ public:
       : m_FrameNumber{ 0 }
       , m_Position{ 0_mm, 0_mm, 0_mm }
       , m_Attitude{ 0_rad, 0_rad, 0_rad }
+    {}
+
+    ObjectData(const ObjectData &&o2)
     {
+        m_FrameNumber = o2.m_FrameNumber;
+        std::copy(o2.m_Position.begin(), o2.m_Position.end(), m_Position.begin());
+        std::copy(o2.m_Attitude.begin(), o2.m_Attitude.end(), m_Attitude.begin());
     }
 
     //----------------------------------------------------------------------------
@@ -60,13 +66,17 @@ public:
         // Cache frame number
         m_FrameNumber = frameNumber;
 
-        // Copy vectors into class
-        m_Position[0] = x;
-        m_Position[1] = y;
-        m_Position[2] = z;
-        m_Attitude[0] = yaw;
-        m_Attitude[1] = pitch;
-        m_Attitude[2] = roll;
+        {
+            std::lock_guard<std::mutex> guard(m_DataMutex);
+
+            // Copy vectors into class
+            m_Position[0] = x;
+            m_Position[1] = y;
+            m_Position[2] = z;
+            m_Attitude[0] = yaw;
+            m_Attitude[1] = pitch;
+            m_Attitude[2] = roll;
+        }
     }
 
     uint32_t getFrameNumber() const
@@ -77,12 +87,14 @@ public:
     template <class LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition() const
     {
+        std::lock_guard<std::mutex> guard(m_DataMutex);
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
     Vector3<AngleUnit> getAttitude() const
     {
+        std::lock_guard<std::mutex> guard(m_DataMutex);
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
@@ -93,6 +105,7 @@ private:
     uint32_t m_FrameNumber;
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
+    mutable std::mutex m_DataMutex;
 };
 
 //----------------------------------------------------------------------------
