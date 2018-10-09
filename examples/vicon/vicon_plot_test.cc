@@ -1,6 +1,5 @@
 // C++ includes
 #include <chrono>
-#include <cstdlib>
 #include <iostream>
 #include <thread>
 
@@ -32,14 +31,12 @@ main()
         return EXIT_FAILURE;
     }
 
-    // Plot for 30s
-    auto &object = vicon.getObject(0);
-    const auto startTime = now();
+    auto &plotter = vicon.getObject(0);
     do {
-        if (!object.update()) {
+        if (!plotter.update()) {
             std::this_thread::sleep_for(25ms);
         }
-    } while ((now() - startTime) <= 30s);
+    } while (plotter.isOpen());
 
     if (!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;

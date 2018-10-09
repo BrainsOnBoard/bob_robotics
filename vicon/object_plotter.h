@@ -44,10 +44,17 @@ public:
         }
 
         // Update plot
+        matplotlibcpp::figure(1);
         plotAgent(*this, { -2500, 2500 }, { -2500, 2500 });
         matplotlibcpp::pause(0.01);
         return true;
     }
+
+    bool isOpen()
+    {
+        return matplotlibcpp::fignum_exists(1);
+    }
+
 private:
     std::atomic<bool> m_NewData{ false };
 }; // ObjectPlotter
