@@ -122,7 +122,7 @@ public:
 
         // Write current view to file
         const auto imagePath = m_Path / filename;
-        assert(!imagePath.exists()); // We don't want to overwrite data by default!
+        BOB_ASSERT(!imagePath.exists()); // We don't want to overwrite data by default!
         cv::imwrite(imagePath.str(), frame);
     }
 
