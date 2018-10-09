@@ -2,6 +2,7 @@
 #include "common/plot_agent.h"
 #include "hid/joystick.h"
 #include "libbebop/bebop.h"
+#include "robots/uav_positioner.h"
 #include "vicon/udp.h"
 
 // Standard C++ includes
@@ -27,9 +28,25 @@ int main()
         Vicon::UDPClient<> vicon(51001);
         vicon.waitForObject();
 
+        // Positioner
+        Robots::UAVPositioner positioner(uav, 0.1f);
+        bool positionerMode = false;
+        joystick.addHandler([&positionerMode](HID::JButton button, bool pressed) {
+            if (button == HID::JButton::Y && pressed) {
+                positionerMode = !positionerMode;
+                return true;
+            } else {
+                return false;
+            }
+        });
+
         do {
             // Check for joystick events
             joystick.update();
+
+            if (positionerMode) {
+                positioner.update(vicon.getObjectData(0));
+            }
 
             // Plot UAV's position
             plt::figure(1);
