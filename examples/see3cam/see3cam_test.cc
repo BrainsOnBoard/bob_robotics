@@ -1,14 +1,15 @@
-#include <map>
-#include <numeric>
-
+// OpenCV includes
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-// Common includes
-#include "common/pid.h"
+// BoB robotics includes
 #include "common/timer.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/see3cam_cu40.h"
+
+// Standard C++ includes
+#include <map>
+#include <numeric>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
@@ -56,7 +57,7 @@ int main(int argc, char *argv[])
             std::cout << control.name << " (" << std::hex << control.id << std::dec << ")" << std::endl;
             if(control.type == V4L2_CTRL_TYPE_INTEGER) {
                 std::cout << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value << std::endl;
- 
+
                 int32_t currentValue;
                 if(cam.getControlValue(control.id, currentValue)){
                     std::cout << "\tCurrent value=" << currentValue << std::endl;
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
     // Get initial brightness and exposure
     int32_t brightness = cam.getBrightness();
     int32_t exposure = cam.getExposure();
-   
+
     // Create window
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 
     Mode mode = Mode::Greyscale;
     OpenCVUnwrap360 unwrapper = cam.createUnwrapper({unwrapWidth, unwrapHeight});
-    
+
     auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
     cv::namedWindow("Raw", CV_WINDOW_NORMAL);
