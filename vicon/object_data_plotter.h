@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/plot_agent.h"
 #include "udp.h"
 
 // Third-party includes
@@ -38,18 +39,7 @@ public:
         }
 
         // Update plot
-        const auto position = getPosition<>();
-        const auto attitude = getAttitude<>();
-        const std::vector<double> vx{ position[0].value() };
-        const std::vector<double> vy{ position[1].value() };
-        const std::vector<double> vu{ units::math::cos(attitude[0]) };
-        const std::vector<double> vv{ units::math::sin(attitude[0]) };
-        const std::vector<int> x0 { 0 }, y0 { 0 };
-        matplotlibcpp::clf();
-        matplotlibcpp::plot(x0, y0, "r+");
-        matplotlibcpp::quiver(vx, vy, vu, vv);
-        matplotlibcpp::xlim(-2500, 2500);
-        matplotlibcpp::ylim(-2500, 2500);
+        plotAgent(*this, { -2500, 2500 }, { -2500, 2500 });
         matplotlibcpp::pause(0.01);
         return true;
     }
