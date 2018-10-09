@@ -13,7 +13,7 @@ using namespace std::literals;
 
 int main()
 {
-    UDPClient<ObjectDataVelocity> vicon(51001);
+    UDPClient<ObjectVelocity> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
     while (vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
@@ -23,9 +23,9 @@ int main()
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
+    auto &object = vicon.getObject(0);
     for (int i = 0; i < 10000; i++) {
-        auto objectData = vicon.getObjectData(0);
-        const auto &velocity = objectData.getVelocity();
+        const auto &velocity = object.getVelocity();
 
         std::cout << velocity[0] << ", " << velocity[1] << ", " << velocity[2] << std::endl;
     }

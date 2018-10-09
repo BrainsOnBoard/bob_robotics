@@ -36,6 +36,7 @@ struct _interpreter {
     PyObject *s_python_function_pause;
     PyObject *s_python_function_save;
     PyObject *s_python_function_figure;
+    PyObject *s_python_function_fignum_exists;
     PyObject *s_python_function_plot;
     PyObject *s_python_function_quiver;
     PyObject *s_python_function_semilogx;
@@ -139,6 +140,7 @@ private:
         s_python_function_draw = PyObject_GetAttrString(pymod, "draw");
         s_python_function_pause = PyObject_GetAttrString(pymod, "pause");
         s_python_function_figure = PyObject_GetAttrString(pymod, "figure");
+        s_python_function_fignum_exists = PyObject_GetAttrString(pymod, "fignum_exists");
         s_python_function_plot = PyObject_GetAttrString(pymod, "plot");
         s_python_function_quiver = PyObject_GetAttrString(pymod, "quiver");
         s_python_function_semilogx = PyObject_GetAttrString(pymod, "semilogx");
@@ -171,6 +173,7 @@ private:
             || !s_python_function_draw
             || !s_python_function_pause
             || !s_python_function_figure
+            || !s_python_function_fignum_exists
             || !s_python_function_plot
             || !s_python_function_quiver
             || !s_python_function_semilogx
@@ -202,6 +205,7 @@ private:
             || !PyFunction_Check(s_python_function_draw)
             || !PyFunction_Check(s_python_function_pause)
             || !PyFunction_Check(s_python_function_figure)
+            || !PyFunction_Check(s_python_function_fignum_exists)
             || !PyFunction_Check(s_python_function_plot)
             || !PyFunction_Check(s_python_function_quiver)
             || !PyFunction_Check(s_python_function_semilogx)
@@ -613,7 +617,7 @@ bool loglog(const std::vector<NumericX>& x, const std::vector<NumericY>& y, cons
 }
 
 template<typename NumericX, typename NumericY>
-bool errorbar(const std::vector<NumericX> &x, const std::vector<NumericY> &y, const std::vector<NumericX> &yerr, const std::string &s = "")
+bool errorbar(const std::vector<NumericX> &x, const std::vector<NumericY> &y, const std::vector<NumericX> &yerr, const std::map<std::string, std::string> &keywords = {})
 {
     assert(x.size() == y.size());
 
@@ -621,11 +625,14 @@ bool errorbar(const std::vector<NumericX> &x, const std::vector<NumericY> &y, co
     PyObject* yarray = get_array(y);
     PyObject* yerrarray = get_array(yerr);
 
-    PyObject *kwargs = PyDict_New();
+    // construct keyword args
+    PyObject* kwargs = PyDict_New();
+    for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
+    {
+        PyDict_SetItemString(kwargs, it->first.c_str(), PyString_FromString(it->second.c_str()));
+    }
 
     PyDict_SetItemString(kwargs, "yerr", yerrarray);
-
-    PyObject *pystring = PyString_FromString(s.c_str());
 
     PyObject *plot_args = PyTuple_New(2);
     PyTuple_SetItem(plot_args, 0, xarray);
@@ -784,12 +791,50 @@ bool stem(const std::vector<Numeric>& y, const std::string& format = "")
     return stem(x, y, format);
 }
 
-inline void figure()
+inline long figure(long number = -1)
 {
-    PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, detail::_interpreter::get().s_python_empty_tuple);
+    PyObject *res;
+    if (number == -1)
+        res = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, detail::_interpreter::get().s_python_empty_tuple);
+    else {
+        assert(number > 0);
+
+        // Make sure interpreter is initialised
+        detail::_interpreter::get();
+
+        PyObject *args = PyTuple_New(1);
+        PyTuple_SetItem(args, 0, PyLong_FromLong(number));
+        res = PyObject_CallObject(detail::_interpreter::get().s_python_function_figure, args);
+        Py_DECREF(args);
+    }
+
     if(!res) throw std::runtime_error("Call to figure() failed.");
 
+    PyObject* num = PyObject_GetAttrString(res, "number");
+    if (!num) throw std::runtime_error("Could not get number attribute of figure object");
+    const long figureNumber = PyLong_AsLong(num);
+
+    Py_DECREF(num);
     Py_DECREF(res);
+
+    return figureNumber;
+}
+
+inline bool fignum_exists(long number)
+{
+    // Make sure interpreter is initialised
+    detail::_interpreter::get();
+
+    PyObject *args = PyTuple_New(1);
+    PyTuple_SetItem(args, 0, PyLong_FromLong(number));
+    PyObject *res = PyObject_CallObject(detail::_interpreter::get().s_python_function_fignum_exists, args);
+    if(!res) throw std::runtime_error("Call to fignum_exists() failed.");
+
+    bool ret = PyLong_AsLong(res);
+    Py_DECREF(res);
+    Py_DECREF(args);
+
+    return ret;
 }
 
 inline void figure_size(size_t w, size_t h)
@@ -927,7 +972,7 @@ inline void xticks(const std::vector<Numeric> &ticks, const std::vector<std::str
     Py_DECREF(args);
     Py_DECREF(kwargs);
     if(!res) throw std::runtime_error("Call to xticks() failed");
-    
+
     Py_DECREF(res);
 }
 
@@ -974,7 +1019,7 @@ inline void yticks(const std::vector<Numeric> &ticks, const std::vector<std::str
     Py_DECREF(args);
     Py_DECREF(kwargs);
     if(!res) throw std::runtime_error("Call to yticks() failed");
-    
+
     Py_DECREF(res);
 }
 
