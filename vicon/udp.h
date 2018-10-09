@@ -7,6 +7,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -31,6 +32,7 @@ namespace BoBRobotics
 {
 namespace Vicon
 {
+using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
@@ -241,6 +243,14 @@ public:
         }
         else {
             throw std::runtime_error("Invalid object id: " + std::to_string(id));
+        }
+    }
+
+    void waitForObject()
+    {
+        while (getNumObjects() == 0) {
+            std::this_thread::sleep_for(1s);
+            std::cout << "Waiting for object" << std::endl;
         }
     }
 

@@ -68,10 +68,7 @@ int main(int argc, char *argv[])
 #endif  // RECORD_ELECTROPHYS
     
     // Wait for VICON system to track some objects
-    while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object..." << std::endl;
-    }
+    vicon.waitForObject();
 
     // Start capture
     if(!viconCaptureControl.startRecording("test")) {

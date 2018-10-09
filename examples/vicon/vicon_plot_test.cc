@@ -25,12 +25,9 @@ int
 main()
 {
     Vicon::UDPClient<> vicon(51001);
-    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
+    vicon.waitForObject();
 
+    Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }

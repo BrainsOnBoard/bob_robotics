@@ -14,12 +14,9 @@ using namespace std::literals;
 int main()
 {
     UDPClient<ObjectDataVelocity> vicon(51001);
-    CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
+    vicon.waitForObject();
 
+    CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }

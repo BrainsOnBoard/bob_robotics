@@ -55,10 +55,7 @@ int main()
                                               "c:\\users\\ad374\\Desktop");
 
     // Wait for tracking
-    while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
+    vicon.waitForObject();
 
     // Start capture
     if(!viconCaptureControl.startRecording("camera_recorder")) {
