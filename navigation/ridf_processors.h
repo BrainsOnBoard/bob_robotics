@@ -11,6 +11,9 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// BoB robotics includes
+#include "../common/circstat.h"
+
 // Third-party includes
 #include "../third_party/units.h"
 
@@ -18,22 +21,6 @@ namespace BoBRobotics {
 namespace Navigation {
 using namespace units::angle;
 using namespace units::dimensionless;
-
-namespace Internal {
-template<typename T1, typename T2>
-static radian_t
-circularMean(const T1 &angles, const T2 &weights)
-{
-    scalar_t sumCos = 0.0;
-    scalar_t sumSin = 0.0;
-    for (size_t i = 0; i < angles.size(); i++) {
-        sumCos += weights[i] * units::math::cos(angles[i]);
-        sumSin += weights[i] * units::math::sin(angles[i]);
-    }
-
-    return units::math::atan2(sumSin / angles.size(), sumCos / angles.size());
-}
-}
 
 //! Winner-take all: derive heading using only the best-matching snapshot
 struct BestMatchingSnapshot
@@ -114,7 +101,7 @@ struct WeightSnapshotsDynamic
                        weights.begin(), diffsToWeights);
 
         // Best angle is a weighted cirular mean of headings
-        const radian_t bestAngle = Internal::circularMean(headings, weights);
+        const radian_t bestAngle = circularMean(headings, weights);
 
         // Bundle result as tuple
         return std::make_tuple(bestAngle, std::move(snapshots), std::move(minDifferencesOut));
