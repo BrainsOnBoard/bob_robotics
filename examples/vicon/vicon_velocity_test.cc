@@ -23,7 +23,7 @@ int main()
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
-    auto &objectData = vicon.getObjectData(0);
+    auto &objectData = vicon.getObject(0);
     for (int i = 0; i < 10000; i++) {
         const auto &velocity = objectData.getVelocity();
 

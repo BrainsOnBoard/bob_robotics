@@ -91,7 +91,7 @@ int main()
 
 #ifdef VICON_CAPTURE
                // Get tracking data
-               auto &objectData = vicon.getObjectData(0);
+               auto &objectData = vicon.getObject(0);
                const auto position = objectData.getPosition<>();
                const auto attitude = objectData.getAttitude<>();
 

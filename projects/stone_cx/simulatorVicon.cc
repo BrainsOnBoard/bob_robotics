@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
+    std::cout << "Start VICON frame:" << vicon.getObject(0).getFrameNumber() << std::endl;
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
         }
 
         // Read data from VICON system
-        auto &objectData = vicon.getObjectData(0);
+        auto &objectData = vicon.getObject(0);
         const auto &velocity = objectData.getVelocity();
         const auto &attitude = objectData.getAttitude();
 

@@ -33,7 +33,7 @@ main()
     }
 
     // Plot for 30s
-    auto &object = vicon.getObjectData(0);
+    auto &object = vicon.getObject(0);
     const auto startTime = now();
     do {
         if (!object.update()) {
