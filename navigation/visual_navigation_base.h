@@ -27,7 +27,7 @@ namespace Navigation {
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes)
+    VisualNavigationBase(const cv::Size &unwrapRes)
       : m_UnwrapRes(unwrapRes)
     {}
 
@@ -39,6 +39,9 @@ public:
 
     //! Test the algorithm with the specified image
     virtual float test(const cv::Mat &image) const = 0;
+
+    //! Clears the training from memory
+    virtual void clearMemory() = 0;
 
     //------------------------------------------------------------------------
     // Public API

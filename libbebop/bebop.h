@@ -1,7 +1,9 @@
 #pragma once
 
-// Standard C++ includes
+// Standard C includes
 #include <cstdint>
+
+// Standard C++ includes
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -162,6 +164,16 @@ public:
         static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
+    //! The drone's current state
+    enum class State
+    {
+        Stopped = ARCONTROLLER_DEVICE_STATE_STOPPED,
+        Starting = ARCONTROLLER_DEVICE_STATE_STARTING,
+        Running = ARCONTROLLER_DEVICE_STATE_RUNNING,
+        Paused = ARCONTROLLER_DEVICE_STATE_PAUSED,
+        Stopping = ARCONTROLLER_DEVICE_STATE_STOPPING
+    };
+
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
@@ -184,6 +196,7 @@ public:
     virtual void setYawSpeed(float right) override;
 
     // misc
+    State getState();
     VideoStream &getVideoStream();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
@@ -276,8 +289,7 @@ private:
     inline void addEventHandlers();
     inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
     inline void createControllerDevice();
-    inline eARCONTROLLER_DEVICE_STATE getState();
-    inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
+    inline State getStateUpdate();
 
     // speed limits
     inline void setMaximumTilt(degree_t newValue);
@@ -287,6 +299,7 @@ private:
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
+    static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,
                              const char *format,

@@ -75,13 +75,13 @@ public:
     }
 
     template <class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude()
+    Vector3<AngleUnit> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
@@ -262,7 +262,7 @@ private:
 
         /*
          * Update object data with position and attitude.
-         * 
+         *
          * Note that we reorder the rotation angles we get from the Vicon system
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).

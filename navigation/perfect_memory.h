@@ -41,7 +41,9 @@ template<typename Store = PerfectMemoryStore::RawImage<>>
 class PerfectMemory : public VisualNavigationBase
 {
 public:
-    PerfectMemory(const cv::Size unwrapRes /**TODO*** forward other parameters*/) : VisualNavigationBase(unwrapRes), m_Store(unwrapRes)
+    PerfectMemory(const cv::Size &unwrapRes)
+      : VisualNavigationBase(unwrapRes)
+      , m_Store(unwrapRes)
     {}
 
     //------------------------------------------------------------------------
@@ -78,6 +80,11 @@ public:
 
         // Return smallest difference
         return *std::min_element(m_Differences.begin(), m_Differences.end());
+    }
+
+    virtual void clearMemory() override
+    {
+        m_Store.clear();
     }
 
     //------------------------------------------------------------------------

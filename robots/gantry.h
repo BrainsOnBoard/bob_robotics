@@ -14,6 +14,7 @@
 #include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
 
 // BoB robotics includes
+#include "common/assert.h"
 #include "common/pose.h"
 
 // Third-party includes
@@ -39,7 +40,7 @@ class Gantry
 public:
     //! Open the PCI device and set drive parameters
     Gantry(BYTE boardId = 0)
-      : m_BoardId(0)
+      : m_BoardId(boardId)
     {
         // Try to open PCI device
         checkError(P1240MotDevOpen(m_BoardId), "Could not open PCI card");
@@ -70,13 +71,13 @@ public:
     }
 
     /**!
-     * \brief Returns the gantry to its home position
+     * \brief Returns the gantry to its home position, raising the gantry head first
      *
      * Home position is (0, 0, 0). The robot gantry will be raised before homing so that it does
      * not collide with objects in the arena. The gantry needs to be homed before use so that it
      * can reset its estimate of its position. This function blocks until the gantry is homed.
      */
-    void home()
+    void raiseAndHome()
     {
         m_IsMovingLine = false;
 
@@ -86,15 +87,26 @@ public:
         waitToStopMoving(Z_Axis);
 
         // Home along x- and y-axes
-        checkError(P1240MotHome(m_BoardId, XY_Axis), "Could not home x- and y- axes");
+        home(XY_Axis);
         waitToStopMoving(XY_Axis);
 
         // Home z-axis
-        checkError(P1240MotHome(m_BoardId, Z_Axis), "Could not home z-axis");
+        home(Z_Axis);
         waitToStopMoving(Z_Axis);
 
         // Give error if emergency button pressed
         checkEmergencyButton();
+    }
+
+    /**!
+     * \brief Returns the gantry to its home position
+     *
+     * Home position is (0, 0, 0). The gantry needs to be homed before use so that it
+     * can reset its estimate of its position. This function does not block.
+     */
+    void home(BYTE axis = XYZ_Axis)
+    {
+        checkError(P1240MotHome(m_BoardId, axis), "Could not home axis");
     }
 
     //! Check if either of the emergency buttons are pressed down
@@ -150,6 +162,11 @@ public:
      */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
+        // Check the desired position is within the gantry's limits
+        BOB_ASSERT(x >= 0_mm && x <= Limits[0]);
+        BOB_ASSERT(y >= 0_mm && y <= Limits[1]);
+        BOB_ASSERT(z >= 0_mm && z <= Limits[2]);
+
         m_IsMovingLine = true;
         const Vector3<LONG> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
                                     (LONG) round(y.value() * PulsesPerMillimetre[1]),
@@ -199,7 +216,17 @@ public:
 private:
     BYTE m_BoardId;
     bool m_IsMovingLine = false;
-    static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+
+    /*
+     * These values are for converting from a number of motor pulses in the x, y
+     * and z axes to a number of millimetres. I took them directly from Chris
+     * Johnson's Matlab code and I assume he just measured them empirically.
+     * They seem pretty accurate. -- AD
+     */
+    static constexpr Vector3<double> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+
+    // These are the gantry's upper x, y and z limits (i.e. the size of the "arena")
+    static constexpr Vector3<millimeter_t> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
     void close() noexcept
     {

@@ -40,11 +40,13 @@ class Display : public Threadable
 public:
     /*!
      * \brief Create a new display with unwrapping disabled
-     * 
+     *
      * @param videoInput The video source to display
+     * @param fullScreen Whether or not to display fullscreen
      */
-    Display(Input &videoInput)
-      : m_VideoInput(&videoInput)
+    Display(Input &videoInput, const bool fullScreen = false)
+      : m_VideoInput(videoInput)
+      , m_FullScreen(fullScreen)
     {}
 
     //! Close display window and destroy this object
@@ -55,12 +57,14 @@ public:
 
     /*!
      * \brief Create a new display with unwrapping enabled if the videoInput supports it
-     * 
+     *
      * @param videoInput The video source to display
-     * @param unwrapRes The size of the target image after unwrapping, as cv::Size or two ints
+     * @param unwrapRes The size of the target image after unwrapping
+     * @param fullScreen Whether or not to display fullscreen
      */
-    Display(Input &videoInput, const cv::Size &unwrapRes)
-      : m_VideoInput(&videoInput)
+    Display(Input &videoInput, const cv::Size &unwrapRes, const bool fullScreen = false)
+      : m_VideoInput(videoInput)
+      , m_FullScreen(fullScreen)
     {
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
@@ -88,7 +92,7 @@ public:
 
     /*!
      * \brief Try to read a new frame from the video source and display it
-     * 
+     *
      * \return Whether a new frame was successfully read
      */
     bool update()
@@ -96,7 +100,9 @@ public:
         if (!m_Open) {
             // set opencv window to display full screen
             cv::namedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
-            setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+            if (m_FullScreen) {
+                setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+            }
             m_Open = true;
         }
 
@@ -108,7 +114,7 @@ public:
         }
 
         // get keyboard input
-        switch (cv::waitKeyEx(1)) {
+        switch (cv::waitKeyEx(1) & OS::KeyMask) {
         case 'u': // toggle unwrapping
             m_ShowUnwrapped = !m_ShowUnwrapped;
             break;
@@ -134,14 +140,15 @@ protected:
     cv::Mat m_Frame, m_Unwrapped;
     bool m_ShowUnwrapped = false;
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
-    Input *m_VideoInput;
+    Input &m_VideoInput;
+    bool m_FullScreen;
 
     virtual bool readFrame(cv::Mat &frame)
     {
-        if (!m_VideoInput->readFrame(m_Frame)) {
+        if (!m_VideoInput.readFrame(m_Frame)) {
             return false;
         }
-        
+
         // unwrap frame if required
         if (m_Unwrapper && m_ShowUnwrapped) {
             m_Unwrapper->unwrap(m_Frame, m_Unwrapped);

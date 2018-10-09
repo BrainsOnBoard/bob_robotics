@@ -121,7 +121,14 @@ public:
         m_Database.push_back(Entry{ { x, y, z }, heading, filename });
 
         // Write current view to file
-        cv::imwrite((filesystem::path(m_Path) / filename).str(), frame);
+        const auto imagePath = m_Path / filename;
+        BOB_ASSERT(!imagePath.exists()); // We don't want to overwrite data by default!
+        cv::imwrite(imagePath.str(), frame);
+    }
+
+    void abortSave()
+    {
+        m_DirtyFlag = false;
     }
 
     void saveMetadata()

@@ -64,6 +64,11 @@ public:
         return (m_Snapshots.size() - 1);
     }
 
+    void clear()
+    {
+        m_Snapshots.clear();
+    }
+
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &snapshotMask) const
     {
         // Calculate difference between image and stored image
