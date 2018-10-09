@@ -162,6 +162,7 @@ public:
      */
     void setPosition(millimeter_t x, millimeter_t y, millimeter_t z)
     {
+        // Check the desired position is within the gantry's limits
         BOB_ASSERT(x >= 0_mm && x <= Limits[0]);
         BOB_ASSERT(y >= 0_mm && y <= Limits[1]);
         BOB_ASSERT(z >= 0_mm && z <= Limits[2]);
@@ -215,7 +216,16 @@ public:
 private:
     BYTE m_BoardId;
     bool m_IsMovingLine = false;
+
+    /*
+     * These values are for converting from a number of motor pulses in the x, y
+     * and z axes to a number of millimetres. I took them directly from Chris
+     * Johnson's Matlab code and I assume he just measured them empirically.
+     * They seem pretty accurate. -- AD
+     */
     static constexpr Vector3<double> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+
+    // These are the gantry's upper x, y and z limits (i.e. the size of the "arena")
     static constexpr Vector3<millimeter_t> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
     void close() noexcept
