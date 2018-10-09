@@ -17,22 +17,22 @@ namespace BoBRobotics {
 namespace Vicon {
 using namespace std::literals;
 
-template<typename BaseObjectDataType = ObjectData>
-class ObjectDataPlotter
-  : public ObjectData
+template<typename BaseObjectType = Object>
+class ObjectPlotter
+  : public Object
 {
 public:
-    ObjectDataPlotter() = default;
-    ObjectDataPlotter(const ObjectDataPlotter &&o2)
+    ObjectPlotter() = default;
+    ObjectPlotter(const ObjectPlotter &&o2)
     {
         const auto pos = o2.getPosition<>();
         const auto att = o2.getAttitude<>();
-        BaseObjectDataType::update(o2.getFrameNumber(), pos[0], pos[1], pos[2], att[0], att[1], att[2]);
+        BaseObjectType::update(o2.getFrameNumber(), pos[0], pos[1], pos[2], att[0], att[1], att[2]);
     }
 
     void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z, radian_t yaw, radian_t pitch, radian_t roll)
     {
-        BaseObjectDataType::update(frameNumber, x, y, z, yaw, pitch, roll);
+        BaseObjectType::update(frameNumber, x, y, z, yaw, pitch, roll);
         m_NewData = true;
     }
 
@@ -50,6 +50,6 @@ public:
     }
 private:
     std::atomic<bool> m_NewData{ false };
-}; // ObjectDataPlotter
+}; // ObjectPlotter
 } // Vicon
 } // BoBRobotics

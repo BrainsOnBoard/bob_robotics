@@ -91,12 +91,12 @@ int main()
 
 #ifdef VICON_CAPTURE
                // Get tracking data
-               auto &objectData = vicon.getObject(0);
-               const auto position = objectData.getPosition<>();
-               const auto attitude = objectData.getAttitude<>();
+               auto &object = vicon.getObject(0);
+               const auto position = object.getPosition<>();
+               const auto attitude = object.getAttitude<>();
 
                // Write to CSV
-               data << filename << ", " << objectData.getFrameNumber() << ", "
+               data << filename << ", " << object.getFrameNumber() << ", "
                     << position[0].value() << ", " << position[1].value() << ", "
                     << position[2].value() << ", " << attitude[0].value() << ", "
                     << attitude[1].value() << ", " << attitude[2].value() << std::endl;

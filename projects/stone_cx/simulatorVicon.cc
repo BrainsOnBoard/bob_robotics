@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     Robots::Norbot motor;
 
     // Create VICON UDP interface
-    Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
+    Vicon::UDPClient<Vicon::ObjectVelocity> vicon(51001);
 
     // Create VICON capture control interface
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
@@ -98,9 +98,9 @@ int main(int argc, char *argv[])
         }
 
         // Read data from VICON system
-        auto &objectData = vicon.getObject(0);
-        const auto &velocity = objectData.getVelocity();
-        const auto &attitude = objectData.getAttitude();
+        auto &object = vicon.getObject(0);
+        const auto &velocity = object.getVelocity();
+        const auto &attitude = object.getAttitude();
 
         /*
          * Update TL input
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
             if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
                 std::cout << "Returning home!" << std::endl;
-                std::cout << "Turn around VICON frame:" << objectData.getFrameNumber() << std::endl;
+                std::cout << "Turn around VICON frame:" << object.getFrameNumber() << std::endl;
                 outbound = false;
             }
         }

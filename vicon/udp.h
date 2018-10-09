@@ -38,19 +38,19 @@ using namespace units::time;
 using namespace units::velocity;
 
 //----------------------------------------------------------------------------
-// Vicon::ObjectData
+// Vicon::Object
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
-class ObjectData
+class Object
 {
 public:
-    ObjectData()
+    Object()
       : m_FrameNumber{ 0 }
       , m_Position{ 0_mm, 0_mm, 0_mm }
       , m_Attitude{ 0_rad, 0_rad, 0_rad }
     {}
 
-    ObjectData(const ObjectData &&o2)
+    Object(const Object &&o2)
     {
         m_FrameNumber = o2.m_FrameNumber;
         std::copy(o2.m_Position.begin(), o2.m_Position.end(), m_Position.begin());
@@ -109,13 +109,13 @@ private:
 };
 
 //----------------------------------------------------------------------------
-// Vicon::ObjectDataVelocity
+// Vicon::ObjectVelocity
 //----------------------------------------------------------------------------
 //! Object data class which also calculate (un-filtered) velocity
-class ObjectDataVelocity : public ObjectData
+class ObjectVelocity : public Object
 {
 public:
-    ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
+    ObjectVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
     {}
 
     //----------------------------------------------------------------------------
@@ -154,7 +154,7 @@ public:
                        smoothVelocity);
 
         // Superclass
-        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
+        Object::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
     template <class VelocityUnit = meters_per_second_t>
@@ -174,7 +174,7 @@ private:
 // BoBRobotics::Vicon::UDPClient
 //----------------------------------------------------------------------------
 //! Receiver for Vicon UDP streams
-template<typename ObjectDataType = ObjectData>
+template<typename ObjectType = Object>
 class UDPClient
 {
 public:
@@ -242,15 +242,15 @@ public:
 
     unsigned int getNumObjects()
     {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        return m_ObjectData.size();
+        std::lock_guard<std::mutex> guard(m_ObjectsMutex);
+        return m_Objects.size();
     }
 
-    ObjectDataType &getObject(unsigned int id)
+    ObjectType &getObject(unsigned int id)
     {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        if(id < m_ObjectData.size()) {
-            return m_ObjectData[id];
+        std::lock_guard<std::mutex> guard(m_ObjectsMutex);
+        if(id < m_Objects.size()) {
+            return m_Objects[id];
         }
         else {
             throw std::runtime_error("Invalid object id: " + std::to_string(id));
@@ -261,16 +261,16 @@ private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, uint32_t frameNumber,
+    void updateObject(unsigned int id, uint32_t frameNumber,
                           const Vector3<double> &position,
                           const Vector3<double> &attitude)
     {
         // Lock mutex
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        std::lock_guard<std::mutex> guard(m_ObjectsMutex);
 
         // If no object data structure has been created for this ID, add one
-        if(id >= m_ObjectData.size()) {
-            m_ObjectData.resize(id + 1);
+        if(id >= m_Objects.size()) {
+            m_Objects.resize(id + 1);
         }
 
         /*
@@ -280,7 +280,7 @@ private:
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).
          */
-        m_ObjectData[id].update(frameNumber,
+        m_Objects[id].update(frameNumber,
                                 units::make_unit<millimeter_t>(position[0]),
                                 units::make_unit<millimeter_t>(position[1]),
                                 units::make_unit<millimeter_t>(position[2]),
@@ -342,7 +342,7 @@ private:
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, frameNumber, position, attitude);
+                    updateObject(objectID, frameNumber, position, attitude);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;
@@ -361,8 +361,8 @@ private:
     std::thread m_ReadThread;
     void *m_ReadUserData;
 
-    std::mutex m_ObjectDataMutex;
-    std::vector<ObjectDataType> m_ObjectData;
+    std::mutex m_ObjectsMutex;
+    std::vector<ObjectType> m_Objects;
 };
 } // namespace Vicon
 } // BoBRobotics

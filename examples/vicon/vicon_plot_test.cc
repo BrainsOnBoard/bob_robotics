@@ -6,7 +6,7 @@
 
 // BoB robotics includes
 #include "vicon/capture_control.h"
-#include "vicon/object_data_plotter.h"
+#include "vicon/object_plotter.h"
 #include "vicon/udp.h"
 
 using namespace BoBRobotics::Vicon;
@@ -21,7 +21,7 @@ auto now()
 int
 main()
 {
-    UDPClient<ObjectDataPlotter<>> vicon(51001);
+    UDPClient<ObjectPlotter<>> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
     while (vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
