@@ -21,8 +21,11 @@ class ObjectDataPlotter
   : public ObjectData
 {
 public:
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
-                radian_t yaw, radian_t pitch, radian_t roll) {
+    ObjectDataPlotter() = default;
+    ObjectDataPlotter(const ObjectDataPlotter &) {}
+
+    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z, radian_t yaw, radian_t pitch, radian_t roll)
+    {
         BaseObjectDataType::update(frameNumber, x, y, z, yaw, pitch, roll);
         m_NewData = true;
     }
@@ -51,7 +54,7 @@ public:
         return true;
     }
 private:
-    std::atomic<bool> m_NewData = false;
+    std::atomic<bool> m_NewData{ false };
 }; // ObjectDataPlotter
 } // Vicon
 } // BoBRobotics
