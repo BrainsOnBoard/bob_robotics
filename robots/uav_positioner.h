@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/circstat.h"
 #include "uav.h"
 
 // Third-party includes
@@ -22,16 +23,17 @@ public:
     {}
 
     template<typename ObjectData>
-    bool update(const ObjectData &object)
+    bool update(const ObjectData &object, const radian_t targetYaw = 0_deg)
     {
         const auto att = object.template getAttitude<>();
-        if (abs(att[0]) < m_AngleThreshold) {
+        const radian_t circDist = circularDistance(targetYaw, att[0]);
+        if (abs(circDist) < m_AngleThreshold) {
             return false;
         } else {
-            if (att[0] < 0_rad) {
-                m_UAV.setYawSpeed(m_YawSpeed);
-            } else {
+            if (circDist < 0_rad) {
                 m_UAV.setYawSpeed(-m_YawSpeed);
+            } else {
+                m_UAV.setYawSpeed(m_YawSpeed);
             }
             return true;
         }

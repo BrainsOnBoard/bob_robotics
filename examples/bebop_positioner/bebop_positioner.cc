@@ -11,6 +11,7 @@
 #include <iostream>
 
 using namespace std::literals;
+using namespace units::literals;
 using namespace BoBRobotics;
 namespace plt = matplotlibcpp;
 
@@ -45,7 +46,7 @@ int main()
             joystick.update();
 
             if (positionerMode) {
-                positioner.update(vicon.getObjectData(0));
+                positioner.update(vicon.getObjectData(0), 0_deg);
             }
 
             // Plot UAV's position
