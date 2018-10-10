@@ -1,15 +1,7 @@
 #pragma once
 
-// C includes
-#include <cmath>
-#include <cstdint>
-#include <cstring>
-
-// C++ includes
-#include <array>
-#include <iostream>
-#include <limits>
-#include <thread>
+// BoB robotics includes
+#include "joystick_base.h"
 
 // Linux includes
 #include <fcntl.h>
@@ -17,8 +9,27 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// local includes
-#include "joystick_base.h"
+// Standard C includes
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+
+// Standard C++ includes
+#include <array>
+#include <iostream>
+#include <limits>
+#include <thread>
+
+/*
+ * We need to undef these macros (defined in linux/joystick.h) because they
+ * break OpenCV.
+ */
+#ifdef KEY_UP
+#undef KEY_UP
+#endif
+#ifdef KEY_DOWN
+#undef KEY_DOWN
+#endif
 
 namespace BoBRobotics {
 namespace HID {
@@ -47,7 +58,7 @@ using JAxis = JAxisLinux;
 
 /*!
  * \brief Controller buttons (Linux)
- * 
+ *
  * The left stick and right stick are also buttons (you can click them).
  */
 enum class JButtonLinux
@@ -71,7 +82,7 @@ using JButton = JButtonLinux;
 
 /*!
  * \brief Class for reading from joysticks on Linux.
- * 
+ *
  * *NOTE*: This class should not be used directly; see example in joystick_test.
  */
 class JoystickLinux : public JoystickBase<JAxisLinux, JButtonLinux>

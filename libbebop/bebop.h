@@ -13,12 +13,6 @@
 #include <utility>
 
 // OpenCV
-#ifdef KEY_UP
-#undef KEY_UP
-#endif
-#ifdef KEY_DOWN
-#undef KEY_DOWN
-#endif
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
