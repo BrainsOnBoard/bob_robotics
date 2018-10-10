@@ -29,6 +29,11 @@ public:
     //----------------------------------------------------------------------------
     // Tank virtuals
     //----------------------------------------------------------------------------
+    virtual ~Norbot() override
+    {
+        stopMoving();
+    }
+
     virtual void tank(float left, float right) override
     {
         BOB_ASSERT(left >= -1.f && left <= 1.f);

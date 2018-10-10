@@ -23,6 +23,9 @@ class Tank
   : public Robot
 {
 public:
+    virtual ~Tank()
+    {}
+
     virtual void moveForward(float speed) override
     {
         tank(speed, speed);

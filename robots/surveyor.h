@@ -55,8 +55,10 @@ public:
         }
     }
 
-    ~Surveyor()
+    virtual ~Surveyor() override
     {
+        stopMoving();
+
         if (m_Socket > 0) {
             close(m_Socket);
         }
