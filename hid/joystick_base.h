@@ -38,10 +38,10 @@ enum ButtonState
 /*!
  * \brief Generic joystick class for Xbox 360 controller, from which
  *        JoystickLinux and JoystickWindows classes inherit.
- * 
+ *
  * The class provides the basic, platform-independent functionality required
  * by JoystickLinux and JoystickWindows.
- * 
+ *
  * *NOTE*: This class should not be used directly; see example in joystick_test.
  */
 template<typename JAxis, typename JButton>
@@ -49,7 +49,7 @@ class JoystickBase : public Threadable
 {
     /*!
      * \brief A delegate to handle joystick button presses
-     * 
+     *
      * @param button Which button was pressed/released
      * @param pressed Whether button was pressed/released
      * @return True if the function has handled the event, false otherwise
@@ -58,7 +58,7 @@ class JoystickBase : public Threadable
 
     /*!
      * \brief A delegate to handle joystick axis events (i.e. moving joysticks)
-     * 
+     *
      * @param axis Which axis was pressed/released
      * @param value Value from -1.0f to 1.0f representing new position of axis
      * @return True if the function has handled the event, false otherwise
@@ -66,10 +66,6 @@ class JoystickBase : public Threadable
     using AxisHandler = std::function<bool(JAxis axis, float value)>;
 
 public:
-    virtual ~JoystickBase()
-    {
-    }
-
     //------------------------------------------------------------------------
     // Threadable virtuals
     //------------------------------------------------------------------------
@@ -88,7 +84,7 @@ public:
     //------------------------------------------------------------------------
     /*!
      * \brief Try to read from the joystick
-     * 
+     *
      * @return True if one or more events were read from joystick
      */
     bool update()
@@ -135,7 +131,7 @@ public:
 
     /*!
      * \brief Get the current state for a specified joystick button
-     * 
+     *
      * \see ButtonState
      */
     unsigned char getState(JButton button) const
