@@ -3,6 +3,7 @@
 
 # Visual Studio code user files
 /.vscode/*.json
+!/.vscode/c_cpp_properties.json
 *.code-workspace
 
 # Ignore object files
