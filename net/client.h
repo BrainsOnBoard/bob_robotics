@@ -1,16 +1,19 @@
 #pragma once
 
-// Standard C++ includes
-#include <limits>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "node.h"
+#include "socket.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// Local includes
-#include "node.h"
-#include "socket.h"
+// Standard C includes
+#include <cerrno>
+
+// Standard C++ includes
+#include <limits>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Net {
@@ -32,7 +35,7 @@ public:
     Client(const std::string &host, int port = DefaultListenPort)
     {
         // Create socket
-        setSocket(socket(AF_INET, SOCK_STREAM, 0));
+        setSocket(socket(AF_INET, SOCK_NONBLOCK | SOCK_STREAM, 0));
 
         // Create socket address structure
         in_addr addr;
@@ -43,11 +46,15 @@ public:
         destAddress.sin_addr = addr;
 
         // Connect socket
-        if (connect(Socket::getSocket(),
-                    reinterpret_cast<sockaddr *>(&destAddress),
-                    sizeof(destAddress)) < 0) {
-            throw std::runtime_error("Cannot connect socket to " + host + ":" +
-                                    std::to_string(port));
+        int ret = connect(Socket::getSocket(),
+                          reinterpret_cast<sockaddr *>(&destAddress),
+                          sizeof(destAddress));
+        if (ret < 0) {
+            int err = errno;
+            if (err != EINPROGRESS) {
+                throw std::runtime_error("Cannot connect socket to " + host + ":" +
+                                        std::to_string(port) + " (" + std::to_string(err) + ": " + strerror(err) + ")");
+            }
         }
 
         std::cout << "Opened socket" << std::endl;

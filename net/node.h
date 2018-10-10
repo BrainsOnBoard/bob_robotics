@@ -2,10 +2,12 @@
 
 // Standard C++ includes
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 // BoB robotics includes
@@ -23,6 +25,8 @@ using CommandHandler = std::function<void(Node &, const Command &)>;
 
 //! A callback function which is notified when a connection is made
 using ConnectedHandler = std::function<void(Node &)>;
+
+using namespace std::literals;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Net::Node
@@ -99,9 +103,12 @@ protected:
 
     virtual void runInternal() override
     {
+        Command command;
         while (isRunning()) {
             Socket *sock = getSocket();
-            auto command = sock->readCommand();
+            if(!sock->tryReadCommand(command)) {
+                std::this_thread::sleep_for(25ms);
+            }
             if (!parseCommand(command)) {
                 break;
             }

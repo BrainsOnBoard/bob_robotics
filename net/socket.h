@@ -113,13 +113,17 @@ public:
     }
 
     //! Read a plaintext command, splitting it into separate words
-    Command readCommand()
+    bool tryReadCommand(Command &command)
     {
-        std::string line = readLine();
+        std::string line;
+        if (!tryReadLine(line)) {
+            return false;
+        }
+
         std::istringstream iss(line);
-        Command results(std::istream_iterator<std::string>{ iss },
-                        std::istream_iterator<std::string>());
-        return results;
+        command = Command(std::istream_iterator<std::string>{ iss },
+                          std::istream_iterator<std::string>());
+        return true;
     }
 
     //! Read a specified number of bytes into a buffer
@@ -147,40 +151,40 @@ public:
     }
 
     //! Read a single line in, stopping at a newline char
-    std::string readLine()
+    bool tryReadLine(std::string &outstring)
     {
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
+        std::lock_guard<std::mutex> guard(m_ReadMutex);
 
-        std::ostringstream oss;
-        while (true) {
-            if (m_BufferBytes == 0) {
-                m_BufferBytes += readOnce(m_Buffer.data(),
-                                          m_BufferStart,
-                                          DefaultBufferSize - m_BufferStart);
-            }
+        m_BufferBytes += readOnce(m_Buffer.data(),
+                                  m_BufferStart,
+                                  DefaultBufferSize - m_BufferStart);
 
-            // look for newline char
-            for (size_t i = 0; i < m_BufferBytes; i++) {
-                char &c = m_Buffer[m_BufferStart + i];
-                if (c == '\n') {
-                    c = '\0';
-                    oss << std::string(&m_Buffer[m_BufferStart]);
-                    debitBytes(i + 1);
+        // look for newline char
+        for (size_t i = 0; i < m_BufferBytes; i++) {
+            char &c = m_Buffer[m_BufferStart + i];
+            if (c == '\n') {
+                c = '\0';
+                m_ReadLineOutput << std::string(&m_Buffer[m_BufferStart]);
+                debitBytes(i + 1);
 
-                    std::string outstring = oss.str();
-                    if (m_Print) {
-                        std::cout << "<<< " << outstring << std::endl;
-                    }
-                    return outstring;
+                outstring = m_ReadLineOutput.str();
+                if (m_Print) {
+                    std::cout << "<<< " << outstring << std::endl;
                 }
-            }
 
-            // if newline is not present, append the text we received and try
-            // another read
-            oss << std::string(&m_Buffer[m_BufferStart], m_BufferBytes);
-            debitBytes(m_BufferBytes);
+                // Reset buffer
+                m_ReadLineOutput.str("");
+                m_ReadLineOutput.clear();
+                return true;
+            }
         }
+
+        // if newline is not present, append the text we received and try
+        // another read
+        m_ReadLineOutput << std::string(&m_Buffer[m_BufferStart], m_BufferBytes);
+        debitBytes(m_BufferBytes);
+        return false;
     }
 
     //! Send a buffer of specified length through the socket
@@ -220,6 +224,7 @@ private:
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
     std::mutex m_ReadMutex, m_SendMutex;
+    std::ostringstream m_ReadLineOutput;
     bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
 
@@ -252,8 +257,13 @@ private:
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
-            close();
-            throw SocketError("Could not read from socket");
+            int err = errno;
+            if (err == EAGAIN) {
+                return 0;
+            } else {
+                close();
+                throw SocketError("Could not read from socket");
+            }
         }
 
         return static_cast<size_t>(len);
