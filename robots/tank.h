@@ -94,7 +94,8 @@ private:
             tank(x, -x);
         } else {
             // If length of joystick vector places it in deadZone, stop motors
-            const float r = std::min(1.f, hypot(x, y));
+            float r = hypot(x, y);
+            r = std::min(1.f, r);
             const float theta = atan2(x, -y);
             const float twoTheta = 2.0f * theta;
 
