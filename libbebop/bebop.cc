@@ -298,11 +298,11 @@ inline void
 Bebop::createControllerDevice()
 {
     // create discovery device
-    static const auto deleter = [](ARDISCOVERY_Device_t *discover) {
+    static const auto deleter = [](ARDISCOVERY_Device_t *&discover) {
         ARDISCOVERY_Device_Delete(&discover);
     };
     auto derr = ARDISCOVERY_OK;
-    const std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
+    std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
     checkError(derr);
 
     // try to discover device on network
@@ -315,7 +315,7 @@ Bebop::createControllerDevice()
     // create controller object
     auto err = ARCONTROLLER_OK;
     m_Device = ControllerPtr(ARCONTROLLER_Device_New(discover.get(), &err),
-                             [](ARCONTROLLER_Device_t *dev) {
+                             [](ARCONTROLLER_Device_t *&dev) {
                                  ARCONTROLLER_Device_Delete(&dev);
                              });
     checkError(err);
