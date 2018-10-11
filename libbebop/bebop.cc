@@ -223,6 +223,14 @@ Bebop::setYawSpeed(float right)
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
+//! Carry out flat trim calibration
+void
+Bebop::doFlatTrimCalibration()
+{
+    DRONE_COMMAND_NO_ARG(sendPilotingFlatTrim);
+    m_FlatTrimSemaphore.wait();
+}
+
 /*!
  * \brief Tell the drone to take a photo and store it.
  */
@@ -377,7 +385,7 @@ Bebop::stopStreaming()
 inline Bebop::State
 Bebop::getStateUpdate()
 {
-    m_Semaphore.wait();
+    m_StateSemaphore.wait();
     return getState();
 }
 
@@ -443,7 +451,7 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                     void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
-    bebop->m_Semaphore.notify(); // trigger semaphore used by getStateUpdate()
+    bebop->m_StateSemaphore.notify(); // trigger semaphore used by getStateUpdate()
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
@@ -497,6 +505,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED:
         productVersionReceived(dict);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLATTRIMCHANGED:
+        bebop->m_FlatTrimSemaphore.notify();
         break;
     default:
         break;

@@ -190,6 +190,9 @@ public:
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
 
+    // calibration
+    void doFlatTrimCalibration();
+
     // misc
     State getState();
     VideoStream &getVideoStream();
@@ -270,7 +273,7 @@ private:
     };
 
     ControllerPtr m_Device;
-    Semaphore m_Semaphore;
+    Semaphore m_StateSemaphore, m_FlatTrimSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
