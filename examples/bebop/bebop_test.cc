@@ -1,13 +1,13 @@
-// C++ includes
-#include <chrono>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-
 // BoB robotics includes
 #include "hid/joystick.h"
 #include "libbebop/bebop.h"
 #include "video/display.h"
+
+// Standard C++ includes
+#include <chrono>
+#include <iostream>
+#include <stdexcept>
+#include <thread>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
@@ -43,27 +43,24 @@ void printSpeedLimits(Bebop &drone)
 
 int main()
 {
-    // joystick for controlling drone
-    HID::Joystick joystick(/*deadZone=*/0.25);
-
-    /*
-     * Connects to the drone.
-     *
-     * NB: Any or all of these parameters can be omitted to use the defaults,
-     *     which is probably almost always what you want. Side note: don't set
-     *     these values to their maximum if you want to be able to control the
-     *     drone.
-     */
-    Bebop drone(/*maxYawSpeed=*/Bebop::DefaultMaximumYawSpeed,
-                /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
-                /*maxTilt=*/Bebop::DefaultMaximumTilt);
-
-
     try {
+        /*
+         * Connects to the drone.
+         *
+         * NB: Any or all of these parameters can be omitted to use the defaults,
+         *     which is probably almost always what you want. Side note: don't set
+         *     these values to their maximum if you want to be able to control the
+         *     drone.
+         */
+        Bebop drone(/*maxYawSpeed=*/Bebop::DefaultMaximumYawSpeed,
+                    /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
+                    /*maxTilt=*/Bebop::DefaultMaximumTilt);
+
         // print maximum speed parameters
         printSpeedLimits(drone);
 
         // control drone with joystick
+        HID::Joystick joystick(/*deadZone=*/0.25);
         drone.addJoystick(joystick);
 
         // display the drone's video stream on screen
