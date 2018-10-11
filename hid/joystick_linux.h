@@ -115,6 +115,7 @@ public:
     //! Close connection to controller
     ~JoystickLinux()
     {
+        stop();
         ::close(m_Fd);
     }
 
