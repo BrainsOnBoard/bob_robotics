@@ -10,6 +10,7 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -93,7 +94,7 @@ private:
             tank(x, -x);
         } else {
             // If length of joystick vector places it in deadZone, stop motors
-            const float r = sqrt((x * x) + (y * y));
+            const float r = std::min(1.f, hypot(x, y));
             const float theta = atan2(x, -y);
             const float twoTheta = 2.0f * theta;
 
