@@ -73,7 +73,7 @@ public:
     virtual void run() override
     {
         while (m_DoRun) {
-            while (!update()) {
+            if (!update()) {
                 std::this_thread::sleep_for(50ms);
             }
         }
