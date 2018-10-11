@@ -9,7 +9,9 @@
 
 namespace BoBRobotics {
     template<typename AgentType>
-    void plotAgent(const AgentType &agent, std::array<double, 2> &&xlim, std::array<double, 2> &&ylim)
+    void plotAgent(const AgentType &agent,
+                   const std::array<double, 2> &xlim,
+                   const std::array<double, 2> &ylim)
     {
         // Update plot
         const auto position = agent.template getPosition<>();
