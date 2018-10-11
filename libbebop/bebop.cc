@@ -483,6 +483,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED:
         bebop->onBatteryChanged(dict);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED:
+        alertStateChanged(dict);
+        break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
         MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
         break;
@@ -501,21 +504,50 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
 }
 
 void
+Bebop::alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
+        if (arg) {
+            switch (arg->value.I32) {
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
+                std::cout << "Alert! User emergency alert" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
+                std::cout << "Alert! Drone has cut out" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+                std::cout << "Alert! Battery level is critical" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+                std::cout << "Alert! Battery level is low" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
+                std::cout << "Alert! The angle of the drone is too high" << std::endl;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+}
+
+void
 Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *element = nullptr;
-    HASH_FIND_STR (dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, element);
-    if (element)
-    {
-        HASH_FIND_STR (element->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
-        if (arg)
-        {
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
+        if (arg) {
             std::cout << "Bebop software version: " << arg->value.String << std::endl;
         }
-        HASH_FIND_STR (element->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
-        if (arg)
-        {
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
+        if (arg) {
             std::cout << "Bebop hardware version: " << arg->value.String << std::endl;
         }
     }

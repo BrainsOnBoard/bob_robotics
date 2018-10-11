@@ -293,6 +293,7 @@ private:
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
+    static void alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,
