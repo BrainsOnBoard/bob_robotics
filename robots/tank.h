@@ -10,6 +10,7 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -23,6 +24,9 @@ class Tank
   : public Robot
 {
 public:
+    virtual ~Tank()
+    {}
+
     virtual void moveForward(float speed) override
     {
         tank(speed, speed);
@@ -90,7 +94,8 @@ private:
             tank(x, -x);
         } else {
             // If length of joystick vector places it in deadZone, stop motors
-            const float r = sqrt((x * x) + (y * y));
+            float r = hypot(x, y);
+            r = std::min(1.f, r);
             const float theta = atan2(x, -y);
             const float twoTheta = 2.0f * theta;
 

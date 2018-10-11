@@ -53,11 +53,11 @@ public:
 //----------------------------------------------------------------------------
 /*!
  * \brief A class for operating on sockets in a platform-independent way
- * 
+ *
  * In Windows, this class represents an underlying SOCKET pointer and in *nix,
  * it represents a socket's file handle. This class provides convenience methods
  * for sending and receiving data from the socket.
- * 
+ *
  * A typical (plaintext) command sent over a socket looks like this:
  *     TNK 0.5 0.5
  * where the first word indicates the command name and the other words are parameters.
@@ -71,14 +71,13 @@ public:
 
     /*!
      * \brief Initialise class without a Socket set
-     * 
+     *
      * The Socket can be set later with setSocket().
      */
     Socket(bool print = PrintDebug)
       : m_Buffer(DefaultBufferSize)
       , m_Print(print)
     {
-        m_Buffer.resize(DefaultBufferSize);
     }
 
     //! Initialise class with specified socket
