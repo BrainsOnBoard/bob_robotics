@@ -9,7 +9,7 @@
 
 // Headers to be included
 #ifdef _WIN32
-// Our common header for including windows.h with the right macros set
+// Our common header for including windows.h with the right #defines in place
 #include "windows_include.h"
 
 // Include the (new) winsock API
@@ -64,19 +64,48 @@ close(socket_t sock)
 typedef int socket_t;
 #endif
 
-// Macros for enabling networking functionality on Windows and cleaning up
+namespace BoBRobotics {
+namespace OS {
+namespace Net {
+/*!
+ * \brief A simple wrapper for WSAStartup() and WSACleanup() on Windows
+ *
+ * This class does nothing on *nix.
+ *
+ * Use it like so:
+ *   int main()
+ *   {
+ *      try {
+ *          BoBRobotics::OS::Net::WindowsNetworking net;
+ *          // ... rest of program
+ *      } catch (std::exception &e) {
+ *          std::cerr << "Uncaught exception: " << e.what() << std::endl;
+ *      }
+ *   }
+ */
+class WindowsNetworking
+{
+public:
 #ifdef _WIN32
-#define WSAStartup()                                                           \
-    {                                                                          \
-        WSADATA wsaData;                                                       \
-        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);                     \
-        if (result != NO_ERROR) {                                              \
-            throw std::runtime_error("Error at WSAStartup");                   \
-        }                                                                      \
+    WindowsNetworking()
+    {
+        WSADATA wsaData;
+        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        if (result != NO_ERROR) {
+            throw std::runtime_error("Error at WSAStartup");
+        }
+    }
+
+    ~WindowsNetworking()
+    {
+        WSACleanup();
     }
 #else
-#define WSAStartup()                                                           \
-    {}
-#define WSACleanup()                                                           \
+    // Empty constructor needed so that variables don't appear to be unused
+    WindowsNetworking()
     {}
 #endif
+}; // WindowsNetworking
+} // Net
+} // OS
+} // BoBRobotics

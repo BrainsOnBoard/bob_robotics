@@ -1,10 +1,10 @@
 /*
  * Example program to be run on robot, or locally on a desktop as a server.
- * 
+ *
  * If you don't want to build in I2C support (e.g. if running on desktop) then
  * make the program with:
  *     NO_I2C_ROBOT=1 make
- * 
+ *
  * Use the corresponding "computer" program to connect to the server.
  */
 
@@ -27,37 +27,42 @@
 #include "robots/norbot.h"
 #endif
 
+// Standard C++ includes
+#include <iostream>
+
 using namespace BoBRobotics;
 
 int
 main()
 {
-    // start networking API on Windows
-    WSAStartup();
+    try {
+        // Enable networking on Windows
+        OS::Net::WindowsNetworking net;
 
-    // listen for incoming connection on default port
-    Net::Server server;
+        // Listen for incoming connection on default port
+        Net::Server server;
 
-    // get default camera
-    auto cam = Video::getPanoramicCamera();
+        // Get default camera
+        auto cam = Video::getPanoramicCamera();
 
-    // stream camera asynchronously over network
-    Video::NetSink netSink(server, *cam);
+        // Stream camera asynchronously over network
+        Video::NetSink netSink(server, *cam);
 
-#ifdef NO_I2C_ROBOT
-    // output motor commands to terminal
-    Robots::Tank motor;
-#else
-    // use Arduino robot
-    Robots::Norbot motor;
-#endif
+    #ifdef NO_I2C_ROBOT
+        // Output motor commands to terminal
+        Robots::Tank motor;
+    #else
+        // Use Arduino robot
+        Robots::Norbot motor;
+    #endif
 
-    // read motor commands from network
-    motor.readFromNetwork(server);
+        // Read motor commands from network
+        motor.readFromNetwork(server);
 
-    // run server on main thread
-    server.run();
-
-    // shutdown networking API on Windows
-    WSACleanup();
+        // Run server on main thread
+        server.run();
+    } catch (std::exception &e) {
+        std::cerr << "Uncaught exception: " << e.what() << std::endl;
+        return 1;
+    }
 }
