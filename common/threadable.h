@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <atomic>
 #include <memory>
 #include <thread>
 
@@ -38,8 +39,7 @@ public:
     //! Stop the background thread
     virtual void stop()
     {
-        m_DoRun = false;
-        if (m_ThreadRunning) {
+        if (m_DoRun.exchange(false) && m_ThreadRunning) {
             if (m_Thread.joinable()) {
                 m_Thread.join();
             } else {
@@ -54,6 +54,6 @@ private:
     bool m_ThreadRunning = false;
 
 protected:
-    bool m_DoRun = true;
+    std::atomic<bool> m_DoRun{ true };
 };
 }
