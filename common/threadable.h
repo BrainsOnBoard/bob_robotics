@@ -29,6 +29,12 @@ public:
     //! Run on the current thread, blocking until process ends
     virtual void run() = 0;
 
+    //! Check if the run() function has been called
+    virtual bool isRunning()
+    {
+        return m_DoRun;
+    }
+
     //! Run the process on a background thread
     virtual void runInBackground()
     {
@@ -38,7 +44,8 @@ public:
     //! Stop the background thread
     virtual void stop()
     {
-        if (m_DoRun.exchange(false) && m_Thread) {
+        m_DoRun = false;
+        if (m_Thread) {
             if (m_Thread->joinable()) {
                 m_Thread->join();
             } else {
@@ -49,8 +56,12 @@ public:
 
 private:
     std::unique_ptr<std::thread> m_Thread;
+    std::atomic<bool> m_DoRun{ false };
 
 protected:
-    std::atomic<bool> m_DoRun{ true };
+    void runStart()
+    {
+        m_DoRun = true;
+    }
 };
 }

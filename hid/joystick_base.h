@@ -72,7 +72,8 @@ public:
     //! Block and keep updating the joystick on the current thread
     virtual void run() override
     {
-        while (m_DoRun) {
+        runStart();
+        while (isRunning()) {
             if (!update()) {
                 std::this_thread::sleep_for(50ms);
             }

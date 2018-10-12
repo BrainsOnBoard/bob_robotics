@@ -23,7 +23,7 @@ namespace Net {
 //----------------------------------------------------------------------------
 /*!
  * \brief A general-purpose TCP server
- * 
+ *
  * To be used with corresponding Client object. Various sink/source-type
  * objects are used for either sending or receiving data to the client.
  */
@@ -82,11 +82,13 @@ public:
 
     /*!
      * \brief Keep accepting connections and parsing input for ever
-     * 
+     *
      * **NOTE**: Can only handle one connection at a time.
      */
     void run() override
     {
+        runStart();
+
         // Start listening
         if (listen(m_ListenSocket, 10)) {
             throw std::runtime_error("Error (" + std::to_string(errno) + "): Could not listen");
@@ -97,7 +99,7 @@ public:
         socklen_t addrlen = sizeof(addr);
 
         // loop until stopped
-        while (m_DoRun) {
+        while (isRunning()) {
             // wait for incoming TCP connection
             std::cout << "Waiting for incoming connection..." << std::endl;
             m_Socket = std::make_unique<Socket>(accept(m_ListenSocket, (sockaddr *) &addr, &addrlen));
