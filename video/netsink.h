@@ -1,19 +1,18 @@
 #pragma once
 
-// C++ includes
-#include <mutex>
-#include <string>
-#include <vector>
-
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
 #include "../common/semaphore.h"
 #include "../net/node.h"
-
-// local includes
 #include "input.h"
+
+// Standard C++ includes
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Video {
@@ -43,12 +42,12 @@ public:
 
     virtual ~NetSink()
     {
-        if (m_ThreadRunning) {
-            if (m_Thread.joinable()) {
-                m_Thread.join();
+        if (m_Thread) {
+            if (m_Thread->joinable()) {
+                m_Thread->join();
             }
             else {
-                m_Thread.detach();
+                m_Thread->detach();
             }
         }
     }
@@ -117,8 +116,7 @@ private:
         onCommandReceived(command);
 
         // start thread to transmit images in background
-        m_ThreadRunning = true;
-        m_Thread = std::thread(&NetSink::runAsync, this);
+        m_Thread = std::make_unique<std::thread>(&NetSink::runAsync, this);
     }
 
     void onCommandReceivedSync(const Net::Command &command)
@@ -133,7 +131,7 @@ private:
     void runAsync()
     {
         cv::Mat frame;
-        while (m_ThreadRunning && m_Input->readFrame(frame)) {
+        while (m_Thread && m_Input->readFrame(frame)) {
             sendFrameInternal(frame);
         }
     }
@@ -145,10 +143,9 @@ private:
     Input *m_Input;
     const cv::Size m_FrameSize;
     const std::string m_Name;
-    std::thread m_Thread;
+    std::unique_ptr<std::thread> m_Thread;
     std::vector<uchar> m_Buffer;
     Semaphore m_AckSemaphore;
-    bool m_ThreadRunning = false;
 };
 }   // Video
 }   // BoBRobotics
