@@ -1,7 +1,6 @@
 #pragma once
 
 // C++ includes
-#include <future>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -10,6 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "../common/semaphore.h"
 #include "../net/node.h"
 
 // local includes
@@ -26,7 +26,7 @@ class NetSource : public Input
 public:
     /*!
      * \brief Create an object to read video transmitted over the network
-     * 
+     *
      * @param node The network connection from which to read images
      */
     NetSource(Net::Node &node)
@@ -44,17 +44,19 @@ public:
 
     const std::string getCameraName() const override
     {
+        m_ParamsSemaphore.waitOnce();
         return m_CameraName;
     }
 
     cv::Size getOutputSize() const override
     {
+        m_ParamsSemaphore.waitOnce();
         return m_CameraResolution;
     }
 
     bool needsUnwrapping() const override
     {
-        m_ParamsPromise.get_future().wait();
+        m_ParamsSemaphore.waitOnce();
         return Input::needsUnwrapping();
     }
 
@@ -79,7 +81,7 @@ private:
     cv::Mat m_Frame;
     std::mutex m_FrameMutex;
     bool m_NewFrame = false;
-    mutable std::promise<void> m_ParamsPromise;
+    mutable Semaphore m_ParamsSemaphore;
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
@@ -87,7 +89,7 @@ private:
             m_CameraResolution.width = stoi(command[2]);
             m_CameraResolution.height = stoi(command[3]);
             m_CameraName = command[4];
-            m_ParamsPromise.set_value();
+            m_ParamsSemaphore.notify();
         } else if (command[1] == "FRAME") {
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
