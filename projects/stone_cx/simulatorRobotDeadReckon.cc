@@ -126,6 +126,9 @@ int main(int argc, char *argv[])
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
 
+		// Check for exceptions on background threads
+        GlobalException::check();
+
         // Read from joystick
         joystick.update();
 
@@ -194,9 +197,6 @@ int main(int argc, char *argv[])
         else {
             numOverflowTicks++;
         }
-
-        // Check for exceptions on server's thread
-        GlobalException::check();
     }
 
     // Set quit flag and wait for child threads to complete

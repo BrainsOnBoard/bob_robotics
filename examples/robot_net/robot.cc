@@ -17,6 +17,7 @@
 #endif
 
 // BoB robotics includes
+#include "common/global_exception.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/tank.h"
@@ -28,8 +29,11 @@
 #endif
 
 // Standard C++ includes
+#include <chrono>
 #include <iostream>
+#include <thread>
 
+using namespace std::literals;
 using namespace BoBRobotics;
 
 int
@@ -48,19 +52,25 @@ main()
         // Stream camera asynchronously over network
         Video::NetSink netSink(server, *cam);
 
-    #ifdef NO_I2C_ROBOT
+#ifdef NO_I2C_ROBOT
         // Output motor commands to terminal
         Robots::Tank motor;
-    #else
+#else
         // Use Arduino robot
         Robots::Norbot motor;
-    #endif
+#endif
 
         // Read motor commands from network
         motor.readFromNetwork(server);
 
-        // Run server on main thread
-        server.run();
+        // Run server in background
+        server.runInBackground();
+
+		// Poll for errors every 250ms
+        while (true) {
+            GlobalException::check();
+            std::this_thread::sleep_for(250ms);
+        }
     } catch (std::exception &e) {
         std::cerr << "Uncaught exception: " << e.what() << std::endl;
         return 1;

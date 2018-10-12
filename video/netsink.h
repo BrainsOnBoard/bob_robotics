@@ -4,18 +4,24 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "../common/global_exception.h"
 #include "../common/semaphore.h"
 #include "../net/node.h"
 #include "input.h"
 
 // Standard C++ includes
+#include <atomic>
+#include <chrono>
 #include <memory>
-#include <mutex>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace BoBRobotics {
 namespace Video {
+using namespace std::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::NetSink
 //----------------------------------------------------------------------------
@@ -30,12 +36,14 @@ public:
      * @param input The Input source for images
      */
     NetSink(Net::Node &node, Input &input)
-    :   m_Node(node), m_Input(&input), m_FrameSize(input.getOutputSize()), m_Name(input.getCameraName())
+      : m_Node(node)
+      , m_Input(&input)
+      , m_FrameSize(input.getOutputSize())
+      , m_Name(input.getCameraName())
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command &command)
-                                 {
+                                 [this](Net::Node &, const Net::Command &command) {
                                      onCommandReceivedAsync(command);
                                  });
     }
@@ -43,10 +51,10 @@ public:
     virtual ~NetSink()
     {
         if (m_Thread) {
+            m_DoRun = false;
             if (m_Thread->joinable()) {
                 m_Thread->join();
-            }
-            else {
+            } else {
                 m_Thread->detach();
             }
         }
@@ -60,12 +68,14 @@ public:
      * @param cameraName The name of the camera (see Input::getCameraName())
      */
     NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &cameraName)
-    :   m_Node(node), m_Input(nullptr), m_FrameSize(frameSize), m_Name(cameraName)
+      : m_Node(node)
+      , m_Input(nullptr)
+      , m_FrameSize(frameSize)
+      , m_Name(cameraName)
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command &command)
-                                 {
+                                 [this](Net::Node &, const Net::Command &command) {
                                      onCommandReceivedSync(command);
                                  });
     }
@@ -77,15 +87,13 @@ public:
     void sendFrame(const cv::Mat &frame)
     {
         // If node is connected
-        if(m_Node.isConnected()) {
+        if (m_Node.isConnected()) {
             // Wait for start acknowledgement
             m_AckSemaphore.waitOnce();
 
             sendFrameInternal(frame);
         }
     }
-
-
 
 private:
     //----------------------------------------------------------------------------
@@ -130,9 +138,17 @@ private:
 
     void runAsync()
     {
-        cv::Mat frame;
-        while (m_Thread && m_Input->readFrame(frame)) {
-            sendFrameInternal(frame);
+        try {
+            cv::Mat frame;
+            while (m_DoRun) {
+                if (m_Input->readFrame(frame)) {
+                    sendFrameInternal(frame);
+                } else {
+                    std::this_thread::sleep_for(25ms);
+                }
+            }
+        } catch (...) {
+            GlobalException::set(std::current_exception());
         }
     }
 
@@ -146,6 +162,7 @@ private:
     std::unique_ptr<std::thread> m_Thread;
     std::vector<uchar> m_Buffer;
     Semaphore m_AckSemaphore;
+    std::atomic<bool> m_DoRun{ true };
 };
-}   // Video
-}   // BoBRobotics
+} // Video
+} // BoBRobotics
