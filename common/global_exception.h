@@ -24,4 +24,6 @@ public:
 private:
     static std::exception_ptr m_Exception;
 }; // GlobalException
+
+std::exception_ptr GlobalException::m_Exception;
 } // BoBRobotics
