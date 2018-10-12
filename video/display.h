@@ -82,9 +82,9 @@ public:
     //! Run the display on the current thread
     void run() override
     {
-        while (m_DoRun) {
-            // poll the camera until we get a new frame
-            while (!update()) {
+        while (isRunning()) {
+            // check for a new frame
+            if (!update()) {
                 std::this_thread::sleep_for(25ms);
             }
         }
@@ -130,7 +130,6 @@ public:
     {
         if (m_Open) {
             cv::destroyWindow(WINDOW_NAME);
-            m_DoRun = false;
             m_Open = false;
         }
     }
