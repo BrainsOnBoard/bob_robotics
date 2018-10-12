@@ -159,7 +159,7 @@ public:
     }
 
     //! Get the name of a specified joystick axis
-    static constexpr std::string getName(JAxis axis)
+    static std::string getName(JAxis axis)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -184,7 +184,7 @@ public:
     }
 
     //! Get the name of a specified joystick button
-    static constexpr std::string getName(JButton button)
+    static std::string getName(JButton button)
     {
         switch (button) {
         case JButton::A:
