@@ -6,6 +6,7 @@
 
 // BoB robotics includes
 #include "common/lm9ds1_imu.h"
+#include "common/global_exception.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/server.h"
@@ -36,21 +37,21 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 {
     // Create IMU interface
     LM9DS1 imu;
-    
+
     // Initialise IMU magnetometer
     LM9DS1::MagnetoSettings magSettings;
     imu.initMagneto(magSettings);
-    
+
     // While quit signal isn't set
     for(numSamples = 0; !shouldQuit; numSamples++) {
         // Wait for magneto to become available
         while(!imu.isMagnetoAvailable()){
         }
-        
+
         // Read magneto
         float magnetoData[3];
         imu.readMagneto(magnetoData);
-            
+
         // Calculate heading angle from magneto data and set atomic value
         heading = atan2(magnetoData[0], magnetoData[2]);
     }
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
     // Create server and sink for sending activity image over network
     Net::Server server(Net::Socket::DefaultListenPort);
     Video::NetSink netSink(server, cv::Size(activityImageWidth, activityImageHeight), "activity");
-    
+
     // If command line arguments are specified, run server
     if(streamActivity) {
         std::cout << "Streaming activity over network" << std::endl;
@@ -79,10 +80,10 @@ int main(int argc, char *argv[])
 
     // Create joystick interface
     Joystick joystick;
-    
+
     // Create motor interface
     Robots::Norbot motor;
-    
+
     // Initialise GeNN
     allocateMem();
     initialize();
@@ -99,18 +100,18 @@ int main(int argc, char *argv[])
     // Build connectivity
     //---------------------------------------------------------------------------
     buildConnectivity();
-    
+
     initstone_cx();
-    
+
     // Atomic flag for quitting child threads
     std::atomic<bool> shouldQuit{false};
-    
+
     // Create thread to read from IMU
     unsigned int numIMUSamples = 0;
     std::atomic<float> imuHeading{0.0f};
-    std::thread imuThread(&imuThreadFunc, 
+    std::thread imuThread(&imuThreadFunc,
                           std::ref(shouldQuit), std::ref(imuHeading), std::ref(numIMUSamples));
-    
+
     cv::Mat activityImage(activityImageHeight, activityImageWidth, CV_8UC3, cv::Scalar::all(0));
 
 #ifdef RECORD_SENSORS
@@ -124,10 +125,10 @@ int main(int argc, char *argv[])
     for(;; numTicks++) {
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
-        
+
         // Read from joystick
         joystick.update();
-        
+
         // Stop if 2nd button is pressed
         if(joystick.isDown(JButton::B)) {
             break;
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
 #endif
         // Step network
         stepTimeCPU();
-        
+
         // If we should be streaming activity
         if(streamActivity) {
             // Render network activity
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
         if(outbound) {
             // Use joystick to drive motor
             motor.drive(joystick, RobotParameters::joystickDeadzone);
-            
+
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
@@ -175,16 +176,16 @@ int main(int argc, char *argv[])
         else {
             driveMotorFromCPU1(motor, (numTicks % 100) == 0);
         }
-        
+
         // Record time at end of tick
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
-        
+
         // Calculate tick duration (in microseconds)
         const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
-        
+
         // Add to total
         totalMicroseconds += tickMicroseconds;
-        
+
         // If there is time left in tick, sleep for remainder
         if(tickMicroseconds < RobotParameters::targetTickMicroseconds) {
             std::this_thread::sleep_for(std::chrono::microseconds(RobotParameters::targetTickMicroseconds - tickMicroseconds));
@@ -193,19 +194,22 @@ int main(int argc, char *argv[])
         else {
             numOverflowTicks++;
         }
+
+        // Check for exceptions on server's thread
+        GlobalException::check();
     }
-    
+
     // Set quit flag and wait for child threads to complete
     shouldQuit = true;
     imuThread.join();
-    
+
     // Show stats
     std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
     std::cout << "IMU samples: " << numIMUSamples << ", ";
-    
+
     // Stop motor
     motor.tank(0.0f, 0.0f);
-    
+
     // Exit
     return EXIT_SUCCESS;
 }

@@ -11,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "common/global_exception.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
@@ -69,6 +70,9 @@ main(int argc, char **argv)
             if (!joystick.update() && !display.update()) {
                 std::this_thread::sleep_for(50ms);
             }
+
+            // Check for exceptions on background thread
+            GlobalException::check();
         } while (display.isOpen());
     } catch (std::exception &e) {
         std::cerr << "Uncaught exception: " << e.what() << std::endl;

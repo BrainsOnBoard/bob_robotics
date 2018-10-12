@@ -1,8 +1,12 @@
 #pragma once
 
+// BoB robotics includes
+#include "global_exception.h"
+
 // Standard C++ includes
 #include <atomic>
 #include <memory>
+#include <stdexcept>
 #include <thread>
 
 namespace BoBRobotics {
@@ -57,6 +61,15 @@ public:
 private:
     std::unique_ptr<std::thread> m_Thread;
     std::atomic<bool> m_DoRun{ false };
+
+    void runCatchExceptions()
+    {
+        try {
+            run();
+        } catch (...) {
+            GlobalException::set(std::current_exception());
+        }
+    }
 
 protected:
     void runStart()
