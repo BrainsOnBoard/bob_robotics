@@ -32,26 +32,23 @@ public:
     //! Run the process on a background thread
     virtual void runInBackground()
     {
-        m_Thread = std::thread([this] { run(); });
-        m_ThreadRunning = true;
+        m_Thread = std::make_unique<std::thread>([this] { run(); });
     }
 
     //! Stop the background thread
     virtual void stop()
     {
-        if (m_DoRun.exchange(false) && m_ThreadRunning) {
-            if (m_Thread.joinable()) {
-                m_Thread.join();
+        if (m_DoRun.exchange(false) && m_Thread) {
+            if (m_Thread->joinable()) {
+                m_Thread->join();
             } else {
-                m_Thread.detach();
+                m_Thread->detach();
             }
-            m_ThreadRunning = false;
         }
     }
 
 private:
-    std::thread m_Thread;
-    bool m_ThreadRunning = false;
+    std::unique_ptr<std::thread> m_Thread;
 
 protected:
     std::atomic<bool> m_DoRun{ true };
