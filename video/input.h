@@ -56,10 +56,8 @@ public:
     {
         // If reading (colour frame) was successful
         if(readFrame(m_IntermediateFrame)) {
-            // If output frame isn't correct size, create it
-            if(outFrame.size() != m_IntermediateFrame.size()) {
-                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
-            }
+            // Make sure frame is of right size and type
+            outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
 
             // Convert intermediate frame to greyscale
             cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
