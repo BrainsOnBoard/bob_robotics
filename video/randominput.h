@@ -34,17 +34,17 @@ public:
         return true;
     }
 
-    virtual std::string getCameraName() const
+    virtual std::string getCameraName() const override
     {
         return m_CameraName;
     }
 
-    virtual cv::Size getOutputSize() const
+    virtual cv::Size getOutputSize() const override
     {
         return m_Size;
     }
 
-    virtual void setOutputSize(const cv::Size &size)
+    virtual void setOutputSize(const cv::Size &size) override
     {
         m_Size = size;
     }
