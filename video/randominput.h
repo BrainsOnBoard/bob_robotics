@@ -14,8 +14,9 @@ namespace Video {
 //! A Video::Input which generates white noise, for testing purposes
 class RandomInput : public Input {
 public:
-    RandomInput(const cv::Size &size)
+    RandomInput(const cv::Size &size, const std::string &cameraName = "random")
       : m_Size(size)
+      , m_CameraName(cameraName)
       , m_Generator(m_RandomDevice())
     {}
 
@@ -35,7 +36,7 @@ public:
 
     virtual const std::string getCameraName() const
     {
-        return "random";
+        return m_CameraName;
     }
 
     virtual cv::Size getOutputSize() const
@@ -50,6 +51,7 @@ public:
 
 private:
     cv::Size m_Size;
+    std::string m_CameraName;
     std::random_device m_RandomDevice;
     std::mt19937 m_Generator;
     std::uniform_int_distribution<uchar> m_Distribution;
