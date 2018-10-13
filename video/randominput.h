@@ -34,7 +34,7 @@ public:
         return true;
     }
 
-    virtual const std::string getCameraName() const
+    virtual std::string getCameraName() const
     {
         return m_CameraName;
     }

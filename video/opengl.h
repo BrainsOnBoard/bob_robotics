@@ -20,10 +20,10 @@ class OpenGL : public Input
 public:
     /*!
      * \brief Create a Video::Input for reading from an OpenGL window
-     * 
+     *
      * @param readX, readY The starting coordinates to read from (from bottom left of screen)
      * @param readWidth, readHeight Size of image
-     * 
+     *
      * **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
      * from bottom left of screen which would require window size etc. to convert
      */
@@ -34,7 +34,7 @@ public:
     //----------------------------------------------------------------------------
     // Input virtuals
     //----------------------------------------------------------------------------
-    virtual const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return "opengl";
     }
@@ -55,7 +55,7 @@ public:
         // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
         glReadPixels(m_ReadX, m_ReadY, m_ReadWidth, m_ReadHeight,
                      GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
-        
+
         // Flip image vertically
         cv::flip(outFrame, outFrame, 0);
 

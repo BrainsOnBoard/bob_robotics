@@ -28,7 +28,7 @@ public:
 
     /*!
      * \brief Create a video stream for a specific device
-     * 
+     *
      * @param device Integer or string representation of device (passed to
      *        cv::VideoCapture's constructor)
      * @param cameraName The short name to use for this camera (see getCameraName())
@@ -40,7 +40,7 @@ public:
 
     /*!
      * \brief Create a video stream for a specific device and a specified resolution
-     * 
+     *
      * @param device Integer or string representation of device (passed to
      *        cv::VideoCapture's constructor)
      * @param outSize Output resolution of camera
@@ -57,7 +57,7 @@ public:
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
-    virtual const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return m_CameraName;
     }
@@ -77,7 +77,7 @@ public:
             throw std::runtime_error("Could not read frame");
         }
 
-        // If there's no error, then we have updated frame and so return true        
+        // If there's no error, then we have updated frame and so return true
         return true;
     }
 
