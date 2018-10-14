@@ -31,7 +31,7 @@ class NetSink
 public:
     /*!
      * \brief Create a NetSink for asynchronous operation
-     *
+     * 
      * @param node The connection over which to transmit images
      * @param input The Input source for images
      */
@@ -61,7 +61,7 @@ public:
 
     /*!
      * \brief Create a NetSink for synchronous operation
-     *
+     * 
      * @param node The connection over which to transmit images
      * @param frameSize The size of the frames output by the video source
      * @param cameraName The name of the camera (see Input::getCameraName())
@@ -101,10 +101,8 @@ private:
     void sendFrameInternal(const cv::Mat &frame)
     {
         cv::imencode(".jpg", frame, m_Buffer);
-
-        Net::Socket &sock = m_Node.getSocket();
-        sock.send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
-        sock.send(m_Buffer.data(), m_Buffer.size());
+        m_Node.getSocket()->send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
+        m_Node.getSocket()->send(m_Buffer.data(), m_Buffer.size());
     }
 
     void onCommandReceived(const Net::Command &command)
@@ -114,9 +112,9 @@ private:
         }
 
         // ACK the command and tell client the camera resolution
-        m_Node.getSocket().send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
-                                std::to_string(m_FrameSize.height) + " " +
-                                m_Name + "\n");
+        m_Node.getSocket()->send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
+                                 std::to_string(m_FrameSize.height) + " " +
+                                 m_Name + "\n");
     }
 
     void onCommandReceivedAsync(const Net::Command &command)

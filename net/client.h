@@ -56,9 +56,9 @@ public:
     }
 
     //! Used to get current socket, which for the Client object is always itself
-    virtual Socket &getSocket() override
+    Socket *getSocket() const override
     {
-        return *this;
+        return (Socket *) this;
     }
 }; // Client
 } // Net

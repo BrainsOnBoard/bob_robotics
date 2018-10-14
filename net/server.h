@@ -60,9 +60,9 @@ public:
     }
 
     //! Get the socket associated with the current connection
-    virtual Socket &getSocket() override
+    Socket *getSocket() const override
     {
-        return *m_Socket;
+        return m_Socket.get();
     }
 
 protected:
