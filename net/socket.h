@@ -35,7 +35,7 @@ class SocketError : public std::runtime_error
 {
 public:
     SocketError(std::string msg)
-      : std::runtime_error("Socket error: " + msg)
+      : std::runtime_error(msg + " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")")
     {}
 };
 
@@ -77,8 +77,7 @@ public:
     Socket(bool print = PrintDebug)
       : m_Buffer(DefaultBufferSize)
       , m_Print(print)
-    {
-    }
+    {}
 
     //! Initialise class with specified socket
     Socket(socket_t sock, bool print = PrintDebug)
@@ -106,9 +105,8 @@ public:
     {
         std::string line = readLine();
         std::istringstream iss(line);
-        Command results(
-                std::istream_iterator<std::string>{ iss },
-                std::istream_iterator<std::string>());
+        Command results(std::istream_iterator<std::string>{ iss },
+                        std::istream_iterator<std::string>());
         return results;
     }
 
@@ -181,7 +179,7 @@ public:
 
         int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
         if (ret == -1) {
-            throw SocketError("Could not send " + errorMessage());
+            throw SocketError("Could not send");
         }
     }
 
@@ -230,7 +228,7 @@ private:
     void checkSocket()
     {
         if (m_Socket == INVALID_SOCKET) {
-            throw SocketError("Bad socket " + errorMessage());
+            throw SocketError("Bad socket");
         }
     }
 
@@ -241,18 +239,10 @@ private:
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
-            throw SocketError("Could not read from socket " + errorMessage());
+            throw SocketError("Could not read from socket");
         }
 
         return static_cast<size_t>(len);
-    }
-
-    /*
-     * Get the last error message.
-     */
-    static std::string errorMessage()
-    {
-        return " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")";
     }
 }; // Socket
 } // Net
