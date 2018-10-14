@@ -50,6 +50,15 @@ public:
         m_Size = size;
     }
 
+    virtual bool needsUnwrapping() const override
+    {
+        /*
+         * If the user sets the camera name to something else, it's probably
+         * because they want to simulate a panoramic camera.
+         */
+        return m_CameraName != "random";
+    }
+
 private:
     cv::Size m_Size;
     std::string m_CameraName;
