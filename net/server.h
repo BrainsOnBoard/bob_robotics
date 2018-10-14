@@ -64,16 +64,6 @@ public:
         exit(1);
     }
 
-    //! Stop listening and stop background thread
-    virtual ~Server()
-    {
-        stop();
-
-        if (m_ListenSocket != INVALID_SOCKET) {
-            close(m_ListenSocket);
-        }
-    }
-
     //! Get the socket associated with the current connection
     Socket *getSocket() const override
     {

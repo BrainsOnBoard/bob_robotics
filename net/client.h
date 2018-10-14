@@ -19,7 +19,7 @@ namespace Net {
 //----------------------------------------------------------------------------
 /*!
  * \brief General-purpose TCP client
- * 
+ *
  * To be used with corresponding Server object. Various sink/source-type
  * objects are used for either sending or receiving data from the server.
  */
@@ -53,11 +53,6 @@ public:
         std::cout << "Opened socket" << std::endl;
 
         notifyConnectedHandlers();
-    }
-
-    ~Client()
-    {
-        stop(); // stop thread if needed
     }
 
     //! Used to get current socket, which for the Client object is always itself

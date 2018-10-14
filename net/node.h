@@ -31,6 +31,9 @@ using ConnectedHandler = std::function<void(Node &)>;
 class Node : public Threadable
 {
 public:
+    virtual ~Node()
+    {}
+
     //! Gets the socket currently associated with this connection
     virtual Socket *getSocket() const = 0;
 
