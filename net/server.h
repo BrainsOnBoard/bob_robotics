@@ -1,20 +1,19 @@
 #pragma once
 
-// C++ includes
-#include <memory>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../robots/tank.h"
+#include "../video/input.h"
+#include "node.h"
+#include "socket.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "../robots/tank.h"
-#include "../video/input.h"
-
-// local includes
-#include "node.h"
-#include "socket.h"
+// Standard C++ includes
+#include <memory>
+#include <exception>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Net {
@@ -33,35 +32,31 @@ public:
     //! Create a new server, listening on the specified port
     Server(int port = Socket::DefaultListenPort)
     {
-        struct sockaddr_in addr;
-        int on = 1;
+        try {
+            m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (m_ListenSocket == INVALID_SOCKET) {
+                throw std::exception();
+            }
 
-        m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (m_ListenSocket == INVALID_SOCKET) {
-            goto error;
+    #ifndef _WIN32
+            int on = 1;
+            if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+                throw std::exception();
+            }
+    #endif
+
+            struct sockaddr_in addr;
+            memset(&addr, 0, sizeof(addr));
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = htonl(INADDR_ANY);
+            addr.sin_port = htons(port);
+
+            if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
+                throw std::exception();
+            }
+        } catch (...) {
+            throw SocketError("Could not bind to port");
         }
-
-#ifndef _WIN32
-        if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-            goto error;
-        }
-#endif
-
-        memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        addr.sin_port = htons(port);
-
-        if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
-            goto error;
-        }
-
-        return;
-
-    error:
-        std::cerr << "Error (" << errno << "): Could not bind to port " << port
-                  << std::endl;
-        exit(1);
     }
 
     //! Get the socket associated with the current connection
