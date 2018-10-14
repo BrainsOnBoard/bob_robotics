@@ -26,7 +26,7 @@ public:
 
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
-     * 
+     *
      * @param args The resolution of the unwrapped image
      */
     ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
@@ -38,28 +38,26 @@ public:
 
     /*!
      * \brief Get the name of this type of camera as a (short) string
-     * 
+     *
      * Note that this is used to load the appropriate unwrapping parameters
      * (we look for a file called [camera name].yaml).
      */
-    virtual const std::string getCameraName() const
+    virtual std::string getCameraName() const
     {
         return DefaultCameraName;
     }
 
     /*!
      * \brief Try to read a frame in greyscale from this video source
-     * 
+     *
      * @return Whether a new frame was read
      */
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
     {
         // If reading (colour frame) was successful
         if(readFrame(m_IntermediateFrame)) {
-            // If output frame isn't correct size, create it
-            if(outFrame.size() != m_IntermediateFrame.size()) {
-                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
-            }
+            // Make sure frame is of right size and type
+            outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
 
             // Convert intermediate frame to greyscale
             cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
@@ -88,7 +86,7 @@ public:
 
     /*!
      * \brief Try to read a frame in colour from this video source
-     * 
+     *
      * @return Whether a new frame was read
      */
     virtual bool readFrame(cv::Mat &outFrame) = 0;

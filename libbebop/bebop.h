@@ -118,6 +118,7 @@ public:
         ~VideoStream();
         virtual bool readFrame(cv::Mat &) override;
         virtual cv::Size getOutputSize() const override;
+        virtual std::string getCameraName() const;
 
     private:
         cv::Mat m_Frame;

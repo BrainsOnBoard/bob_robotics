@@ -26,7 +26,7 @@ class NetSource : public Input
 public:
     /*!
      * \brief Create an object to read video transmitted over the network
-     * 
+     *
      * @param node The network connection from which to read images
      */
     NetSource(Net::Node &node)
@@ -42,23 +42,23 @@ public:
         });
     }
 
-    const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return m_CameraName;
     }
 
-    cv::Size getOutputSize() const override
+    virtual cv::Size getOutputSize() const override
     {
         return m_CameraResolution;
     }
 
-    bool needsUnwrapping() const override
+    virtual bool needsUnwrapping() const override
     {
         m_ParamsPromise.get_future().wait();
         return Input::needsUnwrapping();
     }
 
-    bool readFrame(cv::Mat &frame) override
+    virtual bool readFrame(cv::Mat &frame) override
     {
         std::lock_guard<std::mutex> guard(m_FrameMutex);
 

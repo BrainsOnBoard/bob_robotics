@@ -94,7 +94,7 @@ public:
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
-    virtual const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return "see3cam";
     }
@@ -105,7 +105,7 @@ public:
         if (outFrame.cols == 0) {
             outFrame.create(getSuperPixelSize(), CV_8UC3);
         }
-        
+
         // Try to read from camera and throw error if it fails
         if (!captureSuperPixelWBU30(outFrame)) {
             throw std::runtime_error("Could not read from See3Cam");
