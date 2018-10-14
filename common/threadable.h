@@ -46,7 +46,7 @@ public:
     //! Run the process on a background thread
     virtual void runInBackground()
     {
-        m_Thread = std::make_unique<std::thread>([this] { run(); });
+        m_Thread = std::make_unique<std::thread>([this] { runCatchExceptions(); });
     }
 
     //! Stop the background thread
