@@ -35,7 +35,7 @@ public:
     {}
 
     //! Gets the socket currently associated with this connection
-    virtual Socket *getSocket() const = 0;
+    virtual Socket &getSocket() = 0;
 
     /*!
      * \brief Add a handler for a specified type of command
@@ -99,8 +99,7 @@ protected:
     virtual void runInternal() override
     {
         while (isRunning()) {
-            Socket *sock = getSocket();
-            auto command = sock->readCommand();
+            auto command = getSocket().readCommand();
             if (!parseCommand(command)) {
                 break;
             }
