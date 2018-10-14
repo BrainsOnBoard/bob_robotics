@@ -93,12 +93,7 @@ protected:
         }
     }
 
-private:
-    std::map<std::string, CommandHandler> m_CommandHandlers;
-    std::vector<ConnectedHandler> m_ConnectedHandlers;
-
-protected:
-    virtual void run() override
+    virtual void runInternal() override
     {
         while (isRunning()) {
             Socket *sock = getSocket();
@@ -108,6 +103,10 @@ protected:
             }
         }
     }
+
+private:
+    std::map<std::string, CommandHandler> m_CommandHandlers;
+    std::vector<ConnectedHandler> m_ConnectedHandlers;
 
 }; // Node
 } // Net
