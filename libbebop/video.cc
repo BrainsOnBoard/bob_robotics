@@ -281,6 +281,12 @@ Bebop::VideoStream::getOutputSize() const
     return cv::Size(856, 480);
 }
 
+std::string
+Bebop::VideoStream::getCameraName() const
+{
+    return "bebop";
+}
+
 bool
 Bebop::VideoStream::readFrame(cv::Mat &frame)
 {

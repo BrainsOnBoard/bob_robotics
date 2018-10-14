@@ -41,25 +41,25 @@ public:
         });
     }
 
-    const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         m_ParamsSemaphore.waitOnce();
         return m_CameraName;
     }
 
-    cv::Size getOutputSize() const override
+    virtual cv::Size getOutputSize() const override
     {
         m_ParamsSemaphore.waitOnce();
         return m_CameraResolution;
     }
 
-    bool needsUnwrapping() const override
+    virtual bool needsUnwrapping() const override
     {
         m_ParamsSemaphore.waitOnce();
         return Input::needsUnwrapping();
     }
 
-    bool readFrame(cv::Mat &frame) override
+    virtual bool readFrame(cv::Mat &frame) override
     {
         if (!m_NewFrame.exchange(false)) {
             // The return value indicates whether there is a new frame or not
