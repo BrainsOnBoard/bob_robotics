@@ -16,7 +16,7 @@ class TankNetSink : public Tank
 {
 public:
     TankNetSink(Net::Node &node)
-      : m_Node(&node)
+      : m_Node(node)
     {}
 
     /* Motor command: send TNK command over TCP */
@@ -31,8 +31,8 @@ public:
         }
 
         // send steering command
-        m_Node->getSocket()->send("TNK " + std::to_string(left) + " " +
-                                  std::to_string(right) + "\n");
+        m_Node.getSocket()->send("TNK " + std::to_string(left) + " " +
+                                 std::to_string(right) + "\n");
 
         // store current left/right values to compare next time
         m_OldLeft = left;
@@ -40,7 +40,7 @@ public:
     }
 
 private:
-    Net::Node *m_Node;
+    Net::Node &m_Node;
     float m_OldLeft = 0, m_OldRight = 0;
 };
 }
