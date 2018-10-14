@@ -90,12 +90,8 @@ protected:
             inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
             std::cout << "Incoming connection from " << saddr << std::endl;
 
-            try {
-                Node::runInternal();
-            } catch (SocketError &e) {
-                std::cout << "Connection closed [" + std::string(e.what()) + "]"
-                          << std::endl;
-            }
+            // read incoming commands in a loop
+            Node::runInternal();
         }
     }
 
