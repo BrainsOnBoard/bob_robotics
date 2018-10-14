@@ -91,7 +91,7 @@ protected:
             std::cout << "Incoming connection from " << saddr << std::endl;
 
             try {
-                Node::run();
+                Node::runInternal();
             } catch (SocketError &e) {
                 std::cout << "Connection closed [" + std::string(e.what()) + "]"
                           << std::endl;
