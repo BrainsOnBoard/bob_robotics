@@ -152,9 +152,13 @@ public:
     bool tryReadLine(std::string &outstring)
     {
         checkSocket();
-        m_BufferBytes += readOnce(m_Buffer.data(),
-                                  m_BufferStart,
-                                  DefaultBufferSize - m_BufferStart);
+        size_t newBytes = readOnce(m_Buffer.data(),
+                                   m_BufferStart,
+                                   DefaultBufferSize - m_BufferStart);
+        if (newBytes == 0) {
+            return false;
+        }
+        m_BufferBytes += newBytes;
 
         // look for newline char
         for (size_t i = 0; i < m_BufferBytes; i++) {
