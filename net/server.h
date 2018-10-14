@@ -75,7 +75,7 @@ protected:
     {
         // Start listening
         if (listen(m_ListenSocket, 10)) {
-            throw std::runtime_error("Error (" + std::to_string(errno) + "): Could not listen");
+            throw SocketError("Error while listening for connection");
         }
 
         // for incoming connection

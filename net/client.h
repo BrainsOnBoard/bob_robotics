@@ -52,13 +52,12 @@ public:
         if (ret < 0) {
             int err = errno;
             if (err != EINPROGRESS) {
-                throw std::runtime_error("Cannot connect socket to " + host + ":" +
-                                        std::to_string(port) + " (" + std::to_string(err) + ": " + strerror(err) + ")");
+                throw SocketError("Cannot connect socket to " + host + ":" +
+                                  std::to_string(port));
             }
         }
 
         std::cout << "Opened socket" << std::endl;
-
         notifyConnectedHandlers();
     }
 
