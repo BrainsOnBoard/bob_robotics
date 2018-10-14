@@ -50,8 +50,7 @@ public:
 
     virtual ~NetSink()
     {
-        if (m_Thread) {
-            m_DoRun = false;
+        if (m_DoRun.exchange(false) && m_Thread) {
             if (m_Thread->joinable()) {
                 m_Thread->join();
             } else {
