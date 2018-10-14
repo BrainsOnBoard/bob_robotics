@@ -53,10 +53,8 @@ public:
     virtual void stop()
     {
         m_DoRun = false;
-        if (m_Thread) {
-            if (m_Thread->joinable()) {
-                m_Thread->join();
-            }
+        if (m_Thread && m_Thread->joinable()) {
+            m_Thread->join();
         }
     }
 
