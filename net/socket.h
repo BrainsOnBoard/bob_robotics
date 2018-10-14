@@ -34,17 +34,17 @@ using Command = std::vector<std::string>;
 class SocketError : public std::runtime_error
 {
 public:
-    SocketError(std::string msg)
+    SocketError(const std::string &msg)
       : std::runtime_error(msg + " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")")
     {}
 };
 
 //! An exception thrown if a command received over the network is badly formed
-class BadCommandError : public SocketError
+class BadCommandError : public std::runtime_error
 {
 public:
     BadCommandError()
-      : SocketError("Bad command received")
+      : std::runtime_error("Bad command received")
     {}
 };
 
@@ -89,8 +89,14 @@ public:
     //! Close the socket
     virtual ~Socket()
     {
+        close();
+    }
+
+    void close()
+    {
         if (m_Socket != INVALID_SOCKET) {
-            close(m_Socket);
+            ::close(m_Socket);
+            m_Socket = INVALID_SOCKET;
         }
     }
 
@@ -179,6 +185,7 @@ public:
 
         int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
         if (ret == -1) {
+            close();
             throw SocketError("Could not send");
         }
     }
@@ -239,6 +246,7 @@ private:
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
+            close();
             throw SocketError("Could not read from socket");
         }
 
