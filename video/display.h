@@ -79,17 +79,6 @@ public:
         return m_Open;
     }
 
-    //! Run the display on the current thread
-    void run() override
-    {
-        while (isRunning()) {
-            // check for a new frame
-            if (!update()) {
-                std::this_thread::sleep_for(25ms);
-            }
-        }
-    }
-
     /*!
      * \brief Try to read a new frame from the video source and display it
      *
@@ -156,6 +145,16 @@ protected:
             frame = m_Frame;
         }
         return true;
+    }
+
+    virtual void runInternal() override
+    {
+        while (isRunning()) {
+            // check for a new frame
+            if (!update()) {
+                std::this_thread::sleep_for(25ms);
+            }
+        }
     }
 }; // Display
 } // Video

@@ -27,7 +27,11 @@ public:
     }
 
     //! Run on the current thread, blocking until process ends
-    virtual void run() = 0;
+    virtual void run()
+    {
+        m_DoRun = true;
+        runInternal();
+    }
 
     //! Check if the run() function has been called
     virtual bool isRunning()
@@ -59,9 +63,6 @@ private:
     std::atomic<bool> m_DoRun{ false };
 
 protected:
-    void runStart()
-    {
-        m_DoRun = true;
-    }
+    virtual void runInternal() = 0;
 };
 }

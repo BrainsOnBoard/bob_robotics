@@ -53,19 +53,6 @@ public:
         }
     }
 
-    //! Repeatedly read and parse commands from the socket until stopped
-    void run() override
-    {
-        runStart();
-        while (isRunning()) {
-            Socket *sock = getSocket();
-            auto command = sock->readCommand();
-            if (!parseCommand(command)) {
-                break;
-            }
-        }
-    }
-
     //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
@@ -109,6 +96,18 @@ protected:
 private:
     std::map<std::string, CommandHandler> m_CommandHandlers;
     std::vector<ConnectedHandler> m_ConnectedHandlers;
+
+protected:
+    virtual void run() override
+    {
+        while (isRunning()) {
+            Socket *sock = getSocket();
+            auto command = sock->readCommand();
+            if (!parseCommand(command)) {
+                break;
+            }
+        }
+    }
 
 }; // Node
 } // Net

@@ -67,20 +67,6 @@ class JoystickBase : public Threadable
 
 public:
     //------------------------------------------------------------------------
-    // Threadable virtuals
-    //------------------------------------------------------------------------
-    //! Block and keep updating the joystick on the current thread
-    virtual void run() override
-    {
-        runStart();
-        while (isRunning()) {
-            if (!update()) {
-                std::this_thread::sleep_for(50ms);
-            }
-        }
-    }
-
-    //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     /*!
@@ -221,6 +207,18 @@ protected:
     // Declared virtuals
     //------------------------------------------------------------------------
     virtual bool updateState() = 0;
+
+    //------------------------------------------------------------------------
+    // Threadable virtuals
+    //------------------------------------------------------------------------
+    virtual void runInternal() override
+    {
+        while (isRunning()) {
+            if (!update()) {
+                std::this_thread::sleep_for(50ms);
+            }
+        }
+    }
 
     //------------------------------------------------------------------------
     // Protected methods
