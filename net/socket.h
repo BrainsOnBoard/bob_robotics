@@ -14,7 +14,6 @@
 #include <chrono>
 #include <iostream>
 #include <iterator>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -129,7 +128,6 @@ public:
     //! Read a specified number of bytes into a buffer
     void read(void *buffer, size_t len)
     {
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
 
         // initially, copy over any leftover bytes in m_Buffer
@@ -154,8 +152,6 @@ public:
     bool tryReadLine(std::string &outstring)
     {
         checkSocket();
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
-
         m_BufferBytes += readOnce(m_Buffer.data(),
                                   m_BufferStart,
                                   DefaultBufferSize - m_BufferStart);
@@ -190,7 +186,6 @@ public:
     //! Send a buffer of specified length through the socket
     void send(const void *buffer, size_t len)
     {
-        std::lock_guard<std::mutex> guard(m_SendMutex);
         checkSocket();
 
         int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
@@ -213,8 +208,6 @@ public:
     //! Set the current socket handle for this connection
     void setSocket(socket_t sock)
     {
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
-
         m_Socket = sock;
         checkSocket();
     }
@@ -223,7 +216,6 @@ private:
     std::vector<char> m_Buffer;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
-    std::mutex m_ReadMutex, m_SendMutex;
     std::ostringstream m_ReadLineOutput;
     bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;

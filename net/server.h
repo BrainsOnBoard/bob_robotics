@@ -61,7 +61,7 @@ public:
 
     virtual ~Server() override
     {
-        tryToSayBye();
+        disconnect();
     }
 
     //! Get the socket associated with the current connection

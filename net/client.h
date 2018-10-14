@@ -64,7 +64,7 @@ public:
 
     virtual ~Client() override
     {
-        tryToSayBye();
+        disconnect();
     }
 
     //! Used to get current socket, which for the Client object is always itself

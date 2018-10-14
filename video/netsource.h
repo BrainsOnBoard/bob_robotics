@@ -37,6 +37,7 @@ public:
 
         // when connected, send command to start streaming
         node.addConnectedHandler([](Net::Node &node) {
+            std::lock_guard<Net::Node> guard(node);
             node.getSocket()->send("IMG START\n");
         });
     }
@@ -92,7 +93,10 @@ private:
         } else if (command[1] == "FRAME") {
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
-            node.getSocket()->read(m_Buffer.data(), nbytes);
+            {
+                std::lock_guard<Net::Node> guard(node);
+                node.getSocket()->read(m_Buffer.data(), nbytes);
+            }
             {
                 std::lock_guard<std::mutex> guard(m_FrameMutex);
                 cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);

@@ -5,6 +5,7 @@
 #include <chrono>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -36,8 +37,7 @@ class Node : public Threadable
 {
 public:
     virtual ~Node()
-    {
-    }
+    {}
 
     //! Gets the socket currently associated with this connection
     virtual Socket *getSocket() = 0;
@@ -64,8 +64,11 @@ public:
     //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
+    void lock() { m_Mutex.lock(); }
+    void unlock() { m_Mutex.unlock(); }
+
 protected:
-    std::atomic<bool> m_IsConnected{false};
+    std::atomic<bool> m_IsConnected{ false };
 
     void notifyConnectedHandlers()
     {
@@ -75,7 +78,41 @@ protected:
         }
     }
 
-    virtual bool parseCommand(Command &command)
+    virtual void runInternal() override
+    {
+        Command command;
+        bool updated;
+        while (isRunning()) {
+            {
+                std::lock_guard<Node> guard(*this);
+                updated = getSocket()->tryReadCommand(command);
+            }
+            if(updated) {
+                if (!parseCommand(command)) {
+                    break;
+                }
+            } else {
+                std::this_thread::sleep_for(25ms);
+            }
+        }
+    }
+
+    void disconnect()
+    {
+        std::lock_guard<Node> guard(*this);
+        Socket *sock = getSocket();
+        if (sock && sock->isValid()) {
+            sock->send("BYE\n");
+            sock->close();
+        }
+    }
+
+private:
+    std::map<std::string, CommandHandler> m_CommandHandlers;
+    std::mutex m_Mutex;
+    std::vector<ConnectedHandler> m_ConnectedHandlers;
+
+    bool parseCommand(Command &command)
     {
         if (command[0] == "BYE") {
             return false;
@@ -85,9 +122,9 @@ protected:
         }
         if (tryRunHandler(command)) {
             return true;
-        } else {
-            throw BadCommandError();
         }
+
+        throw BadCommandError();
     }
 
     bool tryRunHandler(Command &command)
@@ -100,32 +137,6 @@ protected:
             return false;
         }
     }
-
-    virtual void runInternal() override
-    {
-        Command command;
-        while (isRunning()) {
-            if(getSocket()->tryReadCommand(command)) {
-                if (!parseCommand(command)) {
-                    break;
-                }
-            } else {
-                std::this_thread::sleep_for(25ms);
-            }
-        }
-    }
-
-    void tryToSayBye()
-    {
-        Socket *sock = getSocket();
-        if (sock && sock->isValid()) {
-            sock->send("BYE\n");
-        }
-    }
-
-private:
-    std::map<std::string, CommandHandler> m_CommandHandlers;
-    std::vector<ConnectedHandler> m_ConnectedHandlers;
 
 }; // Node
 } // Net
