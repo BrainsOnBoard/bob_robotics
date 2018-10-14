@@ -111,7 +111,6 @@ private:
         }
 
         // ACK the command and tell client the camera resolution
-        std::lock_guard<Net::Node> guard(m_Node);
         m_Node.getSocket()->send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
                                  std::to_string(m_FrameSize.height) + " " +
                                  m_Name + "\n");

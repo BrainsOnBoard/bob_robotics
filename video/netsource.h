@@ -93,15 +93,11 @@ private:
         } else if (command[1] == "FRAME") {
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
-            {
-                std::lock_guard<Net::Node> guard(node);
-                node.getSocket()->read(m_Buffer.data(), nbytes);
-            }
-            {
-                std::lock_guard<std::mutex> guard(m_FrameMutex);
-                cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
-                m_NewFrame = true;
-            }
+            node.getSocket()->read(m_Buffer.data(), nbytes);
+
+            std::lock_guard<std::mutex> guard(m_FrameMutex);
+            cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
+            m_NewFrame = true;
         } else {
             throw Net::BadCommandError();
         }

@@ -86,12 +86,11 @@ protected:
             {
                 std::lock_guard<Node> guard(*this);
                 updated = getSocket()->tryReadCommand(command);
-            }
-            if(updated) {
-                if (!parseCommand(command)) {
+                if (updated && !parseCommand(command)) {
                     break;
                 }
-            } else {
+            }
+            if (!updated) {
                 std::this_thread::sleep_for(25ms);
             }
         }
