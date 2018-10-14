@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
+#include <algorithm>
 #include <random>
 
 namespace BoBRobotics {
@@ -58,9 +59,7 @@ private:
 
     void fillRandom(uchar *start, uchar *end)
     {
-        for (uchar *p = start; p < end; p++) {
-            *p = m_Distribution(m_Generator);
-        }
+        std::generate(start, end, [this](){ return m_Distribution(m_Generator); });
     }
 };
 } // Video
