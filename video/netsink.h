@@ -31,7 +31,7 @@ class NetSink
 public:
     /*!
      * \brief Create a NetSink for asynchronous operation
-     * 
+     *
      * @param node The connection over which to transmit images
      * @param input The Input source for images
      */
@@ -50,18 +50,14 @@ public:
 
     virtual ~NetSink()
     {
-        if (m_DoRun.exchange(false) && m_Thread) {
-            if (m_Thread->joinable()) {
-                m_Thread->join();
-            } else {
-                m_Thread->detach();
-            }
+        if (m_DoRun.exchange(false) && m_Thread && m_Thread->joinable()) {
+            m_Thread->join();
         }
     }
 
     /*!
      * \brief Create a NetSink for synchronous operation
-     * 
+     *
      * @param node The connection over which to transmit images
      * @param frameSize The size of the frames output by the video source
      * @param cameraName The name of the camera (see Input::getCameraName())
