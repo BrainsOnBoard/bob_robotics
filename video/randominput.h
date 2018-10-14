@@ -16,10 +16,11 @@ namespace Video {
 template<typename GeneratorType = std::mt19937>
 class RandomInput : public Input {
 public:
-    RandomInput(const cv::Size &size, const std::string &cameraName = "random")
+    RandomInput(const cv::Size &size, const std::string &cameraName = "random",
+                const typename GeneratorType::result_type seed = getRandomSeed())
       : m_Size(size)
       , m_CameraName(cameraName)
-      , m_Generator(m_RandomDevice())
+      , m_Generator(seed)
     {}
 
     virtual bool readFrame(cv::Mat &outFrame) override
@@ -63,13 +64,18 @@ public:
 private:
     cv::Size m_Size;
     std::string m_CameraName;
-    std::random_device m_RandomDevice;
     GeneratorType m_Generator;
     std::uniform_int_distribution<uchar> m_Distribution;
 
     void fillRandom(uchar *start, uchar *end)
     {
         std::generate(start, end, [this](){ return m_Distribution(m_Generator); });
+    }
+
+    static auto getRandomSeed()
+    {
+        std::random_device rd;
+        return rd();
     }
 };
 } // Video
