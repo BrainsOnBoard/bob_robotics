@@ -105,12 +105,12 @@ protected:
     {
         Command command;
         while (isRunning()) {
-            Socket *sock = getSocket();
-            if(!sock->tryReadCommand(command)) {
+            if(getSocket()->tryReadCommand(command)) {
+                if (!parseCommand(command)) {
+                    break;
+                }
+            } else {
                 std::this_thread::sleep_for(25ms);
-            }
-            if (!parseCommand(command)) {
-                break;
             }
         }
     }
