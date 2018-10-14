@@ -36,7 +36,7 @@ public:
 
     /*!
      * \brief Add a handler for a specified type of command
-     * 
+     *
      * e.g. if it's an IMG command, it should be handled by Video::NetSource.
      */
     void addCommandHandler(const std::string commandName, const CommandHandler handler)
@@ -53,18 +53,6 @@ public:
         }
     }
 
-    //! Repeatedly read and parse commands from the socket until stopped
-    void run() override
-    {
-        while (m_DoRun) {
-            Socket *sock = getSocket();
-            auto command = sock->readCommand();
-            if (!parseCommand(command)) {
-                break;
-            }
-        }
-    }
-    
     //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
@@ -102,6 +90,17 @@ protected:
             return true;
         } catch (std::out_of_range &) {
             return false;
+        }
+    }
+
+    virtual void runInternal() override
+    {
+        while (isRunning()) {
+            Socket *sock = getSocket();
+            auto command = sock->readCommand();
+            if (!parseCommand(command)) {
+                break;
+            }
         }
     }
 

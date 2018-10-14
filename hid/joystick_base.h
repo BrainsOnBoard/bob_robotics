@@ -67,19 +67,6 @@ class JoystickBase : public Threadable
 
 public:
     //------------------------------------------------------------------------
-    // Threadable virtuals
-    //------------------------------------------------------------------------
-    //! Block and keep updating the joystick on the current thread
-    virtual void run() override
-    {
-        while (m_DoRun) {
-            while (!update()) {
-                std::this_thread::sleep_for(50ms);
-            }
-        }
-    }
-
-    //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     /*!
@@ -158,7 +145,7 @@ public:
     }
 
     //! Get the name of a specified joystick axis
-    static constexpr std::string getName(JAxis axis)
+    static std::string getName(JAxis axis)
     {
         switch (axis) {
         case JAxis::LeftStickHorizontal:
@@ -183,7 +170,7 @@ public:
     }
 
     //! Get the name of a specified joystick button
-    static constexpr std::string getName(JButton button)
+    static std::string getName(JButton button)
     {
         switch (button) {
         case JButton::A:
@@ -220,6 +207,18 @@ protected:
     // Declared virtuals
     //------------------------------------------------------------------------
     virtual bool updateState() = 0;
+
+    //------------------------------------------------------------------------
+    // Threadable virtuals
+    //------------------------------------------------------------------------
+    virtual void runInternal() override
+    {
+        while (isRunning()) {
+            if (!update()) {
+                std::this_thread::sleep_for(50ms);
+            }
+        }
+    }
 
     //------------------------------------------------------------------------
     // Protected methods

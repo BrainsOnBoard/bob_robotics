@@ -7,11 +7,6 @@
 // Windows headers
 #include "os/windows_include.h"
 
-// C++ includes
-#include <chrono>
-#include <iostream>
-#include <thread>
-
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
@@ -23,29 +18,35 @@
 #include "video/display.h"
 #include "video/netsource.h"
 
+// Standard C++ includes
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <thread>
+
 using namespace BoBRobotics;
 using namespace std::literals;
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
-    std::string robotIP;
-    if (argc == 2) {
-        // get robot IP from commandline argument
-        robotIP = argv[1];
-    } else {
-        // get robot IP from terminal
-        std::cout << "Robot IP [127.0.0.1]: ";
-        std::getline(std::cin, robotIP);
-        if (robotIP.empty()) {
-            robotIP = "127.0.0.1";
+    try {
+        std::string robotIP;
+        if (argc == 2) {
+            // get robot IP from commandline argument
+            robotIP = argv[1];
+        } else {
+            // get robot IP from terminal
+            std::cout << "Robot IP [127.0.0.1]: ";
+            std::getline(std::cin, robotIP);
+            if (robotIP.empty()) {
+                robotIP = "127.0.0.1";
+            }
         }
-    }
 
-    // start networking API on Windows
-    WSAStartup();
+        // Enable networking on Windows
+        OS::Net::WindowsNetworking net;
 
-    // use a separate scope so that socket is closed before WSACleanup is called
-    {
         // make connection to robot on default port
         Net::Client client(robotIP);
         client.runInBackground();
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
         motor.addJoystick(joystick); // send joystick events to motor
 
         // display video stream
-        Video::Display display(video, {1240, 500});
+        Video::Display display(video, { 1240, 500 });
 
         // poll joystick and video stream repeatedly
         do {
@@ -69,8 +70,8 @@ int main(int argc, char **argv)
                 std::this_thread::sleep_for(50ms);
             }
         } while (display.isOpen());
+    } catch (std::exception &e) {
+        std::cerr << "Uncaught exception: " << e.what() << std::endl;
+        return 1;
     }
-
-    // shutdown networking API on Windows
-    WSACleanup();
 }

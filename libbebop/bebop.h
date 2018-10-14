@@ -107,7 +107,7 @@ checkError(eARCONTROLLER_ERROR err)
 class Bebop
   : public UAV
 {
-    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
+    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *&)>>;
 
 public:
     //! Interface to the drone's built-in camera
@@ -294,6 +294,7 @@ private:
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
+    static void alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,

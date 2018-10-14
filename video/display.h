@@ -79,17 +79,6 @@ public:
         return m_Open;
     }
 
-    //! Run the display on the current thread
-    void run() override
-    {
-        while (m_DoRun) {
-            // poll the camera until we get a new frame
-            while (!update()) {
-                std::this_thread::sleep_for(25ms);
-            }
-        }
-    }
-
     /*!
      * \brief Try to read a new frame from the video source and display it
      *
@@ -130,7 +119,6 @@ public:
     {
         if (m_Open) {
             cv::destroyWindow(WINDOW_NAME);
-            m_DoRun = false;
             m_Open = false;
         }
     }
@@ -157,6 +145,16 @@ protected:
             frame = m_Frame;
         }
         return true;
+    }
+
+    virtual void runInternal() override
+    {
+        while (isRunning()) {
+            // check for a new frame
+            if (!update()) {
+                std::this_thread::sleep_for(25ms);
+            }
+        }
     }
 }; // Display
 } // Video

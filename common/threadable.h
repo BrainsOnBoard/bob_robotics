@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <atomic>
 #include <memory>
 #include <thread>
 
@@ -26,34 +27,40 @@ public:
     }
 
     //! Run on the current thread, blocking until process ends
-    virtual void run() = 0;
+    virtual void run()
+    {
+        m_DoRun = true;
+        runInternal();
+    }
+
+    //! Check if the run() function has been called
+    virtual bool isRunning()
+    {
+        return m_DoRun;
+    }
 
     //! Run the process on a background thread
     virtual void runInBackground()
     {
-        m_Thread = std::thread([this] { run(); });
-        m_ThreadRunning = true;
+        m_Thread = std::make_unique<std::thread>([this] { run(); });
     }
 
     //! Stop the background thread
     virtual void stop()
     {
         m_DoRun = false;
-        if (m_ThreadRunning) {
-            if (m_Thread.joinable()) {
-                m_Thread.join();
-            } else {
-                m_Thread.detach();
+        if (m_Thread) {
+            if (m_Thread->joinable()) {
+                m_Thread->join();
             }
-            m_ThreadRunning = false;
         }
     }
 
 private:
-    std::thread m_Thread;
-    bool m_ThreadRunning = false;
+    std::unique_ptr<std::thread> m_Thread;
+    std::atomic<bool> m_DoRun{ false };
 
 protected:
-    bool m_DoRun = true;
+    virtual void runInternal() = 0;
 };
 }
