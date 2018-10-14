@@ -52,8 +52,6 @@ public:
         if (m_Thread) {
             if (m_Thread->joinable()) {
                 m_Thread->join();
-            } else {
-                m_Thread->detach();
             }
         }
     }
