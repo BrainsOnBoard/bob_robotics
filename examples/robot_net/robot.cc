@@ -22,11 +22,16 @@
 #include "os/net.h"
 #include "robots/tank.h"
 #include "video/netsink.h"
+#include "video/opencvinput.h"
 #include "video/panoramic.h"
+#include "video/randominput.h"
 
 #ifndef NO_I2C_ROBOT
 #include "robots/norbot.h"
 #endif
+
+// Standard C includes
+#include <cstring>
 
 // Standard C++ includes
 #include <chrono>
@@ -36,40 +41,68 @@
 using namespace std::literals;
 using namespace BoBRobotics;
 
-int
-main()
+void
+run(Video::Input &camera)
 {
-    try {
-        // Enable networking on Windows
-        OS::Net::WindowsNetworking net;
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking net;
 
-        // Listen for incoming connection on default port
-        Net::Server server;
+    // Listen for incoming connection on default port
+    Net::Server server;
 
-        // Get default camera
-        auto cam = Video::getPanoramicCamera();
-
-        // Stream camera asynchronously over network
-        Video::NetSink netSink(server, *cam);
+    // Stream camera asynchronously over network
+    Video::NetSink netSink(server, camera);
 
 #ifdef NO_I2C_ROBOT
-        // Output motor commands to terminal
-        Robots::Tank motor;
+    // Output motor commands to terminal
+    Robots::Tank motor;
 #else
-        // Use Arduino robot
-        Robots::Norbot motor;
+    // Use Arduino robot
+    Robots::Norbot motor;
 #endif
 
-        // Read motor commands from network
-        motor.readFromNetwork(server);
+    // Read motor commands from network
+    motor.readFromNetwork(server);
 
-        // Run server in background
-        server.runInBackground();
+    // Run server in background
+    server.runInBackground();
 
-		// Poll for errors every 250ms
-        while (true) {
-            GlobalException::check();
-            std::this_thread::sleep_for(250ms);
+    // Poll for errors every 250ms
+    while (true) {
+        GlobalException::check();
+        std::this_thread::sleep_for(250ms);
+    }
+}
+
+int
+main(int argc, char **argv)
+{
+    try {
+        /*
+         * Command-line argument can be:
+         * - An integer (indicating number of video device)
+         * - "random" for random input
+         * - or a string indicating a video device
+         */
+        if (argc > 1) {
+            try {
+                // Try to parse the argument as an integer
+                Video::OpenCVInput camera(std::stoi(argv[1]));
+                run(camera);
+            } catch (std::invalid_argument &) {
+                // ...and fall back on treating it as a string
+                if (strcmp(argv[1], "random") == 0) {
+                    Video::RandomInput<> camera({500, 250}, "webcam360");
+                    run(camera);
+                } else {
+                    Video::OpenCVInput camera(argv[1]);
+                    run(camera);
+                }
+            }
+        } else {
+            // Otherwise use the default panoramic camera
+            auto camera = Video::getPanoramicCamera();
+            run(*camera);
         }
     } catch (std::exception &e) {
         std::cerr << "Uncaught exception: " << e.what() << std::endl;
