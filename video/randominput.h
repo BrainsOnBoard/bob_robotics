@@ -13,6 +13,7 @@
 namespace BoBRobotics {
 namespace Video {
 //! A Video::Input which generates white noise, for testing purposes
+template<typename GeneratorType = std::mt19937>
 class RandomInput : public Input {
 public:
     RandomInput(const cv::Size &size, const std::string &cameraName = "random")
@@ -63,7 +64,7 @@ private:
     cv::Size m_Size;
     std::string m_CameraName;
     std::random_device m_RandomDevice;
-    std::mt19937 m_Generator;
+    GeneratorType m_Generator;
     std::uniform_int_distribution<uchar> m_Distribution;
 
     void fillRandom(uchar *start, uchar *end)
