@@ -94,7 +94,7 @@ public:
 
     void close()
     {
-        if (m_Socket != INVALID_SOCKET) {
+        if (isValid()) {
             ::close(m_Socket);
             m_Socket = INVALID_SOCKET;
         }
@@ -104,6 +104,12 @@ public:
     socket_t getSocket() const
     {
         return m_Socket;
+    }
+
+    //! Check whether socket is open and usable
+    bool isValid() const
+    {
+        return m_Socket != INVALID_SOCKET;
     }
 
     //! Read a plaintext command, splitting it into separate words

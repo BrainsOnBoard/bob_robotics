@@ -32,10 +32,11 @@ class Node : public Threadable
 {
 public:
     virtual ~Node()
-    {}
+    {
+    }
 
     //! Gets the socket currently associated with this connection
-    virtual Socket *getSocket() const = 0;
+    virtual Socket *getSocket() = 0;
 
     /*!
      * \brief Add a handler for a specified type of command
@@ -104,6 +105,14 @@ protected:
             if (!parseCommand(command)) {
                 break;
             }
+        }
+    }
+
+    void tryToSayBye()
+    {
+        Socket *sock = getSocket();
+        if (sock && sock->isValid()) {
+            sock->send("BYE\n");
         }
     }
 

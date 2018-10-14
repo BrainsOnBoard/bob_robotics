@@ -55,10 +55,15 @@ public:
         notifyConnectedHandlers();
     }
 
-    //! Used to get current socket, which for the Client object is always itself
-    Socket *getSocket() const override
+    virtual ~Client() override
     {
-        return (Socket *) this;
+        tryToSayBye();
+    }
+
+    //! Used to get current socket, which for the Client object is always itself
+    Socket *getSocket() override
+    {
+        return this;
     }
 }; // Client
 } // Net

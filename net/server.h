@@ -59,8 +59,13 @@ public:
         }
     }
 
+    virtual ~Server() override
+    {
+        tryToSayBye();
+    }
+
     //! Get the socket associated with the current connection
-    Socket *getSocket() const override
+    virtual Socket *getSocket() override
     {
         return m_Socket.get();
     }
