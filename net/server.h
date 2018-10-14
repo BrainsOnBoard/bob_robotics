@@ -77,22 +77,19 @@ protected:
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
 
-        // loop until stopped
-        while (isRunning()) {
-            // wait for incoming TCP connection
-            std::cout << "Waiting for incoming connection..." << std::endl;
-            m_Socket = std::make_unique<Socket>(accept(m_ListenSocket, (sockaddr *) &addr, &addrlen));
-            m_Socket->send("HEY\n");
-            notifyConnectedHandlers();
+        // wait for incoming TCP connection
+        std::cout << "Waiting for incoming connection..." << std::endl;
+        m_Socket = std::make_unique<Socket>(accept(m_ListenSocket, (sockaddr *) &addr, &addrlen));
+        m_Socket->send("HEY\n");
+        notifyConnectedHandlers();
 
-            // convert IP to string
-            char saddr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
-            std::cout << "Incoming connection from " << saddr << std::endl;
+        // convert IP to string
+        char saddr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
+        std::cout << "Incoming connection from " << saddr << std::endl;
 
-            // read incoming commands in a loop
-            Node::runInternal();
-        }
+        // read incoming commands in a loop
+        Node::runInternal();
     }
 
 private:
