@@ -1,19 +1,16 @@
 #pragma once
 
-// BoB robotics includes
-#include "node.h"
-#include "socket.h"
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// Standard C includes
-#include <cerrno>
-
 // Standard C++ includes
 #include <limits>
 #include <string>
 #include <vector>
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Local includes
+#include "node.h"
+#include "socket.h"
 
 namespace BoBRobotics {
 namespace Net {
@@ -28,14 +25,14 @@ namespace Net {
  */
 class Client
   : public Node
-  , Socket
+  , public Socket
 {
 public:
     //! Create client and connect to host over TCP
     Client(const std::string &host, int port = DefaultListenPort)
     {
         // Create socket
-        setSocket(socket(AF_INET, SOCK_NONBLOCK | SOCK_STREAM, 0));
+        setSocket(socket(AF_INET, SOCK_STREAM, 0));
 
         // Create socket address structure
         in_addr addr;
@@ -46,15 +43,11 @@ public:
         destAddress.sin_addr = addr;
 
         // Connect socket
-        int ret = connect(Socket::getSocket(),
-                          reinterpret_cast<sockaddr *>(&destAddress),
-                          sizeof(destAddress));
-        if (ret < 0) {
-            int err = errno;
-            if (err != EINPROGRESS) {
-                throw SocketError("Cannot connect socket to " + host + ":" +
-                                  std::to_string(port));
-            }
+        if (connect(Socket::getSocket(),
+                    reinterpret_cast<sockaddr *>(&destAddress),
+                    sizeof(destAddress)) < 0) {
+            throw SocketError("Cannot connect socket to " + host + ":" +
+                                    std::to_string(port));
         }
 
         std::cout << "Opened socket" << std::endl;
@@ -67,7 +60,7 @@ public:
     }
 
     //! Used to get current socket, which for the Client object is always itself
-    Socket *getSocket() override
+    virtual Socket *getSocket() override
     {
         return this;
     }
