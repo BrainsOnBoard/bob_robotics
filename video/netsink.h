@@ -48,13 +48,6 @@ public:
                                  });
     }
 
-    virtual ~NetSink()
-    {
-        if (m_DoRun.exchange(false) && m_Thread && m_Thread->joinable()) {
-            m_Thread->join();
-        }
-    }
-
     /*!
      * \brief Create a NetSink for synchronous operation
      *
@@ -73,6 +66,13 @@ public:
                                  [this](Net::Node &, const Net::Command &command) {
                                      onCommandReceivedSync(command);
                                  });
+    }
+
+    virtual ~NetSink()
+    {
+        if (m_DoRun.exchange(false) && m_Thread && m_Thread->joinable()) {
+            m_Thread->join();
+        }
     }
 
     //----------------------------------------------------------------------------

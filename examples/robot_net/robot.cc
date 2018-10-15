@@ -50,8 +50,8 @@ run(Video::Input &camera)
     // Listen for incoming connection on default port
     Net::Server server;
 
-    // Stream camera asynchronously over network
-    Video::NetSink netSink(server, camera);
+    // Stream camera synchronously over network
+    Video::NetSink netSink(server, camera.getOutputSize(), camera.getCameraName());
 
 #ifdef NO_I2C_ROBOT
     // Output motor commands to terminal
@@ -67,10 +67,18 @@ run(Video::Input &camera)
     // Run server in background
     server.runInBackground();
 
-    // Poll for errors every 250ms
+    // Send frames over network
+    cv::Mat frame;
     while (true) {
+        // Check for exceptions on background thread
         BackgroundException::check();
-        std::this_thread::sleep_for(250ms);
+
+        // If there's a new frame, send it, else sleep
+        if (camera.readFrame(frame)) {
+            netSink.sendFrame(frame);
+        } else {
+            std::this_thread::sleep_for(25ms);
+        }
     }
 }
 
