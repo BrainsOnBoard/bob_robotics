@@ -42,6 +42,12 @@ public:
         });
     }
 
+    virtual ~NetSource() override
+    {
+        // Hold off on destroying m_Frame if it's still in use
+        m_FrameMutex.lock();
+    }
+
     virtual std::string getCameraName() const override
     {
         m_ParamsSemaphore.waitOnce();
