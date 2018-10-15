@@ -45,7 +45,7 @@ public:
     virtual ~NetSource() override
     {
         // Hold off on destroying m_Frame if it's still in use
-        m_FrameMutex.lock();
+        std::lock_guard<std::mutex> guard(m_FrameMutex);
     }
 
     virtual std::string getCameraName() const override
@@ -81,11 +81,11 @@ public:
     }
 
 private:
+    std::mutex m_FrameMutex;
+    cv::Mat m_Frame;
     std::string m_CameraName = DefaultCameraName;
     cv::Size m_CameraResolution;
     std::vector<uchar> m_Buffer;
-    cv::Mat m_Frame;
-    std::mutex m_FrameMutex;
     std::atomic<bool> m_NewFrame{ false };
     mutable Semaphore m_ParamsSemaphore;
 
