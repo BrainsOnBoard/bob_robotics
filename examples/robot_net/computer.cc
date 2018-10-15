@@ -50,6 +50,9 @@ main(int argc, char **argv)
 
         // Make connection to robot on default port
         Net::Client client(robotIP);
+
+        // Run client on background thread, catching any exceptions for rethrowing
+        BackgroundException::enableCatching();
         client.runInBackground();
 
         // Read video stream from network
@@ -65,7 +68,7 @@ main(int argc, char **argv)
         // Display video stream on screen
         Video::Display display(video, { 1240, 500 });
         while(display.isOpen()) {
-            // Check for exceptions on background thread
+            // Rethrow any exceptions caught on background thread
             BackgroundException::check();
 
             // Poll joystick and camera for updates

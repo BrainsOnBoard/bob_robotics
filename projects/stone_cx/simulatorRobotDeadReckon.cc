@@ -126,9 +126,6 @@ int main(int argc, char *argv[])
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
 
-		// Check for exceptions on background threads
-        BackgroundException::check();
-
         // Read from joystick
         joystick.update();
 

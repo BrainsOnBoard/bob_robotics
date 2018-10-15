@@ -64,13 +64,14 @@ run(Video::Input &camera)
     // Read motor commands from network
     tank.readFromNetwork(server);
 
-    // Run server in background
+    // Run server in background,, catching any exceptions for rethrowing
+    BackgroundException::enableCatching();
     server.runInBackground();
 
     // Send frames over network
     cv::Mat frame;
     while (true) {
-        // Check for exceptions on background thread
+        // Rethrow any exceptions caught on background thread
         BackgroundException::check();
 
         // If there's a new frame, send it, else sleep
