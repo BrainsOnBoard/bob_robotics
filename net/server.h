@@ -32,30 +32,26 @@ public:
     //! Create a new server, listening on the specified port
     Server(int port = Socket::DefaultListenPort)
     {
-        try {
-            m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-            if (m_ListenSocket == INVALID_SOCKET) {
-                throw std::exception();
-            }
+        m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (m_ListenSocket == INVALID_SOCKET) {
+            throw SocketError("Could not create socket");
+        }
 
-    #ifndef _WIN32
-            int on = 1;
-            if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-                throw std::exception();
-            }
-    #endif
+#ifndef _WIN32
+        int on = 1;
+        if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+            throw SocketError("Could not set socket option");
+        }
+#endif
 
-            struct sockaddr_in addr;
-            memset(&addr, 0, sizeof(addr));
-            addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = htonl(INADDR_ANY);
-            addr.sin_port = htons(port);
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        addr.sin_port = htons(port);
 
-            if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
-                throw std::exception();
-            }
-        } catch (...) {
-            throw SocketError("Could not bind to port");
+        if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
+            throw SocketError("Could not bind to socket");
         }
     }
 
