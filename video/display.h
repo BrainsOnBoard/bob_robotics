@@ -1,19 +1,20 @@
-// Standard C++ includes
-#include <chrono>
-#include <memory>
-#include <stdexcept>
-#include <thread>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
+#pragma once
 
 // BoB robotics includes
 #include "../common/threadable.h"
 #include "../imgproc/opencv_unwrap_360.h"
 #include "../os/keycodes.h"
-
-// Local includes
 #include "input.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <chrono>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <thread>
 
 namespace BoBRobotics {
 namespace Video {
@@ -25,8 +26,8 @@ using namespace std::literals;
 /*!
  * \brief Display a video source on screen
  *
- * This is a simple class for displaying a VideoInput (e.g. a webcam) on screen.
- * An example of its use is given in examples/display_test.
+ * This is a simple class for displaying a Video::Input (e.g. a webcam) on screen.
+ * An example of its use is given in examples/display.
  *
  * You can optionally run the display on a separate thread by invoking the
  * runInBackground() method.
@@ -35,8 +36,6 @@ using namespace std::literals;
  */
 class Display : public Threadable
 {
-#define WINDOW_NAME "OpenCV display"
-
 public:
     /*!
      * \brief Create a new display with unwrapping disabled
@@ -47,13 +46,14 @@ public:
     Display(Input &videoInput, const bool fullScreen = false)
       : m_VideoInput(videoInput)
       , m_FullScreen(fullScreen)
-    {}
-
-    //! Close display window and destroy this object
-    virtual ~Display()
     {
-        close();
+        // set opencv window to display full screen
+        cv::namedWindow(WindowName, cv::WINDOW_AUTOSIZE);
+        if (fullScreen) {
+            setWindowProperty(WindowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+        }
     }
+
 
     /*!
      * \brief Create a new display with unwrapping enabled if the videoInput supports it
@@ -63,8 +63,7 @@ public:
      * @param fullScreen Whether or not to display fullscreen
      */
     Display(Input &videoInput, const cv::Size &unwrapRes, const bool fullScreen = false)
-      : m_VideoInput(videoInput)
-      , m_FullScreen(fullScreen)
+      : Display(videoInput, fullScreen)
     {
         if (videoInput.needsUnwrapping()) {
             m_ShowUnwrapped = true;
@@ -73,10 +72,16 @@ public:
         }
     }
 
+    //! Close display window and destroy this object
+    virtual ~Display()
+    {
+        close();
+    }
+
     //! Return true if the display window is open
     bool isOpen() const
     {
-        return m_Open;
+        return cvGetWindowHandle(WindowName) != nullptr;
     }
 
     /*!
@@ -86,20 +91,11 @@ public:
      */
     bool update()
     {
-        if (!m_Open) {
-            // set opencv window to display full screen
-            cv::namedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
-            if (m_FullScreen) {
-                setWindowProperty(WINDOW_NAME, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
-            }
-            m_Open = true;
-        }
-
         cv::Mat frame;
         bool newFrame = readFrame(frame);
         if (newFrame) {
             // display the frame on screen
-            cv::imshow(WINDOW_NAME, frame);
+            cv::imshow(WindowName, frame);
         }
 
         // get keyboard input
@@ -117,20 +113,12 @@ public:
     //! Close the display and stop the background thread if needed
     virtual void close()
     {
-        if (m_Open) {
-            cv::destroyWindow(WINDOW_NAME);
-            m_Open = false;
+        if (isOpen()) {
+            cv::destroyWindow(WindowName);
         }
     }
 
 protected:
-    bool m_Open = false;
-    cv::Mat m_Frame, m_Unwrapped;
-    bool m_ShowUnwrapped = false;
-    std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
-    Input &m_VideoInput;
-    bool m_FullScreen;
-
     virtual bool readFrame(cv::Mat &frame)
     {
         if (!m_VideoInput.readFrame(m_Frame)) {
@@ -156,6 +144,14 @@ protected:
             }
         }
     }
+
+private:
+    cv::Mat m_Frame, m_Unwrapped;
+    bool m_ShowUnwrapped = false;
+    std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
+    Input &m_VideoInput;
+    bool m_FullScreen;
+    static constexpr const char *WindowName = "BoB robotics display";
 }; // Display
 } // Video
 } // BoBRobotics
