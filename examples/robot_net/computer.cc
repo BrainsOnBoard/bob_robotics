@@ -56,18 +56,20 @@ main(int argc, char **argv)
         Video::NetSource video(client);
 
         // transmit motor commands over network
-        Robots::TankNetSink motor(client);
+        Robots::TankNetSink tank(client);
 
         // add joystick for controlling Tank
         HID::Joystick joystick;
-        motor.addJoystick(joystick); // send joystick events to motor
+        tank.addJoystick(joystick); // send joystick events to robot
 
         // display video stream
         Video::Display display(video, { 1240, 500 });
 
         // poll joystick and video stream repeatedly
         do {
-            if (!joystick.update() && !display.update()) {
+            bool joystickUpdate = joystick.update();
+            bool displayUpdate = display.update();
+            if (!joystickUpdate && !displayUpdate) {
                 std::this_thread::sleep_for(50ms);
             }
 
