@@ -60,8 +60,8 @@ public:
     //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
-    void lock() { m_Mutex.lock(); }
-    void unlock() { m_Mutex.unlock(); }
+    void lock() { m_SendMutex.lock(); }
+    void unlock() { m_SendMutex.unlock(); }
 
 protected:
     std::atomic<bool> m_IsConnected{ false };
@@ -93,7 +93,7 @@ protected:
 
 private:
     std::map<std::string, CommandHandler> m_CommandHandlers;
-    std::mutex m_Mutex;
+    std::mutex m_SendMutex;
     std::vector<ConnectedHandler> m_ConnectedHandlers;
 
     bool parseCommand(Command &command)
