@@ -16,16 +16,12 @@
 // Standard C includes
 #include <cstring>
 
-// Networking includes
-#ifdef _WIN32
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
-    #include <sys/types.h>
-    #include <unistd.h>
-#endif
+// POSIX networking includes
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace BoBRobotics
 {
