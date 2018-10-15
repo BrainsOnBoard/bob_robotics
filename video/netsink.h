@@ -99,7 +99,7 @@ private:
     {
         cv::imencode(".jpg", frame, m_Buffer);
 
-        // std::lock_guard<Net::Node> guard(m_Node);
+        std::lock_guard<Net::Node> guard(m_Node);
         Net::Socket *sock = m_Node.getSocket();
         sock->send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
         sock->send(m_Buffer.data(), m_Buffer.size());
