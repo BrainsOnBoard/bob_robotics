@@ -70,8 +70,9 @@ public:
 
     virtual ~NetSink()
     {
-        if (m_DoRun.exchange(false) && m_Thread && m_Thread->joinable()) {
-            m_Thread->join();
+        m_DoRun = false;
+        if (m_Thread.joinable()) {
+            m_Thread.join();
         }
     }
 
@@ -122,7 +123,7 @@ private:
         onCommandReceived(command);
 
         // start thread to transmit images in background
-        m_Thread = std::make_unique<std::thread>(&NetSink::runAsync, this);
+        m_Thread = std::thread(&NetSink::runAsync, this);
     }
 
     void onCommandReceivedSync(const Net::Command &command)
@@ -157,7 +158,7 @@ private:
     Input *m_Input;
     const cv::Size m_FrameSize;
     const std::string m_Name;
-    std::unique_ptr<std::thread> m_Thread;
+    std::thread m_Thread;
     std::vector<uchar> m_Buffer;
     Semaphore m_AckSemaphore;
     std::atomic<bool> m_DoRun{ true };

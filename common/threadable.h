@@ -46,20 +46,20 @@ public:
     //! Run the process on a background thread
     virtual void runInBackground()
     {
-        m_Thread = std::make_unique<std::thread>([this] { runCatchExceptions(); });
+        m_Thread = std::thread(&Threadable::runCatchExceptions, this);
     }
 
     //! Stop the background thread
     virtual void stop()
     {
         m_DoRun = false;
-        if (m_Thread && m_Thread->joinable()) {
-            m_Thread->join();
+        if (m_Thread.joinable()) {
+            m_Thread.join();
         }
     }
 
 private:
-    std::unique_ptr<std::thread> m_Thread;
+    std::thread m_Thread;
     std::atomic<bool> m_DoRun{ false };
 
     void runCatchExceptions()
