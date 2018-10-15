@@ -21,6 +21,7 @@ public:
       : m_Size(size)
       , m_CameraName(cameraName)
       , m_Generator(seed)
+	  , m_Distribution(0, 0xff)
     {}
 
     virtual bool readFrame(cv::Mat &outFrame) override
@@ -65,11 +66,11 @@ private:
     cv::Size m_Size;
     std::string m_CameraName;
     GeneratorType m_Generator;
-    std::uniform_int_distribution<uchar> m_Distribution;
+    std::uniform_int_distribution<int> m_Distribution;
 
     void fillRandom(uchar *start, uchar *end)
     {
-        std::generate(start, end, [this](){ return m_Distribution(m_Generator); });
+        std::generate(start, end, [this](){ return static_cast<uchar>(m_Distribution(m_Generator)); });
     }
 
     static auto getRandomSeed()
