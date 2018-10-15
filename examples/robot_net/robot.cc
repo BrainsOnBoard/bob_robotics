@@ -55,14 +55,14 @@ run(Video::Input &camera)
 
 #ifdef NO_I2C_ROBOT
     // Output motor commands to terminal
-    Robots::Tank motor;
+    Robots::Tank tank;
 #else
     // Use Arduino robot
-    Robots::Norbot motor;
+    Robots::Norbot tank;
 #endif
 
     // Read motor commands from network
-    motor.readFromNetwork(server);
+    tank.readFromNetwork(server);
 
     // Run server in background
     server.runInBackground();

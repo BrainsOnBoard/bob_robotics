@@ -92,12 +92,12 @@ public:
         setSocket(sock);
     }
 
-    //! Close the socket
     virtual ~Socket()
     {
         close();
     }
 
+    //! Close the socket
     void close()
     {
         if (valid() && !m_Closing.exchange(true)) {
@@ -106,6 +106,7 @@ public:
         }
     }
 
+    //! Check if the socket is being closed or is already closed
     bool closing() const
     {
         return m_Closing;
@@ -229,9 +230,7 @@ private:
     socket_t m_Socket = INVALID_SOCKET;
     std::atomic<bool> m_Closing{ false };
 
-    /*
-     * Debit the byte store by specified amount.
-     */
+    // Debit the byte store by specified amount
     void debitBytes(size_t nbytes)
     {
         m_BufferStart += nbytes;
@@ -241,9 +240,7 @@ private:
         m_BufferBytes -= nbytes;
     }
 
-    /*
-     * Check that the current socket is valid.
-     */
+    // Check that the current socket is valid and throw an exception otherwise
     void checkSocket()
     {
         if (!valid()) {
@@ -251,9 +248,7 @@ private:
         }
     }
 
-    /*
-     * Make a single call to read/recv.
-     */
+    // Make a single call to recv.
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
