@@ -130,15 +130,20 @@ errorMessage(int err = lastError())
 {
     wchar_t *s = nullptr;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                  nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR) &s, 0, nullptr);
+                  nullptr,
+                  err,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPWSTR) &s,
+                  0,
+                  nullptr);
 
-	// Convert wide chars to regular string
+    // Convert wide chars to regular string
     std::string msg(&s[0], &s[wcslen(s)]);
 
-	// Free memory from heap
-	LocalFree(s);
+    // Free memory from heap
+    LocalFree(s);
 
-	return msg;
+    return msg;
 }
 #else
 inline int
@@ -150,7 +155,7 @@ lastError()
 inline std::string
 errorMessage(int err = lastError())
 {
-	return std::strerror(err);
+    return std::strerror(err);
 }
 #endif
 } // Net
