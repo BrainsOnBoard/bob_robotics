@@ -17,10 +17,21 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+// Standard C includes
+#include <cwchar>
+
 // Macros defined in Linux but not Windows
 #define MSG_NOSIGNAL 0
 #define INET_ADDRSTRLEN 22
+
+#pragma comment(lib, "Ws2_32.lib")
 #else
+
+// Standard C includes
+#include <cerrno>
+#include <cstring>
+
+// POSIX includes
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -57,8 +68,6 @@ close(socket_t sock)
 {
     closesocket(sock);
 }
-
-#pragma comment(lib, "Ws2_32.lib")
 #else
 // Sockets are file descriptors in *nix
 typedef int socket_t;
@@ -106,6 +115,44 @@ public:
     {}
 #endif
 }; // WindowsNetworking
+
+#ifdef _WIN32
+//! Get the last networking error code
+inline int
+lastError()
+{
+    return WSAGetLastError();
+}
+
+//! Get the error messgae which corresponds to the given code
+inline std::string
+errorMessage(int err = lastError())
+{
+    wchar_t *s = nullptr;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                  nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR) &s, 0, nullptr);
+
+	// Convert wide chars to regular string
+    std::string msg(&s[0], &s[wcslen(s)]);
+
+	// Free memory from heap
+	LocalFree(s);
+
+	return msg;
+}
+#else
+inline int
+lastError()
+{
+    return errno;
+}
+
+inline std::string
+errorMessage(int err = lastError())
+{
+	return std::strerror(err);
+}
+#endif
 } // Net
 } // OS
 } // BoBRobotics

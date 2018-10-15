@@ -5,10 +5,6 @@
 
 #pragma once
 
-// Standard C includes
-#include <cerrno>
-#include <cstring>
-
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
@@ -33,7 +29,7 @@ class SocketError : public std::runtime_error
 {
 public:
     SocketError(const std::string &msg)
-      : std::runtime_error(msg + " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")")
+      : std::runtime_error(msg + " (" + std::to_string(OS::Net::lastError()) + ": " + OS::Net::errorMessage() + ")")
     {}
 };
 

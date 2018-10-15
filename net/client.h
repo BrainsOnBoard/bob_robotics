@@ -1,16 +1,16 @@
 #pragma once
 
-// Standard C++ includes
-#include <limits>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "node.h"
+#include "socket.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// Local includes
-#include "node.h"
-#include "socket.h"
+// Standard C++ includes
+#include <limits>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Net {
