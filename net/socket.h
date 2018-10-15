@@ -11,8 +11,7 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <chrono>
-#include <iostream>
+#include <atomic>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
@@ -35,6 +34,14 @@ class SocketError : public std::runtime_error
 public:
     SocketError(const std::string &msg)
       : std::runtime_error(msg + " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")")
+    {}
+};
+
+//! An exception thrown if the socket is deliberately being closed
+class SocketClosingError : public std::runtime_error
+{
+public:
+    SocketClosingError() : std::runtime_error("Socket is closed")
     {}
 };
 
@@ -93,10 +100,15 @@ public:
 
     void close()
     {
-        if (isValid()) {
+        if (valid() && !m_Closing.exchange(true)) {
             ::close(m_Socket);
             m_Socket = INVALID_SOCKET;
         }
+    }
+
+    bool closing() const
+    {
+        return m_Closing;
     }
 
     //! Get the current socket handle this object holds
@@ -106,7 +118,7 @@ public:
     }
 
     //! Check whether socket is open and usable
-    bool isValid() const
+    bool valid() const
     {
         return m_Socket != INVALID_SOCKET;
     }
@@ -187,8 +199,7 @@ public:
 
         int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
         if (ret == -1) {
-            close();
-            throw SocketError("Could not send");
+            throwError("Could not send");
         }
     }
 
@@ -216,6 +227,7 @@ private:
     std::ostringstream m_ReadLineOutput;
     bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
+    std::atomic<bool> m_Closing{ false };
 
     /*
      * Debit the byte store by specified amount.
@@ -234,8 +246,8 @@ private:
      */
     void checkSocket()
     {
-        if (!isValid()) {
-            throw SocketError("Bad socket");
+        if (!valid()) {
+            throwError("Bad socket");
         }
     }
 
@@ -246,11 +258,20 @@ private:
     {
         int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
-            close();
-            throw SocketError("Could not read from socket");
+            throwError("Could not read from socket");
         }
 
         return static_cast<size_t>(len);
+    }
+
+    void throwError(const std::string &msg)
+    {
+        if (closing()) {
+            throw SocketClosingError();
+        } else {
+            close();
+            throw SocketError(msg);
+        }
     }
 }; // Socket
 } // Net

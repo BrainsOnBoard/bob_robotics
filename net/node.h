@@ -76,20 +76,16 @@ protected:
 
     virtual void runInternal() override
     {
-        while (isRunning()) {
-            std::lock_guard<Node> guard(*this);
-            Command command = getSocket()->readCommand();
-            if (!parseCommand(command)) {
-                break;
-            }
-        }
+        Command command;
+        do {
+            command = getSocket()->readCommand();
+        } while (isRunning() && parseCommand(command));
     }
 
     void disconnect()
     {
-        std::lock_guard<Node> guard(*this);
         Socket *sock = getSocket();
-        if (sock && sock->isValid()) {
+        if (sock && sock->valid()) {
             sock->send("BYE\n");
             sock->close();
         }
@@ -103,6 +99,7 @@ private:
     bool parseCommand(Command &command)
     {
         if (command[0] == "BYE") {
+            getSocket()->close();
             return false;
         }
         if (command[0] == "HEY") {

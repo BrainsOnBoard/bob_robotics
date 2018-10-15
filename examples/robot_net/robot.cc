@@ -104,6 +104,9 @@ main(int argc, char **argv)
             auto camera = Video::getPanoramicCamera();
             run(*camera);
         }
+    } catch (Net::SocketClosingError &) {
+        // The connection was closed on purpose: do nothing
+        std::cout << "Connection closed" << std::endl;
     } catch (std::exception &e) {
         std::cerr << "Uncaught exception: " << e.what() << std::endl;
         return 1;
