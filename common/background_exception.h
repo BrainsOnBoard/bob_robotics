@@ -5,7 +5,7 @@
 
 namespace BoBRobotics {
 //! A wrapper for passing exceptions between threads (i.e. a background thread to the main one)
-class GlobalException {
+class BackgroundException {
 public:
     //! Sets the global exception
     static void set(const std::exception_ptr &error)
@@ -23,7 +23,7 @@ public:
 
 private:
     static std::exception_ptr m_Exception;
-}; // GlobalException
+}; // BackgroundException
 
-std::exception_ptr GlobalException::m_Exception;
+std::exception_ptr BackgroundException::m_Exception;
 } // BoBRobotics

@@ -17,7 +17,7 @@
 #endif
 
 // BoB robotics includes
-#include "common/global_exception.h"
+#include "common/background_exception.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/tank.h"
@@ -69,7 +69,7 @@ run(Video::Input &camera)
 
     // Poll for errors every 250ms
     while (true) {
-        GlobalException::check();
+        BackgroundException::check();
         std::this_thread::sleep_for(250ms);
     }
 }

@@ -6,7 +6,7 @@
 
 // BoB robotics includes
 #include "common/lm9ds1_imu.h"
-#include "common/global_exception.h"
+#include "common/background_exception.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/server.h"
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
 
 		// Check for exceptions on background threads
-        GlobalException::check();
+        BackgroundException::check();
 
         // Read from joystick
         joystick.update();

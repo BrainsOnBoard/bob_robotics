@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#include "../common/global_exception.h"
+#include "../common/background_exception.h"
 #include "../common/semaphore.h"
 #include "../net/node.h"
 #include "input.h"
@@ -146,7 +146,7 @@ private:
                 }
             }
         } catch (...) {
-            GlobalException::set(std::current_exception());
+            BackgroundException::set(std::current_exception());
         }
     }
 
