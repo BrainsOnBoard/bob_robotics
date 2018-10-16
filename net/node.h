@@ -32,6 +32,12 @@ public:
         m_Mutex.unlock();
     }
 
+    // Object is non-copyable
+    SocketWriter(const SocketWriter &) = delete;
+    void operator=(const SocketWriter &) = delete;
+    SocketWriter(SocketWriter &&) = default;
+    SocketWriter &operator=(SocketWriter &&) = default;
+
     //! Send data via the Socket
     template<typename... Args>
     void send(Args&&... args)
