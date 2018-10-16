@@ -172,7 +172,7 @@ public:
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
-    ~Bebop();
+    virtual ~Bebop() override;
 
     // speed limits
     degree_t getMaximumTilt() const;
