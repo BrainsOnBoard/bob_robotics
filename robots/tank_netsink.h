@@ -31,11 +31,8 @@ public:
         }
 
         // send steering command
-        {
-            std::lock_guard<Net::Node> guard(m_Node);
-            m_Node.getSocket()->send("TNK " + std::to_string(left) + " " +
-                                     std::to_string(right) + "\n");
-        }
+        m_Node.getSocketWriter().send("TNK " + std::to_string(left) + " " +
+                                      std::to_string(right) + "\n");
 
         // store current left/right values to compare next time
         m_OldLeft = left;

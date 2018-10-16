@@ -99,10 +99,9 @@ private:
     {
         cv::imencode(".jpg", frame, m_Buffer);
 
-        std::lock_guard<Net::Node> guard(m_Node);
-        Net::Socket *sock = m_Node.getSocket();
-        sock->send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
-        sock->send(m_Buffer.data(), m_Buffer.size());
+        auto socket = m_Node.getSocketWriter();
+        socket.send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
+        socket.send(m_Buffer.data(), m_Buffer.size());
     }
 
     void onCommandReceived(const Net::Command &command)
@@ -112,9 +111,9 @@ private:
         }
 
         // ACK the command and tell client the camera resolution
-        m_Node.getSocket()->send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
-                                 std::to_string(m_FrameSize.height) + " " +
-                                 m_Name + "\n");
+        m_Node.getSocketWriter().send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
+                                      std::to_string(m_FrameSize.height) + " " +
+                                      m_Name + "\n");
     }
 
     void onCommandReceivedAsync(const Net::Command &command)

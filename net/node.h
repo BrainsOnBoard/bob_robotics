@@ -17,6 +17,33 @@
 
 namespace BoBRobotics {
 namespace Net {
+//! Provides a thread-safe interface for writing to Sockets
+class SocketWriter {
+public:
+    SocketWriter(Socket &socket, std::mutex &mutex)
+      : m_Socket(socket)
+      , m_Mutex(mutex)
+    {
+        m_Mutex.lock();
+    }
+
+    ~SocketWriter()
+    {
+        m_Mutex.unlock();
+    }
+
+    //! Send data via the Socket
+    template<typename... Args>
+    void send(Args&&... args)
+    {
+        m_Socket.send(std::forward<Args>(args)...);
+    }
+
+private:
+    Socket &m_Socket;
+    std::mutex &m_Mutex;
+};
+
 class Node; // forward declaration
 
 //! A callback function to handle incoming commands over the network
@@ -34,9 +61,6 @@ class Node : public Threadable
 public:
     virtual ~Node()
     {}
-
-    //! Gets the socket currently associated with this connection
-    virtual Socket *getSocket() = 0;
 
     /*!
      * \brief Add a handler for a specified type of command
@@ -60,11 +84,23 @@ public:
     //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
-    void lock() { m_SendMutex.lock(); }
-    void unlock() { m_SendMutex.unlock(); }
+    //! Read from this Node's Socket into buffer
+    void read(void *buffer, size_t len)
+    {
+        getSocket()->read(buffer, len);
+    }
+
+    //! Return a transaction object for writing to this Node's Socket
+    SocketWriter getSocketWriter()
+    {
+        return SocketWriter(*getSocket(), m_SendMutex);
+    }
 
 protected:
     std::atomic<bool> m_IsConnected{ false };
+
+    //! Gets the socket currently associated with this connection
+    virtual Socket *getSocket() = 0;
 
     void notifyConnectedHandlers()
     {
