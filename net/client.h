@@ -1,16 +1,16 @@
 #pragma once
 
-// Standard C++ includes
-#include <limits>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "node.h"
+#include "socket.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// Local includes
-#include "node.h"
-#include "socket.h"
+// Standard C++ includes
+#include <limits>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Net {
@@ -19,13 +19,13 @@ namespace Net {
 //----------------------------------------------------------------------------
 /*!
  * \brief General-purpose TCP client
- * 
+ *
  * To be used with corresponding Server object. Various sink/source-type
  * objects are used for either sending or receiving data from the server.
  */
 class Client
   : public Node
-  , Socket
+  , public Socket
 {
 public:
     //! Create client and connect to host over TCP
@@ -46,24 +46,23 @@ public:
         if (connect(Socket::getSocket(),
                     reinterpret_cast<sockaddr *>(&destAddress),
                     sizeof(destAddress)) < 0) {
-            throw std::runtime_error("Cannot connect socket to " + host + ":" +
+            throw SocketError("Cannot connect socket to " + host + ":" +
                                     std::to_string(port));
         }
 
         std::cout << "Opened socket" << std::endl;
-
         notifyConnectedHandlers();
     }
 
-    ~Client()
+    virtual ~Client() override
     {
-        stop(); // stop thread if needed
+        disconnect();
     }
 
     //! Used to get current socket, which for the Client object is always itself
-    Socket *getSocket() const override
+    virtual Socket *getSocket() override
     {
-        return (Socket *) this;
+        return this;
     }
 }; // Client
 } // Net

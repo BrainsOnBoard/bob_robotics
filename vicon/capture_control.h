@@ -11,16 +11,12 @@
 #include <cstring>
 #include <ctime>
 
-// POSIX includes
-#ifdef _WIN32
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
-    #include <sys/types.h>
-    #include <unistd.h>
-#endif
+// POSIX networking includes
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace BoBRobotics {
 namespace Vicon
@@ -63,7 +59,7 @@ public:
             std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
             return false;
         }
-        
+
          // Create socket address structure
         memset(&m_RemoteAddress, 0, sizeof(sockaddr_in));
         m_RemoteAddress.sin_family = AF_INET,
@@ -87,11 +83,11 @@ public:
         message << "<DatabasePath VALUE=\"" << m_CapturePath << "\"/>" << std::endl;
         message << "<PacketID VALUE=\"" << m_CapturePacketID++ << "\"/>" << std::endl;
         message << "</CaptureStart>" << std::endl;
-        
+
         // Send message  to tracker
         std::string messageString = message.str();
         if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
-                    reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0) 
+                    reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
         {
             std::cerr << "Cannot send start message:" << strerror(errno) << std::endl;
             return false;
@@ -100,7 +96,7 @@ public:
             return true;
         }
     }
-    
+
     bool stopRecording(const std::string &recordingName)
     {
         // Create message
@@ -133,7 +129,7 @@ private:
 
     std::string m_CapturePath;
     uint32_t m_CapturePacketID;
-    
+
     sockaddr_in m_RemoteAddress;
 };
 } // namespace Vicon

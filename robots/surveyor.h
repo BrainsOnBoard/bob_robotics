@@ -5,16 +5,12 @@
 #include <cstdio>
 #include <cstring>
 
-// POSIX includes
-#ifdef _WIN32
-#include <winsock2.h>
-#else
+// POSIX networking includes
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 
 // BoB robotics includes
 #include "tank.h"

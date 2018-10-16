@@ -37,8 +37,14 @@ public:
 
         // when connected, send command to start streaming
         node.addConnectedHandler([](Net::Node &node) {
-            node.getSocket()->send("IMG START\n");
+            node.getSocketWriter().send("IMG START\n");
         });
+    }
+
+    virtual ~NetSource() override
+    {
+        // Hold off on destroying m_Frame if it's still in use
+        std::lock_guard<std::mutex> guard(m_FrameMutex);
     }
 
     virtual std::string getCameraName() const override
@@ -74,11 +80,11 @@ public:
     }
 
 private:
+    std::mutex m_FrameMutex;
+    cv::Mat m_Frame;
     std::string m_CameraName = DefaultCameraName;
     cv::Size m_CameraResolution;
     std::vector<uchar> m_Buffer;
-    cv::Mat m_Frame;
-    std::mutex m_FrameMutex;
     std::atomic<bool> m_NewFrame{ false };
     mutable Semaphore m_ParamsSemaphore;
 
@@ -92,12 +98,11 @@ private:
         } else if (command[1] == "FRAME") {
             size_t nbytes = stoi(command[2]);
             m_Buffer.resize(nbytes);
-            node.getSocket()->read(m_Buffer.data(), nbytes);
-            {
-                std::lock_guard<std::mutex> guard(m_FrameMutex);
-                cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
-                m_NewFrame = true;
-            }
+            node.read(m_Buffer.data(), nbytes);
+
+            std::lock_guard<std::mutex> guard(m_FrameMutex);
+            cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
+            m_NewFrame = true;
         } else {
             throw Net::BadCommandError();
         }

@@ -1,8 +1,12 @@
 #pragma once
 
+// BoB robotics includes
+#include "background_exception.h"
+
 // Standard C++ includes
 #include <atomic>
 #include <memory>
+#include <stdexcept>
 #include <thread>
 
 namespace BoBRobotics {
@@ -42,23 +46,30 @@ public:
     //! Run the process on a background thread
     virtual void runInBackground()
     {
-        m_Thread = std::make_unique<std::thread>([this] { run(); });
+        m_Thread = std::thread(&Threadable::runCatchExceptions, this);
     }
 
     //! Stop the background thread
     virtual void stop()
     {
         m_DoRun = false;
-        if (m_Thread) {
-            if (m_Thread->joinable()) {
-                m_Thread->join();
-            }
+        if (m_Thread.joinable()) {
+            m_Thread.join();
         }
     }
 
 private:
-    std::unique_ptr<std::thread> m_Thread;
+    std::thread m_Thread;
     std::atomic<bool> m_DoRun{ false };
+
+    void runCatchExceptions()
+    {
+        try {
+            run();
+        } catch (...) {
+            BackgroundException::set(std::current_exception());
+        }
+    }
 
 protected:
     virtual void runInternal() = 0;
