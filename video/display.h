@@ -47,9 +47,11 @@ public:
       : m_VideoInput(videoInput)
     {
         // set opencv window to display full screen
-        cv::namedWindow(WindowName, cv::WINDOW_AUTOSIZE);
         if (fullScreen) {
+            cv::namedWindow(WindowName, cv::WINDOW_NORMAL);
             setWindowProperty(WindowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
+        } else {
+            cv::namedWindow(WindowName, cv::WINDOW_AUTOSIZE);
         }
     }
 
@@ -75,6 +77,12 @@ public:
     virtual ~Display()
     {
         close();
+    }
+
+    //! Gets the Video::Input object this Display is reading from
+    Video::Input &getVideoInput()
+    {
+        return m_VideoInput;
     }
 
     //! Return true if the display window is open
