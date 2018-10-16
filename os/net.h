@@ -20,8 +20,7 @@
 // Standard C includes
 #include <cwchar>
 
-// Macros defined in Linux but not Windows
-#define MSG_NOSIGNAL 0
+// Macro defined in Linux but not Windows
 #define INET_ADDRSTRLEN 22
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -76,6 +75,17 @@ typedef int socket_t;
 namespace BoBRobotics {
 namespace OS {
 namespace Net {
+
+/*
+ * We set MSG_NOSIGNAL on Linux, because otherwise a broken pipe will exit the
+ * program.
+ */
+#ifdef _WIN32
+const int sendFlags = 0;
+#else
+const int sendFlags = MSG_NOSIGNAL;
+#endif
+
 /*!
  * \brief A simple wrapper for WSAStartup() and WSACleanup() on Windows
  *

@@ -194,7 +194,7 @@ public:
     {
         checkSocket();
 
-        int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
+        int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
         if (ret == -1) {
             throwError("Could not send");
         }
