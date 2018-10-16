@@ -221,7 +221,6 @@ private:
     std::vector<char> m_Buffer;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
-    std::ostringstream m_ReadLineOutput;
     bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
     std::atomic<bool> m_Closing{ false };
