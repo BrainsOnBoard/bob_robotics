@@ -120,6 +120,7 @@ public:
     //! Close the display and stop the background thread if needed
     virtual void close()
     {
+        stop();
         if (isOpen()) {
             cv::destroyWindow(WindowName);
         }
