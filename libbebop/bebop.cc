@@ -401,13 +401,21 @@ Bebop::getState()
     return state;
 }
 
+//! Get the drone's battery level from 0.0f to 1.0f
+float
+Bebop::getBatteryLevel()
+{
+    m_BatteryLevelSemaphore.waitOnce();
+    return static_cast<float>(m_BatteryLevel) / 100.f;
+}
+
 /*
  * Invoked by commandReceived().
  *
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
+Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
@@ -424,8 +432,8 @@ Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
             val);
 
     if (val) {
-        // print battery status
-        std::cout << "Battery: " << (int) val->value.U8 << "%" << std::endl;
+        m_BatteryLevel = val->value.U8;
+        m_BatteryLevelSemaphore.notify();
     }
 }
 

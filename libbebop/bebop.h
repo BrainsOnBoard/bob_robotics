@@ -4,6 +4,7 @@
 #include <cstdint>
 
 // Standard C++ includes
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -194,6 +195,7 @@ public:
     void doFlatTrimCalibration();
 
     // misc
+    float getBatteryLevel();
     State getState();
     VideoStream &getVideoStream();
     void takePhoto();
@@ -273,19 +275,20 @@ private:
     };
 
     ControllerPtr m_Device;
-    Semaphore m_StateSemaphore, m_FlatTrimSemaphore;
+    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
+    std::atomic<unsigned char> m_BatteryLevel;
 
     inline void connect();
     inline void disconnect();
     void startStreaming();
     void stopStreaming();
     inline void addEventHandlers();
-    inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
+    inline void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
     inline State getStateUpdate();
 
