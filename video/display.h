@@ -45,7 +45,6 @@ public:
      */
     Display(Input &videoInput, const bool fullScreen = false)
       : m_VideoInput(videoInput)
-      , m_FullScreen(fullScreen)
     {
         // set opencv window to display full screen
         cv::namedWindow(WindowName, cv::WINDOW_AUTOSIZE);
@@ -150,7 +149,6 @@ private:
     bool m_ShowUnwrapped = false;
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     Input &m_VideoInput;
-    bool m_FullScreen;
     static constexpr const char *WindowName = "BoB robotics display";
 }; // Display
 } // Video
