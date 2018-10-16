@@ -12,6 +12,10 @@ endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 
+# We don't want these definitions, because we'll get linking errors if they're
+# defined in whatever's linking against libbebop
+CXXFLAGS += -DNO_BACKGROUND_EXCEPTION_DEFINITIONS
+
 SOURCES := bebop.cc video.cc
 OBJECTS := $(SOURCES:.cc=.o)
 DEPS	:= $(SOURCES:.cc=.d)

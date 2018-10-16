@@ -39,6 +39,13 @@ private:
     static std::exception_ptr m_Exception;
 }; // BackgroundException
 
+/*
+ * We want to *not* include definitions when we're linking against another
+ * object file. This currently only seems to be a problem when linking with
+ * libbebop.
+ */
+#ifndef NO_BACKGROUND_EXCEPTION_DEFINITIONS
 bool BackgroundException::m_DoCatch = false;
 std::exception_ptr BackgroundException::m_Exception;
+#endif
 } // BoBRobotics
