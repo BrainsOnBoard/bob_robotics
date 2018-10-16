@@ -506,11 +506,28 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED:
         productVersionReceived(dict);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE:
+        magnetometerCalibrationStateReceived(dict);
+        break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLATTRIMCHANGED:
         bebop->m_FlatTrimSemaphore.notify();
         break;
     default:
         break;
+    }
+}
+
+void
+Bebop::magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED, arg);
+        if (arg && arg->value.U8) {
+            std::cout << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!" << std::endl;
+        }
     }
 }
 
