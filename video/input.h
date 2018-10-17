@@ -1,18 +1,20 @@
 #pragma once
 
-// Standard C++ includes
-#include <stdexcept>
-#include <string>
+// BoBRobotics includes
+#include "../imgproc/opencv_unwrap_360.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoBRobotics includes
-#include "../imgproc/opencv_unwrap_360.h"
+// Standard C++ includes
+#include <chrono>
+#include <stdexcept>
+#include <string>
+#include <thread>
 
 namespace BoBRobotics {
 namespace Video {
-#define DefaultCameraName "unknown_camera"
+using namespace std::literals;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::Input
@@ -91,6 +93,15 @@ public:
      */
     virtual bool readFrame(cv::Mat &outFrame) = 0;
 
+    //! Read a frame synchronously, blocking until a new frame is received
+    void readFrameSync(cv::Mat &outFrame)
+    {
+        while (!readFrame(outFrame)) {
+            std::this_thread::sleep_for(10ms);
+        }
+    }
+
+    static constexpr const char *DefaultCameraName = "unknown_camera";
 private:
     cv::Mat m_IntermediateFrame;
 }; // Input
