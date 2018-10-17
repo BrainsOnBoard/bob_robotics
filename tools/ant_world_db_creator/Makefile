@@ -9,7 +9,7 @@ TARGETS = ant_world_db_creator ant_world_map_creator
 all: $(TARGETS)
 
 clean:
-	rm -f ant_world_db_creator ant_world_map_creator
+	rm -f ant_world_db_creator ant_world_map_creator *.d
 
 ant_world_db_creator: libantworld
 	$(CXX) -o $@ ant_world_db_creator.cc $(CXXFLAGS) $(LINK_FLAGS)
