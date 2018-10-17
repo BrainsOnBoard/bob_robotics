@@ -15,6 +15,7 @@
 #include <cstdio>
 
 // Standard C++ includes
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -58,7 +59,7 @@ public:
     ImageDatabase(const filesystem::path &databasePath)
       : m_Path(databasePath)
     {
-        const auto metadataPath = m_Path / "metadata.csv";
+        const auto metadataPath = m_Path / MetadataFilename;
 
         // If we don't have metadata, it's an empty database
         if (!metadataPath.exists()) {
@@ -68,31 +69,20 @@ public:
         }
 
         // Otherwise parse metadata file
-        std::ifstream file(metadataPath.str());
-        std::string line, field;
-        std::vector<std::string> fields;
-        std::getline(file, line); // skip first line
-        while (std::getline(file, line)) {
-            std::stringstream lineStream(line);
-            fields.clear();
-            while (std::getline(lineStream, field, ',')) {
-                ltrim(field); // trim whitespace
-                fields.push_back(field);
-            }
-            if (fields.size() < 5) {
-                break;
-            }
+        cv::FileStorage fs(metadataPath.str(), cv::FileStorage::READ);
+        cv::FileNode entries = fs["entries"];
+        const auto parse = [this](const cv::FileNode &node) {
+            std::vector<double> pos;
+            node["position_mm"] >> pos;
+            BOB_ASSERT(pos.size() == 3);
 
-            // Save details to vector
-            Entry entry{
-                { millimeter_t(std::stod(fields[0])),
-                  millimeter_t(std::stod(fields[1])),
-                  millimeter_t(std::stod(fields[2])) },
-                degree_t(std::stod(fields[3])),
-                m_Path / fields[4]
-            };
-            m_Database.push_back(entry);
-        }
+            Entry entry;
+            entry.position = { millimeter_t(pos[0]), millimeter_t(pos[1]), millimeter_t(pos[2]) };
+            entry.heading = degree_t((double) node["heading_deg"]);
+            entry.path = m_Path / ((std::string) node["filename"]);
+            return entry;
+        };
+        std::transform(entries.begin(), entries.end(), std::back_inserter(m_Database), parse);
     }
 
     ~ImageDatabase()
@@ -133,17 +123,23 @@ public:
 
     void saveMetadata()
     {
-        const std::string path = (m_Path / "metadata.csv").str();
+        const std::string path = (m_Path / MetadataFilename).str();
         std::cout << "Writing metadata to " << path << "..." << std::endl;
 
-        // Open file and write header
-        std::ofstream file(path);
-        file << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
-
-        // Write image file info to CSV file
+        // Write image file info to YAML file
+        cv::FileStorage fs(path, cv::FileStorage::WRITE);
+        fs << "entries" << "[";
         for (auto &e : m_Database) {
-            file << e.position[0]() << ", " << e.position[1]() << ", "
-                 << e.position[2]() << ", " << e.heading() << ", " << e.path << std::endl;
+            fs << "{:";
+            fs << "position_mm"
+               << "[:";
+            for (auto p : e.position) {
+                fs << p.value();
+            }
+            fs << "]";
+            fs << "heading_deg" << e.heading.value();
+            fs << "filename" << e.path.str();
+            fs << "}";
         }
 
         // Metadata no longer needs to be written
@@ -171,6 +167,7 @@ private:
     const filesystem::path m_Path;
     std::vector<Entry> m_Database;
     bool m_DirtyFlag = false;
+    static constexpr const char *MetadataFilename = "metadata.yaml";
 
     static void ltrim(std::string &s) {
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
