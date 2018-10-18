@@ -96,7 +96,6 @@ protected:
 
             // Write to image database
             record(frame);
-            count++;
         }
     }
 
