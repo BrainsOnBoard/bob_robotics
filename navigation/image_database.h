@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -62,11 +63,13 @@ struct Range
 class ImageDatabase
 {
 public:
+    //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
         Vector3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
+        Vector3<int> indexes{ -1, -1, -1 }; //! For grid-type databases, indicates the x,y,z grid position
 
         cv::Mat load() const
         {
@@ -83,25 +86,6 @@ public:
 
     class Recorder {
     public:
-        Recorder(ImageDatabase &imageDatabase, const bool isRoute, const std::string imageFormat)
-          : m_ImageDatabase(imageDatabase)
-          , m_ImageFormat(imageFormat)
-          , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
-          , m_Recording(true)
-        {
-            // Get current date and time
-            std::time_t recordedAt = std::time(nullptr);
-            char timeStr[sizeof("0000-00-00 00:00:00")];
-            BOB_ASSERT(0 != std::strftime(timeStr, sizeof(timeStr), "%F %T",
-                                          std::localtime(&recordedAt)));
-
-            // Write some metadata; users can add extra
-            m_YAML << "metadata"
-                   << "{"
-                   << "isRoute" << isRoute
-                   << "recordedAt" << timeStr;
-        }
-
         ~Recorder()
         {
             if (m_Recording) {
@@ -137,25 +121,51 @@ public:
         std::vector<Entry> m_NewEntries;
 
     protected:
+        Recorder(ImageDatabase &imageDatabase, const bool isRoute, const std::string imageFormat)
+          : m_ImageDatabase(imageDatabase)
+          , m_ImageFormat(imageFormat)
+          , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
+          , m_Recording(true)
+        {
+            // Set this property of the ImageDatabase
+            imageDatabase.m_IsRoute = isRoute;
+
+            // Get current date and time
+            std::time_t now = std::time(nullptr);
+            char timeStr[sizeof("0000-00-00 00:00:00")];
+            BOB_ASSERT(0 != std::strftime(timeStr, sizeof(timeStr), "%F %T",
+                                          std::localtime(&now)));
+
+            // Write some metadata; users can add extra
+            m_YAML << "metadata"
+                   << "{"
+                   << "time" << timeStr
+                   << "type" << (isRoute ? "route" : "grid");
+        }
+
         void addEntry(const std::string &filename, const cv::Mat &image,
-                      const Vector3<millimeter_t> &position, const degree_t heading)
+                      const Vector3<millimeter_t> &position, const degree_t heading,
+                      const Vector3<int> &indexes = { -1, -1, -1 })
         {
             BOB_ASSERT(m_Recording);
             m_ImageDatabase.writeImage(filename, image);
             m_NewEntries.emplace_back(Entry {
-                position, heading, m_ImageDatabase.m_Path / filename
+                position, heading, m_ImageDatabase.m_Path / filename, indexes
             });
         }
     };
 
     class GridRecorder : public Recorder {
     public:
-        GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange, const Range &zrange = Range(0_mm), degree_t heading = 0_deg, const std::string &imageFormat = "png")
+        GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange,
+                     const Range &zrange = Range(0_mm), degree_t heading = 0_deg,
+                     const std::string &imageFormat = "png")
           : Recorder(imageDatabase, false, imageFormat)
           , m_Heading(heading)
           , m_Begin({ xrange.begin, yrange.begin, zrange.begin })
           , m_Separation({ xrange.separation, yrange.separation, zrange.separation })
           , m_Size({ xrange.size(), yrange.size(), zrange.size() })
+          , m_Current({ 0, 0, 0 })
         {
             BOB_ASSERT(!imageDatabase.isRoute());
             xrange.check();
@@ -163,9 +173,9 @@ public:
             zrange.check();
         }
 
-        Vector3<millimeter_t> getPosition(const Vector3<size_t> &indexes)
+        Vector3<millimeter_t> getPosition(const Vector3<int> &indexes)
         {
-            BOB_ASSERT(indexes[0] < m_Size[0] && indexes[1] < m_Size[1] && indexes[2] < m_Size[2]);
+            BOB_ASSERT(indexes[0] < (int) m_Size[0] && indexes[1] < (int) m_Size[1] && indexes[2] < (int) m_Size[2]);
             Vector3<millimeter_t> position;
             for (size_t i = 0; i < position.size(); i++) {
                 position[i] = (m_Separation[i] * indexes[i]) + m_Begin[i];
@@ -176,25 +186,40 @@ public:
         auto getPositions()
         {
             std::vector<Vector3<millimeter_t>> positions;
-            const size_t s = maximumSize();
-            positions.reserve(s);
-            for (size_t i = 0; i < s; i++) {
-                positions.emplace_back(getPosition(i));
+            positions.reserve(maximumSize());
+            for (int x = 0; x < (int) sizeX(); x++) {
+                for (int y = 0; y < (int) sizeY(); y++) {
+                    for (int z = 0; z < (int) sizeZ(); z++) {
+                        positions.emplace_back(getPosition({ x, y, z }));
+                    }
+                }
             }
             return positions;
         }
 
         void record(const cv::Mat &image)
         {
-            record(size(), image);
+            BOB_ASSERT((size_t) m_Current[2] < sizeZ());
+            record(m_Current, image);
+
+            if ((size_t) m_Current[0] < sizeX()) {
+                m_Current[0]++;
+            } else {
+                m_Current[0] = 0;
+                if ((size_t) m_Current[1] < sizeY()) {
+                    m_Current[1]++;
+                } else {
+                    m_Current[1] = 0;
+                    m_Current[2]++;
+                }
+            }
         }
 
-        template<typename IndexType>
-        void record(const IndexType &indexes, const cv::Mat &image)
+        void record(const Vector3<int> &indexes, const cv::Mat &image)
         {
             const auto position = getPosition(indexes);
             const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
-            addEntry(filename, image, position, m_Heading);
+            addEntry(filename, image, position, m_Heading, { indexes[0], indexes[1], indexes[2] });
         }
 
         size_t maximumSize() const { return sizeX() * sizeY() * sizeZ(); }
@@ -206,12 +231,7 @@ public:
         const degree_t m_Heading;
         const Vector3<millimeter_t> m_Begin, m_Separation;
         const Vector3<size_t> m_Size;
-
-        Vector3<millimeter_t> getPosition(size_t i)
-        {
-            const Vector3<size_t> indexes{ i % sizeX(), i / sizeX(), i / (sizeX() * sizeY()) };
-            return getPosition(indexes);
-        }
+        Vector3<int> m_Current;
     };
 
     class RouteRecorder : public Recorder {
@@ -251,17 +271,38 @@ public:
         }
 
         // Otherwise parse metadata file
-        cv::FileStorage fs(metadataPath.str(), cv::FileStorage::READ);
-        cv::FileNode entries = fs["entries"];
+        cv::FileStorage yaml(metadataPath.str(), cv::FileStorage::READ);
+
+        // What type of database is it?
+        std::string dbtype;
+        yaml["metadata"]["type"] >> dbtype;
+        if (dbtype == "route") {
+            m_IsRoute = true;
+        } else if (dbtype == "grid") {
+            m_IsRoute = false;
+        } else {
+            throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
+        }
+
+        // Read in database entries
+        cv::FileNode entries = yaml["entries"];
         const auto parse = [this](const cv::FileNode &node) {
             std::vector<double> pos;
             node["positionMM"] >> pos;
             BOB_ASSERT(pos.size() == 3);
 
+            std::vector<int> indexes;
+            if (m_IsRoute) {
+                indexes = { -1, -1, -1 };
+            } else {
+                node["grid"] >> indexes;
+            }
+
             return Entry {
                 { millimeter_t(pos[0]), millimeter_t(pos[1]), millimeter_t(pos[2]) },
                 degree_t((double) node["headingDegrees"]),
-                m_Path / ((std::string) node["filename"])
+                m_Path / ((std::string) node["filename"]),
+                { indexes[0], indexes[1], indexes[2] }
             };
         };
         std::transform(entries.begin(), entries.end(), std::back_inserter(m_Metadata), parse);
@@ -294,7 +335,7 @@ public:
     static std::string getFilename(const unsigned int routeIndex,
                                    const std::string &imageFormat = "png")
     {
-        char buf[19];
+        char buf[sizeof("image_00000.") + 1];
         snprintf(buf, sizeof(buf), "image_%05d.", routeIndex);
         return std::string(buf) + imageFormat;
     }
@@ -313,8 +354,8 @@ public:
                                    const std::string &imageFormat = "png")
     {
         const auto zeroPad = [](const auto value) {
-            char num[12];
-            snprintf(num, sizeof(num), "%+05d", value);
+            char num[8];
+            snprintf(num, sizeof(num), "%+07d", value);
             return std::string(num);
         };
         return "image_" + zeroPad(positionMM[0]) + "_" + zeroPad(positionMM[1]) +
@@ -336,7 +377,10 @@ private:
 
     void addNewEntries(std::vector<Entry> &newEntries, cv::FileStorage &yaml)
     {
-        yaml["isRoute"] >> m_IsRoute;
+        if (newEntries.empty()) {
+            std::cerr << "Warning: no new entries added, nothing will be written" << std::endl;
+            return;
+        }
 
         const std::string path = (m_Path / MetadataFilename).str();
         std::cout << "Writing metadata to " << path << "..." << std::endl;
@@ -352,6 +396,16 @@ private:
              << "[";
         for (auto &e : m_Metadata) {
             yaml << "{:";
+
+            if (!m_IsRoute) {
+                yaml << "grid"
+                     << "[:";
+                for (auto i : e.indexes) {
+                    yaml << i;
+                }
+                yaml << "]";
+            }
+
             yaml << "positionMM"
                  << "[:";
             for (auto p : e.position) {
