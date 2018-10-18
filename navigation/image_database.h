@@ -28,7 +28,6 @@ namespace Navigation {
 using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
-using namespace units::math;
 
 //! A range of values in millimetres
 struct Range
@@ -386,7 +385,7 @@ public:
     {
         Vector3<int> iposition;
         std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
-            return static_cast<int>(round(mm));
+            return static_cast<int>(units::math::round(mm));
         });
         return getFilename(iposition, imageFormat);
     }
