@@ -96,7 +96,14 @@ protected:
 
             // Write to image database
             record(frame);
+            count++;
         }
+    }
+
+    void addMetadata(ImageDatabase::Recorder &recorder)
+    {
+        // Record "camera" info
+        recorder.getMetadataWriter() << "camera" << m_Agent << "needsUnwrapping" << false;
     }
 
     const millimeter_t AgentHeight = 1_cm;
@@ -116,7 +123,7 @@ public:
         const auto &worldMinBound = m_Renderer.getWorld().getMinBound();
         const auto &worldMaxBound = m_Renderer.getWorld().getMaxBound();
 
-        // Grid parameters
+        // Make GridRecorder
         Range xrange;
         xrange.begin = worldMinBound[0];
         xrange.end = worldMaxBound[0];
@@ -125,9 +132,10 @@ public:
         yrange.begin = worldMinBound[1];
         yrange.end = worldMaxBound[1];
         yrange.separation = gridSpacing;
-
-        // Make GridRecorder and convert positions to poses
         auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, AgentHeight);
+        addMetadata(gridRecorder);
+
+        // Convert positions to poses
         const auto positions = gridRecorder.getPositions();
         std::vector<Pose> poses;
         poses.reserve(positions.size());
@@ -161,6 +169,8 @@ public:
 
         // Record image database
         auto routeRecorder = m_Database.getRouteRecorder();
+        addMetadata(routeRecorder);
+
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
             const auto pos = m_Agent.getPosition();
             routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
