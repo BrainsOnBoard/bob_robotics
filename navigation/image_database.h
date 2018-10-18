@@ -297,8 +297,10 @@ public:
 
         // Read metadata from YAML file
         const auto metadataPath = m_Path / MetadataFilename;
-        if (!metadataPath.exists()) {
+        const bool metadataPresent = metadataPath.exists();
+        if (!metadataPresent) {
             std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
+            m_IsRoute = true;
         } else {
             // Parse metadata file
             cv::FileStorage metadataFile(metadataPath.str(), cv::FileStorage::READ);
@@ -336,6 +338,11 @@ public:
 
             Vector3<int> gridPosition;
             if (fields.size() >= 8) {
+                if (!metadataPresent) {
+                    // Infer that it is a grid
+                    m_IsRoute = false;
+                }
+
                 gridPosition[0] = std::stoi(fields[5]);
                 gridPosition[1] = std::stoi(fields[6]);
                 gridPosition[2] = std::stoi(fields[7]);
