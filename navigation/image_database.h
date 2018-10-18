@@ -190,8 +190,8 @@ public:
 
             // Save some extra, grid-specific metadata
             m_YAML << "grid" << "{"
-                   << "beginAt" << "[:" << m_Begin[0]() << m_Begin[1]() << m_Begin[2]() << "]"
-                   << "separation" << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
+                   << "beginAtMM" << "[:" << m_Begin[0]() << m_Begin[1]() << m_Begin[2]() << "]"
+                   << "separationMM" << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
                    << "size" << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
                    << "}";
         }
