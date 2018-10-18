@@ -71,7 +71,7 @@ public:
         Vector3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
-        Vector3<int> indexes{ -1, -1, -1 }; //! For grid-type databases, indicates the x,y,z grid position
+        Vector3<int> gridPosition{ -1, -1, -1 }; //! For grid-type databases, indicates the x,y,z grid position
 
         cv::Mat load() const
         {
@@ -108,10 +108,17 @@ public:
         //! Save new metadata
         void save()
         {
-            // End writing metadata
-            m_YAML << "}";
+            // Write metadata to file
+            {
+                m_YAML << "}";
 
-            m_ImageDatabase.addNewEntries(m_NewEntries, m_YAML);
+                const auto path = (m_ImageDatabase.m_Path / MetadataFilename).str();
+                std::cout << "Writing metadata to " << path << "..." << std::endl;
+                std::ofstream os(path);
+                os << m_YAML.releaseAndGetString();
+            }
+
+            m_ImageDatabase.addNewEntries(m_NewEntries);
             m_Recording = false;
         }
 
@@ -153,12 +160,12 @@ public:
 
         void addEntry(const std::string &filename, const cv::Mat &image,
                       const Vector3<millimeter_t> &position, const degree_t heading,
-                      const Vector3<int> &indexes = { -1, -1, -1 })
+                      const Vector3<int> &gridPosition = { -1, -1, -1 })
         {
             BOB_ASSERT(m_Recording);
             m_ImageDatabase.writeImage(filename, image);
             m_NewEntries.emplace_back(Entry {
-                position, heading, m_ImageDatabase.m_Path / filename, indexes
+                position, heading, m_ImageDatabase.m_Path / filename, gridPosition
             });
         }
     };
@@ -183,12 +190,12 @@ public:
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const Vector3<int> &indexes)
+        Vector3<millimeter_t> getPosition(const Vector3<int> &gridPosition)
         {
-            BOB_ASSERT(indexes[0] < (int) m_Size[0] && indexes[1] < (int) m_Size[1] && indexes[2] < (int) m_Size[2]);
+            BOB_ASSERT(gridPosition[0] < (int) m_Size[0] && gridPosition[1] < (int) m_Size[1] && gridPosition[2] < (int) m_Size[2]);
             Vector3<millimeter_t> position;
             for (size_t i = 0; i < position.size(); i++) {
-                position[i] = (m_Separation[i] * indexes[i]) + m_Begin[i];
+                position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
             }
             return position;
         }
@@ -224,11 +231,11 @@ public:
         }
 
         //! Save a new image into the database at the specified coordinates
-        void record(const Vector3<int> &indexes, const cv::Mat &image)
+        void record(const Vector3<int> &gridPosition, const cv::Mat &image)
         {
-            const auto position = getPosition(indexes);
+            const auto position = getPosition(gridPosition);
             const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
-            addEntry(filename, image, position, m_Heading, { indexes[0], indexes[1], indexes[2] });
+            addEntry(filename, image, position, m_Heading, { gridPosition[0], gridPosition[1], gridPosition[2] });
         }
 
         size_t maximumSize() const { return sizeX() * sizeY() * sizeZ(); }
@@ -272,60 +279,83 @@ public:
     ImageDatabase(const filesystem::path &databasePath)
       : m_Path(databasePath)
     {
-        const auto metadataPath = m_Path / MetadataFilename;
+        const auto entriesPath = m_Path / EntriesFilename;
 
-        // If we don't have metadata, it's an empty database
-        if (!metadataPath.exists()) {
+        // If we don't have any entries, it's an empty database
+        if (!entriesPath.exists()) {
             // Make sure we have a directory to save into
             filesystem::create_directory(m_Path);
             return;
         }
 
-        // Otherwise parse metadata file
-        cv::FileStorage yaml(metadataPath.str(), cv::FileStorage::READ);
-
-        // What type of database is it?
-        std::string dbtype;
-        yaml["metadata"]["type"] >> dbtype;
-        if (dbtype == "route") {
-            m_IsRoute = true;
-        } else if (dbtype == "grid") {
-            m_IsRoute = false;
+        // Read metadata from YAML file
+        const auto metadataPath = m_Path / MetadataFilename;
+        if (!metadataPath.exists()) {
+            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
         } else {
-            throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
+            // Parse metadata file
+            cv::FileStorage metadataFile(metadataPath.str(), cv::FileStorage::READ);
+
+            // What type of database is it?
+            std::string dbtype;
+            metadataFile["metadata"]["type"] >> dbtype;
+            if (dbtype == "route") {
+                m_IsRoute = true;
+            } else if (dbtype == "grid") {
+                m_IsRoute = false;
+            } else {
+                throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
+            }
         }
 
-        // Read in database entries
-        cv::FileNode entries = yaml["entries"];
-        const auto parse = [this](const cv::FileNode &node) {
-            std::vector<double> pos;
-            node["positionMM"] >> pos;
-            BOB_ASSERT(pos.size() == 3);
-
-            std::vector<int> indexes;
-            if (m_IsRoute) {
-                indexes = { -1, -1, -1 };
-            } else {
-                node["grid"] >> indexes;
+        // Read in entries from CSV file
+        std::ifstream entriesFile(metadataPath.str());
+        std::string line, field;
+        std::vector<std::string> fields;
+        std::getline(entriesFile, line); // skip first line
+        while (std::getline(entriesFile, line)) {
+            std::stringstream lineStream(line);
+            fields.clear();
+            while (std::getline(lineStream, field, ',')) {
+                // Trim whitespace from left (not C++ at its prettiest!)
+                field.erase(field.begin(), std::find_if(field.begin(), field.end(), [](int ch) {
+                    return !std::isspace(ch);
+                }));
+                fields.push_back(field);
+            }
+            if (fields.size() < 5) {
+                break;
             }
 
-            return Entry {
-                { millimeter_t(pos[0]), millimeter_t(pos[1]), millimeter_t(pos[2]) },
-                degree_t((double) node["headingDegrees"]),
-                m_Path / ((std::string) node["filename"]),
-                { indexes[0], indexes[1], indexes[2] }
+            Vector3<int> gridPosition;
+            if (fields.size() >= 8) {
+                gridPosition[0] = std::stoi(fields[5]);
+                gridPosition[1] = std::stoi(fields[6]);
+                gridPosition[2] = std::stoi(fields[7]);
+            } else {
+                gridPosition = { -1, -1, -1 };
+            }
+
+            // Save details to vector
+            Entry entry{
+                { millimeter_t(std::stod(fields[0])),
+                  millimeter_t(std::stod(fields[1])),
+                  millimeter_t(std::stod(fields[2])) },
+                degree_t(std::stod(fields[3])),
+                m_Path / fields[4],
+                gridPosition
             };
-        };
-        std::transform(entries.begin(), entries.end(), std::back_inserter(m_Metadata), parse);
+            m_Entries.push_back(entry);
+        }
     }
 
     const filesystem::path &getPath() const { return m_Path; }
 
-    const Entry &operator[](size_t i) const { return m_Metadata[i]; }
-    auto begin() const { return m_Metadata.cbegin(); }
-    auto end() const { return m_Metadata.cend(); }
-    size_t size() const { return m_Metadata.size(); }
-    bool empty() const { return m_Metadata.empty(); }
+    const Entry &operator[](size_t i) const { return m_Entries[i]; }
+    auto begin() const { return m_Entries.cbegin(); }
+    auto end() const { return m_Entries.cend(); }
+    size_t size() const { return m_Entries.size(); }
+    bool empty() const { return m_Entries.empty(); }
 
     bool isRoute() const { return !empty() && m_IsRoute; }
     bool isGrid() const { return !empty() && !m_IsRoute; }
@@ -375,9 +405,10 @@ public:
 
 private:
     const filesystem::path m_Path;
-    std::vector<Entry> m_Metadata;
+    std::vector<Entry> m_Entries;
     bool m_IsRoute;
-    static constexpr const char *MetadataFilename = "metadata.yaml";
+    static constexpr const char *MetadataFilename = "database_metadata.yaml";
+    static constexpr const char *EntriesFilename = "database_entries.csv";
 
     void writeImage(const std::string &filename, const cv::Mat &image)
     {
@@ -386,52 +417,44 @@ private:
         cv::imwrite(path.str(), image);
     }
 
-    void addNewEntries(std::vector<Entry> &newEntries, cv::FileStorage &yaml)
+    void addNewEntries(std::vector<Entry> &newEntries)
     {
         if (newEntries.empty()) {
             std::cerr << "Warning: no new entries added, nothing will be written" << std::endl;
             return;
         }
 
-        const std::string path = (m_Path / MetadataFilename).str();
-        std::cout << "Writing metadata to " << path << "..." << std::endl;
+        const std::string path = (m_Path / EntriesFilename).str();
+        std::cout << "Writing entries to " << path << "..." << std::endl;
 
-        // Move new metadata into this object's vector
-        m_Metadata.reserve(m_Metadata.size() + newEntries.size());
+        // Move new entries into this object's vector
+        m_Entries.reserve(m_Entries.size() + newEntries.size());
         for (auto &&e : newEntries) {
-            m_Metadata.emplace_back(std::move(e));
+            m_Entries.emplace_back(std::move(e));
         }
 
-        // Add entries to YAML object
-        yaml << "entries"
-             << "[";
-        for (auto &e : m_Metadata) {
-            yaml << "{:";
-
-            if (!m_IsRoute) {
-                yaml << "grid"
-                     << "[:";
-                for (auto i : e.indexes) {
-                    yaml << i;
-                }
-                yaml << "]";
-            }
-
-            yaml << "positionMM"
-                 << "[:";
-            for (auto p : e.position) {
-                yaml << p.value();
-            }
-            yaml << "]";
-            yaml << "headingDegrees" << e.heading.value();
-            yaml << "filename" << e.path.filename();
-            yaml << "}";
-        }
-        yaml << "]";
-
-        // Write to file
+        // Write image entries info to CSV file
         std::ofstream os(path);
-        os << yaml.releaseAndGetString();
+        if (m_IsRoute) {
+            os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
+            for (auto &e : m_Entries) {
+                writeEntry(os, e);
+                os << std::endl;
+            }
+        } else {
+            os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename, Grid X, Grid Y, Grid Z" << std::endl;
+            for (auto &e : m_Entries) {
+                writeEntry(os, e);
+                os << e.gridPosition[0] << ", " << e.gridPosition[1] << ", " << e.gridPosition[2];
+                os << std::endl;
+            }
+        }
+    }
+
+    void writeEntry(std::ofstream &os, const Entry &e)
+    {
+        os << e.position[0]() << ", " << e.position[1]() << ", "
+           << e.position[2]() << ", " << e.heading() << ", " << e.path;
     }
 }; // ImageDatabase
 } // Navigation
