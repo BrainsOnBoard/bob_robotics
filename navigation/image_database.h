@@ -13,13 +13,13 @@
 
 // Standard C includes
 #include <cstdio>
+#include <ctime>
 
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace BoBRobotics {
@@ -81,29 +81,86 @@ public:
         }
     };
 
-    class GridRecorder {
+    class Recorder {
     public:
-        GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange,
-                     const Range &zrange = Range(0_mm), degree_t heading = 0_deg,
-                     const std::string &imageFormat = "png")
+        Recorder(ImageDatabase &imageDatabase, const bool isRoute, const std::string imageFormat)
           : m_ImageDatabase(imageDatabase)
+          , m_ImageFormat(imageFormat)
+          , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
+          , m_Recording(true)
+        {
+            // Get current date and time
+            std::time_t recordedAt = std::time(nullptr);
+            char timeStr[sizeof("0000-00-00 00:00:00")];
+            BOB_ASSERT(0 != std::strftime(timeStr, sizeof(timeStr), "%F %T",
+                                          std::localtime(&recordedAt)));
+
+            // Write some metadata; users can add extra
+            m_YAML << "metadata"
+                   << "{"
+                   << "isRoute" << isRoute
+                   << "recordedAt" << timeStr;
+        }
+
+        ~Recorder()
+        {
+            if (m_Recording) {
+                save();
+            }
+        }
+
+        cv::FileStorage &getMetadataWriter() { return m_YAML; }
+
+        void abortSave()
+        {
+            m_Recording = false;
+        }
+
+        void save()
+        {
+            // End writing metadata
+            m_YAML << "}";
+
+            m_ImageDatabase.addNewEntries(m_NewEntries, m_YAML);
+            m_Recording = false;
+        }
+
+        size_t size() const { return m_NewEntries.size(); }
+
+        std::string getImageFormat() { return m_ImageFormat; }
+
+    private:
+        ImageDatabase &m_ImageDatabase;
+        const std::string m_ImageFormat;
+        cv::FileStorage m_YAML;
+        bool m_Recording;
+        std::vector<Entry> m_NewEntries;
+
+    protected:
+        void addEntry(const std::string &filename, const cv::Mat &image,
+                      const Vector3<millimeter_t> &position, const degree_t heading)
+        {
+            BOB_ASSERT(m_Recording);
+            m_ImageDatabase.writeImage(filename, image);
+            m_NewEntries.emplace_back(Entry {
+                position, heading, m_ImageDatabase.m_Path / filename
+            });
+        }
+    };
+
+    class GridRecorder : public Recorder {
+    public:
+        GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange, const Range &zrange = Range(0_mm), degree_t heading = 0_deg, const std::string &imageFormat = "png")
+          : Recorder(imageDatabase, false, imageFormat)
           , m_Heading(heading)
           , m_Begin({ xrange.begin, yrange.begin, zrange.begin })
           , m_Separation({ xrange.separation, yrange.separation, zrange.separation })
           , m_Size({ xrange.size(), yrange.size(), zrange.size() })
-          , m_ImageFormat(imageFormat)
         {
             BOB_ASSERT(!imageDatabase.isRoute());
             xrange.check();
             yrange.check();
             zrange.check();
-        }
-
-        ~GridRecorder()
-        {
-            if (m_Recording) {
-                saveMetadata();
-            }
         }
 
         Vector3<millimeter_t> getPosition(const Vector3<size_t> &indexes)
@@ -129,44 +186,26 @@ public:
 
         void record(const cv::Mat &image)
         {
-            record(m_NewMetadata.size(), image);
+            record(size(), image);
         }
 
         template<typename IndexType>
         void record(const IndexType &indexes, const cv::Mat &image)
         {
-            BOB_ASSERT(m_Recording);
             const auto position = getPosition(indexes);
-            const std::string filename = ImageDatabase::getFilename(position, m_ImageFormat);
-
-            m_ImageDatabase.writeImage(filename, image);
-            m_NewMetadata.emplace_back(Entry { position, m_Heading, m_ImageDatabase.m_Path / filename});
+            const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
+            addEntry(filename, image, position, m_Heading);
         }
 
-        void abortSave()
-        {
-            m_Recording = false;
-        }
-
-        void saveMetadata()
-        {
-            m_ImageDatabase.writeMetadata(m_NewMetadata, false);
-            m_Recording = false;
-        }
-
-        size_t size() const { return sizeX() * sizeY() * sizeZ(); }
+        size_t maximumSize() const { return sizeX() * sizeY() * sizeZ(); }
         size_t sizeX() const { return m_Size[0]; }
         size_t sizeY() const { return m_Size[1]; }
         size_t sizeZ() const { return m_Size[2]; }
 
     private:
-        ImageDatabase &m_ImageDatabase;
         const degree_t m_Heading;
-        std::vector<Entry> m_NewMetadata;
         const Vector3<millimeter_t> m_Begin, m_Separation;
         const Vector3<size_t> m_Size;
-        const std::string m_ImageFormat;
-        bool m_Recording = true;
 
         Vector3<millimeter_t> getPosition(size_t i)
         {
@@ -175,54 +214,20 @@ public:
         }
     };
 
-    class RouteRecorder {
+    class RouteRecorder : public Recorder {
     public:
         RouteRecorder(ImageDatabase &imageDatabase, const std::string &imageFormat = "png")
-          : m_ImageDatabase(imageDatabase)
-          , m_ImageFormat(imageFormat)
+          : Recorder(imageDatabase, true, imageFormat)
         {
             BOB_ASSERT(!imageDatabase.isGrid());
-        }
-
-        ~RouteRecorder()
-        {
-            if (m_Recording) {
-                saveMetadata();
-            }
         }
 
         void record(const Vector3<millimeter_t> &position, degree_t heading,
                     const cv::Mat &image)
         {
-            BOB_ASSERT(m_Recording);
-
-            const std::string filename = ImageDatabase::getFilename(m_NewMetadata.size(), m_ImageFormat);
-            m_ImageDatabase.writeImage(filename, image);
-            m_NewMetadata.emplace_back(Entry {
-                position,
-                heading,
-                m_ImageDatabase.m_Path / filename,
-            });
+            const std::string filename = ImageDatabase::getFilename(size(), getImageFormat());
+            addEntry(filename, image, position, heading);
         }
-
-        void abortSave()
-        {
-            m_Recording = false;
-        }
-
-        void saveMetadata()
-        {
-            m_ImageDatabase.writeMetadata(m_NewMetadata, true);
-            m_Recording = false;
-        }
-
-        size_t size() const { return m_NewMetadata.size(); }
-
-    private:
-        ImageDatabase &m_ImageDatabase;
-        const std::string m_ImageFormat;
-        std::vector<Entry> m_NewMetadata;
-        bool m_Recording = true;
     };
 
     ImageDatabase(const char *databasePath)
@@ -250,12 +255,12 @@ public:
         cv::FileNode entries = fs["entries"];
         const auto parse = [this](const cv::FileNode &node) {
             std::vector<double> pos;
-            node["position_mm"] >> pos;
+            node["positionMM"] >> pos;
             BOB_ASSERT(pos.size() == 3);
 
             return Entry {
                 { millimeter_t(pos[0]), millimeter_t(pos[1]), millimeter_t(pos[2]) },
-                degree_t((double) node["heading_deg"]),
+                degree_t((double) node["headingDegrees"]),
                 m_Path / ((std::string) node["filename"])
             };
         };
@@ -304,7 +309,7 @@ public:
         return getFilename(iposition, imageFormat);
     }
 
-    static std::string getFilename(const Vector3<int> &position_mm,
+    static std::string getFilename(const Vector3<int> &positionMM,
                                    const std::string &imageFormat = "png")
     {
         const auto zeroPad = [](const auto value) {
@@ -312,8 +317,8 @@ public:
             snprintf(num, sizeof(num), "%+05d", value);
             return std::string(num);
         };
-        return "image_" + zeroPad(position_mm[0]) + "_" + zeroPad(position_mm[1]) +
-               "_" + zeroPad(position_mm[2]) + "." + imageFormat;
+        return "image_" + zeroPad(positionMM[0]) + "_" + zeroPad(positionMM[1]) +
+               "_" + zeroPad(positionMM[2]) + "." + imageFormat;
     }
 
 private:
@@ -329,38 +334,39 @@ private:
         cv::imwrite(path.str(), image);
     }
 
-    void writeMetadata(std::vector<Entry> &newMetadata, const bool isRoute)
+    void addNewEntries(std::vector<Entry> &newEntries, cv::FileStorage &yaml)
     {
-        m_IsRoute = isRoute;
+        yaml["isRoute"] >> m_IsRoute;
 
         const std::string path = (m_Path / MetadataFilename).str();
         std::cout << "Writing metadata to " << path << "..." << std::endl;
 
         // Move new metadata into this object's vector
-        m_Metadata.reserve(m_Metadata.size() + newMetadata.size());
-        for (auto &&e : newMetadata) {
+        m_Metadata.reserve(m_Metadata.size() + newEntries.size());
+        for (auto &&e : newEntries) {
             m_Metadata.emplace_back(std::move(e));
         }
 
-        // Write to YAML file
-        cv::FileStorage fs(path, cv::FileStorage::WRITE);
-        fs << "metadata"
-           << "{:"
-           << "is_route" << isRoute << "}";
-        fs << "entries"
-           << "[";
+        // Add entries to YAML object
+        yaml << "entries"
+             << "[";
         for (auto &e : m_Metadata) {
-            fs << "{:";
-            fs << "position_mm"
-               << "[:";
+            yaml << "{:";
+            yaml << "positionMM"
+                 << "[:";
             for (auto p : e.position) {
-                fs << p.value();
+                yaml << p.value();
             }
-            fs << "]";
-            fs << "heading_deg" << e.heading.value();
-            fs << "filename" << e.path.filename();
-            fs << "}";
+            yaml << "]";
+            yaml << "headingDegrees" << e.heading.value();
+            yaml << "filename" << e.path.filename();
+            yaml << "}";
         }
+        yaml << "]";
+
+        // Write to file
+        std::ofstream os(path);
+        os << yaml.releaseAndGetString();
     }
 }; // ImageDatabase
 } // Navigation
