@@ -42,7 +42,10 @@ main()
         // Save images into a folder called gantry
         Navigation::ImageDatabase database("gantry");
         auto gridRecorder = database.getGridRecorder(xrange, yrange, z);
-        gridRecorder.getMetadataWriter() << "camera" << cam << "needsUnwrapping" << true;
+        auto &metadata = gridRecorder.getMetadataWriter();
+        metadata << "camera" << cam
+                 << "needsUnwrapping" << true
+                 << "isGreyscale" << false;
 
         cv::Mat frame(imSize, CV_8UC3);
         for (size_t x = 0, y = 0; x < gridRecorder.sizeX(); ) {

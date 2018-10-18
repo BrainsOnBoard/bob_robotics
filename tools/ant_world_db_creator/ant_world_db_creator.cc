@@ -96,13 +96,17 @@ protected:
 
             // Write to image database
             record(frame);
+            count++;
         }
     }
 
     void addMetadata(ImageDatabase::Recorder &recorder)
     {
         // Record "camera" info
-        recorder.getMetadataWriter() << "camera" << m_Agent << "needsUnwrapping" << false;
+        auto &metadata = recorder.getMetadataWriter();
+        metadata << "camera" << m_Agent
+                 << "needsUnwrapping" << false
+                 << "isGreyscale" << false;
     }
 
     const millimeter_t AgentHeight = 1_cm;
