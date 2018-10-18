@@ -101,9 +101,25 @@ public:
         }
     }
 
+    //! Allows OpenCV to serialise info about this Input
+    void write(cv::FileStorage& fs) const
+    {
+        fs << "{";
+        fs << "name" << getCameraName();
+        fs << "resolution" << getOutputSize();
+        fs << "isPanoramic" << needsUnwrapping();
+        fs << "}";
+    }
+
     static constexpr const char *DefaultCameraName = "unknown_camera";
 private:
     cv::Mat m_IntermediateFrame;
 }; // Input
+
+//! More OpenCV boilerplate
+inline void write(cv::FileStorage &fs, const std::string &, const Input &camera)
+{
+    camera.write(fs);
+}
 } // Video
 } // BoBRobotics
