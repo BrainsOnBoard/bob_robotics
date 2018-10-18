@@ -30,6 +30,7 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::math;
 
+//! A range of values in millimetres
 struct Range
 {
     millimeter_t begin;
@@ -60,6 +61,7 @@ struct Range
     }
 };
 
+//! An interface for reading from and writing to folders of images
 class ImageDatabase
 {
 public:
@@ -84,6 +86,7 @@ public:
         }
     };
 
+    //! Base class for GridRecorder and RouteRecorder
     class Recorder {
     public:
         ~Recorder()
@@ -93,13 +96,16 @@ public:
             }
         }
 
+        //! Get an object for writing additional metadata to
         cv::FileStorage &getMetadataWriter() { return m_YAML; }
 
+        //! Don't save new metadata when this class is destroyed
         void abortSave()
         {
             m_Recording = false;
         }
 
+        //! Save new metadata
         void save()
         {
             // End writing metadata
@@ -109,9 +115,11 @@ public:
             m_Recording = false;
         }
 
+        //! Current number of *new* entries for the ImageDatabase
         size_t size() const { return m_NewEntries.size(); }
 
-        std::string getImageFormat() { return m_ImageFormat; }
+        //! Get the format in which images will be saved
+        std::string getImageFormat() const { return m_ImageFormat; }
 
     private:
         ImageDatabase &m_ImageDatabase;
@@ -155,6 +163,7 @@ public:
         }
     };
 
+    //! For recording a grid of images at a fixed heading
     class GridRecorder : public Recorder {
     public:
         GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange,
@@ -173,6 +182,7 @@ public:
             zrange.check();
         }
 
+        //! Get the physical position represented by grid coordinates
         Vector3<millimeter_t> getPosition(const Vector3<int> &indexes)
         {
             BOB_ASSERT(indexes[0] < (int) m_Size[0] && indexes[1] < (int) m_Size[1] && indexes[2] < (int) m_Size[2]);
@@ -183,6 +193,7 @@ public:
             return position;
         }
 
+        //! Get a vector of all possible positions for this grid
         auto getPositions()
         {
             std::vector<Vector3<millimeter_t>> positions;
@@ -197,6 +208,7 @@ public:
             return positions;
         }
 
+        //! Save a new image into the database
         void record(const cv::Mat &image)
         {
             BOB_ASSERT((size_t) m_Current[2] < sizeZ());
@@ -215,6 +227,7 @@ public:
             }
         }
 
+        //! Save a new image into the database at the specified coordinates
         void record(const Vector3<int> &indexes, const cv::Mat &image)
         {
             const auto position = getPosition(indexes);
@@ -234,6 +247,7 @@ public:
         Vector3<int> m_Current;
     };
 
+    //! For saving images recorded along a route
     class RouteRecorder : public Recorder {
     public:
         RouteRecorder(ImageDatabase &imageDatabase, const std::string &imageFormat = "png")
@@ -242,6 +256,7 @@ public:
             BOB_ASSERT(!imageDatabase.isGrid());
         }
 
+        //! Save a new image taken at the specified pose
         void record(const Vector3<millimeter_t> &position, degree_t heading,
                     const cv::Mat &image)
         {
