@@ -17,11 +17,14 @@ using namespace BoBRobotics;
 int
 main()
 {
-    const auto xstart = 0_mm;
-    const auto xend = 100_mm;
-    const auto ystart = 0_mm;
-    const auto yend = 1700_mm;
-    const auto step = 100_mm;
+    Navigation::Range xrange;
+    xrange.begin = 0_mm;
+    xrange.end = 100_mm;
+    xrange.separation = 100_mm;
+    Navigation::Range yrange;
+    yrange.begin = 0_mm;
+    yrange.end = 1700_mm;
+    yrange.separation = 100_mm;
     const auto z = 200_mm;
 
     try {
@@ -38,47 +41,42 @@ main()
 
         // Save images into a folder called gantry
         Navigation::ImageDatabase database("gantry");
+        auto gridRecorder = database.getGridRecorder(xrange, yrange, z);
 
-        auto x = xstart;
-        auto y = ystart;
         cv::Mat frame(imSize, CV_8UC3);
-        bool increaseY = true;
-        while (true) {
+        for (size_t x = 0, y = 0; x < gridRecorder.sizeX(); ) {
+            // Move gantry to next position
+            const auto pos = gridRecorder.getPosition({ x, y, 0 });
+            gantry.setPosition(pos[0], pos[1], pos[2]);
+
             // While gantry is moving, poll for user keypress
-            gantry.setPosition(x, y, z);
             while (gantry.isMoving()) {
-                if (cv::waitKeyEx(1) == OS::KeyCodes::Escape) {
+                if (cv::waitKeyEx(1) & OS::KeyMask == OS::KeyCodes::Escape) {
                     return 0;
                 }
             }
 
             // Read frame (blocking) and display
-            while (!cam.readFrame(frame))
-                ;
+            cam.readFrameSync(frame);
             cv::imshow("Gantry camera", frame);
 
-            // Write to file with metadata
-            database.addImage(frame, x, y, z, 0_deg, false);
+            // Save image
+            gridRecorder.record({ x, y, 0 }, frame);
 
-            // Get next position
-            if (increaseY) {
-                if (y < yend) {
-                    y += step;
+            // If we haven't finished moving along y, move along one more
+            if ((x % 2) == 0) {
+                if (y < gridRecorder.size()) {
+                    y++;
                     continue;
                 }
-            } else {
-                if (y > ystart) {
-                    y -= step;
-                    continue;
-                }
+            } else if (y > 0) {
+                // For odd x positions, we decrease y
+                y--;
+                continue;
             }
-            if (x < xend) {
-                x += step;
-                increaseY = !increaseY;
-            } else {
-                // ... otherwise we've finished
-                break;
-            }
+
+            // Otherwise move x
+            x++;
         }
     } catch (std::exception &e) {
         std::cerr << "Uncaught exception: " << e.what() << std::endl;
