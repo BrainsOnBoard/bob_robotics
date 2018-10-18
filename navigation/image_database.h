@@ -70,7 +70,7 @@ public:
         Vector3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
-        Vector3<int> gridPosition{ -1, -1, -1 }; //! For grid-type databases, indicates the x,y,z grid position
+        Vector3<int> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
 
         cv::Mat load() const
         {
