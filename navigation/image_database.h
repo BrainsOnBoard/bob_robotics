@@ -214,13 +214,9 @@ public:
             BOB_ASSERT((size_t) m_Current[2] < sizeZ());
             record(m_Current, image);
 
-            if ((size_t) m_Current[0] < sizeX()) {
-                m_Current[0]++;
-            } else {
+            if ((size_t) ++m_Current[0] == sizeX()) {
                 m_Current[0] = 0;
-                if ((size_t) m_Current[1] < sizeY()) {
-                    m_Current[1]++;
-                } else {
+                if ((size_t) ++m_Current[1] == sizeY()) {
                     m_Current[1] = 0;
                     m_Current[2]++;
                 }
