@@ -176,7 +176,7 @@ public:
         auto getPositions()
         {
             std::vector<Vector3<millimeter_t>> positions;
-            const size_t s = size();
+            const size_t s = maximumSize();
             positions.reserve(s);
             for (size_t i = 0; i < s; i++) {
                 positions.emplace_back(getPosition(i));
