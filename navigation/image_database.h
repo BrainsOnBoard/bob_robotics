@@ -43,7 +43,7 @@ struct Range
         separation = 0_mm;
     }
 
-    void check()
+    void check() const
     {
         if (begin == end) {
             BOB_ASSERT(separation == 0_mm);
@@ -53,7 +53,7 @@ struct Range
         }
     }
 
-    size_t size()
+    size_t size() const
     {
         return (separation == 0_mm) ? 1 : ((end - begin) / separation).to<size_t>();
     }
@@ -83,8 +83,8 @@ public:
 
     class GridRecorder {
     public:
-        GridRecorder(ImageDatabase &imageDatabase, Range xrange, Range yrange,
-                     Range zrange = Range(0_mm), degree_t heading = 0_deg,
+        GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange,
+                     const Range &zrange = Range(0_mm), degree_t heading = 0_deg,
                      const std::string &imageFormat = "png")
           : m_ImageDatabase(imageDatabase)
           , m_Heading(heading)
@@ -139,13 +139,8 @@ public:
             const auto position = getPosition(indexes);
             const std::string filename = ImageDatabase::getFilename(position, m_ImageFormat);
 
-            try {
-                m_ImageDatabase.writeImage(filename, image);
-                m_NewMetadata.emplace_back(Entry { position, m_Heading, m_ImageDatabase.m_Path / filename});
-            } catch (...) {
-                abortSave();
-                throw;
-            }
+            m_ImageDatabase.writeImage(filename, image);
+            m_NewMetadata.emplace_back(Entry { position, m_Heading, m_ImageDatabase.m_Path / filename});
         }
 
         void abortSave()
@@ -202,17 +197,12 @@ public:
             BOB_ASSERT(m_Recording);
 
             const std::string filename = ImageDatabase::getFilename(m_NewMetadata.size(), m_ImageFormat);
-            try {
-                m_ImageDatabase.writeImage(filename, image);
-                m_NewMetadata.emplace_back(Entry {
-                    position,
-                    heading,
-                    m_ImageDatabase.m_Path / filename,
-                });
-            } catch (...) {
-                abortSave();
-                throw;
-            }
+            m_ImageDatabase.writeImage(filename, image);
+            m_NewMetadata.emplace_back(Entry {
+                position,
+                heading,
+                m_ImageDatabase.m_Path / filename,
+            });
         }
 
         void abortSave()
@@ -283,16 +273,17 @@ public:
     bool isRoute() const { return !empty() && m_IsRoute; }
     bool isGrid() const { return !empty() && !m_IsRoute; }
 
-    template<typename... Ts>
-    GridRecorder getGridRecorder(Ts&&... args)
+    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
+                                 const Range &zrange = Range(0_mm),
+                                 degree_t heading = 0_deg,
+                                 const std::string &imageFormat = "png")
     {
-        return GridRecorder(*this, std::forward<Ts>(args)...);
+        return GridRecorder(*this, xrange, yrange, zrange, heading, imageFormat);
     }
 
-    template<typename... Ts>
-    RouteRecorder getRouteRecorder(Ts&&... args)
+    RouteRecorder getRouteRecorder(const std::string &imageFormat = "png")
     {
-        return RouteRecorder(*this, std::forward<Ts>(args)...);
+        return RouteRecorder(*this, imageFormat);
     }
 
     static std::string getFilename(const unsigned int routeIndex,
