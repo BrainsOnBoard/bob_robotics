@@ -130,16 +130,17 @@ public:
     private:
         ImageDatabase &m_ImageDatabase;
         const std::string m_ImageFormat;
-        cv::FileStorage m_YAML;
         bool m_Recording;
         std::vector<Entry> m_NewEntries;
 
     protected:
+        cv::FileStorage m_YAML;
+
         Recorder(ImageDatabase &imageDatabase, const bool isRoute, const std::string imageFormat)
           : m_ImageDatabase(imageDatabase)
           , m_ImageFormat(imageFormat)
-          , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
           , m_Recording(true)
+          , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
         {
             // Set this property of the ImageDatabase
             imageDatabase.m_IsRoute = isRoute;
@@ -186,6 +187,13 @@ public:
             xrange.check();
             yrange.check();
             zrange.check();
+
+            // Save some extra, grid-specific metadata
+            m_YAML << "grid" << "{"
+                   << "beginAt" << "[:" << m_Begin[0]() << m_Begin[1]() << m_Begin[2]() << "]"
+                   << "separation" << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
+                   << "size" << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
+                   << "}";
         }
 
         //! Get the physical position represented by grid coordinates
