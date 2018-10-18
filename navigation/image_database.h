@@ -445,7 +445,7 @@ private:
             os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename, Grid X, Grid Y, Grid Z" << std::endl;
             for (auto &e : m_Entries) {
                 writeEntry(os, e);
-                os << e.gridPosition[0] << ", " << e.gridPosition[1] << ", " << e.gridPosition[2];
+                os << ", " << e.gridPosition[0] << ", " << e.gridPosition[1] << ", " << e.gridPosition[2];
                 os << std::endl;
             }
         }
