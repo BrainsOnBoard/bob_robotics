@@ -57,7 +57,7 @@ struct Range
 
     size_t size() const
     {
-        return (separation == 0_mm) ? 1 : ((end - begin) / separation).to<size_t>();
+        return (separation == 0_mm) ? 1 : (1 + ((end - begin) / separation).to<size_t>());
     }
 };
 
