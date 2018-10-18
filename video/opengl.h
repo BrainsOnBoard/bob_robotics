@@ -47,7 +47,7 @@ public:
     virtual bool readFrame(cv::Mat &outFrame) override
     {
         // Make sure frame is of right size and type
-        outFrame.create(m_ReadWidth, m_ReadHeight, CV_8UC3);
+        outFrame.create(m_ReadHeight, m_ReadWidth, CV_8UC3);
 
         // Read pixels from framebuffer into outFrame
         // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
