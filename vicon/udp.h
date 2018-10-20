@@ -1,8 +1,11 @@
 #pragma once
 
-// BoB robotics includes
-#include "../common/assert.h"
-#include "../common/pose.h"
+// POSIX networking includes
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 // Standard C++ includes
 #include <algorithm>
@@ -16,12 +19,9 @@
 // Standard C includes
 #include <cstring>
 
-// POSIX networking includes
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
 
 namespace BoBRobotics
 {
