@@ -1,14 +1,14 @@
 #pragma once
 
-// Standard C++ includes
-#include <stdexcept>
-#include <string>
+// BoBRobotics includes
+#include "../imgproc/opencv_unwrap_360.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoBRobotics includes
-#include "../imgproc/opencv_unwrap_360.h"
+// Standard C++ includes
+#include <stdexcept>
+#include <string>
 
 namespace BoBRobotics {
 namespace Video {
@@ -27,7 +27,7 @@ public:
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
      *
-     * @param args The resolution of the unwrapped image
+     * @param unwrapRes The resolution of the unwrapped image
      */
     ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
     {

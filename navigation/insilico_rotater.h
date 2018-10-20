@@ -54,7 +54,7 @@ public:
 
     size_t max() const
     {
-        return m_Image.cols / m_ScanStep;
+        return static_cast<size_t>(m_Image.cols) / m_ScanStep;
     }
 
 private:

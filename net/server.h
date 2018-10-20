@@ -9,9 +9,12 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// Standard C includes
+#include <cstdint>
+
 // Standard C++ includes
-#include <memory>
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,7 +33,7 @@ class Server : public Node
 {
 public:
     //! Create a new server, listening on the specified port
-    Server(int port = Socket::DefaultListenPort)
+    Server(uint16_t port = Socket::DefaultListenPort)
     {
         m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (m_ListenSocket == INVALID_SOCKET) {
@@ -94,8 +97,8 @@ protected:
     }
 
 private:
-    socket_t m_ListenSocket = INVALID_SOCKET;
     std::unique_ptr<Socket> m_Socket;
+    socket_t m_ListenSocket = INVALID_SOCKET;
 };
 } // Net
 } // BoBRobotics

@@ -43,8 +43,8 @@ public:
     }
 
 private:
-    std::mutex mtx;
     std::condition_variable cv;
+    std::mutex mtx;
     bool fired = false;
 };
 } // BoBRobotics

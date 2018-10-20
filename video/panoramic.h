@@ -1,21 +1,21 @@
 #pragma once
 
-// Standard C++ includes
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// Local includes
+// BoB robotics includes
 #include "input.h"
 #include "opencvinput.h"
 #ifndef _WIN32
 #include "../os/video.h"
 #include "see3cam_cu40.h"
 #endif
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Video {
@@ -32,7 +32,7 @@ inline std::unique_ptr<Input> getPanoramicCamera()
 
     // list of preferred cameras in priority order
     static const std::array<std::string, 3> prefCameras{
-        SEE3CAM_DEVICE_NAME, PIXPRO_USB_DEVICE_NAME, WEBCAM360_DEVICE_NAME
+        See3CamDeviceName, PixProUSBDeviceName, Webcam360DeviceName
     };
 
     int deviceNum = -1, prefCamNum = -1;

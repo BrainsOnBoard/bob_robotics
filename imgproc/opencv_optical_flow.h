@@ -68,10 +68,10 @@ public:
         }
     }
 
-    void render(cv::Mat &outputImage, unsigned int scale)
+    void render(cv::Mat &outputImage, int scale)
     {
-        BOB_ASSERT(outputImage.cols == m_FlowX.cols * (int) scale);
-        BOB_ASSERT(outputImage.rows == m_FlowX.rows * (int) scale);
+        BOB_ASSERT(outputImage.cols == m_FlowX.cols * scale);
+        BOB_ASSERT(outputImage.rows == m_FlowX.rows * scale);
 
         // Clear image
         outputImage.setTo(cv::Scalar::all(0));

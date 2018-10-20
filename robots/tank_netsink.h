@@ -2,8 +2,6 @@
 
 // BoB robotics includes
 #include "../net/node.h"
-
-// local includes
 #include "tank.h"
 
 namespace BoBRobotics {

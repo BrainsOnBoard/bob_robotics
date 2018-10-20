@@ -98,7 +98,7 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
-    const std::streampos numTriangles = input.tellg() / (sizeof(double) * 12);
+    const auto numTriangles = static_cast<size_t>(input.tellg()) / (sizeof(double) * 12);
     input.seekg(0);
     std::cout << "World has " << numTriangles << " triangles" << std::endl;
 

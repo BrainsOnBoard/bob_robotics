@@ -1,20 +1,20 @@
 #pragma once
 
-// Standard C++ includes
-#include <array>
-#include <set>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../common/pose.h"
+
+// Third-party includes
+#include "../third_party/units.h"
 
 // OpenGL includes
 #include <GL/glew.h>
 #include <GL/glu.h>
 
-// Third-party includes
-#include "../third_party/units.h"
-
-// BoB robotics includes
-#include "../common/pose.h"
+// Standard C++ includes
+#include <array>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics
 {
@@ -92,3 +92,4 @@ private:
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
+

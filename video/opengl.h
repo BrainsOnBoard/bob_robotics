@@ -1,13 +1,13 @@
 #pragma once
 
+// BoB robotics includes
+#include "input.h"
+
 // OpenGL includes
 #include <GL/glew.h>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "input.h"
 
 namespace BoBRobotics {
 namespace Video {

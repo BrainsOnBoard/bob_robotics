@@ -282,7 +282,7 @@ private:
         for(unsigned int f = 0; !m_ShouldQuit; f++) {
             // Read datagram
             const ssize_t bytesReceived = recvfrom(socket, &buffer[0], 1024,
-                                                   0, NULL, NULL);
+                                                   0, nullptr, nullptr);
 
             // If there was an error
             if(bytesReceived == -1) {

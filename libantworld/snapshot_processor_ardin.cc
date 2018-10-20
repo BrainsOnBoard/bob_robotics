@@ -10,8 +10,8 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-SnapshotProcessorArdin::SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                                               unsigned int outputWidth, unsigned int outputHeight)
+SnapshotProcessorArdin::SnapshotProcessorArdin(int displayScale, int intermediateWidth, int intermediateHeight,
+                                               int outputWidth, int outputHeight)
 :   m_DisplayScale(displayScale), m_IntermediateWidth(intermediateWidth), m_IntermediateHeight(intermediateHeight),
     m_OutputWidth(outputWidth), m_OutputHeight(outputHeight),
     m_IntermediateSnapshotGreyscale(intermediateHeight, intermediateWidth, CV_8UC1),
@@ -30,38 +30,38 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
     // b) CLAHE seems broken for GPU matrices
 
     // Check snapshot is expected size
-    BOB_ASSERT((unsigned int)snapshot.rows == m_IntermediateHeight * m_DisplayScale);
-    BOB_ASSERT((unsigned int)snapshot.cols == m_IntermediateWidth * m_DisplayScale);
+    BOB_ASSERT(snapshot.rows == m_IntermediateHeight * m_DisplayScale);
+    BOB_ASSERT(snapshot.cols == m_IntermediateWidth * m_DisplayScale);
 
     // Calculate start and end offset of resize kernel
-    const unsigned int kernelStart = m_DisplayScale / 4;
-    const unsigned int kernelEnd = m_DisplayScale - kernelStart;
-    const unsigned int kernelPixels = kernelStart * m_DisplayScale;
+    const int kernelStart = m_DisplayScale / 4;
+    const int kernelEnd = m_DisplayScale - kernelStart;
+    const int kernelPixels = kernelStart * m_DisplayScale;
 
     // Loop through intermediate image rows
     // **NOTE** this technique for downsampling the image is taken from the Matlab
     // and MASSIVELY improves performance over standard cv::imresize algorithms
-    for(unsigned int y = 0; y < m_IntermediateHeight; y++) {
+    for(int y = 0; y < m_IntermediateHeight; y++) {
         // Calculate rows averaging kernel should operate over
-        const unsigned int kernelStartY = (y * m_DisplayScale) + kernelStart;
-        const unsigned int kernelEndY = (y * m_DisplayScale) + kernelEnd;
+        const int kernelStartY = (y * m_DisplayScale) + kernelStart;
+        const int kernelEndY = (y * m_DisplayScale) + kernelEnd;
 
         // Loop through intermediate image columns
-        for(unsigned int x = 0; x < m_IntermediateWidth; x++) {
+        for(int x = 0; x < m_IntermediateWidth; x++) {
             // Calculate columns averaging kernel should operate over
-            const unsigned int kernelStartX = (x * m_DisplayScale) + kernelStart;
-            const unsigned int kernelEndX = (x * m_DisplayScale) + kernelEnd;
+            const int kernelStartX = (x * m_DisplayScale) + kernelStart;
+            const int kernelEndX = (x * m_DisplayScale) + kernelEnd;
 
             // Loop over snapshot pixels in kernel and sum their green components
-            unsigned int sum = 0;
-            for(unsigned i = kernelStartY; i < kernelEndY; i++) {
-                for(unsigned int j = kernelStartX; j < kernelEndX; j++) {
+            int sum = 0;
+            for(int i = kernelStartY; i < kernelEndY; i++) {
+                for(int j = kernelStartX; j < kernelEndX; j++) {
                     sum += snapshot.at<cv::Vec3b>(i, j)[1];
                 }
             }
 
             // Divide sum by number of pixels in kernel to compute average and write to intermediate snapshot
-            m_IntermediateSnapshotGreyscale.at<uint8_t>(y, x) = sum / kernelPixels;
+            m_IntermediateSnapshotGreyscale.at<uint8_t>(y, x) = static_cast<uchar>(sum / kernelPixels);
         }
     }
 

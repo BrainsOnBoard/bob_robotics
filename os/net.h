@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <string>
+
 // Headers to be included
 #ifdef _WIN32
 // Our common header for including windows.h with the right #defines in place

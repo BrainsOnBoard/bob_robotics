@@ -7,6 +7,9 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// Standard C includes
+#include <cstdint>
+
 // Standard C++ includes
 #include <limits>
 #include <string>
@@ -29,7 +32,7 @@ class Client
 {
 public:
     //! Create client and connect to host over TCP
-    Client(const std::string &host, int port = DefaultListenPort)
+    Client(const std::string &host, uint16_t port = DefaultListenPort)
     {
         // Create socket
         setSocket(socket(AF_INET, SOCK_STREAM, 0));
