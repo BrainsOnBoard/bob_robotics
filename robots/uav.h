@@ -10,9 +10,6 @@ class UAV
   : public Robot
 {
 public:
-    virtual ~UAV()
-    {}
-
     virtual void takeOff() = 0;
     virtual void land() = 0;
     virtual void setPitch(float pitch) = 0;
