@@ -121,6 +121,7 @@ protected:
 
     void disconnect()
     {
+        stop();
         Socket *sock = getSocket();
         if (sock && sock->valid()) {
             sock->send("BYE\n");
