@@ -1,5 +1,15 @@
 #pragma once
 
+// BoB robotics includes
+#include "differencers.h"
+#include "ridf_processors.h"
+
+// Third-party includes
+#include "../third_party/path.h"
+
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
 // Standard C includes
 #include <cassert>
 #include <cstdlib>
@@ -7,16 +17,6 @@
 // Standard C++ includes
 #include <numeric>
 #include <vector>
-
-// OpenCV includes
-#include <opencv2/opencv.hpp>
-
-// Third-party includes
-#include "../third_party/path.h"
-
-// Local includes
-#include "differencers.h"
-#include "ridf_processors.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -28,8 +28,6 @@ namespace PerfectMemoryStore {
 /*!
  * \brief The conventional perfect memory (RIDF) algorithm
  *
- * \tparam RIDFProcessor The method used to calculate the heading (e.g. single snapshot v. multi-snapshot)
- * \tparam Rotater Method used to rotate current view (e.g. InSilicoRotater or AntWorldRotater)
  * \tparam Differencer This can be AbsDiff or RMSDiff
  */
 template<typename Differencer = AbsDiff>

@@ -1,5 +1,18 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "differencers.h"
+#include "insilico_rotater.h"
+#include "perfect_memory_store_raw.h"
+#include "visual_navigation_base.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C includes
 #include <cstdlib>
 
@@ -12,21 +25,6 @@
 #include <numeric>
 #include <tuple>
 #include <vector>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// Third-party includes
-#include "../third_party/units.h"
-
-// BoB robotics includes
-#include "../common/assert.h"
-
-// Local includes
-#include "differencers.h"
-#include "insilico_rotater.h"
-#include "perfect_memory_store_raw.h"
-#include "visual_navigation_base.h"
 
 namespace BoBRobotics {
 namespace Navigation {

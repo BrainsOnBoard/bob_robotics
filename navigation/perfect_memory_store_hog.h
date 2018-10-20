@@ -1,5 +1,13 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "differencers.h"
+#include "ridf_processors.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C includes
 #include <cmath>
 
@@ -7,16 +15,6 @@
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "../common/assert.h"
-
-// Local includes
-#include "differencers.h"
-#include "ridf_processors.h"
 
 namespace BoBRobotics {
 namespace Navigation {
