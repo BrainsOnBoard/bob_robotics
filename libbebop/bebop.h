@@ -116,10 +116,10 @@ public:
     {
     public:
         VideoStream(Bebop &bebop);
-        ~VideoStream();
+        virtual ~VideoStream() override;
         virtual bool readFrame(cv::Mat &) override;
         virtual cv::Size getOutputSize() const override;
-        virtual std::string getCameraName() const;
+        virtual std::string getCameraName() const override;
 
     private:
         cv::Mat m_Frame;
