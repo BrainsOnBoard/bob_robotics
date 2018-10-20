@@ -24,9 +24,6 @@ class Tank
   : public Robot
 {
 public:
-    virtual ~Tank()
-    {}
-
     virtual void moveForward(float speed) override
     {
         tank(speed, speed);
@@ -45,16 +42,16 @@ public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
         joystick.addHandler(
-            [this, deadZone](HID::JAxis axis, float value)
-            {
-                return onJoystickEvent(axis, value, deadZone);
-            });
+                [this, deadZone](HID::JAxis axis, float value) {
+                    return onJoystickEvent(axis, value, deadZone);
+                });
     }
 
     void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-              joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
+              joystick.getState(HID::JAxis::LeftStickVertical),
+              deadZone);
     }
 
     //! Set the left and right motors to the specified speed
