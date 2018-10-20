@@ -162,7 +162,7 @@ class UDPClient
 {
 public:
     UDPClient(){}
-    UDPClient(unsigned int port)
+    UDPClient(uint16_t port)
     {
         if(!connect(port)) {
             throw std::runtime_error("Cannot connect");
@@ -181,7 +181,7 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(unsigned int port)
+    bool connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
