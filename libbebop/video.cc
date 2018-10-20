@@ -73,8 +73,8 @@ Bebop::VideoStream::reallocateBuffers()
                                      std::to_string(m_CodecContextPtr->width));
         }
 
-        const uint32_t num_bytes = avpicture_get_size(
-                AV_PIX_FMT_BGR24, m_CodecContextPtr->width, m_CodecContextPtr->width);
+        const auto num_bytes = static_cast<uint32_t>(avpicture_get_size(
+                AV_PIX_FMT_BGR24, m_CodecContextPtr->width, m_CodecContextPtr->width));
         m_FrameBGRPtr = av_frame_alloc();
 
         if (!m_FrameBGRPtr) {
@@ -225,7 +225,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
      * */
     if (m_UpdateCodecParams && m_CodecData.size()) {
         m_Packet.data = &m_CodecData[0];
-        m_Packet.size = m_CodecData.size();
+        m_Packet.size = static_cast<int>(m_CodecData.size());
         int32_t frame_finished = 0;
         const int32_t len = avcodec_decode_video2(
                 m_CodecContextPtr, m_FramePtr, &frame_finished, &m_Packet);
@@ -245,10 +245,10 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
     }
 
     m_Packet.data = framePtr->data;
-    m_Packet.size = framePtr->used;
+    m_Packet.size = static_cast<int>(framePtr->used);
 
-    const uint32_t width_prev = getFrameWidth();
-    const uint32_t height_prev = getFrameHeight();
+    const int width_prev = getFrameWidth();
+    const int height_prev = getFrameHeight();
 
     int32_t frame_finished = 0;
     while (m_Packet.size > 0) {
@@ -304,9 +304,9 @@ Bebop::VideoStream::configCallback(ARCONTROLLER_Stream_Codec_t codec, void *data
 {
     auto stream = reinterpret_cast<VideoStream *>(data);
     stream->setH264Params(codec.parameters.h264parameters.spsBuffer,
-                          codec.parameters.h264parameters.spsSize,
+                          static_cast<uint32_t>(codec.parameters.h264parameters.spsSize),
                           codec.parameters.h264parameters.ppsBuffer,
-                          codec.parameters.h264parameters.ppsSize);
+                          static_cast<uint32_t>(codec.parameters.h264parameters.ppsSize));
     return ARCONTROLLER_OK;
 }
 

@@ -147,11 +147,11 @@ public:
                            uint8_t *pps_buffer_ptr,
                            uint32_t pps_buffer_size);
         bool decode(const ARCONTROLLER_Frame_t *framePtr);
-        inline uint32_t getFrameWidth() const
+        inline int getFrameWidth() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->width : 0;
         }
-        inline uint32_t getFrameHeight() const
+        inline int getFrameHeight() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->height : 0;
         }
