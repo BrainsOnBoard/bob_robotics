@@ -42,7 +42,7 @@ inline std::unique_ptr<Input> getPanoramicCamera()
         for (size_t i = 0; i < lowestIndex; i++) {
             if (cam.second == prefCameras[i]) {
                 deviceNum = cam.first;
-                prefCamNum = i;
+                prefCamNum = static_cast<int>(i);
                 lowestIndex = i;
                 break;
             }
