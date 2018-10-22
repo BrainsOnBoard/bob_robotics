@@ -17,7 +17,7 @@ main.o: main.cpp
 .PHONY: clean cleanest
 
 clean:
-	rm *.o
+        rm -f *.o
 
 cleanest: clean
-	rm main
+        rm -f main
