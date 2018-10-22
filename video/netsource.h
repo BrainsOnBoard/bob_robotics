@@ -96,7 +96,7 @@ private:
             m_CameraName = command[4];
             m_ParamsSemaphore.notify();
         } else if (command[1] == "FRAME") {
-            const size_t nbytes = stoull(command[2]);
+            const auto nbytes = static_cast<size_t>(stoul(command[2]));
             m_Buffer.resize(nbytes);
             node.read(m_Buffer.data(), nbytes);
 
