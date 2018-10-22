@@ -42,14 +42,14 @@ main()
                  << "isGreyscale" << false;
 
         cv::Mat frame(imSize, CV_8UC3);
-        for (size_t x = 0, y = 0; x < gridRecorder.sizeX(); ) {
+        for (int x = 0, y = 0; x < static_cast<int>(gridRecorder.sizeX()); ) {
             // Move gantry to next position
             const auto pos = gridRecorder.getPosition({ x, y, 0 });
             gantry.setPosition(pos[0], pos[1], pos[2]);
 
             // While gantry is moving, poll for user keypress
             while (gantry.isMoving()) {
-                if (cv::waitKeyEx(1) & OS::KeyMask == OS::KeyCodes::Escape) {
+                if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
                     return 0;
                 }
             }
@@ -63,7 +63,7 @@ main()
 
             // If we haven't finished moving along y, move along one more
             if ((x % 2) == 0) {
-                if (y < gridRecorder.size()) {
+                if (y < static_cast<int>(gridRecorder.size())) {
                     y++;
                     continue;
                 }
