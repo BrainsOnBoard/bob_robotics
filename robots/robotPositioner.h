@@ -30,14 +30,11 @@ private:
     // Robot variables
     millimeter_t m_pos_X;                                           // robot's x position
     millimeter_t m_pos_Y;                                           // robot's y position
-    millimeter_t m_pos_Z;                                           // robot's z position
     millimeter_t m_goalPositionX;                                   // goal position x
     millimeter_t m_goalPositionY;                                   // goal position y
-    millimeter_t m_goalPositionZ;                                   // goal position z
     millimeter_t m_distanceFromGoal;                                // Euclidean distance from goal coordinate
     degree_t m_heading;                                             // heading (angle) of the robot
     degree_t m_goalAngle;                                           // angle to turn after finding the correct location
-    degree_t m_bearingFinal;                                        // heading converted to range <-180, 180> from <0, 360>
     degree_t m_bearingFromGoal;                                     // bearing (angle) from goal coordinate
 
     // user variables
