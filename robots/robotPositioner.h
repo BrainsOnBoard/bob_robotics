@@ -86,11 +86,11 @@ public:
         meters_per_second_t max_velocity                              // max velocity
         ) : m_stopping_distance(stopping_distance),
             m_allowed_heading_error(allowed_heading_error),
+            m_max_velocity(max_velocity),
             m_k1(k1),
             m_k2(k2),
             m_alpha(alpha),
-            m_beta(beta),
-            m_max_velocity(max_velocity) 
+            m_beta(beta)
     {  }
 
     //! sets the goal pose (x, y, angle)
