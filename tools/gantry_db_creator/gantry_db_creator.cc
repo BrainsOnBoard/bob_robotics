@@ -17,14 +17,8 @@ using namespace BoBRobotics;
 int
 main()
 {
-    Navigation::Range xrange;
-    xrange.begin = 0_mm;
-    xrange.end = 100_mm;
-    xrange.separation = 100_mm;
-    Navigation::Range yrange;
-    yrange.begin = 0_mm;
-    yrange.end = 1700_mm;
-    yrange.separation = 100_mm;
+    Navigation::Range xrange({ 0_mm, 100_mm }, 100_mm);
+    Navigation::Range yrange({ 0_mm, 1700_mm }, 100_mm);
     const auto z = 200_mm;
 
     try {

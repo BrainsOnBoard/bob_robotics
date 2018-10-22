@@ -21,6 +21,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace BoBRobotics {
@@ -32,19 +33,14 @@ using namespace units::literals;
 //! A range of values in millimetres
 struct Range
 {
-    millimeter_t begin;
-    millimeter_t end;
-    millimeter_t separation;
+    const millimeter_t begin;
+    const millimeter_t end;
+    const millimeter_t separation;
 
-    Range() = default;
-
-    Range(const millimeter_t value)
-    {
-        begin = end = value;
-        separation = 0_mm;
-    }
-
-    void check() const
+    Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd, const millimeter_t separation)
+      : begin(beginAndEnd.first)
+      , end(beginAndEnd.second)
+      , separation(separation)
     {
         if (begin == end) {
             BOB_ASSERT(separation == 0_mm);
@@ -53,6 +49,10 @@ struct Range
             BOB_ASSERT(separation > 0_mm);
         }
     }
+
+    Range(const millimeter_t value)
+      : Range({value, value}, 0_mm)
+    {}
 
     size_t size() const
     {
@@ -184,9 +184,6 @@ public:
           , m_Current({ 0, 0, 0 })
         {
             BOB_ASSERT(!imageDatabase.isRoute());
-            xrange.check();
-            yrange.check();
-            zrange.check();
 
             // Save some extra, grid-specific metadata
             m_YAML << "grid" << "{"

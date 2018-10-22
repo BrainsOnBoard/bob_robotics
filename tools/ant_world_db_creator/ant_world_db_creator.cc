@@ -126,14 +126,8 @@ public:
         const auto &worldMaxBound = m_Renderer.getWorld().getMaxBound();
 
         // Make GridRecorder
-        Range xrange;
-        xrange.begin = worldMinBound[0];
-        xrange.end = worldMaxBound[0];
-        xrange.separation = gridSpacing;
-        Range yrange;
-        yrange.begin = worldMinBound[1];
-        yrange.end = worldMaxBound[1];
-        yrange.separation = gridSpacing;
+        Range xrange({worldMinBound[0], worldMaxBound[0]}, gridSpacing);
+        Range yrange({worldMinBound[1], worldMaxBound[1]}, gridSpacing);
         auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, AgentHeight);
         addMetadata(gridRecorder);
 
