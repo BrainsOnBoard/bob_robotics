@@ -61,7 +61,7 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
             }
 
             // Divide sum by number of pixels in kernel to compute average and write to intermediate snapshot
-            m_IntermediateSnapshotGreyscale.at<uint8_t>(y, x) = static_cast<uchar>(sum / kernelPixels);
+            m_IntermediateSnapshotGreyscale.at<uint8_t>(y, x) = static_cast<uint8_t>(sum / kernelPixels);
         }
     }
 
