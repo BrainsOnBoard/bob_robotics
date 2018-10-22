@@ -1,8 +1,14 @@
 
 #pragma once
 
-#include "../third_party/units.h"
+// BoB robotics includes
 #include "../robots/tank.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// Standard C includes
+#include <cmath>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -127,7 +133,7 @@ public:
          + degree_t( 1+(m_k1/(1+pow(m_k1*theta.value(),2))) )
          * units::math::sin(m_bearingFromGoal))/m_distanceFromGoal;
      
-        v = m_max_velocity/scalar_t( (1+m_beta*pow(abs(k.value()),m_alpha)));
+        v = m_max_velocity/scalar_t( (1+m_beta*pow(std::abs(k.value()),m_alpha)));
         w = k*v;  
     }
 
