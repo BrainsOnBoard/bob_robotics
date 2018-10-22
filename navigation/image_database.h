@@ -12,13 +12,13 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C includes
-#include <cstdio>
 #include <ctime>
 
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -387,9 +387,9 @@ public:
     static std::string getFilename(const unsigned int routeIndex,
                                    const std::string &imageFormat = "png")
     {
-        char buf[sizeof("image_00000.") + 1];
-        snprintf(buf, sizeof(buf), "image_%05d.", routeIndex);
-        return std::string(buf) + imageFormat;
+        std::ostringstream ss;
+        ss << "image_" << std::setw(5) << std::setfill('0') << routeIndex << "." << imageFormat;
+        return ss.str();
     }
 
     static std::string getFilename(const Vector3<millimeter_t> &position,
@@ -405,13 +405,12 @@ public:
     static std::string getFilename(const Vector3<int> &positionMM,
                                    const std::string &imageFormat = "png")
     {
-        const auto zeroPad = [](const auto value) {
-            char num[8];
-            snprintf(num, sizeof(num), "%+07d", value);
-            return std::string(num);
-        };
-        return "image_" + zeroPad(positionMM[0]) + "_" + zeroPad(positionMM[1]) +
-               "_" + zeroPad(positionMM[2]) + "." + imageFormat;
+        std::ostringstream ss;
+        ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
+           << std::setw(7) << positionMM[0] << "_"
+           << std::setw(7) << positionMM[1] << "_"
+           << std::setw(7) << positionMM[2] << "." << imageFormat;
+        return ss.str();
     }
 
 private:
