@@ -70,7 +70,7 @@ public:
         Vector3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
-        Vector3<int> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
+        Vector3<size_t> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
 
         cv::Mat load() const
         {
@@ -160,7 +160,7 @@ public:
 
         void addEntry(const std::string &filename, const cv::Mat &image,
                       const Vector3<millimeter_t> &position, const degree_t heading,
-                      const Vector3<int> &gridPosition = { -1, -1, -1 })
+                      const Vector3<size_t> &gridPosition = { 0, 0, 0 })
         {
             BOB_ASSERT(m_Recording);
             m_ImageDatabase.writeImage(filename, image);
@@ -194,9 +194,9 @@ public:
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const Vector3<int> &gridPosition)
+        Vector3<millimeter_t> getPosition(const Vector3<size_t> &gridPosition)
         {
-            BOB_ASSERT(gridPosition[0] < (int) m_Size[0] && gridPosition[1] < (int) m_Size[1] && gridPosition[2] < (int) m_Size[2]);
+            BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
             Vector3<millimeter_t> position;
             for (size_t i = 0; i < position.size(); i++) {
                 position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
@@ -209,9 +209,9 @@ public:
         {
             std::vector<Vector3<millimeter_t>> positions;
             positions.reserve(maximumSize());
-            for (int x = 0; x < (int) sizeX(); x++) {
-                for (int y = 0; y < (int) sizeY(); y++) {
-                    for (int z = 0; z < (int) sizeZ(); z++) {
+            for (size_t x = 0; x < sizeX(); x++) {
+                for (size_t y = 0; y < sizeY(); y++) {
+                    for (size_t z = 0; z < sizeZ(); z++) {
                         positions.emplace_back(getPosition({ x, y, z }));
                     }
                 }
@@ -222,12 +222,12 @@ public:
         //! Save a new image into the database
         void record(const cv::Mat &image)
         {
-            BOB_ASSERT((size_t) m_Current[2] < sizeZ());
+            BOB_ASSERT(m_Current[2] < sizeZ());
             record(m_Current, image);
 
-            if ((size_t) ++m_Current[0] == sizeX()) {
+            if (++m_Current[0] == sizeX()) {
                 m_Current[0] = 0;
-                if ((size_t) ++m_Current[1] == sizeY()) {
+                if (++m_Current[1] == sizeY()) {
                     m_Current[1] = 0;
                     m_Current[2]++;
                 }
@@ -235,7 +235,7 @@ public:
         }
 
         //! Save a new image into the database at the specified coordinates
-        void record(const Vector3<int> &gridPosition, const cv::Mat &image)
+        void record(const Vector3<size_t> &gridPosition, const cv::Mat &image)
         {
             const auto position = getPosition(gridPosition);
             const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
@@ -251,7 +251,7 @@ public:
         const degree_t m_Heading;
         const Vector3<millimeter_t> m_Begin, m_Separation;
         const Vector3<size_t> m_Size;
-        Vector3<int> m_Current;
+        Vector3<size_t> m_Current;
     };
 
     //! For saving images recorded along a route
@@ -333,18 +333,18 @@ public:
                 break;
             }
 
-            Vector3<int> gridPosition;
+            Vector3<size_t> gridPosition;
             if (fields.size() >= 8) {
                 if (!metadataPresent) {
                     // Infer that it is a grid
                     m_IsRoute = false;
                 }
 
-                gridPosition[0] = std::stoi(fields[5]);
-                gridPosition[1] = std::stoi(fields[6]);
-                gridPosition[2] = std::stoi(fields[7]);
+                gridPosition[0] = static_cast<size_t>(std::stoul(fields[5]));
+                gridPosition[1] = static_cast<size_t>(std::stoul(fields[6]));
+                gridPosition[2] = static_cast<size_t>(std::stoul(fields[7]));
             } else {
-                gridPosition = { -1, -1, -1 };
+                gridPosition = { 0, 0, 0 };
             }
 
             // Save details to vector
@@ -384,7 +384,7 @@ public:
         return RouteRecorder(*this, imageFormat);
     }
 
-    static std::string getFilename(const unsigned int routeIndex,
+    static std::string getFilename(const size_t routeIndex,
                                    const std::string &imageFormat = "png")
     {
         std::ostringstream ss;
@@ -395,21 +395,18 @@ public:
     static std::string getFilename(const Vector3<millimeter_t> &position,
                                    const std::string &imageFormat = "png")
     {
+        // Convert to integers
         Vector3<int> iposition;
         std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
             return static_cast<int>(units::math::round(mm));
         });
-        return getFilename(iposition, imageFormat);
-    }
 
-    static std::string getFilename(const Vector3<int> &positionMM,
-                                   const std::string &imageFormat = "png")
-    {
+        // Make filename
         std::ostringstream ss;
         ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
-           << std::setw(7) << positionMM[0] << "_"
-           << std::setw(7) << positionMM[1] << "_"
-           << std::setw(7) << positionMM[2] << "." << imageFormat;
+           << std::setw(7) << iposition[0] << "_"
+           << std::setw(7) << iposition[1] << "_"
+           << std::setw(7) << iposition[2] << "." << imageFormat;
         return ss.str();
     }
 
