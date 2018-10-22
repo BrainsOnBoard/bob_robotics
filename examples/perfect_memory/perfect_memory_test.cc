@@ -23,7 +23,7 @@ int
 main()
 {
     const cv::Size imSize(180, 50);
-    degree_t heading;
+    units::angle::degree_t heading;
     std::vector<std::vector<float>> allDifferences;
 
     {

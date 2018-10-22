@@ -20,9 +20,6 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-using namespace units::angle;
-using namespace units::length;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
@@ -33,6 +30,9 @@ using namespace units::length;
  */
 class RouteArdin
 {
+    using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
+
 public:
     RouteArdin(float arrowLength, unsigned int maxRouteEntries);
     RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename, bool realign = true);

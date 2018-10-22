@@ -26,13 +26,13 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
 
 //! A range of values in millimetres
 struct Range
 {
+    using millimeter_t = units::length::millimeter_t;
+
     const millimeter_t begin;
     const millimeter_t end;
     const millimeter_t separation;
@@ -63,6 +63,9 @@ struct Range
 //! An interface for reading from and writing to folders of images
 class ImageDatabase
 {
+    using degree_t = units::angle::degree_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
@@ -209,6 +212,7 @@ public:
         {
             std::vector<Vector3<millimeter_t>> positions;
             positions.reserve(maximumSize());
+
             for (size_t x = 0; x < sizeX(); x++) {
                 for (size_t y = 0; y < sizeY(); y++) {
                     for (size_t z = 0; z < sizeZ(); z++) {

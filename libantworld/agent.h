@@ -14,8 +14,6 @@
 
 namespace BoBRobotics {
 namespace AntWorld {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
@@ -25,6 +23,9 @@ using namespace units::literals;
 class AntAgent
   : public Video::OpenGL
 {
+    using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
+
 public:
     AntAgent(GLFWwindow *window, Renderer &renderer, GLsizei readWidth, GLsizei readHeight)
       : Video::OpenGL(0, 0, readWidth, readHeight)

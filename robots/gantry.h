@@ -20,16 +20,10 @@
 // Third-party includes
 #include "third_party/units.h"
 
-using namespace units::literals;
-
 namespace BoBRobotics {
 namespace Robots {
 using namespace std::literals;
-using namespace units;
-using namespace units::math;
-using namespace units::length;
-using namespace units::time;
-using namespace units::velocity;
+using namespace units::literals;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Gantry
@@ -37,6 +31,9 @@ using namespace units::velocity;
 //! An interface for the robot gantry system at the University of Sussex
 class Gantry
 {
+    using millimeter_t = units::length::millimeter_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+
 public:
     //! Open the PCI device and set drive parameters
     Gantry(BYTE boardId = 0)
@@ -150,7 +147,7 @@ public:
             checkError(P1240MotRdMultiReg(m_BoardId, XYZ_Axis, CurV, &pulseRate[0], &pulseRate[1], &pulseRate[2], nullptr), "Error reading velocity");
         }
 
-        using InitialUnit = unit_t<compound_unit<millimeter, inverse<second>>>;
+        using InitialUnit = units::unit_t<compound_unit<units::length::millimeter, inverse<units::time::second>>>;
         const auto velocity = pulsesToUnit<VelocityUnit, InitialUnit, DWORD>(pulseRate);
         return velocity;
     }

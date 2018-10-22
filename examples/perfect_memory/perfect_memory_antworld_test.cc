@@ -97,7 +97,7 @@ main()
     agent.setPosition(5.5_m, 4_m, 10_mm);
 
     const cv::Size imSize(renderWidth, renderHeight);
-    degree_t heading;
+    units::angle::degree_t heading;
 
     {
         std::cout << "Using ant world rotater..." << std::endl;

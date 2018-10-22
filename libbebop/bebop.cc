@@ -1,5 +1,9 @@
 #include "bebop.h"
 
+using degree_t = units::angle::degree_t;
+using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+using meters_per_second_t = units::velocity::meters_per_second_t;
+
 // BoB robotics includes
 #include "../common/assert.h"
 

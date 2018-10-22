@@ -29,17 +29,15 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace Eigen;
-using namespace units::angle;
-
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
 template<typename FloatType = float>
 class InfoMax : public VisualNavigationBase
 {
-    using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
-    using VectorType = Matrix<FloatType, Dynamic, 1>;
+    using radian_t = units::angle::radian_t;
+    using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
+    using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
 public:
     InfoMax(const cv::Size &unwrapRes,
@@ -172,7 +170,7 @@ private:
 
     static auto getFloatVector(const cv::Mat &image)
     {
-        Map<Matrix<uint8_t, Dynamic, 1>> map(image.data, image.cols * image.rows);
+        Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
         return map.cast<FloatType>() / 255.0;
     }
 
@@ -189,7 +187,8 @@ private:
 template<typename Rotater = InSilicoRotater, typename FloatType = float>
 class InfoMaxRotater : public InfoMax<FloatType>
 {
-    using MatrixType = Matrix<FloatType, Dynamic, Dynamic>;
+    using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
+
 public:
     InfoMaxRotater(const cv::Size &unwrapRes,
                    const MatrixType &initialWeights,
@@ -219,7 +218,8 @@ public:
         if (bestIndex > outputs.size() / 2) {
             bestIndex -= outputs.size();
         }
-        const radian_t heading = units::make_unit<turn_t>((double) bestIndex / (double) outputs.size());
+        using namespace units::angle;
+        const radian_t heading = turn_t((double) bestIndex / (double) outputs.size());
 
         return std::make_tuple(heading, *el, std::move(outputs));
     }
