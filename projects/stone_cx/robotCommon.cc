@@ -1,3 +1,5 @@
+#define NO_BACKGROUND_EXCEPTION_DEFINITIONS
+
 #include "robotCommon.h"
 
 // Standard C++ includes
