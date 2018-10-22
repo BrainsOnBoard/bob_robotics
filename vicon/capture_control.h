@@ -8,6 +8,7 @@
 #include <sstream>
 
 // Standard C includes
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 
@@ -30,7 +31,7 @@ class CaptureControl
 
 public:
     CaptureControl() : m_Socket(-1){}
-    CaptureControl(const std::string &hostname, unsigned int port,
+    CaptureControl(const std::string &hostname, uint16_t port,
                    const std::string &capturePath)
     {
         if(!connect(hostname, port, capturePath)) {
@@ -47,7 +48,7 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(const std::string &hostname, unsigned int port,
+    bool connect(const std::string &hostname, uint16_t port,
                  const std::string &capturePath)
     {
         // Stash capture path

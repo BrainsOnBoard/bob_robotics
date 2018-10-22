@@ -5,18 +5,19 @@
 
 #pragma once
 
+// BoB robotics includes
+#include "../os/net.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
+#include <iostream>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
-
-// BoB robotics includes
-#include "../os/net.h"
 
 namespace BoBRobotics {
 namespace Net {
@@ -194,7 +195,7 @@ public:
     {
         checkSocket();
 
-        int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
+        const auto ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
         if (ret == -1) {
             throwError("Could not send");
         }
@@ -221,9 +222,9 @@ private:
     std::vector<char> m_Buffer;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
-    bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
     std::atomic<bool> m_Closing{ false };
+    bool m_Print;
 
     // Debit the byte store by specified amount
     void debitBytes(size_t nbytes)
@@ -246,7 +247,7 @@ private:
     // Make a single call to recv.
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
-        int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
+        const auto len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
             throwError("Could not read from socket");
         }

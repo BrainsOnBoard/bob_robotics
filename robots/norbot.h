@@ -1,15 +1,15 @@
 #pragma once
 
-// Standard C++ includes
-#include <vector>
+// BoB robotics includes
+#include "../common/i2c_interface.h"
+#include "tank.h"
 
 // Standard C includes
 #include <cmath>
 #include <cstdint>
 
-// Common includes
-#include "../common/i2c_interface.h"
-#include "tank.h"
+// Standard C++ includes
+#include <vector>
 
 namespace BoBRobotics {
 namespace Robots {

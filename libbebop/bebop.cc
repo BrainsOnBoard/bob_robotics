@@ -223,6 +223,14 @@ Bebop::setYawSpeed(float right)
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
+//! Carry out flat trim calibration
+void
+Bebop::doFlatTrimCalibration()
+{
+    DRONE_COMMAND_NO_ARG(sendPilotingFlatTrim);
+    m_FlatTrimSemaphore.wait();
+}
+
 /*!
  * \brief Tell the drone to take a photo and store it.
  */
@@ -377,7 +385,7 @@ Bebop::stopStreaming()
 inline Bebop::State
 Bebop::getStateUpdate()
 {
-    m_Semaphore.wait();
+    m_StateSemaphore.wait();
     return getState();
 }
 
@@ -393,13 +401,21 @@ Bebop::getState()
     return state;
 }
 
+//! Get the drone's battery level from 0.0f to 1.0f
+float
+Bebop::getBatteryLevel()
+{
+    m_BatteryLevelSemaphore.waitOnce();
+    return static_cast<float>(m_BatteryLevel) / 100.f;
+}
+
 /*
  * Invoked by commandReceived().
  *
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
+Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
@@ -416,8 +432,8 @@ Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
             val);
 
     if (val) {
-        // print battery status
-        std::cout << "Battery: " << (int) val->value.U8 << "%" << std::endl;
+        m_BatteryLevel = val->value.U8;
+        m_BatteryLevelSemaphore.notify();
     }
 }
 
@@ -443,7 +459,7 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                     void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
-    bebop->m_Semaphore.notify(); // trigger semaphore used by getStateUpdate()
+    bebop->m_StateSemaphore.notify(); // trigger semaphore used by getStateUpdate()
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
@@ -498,8 +514,28 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED:
         productVersionReceived(dict);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE:
+        magnetometerCalibrationStateReceived(dict);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLATTRIMCHANGED:
+        bebop->m_FlatTrimSemaphore.notify();
+        break;
     default:
         break;
+    }
+}
+
+void
+Bebop::magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED, arg);
+        if (arg && arg->value.U8) {
+            std::cout << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!" << std::endl;
+        }
     }
 }
 

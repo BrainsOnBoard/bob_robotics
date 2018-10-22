@@ -13,7 +13,7 @@ namespace AntWorld
 // **NOTE** RenderMesh initialisation matches the matlab:
 // hfov = hfov/180/2*pi;
 // axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip,
+Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
                    degree_t horizontalFOV, degree_t verticalFOV)
 :   m_RenderMesh(horizontalFOV, verticalFOV, 15_deg, 40, 10),
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
@@ -31,7 +31,7 @@ Renderer::Renderer(unsigned int cubemapSize, double nearClip, double farClip,
     // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
     for(unsigned int t = 0; t < 6; t++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
-                     m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+                     m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     }
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -149,7 +149,7 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
-                   (GLfloat)viewportWidth / (GLfloat)viewportHeight,
+                   (GLdouble)viewportWidth / (GLdouble)viewportHeight,
                    m_NearClip, m_FarClip);
 
     glMatrixMode(GL_MODELVIEW);

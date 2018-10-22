@@ -128,7 +128,7 @@ bool RouteArdin::load(const std::string &filename, bool realign)
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
-    const std::streampos numPoints = input.tellg() / (sizeof(double) * 3);
+    const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
     std::cout << "Route has " << numPoints << " points" << std::endl;
 
@@ -158,7 +158,7 @@ bool RouteArdin::load(const std::string &filename, bool realign)
     }
 
     // Reserve headings
-    const unsigned int numSegments = m_Waypoints.size() - 1;
+    const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);
 
     // Loop through route segments

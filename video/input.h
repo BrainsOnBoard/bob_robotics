@@ -7,6 +7,8 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
+#include <stdexcept>
+#include <string>
 #include <chrono>
 #include <stdexcept>
 #include <string>
@@ -29,7 +31,7 @@ public:
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
      *
-     * @param args The resolution of the unwrapped image
+     * @param unwrapRes The resolution of the unwrapped image
      */
     ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
     {

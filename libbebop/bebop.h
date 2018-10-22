@@ -4,6 +4,7 @@
 #include <cstdint>
 
 // Standard C++ includes
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -115,10 +116,10 @@ public:
     {
     public:
         VideoStream(Bebop &bebop);
-        ~VideoStream();
+        virtual ~VideoStream() override;
         virtual bool readFrame(cv::Mat &) override;
         virtual cv::Size getOutputSize() const override;
-        virtual std::string getCameraName() const;
+        virtual std::string getCameraName() const override;
 
     private:
         cv::Mat m_Frame;
@@ -146,11 +147,11 @@ public:
                            uint8_t *pps_buffer_ptr,
                            uint32_t pps_buffer_size);
         bool decode(const ARCONTROLLER_Frame_t *framePtr);
-        inline uint32_t getFrameWidth() const
+        inline int getFrameWidth() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->width : 0;
         }
-        inline uint32_t getFrameHeight() const
+        inline int getFrameHeight() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->height : 0;
         }
@@ -172,7 +173,7 @@ public:
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
-    ~Bebop();
+    virtual ~Bebop() override;
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -190,7 +191,11 @@ public:
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
 
+    // calibration
+    void doFlatTrimCalibration();
+
     // misc
+    float getBatteryLevel();
     State getState();
     VideoStream &getVideoStream();
     void takePhoto();
@@ -270,19 +275,20 @@ private:
     };
 
     ControllerPtr m_Device;
-    Semaphore m_Semaphore;
+    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
+    std::atomic<unsigned char> m_BatteryLevel;
 
     inline void connect();
     inline void disconnect();
     void startStreaming();
     void stopStreaming();
     inline void addEventHandlers();
-    inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
+    inline void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
     inline State getStateUpdate();
 
@@ -296,6 +302,7 @@ private:
                                 void *data);
     static void alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    static void magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,
                              const char *format,

@@ -113,8 +113,9 @@ public:
     }
 
     //! Close connection to controller
-    ~JoystickLinux()
+    virtual ~JoystickLinux() override
     {
+        stop();
         ::close(m_Fd);
     }
 

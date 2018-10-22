@@ -28,7 +28,7 @@ using namespace units::length;
 class Renderer
 {
 public:
-    Renderer(unsigned int cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
+    Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
     ~Renderer();
 
@@ -64,7 +64,7 @@ private:
     GLuint m_DepthBuffer;
     GLfloat m_CubeFaceLookAtMatrices[6][16];
 
-    const unsigned int m_CubemapSize;
+    const GLsizei m_CubemapSize;
     const double m_NearClip;
     const double m_FarClip;
 };

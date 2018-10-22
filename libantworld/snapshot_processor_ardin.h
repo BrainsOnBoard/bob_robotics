@@ -14,8 +14,8 @@ namespace AntWorld
 class SnapshotProcessorArdin
 {
 public:
-    SnapshotProcessorArdin(unsigned int displayScale, unsigned int intermediateWidth, unsigned int intermediateHeight,
-                           unsigned int outputWidth, unsigned int outputHeight);
+    SnapshotProcessorArdin(int displayScale, int intermediateWidth, int intermediateHeight,
+                           int outputWidth, int outputHeight);
 
     //------------------------------------------------------------------------
     // Public API
@@ -31,15 +31,15 @@ private:
     // Private members
     //------------------------------------------------------------------------
     // How much larger than intermediate image size is snapshot
-    const unsigned int m_DisplayScale;
+    const int m_DisplayScale;
 
     // Dimensions of intermediate image
-    const unsigned int m_IntermediateWidth;
-    const unsigned int m_IntermediateHeight;
+    const int m_IntermediateWidth;
+    const int m_IntermediateHeight;
 
     // Dimensions of final output
-    const unsigned int m_OutputWidth;
-    const unsigned int m_OutputHeight;
+    const int m_OutputWidth;
+    const int m_OutputHeight;
 
     // Host OpenCV array to hold intermediate resolution greyscale snapshot
     cv::Mat m_IntermediateSnapshotGreyscale;

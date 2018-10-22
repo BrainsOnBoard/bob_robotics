@@ -1,19 +1,19 @@
 #pragma once
 
-// C++ includes
-#include <stdexcept>
+// BoB robotics includes
+#include "input.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// local includes
-#include "input.h"
-
-#define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
-#define WEBCAM360_DEVICE_NAME "USB 2.0 Camera"
+// Standard C++ includes
+#include <stdexcept>
 
 namespace BoBRobotics {
 namespace Video {
+constexpr const char *PixProUSBDeviceName = "PIXPRO SP360 4K";
+constexpr const char *Webcam360DeviceName = "USB 2.0 Camera";
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::OpenCVInput
 //----------------------------------------------------------------------------

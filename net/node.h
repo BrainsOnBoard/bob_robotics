@@ -1,5 +1,9 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/threadable.h"
+#include "socket.h"
+
 // Standard C++ includes
 #include <atomic>
 #include <functional>
@@ -8,12 +12,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-// BoB robotics includes
-#include "../common/threadable.h"
-
-// Local includes
-#include "socket.h"
 
 namespace BoBRobotics {
 namespace Net {
@@ -65,9 +63,6 @@ using ConnectedHandler = std::function<void(Node &)>;
 class Node : public Threadable
 {
 public:
-    virtual ~Node()
-    {}
-
     /*!
      * \brief Add a handler for a specified type of command
      *
@@ -126,6 +121,7 @@ protected:
 
     void disconnect()
     {
+        stop();
         Socket *sock = getSocket();
         if (sock && sock->valid()) {
             sock->send("BYE\n");

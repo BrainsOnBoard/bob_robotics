@@ -2,6 +2,7 @@
 
 // Standard C includes
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
@@ -28,7 +29,7 @@ namespace Robots {
 class Surveyor : public Tank
 {
 public:
-    Surveyor(const std::string &address, unsigned int port)
+    Surveyor(const std::string &address, uint16_t port)
     {
         // Create socket
         m_Socket = socket(AF_INET, SOCK_STREAM, 0);

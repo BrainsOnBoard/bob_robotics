@@ -74,7 +74,7 @@ public:
     }
 
     //! Close display window and destroy this object
-    virtual ~Display()
+    virtual ~Display() override
     {
         close();
     }
@@ -154,11 +154,11 @@ protected:
     }
 
 private:
-    cv::Mat m_Frame, m_Unwrapped;
-    bool m_ShowUnwrapped = false;
-    std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     Input &m_VideoInput;
+    cv::Mat m_Frame, m_Unwrapped;
+    std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     static constexpr const char *WindowName = "BoB robotics display";
+    bool m_ShowUnwrapped = false;
 }; // Display
 } // Video
 } // BoBRobotics

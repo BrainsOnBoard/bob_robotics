@@ -1,5 +1,8 @@
 #pragma once
 
+// Standard C++ includes
+#include <random>
+
 // Standard C includes
 #include <cmath>
 

@@ -56,6 +56,8 @@ int main()
                     /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
                     /*maxTilt=*/Bebop::DefaultMaximumTilt);
 
+        std::cout << "Battery is at: " << drone.getBatteryLevel() * 100.f << "%" << std::endl;
+
         // print maximum speed parameters
         printSpeedLimits(drone);
 

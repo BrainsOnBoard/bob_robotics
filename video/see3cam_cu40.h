@@ -1,20 +1,17 @@
 #pragma once
 
+// BoB robotics includes
+#include "input.h"
+#include "v4l_camera.h"
+
+// OpenCV includes
+#include <opencv2/imgproc/imgproc.hpp>
+
 // Standard C++ includes
 #include <chrono>
 #include <numeric>
 #include <stdexcept>
 #include <thread>
-
-// OpenCV includes
-#include <opencv2/imgproc/imgproc.hpp>
-
-// Common includes
-#include "input.h"
-#include "v4l_camera.h"
-
-// Linux device name
-#define SEE3CAM_DEVICE_NAME "See3CAM_CU40"
 
 /* NEON version of captureSuperPixel - fun but doesn't actually help performance
 // Create tables to use for shuffling BGIR data into BGR
@@ -63,6 +60,9 @@ full of RGB data uint8x16_t out8 = vcombine_u8(outA, outB);
 
 namespace BoBRobotics {
 namespace Video {
+// Linux device name
+constexpr const char *See3CamDeviceName = "See3CAM_CU40";
+
 //------------------------------------------------------------------------
 // BoBRobotics::Video::See3CAM_CU40
 //------------------------------------------------------------------------

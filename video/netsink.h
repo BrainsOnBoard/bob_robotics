@@ -1,13 +1,13 @@
 #pragma once
 
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // BoB robotics includes
 #include "../common/background_exception.h"
 #include "../common/semaphore.h"
 #include "../net/node.h"
 #include "input.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
 
 // Standard C++ includes
 #include <atomic>
@@ -37,9 +37,9 @@ public:
      */
     NetSink(Net::Node &node, Input &input)
       : m_Node(node)
-      , m_Input(&input)
-      , m_FrameSize(input.getOutputSize())
       , m_Name(input.getCameraName())
+      , m_FrameSize(input.getOutputSize())
+      , m_Input(&input)
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
@@ -57,9 +57,9 @@ public:
      */
     NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &cameraName)
       : m_Node(node)
-      , m_Input(nullptr)
-      , m_FrameSize(frameSize)
       , m_Name(cameraName)
+      , m_FrameSize(frameSize)
+      , m_Input(nullptr)
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
@@ -154,12 +154,12 @@ private:
     // Members
     //----------------------------------------------------------------------------
     Net::Node &m_Node;
-    Input *m_Input;
-    const cv::Size m_FrameSize;
-    const std::string m_Name;
-    std::thread m_Thread;
-    std::vector<uchar> m_Buffer;
     Semaphore m_AckSemaphore;
+    const std::string m_Name;
+    std::vector<uchar> m_Buffer;
+    std::thread m_Thread;
+    const cv::Size m_FrameSize;
+    Input *m_Input;
     std::atomic<bool> m_DoRun{ true };
 };
 } // Video

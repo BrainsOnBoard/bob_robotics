@@ -1,8 +1,11 @@
 #pragma once
 
-// BoB robotics includes
-#include "../common/assert.h"
-#include "../common/pose.h"
+// POSIX networking includes
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 // Standard C++ includes
 #include <algorithm>
@@ -16,12 +19,9 @@
 // Standard C includes
 #include <cstring>
 
-// POSIX networking includes
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
 
 namespace BoBRobotics
 {
@@ -162,7 +162,7 @@ class UDPClient
 {
 public:
     UDPClient(){}
-    UDPClient(unsigned int port)
+    UDPClient(uint16_t port)
     {
         if(!connect(port)) {
             throw std::runtime_error("Cannot connect");
@@ -181,7 +181,7 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(unsigned int port)
+    bool connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -282,7 +282,7 @@ private:
         for(unsigned int f = 0; !m_ShouldQuit; f++) {
             // Read datagram
             const ssize_t bytesReceived = recvfrom(socket, &buffer[0], 1024,
-                                                   0, NULL, NULL);
+                                                   0, nullptr, nullptr);
 
             // If there was an error
             if(bytesReceived == -1) {
