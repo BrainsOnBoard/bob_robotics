@@ -147,7 +147,7 @@ public:
             checkError(P1240MotRdMultiReg(m_BoardId, XYZ_Axis, CurV, &pulseRate[0], &pulseRate[1], &pulseRate[2], nullptr), "Error reading velocity");
         }
 
-        using InitialUnit = units::unit_t<compound_unit<units::length::millimeter, inverse<units::time::second>>>;
+        using InitialUnit = units::unit_t<units::compound_unit<units::length::millimeter, units::inverse<units::time::second>>>;
         const auto velocity = pulsesToUnit<VelocityUnit, InitialUnit, DWORD>(pulseRate);
         return velocity;
     }
