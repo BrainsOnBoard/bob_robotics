@@ -189,9 +189,9 @@ public:
             return true;
         case ERROR_SUCCESS:
             return false;
-        default:
-            throwError(res, "Error while reading axis busy state");
         }
+
+        throwError(res, "Error while reading axis busy state");
     }
 
     //! Wait until the gantry has stopped moving
