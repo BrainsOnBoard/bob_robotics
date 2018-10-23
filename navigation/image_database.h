@@ -319,7 +319,7 @@ public:
         }
 
         // Read in entries from CSV file
-        std::ifstream entriesFile(metadataPath.str());
+        std::ifstream entriesFile(entriesPath.str());
         std::string line, field;
         std::vector<std::string> fields;
         std::getline(entriesFile, line); // skip first line
