@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -296,27 +297,8 @@ public:
             return;
         }
 
-        // Read metadata from YAML file
-        const auto metadataPath = m_Path / MetadataFilename;
-        const bool metadataPresent = metadataPath.exists();
-        if (!metadataPresent) {
-            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
-            m_IsRoute = true;
-        } else {
-            // Parse metadata file
-            cv::FileStorage metadataFile(metadataPath.str(), cv::FileStorage::READ);
-
-            // What type of database is it?
-            std::string dbtype;
-            metadataFile["metadata"]["type"] >> dbtype;
-            if (dbtype == "route") {
-                m_IsRoute = true;
-            } else if (dbtype == "grid") {
-                m_IsRoute = false;
-            } else {
-                throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
-            }
-        }
+        // Try to read metadata from YAML file
+        loadMetadata();
 
         // Read in entries from CSV file
         std::ifstream entriesFile(entriesPath.str());
@@ -339,7 +321,7 @@ public:
 
             Vector3<size_t> gridPosition;
             if (fields.size() >= 8) {
-                if (!metadataPresent) {
+                if (!hasMetadata()) {
                     // Infer that it is a grid
                     m_IsRoute = false;
                 }
@@ -375,6 +357,12 @@ public:
     bool isRoute() const { return !empty() && m_IsRoute; }
     bool isGrid() const { return !empty() && !m_IsRoute; }
 
+    cv::FileNode getMetadata() const
+    {
+        BOB_ASSERT(hasMetadata());
+        return m_MetadataYAML->operator[]("metadata");
+    }
+
     GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
                                  const Range &zrange = Range(0_mm),
                                  degree_t heading = 0_deg,
@@ -387,6 +375,8 @@ public:
     {
         return RouteRecorder(*this, imageFormat);
     }
+
+    bool hasMetadata() const { return static_cast<bool>(m_MetadataYAML); }
 
     static std::string getFilename(const size_t routeIndex,
                                    const std::string &imageFormat = "png")
@@ -417,9 +407,39 @@ public:
 private:
     const filesystem::path m_Path;
     std::vector<Entry> m_Entries;
+    std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     bool m_IsRoute;
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
     static constexpr const char *EntriesFilename = "database_entries.csv";
+
+    void loadMetadata()
+    {
+        const auto metadataPath = m_Path / MetadataFilename;
+        const bool metadataPresent = metadataPath.exists();
+        if (!metadataPresent) {
+            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
+            m_IsRoute = true;
+            m_MetadataYAML.reset();
+        } else {
+            std::ifstream ifs(metadataPath.str());
+            std::stringstream ss;
+            ss << ifs.rdbuf();
+
+            // Parse metadata file
+            m_MetadataYAML = std::make_unique<cv::FileStorage>(ss.str(), cv::FileStorage::READ | cv::FileStorage::MEMORY);
+
+            // What type of database is it?
+            std::string dbtype;
+            getMetadata()["type"] >> dbtype;
+            if (dbtype == "route") {
+                m_IsRoute = true;
+            } else if (dbtype == "grid") {
+                m_IsRoute = false;
+            } else {
+                throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
+            }
+        }
+    }
 
     void writeImage(const std::string &filename, const cv::Mat &image)
     {
@@ -460,6 +480,9 @@ private:
                 os << std::endl;
             }
         }
+
+        // Reload metadata, in case it's changed
+        loadMetadata();
     }
 
     void writeEntry(std::ofstream &os, const Entry &e)
