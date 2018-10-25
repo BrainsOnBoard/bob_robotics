@@ -465,7 +465,7 @@ private:
     void writeEntry(std::ofstream &os, const Entry &e)
     {
         os << e.position[0]() << ", " << e.position[1]() << ", "
-           << e.position[2]() << ", " << e.heading() << ", " << e.path;
+           << e.position[2]() << ", " << e.heading() << ", " << e.path.filename();
     }
 }; // ImageDatabase
 } // Navigation
