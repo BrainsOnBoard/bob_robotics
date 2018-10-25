@@ -377,6 +377,8 @@ public:
         return m_MetadataYAML->operator[]("metadata");
     }
 
+    std::string getName() const { return m_Path.filename(); }
+
     GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
                                  const Range &zrange = Range(0_mm),
                                  degree_t heading = 0_deg,
