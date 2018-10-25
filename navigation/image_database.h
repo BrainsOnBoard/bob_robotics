@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "../common/assert.h"
 #include "../common/pose.h"
+#include "../imgproc/opencv_unwrap_360.h"
 
 // Third-party includes
 #include "../third_party/path.h"
@@ -392,7 +393,55 @@ public:
         return RouteRecorder(*this, imageFormat);
     }
 
+    cv::Size getResolution() const
+    {
+        BOB_ASSERT(hasMetadata());
+        return m_Resolution;
+    }
+
     bool hasMetadata() const { return static_cast<bool>(m_MetadataYAML); }
+
+    void unwrap(const filesystem::path &destination, const cv::Size &unwrapRes)
+    {
+        // Check that the database doesn't already exist
+        BOB_ASSERT(!(destination / EntriesFilename).exists());
+
+        std::string camName;
+        getMetadata()["camera"]["name"] >> camName;
+        ImgProc::OpenCVUnwrap360 unwrapper(getResolution(), unwrapRes, camName);
+        filesystem::create_directory(destination);
+        copyfile(m_Path / EntriesFilename, destination / EntriesFilename);
+        {
+            std::string line;
+            std::ofstream ofs((destination / MetadataFilename).str());
+            for (std::ifstream ifs((m_Path / MetadataFilename).str()); std::getline(ifs, line); ) {
+                if (line.find("  needsUnwrapping:") == 0) {
+                    ofs << "  needsUnwrapping: 0\n";
+                } else {
+                    ofs << line << "\n";
+                }
+            }
+
+            cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
+            fs << "unwrapper" << unwrapper;
+            std::stringstream ss;
+            ss << fs.releaseAndGetString();
+            std::getline(ss, line);
+            std::getline(ss, line);
+            while (std::getline(ss, line)) {
+                ofs << "  " << line << "\n";
+            }
+        }
+
+        cv::Mat unwrapped(unwrapRes, CV_8UC3);
+        std::string outPath;
+        for (auto &entry : m_Entries) {
+            unwrapper.unwrap(entry.load(), unwrapped);
+            outPath = (destination / entry.path.filename()).str();
+            std::cout << "Writing to " << outPath << std::endl;
+            BOB_ASSERT(cv::imwrite(outPath, unwrapped));
+        }
+    }
 
     static std::string getFilename(const size_t routeIndex,
                                    const std::string &imageFormat = "png")
@@ -424,6 +473,7 @@ private:
     const filesystem::path m_Path;
     std::vector<Entry> m_Entries;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
+    cv::Size m_Resolution;
     bool m_IsRoute;
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
     static constexpr const char *EntriesFilename = "database_entries.csv";
@@ -446,7 +496,8 @@ private:
 
             // What type of database is it?
             std::string dbtype;
-            getMetadata()["type"] >> dbtype;
+            const auto metadata = getMetadata();
+            metadata["type"] >> dbtype;
             if (dbtype == "route") {
                 m_IsRoute = true;
             } else if (dbtype == "grid") {
@@ -454,6 +505,11 @@ private:
             } else {
                 throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
             }
+
+            // Get image resolution
+            std::vector<int> size(2);
+            metadata["camera"]["resolution"] >> size;
+            m_Resolution = { size[0], size[1] };
         }
     }
 
@@ -505,6 +561,13 @@ private:
     {
         os << e.position[0]() << ", " << e.position[1]() << ", "
            << e.position[2]() << ", " << e.heading() << ", " << e.path.filename();
+    }
+
+    static void copyfile(const filesystem::path &from, const filesystem::path &to)
+    {
+        std::ifstream ifs(from.str());
+        std::ofstream ofs(to.str());
+        ofs << ifs.rdbuf();
     }
 }; // ImageDatabase
 } // Navigation
