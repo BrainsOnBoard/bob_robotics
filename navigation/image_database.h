@@ -357,6 +357,20 @@ public:
     bool isRoute() const { return !empty() && m_IsRoute; }
     bool isGrid() const { return !empty() && !m_IsRoute; }
 
+    std::vector<cv::Mat> getImages() const
+    {
+        std::vector<cv::Mat> images;
+        getImages(images);
+        return images;
+    }
+
+    void getImages(std::vector<cv::Mat> &images) const
+    {
+        std::transform(begin(), end(), std::back_inserter(images), [](const auto &entry) {
+            return entry.load();
+        });
+    }
+
     cv::FileNode getMetadata() const
     {
         BOB_ASSERT(hasMetadata());
@@ -423,7 +437,7 @@ private:
         } else {
             std::ifstream ifs(metadataPath.str());
             std::stringstream ss;
-            ss << ifs.rdbuf();
+            ss << "%YAML:1.0\n" << ifs.rdbuf();
 
             // Parse metadata file
             m_MetadataYAML = std::make_unique<cv::FileStorage>(ss.str(), cv::FileStorage::READ | cv::FileStorage::MEMORY);
