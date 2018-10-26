@@ -53,7 +53,7 @@ main()
         std::cout << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
                   << pos[2] << "\n";
     } catch (std::exception &e) {
-        std::cout << "Uncaught exception: " << e.what() << std::endl;
+        std::cerr << "Uncaught exception: " << e.what() << std::endl;
 		return 1;
     }
 }
