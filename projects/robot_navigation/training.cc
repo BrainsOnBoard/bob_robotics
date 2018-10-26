@@ -29,7 +29,8 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 
-Navigation::ImageDatabase createTrainingDatabase()
+Navigation::ImageDatabase
+createTrainingDatabase()
 {
     const filesystem::path basePath = "routes";
     filesystem::create_directory(basePath);
@@ -47,10 +48,13 @@ Navigation::ImageDatabase createTrainingDatabase()
 int
 main()
 {
+    const cv::Size unwrapResolution{ 360, 75 };
+
     try {
         Vicon::UDPClient<> vicon(51001);
 
         auto cam = Video::getPanoramicCamera();
+        const auto unwrapper = cam->createUnwrapper(unwrapResolution);
 
 #ifdef NO_I2C_ROBOT
         // Output motor commands to terminal
@@ -66,8 +70,13 @@ main()
         std::cout << "Joystick opened" << std::endl;
 
         // Make new image database for training images
-        auto trainImages = createTrainingDatabase();
-        auto route = trainImages.getRouteRecorder();
+        auto trainingDatabase = createTrainingDatabase();
+        auto route = trainingDatabase.getRouteRecorder();
+        auto &metadata = route.getMetadataWriter();
+        metadata << "camera" << *cam
+                 << "needsUnwrapping" << false
+                 << "isGreyscale" << true
+                 << "unwrapper" << unwrapper;
 
         while (vicon.getNumObjects() == 0) {
             std::this_thread::sleep_for(1s);
@@ -76,26 +85,31 @@ main()
 
         // Poll joystick
         bool trainingMode = false;
-        cv::Mat frame;
+        cv::Mat frameRaw, frameUnwrapped;
         while (!joystick.isPressed(HID::JButton::B)) {
             bool joystickUpdate = joystick.update();
-            bool cameraUpdate = trainingMode && cam->readFrame(frame);
+            bool cameraUpdate = trainingMode && cam->readGreyscaleFrame(frameRaw);
             if (cameraUpdate) {
                 auto pose = vicon.getObjectData(0);
-                route.record(pose.getPosition<>(), pose.getAttitude()[0], frame);
+                unwrapper.unwrap(frameRaw, frameUnwrapped);
+                route.record(pose.getPosition<>(), pose.getAttitude()[0], frameUnwrapped);
             } else if (!joystickUpdate) {
                 std::this_thread::sleep_for(10ms);
             }
 
             if (joystick.isPressed(HID::JButton::Y)) {
-                trainingMode = !trainingMode;
-                if (trainingMode) {
-                    std::cout << "Entering training mode" << std::endl;
+                if (!trainingMode) {
+                    trainingMode = true;
+                    std::cout << "Recording training images" << std::endl;
                 } else {
-                    route.save();
-                    std::cout << "Stopping training (" << trainImages.size() << " stored)" << std::endl;
+                    break;
                 }
             }
+        }
+
+        if (trainingMode) {
+            route.save();
+            std::cout << "Stopping training (" << trainingDatabase.size() << " stored)" << std::endl;
         }
     } catch (std::exception &e) {
         std::cerr << "Uncaught exception: " << e.what() << std::endl;

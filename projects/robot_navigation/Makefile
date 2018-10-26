@@ -6,7 +6,7 @@ ifdef NO_I2C_ROBOT
 	CXXFLAGS += -DNO_I2C_ROBOT
 endif
 
-EXECUTABLE := robot
+EXECUTABLE := training
 
 .PHONY: all clean
 
