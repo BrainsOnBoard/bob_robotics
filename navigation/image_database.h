@@ -30,6 +30,9 @@ namespace BoBRobotics {
 namespace Navigation {
 using namespace units::literals;
 
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::Range
+//------------------------------------------------------------------------
 //! A range of values in millimetres
 struct Range
 {
@@ -62,6 +65,9 @@ struct Range
     }
 };
 
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::ImageDatabase
+//------------------------------------------------------------------------
 //! An interface for reading from and writing to folders of images
 class ImageDatabase
 {
@@ -347,17 +353,31 @@ public:
         }
     }
 
+    //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const { return m_Path; }
 
+    //! Get one Entry from the database
     const Entry &operator[](size_t i) const { return m_Entries[i]; }
+
+    //! Start iterator for the database entries
     auto begin() const { return m_Entries.cbegin(); }
+
+    //! End iterator for the database entries
     auto end() const { return m_Entries.cend(); }
+
+    //! Number of entries in this database
     size_t size() const { return m_Entries.size(); }
+
+    //! Check if there are any entries in this database
     bool empty() const { return m_Entries.empty(); }
 
+    //! Check if the database is non-empty and a route-type database
     bool isRoute() const { return !empty() && m_IsRoute; }
+
+    //! Check if the database is non-empty and a grid-type database
     bool isGrid() const { return !empty() && !m_IsRoute; }
 
+    //! Load all of the images in this database into memory and return
     std::vector<cv::Mat> getImages() const
     {
         std::vector<cv::Mat> images;
@@ -365,6 +385,7 @@ public:
         return images;
     }
 
+    //! Load all of the images in this database into the specified std::vector<>
     void getImages(std::vector<cv::Mat> &images) const
     {
         std::transform(begin(), end(), std::back_inserter(images), [](const auto &entry) {
@@ -372,14 +393,17 @@ public:
         });
     }
 
+    //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const
     {
         BOB_ASSERT(hasMetadata());
         return m_MetadataYAML->operator[]("metadata");
     }
 
+    //! Get the (directory) name of this database
     std::string getName() const { return m_Path.filename(); }
 
+    //! Start recording a grid of images
     GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
                                  const Range &zrange = Range(0_mm),
                                  degree_t heading = 0_deg,
@@ -388,30 +412,48 @@ public:
         return GridRecorder(*this, xrange, yrange, zrange, heading, imageFormat);
     }
 
+    //! Start recording a route
     RouteRecorder getRouteRecorder(const std::string &imageFormat = "png")
     {
         return RouteRecorder(*this, imageFormat);
     }
 
+    //! Get the resolution of saved images
     cv::Size getResolution() const
     {
         BOB_ASSERT(hasMetadata());
         return m_Resolution;
     }
 
+    //! Check if this database has any saved metadata (yet)
     bool hasMetadata() const { return static_cast<bool>(m_MetadataYAML); }
 
+    /**!
+     *  \brief Unwrap all the panoramic images in this database into a new
+     *         folder, creating a new database.
+     */
     void unwrap(const filesystem::path &destination, const cv::Size &unwrapRes)
     {
         // Check that the database doesn't already exist
         BOB_ASSERT(!(destination / EntriesFilename).exists());
 
+        // Create object for unwrapping images
         std::string camName;
         getMetadata()["camera"]["name"] >> camName;
         ImgProc::OpenCVUnwrap360 unwrapper(getResolution(), unwrapRes, camName);
         filesystem::create_directory(destination);
+
+        // Copy entries (CSV) file
         copyfile(m_Path / EntriesFilename, destination / EntriesFilename);
+
+        // Create new metadata (YAML) file
         {
+            /*
+             * There is no way to edit a persistence file in OpenCV, so we have
+             * to do it ourselves in this ugly way.
+             *
+             * First, copy all fields, except for changing needsUnwrapping to false.
+             */
             std::string line;
             std::ofstream ofs((destination / MetadataFilename).str());
             for (std::ifstream ifs((m_Path / MetadataFilename).str()); std::getline(ifs, line); ) {
@@ -422,6 +464,7 @@ public:
                 }
             }
 
+            // Append info about the unwrapping object, indenting appropriately
             cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
             fs << "unwrapper" << unwrapper;
             std::stringstream ss;
@@ -433,6 +476,7 @@ public:
             }
         }
 
+        // Finally, unwrap all images and save to new folder
         cv::Mat unwrapped(unwrapRes, CV_8UC3);
         std::string outPath;
         for (auto &entry : m_Entries) {
@@ -443,6 +487,7 @@ public:
         }
     }
 
+    //! Get a filename for a route-type database
     static std::string getFilename(const size_t routeIndex,
                                    const std::string &imageFormat = "png")
     {
@@ -451,6 +496,7 @@ public:
         return ss.str();
     }
 
+    //! Get a filename for a grid-type database
     static std::string getFilename(const Vector3<millimeter_t> &position,
                                    const std::string &imageFormat = "png")
     {
