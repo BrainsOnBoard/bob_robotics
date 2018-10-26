@@ -183,7 +183,7 @@ public:
         const double b = (robot_wheel_radius/robot_axis_length).value();
 
         const double c = v.value();
-        const double d = w.value();
+        const double d = static_cast<units::angular_velocity::radians_per_second_t>(w).value();
 
         // determinant
         const double det = 2*(-a*b);
