@@ -458,8 +458,9 @@ public:
             std::string line;
             std::ofstream ofs((destination / MetadataFilename).str());
             for (std::ifstream ifs((m_Path / MetadataFilename).str()); std::getline(ifs, line); ) {
-                if (line.find("  needsUnwrapping:") == 0) {
-                    ofs << "  needsUnwrapping: 0\n";
+                const auto pos = line.find("needsUnwrapping:");
+                if (pos != std::string::npos) {
+                    ofs << std::string(pos, ' ') << "needsUnwrapping: 0\n";
                 } else {
                     ofs << line << "\n";
                 }
