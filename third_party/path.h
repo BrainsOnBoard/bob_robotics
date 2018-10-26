@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
+#include <fstream>
 
 #if defined(_WIN32)
 # include <windows.h>
@@ -333,6 +334,14 @@ inline bool create_directory(const path& p) {
 #else
     return mkdir(p.str().c_str(), S_IRUSR | S_IWUSR | S_IXUSR) == 0;
 #endif
+}
+
+//! BoB's basic implementation for copying a file
+void copy_file(const filesystem::path &from, const filesystem::path &to)
+{
+    std::ifstream ifs(from.str());
+    std::ofstream ofs(to.str());
+    ofs << ifs.rdbuf();
 }
 
 }   // namespace filesystem

@@ -445,7 +445,7 @@ public:
         filesystem::create_directory(destination);
 
         // Copy entries (CSV) file
-        copyfile(m_Path / EntriesFilename, destination / EntriesFilename);
+        filesystem::copy_file(m_Path / EntriesFilename, destination / EntriesFilename);
 
         // Create new metadata (YAML) file
         {
@@ -608,13 +608,6 @@ private:
     {
         os << e.position[0]() << ", " << e.position[1]() << ", "
            << e.position[2]() << ", " << e.heading() << ", " << e.path.filename();
-    }
-
-    static void copyfile(const filesystem::path &from, const filesystem::path &to)
-    {
-        std::ifstream ifs(from.str());
-        std::ofstream ofs(to.str());
-        ofs << ifs.rdbuf();
     }
 }; // ImageDatabase
 } // Navigation
