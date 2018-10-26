@@ -388,6 +388,7 @@ public:
     //! Load all of the images in this database into the specified std::vector<>
     void getImages(std::vector<cv::Mat> &images) const
     {
+        images.reserve(size());
         std::transform(begin(), end(), std::back_inserter(images), [](const auto &entry) {
             return entry.load();
         });
