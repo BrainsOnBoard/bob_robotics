@@ -75,6 +75,7 @@ bob_main(int, char **)
                 std::cout << "Starting positioner" << std::endl;
             } else {
                 std::cout << "Stopping positioner" << std::endl;
+                bot.stopMoving();
             }
         }
 
