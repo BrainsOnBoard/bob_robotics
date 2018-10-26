@@ -188,7 +188,11 @@ public:
         const double Vr = (( a*d - c*b)/det);
 
         // drive robot
-        bot.tank(Vl, Vr);
+        std::cout << "Motor: " << Vl << ", " << Vr << std::endl;
+        const auto cap = [](const double val) {
+            return std::min(1.0, std::max(-1.0, val));
+        };
+        bot.tank(cap(Vl), cap(Vr));
     }
 
     //! returns true if the robot reached the goal position
