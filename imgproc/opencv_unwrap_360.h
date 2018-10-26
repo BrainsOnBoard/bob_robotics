@@ -152,7 +152,7 @@ public:
         }
     }
 
-    void unwrap(const cv::Mat &input, cv::Mat &output)
+    void unwrap(const cv::Mat &input, cv::Mat &output) const
     {
         cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
     }
@@ -184,7 +184,7 @@ public:
 
     /*
      * Deserialise from a cv::FileStorage object (e.g. read from file).
-     * 
+     *
      * **TODO**: Check that we are actually reading values from the file
      */
     void read(const cv::FileNode &node)
