@@ -337,7 +337,7 @@ inline bool create_directory(const path& p) {
 }
 
 //! BoB's basic implementation for copying a file
-void copy_file(const filesystem::path &from, const filesystem::path &to)
+inline void copy_file(const filesystem::path &from, const filesystem::path &to)
 {
     std::ifstream ifs(from.str());
     std::ofstream ofs(to.str());
