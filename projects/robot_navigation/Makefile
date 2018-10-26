@@ -13,14 +13,14 @@ all: computer robot
 -include computer.d
 
 computer: computer.cc computer.d
-	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
+	$(CXX) -o $@ computer.cc $(CXXFLAGS) $(LINK_FLAGS)
 
 -include robot.d
 
 robot: robot.cc robot.d
-	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
+	$(CXX) -o $@ robot.cc $(CXXFLAGS) $(LINK_FLAGS)
 
 %.d: ;
 
 clean:
-	rm -f computer robot *.d
+	rm -f computer robot computer.d robot.d
