@@ -1,8 +1,8 @@
 // BoB robotics includes
-#include "robots/robot_positioner.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/norbot.h"
+#include "robots/robot_positioner.h"
 #include "vicon/udp.h"
 
 // Third-party includes

@@ -1,4 +1,3 @@
-
 #pragma once
 
 // BoB robotics includes
@@ -25,9 +24,14 @@ using namespace units::constants;
 using namespace units::dimensionless;
 using namespace units::angular_velocity;
 
-
+/*!
+ * \brief A tool for moving a tank robot to a specified position in space
+ *
+ * This class requires that we have a mechanism for obtaining the robot's pose,
+ * with, e.g. a Vicon system (see Vicon::UDPClient). The algorithm used is drawn
+ * from: https://web.eecs.umich.edu/~kuipers/papers/Park-icra-11.pdf
+ */
 class RobotPositioner {
-
 private:
     // Robot variables
     millimeter_t m_pos_X;                                           // robot's x position
