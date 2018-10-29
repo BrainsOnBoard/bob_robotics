@@ -23,11 +23,12 @@
 //----------------------------------------------------------------------------
 namespace BoBRobotics {
 namespace ImgProc {
-using namespace units::angle;
 using namespace units::literals;
 
 class OpenCVUnwrap360
 {
+    using degree_t = units::angle::degree_t;
+
 public:
     OpenCVUnwrap360()
     {}

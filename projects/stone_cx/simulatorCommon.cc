@@ -1,3 +1,5 @@
+#define NO_BACKGROUND_EXCEPTION_DEFINITIONS
+
 #include "simulatorCommon.h"
 
 // Standard C++ includes

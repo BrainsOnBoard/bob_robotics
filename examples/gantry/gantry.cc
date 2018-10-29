@@ -9,15 +9,19 @@
 
 #include "os/windows_include.h"
 
-// Standard C++ includes
-#include <iostream>
-
 // BoB robotics includes
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 
+// Third-party includes
+#include "third_party/units.h"
+
+// Standard C++ includes
+#include <iostream>
+
 using namespace BoBRobotics;
+using namespace units::literals;
 
 int
 main()
@@ -49,6 +53,7 @@ main()
         std::cout << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
                   << pos[2] << "\n";
     } catch (std::exception &e) {
-        std::cout << "Uncaught exception: " << e.what();
+        std::cerr << "Uncaught exception: " << e.what() << std::endl;
+		return 1;
     }
 }

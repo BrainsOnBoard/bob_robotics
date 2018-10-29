@@ -27,11 +27,7 @@ namespace BoBRobotics
 {
 namespace Vicon
 {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
-using namespace units::time;
-using namespace units::velocity;
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
@@ -39,6 +35,9 @@ using namespace units::velocity;
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
@@ -97,6 +96,11 @@ private:
 //! Object data class which also calculate (un-filtered) velocity
 class ObjectDataVelocity : public ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+    using millisecond_t = units::time::millisecond_t;
+
 public:
     ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
     {}
@@ -263,13 +267,15 @@ private:
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).
          */
+        using namespace units::length;
+        using namespace units::angle;
         m_ObjectData[id].update(frameNumber,
-                                units::make_unit<millimeter_t>(position[0]),
-                                units::make_unit<millimeter_t>(position[1]),
-                                units::make_unit<millimeter_t>(position[2]),
-                                units::make_unit<radian_t>(attitude[2]),
-                                units::make_unit<radian_t>(attitude[0]),
-                                units::make_unit<radian_t>(attitude[1]));
+                                millimeter_t(position[0]),
+                                millimeter_t(position[1]),
+                                millimeter_t(position[2]),
+                                radian_t(attitude[2]),
+                                radian_t(attitude[0]),
+                                radian_t(attitude[1]));
     }
 
     void readThread(int socket)
