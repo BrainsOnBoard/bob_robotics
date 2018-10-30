@@ -6,21 +6,18 @@ ifdef NO_I2C_ROBOT
 	CXXFLAGS += -DNO_I2C_ROBOT
 endif
 
+EXECUTABLE := robot
+
 .PHONY: all clean
 
-all: computer robot
+all: $(EXECUTABLE)
 
--include computer.d
+-include $(EXECUTABLE).d
 
-computer: computer.cc computer.d
-	$(CXX) -o $@ computer.cc $(CXXFLAGS) $(LINK_FLAGS)
-
--include robot.d
-
-robot: robot.cc robot.d
-	$(CXX) -o $@ robot.cc $(CXXFLAGS) $(LINK_FLAGS)
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 %.d: ;
 
 clean:
-	rm -f computer robot computer.d robot.d
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d
