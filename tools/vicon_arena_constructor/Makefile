@@ -16,4 +16,4 @@ $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
 %.d: ;
 
 clean:
-	rm $(EXECUTABLE) *.d`
+	rm -f $(EXECUTABLE) *.d
