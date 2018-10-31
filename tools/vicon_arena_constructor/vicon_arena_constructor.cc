@@ -13,6 +13,7 @@
 
 // Standard C includes
 #include <cmath>
+#include <ctime>
 
 // Standard C++ includes
 #include <chrono>
@@ -142,6 +143,16 @@ main()
                     {
                         const std::string filename = "objects.yaml";
                         cv::FileStorage fs(filename, cv::FileStorage::WRITE);
+
+                        // Get current date and time
+                        std::time_t now = std::time(nullptr);
+                        char timeStr[sizeof("0000-00-00 00:00:00")];
+                        BOB_ASSERT(0 != std::strftime(timeStr, sizeof(timeStr), "%F %T",
+                                                    std::localtime(&now)));
+
+                        fs << "metadata" << "{"
+                           << "time" << timeStr
+                           << "}";
                         fs << "objects"
                            << "[";
                         for (auto &o : objects) {
