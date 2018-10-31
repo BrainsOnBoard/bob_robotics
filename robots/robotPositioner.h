@@ -62,10 +62,6 @@ private:
         // calculate distance
         m_distanceFromGoal =  units::math::hypot(delta_x, delta_y);
 
-        if (m_distanceFromGoal == 0_mm) {
-            m_distanceFromGoal += 0.1_mm;
-        }
-
         // calculate bearing
         m_bearingFromGoal = units::math::atan2(delta_y,delta_x)-m_heading;
        
