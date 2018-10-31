@@ -37,6 +37,7 @@ main()
 
     do {
         plt::figure(1);
+        plt::clf();
         plotAgent(vicon.getObjectData(0), { -2500, 2500 }, { -2500, 2500 });
         plt::pause(0.025);
     } while (plt::fignum_exists(1));

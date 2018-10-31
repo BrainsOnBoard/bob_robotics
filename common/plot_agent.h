@@ -21,7 +21,6 @@ namespace BoBRobotics {
         const std::vector<double> vu{ units::math::cos(attitude[0]) };
         const std::vector<double> vv{ units::math::sin(attitude[0]) };
         const std::vector<int> x0 { 0 }, y0 { 0 };
-        matplotlibcpp::clf();
         matplotlibcpp::plot(x0, y0, "r+");
         matplotlibcpp::quiver(vx, vy, vu, vv);
         matplotlibcpp::xlim(xlim[0], xlim[1]);
