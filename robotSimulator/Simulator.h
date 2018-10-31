@@ -42,9 +42,9 @@ private:
 		m_w = w;
 
 		// calculating next position, given velocity commands - v and w
-        m_x     = m_x + (-m_v/m_w) * sin(m_angle*PI/180.0) + ( m_v/m_w) * sin( (m_angle + m_w * m_dt)*PI/180.0 );
-        m_y     = m_y + ( m_v/m_w) * cos(m_angle*PI/180.0) - ( m_v/m_w) * cos( (m_angle + m_w * m_dt)*PI/180.0 );
-        m_angle += m_w * m_dt;
+		m_x     = m_x + (-m_v/m_w) * sin(m_angle*PI/180.0) + ( m_v/m_w) * sin( (m_angle + m_w * m_dt)*PI/180.0 );
+		m_y     = m_y + ( m_v/m_w) * cos(m_angle*PI/180.0) - ( m_v/m_w) * cos( (m_angle + m_w * m_dt)*PI/180.0 );
+		m_angle += m_w * m_dt;
 	}
 
 public:
@@ -59,11 +59,11 @@ public:
 		image = SDL_LoadBMP("car.bmp");
 		texture = SDL_CreateTextureFromSurface(renderer, image);
 
-    	// Select the color for drawing. 
-    	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		// Select the color for drawing. 
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    	// Clear the entire screen to our selected color.
-    	SDL_RenderClear(renderer);
+		// Clear the entire screen to our selected color.
+		SDL_RenderClear(renderer);
 
 		// initial position and size of the robot car
 		dstrect = { 5, 5, 65, 50 };	  // currently 1cm translates to 5cm
@@ -100,55 +100,55 @@ public:
 	//! suimulates a step of the simulation with the provided velocities
 	void simulationStep(float v, float w) 
 	{
-         // Clear the entire screen to our selected color.
-        SDL_RenderClear(renderer);
+		 // Clear the entire screen to our selected color.
+		SDL_RenderClear(renderer);
 
-        SDL_PollEvent(&event);
+		SDL_PollEvent(&event);
  
 		// getting events 
-        switch (event.type) {
-            case SDL_QUIT:
-                quit = true;
+		switch (event.type) {
+			case SDL_QUIT:
+				quit = true;
 				// freeing up resources 
 				SDL_DestroyTexture(texture);
 				SDL_FreeSurface(image);
 				SDL_DestroyRenderer(renderer);
 				SDL_DestroyWindow(window);
 				SDL_Quit();
-                break;
+				break;
 
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.sym) {
-                    case SDLK_LEFT:   
-                        w = -0.5;
-                        break;
-                    case SDLK_RIGHT:  
-                        w = 0.5;
-                        break;
-                    case SDLK_UP:     
-                        v = 10.0;
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym) {
+					case SDLK_LEFT:   
+						w = -0.5;
+						break;
+					case SDLK_RIGHT:  
+						w = 0.5;
+						break;
+					case SDLK_UP:     
+						v = 10.0;
 						w = 0.0001;
-                        break;
-                    case SDLK_DOWN:  
-                        v = -10.0;
+						break;
+					case SDLK_DOWN:  
+						v = -10.0;
 						w = 0.0001;
-                        break;
-                }
-            
+						break;
+				}
+			
 			case SDL_MOUSEBUTTONDOWN:
-        		// If the left button was pressed. 
-                if (event.button.button == SDL_BUTTON_LEFT) {
+				// If the left button was pressed. 
+				if (event.button.button == SDL_BUTTON_LEFT) {
 					int x, y;
 					SDL_GetMouseState(&x, &y);
 					mouseClickX = x;
 					mouseClickY = y;			
 				}
-                       
-            default: 
+					   
+			default: 
 				// adding a small value to avoid dividing by 0
 				if (v == 0 && w == 0) {
-                	v = 0.0001;
-                	w = 0.0001;
+					v = 0.0001;
+					w = 0.0001;
 				}
 				break;
 		}
@@ -163,14 +163,14 @@ public:
 		drawRectangleAtCoordinates(rect_goal , mouseClickX, mouseClickY);
 
 		// Select the color for drawing. 
-    	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		
 		// render texture with rotation
-        SDL_RenderCopyEx( renderer, texture, NULL, &dstrect, m_angle, NULL, SDL_FLIP_NONE );
-        
-        SDL_RenderPresent(renderer);
+		SDL_RenderCopyEx( renderer, texture, NULL, &dstrect, m_angle, NULL, SDL_FLIP_NONE );
+		
+		SDL_RenderPresent(renderer);
 	
-    }
+	}
 
 	//! draws the rectangle at the desired coordinates
 	void drawRectangleAtCoordinates(SDL_Rect &rectangle, const float x, const float y) {
