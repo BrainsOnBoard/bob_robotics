@@ -18,6 +18,7 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/main.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/tank.h"
@@ -84,7 +85,7 @@ run(Video::Input &camera)
 }
 
 int
-main(int argc, char **argv)
+bob_main(int argc, char **argv)
 {
     try {
         /*
@@ -101,7 +102,7 @@ main(int argc, char **argv)
             } catch (std::invalid_argument &) {
                 // ...and fall back on treating it as a string
                 if (strcmp(argv[1], "random") == 0) {
-                    Video::RandomInput<> camera({500, 250}, "webcam360");
+                    Video::RandomInput<> camera({ 500, 250 }, "webcam360");
                     run(camera);
                 } else {
                     Video::OpenCVInput camera(argv[1]);
@@ -116,8 +117,7 @@ main(int argc, char **argv)
     } catch (Net::SocketClosingError &) {
         // The connection was closed on purpose: do nothing
         std::cout << "Connection closed" << std::endl;
-    } catch (std::exception &e) {
-        std::cerr << "Uncaught exception: " << e.what() << std::endl;
-        return 1;
     }
+
+    return EXIT_SUCCESS;
 }
