@@ -1,14 +1,21 @@
 #pragma once
 
+// Standard C includes
+#include <csignal>
+
 // Standard C++ includes
+#include <array>
 #include <stdexcept>
+#include <string>
+#include <unordered_set>
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
 // BoBRobotics::BackgroundExceptionCatcher
 //----------------------------------------------------------------------------
 //! A wrapper for passing exceptions between threads (i.e. a background thread to the main one)
-class BackgroundExceptionCatcher {
+class BackgroundExceptionCatcher
+{
 public:
     BackgroundExceptionCatcher()
     {
@@ -18,6 +25,20 @@ public:
     ~BackgroundExceptionCatcher()
     {
         NumCatchers--;
+
+        // Unregister signal handlers
+        for (auto sig : m_Signals) {
+            std::signal(sig, SIG_DFL);
+        }
+    }
+
+    //! Trap specified signals like exceptions
+    void trapSignals(const std::unordered_set<int> &signals = {SIGSEGV, SIGINT, SIGFPE})
+    {
+        m_Signals.insert(signals.cbegin(), signals.cend());
+        for (auto &sig : signals) {
+            std::signal(sig, &signalHandler);
+        }
     }
 
     //! Sets the global exception
@@ -45,8 +66,34 @@ public:
     BackgroundExceptionCatcher &operator=(BackgroundExceptionCatcher &&) = default;
 
 private:
+    std::unordered_set<int> m_Signals;
     static unsigned NumCatchers;
     static std::exception_ptr ExceptionPtr;
+
+    static void signalHandler(int sig)
+    {
+        set(std::make_exception_ptr(std::runtime_error("Caught signal: " + getSignalName(sig))));
+    }
+
+    static std::string getSignalName(int sig)
+    {
+        switch (sig) {
+        case SIGABRT:
+            return "SIGABRT";
+        case SIGFPE:
+            return "SIGFPE";
+        case SIGILL:
+            return "SIGILL";
+        case SIGINT:
+            return "SIGINT";
+        case SIGSEGV:
+            return "SIGSEGV";
+        case SIGTERM:
+            return "SIGTERM";
+        default:
+            return "unknown (" + std::to_string(sig) + ")";
+        }
+    }
 }; // BackgroundExceptionCatcher
 
 /*
