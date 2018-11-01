@@ -52,7 +52,7 @@ main(int argc, char **argv)
         Net::Client client(robotIP);
 
         // Run client on background thread, catching any exceptions for rethrowing
-        BackgroundException::enableCatching();
+        const BackgroundException catcher;
         client.runInBackground();
 
         // Read video stream from network
@@ -69,7 +69,7 @@ main(int argc, char **argv)
         Video::Display display(video, { 1240, 500 });
         while(display.isOpen()) {
             // Rethrow any exceptions caught on background thread
-            BackgroundException::check();
+            catcher.check();
 
             // Poll joystick and camera for updates
             bool joystickUpdate = joystick.update();

@@ -10,16 +10,20 @@ namespace BoBRobotics {
 //! A wrapper for passing exceptions between threads (i.e. a background thread to the main one)
 class BackgroundException {
 public:
-    //! Start catching exceptions on background threads
-    static void enableCatching()
+    BackgroundException()
     {
-        m_DoCatch = true;
+        m_NumCatchers++;
+    }
+
+    ~BackgroundException()
+    {
+        m_NumCatchers--;
     }
 
     //! Sets the global exception
     static void set(const std::exception_ptr &error)
     {
-        if (m_DoCatch) {
+        if (m_NumCatchers > 0) {
             m_Exception = error;
         } else {
             std::rethrow_exception(error);
@@ -34,8 +38,14 @@ public:
         }
     }
 
+    // Object is non-copyable
+    BackgroundException(const BackgroundException &) = delete;
+    void operator=(const BackgroundException &) = delete;
+    BackgroundException(BackgroundException &&) = default;
+    BackgroundException &operator=(BackgroundException &&) = default;
+
 private:
-    static bool m_DoCatch;
+    static unsigned m_NumCatchers;
     static std::exception_ptr m_Exception;
 }; // BackgroundException
 
@@ -45,7 +55,7 @@ private:
  * libbebop.
  */
 #ifndef NO_BACKGROUND_EXCEPTION_DEFINITIONS
-bool BackgroundException::m_DoCatch = false;
+unsigned BackgroundException::m_NumCatchers = 0;
 std::exception_ptr BackgroundException::m_Exception;
 #endif
 } // BoBRobotics

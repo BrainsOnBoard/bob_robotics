@@ -65,14 +65,14 @@ run(Video::Input &camera)
     tank.readFromNetwork(server);
 
     // Run server in background,, catching any exceptions for rethrowing
-    BackgroundException::enableCatching();
+    const BackgroundException catcher;
     server.runInBackground();
 
     // Send frames over network
     cv::Mat frame;
     while (true) {
         // Rethrow any exceptions caught on background thread
-        BackgroundException::check();
+        catcher.check();
 
         // If there's a new frame, send it, else sleep
         if (camera.readFrame(frame)) {
