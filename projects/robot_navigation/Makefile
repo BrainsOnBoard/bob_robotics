@@ -1,3 +1,4 @@
+WITH_MATPLOTLIBCPP := 1
 include ../../common/flags.mk
 CXXFLAGS += -I../..
 
