@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#include "common/background_exception.h"
+#include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
@@ -52,7 +52,7 @@ main(int argc, char **argv)
         Net::Client client(robotIP);
 
         // Run client on background thread, catching any exceptions for rethrowing
-        const BackgroundException catcher;
+        const BackgroundExceptionCatcher catcher;
         client.runInBackground();
 
         // Read video stream from network

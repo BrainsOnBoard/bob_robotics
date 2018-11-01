@@ -17,7 +17,7 @@
 #endif
 
 // BoB robotics includes
-#include "common/background_exception.h"
+#include "common/background_exception_catcher.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/tank.h"
@@ -65,7 +65,7 @@ run(Video::Input &camera)
     tank.readFromNetwork(server);
 
     // Run server in background,, catching any exceptions for rethrowing
-    const BackgroundException catcher;
+    const BackgroundExceptionCatcher catcher;
     server.runInBackground();
 
     // Send frames over network
