@@ -658,36 +658,20 @@ private:
     //----------------------------------------------------------------------------
     uint8_t readByte(I2CInterface &interface, uint8_t address)
     {
-        if(!interface.writeByte(address)) {
-            throw std::runtime_error("Cannot select read address '" + std::to_string(address) + "'");
-        }
-
-        uint8_t byte;
-        if(interface.readByte(byte)) {
-            return byte;
-        }
-        else {
-            throw std::runtime_error("Cannot read from address '" + std::to_string(address) + "'");
-        }
+        interface.writeByte(address);
+        return interface.readByte();
     }
 
     template<typename T, size_t N>
     void readData(I2CInterface &interface, uint8_t address, T (&data)[N])
     {
-        if(!interface.writeByte(address | 0x80)) {
-            throw std::runtime_error("Cannot select read address '" + std::to_string(address) + "'");
-        }
-
-        if(!interface.read(data)) {
-            throw std::runtime_error("Cannot read from address '" + std::to_string(address) + "'");
-        }
+        interface.writeByte(address | 0x80);
+        interface.read(data);
     }
 
     void writeByte(I2CInterface &interface, uint8_t address, uint8_t byte)
     {
-        if(!interface.writeByteCommand(address, byte)) {
-            throw std::runtime_error("Cannot write '" + std::to_string(byte) + "' to address '" + std::to_string(address) + "'");
-        }
+        interface.writeByteCommand(address, byte);
     }
 
     uint8_t readAccelGyroByte(AccelGyroReg reg)
