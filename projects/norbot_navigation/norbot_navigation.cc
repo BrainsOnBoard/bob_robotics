@@ -134,6 +134,9 @@ bob_main(int argc, char **argv)
 
     Vicon::UDPClient<> vicon(51001);
 
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals();
+
 #ifdef NO_I2C_ROBOT
     std::string robotIP;
     if (argc == 2) {
@@ -157,6 +160,8 @@ bob_main(int argc, char **argv)
     // Read video stream from network
     Video::NetSource video(client);
     Video::Input *cam = &video;
+
+    client.runInBackground();
 #else
     // Use Arduino robot
     Robots::Norbot tank;
