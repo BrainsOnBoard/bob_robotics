@@ -7,7 +7,7 @@ ifdef NO_I2C_ROBOT
 	CXXFLAGS += -DNO_I2C_ROBOT
 endif
 
-EXECUTABLE := training
+EXECUTABLE := norbot_navigation
 
 .PHONY: all clean
 
