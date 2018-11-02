@@ -13,27 +13,40 @@
 #include <unordered_set>
 
 namespace BoBRobotics {
+/*!
+ * \brief A template for the singleton design pattern
+ *
+ * After: https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
+ */
+template<typename T>
+class Singleton
+{
+public:
+    Singleton()
+    {}
+
+    Singleton(Singleton const &) = delete;
+    void operator=(Singleton const &) = delete;
+
+    static T &getInstance()
+    {
+        static T instance; // Guaranteed to be destroyed.
+                           // Instantiated on first use.
+        return instance;
+    }
+};
+
 //----------------------------------------------------------------------------
 // BoBRobotics::BackgroundExceptionCatcher
 //----------------------------------------------------------------------------
 //! A wrapper for passing exceptions between threads (i.e. a background thread to the main one)
 class BackgroundExceptionCatcher
+  : public Singleton<BackgroundExceptionCatcher>
 {
 public:
     BackgroundExceptionCatcher()
     {
-        // We can have only one instance
-        BOB_ASSERT(!CatcherExists);
-    }
-
-    ~BackgroundExceptionCatcher()
-    {
-        // Unregister signal handlers
-        for (auto sig : m_Signals) {
-            std::signal(sig, SIG_DFL);
-        }
-
-        CatcherExists = false;
+        CatcherExists = true;
     }
 
 #ifdef DEBUG
@@ -51,9 +64,16 @@ void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNAL
     void trapSignals(const std::unordered_set<int> &signals = { SIGSEGV, SIGINT, SIGFPE })
 #endif
     {
-        m_Signals.insert(signals.cbegin(), signals.cend());
         for (auto &sig : signals) {
             std::signal(sig, &signalHandler);
+        }
+    }
+
+    //! Checks if the global exception is set and rethrows it if so
+    void check()
+    {
+        if (ExceptionPtr) {
+            std::rethrow_exception(ExceptionPtr);
         }
     }
 
@@ -67,22 +87,7 @@ void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNAL
         }
     }
 
-    //! Checks if the global exception is set and rethrows it if so
-    static void check()
-    {
-        if (ExceptionPtr) {
-            std::rethrow_exception(ExceptionPtr);
-        }
-    }
-
-    // Object is non-copyable
-    BackgroundExceptionCatcher(const BackgroundExceptionCatcher &) = delete;
-    void operator=(const BackgroundExceptionCatcher &) = delete;
-    BackgroundExceptionCatcher(BackgroundExceptionCatcher &&) = default;
-    BackgroundExceptionCatcher &operator=(BackgroundExceptionCatcher &&) = default;
-
 private:
-    std::unordered_set<int> m_Signals;
     static bool CatcherExists;
     static std::exception_ptr ExceptionPtr;
 
