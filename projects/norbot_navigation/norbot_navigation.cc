@@ -73,6 +73,7 @@ public:
 
     ~TrainingDatabase()
     {
+        m_Recorder.save();
         std::cout << "Stopping training (" << size() << " stored)" << std::endl;
     }
 
