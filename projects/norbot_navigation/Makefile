@@ -7,18 +7,21 @@ ifdef NO_I2C_ROBOT
 	CXXFLAGS += -DNO_I2C_ROBOT
 endif
 
-EXECUTABLE := norbot_navigation
-
 .PHONY: all clean
 
-all: $(EXECUTABLE)
+all: norbot_navigation robot
 
--include $(EXECUTABLE).d
+-include norbot_navigation.d
 
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+norbot_navigation: norbot_navigation.cc norbot_navigation.d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+-include robot.d
+
+robot: robot.cc robot.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 %.d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f norbot_navigation robot *.d

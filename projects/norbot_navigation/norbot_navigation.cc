@@ -17,7 +17,11 @@
 #include "vicon/udp.h"
 #include "video/panoramic.h"
 
-#ifndef NO_I2C_ROBOT
+#ifdef NO_I2C_ROBOT
+#include "net/client.h"
+#include "robots/tank_netsink.h"
+#include "video/netsource.h"
+#else
 #include "robots/norbot.h"
 #endif
 
@@ -118,9 +122,7 @@ int
 bob_main(int argc, char **argv)
 {
     const cv::Size unwrapResolution{ 360, 75 };
-    const auto objects = loadObjects(argc < 2 ? "../../tools/vicon_arena_constructor/objects.yaml"
-                                              : argv[1]);
-
+    const auto objects = loadObjects("../../tools/vicon_arena_constructor/objects.yaml");
     const filesystem::path routeBasePath = "routes";
     filesystem::create_directory(routeBasePath);
 
@@ -132,16 +134,36 @@ bob_main(int argc, char **argv)
 
     Vicon::UDPClient<> vicon(51001);
 
-    auto cam = Video::getPanoramicCamera();
-    const auto unwrapper = cam->createUnwrapper(unwrapResolution);
-
 #ifdef NO_I2C_ROBOT
-    // Output motor commands to terminal
-    Robots::Tank tank;
+    std::string robotIP;
+    if (argc == 2) {
+        // Get robot IP from command-line argument
+        robotIP = argv[1];
+    } else {
+        // Get robot IP from terminal
+        std::cout << "Robot IP [127.0.0.1]: ";
+        std::getline(std::cin, robotIP);
+        if (robotIP.empty()) {
+            robotIP = "127.0.0.1";
+        }
+    }
+
+    // Make connection to robot on default port
+    Net::Client client(robotIP);
+
+    // Output motor commands to network
+    Robots::TankNetSink tank(client);
+
+    // Read video stream from network
+    Video::NetSource video(client);
+    Video::Input *cam = &video;
 #else
     // Use Arduino robot
     Robots::Norbot tank;
+
+    auto cam = Video::getPanoramicCamera();
 #endif
+    const auto unwrapper = cam->createUnwrapper(unwrapResolution);
 
     // Control robot with joystick
     HID::Joystick joystick;
