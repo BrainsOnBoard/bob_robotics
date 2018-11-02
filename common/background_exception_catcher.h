@@ -32,8 +32,13 @@ public:
         }
     }
 
+#ifdef DEBUG
+    // Don't catch segfaults etc. when debugging: we want the debugger to catch them
+    void trapSignals(const std::unordered_set<int> &signals = { SIGINT })
+#else
     //! Trap specified signals like exceptions
-    void trapSignals(const std::unordered_set<int> &signals = {SIGSEGV, SIGINT, SIGFPE})
+    void trapSignals(const std::unordered_set<int> &signals = { SIGSEGV, SIGINT, SIGFPE })
+#endif
     {
         m_Signals.insert(signals.cbegin(), signals.cend());
         for (auto &sig : signals) {
