@@ -102,22 +102,6 @@ loadObjects(const std::string &objectsPath)
     return objects;
 }
 
-Navigation::ImageDatabase
-createTrainingDatabase()
-{
-    const filesystem::path basePath = "routes";
-    filesystem::create_directory(basePath);
-
-    filesystem::path databasePath;
-    int i = 1;
-    do {
-        databasePath = basePath / ("route" + std::to_string(i++));
-    } while (databasePath.exists());
-
-    std::cout << "Creating folder " << databasePath << std::endl;
-    return databasePath;
-}
-
 int
 bob_main(int argc, char **argv)
 {
