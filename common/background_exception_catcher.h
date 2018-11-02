@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "assert.h"
+
 // Standard C includes
 #include <csignal>
 
@@ -19,17 +22,18 @@ class BackgroundExceptionCatcher
 public:
     BackgroundExceptionCatcher()
     {
-        NumCatchers++;
+        // We can have only one instance
+        BOB_ASSERT(!CatcherExists);
     }
 
     ~BackgroundExceptionCatcher()
     {
-        NumCatchers--;
-
         // Unregister signal handlers
         for (auto sig : m_Signals) {
             std::signal(sig, SIG_DFL);
         }
+
+        CatcherExists = false;
     }
 
 #ifdef DEBUG
@@ -49,7 +53,7 @@ public:
     //! Sets the global exception
     static void set(const std::exception_ptr &error)
     {
-        if (NumCatchers > 0) {
+        if (CatcherExists) {
             ExceptionPtr = error;
         } else {
             std::rethrow_exception(error);
@@ -72,7 +76,7 @@ public:
 
 private:
     std::unordered_set<int> m_Signals;
-    static unsigned NumCatchers;
+    static bool CatcherExists;
     static std::exception_ptr ExceptionPtr;
 
     static void signalHandler(int sig)
@@ -107,7 +111,7 @@ private:
  * libbebop.
  */
 #ifndef NO_BACKGROUND_EXCEPTION_CATCHER_DEFINITIONS
-unsigned BackgroundExceptionCatcher::NumCatchers = 0;
+bool BackgroundExceptionCatcher::CatcherExists = false;
 std::exception_ptr BackgroundExceptionCatcher::ExceptionPtr;
 #endif
 } // BoBRobotics
