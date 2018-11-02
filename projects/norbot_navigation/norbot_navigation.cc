@@ -121,34 +121,41 @@ bob_main(int argc, char **argv)
     auto &catcher = BackgroundExceptionCatcher::getInstance();
     catcher.trapSignals();
 
+    std::unique_ptr<Video::Input> cam;
+    std::unique_ptr<Robots::Tank> tank;
 #ifdef NO_I2C_ROBOT
-    std::string robotIP;
-    if (argc == 2) {
-        // Get robot IP from command-line argument
-        robotIP = argv[1];
+    std::unique_ptr<Net::Client> client;
+    if ((argc > 1 && strcmp(argv[1], "--robot") == 0)) {
+        cam = Video::getPanoramicCamera();
+        tank = std::make_unique<Robots::Tank>();
     } else {
-        // Get robot IP from terminal
-        std::cout << "Robot IP [127.0.0.1]: ";
-        std::getline(std::cin, robotIP);
-        if (robotIP.empty()) {
-            robotIP = "127.0.0.1";
+        std::string robotIP;
+        if (argc == 2) {
+            // Get robot IP from command-line argument
+            robotIP = argv[1];
+        } else {
+            // Get robot IP from terminal
+            std::cout << "Robot IP [127.0.0.1]: ";
+            std::getline(std::cin, robotIP);
+            if (robotIP.empty()) {
+                robotIP = "127.0.0.1";
+            }
         }
+
+        // Make connection to robot on default port
+        client = std::make_unique<Net::Client>(robotIP);
+
+        // Output motor commands to network
+        tank = std::make_unique<Robots::TankNetSink>(*client);
+
+        // Read video stream from network
+        cam = std::make_unique<Video::NetSource>(*client);
+
+        client->runInBackground();
     }
-
-    // Make connection to robot on default port
-    Net::Client client(robotIP);
-
-    // Output motor commands to network
-    Robots::TankNetSink tank(client);
-
-    // Read video stream from network
-    Video::NetSource video(client);
-    Video::Input *cam = &video;
-
-    client.runInBackground();
 #else
     // Use Arduino robot
-    Robots::Norbot tank;
+    tank = std::make_unique<Robots::Norbot>();
 
     auto cam = Video::getPanoramicCamera();
 #endif
@@ -156,7 +163,7 @@ bob_main(int argc, char **argv)
 
     // Control robot with joystick
     HID::Joystick joystick;
-    tank.addJoystick(joystick);
+    tank->addJoystick(joystick);
     std::cout << "Joystick opened" << std::endl;
 
     while (vicon.getNumObjects() == 0) {
