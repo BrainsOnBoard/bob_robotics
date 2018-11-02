@@ -37,6 +37,13 @@ public:
     }
 
 #ifdef DEBUG
+#define DEFAULT_TRAPPED_SIGNALS { SIGINT }
+#else
+#define DEFAULT_TRAPPED_SIGNALS { SIGSEGV, SIGINT, SIGFPE }
+#endif
+void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNALS)
+{
+}
     // Don't catch segfaults etc. when debugging: we want the debugger to catch them
     void trapSignals(const std::unordered_set<int> &signals = { SIGINT })
 #else
