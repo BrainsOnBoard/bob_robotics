@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <thread>
 #include <utility>
@@ -43,6 +44,59 @@ using namespace units::length;
 using namespace std::literals;
 
 namespace plt = matplotlibcpp;
+
+filesystem::path
+getRoutePath(const int routeNum)
+{
+    const filesystem::path routeBasePath = "routes";
+    return routeBasePath / ("route" + std::to_string(routeNum));
+}
+
+class TrainingDatabase
+  : Navigation::ImageDatabase
+{
+public:
+    TrainingDatabase(const int routeNum, const Video::Input &cam, const ImgProc::OpenCVUnwrap360 &unwrapper)
+      : Navigation::ImageDatabase(getRoutePath(routeNum))
+      , m_Recorder(getRouteRecorder())
+    {
+        auto &metadata = m_Recorder.getMetadataWriter();
+        metadata << "camera" << cam
+                 << "needsUnwrapping" << false
+                 << "isGreyscale" << true
+                 << "unwrapper" << unwrapper;
+    }
+
+    ~TrainingDatabase()
+    {
+        std::cout << "Stopping training (" << size() << " stored)" << std::endl;
+    }
+
+    Navigation::ImageDatabase::RouteRecorder &getRouteRecorder() { return m_Recorder; }
+
+private:
+    Navigation::ImageDatabase::RouteRecorder m_Recorder;
+};
+
+auto
+loadObjects(const std::string &objectsPath)
+{
+    std::vector<std::pair<std::vector<millimeter_t>, std::vector<millimeter_t>>> objects;
+
+    std::cout << "Loading object positions from " << objectsPath << "..." << std::endl;
+    cv::FileStorage fs(objectsPath, cv::FileStorage::READ);
+    std::vector<double> vertex(2);
+    for (auto objectNode : fs["objects"]) {
+        objects.emplace_back();
+        for (auto vertexNode : objectNode) {
+            vertexNode >> vertex;
+            objects.back().first.emplace_back(vertex[0]);
+            objects.back().second.emplace_back(vertex[1]);
+        }
+    }
+
+    return objects;
+}
 
 Navigation::ImageDatabase
 createTrainingDatabase()
@@ -64,23 +118,17 @@ int
 bob_main(int argc, char **argv)
 {
     const cv::Size unwrapResolution{ 360, 75 };
-    const std::string objectsPath = argc < 2 ? "../../tools/vicon_arena_constructor/objects.yaml"
-                                             : argv[1];
+    const auto objects = loadObjects(argc < 2 ? "../../tools/vicon_arena_constructor/objects.yaml"
+                                              : argv[1]);
 
-    std::vector<std::pair<std::vector<millimeter_t>, std::vector<millimeter_t>>> objects;
-    {
-        std::cout << "Loading object positions from " << objectsPath << "..." << std::endl;
-        cv::FileStorage fs(objectsPath, cv::FileStorage::READ);
-        std::vector<double> vertex(2);
-        for (auto objectNode : fs["objects"]) {
-            objects.emplace_back();
-            for (auto vertexNode : objectNode) {
-                vertexNode >> vertex;
-                objects.back().first.emplace_back(vertex[0]);
-                objects.back().second.emplace_back(vertex[1]);
-            }
-        }
-    }
+    const filesystem::path routeBasePath = "routes";
+    filesystem::create_directory(routeBasePath);
+
+    // Count number of routes
+    int numRoutes = 0;
+    while(getRoutePath(++numRoutes).exists())
+        ;
+    std::unique_ptr<TrainingDatabase> trainingDatabase;
 
     Vicon::UDPClient<> vicon(51001);
 
@@ -100,22 +148,12 @@ bob_main(int argc, char **argv)
     tank.addJoystick(joystick);
     std::cout << "Joystick opened" << std::endl;
 
-    // Make new image database for training images
-    auto trainingDatabase = createTrainingDatabase();
-    auto route = trainingDatabase.getRouteRecorder();
-    auto &metadata = route.getMetadataWriter();
-    metadata << "camera" << *cam
-             << "needsUnwrapping" << false
-             << "isGreyscale" << true
-             << "unwrapper" << unwrapper;
-
     while (vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
     }
 
     // Poll joystick
-    bool trainingMode = false;
     cv::Mat frameRaw, frameUnwrapped;
     while (!joystick.isPressed(HID::JButton::B)) {
         const auto pose = vicon.getObjectData(0);
@@ -142,27 +180,22 @@ bob_main(int argc, char **argv)
         plotAgent(pose, { -1500, 1500 }, { -1500, 1500 });
 
         bool joystickUpdate = joystick.update();
-        bool cameraUpdate = trainingMode && cam->readGreyscaleFrame(frameRaw);
+        bool cameraUpdate = trainingDatabase && cam->readGreyscaleFrame(frameRaw);
         if (cameraUpdate) {
             unwrapper.unwrap(frameRaw, frameUnwrapped);
-            route.record(pose.getPosition<>(), pose.getAttitude()[0], frameUnwrapped);
+            trainingDatabase->getRouteRecorder().record(pose.getPosition<>(), pose.getAttitude()[0], frameUnwrapped);
         } else if (!joystickUpdate) {
             plt::pause(0.1);
         }
 
         if (joystick.isPressed(HID::JButton::Y)) {
-            if (!trainingMode) {
-                trainingMode = true;
-                std::cout << "Recording training images" << std::endl;
+            if (trainingDatabase) {
+                trainingDatabase.reset();
             } else {
-                break;
+                trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, *cam, unwrapper);
+                std::cout << "Recording training images" << std::endl;
             }
         }
-    }
-
-    if (trainingMode) {
-        route.save();
-        std::cout << "Stopping training (" << trainingDatabase.size() << " stored)" << std::endl;
     }
 
     return EXIT_SUCCESS;
