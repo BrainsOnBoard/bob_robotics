@@ -21,6 +21,7 @@
 #include "common/main.h"
 #include "net/server.h"
 #include "os/net.h"
+#include "robots/tank.h"
 #include "robots/norbot.h"
 #include "video/netsink.h"
 #include "video/panoramic.h"
@@ -51,8 +52,12 @@ bob_main(int, char **)
     // Stream camera synchronously over network
     Video::NetSink netSink(server, camera->getOutputSize(), camera->getCameraName());
 
+#ifdef NO_I2C_ROBOT
+    Robots::Tank tank;
+#else
     // Use Arduino robot
     Robots::Norbot tank;
+#endif
 
     // Read motor commands from network
     tank.readFromNetwork(server);
