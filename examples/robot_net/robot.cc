@@ -66,7 +66,7 @@ run(Video::Input &camera)
     tank.readFromNetwork(server);
 
     // Run server in background,, catching any exceptions for rethrowing
-    BackgroundExceptionCatcher catcher;
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
     catcher.trapSignals(); // Catch Ctrl-C
     server.runInBackground();
 

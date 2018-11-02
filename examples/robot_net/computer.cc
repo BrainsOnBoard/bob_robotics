@@ -52,7 +52,7 @@ bob_main(int argc, char **argv)
     Net::Client client(robotIP);
 
     // Run client on background thread, catching any exceptions for rethrowing
-    BackgroundExceptionCatcher catcher;
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
     catcher.trapSignals(); // Catch Ctrl-C
     client.runInBackground();
 
