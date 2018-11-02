@@ -49,8 +49,8 @@ public:
         if (connect(Socket::getSocket(),
                     reinterpret_cast<sockaddr *>(&destAddress),
                     sizeof(destAddress)) < 0) {
-            throw SocketError("Cannot connect socket to " + host + ":" +
-                                    std::to_string(port));
+            throw OS::Net::NetworkError("Cannot connect socket to " + host + ":" +
+                                        std::to_string(port));
         }
 
         std::cout << "Opened socket" << std::endl;

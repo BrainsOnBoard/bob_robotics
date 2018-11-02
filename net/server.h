@@ -37,13 +37,13 @@ public:
     {
         m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (m_ListenSocket == INVALID_SOCKET) {
-            throw SocketError("Could not create socket");
+            throw OS::Net::NetworkError("Could not create socket");
         }
 
 #ifndef _WIN32
         int on = 1;
         if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-            throw SocketError("Could not set socket option");
+            throw OS::Net::NetworkError("Could not set socket option");
         }
 #endif
 
@@ -54,7 +54,7 @@ public:
         addr.sin_port = htons(port);
 
         if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
-            throw SocketError("Could not bind to socket");
+            throw OS::Net::NetworkError("Could not bind to socket");
         }
     }
 
@@ -74,7 +74,7 @@ protected:
     {
         // Start listening
         if (listen(m_ListenSocket, 10)) {
-            throw SocketError("Error while listening for connection");
+            throw OS::Net::NetworkError("Error while listening for connection");
         }
 
         // for incoming connection

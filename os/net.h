@@ -77,10 +77,9 @@ typedef int socket_t;
 namespace BoBRobotics {
 namespace OS {
 namespace Net {
-
 /*
- * We set MSG_NOSIGNAL on Linux, because otherwise a broken pipe will exit the
- * program.
+ * We set sendFlags to MSG_NOSIGNAL  on Linux, because otherwise a broken pipe
+ * will terminate the program.
  */
 #ifdef _WIN32
 const int sendFlags = 0;
@@ -170,6 +169,15 @@ errorMessage(int err = lastError())
     return std::strerror(err);
 }
 #endif
+
+//! An exception thrown if an error signal is given by network interface
+class NetworkError : public std::runtime_error
+{
+public:
+    NetworkError(const std::string &msg)
+      : std::runtime_error(msg + " (" + std::to_string(OS::Net::lastError()) + ": " + OS::Net::errorMessage() + ")")
+    {}
+};
 } // Net
 } // OS
 } // BoBRobotics
