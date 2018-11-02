@@ -77,4 +77,6 @@ bob_main(int, char **)
             std::this_thread::sleep_for(25ms);
         }
     } while (display.isOpen());
+
+    return EXIT_SUCCESS;
 }
