@@ -19,21 +19,30 @@ bob_main(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
+#ifdef DEBUG
+    /*
+     * If we're debugging, we don't catch exceptions, so that a debugger can
+     * catch them.
+     */
+    return bob_main(argc, argv);
+#else
+#ifdef _WIN32
     try {
         return bob_main(argc, argv);
-#ifdef _WIN32
     } catch (std::exception &e) {
         // Windows doesn't print exception details by default
         std::cerr << "Uncaught exception: " << e.what() << std::endl;
-#ifndef DEBUG
+
         // There's no point telling Windows the program has crashed
         return EXIT_FAILURE;
+    }
 #else
-        throw;
-#endif // !DEBUG
-#endif // _WIN32
+    // On *nix, use default exception handler, after clean-up
+    try {
+        return bob_main(argc, argv);
     } catch (...) {
-        // Rethrow the caught exception
         throw;
     }
+#endif // _WIN32
+#endif // DEBUG
 }
