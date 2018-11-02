@@ -11,8 +11,10 @@
 #include "common/main.h"
 #include "common/plot_agent.h"
 #include "common/pose.h"
+#include "common/timer.h"
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
+#include "navigation/perfect_memory.h"
 #include "robots/tank.h"
 #include "vicon/udp.h"
 #include "video/panoramic.h"
@@ -44,7 +46,10 @@
 #include <vector>
 
 using namespace BoBRobotics;
+using namespace units::angle;
 using namespace units::length;
+using namespace units::literals;
+using namespace units::time;
 using namespace std::literals;
 
 namespace plt = matplotlibcpp;
@@ -106,10 +111,15 @@ loadObjects(const std::string &objectsPath)
 int
 bob_main(int argc, char **argv)
 {
+    const float forwardSpeed = 1.f;
+
     const cv::Size unwrapResolution{ 360, 75 };
     const auto objects = loadObjects("../../tools/vicon_arena_constructor/objects.yaml");
+
     const filesystem::path routeBasePath = "routes";
     filesystem::create_directory(routeBasePath);
+
+    const auto robotTurnSpeed = 13.333_deg_per_s;
 
     // Count number of routes
     int numRoutes = 0;
@@ -117,12 +127,14 @@ bob_main(int argc, char **argv)
         ;
     std::unique_ptr<TrainingDatabase> trainingDatabase;
 
+    Navigation::PerfectMemoryRotater<> pm(unwrapResolution);
+
     Vicon::UDPClient<> vicon(51001);
 
-    std::unique_ptr<Video::Input> cam;
-    std::unique_ptr<Robots::Tank> tank;
 #ifdef NO_I2C_ROBOT
     std::unique_ptr<Net::Client> client;
+    std::unique_ptr<Robots::Tank> tank;
+    std::unique_ptr<Video::Input> cam;
     if ((argc > 1 && strcmp(argv[1], "--robot") == 0)) {
         cam = Video::getPanoramicCamera();
         tank = std::make_unique<Robots::Tank>();
@@ -153,8 +165,7 @@ bob_main(int argc, char **argv)
     }
 #else
     // Use Arduino robot
-    tank = std::make_unique<Robots::Norbot>();
-
+    auto tank = std::make_unique<Robots::Norbot>();
     auto cam = Video::getPanoramicCamera();
 #endif
     const auto unwrapper = cam->createUnwrapper(unwrapResolution);
@@ -167,14 +178,64 @@ bob_main(int argc, char **argv)
     tank->addJoystick(joystick);
     std::cout << "Joystick opened" << std::endl;
 
+    bool testing = false;
+    bool isTurning = false;
+    using TimeType = std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds>;
+    TimeType turnStartTime;
+    joystick.addHandler([&](HID::JButton button, bool pressed) {
+        if (!pressed) {
+            return false;
+        }
+
+        switch (button) {
+        case HID::JButton::Y:
+            BOB_ASSERT(!testing);
+
+            if (trainingDatabase) {
+                trainingDatabase.reset();
+            } else {
+                trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, *cam, unwrapper);
+                std::cout << "Recording training images" << std::endl;
+            }
+            return true;
+        case HID::JButton::X:
+            if (testing) {
+                tank->stopMoving();
+                testing = false;
+                isTurning = false;
+                std::cout << "Stopping testing" << std::endl;
+            } else {
+                if (trainingDatabase) {
+                    trainingDatabase.reset();
+                }
+
+                std::cout << "Starting testing" << std::endl;
+                if (pm.getNumSnapshots() == 0) {
+                    pm.trainRoute(getRoutePath(numRoutes - 1));
+                }
+                testing = true;
+
+                tank->moveForward(forwardSpeed);
+            }
+            return true;
+        default:
+            return !testing;
+        }
+    });
+
     while (vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
+        catcher.check();
     }
 
     // Poll joystick
     cv::Mat frameRaw, frameUnwrapped;
+    std::chrono::nanoseconds turnDuration(0);
+    const auto getNow = []() { return std::chrono::high_resolution_clock::now(); };
     do {
+        catcher.check();
+
         const auto pose = vicon.getObjectData(0);
 
         plt::figure(1);
@@ -199,21 +260,32 @@ bob_main(int argc, char **argv)
         plotAgent(pose, { -1500, 1500 }, { -1500, 1500 });
 
         bool joystickUpdate = joystick.update();
-        bool cameraUpdate = trainingDatabase && cam->readGreyscaleFrame(frameRaw);
-        if (cameraUpdate) {
-            unwrapper.unwrap(frameRaw, frameUnwrapped);
-            trainingDatabase->getRouteRecorder().record(pose.getPosition<>(), pose.getAttitude()[0], frameUnwrapped);
-        } else if (!joystickUpdate) {
-            plt::pause(0.1);
+        if (isTurning) {
+            if ((turnStartTime - getNow()) >= turnDuration) {
+                tank->moveForward(forwardSpeed);
+                isTurning = false;
+            } else {
+                continue;
+            }
         }
 
-        if (joystick.isPressed(HID::JButton::Y)) {
+        bool cameraUpdate = (trainingDatabase || testing) && cam->readGreyscaleFrame(frameRaw);
+        if (cameraUpdate) {
+            unwrapper.unwrap(frameRaw, frameUnwrapped);
             if (trainingDatabase) {
-                trainingDatabase.reset();
+                trainingDatabase->getRouteRecorder().record(pose.getPosition<>(), pose.getAttitude()[0], frameUnwrapped);
             } else {
-                trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, *cam, unwrapper);
-                std::cout << "Recording training images" << std::endl;
+                Timer<> t{ "Time to calculate: " };
+                const degree_t heading = std::get<0>(pm.getHeading(frameUnwrapped));
+                std::cout << "Heading: " << heading << std::endl;
+                const nanosecond_t turnDurationUnits = heading / robotTurnSpeed;
+                turnDuration = std::chrono::nanoseconds(static_cast<int64_t>(turnDurationUnits.value()));
+                isTurning = true;
+                turnStartTime = getNow();
+                tank->turnOnTheSpot(heading < 0_deg ? 1.f : -1.f);
             }
+        } else if (!joystickUpdate) {
+            plt::pause(0.1);
         }
     } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
 
