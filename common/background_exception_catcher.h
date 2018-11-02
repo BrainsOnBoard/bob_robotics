@@ -54,15 +54,9 @@ public:
 #else
 #define DEFAULT_TRAPPED_SIGNALS { SIGSEGV, SIGINT, SIGFPE }
 #endif
-void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNALS)
-{
-}
-    // Don't catch segfaults etc. when debugging: we want the debugger to catch them
-    void trapSignals(const std::unordered_set<int> &signals = { SIGINT })
-#else
+
     //! Trap specified signals like exceptions
-    void trapSignals(const std::unordered_set<int> &signals = { SIGSEGV, SIGINT, SIGFPE })
-#endif
+    void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNALS)
     {
         for (auto &sig : signals) {
             std::signal(sig, &signalHandler);
