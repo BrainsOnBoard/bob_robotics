@@ -66,7 +66,8 @@ run(Video::Input &camera)
     tank.readFromNetwork(server);
 
     // Run server in background,, catching any exceptions for rethrowing
-    const BackgroundExceptionCatcher catcher;
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Catch Ctrl-C
     server.runInBackground();
 
     // Send frames over network
