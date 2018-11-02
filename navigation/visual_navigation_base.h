@@ -48,24 +48,32 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    //! Train algorithm with specified route
-    void trainRoute(const ImageDatabase &imdb, bool resizeImages = false)
+    void trainRoute(const ImageDatabase &imdb, const int imageStep)
     {
+        trainRoute(imdb, false, imageStep);
+    }
+
+    //! Train algorithm with specified route
+    void trainRoute(const ImageDatabase &imdb,
+                    const bool resizeImages = false,
+                    const int imageStep = 1)
+    {
+        BOB_ASSERT(imageStep >= 1);
+
         cv::Mat image;
         if (resizeImages) {
             cv::Mat imageResized;
-            for (const auto &e : imdb) {
-                image = e.loadGreyscale();
+            for (auto iter = imdb.begin(); iter < imdb.end(); iter += imageStep) {
+                image = iter->loadGreyscale();
                 BOB_ASSERT(image.type() == CV_8UC1);
                 cv::resize(image, imageResized, m_UnwrapRes);
                 train(imageResized);
             }
         } else {
-            for (const auto &e : imdb) {
-                image = e.loadGreyscale();
+            for (auto iter = imdb.begin(); iter < imdb.end(); iter += imageStep) {
+                image = iter->loadGreyscale();
                 BOB_ASSERT(image.type() == CV_8UC1);
-                BOB_ASSERT(image.cols == m_UnwrapRes.width);
-                BOB_ASSERT(image.rows == m_UnwrapRes.height);
+                BOB_ASSERT(image.size() == m_UnwrapRes);
                 train(image);
             }
         }
