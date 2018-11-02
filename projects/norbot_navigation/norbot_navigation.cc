@@ -62,7 +62,7 @@ class TrainingDatabase
 public:
     TrainingDatabase(const int routeNum, const Video::Input &cam, const ImgProc::OpenCVUnwrap360 &unwrapper)
       : Navigation::ImageDatabase(getRoutePath(routeNum))
-      , m_Recorder(getRouteRecorder())
+      , m_Recorder(*this)
     {
         auto &metadata = m_Recorder.getMetadataWriter();
         metadata << "camera" << cam
