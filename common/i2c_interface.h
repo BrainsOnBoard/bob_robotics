@@ -2,12 +2,13 @@
 
 // Standard C++ includes
 #include <iostream>
+#include <string>
 #include <vector>
 
 // Standard C includes
 #include <cstring>
 
-// Posix includes
+// POSIX includes
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,9 +38,7 @@ public:
 
     I2CInterface(const char *path, int slaveAddress) : m_I2C(0)
     {
-        if(!setup(path, slaveAddress)) {
-            throw std::runtime_error("Cannot open I2C interface");
-        }
+        setup(path, slaveAddress);
     }
 
     ~I2CInterface()
@@ -53,24 +52,20 @@ public:
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
-    bool setup(const char *path, int slaveAddress )
+    void setup(const char *path, int slaveAddress )
     {
         m_I2C = open(path, O_RDWR);
         if (m_I2C < 0) {
-            std::cerr << "Error in setup:" << strerror(errno) << std::endl;
-            // the error is usually permission error which, on Ubuntu, can be fixed by
-            // creating a file /etc/udev/rules.d/90-i2c.rules and adding the following line:
-            // KERNEL=="i2c-[0-7]",MODE="0666"
-            return false;
+            throw std::runtime_error("Error in setup: " + std::string(strerror(errno)) + "\n" +
+                "The error is usually permission error which, on Ubuntu, can be fixed by" +
+                "creating a file /etc/udev/rules.d/90-i2c.rules and adding the following line:\n" +
+                "   KERNEL==\"i2c-[0-7]\",MODE=\"0666\"");
         }
 
         if (ioctl(m_I2C, I2C_SLAVE, slaveAddress) < 0) {
-            std::cerr << "Cannot connect to the slave" << std::endl;
-            return false;
-        }
-        else {
+            throw std::runtime_error("Cannot connect to I2C slave");
+        } else {
             std::cout << "I2C successfully initialized" << std::endl;
-            return true;
         }
     }
 
