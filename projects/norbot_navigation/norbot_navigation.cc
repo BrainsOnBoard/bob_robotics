@@ -118,9 +118,6 @@ bob_main(int argc, char **argv)
 
     Vicon::UDPClient<> vicon(51001);
 
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
-    catcher.trapSignals();
-
     std::unique_ptr<Video::Input> cam;
     std::unique_ptr<Robots::Tank> tank;
 #ifdef NO_I2C_ROBOT
@@ -161,6 +158,9 @@ bob_main(int argc, char **argv)
 #endif
     const auto unwrapper = cam->createUnwrapper(unwrapResolution);
 
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals();
+
     // Control robot with joystick
     HID::Joystick joystick;
     tank->addJoystick(joystick);
@@ -173,7 +173,7 @@ bob_main(int argc, char **argv)
 
     // Poll joystick
     cv::Mat frameRaw, frameUnwrapped;
-    while (!joystick.isPressed(HID::JButton::B)) {
+    do {
         const auto pose = vicon.getObjectData(0);
 
         plt::figure(1);
@@ -214,7 +214,7 @@ bob_main(int argc, char **argv)
                 std::cout << "Recording training images" << std::endl;
             }
         }
-    }
+    } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
 
     return EXIT_SUCCESS;
 }
