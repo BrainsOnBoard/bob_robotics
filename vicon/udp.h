@@ -1,11 +1,9 @@
 #pragma once
 
-// POSIX networking includes
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
+#include "../os/net.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -15,13 +13,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
-// Standard C includes
-#include <cstring>
-
-// BoB robotics includes
-#include "../common/assert.h"
-#include "../common/pose.h"
 
 namespace BoBRobotics
 {
@@ -168,9 +159,7 @@ public:
     UDPClient(){}
     UDPClient(uint16_t port)
     {
-        if(!connect(port)) {
-            throw std::runtime_error("Cannot connect");
-        }
+        connect(port);
     }
 
     virtual ~UDPClient()
@@ -185,13 +174,12 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(uint16_t port)
+    void connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
-            std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot open socket");
         }
 
         // Set socket to have 1s read timeout
@@ -204,8 +192,7 @@ public:
         timeout.tv_usec = 0;
 #endif
         if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
-            std::cerr << "Cannot set socket timeout: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot set socket timeout");
         }
 
         // Create socket address structure
@@ -217,14 +204,12 @@ public:
 
         // Bind socket to local port
         if(bind(socket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) < 0) {
-            std::cerr << "Cannot bind socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot bind socket");
         }
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
         m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
-        return true;
     }
 
     unsigned int getNumObjects()
@@ -298,8 +283,7 @@ private:
                 }
                 // Otherwise, display error and stop
                 else {
-                    std::cerr << "Cannot read datagram: " << strerror(errno) << std::endl;
-                    break;
+                    throw OS::Net::NetworkError("Cannot read datagram");
                 }
             }
             // Otherwise, if data was received

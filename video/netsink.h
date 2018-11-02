@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/background_exception.h"
+#include "../common/background_exception_catcher.h"
 #include "../common/semaphore.h"
 #include "../net/node.h"
 #include "input.h"
@@ -146,7 +146,7 @@ private:
                 }
             }
         } catch (...) {
-            BackgroundException::set(std::current_exception());
+            BackgroundExceptionCatcher::set(std::current_exception());
         }
     }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "background_exception.h"
+#include "background_exception_catcher.h"
 
 // Standard C++ includes
 #include <atomic>
@@ -67,7 +67,7 @@ private:
         try {
             run();
         } catch (...) {
-            BackgroundException::set(std::current_exception());
+            BackgroundExceptionCatcher::set(std::current_exception());
         }
     }
 

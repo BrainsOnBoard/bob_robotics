@@ -25,15 +25,6 @@ namespace Net {
 //! Represents a command read from the network
 using Command = std::vector<std::string>;
 
-//! An exception thrown if an error signal is given by a Socket
-class SocketError : public std::runtime_error
-{
-public:
-    SocketError(const std::string &msg)
-      : std::runtime_error(msg + " (" + std::to_string(OS::Net::lastError()) + ": " + OS::Net::errorMessage() + ")")
-    {}
-};
-
 //! An exception thrown if the socket is deliberately being closed
 class SocketClosingError : public std::runtime_error
 {
@@ -261,7 +252,7 @@ private:
             throw SocketClosingError();
         } else {
             close();
-            throw SocketError(msg);
+            throw OS::Net::NetworkError(msg);
         }
     }
 }; // Socket
