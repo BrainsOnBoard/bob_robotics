@@ -99,18 +99,15 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
-        // If outFrame is empty, first make it the appropriate size
-        if (outFrame.cols == 0) {
-            outFrame.create(getSuperPixelSize(), CV_8UC3);
-        }
-
         // Try to read from camera and throw error if it fails
+        outFrame.create(getSuperPixelSize(), CV_8UC3);
         captureSuperPixelWBU30(outFrame);
         return true;
     }
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
     {
+        // Try to read from camera and throw error if it fails
         outFrame.create(getSuperPixelSize(), CV_8UC1);
         captureSuperPixelGreyscale(outFrame);
         return true;
