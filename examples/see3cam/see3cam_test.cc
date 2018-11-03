@@ -56,11 +56,9 @@ int main(int argc, char *argv[])
             std::cout << control.name << " (" << std::hex << control.id << std::dec << ")" << std::endl;
             if(control.type == V4L2_CTRL_TYPE_INTEGER) {
                 std::cout << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value << std::endl;
- 
-                int32_t currentValue;
-                if(cam.getControlValue(control.id, currentValue)){
-                    std::cout << "\tCurrent value=" << currentValue << std::endl;
-                }
+
+                int32_t currentValue = cam.getControlValue(control.id);
+                std::cout << "\tCurrent value=" << currentValue << std::endl;
             }
             else {
                 std::cout << "\tUnknown type " << control.type << std::endl;
@@ -70,7 +68,7 @@ int main(int argc, char *argv[])
     // Get initial brightness and exposure
     int32_t brightness = cam.getBrightness();
     int32_t exposure = cam.getExposure();
-   
+
     // Create window
     const unsigned int rawWidth = cam.getWidth() / 2;
     const unsigned int rawHeight = cam.getHeight() / 2;
@@ -79,7 +77,7 @@ int main(int argc, char *argv[])
 
     Mode mode = Mode::Greyscale;
     OpenCVUnwrap360 unwrapper = cam.createUnwrapper({unwrapWidth, unwrapHeight});
-    
+
     auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
     cv::namedWindow("Raw", CV_WINDOW_NORMAL);
@@ -95,29 +93,30 @@ int main(int argc, char *argv[])
 
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
-            bool success = false;
-            switch(mode) {
+            try {
+                switch (mode) {
                 case Mode::Clamp:
-                    success = cam.captureSuperPixelClamp(output);
+                    cam.captureSuperPixelClamp(output);
                     break;
                 case Mode::Shift:
-                    success = cam.captureSuperPixel(output);
+                    cam.captureSuperPixel(output);
                     break;
                 case Mode::WhiteBalanceU30:
-                    success = cam.captureSuperPixelWBU30(output);
+                    cam.captureSuperPixelWBU30(output);
                     break;
                 case Mode::WhiteBalanceCoolWhite:
-                    success = cam.captureSuperPixelWBCoolWhite(output);
+                    cam.captureSuperPixelWBCoolWhite(output);
                     break;
                 case Mode::Greyscale:
-                    success = cam.captureSuperPixelGreyscale(output);
-            }
+                    cam.captureSuperPixelGreyscale(output);
+                }
 
-            if(success) {
                 cv::imshow("Raw", output);
 
                 unwrapper.unwrap(output, unwrapped);
                 cv::imshow("Unwrapped", unwrapped);
+            } catch (...) {
+                // Ignore V4L errors
             }
 
             const int key = cv::waitKey(1);
