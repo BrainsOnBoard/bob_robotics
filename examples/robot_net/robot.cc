@@ -45,9 +45,6 @@ using namespace BoBRobotics;
 void
 run(Video::Input &camera)
 {
-    // Enable networking on Windows
-    OS::Net::WindowsNetworking net;
-
     // Listen for incoming connection on default port
     Net::Server server;
 

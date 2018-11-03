@@ -63,6 +63,12 @@ using ConnectedHandler = std::function<void(Node &)>;
 class Node : public Threadable
 {
 public:
+    Node()
+    {
+        // Make sure Windows networking is initialised
+        OS::Net::WindowsNetworking::initialise();
+    }
+
     /*!
      * \brief Add a handler for a specified type of command
      *

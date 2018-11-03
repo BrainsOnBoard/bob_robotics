@@ -45,9 +45,6 @@ bob_main(int argc, char **argv)
         }
     }
 
-    // Enable networking on Windows
-    OS::Net::WindowsNetworking net;
-
     // Make connection to robot on default port
     Net::Client client(robotIP);
 

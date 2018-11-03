@@ -107,6 +107,12 @@ class WindowsNetworking
 {
 public:
 #ifdef _WIN32
+    static void initialise()
+    {
+        static WindowsNetworking net;
+    }
+
+private:
     WindowsNetworking()
     {
         WSADATA wsaData;
@@ -121,9 +127,7 @@ public:
         WSACleanup();
     }
 #else
-    // Empty constructor needed so that variables don't appear to be unused
-    WindowsNetworking()
-    {}
+    static void initialise() {}
 #endif
 }; // WindowsNetworking
 
