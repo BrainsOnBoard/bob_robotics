@@ -32,6 +32,9 @@ using namespace std::literals;
 int
 bob_main(int argc, char **argv)
 {
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking::initialise();
+
     std::string robotIP;
     if (argc == 2) {
         // Get robot IP from command-line argument

@@ -24,6 +24,10 @@ namespace BoBRobotics {
 class Threadable
 {
 public:
+    Threadable()
+      : m_DoRun(false)
+    {}
+
     //! Stop the background thread (if needed)
     virtual ~Threadable()
     {
@@ -58,9 +62,17 @@ public:
         }
     }
 
+    Threadable(const Threadable &old) = delete;
+    void operator=(const Threadable &old) = delete;
+    Threadable(Threadable &&old)
+      : m_Thread(std::move(old.m_Thread))
+      , m_DoRun(old.m_DoRun.load())
+    {}
+    Threadable &operator=(Threadable &&old) = default;
+
 private:
     std::thread m_Thread;
-    std::atomic<bool> m_DoRun{ false };
+    std::atomic<bool> m_DoRun;
 
     void runCatchExceptions()
     {

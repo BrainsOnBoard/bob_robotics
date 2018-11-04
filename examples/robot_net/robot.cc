@@ -45,11 +45,15 @@ using namespace BoBRobotics;
 void
 run(Video::Input &camera)
 {
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking::initialise();
+
     // Listen for incoming connection on default port
     Net::Server server;
+    auto connection = server.waitForConnection();
 
     // Stream camera synchronously over network
-    Video::NetSink netSink(server, camera.getOutputSize(), camera.getCameraName());
+    Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
 
 #ifdef NO_I2C_ROBOT
     // Output motor commands to terminal
@@ -60,12 +64,12 @@ run(Video::Input &camera)
 #endif
 
     // Read motor commands from network
-    tank.readFromNetwork(server);
+    tank.readFromNetwork(connection);
 
     // Run server in background,, catching any exceptions for rethrowing
     auto &catcher = BackgroundExceptionCatcher::getInstance();
-    catcher.trapSignals(); // Catch Ctrl-C
-    server.runInBackground();
+    // catcher.trapSignals(); // Catch Ctrl-C
+    connection.runInBackground();
 
     // Send frames over network
     cv::Mat frame;
@@ -112,7 +116,7 @@ bob_main(int argc, char **argv)
             auto camera = Video::getPanoramicCamera();
             run(*camera);
         }
-    } catch (Net::SocketClosingError &) {
+    } catch (Net::SocketClosedError &) {
         // The connection was closed on purpose: do nothing
         std::cout << "Connection closed" << std::endl;
     }

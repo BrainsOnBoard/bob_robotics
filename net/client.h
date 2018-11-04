@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "node.h"
+#include "connection.h"
 #include "socket.h"
 
 // OpenCV
@@ -27,16 +27,13 @@ namespace Net {
  * objects are used for either sending or receiving data from the server.
  */
 class Client
-  : public Node
-  , public Socket
+  : public Connection
 {
 public:
     //! Create client and connect to host over TCP
-    Client(const std::string &host, uint16_t port = DefaultListenPort)
+    Client(const std::string &host, uint16_t port = Socket::DefaultListenPort)
+      : Connection(AF_INET, SOCK_STREAM, 0)
     {
-        // Create socket
-        setSocket(socket(AF_INET, SOCK_STREAM, 0));
-
         // Create socket address structure
         in_addr addr;
         addr.s_addr = inet_addr(host.c_str());
@@ -46,7 +43,7 @@ public:
         destAddress.sin_addr = addr;
 
         // Connect socket
-        if (connect(Socket::getSocket(),
+        if (connect(getSocket().getHandle(),
                     reinterpret_cast<sockaddr *>(&destAddress),
                     sizeof(destAddress)) < 0) {
             throw OS::Net::NetworkError("Cannot connect socket to " + host + ":" +
@@ -54,18 +51,6 @@ public:
         }
 
         std::cout << "Opened socket" << std::endl;
-        notifyConnectedHandlers();
-    }
-
-    virtual ~Client() override
-    {
-        disconnect();
-    }
-
-    //! Used to get current socket, which for the Client object is always itself
-    virtual Socket *getSocket() override
-    {
-        return this;
     }
 }; // Client
 } // Net

@@ -26,10 +26,10 @@ namespace Net {
 using Command = std::vector<std::string>;
 
 //! An exception thrown if the socket is deliberately being closed
-class SocketClosingError : public std::runtime_error
+class SocketClosedError : public std::runtime_error
 {
 public:
-    SocketClosingError() : std::runtime_error("Socket is closed")
+    SocketClosedError() : std::runtime_error("Socket is closed")
     {}
 };
 
@@ -60,25 +60,22 @@ class Socket
 {
 public:
     static const size_t DefaultBufferSize = 1024 * 8; //! Default buffer size, in bytes
-    static const int DefaultListenPort = 2000; //! Default listening port
+    static const int DefaultListenPort = 2000;        //! Default listening port
     static const bool PrintDebug = false;
 
-    /*!
-     * \brief Initialise class without a Socket set
-     *
-     * The Socket can be set later with setSocket().
-     */
-    Socket(bool print = PrintDebug)
+    Socket(const socket_t handle, bool print = PrintDebug)
       : m_Buffer(DefaultBufferSize)
+      , m_Handle(handle)
       , m_Print(print)
-    {}
-
-    //! Initialise class with specified socket
-    Socket(socket_t sock, bool print = PrintDebug)
-      : Socket(print)
     {
-        setSocket(sock);
+        if (!isOpen()) {
+            throw OS::Net::NetworkError("Could not initialise socket");
+        }
     }
+
+    Socket(int domain, int type, int protocol, bool print = PrintDebug)
+      : Socket(socket(domain, type, protocol), print)
+    {}
 
     virtual ~Socket()
     {
@@ -88,28 +85,19 @@ public:
     //! Close the socket
     void close()
     {
-        if (valid() && !m_Closing.exchange(true)) {
-            ::close(m_Socket);
-            m_Socket = INVALID_SOCKET;
+        const socket_t handle = m_Handle.exchange(INVALID_SOCKET);
+        if (handle != INVALID_SOCKET) {
+            ::close(handle);
         }
     }
 
-    //! Check if the socket is being closed or is already closed
-    bool closing() const
-    {
-        return m_Closing;
-    }
+    //! Check if socket is still open
+    bool isOpen() const { return m_Handle != INVALID_SOCKET; }
 
     //! Get the current socket handle this object holds
-    socket_t getSocket() const
+    socket_t getHandle() const
     {
-        return m_Socket;
-    }
-
-    //! Check whether socket is open and usable
-    bool valid() const
-    {
-        return m_Socket != INVALID_SOCKET;
+        return m_Handle;
     }
 
     //! Read a plaintext command, splitting it into separate words
@@ -125,8 +113,6 @@ public:
     //! Read a specified number of bytes into a buffer
     void read(void *buffer, size_t len)
     {
-        checkSocket();
-
         // initially, copy over any leftover bytes in m_Buffer
         size_t start = 0;
         if (m_BufferBytes > 0) {
@@ -148,8 +134,6 @@ public:
     //! Read a single line in, stopping at a newline char
     std::string readLine()
     {
-        checkSocket();
-
         std::ostringstream oss;
         while (true) {
             if (m_BufferBytes == 0) {
@@ -184,9 +168,7 @@ public:
     //! Send a buffer of specified length through the socket
     void send(const void *buffer, size_t len)
     {
-        checkSocket();
-
-        const auto ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
+        const auto ret = ::send(m_Handle, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
         if (ret == -1) {
             throwError("Could not send");
         }
@@ -202,19 +184,26 @@ public:
         }
     }
 
-    //! Set the current socket handle for this connection
-    void setSocket(socket_t sock)
+    // Object is non-copyable
+    Socket(const Socket &) = delete;
+    void operator=(const Socket &) = delete;
+    Socket &operator=(Socket &&) = default;
+
+    Socket(Socket &&old)
+      : m_Buffer(std::move(old.m_Buffer))
+      , m_BufferStart(old.m_BufferStart)
+      , m_BufferBytes(old.m_BufferBytes)
+      , m_Handle(old.m_Handle.load())
+      , m_Print(old.m_Print)
     {
-        m_Socket = sock;
-        checkSocket();
+        old.m_Handle = INVALID_SOCKET;
     }
 
 private:
     std::vector<char> m_Buffer;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
-    socket_t m_Socket = INVALID_SOCKET;
-    std::atomic<bool> m_Closing{ false };
+    std::atomic<socket_t> m_Handle;
     bool m_Print;
 
     // Debit the byte store by specified amount
@@ -227,18 +216,10 @@ private:
         m_BufferBytes -= nbytes;
     }
 
-    // Check that the current socket is valid and throw an exception otherwise
-    void checkSocket()
-    {
-        if (!valid()) {
-            throwError("Bad socket");
-        }
-    }
-
     // Make a single call to recv.
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
-        const auto len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
+        const auto len = recv(m_Handle, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
             throwError("Could not read from socket");
         }
@@ -248,11 +229,11 @@ private:
 
     void throwError(const std::string &msg)
     {
-        if (closing()) {
-            throw SocketClosingError();
-        } else {
+        if (isOpen()) {
             close();
             throw OS::Net::NetworkError(msg);
+        } else {
+            throw SocketClosedError();
         }
     }
 }; // Socket
