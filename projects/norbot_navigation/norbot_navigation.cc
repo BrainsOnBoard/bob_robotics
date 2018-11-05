@@ -257,7 +257,7 @@ bob_main(int argc, char **argv)
         }
 
         // Plot position of robot
-        plotAgent(pose, { -1500, 1500 }, { -1500, 1500 });
+        plotAgent(pose, { -2500, 2500 }, { -2500, 2500 });
 
         bool joystickUpdate = joystick.update();
         if (isTurning) {
