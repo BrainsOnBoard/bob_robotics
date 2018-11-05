@@ -211,7 +211,10 @@ bob_main(int argc, char **argv)
 
                 std::cout << "Starting testing" << std::endl;
                 if (pm.getNumSnapshots() == 0) {
-                    pm.trainRoute(getRoutePath(numRoutes - 1));
+                    const int imageStep = 10;
+                    const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
+                    std::cout << "Loading " << database.size() / imageStep << " images" << std::endl;
+                    pm.trainRoute(database, imageStep);
                 }
                 testing = true;
 
