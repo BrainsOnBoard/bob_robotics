@@ -31,7 +31,7 @@ class Client
 {
 public:
     //! Create client and connect to host over TCP
-    Client(const std::string &host, uint16_t port = Socket::DefaultListenPort)
+    Client(const std::string &host, uint16_t port = DefaultListenPort)
       : Connection(AF_INET, SOCK_STREAM, 0)
     {
         // Create socket address structure

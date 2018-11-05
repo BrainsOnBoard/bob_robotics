@@ -33,7 +33,7 @@ class Server
 {
 public:
     //! Create a new server, listening on the specified port
-    Server(uint16_t port = Socket::DefaultListenPort)
+    Server(uint16_t port = Connection::DefaultListenPort)
       : m_ListenSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
     {
 #ifndef _WIN32
@@ -79,7 +79,7 @@ public:
     }
 
 private:
-    Socket m_ListenSocket;
+    const Socket m_ListenSocket;
 };
 } // Net
 } // BoBRobotics
