@@ -289,5 +289,7 @@ bob_main(int argc, char **argv)
         }
     } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
 
+    plt::close();
+
     return EXIT_SUCCESS;
 }
