@@ -32,6 +32,9 @@ using namespace std::literals;
 int
 bob_main(int argc, char **argv)
 {
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking::initialise();
+
     std::string robotIP;
     if (argc == 2) {
         // Get robot IP from command-line argument
@@ -45,14 +48,11 @@ bob_main(int argc, char **argv)
         }
     }
 
-    // Enable networking on Windows
-    OS::Net::WindowsNetworking net;
-
     // Make connection to robot on default port
     Net::Client client(robotIP);
 
     // Run client on background thread, catching any exceptions for rethrowing
-    BackgroundExceptionCatcher catcher;
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
     catcher.trapSignals(); // Catch Ctrl-C
     client.runInBackground();
 

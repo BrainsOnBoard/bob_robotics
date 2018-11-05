@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "../common/semaphore.h"
-#include "../net/node.h"
+#include "../net/connection.h"
 #include "input.h"
 
 // OpenCV
@@ -28,17 +28,15 @@ public:
      *
      * @param node The network connection from which to read images
      */
-    NetSource(Net::Node &node)
+    NetSource(Net::Connection &connection)
     {
-        // handle incoming IMG commands
-        node.addCommandHandler("IMG", [this](Net::Node &node, const Net::Command &command) {
-            onCommandReceived(node, command);
+        // Handle incoming IMG commands
+        connection.addCommandHandler("IMG", [this](Net::Connection &connection, const Net::Command &command) {
+            onCommandReceived(connection, command);
         });
 
-        // when connected, send command to start streaming
-        node.addConnectedHandler([](Net::Node &node) {
-            node.getSocketWriter().send("IMG START\n");
-        });
+        // When connected, send command to start streaming
+        connection.getSocketWriter().send("IMG START\n");
     }
 
     virtual ~NetSource() override
@@ -88,7 +86,7 @@ private:
     cv::Size m_CameraResolution;
     std::atomic<bool> m_NewFrame{ false };
 
-    void onCommandReceived(Net::Node &node, const Net::Command &command)
+    void onCommandReceived(Net::Connection &connection, const Net::Command &command)
     {
         if (command[1] == "PARAMS") {
             m_CameraResolution.width = stoi(command[2]);
@@ -98,7 +96,7 @@ private:
         } else if (command[1] == "FRAME") {
             const auto nbytes = static_cast<size_t>(stoul(command[2]));
             m_Buffer.resize(nbytes);
-            node.read(m_Buffer.data(), nbytes);
+            connection.read(m_Buffer.data(), nbytes);
 
             std::lock_guard<std::mutex> guard(m_FrameMutex);
             cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
