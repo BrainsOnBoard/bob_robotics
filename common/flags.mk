@@ -17,6 +17,9 @@ ifdef DEBUG
 else
 	CXXFLAGS += -O2
 endif
+ifdef TRACE_NET
+	CXXFLAGS += -DTRACE_NET
+endif
 
 # Improves build time
 CXXFLAGS += -pipe

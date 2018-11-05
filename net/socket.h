@@ -26,10 +26,10 @@ namespace Net {
 using Command = std::vector<std::string>;
 
 //! An exception thrown if the socket is deliberately being closed
-class SocketClosingError : public std::runtime_error
+class SocketClosedError : public std::runtime_error
 {
 public:
-    SocketClosingError() : std::runtime_error("Socket is closed")
+    SocketClosedError() : std::runtime_error("Socket is closed")
     {}
 };
 
@@ -59,26 +59,17 @@ public:
 class Socket
 {
 public:
-    static const size_t DefaultBufferSize = 1024 * 8; //! Default buffer size, in bytes
-    static const int DefaultListenPort = 2000; //! Default listening port
-    static const bool PrintDebug = false;
-
-    /*!
-     * \brief Initialise class without a Socket set
-     *
-     * The Socket can be set later with setSocket().
-     */
-    Socket(bool print = PrintDebug)
-      : m_Buffer(DefaultBufferSize)
-      , m_Print(print)
-    {}
-
-    //! Initialise class with specified socket
-    Socket(socket_t sock, bool print = PrintDebug)
-      : Socket(print)
+    Socket(const socket_t handle)
+      : m_Handle(handle)
     {
-        setSocket(sock);
+        if (!isOpen()) {
+            throw OS::Net::NetworkError("Could not initialise socket");
+        }
     }
+
+    Socket(int domain, int type, int protocol)
+      : Socket(socket(domain, type, protocol))
+    {}
 
     virtual ~Socket()
     {
@@ -88,105 +79,38 @@ public:
     //! Close the socket
     void close()
     {
-        if (valid() && !m_Closing.exchange(true)) {
-            ::close(m_Socket);
-            m_Socket = INVALID_SOCKET;
+        const socket_t handle = m_Handle.exchange(INVALID_SOCKET);
+        if (handle != INVALID_SOCKET) {
+            ::close(handle);
         }
     }
 
-    //! Check if the socket is being closed or is already closed
-    bool closing() const
-    {
-        return m_Closing;
-    }
+    //! Check if socket is still open
+    bool isOpen() const { return m_Handle != INVALID_SOCKET; }
 
     //! Get the current socket handle this object holds
-    socket_t getSocket() const
-    {
-        return m_Socket;
-    }
+    socket_t getHandle() const { return m_Handle; }
 
-    //! Check whether socket is open and usable
-    bool valid() const
+    size_t read(void *buffer, const size_t length)
     {
-        return m_Socket != INVALID_SOCKET;
-    }
-
-    //! Read a plaintext command, splitting it into separate words
-    Command readCommand()
-    {
-        std::string line = readLine();
-        std::istringstream iss(line);
-        Command results(std::istream_iterator<std::string>{ iss },
-                        std::istream_iterator<std::string>());
-        return results;
-    }
-
-    //! Read a specified number of bytes into a buffer
-    void read(void *buffer, size_t len)
-    {
-        checkSocket();
-
-        // initially, copy over any leftover bytes in m_Buffer
-        size_t start = 0;
-        if (m_BufferBytes > 0) {
-            size_t tocopy = std::min(len, m_BufferBytes);
-            memcpy(buffer, &m_Buffer[m_BufferStart], tocopy);
-            start += tocopy;
-            len -= tocopy;
-            debitBytes(tocopy);
+        const auto nbytes = recv(m_Handle,
+                                 reinterpret_cast<readbuff_t>(buffer),
+                                 static_cast<bufflen_t>(length),
+                                 0);
+        if (nbytes == -1) {
+            throwError("Could not read from socket");
         }
 
-        // keep reading from socket until we have enough bytes
-        while (len > 0) {
-            size_t nbytes = readOnce((char *) buffer, start, len);
-            start += nbytes;
-            len -= nbytes;
-        }
-    }
-
-    //! Read a single line in, stopping at a newline char
-    std::string readLine()
-    {
-        checkSocket();
-
-        std::ostringstream oss;
-        while (true) {
-            if (m_BufferBytes == 0) {
-                m_BufferBytes += readOnce(m_Buffer.data(),
-                                          m_BufferStart,
-                                          DefaultBufferSize - m_BufferStart);
-            }
-
-            // look for newline char
-            for (size_t i = 0; i < m_BufferBytes; i++) {
-                char &c = m_Buffer[m_BufferStart + i];
-                if (c == '\n') {
-                    c = '\0';
-                    oss << std::string(&m_Buffer[m_BufferStart]);
-                    debitBytes(i + 1);
-
-                    std::string outstring = oss.str();
-                    if (m_Print) {
-                        std::cout << "<<< " << outstring << std::endl;
-                    }
-                    return outstring;
-                }
-            }
-
-            // if newline is not present, append the text we received and try
-            // another read
-            oss << std::string(&m_Buffer[m_BufferStart], m_BufferBytes);
-            debitBytes(m_BufferBytes);
-        }
+        return static_cast<size_t>(nbytes);
     }
 
     //! Send a buffer of specified length through the socket
-    void send(const void *buffer, size_t len)
+    void send(const void *buffer, size_t length)
     {
-        checkSocket();
-
-        const auto ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
+        const auto ret = ::send(m_Handle,
+                                reinterpret_cast<sendbuff_t>(buffer),
+                                static_cast<bufflen_t>(length),
+                                OS::Net::sendFlags);
         if (ret == -1) {
             throwError("Could not send");
         }
@@ -195,64 +119,34 @@ public:
     //! Send a string over the socket.
     void send(const std::string &msg)
     {
-        send(msg.c_str(), msg.length());
+        send(msg.c_str(), msg.size());
 
-        if (m_Print) {
-            std::cout << ">>> " << msg;
-        }
+#ifdef TRACE_NET
+        std::cout << ">>> " << msg;
+#endif
     }
 
-    //! Set the current socket handle for this connection
-    void setSocket(socket_t sock)
+    // Object is non-copyable
+    Socket(const Socket &) = delete;
+    void operator=(const Socket &) = delete;
+    Socket &operator=(Socket &&) = default;
+
+    Socket(Socket &&old)
+      : m_Handle(old.m_Handle.load())
     {
-        m_Socket = sock;
-        checkSocket();
+        old.m_Handle = INVALID_SOCKET;
     }
 
 private:
-    std::vector<char> m_Buffer;
-    size_t m_BufferStart = 0;
-    size_t m_BufferBytes = 0;
-    socket_t m_Socket = INVALID_SOCKET;
-    std::atomic<bool> m_Closing{ false };
-    bool m_Print;
-
-    // Debit the byte store by specified amount
-    void debitBytes(size_t nbytes)
-    {
-        m_BufferStart += nbytes;
-        if (m_BufferStart == DefaultBufferSize) {
-            m_BufferStart = 0;
-        }
-        m_BufferBytes -= nbytes;
-    }
-
-    // Check that the current socket is valid and throw an exception otherwise
-    void checkSocket()
-    {
-        if (!valid()) {
-            throwError("Bad socket");
-        }
-    }
-
-    // Make a single call to recv.
-    size_t readOnce(char *buffer, size_t start, size_t maxlen)
-    {
-        const auto len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
-        if (len == -1) {
-            throwError("Could not read from socket");
-        }
-
-        return static_cast<size_t>(len);
-    }
+    std::atomic<socket_t> m_Handle;
 
     void throwError(const std::string &msg)
     {
-        if (closing()) {
-            throw SocketClosingError();
-        } else {
+        if (isOpen()) {
             close();
             throw OS::Net::NetworkError(msg);
+        } else {
+            throw SocketClosedError();
         }
     }
 }; // Socket
