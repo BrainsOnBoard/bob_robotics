@@ -68,7 +68,7 @@ run(Video::Input &camera)
 
     // Run server in background,, catching any exceptions for rethrowing
     auto &catcher = BackgroundExceptionCatcher::getInstance();
-    // catcher.trapSignals(); // Catch Ctrl-C
+    catcher.trapSignals(); // Catch Ctrl-C
     connection.runInBackground();
 
     // Send frames over network
