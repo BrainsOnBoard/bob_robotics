@@ -28,11 +28,8 @@ public:
       : m_DoRun(false)
     {}
 
-    //! Stop the background thread (if needed)
     virtual ~Threadable()
-    {
-        stop();
-    }
+    {}
 
     //! Run on the current thread, blocking until process ends
     virtual void run()
