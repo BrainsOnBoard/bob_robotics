@@ -41,16 +41,13 @@ int
 bob_main(int, char **)
 {
     // Enable networking on Windows
-    OS::Net::WindowsNetworking net;
+    OS::Net::WindowsNetworking::initialise();
 
     // Listen for incoming connection on default port
     Net::Server server;
 
     // Default panoramic camera
     auto camera = Video::getPanoramicCamera();
-
-    // Stream camera synchronously over network
-    Video::NetSink netSink(server, camera->getOutputSize(), camera->getCameraName());
 
 #ifdef NO_I2C_ROBOT
     Robots::Tank tank;
@@ -59,30 +56,37 @@ bob_main(int, char **)
     Robots::Norbot tank;
 #endif
 
-    // Read motor commands from network
-    tank.readFromNetwork(server);
+    while (true) {
+        auto connection = server.waitForConnection();
 
-    // Run server in background,, catching any exceptions for rethrowing
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
-    catcher.trapSignals(); // Catch Ctrl-C
-    server.runInBackground();
+        // Stream camera synchronously over network
+        Video::NetSink netSink(connection, camera->getOutputSize(), camera->getCameraName());
 
-    try {
-        // Send frames over network
-        cv::Mat frame;
-        while (true) {
-            // Rethrow any exceptions caught on background thread
-            catcher.check();
+        // Read motor commands from network
+        tank.readFromNetwork(connection);
 
-            // If there's a new frame, send it, else sleep
-            if (camera->readFrame(frame)) {
-                netSink.sendFrame(frame);
-            } else {
-                std::this_thread::sleep_for(25ms);
+        // Run server in background,, catching any exceptions for rethrowing
+        auto &catcher = BackgroundExceptionCatcher::getInstance();
+        catcher.trapSignals(); // Catch Ctrl-C
+        connection.runInBackground();
+
+        try {
+            // Send frames over network
+            cv::Mat frame;
+            while (true) {
+                // Rethrow any exceptions caught on background thread
+                catcher.check();
+
+                // If there's a new frame, send it, else sleep
+                if (camera->readFrame(frame)) {
+                    netSink.sendFrame(frame);
+                } else {
+                    std::this_thread::sleep_for(25ms);
+                }
             }
+        } catch (Net::SocketClosedError const &) {
+            std::cout << "Connection closed" << std::endl;
         }
-    } catch (Net::SocketClosingError const &) {
-        std::cout << "Connection closed" << std::endl;
     }
 
     return EXIT_SUCCESS;
