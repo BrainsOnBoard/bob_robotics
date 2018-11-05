@@ -67,18 +67,22 @@ bob_main(int, char **)
     catcher.trapSignals(); // Catch Ctrl-C
     server.runInBackground();
 
-    // Send frames over network
-    cv::Mat frame;
-    while (true) {
-        // Rethrow any exceptions caught on background thread
-        catcher.check();
+    try {
+        // Send frames over network
+        cv::Mat frame;
+        while (true) {
+            // Rethrow any exceptions caught on background thread
+            catcher.check();
 
-        // If there's a new frame, send it, else sleep
-        if (camera->readFrame(frame)) {
-            netSink.sendFrame(frame);
-        } else {
-            std::this_thread::sleep_for(25ms);
+            // If there's a new frame, send it, else sleep
+            if (camera->readFrame(frame)) {
+                netSink.sendFrame(frame);
+            } else {
+                std::this_thread::sleep_for(25ms);
+            }
         }
+    } catch (Net::SocketClosingError const &) {
+        std::cout << "Connection closed" << std::endl;
     }
 
     return EXIT_SUCCESS;
