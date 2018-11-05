@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 
                 unwrapper.unwrap(output, unwrapped);
                 cv::imshow("Unwrapped", unwrapped);
-            } catch (...) {
+            } catch (Video::Video4LinuxCamera::Error const &) {
                 // Ignore V4L errors
             }
 
