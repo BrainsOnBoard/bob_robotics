@@ -10,7 +10,7 @@ all: $(EXECUTABLE)
 -include $(EXECUTABLE).d
 
 $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libantworld
-	$(CXX) $(CXXFLAGS) $(LINK_FLAGS) -o $@ $<
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 libantworld:
 	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
