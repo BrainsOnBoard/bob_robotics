@@ -183,7 +183,7 @@ bob_main(int argc, char **argv)
     using TimeType = std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds>;
     TimeType turnStartTime;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
-        if (!pressed) {
+        if (pressed) {
             return false;
         }
 
@@ -211,7 +211,7 @@ bob_main(int argc, char **argv)
 
                 std::cout << "Starting testing" << std::endl;
                 if (pm.getNumSnapshots() == 0) {
-                    const int imageStep = 10;
+                    const int imageStep = 1;
                     const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
                     std::cout << "Loading " << database.size() / imageStep << " images" << std::endl;
                     pm.trainRoute(database, imageStep);
@@ -263,7 +263,12 @@ bob_main(int argc, char **argv)
         }
 
         // Plot position of robot
-        plotAgent(pose, { -2500, 2500 }, { -2500, 2500 });
+        plotAgent(pose, { -3000, 3000 }, { -3000, 3000 });
+        if (trainingDatabase) {
+            plt::title("Training");
+        } else if (testing) {
+            plt::title("Testing");
+        }
 
         bool joystickUpdate = joystick.update();
         if (isTurning) {
