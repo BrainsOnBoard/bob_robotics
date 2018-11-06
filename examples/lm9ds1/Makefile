@@ -1,7 +1,6 @@
 NO_OPENCV := 1
 WITH_I2C := 1
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 EXECUTABLE := lm9ds1_test
 

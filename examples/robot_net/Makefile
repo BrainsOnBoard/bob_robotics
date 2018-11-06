@@ -1,5 +1,4 @@
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 # optionally disable I2C
 ifdef NO_I2C_ROBOT

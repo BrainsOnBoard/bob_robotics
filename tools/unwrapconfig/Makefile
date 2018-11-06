@@ -1,5 +1,4 @@
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 EXECUTABLE := unwrapconfig
 

@@ -24,9 +24,6 @@
 # path here)
 include flags.mk
 
-# Include the root BoB robotics path
-CXXFLAGS += -I..
-
 EXECUTABLE := program_name
 
 .PHONY: all clean

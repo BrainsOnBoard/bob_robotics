@@ -1,5 +1,4 @@
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 ifdef ffmpeg_path
 	CXXFLAGS += -DFFMPEG_PATH=\"$(ffmpeg_path)\"

@@ -1,6 +1,5 @@
 WITH_MATPLOTLIBCPP := 1
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 ifndef DEBUG
 CXXFLAGS += -O3

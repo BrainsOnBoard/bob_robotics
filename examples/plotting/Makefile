@@ -1,6 +1,5 @@
 WITH_MATPLOTLIBCPP := 1
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 EXECUTABLE := plotting_test
 

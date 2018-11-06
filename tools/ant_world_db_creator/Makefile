@@ -1,5 +1,4 @@
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 LINK_FLAGS += -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 
 TARGETS = ant_world_db_creator ant_world_map_creator

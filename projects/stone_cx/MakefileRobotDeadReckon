@@ -1,6 +1,5 @@
 WITH_I2C := 1
 include ../../make_common/flags.mk
-CXXFLAGS += -I../..
 
 EXECUTABLE      := simulatorRobotDeadReckon
 SOURCES         := simulatorRobotDeadReckon.cc simulatorCommon.cc robotCommon.cc visualizationCommon.cc
