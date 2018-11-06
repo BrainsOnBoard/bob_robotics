@@ -236,6 +236,8 @@ bob_main(int argc, char **argv)
     cv::Mat frameRaw, frameUnwrapped;
     std::chrono::nanoseconds turnDuration(0);
     const auto getNow = []() { return std::chrono::high_resolution_clock::now(); };
+    std::map<std::string, std::string> imshowKeywords;
+    imshowKeywords["cmap"] = "gray";
     do {
         catcher.check();
 
@@ -245,6 +247,7 @@ bob_main(int argc, char **argv)
         plt::clf();
 
         // Plot objects
+        plt::subplot(2, 1, 1);
         for (auto object : objects) {
             std::vector<double> x, y;
 
@@ -272,12 +275,15 @@ bob_main(int argc, char **argv)
             }
         }
 
-        bool cameraUpdate = (trainingDatabase || testing) && cam->readGreyscaleFrame(frameRaw);
-        if (cameraUpdate) {
+        if (cam->readGreyscaleFrame(frameRaw)) {
             unwrapper.unwrap(frameRaw, frameUnwrapped);
+            plt::subplot(2, 1, 2);
+            plt::imshow(frameUnwrapped, imshowKeywords);
+            plt::pause(0.1);
+
             if (trainingDatabase) {
                 trainingDatabase->getRouteRecorder().record(pose.getPosition<>(), pose.getAttitude()[0], frameUnwrapped);
-            } else {
+            } else if (testing) {
                 Timer<> t{ "Time to calculate: " };
                 const degree_t heading = std::get<0>(pm.getHeading(frameUnwrapped));
                 std::cout << "Heading: " << heading << std::endl;
