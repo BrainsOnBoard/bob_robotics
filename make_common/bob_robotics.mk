@@ -44,14 +44,15 @@ CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
+# Add support for libantworld
+ifdef WITH_LIBANTWORLD
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+endif
+
 # Build with OpenCV
 ifndef NO_OPENCV
 	CXXFLAGS += `pkg-config --cflags opencv`
 	LINK_FLAGS += `pkg-config --libs opencv`
-endif
-
-ifdef WITH_LIBANTWORLD
-	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 endif
 
 ifdef WITH_LIBBEBOP
