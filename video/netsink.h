@@ -43,9 +43,9 @@ public:
     {
         // handle incoming IMG commands
         m_Connection.addCommandHandler("IMG",
-                                 [this](Net::Connection &, const Net::Command &command) {
-                                     onCommandReceivedAsync(command);
-                                 });
+                                       [this](auto &, auto &command) {
+                                           onCommandReceivedAsync(command);
+                                       });
     }
 
     /*!
@@ -63,13 +63,15 @@ public:
     {
         // handle incoming IMG commands
         m_Connection.addCommandHandler("IMG",
-                                 [this](Net::Connection &, const Net::Command &command) {
-                                     onCommandReceivedSync(command);
-                                 });
+                                       [this](auto &, auto &command) {
+                                           onCommandReceivedSync(command);
+                                       });
     }
 
     virtual ~NetSink()
     {
+        m_Connection.removeCommandHandler("IMG");
+
         m_DoRun = false;
         if (m_Thread.joinable()) {
             m_Thread.join();
