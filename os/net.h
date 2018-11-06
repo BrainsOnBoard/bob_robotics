@@ -128,6 +128,7 @@ private:
     }
 #else
     static void initialise() {}
+    WindowsNetworking() = delete;
 #endif
 }; // WindowsNetworking
 
