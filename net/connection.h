@@ -116,7 +116,7 @@ public:
 
         // keep reading from socket until we have enough bytes
         while (length > 0) {
-            size_t nbytes = m_Socket.read(buffer, length);
+            size_t nbytes = m_Socket.read(cbuffer, length);
             cbuffer += nbytes;
             length -= nbytes;
         }
