@@ -1,5 +1,5 @@
 WITH_I2C := 1
-include ../../make_common/flags.mk
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE      := simulatorRobot
 SOURCES         := simulatorRobot.cc simulatorCommon.cc robotCommon.cc

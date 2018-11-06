@@ -1,6 +1,6 @@
 WITH_LIBANTWORLD := 1
 WITH_MATPLOTLIBCPP := 1
-include ../../make_common/flags.mk
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := ant_world_test perfect_memory_antworld_test plot_ridf
 

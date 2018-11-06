@@ -1,4 +1,4 @@
-include ../../make_common/flags.mk
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := optical_flow_test
 

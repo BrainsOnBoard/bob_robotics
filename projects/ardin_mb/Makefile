@@ -1,5 +1,5 @@
 WITH_LIBANTWORLD := 1
-include ../../make_common/flags.mk
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE      := ardin_mb
 SOURCES         := ardin_mb.cc state_handler.cc mb_memory.cc vector_field.cc

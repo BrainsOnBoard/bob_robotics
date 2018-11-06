@@ -1,5 +1,5 @@
 WITH_MATPLOTLIBCPP := 1
-include ../../make_common/flags.mk
+include ../../make_common/bob_robotics.mk
 CXXFLAGS += `pkg-config --cflags eigen3`
 LINK_FLAGS += -fopenmp
 

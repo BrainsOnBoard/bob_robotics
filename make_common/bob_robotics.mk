@@ -1,7 +1,7 @@
 # This makefile is just an easy way to standardise the compiler flags we're using
 # between different samples/mini-libraries.
 #
-# Just put "include ../make_common/flags.mk" in your makefile.
+# Just put "include (path to BoB robotics)/make_common/bob_robotics.mk" in your makefile.
 
 # Which processor architecture to build for
 ARCH ?= native

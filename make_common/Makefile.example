@@ -24,7 +24,7 @@
 
 # The common BoB robotics makefile (NB: you'll want to put the correct relative
 # path here)
-include flags.mk
+include bob_robotics.mk
 
 EXECUTABLE := program_name
 

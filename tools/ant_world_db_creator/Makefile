@@ -1,5 +1,5 @@
 WITH_LIBANTWORLD := 1
-include ../../make_common/flags.mk
+include ../../make_common/bob_robotics.mk
 
 TARGETS = ant_world_db_creator ant_world_map_creator
 
