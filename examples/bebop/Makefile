@@ -1,4 +1,3 @@
-LIBBEBOP_PATH := ../../libbebop
 WITH_LIBBEBOP := 1
 include ../../make_common/flags.mk
 
@@ -16,7 +15,7 @@ $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libbebop
 $(EXECUTABLE).d: ;
 
 libbebop:
-	$(MAKE) -C $(LIBBEBOP_PATH)
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libbebop
 
 clean:
 	rm -f $(EXECUTABLE) $(EXECUTABLE).d

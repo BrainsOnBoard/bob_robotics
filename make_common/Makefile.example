@@ -7,7 +7,6 @@
 # # You also need to set LIBBEBOP_PATH and the user must have ARSDK_ROOT set to
 # # point to Parrot's SDK.
 # WITH_LIBBEBOP := 1
-# LIBBEBOP_PATH := ..
 #
 # # Enables support for matplotlibcpp (in third_party/matplotlibcpp.h).
 # # This is a simple wrapper for matplotlib, which requires python and numpy to

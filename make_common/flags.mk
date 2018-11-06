@@ -15,7 +15,8 @@ CXXFLAGS += -std=$(CPP_STANDARD) -Wall -Wpedantic -Wextra -MMD -MP
 
 # Include the root BoB robotics folder
 CURRENT_DIR := $(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
-CXXFLAGS += -I$(CURRENT_DIR)/..
+BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
+CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
 
 # Debug mode: includes debug symbols, disables optimisation and sets DEBUG macro
 ifdef DEBUG
@@ -50,12 +51,8 @@ ifndef NO_OPENCV
 endif
 
 ifdef WITH_LIBBEBOP
-	ifndef LIBBEBOP_PATH
-$(error Must set LIBBEBOP_PATH)
-	endif
-
 	# libbebop
-	LINK_FLAGS += -L$(LIBBEBOP_PATH) -lbebop
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop
 
 	# ARSDK
 	# We set the rpath so that compiled programs can find the folder with the ARSDK
