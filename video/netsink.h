@@ -43,7 +43,7 @@ public:
     {
         // handle incoming IMG commands
         m_Connection.addCommandHandler("IMG",
-                                       [this](Net::Connection &, Net::Command &command) {
+                                       [this](Net::Connection &, const Net::Command &command) {
                                            onCommandReceivedAsync(command);
                                        });
     }
@@ -63,7 +63,7 @@ public:
     {
         // handle incoming IMG commands
         m_Connection.addCommandHandler("IMG",
-                                       [this](Net::Connection &, Net::Command &command) {
+                                       [this](Net::Connection &, const Net::Command &command) {
                                            onCommandReceivedSync(command);
                                        });
     }
