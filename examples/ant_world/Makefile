@@ -1,8 +1,7 @@
 WITH_LIBANTWORLD := 1
-WITH_MATPLOTLIBCPP := 1
 include ../../make_common/bob_robotics.mk
 
-EXECUTABLE := ant_world_test perfect_memory_antworld_test plot_ridf
+EXECUTABLE := ant_world_test
 
 .PHONY: all clean libantworld
 
@@ -10,8 +9,8 @@ all: $(EXECUTABLE)
 
 -include $(EXECUTABLE).d
 
-$(EXECUTABLE): %: %.cc %d libantworld
-	$(CXX) -o $@ $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS)
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libantworld
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 libantworld:
 	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
@@ -19,4 +18,4 @@ libantworld:
 %.d: ;
 
 clean:
-	rm -f $(EXECUTABLE) *.d
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d
