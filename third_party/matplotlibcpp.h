@@ -17,6 +17,10 @@
 #ifndef WITHOUT_NUMPY
 #  define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #  include <numpy/arrayobject.h>
+
+#  ifdef WITH_OPENCV
+#  include <opencv2/opencv.hpp>
+#  endif // WITH_OPENCV
 #endif // WITHOUT_NUMPY
 
 #if PY_MAJOR_VERSION >= 3
@@ -44,6 +48,7 @@ struct _interpreter {
     PyObject *s_python_function_loglog;
     PyObject *s_python_function_fill_between;
     PyObject *s_python_function_hist;
+    PyObject *s_python_function_imshow;
     PyObject *s_python_function_subplot;
     PyObject *s_python_function_legend;
     PyObject *s_python_function_xlim;
@@ -149,6 +154,9 @@ private:
         s_python_function_loglog = PyObject_GetAttrString(pymod, "loglog");
         s_python_function_fill_between = PyObject_GetAttrString(pymod, "fill_between");
         s_python_function_hist = PyObject_GetAttrString(pymod,"hist");
+#ifndef WITHOUT_NUMPY
+        s_python_function_imshow = PyObject_GetAttrString(pymod, "imshow");
+#endif
         s_python_function_subplot = PyObject_GetAttrString(pymod, "subplot");
         s_python_function_legend = PyObject_GetAttrString(pymod, "legend");
         s_python_function_ylim = PyObject_GetAttrString(pymod, "ylim");
@@ -189,6 +197,9 @@ private:
             || !s_python_function_axis
             || !s_python_function_xlabel
             || !s_python_function_ylabel
+#ifndef WITHOUT_NUMPY
+            || !s_python_function_imshow
+#endif
             || !s_python_function_grid
             || !s_python_function_xlim
             || !s_python_function_ion
@@ -219,6 +230,9 @@ private:
             || !PyFunction_Check(s_python_function_legend)
             || !PyFunction_Check(s_python_function_annotate)
             || !PyFunction_Check(s_python_function_ylim)
+#ifndef WITHOUT_NUMPY
+            || !PyFunction_Check(s_python_function_imshow)
+#endif
             || !PyFunction_Check(s_python_function_title)
             || !PyFunction_Check(s_python_function_axis)
             || !PyFunction_Check(s_python_function_xlabel)
@@ -445,6 +459,78 @@ bool hist(const std::vector<Numeric>& y, long bins=10,std::string color="b", dou
 
     return res;
 }
+
+#ifndef WITHOUT_NUMPY
+    namespace internal {
+        void imshow(void *ptr, const NPY_TYPES type, const int rows, const int columns, const int colors, const std::map<std::string, std::string> &keywords)
+        {
+            assert(type == NPY_UINT8 || type == NPY_FLOAT);
+            assert(colors == 1 || colors == 3 || colors == 4);
+
+            detail::_interpreter::get();    //interpreter needs to be initialized for the numpy commands to work
+
+            // construct args
+            npy_intp dims[3] = { rows, columns, colors };
+            PyObject *args = PyTuple_New(1);
+            PyTuple_SetItem(args, 0, PyArray_SimpleNewFromData(colors == 1 ? 2 : 3, dims, type, ptr));
+
+            // construct keyword args
+            PyObject* kwargs = PyDict_New();
+            for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
+            {
+                PyDict_SetItemString(kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
+            }
+
+            PyObject *res = PyObject_Call(detail::_interpreter::get().s_python_function_imshow, args, kwargs);
+            Py_DECREF(args);
+            Py_DECREF(kwargs);
+            if (!res)
+                throw std::runtime_error("Call to imshow() failed");
+            Py_DECREF(res);
+        }
+    }
+
+    void imshow(const unsigned char *ptr, const int rows, const int columns, const int colors, const std::map<std::string, std::string> &keywords = {})
+    {
+        internal::imshow((void *) ptr, NPY_UINT8, rows, columns, colors, keywords);
+    }
+
+    void imshow(const float *ptr, const int rows, const int columns, const int colors, const std::map<std::string, std::string> &keywords = {})
+    {
+        internal::imshow((void *) ptr, NPY_FLOAT, rows, columns, colors, keywords);
+    }
+
+#ifdef WITH_OPENCV
+    void imshow(const cv::Mat &image, const std::map<std::string, std::string> &keywords = {})
+    {
+        // Convert underlying type of matrix, if needed
+        cv::Mat image2;
+        NPY_TYPES npy_type = NPY_UINT8;
+        switch (image.type() & CV_MAT_DEPTH_MASK) {
+        case CV_8U:
+            image2 = image;
+            break;
+        case CV_32F:
+            image2 = image;
+            npy_type = NPY_FLOAT;
+            break;
+        default:
+            image.convertTo(image2, CV_MAKETYPE(CV_8U, image.channels()));
+        }
+
+        // If color image, convert from BGR to RGB
+        switch (image2.channels()) {
+        case 3:
+            cv::cvtColor(image2, image2, CV_BGR2RGB);
+            break;
+        case 4:
+            cv::cvtColor(image2, image2, CV_BGRA2RGBA);
+        }
+
+        internal::imshow(image2.data, npy_type, image2.rows, image2.cols, image2.channels(), keywords);
+    }
+#endif
+#endif
 
 template< typename Numeric>
 bool named_hist(std::string label,const std::vector<Numeric>& y, long bins=10, std::string color="b", double alpha=1.0)

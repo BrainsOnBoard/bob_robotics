@@ -85,7 +85,8 @@ ifdef WITH_MATPLOTLIBCPP
 	PYTHON_VERSION       := $(shell echo $(PYTHON_INCLUDE) | cut -f 1 -d " " | grep -e python... -o)
 	PYTHON_NUMPY_INCLUDE ?= $(shell find $$($(PYTHON_CONFIG) --prefix)/lib -type d -path "*/*-packages/numpy/core/include" | grep -m 1 $(PYTHON_VERSION))
 
-	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
+	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE) \
+		-DWITH_OPENCV
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
 endif
 
