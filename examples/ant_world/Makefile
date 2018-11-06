@@ -1,23 +1,22 @@
-LIBANTWORLD_PATH := ../../libantworld
-
+WITH_LIBANTWORLD := 1
+WITH_MATPLOTLIBCPP := 1
 include ../../make_common/flags.mk
-LINK_FLAGS := -L$(LIBANTWORLD_PATH) -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_FLAGS)
 
-EXECUTABLE := ant_world_test
+EXECUTABLE := ant_world_test perfect_memory_antworld_test plot_ridf
 
-.PHONY: all clean $(LIBANTWORLD_PATH)/libantworld.a
+.PHONY: all clean libantworld
 
 all: $(EXECUTABLE)
 
 -include $(EXECUTABLE).d
 
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d $(LIBANTWORLD_PATH)/libantworld.a
+$(EXECUTABLE): %: %.cc %d libantworld
 	$(CXX) -o $@ $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS)
 
-$(LIBANTWORLD_PATH)/libantworld.a:
-	$(MAKE) -C $(LIBANTWORLD_PATH)
+libantworld:
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
 
 %.d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f $(EXECUTABLE) *.d

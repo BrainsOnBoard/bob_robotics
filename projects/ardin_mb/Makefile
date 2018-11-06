@@ -1,8 +1,8 @@
+WITH_LIBANTWORLD := 1
 include ../../make_common/flags.mk
 
 EXECUTABLE      := ardin_mb
 SOURCES         := ardin_mb.cc state_handler.cc mb_memory.cc vector_field.cc
-LINK_FLAGS      := -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW $(LINK_FLAGS)
 CXXFLAGS        += -I../.. `pkg-config --cflags eigen3`
 
 ifdef RECORD_SPIKES

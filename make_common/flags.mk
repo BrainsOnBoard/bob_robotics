@@ -50,6 +50,10 @@ ifndef NO_OPENCV
 	LINK_FLAGS += `pkg-config --libs opencv`
 endif
 
+ifdef WITH_LIBANTWORLD
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+endif
+
 ifdef WITH_LIBBEBOP
 	# libbebop
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop

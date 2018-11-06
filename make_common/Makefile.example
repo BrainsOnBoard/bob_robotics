@@ -3,6 +3,9 @@
 # # OpenCV is included by default; set this flag to disable
 # NO_OPENCV := 1
 #
+# # Enables the OpenGL-based libantworld simulation environment
+# WITH_LIBANTWORLD := 1
+#
 # # Enables libbebop to give support for Parrot Bebop drones.
 # # You also need to set LIBBEBOP_PATH and the user must have ARSDK_ROOT set to
 # # point to Parrot's SDK.
