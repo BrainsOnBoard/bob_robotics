@@ -35,7 +35,7 @@ all: $(EXECUTABLE)
 -include $(EXECUTABLE).d
 
 $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
-	$(CXX) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS) -o $(EXECUTABLE)
+	$(CXX) $< $(CXXFLAGS) $(LINK_FLAGS) -o $@
 
 %d: ;
 
