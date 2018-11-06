@@ -1,4 +1,4 @@
-include ../../common/flags.mk
+include ../../make_common/flags.mk
 CXXFLAGS += -I../..
 
 # optionally disable I2C

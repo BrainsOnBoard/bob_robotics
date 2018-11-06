@@ -90,7 +90,8 @@ ifdef WITH_MATPLOTLIBCPP
 endif
 
 ifdef WITH_I2C
-	ifeq (0,$(shell ../../common/is_i2c_tools_new.sh; echo $$?))
+	DIR := $(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+	ifeq (0,$(shell $(DIR)/is_i2c_tools_new.sh; echo $$?))
 	LINK_FLAGS += -li2c
 	endif
 endif

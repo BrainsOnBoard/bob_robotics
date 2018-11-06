@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../common/build_all_function.sh
+source ../make_common/build_all_function.sh
 
 basename=$(dirname "$0")
 

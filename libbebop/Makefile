@@ -1,4 +1,4 @@
-include ../common/flags.mk
+include ../make_common/flags.mk
 
 # The current version of the avcodec code uses some deprecated functions, so
 # let's ignore compiler warnings about this. I should probably fix the code up

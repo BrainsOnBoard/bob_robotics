@@ -1,4 +1,4 @@
-include ../../common/flags.mk
+include ../../make_common/flags.mk
 CXXFLAGS += -I../..
 LINK_FLAGS += -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 

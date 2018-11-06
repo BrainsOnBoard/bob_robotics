@@ -1,6 +1,6 @@
 LIBBEBOP_PATH := ../../libbebop
 WITH_LIBBEBOP := 1
-include ../../common/flags.mk
+include ../../make_common/flags.mk
 CXXFLAGS += -I../..
 
 .PHONY: all clean libbebop

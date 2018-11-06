@@ -1,4 +1,4 @@
-include ../../common/flags.mk
+include ../../make_common/flags.mk
 
 EXECUTABLE      := ardin_mb
 SOURCES         := ardin_mb.cc state_handler.cc mb_memory.cc vector_field.cc
