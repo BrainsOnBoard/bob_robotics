@@ -61,12 +61,13 @@ inline std::unique_ptr<Input> getPanoramicCamera()
             deviceNum = cam.first;
         }
     }
-    std::cout << "Selected camera #" << deviceNum << ": "
-              << OS::Video::getCameraName(deviceNum) << std::endl;
 
     if (deviceNum == -1) {
         throw std::runtime_error("No camera found");
     }
+
+    std::cout << "Selected camera #" << deviceNum << ": "
+              << OS::Video::getCameraName(deviceNum) << std::endl;
 
     // SeeCam
     if(prefCamNum == 0) {
