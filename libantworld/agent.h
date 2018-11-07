@@ -19,6 +19,7 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <utility>
 
 namespace BoBRobotics {
 namespace AntWorld {
@@ -81,18 +82,26 @@ public:
                 });
     }
 
-    template<class LengthUnit = meter_t>
+    template<typename LengthUnit = meter_t>
     Vector3<LengthUnit> getPosition()
     {
         updatePose();
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
-    template<class AngleUnit = degree_t>
+    template<typename AngleUnit = degree_t>
     Vector3<AngleUnit> getAttitude()
     {
         updatePose();
         return convertUnitArray<AngleUnit>(m_Attitude);
+    }
+
+    template<typename LengthUnit = meter_t, typename AngleUnit = degree_t>
+    auto getPose()
+    {
+        updatePose();
+        return std::make_pair(convertUnitArray<LengthUnit>(m_Position),
+                              convertUnitArray<AngleUnit>(m_Attitude));
     }
 
     virtual degrees_per_second_t getMaximumTurnSpeed() override
