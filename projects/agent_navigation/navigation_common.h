@@ -124,6 +124,8 @@ void runNavigation(Robots::Robot &robot,
                    Video::Input &videoInput,
                    const std::vector<ObjectType> &objects = {})
 {
+    const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
+
     const filesystem::path routeBasePath = "routes";
     filesystem::create_directory(routeBasePath);
 
@@ -245,7 +247,7 @@ void runNavigation(Robots::Robot &robot,
                 const degree_t heading = std::get<0>(pm.getHeading(frame));
                 std::cout << "Heading: " << heading << std::endl;
 
-                turnTimer.start(heading / robot.getMaximumTurnSpeed());
+                turnTimer.start(heading / robotTurnSpeed);
                 robot.turnOnTheSpot(heading < 0_deg ? 1.f : -1.f);
             }
         } else if (!joystickUpdate) {
