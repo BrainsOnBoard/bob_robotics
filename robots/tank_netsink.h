@@ -4,6 +4,16 @@
 #include "../net/connection.h"
 #include "tank.h"
 
+// Third-party includes
+#include "../third_party/units.h"
+
+// Standard C includes
+#include <cmath>
+
+// Standard C++ includes
+#include <limits>
+#include <string>
+
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
@@ -12,10 +22,21 @@ namespace Robots {
 //! An interface for transmitting tank steering commands over the network
 class TankNetSink : public Tank
 {
+private:
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
+
+    Net::Connection &m_Connection;
+    radians_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
+    float m_OldLeft = 0, m_OldRight = 0;
+
 public:
     TankNetSink(Net::Connection &connection)
       : m_Connection(connection)
-    {}
+    {
+        connection.setCommandHandler("TRN", [this](Net::Connection &, const Net::Command &command) {
+            m_TurnSpeed = radians_per_second_t(stod(command[1]));
+        });
+    }
 
     virtual ~TankNetSink()
     {
@@ -51,9 +72,14 @@ public:
         m_OldRight = right;
     }
 
-private:
-    Net::Connection &m_Connection;
-    float m_OldLeft = 0, m_OldRight = 0;
-};
-}
-}
+    virtual radians_per_second_t getMaximumTurnSpeed() override
+    {
+        if (isnan(m_TurnSpeed.value())) {
+            return Tank::getMaximumTurnSpeed();
+        } else {
+            return m_TurnSpeed;
+        }
+    }
+}; // TankNetSink
+} // Robots
+} // BoBRobotics

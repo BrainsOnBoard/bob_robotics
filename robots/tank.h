@@ -148,7 +148,14 @@ public:
     //! Controls the robot with a network stream
     void readFromNetwork(Net::Connection &connection)
     {
-        // handle incoming TNK commands
+        // Send maximum turn speed, if we know it
+        try {
+            connection.getSocketWriter().send("TRN " + std::to_string(getMaximumTurnSpeed().value()) + "\n");
+        } catch (std::runtime_error &) {
+            // Then getMaximumTurnSpeed() isn't implemented
+        }
+
+        // Handle incoming TNK commands
         connection.setCommandHandler("TNK",
             [this](Net::Connection &connection, const Net::Command &command) {
                 onCommandReceived(connection, command);
