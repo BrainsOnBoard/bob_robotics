@@ -52,7 +52,6 @@ private:
         m_x += units::length::meter_t(x_part.value());
         m_y += units::length::meter_t(y_part.value());
         m_angle += w * dt;
-
     }
 
     //! draws the rectangle at the desired coordinates
@@ -64,8 +63,6 @@ private:
         rectangle.h = 5;
 
         SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-
-    
         SDL_RenderFillRect( renderer, &rectangle );
     }
 
@@ -112,6 +109,7 @@ public:
         dstrect.w = width.value() * SCALE_FACTOR;
     }
 
+    //! returns true if we did quit the simulator's gui
     bool didQuit() {
         return quit;
     }
@@ -124,11 +122,8 @@ public:
     {
          // Clear the entire screen to our selected color.
         SDL_RenderClear(renderer);
-
         SDL_PollEvent(&event);
 
-        
- 
         // getting events 
         switch (event.type) {
             case SDL_QUIT:
@@ -193,7 +188,6 @@ public:
         SDL_RenderCopyEx( renderer, texture, NULL, &dstrect, m_angle.value(), NULL, SDL_FLIP_NONE );
         
         SDL_RenderPresent(renderer);
-    
     }
 
     //! returns the current position of the robot
@@ -224,5 +218,4 @@ public:
         x_mm = units::length::millimeter_t(x_pos / SCALE_FACTOR);
         y_mm = units::length::millimeter_t(y_pos / SCALE_FACTOR);
     }
-
 };
