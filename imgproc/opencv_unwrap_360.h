@@ -220,6 +220,11 @@ public:
                flip);
     }
 
+    cv::Size getOutputSize() const
+    {
+        return m_UnwrappedResolution;
+    }
+
     // Public members
     cv::Point m_CentrePixel;
     int m_InnerPixel = 0, m_OuterPixel = 0;
