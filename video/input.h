@@ -33,7 +33,7 @@ public:
      *
      * @param unwrapRes The resolution of the unwrapped image
      */
-    ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
+    ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes) const
     {
         // Create unwrapper and return
         return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes,
