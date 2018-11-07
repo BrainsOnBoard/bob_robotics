@@ -33,7 +33,7 @@ public:
     virtual void stopMoving() = 0;
 
     //! Start controlling this Robot with a joystick
-    virtual void addJoystick(HID::Joystick &joystick)
+    virtual void addJoystick(HID::Joystick &)
     {
         throw std::runtime_error("addJoystick() is not implemented for this Robot");
     }
