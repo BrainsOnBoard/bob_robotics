@@ -1,6 +1,7 @@
 #pragma once
 
 // C++ includes
+#include <stdexcept>
 #include <string>
 
 // BoB robotics includes
@@ -45,12 +46,12 @@ public:
 
     virtual units::length::millimeter_t getRobotWheelRadius() 
     {
-        return units::length::millimeter_t(0);
+        throw std::runtime_error("getRobotWheelRadius() is not implemented for this class");
     }
 
     virtual units::length::millimeter_t getRobotAxisLength() 
     {
-        return units::length::millimeter_t(0);
+        throw std::runtime_error("getRobotAxisLength() is not implemented for this class");
     }
 
     void readFromNetwork(Net::Node &node)
