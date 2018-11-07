@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/pose.h"
+#include "../hid/joystick.h"
 #include "../video/opengl.h"
 #include "../robots/robot.h"
 #include "common.h"
@@ -12,6 +13,9 @@
 
 // GLFW
 #include <GLFW/glfw3.h>
+
+// Standard C includes
+#include <cmath>
 
 // Standard C++ includes
 #include <chrono>
@@ -35,7 +39,7 @@ class AntAgent
 
 public:
     static constexpr meters_per_second_t DefaultVelocity = 300_mm / 1_s;
-    static constexpr degrees_per_second_t DefaultTurnSpeed = 100_deg_per_s;
+    static constexpr degrees_per_second_t DefaultTurnSpeed = 200_deg_per_s;
 
     AntAgent(GLFWwindow *window, Renderer &renderer, GLsizei readWidth, GLsizei readHeight,
              meters_per_second_t velocity = DefaultVelocity, degrees_per_second_t turnSpeed = DefaultTurnSpeed)
@@ -45,6 +49,32 @@ public:
       , m_Renderer(renderer)
       , m_Window(window)
     {}
+
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
+    {
+        joystick.addHandler(
+                [this, deadZone](HID::JAxis axis, float value) {
+                    switch (axis) {
+                    case HID::JAxis::LeftStickVertical:
+                        m_JoystickY = value;
+                        break;
+                    case HID::JAxis::LeftStickHorizontal:
+                        m_JoystickX = value;
+                        break;
+                    default:
+                        return false;
+                    }
+
+                    if (fabs(m_JoystickY) > deadZone) {
+                        moveForward(-m_JoystickY);
+                    } else if (fabs(m_JoystickX) > deadZone) {
+                        turnOnTheSpot(-m_JoystickX);
+                    } else {
+                        stopMoving();
+                    }
+                    return true;
+                });
+    }
 
     template<class LengthUnit = meter_t>
     Vector3<LengthUnit> getPosition()
@@ -104,6 +134,7 @@ public:
 
     virtual void moveForward(float speed) override
     {
+        BOB_ASSERT(speed >= -1.f && speed <= 1.f);
         BOB_ASSERT(m_Attitude[1] == 0_deg && m_Attitude[2] == 0_deg);
 
         updatePose();
@@ -113,6 +144,7 @@ public:
 
     virtual void turnOnTheSpot(float clockwiseSpeed) override
     {
+        BOB_ASSERT(clockwiseSpeed >= -1.f && clockwiseSpeed <= 1.f);
         BOB_ASSERT(m_Attitude[1] == 0_deg && m_Attitude[2] == 0_deg);
 
         updatePose();
@@ -129,6 +161,7 @@ private:
     degrees_per_second_t m_TurnSpeed;
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
+    float m_JoystickX = 0.f, m_JoystickY = 0.f;
 
     TimeType m_MoveStartTime;
     enum class MoveMode
@@ -150,12 +183,18 @@ private:
         case MoveMode::MovingForward:
             {
                 const meter_t dist = m_MoveSpeed * m_Velocity * elapsed;
-                m_Position[0] += dist * cos(m_Attitude[0]);
-                m_Position[1] += dist * sin(m_Attitude[0]);
+                m_Position[0] += dist * sin(m_Attitude[0]);
+                m_Position[1] += dist * cos(m_Attitude[0]);
             }
             break;
         case MoveMode::Turning:
             m_Attitude[0] -= m_MoveSpeed * m_TurnSpeed * elapsed;
+            while (m_Attitude[0] > 360_deg) {
+                m_Attitude[0] -= 360_deg;
+            }
+            while (m_Attitude[0] < 0_deg) {
+                m_Attitude[0] += 360_deg;
+            }
             break;
         default:
             break;
