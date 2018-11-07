@@ -15,7 +15,7 @@ public:
     virtual void setPitch(float pitch) = 0;
     virtual void setRoll(float right) = 0;
     virtual void setVerticalSpeed(float up) = 0;
-    virtual void setYawSpeed(float right) = 0;
+    virtual void setTurnSpeed(float right) = 0;
 
     //! An alias for setPitch
     virtual void moveForward(float speed) override
@@ -29,7 +29,7 @@ public:
         setPitch(0.f);
         setRoll(0.f);
         setVerticalSpeed(0.f);
-        setYawSpeed(clockwiseSpeed);
+        setTurnSpeed(clockwiseSpeed);
     }
 
     virtual void stopMoving() override
@@ -37,7 +37,7 @@ public:
         setPitch(0.f);
         setRoll(0.f);
         setVerticalSpeed(0.f);
-        setYawSpeed(0.f);
+        setTurnSpeed(0.f);
     }
 
     //! Start controlling this drone with a joystick
@@ -70,10 +70,10 @@ private:
             setVerticalSpeed(-value);
             return true;
         case HID::JAxis::LeftTrigger:
-            setYawSpeed(-value);
+            setTurnSpeed(-value);
             return true;
         case HID::JAxis::RightTrigger:
-            setYawSpeed(value);
+            setTurnSpeed(value);
             return true;
         default:
             // otherwise signal that we haven't handled event

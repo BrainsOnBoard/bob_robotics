@@ -32,9 +32,9 @@ printSpeedLimits(Bebop &drone)
     print(tiltLimits);
 
     // max yaw speed
-    auto maxYawSpeed = drone.getMaximumYawSpeed();
-    auto yawLimits = drone.getYawSpeedLimits();
-    std::cout << "Max yaw speed: " << maxYawSpeed;
+    auto maxTurnSpeed = drone.getMaximumTurnSpeed();
+    auto yawLimits = drone.getTurnSpeedLimits();
+    std::cout << "Max yaw speed: " << maxTurnSpeed;
     print(yawLimits);
 
     // max vertical speed
@@ -55,7 +55,7 @@ bob_main(int, char **)
      *     these values to their maximum if you want to be able to control the
      *     drone.
      */
-    Bebop drone(/*maxYawSpeed=*/Bebop::DefaultMaximumYawSpeed,
+    Bebop drone(/*maxTurnSpeed=*/Bebop::DefaultMaximumTurnSpeed,
                 /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
                 /*maxTilt=*/Bebop::DefaultMaximumTilt);
 

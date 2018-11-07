@@ -47,13 +47,13 @@ namespace Robots {
 
 // We also have to give declarations for these variables, because c++ is weird
 constexpr degree_t Bebop::DefaultMaximumTilt;
-constexpr degrees_per_second_t Bebop::DefaultMaximumYawSpeed;
+constexpr degrees_per_second_t Bebop::DefaultMaximumTurnSpeed;
 constexpr meters_per_second_t Bebop::DefaultMaximumVerticalSpeed;
 
 /*!
  * \brief Search for the drone on the network and connect to it.
  */
-Bebop::Bebop(degrees_per_second_t maxYawSpeed,
+Bebop::Bebop(degrees_per_second_t maxTurnSpeed,
              meters_per_second_t maxVerticalSpeed,
              degree_t maxTilt)
 {
@@ -70,7 +70,7 @@ Bebop::Bebop(degrees_per_second_t maxYawSpeed,
     m_VideoStream = std::make_unique<VideoStream>(*this);
 
     // store speed limits for later
-    m_YawSpeedLimits.m_UserMaximum = maxYawSpeed;
+    m_TurnSpeedLimits.m_UserMaximum = maxTurnSpeed;
     m_VerticalSpeedLimits.m_UserMaximum = maxVerticalSpeed;
     m_TiltLimits.m_UserMaximum = maxTilt;
 
@@ -170,9 +170,9 @@ Bebop::getVerticalSpeedLimits()
  * \brief Return the current maximum yaw speed setting.
  */
 degrees_per_second_t
-Bebop::getMaximumYawSpeed() const
+Bebop::getMaximumTurnSpeed() const
 {
-    return m_YawSpeedLimits.getCurrent();
+    return m_TurnSpeedLimits.getCurrent();
 }
 
 /*!
@@ -180,9 +180,9 @@ Bebop::getMaximumYawSpeed() const
  *        speed setting.
  */
 std::pair<degrees_per_second_t, degrees_per_second_t> &
-Bebop::getYawSpeedLimits()
+Bebop::getTurnSpeedLimits()
 {
-    return m_YawSpeedLimits.getLimits();
+    return m_TurnSpeedLimits.getLimits();
 }
 
 /*!
@@ -221,7 +221,7 @@ Bebop::setVerticalSpeed(float up)
  * \brief Set drone's yaw speed.
  */
 void
-Bebop::setYawSpeed(float right)
+Bebop::setTurnSpeed(float right)
 {
     BOB_ASSERT(right >= -1.f && right <= 1.f);
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
@@ -276,7 +276,7 @@ Bebop::connect()
     }
 
     // set speed limits
-    setMaximumYawSpeed(m_YawSpeedLimits.m_UserMaximum);
+    setMaximumTurnSpeed(m_TurnSpeedLimits.m_UserMaximum);
     setMaximumVerticalSpeed(m_VerticalSpeedLimits.m_UserMaximum);
     setMaximumTilt(m_TiltLimits.m_UserMaximum);
 }
@@ -359,7 +359,7 @@ Bebop::setMaximumVerticalSpeed(meters_per_second_t newValue)
 }
 
 inline void
-Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
+Bebop::setMaximumTurnSpeed(degrees_per_second_t newValue)
 {
     DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
 }
@@ -510,7 +510,7 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXROTATIONSPEEDCHANGED:
-        MAX_SPEED_CHANGED(YawSpeed, SPEEDSETTINGSSTATE_MAXROTATIONSPEED);
+        MAX_SPEED_CHANGED(TurnSpeed, SPEEDSETTINGSSTATE_MAXROTATIONSPEED);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
         MAX_SPEED_CHANGED(VerticalSpeed, SPEEDSETTINGSSTATE_MAXVERTICALSPEED);

@@ -171,7 +171,7 @@ public:
         Stopping = ARCONTROLLER_DEVICE_STATE_STOPPING
     };
 
-    Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
+    Bebop(degrees_per_second_t maxTurnSpeed = DefaultMaximumTurnSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
     virtual ~Bebop() override;
@@ -181,8 +181,8 @@ public:
     std::pair<degree_t, degree_t> &getTiltLimits();
     meters_per_second_t getMaximumVerticalSpeed() const;
     std::pair<meters_per_second_t, meters_per_second_t> &getVerticalSpeedLimits();
-    degrees_per_second_t getMaximumYawSpeed() const;
-    std::pair<degrees_per_second_t, degrees_per_second_t> &getYawSpeedLimits();
+    degrees_per_second_t getMaximumTurnSpeed() const;
+    std::pair<degrees_per_second_t, degrees_per_second_t> &getTurnSpeedLimits();
 
     // motor control
     virtual void takeOff() override;
@@ -190,7 +190,7 @@ public:
     virtual void setPitch(float pitch) override;
     virtual void setRoll(float right) override;
     virtual void setVerticalSpeed(float up) override;
-    virtual void setYawSpeed(float right) override;
+    virtual void setTurnSpeed(float right) override;
 
     // calibration
     void doFlatTrimCalibration();
@@ -206,7 +206,7 @@ public:
     static constexpr auto DefaultMaximumTilt = 8_deg;
 
     //! Default maximum yaw speed.
-    static constexpr auto DefaultMaximumYawSpeed = 100_deg_per_s;
+    static constexpr auto DefaultMaximumTurnSpeed = 100_deg_per_s;
 
     //! Default maximum vertical speed.
     static constexpr auto DefaultMaximumVerticalSpeed = 1_mps;
@@ -281,7 +281,7 @@ private:
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
-    LimitValues<degrees_per_second_t> m_YawSpeedLimits;
+    LimitValues<degrees_per_second_t> m_TurnSpeedLimits;
     std::atomic<unsigned char> m_BatteryLevel;
 
     inline void connect();
@@ -296,7 +296,7 @@ private:
     // speed limits
     inline void setMaximumTilt(degree_t newValue);
     inline void setMaximumVerticalSpeed(meters_per_second_t newValue);
-    inline void setMaximumYawSpeed(degrees_per_second_t newValue);
+    inline void setMaximumTurnSpeed(degrees_per_second_t newValue);
 
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
