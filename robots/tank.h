@@ -39,7 +39,12 @@ public:
         tank(0.f, 0.f);
     }
 
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
+    virtual void addJoystick(HID::Joystick &joystick) override
+    {
+        addJoystick(joystick, 0.25f);
+    }
+
+    void addJoystick(HID::Joystick &joystick, float deadZone)
     {
         joystick.addHandler(
                 [this, deadZone](HID::JAxis axis, float value) {

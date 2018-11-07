@@ -41,7 +41,7 @@ public:
     }
 
     //! Start controlling this drone with a joystick
-    void addJoystick(HID::Joystick &joystick)
+    virtual void addJoystick(HID::Joystick &joystick) override
     {
         joystick.addHandler([this](HID::JAxis axis, float value) {
             return onAxisEvent(axis, value);

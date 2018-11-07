@@ -1,5 +1,11 @@
 #pragma once
 
+// BoB robotics includes
+#include "../hid/joystick.h"
+
+// Standard C++ includes
+#include <stdexcept>
+
 namespace BoBRobotics {
 namespace Robots {
 //! A generic abstract class for robots and other moveable agents
@@ -25,6 +31,12 @@ public:
 
     //! Stop the robot moving
     virtual void stopMoving() = 0;
+
+    //! Start controlling this Robot with a joystick
+    virtual void addJoystick(HID::Joystick &joystick)
+    {
+        throw std::runtime_error("addJoystick() is not implemented for this Robot");
+    }
 }; // Robot
 } // Robots
 } // BoBRobotics
