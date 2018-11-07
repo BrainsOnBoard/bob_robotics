@@ -125,11 +125,14 @@ public:
         // orientation of Target with respect to the line of sight from the observer to the target
         m_theta = m_heading + m_bearingFromGoal - m_goalAngle; 
         m_theta = angleWrapAround(m_theta);
+
+        meter_t distanceFromGoalMeters = m_distanceFromGoal;
+
        
-        float k = (1/m_distanceFromGoal.value()) * ( m_k2* (m_bearingFromGoal.value() - atan(-m_k1*m_theta.value()*PI/180)*180/PI) + 
+        float k = (1/distanceFromGoalMeters.value()) * ( m_k2* (m_bearingFromGoal.value() - atan(-m_k1*m_theta.value()*PI/180)*180/PI) + 
 				1+(m_k1/(1+pow(m_k1*m_theta.value(),2)))*sin(m_bearingFromGoal.value()*PI/180)*180/PI);
      
-        v = m_max_velocity/scalar_t( (1+m_beta*pow(fabs(k),m_alpha)));
+        v = m_max_velocity/scalar_t( (1+m_beta*pow(std::abs(k),m_alpha)));
         w = degrees_per_second_t(k*v.value());
 
         // if turning speed is greater than the limit, turning speed = max_turning speed
