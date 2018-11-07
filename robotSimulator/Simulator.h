@@ -55,6 +55,20 @@ private:
 
     }
 
+    //! draws the rectangle at the desired coordinates
+    void drawRectangleAtCoordinates(SDL_Rect &rectangle, const float x, const float y) {
+        
+        rectangle.x = x;
+        rectangle.y = y;
+        rectangle.w = 5;
+        rectangle.h = 5;
+
+        SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
+
+    
+        SDL_RenderFillRect( renderer, &rectangle );
+    }
+
 public:
     Simulator() 
     {
@@ -87,6 +101,7 @@ public:
 
     ~Simulator() {}
 
+    //! sets the robot's size in millimeter
     void setRobotSize(const units::length::millimeter_t height, 
                       const units::length::millimeter_t width
                       ) 
@@ -181,20 +196,6 @@ public:
     
     }
 
-    //! draws the rectangle at the desired coordinates
-    void drawRectangleAtCoordinates(SDL_Rect &rectangle, const float x, const float y) {
-        
-        rectangle.x = x;
-        rectangle.y = y;
-        rectangle.w = 5;
-        rectangle.h = 5;
-
-        SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-
-    
-        SDL_RenderFillRect( renderer, &rectangle );
-    }
-
     //! returns the current position of the robot
     std::vector<float> getCurrentPosition() 
     { 
@@ -205,7 +206,7 @@ public:
         return position;
     } 
 
-    //! gets the position of the mouse relative to the window
+    //! gets the position of the latest mouse click relative to the window
     std::vector<float> getMouseClickLocation() 
     {
         std::vector<float> mouseClickCoordinates;
@@ -214,6 +215,7 @@ public:
         return mouseClickCoordinates;
     }
 
+    //! changes the pixel value to millimeter
     static void changePixelToMM(const float x_pos,
                          const float y_pos,
                          units::length::millimeter_t &x_mm,
