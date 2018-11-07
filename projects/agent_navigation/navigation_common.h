@@ -58,7 +58,7 @@ public:
 
     bool running() const
     {
-        return m_Duration == std::chrono::nanoseconds::zero();
+        return m_Duration != std::chrono::nanoseconds::zero();
     }
 
     void stop()
