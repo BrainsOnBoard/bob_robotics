@@ -18,14 +18,14 @@ class Simulator {
 
 private:
 
-	units::velocity::meters_per_second_t m_v; 					// velocity v (translational velocity)
-	units::angular_velocity::degrees_per_second_t m_w; 			// velocity w (rotational velocity)
-	units::length::millimeter_t m_height; 						// height of the robot 
-	units::length::millimeter_t m_width; 						// width of the robot 
-	units::angle::degree_t m_angle; 							// angle of the robot
-	units::length::millimeter_t m_x; 							// position 'x' of the robot on the screen
-	units::length::millimeter_t m_y; 							// position 'y' of the robot on the screen
-	units::time::millisecond_t m_dt; 							// delta time 
+	units::velocity::meters_per_second_t m_v;				// velocity v (translational velocity)
+	units::angular_velocity::degrees_per_second_t m_w;		// velocity w (rotational velocity)
+	units::length::millimeter_t m_height;					// height of the robot 
+	units::length::millimeter_t m_width;					// width of the robot 
+	units::angle::degree_t m_angle;							// angle of the robot
+	units::length::millimeter_t m_x;						// position 'x' of the robot on the screen
+	units::length::millimeter_t m_y;						// position 'y' of the robot on the screen
+	units::time::millisecond_t m_dt;						// delta time 
 
 	float mouseClickX;
 	float mouseClickY;
