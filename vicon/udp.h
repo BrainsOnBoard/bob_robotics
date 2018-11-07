@@ -60,13 +60,13 @@ public:
         return m_FrameNumber;
     }
 
-    template <class LengthUnit = millimeter_t>
+    template<typename LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
-    template <class AngleUnit = radian_t>
+    template<typename AngleUnit = radian_t>
     Vector3<AngleUnit> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
@@ -135,7 +135,7 @@ public:
         ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
-    template <class VelocityUnit = meters_per_second_t>
+    template<typename VelocityUnit = meters_per_second_t>
     Vector3<VelocityUnit> getVelocity() const
     {
         return convertUnitArray<VelocityUnit>(m_Velocity);
@@ -156,6 +156,44 @@ template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
 public:
+    class Object
+    {
+    public:
+        Object(UDPClient<ObjectDataType> &client, const unsigned id)
+          : m_Client(client)
+          , m_Id(id)
+        {}
+
+        template<typename LengthUnit = millimeter_t>
+        Vector3<LengthUnit> getPosition() const
+        {
+            return getData().template getPosition<LengthUnit>();
+        }
+
+        template<typename AngleUnit = radian_t>
+        Vector3<AngleUnit> getAttitude() const
+        {
+            return getData().template getAttitude<AngleUnit>();
+        }
+
+        template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
+        auto getPose() const
+        {
+            const auto data = getData();
+            return std::make_pair(data.template getPosition<LengthUnit>(),
+                                  data.template getAttitude<AngleUnit>());
+        }
+
+        ObjectDataType getData() const
+        {
+            return m_Client.getObjectData(m_Id);
+        }
+
+    private:
+        UDPClient<ObjectDataType> &m_Client;
+        const unsigned m_Id;
+    };
+
     UDPClient(){}
     UDPClient(uint16_t port)
     {
@@ -227,6 +265,11 @@ public:
         else {
             throw std::runtime_error("Invalid object id: " + std::to_string(id));
         }
+    }
+
+    Object getObject(unsigned int id)
+    {
+        return Object(*this, id);
     }
 
 private:
