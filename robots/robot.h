@@ -3,6 +3,9 @@
 // BoB robotics includes
 #include "../hid/joystick.h"
 
+// Third-party includes
+#include "../third_party/units.h"
+
 // Standard C++ includes
 #include <stdexcept>
 
@@ -36,6 +39,11 @@ public:
     virtual void addJoystick(HID::Joystick &)
     {
         throw std::runtime_error("addJoystick() is not implemented for this Robot");
+    }
+
+    virtual units::angular_velocity::degrees_per_second_t getMaximumTurnSpeed()
+    {
+        throw std::runtime_error("getMaximumTurnSpeed() is not implemented for this Robot");
     }
 }; // Robot
 } // Robots

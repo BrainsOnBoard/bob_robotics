@@ -181,7 +181,7 @@ public:
     std::pair<degree_t, degree_t> &getTiltLimits();
     meters_per_second_t getMaximumVerticalSpeed() const;
     std::pair<meters_per_second_t, meters_per_second_t> &getVerticalSpeedLimits();
-    degrees_per_second_t getMaximumTurnSpeed() const;
+    virtual degrees_per_second_t getMaximumTurnSpeed() override;
     std::pair<degrees_per_second_t, degrees_per_second_t> &getTurnSpeedLimits();
 
     // motor control

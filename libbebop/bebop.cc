@@ -170,7 +170,7 @@ Bebop::getVerticalSpeedLimits()
  * \brief Return the current maximum yaw speed setting.
  */
 degrees_per_second_t
-Bebop::getMaximumTurnSpeed() const
+Bebop::getMaximumTurnSpeed()
 {
     return m_TurnSpeedLimits.getCurrent();
 }

@@ -95,6 +95,11 @@ public:
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
+    virtual degrees_per_second_t getMaximumTurnSpeed() override
+    {
+        return m_TurnSpeed;
+    }
+
     void setPosition(meter_t x, meter_t y, meter_t z)
     {
         BOB_ASSERT(m_MoveMode == MoveMode::NotMoving);
