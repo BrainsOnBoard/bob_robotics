@@ -13,6 +13,8 @@
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
@@ -25,6 +27,15 @@ public:
       , m_Left(0.0f)
       , m_Right(0.0f)
     {}
+
+    //----------------------------------------------------------------------------
+    // Robot virtuals
+    //----------------------------------------------------------------------------
+    virtual units::angular_velocity::degrees_per_second_t getMaximumTurnSpeed() override
+    {
+        // This is pretty approximate... -- AD
+        return 13.333_deg_per_s;
+    }
 
     //----------------------------------------------------------------------------
     // Tank virtuals
