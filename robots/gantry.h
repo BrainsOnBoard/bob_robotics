@@ -2,6 +2,16 @@
 
 #include "os/windows_include.h"
 
+// BoB robotics includes
+#include "common/assert.h"
+#include "common/pose.h"
+
+// Third-party includes
+#include "third_party/units.h"
+
+// Gantry-specifc includes
+#include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <chrono>
@@ -9,16 +19,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-
-// Gantry-specifc includes
-#include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
-
-// BoB robotics includes
-#include "common/assert.h"
-#include "common/pose.h"
-
-// Third-party includes
-#include "third_party/units.h"
 
 namespace BoBRobotics {
 namespace Robots {
