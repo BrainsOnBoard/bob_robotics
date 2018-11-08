@@ -137,50 +137,52 @@ public:
 
         // getting events
         switch (event.type) {
-            case SDL_QUIT:
-                quit = true;
-                // freeing up resources
-                SDL_DestroyTexture(texture);
-                SDL_FreeSurface(image);
-                SDL_DestroyRenderer(renderer);
-                SDL_DestroyWindow(window);
-                SDL_Quit();
+        case SDL_QUIT:
+            quit = true;
+            // freeing up resources
+            SDL_DestroyTexture(texture);
+            SDL_FreeSurface(image);
+            SDL_DestroyRenderer(renderer);
+            SDL_DestroyWindow(window);
+            SDL_Quit();
+            break;
+
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.sym) {
+            case SDLK_LEFT:
+                w = units::angular_velocity::degrees_per_second_t(-35.0);
                 break;
-
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.sym) {
-                    case SDLK_LEFT:
-                        w = units::angular_velocity::degrees_per_second_t(-35.0);
-                        break;
-                    case SDLK_RIGHT:
-                        w = units::angular_velocity::degrees_per_second_t( 35.0);
-                        break;
-                    case SDLK_UP:
-                        v = units::velocity::meters_per_second_t(5.0);
-                        w = units::angular_velocity::degrees_per_second_t(1e-10);
-                        break;
-                    case SDLK_DOWN:
-                        v = units::velocity::meters_per_second_t(-5.0);
-                        w = units::angular_velocity::degrees_per_second_t(1e-10);
-                        break;
-                }
-
-            case SDL_MOUSEBUTTONDOWN:
-                // If the left button was pressed.
-                if (event.button.button == SDL_BUTTON_LEFT) {
-                    int x, y;
-                    SDL_GetMouseState(&x, &y);
-                    mouseClickX = x;
-                    mouseClickY = y;
-                }
-
-            default:
-                // adding a small value to avoid dividing by 0
-                if (v.value() == 0 && w.value() == 0) {
-                    v = units::velocity::meters_per_second_t(1e-10);
-                    w = units::angular_velocity::degrees_per_second_t(1e-10);
-                }
+            case SDLK_RIGHT:
+                w = units::angular_velocity::degrees_per_second_t(35.0);
                 break;
+            case SDLK_UP:
+                v = units::velocity::meters_per_second_t(5.0);
+                w = units::angular_velocity::degrees_per_second_t(1e-10);
+                break;
+            case SDLK_DOWN:
+                v = units::velocity::meters_per_second_t(-5.0);
+                w = units::angular_velocity::degrees_per_second_t(1e-10);
+                break;
+            }
+            break;
+
+        case SDL_MOUSEBUTTONDOWN:
+            // If the left button was pressed.
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                int x, y;
+                SDL_GetMouseState(&x, &y);
+                mouseClickX = x;
+                mouseClickY = y;
+            }
+            break;
+
+        default:
+            // adding a small value to avoid dividing by 0
+            if (v.value() == 0 && w.value() == 0) {
+                v = units::velocity::meters_per_second_t(1e-10);
+                w = units::angular_velocity::degrees_per_second_t(1e-10);
+            }
+            break;
         }
 
         updatePose(v, w, delta_time);
