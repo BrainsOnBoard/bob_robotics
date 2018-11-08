@@ -14,6 +14,7 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::angle;
+using namespace units::literals;
 namespace plt = matplotlibcpp;
 
 auto now()
@@ -38,7 +39,8 @@ main()
     do {
         plt::figure(1);
         plt::clf();
-        plotAgent(vicon.getObjectData(0), { -2500, 2500 }, { -2500, 2500 });
+        const auto objectData = vicon.getObjectData(0);
+        plotAgent(objectData, -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         plt::pause(0.025);
     } while (plt::fignum_exists(1));
 
