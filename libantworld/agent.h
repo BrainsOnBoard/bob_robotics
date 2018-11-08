@@ -3,8 +3,8 @@
 // BoB robotics includes
 #include "../common/pose.h"
 #include "../hid/joystick.h"
-#include "../video/opengl.h"
 #include "../robots/robot.h"
+#include "../video/opengl.h"
 #include "common.h"
 #include "renderer.h"
 
@@ -19,6 +19,10 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <functional>
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace BoBRobotics {
@@ -42,9 +46,10 @@ public:
     static constexpr meters_per_second_t DefaultVelocity = 300_mm / 1_s;
     static constexpr degrees_per_second_t DefaultTurnSpeed = 200_deg_per_s;
 
-    AntAgent(GLFWwindow *window, Renderer &renderer, GLsizei readWidth, GLsizei readHeight,
+    AntAgent(GLFWwindow *window, Renderer &renderer,
+             const cv::Size &renderSize,
              meters_per_second_t velocity = DefaultVelocity, degrees_per_second_t turnSpeed = DefaultTurnSpeed)
-      : Video::OpenGL(0, 0, readWidth, readHeight)
+      : Video::OpenGL(renderSize)
       , m_Velocity(velocity)
       , m_TurnSpeed(turnSpeed)
       , m_Renderer(renderer)
@@ -96,6 +101,11 @@ public:
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
+    GLFWwindow *getWindow() const
+    {
+        return m_Window;
+    }
+
     template<typename LengthUnit = meter_t, typename AngleUnit = degree_t>
     auto getPose()
     {
@@ -134,9 +144,7 @@ public:
 
         // Render first person
         const auto size = getOutputSize();
-        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2],
-                                       m_Attitude[0], m_Attitude[1], m_Attitude[2],
-                                       0, 0, size.width, size.height);
+        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2], m_Attitude[0], m_Attitude[1], m_Attitude[2], 0, 0, size.width, size.height);
 
         // Swap front and back buffers
         glfwSwapBuffers(m_Window);
@@ -171,11 +179,60 @@ public:
         m_MoveSpeed = clockwiseSpeed;
     }
 
+    static auto initialiseWindow(const cv::Size &size)
+    {
+        // Set GLFW error callback
+        glfwSetErrorCallback(handleGLFWError);
+
+        // Initialize the library
+        if (!glfwInit()) {
+            throw std::runtime_error("Failed to initialize GLFW");
+        }
+
+        // Prevent window being resized
+        glfwWindowHint(GLFW_RESIZABLE, false);
+
+        GLFWwindow *ptr = glfwCreateWindow(size.width, size.height, "Ant world", nullptr, nullptr);
+        if (!ptr) {
+            glfwTerminate();
+            throw std::runtime_error("Failed to create window");
+        }
+
+        // Wrap in a unique_ptr so we can free it properly when we're done
+        std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow *)>> window(ptr, &glfwDestroyWindow);
+
+        // Make the window's context current
+        glfwMakeContextCurrent(window.get());
+
+        // Initialize GLEW
+        if (glewInit() != GLEW_OK) {
+            throw std::runtime_error("Failed to initialize GLEW");
+        }
+
+        // Enable VSync
+        glfwSwapInterval(1);
+
+        glDebugMessageCallback(handleGLError, nullptr);
+
+        // Set clear colour to match matlab and enable depth test
+        glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+        glEnable(GL_DEPTH_TEST);
+        glLineWidth(4.0);
+        glPointSize(4.0);
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
+        glEnable(GL_TEXTURE_2D);
+
+        return window;
+    }
+
 private:
     using TimeType = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
-    Vector3<degree_t> m_Attitude{{ 0_deg, 0_deg, 0_deg }};
-    Vector3<meter_t> m_Position{{ 0_m, 0_m, 0_m }};
+    Vector3<degree_t> m_Attitude{ { 0_deg, 0_deg, 0_deg } };
+    Vector3<meter_t> m_Position{ { 0_m, 0_m, 0_m } };
     meters_per_second_t m_Velocity;
     degrees_per_second_t m_TurnSpeed;
     Renderer &m_Renderer;
@@ -199,13 +256,11 @@ private:
 
         using namespace units::math;
         switch (m_MoveMode) {
-        case MoveMode::MovingForward:
-            {
-                const meter_t dist = m_MoveSpeed * m_Velocity * elapsed;
-                m_Position[0] += dist * sin(m_Attitude[0]);
-                m_Position[1] += dist * cos(m_Attitude[0]);
-            }
-            break;
+        case MoveMode::MovingForward: {
+            const meter_t dist = m_MoveSpeed * m_Velocity * elapsed;
+            m_Position[0] += dist * sin(m_Attitude[0]);
+            m_Position[1] += dist * cos(m_Attitude[0]);
+        } break;
         case MoveMode::Turning:
             m_Attitude[0] -= m_MoveSpeed * m_TurnSpeed * elapsed;
             while (m_Attitude[0] > 360_deg) {
@@ -220,10 +275,26 @@ private:
         }
     }
 
+    static void handleGLFWError(int errorNumber, const char *message)
+    {
+        throw std::runtime_error("GLFW error number: " + std::to_string(errorNumber) + ", message:" + message);
+    }
+
+    static void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+    {
+        throw std::runtime_error(message);
+    }
+
     static TimeType now()
     {
         return std::chrono::high_resolution_clock::now();
     }
 }; // AntAgent
+
+#ifndef NO_HEADER_DEFINITIONS
+constexpr units::velocity::meters_per_second_t AntAgent::DefaultVelocity;
+constexpr units::angular_velocity::degrees_per_second_t AntAgent::DefaultTurnSpeed;
+#endif
+
 } // AntWorld
 } // BoBRobotics

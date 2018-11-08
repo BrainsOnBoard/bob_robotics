@@ -19,7 +19,7 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
-     // Create FBO for rendering to cubemap and bind
+    // Create FBO for rendering to cubemap and bind
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
