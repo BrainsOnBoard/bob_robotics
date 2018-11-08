@@ -19,22 +19,31 @@
 #define WINDOW_HEIGHT 600
 #define SCALE_FACTOR 0.25
 
-using namespace units::literals;
 
 namespace BoBRobotics {
 namespace Robots {
+
+using namespace units::literals;
 class Simulator {
-
 private:
+    using millimeter_t = units::length::millimeter_t;
+    using degree_t = units::angle::degree_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using millisecond_t = units::time::millisecond_t;
 
-    units::velocity::meters_per_second_t m_v;               // velocity v (translational velocity)
-    units::angular_velocity::degrees_per_second_t m_w;      // velocity w (rotational velocity)
-    units::length::millimeter_t m_height;                   // height of the robot
-    units::length::millimeter_t m_width;                    // width of the robot
-    units::angle::degree_t m_angle;                         // angle of the robot
-    units::length::millimeter_t m_x;                        // position 'x' of the robot on the screen
-    units::length::millimeter_t m_y;                        // position 'y' of the robot on the screen
-    units::time::millisecond_t m_dt;                        // delta time
+    // Agent's forward velocity and turning speed
+    static constexpr meters_per_second_t Velocity = 5_mps;
+    static constexpr degrees_per_second_t TurnSpeed = 50_deg_per_s;
+
+    meters_per_second_t m_v;  // velocity v (translational velocity)
+    degrees_per_second_t m_w; // velocity w (rotational velocity)
+    millimeter_t m_height;    // height of the robot
+    millimeter_t m_width;     // width of the robot
+    degree_t m_angle;         // angle of the robot
+    millimeter_t m_x;         // position 'x' of the robot on the screen
+    millimeter_t m_y;         // position 'y' of the robot on the screen
+    millisecond_t m_dt;       // delta time
 
     float mouseClickX;
     float mouseClickY;
@@ -48,17 +57,18 @@ private:
     SDL_Rect dstrect;
     SDL_Rect rect_goal;
 
-    void updatePose(const units::velocity::meters_per_second_t v,
-                    const units::angular_velocity::degrees_per_second_t w,
-                    const units::time::millisecond_t dt)
+    void updatePose(const meters_per_second_t v,
+                    const degrees_per_second_t w,
+                    const millisecond_t dt)
     {
         // set current velocities
         m_v = v;
         m_w = w;
 
         // calculating next position, given velocity commands - v and w
-        auto x_part = (-v/w) * units::math::sin(m_angle) + ( v/w) * units::math::sin( (m_angle + w * dt) );
-        auto y_part = ( v/w) * units::math::cos(m_angle) - ( v/w) * units::math::cos( (m_angle + w * dt) );
+        using namespace units::math;
+        auto x_part = (-v / w) * sin(m_angle) + (v / w) * sin((m_angle + w * dt));
+        auto y_part = ( v/w) * cos(m_angle) - ( v/w) * cos( (m_angle + w * dt) );
         m_x += units::length::meter_t(x_part.value());
         m_y += units::length::meter_t(y_part.value());
         m_angle += w * dt;
@@ -99,8 +109,8 @@ public:
         // initial position and size of the robot car
         dstrect = { WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 10, 13 };
 
-        m_x = units::length::millimeter_t((float)dstrect.x *SCALE_FACTOR);
-        m_y = units::length::millimeter_t((float)dstrect.y *SCALE_FACTOR);
+        m_x = millimeter_t((float)dstrect.x *SCALE_FACTOR);
+        m_y = millimeter_t((float)dstrect.y *SCALE_FACTOR);
         m_angle = 10_deg;
 
         // first goal is set to the middle of the window
@@ -111,8 +121,8 @@ public:
     ~Simulator() {}
 
     //! sets the robot's size in millimeter
-    void setRobotSize(const units::length::millimeter_t height,
-                      const units::length::millimeter_t width
+    void setRobotSize(const millimeter_t height,
+                      const millimeter_t width
                       )
     {
         m_height = height;
@@ -127,9 +137,9 @@ public:
     }
 
     //! suimulates a step of the simulation with the provided velocities
-    void simulationStep(units::velocity::meters_per_second_t v,
-                        units::angular_velocity::degrees_per_second_t w,
-                        units::time::millisecond_t delta_time
+    void simulationStep(meters_per_second_t v,
+                        degrees_per_second_t w,
+                        millisecond_t delta_time
                         )
     {
          // Clear the entire screen to our selected color.
@@ -151,18 +161,18 @@ public:
         case SDL_KEYDOWN:
             switch (event.key.keysym.sym) {
             case SDLK_LEFT:
-                w = units::angular_velocity::degrees_per_second_t(-35.0);
+                w = -TurnSpeed;
                 break;
             case SDLK_RIGHT:
-                w = units::angular_velocity::degrees_per_second_t(35.0);
+                w = TurnSpeed;
                 break;
             case SDLK_UP:
-                v = units::velocity::meters_per_second_t(5.0);
-                w = units::angular_velocity::degrees_per_second_t(1e-10);
+                v = Velocity;
+                w = 1e-10_deg_per_s;
                 break;
             case SDLK_DOWN:
-                v = units::velocity::meters_per_second_t(-5.0);
-                w = units::angular_velocity::degrees_per_second_t(1e-10);
+                v = -Velocity;
+                w = 1e-10_deg_per_s;
                 break;
             }
             break;
@@ -179,9 +189,9 @@ public:
 
         default:
             // adding a small value to avoid dividing by 0
-            if (v.value() == 0 && w.value() == 0) {
-                v = units::velocity::meters_per_second_t(1e-10);
-                w = units::angular_velocity::degrees_per_second_t(1e-10);
+            if (v == 0_mps && w == 0_deg_per_s) {
+                v = 1e-10_mps;
+                w = 1e-10_deg_per_s;
             }
             break;
         }
@@ -225,12 +235,12 @@ public:
 
     //! changes the pixel value to millimeter
     static void changePixelToMM(const float x_pos,
-                         const float y_pos,
-                         units::length::millimeter_t &x_mm,
-                         units::length::millimeter_t &y_mm)
+                                const float y_pos,
+                                millimeter_t &x_mm,
+                                millimeter_t &y_mm)
     {
-        x_mm = units::length::millimeter_t(x_pos / SCALE_FACTOR);
-        y_mm = units::length::millimeter_t(y_pos / SCALE_FACTOR);
+        x_mm = millimeter_t(x_pos / SCALE_FACTOR);
+        y_mm = millimeter_t(y_pos / SCALE_FACTOR);
     }
 }; // Simulator
 } // Robots
