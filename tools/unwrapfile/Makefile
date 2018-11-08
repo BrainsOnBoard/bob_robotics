@@ -1,5 +1,4 @@
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 ifdef ffmpeg_path
 	CXXFLAGS += -DFFMPEG_PATH=\"$(ffmpeg_path)\"

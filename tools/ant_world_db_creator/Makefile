@@ -1,6 +1,5 @@
-include ../../common/flags.mk
-CXXFLAGS += -I../..
-LINK_FLAGS += -L../../libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+WITH_LIBANTWORLD := 1
+include ../../make_common/bob_robotics.mk
 
 TARGETS = ant_world_db_creator ant_world_map_creator
 

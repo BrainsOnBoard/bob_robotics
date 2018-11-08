@@ -1,7 +1,5 @@
-LIBBEBOP_PATH := ../../libbebop
 WITH_LIBBEBOP := 1
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 .PHONY: all clean libbebop
 
@@ -17,7 +15,7 @@ $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libbebop
 $(EXECUTABLE).d: ;
 
 libbebop:
-	$(MAKE) -C $(LIBBEBOP_PATH)
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libbebop
 
 clean:
 	rm -f $(EXECUTABLE) $(EXECUTABLE).d
