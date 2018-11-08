@@ -160,7 +160,7 @@ public:
                         w = units::angular_velocity::degrees_per_second_t(1e-10);
                         break;
                     case SDLK_DOWN:
-                        v = units::velocity::meters_per_second_t(5.0);
+                        v = units::velocity::meters_per_second_t(-5.0);
                         w = units::angular_velocity::degrees_per_second_t(1e-10);
                         break;
                 }
