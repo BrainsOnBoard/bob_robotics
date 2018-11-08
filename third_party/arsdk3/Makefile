@@ -1,7 +1,8 @@
 .PHONY: checkout build
 
 checkout:
-ifeq ("$(wildcard .repo)","")
+	@git submodule update --init arsdk_manifests
+ifeq ("$(wildcard build.sh)","")
 	@repo init -u arsdk_manifests --no-clone-bundle --depth=1
 	@repo sync
 	$(MAKE) build

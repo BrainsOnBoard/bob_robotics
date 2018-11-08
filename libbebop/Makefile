@@ -27,12 +27,12 @@ TARGET := libbebop.a
 
 all: $(TARGET)
 
-$(TARGET): arsdk3 $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	$(AR) -rcs $@ $(OBJECTS)
 
 -include $(DEPS)
 
-%.o: %.cc %.d
+%.o: %.cc %.d arsdk3
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.d: ;
