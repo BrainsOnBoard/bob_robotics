@@ -7,7 +7,8 @@ CXXFLAGS+=-Wno-deprecated-declarations -Wno-implicit-fallthrough
 
 # AR SDK
 ifndef ARSDK_ROOT
-$(error Environment variable ARSDK_ROOT must be defined)
+ARSDK_ROOT := ../third_party/arsdk3
+USE_LOCAL_ARSDK := 1
 endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
@@ -20,13 +21,13 @@ SOURCES := bebop.cc video.cc
 OBJECTS := $(SOURCES:.cc=.o)
 DEPS	:= $(SOURCES:.cc=.d)
 
-.PHONY: all clean
+.PHONY: all clean arsdk3
 
 TARGET := libbebop.a
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS)
+$(TARGET): arsdk3 $(OBJECTS)
 	$(AR) -rcs $@ $(OBJECTS)
 
 -include $(DEPS)
@@ -38,3 +39,9 @@ $(TARGET): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(DEPS) $(TARGET)
+
+arsdk3:
+ifdef USE_LOCAL_ARSDK
+	$(MAKE) -C $(ARSDK_ROOT)
+endif
+	@echo Using ARSDK at: $(ARSDK_ROOT)
