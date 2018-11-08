@@ -9,6 +9,7 @@
 
 // Standard C++ includes
 #include <string>
+#include <tuple>
 
 namespace BoBRobotics {
     template<typename LengthUnit, typename AgentType>
@@ -19,8 +20,10 @@ namespace BoBRobotics {
                    const LengthUnit yUpper)
     {
         // Get agent's pose
-        const auto position = agent.template getPosition<LengthUnit>();
-        const auto attitude = agent.template getAttitude<>();
+        using namespace units::angle;
+        Vector3<LengthUnit> position;
+        Vector3<radian_t> attitude;
+        std::tie(position, attitude) = agent.template getPose<LengthUnit, radian_t>();
 
         // Get vector components
         const std::vector<double> vx{ position[0].value() };

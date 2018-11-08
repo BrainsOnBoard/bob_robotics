@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/default_get_pose.h"
 #include "../common/pose.h"
 #include "../os/net.h"
 
@@ -25,6 +26,7 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
+  : public DefaultGetPose<ObjectData, units::length::millimeter_t, units::angle::radian_t>
 {
     using radian_t = units::angle::radian_t;
     using millimeter_t = units::length::millimeter_t;
