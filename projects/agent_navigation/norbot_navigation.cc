@@ -23,6 +23,7 @@
 #endif
 
 using namespace BoBRobotics;
+using namespace units::literals;
 
 auto
 loadObjects(const std::string &objectsPath)
@@ -102,7 +103,8 @@ bob_main(int argc, char **argv)
     }
 
     auto viconObject = vicon.getObject(0);
-    runNavigation(*tank, viconObject, forwardSpeed, camUnwrapped, objects);
+    const units::length::millimeter_t lim = 3000_mm;
+    runNavigation(*tank, viconObject, forwardSpeed, camUnwrapped, -lim, lim, -lim, lim, objects);
 
     return EXIT_SUCCESS;
 }

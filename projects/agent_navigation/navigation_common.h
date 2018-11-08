@@ -117,11 +117,15 @@ private:
 
 using ObjectType = std::pair<std::vector<millimeter_t>, std::vector<millimeter_t>>;
 
-template<typename T>
+template<typename PoseGetterType, typename LengthUnit>
 void runNavigation(Robots::Robot &robot,
-                   T &poseGetter,
+                   PoseGetterType &poseGetter,
                    const float forwardSpeed,
                    Video::Input &videoInput,
+                   const LengthUnit xLower,
+                   const LengthUnit xUpper,
+                   const LengthUnit yLower,
+                   const LengthUnit yUpper,
                    const std::vector<ObjectType> &objects = {})
 {
     const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
@@ -212,12 +216,10 @@ void runNavigation(Robots::Robot &robot,
             y.push_back(y[0]);
 
             plt::plot(x, y);
-            plt::xlabel("x (mm)");
-            plt::ylabel("y (mm)");
         }
 
         // Plot position of robot
-        plotAgent(poseGetter, { -3000, 3000 }, { -3000, 3000 });
+        plotAgent(poseGetter, xLower, xUpper, yLower, yUpper);
         if (trainingDatabase) {
             plt::title("Training");
         } else if (testing) {
