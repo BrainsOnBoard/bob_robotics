@@ -15,8 +15,8 @@
 #include <string>
 
 #define PI 3.14159
-#define WINDOW_WIDTH 800.0
-#define WINDOW_HEIGHT 600.0
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 #define SCALE_FACTOR 0.25
 
 using namespace units::literals;
@@ -97,7 +97,7 @@ public:
         SDL_RenderClear(renderer);
 
         // initial position and size of the robot car
-        dstrect = { 5, 5, 10, 13 };
+        dstrect = { WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 10, 13 };
 
         m_x = units::length::millimeter_t((float)dstrect.x *SCALE_FACTOR);
         m_y = units::length::millimeter_t((float)dstrect.y *SCALE_FACTOR);
