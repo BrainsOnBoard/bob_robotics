@@ -79,7 +79,7 @@ public:
                     if (fabs(m_JoystickY) > deadZone) {
                         moveForward(-m_JoystickY);
                     } else if (fabs(m_JoystickX) > deadZone) {
-                        turnOnTheSpot(-m_JoystickX);
+                        turnOnTheSpot(m_JoystickX);
                     } else {
                         stopMoving();
                     }
@@ -101,11 +101,6 @@ public:
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
-    GLFWwindow *getWindow() const
-    {
-        return m_Window;
-    }
-
     template<typename LengthUnit = meter_t, typename AngleUnit = degree_t>
     auto getPose()
     {
@@ -113,6 +108,12 @@ public:
         return std::make_pair(convertUnitArray<LengthUnit>(m_Position),
                               convertUnitArray<AngleUnit>(m_Attitude));
     }
+
+    GLFWwindow *getWindow() const
+    {
+        return m_Window;
+    }
+
 
     virtual degrees_per_second_t getMaximumTurnSpeed() override
     {
