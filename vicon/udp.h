@@ -158,6 +158,9 @@ class UDPClient
 public:
     class Object
     {
+        using millimeter_t = units::length::millimeter_t;
+        using radian_t = units::angle::radian_t;
+
     public:
         Object(UDPClient<ObjectDataType> &client, const unsigned id)
           : m_Client(client)
