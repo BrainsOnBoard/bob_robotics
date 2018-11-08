@@ -70,7 +70,7 @@ public:
 
     virtual degrees_per_second_t getMaximumTurnSpeed() override
     {
-        if (isnan(m_TurnSpeed.value())) {
+        if (std::isnan(m_TurnSpeed.value())) {
             return Tank::getMaximumTurnSpeed();
         } else {
             return m_TurnSpeed;
