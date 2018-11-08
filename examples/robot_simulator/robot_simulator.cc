@@ -15,7 +15,7 @@ using namespace units::literals;
 int main()
 {
     Robots::Simulator simulator;
-    while (true) {
+    while (!simulator.didQuit()) {
         simulator.simulationStep(1_mps, 100_deg_per_s, 10_ms);
         simulator.setRobotSize(16.4_cm, 35_cm);
         std::this_thread::sleep_for(10ms);

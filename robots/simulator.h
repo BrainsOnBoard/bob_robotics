@@ -78,6 +78,7 @@ private:
 
 public:
     Simulator()
+      : quit(false)
     {
         SDL_Init(SDL_INIT_VIDEO);
 
