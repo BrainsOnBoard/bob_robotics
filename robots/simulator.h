@@ -21,7 +21,8 @@
 
 using namespace units::literals;
 
-
+namespace BoBRobotics {
+namespace Robots {
 class Simulator {
 
 private:
@@ -228,4 +229,6 @@ public:
         x_mm = units::length::millimeter_t(x_pos / SCALE_FACTOR);
         y_mm = units::length::millimeter_t(y_pos / SCALE_FACTOR);
     }
-};
+}; // Simulator
+} // Robots
+} // BoBRobotics
