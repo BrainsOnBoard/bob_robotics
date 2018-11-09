@@ -42,7 +42,7 @@ public:
       , m_Input(&input)
     {
         // handle incoming IMG commands
-        m_Connection.addCommandHandler("IMG",
+        m_Connection.setCommandHandler("IMG",
                                        [this](Net::Connection &, const Net::Command &command) {
                                            onCommandReceivedAsync(command);
                                        });
@@ -62,7 +62,7 @@ public:
       , m_Input(nullptr)
     {
         // handle incoming IMG commands
-        m_Connection.addCommandHandler("IMG",
+        m_Connection.setCommandHandler("IMG",
                                        [this](Net::Connection &, const Net::Command &command) {
                                            onCommandReceivedSync(command);
                                        });
@@ -70,7 +70,8 @@ public:
 
     virtual ~NetSink()
     {
-        m_Connection.removeCommandHandler("IMG");
+        // Ignore IMG commands
+        m_Connection.setCommandHandler("IMG", nullptr);
 
         m_DoRun = false;
         if (m_Thread.joinable()) {

@@ -67,7 +67,7 @@ public:
     void readFromNetwork(Net::Connection &connection)
     {
         // handle incoming TNK commands
-        connection.addCommandHandler("TNK",
+        connection.setCommandHandler("TNK",
             [this](Net::Connection &connection, const Net::Command &command) {
                 onCommandReceived(connection, command);
             });
@@ -78,7 +78,8 @@ public:
     void stopReadingFromNetwork()
     {
         if (m_Connection) {
-            m_Connection->removeCommandHandler("TNK");
+            // Ignore TNK commands
+            m_Connection->setCommandHandler("TNK", nullptr);
         }
     }
 
