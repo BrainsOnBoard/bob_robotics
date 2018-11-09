@@ -29,9 +29,10 @@ public:
      * @param node The network connection from which to read images
      */
     NetSource(Net::Connection &connection)
+      : m_Connection(connection)
     {
         // Handle incoming IMG commands
-        connection.addCommandHandler("IMG", [this](Net::Connection &connection, const Net::Command &command) {
+        connection.setCommandHandler("IMG", [this](Net::Connection &connection, const Net::Command &command) {
             onCommandReceived(connection, command);
         });
 
@@ -41,8 +42,8 @@ public:
 
     virtual ~NetSource() override
     {
-        // Hold off on destroying m_Frame if it's still in use
-        std::lock_guard<std::mutex> guard(m_FrameMutex);
+        // Ignore IMG commands
+        m_Connection.setCommandHandler("IMG", nullptr);
     }
 
     virtual std::string getCameraName() const override
@@ -80,10 +81,11 @@ public:
 private:
     cv::Mat m_Frame;
     mutable Semaphore m_ParamsSemaphore;
-    std::mutex m_FrameMutex;
     std::vector<uchar> m_Buffer;
     std::string m_CameraName = DefaultCameraName;
+    Net::Connection &m_Connection;
     cv::Size m_CameraResolution;
+    std::mutex m_FrameMutex;
     std::atomic<bool> m_NewFrame{ false };
 
     void onCommandReceived(Net::Connection &connection, const Net::Command &command)
