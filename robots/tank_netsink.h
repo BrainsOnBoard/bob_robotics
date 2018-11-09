@@ -33,7 +33,7 @@ public:
     TankNetSink(Net::Connection &connection)
       : m_Connection(connection)
     {
-        connection.addCommandHandler("TRN", [this](Net::Connection &, const Net::Command &command) {
+        connection.setCommandHandler("TRN", [this](Net::Connection &, const Net::Command &command) {
             m_TurnSpeed = degrees_per_second_t(stod(command[1]));
         });
     }
@@ -42,7 +42,11 @@ public:
     {
         try {
             stopMoving();
-        } catch (...) {
+        } catch (OS::Net::NetworkError &e) {
+            std::cerr << "Warning: Caught exception while trying to send command: "
+                      << e.what() << std::endl;
+        } catch (Net::SocketClosedError &) {
+            // Socket has already been cleanly closed
         }
 
         stopReadingFromNetwork();

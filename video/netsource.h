@@ -32,7 +32,7 @@ public:
       : m_Connection(connection)
     {
         // Handle incoming IMG commands
-        connection.addCommandHandler("IMG", [this](Net::Connection &connection, const Net::Command &command) {
+        connection.setCommandHandler("IMG", [this](Net::Connection &connection, const Net::Command &command) {
             onCommandReceived(connection, command);
         });
 
@@ -42,7 +42,8 @@ public:
 
     virtual ~NetSource() override
     {
-        m_Connection.removeCommandHandler("IMG");
+        // Ignore IMG commands
+        m_Connection.setCommandHandler("IMG", nullptr);
     }
 
     virtual std::string getCameraName() const override

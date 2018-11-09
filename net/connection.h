@@ -88,17 +88,12 @@ public:
      * \brief Add a handler for a specified type of command
      *
      * e.g. if it's an IMG command, it should be handled by Video::NetSource.
+     * Set to nullptr to disable and ignore these commands.
      */
-    void addCommandHandler(const std::string &commandName, const CommandHandler handler)
+    void setCommandHandler(const std::string &commandName, const CommandHandler handler)
     {
         std::lock_guard<std::mutex> guard(*m_CommandHandlersMutex);
         m_CommandHandlers.emplace(commandName, handler);
-    }
-
-    void removeCommandHandler(const std::string &commandName)
-    {
-        std::lock_guard<std::mutex> guard(*m_CommandHandlersMutex);
-        m_CommandHandlers[commandName] = nullptr;
     }
 
     //! Read a specified number of bytes into a buffer
