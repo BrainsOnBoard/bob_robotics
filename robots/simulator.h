@@ -126,7 +126,15 @@ public:
         mouseClickY = WindowHeight/2;
     }
 
-    ~Simulator() {}
+    ~Simulator()
+    {
+        // freeing up resources
+        SDL_DestroyTexture(texture);
+        SDL_FreeSurface(image);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+    }
 
     //! sets the robot's size in millimeter
     void setRobotSize(const millimeter_t height,
@@ -158,12 +166,6 @@ public:
         switch (event.type) {
         case SDL_QUIT:
             quit = true;
-            // freeing up resources
-            SDL_DestroyTexture(texture);
-            SDL_FreeSurface(image);
-            SDL_DestroyRenderer(renderer);
-            SDL_DestroyWindow(window);
-            SDL_Quit();
             break;
 
         case SDL_KEYDOWN:
