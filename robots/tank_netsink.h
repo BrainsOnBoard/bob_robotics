@@ -21,7 +21,12 @@ public:
     {
         try {
             stopMoving();
-        } catch (...) {}
+        } catch (OS::Net::NetworkError &e) {
+            std::cerr << "Warning: Caught exception while trying to send command: "
+                      << e.what() << std::endl;
+        } catch (Net::SocketClosedError &) {
+            // Socket has already been cleanly closed
+        }
 
         stopReadingFromNetwork();
     }
