@@ -75,14 +75,13 @@ main()
             millimeter_t robotPoseX, robotPoseY;
             Robots::Simulator::changePixelToMM(pose[0], pose[1], robotPoseX, robotPoseY);
 
+            // update robot's current pose
+            robp.setPose(robotPoseX, robotPoseY, degree_t(pose[2]));
             if (robp.didReachGoal()) {
                 v = 0_mps;
                 w = 0_deg_per_s;
-
-                std::cout << "Reached goal!" << std::endl;
-                runPositioner = false;
             } else {
-                robp.updateVelocities(robotPoseX, robotPoseY, degree_t(pose[2]), v, w);
+                robp.updateVelocities(v, w);
             }
         }
 

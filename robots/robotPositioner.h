@@ -108,25 +108,25 @@ public:
         updateRangeAndBearing();
     }
 
+    //! updates the agent's current pose
+    void setPose(const millimeter_t x, const millimeter_t y, const degree_t theta)
+    {
+        m_pos_X = x;
+        m_pos_Y = y;
+        m_heading = theta;
+
+        // Recompute heading and distance from goal
+        updateRangeAndBearing();
+    }
+
     //! updates the velocities in order to get to a goal location. This function can be used
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
-        const millimeter_t pos_x,         // current X position of robot
-        const millimeter_t pos_y,         // current Y position of robot
-        const degree_t angle,             // current heading of robot
         meters_per_second_t &v,           // velocity to update
         degrees_per_second_t &w)          // angular velocity to update
 
     {
-
-        m_pos_X = pos_x;
-        m_pos_Y = pos_y;
-        m_heading = angle;
-
-        // updates the range and bearing
-        updateRangeAndBearing();
-
         // orientation of Target with respect to the line of sight from the observer to the target
         m_theta = m_heading + m_bearingFromGoal - m_goalAngle;
         m_theta = angleWrapAround(m_theta);
@@ -158,10 +158,11 @@ public:
         // recover Vl (left wheel velocity) and Vr (right wheel velocity)
         //                                       v = wheel_radius * (Vl+Vr)/2
         //                                       w = wheel_radius * (Vr-Vl)/axis_length
+        setPose(pos_x, pos_y, angle);
 
         meters_per_second_t v;
         degrees_per_second_t w;
-        updateVelocities(pos_x, pos_y, angle, v, w);
+        updateVelocities(v, w);
 
         const millimeter_t robot_wheel_radius = bot.getRobotWheelRadius();
         const millimeter_t robot_axis_length  = bot.getRobotAxisLength();
