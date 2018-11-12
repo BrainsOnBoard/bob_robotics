@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/pose.h"
-#include "robots/robotPositioner.h"
+#include "robots/robot_positioner.h"
 #include "robots/simulator.h"
 
 // Third-party includes
