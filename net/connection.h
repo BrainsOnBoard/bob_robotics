@@ -72,6 +72,7 @@ public:
       : m_Buffer(DefaultBufferSize)
       , m_Socket(std::forward<Ts>(args)...)
       , m_SendMutex(std::make_unique<std::mutex>())
+      , m_CommandHandlersMutex(std::make_unique<std::mutex>())
     {}
 
     virtual ~Connection() override
@@ -87,9 +88,11 @@ public:
      * \brief Add a handler for a specified type of command
      *
      * e.g. if it's an IMG command, it should be handled by Video::NetSource.
+     * Set to nullptr to disable and ignore these commands.
      */
-    void addCommandHandler(const std::string commandName, const CommandHandler handler)
+    void setCommandHandler(const std::string &commandName, const CommandHandler handler)
     {
+        std::lock_guard<std::mutex> guard(*m_CommandHandlersMutex);
         m_CommandHandlers.emplace(commandName, handler);
     }
 
@@ -108,7 +111,7 @@ public:
 
         // keep reading from socket until we have enough bytes
         while (length > 0) {
-            size_t nbytes = m_Socket.read(buffer, length);
+            size_t nbytes = m_Socket.read(cbuffer, length);
             cbuffer += nbytes;
             length -= nbytes;
         }
@@ -142,6 +145,7 @@ private:
     std::vector<char> m_Buffer;
     Socket m_Socket;
     std::unique_ptr<std::mutex> m_SendMutex;
+    std::unique_ptr<std::mutex> m_CommandHandlersMutex;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
 
@@ -154,21 +158,18 @@ private:
         if (command[0] == "HEY") {
             return true;
         }
-        if (tryRunHandler(command)) {
-            return true;
-        }
 
-        throw BadCommandError();
-    }
-
-    bool tryRunHandler(Command &command)
-    {
         try {
+            std::lock_guard<std::mutex> guard(*m_CommandHandlersMutex);
             CommandHandler &handler = m_CommandHandlers.at(command[0]);
-            handler(*this, command);
+
+            // handler will be nullptr if it has been removed
+            if (handler) {
+                handler(*this, command);
+            }
             return true;
         } catch (std::out_of_range &) {
-            return false;
+            throw BadCommandError();
         }
     }
 

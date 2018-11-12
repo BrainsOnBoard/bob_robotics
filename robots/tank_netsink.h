@@ -17,8 +17,22 @@ public:
       : m_Connection(connection)
     {}
 
-    /* Motor command: send TNK command over TCP */
-    void tank(float left, float right) override
+    virtual ~TankNetSink()
+    {
+        try {
+            stopMoving();
+        } catch (OS::Net::NetworkError &e) {
+            std::cerr << "Warning: Caught exception while trying to send command: "
+                      << e.what() << std::endl;
+        } catch (Net::SocketClosedError &) {
+            // Socket has already been cleanly closed
+        }
+
+        stopReadingFromNetwork();
+    }
+
+    //! Motor command: send TNK command over TCP
+    virtual void tank(float left, float right) override
     {
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
@@ -30,7 +44,7 @@ public:
 
         // send steering command
         m_Connection.getSocketWriter().send("TNK " + std::to_string(left) + " " +
-                                      std::to_string(right) + "\n");
+                                            std::to_string(right) + "\n");
 
         // store current left/right values to compare next time
         m_OldLeft = left;
