@@ -14,7 +14,7 @@ CPP_STANDARD ?= c++14
 CXXFLAGS += -std=$(CPP_STANDARD) -Wall -Wpedantic -Wextra -MMD -MP
 
 # Include the root BoB robotics folder
-CURRENT_DIR := $(strip $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST)))))
+CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
 CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
 
