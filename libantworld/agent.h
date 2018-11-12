@@ -21,6 +21,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -90,6 +91,7 @@ public:
     template<typename LengthUnit = meter_t>
     Vector3<LengthUnit> getPosition()
     {
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
         return convertUnitArray<LengthUnit>(m_Position);
     }
@@ -97,6 +99,7 @@ public:
     template<typename AngleUnit = degree_t>
     Vector3<AngleUnit> getAttitude()
     {
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
@@ -104,6 +107,7 @@ public:
     template<typename LengthUnit = meter_t, typename AngleUnit = degree_t>
     auto getPose()
     {
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
         return std::make_pair(convertUnitArray<LengthUnit>(m_Position),
                               convertUnitArray<AngleUnit>(m_Attitude));
@@ -140,12 +144,18 @@ public:
 
     virtual bool readFrame(cv::Mat &frame) override
     {
+        // If the agent is "moving", we need to calculate its current position
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
+        updatePose();
+
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
         const auto size = getOutputSize();
-        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2], m_Attitude[0], m_Attitude[1], m_Attitude[2], 0, 0, size.width, size.height);
+        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2],
+                                       m_Attitude[0], m_Attitude[1], m_Attitude[2],
+                                       0, 0, size.width, size.height);
 
         // Swap front and back buffers
         glfwSwapBuffers(m_Window);
@@ -156,6 +166,7 @@ public:
 
     virtual void stopMoving() override
     {
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
         m_MoveMode = MoveMode::NotMoving;
     }
@@ -163,6 +174,8 @@ public:
     virtual void moveForward(float speed) override
     {
         BOB_ASSERT(speed >= -1.f && speed <= 1.f);
+
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
         BOB_ASSERT(m_Attitude[1] == 0_deg && m_Attitude[2] == 0_deg);
 
         updatePose();
@@ -173,6 +186,8 @@ public:
     virtual void turnOnTheSpot(float clockwiseSpeed) override
     {
         BOB_ASSERT(clockwiseSpeed >= -1.f && clockwiseSpeed <= 1.f);
+
+        std::lock_guard<std::mutex> guard(m_PoseMutex);
         BOB_ASSERT(m_Attitude[1] == 0_deg && m_Attitude[2] == 0_deg);
 
         updatePose();
@@ -238,6 +253,7 @@ private:
     degrees_per_second_t m_TurnSpeed;
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
+    std::mutex m_PoseMutex;
     float m_JoystickX = 0.f, m_JoystickY = 0.f;
 
     TimeType m_MoveStartTime;
