@@ -161,16 +161,19 @@ public:
     }
 
     //! returns true if we did quit the simulator's gui
-    bool didQuit() {
+    bool didQuit() const
+    {
         return quit;
     }
 
     //! suimulates a step of the simulation with the provided velocities
-    void simulationStep(meters_per_second_t v,
+    bool simulationStep(meters_per_second_t v,
                         degrees_per_second_t w,
                         second_t delta_time
                         )
     {
+        bool ret = false;
+
         // Clear the entire screen to our selected color.
         SDL_RenderClear(renderer);
         SDL_PollEvent(&event);
@@ -196,6 +199,9 @@ public:
             case SDLK_DOWN:
                 v = -Velocity;
                 w = 0_deg_per_s;
+                break;
+            case SDLK_SPACE:
+                ret = true;
                 break;
             }
             break;
@@ -226,6 +232,8 @@ public:
         SDL_RenderCopyEx( renderer, texture, NULL, &dstrect, m_angle.value(), NULL, SDL_FLIP_NONE );
 
         SDL_RenderPresent(renderer);
+
+        return ret;
     }
 
     //! returns the current position of the robot
