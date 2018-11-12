@@ -71,16 +71,15 @@ private:
 
         if (w == 0_deg_per_s) {
             const meter_t r = v * dt;
-            m_x += r * cos(m_angle);
-            m_y += r * sin(m_angle);
+            setPose(m_x + r * cos(m_angle), m_y + r * sin(m_angle), m_angle);
         } else {
             // v = wr, but the units lib gives a mismatched units error for it
             const units::angular_velocity::radians_per_second_t w_rad = w;
             const meter_t r{ (v / w_rad).value() };
             const degree_t new_angle = m_angle + w * dt;
-            m_x += -r * sin(m_angle) + r * sin(new_angle);
-            m_y += r * cos(m_angle) - r * cos(new_angle);
-            m_angle = new_angle;
+            const auto x = m_x + -r * sin(m_angle) + r * sin(new_angle);
+            const auto y = m_y + r * cos(m_angle) - r * cos(new_angle);
+            setPose(x, y, new_angle);
         }
     }
 
@@ -136,6 +135,18 @@ public:
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
+    }
+
+    //! sets the current pose of the robot
+    void setPose(const millimeter_t x, const millimeter_t y, const degree_t theta)
+    {
+        m_x = x;
+        m_y = y;
+        m_angle = theta;
+
+        // Update agent's position in pixels
+        dstrect.x = m_x / MMPerPixel;
+        dstrect.y = m_y / MMPerPixel;
     }
 
     //! sets the robot's size in millimeter
@@ -204,10 +215,6 @@ public:
         }
 
         updatePose(v, w, delta_time);
-
-        // moving the robot
-        dstrect.x = m_x / MMPerPixel;
-        dstrect.y = m_y / MMPerPixel;
 
         // draw a rectangle at the goal position
         drawRectangleAtCoordinates(rect_goal , mouseClickX, mouseClickY);
