@@ -275,8 +275,8 @@ private:
         switch (m_MoveMode) {
         case MoveMode::MovingForward: {
             const meter_t dist = m_MoveSpeed * m_Velocity * elapsed;
-            m_Position[0] += dist * sin(m_Attitude[0]);
-            m_Position[1] += dist * cos(m_Attitude[0]);
+            m_Position[0] += dist * cos(m_Attitude[0]);
+            m_Position[1] += dist * sin(m_Attitude[0]);
         } break;
         case MoveMode::Turning:
             m_Attitude[0] -= m_MoveSpeed * m_TurnSpeed * elapsed;
