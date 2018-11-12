@@ -1,7 +1,7 @@
 # This makefile is just an easy way to standardise the compiler flags we're using
 # between different samples/mini-libraries.
 #
-# Just put "include ../common/flags.mk" in your makefile.
+# Just put "include (path to BoB robotics)/make_common/bob_robotics.mk" in your makefile.
 
 # Which processor architecture to build for
 ARCH ?= native
@@ -12,11 +12,20 @@ CPP_STANDARD ?= c++14
 
 # Build flags
 CXXFLAGS += -std=$(CPP_STANDARD) -Wall -Wpedantic -Wextra -MMD -MP
+
+# Include the root BoB robotics folder
+CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
+CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
+
+# Debug mode: includes debug symbols, disables optimisation and sets DEBUG macro
 ifdef DEBUG
 	CXXFLAGS += -g -O0 -DDEBUG
 else
 	CXXFLAGS += -O2
 endif
+
+# For printing network messages (see net/ folder)
 ifdef TRACE_NET
 	CXXFLAGS += -DTRACE_NET
 endif
@@ -35,6 +44,11 @@ CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
+# Add support for libantworld
+ifdef WITH_LIBANTWORLD
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+endif
+
 # Build with OpenCV
 ifndef NO_OPENCV
 	CXXFLAGS += `pkg-config --cflags opencv`
@@ -42,12 +56,8 @@ ifndef NO_OPENCV
 endif
 
 ifdef WITH_LIBBEBOP
-	ifndef LIBBEBOP_PATH
-$(error Must set LIBBEBOP_PATH)
-	endif
-
 	# libbebop
-	LINK_FLAGS += -L$(LIBBEBOP_PATH) -lbebop
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop
 
 	# ARSDK
 	# We set the rpath so that compiled programs can find the folder with the ARSDK
@@ -90,7 +100,7 @@ ifdef WITH_MATPLOTLIBCPP
 endif
 
 ifdef WITH_I2C
-	ifeq (0,$(shell ../../common/is_i2c_tools_new.sh; echo $$?))
+	ifeq (0,$(shell $(CURRENT_DIR)/is_i2c_tools_new.sh; echo $$?))
 	LINK_FLAGS += -li2c
 	endif
 endif

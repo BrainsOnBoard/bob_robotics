@@ -1,5 +1,4 @@
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := optical_flow_test
 

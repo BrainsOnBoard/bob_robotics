@@ -1,6 +1,5 @@
 NO_OPENCV := 1
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := obj_process
 
