@@ -1,10 +1,7 @@
 #pragma once
 
-// Standard C includes
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
+// BoB robotics includes
+#include "tank.h"
 
 // POSIX networking includes
 #include <arpa/inet.h>
@@ -13,11 +10,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// BoB robotics includes
-#include "tank.h"
+// Standard C includes
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
@@ -28,10 +31,10 @@ namespace Robots {
  */
 class Surveyor : public Tank
 {
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     Surveyor(const std::string &address, uint16_t port)
-      : m_robotWheelRadius(19_mm)
-      , m_robotAxisLength(150_mm)
     {
         // Create socket
         m_Socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -88,12 +91,12 @@ public:
 
     virtual millimeter_t getRobotWheelRadius() override
     {
-        return m_robotWheelRadius;
+        return 19_mm;
     }
 
     virtual millimeter_t getRobotAxisLength() override
     {
-        return m_robotAxisLength;
+        return 150_mm;
     }
 
 private:
@@ -101,8 +104,6 @@ private:
     // Private members
     //----------------------------------------------------------------------------
     int m_Socket;
-    millimeter_t m_robotWheelRadius;
-    millimeter_t m_robotAxisLength;
 }; // Surveyor
 } // Robots
 } // BoBRobotics

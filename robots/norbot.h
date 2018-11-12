@@ -16,13 +16,15 @@
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
 class Norbot : public Tank
 {
-using millimeter_t = units::length::millimeter_t;
+    using millimeter_t = units::length::millimeter_t;
 
 public:
     Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
@@ -58,12 +60,12 @@ public:
 
     virtual millimeter_t getRobotWheelRadius() override
     {
-        return WheelRadius;
+        return 34_mm;
     }
 
     virtual millimeter_t getRobotAxisLength() override
     {
-        return AxisLength;
+        return 104_mm;
     }
 
     //----------------------------------------------------------------------------
@@ -108,9 +110,6 @@ private:
     BoBRobotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
-
-    static constexpr millimeter_t WheelRadius{ 34 };
-    static constexpr millimeter_t AxisLength{ 104 };
 }; // Norbot
 } // Robots
 } // BoBRobotics
