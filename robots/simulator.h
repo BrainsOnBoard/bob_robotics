@@ -25,7 +25,7 @@ private:
     using degree_t = units::angle::degree_t;
     using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
-    using millisecond_t = units::time::millisecond_t;
+    using second_t = units::time::second_t;
 
     // Agent's forward velocity and turning speed
     static constexpr meters_per_second_t Velocity = 1_mps;
@@ -60,25 +60,28 @@ private:
 
     void updatePose(const meters_per_second_t v,
                     const degrees_per_second_t w,
-                    const millisecond_t dt)
+                    const second_t dt)
     {
+        using namespace units::length;
         using namespace units::math;
 
         // set current velocities
         m_v = v;
         m_w = w;
 
-        // v = wr, but the units lib gives a mismatched units error for it
-        const units::angular_velocity::radians_per_second_t w_rad = w;
-        const units::length::meter_t r{ (v / w_rad).value() };
-
-        // calculating next position, given velocity commands - v and w
-        const degree_t new_angle = m_angle + w * dt;
-        const auto x_part = -r * sin(m_angle) + r * sin(new_angle);
-        const auto y_part = r * cos(m_angle) - r * cos(new_angle);
-        m_x += x_part;
-        m_y += y_part;
-        m_angle = new_angle;
+        if (w == 0_deg_per_s) {
+            const meter_t r = v * dt;
+            m_x += r * cos(m_angle);
+            m_y += r * sin(m_angle);
+        } else {
+            // v = wr, but the units lib gives a mismatched units error for it
+            const units::angular_velocity::radians_per_second_t w_rad = w;
+            const meter_t r{ (v / w_rad).value() };
+            const degree_t new_angle = m_angle + w * dt;
+            m_x += -r * sin(m_angle) + r * sin(new_angle);
+            m_y += r * cos(m_angle) - r * cos(new_angle);
+            m_angle = new_angle;
+        }
     }
 
     //! draws the rectangle at the desired coordinates
@@ -154,10 +157,10 @@ public:
     //! suimulates a step of the simulation with the provided velocities
     void simulationStep(meters_per_second_t v,
                         degrees_per_second_t w,
-                        millisecond_t delta_time
+                        second_t delta_time
                         )
     {
-         // Clear the entire screen to our selected color.
+        // Clear the entire screen to our selected color.
         SDL_RenderClear(renderer);
         SDL_PollEvent(&event);
 
@@ -177,11 +180,11 @@ public:
                 break;
             case SDLK_UP:
                 v = Velocity;
-                w = 1e-10_deg_per_s;
+                w = 0_deg_per_s;
                 break;
             case SDLK_DOWN:
                 v = -Velocity;
-                w = 1e-10_deg_per_s;
+                w = 0_deg_per_s;
                 break;
             }
             break;
@@ -197,11 +200,6 @@ public:
             break;
 
         default:
-            // adding a small value to avoid dividing by 0
-            if (v == 0_mps && w == 0_deg_per_s) {
-                v = 1e-10_mps;
-                w = 1e-10_deg_per_s;
-            }
             break;
         }
 
