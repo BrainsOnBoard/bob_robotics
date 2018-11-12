@@ -1,12 +1,19 @@
 #pragma once
 
-// C++ includes
-#include <stdexcept>
-#include <string>
-
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../hid/joystick.h"
 #include "../net/node.h"
+#include "robot.h"
+
+// Standard C includes
+#include <cmath>
+
+// Standard C++ includes
+#include <algorithm>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 // third party includes
 #include "../third_party/units.h"
@@ -18,42 +25,59 @@ namespace Robots {
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
 class Tank
+  : public Robot
 {
 public:
-    virtual ~Tank()
-    {}
+    virtual void moveForward(float speed) override
+    {
+        tank(speed, speed);
+    }
+
+    virtual void turnOnTheSpot(float clockwiseSpeed) override
+    {
+        tank(clockwiseSpeed, -clockwiseSpeed);
+    }
+
+    virtual void stopMoving() override
+    {
+        tank(0.f, 0.f);
+    }
 
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
         joystick.addHandler(
-            [this, deadZone](HID::JAxis axis, float value)
-            {
-                return onJoystickEvent(axis, value, deadZone);
-            });
+                [this, deadZone](HID::JAxis axis, float value) {
+                    return onJoystickEvent(axis, value, deadZone);
+                });
     }
 
     void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-              joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
+              joystick.getState(HID::JAxis::LeftStickVertical),
+              deadZone);
     }
 
+    //! Set the left and right motors to the specified speed
     virtual void tank(float left, float right)
     {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
         std::cout << "Dummy motor: left: " << left << "; right: " << right
                   << std::endl;
     }
 
-    virtual units::length::millimeter_t getRobotWheelRadius() 
+    virtual units::length::millimeter_t getRobotWheelRadius()
     {
         throw std::runtime_error("getRobotWheelRadius() is not implemented for this class");
     }
 
-    virtual units::length::millimeter_t getRobotAxisLength() 
+    virtual units::length::millimeter_t getRobotAxisLength()
     {
         throw std::runtime_error("getRobotAxisLength() is not implemented for this class");
     }
 
+    //! Controls the robot with a network stream
     void readFromNetwork(Net::Node &node)
     {
         // handle incoming TNK commands
@@ -81,7 +105,8 @@ private:
             tank(x, -x);
         } else {
             // If length of joystick vector places it in deadZone, stop motors
-            const float r = sqrt((x * x) + (y * y));
+            float r = hypot(x, y);
+            r = std::min(1.f, r);
             const float theta = atan2(x, -y);
             const float twoTheta = 2.0f * theta;
 

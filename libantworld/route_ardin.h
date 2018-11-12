@@ -1,17 +1,20 @@
 #pragma once
 
-// Standard C++ includes
-#include <array>
-#include <set>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../common/pose.h"
+
+// Third-party includes
+#include "../third_party/units.h"
 
 // OpenGL includes
 #include <GL/glew.h>
 #include <GL/glu.h>
 
-// Third-party includes
-#include "../third_party/units.h"
+// Standard C++ includes
+#include <array>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics
 {
@@ -46,6 +49,16 @@ public:
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(meter_t x, meter_t y, bool error);
 
+    const Vector2<meter_t> &getMinBound()
+    {
+        return m_MinBound;
+    }
+
+    const Vector2<meter_t> &getMaxBound()
+    {
+        return m_MaxBound;
+    }
+
     size_t size() const{ return m_Waypoints.size(); }
 
     //------------------------------------------------------------------------
@@ -73,6 +86,10 @@ private:
     GLuint m_OverlayVAO;
     GLuint m_OverlayPositionVBO;
     GLuint m_OverlayColoursVBO;
+
+    Vector2<meter_t> m_MinBound;
+    Vector2<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
+

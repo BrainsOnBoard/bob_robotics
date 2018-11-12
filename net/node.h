@@ -1,21 +1,53 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/threadable.h"
+#include "socket.h"
+
 // Standard C++ includes
 #include <atomic>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-// BoB robotics includes
-#include "../common/threadable.h"
-
-// Local includes
-#include "socket.h"
-
 namespace BoBRobotics {
 namespace Net {
+//! Provides a thread-safe interface for writing to Sockets
+class SocketWriter {
+public:
+    SocketWriter(Socket &socket, std::mutex &mutex)
+      : m_Socket(socket)
+      , m_Mutex(mutex)
+    {
+        m_Mutex.lock();
+    }
+
+    ~SocketWriter()
+    {
+        m_Mutex.unlock();
+    }
+
+    // Object is non-copyable
+    SocketWriter(const SocketWriter &) = delete;
+    void operator=(const SocketWriter &) = delete;
+    SocketWriter(SocketWriter &&) = default;
+    SocketWriter &operator=(SocketWriter &&) = default;
+
+    //! Send data via the Socket
+    template<typename... Args>
+    void send(Args&&... args)
+    {
+        m_Socket.send(std::forward<Args>(args)...);
+    }
+
+private:
+    Socket &m_Socket;
+    std::mutex &m_Mutex;
+};
+
 class Node; // forward declaration
 
 //! A callback function to handle incoming commands over the network
@@ -31,12 +63,9 @@ using ConnectedHandler = std::function<void(Node &)>;
 class Node : public Threadable
 {
 public:
-    //! Gets the socket currently associated with this connection
-    virtual Socket *getSocket() const = 0;
-
     /*!
      * \brief Add a handler for a specified type of command
-     * 
+     *
      * e.g. if it's an IMG command, it should be handled by Video::NetSource.
      */
     void addCommandHandler(const std::string commandName, const CommandHandler handler)
@@ -53,23 +82,26 @@ public:
         }
     }
 
-    //! Repeatedly read and parse commands from the socket until stopped
-    void run() override
-    {
-        while (m_DoRun) {
-            Socket *sock = getSocket();
-            auto command = sock->readCommand();
-            if (!parseCommand(command)) {
-                break;
-            }
-        }
-    }
-    
     //! Return true if this Node is currently connected
     bool isConnected() const{ return m_IsConnected; }
 
+    //! Read from this Node's Socket into buffer
+    void read(void *buffer, size_t len)
+    {
+        getSocket()->read(buffer, len);
+    }
+
+    //! Return a transaction object for writing to this Node's Socket
+    SocketWriter getSocketWriter()
+    {
+        return SocketWriter(*getSocket(), m_SendMutex);
+    }
+
 protected:
-    std::atomic<bool> m_IsConnected{false};
+    std::atomic<bool> m_IsConnected{ false };
+
+    //! Gets the socket currently associated with this connection
+    virtual Socket *getSocket() = 0;
 
     void notifyConnectedHandlers()
     {
@@ -79,9 +111,33 @@ protected:
         }
     }
 
-    virtual bool parseCommand(Command &command)
+    virtual void runInternal() override
+    {
+        Command command;
+        do {
+            command = getSocket()->readCommand();
+        } while (isRunning() && parseCommand(command));
+    }
+
+    void disconnect()
+    {
+        stop();
+        Socket *sock = getSocket();
+        if (sock && sock->valid()) {
+            sock->send("BYE\n");
+            sock->close();
+        }
+    }
+
+private:
+    std::map<std::string, CommandHandler> m_CommandHandlers;
+    std::mutex m_SendMutex;
+    std::vector<ConnectedHandler> m_ConnectedHandlers;
+
+    bool parseCommand(Command &command)
     {
         if (command[0] == "BYE") {
+            getSocket()->close();
             return false;
         }
         if (command[0] == "HEY") {
@@ -89,9 +145,9 @@ protected:
         }
         if (tryRunHandler(command)) {
             return true;
-        } else {
-            throw BadCommandError();
         }
+
+        throw BadCommandError();
     }
 
     bool tryRunHandler(Command &command)
@@ -104,10 +160,6 @@ protected:
             return false;
         }
     }
-
-private:
-    std::map<std::string, CommandHandler> m_CommandHandlers;
-    std::vector<ConnectedHandler> m_ConnectedHandlers;
 
 }; // Node
 } // Net

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['stone_20et_20al_2e_20model_20of_20path_20integration',['Stone et al. Model of path integration',['../md_projects_stone_cx_README.html',1,'']]],
-  ['savesnapshot',['saveSnapshot',['../classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a241f6e22dd27098d7bc153427e31aca0',1,'BoBRobotics::Navigation::VisualNavigationBase']]],
   ['scalar_5funit',['scalar_unit',['../namespaceunits_1_1category.html#a6a8e59826a504070a1904837b0a80e58',1,'units::category']]],
   ['see3cam_5fcu40',['See3CAM_CU40',['../classBoBRobotics_1_1Video_1_1See3CAM__CU40.html',1,'BoBRobotics::Video']]],
   ['select_5fnpy_5ftype',['select_npy_type',['../structmatplotlibcpp_1_1select__npy__type.html',1,'matplotlibcpp']]],
@@ -21,9 +20,10 @@ var searchData=
   ['sendframe',['sendFrame',['../classBoBRobotics_1_1Video_1_1NetSink.html#a4642f3bfb7a291d99958065f9c163404',1,'BoBRobotics::Video::NetSink']]],
   ['server',['Server',['../classBoBRobotics_1_1Net_1_1Server.html',1,'BoBRobotics::Net::Server'],['../classBoBRobotics_1_1Net_1_1Server.html#ae66fe720dd6896d3fdc65da0dc5e78e8',1,'BoBRobotics::Net::Server::Server()']]],
   ['setflighteventhandler',['setFlightEventHandler',['../classBoBRobotics_1_1Robots_1_1Bebop.html#a22b22a92aa2578ddde061670b0b59b93',1,'BoBRobotics::Robots::Bebop']]],
-  ['setmaskimage',['setMaskImage',['../classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#aafb7009773a48771e25520041dda82eb',1,'BoBRobotics::Navigation::VisualNavigationBase']]],
+  ['setmaskimage',['setMaskImage',['../classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a897ca87fe635b0970e3e12e3a61c616d',1,'BoBRobotics::Navigation::VisualNavigationBase']]],
   ['setoutputsize',['setOutputSize',['../classBoBRobotics_1_1Video_1_1Input.html#acc9d9390fbe7760b885bac78eb7fa5b9',1,'BoBRobotics::Video::Input::setOutputSize()'],['../classBoBRobotics_1_1Video_1_1OpenCVInput.html#ad5db36d1c62ed58ded4558fe546b0b41',1,'BoBRobotics::Video::OpenCVInput::setOutputSize()']]],
   ['setpitch',['setPitch',['../classBoBRobotics_1_1Robots_1_1Bebop.html#a7147700018a7ed76808ded40137c74a0',1,'BoBRobotics::Robots::Bebop']]],
+  ['setposition',['setPosition',['../classBoBRobotics_1_1Robots_1_1Gantry.html#a9f25b4030181f829384429ae1cb668b6',1,'BoBRobotics::Robots::Gantry']]],
   ['setroll',['setRoll',['../classBoBRobotics_1_1Robots_1_1Bebop.html#a2cb5e144ba566057d01847fc3ef351bc',1,'BoBRobotics::Robots::Bebop']]],
   ['setsocket',['setSocket',['../classBoBRobotics_1_1Net_1_1Socket.html#aa8106f3b2be09c5d1d99660195a1f081',1,'BoBRobotics::Net::Socket']]],
   ['setverticalspeed',['setVerticalSpeed',['../classBoBRobotics_1_1Robots_1_1Bebop.html#aeb3108f861e37fd279657b2d73b62f37',1,'BoBRobotics::Robots::Bebop']]],
@@ -38,6 +38,7 @@ var searchData=
   ['spikecsvrecorder',['SpikeCSVRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorder.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikecsvrecordercached',['SpikeCSVRecorderCached',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderCached.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikecsvrecorderdelay',['SpikeCSVRecorderDelay',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelay.html',1,'BoBRobotics::GeNNUtils']]],
+  ['spikecsvrecorderdelaycached',['SpikeCSVRecorderDelayCached',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelayCached.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikerecorder',['SpikeRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeRecorder.html',1,'BoBRobotics::GeNNUtils']]],
   ['spikerenderer',['SpikeRenderer',['../classBoBRobotics_1_1GeNNUtils_1_1SpikeRenderer.html',1,'BoBRobotics::GeNNUtils']]],
   ['sqrt',['sqrt',['../group__UnitMath.html#gae52f60a9e2a9e7ad1018a846bcf49140',1,'units::math']]],
@@ -49,7 +50,9 @@ var searchData=
   ['statereleased',['StateReleased',['../namespaceBoBRobotics_1_1HID.html#a71b9d0f7acdc0b32f717ada7451fed1da23a0155d09d58c6c0988a67adb1da8c9',1,'BoBRobotics::HID']]],
   ['stdpdopamine',['STDPDopamine',['../classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html',1,'BoBRobotics::GeNNModels']]],
   ['stop',['stop',['../classBoBRobotics_1_1Threadable.html#a5876dea45f829d0e31640f223a0fdc59',1,'BoBRobotics::Threadable']]],
-  ['stopmoving',['stopMoving',['../classBoBRobotics_1_1Robots_1_1Bebop.html#afd1ba2c92f263805d5f2d9e7792671b3',1,'BoBRobotics::Robots::Bebop']]],
+  ['stopmoving',['stopMoving',['../classBoBRobotics_1_1Robots_1_1Bebop.html#afd1ba2c92f263805d5f2d9e7792671b3',1,'BoBRobotics::Robots::Bebop::stopMoving()'],['../classBoBRobotics_1_1Robots_1_1Gantry.html#a3afa18652c7b051dbb01aebea30bb192',1,'BoBRobotics::Robots::Gantry::stopMoving()']]],
   ['substance_5funit',['substance_unit',['../namespaceunits_1_1category.html#a8f8455cfcc9594b58e2c499095408ff4',1,'units::category']]],
-  ['surveyor',['Surveyor',['../classBoBRobotics_1_1Robots_1_1Surveyor.html',1,'BoBRobotics::Robots']]]
+  ['support_5fcode_2eh',['support_code.h',['../support__code_8h.html',1,'']]],
+  ['surveyor',['Surveyor',['../classBoBRobotics_1_1Robots_1_1Surveyor.html',1,'BoBRobotics::Robots']]],
+  ['synapsefnct_2ecc',['synapseFnct.cc',['../synapseFnct_8cc.html',1,'']]]
 ];

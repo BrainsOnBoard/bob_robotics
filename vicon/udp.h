@@ -1,5 +1,12 @@
 #pragma once
 
+// POSIX networking includes
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
@@ -10,21 +17,10 @@
 #include <vector>
 
 // Standard C includes
-#include <cassert>
 #include <cstring>
 
-// Networking includes
-#ifdef _WIN32
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
-    #include <sys/types.h>
-    #include <unistd.h>
-#endif
-
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/pose.h"
 
 namespace BoBRobotics
@@ -75,13 +71,13 @@ public:
     }
 
     template <class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude()
+    Vector3<AngleUnit> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
@@ -166,7 +162,7 @@ class UDPClient
 {
 public:
     UDPClient(){}
-    UDPClient(unsigned int port)
+    UDPClient(uint16_t port)
     {
         if(!connect(port)) {
             throw std::runtime_error("Cannot connect");
@@ -185,7 +181,7 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(unsigned int port)
+    bool connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -262,7 +258,7 @@ private:
 
         /*
          * Update object data with position and attitude.
-         * 
+         *
          * Note that we reorder the rotation angles we get from the Vicon system
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).
@@ -286,7 +282,7 @@ private:
         for(unsigned int f = 0; !m_ShouldQuit; f++) {
             // Read datagram
             const ssize_t bytesReceived = recvfrom(socket, &buffer[0], 1024,
-                                                   0, NULL, NULL);
+                                                   0, nullptr, nullptr);
 
             // If there was an error
             if(bytesReceived == -1) {
@@ -318,7 +314,7 @@ private:
                     // Read size of item
                     uint16_t itemDataSize;
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
-                    assert(itemDataSize == 72);
+                    BOB_ASSERT(itemDataSize == 72);
 
                     // Read object position
                     Vector3<double> position;

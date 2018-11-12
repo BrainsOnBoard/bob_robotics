@@ -1,18 +1,16 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/pose.h"
+#include "../video/opengl.h"
+#include "common.h"
+#include "renderer.h"
+
 // OpenGL includes
 #include <GL/glew.h>
 
 // GLFW
 #include <GLFW/glfw3.h>
-
-// Libantworld includes
-#include "common.h"
-#include "renderer.h"
-
-// BoB robotics includes
-#include "../common/pose.h"
-#include "../video/opengl.h"
 
 namespace BoBRobotics {
 namespace AntWorld {

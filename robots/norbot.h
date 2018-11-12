@@ -1,15 +1,15 @@
 #pragma once
 
-// Standard C++ includes
-#include <vector>
+// BoB robotics includes
+#include "../common/i2c_interface.h"
+#include "tank.h"
 
 // Standard C includes
 #include <cmath>
 #include <cstdint>
 
-// Common includes
-#include "../common/i2c_interface.h"
-#include "tank.h"
+// Standard C++ includes
+#include <vector>
 
 // third party includes
 #include "../third_party/units.h"
@@ -34,8 +34,16 @@ public:
     //----------------------------------------------------------------------------
     // Tank virtuals
     //----------------------------------------------------------------------------
+    virtual ~Norbot() override
+    {
+        stopMoving();
+    }
+
     virtual void tank(float left, float right) override
     {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
+
         // Cache left and right
         m_Left = left;
         m_Right = right;

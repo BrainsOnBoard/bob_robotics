@@ -1,18 +1,22 @@
 #pragma once
 
-// Standard C++ includes
-#include <stdexcept>
-#include <string>
+// BoBRobotics includes
+#include "../imgproc/opencv_unwrap_360.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoBRobotics includes
-#include "../imgproc/opencv_unwrap_360.h"
+// Standard C++ includes
+#include <stdexcept>
+#include <string>
+#include <chrono>
+#include <stdexcept>
+#include <string>
+#include <thread>
 
 namespace BoBRobotics {
 namespace Video {
-#define DefaultCameraName "unknown_camera"
+using namespace std::literals;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::Input
@@ -26,14 +30,11 @@ public:
 
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
-     * 
-     * @param args The resolution of the unwrapped image, as cv::Size or two ints
+     *
+     * @param unwrapRes The resolution of the unwrapped image
      */
-    template<typename... Ts>
-    ImgProc::OpenCVUnwrap360 createUnwrapper(Ts &&... args)
+    ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
     {
-        cv::Size unwrapRes(std::forward<Ts>(args)...);
-
         // Create unwrapper and return
         return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes,
                                         getCameraName());
@@ -41,28 +42,26 @@ public:
 
     /*!
      * \brief Get the name of this type of camera as a (short) string
-     * 
+     *
      * Note that this is used to load the appropriate unwrapping parameters
      * (we look for a file called [camera name].yaml).
      */
-    virtual const std::string getCameraName() const
+    virtual std::string getCameraName() const
     {
         return DefaultCameraName;
     }
 
     /*!
      * \brief Try to read a frame in greyscale from this video source
-     * 
+     *
      * @return Whether a new frame was read
      */
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
     {
         // If reading (colour frame) was successful
         if(readFrame(m_IntermediateFrame)) {
-            // If output frame isn't correct size, create it
-            if(outFrame.size() != m_IntermediateFrame.size()) {
-                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
-            }
+            // Make sure frame is of right size and type
+            outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
 
             // Convert intermediate frame to greyscale
             cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
@@ -91,13 +90,38 @@ public:
 
     /*!
      * \brief Try to read a frame in colour from this video source
-     * 
+     *
      * @return Whether a new frame was read
      */
     virtual bool readFrame(cv::Mat &outFrame) = 0;
 
+    //! Read a frame synchronously, blocking until a new frame is received
+    void readFrameSync(cv::Mat &outFrame)
+    {
+        while (!readFrame(outFrame)) {
+            std::this_thread::sleep_for(10ms);
+        }
+    }
+
+    //! Allows OpenCV to serialise info about this Input
+    void write(cv::FileStorage& fs) const
+    {
+        fs << "{";
+        fs << "name" << getCameraName();
+        fs << "resolution" << getOutputSize();
+        fs << "isPanoramic" << needsUnwrapping();
+        fs << "}";
+    }
+
+    static constexpr const char *DefaultCameraName = "unknown_camera";
 private:
     cv::Mat m_IntermediateFrame;
 }; // Input
+
+//! More OpenCV boilerplate
+inline void write(cv::FileStorage &fs, const std::string &, const Input &camera)
+{
+    camera.write(fs);
+}
 } // Video
 } // BoBRobotics

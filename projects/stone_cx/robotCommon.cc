@@ -1,6 +1,7 @@
 #include "robotCommon.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <iostream>
 #include <numeric>
 
@@ -21,6 +22,10 @@ float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Norbot &moto
     if(display) {
         std::cout << "Steer:" << steering << std::endl;
     }
-    motor.tank(1.0f + (4.0f * steering), 1.0f - (4.0f * steering));
+
+    // Clamp motor input values to be between -1 and 1
+    const float left = 1.0f + (4.0f * steering);
+    const float right = 1.0f - (4.0f * steering);
+    motor.tank(std::max(-1.f, std::min(1.f, left)), std::max(-1.f, std::min(1.f, right)));
     return steering;
 }

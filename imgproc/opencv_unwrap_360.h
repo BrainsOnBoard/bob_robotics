@@ -1,18 +1,21 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 // Standard C++ includes
 #include <iostream>
 #include <stdexcept>
 
 // Standard C includes
-#include <cassert>
 #include <cmath>
 #include <cstdlib>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
-// BoBRobotics includes
+// Third-party includes
+#include "../third_party/units.h"
 #include "../third_party/path.h"
 
 //----------------------------------------------------------------------------
@@ -20,6 +23,9 @@
 //----------------------------------------------------------------------------
 namespace BoBRobotics {
 namespace ImgProc {
+using namespace units::angle;
+using namespace units::literals;
+
 class OpenCVUnwrap360
 {
 public:
@@ -32,7 +38,7 @@ public:
                     double centreY = 0.5,
                     double inner = 0.1,
                     double outer = 0.5,
-                    int offsetDegrees = 0,
+                    degree_t offsetAngle = 0.0_deg,
                     bool flip = false)
     {
         create(cameraResolution,
@@ -41,7 +47,7 @@ public:
                centreY,
                inner,
                outer,
-               offsetDegrees,
+               offsetAngle,
                flip);
     }
 
@@ -96,7 +102,7 @@ public:
                 double centreY = 0.5,
                 double inner = 0.1,
                 double outer = 0.5,
-                int offsetDegrees = 0,
+                degree_t offsetAngle = 0_deg,
                 bool flip = false)
     {
         // convert relative (0.0 to 1.0) to absolute pixel values
@@ -109,7 +115,7 @@ public:
         // Save params
         m_CameraResolution = cameraResolution;
         m_UnwrappedResolution = unwrappedResolution;
-        m_OffsetDegrees = offsetDegrees;
+        m_OffsetAngle = offsetAngle;
         m_Flip = flip;
 
         // Build unwrap maps
@@ -119,8 +125,6 @@ public:
     void updateMaps()
     {
         // Build unwrap maps
-        const float pi = 3.141592653589793238462643383279502884f;
-        float offsetRadians = m_OffsetDegrees * pi / 180.0f;
         for (int i = 0; i < m_UnwrappedResolution.height; i++) {
             for (int j = 0; j < m_UnwrappedResolution.width; j++) {
                 // Get i as a fraction of unwrapped height, flipping if desired
@@ -133,14 +137,14 @@ public:
                 // Convert i and j to polar
                 const float r =
                         iFrac * (m_OuterPixel - m_InnerPixel) + m_InnerPixel;
-                const float th =
-                        (((float) j / (float) m_UnwrappedResolution.width) *
-                         2.0f * pi) +
-                        offsetRadians;
+                const degree_t th =
+                        (((double) j / (double)m_UnwrappedResolution.width) *
+                        360.0_deg) +
+                        m_OffsetAngle;
 
                 // Remap onto sphere
-                const float x = m_CentrePixel.x - r * sin(th);
-                const float y = m_CentrePixel.y + r * cos(th);
+                const float x = m_CentrePixel.x - r * units::math::sin(th);
+                const float y = m_CentrePixel.y + r * units::math::cos(th);
                 m_UnwrapMapX.at<float>(i, j) = x;
                 m_UnwrapMapY.at<float>(i, j) = y;
             }
@@ -172,7 +176,7 @@ public:
            << (double) m_OuterPixel / (double) m_CameraResolution.height;
 
         // other
-        fs << "offsetDegrees" << m_OffsetDegrees;
+        fs << "offsetDegrees" << m_OffsetAngle.value();
         fs << "flip" << m_Flip;
         fs << "}";
     }
@@ -188,8 +192,8 @@ public:
          * We need to already know the camera resolution otherwise we won't be
          * able to convert the parameters from relative to absolute values.
          */
-        assert(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
-        assert(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
+        BOB_ASSERT(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
+        BOB_ASSERT(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
 
         // centre
         std::vector<double> centre(2);
@@ -200,7 +204,7 @@ public:
         double outer = (double) node["outer"];
 
         // other params
-        int offsetDegrees = (int) node["offsetDegrees"];
+        degree_t offsetAngle = units::make_unit<degree_t>((double)node["offsetDegrees"]);
         bool flip;
         node["flip"] >> flip;
 
@@ -211,14 +215,14 @@ public:
                centre[1],
                inner,
                outer,
-               offsetDegrees,
+               offsetAngle,
                flip);
     }
 
     // Public members
     cv::Point m_CentrePixel;
     int m_InnerPixel = 0, m_OuterPixel = 0;
-    int m_OffsetDegrees = 0;
+    degree_t m_OffsetAngle = 0.0_deg;
     bool m_Flip = false;
 
 private:

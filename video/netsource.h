@@ -1,19 +1,18 @@
 #pragma once
 
-// C++ includes
-#include <future>
-#include <mutex>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../common/semaphore.h"
+#include "../net/node.h"
+#include "input.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "../net/node.h"
-
-// local includes
-#include "input.h"
+// Standard C++ includes
+#include <atomic>
+#include <mutex>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Video {
@@ -26,7 +25,7 @@ class NetSource : public Input
 public:
     /*!
      * \brief Create an object to read video transmitted over the network
-     * 
+     *
      * @param node The network connection from which to read images
      */
     NetSource(Net::Node &node)
@@ -38,48 +37,56 @@ public:
 
         // when connected, send command to start streaming
         node.addConnectedHandler([](Net::Node &node) {
-            node.getSocket()->send("IMG START\n");
+            node.getSocketWriter().send("IMG START\n");
         });
     }
 
-    const std::string getCameraName() const override
+    virtual ~NetSource() override
     {
+        // Hold off on destroying m_Frame if it's still in use
+        std::lock_guard<std::mutex> guard(m_FrameMutex);
+    }
+
+    virtual std::string getCameraName() const override
+    {
+        m_ParamsSemaphore.waitOnce();
         return m_CameraName;
     }
 
-    cv::Size getOutputSize() const override
+    virtual cv::Size getOutputSize() const override
     {
+        m_ParamsSemaphore.waitOnce();
         return m_CameraResolution;
     }
 
-    bool needsUnwrapping() const override
+    virtual bool needsUnwrapping() const override
     {
-        m_ParamsPromise.get_future().wait();
+        m_ParamsSemaphore.waitOnce();
         return Input::needsUnwrapping();
     }
 
-    bool readFrame(cv::Mat &frame) override
+    virtual bool readFrame(cv::Mat &frame) override
     {
-        std::lock_guard<std::mutex> guard(m_FrameMutex);
-
-        // The return value indicates whether there is a new frame or not
-        if (!m_NewFrame) {
+        if (!m_NewFrame.exchange(false)) {
+            // The return value indicates whether there is a new frame or not
             return false;
-        }
+        } else {
+            std::lock_guard<std::mutex> guard(m_FrameMutex);
 
-        // Copy latest frame and return true
-        m_Frame.copyTo(frame);
-        return true;
+            // Copy latest frame and return true
+            m_Frame.copyTo(frame);
+            return true;
+        }
     }
 
 private:
+    cv::Mat m_Frame;
+    mutable Semaphore m_ParamsSemaphore;
+    std::mutex m_FrameMutex;
+    std::vector<uchar> m_Buffer;
     std::string m_CameraName = DefaultCameraName;
     cv::Size m_CameraResolution;
-    std::vector<uchar> m_Buffer;
-    cv::Mat m_Frame;
-    std::mutex m_FrameMutex;
-    bool m_NewFrame = false;
-    mutable std::promise<void> m_ParamsPromise;
+    std::atomic<bool> m_NewFrame{ false };
 
     void onCommandReceived(Net::Node &node, const Net::Command &command)
     {
@@ -87,16 +94,15 @@ private:
             m_CameraResolution.width = stoi(command[2]);
             m_CameraResolution.height = stoi(command[3]);
             m_CameraName = command[4];
-            m_ParamsPromise.set_value();
+            m_ParamsSemaphore.notify();
         } else if (command[1] == "FRAME") {
-            size_t nbytes = stoi(command[2]);
+            const auto nbytes = static_cast<size_t>(stoul(command[2]));
             m_Buffer.resize(nbytes);
-            node.getSocket()->read(m_Buffer.data(), nbytes);
-            {
-                std::lock_guard<std::mutex> guard(m_FrameMutex);
-                cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
-                m_NewFrame = true;
-            }
+            node.read(m_Buffer.data(), nbytes);
+
+            std::lock_guard<std::mutex> guard(m_FrameMutex);
+            cv::imdecode(m_Buffer, cv::IMREAD_UNCHANGED, &m_Frame);
+            m_NewFrame = true;
         } else {
             throw Net::BadCommandError();
         }

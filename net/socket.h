@@ -5,24 +5,19 @@
 
 #pragma once
 
-// Standard C includes
-#include <cerrno>
-#include <cstring>
+// BoB robotics includes
+#include "../os/net.h"
 
 // Standard C++ includes
 #include <algorithm>
-#include <chrono>
+#include <atomic>
 #include <iostream>
 #include <iterator>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
-
-// BoB robotics includes
-#include "../os/net.h"
 
 namespace BoBRobotics {
 namespace Net {
@@ -34,17 +29,25 @@ using Command = std::vector<std::string>;
 class SocketError : public std::runtime_error
 {
 public:
-    SocketError(std::string msg)
-      : std::runtime_error("Socket error: " + msg)
+    SocketError(const std::string &msg)
+      : std::runtime_error(msg + " (" + std::to_string(OS::Net::lastError()) + ": " + OS::Net::errorMessage() + ")")
+    {}
+};
+
+//! An exception thrown if the socket is deliberately being closed
+class SocketClosingError : public std::runtime_error
+{
+public:
+    SocketClosingError() : std::runtime_error("Socket is closed")
     {}
 };
 
 //! An exception thrown if a command received over the network is badly formed
-class BadCommandError : public SocketError
+class BadCommandError : public std::runtime_error
 {
 public:
     BadCommandError()
-      : SocketError("Bad command received")
+      : std::runtime_error("Bad command received")
     {}
 };
 
@@ -53,11 +56,11 @@ public:
 //----------------------------------------------------------------------------
 /*!
  * \brief A class for operating on sockets in a platform-independent way
- * 
+ *
  * In Windows, this class represents an underlying SOCKET pointer and in *nix,
  * it represents a socket's file handle. This class provides convenience methods
  * for sending and receiving data from the socket.
- * 
+ *
  * A typical (plaintext) command sent over a socket looks like this:
  *     TNK 0.5 0.5
  * where the first word indicates the command name and the other words are parameters.
@@ -71,15 +74,13 @@ public:
 
     /*!
      * \brief Initialise class without a Socket set
-     * 
+     *
      * The Socket can be set later with setSocket().
      */
     Socket(bool print = PrintDebug)
       : m_Buffer(DefaultBufferSize)
       , m_Print(print)
-    {
-        m_Buffer.resize(DefaultBufferSize);
-    }
+    {}
 
     //! Initialise class with specified socket
     Socket(socket_t sock, bool print = PrintDebug)
@@ -88,12 +89,24 @@ public:
         setSocket(sock);
     }
 
-    //! Close the socket
     virtual ~Socket()
     {
-        if (m_Socket != INVALID_SOCKET) {
-            close(m_Socket);
+        close();
+    }
+
+    //! Close the socket
+    void close()
+    {
+        if (valid() && !m_Closing.exchange(true)) {
+            ::close(m_Socket);
+            m_Socket = INVALID_SOCKET;
         }
+    }
+
+    //! Check if the socket is being closed or is already closed
+    bool closing() const
+    {
+        return m_Closing;
     }
 
     //! Get the current socket handle this object holds
@@ -102,21 +115,25 @@ public:
         return m_Socket;
     }
 
+    //! Check whether socket is open and usable
+    bool valid() const
+    {
+        return m_Socket != INVALID_SOCKET;
+    }
+
     //! Read a plaintext command, splitting it into separate words
     Command readCommand()
     {
         std::string line = readLine();
         std::istringstream iss(line);
-        Command results(
-                std::istream_iterator<std::string>{ iss },
-                std::istream_iterator<std::string>());
+        Command results(std::istream_iterator<std::string>{ iss },
+                        std::istream_iterator<std::string>());
         return results;
     }
 
     //! Read a specified number of bytes into a buffer
     void read(void *buffer, size_t len)
     {
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
 
         // initially, copy over any leftover bytes in m_Buffer
@@ -140,7 +157,6 @@ public:
     //! Read a single line in, stopping at a newline char
     std::string readLine()
     {
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
         checkSocket();
 
         std::ostringstream oss;
@@ -177,12 +193,11 @@ public:
     //! Send a buffer of specified length through the socket
     void send(const void *buffer, size_t len)
     {
-        std::lock_guard<std::mutex> guard(m_SendMutex);
         checkSocket();
 
-        int ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), MSG_NOSIGNAL);
+        const auto ret = ::send(m_Socket, static_cast<sendbuff_t>(buffer), static_cast<bufflen_t>(len), OS::Net::sendFlags);
         if (ret == -1) {
-            throw SocketError("Could not send " + errorMessage());
+            throwError("Could not send");
         }
     }
 
@@ -199,8 +214,6 @@ public:
     //! Set the current socket handle for this connection
     void setSocket(socket_t sock)
     {
-        std::lock_guard<std::mutex> guard(m_ReadMutex);
-
         m_Socket = sock;
         checkSocket();
     }
@@ -209,13 +222,11 @@ private:
     std::vector<char> m_Buffer;
     size_t m_BufferStart = 0;
     size_t m_BufferBytes = 0;
-    std::mutex m_ReadMutex, m_SendMutex;
-    bool m_Print;
     socket_t m_Socket = INVALID_SOCKET;
+    std::atomic<bool> m_Closing{ false };
+    bool m_Print;
 
-    /*
-     * Debit the byte store by specified amount.
-     */
+    // Debit the byte store by specified amount
     void debitBytes(size_t nbytes)
     {
         m_BufferStart += nbytes;
@@ -225,35 +236,33 @@ private:
         m_BufferBytes -= nbytes;
     }
 
-    /*
-     * Check that the current socket is valid.
-     */
+    // Check that the current socket is valid and throw an exception otherwise
     void checkSocket()
     {
-        if (m_Socket == INVALID_SOCKET) {
-            throw SocketError("Bad socket " + errorMessage());
+        if (!valid()) {
+            throwError("Bad socket");
         }
     }
 
-    /*
-     * Make a single call to read/recv.
-     */
+    // Make a single call to recv.
     size_t readOnce(char *buffer, size_t start, size_t maxlen)
     {
-        int len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
+        const auto len = recv(m_Socket, static_cast<readbuff_t>(&buffer[start]), static_cast<bufflen_t>(maxlen), 0);
         if (len == -1) {
-            throw SocketError("Could not read from socket " + errorMessage());
+            throwError("Could not read from socket");
         }
 
         return static_cast<size_t>(len);
     }
 
-    /*
-     * Get the last error message.
-     */
-    static std::string errorMessage()
+    void throwError(const std::string &msg)
     {
-        return " (" + std::to_string(errno) + ": " + std::strerror(errno) + ")";
+        if (closing()) {
+            throw SocketClosingError();
+        } else {
+            close();
+            throw SocketError(msg);
+        }
     }
 }; // Socket
 } // Net

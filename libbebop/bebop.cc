@@ -1,5 +1,8 @@
 #include "bebop.h"
 
+// BoB robotics includes
+#include "../common/assert.h"
+
 /*
  * Little macros to make using the ARSDK's C API less verbose.
  */
@@ -82,20 +85,6 @@ Bebop::~Bebop()
 }
 
 /*!
- * \brief Start controlling this drone with a joystick.
- */
-void
-Bebop::addJoystick(HID::Joystick &joystick)
-{
-    joystick.addHandler([this](HID::JAxis axis, float value) {
-        return onAxisEvent(axis, value);
-    });
-    joystick.addHandler([this](HID::JButton button, bool pressed) {
-        return onButtonEvent(button, pressed);
-    });
-}
-
-/*!
  * \brief Send take-off command.
  */
 void
@@ -135,7 +124,7 @@ Bebop::getVideoStream()
 
 /*!
  * \brief Return the current maximum tilt setting.
- * 
+ *
  * This affects pitch and roll.
  */
 degree_t
@@ -148,7 +137,7 @@ Bebop::getMaximumTilt() const
  * \brief Return the minimum and maximum permitted values for the maximum tilt
  *        setting.
  */
-Limits<degree_t> &
+std::pair<degree_t, degree_t> &
 Bebop::getTiltLimits()
 {
     return m_TiltLimits.getLimits();
@@ -167,7 +156,7 @@ Bebop::getMaximumVerticalSpeed() const
  * \brief Return the minimum and maximum permitted values for the maximum
  *        vertical speed setting.
  */
-Limits<meters_per_second_t> &
+std::pair<meters_per_second_t, meters_per_second_t> &
 Bebop::getVerticalSpeedLimits()
 {
     return m_VerticalSpeedLimits.getLimits();
@@ -186,7 +175,7 @@ Bebop::getMaximumYawSpeed() const
  * \brief Return the minimum and maximum permitted values for the maximum yaw
  *        speed setting.
  */
-Limits<degrees_per_second_t> &
+std::pair<degrees_per_second_t, degrees_per_second_t> &
 Bebop::getYawSpeedLimits()
 {
     return m_YawSpeedLimits.getLimits();
@@ -198,7 +187,7 @@ Bebop::getYawSpeedLimits()
 void
 Bebop::setPitch(float pitch)
 {
-    pitch = std::min(1.0f, std::max(-1.0f, pitch)); // cap value
+    BOB_ASSERT(pitch >= -1.f && pitch <= 1.f);
     DRONE_COMMAND(setPilotingPCMDPitch, round(pitch * 100.0f));
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
@@ -209,7 +198,7 @@ Bebop::setPitch(float pitch)
 void
 Bebop::setRoll(float right)
 {
-    right = std::min(1.0f, std::max(-1.0f, right)); // cap value
+    BOB_ASSERT(right >= -1.f && right <= 1.f);
     DRONE_COMMAND(setPilotingPCMDRoll, round(right * 100.0f));
     DRONE_COMMAND(setPilotingPCMDFlag, 1);
 }
@@ -220,7 +209,7 @@ Bebop::setRoll(float right)
 void
 Bebop::setVerticalSpeed(float up)
 {
-    up = std::min(1.0f, std::max(-1.0f, up)); // cap value
+    BOB_ASSERT(up >= -1.f && up <= 1.f);
     DRONE_COMMAND(setPilotingPCMDGaz, round(up * 100.0f));
 }
 
@@ -230,20 +219,16 @@ Bebop::setVerticalSpeed(float up)
 void
 Bebop::setYawSpeed(float right)
 {
-    right = std::min(1.0f, std::max(-1.0f, right)); // cap value
+    BOB_ASSERT(right >= -1.f && right <= 1.f);
     DRONE_COMMAND(setPilotingPCMDYaw, round(right * 100.0f));
 }
 
-/*!
- * \brief Stop the drone from moving along all axes.
- */
+//! Carry out flat trim calibration
 void
-Bebop::stopMoving()
+Bebop::doFlatTrimCalibration()
 {
-    setPitch(0);
-    setRoll(0);
-    setYawSpeed(0);
-    setVerticalSpeed(0);
+    DRONE_COMMAND_NO_ARG(sendPilotingFlatTrim);
+    m_FlatTrimSemaphore.wait();
 }
 
 /*!
@@ -277,12 +262,12 @@ Bebop::connect()
     checkError(ARCONTROLLER_Device_Start(m_Device.get()));
 
     // wait for start
-    eARCONTROLLER_DEVICE_STATE state;
+    Bebop::State state;
     do {
         state = getStateUpdate();
-    } while (state == ARCONTROLLER_DEVICE_STATE_STARTING);
+    } while (state == Bebop::State::Starting);
 
-    if (state != ARCONTROLLER_DEVICE_STATE_RUNNING) {
+    if (state != Bebop::State::Running) {
         throw std::runtime_error("Could not connect to drone");
     }
 
@@ -303,12 +288,12 @@ Bebop::disconnect()
         checkError(ARCONTROLLER_Device_Stop(m_Device.get()));
 
         // wait for stop
-        eARCONTROLLER_DEVICE_STATE state;
+        Bebop::State state;
         do {
             state = getStateUpdate();
-        } while (state == ARCONTROLLER_DEVICE_STATE_STOPPING);
+        } while (state == Bebop::State::Stopping);
 
-        if (state != ARCONTROLLER_DEVICE_STATE_STOPPED) {
+        if (state != Bebop::State::Stopped) {
             std::cerr << "Warning: Could not disconnect from drone" << std::endl;
         }
     }
@@ -321,11 +306,11 @@ inline void
 Bebop::createControllerDevice()
 {
     // create discovery device
-    static const auto deleter = [](ARDISCOVERY_Device_t *discover) {
+    static const auto deleter = [](ARDISCOVERY_Device_t *&discover) {
         ARDISCOVERY_Device_Delete(&discover);
     };
     auto derr = ARDISCOVERY_OK;
-    const std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
+    std::unique_ptr<ARDISCOVERY_Device_t, decltype(deleter)> discover(ARDISCOVERY_Device_New(&derr), deleter);
     checkError(derr);
 
     // try to discover device on network
@@ -338,7 +323,7 @@ Bebop::createControllerDevice()
     // create controller object
     auto err = ARCONTROLLER_OK;
     m_Device = ControllerPtr(ARCONTROLLER_Device_New(discover.get(), &err),
-                             [](ARCONTROLLER_Device_t *dev) {
+                             [](ARCONTROLLER_Device_t *&dev) {
                                  ARCONTROLLER_Device_Delete(&dev);
                              });
     checkError(err);
@@ -397,23 +382,31 @@ Bebop::stopStreaming()
  * Wait for the drone to send a state-update command and return the new
  * state.
  */
-inline eARCONTROLLER_DEVICE_STATE
+inline Bebop::State
 Bebop::getStateUpdate()
 {
-    m_Semaphore.wait();
+    m_StateSemaphore.wait();
     return getState();
 }
 
 /*
  * Return the drone's connection state.
  */
-inline eARCONTROLLER_DEVICE_STATE
+Bebop::State
 Bebop::getState()
 {
     auto err = ARCONTROLLER_OK;
-    const auto state = ARCONTROLLER_Device_GetState(m_Device.get(), &err);
+    const Bebop::State state = static_cast<Bebop::State>(ARCONTROLLER_Device_GetState(m_Device.get(), &err));
     checkError(err);
     return state;
+}
+
+//! Get the drone's battery level from 0.0f to 1.0f
+float
+Bebop::getBatteryLevel()
+{
+    m_BatteryLevelSemaphore.waitOnce();
+    return static_cast<float>(m_BatteryLevel) / 100.f;
 }
 
 /*
@@ -422,7 +415,7 @@ Bebop::getState()
  * Prints the battery state whenever it changes.
  */
 inline void
-Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
+Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
@@ -439,8 +432,8 @@ Bebop::onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const
             val);
 
     if (val) {
-        // print battery status
-        std::cout << "Battery: " << (int) val->value.U8 << "%" << std::endl;
+        m_BatteryLevel = val->value.U8;
+        m_BatteryLevelSemaphore.notify();
     }
 }
 
@@ -466,7 +459,7 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
                     void *data)
 {
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
-    bebop->m_Semaphore.notify(); // trigger semaphore used by get_state_update()
+    bebop->m_StateSemaphore.notify(); // trigger semaphore used by getStateUpdate()
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
@@ -506,6 +499,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED:
         bebop->onBatteryChanged(dict);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED:
+        alertStateChanged(dict);
+        break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
         MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
         break;
@@ -515,68 +511,82 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_SPEEDSETTINGSSTATE_MAXVERTICALSPEEDCHANGED:
         MAX_SPEED_CHANGED(VerticalSpeed, SPEEDSETTINGSSTATE_MAXVERTICALSPEED);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED:
+        productVersionReceived(dict);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE:
+        magnetometerCalibrationStateReceived(dict);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLATTRIMCHANGED:
+        bebop->m_FlatTrimSemaphore.notify();
+        break;
     default:
         break;
     }
 }
 
-/*
- * Handle joystick axis events.
- */
-bool
-Bebop::onAxisEvent(HID::JAxis axis, float value)
+void
+Bebop::magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
-    /* 
-     * setRoll/Pitch etc. all take values between -1 and 1. We cap these 
-     * values for the joystick code to make the drone more controllable. 
-     */
-    switch (axis) {
-    case HID::JAxis::RightStickHorizontal:
-        setRoll(value);
-        return true;
-    case HID::JAxis::RightStickVertical:
-        setPitch(-value);
-        return true;
-    case HID::JAxis::LeftStickVertical:
-        setVerticalSpeed(-value);
-        return true;
-    case HID::JAxis::LeftTrigger:
-        setYawSpeed(-value);
-        return true;
-    case HID::JAxis::RightTrigger:
-        setYawSpeed(value);
-        return true;
-    default:
-        // otherwise signal that we haven't handled event
-        return false;
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED, arg);
+        if (arg && arg->value.U8) {
+            std::cout << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!" << std::endl;
+        }
     }
 }
 
-/*
- * Handle joystick button events.
- */
-bool
-Bebop::onButtonEvent(HID::JButton button, bool pressed)
+void
+Bebop::alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
-    // we only care about button presses
-    if (!pressed) {
-        return false;
-    }
-
-    // A = take off; B = land
-    switch (button) {
-    case HID::JButton::A:
-        takeOff();
-        return true;
-    case HID::JButton::B:
-        land();
-        return true;
-    default:
-        // otherwise signal that we haven't handled event
-        return false;
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
+        if (arg) {
+            switch (arg->value.I32) {
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
+                std::cout << "Alert! User emergency alert" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
+                std::cout << "Alert! Drone has cut out" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+                std::cout << "Alert! Battery level is critical" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+                std::cout << "Alert! Battery level is low" << std::endl;
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
+                std::cout << "Alert! The angle of the drone is too high" << std::endl;
+                break;
+            default:
+                break;
+            }
+        }
     }
 }
 
-/** END PRIVATE MEMBERS **/
+void
+Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (elem) {
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
+        if (arg) {
+            std::cout << "Bebop software version: " << arg->value.String << std::endl;
+        }
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
+        if (arg) {
+            std::cout << "Bebop hardware version: " << arg->value.String << std::endl;
+        }
+    }
+}
 } // Robots
 } // BoBRobotics

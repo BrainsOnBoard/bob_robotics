@@ -1,22 +1,27 @@
 #pragma once
 
-// C++ includes
-#include <mutex>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../common/background_exception.h"
+#include "../common/semaphore.h"
+#include "../net/node.h"
+#include "input.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "../common/semaphore.h"
-#include "../net/node.h"
-
-// local includes
-#include "input.h"
+// Standard C++ includes
+#include <atomic>
+#include <chrono>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <thread>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Video {
+using namespace std::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::NetSink
 //----------------------------------------------------------------------------
@@ -26,49 +31,49 @@ class NetSink
 public:
     /*!
      * \brief Create a NetSink for asynchronous operation
-     * 
+     *
      * @param node The connection over which to transmit images
      * @param input The Input source for images
      */
     NetSink(Net::Node &node, Input &input)
-    :   m_Node(node), m_Input(&input), m_FrameSize(input.getOutputSize()), m_Name(input.getCameraName())
+      : m_Node(node)
+      , m_Name(input.getCameraName())
+      , m_FrameSize(input.getOutputSize())
+      , m_Input(&input)
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command &command)
-                                 {
+                                 [this](Net::Node &, const Net::Command &command) {
                                      onCommandReceivedAsync(command);
                                  });
     }
 
-    virtual ~NetSink()
-    {
-        if (m_ThreadRunning) {
-            if (m_Thread.joinable()) {
-                m_Thread.join();
-            }
-            else {
-                m_Thread.detach();
-            }
-        }
-    }
-
     /*!
      * \brief Create a NetSink for synchronous operation
-     * 
+     *
      * @param node The connection over which to transmit images
      * @param frameSize The size of the frames output by the video source
      * @param cameraName The name of the camera (see Input::getCameraName())
      */
     NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &cameraName)
-    :   m_Node(node), m_Input(nullptr), m_FrameSize(frameSize), m_Name(cameraName)
+      : m_Node(node)
+      , m_Name(cameraName)
+      , m_FrameSize(frameSize)
+      , m_Input(nullptr)
     {
         // handle incoming IMG commands
         m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command &command)
-                                 {
+                                 [this](Net::Node &, const Net::Command &command) {
                                      onCommandReceivedSync(command);
                                  });
+    }
+
+    virtual ~NetSink()
+    {
+        m_DoRun = false;
+        if (m_Thread.joinable()) {
+            m_Thread.join();
+        }
     }
 
     //----------------------------------------------------------------------------
@@ -78,15 +83,13 @@ public:
     void sendFrame(const cv::Mat &frame)
     {
         // If node is connected
-        if(m_Node.isConnected()) {
+        if (m_Node.isConnected()) {
             // Wait for start acknowledgement
             m_AckSemaphore.waitOnce();
 
             sendFrameInternal(frame);
         }
     }
-
-
 
 private:
     //----------------------------------------------------------------------------
@@ -95,8 +98,10 @@ private:
     void sendFrameInternal(const cv::Mat &frame)
     {
         cv::imencode(".jpg", frame, m_Buffer);
-        m_Node.getSocket()->send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
-        m_Node.getSocket()->send(m_Buffer.data(), m_Buffer.size());
+
+        auto socket = m_Node.getSocketWriter();
+        socket.send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
+        socket.send(m_Buffer.data(), m_Buffer.size());
     }
 
     void onCommandReceived(const Net::Command &command)
@@ -106,9 +111,9 @@ private:
         }
 
         // ACK the command and tell client the camera resolution
-        m_Node.getSocket()->send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
-                                 std::to_string(m_FrameSize.height) + " " +
-                                 m_Name + "\n");
+        m_Node.getSocketWriter().send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
+                                      std::to_string(m_FrameSize.height) + " " +
+                                      m_Name + "\n");
     }
 
     void onCommandReceivedAsync(const Net::Command &command)
@@ -117,7 +122,6 @@ private:
         onCommandReceived(command);
 
         // start thread to transmit images in background
-        m_ThreadRunning = true;
         m_Thread = std::thread(&NetSink::runAsync, this);
     }
 
@@ -132,9 +136,17 @@ private:
 
     void runAsync()
     {
-        cv::Mat frame;
-        while (m_ThreadRunning && m_Input->readFrame(frame)) {
-            sendFrameInternal(frame);
+        try {
+            cv::Mat frame;
+            while (m_DoRun) {
+                if (m_Input->readFrame(frame)) {
+                    sendFrameInternal(frame);
+                } else {
+                    std::this_thread::sleep_for(25ms);
+                }
+            }
+        } catch (...) {
+            BackgroundException::set(std::current_exception());
         }
     }
 
@@ -142,13 +154,13 @@ private:
     // Members
     //----------------------------------------------------------------------------
     Net::Node &m_Node;
-    Input *m_Input;
-    const cv::Size m_FrameSize;
-    const std::string m_Name;
-    std::thread m_Thread;
-    std::vector<uchar> m_Buffer;
     Semaphore m_AckSemaphore;
-    bool m_ThreadRunning = false;
+    const std::string m_Name;
+    std::vector<uchar> m_Buffer;
+    std::thread m_Thread;
+    const cv::Size m_FrameSize;
+    Input *m_Input;
+    std::atomic<bool> m_DoRun{ true };
 };
-}   // Video
-}   // BoBRobotics
+} // Video
+} // BoBRobotics

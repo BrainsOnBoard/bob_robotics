@@ -1,20 +1,17 @@
 #pragma once
 
+// BoB robotics includes
+#include "input.h"
+#include "v4l_camera.h"
+
+// OpenCV includes
+#include <opencv2/imgproc/imgproc.hpp>
+
 // Standard C++ includes
 #include <chrono>
 #include <numeric>
 #include <stdexcept>
 #include <thread>
-
-// OpenCV includes
-#include <opencv2/imgproc/imgproc.hpp>
-
-// Common includes
-#include "input.h"
-#include "v4l_camera.h"
-
-// Linux device name
-#define SEE3CAM_DEVICE_NAME "See3CAM_CU40"
 
 /* NEON version of captureSuperPixel - fun but doesn't actually help performance
 // Create tables to use for shuffling BGIR data into BGR
@@ -63,6 +60,9 @@ full of RGB data uint8x16_t out8 = vcombine_u8(outA, outB);
 
 namespace BoBRobotics {
 namespace Video {
+// Linux device name
+constexpr const char *See3CamDeviceName = "See3CAM_CU40";
+
 //------------------------------------------------------------------------
 // BoBRobotics::Video::See3CAM_CU40
 //------------------------------------------------------------------------
@@ -94,7 +94,7 @@ public:
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
-    virtual const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return "see3cam";
     }
@@ -105,7 +105,7 @@ public:
         if (outFrame.cols == 0) {
             outFrame.create(getSuperPixelSize(), CV_8UC3);
         }
-        
+
         // Try to read from camera and throw error if it fails
         if (!captureSuperPixelWBU30(outFrame)) {
             throw std::runtime_error("Could not read from See3Cam");
@@ -189,9 +189,9 @@ public:
         // quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
-        assert(output.cols == (int) inputWidth / 2);
-        assert(output.rows == (int) inputHeight / 2);
-        assert(output.type() == CV_8UC1);
+        BOB_ASSERT(output.cols == (int) inputWidth / 2);
+        BOB_ASSERT(output.rows == (int) inputHeight / 2);
+        BOB_ASSERT(output.type() == CV_8UC1);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
@@ -199,7 +199,7 @@ public:
         uint32_t sizeBytes = 0;
         if (Video4LinuxCamera::capture(data, sizeBytes)) {
             // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            BOB_ASSERT(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
             const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
 
             // Loop through bayer pixels
@@ -242,9 +242,9 @@ public:
 
         // Check validity of mask
         const bool noMask = (mask.cols == 0 && mask.rows == 0);
-        assert(noMask || (mask.cols == (int) (inputWidth / 2) &&
+        BOB_ASSERT(noMask || (mask.cols == (int) (inputWidth / 2) &&
                           mask.rows == (int) (inputHeight / 2)));
-        assert(noMask || mask.type() == CV_8UC1);
+        BOB_ASSERT(noMask || mask.type() == CV_8UC1);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
@@ -252,7 +252,7 @@ public:
         uint32_t sizeBytes = 0;
         if (Video4LinuxCamera::capture(data, sizeBytes)) {
             // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            BOB_ASSERT(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
             const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
 
             // Zero a 10-bit RGB histogram for each colour channel
@@ -292,7 +292,7 @@ public:
             }
 
             // Check pixel count
-            assert(!noMask || numPixels == (inputWidth * inputHeight / 4));
+            BOB_ASSERT(!noMask || numPixels == (inputWidth * inputHeight / 4));
 
             // Sum together entropy for each colour channel
             float entropy = 0.0f;
@@ -327,7 +327,7 @@ public:
         int32_t brightness = m_BrightnessControl.minimum;
         int32_t exposure = std::max(m_ExposureControl.minimum,
                                     brightness * brightnessExposureConstant);
-        assert(exposure < m_ExposureControl.maximum);
+        BOB_ASSERT(exposure < m_ExposureControl.maximum);
 
         // Loop until we've
         int32_t previousBrightness = 0;
@@ -598,9 +598,9 @@ private:
         // quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
-        assert(output.cols == (int) inputWidth / 2);
-        assert(output.rows == (int) inputHeight / 2);
-        assert(output.type() == CV_8UC3);
+        BOB_ASSERT(output.cols == (int) inputWidth / 2);
+        BOB_ASSERT(output.rows == (int) inputHeight / 2);
+        BOB_ASSERT(output.type() == CV_8UC3);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
@@ -608,7 +608,7 @@ private:
         uint32_t sizeBytes = 0;
         if (Video4LinuxCamera::capture(data, sizeBytes)) {
             // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+            BOB_ASSERT(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
             const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
 
             // Loop through bayer pixels

@@ -1,6 +1,4 @@
 namespace BoBRobotics {
-/*!
- * \brief Robot platforms used in BoBRobotics
- */
+//! Robot platforms used in BoB robotics
 namespace Robots {}
 }

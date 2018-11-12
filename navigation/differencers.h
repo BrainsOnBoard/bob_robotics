@@ -83,7 +83,7 @@ public:
 class RMSDiff
 {
     public:
-    RMSDiff(const int imSize) : m_Differences(imSize)
+    RMSDiff(const size_t imSize) : m_Differences(imSize)
     {}
 
     template<typename InputArray1, typename InputArray2, typename OutputArray>
@@ -94,7 +94,7 @@ class RMSDiff
         cv::absdiff(src1, src2, dst);
         const auto sqDiff = [](const auto val)
         {
-            const float d = (float) val;
+            const auto d = static_cast<float>(val);
             return d * d;
         };
         std::transform(Internal::begin(dst), Internal::end(dst), std::begin(m_Differences), sqDiff);
