@@ -27,10 +27,12 @@ int main()
         // Get time since last frame
         const auto currentTime = now();
         const auto dt = currentTime - lastTime;
+
+        // Render simulation
         simulator.simulationStep(0_mps, 0_deg_per_s, dt);
-        lastTime = currentTime;
 
         // Put a small delay in
         std::this_thread::sleep_for(10ms);
+        lastTime = currentTime;
     }
 }

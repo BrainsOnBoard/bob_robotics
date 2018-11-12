@@ -10,6 +10,8 @@
 // Standard C includes
 #include <cmath>
 
+#define PI 3.142
+
 namespace BoBRobotics {
 namespace Robots {
 
@@ -89,11 +91,11 @@ public:
         ) : m_stopping_distance(stopping_distance),
             m_allowed_heading_error(allowed_heading_error),
             m_max_velocity(max_velocity),
+            m_maxTurningVelocity(max_turning_velocity),
             m_k1(k1),
             m_k2(k2),
             m_alpha(alpha),
-            m_beta(beta),
-            m_maxTurningVelocity(max_turning_velocity)
+            m_beta(beta)
     {  }
 
     //! sets the goal pose (x, y, angle)
@@ -131,10 +133,10 @@ public:
 
         meter_t distanceFromGoalMeters = m_distanceFromGoal;
 
-       
-        float k = (1/distanceFromGoalMeters.value()) * ( m_k2* (m_bearingFromGoal.value() - atan(-m_k1*m_theta.value()*PI/180)*180/PI) + 
+
+        float k = (1/distanceFromGoalMeters.value()) * ( m_k2* (m_bearingFromGoal.value() - atan(-m_k1*m_theta.value()*PI/180)*180/PI) +
 				1+(m_k1/(1+pow(m_k1*m_theta.value(),2)))*sin(m_bearingFromGoal.value()*PI/180)*180/PI);
-     
+
         v = m_max_velocity/scalar_t( (1+m_beta*pow(std::abs(k),m_alpha)));
         w = degrees_per_second_t(k*v.value());
 

@@ -45,7 +45,6 @@ private:
     degree_t m_angle;         // angle of the robot
     millimeter_t m_x;         // position 'x' of the robot on the screen
     millimeter_t m_y;         // position 'y' of the robot on the screen
-    millisecond_t m_dt;       // delta time
 
     float mouseClickX;
     float mouseClickY;
