@@ -28,8 +28,6 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::angle;
-using namespace units::dimensionless;
 using namespace units::literals;
 
 //------------------------------------------------------------------------

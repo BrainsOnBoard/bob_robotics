@@ -1,7 +1,5 @@
-LIBBEBOP_PATH := ../../libbebop
 WITH_LIBBEBOP := 1
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 .PHONY: all clean libbebop
 
@@ -15,7 +13,7 @@ flat_trim: flat_trim.cc flat_trim.d libbebop
 flat_trim.d: ;
 
 libbebop:
-	$(MAKE) -C $(LIBBEBOP_PATH)
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libbebop
 
 clean:
 	rm -f flat_trim flat_trim.d

@@ -1,9 +1,9 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/background_exception.h"
+#include "../common/background_exception_catcher.h"
 #include "../common/semaphore.h"
-#include "../net/node.h"
+#include "../net/connection.h"
 #include "input.h"
 
 // OpenCV
@@ -32,44 +32,47 @@ public:
     /*!
      * \brief Create a NetSink for asynchronous operation
      *
-     * @param node The connection over which to transmit images
+     * @param connection The connection over which to transmit images
      * @param input The Input source for images
      */
-    NetSink(Net::Node &node, Input &input)
-      : m_Node(node)
+    NetSink(Net::Connection &connection, Input &input)
+      : m_Connection(connection)
       , m_Name(input.getCameraName())
       , m_FrameSize(input.getOutputSize())
       , m_Input(&input)
     {
         // handle incoming IMG commands
-        m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command &command) {
-                                     onCommandReceivedAsync(command);
-                                 });
+        m_Connection.setCommandHandler("IMG",
+                                       [this](Net::Connection &, const Net::Command &command) {
+                                           onCommandReceivedAsync(command);
+                                       });
     }
 
     /*!
      * \brief Create a NetSink for synchronous operation
      *
-     * @param node The connection over which to transmit images
+     * @param connections The connection over which to transmit images
      * @param frameSize The size of the frames output by the video source
      * @param cameraName The name of the camera (see Input::getCameraName())
      */
-    NetSink(Net::Node &node, const cv::Size &frameSize, const std::string &cameraName)
-      : m_Node(node)
+    NetSink(Net::Connection &connection, const cv::Size &frameSize, const std::string &cameraName)
+      : m_Connection(connection)
       , m_Name(cameraName)
       , m_FrameSize(frameSize)
       , m_Input(nullptr)
     {
         // handle incoming IMG commands
-        m_Node.addCommandHandler("IMG",
-                                 [this](Net::Node &, const Net::Command &command) {
-                                     onCommandReceivedSync(command);
-                                 });
+        m_Connection.setCommandHandler("IMG",
+                                       [this](Net::Connection &, const Net::Command &command) {
+                                           onCommandReceivedSync(command);
+                                       });
     }
 
     virtual ~NetSink()
     {
+        // Ignore IMG commands
+        m_Connection.setCommandHandler("IMG", nullptr);
+
         m_DoRun = false;
         if (m_Thread.joinable()) {
             m_Thread.join();
@@ -82,13 +85,10 @@ public:
     //! Send a frame over the network (when operating in synchronous mode)
     void sendFrame(const cv::Mat &frame)
     {
-        // If node is connected
-        if (m_Node.isConnected()) {
-            // Wait for start acknowledgement
-            m_AckSemaphore.waitOnce();
+        // Wait for start acknowledgement
+        m_AckSemaphore.waitOnce();
 
-            sendFrameInternal(frame);
-        }
+        sendFrameInternal(frame);
     }
 
 private:
@@ -99,7 +99,7 @@ private:
     {
         cv::imencode(".jpg", frame, m_Buffer);
 
-        auto socket = m_Node.getSocketWriter();
+        auto socket = m_Connection.getSocketWriter();
         socket.send("IMG FRAME " + std::to_string(m_Buffer.size()) + "\n");
         socket.send(m_Buffer.data(), m_Buffer.size());
     }
@@ -111,7 +111,7 @@ private:
         }
 
         // ACK the command and tell client the camera resolution
-        m_Node.getSocketWriter().send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
+        m_Connection.getSocketWriter().send("IMG PARAMS " + std::to_string(m_FrameSize.width) + " " +
                                       std::to_string(m_FrameSize.height) + " " +
                                       m_Name + "\n");
     }
@@ -146,14 +146,14 @@ private:
                 }
             }
         } catch (...) {
-            BackgroundException::set(std::current_exception());
+            BackgroundExceptionCatcher::set(std::current_exception());
         }
     }
 
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Net::Node &m_Node;
+    Net::Connection &m_Connection;
     Semaphore m_AckSemaphore;
     const std::string m_Name;
     std::vector<uchar> m_Buffer;

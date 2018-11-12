@@ -75,9 +75,6 @@ extern "C"
 namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
-using namespace units::angle;
-using namespace units::angular_velocity;
-using namespace units::velocity;
 
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
@@ -109,6 +106,10 @@ class Bebop
   : public UAV
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *&)>>;
+
+    using degree_t = units::angle::degree_t;
+    using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
     //! Interface to the drone's built-in camera

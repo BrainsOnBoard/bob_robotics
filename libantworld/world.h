@@ -27,7 +27,6 @@ namespace filesystem
 namespace BoBRobotics
 {
 using namespace units::literals;
-using namespace units::length;
 
 namespace AntWorld
 {
@@ -37,6 +36,8 @@ namespace AntWorld
 //! Provides a means for loading a world stored on disk into OpenGL
 class World
 {
+    using meter_t = units::length::meter_t;
+
 public:
     World()
       : m_MinBound{0_m, 0_m, 0_m}, m_MaxBound{0_m, 0_m, 0_m}

@@ -9,7 +9,6 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::angle;
 using namespace units::literals;
 
 //------------------------------------------------------------------------
@@ -21,6 +20,8 @@ using namespace units::literals;
  */
 class AntWorldRotater
 {
+    using degree_t = units::angle::degree_t;
+
 public:
     AntWorldRotater(const cv::Size &unwrapRes,
                     const cv::Mat &maskImage,

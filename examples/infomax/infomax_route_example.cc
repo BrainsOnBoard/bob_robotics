@@ -49,7 +49,7 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
             y.push_back(ally[i]);
 
             // Get heading and convert to vector
-            const radian_t heading = std::get<0>(infomax.getHeading(images[i]));
+            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(images[i]));
             double sinx, cosx;
             sincos(heading.value(), &sinx, &cosx);
             u.push_back(cosx);
