@@ -17,7 +17,8 @@
 #endif
 
 // BoB robotics includes
-#include "common/background_exception.h"
+#include "common/background_exception_catcher.h"
+#include "common/main.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/tank.h"
@@ -45,13 +46,14 @@ void
 run(Video::Input &camera)
 {
     // Enable networking on Windows
-    OS::Net::WindowsNetworking net;
+    OS::Net::WindowsNetworking::initialise();
 
     // Listen for incoming connection on default port
     Net::Server server;
+    auto connection = server.waitForConnection();
 
     // Stream camera synchronously over network
-    Video::NetSink netSink(server, camera.getOutputSize(), camera.getCameraName());
+    Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
 
 #ifdef NO_I2C_ROBOT
     // Output motor commands to terminal
@@ -62,17 +64,18 @@ run(Video::Input &camera)
 #endif
 
     // Read motor commands from network
-    tank.readFromNetwork(server);
+    tank.readFromNetwork(connection);
 
     // Run server in background,, catching any exceptions for rethrowing
-    BackgroundException::enableCatching();
-    server.runInBackground();
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals(); // Catch Ctrl-C
+    connection.runInBackground();
 
     // Send frames over network
     cv::Mat frame;
     while (true) {
         // Rethrow any exceptions caught on background thread
-        BackgroundException::check();
+        catcher.check();
 
         // If there's a new frame, send it, else sleep
         if (camera.readFrame(frame)) {
@@ -84,7 +87,7 @@ run(Video::Input &camera)
 }
 
 int
-main(int argc, char **argv)
+bob_main(int argc, char **argv)
 {
     try {
         /*
@@ -101,7 +104,7 @@ main(int argc, char **argv)
             } catch (std::invalid_argument &) {
                 // ...and fall back on treating it as a string
                 if (strcmp(argv[1], "random") == 0) {
-                    Video::RandomInput<> camera({500, 250}, "webcam360");
+                    Video::RandomInput<> camera({ 500, 250 }, "webcam360");
                     run(camera);
                 } else {
                     Video::OpenCVInput camera(argv[1]);
@@ -113,11 +116,10 @@ main(int argc, char **argv)
             auto camera = Video::getPanoramicCamera();
             run(*camera);
         }
-    } catch (Net::SocketClosingError &) {
+    } catch (Net::SocketClosedError &) {
         // The connection was closed on purpose: do nothing
         std::cout << "Connection closed" << std::endl;
-    } catch (std::exception &e) {
-        std::cerr << "Uncaught exception: " << e.what() << std::endl;
-        return 1;
     }
+
+    return EXIT_SUCCESS;
 }

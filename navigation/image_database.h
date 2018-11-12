@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "../common/assert.h"
 #include "../common/pose.h"
+#include "../imgproc/opencv_unwrap_360.h"
 
 // Third-party includes
 #include "../third_party/path.h"
@@ -18,6 +19,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -26,13 +28,16 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
 
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::Range
+//------------------------------------------------------------------------
 //! A range of values in millimetres
 struct Range
 {
+    using millimeter_t = units::length::millimeter_t;
+
     const millimeter_t begin;
     const millimeter_t end;
     const millimeter_t separation;
@@ -60,9 +65,15 @@ struct Range
     }
 };
 
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::ImageDatabase
+//------------------------------------------------------------------------
 //! An interface for reading from and writing to folders of images
 class ImageDatabase
 {
+    using degree_t = units::angle::degree_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
@@ -209,6 +220,7 @@ public:
         {
             std::vector<Vector3<millimeter_t>> positions;
             positions.reserve(maximumSize());
+
             for (size_t x = 0; x < sizeX(); x++) {
                 for (size_t y = 0; y < sizeY(); y++) {
                     for (size_t z = 0; z < sizeZ(); z++) {
@@ -292,30 +304,11 @@ public:
             return;
         }
 
-        // Read metadata from YAML file
-        const auto metadataPath = m_Path / MetadataFilename;
-        const bool metadataPresent = metadataPath.exists();
-        if (!metadataPresent) {
-            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
-            m_IsRoute = true;
-        } else {
-            // Parse metadata file
-            cv::FileStorage metadataFile(metadataPath.str(), cv::FileStorage::READ);
-
-            // What type of database is it?
-            std::string dbtype;
-            metadataFile["metadata"]["type"] >> dbtype;
-            if (dbtype == "route") {
-                m_IsRoute = true;
-            } else if (dbtype == "grid") {
-                m_IsRoute = false;
-            } else {
-                throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
-            }
-        }
+        // Try to read metadata from YAML file
+        loadMetadata();
 
         // Read in entries from CSV file
-        std::ifstream entriesFile(metadataPath.str());
+        std::ifstream entriesFile(entriesPath.str());
         std::string line, field;
         std::vector<std::string> fields;
         std::getline(entriesFile, line); // skip first line
@@ -335,7 +328,7 @@ public:
 
             Vector3<size_t> gridPosition;
             if (fields.size() >= 8) {
-                if (!metadataPresent) {
+                if (!hasMetadata()) {
                     // Infer that it is a grid
                     m_IsRoute = false;
                 }
@@ -360,17 +353,58 @@ public:
         }
     }
 
+    //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const { return m_Path; }
 
+    //! Get one Entry from the database
     const Entry &operator[](size_t i) const { return m_Entries[i]; }
+
+    //! Start iterator for the database entries
     auto begin() const { return m_Entries.cbegin(); }
+
+    //! End iterator for the database entries
     auto end() const { return m_Entries.cend(); }
+
+    //! Number of entries in this database
     size_t size() const { return m_Entries.size(); }
+
+    //! Check if there are any entries in this database
     bool empty() const { return m_Entries.empty(); }
 
+    //! Check if the database is non-empty and a route-type database
     bool isRoute() const { return !empty() && m_IsRoute; }
+
+    //! Check if the database is non-empty and a grid-type database
     bool isGrid() const { return !empty() && !m_IsRoute; }
 
+    //! Load all of the images in this database into memory and return
+    std::vector<cv::Mat> getImages() const
+    {
+        std::vector<cv::Mat> images;
+        getImages(images);
+        return images;
+    }
+
+    //! Load all of the images in this database into the specified std::vector<>
+    void getImages(std::vector<cv::Mat> &images) const
+    {
+        images.reserve(size());
+        std::transform(begin(), end(), std::back_inserter(images), [](const auto &entry) {
+            return entry.load();
+        });
+    }
+
+    //! Access the metadata for this database via OpenCV's persistence API
+    cv::FileNode getMetadata() const
+    {
+        BOB_ASSERT(hasMetadata());
+        return m_MetadataYAML->operator[]("metadata");
+    }
+
+    //! Get the (directory) name of this database
+    std::string getName() const { return m_Path.filename(); }
+
+    //! Start recording a grid of images
     GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
                                  const Range &zrange = Range(0_mm),
                                  degree_t heading = 0_deg,
@@ -379,11 +413,83 @@ public:
         return GridRecorder(*this, xrange, yrange, zrange, heading, imageFormat);
     }
 
+    //! Start recording a route
     RouteRecorder getRouteRecorder(const std::string &imageFormat = "png")
     {
         return RouteRecorder(*this, imageFormat);
     }
 
+    //! Get the resolution of saved images
+    cv::Size getResolution() const
+    {
+        BOB_ASSERT(hasMetadata());
+        return m_Resolution;
+    }
+
+    //! Check if this database has any saved metadata (yet)
+    bool hasMetadata() const { return static_cast<bool>(m_MetadataYAML); }
+
+    /**!
+     *  \brief Unwrap all the panoramic images in this database into a new
+     *         folder, creating a new database.
+     */
+    void unwrap(const filesystem::path &destination, const cv::Size &unwrapRes)
+    {
+        // Check that the database doesn't already exist
+        BOB_ASSERT(!(destination / EntriesFilename).exists());
+
+        // Create object for unwrapping images
+        std::string camName;
+        getMetadata()["camera"]["name"] >> camName;
+        ImgProc::OpenCVUnwrap360 unwrapper(getResolution(), unwrapRes, camName);
+        filesystem::create_directory(destination);
+
+        // Copy entries (CSV) file
+        filesystem::copy_file(m_Path / EntriesFilename, destination / EntriesFilename);
+
+        // Create new metadata (YAML) file
+        {
+            /*
+             * There is no way to edit a persistence file in OpenCV, so we have
+             * to do it ourselves in this ugly way.
+             *
+             * First, copy all fields, except for changing needsUnwrapping to false.
+             */
+            std::string line;
+            std::ofstream ofs((destination / MetadataFilename).str());
+            for (std::ifstream ifs((m_Path / MetadataFilename).str()); std::getline(ifs, line); ) {
+                const auto pos = line.find("needsUnwrapping:");
+                if (pos != std::string::npos) {
+                    ofs << std::string(pos, ' ') << "needsUnwrapping: 0\n";
+                } else {
+                    ofs << line << "\n";
+                }
+            }
+
+            // Append info about the unwrapping object, indenting appropriately
+            cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
+            fs << "unwrapper" << unwrapper;
+            std::stringstream ss;
+            ss << fs.releaseAndGetString();
+            std::getline(ss, line);
+            std::getline(ss, line);
+            while (std::getline(ss, line)) {
+                ofs << "  " << line << "\n";
+            }
+        }
+
+        // Finally, unwrap all images and save to new folder
+        cv::Mat unwrapped(unwrapRes, CV_8UC3);
+        std::string outPath;
+        for (auto &entry : m_Entries) {
+            unwrapper.unwrap(entry.load(), unwrapped);
+            outPath = (destination / entry.path.filename()).str();
+            std::cout << "Writing to " << outPath << std::endl;
+            BOB_ASSERT(cv::imwrite(outPath, unwrapped));
+        }
+    }
+
+    //! Get a filename for a route-type database
     static std::string getFilename(const size_t routeIndex,
                                    const std::string &imageFormat = "png")
     {
@@ -392,6 +498,7 @@ public:
         return ss.str();
     }
 
+    //! Get a filename for a grid-type database
     static std::string getFilename(const Vector3<millimeter_t> &position,
                                    const std::string &imageFormat = "png")
     {
@@ -413,9 +520,46 @@ public:
 private:
     const filesystem::path m_Path;
     std::vector<Entry> m_Entries;
+    std::unique_ptr<cv::FileStorage> m_MetadataYAML;
+    cv::Size m_Resolution;
     bool m_IsRoute;
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
     static constexpr const char *EntriesFilename = "database_entries.csv";
+
+    void loadMetadata()
+    {
+        const auto metadataPath = m_Path / MetadataFilename;
+        const bool metadataPresent = metadataPath.exists();
+        if (!metadataPresent) {
+            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
+            m_IsRoute = true;
+            m_MetadataYAML.reset();
+        } else {
+            std::ifstream ifs(metadataPath.str());
+            std::stringstream ss;
+            ss << "%YAML:1.0\n" << ifs.rdbuf();
+
+            // Parse metadata file
+            m_MetadataYAML = std::make_unique<cv::FileStorage>(ss.str(), cv::FileStorage::READ | cv::FileStorage::MEMORY);
+
+            // What type of database is it?
+            std::string dbtype;
+            const auto metadata = getMetadata();
+            metadata["type"] >> dbtype;
+            if (dbtype == "route") {
+                m_IsRoute = true;
+            } else if (dbtype == "grid") {
+                m_IsRoute = false;
+            } else {
+                throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
+            }
+
+            // Get image resolution
+            std::vector<int> size(2);
+            metadata["camera"]["resolution"] >> size;
+            m_Resolution = { size[0], size[1] };
+        }
+    }
 
     void writeImage(const std::string &filename, const cv::Mat &image)
     {
@@ -456,12 +600,15 @@ private:
                 os << std::endl;
             }
         }
+
+        // Reload metadata, in case it's changed
+        loadMetadata();
     }
 
     void writeEntry(std::ofstream &os, const Entry &e)
     {
         os << e.position[0]() << ", " << e.position[1]() << ", "
-           << e.position[2]() << ", " << e.heading() << ", " << e.path;
+           << e.position[2]() << ", " << e.heading() << ", " << e.path.filename();
     }
 }; // ImageDatabase
 } // Navigation

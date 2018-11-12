@@ -1,11 +1,9 @@
 #pragma once
 
-// POSIX networking includes
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
+#include "../os/net.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -16,22 +14,11 @@
 #include <thread>
 #include <vector>
 
-// Standard C includes
-#include <cstring>
-
-// BoB robotics includes
-#include "../common/assert.h"
-#include "../common/pose.h"
-
 namespace BoBRobotics
 {
 namespace Vicon
 {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
-using namespace units::time;
-using namespace units::velocity;
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
@@ -39,6 +26,9 @@ using namespace units::velocity;
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
@@ -97,6 +87,11 @@ private:
 //! Object data class which also calculate (un-filtered) velocity
 class ObjectDataVelocity : public ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+    using millisecond_t = units::time::millisecond_t;
+
 public:
     ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
     {}
@@ -164,9 +159,7 @@ public:
     UDPClient(){}
     UDPClient(uint16_t port)
     {
-        if(!connect(port)) {
-            throw std::runtime_error("Cannot connect");
-        }
+        connect(port);
     }
 
     virtual ~UDPClient()
@@ -181,13 +174,12 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(uint16_t port)
+    void connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
-            std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot open socket");
         }
 
         // Set socket to have 1s read timeout
@@ -200,8 +192,7 @@ public:
         timeout.tv_usec = 0;
 #endif
         if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
-            std::cerr << "Cannot set socket timeout: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot set socket timeout");
         }
 
         // Create socket address structure
@@ -213,14 +204,12 @@ public:
 
         // Bind socket to local port
         if(bind(socket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) < 0) {
-            std::cerr << "Cannot bind socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot bind socket");
         }
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
         m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
-        return true;
     }
 
     unsigned int getNumObjects()
@@ -263,13 +252,15 @@ private:
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).
          */
+        using namespace units::length;
+        using namespace units::angle;
         m_ObjectData[id].update(frameNumber,
-                                units::make_unit<millimeter_t>(position[0]),
-                                units::make_unit<millimeter_t>(position[1]),
-                                units::make_unit<millimeter_t>(position[2]),
-                                units::make_unit<radian_t>(attitude[2]),
-                                units::make_unit<radian_t>(attitude[0]),
-                                units::make_unit<radian_t>(attitude[1]));
+                                millimeter_t(position[0]),
+                                millimeter_t(position[1]),
+                                millimeter_t(position[2]),
+                                radian_t(attitude[2]),
+                                radian_t(attitude[0]),
+                                radian_t(attitude[1]));
     }
 
     void readThread(int socket)
@@ -292,8 +283,7 @@ private:
                 }
                 // Otherwise, display error and stop
                 else {
-                    std::cerr << "Cannot read datagram: " << strerror(errno) << std::endl;
-                    break;
+                    throw OS::Net::NetworkError("Cannot read datagram");
                 }
             }
             // Otherwise, if data was received

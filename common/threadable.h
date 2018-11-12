@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "background_exception.h"
+#include "background_exception_catcher.h"
 
 // Standard C++ includes
 #include <atomic>
@@ -24,11 +24,12 @@ namespace BoBRobotics {
 class Threadable
 {
 public:
-    //! Stop the background thread (if needed)
+    Threadable()
+      : m_DoRun(false)
+    {}
+
     virtual ~Threadable()
-    {
-        stop();
-    }
+    {}
 
     //! Run on the current thread, blocking until process ends
     virtual void run()
@@ -58,16 +59,24 @@ public:
         }
     }
 
+    Threadable(const Threadable &old) = delete;
+    void operator=(const Threadable &old) = delete;
+    Threadable(Threadable &&old)
+      : m_Thread(std::move(old.m_Thread))
+      , m_DoRun(old.m_DoRun.load())
+    {}
+    Threadable &operator=(Threadable &&old) = default;
+
 private:
     std::thread m_Thread;
-    std::atomic<bool> m_DoRun{ false };
+    std::atomic<bool> m_DoRun;
 
     void runCatchExceptions()
     {
         try {
             run();
         } catch (...) {
-            BackgroundException::set(std::current_exception());
+            BackgroundExceptionCatcher::set(std::current_exception());
         }
     }
 

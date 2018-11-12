@@ -15,15 +15,15 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-using namespace units::angle;
-using namespace units::length;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous
 //----------------------------------------------------------------------------
 //! Class for reading ant routes exported by Matlab and rendering them in ant world
 class RouteContinuous
 {
+    using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
+
 public:
     RouteContinuous(float arrowLength, unsigned int maxRouteEntries);
     RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename);

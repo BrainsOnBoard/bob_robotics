@@ -57,6 +57,7 @@ public:
     virtual ~Surveyor() override
     {
         stopMoving();
+        stopReadingFromNetwork();
 
         if (m_Socket > 0) {
             close(m_Socket);

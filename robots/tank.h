@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "../common/assert.h"
 #include "../hid/joystick.h"
-#include "../net/node.h"
+#include "../net/connection.h"
 #include "robot.h"
 
 // Standard C includes
@@ -78,15 +78,27 @@ public:
     }
 
     //! Controls the robot with a network stream
-    void readFromNetwork(Net::Node &node)
+    void readFromNetwork(Net::Connection &connection)
     {
         // handle incoming TNK commands
-        node.addCommandHandler("TNK", [this](Net::Node &node, const Net::Command &command) {
-            onCommandReceived(node, command);
-        });
+        connection.setCommandHandler("TNK",
+            [this](Net::Connection &connection, const Net::Command &command) {
+                onCommandReceived(connection, command);
+            });
+
+        m_Connection = &connection;
+    }
+
+    void stopReadingFromNetwork()
+    {
+        if (m_Connection) {
+            // Ignore TNK commands
+            m_Connection->setCommandHandler("TNK", nullptr);
+        }
     }
 
 private:
+    Net::Connection *m_Connection = nullptr;
     float m_X = 0;
     float m_Y = 0;
 
@@ -123,7 +135,7 @@ private:
         }
     }
 
-    void onCommandReceived(Net::Node &, const Net::Command &command)
+    void onCommandReceived(Net::Connection &, const Net::Command &command)
     {
         // second space separates left and right parameters
         if (command.size() != 3) {

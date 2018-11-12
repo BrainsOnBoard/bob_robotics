@@ -39,11 +39,11 @@ int main()
 
     // Create unwrapper to unwrap camera output
     auto unwrapper = cam.createUnwrapper(unwrapSize);
-    
+
     // Create motor interface
     Norbot motor;
 
-    cv::Mat output(cam.getSuperPixelSize(), CV_8UC1);
+    cv::Mat output;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
 
 #ifdef VICON_CAPTURE
@@ -72,36 +72,35 @@ int main()
 
     // Loop through time until joystick button pressed
     motor.addJoystick(joystick, joystickDeadzone);
-    for(unsigned int x = 0; !joystick.isDown(JButton::B); x++) {
+    for (unsigned int x = 0; !joystick.isDown(JButton::B); x++) {
         // Read joystick
         joystick.update();
 
         // If we successfully captured a frame
-        if(cam.captureSuperPixelGreyscale(output))
-        {
-           // Unwrap frame
-           unwrapper.unwrap(output, unwrapped);
+        cam.readGreyscaleFrame(output);
 
-           // If recording interval has elapsed
-           if((x % recordingInterval) == 0) {
-               // Write image file
-               char filename[255];
-               sprintf(filename, "image_%u.png", x);
-               cv::imwrite(filename,  unwrapped);
+        // Unwrap frame
+        unwrapper.unwrap(output, unwrapped);
+
+        // If recording interval has elapsed
+        if ((x % recordingInterval) == 0) {
+            // Write image file
+            char filename[255];
+            sprintf(filename, "image_%u.png", x);
+            cv::imwrite(filename, unwrapped);
 
 #ifdef VICON_CAPTURE
-               // Get tracking data
-               auto objectData = vicon.getObjectData(0);
-               const auto &position = objectData.getPosition<>();
-               const auto &attitude = objectData.getAttitude<>();
+            // Get tracking data
+            auto objectData = vicon.getObjectData(0);
+            const auto &position = objectData.getPosition<>();
+            const auto &attitude = objectData.getAttitude<>();
 
-               // Write to CSV
-               data << filename << ", " << objectData.getFrameNumber() << ", "
-                    << position[0].value() << ", " << position[1].value() << ", "
-                    << position[2].value() << ", " << attitude[0].value() << ", "
-                    << attitude[1].value() << ", " << attitude[2].value() << std::endl;
-#endif  // VICON_CAPTURE
-           }
+            // Write to CSV
+            data << filename << ", " << objectData.getFrameNumber() << ", "
+                 << position[0].value() << ", " << position[1].value() << ", "
+                 << position[2].value() << ", " << attitude[0].value() << ", "
+                 << attitude[1].value() << ", " << attitude[2].value() << std::endl;
+#endif // VICON_CAPTURE
         }
     }
 

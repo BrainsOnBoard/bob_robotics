@@ -18,8 +18,6 @@ namespace BoBRobotics
 namespace AntWorld
 {
 using namespace units::literals;
-using namespace units::angle;
-using namespace units::length;
 
 //----------------------------------------------------------------------------
 // Renderer
@@ -27,6 +25,9 @@ using namespace units::length;
 //! Helper class which combines a world with a rendermesh to allow ant views of world to be rendered to screen
 class Renderer
 {
+    using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
+
 public:
     Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);

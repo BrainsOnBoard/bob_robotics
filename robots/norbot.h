@@ -37,6 +37,7 @@ public:
     virtual ~Norbot() override
     {
         stopMoving();
+        stopReadingFromNetwork();
     }
 
     virtual void tank(float left, float right) override
