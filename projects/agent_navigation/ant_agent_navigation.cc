@@ -30,7 +30,7 @@ bob_main(int, char **)
 
     // Create agent and put in the centre of the world
     AntWorld::AntAgent ant(window.get(), renderer, RenderSize, 1_mps);
-    ant.setPosition((maxBound[0] - minBound[0]) / 2, (maxBound[1] - minBound[1]) / 2, AntHeight);
+    ant.setPosition(0_m, 0_m, AntHeight);
 
     // Run navigation
     runNavigation(ant, ant, ForwardSpeed, ant, minBound[0], maxBound[0], minBound[1], maxBound[1]);
