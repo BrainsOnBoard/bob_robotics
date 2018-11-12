@@ -1,7 +1,6 @@
 NO_OPENCV := 1
 WITH_I2C := 1
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := lm9ds1_test
 
