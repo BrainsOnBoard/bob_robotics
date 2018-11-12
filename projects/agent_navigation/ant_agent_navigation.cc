@@ -12,7 +12,7 @@ using namespace BoBRobotics;
 int
 bob_main(int, char **)
 {
-    const cv::Size RenderSize{ 720, 150 };
+    const cv::Size RenderSize{ 360, 75 };
     const meter_t AntHeight = 1_cm;
     const float ForwardSpeed = 1.f;
 
