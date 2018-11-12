@@ -253,5 +253,12 @@ public:
         y_mm = y_pos * MMPerPixel;
     }
 }; // Simulator
+
+#ifndef NO_HEADER_DEFINITIONS
+constexpr units::velocity::meters_per_second_t Simulator::Velocity;
+constexpr units::angular_velocity::degrees_per_second_t Simulator::TurnSpeed;
+constexpr units::length::millimeter_t Simulator::MMPerPixel;
+constexpr int Simulator::WindowWidth, Simulator::WindowHeight;
+#endif
 } // Robots
 } // BoBRobotics
