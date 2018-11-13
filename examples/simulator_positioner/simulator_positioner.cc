@@ -38,7 +38,7 @@ main()
     double alpha = 1.03;                     // causes more sharply peaked curves
     double beta = 0.02;                      // causes to drop velocity if 'k'(curveness) increases
     meters_per_second_t max_velocity{ 1 }; // will limit the maximum velocity to this value
-    degrees_per_second_t max_turning_velocity{ 90 };
+    degrees_per_second_t max_turning_velocity{ 150 };
 
     // construct the positioner
     Robots::RobotPositioner robp(
