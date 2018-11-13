@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/pose.h"
+
 // Third-party includes
 #include "../third_party/units.h"
 
@@ -7,13 +10,13 @@
 #include <SDL2/SDL.h>
 
 // Standard C includes
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
 
 // Standard C++ includes
-#include <vector>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -40,14 +43,12 @@ private:
 
     meters_per_second_t m_v;  // velocity v (translational velocity)
     degrees_per_second_t m_w; // velocity w (rotational velocity)
-    millimeter_t m_height;    // height of the robot
-    millimeter_t m_width;     // width of the robot
     degree_t m_angle;         // angle of the robot
     millimeter_t m_x;         // position 'x' of the robot on the screen
     millimeter_t m_y;         // position 'y' of the robot on the screen
 
-    float mouseClickX;
-    float mouseClickY;
+    // first goal is set to the middle of the window
+    Vector2<int> m_mouse_click_position{ WindowWidth / 2, WindowHeight / 2 };
 
     bool m_quit = false;
     SDL_Window *m_window;
@@ -55,7 +56,6 @@ private:
     SDL_Renderer *m_renderer;
     SDL_Texture *m_texture;
     SDL_Rect m_robot_rect;
-    SDL_Rect m_goal_rect;
 
     void updatePose(const meters_per_second_t v,
                     const degrees_per_second_t w,
@@ -83,15 +83,10 @@ private:
     }
 
     //! draws the rectangle at the desired coordinates
-    void drawRectangleAtCoordinates(SDL_Rect &rectangle, const float x, const float y) {
-
-        rectangle.x = x;
-        rectangle.y = y;
-        rectangle.w = 5;
-        rectangle.h = 5;
-
-        SDL_SetRenderDrawColor( m_renderer, 0, 0, 255, 255 );
-        SDL_RenderFillRect( m_renderer, &rectangle );
+    void drawRectangleAtCoordinates(const SDL_Rect &rectangle)
+    {
+        SDL_SetRenderDrawColor(m_renderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(m_renderer, &rectangle);
     }
 
 public:
@@ -124,10 +119,6 @@ public:
         m_x = m_robot_rect.x * MMPerPixel;
         m_y = m_robot_rect.y * MMPerPixel;
         m_angle = 10_deg;
-
-        // first goal is set to the middle of the window
-        mouseClickX = WindowWidth/2;
-        mouseClickY = WindowHeight/2;
     }
 
     ~Simulator()
@@ -156,8 +147,6 @@ public:
                       const millimeter_t width
                       )
     {
-        m_height = height;
-        m_width = width;
         m_robot_rect.h = height / MMPerPixel;
         m_robot_rect.w = width / MMPerPixel;
     }
@@ -211,10 +200,7 @@ public:
         case SDL_MOUSEBUTTONDOWN:
             // If the left button was pressed.
             if (m_event.button.button == SDL_BUTTON_LEFT) {
-                int x, y;
-                SDL_GetMouseState(&x, &y);
-                mouseClickX = x;
-                mouseClickY = y;
+                SDL_GetMouseState(&m_mouse_click_position[0], &m_mouse_click_position[1]);
             }
             break;
 
@@ -225,13 +211,13 @@ public:
         updatePose(v, w, delta_time);
 
         // draw a rectangle at the goal position
-        drawRectangleAtCoordinates(m_goal_rect , mouseClickX, mouseClickY);
+        drawRectangleAtCoordinates({ m_mouse_click_position[0], m_mouse_click_position[1], 5, 5 });
 
         // Select the color for drawing.
         SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 
         // render texture with rotation
-        SDL_RenderCopyEx( m_renderer, m_texture, nullptr, &m_robot_rect, m_angle.value(), nullptr, SDL_FLIP_NONE );
+        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, m_angle.value(), nullptr, SDL_FLIP_NONE);
 
         SDL_RenderPresent(m_renderer);
 
@@ -239,22 +225,15 @@ public:
     }
 
     //! returns the current position of the robot
-    std::vector<float> getCurrentPosition()
+    Vector3<float> getCurrentPosition()
     {
-        std::vector<float> position;
-        position.push_back(m_robot_rect.x);
-        position.push_back(m_robot_rect.y);
-        position.push_back(m_angle.value());
-        return position;
+        return { static_cast<float>(m_robot_rect.x), static_cast<float>(m_robot_rect.y), m_angle.value() };
     }
 
     //! gets the position of the latest mouse click relative to the window
-    std::vector<float> getMouseClickLocation()
+    Vector2<int> getMouseClickLocation()
     {
-        std::vector<float> mouseClickCoordinates;
-        mouseClickCoordinates.push_back(mouseClickX);
-        mouseClickCoordinates.push_back(mouseClickY);
-        return mouseClickCoordinates;
+        return m_mouse_click_position;
     }
 
     //! changes the pixel value to millimeter
