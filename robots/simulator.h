@@ -49,14 +49,13 @@ private:
     float mouseClickX;
     float mouseClickY;
 
-    bool quit;
-    SDL_Event event;
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    SDL_Surface *image;
-    SDL_Texture *texture;
-    SDL_Rect dstrect;
-    SDL_Rect rect_goal;
+    bool m_quit = false;
+    SDL_Window *m_window;
+    SDL_Event m_event;
+    SDL_Renderer *m_renderer;
+    SDL_Texture *m_texture;
+    SDL_Rect m_robot_rect;
+    SDL_Rect m_goal_rect;
 
     void updatePose(const meters_per_second_t v,
                     const degrees_per_second_t w,
@@ -91,38 +90,39 @@ private:
         rectangle.w = 5;
         rectangle.h = 5;
 
-        SDL_SetRenderDrawColor( renderer, 0, 0, 255, 255 );
-        SDL_RenderFillRect( renderer, &rectangle );
+        SDL_SetRenderDrawColor( m_renderer, 0, 0, 255, 255 );
+        SDL_RenderFillRect( m_renderer, &rectangle );
     }
 
 public:
     Simulator()
-      : quit(false)
     {
         SDL_Init(SDL_INIT_VIDEO);
 
-        window = SDL_CreateWindow("Wheeled-robot simulator",
+        m_window = SDL_CreateWindow("Wheeled-robot simulator",
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WindowWidth, WindowHeight, 0);
 
-        renderer = SDL_CreateRenderer(window, -1, 0);
+        m_renderer = SDL_CreateRenderer(m_window, -1, 0);
 
         const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
-        image = SDL_LoadBMP(imagePath.c_str());
+        SDL_Surface *image = SDL_LoadBMP(imagePath.c_str());
         BOB_ASSERT(image != nullptr); // Check file exists
 
-        texture = SDL_CreateTextureFromSurface(renderer, image);
+        // Turn bitmap into texture
+        m_texture = SDL_CreateTextureFromSurface(m_renderer, image);
+        SDL_FreeSurface(image); // We're done with bitmap
 
         // Select the color for drawing.
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 
         // Clear the entire screen to our selected color.
-        SDL_RenderClear(renderer);
+        SDL_RenderClear(m_renderer);
 
         // initial position and size of the robot car
-        dstrect = { WindowWidth / 2, WindowHeight / 2, 10, 13 };
+        m_robot_rect = { WindowWidth / 2, WindowHeight / 2, 10, 13 };
 
-        m_x = dstrect.x * MMPerPixel;
-        m_y = dstrect.y * MMPerPixel;
+        m_x = m_robot_rect.x * MMPerPixel;
+        m_y = m_robot_rect.y * MMPerPixel;
         m_angle = 10_deg;
 
         // first goal is set to the middle of the window
@@ -133,10 +133,9 @@ public:
     ~Simulator()
     {
         // freeing up resources
-        SDL_DestroyTexture(texture);
-        SDL_FreeSurface(image);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
+        SDL_DestroyTexture(m_texture);
+        SDL_DestroyRenderer(m_renderer);
+        SDL_DestroyWindow(m_window);
         SDL_Quit();
     }
 
@@ -148,8 +147,8 @@ public:
         m_angle = theta;
 
         // Update agent's position in pixels
-        dstrect.x = m_x / MMPerPixel;
-        dstrect.y = m_y / MMPerPixel;
+        m_robot_rect.x = m_x / MMPerPixel;
+        m_robot_rect.y = m_y / MMPerPixel;
     }
 
     //! sets the robot's size in millimeter
@@ -159,14 +158,14 @@ public:
     {
         m_height = height;
         m_width = width;
-        dstrect.h = height / MMPerPixel;
-        dstrect.w = width / MMPerPixel;
+        m_robot_rect.h = height / MMPerPixel;
+        m_robot_rect.w = width / MMPerPixel;
     }
 
     //! returns true if we did quit the simulator's gui
     bool didQuit() const
     {
-        return quit;
+        return m_quit;
     }
 
     //! suimulates a step of the simulation with the provided velocities
@@ -178,17 +177,17 @@ public:
         bool ret = false;
 
         // Clear the entire screen to our selected color.
-        SDL_RenderClear(renderer);
-        SDL_PollEvent(&event);
+        SDL_RenderClear(m_renderer);
 
         // getting events
-        switch (event.type) {
+        SDL_PollEvent(&m_event);
+        switch (m_event.type) {
         case SDL_QUIT:
-            quit = true;
+            m_quit = true;
             break;
 
         case SDL_KEYDOWN:
-            switch (event.key.keysym.sym) {
+            switch (m_event.key.keysym.sym) {
             case SDLK_LEFT:
                 w = -TurnSpeed;
                 break;
@@ -211,7 +210,7 @@ public:
 
         case SDL_MOUSEBUTTONDOWN:
             // If the left button was pressed.
-            if (event.button.button == SDL_BUTTON_LEFT) {
+            if (m_event.button.button == SDL_BUTTON_LEFT) {
                 int x, y;
                 SDL_GetMouseState(&x, &y);
                 mouseClickX = x;
@@ -226,15 +225,15 @@ public:
         updatePose(v, w, delta_time);
 
         // draw a rectangle at the goal position
-        drawRectangleAtCoordinates(rect_goal , mouseClickX, mouseClickY);
+        drawRectangleAtCoordinates(m_goal_rect , mouseClickX, mouseClickY);
 
         // Select the color for drawing.
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 
         // render texture with rotation
-        SDL_RenderCopyEx( renderer, texture, NULL, &dstrect, m_angle.value(), NULL, SDL_FLIP_NONE );
+        SDL_RenderCopyEx( m_renderer, m_texture, nullptr, &m_robot_rect, m_angle.value(), nullptr, SDL_FLIP_NONE );
 
-        SDL_RenderPresent(renderer);
+        SDL_RenderPresent(m_renderer);
 
         return ret;
     }
@@ -243,8 +242,8 @@ public:
     std::vector<float> getCurrentPosition()
     {
         std::vector<float> position;
-        position.push_back(dstrect.x);
-        position.push_back(dstrect.y);
+        position.push_back(m_robot_rect.x);
+        position.push_back(m_robot_rect.y);
         position.push_back(m_angle.value());
         return position;
     }
