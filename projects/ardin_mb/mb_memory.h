@@ -26,6 +26,9 @@ public:
     //! Test the algorithm with the specified image
     virtual float test(const cv::Mat &image) const override;
 
+    //! Clear the memory
+    virtual void clearMemory() override;
+
 private:
     std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
 

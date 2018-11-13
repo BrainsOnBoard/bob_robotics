@@ -12,6 +12,7 @@
 
 using namespace BoBRobotics;
 using namespace units::literals;
+using namespace units::length;
 
 //----------------------------------------------------------------------------
 // StateHandler

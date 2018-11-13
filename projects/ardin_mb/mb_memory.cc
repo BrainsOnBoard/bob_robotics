@@ -82,6 +82,11 @@ float MBMemory::test(const cv::Mat &image) const
     return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
 }
 //----------------------------------------------------------------------------
+void MBMemory::clearMemory()
+{
+    throw std::runtime_error("MBMemory does not currently support clearing");
+}
+//----------------------------------------------------------------------------
 std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train) const
 {
     BOB_ASSERT(image.cols == MBParams::inputWidth);
