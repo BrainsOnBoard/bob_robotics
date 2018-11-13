@@ -37,9 +37,10 @@ template<typename Store = PerfectMemoryStore::RawImage<>>
 class PerfectMemory : public VisualNavigationBase
 {
 public:
-    PerfectMemory(const cv::Size &unwrapRes)
+    template<class... Ts>
+    PerfectMemory(const cv::Size &unwrapRes, Ts &&... args)
       : VisualNavigationBase(unwrapRes)
-      , m_Store(unwrapRes)
+      , m_Store(unwrapRes, std::forward<Ts>(args)...)
     {}
 
     //------------------------------------------------------------------------
@@ -125,7 +126,9 @@ template<typename Store = PerfectMemoryStore::RawImage<>, typename RIDFProcessor
 class PerfectMemoryRotater : public PerfectMemory<Store>
 {
 public:
-    PerfectMemoryRotater(const cv::Size unwrapRes /**TODO*** forward other parameters*/) : PerfectMemory<Store>(unwrapRes)
+    template<class... Ts>
+    PerfectMemoryRotater(const cv::Size unwrapRes, Ts &&... args)
+    :   PerfectMemory<Store>(unwrapRes, std::forward<Ts>(args)...)
     {
     }
     /*!
