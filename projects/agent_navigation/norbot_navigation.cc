@@ -48,8 +48,9 @@ loadObjects(const std::string &objectsPath)
 int
 bob_main(int argc, char **argv)
 {
-    const float forwardSpeed = 1.f;
-    const cv::Size unwrapResolution{ 360, 75 };
+    const float ForwardSpeed = 1.f;
+    const float TurnSpeed = 1.f;
+    const cv::Size UnwrapResolution{ 360, 75 };
 
     const auto objects = loadObjects("../../tools/vicon_arena_constructor/objects.yaml");
 
@@ -94,7 +95,7 @@ bob_main(int argc, char **argv)
 #endif
 
     // Unwrap camera frames
-    Video::UnwrappedInput camUnwrapped(*cam, unwrapResolution);
+    Video::UnwrappedInput camUnwrapped(*cam, UnwrapResolution);
 
     // Wait for Vicon system to start
     while (vicon.getNumObjects() == 0) {
@@ -104,7 +105,7 @@ bob_main(int argc, char **argv)
 
     auto viconObject = vicon.getObject(0);
     const units::length::millimeter_t lim = 3000_mm;
-    runNavigation(*tank, viconObject, forwardSpeed, camUnwrapped, -lim, lim, -lim, lim, objects);
+    runNavigation(*tank, viconObject, ForwardSpeed, TurnSpeed, camUnwrapped, -lim, lim, -lim, lim, objects);
 
     return EXIT_SUCCESS;
 }

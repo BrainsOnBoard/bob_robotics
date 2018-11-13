@@ -206,6 +206,7 @@ void
 runNavigation(Robots::Robot &robot,
               PoseGetterType &poseGetter,
               const float forwardSpeed,
+              const float turnSpeed,
               Video::Input &videoInput,
               const LengthUnit xLower,
               const LengthUnit xUpper,
@@ -316,7 +317,7 @@ runNavigation(Robots::Robot &robot,
                 std::cout << "Heading: " << heading << std::endl;
 
                 turnTimer.start(heading / robotTurnSpeed);
-                robot.turnOnTheSpot(heading < 0_deg ? 1.f : -1.f);
+                robot.turnOnTheSpot(heading < 0_deg ? -turnSpeed : turnSpeed);
             }
         }
     } while (!joystick.isPressed(HID::JButton::B) && plotter.isOpen());
