@@ -28,16 +28,16 @@ template<typename Differencer = AbsDiff>
 class HOG
 {
 public:
-    HOG(const cv::Size unwrapRes, int hogPixelsPerCell = 10, int hogOrientations = 8)
+    HOG(const cv::Size unwrapRes, int hogCellWidth = 10, int hogCellHeight = 10, int hogOrientations = 8)
       : m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
-                            hogOrientations / (hogPixelsPerCell * hogPixelsPerCell))
+                            hogOrientations / (hogCellWidth * hogCellHeight))
       , m_Differencer(m_HOGDescriptorSize)
     {
         std::cout << "Creating perfect memory for HOG features" << std::endl;
 
         // Configure HOG features
         m_HOG.winSize = unwrapRes;
-        m_HOG.blockSize = cv::Size(hogPixelsPerCell, hogPixelsPerCell);
+        m_HOG.blockSize = cv::Size(hogCellWidth, hogCellHeight);
         m_HOG.blockStride = m_HOG.blockSize;
         m_HOG.cellSize = m_HOG.blockSize;
         m_HOG.nbins = hogOrientations;
