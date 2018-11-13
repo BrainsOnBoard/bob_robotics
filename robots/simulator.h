@@ -105,8 +105,11 @@ public:
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WindowWidth, WindowHeight, 0);
 
         renderer = SDL_CreateRenderer(window, -1, 0);
+
         const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
         image = SDL_LoadBMP(imagePath.c_str());
+        BOB_ASSERT(image != nullptr); // Check file exists
+
         texture = SDL_CreateTextureFromSurface(renderer, image);
 
         // Select the color for drawing.
