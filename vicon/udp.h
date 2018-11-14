@@ -42,11 +42,15 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+    void update(uint32_t frameNumber, std::string &&objectName,
+                millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
         // Cache frame number
         m_FrameNumber = frameNumber;
+
+        // Update object name
+        m_ObjectName = objectName;
 
         // Copy vectors into class
         m_Position[0] = x;
@@ -60,6 +64,11 @@ public:
     uint32_t getFrameNumber() const
     {
         return m_FrameNumber;
+    }
+
+    const std::string &getObjectName() const
+    {
+        return m_ObjectName;
     }
 
     template<typename LengthUnit = millimeter_t>
@@ -79,6 +88,7 @@ private:
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
+    std::string m_ObjectName;
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
 };
@@ -101,7 +111,8 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+    void update(uint32_t frameNumber, std::string &&objectName,
+                millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
         const Vector3<millimeter_t> position {x, y, z};
@@ -134,7 +145,7 @@ public:
                        smoothVelocity);
 
         // Superclass
-        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
+        ObjectData::update(frameNumber, std::move(objectName), x, y, z, yaw, pitch, roll);
     }
 
     template<typename VelocityUnit = meters_per_second_t>
@@ -282,6 +293,7 @@ private:
     // Private API
     //----------------------------------------------------------------------------
     void updateObjectData(unsigned int id, uint32_t frameNumber,
+                          std::string &&objectName,
                           const Vector3<double> &position,
                           const Vector3<double> &attitude)
     {
@@ -303,6 +315,7 @@ private:
         using namespace units::length;
         using namespace units::angle;
         m_ObjectData[id].update(frameNumber,
+                                std::move(objectName),
                                 millimeter_t(position[0]),
                                 millimeter_t(position[1]),
                                 millimeter_t(position[2]),
@@ -354,6 +367,10 @@ private:
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
                     BOB_ASSERT(itemDataSize == 72);
 
+                    // Read object name
+                    char objectName[23];
+                    memcpy(&objectName, &buffer[itemOffset + 3], sizeof(objectName));
+
                     // Read object position
                     Vector3<double> position;
                     memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
@@ -363,7 +380,7 @@ private:
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, frameNumber, position, attitude);
+                    updateObjectData(objectID, frameNumber, objectName, position, attitude);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;

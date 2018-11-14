@@ -21,6 +21,7 @@ main()
         std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
     }
+    std::cout << "Object name: " << vicon.getObjectData(0).getObjectName() << std::endl;
 
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
