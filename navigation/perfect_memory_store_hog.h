@@ -20,6 +20,9 @@ namespace BoBRobotics {
 namespace Navigation {
 namespace PerfectMemoryStore {
 
+    /*numOrientations*
+        ((unwrapRes.width - blockSize.width)/blockStride.width + 1)*
+        ((unwrapRes.height - blockSize.height)/blockStride.height + 1);*/
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryStore::HOG
 //------------------------------------------------------------------------
@@ -28,21 +31,23 @@ template<typename Differencer = AbsDiff>
 class HOG
 {
 public:
-    HOG(const cv::Size unwrapRes,
-                     const int HOGPixelsPerCell = 10,
-                     int HOGOrientations = 8)
-      : m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
-                            HOGOrientations / (HOGPixelsPerCell * HOGPixelsPerCell))
-      , m_Differencer(m_HOGDescriptorSize)
+    HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, int numOrientations)
+    :   HOG(unwrapRes, blockSize, blockSize, numOrientations)
     {
-        std::cout << "Creating perfect memory for HOG features" << std::endl;
+    }
+
+    HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, const cv::Size &blockStride, int numOrientations)
+    :   m_HOGDescriptorSize(numOrientations * ((unwrapRes.width - blockSize.width)/blockStride.width + 1) * ((unwrapRes.height - blockSize.height)/blockStride.height + 1)),
+        m_Differencer(m_HOGDescriptorSize)
+    {
+        std::cout << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features" << std::endl;
 
         // Configure HOG features
         m_HOG.winSize = unwrapRes;
-        m_HOG.blockSize = cv::Size(HOGPixelsPerCell, HOGPixelsPerCell);
-        m_HOG.blockStride = m_HOG.blockSize;
-        m_HOG.cellSize = m_HOG.blockSize;
-        m_HOG.nbins = HOGOrientations;
+        m_HOG.blockSize = blockSize;
+        m_HOG.blockStride = blockStride;
+        m_HOG.cellSize = blockSize;
+        m_HOG.nbins = numOrientations;
     }
 
     //------------------------------------------------------------------------
