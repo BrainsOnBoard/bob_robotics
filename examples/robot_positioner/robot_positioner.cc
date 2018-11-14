@@ -1,8 +1,8 @@
 // BoB robotics includes
+#include "robots/robot_positioner.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/norbot.h"
-#include "robots/robot_positioner.h"
 #include "vicon/udp.h"
 
 // Third-party includes
@@ -37,14 +37,14 @@ bob_main(int, char **)
     BoBRobotics::Robots::Norbot bot;
 
     // setup parameters
-    constexpr millimeter_t stopping_distance = 10_cm;   // if the robot's distance from goal < stopping dist, robot stops
-    constexpr degree_t allowed_heading_error = 5_deg;   // the amount of error allowed in the final heading
-    constexpr double k1 = 1;                            // curveness of the path to the goal
-    constexpr double k2 = 2;                            // speed of turning on the curves
-    constexpr double alpha = 1.4;                       // causes more sharply peaked curves
-    constexpr double beta = 0.3;                        // causes to drop velocity if 'k'(curveness) increases
-    constexpr meters_per_second_t max_velocity{ 0.05 }; // will limit the maximum velocity to this value
-    constexpr degrees_per_second_t max_turning_velocity{ 13 };
+    constexpr millimeter_t stopping_distance = 10_cm; // if the robot's distance from goal < stopping dist, robot stops
+    constexpr degree_t allowed_heading_error = 5_deg; // the amount of error allowed in the final heading
+    double k1 = 1.51;                                 // curveness of the path to the goal
+    double k2 = 4.4;                                  // speed of turning on the curves
+    double alpha = 1.03;                              // causes more sharply peaked curves
+    double beta = 0.02;                               // causes to drop velocity if 'k'(curveness) increases
+    meters_per_second_t max_velocity{ 0.05 };         // will limit the maximum velocity to this value
+    degrees_per_second_t max_turning_velocity{ 13 };
 
     BoBRobotics::Robots::RobotPositioner robp(
             stopping_distance,
