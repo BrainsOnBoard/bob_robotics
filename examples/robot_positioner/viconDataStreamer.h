@@ -12,18 +12,18 @@ class ViconDataStreamer {
 
 private:
 
-    UDPClient<ObjectData> *m_vicon;                          
+    UDPClient<ObjectData> *m_vicon;
     CaptureControl *m_viconCaptureControl;
     unsigned int m_vicon_udp_client_port;                     // udp streaming port number
     std::string m_vicon_capture_control_ip_address;           // vicon capture control ip address
     std::string m_vicon_capture_control_executable_path;      // vicon capture control program executable path
-    unsigned int m_capture_control_port;  
+    unsigned int m_capture_control_port;
 
     void setupVicon() {
 
         // setup vicon and capture control
         m_vicon = new UDPClient<ObjectData>(m_vicon_udp_client_port);
-        m_viconCaptureControl = new CaptureControl( 
+        m_viconCaptureControl = new CaptureControl(
             m_vicon_capture_control_ip_address,
             m_capture_control_port,
             m_vicon_capture_control_executable_path
@@ -35,7 +35,7 @@ private:
             std::cout << "Waiting for object" << std::endl;
         }
 
-        // start recording 
+        // start recording
         if(!m_viconCaptureControl->startRecording("test1")) {
             std::cout << "failed to start recording" << std::endl;
         } else {
@@ -60,15 +60,12 @@ public:
     }
 
     //! gets position of object from vicon
-    BoBRobotics::Vector3<millimeter_t> getTranslation() {
-        auto objectData = m_vicon->getObjectData(0);
-        return objectData.getPosition();     
+    auto getTranslation() {
+        return m_vicon->getObjectData(0).getPosition();
     }
 
     //! gets rotation of object from vicon
-    BoBRobotics::Vector3<radian_t> getRotation() {
-        auto objectData = m_vicon->getObjectData(0);
-        return objectData.getAttitude();   
+    auto getRotation() {
+        return m_vicon->getObjectData(0).getAttitude();
     }
-
 };
