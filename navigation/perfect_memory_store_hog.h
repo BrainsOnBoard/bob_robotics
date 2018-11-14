@@ -28,12 +28,12 @@ template<typename Differencer = AbsDiff>
 class HOG
 {
 public:
-    HOG(const cv::Size unwrapRes, const cv::Size &blockSize, int numOrientations)
+    HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, int numOrientations)
     :   HOG(unwrapRes, blockSize, blockSize, numOrientations)
     {
     }
 
-    HOG(const cv::Size unwrapRes, const cv::Size &blockSize, const cv::Size &blockStride, int numOrientations)
+    HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, const cv::Size &blockStride, int numOrientations)
     :   m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
                             numOrientations / (blockSize.width * blockSize.height)),
         m_Differencer(m_HOGDescriptorSize)
