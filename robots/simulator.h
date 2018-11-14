@@ -227,7 +227,8 @@ public:
     //! returns the current position of the robot
     Vector3<float> getCurrentPosition()
     {
-        return { static_cast<float>(m_robot_rect.x), static_cast<float>(m_robot_rect.y), m_angle.value() };
+        return { static_cast<float>(m_robot_rect.x), static_cast<float>(m_robot_rect.y),
+                 static_cast<float>(m_angle.value()) };
     }
 
     //! gets the position of the latest mouse click relative to the window
