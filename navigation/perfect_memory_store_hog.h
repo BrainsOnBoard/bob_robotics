@@ -20,6 +20,9 @@ namespace BoBRobotics {
 namespace Navigation {
 namespace PerfectMemoryStore {
 
+    /*numOrientations*
+        ((unwrapRes.width - blockSize.width)/blockStride.width + 1)*
+        ((unwrapRes.height - blockSize.height)/blockStride.height + 1);*/
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryStore::HOG
 //------------------------------------------------------------------------
@@ -34,11 +37,10 @@ public:
     }
 
     HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, const cv::Size &blockStride, int numOrientations)
-    :   m_HOGDescriptorSize(unwrapRes.width * unwrapRes.height *
-                            numOrientations / (blockSize.width * blockSize.height)),
+    :   m_HOGDescriptorSize(numOrientations * ((unwrapRes.width - blockSize.width)/blockStride.width + 1) * ((unwrapRes.height - blockSize.height)/blockStride.height + 1)),
         m_Differencer(m_HOGDescriptorSize)
     {
-        std::cout << "Creating perfect memory for HOG features" << std::endl;
+        std::cout << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features" << std::endl;
 
         // Configure HOG features
         m_HOG.winSize = unwrapRes;
