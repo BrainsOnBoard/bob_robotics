@@ -1,4 +1,6 @@
 // BoB robotics includes
+#include "common/main.h"
+#include "hid/joystick.h"
 #include "robots/norbot.h"
 #include "robots/robot_positioner.h"
 #include "vicon/udp.h"
@@ -23,7 +25,7 @@ using namespace units::velocity;
 using namespace std::literals;
 
 int
-main()
+bob_main(int, char **)
 {
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
@@ -60,12 +62,31 @@ main()
     std::cout << "Goal: (" << goalX << ", " << goalY << ") at " << goalHeading << std::endl;
     robp.setGoalPose(goalX, goalY, goalHeading);
 
-    while (1) {
-        const auto objectData = vicon.getObjectData(0);
-        const Vector3<millimeter_t> position = objectData.getPosition();
-        const Vector3<radian_t> attitude = objectData.getAttitude();
-        robp.updateMotors(bot, position[0], position[1], attitude[0]);
+    // drive robot with joystick
+    HID::Joystick joystick;
+    bot.addJoystick(joystick);
+
+    bool runPositioner = false;
+    while (!joystick.isPressed(HID::JButton::B)) {
+        const bool joystickUpdate = joystick.update();
+        if (joystick.isPressed(HID::JButton::Y)) {
+            runPositioner = !runPositioner;
+            if (runPositioner) {
+                std::cout << "Starting positioner" << std::endl;
+            } else {
+                std::cout << "Stopping positioner" << std::endl;
+            }
+        }
+
+        if (runPositioner) {
+            const auto objectData = vicon.getObjectData(0);
+            const Vector3<millimeter_t> position = objectData.getPosition();
+            const Vector3<radian_t> attitude = objectData.getAttitude();
+            robp.updateMotors(bot, position[0], position[1], attitude[0]);
+        } else if (!joystickUpdate) {
+            std::this_thread::sleep_for(5ms);
+        }
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
