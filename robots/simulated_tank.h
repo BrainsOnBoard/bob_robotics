@@ -32,6 +32,7 @@ public:
 
     const auto &getPose() const
     {
+        updatePose();
         return m_Pose;
     }
 
@@ -42,6 +43,7 @@ public:
 
     void setPose(const Pose2<LengthUnit, AngleUnit> &pose)
     {
+        m_MoveStartTime = now();
         m_Pose = pose;
     }
 
