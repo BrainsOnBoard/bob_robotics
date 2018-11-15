@@ -120,9 +120,8 @@ public:
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
-        meters_per_second_t &v,           // velocity to update
-        degrees_per_second_t &w)          // angular velocity to update
-
+            meters_per_second_t &v,  // velocity to update
+            degrees_per_second_t &w) // angular velocity to update
     {
         // If we're already at the goal, then we're done
         if (didReachGoal()) {
@@ -145,7 +144,8 @@ public:
                                                                 1 + (m_K1 / (1 + pow(m_K1 * m_Theta.value(), 2))) * sin(m_BearingFromGoal.value() * PI / 180) * 180 / PI);
 
         v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k), m_Alpha)));
-        w = degrees_per_second_t(k * v.value());
+        const units::angular_velocity::radians_per_second_t wrad{ k * v.value() };
+        w = wrad;
 
         // if turning speed is greater than the limit, turning speed = max_turning speed
         if (w > m_MaxTurnSpeed) {
