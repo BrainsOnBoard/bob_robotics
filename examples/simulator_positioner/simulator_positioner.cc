@@ -51,7 +51,7 @@ main()
             max_turning_velocity);
 
     const Pose2<millimeter_t, degree_t> startPose{ 1.2_m, 1.6_m, 15_deg };
-    robp.setGoalPose(startPose.x, startPose.y, startPose.angle);
+    robp.setGoalPose(startPose);
 
     bool runPositioner = false;
     auto lastTime = now();
@@ -67,10 +67,10 @@ main()
             const auto mousePosition = sim.getMouseClickLocation();
 
             // change the coordinates to mm
-            robp.setGoalPose(mousePosition[0], mousePosition[1], 15_deg);
+            robp.setGoalPose({ mousePosition[0], mousePosition[1], 15_deg });
 
             // update robot's current pose
-            robp.setPose(pose.x, pose.y, pose.angle);
+            robp.setPose(pose);
             if (robp.didReachGoal()) {
                 v = 0_mps;
                 w = 0_deg_per_s;
