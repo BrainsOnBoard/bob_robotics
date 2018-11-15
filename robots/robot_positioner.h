@@ -162,6 +162,10 @@ public:
         //                                       v = wheel_radius * (Vl+Vr)/2
         //                                       w = wheel_radius * (Vr-Vl)/axis_length
         setPose(pose);
+        if (didReachGoal()) {
+            bot.stopMoving();
+            return;
+        }
 
         meters_per_second_t v;
         degrees_per_second_t w;
