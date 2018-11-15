@@ -77,6 +77,11 @@ public:
         throw std::runtime_error("getRobotAxisLength() is not implemented for this class");
     }
 
+    virtual units::velocity::meters_per_second_t getMaximumSpeed()
+    {
+        throw std::runtime_error("getMaximumSpeed() is not implemented for this class");
+    }
+
     //! Controls the robot with a network stream
     void readFromNetwork(Net::Connection &connection)
     {
