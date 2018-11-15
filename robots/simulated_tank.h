@@ -12,6 +12,8 @@
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 template<typename LengthUnit, typename AngleUnit>
 class SimulatedTank
   : public Tank
@@ -30,7 +32,21 @@ public:
         return m_AxisLength;
     }
 
-    const auto &getPose() const
+    template<typename ReturnLengthUnit = LengthUnit>
+    Vector3<ReturnLengthUnit> getPosition()
+    {
+        updatePose();
+        return { m_Pose.x, m_Pose.y, 0_m };
+    }
+
+    template<typename ReturnAngleUnit = AngleUnit>
+    Vector3<ReturnAngleUnit> getAttitude()
+    {
+        updatePose();
+        return { m_Pose.angle, 0_rad, 0_rad };
+    }
+
+    const auto &getPose()
     {
         updatePose();
         return m_Pose;
