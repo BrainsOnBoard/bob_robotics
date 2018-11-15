@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/pose.h"
+#include "../robots/simulated_tank.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -20,9 +21,10 @@
 
 namespace BoBRobotics {
 namespace Robots {
-
 using namespace units::literals;
-class Simulator {
+
+class Simulator
+  : public SimulatedTank<units::length::millimeter_t, units::angle::degree_t> {
 private:
     using millimeter_t = units::length::millimeter_t;
     using degree_t = units::angle::degree_t;
@@ -43,12 +45,8 @@ private:
 
     meters_per_second_t m_v;  // velocity v (translational velocity)
     degrees_per_second_t m_w; // velocity w (rotational velocity)
-    degree_t m_angle;         // angle of the robot
-    millimeter_t m_x;         // position 'x' of the robot on the screen
-    millimeter_t m_y;         // position 'y' of the robot on the screen
 
-    // first goal is set to the middle of the window
-    Vector2<int> m_mouse_click_position{ WindowWidth / 2, WindowHeight / 2 };
+    Vector2<int> m_mouse_click_position;
 
     bool m_quit = false;
     SDL_Window *m_window;
@@ -68,18 +66,21 @@ private:
         m_v = v;
         m_w = w;
 
+        auto pose = getPose();
         if (w == 0_deg_per_s) {
             const meter_t r = v * dt;
-            setPose(m_x + r * cos(m_angle), m_y + r * sin(m_angle), m_angle);
+            pose.x += r * cos(pose.angle);
+            pose.y += r * sin(pose.angle);
         } else {
             // v = wr, but the units lib gives a mismatched units error for it
             const units::angular_velocity::radians_per_second_t w_rad = w;
             const meter_t r{ (v / w_rad).value() };
-            const degree_t new_angle = m_angle + w * dt;
-            const auto x = m_x + -r * sin(m_angle) + r * sin(new_angle);
-            const auto y = m_y + r * cos(m_angle) - r * cos(new_angle);
-            setPose(x, y, new_angle);
+            const degree_t newAngle = pose.angle + w * dt;
+            pose.x += -r * sin(pose.angle) + r * sin(newAngle);
+            pose.y += r * cos(pose.angle) - r * cos(newAngle);
+            pose.angle = newAngle;
         }
+        setPose(pose);
     }
 
     //! draws the rectangle at the desired coordinates
@@ -90,7 +91,8 @@ private:
     }
 
 public:
-    Simulator()
+    Simulator(const millimeter_t carWidth = 16.4_cm)
+      : SimulatedTank(Velocity, carWidth)
     {
         SDL_Init(SDL_INIT_VIDEO);
 
@@ -114,14 +116,21 @@ public:
         SDL_RenderClear(m_renderer);
 
         // initial position and size of the robot car
-        m_robot_rect = { WindowWidth / 2, WindowHeight / 2, 10, 13 };
+        m_robot_rect.x = WindowWidth / 2;
+        m_robot_rect.y = WindowHeight / 2;
+        const double widthPx = carWidth / MMPerPixel;
+        m_robot_rect.h = static_cast<int>(widthPx);
+        m_robot_rect.w = static_cast<int>((444.0 / 208.0) * widthPx);
 
-        m_x = m_robot_rect.x * MMPerPixel;
-        m_y = m_robot_rect.y * MMPerPixel;
-        m_angle = 10_deg;
+        // first goal is set to the middle of the window
+        m_mouse_click_position[0] = m_robot_rect.x;
+        m_mouse_click_position[1] = m_robot_rect.y;
+
+        SimulatedTank::setPose({ m_robot_rect.x * MMPerPixel,
+                                 m_robot_rect.y * MMPerPixel, 10_deg });
     }
 
-    ~Simulator()
+    virtual ~Simulator() override
     {
         // freeing up resources
         SDL_DestroyTexture(m_texture);
@@ -131,24 +140,13 @@ public:
     }
 
     //! sets the current pose of the robot
-    void setPose(const millimeter_t x, const millimeter_t y, const degree_t theta)
+    void setPose(const Pose2<millimeter_t, degree_t> &pose)
     {
-        m_x = x;
-        m_y = y;
-        m_angle = theta;
+        SimulatedTank::setPose(pose);
 
         // Update agent's position in pixels
-        m_robot_rect.x = m_x / MMPerPixel;
-        m_robot_rect.y = m_y / MMPerPixel;
-    }
-
-    //! sets the robot's size in millimeter
-    void setRobotSize(const millimeter_t height,
-                      const millimeter_t width
-                      )
-    {
-        m_robot_rect.h = height / MMPerPixel;
-        m_robot_rect.w = width / MMPerPixel;
+        m_robot_rect.x = pose.x / MMPerPixel;
+        m_robot_rect.y = pose.y / MMPerPixel;
     }
 
     //! returns true if we did quit the simulator's gui
@@ -160,8 +158,7 @@ public:
     //! suimulates a step of the simulation with the provided velocities
     bool simulationStep(meters_per_second_t v,
                         degrees_per_second_t w,
-                        second_t delta_time
-                        )
+                        second_t delta_time)
     {
         bool ret = false;
 
@@ -173,7 +170,7 @@ public:
         switch (m_event.type) {
         case SDL_QUIT:
             m_quit = true;
-            break;
+            return false;
 
         case SDL_KEYDOWN:
             switch (m_event.key.keysym.sym) {
@@ -217,24 +214,18 @@ public:
         SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 
         // render texture with rotation
-        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, m_angle.value(), nullptr, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, getPose().angle.value(), nullptr, SDL_FLIP_NONE);
 
         SDL_RenderPresent(m_renderer);
 
         return ret;
     }
 
-    //! returns the current position of the robot
-    Vector3<float> getCurrentPosition()
-    {
-        return { static_cast<float>(m_robot_rect.x), static_cast<float>(m_robot_rect.y),
-                 static_cast<float>(m_angle.value()) };
-    }
-
     //! gets the position of the latest mouse click relative to the window
-    Vector2<int> getMouseClickLocation()
+    Vector2<millimeter_t> getMouseClickLocation() const
     {
-        return m_mouse_click_position;
+        return { m_mouse_click_position[0] * MMPerPixel,
+                 m_mouse_click_position[1] * MMPerPixel };
     }
 
     //! changes the pixel value to millimeter

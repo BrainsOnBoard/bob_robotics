@@ -29,7 +29,6 @@ int
 main()
 {
     Robots::Simulator sim;
-    sim.setRobotSize(16.4_cm, 35_cm);
 
     millimeter_t stopping_distance = 5_cm;  // if the robot's distance from goal < stopping dist, robot stops
     degree_t allowed_heading_error = 1_deg; // the amount of error allowed in the final heading
@@ -51,32 +50,27 @@ main()
             max_velocity,
             max_turning_velocity);
 
-    constexpr Vector2<millimeter_t> startPosition{ 1.2_m, 1.6_m };
-    constexpr degree_t startHeading = 15_deg;
-    robp.setGoalPose(startPosition[0], startPosition[1], startHeading);
+    const Pose2<millimeter_t, degree_t> startPose{ 1.2_m, 1.6_m, 15_deg };
+    robp.setGoalPose(startPose.x, startPose.y, startPose.angle);
 
     bool runPositioner = false;
     auto lastTime = now();
     while (!sim.didQuit()) {
+        const auto currentTime = now();
+
         meters_per_second_t v{};
         degrees_per_second_t w{};
-        const auto pose = sim.getCurrentPosition();
+        const auto &pose = sim.getPose();
 
         if (runPositioner) {
             // setting a new goal position if user clicks in the window
             const auto mousePosition = sim.getMouseClickLocation();
 
             // change the coordinates to mm
-            Vector2<millimeter_t> newPosition;
-            Robots::Simulator::changePixelToMM(mousePosition[0], mousePosition[1], newPosition[0], newPosition[1]);
-            robp.setGoalPose(newPosition[0], newPosition[1], 15_deg);
-
-            // change the robot's coordinates to real units (mm)
-            millimeter_t robotPoseX, robotPoseY;
-            Robots::Simulator::changePixelToMM(pose[0], pose[1], robotPoseX, robotPoseY);
+            robp.setGoalPose(mousePosition[0], mousePosition[1], 15_deg);
 
             // update robot's current pose
-            robp.setPose(robotPoseX, robotPoseY, degree_t(pose[2]));
+            robp.setPose(pose.x, pose.y, pose.angle);
             if (robp.didReachGoal()) {
                 v = 0_mps;
                 w = 0_deg_per_s;
@@ -84,9 +78,6 @@ main()
                 robp.updateVelocities(v, w);
             }
         }
-
-        //timing end
-        const auto currentTime = now();
 
         if (sim.simulationStep(v, w, currentTime - lastTime)) {
             runPositioner = !runPositioner;
@@ -96,7 +87,7 @@ main()
                 std::cout << "Stopping simulation" << std::endl;
 
                 // Reset agent's position
-                sim.setPose(startPosition[0], startPosition[1], startHeading);
+                sim.setPose(startPose);
             }
         }
         lastTime = currentTime;
