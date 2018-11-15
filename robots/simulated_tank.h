@@ -72,14 +72,20 @@ private:
         const second_t elapsed = currentTime - m_MoveStartTime;
         m_MoveStartTime = currentTime;
 
-        const meter_t width = getRobotAxisLength();
-        const auto turnRadius = (width * (m_Left + m_Right)) /
-                                (2 * (m_Left - m_Right));
-        const double deltaAngle = (m_Right - m_Left) * elapsed / width;
-        const radian_t newAngle = m_Pose.angle + radian_t{ deltaAngle };
-        m_Pose.x += turnRadius * (sin(newAngle) - sin(m_Pose.angle));
-        m_Pose.y += turnRadius * (cos(newAngle) - cos(m_Pose.angle));
-        m_Pose.angle = newAngle;
+        if (m_Left == m_Right) {
+            const LengthUnit dist = m_Left * elapsed;
+            m_Pose.x += dist * cos(m_Pose.angle);
+            m_Pose.y += dist * sin(m_Pose.angle);
+        } else {
+            const meter_t width = getRobotAxisLength();
+            const auto turnRadius = (width * (m_Left + m_Right)) /
+                                    (2 * (m_Left - m_Right));
+            const double deltaAngle = (m_Right - m_Left) * elapsed / width;
+            const radian_t newAngle = m_Pose.angle + radian_t{ deltaAngle };
+            m_Pose.x += turnRadius * (sin(newAngle) - sin(m_Pose.angle));
+            m_Pose.y += turnRadius * (cos(newAngle) - cos(m_Pose.angle));
+            m_Pose.angle = newAngle;
+        }
     }
 
     static auto now()
