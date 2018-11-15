@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "pose.h"
+
 // Third-party includes
 #include "../third_party/matplotlibcpp.h"
 #include "../third_party/units.h"
@@ -9,12 +12,14 @@
 
 namespace BoBRobotics {
     template<typename AgentType>
-    void plotAgent(const AgentType &agent,
+    void plotAgent(AgentType &agent,
                    const std::array<double, 2> &xlim,
                    const std::array<double, 2> &ylim)
     {
+        using namespace units::length;
+
         // Update plot
-        const auto position = agent.template getPosition<>();
+        const Vector3<millimeter_t> position = agent.template getPosition<millimeter_t>();
         const auto attitude = agent.template getAttitude<>();
         const std::vector<double> vx{ position[0].value() };
         const std::vector<double> vy{ position[1].value() };
