@@ -85,6 +85,7 @@ main()
                 std::cout << "Starting simulation" << std::endl;
             } else {
                 std::cout << "Stopping simulation" << std::endl;
+                sim.stopMoving();
 
                 // Reset agent's position
                 sim.setPose(startPose);
