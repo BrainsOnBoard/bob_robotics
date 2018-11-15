@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/pose.h"
 #include "../robots/tank.h"
 
 // Third-party includes
@@ -31,28 +32,25 @@ using namespace units::angular_velocity;
  * with, e.g. a Vicon system (see Vicon::UDPClient). The algorithm used is drawn
  * from: https://web.eecs.umich.edu/~kuipers/papers/Park-icra-11.pdf
  */
-class RobotPositioner {
+class RobotPositioner
+{
 private:
     // Robot variables
-    millimeter_t m_pos_X;                                           // robot's x position
-    millimeter_t m_pos_Y;                                           // robot's y position
-    millimeter_t m_goalPositionX;                                   // goal position x
-    millimeter_t m_goalPositionY;                                   // goal position y
-    millimeter_t m_distanceFromGoal;                                // Euclidean distance from goal coordinate
-    degree_t m_heading;                                             // heading (angle) of the robot
-    degree_t m_goalAngle;                                           // angle to turn after finding the correct location
-    degree_t m_bearingFromGoal;                                     // bearing (angle) from goal coordinate
-    degree_t m_theta;
+    Pose2<millimeter_t, degree_t> m_RobotPose;
+    Pose2<millimeter_t, degree_t> m_GoalPose;
+    millimeter_t m_DistanceFromGoal; // Euclidean distance from goal coordinate
+    degree_t m_BearingFromGoal;      // bearing (angle) from goal coordinate
+    degree_t m_Theta;
 
     // user variables
-    millimeter_t m_stopping_distance;                               // if the robot's distance from goal < stopping dist, robot stops
-    degree_t m_allowed_heading_error;                               // the amount of error allowed in the final heading
-    meters_per_second_t m_max_velocity;                             // max velocity
-    degrees_per_second_t m_maxTurningVelocity;                      // max turning velocity
-    double m_k1;                                                    // curveness of the path to the goal
-    double m_k2;                                                    // speed of turning on the curves
-    double m_alpha;                                                 // causes more sharply peaked curves
-    double m_beta;                                                  // causes to drop velocity if 'k'(curveness) increases
+    const millimeter_t m_StoppingDistance;          // if the robot's distance from goal < stopping dist, robot stops
+    const degree_t m_AllowedHeadingError;          // the amount of error allowed in the final heading
+    const meters_per_second_t m_MaxVelocity;        // max velocity
+    const degrees_per_second_t m_MaxTurnSpeed; // max turning velocity
+    const double m_K1;                               // curveness of the path to the goal
+    const double m_K2;                               // speed of turning on the curves
+    const double m_Alpha;                            // causes more sharply peaked curves
+    const double m_Beta;                             // causes to drop velocity if 'k'(curveness) increases
 
     static degree_t angleWrapAround(degree_t angle) {
 
@@ -65,18 +63,18 @@ private:
     // updates the range and bearing from the goal location
     void updateRangeAndBearing() {
 
-        millimeter_t delta_x = m_goalPositionX - m_pos_X;
-        millimeter_t delta_y = m_goalPositionY - m_pos_Y;
+        const millimeter_t delta_x = m_GoalPose.x - m_RobotPose.x;
+        const millimeter_t delta_y = m_GoalPose.y - m_RobotPose.y;
 
         // calculate distance
-        m_distanceFromGoal =  units::math::hypot(delta_x, delta_y);
+        m_DistanceFromGoal =  units::math::hypot(delta_x, delta_y);
 
         // calculate bearing
-        m_bearingFromGoal = units::math::atan2(delta_y,delta_x)-m_heading;
+        m_BearingFromGoal = units::math::atan2(delta_y,delta_x) - m_RobotPose.angle;
 
         // changing from <0,360> to <-180, 180>
-        m_bearingFromGoal = angleWrapAround(m_bearingFromGoal);
-        m_heading = angleWrapAround(m_heading);
+        m_BearingFromGoal = angleWrapAround(m_BearingFromGoal);
+        m_RobotPose.angle = angleWrapAround(m_RobotPose.angle);
     }
 
 //-----------------PUBLIC API---------------------------------------------------------------------
@@ -92,32 +90,27 @@ public:
         double beta,                                                  // causes to drop velocity if 'k'(curveness) increases
         meters_per_second_t max_velocity,                             // max velocity
         degrees_per_second_t max_turning_velocity
-        ) : m_stopping_distance(stopping_distance),
-            m_allowed_heading_error(allowed_heading_error),
-            m_max_velocity(max_velocity),
-            m_maxTurningVelocity(max_turning_velocity),
-            m_k1(k1),
-            m_k2(k2),
-            m_alpha(alpha),
-            m_beta(beta)
+        ) : m_StoppingDistance(stopping_distance),
+            m_AllowedHeadingError(allowed_heading_error),
+            m_MaxVelocity(max_velocity),
+            m_MaxTurnSpeed(max_turning_velocity),
+            m_K1(k1),
+            m_K2(k2),
+            m_Alpha(alpha),
+            m_Beta(beta)
     {  }
 
     //! sets the goal pose (x, y, angle)
-    void setGoalPose(millimeter_t pos_x, millimeter_t pos_y, degree_t goal_angle)
+    void setGoalPose(const Pose2<millimeter_t, degree_t> &pose)
     {
-        m_goalPositionX = pos_x;
-        m_goalPositionY = pos_y;
-        m_goalAngle = goal_angle;
-
+        m_GoalPose = pose;
         updateRangeAndBearing();
     }
 
     //! updates the agent's current pose
-    void setPose(const millimeter_t x, const millimeter_t y, const degree_t theta)
+    void setPose(const Pose2<millimeter_t, degree_t> &pose)
     {
-        m_pos_X = x;
-        m_pos_Y = y;
-        m_heading = theta;
+        m_RobotPose = pose;
 
         // Recompute heading and distance from goal
         updateRangeAndBearing();
@@ -139,38 +132,36 @@ public:
         }
 
         // orientation of Target with respect to the line of sight from the observer to the target
-        m_theta = m_heading + m_bearingFromGoal - m_goalAngle;
-        m_theta = angleWrapAround(m_theta);
+        m_Theta = m_RobotPose.angle + m_BearingFromGoal - m_GoalPose.angle;
+        m_Theta = angleWrapAround(m_Theta);
 
-        meter_t distanceFromGoalMeters = m_distanceFromGoal;
+        meter_t distanceFromGoalMeters = m_DistanceFromGoal;
         if (distanceFromGoalMeters == 0_m) {
             // If we're at the goal (but at wrong heading) then set distance to a tiny value
             distanceFromGoalMeters = meter_t{ std::numeric_limits<double>::epsilon() };
         }
 
-        const float k = (1 / distanceFromGoalMeters.value()) * (m_k2 * (m_bearingFromGoal.value() - atan(-m_k1 * m_theta.value() * PI / 180) * 180 / PI) +
-                                                                1 + (m_k1 / (1 + pow(m_k1 * m_theta.value(), 2))) * sin(m_bearingFromGoal.value() * PI / 180) * 180 / PI);
+        const float k = (1 / distanceFromGoalMeters.value()) * (m_K2 * (m_BearingFromGoal.value() - atan(-m_K1 * m_Theta.value() * PI / 180) * 180 / PI) +
+                                                                1 + (m_K1 / (1 + pow(m_K1 * m_Theta.value(), 2))) * sin(m_BearingFromGoal.value() * PI / 180) * 180 / PI);
 
-        v = m_max_velocity / scalar_t((1 + m_beta * pow(std::abs(k), m_alpha)));
+        v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k), m_Alpha)));
         w = degrees_per_second_t(k * v.value());
 
         // if turning speed is greater than the limit, turning speed = max_turning speed
-        if (w > m_maxTurningVelocity) {
-            w = m_maxTurningVelocity;
+        if (w > m_MaxTurnSpeed) {
+            w = m_MaxTurnSpeed;
         }
     }
 
     //! This function will update the motors so it drives towards a previously set goal location
     void updateMotors(BoBRobotics::Robots::Tank &bot,
-                      const millimeter_t pos_x,
-                      const millimeter_t pos_y,
-                      const degree_t angle)
+                      const Pose2<millimeter_t, degree_t> &pose)
     {
         // here we are solving simultaneous equations where we would like to
         // recover Vl (left wheel velocity) and Vr (right wheel velocity)
         //                                       v = wheel_radius * (Vl+Vr)/2
         //                                       w = wheel_radius * (Vr-Vl)/axis_length
-        setPose(pos_x, pos_y, angle);
+        setPose(pose);
 
         meters_per_second_t v;
         degrees_per_second_t w;
@@ -202,11 +193,10 @@ public:
     //! returns true if the robot reached the goal position
     bool didReachGoal()
     {
-        return (m_distanceFromGoal < m_stopping_distance  &&
-               ((m_heading - m_goalAngle) > -m_allowed_heading_error &&
-                (m_heading - m_goalAngle) < m_allowed_heading_error));
+        return m_DistanceFromGoal < m_StoppingDistance &&
+                    units::math::abs(m_RobotPose.angle - m_GoalPose.angle) < m_AllowedHeadingError;
     }
 
-};// RobotPositioner
+}; // RobotPositioner
 } // Robots
 } // BoBRobotics

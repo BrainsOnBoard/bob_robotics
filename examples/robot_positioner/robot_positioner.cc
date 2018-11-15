@@ -57,10 +57,9 @@ bob_main(int, char **)
             max_turning_velocity);
 
     // set goal pose
-    constexpr millimeter_t goalX = 0_mm, goalY = 0_mm;
-    constexpr degree_t goalHeading = 15_deg;
-    std::cout << "Goal: (" << goalX << ", " << goalY << ") at " << goalHeading << std::endl;
-    robp.setGoalPose(goalX, goalY, goalHeading);
+    const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
+    std::cout << "Goal: (" << goal.x << ", " << goal.y << ") at " << goal.angle << std::endl;
+    robp.setGoalPose(goal);
 
     // drive robot with joystick
     HID::Joystick joystick;
@@ -83,7 +82,7 @@ bob_main(int, char **)
             const auto objectData = vicon.getObjectData(0);
             const Vector3<millimeter_t> position = objectData.getPosition();
             const Vector3<radian_t> attitude = objectData.getAttitude();
-            robp.updateMotors(bot, position[0], position[1], attitude[0]);
+            robp.updateMotors(bot, { position[0], position[1], attitude[0] });
         } else if (!joystickUpdate) {
             std::this_thread::sleep_for(5ms);
         }
