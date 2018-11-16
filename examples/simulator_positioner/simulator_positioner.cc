@@ -28,7 +28,7 @@ now()
 int
 main()
 {
-    Robots::Simulator sim;
+    Robots::Simulator sim(104_mm);
 
     millimeter_t stopping_distance = 5_cm;  // if the robot's distance from goal < stopping dist, robot stops
     degree_t allowed_heading_error = 1_deg; // the amount of error allowed in the final heading
@@ -70,13 +70,7 @@ main()
             robp.setGoalPose({ mousePosition[0], mousePosition[1], 15_deg });
 
             // update robot's current pose
-            robp.setPose(pose);
-            if (robp.didReachGoal()) {
-                v = 0_mps;
-                w = 0_deg_per_s;
-            } else {
-                robp.updateVelocities(v, w);
-            }
+            robp.updateMotors(sim, pose);
         }
 
         if (sim.simulationStep(v, w, currentTime - lastTime)) {
