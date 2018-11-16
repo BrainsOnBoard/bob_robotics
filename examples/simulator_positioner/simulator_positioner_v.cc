@@ -28,7 +28,7 @@ now()
 int
 main()
 {
-    Robots::Simulator sim;
+    Robots::Simulator sim(50_cm, 0.1_mps, 34_mm);
 
     millimeter_t stopping_distance = 5_cm;  // if the robot's distance from goal < stopping dist, robot stops
     degree_t allowed_heading_error = 1_deg; // the amount of error allowed in the final heading

@@ -35,10 +35,6 @@ private:
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using second_t = units::time::second_t;
 
-    // Agent's forward velocity and turning speed
-    static constexpr meters_per_second_t Velocity = 1_mps;
-    static constexpr degrees_per_second_t TurnSpeed = 90_deg_per_s;
-
     // Window size
     static constexpr int WindowWidth = 800;
     static constexpr int WindowHeight = 600;
@@ -252,17 +248,17 @@ public:
         if (key.second) {
             switch (key.first) {
             case SDLK_LEFT:
-                w = TurnSpeed;
+                w = getMaximumTurnSpeed();
                 break;
             case SDLK_RIGHT:
-                w = -TurnSpeed;
+                w = -getMaximumTurnSpeed();
                 break;
             case SDLK_UP:
-                v = Velocity;
+                v = getMaximumSpeed();
                 w = 0_deg_per_s;
                 break;
             case SDLK_DOWN:
-                v = -Velocity;
+                v = -getMaximumSpeed();
                 w = 0_deg_per_s;
                 break;
             }
@@ -294,8 +290,6 @@ public:
 }; // Simulator
 
 #ifndef NO_HEADER_DEFINITIONS
-constexpr units::velocity::meters_per_second_t Simulator::Velocity;
-constexpr units::angular_velocity::degrees_per_second_t Simulator::TurnSpeed;
 constexpr int Simulator::WindowWidth, Simulator::WindowHeight;
 #endif
 } // Robots
