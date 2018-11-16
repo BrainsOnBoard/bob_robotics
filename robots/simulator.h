@@ -39,15 +39,13 @@ private:
     static constexpr meters_per_second_t Velocity = 1_mps;
     static constexpr degrees_per_second_t TurnSpeed = 90_deg_per_s;
 
-    // Scaling factor
-    static constexpr millimeter_t MMPerPixel = 4_mm;
-
     // Window size
     static constexpr int WindowWidth = 800;
     static constexpr int WindowHeight = 600;
 
     meters_per_second_t m_v;  // velocity v (translational velocity)
     degrees_per_second_t m_w; // velocity w (rotational velocity)
+    millimeter_t m_MMPerPixel;
 
     Vector2<int> m_mouse_click_position;
 
@@ -73,14 +71,14 @@ private:
         if (w == 0_deg_per_s) {
             const meter_t r = v * dt;
             pose.x += r * cos(pose.angle);
-            pose.y += r * sin(pose.angle);
+            pose.y -= r * sin(pose.angle);
         } else {
             // v = wr, but the units lib gives a mismatched units error for it
             const units::angular_velocity::radians_per_second_t w_rad = w;
             const meter_t r{ (v / w_rad).value() };
             const degree_t newAngle = pose.angle + w * dt;
             pose.x += -r * sin(pose.angle) + r * sin(newAngle);
-            pose.y += r * cos(pose.angle) - r * cos(newAngle);
+            pose.y -= r * cos(pose.angle) - r * cos(newAngle);
             pose.angle = newAngle;
         }
         setPose(pose);
@@ -131,14 +129,15 @@ private:
         SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
 
         // render texture with rotation
-        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, getPose().angle.value(), nullptr, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, -getPose().angle.value(), nullptr, SDL_FLIP_NONE);
 
         SDL_RenderPresent(m_renderer);
     }
 
 public:
-    Simulator(const millimeter_t carWidth = 16.4_cm)
-      : SimulatedTank(Velocity, carWidth)
+    Simulator(const millimeter_t screenHeight = 3.2_m, const meters_per_second_t speed = 0.05_mps, const millimeter_t carWidth = 16.4_cm)
+      : SimulatedTank(speed, carWidth)
+      , m_MMPerPixel(screenHeight / WindowHeight)
     {
         SDL_Init(SDL_INIT_VIDEO);
 
@@ -168,16 +167,16 @@ public:
         // initial position and size of the robot car
         m_robot_rect.x = WindowWidth / 2;
         m_robot_rect.y = WindowHeight / 2;
-        const double widthPx = carWidth / MMPerPixel;
+        const double widthPx = carWidth / m_MMPerPixel;
         m_robot_rect.h = static_cast<int>(widthPx);
         m_robot_rect.w = static_cast<int>((444.0 / 208.0) * widthPx);
 
         // first goal is set to the middle of the window
         m_mouse_click_position[0] = m_robot_rect.x;
-        m_mouse_click_position[1] = m_robot_rect.y;
+        m_mouse_click_position[1] = WindowHeight - m_robot_rect.y;
 
-        SimulatedTank::setPose({ m_robot_rect.x * MMPerPixel,
-                                 m_robot_rect.y * MMPerPixel,
+        SimulatedTank::setPose({ m_robot_rect.x * m_MMPerPixel,
+                                 m_robot_rect.y * m_MMPerPixel,
                                  10_deg });
     }
 
@@ -196,8 +195,8 @@ public:
         SimulatedTank::setPose(pose);
 
         // Update agent's position in pixels
-        m_robot_rect.x = pose.x / MMPerPixel;
-        m_robot_rect.y = pose.y / MMPerPixel;
+        m_robot_rect.x = pose.x / m_MMPerPixel;
+        m_robot_rect.y = pose.y / m_MMPerPixel;
     }
 
     //! returns true if we did quit the simulator's gui
@@ -212,10 +211,10 @@ public:
         if (key.second) {
             switch (key.first) {
             case SDLK_LEFT:
-                tank(0.5f, -0.5f);
+                tank(-0.5f, 0.5f);
                 break;
             case SDLK_RIGHT:
-                tank(-0.5f, 0.5f);
+                tank(0.5f, -0.5f);
                 break;
             case SDLK_UP:
                 tank(1.f, 1.f);
@@ -236,8 +235,8 @@ public:
         }
 
         const auto &pose = getPose();
-        m_robot_rect.x = static_cast<int>(pose.x / MMPerPixel);
-        m_robot_rect.y = static_cast<int>(pose.y / MMPerPixel);
+        m_robot_rect.x = static_cast<int>(pose.x / m_MMPerPixel);
+        m_robot_rect.y = WindowHeight - static_cast<int>(pose.y / m_MMPerPixel);
 
         draw();
 
@@ -253,10 +252,10 @@ public:
         if (key.second) {
             switch (key.first) {
             case SDLK_LEFT:
-                w = -TurnSpeed;
+                w = TurnSpeed;
                 break;
             case SDLK_RIGHT:
-                w = TurnSpeed;
+                w = -TurnSpeed;
                 break;
             case SDLK_UP:
                 v = Velocity;
@@ -279,25 +278,24 @@ public:
     //! gets the position of the latest mouse click relative to the window
     Vector2<millimeter_t> getMouseClickLocation() const
     {
-        return { m_mouse_click_position[0] * MMPerPixel,
-                 m_mouse_click_position[1] * MMPerPixel };
+        return { m_mouse_click_position[0] * m_MMPerPixel,
+                 m_mouse_click_position[1] * m_MMPerPixel };
     }
 
     //! changes the pixel value to millimeter
-    static void changePixelToMM(const float x_pos,
+    void changePixelToMM(const float x_pos,
                                 const float y_pos,
                                 millimeter_t &x_mm,
                                 millimeter_t &y_mm)
     {
-        x_mm = x_pos * MMPerPixel;
-        y_mm = y_pos * MMPerPixel;
+        x_mm = x_pos * m_MMPerPixel;
+        y_mm = y_pos * m_MMPerPixel;
     }
 }; // Simulator
 
 #ifndef NO_HEADER_DEFINITIONS
 constexpr units::velocity::meters_per_second_t Simulator::Velocity;
 constexpr units::angular_velocity::degrees_per_second_t Simulator::TurnSpeed;
-constexpr units::length::millimeter_t Simulator::MMPerPixel;
 constexpr int Simulator::WindowWidth, Simulator::WindowHeight;
 #endif
 } // Robots
