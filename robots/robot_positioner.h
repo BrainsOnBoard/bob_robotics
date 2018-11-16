@@ -140,7 +140,7 @@ public:
             distanceFromGoalMeters = meter_t{ std::numeric_limits<double>::epsilon() };
         }
 
-        const float k = (1 / distanceFromGoalMeters.value()) * (m_K2 * (m_BearingFromGoal.value() - atan(-m_K1 * m_Theta.value() * PI / 180) * 180 / PI) +
+        const float k = -(1 / distanceFromGoalMeters.value()) * (m_K2 * (m_BearingFromGoal.value() - atan(-m_K1 * m_Theta.value() * PI / 180) * 180 / PI) +
                                                                 1 + (m_K1 / (1 + pow(m_K1 * m_Theta.value(), 2))) * sin(m_BearingFromGoal.value() * PI / 180) * 180 / PI);
 
         v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k), m_Alpha)));
