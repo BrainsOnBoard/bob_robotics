@@ -70,10 +70,19 @@ main()
             robp.setGoalPose({ mousePosition[0], mousePosition[1], 15_deg });
 
             // update robot's current pose
-            robp.updateMotors(sim, pose);
+            robp.setPose(pose);
+            if (robp.didReachGoal()) {
+                v = 0_mps;
+                w = 0_deg_per_s;
+            } else {
+                robp.updateVelocities(v, w);
+            }
+            sim.drive(v, w);
+            // robp.updateMotors(sim, pose);
+            // sim.simulationStep(v, w, currentTime - lastTime);
         }
 
-        if (sim.simulationStep(v, w, currentTime - lastTime)) {
+        if (sim.simulationStep() == SDLK_SPACE) {
             runPositioner = !runPositioner;
             if (runPositioner) {
                 std::cout << "Starting simulation" << std::endl;

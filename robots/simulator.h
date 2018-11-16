@@ -17,6 +17,7 @@
 // Standard C++ includes
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace BoBRobotics {
@@ -24,8 +25,10 @@ namespace Robots {
 using namespace units::literals;
 
 class Simulator
-  : public SimulatedTank<units::length::millimeter_t, units::angle::degree_t> {
+  : public SimulatedTank<units::length::millimeter_t, units::angle::degree_t>
+{
 private:
+    using meter_t = units::length::meter_t;
     using millimeter_t = units::length::millimeter_t;
     using degree_t = units::angle::degree_t;
     using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
@@ -83,11 +86,54 @@ private:
         setPose(pose);
     }
 
+    std::pair<SDL_Keycode, bool> pollEvents()
+    {
+        // Clear the entire screen to our selected color.
+        SDL_RenderClear(m_renderer);
+
+        // getting events
+        SDL_PollEvent(&m_event);
+        switch (m_event.type) {
+        case SDL_QUIT:
+            m_quit = true;
+            break;
+        case SDL_KEYDOWN:
+            return std::make_pair(m_event.key.keysym.sym, true);
+        case SDL_KEYUP:
+            return std::make_pair(m_event.key.keysym.sym, false);
+        case SDL_MOUSEBUTTONDOWN:
+            // If the left button was pressed.
+            if (m_event.button.button == SDL_BUTTON_LEFT) {
+                SDL_GetMouseState(&m_mouse_click_position[0], &m_mouse_click_position[1]);
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        return std::make_pair(0, false);
+    }
+
     //! draws the rectangle at the desired coordinates
     void drawRectangleAtCoordinates(const SDL_Rect &rectangle)
     {
         SDL_SetRenderDrawColor(m_renderer, 0, 0, 255, 255);
         SDL_RenderFillRect(m_renderer, &rectangle);
+    }
+
+    void draw()
+    {
+        // draw a rectangle at the goal position
+        drawRectangleAtCoordinates({ m_mouse_click_position[0], m_mouse_click_position[1], 5, 5 });
+
+        // Select the color for drawing.
+        SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+
+        // render texture with rotation
+        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, getPose().angle.value(), nullptr, SDL_FLIP_NONE);
+
+        SDL_RenderPresent(m_renderer);
     }
 
 public:
@@ -97,7 +143,11 @@ public:
         SDL_Init(SDL_INIT_VIDEO);
 
         m_window = SDL_CreateWindow("Wheeled-robot simulator",
-            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WindowWidth, WindowHeight, 0);
+                                    SDL_WINDOWPOS_UNDEFINED,
+                                    SDL_WINDOWPOS_UNDEFINED,
+                                    WindowWidth,
+                                    WindowHeight,
+                                    0);
 
         m_renderer = SDL_CreateRenderer(m_window, -1, 0);
 
@@ -127,7 +177,8 @@ public:
         m_mouse_click_position[1] = m_robot_rect.y;
 
         SimulatedTank::setPose({ m_robot_rect.x * MMPerPixel,
-                                 m_robot_rect.y * MMPerPixel, 10_deg });
+                                 m_robot_rect.y * MMPerPixel,
+                                 10_deg });
     }
 
     virtual ~Simulator() override
@@ -155,25 +206,52 @@ public:
         return m_quit;
     }
 
-    //! suimulates a step of the simulation with the provided velocities
-    bool simulationStep(meters_per_second_t v,
-                        degrees_per_second_t w,
-                        second_t delta_time)
+    SDL_Keycode simulationStep()
     {
-        bool ret = false;
+        const auto key = pollEvents();
+        if (key.second) {
+            switch (key.first) {
+            case SDLK_LEFT:
+                tank(0.5f, -0.5f);
+                break;
+            case SDLK_RIGHT:
+                tank(-0.5f, 0.5f);
+                break;
+            case SDLK_UP:
+                tank(1.f, 1.f);
+                break;
+            case SDLK_DOWN:
+                tank(-1.f, -1.f);
+                break;
+            }
+        } else {
+            switch (key.first) {
+            case SDLK_LEFT:
+            case SDLK_RIGHT:
+            case SDLK_UP:
+            case SDLK_DOWN:
+                stopMoving();
+                break;
+            }
+        }
 
-        // Clear the entire screen to our selected color.
-        SDL_RenderClear(m_renderer);
+        const auto &pose = getPose();
+        m_robot_rect.x = static_cast<int>(pose.x / MMPerPixel);
+        m_robot_rect.y = static_cast<int>(pose.y / MMPerPixel);
 
-        // getting events
-        SDL_PollEvent(&m_event);
-        switch (m_event.type) {
-        case SDL_QUIT:
-            m_quit = true;
-            return false;
+        draw();
 
-        case SDL_KEYDOWN:
-            switch (m_event.key.keysym.sym) {
+        return key.second ? key.first : 0;
+    }
+
+    //! suimulates a step of the simulation with the provided velocities
+    SDL_Keycode simulationStep(meters_per_second_t v,
+                               degrees_per_second_t w,
+                               second_t delta_time)
+    {
+        const auto key = pollEvents();
+        if (key.second) {
+            switch (key.first) {
             case SDLK_LEFT:
                 w = -TurnSpeed;
                 break;
@@ -188,37 +266,14 @@ public:
                 v = -Velocity;
                 w = 0_deg_per_s;
                 break;
-            case SDLK_SPACE:
-                ret = true;
-                break;
             }
-            break;
-
-        case SDL_MOUSEBUTTONDOWN:
-            // If the left button was pressed.
-            if (m_event.button.button == SDL_BUTTON_LEFT) {
-                SDL_GetMouseState(&m_mouse_click_position[0], &m_mouse_click_position[1]);
-            }
-            break;
-
-        default:
-            break;
         }
 
         updatePose(v, w, delta_time);
 
-        // draw a rectangle at the goal position
-        drawRectangleAtCoordinates({ m_mouse_click_position[0], m_mouse_click_position[1], 5, 5 });
+        draw();
 
-        // Select the color for drawing.
-        SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
-
-        // render texture with rotation
-        SDL_RenderCopyEx(m_renderer, m_texture, nullptr, &m_robot_rect, getPose().angle.value(), nullptr, SDL_FLIP_NONE);
-
-        SDL_RenderPresent(m_renderer);
-
-        return ret;
+        return key.second ? key.first : 0;
     }
 
     //! gets the position of the latest mouse click relative to the window

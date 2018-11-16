@@ -79,7 +79,7 @@ main()
             }
         }
 
-        if (sim.simulationStep(v, w, currentTime - lastTime)) {
+        if (sim.simulationStep(v, w, currentTime - lastTime) == SDLK_SPACE) {
             runPositioner = !runPositioner;
             if (runPositioner) {
                 std::cout << "Starting simulation" << std::endl;
