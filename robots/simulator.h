@@ -67,14 +67,14 @@ private:
         if (w == 0_deg_per_s) {
             const meter_t r = v * dt;
             pose.x += r * cos(pose.angle);
-            pose.y -= r * sin(pose.angle);
+            pose.y += r * sin(pose.angle);
         } else {
             // v = wr, but the units lib gives a mismatched units error for it
             const units::angular_velocity::radians_per_second_t w_rad = w;
             const meter_t r{ (v / w_rad).value() };
             const degree_t newAngle = pose.angle + w * dt;
             pose.x += -r * sin(pose.angle) + r * sin(newAngle);
-            pose.y -= r * cos(pose.angle) - r * cos(newAngle);
+            pose.y += r * cos(pose.angle) - r * cos(newAngle);
             pose.angle = newAngle;
         }
         setPose(pose);
@@ -191,8 +191,8 @@ public:
         SimulatedTank::setPose(pose);
 
         // Update agent's position in pixels
-        m_robot_rect.x = pose.x / m_MMPerPixel;
-        m_robot_rect.y = pose.y / m_MMPerPixel;
+        m_robot_rect.x = static_cast<int>(pose.x / m_MMPerPixel);
+        m_robot_rect.y = WindowHeight - static_cast<int>(pose.y / m_MMPerPixel);
     }
 
     //! returns true if we did quit the simulator's gui
