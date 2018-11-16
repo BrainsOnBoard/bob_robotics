@@ -17,7 +17,12 @@ all: $(EXECUTABLE)
 $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
+-include simulator_positioner_v.d
+
+simulator_positioner_v: simulator_positioner_v.cc simulator_positioner_v.d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
 %d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f $(EXECUTABLE){,_v} $(EXECUTABLE).d
