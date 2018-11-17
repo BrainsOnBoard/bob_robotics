@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "../common/pose.h"
-#include "../robots/simulated_tank.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -24,8 +23,7 @@ namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
 
-class Simulator
-  : public SimulatedTank<units::length::millimeter_t, units::angle::degree_t>
+class CarDisplay
 {
     using meter_t = units::length::meter_t;
     using millimeter_t = units::length::millimeter_t;
@@ -35,9 +33,8 @@ class Simulator
     using second_t = units::time::second_t;
 
 public:
-    Simulator(const millimeter_t screenHeight = 3.2_m, const meters_per_second_t speed = 0.05_mps, const millimeter_t carWidth = 16.4_cm)
-      : SimulatedTank(speed, carWidth)
-      , m_MMPerPixel(screenHeight / WindowHeight)
+    CarDisplay(const millimeter_t screenHeight = 3.2_m, const millimeter_t carWidth = 16.4_cm)
+      : m_MMPerPixel(screenHeight / WindowHeight)
     {
         SDL_Init(SDL_INIT_VIDEO);
 
@@ -76,7 +73,7 @@ public:
         setRobotPosition(0_m, 0_m);
     }
 
-    virtual ~Simulator() override
+    ~CarDisplay()
     {
         // freeing up resources
         SDL_DestroyTexture(m_Texture);
@@ -85,58 +82,22 @@ public:
         SDL_Quit();
     }
 
-    //! sets the current pose of the robot
-    void setPose(const Pose2<millimeter_t, degree_t> &pose)
-    {
-        SimulatedTank::setPose(pose);
-
-        // Update agent's position in pixels
-        setRobotPosition(pose.x, pose.y);
-    }
-
     //! Returns true if GUI is still running
     bool isOpen() const
     {
         return m_IsOpen;
     }
 
-    SDL_Keycode simulationStep()
+    auto runGUI(const Pose2<millimeter_t, degree_t> &agentPose)
     {
         const auto key = pollEvents();
-        if (key.second) {
-            switch (key.first) {
-            case SDLK_LEFT:
-                tank(-0.5f, 0.5f);
-                break;
-            case SDLK_RIGHT:
-                tank(0.5f, -0.5f);
-                break;
-            case SDLK_UP:
-                tank(1.f, 1.f);
-                break;
-            case SDLK_DOWN:
-                tank(-1.f, -1.f);
-                break;
-            }
-        } else {
-            switch (key.first) {
-            case SDLK_LEFT:
-            case SDLK_RIGHT:
-            case SDLK_UP:
-            case SDLK_DOWN:
-                stopMoving();
-                break;
-            }
-        }
-
-        const auto &pose = getPose();
 
         // Update agent's position in pixels
-        setRobotPosition(pose.x, pose.y);
+        setRobotPosition(agentPose.x, agentPose.y);
 
-        draw();
+        draw(agentPose.angle);
 
-        return key.second ? key.first : 0;
+        return key;
     }
 
     Vector2<millimeter_t> getMouseClickPosition() const
@@ -194,7 +155,7 @@ private:
         SDL_RenderFillRect(m_Renderer, &rectangle);
     }
 
-    void draw()
+    void draw(const degree_t agentAngle)
     {
         // Clear the entire screen to our selected color.
         SDL_RenderClear(m_Renderer);
@@ -207,7 +168,7 @@ private:
 
         // render texture with rotation
         SDL_RenderCopyEx(m_Renderer, m_Texture, nullptr, &m_RobotRectangle,
-                         -getPose().angle.value(), nullptr, SDL_FLIP_NONE);
+                         -agentAngle.value(), nullptr, SDL_FLIP_NONE);
 
         SDL_RenderPresent(m_Renderer);
     }
@@ -230,10 +191,10 @@ private:
         m_RobotRectangle.x -= m_RobotRectangle.w / 2;
         m_RobotRectangle.y -= m_RobotRectangle.h / 2;
     }
-}; // Simulator
+}; // CarDisplay
 
 #ifndef NO_HEADER_DEFINITIONS
-constexpr int Simulator::WindowWidth, Simulator::WindowHeight;
+constexpr int CarDisplay::WindowWidth, CarDisplay::WindowHeight;
 #endif
 } // Robots
 } // BoBRobotics

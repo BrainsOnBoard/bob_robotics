@@ -14,7 +14,8 @@ namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
 
-template<typename LengthUnit, typename AngleUnit>
+template<typename LengthUnit = units::length::millimeter_t,
+         typename AngleUnit = units::angle::degree_t>
 class SimulatedTank
   : public Tank
 {

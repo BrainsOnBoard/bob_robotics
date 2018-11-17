@@ -6,7 +6,7 @@ LINK_FLAGS += `pkg-config --libs sdl2`
 # Ignore spurious gcc warning
 CXXFLAGS += -Wno-uninitialized
 
-EXECUTABLE := simulator_positioner
+EXECUTABLE := simulated_positioner
 
 .PHONY: all clean
 

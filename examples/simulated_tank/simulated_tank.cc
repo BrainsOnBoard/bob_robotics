@@ -1,43 +1,51 @@
 // BoB robotics includes
 #include "common/main.h"
-#include "common/plot_agent.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
+#include "robots/car_display.h"
 
 // Third-party includes
-#include "third_party/matplotlibcpp.h"
 #include "third_party/units.h"
 
+// Standard C++ includes
+#include <chrono>
+#include <iostream>
+#include <thread>
+
 using namespace BoBRobotics;
+using namespace std::literals;
 using namespace units::literals;
-namespace plt = matplotlibcpp;
 
 int
 bob_main(int, char **)
 {
-    Robots::SimulatedTank<units::length::millimeter_t, units::angle::radian_t> robot(0.1_mps, 34_mm);
+    Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
+    Robots::CarDisplay display;                     // For displaying the agent
+
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
     joystick.addHandler([&robot](HID::JButton button, bool pressed) {
         if (pressed && button == HID::JButton::Start) {
-            robot.setPose({ 0_m, 0_m, 0_rad });
+            robot.setPose({}); // Reset to origin
             return true;
         } else {
             return false;
         }
     });
 
-    // robot.drive(0.1_mps, 50_deg_per_s);
+    std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
+
     do {
-        joystick.update();
+        // Refresh display
+        display.runGUI(robot.getPose());
 
-        constexpr int lim = 250;
-        plotAgent(robot, { -lim, lim }, { -lim, lim });
-        plt::pause(0.1);
-    } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
-
-    plt::close();
+        // Check for joystick events
+        if (!joystick.update()) {
+            // A small delay so we don't hog CPU
+            std::this_thread::sleep_for(5ms);
+        }
+    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;
 }
