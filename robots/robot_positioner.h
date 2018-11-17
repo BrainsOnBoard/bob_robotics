@@ -151,8 +151,8 @@ public:
          * to recalculate v so that the centre of the robot's turning circle
          * stays the same.
          */
-        if (units::math::abs(w) > m_MaxTurnSpeed) {
-            const meter_t r{ (v / w).value() };
+        if (units::math::abs(omega) > m_MaxTurnSpeed) {
+            const meter_t r{ (v / omega).value() };
             omega = (omega < 0_rad_per_s) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
             v = meters_per_second_t{ (omega * r).value() };
         }
