@@ -85,14 +85,14 @@ public:
               deadZone);
     }
 
-    virtual void drive(_meters_per_second_t v, _radians_per_second_t omega)
+    virtual void drive(_meters_per_second_t v, _radians_per_second_t clockwiseSpeed)
     {
         const _meter_t axisLength = getRobotAxisLength();
         const _meters_per_second_t diff{
-            (omega * axisLength / 2).value()
+            (clockwiseSpeed * axisLength / 2).value()
         };
-        const _meters_per_second_t vL = v - diff;
-        const _meters_per_second_t vR = v + diff;
+        const _meters_per_second_t vL = v + diff;
+        const _meters_per_second_t vR = v - diff;
 
         const _meters_per_second_t maxSpeed = getMaximumSpeed();
         using namespace units::math;

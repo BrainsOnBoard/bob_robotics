@@ -176,13 +176,17 @@ public:
     {
         setPose(pose);
 
-        // calculate velocities for new course
+        // Calculate velocities for new course
         meters_per_second_t v;
         radians_per_second_t omega;
         updateVelocities(v, omega);
 
-        // drive robot with specified velocities
-        bot.drive(v, omega);
+        /*
+         * Drive robot with specified velocities.
+         * We invert the turning direction because we're counting anti-clockwise
+         * for the robot's pose, but the Tank interface turns robots clockwise.
+         */
+        bot.drive(v, -omega);
     }
 
     //! returns true if the robot reached the goal position
