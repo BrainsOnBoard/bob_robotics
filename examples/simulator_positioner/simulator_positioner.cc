@@ -19,12 +19,6 @@ using namespace units::literals;
 using namespace units::angle;
 using namespace std::literals;
 
-auto
-now()
-{
-    return std::chrono::high_resolution_clock::now();
-}
-
 int
 main()
 {
@@ -49,22 +43,21 @@ main()
             sim.getMaximumTurnSpeed());
 
     bool runPositioner = false;
-    auto lastTime = now();
     bool reachedGoalAnnounced = false;
-    while (!sim.didQuit()) {
-        const auto currentTime = now();
+    while (sim.isOpen()) {
         const auto &pose = sim.getPose();
 
         if (runPositioner) {
             // setting a new goal position if user clicks in the window
-            const auto mousePosition = sim.getMouseClickLocation();
+            const auto mousePosition = sim.getMouseClickPosition();
 
-            // change the coordinates to mm
+            // set the goal to this position
             robp.setGoalPose({ mousePosition[0], mousePosition[1], 15_deg });
 
             // update course and drive robot
             robp.updateMotors(sim, pose);
 
+            // check if the robot is within threshold distance and bearing of goal
             if (robp.didReachGoal()) {
                 if (!reachedGoalAnnounced) {
                     std::cout << "Reached goal" << std::endl;
@@ -75,6 +68,7 @@ main()
             }
         }
 
+        // start/stop homing when spacebar is pressed
         if (sim.simulationStep() == SDLK_SPACE) {
             runPositioner = !runPositioner;
             if (runPositioner) {
@@ -87,7 +81,6 @@ main()
                 sim.setPose({});
             }
         }
-        lastTime = currentTime;
 
         std::this_thread::sleep_for(10ms);
     }
