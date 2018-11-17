@@ -39,9 +39,7 @@ private:
     static constexpr int WindowWidth = 800;
     static constexpr int WindowHeight = 600;
 
-    meters_per_second_t m_v;  // velocity v (translational velocity)
-    degrees_per_second_t m_w; // velocity w (rotational velocity)
-    millimeter_t m_MMPerPixel;
+    millimeter_t m_MMPerPixel; // Scaling factor
 
     Vector2<int> m_mouse_click_position;
 
@@ -58,10 +56,6 @@ private:
     {
         using namespace units::length;
         using namespace units::math;
-
-        // set current velocities
-        m_v = v;
-        m_w = w;
 
         auto pose = getPose();
         if (w == 0_deg_per_s) {
@@ -130,6 +124,25 @@ private:
         SDL_RenderPresent(m_renderer);
     }
 
+    void pixelToMM(const int x, const int y, millimeter_t &xMM, millimeter_t &yMM) const
+    {
+        xMM = (x - (WindowWidth / 2)) * m_MMPerPixel;
+        yMM = -(y - (WindowHeight / 2)) * m_MMPerPixel;
+    }
+
+    void mmToPixel(const millimeter_t x, const millimeter_t y, int &xPixel, int &yPixel) const
+    {
+        xPixel = static_cast<int>(x / m_MMPerPixel) + (WindowWidth / 2);
+        yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
+    }
+
+    void setRobotPosition(const millimeter_t x, const millimeter_t y)
+    {
+        mmToPixel(x, y, m_robot_rect.x, m_robot_rect.y);
+        m_robot_rect.x -= m_robot_rect.w / 2;
+        m_robot_rect.y -= m_robot_rect.h / 2;
+    }
+
 public:
     Simulator(const millimeter_t screenHeight = 3.2_m, const meters_per_second_t speed = 0.05_mps, const millimeter_t carWidth = 16.4_cm)
       : SimulatedTank(speed, carWidth)
@@ -161,19 +174,15 @@ public:
         SDL_RenderClear(m_renderer);
 
         // initial position and size of the robot car
-        m_robot_rect.x = WindowWidth / 2;
-        m_robot_rect.y = WindowHeight / 2;
         const double widthPx = carWidth / m_MMPerPixel;
         m_robot_rect.h = static_cast<int>(widthPx);
         m_robot_rect.w = static_cast<int>((444.0 / 208.0) * widthPx);
 
         // first goal is set to the middle of the window
-        m_mouse_click_position[0] = m_robot_rect.x;
-        m_mouse_click_position[1] = WindowHeight - m_robot_rect.y;
+        m_mouse_click_position[0] = WindowWidth / 2;
+        m_mouse_click_position[1] = WindowHeight / 2;
 
-        SimulatedTank::setPose({ m_robot_rect.x * m_MMPerPixel,
-                                 m_robot_rect.y * m_MMPerPixel,
-                                 10_deg });
+        setRobotPosition(0_m, 0_m);
     }
 
     virtual ~Simulator() override
@@ -191,8 +200,7 @@ public:
         SimulatedTank::setPose(pose);
 
         // Update agent's position in pixels
-        m_robot_rect.x = static_cast<int>(pose.x / m_MMPerPixel);
-        m_robot_rect.y = WindowHeight - static_cast<int>(pose.y / m_MMPerPixel);
+        setRobotPosition(pose.x, pose.y);
     }
 
     //! returns true if we did quit the simulator's gui
@@ -231,8 +239,9 @@ public:
         }
 
         const auto &pose = getPose();
-        m_robot_rect.x = static_cast<int>(pose.x / m_MMPerPixel);
-        m_robot_rect.y = WindowHeight - static_cast<int>(pose.y / m_MMPerPixel);
+
+        // Update agent's position in pixels
+        setRobotPosition(pose.x, pose.y);
 
         draw();
 
@@ -274,18 +283,9 @@ public:
     //! gets the position of the latest mouse click relative to the window
     Vector2<millimeter_t> getMouseClickLocation() const
     {
-        return { m_mouse_click_position[0] * m_MMPerPixel,
-                 m_mouse_click_position[1] * m_MMPerPixel };
-    }
-
-    //! changes the pixel value to millimeter
-    void changePixelToMM(const float x_pos,
-                                const float y_pos,
-                                millimeter_t &x_mm,
-                                millimeter_t &y_mm)
-    {
-        x_mm = x_pos * m_MMPerPixel;
-        y_mm = y_pos * m_MMPerPixel;
+        Vector2<millimeter_t> out;
+        pixelToMM(m_mouse_click_position[0], m_mouse_click_position[1], out[0], out[1]);
+        return out;
     }
 }; // Simulator
 

@@ -50,9 +50,6 @@ main()
             max_velocity,
             max_turning_velocity);
 
-    const Pose2<millimeter_t, degree_t> startPose{ 1.2_m, 1.6_m, 15_deg };
-    robp.setGoalPose(startPose);
-
     bool runPositioner = false;
     auto lastTime = now();
     while (!sim.didQuit()) {
@@ -88,7 +85,7 @@ main()
                 sim.stopMoving();
 
                 // Reset agent's position
-                sim.setPose(startPose);
+                sim.setPose(Pose2<millimeter_t, degree_t>{});
             }
         }
         lastTime = currentTime;
