@@ -157,17 +157,6 @@ public:
 
         v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
         omega = k * v;
-
-        /*
-         * We want to cap the turning speed at m_MaxTurnSpeed, but we also need
-         * to recalculate v so that the centre of the robot's turning circle
-         * stays the same.
-         */
-        if (units::math::abs(omega) > m_MaxTurnSpeed) {
-            const meter_t r{ (v / omega).value() };
-            omega = (omega < 0_rad_per_s) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
-            v = meters_per_second_t{ (omega * r).value() };
-        }
     }
 
     //! This function will update the motors so it drives towards a previously set goal location
@@ -185,8 +174,9 @@ public:
          * Drive robot with specified velocities.
          * We invert the turning direction because we're counting anti-clockwise
          * for the robot's pose, but the Tank interface turns robots clockwise.
+         * If the motor commands are out of range, they will be scaled down.
          */
-        bot.drive(v, -omega);
+        bot.move(v, -omega, true);
     }
 
     //! returns true if the robot reached the goal position

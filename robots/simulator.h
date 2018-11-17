@@ -240,7 +240,6 @@ private:
                 SDL_GetMouseState(&m_mouse_click_position[0], &m_mouse_click_position[1]);
             }
             break;
-
         default:
             break;
         }

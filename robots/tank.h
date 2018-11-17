@@ -6,6 +6,9 @@
 #include "../net/connection.h"
 #include "robot.h"
 
+// Third-party includes
+#include "../third_party/units.h"
+
 // Standard C includes
 #include <cmath>
 
@@ -14,9 +17,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-
-// third party includes
-#include "../third_party/units.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -85,7 +85,9 @@ public:
               deadZone);
     }
 
-    virtual void drive(_meters_per_second_t v, _radians_per_second_t clockwiseSpeed)
+    void move(_meters_per_second_t v,
+              _radians_per_second_t clockwiseSpeed,
+              const bool maxScaled = false)
     {
         const _meter_t axisLength = getRobotAxisLength();
         const _meters_per_second_t diff{
@@ -93,15 +95,7 @@ public:
         };
         const _meters_per_second_t vL = v + diff;
         const _meters_per_second_t vR = v - diff;
-
-        const _meters_per_second_t maxSpeed = getMaximumSpeed();
-        using namespace units::math;
-        const _meters_per_second_t larger = std::max(abs(vL), abs(vR));
-        if (larger > maxSpeed) {
-            tank(static_cast<float>(vL / larger), static_cast<float>(vR / larger));
-        } else {
-            tank(vL, vR);
-        }
+        tank(vL, vR, maxScaled);
     }
 
     //! Set the left and right motors to the specified speed
@@ -113,10 +107,26 @@ public:
                   << std::endl;
     }
 
-    virtual void tank(_meters_per_second_t left, _meters_per_second_t right)
+    void tankMaxScaled(const float left, const float right)
+    {
+        const float larger = std::max(std::abs(left), std::abs(right));
+        if (larger <= 1.f) {
+            tank(left, right);
+        } else {
+            tank(left / larger, right / larger);
+        }
+    }
+
+    void tank(_meters_per_second_t left, _meters_per_second_t right, bool maxScaled = false)
     {
         const _meters_per_second_t maxSpeed = getMaximumSpeed();
-        tank(static_cast<float>(left / maxSpeed), static_cast<float>(right / maxSpeed));
+        const auto leftMotor = static_cast<float>(left / maxSpeed);
+        const auto rightMotor = static_cast<float>(right / maxSpeed);
+        if (maxScaled) {
+            tankMaxScaled(leftMotor, rightMotor);
+        } else {
+            tank(leftMotor, rightMotor);
+        }
     }
 
     virtual _millimeter_t getRobotWheelRadius()
