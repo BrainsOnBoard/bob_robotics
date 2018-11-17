@@ -32,6 +32,12 @@ struct Pose2 {
     Pose2(LengthUnit xval, LengthUnit yval, AngleUnit angleval)
       : x(xval), y(yval), angle(angleval)
     {}
+
+    template<typename LengthUnit2, typename AngleUnit2>
+    operator Pose2<LengthUnit2, AngleUnit2>() const
+    {
+        return Pose2<LengthUnit2, AngleUnit2>{ x, y, angle };
+    }
 };
 
 //! Converts the input array to a unit-type of OutputUnit

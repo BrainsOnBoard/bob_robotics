@@ -10,20 +10,9 @@
 // Standard C includes
 #include <cmath>
 
-#define PI 3.142
-
 namespace BoBRobotics {
 namespace Robots {
-
-using namespace std::literals;
-using namespace units::length;
-using namespace units::time;
-using namespace units::velocity;
 using namespace units::literals;
-using namespace units::angle;
-using namespace units::constants;
-using namespace units::dimensionless;
-using namespace units::angular_velocity;
 
 /*!
  * \brief A tool for moving a tank robot to a specified position in space
@@ -34,25 +23,30 @@ using namespace units::angular_velocity;
  */
 class RobotPositioner
 {
+    using meter_t = units::length::meter_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using radian_t = units::angle::radian_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
+
 private:
     // Robot variables
-    Pose2<millimeter_t, degree_t> m_RobotPose;
-    Pose2<millimeter_t, degree_t> m_GoalPose;
-    millimeter_t m_DistanceFromGoal; // Euclidean distance from goal coordinate
-    degree_t m_BearingFromGoal;      // bearing (angle) from goal coordinate
+    Pose2<meter_t, radian_t> m_RobotPose;
+    Pose2<meter_t, radian_t> m_GoalPose;
+    meter_t m_DistanceFromGoal; // Euclidean distance from goal coordinate
+    radian_t m_BearingFromGoal; // bearing (angle) from goal coordinate
 
     // user variables
-    const millimeter_t m_StoppingDistance;          // if the robot's distance from goal < stopping dist, robot stops
-    const degree_t m_AllowedHeadingError;          // the amount of error allowed in the final heading
-    const meters_per_second_t m_MaxVelocity;        // max velocity
+    const meter_t m_StoppingDistance;          // if the robot's distance from goal < stopping dist, robot stops
+    const radian_t m_AllowedHeadingError;      // the amount of error allowed in the final heading
+    const meters_per_second_t m_MaxVelocity;   // max velocity
     const radians_per_second_t m_MaxTurnSpeed; // max turning velocity
-    const double m_K1;                               // curveness of the path to the goal
-    const double m_K2;                               // speed of turning on the curves
-    const double m_Alpha;                            // causes more sharply peaked curves
-    const double m_Beta;                             // causes to drop velocity if 'k'(curveness) increases
+    const double m_K1;                         // curveness of the path to the goal
+    const double m_K2;                         // speed of turning on the curves
+    const double m_Alpha;                      // causes more sharply peaked curves
+    const double m_Beta;                       // causes to drop velocity if 'k'(curveness) increases
 
-    template<typename AngleUnit>
-    static AngleUnit angleWrapAround(AngleUnit angle) {
+    static radian_t angleWrapAround(radian_t angle)
+    {
 
         while (angle < 0_deg) {
             angle += 360_deg;
@@ -68,54 +62,55 @@ private:
     }
 
     // updates the range and bearing from the goal location
-    void updateRangeAndBearing() {
+    void updateRangeAndBearing()
+    {
 
-        const millimeter_t delta_x = m_GoalPose.x - m_RobotPose.x;
-        const millimeter_t delta_y = m_GoalPose.y - m_RobotPose.y;
+        const meter_t delta_x = m_GoalPose.x - m_RobotPose.x;
+        const meter_t delta_y = m_GoalPose.y - m_RobotPose.y;
 
         // calculate distance
-        m_DistanceFromGoal =  units::math::hypot(delta_x, delta_y);
+        m_DistanceFromGoal = units::math::hypot(delta_x, delta_y);
 
         // calculate bearing
-        m_BearingFromGoal = units::math::atan2(delta_y,delta_x) - m_RobotPose.angle;
+        m_BearingFromGoal = units::math::atan2(delta_y, delta_x) - m_RobotPose.angle;
 
         // changing from <0,360> to <-180, 180>
         m_BearingFromGoal = angleWrapAround(m_BearingFromGoal);
         m_RobotPose.angle = angleWrapAround(m_RobotPose.angle);
     }
 
-//-----------------PUBLIC API---------------------------------------------------------------------
+    //-----------------PUBLIC API---------------------------------------------------------------------
 public:
-
     RobotPositioner(
 
-        millimeter_t stopping_distance,                               // if the robot's distance from goal < stopping dist, robot stops
-        degree_t allowed_heading_error,                               // the amount of error allowed in the final heading
-        double k1,                                                    // curveness of the path to the goal
-        double k2,                                                    // speed of turning on the curves
-        double alpha,                                                 // causes more sharply peaked curves
-        double beta,                                                  // causes to drop velocity if 'k'(curveness) increases
-        meters_per_second_t max_velocity,                             // max velocity
-        radians_per_second_t max_turning_velocity
-        ) : m_StoppingDistance(stopping_distance),
-            m_AllowedHeadingError(allowed_heading_error),
-            m_MaxVelocity(max_velocity),
-            m_MaxTurnSpeed(max_turning_velocity),
-            m_K1(k1),
-            m_K2(k2),
-            m_Alpha(alpha),
-            m_Beta(beta)
-    {  }
+            meter_t stoppingDistance,         // if the robot's distance from goal < stopping dist, robot stops
+            radian_t allowedHeadingError,     // the amount of error allowed in the final heading
+            double k1,                        // curveness of the path to the goal
+            double k2,                        // speed of turning on the curves
+            double alpha,                     // causes more sharply peaked curves
+            double beta,                      // causes to drop velocity if 'k'(curveness) increases
+            meters_per_second_t maxVelocity,  // max velocity
+            radians_per_second_t maxTurnSpeed // max turning speed
+            )
+      : m_StoppingDistance(stoppingDistance)
+      , m_AllowedHeadingError(allowedHeadingError)
+      , m_MaxVelocity(maxVelocity)
+      , m_MaxTurnSpeed(maxTurnSpeed)
+      , m_K1(k1)
+      , m_K2(k2)
+      , m_Alpha(alpha)
+      , m_Beta(beta)
+    {}
 
     //! sets the goal pose (x, y, angle)
-    void setGoalPose(const Pose2<millimeter_t, degree_t> &pose)
+    void setGoalPose(const Pose2<meter_t, radian_t> &pose)
     {
         m_GoalPose = pose;
         updateRangeAndBearing();
     }
 
     //! updates the agent's current pose
-    void setPose(const Pose2<millimeter_t, degree_t> &pose)
+    void setPose(const Pose2<meter_t, radian_t> &pose)
     {
         m_RobotPose = pose;
 
@@ -127,7 +122,7 @@ public:
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
-            meters_per_second_t &v,  // velocity to update
+            meters_per_second_t &v,      // velocity to update
             radians_per_second_t &omega) // angular velocity to update
     {
         // If we're already at the goal, then we're done
@@ -141,9 +136,9 @@ public:
          * Special case: if we're exactly on the goal, but at the wrong heading,
          * rotate on the spot. (We should only see this in simulation.)
          */
-        if (m_DistanceFromGoal == 0_mm) {
+        if (m_DistanceFromGoal == 0_m) {
             v = 0_mps;
-            omega = (m_BearingFromGoal < 0_deg) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
+            omega = (m_BearingFromGoal < 0_rad) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
             return;
         }
 
@@ -151,8 +146,9 @@ public:
         radian_t theta = m_RobotPose.angle + m_BearingFromGoal - m_GoalPose.angle;
         theta = angleWrapAround(theta);
 
+        using namespace units::dimensionless; // scalar_t
         const radian_t delta = units::math::atan(scalar_t((-m_K1 * theta).value()));
-        const radian_t part1 = m_K2 * (static_cast<radian_t>(m_BearingFromGoal) - delta);
+        const radian_t part1 = m_K2 * (m_BearingFromGoal - delta);
         const radian_t part2 = (1_rad + radian_t{ (m_K1 / (1 +
                                                            units::math::pow<2>(m_K1 * theta).value())) }) *
                                units::math::sin(m_BearingFromGoal);
@@ -176,7 +172,7 @@ public:
 
     //! This function will update the motors so it drives towards a previously set goal location
     void updateMotors(BoBRobotics::Robots::Tank &bot,
-                      const Pose2<millimeter_t, degree_t> &pose)
+                      const Pose2<meter_t, radian_t> &pose)
     {
         setPose(pose);
 
@@ -193,7 +189,7 @@ public:
     bool didReachGoal()
     {
         return m_DistanceFromGoal < m_StoppingDistance &&
-                    units::math::abs(m_RobotPose.angle - m_GoalPose.angle) < m_AllowedHeadingError;
+               units::math::abs(m_RobotPose.angle - m_GoalPose.angle) < m_AllowedHeadingError;
     }
 
 }; // RobotPositioner

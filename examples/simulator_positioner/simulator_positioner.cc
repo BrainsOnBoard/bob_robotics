@@ -30,28 +30,27 @@ main()
 {
     Robots::Simulator sim(50_cm, 0.1_mps, 34_mm);
 
-    millimeter_t stopping_distance = 5_cm;  // if the robot's distance from goal < stopping dist, robot stops
-    degree_t allowed_heading_error = 1_deg; // the amount of error allowed in the final heading
-    double k1 = 1.51;                       // curveness of the path to the goal
-    double k2 = 4.4;                        // speed of turning on the curves
-    double alpha = 1.03;                    // causes more sharply peaked curves
-    double beta = 0.02;                     // causes to drop velocity if 'k'(curveness) increases
-    meters_per_second_t max_velocity{ 1 };  // will limit the maximum velocity to this value
-    degrees_per_second_t max_turning_velocity{ 50 };
+    constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
+    constexpr radian_t allowedHeadingError = 1_deg; // the amount of error allowed in the final heading
+    constexpr double k1 = 1.51;                     // curveness of the path to the goal
+    constexpr double k2 = 4.4;                      // speed of turning on the curves
+    constexpr double alpha = 1.03;                  // causes more sharply peaked curves
+    constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
     // construct the positioner
     Robots::RobotPositioner robp(
-            stopping_distance,
-            allowed_heading_error,
+            stoppingDistance,
+            allowedHeadingError,
             k1,
             k2,
             alpha,
             beta,
-            max_velocity,
-            max_turning_velocity);
+            sim.getMaximumSpeed(),
+            sim.getMaximumTurnSpeed());
 
     bool runPositioner = false;
     auto lastTime = now();
+    bool reachedGoalAnnounced = false;
     while (!sim.didQuit()) {
         const auto currentTime = now();
         const auto &pose = sim.getPose();
@@ -65,6 +64,15 @@ main()
 
             // update course and drive robot
             robp.updateMotors(sim, pose);
+
+            if (robp.didReachGoal()) {
+                if (!reachedGoalAnnounced) {
+                    std::cout << "Reached goal" << std::endl;
+                    reachedGoalAnnounced = true;
+                }
+            } else {
+                reachedGoalAnnounced = false;
+            }
         }
 
         if (sim.simulationStep() == SDLK_SPACE) {
@@ -76,7 +84,7 @@ main()
                 sim.stopMoving();
 
                 // Reset agent's position
-                sim.setPose(Pose2<millimeter_t, degree_t>{});
+                sim.setPose({});
             }
         }
         lastTime = currentTime;
