@@ -56,7 +56,7 @@ main()
         const auto currentTime = now();
 
         meters_per_second_t v{};
-        degrees_per_second_t w{};
+        radians_per_second_t w{};
         const auto &pose = sim.getPose();
 
         if (runPositioner) {

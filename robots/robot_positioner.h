@@ -46,7 +46,7 @@ private:
     const millimeter_t m_StoppingDistance;          // if the robot's distance from goal < stopping dist, robot stops
     const degree_t m_AllowedHeadingError;          // the amount of error allowed in the final heading
     const meters_per_second_t m_MaxVelocity;        // max velocity
-    const degrees_per_second_t m_MaxTurnSpeed; // max turning velocity
+    const radians_per_second_t m_MaxTurnSpeed; // max turning velocity
     const double m_K1;                               // curveness of the path to the goal
     const double m_K2;                               // speed of turning on the curves
     const double m_Alpha;                            // causes more sharply peaked curves
@@ -89,7 +89,7 @@ public:
         double alpha,                                                 // causes more sharply peaked curves
         double beta,                                                  // causes to drop velocity if 'k'(curveness) increases
         meters_per_second_t max_velocity,                             // max velocity
-        degrees_per_second_t max_turning_velocity
+        radians_per_second_t max_turning_velocity
         ) : m_StoppingDistance(stopping_distance),
             m_AllowedHeadingError(allowed_heading_error),
             m_MaxVelocity(max_velocity),
@@ -121,12 +121,12 @@ public:
     //! will be executed.
     void updateVelocities(
             meters_per_second_t &v,  // velocity to update
-            degrees_per_second_t &w) // angular velocity to update
+            radians_per_second_t &omega) // angular velocity to update
     {
         // If we're already at the goal, then we're done
         if (didReachGoal()) {
             v = 0_mps;
-            w = 0_deg_per_s;
+            omega = 0_rad_per_s;
             return;
         }
 
@@ -144,13 +144,18 @@ public:
                                                                 1 + (m_K1 / (1 + pow(m_K1 * m_Theta.value(), 2))) * sin(m_BearingFromGoal.value() * PI / 180) * 180 / PI);
 
         v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k), m_Alpha)));
-        const units::angular_velocity::radians_per_second_t wrad{ -k * v.value() };
-        w = wrad;
+        omega = units::angular_velocity::radians_per_second_t{ -k * v.value() };
 
-        // // if turning speed is greater than the limit, turning speed = max_turning speed
-        // if (w > m_MaxTurnSpeed) {
-        //     w = m_MaxTurnSpeed;
-        // }
+        /*
+         * We want to cap the turning speed at m_MaxTurnSpeed, but we also need
+         * to recalculate v so that the centre of the robot's turning circle
+         * stays the same.
+         */
+        if (units::math::abs(w) > m_MaxTurnSpeed) {
+            const meter_t r{ (v / w).value() };
+            omega = (omega < 0_rad_per_s) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
+            v = meters_per_second_t{ (omega * r).value() };
+        }
     }
 
     //! This function will update the motors so it drives towards a previously set goal location
@@ -168,8 +173,8 @@ public:
         }
 
         meters_per_second_t v;
-        degrees_per_second_t w;
-        updateVelocities(v, w);
+        radians_per_second_t omega;
+        updateVelocities(v, omega);
 
         const millimeter_t robot_wheel_radius = bot.getRobotWheelRadius();
         const millimeter_t robot_axis_length  = bot.getRobotAxisLength();
@@ -178,7 +183,7 @@ public:
         const double b = (robot_wheel_radius/robot_axis_length).value();
 
         const double c = v.value();
-        const double d = static_cast<units::angular_velocity::radians_per_second_t>(w).value();
+        const double d = static_cast<units::angular_velocity::radians_per_second_t>(omega).value();
 
         // determinant
         const double det = 2*(-a*b);

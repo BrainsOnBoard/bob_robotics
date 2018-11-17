@@ -59,7 +59,7 @@ main()
         const auto currentTime = now();
 
         meters_per_second_t v{};
-        degrees_per_second_t w{};
+        radians_per_second_t w{};
         const auto &pose = sim.getPose();
 
         if (runPositioner) {
@@ -78,8 +78,6 @@ main()
                 robp.updateVelocities(v, w);
             }
             sim.drive(v, w);
-            // robp.updateMotors(sim, pose);
-            // sim.simulationStep(v, w, currentTime - lastTime);
         }
 
         if (sim.simulationStep() == SDLK_SPACE) {
