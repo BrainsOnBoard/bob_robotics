@@ -40,7 +40,6 @@ private:
     Pose2<millimeter_t, degree_t> m_GoalPose;
     millimeter_t m_DistanceFromGoal; // Euclidean distance from goal coordinate
     degree_t m_BearingFromGoal;      // bearing (angle) from goal coordinate
-    degree_t m_Theta;
 
     // user variables
     const millimeter_t m_StoppingDistance;          // if the robot's distance from goal < stopping dist, robot stops
@@ -52,10 +51,18 @@ private:
     const double m_Alpha;                            // causes more sharply peaked curves
     const double m_Beta;                             // causes to drop velocity if 'k'(curveness) increases
 
-    static degree_t angleWrapAround(degree_t angle) {
+    template<typename AngleUnit>
+    static AngleUnit angleWrapAround(AngleUnit angle) {
 
-        if (angle <= 0_deg) { angle += 360_deg; }
-        if (angle > 180_deg) { angle -= 360_deg; }
+        while (angle < 0_deg) {
+            angle += 360_deg;
+        }
+        while (angle > 360_deg) {
+            angle -= 360_deg;
+        }
+        if (angle > 180_deg) {
+            angle -= 360_deg;
+        }
 
         return angle;
     }
@@ -130,21 +137,30 @@ public:
             return;
         }
 
-        // orientation of Target with respect to the line of sight from the observer to the target
-        m_Theta = m_RobotPose.angle + m_BearingFromGoal - m_GoalPose.angle;
-        m_Theta = angleWrapAround(m_Theta);
-
-        meter_t distanceFromGoalMeters = m_DistanceFromGoal;
-        if (distanceFromGoalMeters == 0_m) {
-            // If we're at the goal (but at wrong heading) then set distance to a tiny value
-            distanceFromGoalMeters = meter_t{ std::numeric_limits<double>::epsilon() };
+        /*
+         * Special case: if we're exactly on the goal, but at the wrong heading,
+         * rotate on the spot. (We should only see this in simulation.)
+         */
+        if (m_DistanceFromGoal == 0_mm) {
+            v = 0_mps;
+            omega = (m_BearingFromGoal < 0_deg) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
+            return;
         }
 
-        const float k = -(1 / distanceFromGoalMeters.value()) * (m_K2 * (m_BearingFromGoal.value() - atan(-m_K1 * m_Theta.value() * PI / 180) * 180 / PI) +
-                                                                1 + (m_K1 / (1 + pow(m_K1 * m_Theta.value(), 2))) * sin(m_BearingFromGoal.value() * PI / 180) * 180 / PI);
+        // orientation of Target with respect to the line of sight from the observer to the target
+        radian_t theta = m_RobotPose.angle + m_BearingFromGoal - m_GoalPose.angle;
+        theta = angleWrapAround(theta);
 
-        v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k), m_Alpha)));
-        omega = units::angular_velocity::radians_per_second_t{ -k * v.value() };
+        const radian_t delta = units::math::atan(scalar_t((-m_K1 * theta).value()));
+        const radian_t part1 = m_K2 * (static_cast<radian_t>(m_BearingFromGoal) - delta);
+        const radian_t part2 = (1_rad + radian_t{ (m_K1 / (1 +
+                                                           units::math::pow<2>(m_K1 * theta).value())) }) *
+                               units::math::sin(m_BearingFromGoal);
+
+        const auto k = -(part1 + part2) / m_DistanceFromGoal; // in rad/mm
+
+        v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
+        omega = -k * v;
 
         /*
          * We want to cap the turning speed at m_MaxTurnSpeed, but we also need
