@@ -20,4 +20,4 @@ $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
 %d: ;
 
 clean:
-	rm -f $(EXECUTABLE){,_v} $(EXECUTABLE).d
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d

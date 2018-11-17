@@ -37,24 +37,22 @@ bob_main(int, char **)
     BoBRobotics::Robots::Norbot bot;
 
     // setup parameters
-    constexpr millimeter_t stopping_distance = 10_cm; // if the robot's distance from goal < stopping dist, robot stops
-    constexpr degree_t allowed_heading_error = 5_deg; // the amount of error allowed in the final heading
-    double k1 = 1.51;                                 // curveness of the path to the goal
-    double k2 = 4.4;                                  // speed of turning on the curves
-    double alpha = 1.03;                              // causes more sharply peaked curves
-    double beta = 0.02;                               // causes to drop velocity if 'k'(curveness) increases
-    meters_per_second_t max_velocity{ 0.05 };         // will limit the maximum velocity to this value
-    degrees_per_second_t max_turning_velocity{ 13 };
+    constexpr meter_t stoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
+    constexpr radian_t allowedHeadingError = 5_deg; // the amount of error allowed in the final heading
+    constexpr double k1 = 1.51;                     // curveness of the path to the goal
+    constexpr double k2 = 4.4;                      // speed of turning on the curves
+    constexpr double alpha = 1.03;                  // causes more sharply peaked curves
+    constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
     BoBRobotics::Robots::RobotPositioner robp(
-            stopping_distance,
-            allowed_heading_error,
+            stoppingDistance,
+            allowedHeadingError,
             k1,
             k2,
             alpha,
             beta,
-            max_velocity,
-            max_turning_velocity);
+            bot.getMaximumSpeed(),
+            bot.getMaximumTurnSpeed());
 
     // set goal pose
     const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
