@@ -54,9 +54,6 @@ main()
     auto lastTime = now();
     while (!sim.didQuit()) {
         const auto currentTime = now();
-
-        meters_per_second_t v{};
-        radians_per_second_t w{};
         const auto &pose = sim.getPose();
 
         if (runPositioner) {
@@ -66,15 +63,8 @@ main()
             // change the coordinates to mm
             robp.setGoalPose({ mousePosition[0], mousePosition[1], 15_deg });
 
-            // update robot's current pose
-            robp.setPose(pose);
-            if (robp.didReachGoal()) {
-                v = 0_mps;
-                w = 0_deg_per_s;
-            } else {
-                robp.updateVelocities(v, w);
-            }
-            sim.drive(v, w);
+            // update course and drive robot
+            robp.updateMotors(sim, pose);
         }
 
         if (sim.simulationStep() == SDLK_SPACE) {

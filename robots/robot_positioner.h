@@ -178,41 +178,15 @@ public:
     void updateMotors(BoBRobotics::Robots::Tank &bot,
                       const Pose2<millimeter_t, degree_t> &pose)
     {
-        // here we are solving simultaneous equations where we would like to
-        // recover Vl (left wheel velocity) and Vr (right wheel velocity)
-        //                                       v = wheel_radius * (Vl+Vr)/2
-        //                                       w = wheel_radius * (Vr-Vl)/axis_length
         setPose(pose);
-        if (didReachGoal()) {
-            bot.stopMoving();
-            return;
-        }
 
+        // calculate velocities for new course
         meters_per_second_t v;
         radians_per_second_t omega;
         updateVelocities(v, omega);
 
-        const millimeter_t robot_wheel_radius = bot.getRobotWheelRadius();
-        const millimeter_t robot_axis_length  = bot.getRobotAxisLength();
-
-        const double a = (robot_wheel_radius/2).value();
-        const double b = (robot_wheel_radius/robot_axis_length).value();
-
-        const double c = v.value();
-        const double d = static_cast<units::angular_velocity::radians_per_second_t>(omega).value();
-
-        // determinant
-        const double det = 2*(-a*b);
-
-        const double Vl = ((-c*b - a*d)/det);
-        const double Vr = (( a*d - c*b)/det);
-
-        // drive robot
-        std::cout << "Motor: " << Vl << ", " << Vr << std::endl;
-        const auto cap = [](const double val) {
-            return std::min(1.0, std::max(-1.0, val));
-        };
-        bot.tank(cap(Vl), cap(Vr));
+        // drive robot with specified velocities
+        bot.drive(v, omega);
     }
 
     //! returns true if the robot reached the goal position
