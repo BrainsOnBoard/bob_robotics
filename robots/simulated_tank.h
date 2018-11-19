@@ -2,13 +2,11 @@
 
 // BoB robotics includes
 #include "../common/pose.h"
+#include "../common/stopwatch.h"
 #include "tank.h"
 
 // Third-party includes
 #include "../third_party/units.h"
-
-// Standard C++ includes
-#include <chrono>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -65,7 +63,7 @@ public:
 
     void setPose(const Pose2<LengthUnit, AngleUnit> &pose)
     {
-        m_MoveStartTime = now();
+        m_MoveStopwatch.start();
         m_Pose = pose;
     }
 
@@ -80,7 +78,7 @@ public:
 
 private:
     Pose2<LengthUnit, AngleUnit> m_Pose;
-    std::chrono::high_resolution_clock::time_point m_MoveStartTime;
+    Stopwatch m_MoveStopwatch;
     const meters_per_second_t m_MaximumSpeed;
     const millimeter_t m_AxisLength;
     meters_per_second_t m_Right{}, m_Left{};
@@ -92,10 +90,7 @@ private:
         using namespace units::math;
         using namespace units::time;
 
-        const auto currentTime = now();
-        const second_t elapsed = currentTime - m_MoveStartTime;
-        m_MoveStartTime = currentTime;
-
+        const second_t elapsed = m_MoveStopwatch.lap();
         if (m_Left == m_Right) {
             const LengthUnit dist = m_Left * elapsed;
             m_Pose.x += dist * cos(m_Pose.angle);
@@ -110,11 +105,6 @@ private:
             m_Pose.y += turnRadius * (cos(newAngle) - cos(m_Pose.angle));
             m_Pose.angle = newAngle;
         }
-    }
-
-    static auto now()
-    {
-        return std::chrono::high_resolution_clock::now();
     }
 }; // SimulatedTank
 } // Robots
