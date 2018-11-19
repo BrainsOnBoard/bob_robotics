@@ -20,9 +20,10 @@
 // BoB Robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_store_hog.h"
 
 // Ardin MB includes
-#include "mb_memory.h"
+#include "mb_memory_hog.h"
 #include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
@@ -141,15 +142,26 @@ int main(int argc, char *argv[])
     const char *bobRoboticsPath = std::getenv("BOB_ROBOTICS_PATH");
     assert(bobRoboticsPath != nullptr);
 
+    /*cv::Size unwrapRes(std::atoi(argv[2]), std::atoi(argv[3]));
+    cv::Size cellSize(std::atoi(argv[4]), std::atoi(argv[5]));
+    int numOrientation = std::atoi(argv[6]);*/
+    float jitterSD = std::atof(argv[2]);
+    //std::cout << "Unwrap res: (" << unwrapRes.width << ", " << unwrapRes.height << "), cell size:(" << cellSize.width << "," << cellSize.height << "), num orientations:" << numOrientation << ", jitter sd:" << jitterSD << std::endl;*/
     // Create memory
+    //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::HOG<>> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight),
+    //                                                                        cv::Size(5, 5), 2);
+    //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::HOG<>> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight),
+    //                                                                        cv::Size(6, 6), cv::Size(4, 4), 4);
+    //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::HOG<>> memory(unwrapRes, cellSize, numOrientation);
     //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
-    MBMemory memory;
+    //MBMemory memory;
+    MBMemoryHOG memory;
 
     // Create state machine and set it as window user pointer
     const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
-    StateHandler stateHandler(worldFilename, routeFilename, memory);
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, memory);
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback

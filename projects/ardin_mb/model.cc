@@ -19,17 +19,14 @@ using namespace BoBRobotics;
 class LIFExtCurrent : public NeuronModels::Base
 {
 public:
-    DECLARE_MODEL(LIFExtCurrent, 8, 2);
+    DECLARE_MODEL(LIFExtCurrent, 7, 2);
 
     SET_SIM_CODE(
         "if ($(RefracTime) <= 0.0)\n"
         "{\n"
         "   scalar Iext = 0.0f;\n"
         "   if($(Iext) != NULL) {\n"
-        "       unsigned int x = $(id) % (unsigned int)($(Width));\n"
-        "       unsigned int y = $(id) / (unsigned int)($(Width));\n"
-        "       const unsigned int index = (y * $(IextStep)) + x;\n"
-        "       Iext = $(IextScale) * $(Iext)[index];\n"
+        "       Iext = $(IextScale) * $(Iext)[$(id)];\n"
         "   }\n"
         "   scalar alpha = (($(Isyn) + Iext) * $(Rmembrane)) + $(Vrest);\n"
         "   $(V) = alpha - ($(ExpTC) * (alpha - $(V)));\n"
@@ -37,8 +34,7 @@ public:
         "else\n"
         "{\n"
         "  $(RefracTime) -= DT;\n"
-        "}\n"
-    );
+        "}\n");
 
     SET_THRESHOLD_CONDITION_CODE("$(RefracTime) <= 0.0 && $(V) >= $(Vthresh)");
 
@@ -53,9 +49,7 @@ public:
         "Vreset",       // 3 - Reset voltage [mV]
         "Vthresh",      // 4 - Spiking threshold [mV]
         "TauRefrac",    // 5 - Refractory time [ms]
-        "IextScale",    // 7 - Scaling factor to apply to external current
-        "Width",        // 8 - Width of population (pixels)
-    });
+        "IextScale"});  // 6 - Scaling factor to apply to external current
 
     SET_DERIVED_PARAMS({
         {"ExpTC", [](const vector<double> &pars, double dt){ return std::exp(-dt / pars[1]); }},
@@ -63,7 +57,7 @@ public:
 
     SET_VARS({{"V", "scalar"}, {"RefracTime", "scalar"}});
 
-    SET_EXTRA_GLOBAL_PARAMS({{"Iext", "float*"}, {"IextStep", "unsigned int"}});
+    SET_EXTRA_GLOBAL_PARAMS({{"Iext", "float*"}});
 };
 IMPLEMENT_MODEL(LIFExtCurrent);
 
@@ -87,8 +81,7 @@ void modelDefinition(NNmodel &model)
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
         2.0,                                // 5 - TauRefrac
-        MBParams::inputCurrentScale,      // 6 - Scaling factor to apply to external current
-        MBParams::inputWidth);            // 7 - Input width
+        MBParams::inputCurrentScale);       // 6 - Scaling factor to apply to external current
 
     GeNNModels::LIF::ParamValues kcParams(
         0.2,                                // 0 - C
