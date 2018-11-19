@@ -17,12 +17,13 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 // StateHandler
 //----------------------------------------------------------------------------
-StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
-    m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+    m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
+    m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
+    m_VisualNavigation(visualNavigation)
 {
     // Load world
     m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
@@ -172,6 +173,10 @@ bool StateHandler::handleEvent(State state, Event event)
                 // Move ant forward by snapshot distance
                 m_AntX += SimParams::snapshotDistance * units::math::sin(m_AntHeading);
                 m_AntY += SimParams::snapshotDistance * units::math::cos(m_AntHeading);
+
+                // Jitter position
+                m_AntX += units::length::centimeter_t(m_PositionJitterDistributionCM(m_RNG));
+                m_AntY += units::length::centimeter_t(m_PositionJitterDistributionCM(m_RNG));
 
                 // If new position means run is over - stop
                 if(!checkAntPosition()) {

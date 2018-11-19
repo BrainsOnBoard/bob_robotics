@@ -69,7 +69,7 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
                  BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
 
     //------------------------------------------------------------------------
@@ -158,6 +158,9 @@ private:
 
     //! RNG used for random walk
     std::mt19937 m_RNG;
+
+    //! Distribution of position jitter
+    std::normal_distribution<float> m_PositionJitterDistributionCM;
 
     //! Distribution of angles to turn for random walk
     std::uniform_real_distribution<float> m_RandomWalkAngleDistribution;
