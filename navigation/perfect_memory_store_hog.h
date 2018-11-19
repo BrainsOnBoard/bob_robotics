@@ -20,9 +20,6 @@ namespace BoBRobotics {
 namespace Navigation {
 namespace PerfectMemoryStore {
 
-    /*numOrientations*
-        ((unwrapRes.width - blockSize.width)/blockStride.width + 1)*
-        ((unwrapRes.height - blockSize.height)/blockStride.height + 1);*/
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryStore::HOG
 //------------------------------------------------------------------------
@@ -31,22 +28,17 @@ template<typename Differencer = AbsDiff>
 class HOG
 {
 public:
-    HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, int numOrientations)
-    :   HOG(unwrapRes, blockSize, blockSize, numOrientations)
-    {
-    }
-
-    HOG(const cv::Size &unwrapRes, const cv::Size &blockSize, const cv::Size &blockStride, int numOrientations)
-    :   m_HOGDescriptorSize(numOrientations * ((unwrapRes.width - blockSize.width)/blockStride.width + 1) * ((unwrapRes.height - blockSize.height)/blockStride.height + 1)),
+    HOG(const cv::Size &unwrapRes, const cv::Size &cellSize, int numOrientations)
+    :   m_HOGDescriptorSize(numOrientations * (unwrapRes.width / cellSize.width) * (unwrapRes.height / cellSize.height)),
         m_Differencer(m_HOGDescriptorSize)
     {
         std::cout << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features" << std::endl;
 
-        // Configure HOG features
+        // Configure HOG features - we want to normalise over the whole image (i.e. one block is the entire image)
         m_HOG.winSize = unwrapRes;
-        m_HOG.blockSize = blockSize;
-        m_HOG.blockStride = blockStride;
-        m_HOG.cellSize = blockSize;
+        m_HOG.blockSize = unwrapRes;
+        m_HOG.blockStride = unwrapRes;
+        m_HOG.cellSize = cellSize;
         m_HOG.nbins = numOrientations;
     }
 
