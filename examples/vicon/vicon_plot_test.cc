@@ -37,7 +37,8 @@ main()
 
     do {
         plt::figure(1);
-        plotAgent(vicon.getObjectData(0), { -2500, 2500 }, { -2500, 2500 });
+        const auto data = vicon.getObjectData(0);
+        plotAgent(data, { -2500, 2500 }, { -2500, 2500 });
         plt::pause(0.025);
     } while (plt::fignum_exists(1));
 
