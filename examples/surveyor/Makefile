@@ -1,5 +1,5 @@
 NO_OPENCV := 1
-include ../../common/flags.mk
+include ../../make_common/bob_robotics.mk
 CXXFLAGS += -I../..
 
 EXECUTABLE := surveyor
