@@ -7,32 +7,33 @@ namespace BoBRobotics {
 class Stopwatch
 {
 public:
-    using time_point = std::chrono::high_resolution_clock::time_point;
+    using TimePoint = std::chrono::high_resolution_clock::time_point;
+    using Duration = std::chrono::high_resolution_clock::duration;
 
     void start()
     {
         m_StartTime = now();
     }
 
-    auto elapsed() const
+    Duration elapsed() const
     {
         return now() - m_StartTime;
     }
 
-    auto lap()
+    Duration lap()
     {
-        const auto currentTime = now();
-        const auto elapsed = currentTime - m_StartTime;
+        const TimePoint currentTime = now();
+        const Duration elapsed = currentTime - m_StartTime;
         m_StartTime = currentTime;
         return elapsed;
     }
 
-    static time_point now()
+    static TimePoint now()
     {
         return std::chrono::high_resolution_clock::now();
     }
 
 private:
-    time_point m_StartTime;
+    TimePoint m_StartTime;
 }; // Stopwatch
 } // BoBRobotics
