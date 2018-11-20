@@ -53,11 +53,6 @@ public:
         return m_Pose;
     }
 
-    virtual millimeter_t getRobotWheelRadius() override
-    {
-        return 34_mm;
-    }
-
     virtual meters_per_second_t getMaximumSpeed() override
     {
         return m_MaximumSpeed;
