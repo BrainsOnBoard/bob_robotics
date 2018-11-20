@@ -71,16 +71,23 @@ bob_main(int, char **)
             if (runPositioner) {
                 std::cout << "Starting positioner" << std::endl;
             } else {
-                std::cout << "Stopping positioner" << std::endl;
                 bot.stopMoving();
+                std::cout << "Stopping positioner" << std::endl;
             }
         }
 
         if (runPositioner) {
             const auto objectData = vicon.getObjectData(0);
-            const Vector3<millimeter_t> position = objectData.getPosition();
-            const Vector3<radian_t> attitude = objectData.getAttitude();
-            robp.updateMotors(bot, { position[0], position[1], attitude[0] });
+            if (objectData.getElapsedTime() > 2s) {
+                bot.stopMoving();
+                runPositioner = false;
+                std::cerr << "Error: Could not get positioner from Vicon system\n"
+                          << "Stopping trial" << std::endl;
+            } else {
+                const Vector3<millimeter_t> position = objectData.getPosition();
+                const Vector3<radian_t> attitude = objectData.getAttitude();
+                robp.updateMotors(bot, { position[0], position[1], attitude[0] });
+            }
         } else if (!joystickUpdate) {
             std::this_thread::sleep_for(5ms);
         }
