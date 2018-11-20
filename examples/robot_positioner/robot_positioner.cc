@@ -39,8 +39,8 @@ bob_main(int, char **)
     // setup parameters
     constexpr meter_t stoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-    constexpr double k1 = 1.51;                     // curveness of the path to the goal
-    constexpr double k2 = 4.4;                      // speed of turning on the curves
+    constexpr double k1 = 0.25;                      // curveness of the path to the goal
+    constexpr double k2 = 200;                      // speed of turning on the curves
     constexpr double alpha = 1.03;                  // causes more sharply peaked curves
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
@@ -78,7 +78,7 @@ bob_main(int, char **)
 
         if (runPositioner) {
             const auto objectData = vicon.getObjectData(0);
-            if (objectData.getElapsedTime() > 2s) {
+            if (objectData.getElapsedTime() > 10s) {
                 bot.stopMoving();
                 runPositioner = false;
                 std::cerr << "Error: Could not get position from Vicon system\n"
