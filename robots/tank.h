@@ -129,11 +129,6 @@ public:
         }
     }
 
-    virtual _millimeter_t getRobotWheelRadius()
-    {
-        throw std::runtime_error("getRobotWheelRadius() is not implemented for this class");
-    }
-
     virtual _millimeter_t getRobotAxisLength()
     {
         throw std::runtime_error("getRobotAxisLength() is not implemented for this class");

@@ -58,11 +58,6 @@ public:
         write(buffer);
     }
 
-    virtual millimeter_t getRobotWheelRadius() override
-    {
-        return 34_mm;
-    }
-
     virtual millimeter_t getRobotAxisLength() override
     {
         return 104_mm;

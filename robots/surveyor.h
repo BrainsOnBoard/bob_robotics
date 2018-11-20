@@ -89,11 +89,6 @@ public:
         }
     }
 
-    virtual millimeter_t getRobotWheelRadius() override
-    {
-        return 19_mm;
-    }
-
     virtual millimeter_t getRobotAxisLength() override
     {
         return 150_mm;
