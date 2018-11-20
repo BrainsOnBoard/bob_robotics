@@ -81,7 +81,7 @@ bob_main(int, char **)
             if (objectData.getElapsedTime() > 2s) {
                 bot.stopMoving();
                 runPositioner = false;
-                std::cerr << "Error: Could not get positioner from Vicon system\n"
+                std::cerr << "Error: Could not get position from Vicon system\n"
                           << "Stopping trial" << std::endl;
             } else {
                 const Vector3<millimeter_t> position = objectData.getPosition();

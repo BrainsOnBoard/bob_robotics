@@ -261,8 +261,6 @@ private:
         }
         m_ObjectData[id].second.start();
 
-        // std::cout << frameNumber << std::endl;
-
         /*
          * Update object data with position and attitude.
          *
