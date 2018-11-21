@@ -87,7 +87,7 @@ main()
     {
         std::cout << std::endl << "Testing with HOG..." << std::endl;
 
-        PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize);
+        PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize, cv::Size(10, 10), 8);
         trainRoute(pm);
 
         // Time testing phase
