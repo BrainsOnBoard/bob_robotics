@@ -1,11 +1,11 @@
 #include "bebop.h"
 
-using degree_t = units::angle::degree_t;
-using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
-using meters_per_second_t = units::velocity::meters_per_second_t;
-
 // BoB robotics includes
 #include "../common/assert.h"
+
+using namespace units::angle;
+using namespace units::velocity;
+using namespace units::angular_velocity;
 
 /*
  * Little macros to make using the ARSDK's C API less verbose.
@@ -169,7 +169,7 @@ Bebop::getVerticalSpeedLimits()
 /*!
  * \brief Return the current maximum yaw speed setting.
  */
-degrees_per_second_t
+radians_per_second_t
 Bebop::getMaximumTurnSpeed()
 {
     return m_TurnSpeedLimits.getCurrent();

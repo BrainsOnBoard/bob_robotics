@@ -41,15 +41,15 @@ class AntAgent
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using degree_t = units::angle::degree_t;
-    using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
     static constexpr meters_per_second_t DefaultVelocity = 300_mm / 1_s;
-    static constexpr degrees_per_second_t DefaultTurnSpeed = 200_deg_per_s;
+    static constexpr radians_per_second_t DefaultTurnSpeed = 200_deg_per_s;
 
     AntAgent(GLFWwindow *window, Renderer &renderer,
              const cv::Size &renderSize,
-             meters_per_second_t velocity = DefaultVelocity, degrees_per_second_t turnSpeed = DefaultTurnSpeed)
+             meters_per_second_t velocity = DefaultVelocity, radians_per_second_t turnSpeed = DefaultTurnSpeed)
       : Video::OpenGL(renderSize)
       , m_Velocity(velocity)
       , m_TurnSpeed(turnSpeed)
@@ -119,7 +119,7 @@ public:
     }
 
 
-    virtual degrees_per_second_t getMaximumTurnSpeed() override
+    virtual radians_per_second_t getMaximumTurnSpeed() override
     {
         return m_TurnSpeed;
     }
@@ -250,7 +250,7 @@ private:
     Vector3<degree_t> m_Attitude{ { 0_deg, 0_deg, 0_deg } };
     Vector3<meter_t> m_Position{ { 0_m, 0_m, 0_m } };
     meters_per_second_t m_Velocity;
-    degrees_per_second_t m_TurnSpeed;
+    radians_per_second_t m_TurnSpeed;
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
     std::mutex m_PoseMutex;
@@ -310,7 +310,7 @@ private:
 
 #ifndef NO_HEADER_DEFINITIONS
 constexpr units::velocity::meters_per_second_t AntAgent::DefaultVelocity;
-constexpr units::angular_velocity::degrees_per_second_t AntAgent::DefaultTurnSpeed;
+constexpr units::angular_velocity::radians_per_second_t AntAgent::DefaultTurnSpeed;
 #endif
 
 } // AntWorld

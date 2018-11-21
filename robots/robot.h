@@ -41,7 +41,7 @@ public:
         throw std::runtime_error("addJoystick() is not implemented for this Robot");
     }
 
-    virtual units::angular_velocity::degrees_per_second_t getMaximumTurnSpeed()
+    virtual units::angular_velocity::radians_per_second_t getMaximumTurnSpeed()
     {
         throw std::runtime_error("getMaximumTurnSpeed() is not implemented for this Robot");
     }

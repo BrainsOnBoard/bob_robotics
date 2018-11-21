@@ -144,7 +144,7 @@ public:
         throw std::runtime_error("getMaximumSpeed() is not implemented for this class");
     }
 
-    virtual _radians_per_second_t getMaximumTurnSpeed()
+    virtual _radians_per_second_t getMaximumTurnSpeed() override
     {
         // max turn speed = v_max / r
         return _radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<_meter_t>(getRobotAxisLength())).value() };

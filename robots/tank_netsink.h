@@ -23,10 +23,10 @@ namespace Robots {
 class TankNetSink : public Tank
 {
 private:
-    using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
     Net::Connection &m_Connection;
-    degrees_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
+    radians_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
     float m_OldLeft = 0, m_OldRight = 0;
 
 public:
@@ -34,7 +34,7 @@ public:
       : m_Connection(connection)
     {
         connection.setCommandHandler("TRN", [this](Net::Connection &, const Net::Command &command) {
-            m_TurnSpeed = degrees_per_second_t(stod(command[1]));
+            m_TurnSpeed = radians_per_second_t(stod(command[1]));
         });
     }
 
@@ -72,9 +72,10 @@ public:
         m_OldRight = right;
     }
 
-    virtual degrees_per_second_t getMaximumTurnSpeed() override
+    virtual radians_per_second_t getMaximumTurnSpeed() override
     {
         if (std::isnan(m_TurnSpeed.value())) {
+            // throw error
             return Tank::getMaximumTurnSpeed();
         } else {
             return m_TurnSpeed;

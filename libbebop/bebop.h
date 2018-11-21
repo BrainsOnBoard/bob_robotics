@@ -109,6 +109,7 @@ class Bebop
 
     using degree_t = units::angle::degree_t;
     using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
@@ -181,7 +182,7 @@ public:
     std::pair<degree_t, degree_t> &getTiltLimits();
     meters_per_second_t getMaximumVerticalSpeed() const;
     std::pair<meters_per_second_t, meters_per_second_t> &getVerticalSpeedLimits();
-    virtual degrees_per_second_t getMaximumTurnSpeed() override;
+    virtual radians_per_second_t getMaximumTurnSpeed() override;
     std::pair<degrees_per_second_t, degrees_per_second_t> &getTurnSpeedLimits();
 
     // motor control
