@@ -1,23 +1,22 @@
 #include "world.h"
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "common.h"
+
+// Third-party includes
+#include "../third_party/path.h"
+
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <tuple>
-
-// OpenCV includes
-#include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "../common/assert.h"
-
-// Third-party includes
-#include "../third_party/path.h"
-
-// Antworld includes
-#include "common.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -81,7 +80,7 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
+void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
     // Create single surface
@@ -92,8 +91,7 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open world file:" << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open world file:" + filename);
     }
 
     // Seek to end of file, get size and rewind
@@ -181,11 +179,9 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Upload colours
         surface.uploadColours(colours);
     }
-
-    return true;
 }
 //----------------------------------------------------------------------------
-bool World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
+void World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
@@ -217,8 +213,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         // Open obj file
         std::ifstream objFile(filename);
         if(!objFile.good()) {
-            std::cerr << "Cannot open obj file: " << filename << std::endl;
-            return false;
+            throw std::runtime_error("Cannot open obj file: " + filename);
         }
 
         // Get base path to load materials etc relative to
@@ -324,9 +319,6 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
             surface.setTexture(tex->second);
         }
     }
-
-
-    return true;
 }
 //----------------------------------------------------------------------------
 void World::render() const
@@ -338,15 +330,14 @@ void World::render() const
     }
 }
 //----------------------------------------------------------------------------
-bool World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
+void World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
                           GLint textureFormat, int maxTextureSize,
                           std::map<std::string, Texture*> &textureNames)
 {
     // Open obj file
     std::ifstream mtlFile((basePath / filename).str());
     if(!mtlFile.good()) {
-        std::cerr << "Cannot open mtl file: " << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open mtl file: " + filename);
     }
 
     std::cout << "Reading material file: " << filename << std::endl;
@@ -439,8 +430,6 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
         }
 
     }
-
-    return true;
 }
 
 //----------------------------------------------------------------------------
