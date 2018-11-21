@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/pose.h"
+#include "../common/stopwatch.h"
 #include "../hid/joystick.h"
 #include "../robots/robot.h"
 #include "../video/opengl.h"
@@ -18,7 +19,6 @@
 #include <cmath>
 
 // Standard C++ includes
-#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -256,7 +256,7 @@ private:
     std::mutex m_PoseMutex;
     float m_JoystickX = 0.f, m_JoystickY = 0.f;
 
-    TimeType m_MoveStartTime;
+    Stopwatch m_MoveStopwatch;
     enum class MoveMode
     {
         NotMoving,
@@ -267,9 +267,7 @@ private:
 
     void updatePose()
     {
-        const TimeType newTime = now();
-        const units::time::second_t elapsed(newTime - m_MoveStartTime);
-        m_MoveStartTime = newTime;
+        const units::time::second_t elapsed = m_MoveStopwatch.lap();
 
         using namespace units::math;
         switch (m_MoveMode) {
