@@ -95,7 +95,7 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,
                        const std::string &filename, bool realign)
     : RouteArdin(arrowLength, maxRouteEntries)
 {
-    load(filename, realign));
+    load(filename, realign);
 }
 //----------------------------------------------------------------------------
 RouteArdin::~RouteArdin()
