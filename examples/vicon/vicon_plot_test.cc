@@ -40,7 +40,7 @@ main()
     do {
         plt::figure(1);
         plt::clf();
-        const auto objectData = vicon.getObjectData(0);
+        auto objectData = vicon.getObjectData(0);
         plotAgent(objectData, -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         if (objectData.getElapsedTime() > 500ms) {
             if (!warningGiven) {
