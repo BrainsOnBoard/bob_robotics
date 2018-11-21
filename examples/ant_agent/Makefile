@@ -9,7 +9,7 @@ all: $(EXECUTABLE)
 
 -include $(EXECUTABLE).d
 
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libantworld
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 %d: ;
