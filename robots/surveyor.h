@@ -1,10 +1,7 @@
 #pragma once
 
-// Standard C includes
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
+// BoB robotics includes
+#include "tank.h"
 
 // POSIX networking includes
 #include <arpa/inet.h>
@@ -13,11 +10,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// BoB robotics includes
-#include "tank.h"
+// Standard C includes
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
@@ -28,6 +31,8 @@ namespace Robots {
  */
 class Surveyor : public Tank
 {
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     Surveyor(const std::string &address, uint16_t port)
     {
@@ -82,6 +87,11 @@ public:
         if (write(m_Socket, command, strlen(command)) < 0) {
             throw std::runtime_error("Cannot write to socket");
         }
+    }
+
+    virtual millimeter_t getRobotAxisLength() override
+    {
+        return 150_mm;
     }
 
 private:

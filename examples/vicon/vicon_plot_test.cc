@@ -36,11 +36,20 @@ main()
         return EXIT_FAILURE;
     }
 
+    bool warningGiven = false;
     do {
         plt::figure(1);
         plt::clf();
-        auto objectData = vicon.getObjectData(0);
+        const auto objectData = vicon.getObjectData(0);
         plotAgent(objectData, -2500_mm, 2500_mm, -2500_mm, 2500_mm);
+        if (objectData.getElapsedTime() > 500ms) {
+            if (!warningGiven) {
+                std::cerr << "Warning: Object is out of range" << std::endl;
+                warningGiven = true;
+            }
+        } else {
+            warningGiven = false;
+        }
         plt::pause(0.025);
     } while (plt::fignum_exists(1));
 

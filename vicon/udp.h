@@ -4,6 +4,7 @@
 #include "../common/assert.h"
 #include "../common/default_get_pose.h"
 #include "../common/pose.h"
+#include "../common/stopwatch.h"
 #include "../os/net.h"
 
 // Standard C++ includes
@@ -13,6 +14,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace BoBRobotics
@@ -61,6 +63,16 @@ public:
         m_Attitude[2] = roll;
     }
 
+    auto getElapsedTime() const
+    {
+        return m_ElapsedTime;
+    }
+
+    void setElapsedTime(const Stopwatch::Duration elapsed)
+    {
+        m_ElapsedTime = elapsed;
+    }
+
     uint32_t getFrameNumber() const
     {
         return m_FrameNumber;
@@ -89,6 +101,7 @@ private:
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
     std::string m_ObjectName;
+    Stopwatch::Duration m_ElapsedTime;
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
 };
@@ -276,7 +289,9 @@ public:
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
         if(id < m_ObjectData.size()) {
-            return m_ObjectData[id];
+            auto data = m_ObjectData[id].first;
+            data.setElapsedTime(m_ObjectData[id].second.elapsed());
+            return data;
         }
         else {
             throw std::runtime_error("Invalid object id: " + std::to_string(id));
@@ -301,9 +316,10 @@ private:
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
 
         // If no object data structure has been created for this ID, add one
-        if(id >= m_ObjectData.size()) {
+        if (id >= m_ObjectData.size()) {
             m_ObjectData.resize(id + 1);
         }
+        m_ObjectData[id].second.start();
 
         /*
          * Update object data with position and attitude.
@@ -314,14 +330,14 @@ private:
          */
         using namespace units::length;
         using namespace units::angle;
-        m_ObjectData[id].update(frameNumber,
-                                std::move(objectName),
-                                millimeter_t(position[0]),
-                                millimeter_t(position[1]),
-                                millimeter_t(position[2]),
-                                radian_t(attitude[2]),
-                                radian_t(attitude[0]),
-                                radian_t(attitude[1]));
+        m_ObjectData[id].first.update(frameNumber,
+                                      std::move(objectName),
+                                      millimeter_t(position[0]),
+                                      millimeter_t(position[1]),
+                                      millimeter_t(position[2]),
+                                      radian_t(attitude[2]),
+                                      radian_t(attitude[0]),
+                                      radian_t(attitude[1]));
     }
 
     void readThread(int socket)
@@ -400,7 +416,7 @@ private:
     void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;
-    std::vector<ObjectDataType> m_ObjectData;
+    std::vector<std::pair<ObjectDataType, Stopwatch>> m_ObjectData;
 };
 } // namespace Vicon
 } // BoBRobotics

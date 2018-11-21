@@ -11,6 +11,9 @@
 // Standard C++ includes
 #include <vector>
 
+// third party includes
+#include "../third_party/units.h"
+
 namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
@@ -21,6 +24,9 @@ using namespace units::literals;
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
 class Norbot : public Tank
 {
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
       : m_I2C(path, slaveAddress)
@@ -60,6 +66,16 @@ public:
 
         // Send buffer
         write(buffer);
+    }
+
+    virtual meters_per_second_t getMaximumSpeed() override
+    {
+        return 11_mps;
+    }
+
+    virtual millimeter_t getRobotAxisLength() override
+    {
+        return 104_mm;
     }
 
     //----------------------------------------------------------------------------

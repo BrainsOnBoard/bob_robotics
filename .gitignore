@@ -1,5 +1,8 @@
-# temporary files
+# Temporary files
 *~
+
+# Temporary Jupyter notebook files
+**/.ipynb_checkpoints/
 
 # QT creator project files
 bob_robotics.config

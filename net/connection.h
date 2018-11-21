@@ -77,11 +77,14 @@ public:
 
     virtual ~Connection() override
     {
-        stop();
-
+        // If connected, notify other side that we want to close connection, then close it
         if (m_Socket.isOpen()) {
-            m_Socket.send("BYE\n");
+            getSocketWriter().send("BYE\n");
+            m_Socket.close();
         }
+
+        // Wait for read thread to finish
+        stop();
     }
 
     /*!

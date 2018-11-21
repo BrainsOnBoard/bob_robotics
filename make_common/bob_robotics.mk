@@ -100,6 +100,14 @@ ifdef WITH_MATPLOTLIBCPP
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
 endif
 
+ifdef WITH_I2C_ROBOT
+ifdef NO_I2C_ROBOT
+	CXXFLAGS += -DNO_I2C_ROBOT
+else
+	WITH_I2C := 1
+endif
+endif
+
 ifdef WITH_I2C
 	ifeq (0,$(shell $(CURRENT_DIR)/is_i2c_tools_new.sh; echo $$?))
 	LINK_FLAGS += -li2c
