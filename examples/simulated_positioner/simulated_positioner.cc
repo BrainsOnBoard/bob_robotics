@@ -2,7 +2,7 @@
 #include "common/pose.h"
 #include "robots/robot_positioner.h"
 #include "robots/simulated_tank.h"
-#include "robots/car_display.h"
+#include "viz/car_display.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -24,7 +24,7 @@ int
 main()
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
-    Robots::CarDisplay display;
+    Viz::CarDisplay display;
 
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading

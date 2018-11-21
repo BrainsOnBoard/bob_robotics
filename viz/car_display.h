@@ -20,7 +20,7 @@
 #include <vector>
 
 namespace BoBRobotics {
-namespace Robots {
+namespace Viz {
 using namespace units::literals;
 
 class CarDisplay
@@ -47,7 +47,7 @@ public:
 
         m_Renderer = SDL_CreateRenderer(m_Window, -1, 0);
 
-        const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
+        const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/viz/car.bmp";
         SDL_Surface *image = SDL_LoadBMP(imagePath.c_str());
         BOB_ASSERT(image != nullptr); // Check file exists
 
@@ -196,5 +196,5 @@ private:
 #ifndef NO_HEADER_DEFINITIONS
 constexpr int CarDisplay::WindowWidth, CarDisplay::WindowHeight;
 #endif
-} // Robots
+} // Viz
 } // BoBRobotics

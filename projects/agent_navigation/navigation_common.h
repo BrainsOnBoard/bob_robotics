@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/plot_agent.h"
+#include "viz/plot_agent.h"
 #include "common/pose.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -104,7 +104,7 @@ private:
             }
 
             // Plot position of robot
-            plotAgent(m_PoseGetter, m_Xlim[0], m_Xlim[1], m_Ylim[0], m_Ylim[1]);
+            Viz::plotAgent(m_PoseGetter, m_Xlim[0], m_Xlim[1], m_Ylim[0], m_Ylim[1]);
 
             // Set title
             {
