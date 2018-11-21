@@ -1,4 +1,3 @@
-NO_OPENCV := 1
 include ../../make_common/bob_robotics.mk
 CXXFLAGS += `pkg-config --cflags sfml-graphics`
 LINK_FLAGS += `pkg-config --libs sfml-graphics`
