@@ -20,23 +20,52 @@ class AgentRenderer
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
 
 public:
-    static constexpr int WindowWidth = 800, WindowHeight = 600;
+    static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    AgentRenderer(const LengthUnit agentSize, const LengthUnit arenaHeight = 3.2_m)
+    AgentRenderer(const LengthUnit agentSize = 30_cm,
+                  const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
+      : AgentRenderer(agentSize,
+                      { -arenaSize[0] / 2, -arenaSize[1] / 2 },
+                      { arenaSize[0] / 2, arenaSize[1] / 2 })
+    {}
+
+    AgentRenderer(const LengthUnit agentSize,
+                  const Vector2<LengthUnit> &minBounds,
+                  const Vector2<LengthUnit> &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
                  sf::Style::Titlebar | sf::Style::Close)
       , m_OriginLineHorizontal({ OriginLineLength, OriginLineThickness })
       , m_OriginLineVertical({ OriginLineThickness, OriginLineLength })
-      , m_UnitPerPixel(arenaHeight / WindowHeight)
+      , m_MinBounds(minBounds)
     {
         m_Window.setVerticalSyncEnabled(true);
+
+        const LengthUnit width = maxBounds[0] - minBounds[0];
+        const LengthUnit height = maxBounds[1] - minBounds[1];
+        BOB_ASSERT(width > 0_m && height > 0_m);
+
+        sf::Vector2u windowSize;
+        if (width > height) {
+            m_UnitPerPixel = width / WindowWidth;
+            windowSize.x = WindowWidth;
+            windowSize.y = static_cast<unsigned>((height / m_UnitPerPixel).value());
+            m_Window.setSize(windowSize);
+        } else {
+            m_UnitPerPixel = height / WindowHeight;
+            windowSize.x = static_cast<unsigned>((width / m_UnitPerPixel).value());
+            windowSize.y = WindowHeight;
+            m_Window.setSize(windowSize);
+        }
 
         // Put red cross at origin
         m_OriginLineHorizontal.setFillColor(sf::Color::Red);
         m_OriginLineVertical.setFillColor(sf::Color::Red);
-        m_OriginLineHorizontal.setPosition({ (WindowWidth - OriginLineLength) / 2.f, (WindowHeight - OriginLineThickness) / 2.f });
-        m_OriginLineVertical.setPosition({ (WindowWidth - OriginLineThickness) / 2.f, (WindowHeight - OriginLineLength) / 2.f });
+        const auto origin = lengthToVector(0_m, 0_m);
+        m_OriginLineHorizontal.setPosition({ origin.x - (OriginLineLength / 2.f),
+                                             origin.y - (OriginLineThickness / 2.f) });
+        m_OriginLineVertical.setPosition({ origin.x - (OriginLineThickness / 2.f),
+                                           origin.y - (OriginLineLength / 2.f) });
 
         // Set size of agent marker
         m_Agent.setWidth(lengthToPixel(agentSize));
@@ -149,7 +178,8 @@ private:
     sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
     AgentMarker m_Agent;
     std::vector<sf::ConvexShape> m_Objects;
-    const LengthUnit m_UnitPerPixel;
+    const Vector2<LengthUnit> m_MinBounds;
+    LengthUnit m_UnitPerPixel;
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 
@@ -160,8 +190,8 @@ private:
 
     sf::Vector2f lengthToVector(const LengthUnit x, const LengthUnit y) const
     {
-        return { lengthToPixel(x) + (WindowWidth / 2),
-                 -lengthToPixel(y) + (WindowHeight / 2) };
+        return { lengthToPixel(x - m_MinBounds[0]),
+                 static_cast<float>(WindowHeight) - lengthToPixel(y - m_MinBounds[1]) };
     }
 }; // AgentRenderer
 } // Viz
