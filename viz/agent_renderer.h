@@ -38,10 +38,8 @@ public:
         m_OriginLineHorizontal.setPosition({ (WindowWidth - OriginLineLength) / 2.f, (WindowHeight - OriginLineThickness) / 2.f });
         m_OriginLineVertical.setPosition({ (WindowWidth - OriginLineThickness) / 2.f, (WindowHeight - OriginLineLength) / 2.f });
 
-        // Set agent's colour
-        const float width = lengthToPixel(agentSize);
-        m_Agent.setSize({ width, width });
-        m_Agent.setFillColor(sf::Color::Blue);
+        // Set size of agent marker
+        m_Agent.setWidth(lengthToPixel(agentSize));
     }
 
     void update(const Pose2<LengthUnit, units::angle::degree_t> &agentPose)
@@ -68,12 +66,9 @@ public:
         }
 
         // Draw agent
-        auto point = lengthToVector(agentPose.x, agentPose.y);
-        const float halfWidth = m_Agent.getSize().x / 2.f;
-        m_Agent.setPosition({ point.x - halfWidth, point.y - halfWidth });
-        sf::Transform transform;
-        transform.rotate(-static_cast<float>(agentPose.angle.value()), point);
-        m_Window.draw(m_Agent, transform);
+        m_Agent.draw(m_Window,
+                     lengthToVector(agentPose.x, agentPose.y),
+                     -agentPose.angle);
 
         // Swap buffers
         m_Window.display();
@@ -100,8 +95,49 @@ public:
     }
 
 private:
+    class AgentMarker
+    {
+    public:
+        AgentMarker()
+        {
+            m_Square.setFillColor(sf::Color::Transparent);
+            m_Square.setOutlineColor(sf::Color::Black);
+            m_Square.setOutlineThickness(2.f);
+
+            m_Line[0].color = m_Line[1].color = sf::Color::Black;
+        }
+
+        void draw(sf::RenderWindow &window, const sf::Vector2f position, const units::angle::degree_t rotation)
+        {
+            const float width = m_Square.getSize().x;
+            const float halfWidth = width / 2.f;
+            m_Square.setPosition({ position.x - halfWidth, position.y - halfWidth });
+
+            sf::Transform transform;
+            transform.rotate(static_cast<float>(rotation.value()), position);
+
+            window.draw(m_Square, transform);
+
+            using namespace units::math;
+            m_Line[0].position = position;
+            m_Line[1].position = { position.x + width * static_cast<float>(cos(rotation).value()),
+                                   position.y + width * static_cast<float>(sin(rotation).value()) };
+            window.draw(&m_Line[0], 2u, sf::PrimitiveType::Lines);
+        }
+
+        void setWidth(const float width)
+        {
+            m_Square.setSize({ width, width });
+        }
+
+    private:
+        sf::RectangleShape m_Square;
+        sf::Vertex m_Line[2];
+    };
+
     sf::RenderWindow m_Window;
-    sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical, m_Agent;
+    sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
+    AgentMarker m_Agent;
     std::vector<sf::ConvexShape> m_Objects;
     const LengthUnit m_UnitPerPixel;
 
