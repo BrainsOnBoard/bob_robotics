@@ -44,6 +44,9 @@ public:
 
     void update(const Pose2<LengthUnit, units::angle::degree_t> &agentPose)
     {
+        // Set m_Window to be active OpenGL context
+        m_Window.setActive(true);
+
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (m_Window.pollEvent(event)) {
@@ -72,6 +75,9 @@ public:
 
         // Swap buffers
         m_Window.display();
+
+        // We don't need to be the current OpenGL context any more
+        m_Window.setActive(false);
     }
 
     bool isOpen() const

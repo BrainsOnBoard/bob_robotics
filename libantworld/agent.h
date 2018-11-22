@@ -142,11 +142,14 @@ public:
         m_Attitude[2] = roll;
     }
 
-    virtual bool readFrame(cv::Mat &frame) override
+    void render()
     {
         // If the agent is "moving", we need to calculate its current position
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
+
+        // Render to m_Window
+        glfwMakeContextCurrent(m_Window);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -159,6 +162,11 @@ public:
 
         // Swap front and back buffers
         glfwSwapBuffers(m_Window);
+    }
+
+    virtual bool readFrame(cv::Mat &frame) override
+    {
+        render();
 
         // Read frame
         return Video::OpenGL::readFrame(frame);
