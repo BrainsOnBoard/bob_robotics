@@ -109,15 +109,19 @@ private:
 
         void draw(sf::RenderWindow &window, const sf::Vector2f position, const units::angle::degree_t rotation)
         {
+            // Set square's position
             const float width = m_Square.getSize().x;
             const float halfWidth = width / 2.f;
             m_Square.setPosition({ position.x - halfWidth, position.y - halfWidth });
 
+            // Make transform for rotating square
             sf::Transform transform;
             transform.rotate(static_cast<float>(rotation.value()), position);
 
+            // Draw square
             window.draw(m_Square, transform);
 
+            // Draw line
             using namespace units::math;
             m_Line[0].position = position;
             m_Line[1].position = { position.x + width * static_cast<float>(cos(rotation).value()),
