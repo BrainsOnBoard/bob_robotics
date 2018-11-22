@@ -169,9 +169,7 @@ main(int argc, char **argv)
     if (argc > 1) {
         // Create route object and load route file specified by command line
         AntWorld::RouteContinuous route(0.2f, 800);
-        if (!route.load(argv[1])) {
-            return 1;
-        }
+        route.load(argv[1]);
 
         // Get filename from route path
         std::string databaseName = filesystem::path(argv[1]).filename();

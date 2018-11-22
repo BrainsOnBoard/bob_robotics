@@ -1,3 +1,6 @@
+[submodule "third_party/arsdk3/arsdk_manifests"]
+	path = third_party/arsdk3/arsdk_manifests
+	url = https://github.com/Parrot-Developers/arsdk_manifests
 [submodule "third_party/vicon_data_stream_sdk"]
 	path = third_party/vicon_data_stream_sdk
 	url = https://github.com/BrainsOnBoard/ViconDataStreamSDK
