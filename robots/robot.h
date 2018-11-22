@@ -45,6 +45,12 @@ public:
     {
         throw std::runtime_error("getMaximumTurnSpeed() is not implemented for this Robot");
     }
+
+    virtual units::length::millimeter_t getRobotWidth()
+    {
+        throw std::runtime_error("getRobotWidth() is not implemented for this class");
+    }
+
 }; // Robot
 } // Robots
 } // BoBRobotics

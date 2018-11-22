@@ -139,11 +139,6 @@ public:
         }
     }
 
-    virtual millimeter_t getRobotWidth()
-    {
-        throw std::runtime_error("getRobotWidth() is not implemented for this class");
-    }
-
     virtual meters_per_second_t getMaximumSpeed()
     {
         throw std::runtime_error("getMaximumSpeed() is not implemented for this class");
