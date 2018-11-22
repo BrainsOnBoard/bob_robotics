@@ -59,7 +59,7 @@ public:
     Position2() = default;
 
     Position2(LengthUnit x, LengthUnit y)
-      : PositionBase<LengthUnit, 3>(x, y)
+      : PositionBase<LengthUnit, 2>(x, y)
     {}
 
     Position2(const std::array<LengthUnit, 2> &array)
@@ -102,7 +102,7 @@ class Pose3;
 //! A two-dimensional pose
 template<typename LengthUnit, typename AngleUnit>
 class Pose2
-  : public std::tuple<Vector2<LengthUnit>, AngleUnit>
+  : public std::tuple<Position2<LengthUnit>, AngleUnit>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
@@ -113,7 +113,7 @@ public:
     Pose2() = default;
 
     Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
-      : std::tuple<Vector2<LengthUnit>, AngleUnit>({ x, y }, angle)
+      : std::tuple<Position2<LengthUnit>, AngleUnit>({ x, y }, angle)
     {}
 
     template<typename LengthUnit2, typename AngleUnit2>
@@ -128,8 +128,8 @@ public:
         return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
     }
 
-    Vector2<LengthUnit> &position() { return std::get<0>(*this); }
-    const Vector2<LengthUnit> &position() const { return std::get<0>(*this); }
+    Position2<LengthUnit> &position() { return std::get<0>(*this); }
+    const Position2<LengthUnit> &position() const { return std::get<0>(*this); }
     LengthUnit &x() { return std::get<0>(*this)[0]; }
     const LengthUnit &x() const { return std::get<0>(*this)[0]; }
     LengthUnit &y() { return std::get<0>(*this)[1]; }

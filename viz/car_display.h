@@ -100,9 +100,9 @@ public:
         return key;
     }
 
-    Vector2<millimeter_t> getMouseClickPosition() const
+    Position2<millimeter_t> getMouseClickPosition() const
     {
-        Vector2<millimeter_t> out;
+        Position2<millimeter_t> out;
         pixelToMM(m_MouseClickPosition[0], m_MouseClickPosition[1], out[0], out[1]);
         return out;
     }

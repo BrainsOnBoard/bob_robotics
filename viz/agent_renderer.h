@@ -23,15 +23,15 @@ public:
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
     AgentRenderer(const LengthUnit agentSize = 30_cm,
-                  const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
+                  const Position2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
       : AgentRenderer(agentSize,
                       { -arenaSize[0] / 2, -arenaSize[1] / 2 },
                       { arenaSize[0] / 2, arenaSize[1] / 2 })
     {}
 
     AgentRenderer(const LengthUnit agentSize,
-                  const Vector2<LengthUnit> &minBounds,
-                  const Vector2<LengthUnit> &maxBounds)
+                  const Position2<LengthUnit> &minBounds,
+                  const Position2<LengthUnit> &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
                  sf::Style::Titlebar | sf::Style::Close)
@@ -114,7 +114,7 @@ public:
         return m_Window.isOpen();
     }
 
-    void addObjects(const std::vector<std::vector<Vector2<LengthUnit>>> &objects)
+    void addObjects(const std::vector<std::vector<Position2<LengthUnit>>> &objects)
     {
         BOB_ASSERT(m_Objects.empty());
         m_Objects.reserve(objects.size());
@@ -178,7 +178,7 @@ private:
     sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
     AgentMarker m_Agent;
     std::vector<sf::ConvexShape> m_Objects;
-    const Vector2<LengthUnit> m_MinBounds;
+    const Position2<LengthUnit> m_MinBounds;
     LengthUnit m_UnitPerPixel;
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;

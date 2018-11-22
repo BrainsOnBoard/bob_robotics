@@ -24,7 +24,7 @@ using namespace units::literals;
 auto
 loadObjects(const filesystem::path &objectsPath)
 {
-    std::vector<std::vector<Vector2<millimeter_t>>> objects;
+    std::vector<std::vector<Position2<millimeter_t>>> objects;
 
     std::cout << "Loading object positions from " << objectsPath << "..." << std::endl;
     cv::FileStorage fs(objectsPath.str(), cv::FileStorage::READ);
@@ -33,7 +33,7 @@ loadObjects(const filesystem::path &objectsPath)
         objects.emplace_back();
         for (auto vertexNode : objectNode) {
             vertexNode >> vertex;
-            objects.back().emplace_back(Vector2<millimeter_t>{ millimeter_t{ vertex[0] },
+            objects.back().emplace_back(Position2<millimeter_t>{ millimeter_t{ vertex[0] },
                                                                millimeter_t{ vertex[1] } });
         }
     }

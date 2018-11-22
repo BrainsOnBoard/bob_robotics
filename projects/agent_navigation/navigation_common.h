@@ -47,7 +47,7 @@ class Plotter
 {
 public:
     Plotter(const std::vector<ObjectType> &objects, PoseGetterType &poseGetter,
-            const Vector2<LengthUnit> xlim, const Vector2<LengthUnit> ylim)
+            const Position2<LengthUnit> xlim, const Position2<LengthUnit> ylim)
       : m_Objects(objects)
       , m_PoseGetter(poseGetter)
       , m_Xlim(xlim)
@@ -77,7 +77,7 @@ private:
     const std::vector<ObjectType> &m_Objects;
     PoseGetterType &m_PoseGetter;
     std::string m_Title;
-    const Vector2<LengthUnit> m_Xlim, m_Ylim;
+    const Position2<LengthUnit> m_Xlim, m_Ylim;
     std::thread m_Thread;
     std::mutex m_TitleMutex;
     std::atomic_bool m_Running;
