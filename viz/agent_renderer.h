@@ -100,7 +100,7 @@ public:
         // Draw agent
         m_Agent.draw(m_Window,
                      lengthToVector(agentPose.x(), agentPose.y()),
-                     -agentPose.angle());
+                     -agentPose.yaw());
 
         // Swap buffers
         m_Window.display();

@@ -95,7 +95,7 @@ public:
         // Update agent's position in pixels
         setRobotPosition(agentPose.x(), agentPose.y());
 
-        draw(agentPose.angle());
+        draw(agentPose.yaw());
 
         return key;
     }
