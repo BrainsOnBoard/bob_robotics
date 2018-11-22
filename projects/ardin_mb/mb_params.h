@@ -27,14 +27,14 @@ namespace MBParams
     constexpr double presentDurationMs = 40.0;
     constexpr double postStimuliDurationMs = 200.0;
 
-    // Scale applied to convert image data to input currents for PNs
+    // Scale applied to convert image data to input rates for PNs
     // **NOTE** manually tuned to get approximately 50% PN activation
-    constexpr double inputCurrentScale = 20.0;
+    constexpr double inputRateScale = 3000.0;
 
     // Weight of static synapses between PN and KC populations
     // **NOTE** manually tuend to get approximately 200/20000 KC firing sparsity
     //constexpr double pnToKCWeight = 0.0525;// 0.0705;
-    constexpr double pnToKCWeight = 0.0175;
+    constexpr double pnToKCWeight = 0.0275;
 
     // Initial/maximum weight of plastic synapses between KC and EN populations
     // **NOTE** note manually tuned to get 15-20 spikes for a novel image
@@ -48,7 +48,7 @@ namespace MBParams
     constexpr double dopamineStrength = 0.03;
 
     // How many PN neurons are connected to each KC
-    constexpr unsigned int numPNSynapsesPerKC = 30;
+    constexpr unsigned int numPNSynapsesPerKC = 10;
 
 
 

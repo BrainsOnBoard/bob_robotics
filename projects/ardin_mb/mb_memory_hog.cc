@@ -111,26 +111,19 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     m_HOG.compute(image, m_HOGFeatures);
     BOB_ASSERT(m_HOGFeatures.size() == MBParams::hogFeatureSize);
 
-    std::ofstream hogStream("hog.bin", std::ios::binary);
-    hogStream.write(reinterpret_cast<char*>(m_HOGFeatures.data()), sizeof(float) * m_HOGFeatures.size());
-
     const float magnitude = std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f);
     /*std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), m_HOGFeatures.begin(),
                    [magnitude](float f)
                    {
                        return f / magnitude;
                    });*/
-    //std::cout << "HOG feature magnitude:" << std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f) << std::endl;
+    std::cout << "HOG feature magnitude:" << magnitude << std::endl;
 
-    // Upload
-    CHECK_CUDA_ERRORS(cudaMemcpy(m_HOGFeaturesGPU, m_HOGFeatures.data(),
-                                 MBParams::hogFeatureSize * sizeof(float),
-                                 cudaMemcpyHostToDevice));
+    // Copy HOG features into GeNN variable
+    std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), ratePN);
 
-#ifdef CPU_ONLY
-    float *snapshotData = m_HOGFeatures.data();
-#else
-    float *snapshotData = m_HOGFeaturesGPU;;
+#ifndef CPU_ONLY
+    pushPNStateToDevice();
 #endif
 
     // Convert simulation regime parameters to timesteps
@@ -158,13 +151,12 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     unsigned int numKCSpikes = 0;
     unsigned int numENSpikes = 0;
     while(iT < endTimestep) {
-        // If we should be presenting an image
-        if(iT < endPresentTimestep) {
-            IextPN = snapshotData;
-        }
-        // Otherwise update offset to point to block of zeros
-        else {
-            IextPN = nullptr;
+        // If we should stop presenting image
+        if(iT == endPresentTimestep) {
+            std::fill_n(ratePN, MBParams::numPN, 0.0001f);
+#ifndef CPU_ONLY
+            pushPNStateToDevice();
+#endif
         }
 
         // If we should reward in this timestep, inject dopamine

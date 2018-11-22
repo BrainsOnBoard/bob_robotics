@@ -32,6 +32,7 @@ public:
     virtual void clearMemory() override;
 
 private:
+    void setInput(const std::vector<float> &input);
     std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
 
     //------------------------------------------------------------------------
