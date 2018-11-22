@@ -56,7 +56,7 @@ bob_main(int, char **)
 
     // set goal pose
     const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
-    std::cout << "Goal: (" << goal.x << ", " << goal.y << ") at " << goal.angle << std::endl;
+    std::cout << "Goal: (" << goal.x() << ", " << goal.y() << ") at " << goal.yaw() << std::endl;
     robp.setGoalPose(goal);
 
     // drive robot with joystick

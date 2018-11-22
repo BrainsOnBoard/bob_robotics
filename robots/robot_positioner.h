@@ -65,18 +65,18 @@ private:
     void updateRangeAndBearing()
     {
 
-        const meter_t delta_x = m_GoalPose.x - m_RobotPose.x;
-        const meter_t delta_y = m_GoalPose.y - m_RobotPose.y;
+        const meter_t delta_x = m_GoalPose.x() - m_RobotPose.x();
+        const meter_t delta_y = m_GoalPose.y() - m_RobotPose.y();
 
         // calculate distance
         m_DistanceToGoal = units::math::hypot(delta_x, delta_y);
 
         // calculate bearing
-        m_HeadingToGoal = m_RobotPose.angle - units::math::atan2(delta_y, delta_x);
+        m_HeadingToGoal = m_RobotPose.yaw() - units::math::atan2(delta_y, delta_x);
 
         // changing from <0,360> to <-180, 180>
         m_HeadingToGoal = angleWrapAround(m_HeadingToGoal);
-        m_RobotPose.angle = angleWrapAround(m_RobotPose.angle);
+        m_RobotPose.yaw() = angleWrapAround(m_RobotPose.yaw());
     }
 
     //-----------------PUBLIC API---------------------------------------------------------------------
@@ -143,7 +143,7 @@ public:
         }
 
         // orientation of Target with respect to the line of sight from the observer to the target
-        radian_t theta = m_GoalPose.angle - m_HeadingToGoal;
+        radian_t theta = m_GoalPose.yaw() - m_HeadingToGoal;
         theta = angleWrapAround(theta);
 
         using namespace units::dimensionless; // scalar_t
@@ -183,7 +183,7 @@ public:
     bool didReachGoal()
     {
         return m_DistanceToGoal < m_StoppingDistance &&
-               units::math::abs(m_RobotPose.angle - m_GoalPose.angle) < m_AllowedHeadingError;
+               units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;
     }
 
 }; // RobotPositioner
