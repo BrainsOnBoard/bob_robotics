@@ -116,7 +116,7 @@ public:
 
     //! Get the current position of the gantry in the arena
     template<class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Position3<LengthUnit> getPosition()
     {
         // Request position from card
         Vector3<LONG> pulses;

@@ -84,7 +84,7 @@ public:
     }
 
     template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
+    Position3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
@@ -102,7 +102,7 @@ private:
     uint32_t m_FrameNumber;
     std::string m_ObjectName;
     Stopwatch::Duration m_ElapsedTime;
-    Vector3<millimeter_t> m_Position;
+    Position3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
 };
 
@@ -128,7 +128,7 @@ public:
                 millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
-        const Vector3<millimeter_t> position {x, y, z};
+        const Position3<millimeter_t> position {x, y, z};
         constexpr millisecond_t frameS = 10_ms;
         constexpr millisecond_t smoothingS = 30_ms;
 
@@ -194,7 +194,7 @@ public:
         {}
 
         template<typename LengthUnit = millimeter_t>
-        Vector3<LengthUnit> getPosition() const
+        Position3<LengthUnit> getPosition() const
         {
             return getData().template getPosition<LengthUnit>();
         }

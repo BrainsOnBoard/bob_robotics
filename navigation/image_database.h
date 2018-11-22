@@ -78,7 +78,7 @@ public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
-        Vector3<millimeter_t> position;
+        Position3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
         Vector3<size_t> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
@@ -170,7 +170,7 @@ public:
         }
 
         void addEntry(const std::string &filename, const cv::Mat &image,
-                      const Vector3<millimeter_t> &position, const degree_t heading,
+                      const Position3<millimeter_t> &position, const degree_t heading,
                       const Vector3<size_t> &gridPosition = { 0, 0, 0 })
         {
             BOB_ASSERT(m_Recording);
@@ -189,8 +189,8 @@ public:
                      const std::string &imageFormat = "png")
           : Recorder(imageDatabase, false, imageFormat)
           , m_Heading(heading)
-          , m_Begin({ xrange.begin, yrange.begin, zrange.begin })
-          , m_Separation({ xrange.separation, yrange.separation, zrange.separation })
+          , m_Begin(xrange.begin, yrange.begin, zrange.begin)
+          , m_Separation(xrange.separation, yrange.separation, zrange.separation)
           , m_Size({ xrange.size(), yrange.size(), zrange.size() })
           , m_Current({ 0, 0, 0 })
         {
@@ -205,10 +205,10 @@ public:
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const Vector3<size_t> &gridPosition)
+        Position3<millimeter_t> getPosition(const Vector3<size_t> &gridPosition)
         {
             BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
-            Vector3<millimeter_t> position;
+            Position3<millimeter_t> position;
             for (size_t i = 0; i < position.size(); i++) {
                 position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
             }
@@ -218,7 +218,7 @@ public:
         //! Get a vector of all possible positions for this grid
         auto getPositions()
         {
-            std::vector<Vector3<millimeter_t>> positions;
+            std::vector<Position3<millimeter_t>> positions;
             positions.reserve(maximumSize());
 
             for (size_t x = 0; x < sizeX(); x++) {
@@ -261,7 +261,7 @@ public:
 
     private:
         const degree_t m_Heading;
-        const Vector3<millimeter_t> m_Begin, m_Separation;
+        const Position3<millimeter_t> m_Begin, m_Separation;
         const Vector3<size_t> m_Size;
         Vector3<size_t> m_Current;
     };
@@ -276,7 +276,7 @@ public:
         }
 
         //! Save a new image taken at the specified pose
-        void record(const Vector3<millimeter_t> &position, degree_t heading,
+        void record(const Position3<millimeter_t> &position, degree_t heading,
                     const cv::Mat &image)
         {
             const std::string filename = ImageDatabase::getFilename(size(), getImageFormat());
@@ -499,7 +499,7 @@ public:
     }
 
     //! Get a filename for a grid-type database
-    static std::string getFilename(const Vector3<millimeter_t> &position,
+    static std::string getFilename(const Position3<millimeter_t> &position,
                                    const std::string &imageFormat = "png")
     {
         // Convert to integers

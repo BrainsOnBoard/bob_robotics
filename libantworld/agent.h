@@ -89,7 +89,7 @@ public:
     }
 
     template<typename LengthUnit = meter_t>
-    Vector3<LengthUnit> getPosition()
+    Position3<LengthUnit> getPosition()
     {
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();

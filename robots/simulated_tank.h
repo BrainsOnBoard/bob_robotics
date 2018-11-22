@@ -32,7 +32,7 @@ public:
     }
 
     template<typename ReturnLengthUnit = LengthUnit>
-    Vector3<ReturnLengthUnit> getPosition()
+    Position3<ReturnLengthUnit> getPosition()
     {
         updatePose();
         return { m_Pose.x(), m_Pose.y(), 0_m };
