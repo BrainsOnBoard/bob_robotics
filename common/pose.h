@@ -8,6 +8,7 @@
 #include <tuple>
 
 namespace BoBRobotics {
+
 //! A generic template for 2D unit arrays
 template<typename T>
 using Vector2 = std::array<T, 2>;
@@ -15,6 +16,61 @@ using Vector2 = std::array<T, 2>;
 //! A generic template for 3D unit arrays
 template<typename T>
 using Vector3 = std::array<T, 3>;
+
+template<typename LengthUnit, size_t N>
+class PositionBase
+{
+    static_assert(units::traits::is_length_unit<LengthUnit>::value,
+                  "LengthUnit is not a unit of length");
+
+public:
+    template<typename... Ts>
+    PositionBase(Ts&& ...args)
+      : m_Array{{ std::forward<Ts>(args)... }}
+    {}
+
+    LengthUnit &operator[](size_t i) { return m_Array[i]; }
+    const LengthUnit &operator[](size_t i) const { return m_Array[i]; }
+    static constexpr size_t size() { return N; }
+
+private:
+    std::array<LengthUnit, N> m_Array;
+};
+
+template<typename LengthUnit>
+class Position2
+  : public PositionBase<LengthUnit, 2>
+{
+public:
+    template<typename... Ts>
+    Position2(Ts&& ...args)
+      : PositionBase<LengthUnit, 3>(std::forward<Ts>(args)...)
+    {}
+
+    LengthUnit &x() { return (*this)[0]; }
+    const LengthUnit &x() const { return (*this)[0]; }
+    LengthUnit &y() { return (*this)[1]; }
+    const LengthUnit &y() const { return (*this)[1]; }
+    static constexpr LengthUnit z() { return LengthUnit(0); }
+};
+
+template<typename LengthUnit>
+class Position3
+  : public PositionBase<LengthUnit, 3>
+{
+public:
+    template<typename... Ts>
+    Position3(Ts&& ...args)
+      : PositionBase<LengthUnit, 3>(std::forward<Ts>(args)...)
+    {}
+
+    LengthUnit &x() { return (*this)[0]; }
+    const LengthUnit &x() const { return (*this)[0]; }
+    LengthUnit &y() { return (*this)[1]; }
+    const LengthUnit &y() const { return (*this)[1]; }
+    LengthUnit &z() { return (*this)[2]; }
+    const LengthUnit &z() const { return (*this)[2]; }
+};
 
 template<typename LengthUnit, typename AngleUnit>
 class Pose3;
