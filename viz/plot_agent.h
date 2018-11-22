@@ -16,7 +16,7 @@ namespace BoBRobotics {
 namespace Viz {
 template<typename LengthUnit, typename AgentType>
 void
-Viz::plotAgent(AgentType &agent,
+plotAgent(AgentType &agent,
                const LengthUnit xLower,
                const LengthUnit xUpper,
                const LengthUnit yLower,

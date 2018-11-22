@@ -4,9 +4,9 @@
 #include <thread>
 
 // BoB robotics includes
-#include "viz/plot_agent.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
+#include "viz/plot_agent.h"
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"
