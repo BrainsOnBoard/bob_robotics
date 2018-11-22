@@ -49,7 +49,7 @@ main(int, char **argv)
 
     Robots::SimulatedTank<millimeter_t, degree_t> robot(0.2_mps, 104_mm);
 
-    Viz::AgentRenderer<millimeter_t> renderer(robot.getRobotAxisLength());
+    Viz::AgentRenderer<millimeter_t> renderer(robot.getRobotWidth());
     renderer.addObjects(objects);
 
     HID::Joystick joystick;

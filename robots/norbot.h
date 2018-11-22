@@ -64,7 +64,7 @@ public:
         return 11_mps;
     }
 
-    virtual millimeter_t getRobotAxisLength() override
+    virtual millimeter_t getRobotWidth() override
     {
         return 104_mm;
     }

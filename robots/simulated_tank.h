@@ -26,7 +26,7 @@ public:
       , m_AxisLength(axisLength)
     {}
 
-    virtual millimeter_t getRobotAxisLength()
+    virtual millimeter_t getRobotWidth()
     {
         return m_AxisLength;
     }
@@ -91,7 +91,7 @@ private:
             m_Pose.x += dist * cos(m_Pose.angle);
             m_Pose.y += dist * sin(m_Pose.angle);
         } else {
-            const meter_t width = getRobotAxisLength();
+            const meter_t width = getRobotWidth();
             const meter_t turnRadius = (width * (m_Left + m_Right)) /
                                        (2 * (m_Left - m_Right));
             const double deltaAngle = (m_Right - m_Left) * elapsed / width;
