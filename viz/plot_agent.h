@@ -23,16 +23,13 @@ plotAgent(AgentType &agent,
                const LengthUnit yUpper)
 {
     // Get agent's pose
-    using namespace units::angle;
-    Vector3<LengthUnit> position;
-    Vector3<radian_t> attitude;
-    std::tie(position, attitude) = agent.template getPose<LengthUnit, radian_t>();
+    const auto pose = agent.template getPose<LengthUnit>();
 
     // Get vector components
-    const std::vector<double> vx{ position[0].value() };
-    const std::vector<double> vy{ position[1].value() };
-    const std::vector<double> vu{ units::math::cos(attitude[0]) };
-    const std::vector<double> vv{ units::math::sin(attitude[0]) };
+    const std::vector<double> vx{ pose.x().value() };
+    const std::vector<double> vy{ pose.y().value() };
+    const std::vector<double> vu{ units::math::cos(pose.yaw()) };
+    const std::vector<double> vv{ units::math::sin(pose.yaw()) };
 
     // Origin
     const std::vector<int> x0{ 0 }, y0{ 0 };
