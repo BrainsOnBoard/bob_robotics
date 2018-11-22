@@ -1,13 +1,22 @@
-#include "navigation_common.h"
-
 // BoB robotics includes
 #include "common/main.h"
+#include "hid/joystick.h"
 #include "libantworld/agent.h"
+#include "viz/agent_renderer.h"
+
+#include "third_party/units.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+#include <chrono>
+#include <thread>
+
 using namespace BoBRobotics;
+using namespace units::angle;
+using namespace units::length;
+using namespace units::literals;
+using namespace std::literals;
 
 int
 bob_main(int, char **)
@@ -33,8 +42,20 @@ bob_main(int, char **)
     AntWorld::AntAgent ant(window.get(), renderer, RenderSize, 0.25_mps, 50_deg_per_s);
     ant.setPosition(0_m, 0_m, AntHeight);
 
-    // Run navigation
-    runNavigation(ant, ant, ForwardSpeed, TurnSpeed, ant, minBound[0], maxBound[0], minBound[1], maxBound[1]);
+    HID::Joystick joystick;
+    ant.addJoystick(joystick);
+
+    Viz::AgentRenderer<meter_t> vrenderer(10_cm);
+
+    Vector3<meter_t> position;
+    Vector3<degree_t> attitude;
+    while (!joystick.isPressed(HID::JButton::B)) {
+        joystick.update();
+        std::tie(position, attitude) = ant.getPose();
+        vrenderer.update({ position[0], position[1], attitude[0] });
+        ant.render();
+        std::this_thread::sleep_for(5ms);
+    }
 
     return EXIT_SUCCESS;
 }
