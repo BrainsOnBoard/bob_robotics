@@ -32,7 +32,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename);
+    void load(const std::string &filename);
     void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
     bool atDestination(meter_t x, meter_t y, meter_t threshold) const;

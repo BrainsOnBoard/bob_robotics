@@ -1,13 +1,14 @@
 #include "route_ardin.h"
 
+// BoB robotics includes
+#include "common.h"
+
 // Standard C++ includes
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <tuple>
-
-// Libantworld includes
-#include "common.h"
 
 using namespace units::angle;
 using namespace units::length;
@@ -94,9 +95,7 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,
                        const std::string &filename, bool realign)
     : RouteArdin(arrowLength, maxRouteEntries)
 {
-    if(!load(filename, realign)) {
-        throw std::runtime_error("Cannot load route");
-    }
+    load(filename, realign);
 }
 //----------------------------------------------------------------------------
 RouteArdin::~RouteArdin()
@@ -117,13 +116,12 @@ RouteArdin::~RouteArdin()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool RouteArdin::load(const std::string &filename, bool realign)
+void RouteArdin::load(const std::string &filename, bool realign)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file:" << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open route file: " + filename);
     }
 
     // Seek to end of file, get size and rewind
@@ -235,7 +233,6 @@ bool RouteArdin::load(const std::string &filename, bool realign)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
-    return true;
 }
 //----------------------------------------------------------------------------
 void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const

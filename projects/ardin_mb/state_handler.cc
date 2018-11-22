@@ -29,20 +29,18 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 
     // If route is specified
     if(!routeFilename.empty()) {
-        // If loading route is successful
-        if(m_Route.load(routeFilename)) {
-            // Get bounds of route
-            const auto &routeMin = m_Route.getMinBound();
-            const auto &routeMax = m_Route.getMaxBound();
+        m_Route.load(routeFilename);
 
-            // Create vector field geometry to cover route bounds
-            m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
-                                         routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+        // Get bounds of route
+        const auto &routeMin = m_Route.getMinBound();
+        const auto &routeMax = m_Route.getMaxBound();
 
-            // Start training
-            m_StateMachine.transition(State::Training);
-            return;
-        }
+        // Create vector field geometry to cover route bounds
+        m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm, routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+
+        // Start training
+        m_StateMachine.transition(State::Training);
+        return;
     }
 
     // Move ant to initial position
