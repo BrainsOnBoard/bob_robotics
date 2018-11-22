@@ -31,7 +31,7 @@ public:
       : m_Array({ std::forward<Ts>(args)... })
     {}
 
-    operator std::array<LengthUnit, N> &() const
+    operator const std::array<LengthUnit, N> &() const
     {
         return m_Array;
     }
