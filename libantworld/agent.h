@@ -93,7 +93,7 @@ public:
     {
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
-        return convertUnitArray<LengthUnit>(m_Position);
+        return convertUnitArray<LengthUnit>(m_Pose.position());
     }
 
     template<typename AngleUnit = degree_t>
@@ -101,23 +101,21 @@ public:
     {
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
-        return convertUnitArray<AngleUnit>(m_Attitude);
+        return convertUnitArray<AngleUnit>(m_Pose.attitude());
     }
 
     template<typename LengthUnit = meter_t, typename AngleUnit = degree_t>
-    auto getPose()
+    Pose3<LengthUnit, AngleUnit> getPose()
     {
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();
-        return std::make_pair(convertUnitArray<LengthUnit>(m_Position),
-                              convertUnitArray<AngleUnit>(m_Attitude));
+        return m_Pose;
     }
 
     GLFWwindow *getWindow() const
     {
         return m_Window;
     }
-
 
     virtual radians_per_second_t getMaximumTurnSpeed() override
     {
@@ -127,19 +125,13 @@ public:
     void setPosition(meter_t x, meter_t y, meter_t z)
     {
         BOB_ASSERT(m_MoveMode == MoveMode::NotMoving);
-
-        m_Position[0] = x;
-        m_Position[1] = y;
-        m_Position[2] = z;
+        m_Pose.position() = { x, y, z };
     }
 
     void setAttitude(degree_t yaw, degree_t pitch, degree_t roll)
     {
         BOB_ASSERT(m_MoveMode == MoveMode::NotMoving);
-
-        m_Attitude[0] = yaw;
-        m_Attitude[1] = pitch;
-        m_Attitude[2] = roll;
+        m_Pose.attitude() = { yaw, pitch, roll };
     }
 
     void render()
@@ -156,8 +148,8 @@ public:
 
         // Render first person
         const auto size = getOutputSize();
-        m_Renderer.renderPanoramicView(m_Position[0], m_Position[1], m_Position[2],
-                                       m_Attitude[0], m_Attitude[1], m_Attitude[2],
+        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_Pose.z(),
+                                       m_Pose.yaw(), m_Pose.pitch(), m_Pose.roll(),
                                        0, 0, size.width, size.height);
 
         // Swap front and back buffers
@@ -184,7 +176,7 @@ public:
         BOB_ASSERT(speed >= -1.f && speed <= 1.f);
 
         std::lock_guard<std::mutex> guard(m_PoseMutex);
-        BOB_ASSERT(m_Attitude[1] == 0_deg && m_Attitude[2] == 0_deg);
+        BOB_ASSERT(m_Pose.pitch() == 0_deg && m_Pose.roll() == 0_deg);
 
         updatePose();
         m_MoveMode = MoveMode::MovingForward;
@@ -196,7 +188,7 @@ public:
         BOB_ASSERT(clockwiseSpeed >= -1.f && clockwiseSpeed <= 1.f);
 
         std::lock_guard<std::mutex> guard(m_PoseMutex);
-        BOB_ASSERT(m_Attitude[1] == 0_deg && m_Attitude[2] == 0_deg);
+        BOB_ASSERT(m_Pose.pitch() == 0_deg && m_Pose.roll() == 0_deg);
 
         updatePose();
         m_MoveMode = MoveMode::Turning;
@@ -255,8 +247,7 @@ public:
 private:
     using TimeType = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
-    Vector3<degree_t> m_Attitude{ { 0_deg, 0_deg, 0_deg } };
-    Vector3<meter_t> m_Position{ { 0_m, 0_m, 0_m } };
+    Pose3<meter_t, degree_t> m_Pose;
     meters_per_second_t m_Velocity;
     radians_per_second_t m_TurnSpeed;
     Renderer &m_Renderer;
@@ -281,16 +272,16 @@ private:
         switch (m_MoveMode) {
         case MoveMode::MovingForward: {
             const meter_t dist = m_MoveSpeed * m_Velocity * elapsed;
-            m_Position[0] += dist * cos(m_Attitude[0]);
-            m_Position[1] += dist * sin(m_Attitude[0]);
+            m_Pose.x() += dist * cos(m_Pose.yaw());
+            m_Pose.y() += dist * sin(m_Pose.yaw());
         } break;
         case MoveMode::Turning:
-            m_Attitude[0] -= m_MoveSpeed * m_TurnSpeed * elapsed;
-            while (m_Attitude[0] > 360_deg) {
-                m_Attitude[0] -= 360_deg;
+            m_Pose.yaw() -= m_MoveSpeed * m_TurnSpeed * elapsed;
+            while (m_Pose.yaw() > 360_deg) {
+                m_Pose.yaw() -= 360_deg;
             }
-            while (m_Attitude[0] < 0_deg) {
-                m_Attitude[0] += 360_deg;
+            while (m_Pose.yaw() < 0_deg) {
+                m_Pose.yaw() += 360_deg;
             }
             break;
         default:
