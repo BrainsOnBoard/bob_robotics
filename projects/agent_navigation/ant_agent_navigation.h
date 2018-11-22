@@ -127,10 +127,9 @@ runNavigation(Robots::Robot &robot,
               const float forwardSpeed,
               const float turnSpeed,
               Video::Input &videoInput,
-              const Vector2<LengthUnit> minBounds,
-              const Vector2<LengthUnit> maxBounds,
-              DisplayType &display,
-              const std::vector<ObjectType> &objects = {})
+              const Position2<LengthUnit> &minBounds,
+              const Position2<LengthUnit> &maxBounds,
+              DisplayType &display)
 {
     const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
 
@@ -208,6 +207,7 @@ runNavigation(Robots::Robot &robot,
         // } else if (testing) {
         //     plotter.setTitle("Testing");
         // }
+
         joystick.update();
         if (turnTimer.running()) {
             if (turnTimer.finished()) {
@@ -216,11 +216,12 @@ runNavigation(Robots::Robot &robot,
             }
         }
 
+        renderer.update(poseGetter.getPose());
         display.update();
         if (videoInput.readGreyscaleFrame(frame)) {
             if (trainingDatabase) {
-                const auto pose = poseGetter.template getPose<millimeter_t, degree_t>();
-                trainingDatabase->getRouteRecorder().record(pose.first, pose.second[0], frame);
+                const auto pose = poseGetter.template getPose<millimeter_t>();
+                trainingDatabase->getRouteRecorder().record(pose.position(), pose.yaw(), frame);
             } else if (testing) {
                 Timer<> t{ "Time to calculate: " };
                 const degree_t heading = std::get<0>(pm.getHeading(frame));
@@ -231,6 +232,5 @@ runNavigation(Robots::Robot &robot,
             }
         }
 
-        renderer.update(poseGetter.getPose());
-    } while (!joystick.isPressed(HID::JButton::B));
+    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen() && renderer.isOpen());
 }

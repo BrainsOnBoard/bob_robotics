@@ -52,6 +52,9 @@ private:
 };
 
 template<typename LengthUnit>
+class Position3;
+
+template<typename LengthUnit>
 class Position2
   : public PositionBase<LengthUnit, 2>
 {
@@ -65,6 +68,8 @@ public:
     Position2(const std::array<LengthUnit, 2> &array)
       : Position2(array[0], array[1])
     {}
+
+    operator Position3<LengthUnit>() const { return Position3<LengthUnit>(x(), y(), z()); }
 
     LengthUnit &x() { return (*this)[0]; }
     const LengthUnit &x() const { return (*this)[0]; }
@@ -87,6 +92,8 @@ public:
     Position3(const std::array<LengthUnit, 3> &array)
       : Position3(array[0], array[1], array[2])
     {}
+
+    operator Position2<LengthUnit>() const { return Position2<LengthUnit>(x(), y()); }
 
     LengthUnit &x() { return (*this)[0]; }
     const LengthUnit &x() const { return (*this)[0]; }

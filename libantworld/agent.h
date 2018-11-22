@@ -134,7 +134,7 @@ public:
         m_Pose.attitude() = { yaw, pitch, roll };
     }
 
-    void render()
+    bool update()
     {
         // If the agent is "moving", we need to calculate its current position
         std::lock_guard<std::mutex> guard(m_PoseMutex);
@@ -154,11 +154,15 @@ public:
 
         // Swap front and back buffers
         glfwSwapBuffers(m_Window);
+
+        return true;
     }
+
+    bool isOpen() const { return !glfwWindowShouldClose(m_Window); }
 
     virtual bool readFrame(cv::Mat &frame) override
     {
-        render();
+        update();
 
         // Read frame
         return Video::OpenGL::readFrame(frame);

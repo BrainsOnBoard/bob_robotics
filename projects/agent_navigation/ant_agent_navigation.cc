@@ -3,7 +3,9 @@
 #include "hid/joystick.h"
 #include "libantworld/agent.h"
 #include "viz/agent_renderer.h"
+#include "ant_agent_navigation.h"
 
+// Third-party includes
 #include "third_party/units.h"
 
 // OpenCV
@@ -42,19 +44,7 @@ bob_main(int, char **)
     AntWorld::AntAgent ant(window.get(), renderer, RenderSize, 0.25_mps, 50_deg_per_s);
     ant.setPosition(0_m, 0_m, AntHeight);
 
-    HID::Joystick joystick;
-    ant.addJoystick(joystick);
-
-    Viz::AgentRenderer<meter_t> vrenderer(10_cm);
-
-    Vector3<meter_t> position;
-    Vector3<degree_t> attitude;
-    while (!joystick.isPressed(HID::JButton::B)) {
-        joystick.update();
-        vrenderer.update(ant.getPose());
-        ant.render();
-        std::this_thread::sleep_for(5ms);
-    }
+    runNavigation(ant, ant, ForwardSpeed, TurnSpeed, ant, static_cast<Position2<meter_t>>(minBound), static_cast<Position2<meter_t>>(maxBound), ant);
 
     return EXIT_SUCCESS;
 }

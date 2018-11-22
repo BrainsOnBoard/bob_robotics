@@ -29,9 +29,10 @@ public:
                       { arenaSize[0] / 2, arenaSize[1] / 2 })
     {}
 
+    template<typename MaxBoundsType>
     AgentRenderer(const LengthUnit agentSize,
                   const Position2<LengthUnit> &minBounds,
-                  const Position2<LengthUnit> &maxBounds)
+                  const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
                  sf::Style::Titlebar | sf::Style::Close)
@@ -71,7 +72,8 @@ public:
         m_Agent.setWidth(lengthToPixel(agentSize));
     }
 
-    void update(const Pose2<LengthUnit, units::angle::degree_t> &agentPose)
+    template<typename PoseType>
+    void update(const PoseType &agentPose)
     {
         // Set m_Window to be active OpenGL context
         m_Window.setActive(true);
