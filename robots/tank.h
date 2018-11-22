@@ -27,10 +27,15 @@ namespace Robots {
 class Tank
   : public Robot
 {
-    using _meter_t = units::length::meter_t;
-    using _millimeter_t = units::length::millimeter_t;
-    using _meters_per_second_t = units::velocity::meters_per_second_t;
-    using _radians_per_second_t = units::angular_velocity::radians_per_second_t;
+/*
+ * If these are declared private then they annoyingly conflict with "usings" in
+ * derived classes.
+ */
+protected:
+    using meter_t = units::length::meter_t;
+    using millimeter_t = units::length::millimeter_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
     virtual void moveForward(float speed) override
@@ -90,16 +95,16 @@ public:
               deadZone);
     }
 
-    void move(_meters_per_second_t v,
-              _radians_per_second_t clockwiseSpeed,
+    void move(meters_per_second_t v,
+              radians_per_second_t clockwiseSpeed,
               const bool maxScaled = false)
     {
-        const _meter_t axisLength = getRobotWidth();
-        const _meters_per_second_t diff{
+        const meter_t axisLength = getRobotWidth();
+        const meters_per_second_t diff{
             (clockwiseSpeed * axisLength / 2).value()
         };
-        const _meters_per_second_t vL = v + diff;
-        const _meters_per_second_t vR = v - diff;
+        const meters_per_second_t vL = v + diff;
+        const meters_per_second_t vR = v - diff;
         tank(vL, vR, maxScaled);
     }
 
@@ -122,9 +127,9 @@ public:
         }
     }
 
-    void tank(_meters_per_second_t left, _meters_per_second_t right, bool maxScaled = false)
+    void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false)
     {
-        const _meters_per_second_t maxSpeed = getMaximumSpeed();
+        const meters_per_second_t maxSpeed = getMaximumSpeed();
         const auto leftMotor = static_cast<float>(left / maxSpeed);
         const auto rightMotor = static_cast<float>(right / maxSpeed);
         if (maxScaled) {
@@ -134,20 +139,20 @@ public:
         }
     }
 
-    virtual _millimeter_t getRobotWidth()
+    virtual millimeter_t getRobotWidth()
     {
         throw std::runtime_error("getRobotWidth() is not implemented for this class");
     }
 
-    virtual _meters_per_second_t getMaximumSpeed()
+    virtual meters_per_second_t getMaximumSpeed()
     {
         throw std::runtime_error("getMaximumSpeed() is not implemented for this class");
     }
 
-    virtual _radians_per_second_t getMaximumTurnSpeed() override
+    virtual radians_per_second_t getMaximumTurnSpeed() override
     {
         // max turn speed = v_max / r
-        return _radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<_meter_t>(getRobotWidth())).value() };
+        return radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<meter_t>(getRobotWidth())).value() };
     }
 
     //! Controls the robot with a network stream
