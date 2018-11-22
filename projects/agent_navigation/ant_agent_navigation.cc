@@ -51,8 +51,7 @@ bob_main(int, char **)
     Vector3<degree_t> attitude;
     while (!joystick.isPressed(HID::JButton::B)) {
         joystick.update();
-        std::tie(position, attitude) = ant.getPose();
-        vrenderer.update({ position[0], position[1], attitude[0] });
+        vrenderer.update(ant.getPose());
         ant.render();
         std::this_thread::sleep_for(5ms);
     }
