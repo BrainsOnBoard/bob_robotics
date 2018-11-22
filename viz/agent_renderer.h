@@ -99,8 +99,8 @@ public:
 
         // Draw agent
         m_Agent.draw(m_Window,
-                     lengthToVector(agentPose.x, agentPose.y),
-                     -agentPose.angle);
+                     lengthToVector(agentPose.x(), agentPose.y()),
+                     -agentPose.angle());
 
         // Swap buffers
         m_Window.display();

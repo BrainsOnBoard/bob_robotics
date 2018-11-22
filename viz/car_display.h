@@ -93,9 +93,9 @@ public:
         const auto key = pollEvents();
 
         // Update agent's position in pixels
-        setRobotPosition(agentPose.x, agentPose.y);
+        setRobotPosition(agentPose.x(), agentPose.y());
 
-        draw(agentPose.angle);
+        draw(agentPose.angle());
 
         return key;
     }

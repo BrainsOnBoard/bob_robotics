@@ -35,14 +35,14 @@ public:
     Vector3<ReturnLengthUnit> getPosition()
     {
         updatePose();
-        return { m_Pose.x, m_Pose.y, 0_m };
+        return { m_Pose.x(), m_Pose.y(), 0_m };
     }
 
     template<typename ReturnAngleUnit = AngleUnit>
     Vector3<ReturnAngleUnit> getAttitude()
     {
         updatePose();
-        return { m_Pose.angle, 0_rad, 0_rad };
+        return { m_Pose.angle(), 0_rad, 0_rad };
     }
 
     const auto &getPose()
@@ -88,17 +88,17 @@ private:
         const second_t elapsed = m_MoveStopwatch.lap();
         if (m_Left == m_Right) {
             const LengthUnit dist = m_Left * elapsed;
-            m_Pose.x += dist * cos(m_Pose.angle);
-            m_Pose.y += dist * sin(m_Pose.angle);
+            m_Pose.x() += dist * cos(m_Pose.angle());
+            m_Pose.y() += dist * sin(m_Pose.angle());
         } else {
             const meter_t width = getRobotWidth();
             const meter_t turnRadius = (width * (m_Left + m_Right)) /
                                        (2 * (m_Left - m_Right));
             const double deltaAngle = (m_Right - m_Left) * elapsed / width;
-            const radian_t newAngle = m_Pose.angle + radian_t{ deltaAngle };
-            m_Pose.x -= turnRadius * (sin(newAngle) - sin(m_Pose.angle));
-            m_Pose.y += turnRadius * (cos(newAngle) - cos(m_Pose.angle));
-            m_Pose.angle = newAngle;
+            const radian_t newAngle = m_Pose.angle() + radian_t{ deltaAngle };
+            m_Pose.x() -= turnRadius * (sin(newAngle) - sin(m_Pose.angle()));
+            m_Pose.y() += turnRadius * (cos(newAngle) - cos(m_Pose.angle()));
+            m_Pose.angle() = newAngle;
         }
     }
 }; // SimulatedTank
