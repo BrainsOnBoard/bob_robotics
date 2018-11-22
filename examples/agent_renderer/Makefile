@@ -2,7 +2,7 @@ include ../../make_common/bob_robotics.mk
 CXXFLAGS += `pkg-config --cflags sfml-graphics`
 LINK_FLAGS += `pkg-config --libs sfml-graphics`
 
-EXECUTABLE := graphics
+EXECUTABLE := agent_renderer
 
 .PHONY: all clean
 
