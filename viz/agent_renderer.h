@@ -28,7 +28,6 @@ public:
                  sf::Style::Titlebar | sf::Style::Close)
       , m_OriginLineHorizontal({ OriginLineLength, OriginLineThickness })
       , m_OriginLineVertical({ OriginLineThickness, OriginLineLength })
-      , m_Agent(50.f)
       , m_UnitPerPixel(arenaHeight / WindowHeight)
     {
         m_Window.setVerticalSyncEnabled(true);
@@ -40,7 +39,8 @@ public:
         m_OriginLineVertical.setPosition({ (WindowWidth - OriginLineThickness) / 2.f, (WindowHeight - OriginLineLength) / 2.f });
 
         // Set agent's colour
-        m_Agent.setRadius(lengthToPixel(agentSize));
+        const float width = lengthToPixel(agentSize);
+        m_Agent.setSize({ width, width });
         m_Agent.setFillColor(sf::Color::Blue);
     }
 
@@ -69,10 +69,11 @@ public:
 
         // Draw agent
         auto point = lengthToVector(agentPose.x, agentPose.y);
-        point.x -= m_Agent.getRadius();
-        point.y -= m_Agent.getRadius();
-        m_Agent.setPosition(point);
-        m_Window.draw(m_Agent);
+        const float halfWidth = m_Agent.getSize().x / 2.f;
+        m_Agent.setPosition({ point.x - halfWidth, point.y - halfWidth });
+        sf::Transform transform;
+        transform.rotate(-static_cast<float>(agentPose.angle.value()), point);
+        m_Window.draw(m_Agent, transform);
 
         // Swap buffers
         m_Window.display();
@@ -100,8 +101,7 @@ public:
 
 private:
     sf::RenderWindow m_Window;
-    sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
-    sf::CircleShape m_Agent;
+    sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical, m_Agent;
     std::vector<sf::ConvexShape> m_Objects;
     const LengthUnit m_UnitPerPixel;
 

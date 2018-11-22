@@ -57,7 +57,11 @@ main(int, char **argv)
 
     // run the program as long as the window is open
     while (renderer.isOpen() && !joystick.isPressed(HID::JButton::B)) {
-        if (!joystick.update()) {
+        if (joystick.update()) {
+            if (joystick.isPressed(HID::JButton::Start)) {
+                robot.setPose({}); // Reset to origin
+            }
+        } else {
             std::this_thread::sleep_for(5ms);
         }
 
