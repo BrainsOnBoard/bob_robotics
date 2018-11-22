@@ -16,6 +16,9 @@ using Vector2 = std::array<T, 2>;
 template<typename T>
 using Vector3 = std::array<T, 3>;
 
+template<typename LengthUnit, typename AngleUnit>
+class Pose3;
+
 //! A two-dimensional pose
 template<typename LengthUnit, typename AngleUnit>
 class Pose2
@@ -37,6 +40,12 @@ public:
     operator Pose2<LengthUnit2, AngleUnit2>() const
     {
         return Pose2<LengthUnit2, AngleUnit2>{ x(), y(), yaw() };
+    }
+
+    template<typename LengthUnit2, typename AngleUnit2>
+    operator Pose3<LengthUnit2, AngleUnit2>() const
+    {
+        return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
     }
 
     Vector2<LengthUnit> &position() { return std::get<0>(*this); }
@@ -77,23 +86,29 @@ public:
         return Pose2<LengthUnit2, AngleUnit2>{ x(), y(), yaw() };
     }
 
+    template<typename LengthUnit2, typename AngleUnit2>
+    operator Pose3<LengthUnit2, AngleUnit2>() const
+    {
+        return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
+    }
+
     Vector3<LengthUnit> &position() { return std::get<0>(*this); }
     const Vector3<LengthUnit> &position() const { return std::get<0>(*this); }
     LengthUnit &x() { return std::get<0>(*this)[0]; }
     const LengthUnit &x() const { return std::get<0>(*this)[0]; }
     LengthUnit &y() { return std::get<0>(*this)[1]; }
     const LengthUnit &y() const { return std::get<0>(*this)[1]; }
-    LengthUnit &z() { return std::get<0>(*this)[0]; }
-    const LengthUnit &z() const { return std::get<0>(*this)[0]; }
+    LengthUnit &z() { return std::get<0>(*this)[2]; }
+    const LengthUnit &z() const { return std::get<0>(*this)[2]; }
 
     Vector3<AngleUnit> &attitude() { return std::get<1>(*this); }
     const Vector3<AngleUnit> &attitude() const { return std::get<1>(*this); }
-    AngleUnit &yaw() { return std::get<1>(*this); }
+    AngleUnit &yaw() { return std::get<1>(*this)[0]; }
     const AngleUnit &yaw() const { return std::get<1>(*this)[0]; }
-    AngleUnit &pitch() { return std::get<1>(*this); }
-    const AngleUnit &pitch() const { return std::get<1>(*this); }
-    AngleUnit &roll() { return std::get<1>(*this); }
-    const AngleUnit &roll() const { return std::get<1>(*this); }
+    AngleUnit &pitch() { return std::get<1>(*this)[1]; }
+    const AngleUnit &pitch() const { return std::get<1>(*this)[1]; }
+    AngleUnit &roll() { return std::get<1>(*this)[2]; }
+    const AngleUnit &roll() const { return std::get<1>(*this)[2]; }
 };
 
 //! Converts the input array to a unit-type of OutputUnit
