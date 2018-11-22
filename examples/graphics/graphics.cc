@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/pose.h"
+#include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "viz/agent_renderer.h"
 
@@ -16,7 +17,9 @@
 
 using namespace BoBRobotics;
 using namespace std::literals;
+using namespace units::angle;
 using namespace units::length;
+using namespace units::literals;
 
 auto
 loadObjects(const filesystem::path &objectsPath)
@@ -44,12 +47,20 @@ main(int, char **argv)
     const auto objectsPath = filesystem::path(argv[0]).parent_path() / "objects.yaml";
     const auto objects = loadObjects(objectsPath);
 
-    Viz::AgentRenderer<> renderer;
+    Robots::SimulatedTank<millimeter_t, degree_t> robot(0.2_mps, 104_mm);
+
+    Viz::AgentRenderer<millimeter_t> renderer(robot.getRobotAxisLength());
     renderer.addObjects(objects);
 
+    HID::Joystick joystick;
+    robot.addJoystick(joystick);
+
     // run the program as long as the window is open
-    while (renderer.isOpen()) {
-        renderer.update();
-        std::this_thread::sleep_for(5ms);
+    while (renderer.isOpen() && !joystick.isPressed(HID::JButton::B)) {
+        if (!joystick.update()) {
+            std::this_thread::sleep_for(5ms);
+        }
+
+        renderer.update(robot.getPose());
     }
 }
