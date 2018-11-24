@@ -51,8 +51,11 @@ endif
 
 # Build with OpenCV
 ifndef NO_OPENCV
-	CXXFLAGS += `pkg-config --cflags opencv`
-	LINK_FLAGS += `pkg-config --libs opencv`
+ifndef OPENCV_PKG_NAME
+	OPENCV_PKG_NAME := opencv
+endif
+	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
+	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
 endif
 
 ifdef WITH_LIBBEBOP
