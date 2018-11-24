@@ -67,11 +67,11 @@ int main()
 
     initstone_cx();
 
-    cv::namedWindow("Path", CV_WINDOW_NORMAL);
+    cv::namedWindow("Path", cv::WINDOW_NORMAL);
     cv::resizeWindow("Path", pathImageSize, pathImageSize);
     cv::Mat pathImage(pathImageSize, pathImageSize, CV_8UC3, cv::Scalar::all(0));
 
-    cv::namedWindow("Activity", CV_WINDOW_NORMAL);
+    cv::namedWindow("Activity", cv::WINDOW_NORMAL);
     cv::resizeWindow("Activity", activityImageWidth, activityImageHeight);
     cv::moveWindow("Activity", pathImageSize, 0);
     cv::Mat activityImage(activityImageHeight, activityImageWidth, CV_8UC3, cv::Scalar::all(0));

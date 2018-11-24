@@ -94,7 +94,7 @@ main()
         Timer<> t{ "Time taken for testing: " };
 
         // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", cv::IMREAD_GRAYSCALE);
         cv::resize(snap, snap, imSize);
         size_t snapshot;
         float difference;
