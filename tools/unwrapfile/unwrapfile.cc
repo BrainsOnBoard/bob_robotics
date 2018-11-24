@@ -31,7 +31,7 @@ enum class FileType {
 
 void saveMaxQualityJPG(const std::string &filename, const cv::Mat &image)
 {
-    std::vector<int> params{CV_IMWRITE_JPEG_QUALITY, 100};
+    static std::vector<int> params{cv::IMWRITE_JPEG_QUALITY, 100};
     cv::imwrite(filename, image, params);
 }
 
@@ -41,7 +41,7 @@ void unwrapJPEG(const char *filepathRaw, const cv::Size &unwrappedResolution, co
     const filesystem::path filepath(filepathRaw);
 
     // read image into memory
-    cv::Mat im = cv::imread(filepath.str(), CV_LOAD_IMAGE_COLOR);
+    cv::Mat im = cv::imread(filepath.str(), cv::IMREAD_COLOR);
 
     // matrix to store unwrapped image
     cv::Mat imunwrap(unwrappedResolution, im.type());
@@ -84,7 +84,7 @@ void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappe
 
     // start writing to file
     std::cout << "Saving video to " << outfilename << "..." << std::endl;
-    cv::VideoWriter writer(tempfilename.str(), 0x21, cap.get(CV_CAP_PROP_FPS), unwrappedResolution);
+    cv::VideoWriter writer(tempfilename.str(), 0x21, cap.get(cv::CAP_PROP_FPS), unwrappedResolution);
     if (!writer.isOpened()) {
         std::cerr << "Error: Could not open file for writing" << std::endl;
         return;

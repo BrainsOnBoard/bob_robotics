@@ -64,7 +64,7 @@ public:
             outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
 
             // Convert intermediate frame to greyscale
-            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            cv::cvtColor(m_IntermediateFrame, outFrame, cv::COLOR_BGR2GRAY);
             return true;
         }
         else {

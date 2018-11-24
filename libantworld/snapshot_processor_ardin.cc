@@ -75,7 +75,7 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
     // Finally resample down to final size
     cv::resize(m_IntermediateSnapshotGreyscale, m_FinalSnapshot,
                 cv::Size(m_OutputWidth, m_OutputHeight),
-                0.0, 0.0, CV_INTER_CUBIC);
+                0.0, 0.0, cv::INTER_CUBIC);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
