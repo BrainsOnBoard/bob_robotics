@@ -108,8 +108,8 @@ public:
         return LineStrip(*this, colour);
     }
 
-    template<typename PoseType, typename T, size_t N>
-    void update(const PoseType &agentPose, const T (&drawables)[N])
+    template<typename PoseType, typename... Drawables>
+    void update(const PoseType &agentPose, Drawables&& ...drawables)
     {
         // Set m_Window to be active OpenGL context
         m_Window.setActive(true);
@@ -136,9 +136,7 @@ public:
         }
 
         // Draw extra drawable things
-        for (auto &drawable : drawables) {
-            m_Window.draw(drawable);
-        }
+        draw(std::forward<Drawables>(drawables)...);
 
         // Draw agent
         m_Agent.draw(m_Window,
@@ -236,6 +234,16 @@ private:
         return { lengthToPixel(x - m_MinBounds[0]),
                  static_cast<float>(WindowHeight) - lengthToPixel(y - m_MinBounds[1]) };
     }
+
+    template<typename... Drawables>
+    void draw(sf::Drawable &drawable, Drawables&& ...others)
+    {
+        m_Window.draw(drawable);
+        draw(std::forward<Drawables>(others)...);
+    }
+
+    void draw()
+    {}
 }; // AgentRenderer
 } // Viz
 } // BobRobotics

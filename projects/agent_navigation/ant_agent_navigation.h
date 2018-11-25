@@ -220,7 +220,7 @@ runNavigation(Robots::Robot &robot,
             }
         }
 
-        renderer.update(poseGetter.getPose(), { trainingLine, testingLine });
+        renderer.update(poseGetter.getPose(), trainingLine, testingLine);
         display.update();
         if (videoInput.readGreyscaleFrame(frame)) {
             const auto pose = poseGetter.template getPose<millimeter_t>();
