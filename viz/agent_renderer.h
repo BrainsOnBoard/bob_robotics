@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "../common/assert.h"
 #include "../common/pose.h"
+#include "../robots/robot.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -12,6 +13,7 @@
 
 // Standard C++ includes
 #include <vector>
+#include <utility>
 
 namespace BoBRobotics {
 namespace Viz {
@@ -109,8 +111,45 @@ public:
     }
 
     template<typename PoseType, typename... Drawables>
-    void update(const PoseType &agentPose, Drawables&& ...drawables)
+    auto update(const PoseType &agentPose, Robots::Robot &robot, Drawables&& ...drawables)
     {
+        const auto ret = update(agentPose, std::forward<Drawables>(drawables)...);
+        if (ret.second) { // Key down
+            switch (ret.first) {
+            case sf::Keyboard::Key::Up:
+                robot.moveForward(1.f);
+                break;
+            case sf::Keyboard::Key::Down:
+                robot.moveForward(-1.f);
+                break;
+            case sf::Keyboard::Key::Right:
+                robot.turnOnTheSpot(1.f);
+                break;
+            case sf::Keyboard::Key::Left:
+                robot.turnOnTheSpot(-1.f);
+            default:
+                break;
+            }
+        } else { // Possible key up
+            switch (ret.first) {
+            case sf::Keyboard::Key::Up:
+            case sf::Keyboard::Key::Down:
+            case sf::Keyboard::Key::Right:
+            case sf::Keyboard::Key::Left:
+                robot.stopMoving();
+            default:
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    template<typename PoseType, typename... Drawables>
+    auto update(const PoseType &agentPose, Drawables&& ...drawables)
+    {
+        std::pair<sf::Keyboard::Key, bool> ret;
+
         // Set m_Window to be active OpenGL context
         m_Window.setActive(true);
 
@@ -118,8 +157,22 @@ public:
         sf::Event event;
         while (m_Window.pollEvent(event)) {
             // "Close requested" event: we close the window
-            if (event.type == sf::Event::Closed) {
+            switch (event.type) {
+            case sf::Event::KeyPressed:
+                ret.first = event.key.code;
+                ret.second = true;
+                if (ret.first != sf::Keyboard::Key::Escape) {
+                    break;
+                }
+                // Falls through
+            case sf::Event::Closed:
                 m_Window.close();
+                return ret;
+            case sf::Event::KeyReleased:
+                ret.first = event.key.code;
+                ret.second = false;
+            default:
+                break;
             }
         }
 
@@ -148,6 +201,8 @@ public:
 
         // We don't need to be the current OpenGL context any more
         m_Window.setActive(false);
+
+        return ret;
     }
 
     bool isOpen() const
