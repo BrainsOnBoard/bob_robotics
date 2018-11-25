@@ -44,7 +44,7 @@ bob_main(int, char **)
     AntWorld::AntAgent ant(window.get(), renderer, RenderSize, 0.25_mps, 50_deg_per_s);
     ant.setPosition(0_m, 0_m, AntHeight);
 
-    runNavigation(ant, ant, ForwardSpeed, TurnSpeed, ant, static_cast<Position2<meter_t>>(minBound), static_cast<Position2<meter_t>>(maxBound), ant);
+    runNavigation<meter_t>(ant, ant, ForwardSpeed, TurnSpeed, ant, minBound, maxBound, ant);
 
     return EXIT_SUCCESS;
 }

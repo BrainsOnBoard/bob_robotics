@@ -120,7 +120,7 @@ private:
     Navigation::ImageDatabase::RouteRecorder m_Recorder;
 };
 
-template<typename PoseGetterType, typename LengthUnit, typename DisplayType>
+template<typename LengthUnit, typename PoseGetterType, typename DisplayType>
 void
 runNavigation(Robots::Robot &robot,
               PoseGetterType &poseGetter,
@@ -197,7 +197,7 @@ runNavigation(Robots::Robot &robot,
         }
     });
 
-    Viz::AgentRenderer renderer(10_cm, minBounds, maxBounds);
+    Viz::AgentRenderer<LengthUnit> renderer(10_cm, minBounds, maxBounds);
     cv::Mat frame;
     do {
         catcher.check();
