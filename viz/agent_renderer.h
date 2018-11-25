@@ -10,6 +10,9 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
+// Standard C++ includes
+#include <vector>
+
 namespace BoBRobotics {
 namespace Viz {
 using namespace units::literals;
@@ -20,6 +23,34 @@ class AgentRenderer
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
 
 public:
+    class LineStrip
+      : public sf::Drawable
+    {
+    public:
+        LineStrip(const AgentRenderer<LengthUnit> &renderer, const sf::Color &colour)
+          : m_Renderer(renderer)
+          , m_Colour(colour)
+        {}
+
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+        {
+            target.draw(&m_Vertices[0], m_Vertices.size(), sf::PrimitiveType::LinesStrip, states);
+        }
+
+        template<typename PositionType>
+        void append(const PositionType &position)
+        {
+            m_Vertices.emplace_back(m_Renderer.lengthToVector(position.x(), position.y()), m_Colour);
+        }
+
+        void clear() { m_Vertices.clear(); }
+
+    private:
+        std::vector<sf::Vertex> m_Vertices;
+        const AgentRenderer<LengthUnit> &m_Renderer;
+        const sf::Color m_Colour;
+    };
+
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
     AgentRenderer(const LengthUnit agentSize = 30_cm,
@@ -72,8 +103,13 @@ public:
         m_Agent.setWidth(lengthToPixel(agentSize));
     }
 
-    template<typename PoseType>
-    void update(const PoseType &agentPose)
+    LineStrip createLine(const sf::Color &colour) const
+    {
+        return LineStrip(*this, colour);
+    }
+
+    template<typename PoseType, typename T, size_t N>
+    void update(const PoseType &agentPose, const T (&drawables)[N])
     {
         // Set m_Window to be active OpenGL context
         m_Window.setActive(true);
@@ -97,6 +133,11 @@ public:
         // Draw objects
         for (auto &object : m_Objects) {
             m_Window.draw(object);
+        }
+
+        // Draw extra drawable things
+        for (auto &drawable : drawables) {
+            m_Window.draw(drawable);
         }
 
         // Draw agent

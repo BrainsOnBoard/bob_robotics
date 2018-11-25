@@ -1,9 +1,10 @@
+#include "ant_agent_navigation.h"
+
 // BoB robotics includes
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "libantworld/agent.h"
 #include "viz/agent_renderer.h"
-#include "ant_agent_navigation.h"
 
 // Third-party includes
 #include "third_party/units.h"

@@ -154,6 +154,9 @@ runNavigation(Robots::Robot &robot,
 
     bool testing = false;
     EggTimer turnTimer;
+    Viz::AgentRenderer<LengthUnit> renderer(10_cm, minBounds, maxBounds);
+    auto trainingLine = renderer.createLine(sf::Color::Blue);
+    auto testingLine = renderer.createLine(sf::Color::Green);
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (pressed) {
             return false;
@@ -167,6 +170,7 @@ runNavigation(Robots::Robot &robot,
                 trainingDatabase.reset();
             } else {
                 trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, videoInput);
+                trainingLine.clear();
                 std::cout << "Recording training images" << std::endl;
             }
             return true;
@@ -182,6 +186,7 @@ runNavigation(Robots::Robot &robot,
                 }
 
                 std::cout << "Starting testing" << std::endl;
+                testingLine.clear();
                 if (pm.getNumSnapshots() == 0) {
                     const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
                     pm.trainRoute(database, /*imageStep=*/10);
@@ -197,7 +202,6 @@ runNavigation(Robots::Robot &robot,
         }
     });
 
-    Viz::AgentRenderer<LengthUnit> renderer(10_cm, minBounds, maxBounds);
     cv::Mat frame;
     do {
         catcher.check();
@@ -216,11 +220,12 @@ runNavigation(Robots::Robot &robot,
             }
         }
 
-        renderer.update(poseGetter.getPose());
+        renderer.update(poseGetter.getPose(), { trainingLine, testingLine });
         display.update();
         if (videoInput.readGreyscaleFrame(frame)) {
+            const auto pose = poseGetter.template getPose<millimeter_t>();
             if (trainingDatabase) {
-                const auto pose = poseGetter.template getPose<millimeter_t>();
+                trainingLine.append(pose);
                 trainingDatabase->getRouteRecorder().record(pose.position(), pose.yaw(), frame);
             } else if (testing) {
                 Timer<> t{ "Time to calculate: " };
@@ -229,6 +234,8 @@ runNavigation(Robots::Robot &robot,
 
                 turnTimer.start(heading / robotTurnSpeed);
                 robot.turnOnTheSpot(heading < 0_deg ? -turnSpeed : turnSpeed);
+
+                testingLine.append(pose);
             }
         }
 
