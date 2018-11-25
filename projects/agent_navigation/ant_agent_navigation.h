@@ -24,6 +24,7 @@
 #include <atomic>
 #include <chrono>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -147,60 +148,71 @@ runNavigation(Robots::Robot &robot,
     auto &catcher = BackgroundExceptionCatcher::getInstance();
     catcher.trapSignals();
 
-    // Control robot with joystick
-    HID::Joystick joystick;
-    robot.addJoystick(joystick);
-    std::cout << "Joystick opened" << std::endl;
-
     bool testing = false;
     EggTimer turnTimer;
     Viz::AgentRenderer<LengthUnit> renderer(10_cm, minBounds, maxBounds);
     auto trainingLine = renderer.createLine(sf::Color::Blue);
     auto testingLine = renderer.createLine(sf::Color::Green);
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
-        if (pressed) {
-            return false;
-        }
 
-        switch (button) {
-        case HID::JButton::Y:
-            BOB_ASSERT(!testing);
+    // Control robot with joystick
+    std::unique_ptr<HID::Joystick> joystick;
+    try {
+        joystick = std::make_unique<HID::Joystick>();
+    } catch (std::runtime_error &) {
+        std::cerr << "Warning: Could not open joystick" << std::endl;
+    }
+    if (joystick) {
+        robot.addJoystick(*joystick);
+        std::cout << "Joystick opened" << std::endl;
 
-            if (trainingDatabase) {
-                trainingDatabase.reset();
-            } else {
-                trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, videoInput);
-                trainingLine.clear();
-                std::cout << "Recording training images" << std::endl;
+        joystick->addHandler([&](HID::JButton button, bool pressed) {
+            if (pressed) {
+                return false;
             }
-            return true;
-        case HID::JButton::X:
-            if (testing) {
-                robot.stopMoving();
-                testing = false;
-                turnTimer.stop();
-                std::cout << "Stopping testing" << std::endl;
-            } else {
+
+            switch (button) {
+            case HID::JButton::Y:
+                BOB_ASSERT(!testing);
+
                 if (trainingDatabase) {
                     trainingDatabase.reset();
+                } else {
+                    trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, videoInput);
+                    trainingLine.clear();
+                    std::cout << "Recording training images" << std::endl;
                 }
+                return true;
+            case HID::JButton::X:
+                if (testing) {
+                    robot.stopMoving();
+                    testing = false;
+                    turnTimer.stop();
+                    std::cout << "Stopping testing" << std::endl;
+                } else {
+                    if (trainingDatabase) {
+                        trainingDatabase.reset();
+                    }
 
-                std::cout << "Starting testing" << std::endl;
-                testingLine.clear();
-                if (pm.getNumSnapshots() == 0) {
-                    const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
-                    pm.trainRoute(database, /*imageStep=*/10);
-                    std::cout << pm.getNumSnapshots() << " snapshots loaded." << std::endl;
+                    std::cout << "Starting testing" << std::endl;
+                    testingLine.clear();
+                    if (pm.getNumSnapshots() == 0) {
+                        const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
+                        pm.trainRoute(database, /*imageStep=*/10);
+                        std::cout << pm.getNumSnapshots() << " snapshots loaded." << std::endl;
+                    }
+                    testing = true;
+
+                    robot.moveForward(forwardSpeed);
                 }
-                testing = true;
-
-                robot.moveForward(forwardSpeed);
+                return true;
+            case HID::JButton::B:
+                renderer.close();
+                return true;
+            default:
+                return !testing;
             }
-            return true;
-        default:
-            return !testing;
-        }
-    });
+        });
+    }
 
     cv::Mat frame;
     do {
@@ -212,7 +224,9 @@ runNavigation(Robots::Robot &robot,
         //     plotter.setTitle("Testing");
         // }
 
-        joystick.update();
+        if (joystick) {
+            joystick->update();
+        }
         if (turnTimer.running()) {
             if (turnTimer.finished()) {
                 robot.moveForward(forwardSpeed);
@@ -239,5 +253,5 @@ runNavigation(Robots::Robot &robot,
             }
         }
 
-    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen() && renderer.isOpen());
+    } while (display.isOpen() && renderer.isOpen());
 }

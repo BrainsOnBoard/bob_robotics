@@ -210,6 +210,11 @@ public:
         return m_Window.isOpen();
     }
 
+    void close()
+    {
+        m_Window.close();
+    }
+
     void addObjects(const std::vector<std::vector<Position2<LengthUnit>>> &objects)
     {
         BOB_ASSERT(m_Objects.empty());
