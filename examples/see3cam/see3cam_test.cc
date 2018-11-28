@@ -80,9 +80,9 @@ int main(int argc, char *argv[])
 
     auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
-    cv::namedWindow("Raw", CV_WINDOW_NORMAL);
+    cv::namedWindow("Raw", cv::WINDOW_NORMAL);
     cv::resizeWindow("Raw", rawWidth, rawHeight);
-    cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
+    cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapWidth, unwrapHeight);
 
     cv::Mat output(rawHeight, rawWidth, CV_8UC1);
