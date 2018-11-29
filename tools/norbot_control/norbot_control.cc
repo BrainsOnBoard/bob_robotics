@@ -59,7 +59,6 @@ bob_main(int, char **)
     try {
         joystick = std::make_unique<HID::Joystick>();
         tank.addJoystick(*joystick);
-        joystick->runInBackground();
     } catch (std::runtime_error &e) {
         // Joystick not found
         std::cerr << e.what() << std::endl;
@@ -75,30 +74,31 @@ bob_main(int, char **)
     // Read motor commands from network
     tank.readFromNetwork(connection);
 
+    // Run server in background,, catching any exceptions for rethrowing
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals(); // Catch Ctrl-C
+    connection.runInBackground();
+
+    std::unique_ptr<Video::NetSink> netSink;
     if (camera) {
         // Stream camera synchronously over network
-        Video::NetSink netSink(connection, camera->getOutputSize(), camera->getCameraName());
+        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+    }
 
-        // Run server in background,, catching any exceptions for rethrowing
-        auto &catcher = BackgroundExceptionCatcher::getInstance();
-        catcher.trapSignals(); // Catch Ctrl-C
-        connection.runInBackground();
+    cv::Mat frame;
+    while (true) {
+        // Rethrow any exceptions caught on background thread
+        catcher.check();
 
-        // Send frames over network
-        cv::Mat frame;
-        while (true) {
-            // Rethrow any exceptions caught on background thread
-            catcher.check();
+        const bool joystickUpdate = joystick && joystick->update();
+        const bool cameraUpdate = camera && camera->readFrame(frame);
 
-            // If there's a new frame, send it, else sleep
-            if (camera->readFrame(frame)) {
-                netSink.sendFrame(frame);
-            } else {
-                std::this_thread::sleep_for(25ms);
-            }
+        // If there's a new frame, send it, else sleep
+        if (cameraUpdate) {
+            netSink->sendFrame(frame);
+        } else if (!joystickUpdate) {
+            std::this_thread::sleep_for(25ms);
         }
-    } else {
-        connection.run();
     }
 
     return EXIT_SUCCESS;
