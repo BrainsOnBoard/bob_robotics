@@ -59,8 +59,8 @@ bob_main(int argc, char **argv)
 
 #ifdef NO_I2C_ROBOT
     std::unique_ptr<Net::Client> client;
-    std::unique_ptr<Robots::Tank> tank;
     std::unique_ptr<Video::Input> cam;
+    std::unique_ptr<Robots::Tank> tank;
     if ((argc > 1 && strcmp(argv[1], "--robot") == 0)) {
         cam = Video::getPanoramicCamera();
         tank = std::make_unique<Robots::Tank>();

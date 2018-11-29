@@ -95,6 +95,7 @@ runNavigation(Robots::Robot &robot,
               const std::vector<std::vector<Position2<LengthUnit>>> &objects = {})
 {
     const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
+    std::cout << "Maximum turn speed: " << static_cast<units::angular_velocity::degrees_per_second_t>(robotTurnSpeed) << std::endl;
 
     const filesystem::path routeBasePath = "routes";
     filesystem::create_directory(routeBasePath);
@@ -195,14 +196,12 @@ runNavigation(Robots::Robot &robot,
         //     plotter.setTitle("Testing");
         // }
 
+        if (turnTimer.running() && turnTimer.finished()) {
+            robot.moveForward(forwardSpeed);
+            turnTimer.stop();
+        }
         if (joystick) {
             joystick->update();
-        }
-        if (turnTimer.running()) {
-            if (turnTimer.finished()) {
-                robot.moveForward(forwardSpeed);
-                turnTimer.stop();
-            }
         }
 
         renderer.update(poseGetter.getPose(), robot, trainingLine, testingLine);
@@ -220,11 +219,21 @@ runNavigation(Robots::Robot &robot,
                 } else if (heading > maxTurn) {
                     heading = maxTurn;
                 }
-                std::cout << "Heading: " << heading << std::endl;
+                const auto turnTime = heading / robotTurnSpeed;
+                const EggTimer::Duration turnTimeDuration = turnTime;
+                if (turnTimeDuration > 1ms) { // If it's sub-millisecond, then ignore
+                    robot.turnOnTheSpot(heading < 0_deg ? -turnSpeed : turnSpeed);
+                    if (turnTimeDuration < 10ms) {
+                        std::this_thread::sleep_for(turnTimeDuration);
+                        robot.moveForward(forwardSpeed);
+                    } else {
+                        turnTimer.start(turnTime);
+                    }
+                } else {
+                    robot.moveForward(forwardSpeed);
+                }
 
-                turnTimer.start(heading / robotTurnSpeed);
-                robot.turnOnTheSpot(heading < 0_deg ? -turnSpeed : turnSpeed);
-
+                std::cout << "Heading: " << heading << " (" << turnTime << ")" << std::endl;
                 testingLine.append(pose);
             }
         }
