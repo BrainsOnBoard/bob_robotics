@@ -164,7 +164,12 @@ runNavigation(Robots::Robot &robot,
                     testingLine.clear();
                     if (pm.getNumSnapshots() == 0) {
                         const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
-                        pm.trainRoute(database, /*imageStep=*/10);
+                        const size_t imageStep = 10;
+                        trainingLine.clear();
+                        for (auto dbEntry = database.begin(); dbEntry < database.end(); dbEntry += imageStep) {
+                            trainingLine.append(dbEntry->position);
+                            pm.train(dbEntry->loadGreyscale());
+                        }
                         std::cout << pm.getNumSnapshots() << " snapshots loaded." << std::endl;
                     }
                     testing = true;
