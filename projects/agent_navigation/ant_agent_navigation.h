@@ -24,6 +24,7 @@
 #include <atomic>
 #include <chrono>
 #include <iostream>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -131,6 +132,7 @@ runNavigation(Robots::Robot &robot,
               const Position2<LengthUnit> &minBounds,
               const Position2<LengthUnit> &maxBounds,
               DisplayType &display,
+              std::function<void()> resetPosition = nullptr,
               const std::vector<std::vector<Position2<LengthUnit>>> &objects = {})
 {
     const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
@@ -210,6 +212,13 @@ runNavigation(Robots::Robot &robot,
             case HID::JButton::B:
                 renderer.close();
                 return true;
+            case HID::JButton::Start:
+                if (resetPosition) {
+                    resetPosition();
+                    return true;
+                } else {
+                    return false;
+                }
             default:
                 return !testing;
             }
