@@ -184,6 +184,7 @@ runNavigation(Robots::Robot &robot,
         });
     }
 
+    constexpr degree_t maxTurn = 45_deg;
     cv::Mat frame;
     do {
         catcher.check();
@@ -213,7 +214,12 @@ runNavigation(Robots::Robot &robot,
                 trainingDatabase->getRouteRecorder().record(pose.position(), pose.yaw(), frame);
             } else if (testing) {
                 Timer<> t{ "Time to calculate: " };
-                const degree_t heading = std::get<0>(pm.getHeading(frame));
+                degree_t heading = std::get<0>(pm.getHeading(frame));
+                if (heading < -maxTurn) {
+                    heading = -maxTurn;
+                } else if (heading > maxTurn) {
+                    heading = maxTurn;
+                }
                 std::cout << "Heading: " << heading << std::endl;
 
                 turnTimer.start(heading / robotTurnSpeed);
