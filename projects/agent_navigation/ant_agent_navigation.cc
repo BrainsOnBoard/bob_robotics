@@ -35,17 +35,30 @@ bob_main(int, char **)
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
-    world.load("../../libantworld/world5000_gray.bin",
-               { 0.0f, 1.0f, 0.0f },
-               { 0.898f, 0.718f, 0.353f });
+    const std::vector<GLfloat> objectsGL = world.load("../../libantworld/world5000_gray.bin",
+                                                      { 0.0f, 1.0f, 0.0f },
+                                                      { 0.898f, 0.718f, 0.353f });
     const auto minBound = world.getMinBound();
     const auto maxBound = world.getMaxBound();
+
+    // Get objects
+    std::vector<std::vector<Position2<meter_t>>> objects;
+    objects.reserve(objectsGL.size() / (3 * 3)); // Number of triangles
+    for (auto it = objectsGL.begin() + 18; it < objectsGL.end(); it += 3 * 3) {
+        objects.emplace_back(3);
+        auto &object = objects.back();
+        for (size_t c = 0; c < 2; c++) {
+            for (size_t v = 0; v < 3; v++) {
+                object[v][c] = meter_t(*(it + (3 * v) + c));
+            }
+        }
+    }
 
     // Create agent and put in the centre of the world
     AntWorld::AntAgent ant(window.get(), renderer, RenderSize, 0.25_mps, 50_deg_per_s);
     ant.setPosition(0_m, 0_m, AntHeight);
 
-    runNavigation<meter_t>(ant, ant, ForwardSpeed, TurnSpeed, ant, minBound, maxBound, ant);
+    runNavigation<meter_t>(ant, ant, ForwardSpeed, TurnSpeed, ant, minBound, maxBound, ant, objects);
 
     return EXIT_SUCCESS;
 }

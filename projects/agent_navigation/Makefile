@@ -9,7 +9,7 @@ ifdef NO_I2C_ROBOT
 	CXXFLAGS += -DNO_I2C_ROBOT
 endif
 
-.PHONY: all clean
+.PHONY: all clean libantworld
 
 all: norbot_navigation robot
 
@@ -25,10 +25,13 @@ robot: robot.cc robot.d
 
 -include ant_agent_navigation.d
 
-ant_agent_navigation: ant_agent_navigation.cc ant_agent_navigation.d
+ant_agent_navigation: ant_agent_navigation.cc ant_agent_navigation.d libantworld
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+libantworld:
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
 
 %.d: ;
 
 clean:
-	rm -f norbot_navigation robot *.d
+	rm -f ant_agent_navigation norbot_navigation robot *.d

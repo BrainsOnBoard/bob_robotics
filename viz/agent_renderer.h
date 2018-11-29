@@ -224,7 +224,7 @@ public:
         for (auto &object : objects) {
             m_Objects.emplace_back();
             m_Objects.back().setPointCount(object.size());
-            m_Objects.back().setFillColor(sf::Color::Black);
+            m_Objects.back().setFillColor(sf::Color::Blue);
             for (size_t i = 0; i < object.size(); i++) {
                 m_Objects.back().setPoint(i, lengthToVector(object[i][0], object[i][1]));
             }

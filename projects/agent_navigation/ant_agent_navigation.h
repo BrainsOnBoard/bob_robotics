@@ -130,7 +130,8 @@ runNavigation(Robots::Robot &robot,
               Video::Input &videoInput,
               const Position2<LengthUnit> &minBounds,
               const Position2<LengthUnit> &maxBounds,
-              DisplayType &display)
+              DisplayType &display,
+              const std::vector<std::vector<Position2<LengthUnit>>> &objects = {})
 {
     const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
 
@@ -151,6 +152,7 @@ runNavigation(Robots::Robot &robot,
     bool testing = false;
     EggTimer turnTimer;
     Viz::AgentRenderer<LengthUnit> renderer(10_cm, minBounds, maxBounds);
+    renderer.addObjects(objects);
     auto trainingLine = renderer.createLine(sf::Color::Blue);
     auto testingLine = renderer.createLine(sf::Color::Green);
 
