@@ -69,41 +69,35 @@ bob_main(int, char **)
 
     // Listen for incoming connection on default port
     Net::Server server;
+    auto connection = server.waitForConnection();
+
+    // Read motor commands from network
+    tank.readFromNetwork(connection);
+
+    // Run server in background,, catching any exceptions for rethrowing
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals(); // Catch Ctrl-C
+    connection.runInBackground();
+
+    std::unique_ptr<Video::NetSink> netSink;
+    if (camera) {
+        // Stream camera synchronously over network
+        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+    }
+
+    cv::Mat frame;
     while (true) {
-        try {
-            auto connection = server.waitForConnection();
+        // Rethrow any exceptions caught on background thread
+        catcher.check();
 
-            // Read motor commands from network
-            tank.readFromNetwork(connection);
+        const bool joystickUpdate = joystick && joystick->update();
+        const bool cameraUpdate = camera && camera->readFrame(frame);
 
-            // Run server in background,, catching any exceptions for rethrowing
-            auto &catcher = BackgroundExceptionCatcher::getInstance();
-            catcher.trapSignals(); // Catch Ctrl-C
-            connection.runInBackground();
-
-            std::unique_ptr<Video::NetSink> netSink;
-            if (camera) {
-                // Stream camera synchronously over network
-                netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
-            }
-
-            cv::Mat frame;
-            while (true) {
-                // Rethrow any exceptions caught on background thread
-                catcher.check();
-
-                const bool joystickUpdate = joystick && joystick->update();
-                const bool cameraUpdate = camera && camera->readFrame(frame);
-
-                // If there's a new frame, send it, else sleep
-                if (cameraUpdate) {
-                    netSink->sendFrame(frame);
-                } else if (!joystickUpdate) {
-                    std::this_thread::sleep_for(25ms);
-                }
-            }
-        } catch (Net::SocketClosedError &) {
-            std::cout << "Connection closed" << std::endl;
+        // If there's a new frame, send it, else sleep
+        if (cameraUpdate) {
+            netSink->sendFrame(frame);
+        } else if (!joystickUpdate) {
+            std::this_thread::sleep_for(25ms);
         }
     }
 
