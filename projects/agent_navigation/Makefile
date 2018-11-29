@@ -18,11 +18,6 @@ all: norbot_navigation ant_agent_navigation
 norbot_navigation: norbot_navigation.cc norbot_navigation.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
--include robot.d
-
-robot: robot.cc robot.d
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
-
 -include ant_agent_navigation.d
 
 ant_agent_navigation: ant_agent_navigation.cc ant_agent_navigation.d libantworld
@@ -34,4 +29,4 @@ libantworld:
 %.d: ;
 
 clean:
-	rm -f ant_agent_navigation norbot_navigation robot *.d
+	rm -f ant_agent_navigation norbot_navigation *.d
