@@ -37,8 +37,13 @@ using namespace BoBRobotics;
 int
 bob_main(int, char **)
 {
-    // Enable networking on Windows
-    OS::Net::WindowsNetworking::initialise();
+#ifdef NO_I2C_ROBOT
+    // Output motor commands to terminal
+    Robots::Tank tank;
+#else
+    // Use Arduino robot
+    Robots::Norbot tank;
+#endif
 
     // Get panoramic camera
     std::unique_ptr<Video::Input> camera;
@@ -49,30 +54,26 @@ bob_main(int, char **)
         std::cerr << e.what() << std::endl;
     }
 
-    // Listen for incoming connection on default port
-    Net::Server server;
-    auto connection = server.waitForConnection();
-
-#ifdef NO_I2C_ROBOT
-    // Output motor commands to terminal
-    Robots::Tank tank;
-#else
-    // Use Arduino robot
-    Robots::Norbot tank;
-#endif
-
-    // Read motor commands from network
-    tank.readFromNetwork(connection);
-
     // Try to get joystick
     std::unique_ptr<HID::Joystick> joystick;
     try {
         joystick = std::make_unique<HID::Joystick>();
+        tank.addJoystick(*joystick);
         joystick->runInBackground();
     } catch (std::runtime_error &e) {
         // Joystick not found
         std::cerr << e.what() << std::endl;
     }
+
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking::initialise();
+
+    // Listen for incoming connection on default port
+    Net::Server server;
+    auto connection = server.waitForConnection();
+
+    // Read motor commands from network
+    tank.readFromNetwork(connection);
 
     if (camera) {
         // Stream camera synchronously over network
