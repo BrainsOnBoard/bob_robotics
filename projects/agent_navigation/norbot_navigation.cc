@@ -26,6 +26,7 @@
 
 using namespace BoBRobotics;
 using namespace units::literals;
+using namespace units::angular_velocity;
 
 auto
 loadObjects(const std::string &objectsPath)
@@ -52,6 +53,7 @@ bob_main(int argc, char **argv)
     const float ForwardSpeed = 1.f;
     const float TurnSpeed = 1.f;
     const cv::Size UnwrapResolution{ 360, 75 };
+    const radians_per_second_t maxTurnSpeed = 13.333_deg_per_s;
 
     const auto objects = loadObjects("../../tools/vicon_arena_constructor/objects.yaml");
 
@@ -111,7 +113,7 @@ bob_main(int argc, char **argv)
     const Position2<millimeter_t> maxBound{ 3000_mm, 3000_mm };
     runNavigation<millimeter_t>(*tank, viconObject, ForwardSpeed, TurnSpeed,
                                 camUnwrapped, minBound, maxBound, display,
-                                nullptr, objects);
+                                nullptr, objects, maxTurnSpeed);
 
     return EXIT_SUCCESS;
 }

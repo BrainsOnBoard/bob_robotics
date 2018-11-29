@@ -24,8 +24,8 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
-#include <iostream>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -92,10 +92,13 @@ runNavigation(Robots::Robot &robot,
               const Position2<LengthUnit> &maxBounds,
               DisplayType &display,
               std::function<void()> resetPosition = nullptr,
-              const std::vector<std::vector<Position2<LengthUnit>>> &objects = {})
+              const std::vector<std::vector<Position2<LengthUnit>>> &objects = {},
+              units::angular_velocity::radians_per_second_t robotTurnSpeed = 0_deg_per_s)
 {
-    const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
-    std::cout << "Maximum turn speed: " << static_cast<units::angular_velocity::degrees_per_second_t>(robotTurnSpeed) << std::endl;
+    if (robotTurnSpeed == 0_deg_per_s) {
+        robotTurnSpeed = robot.getMaximumTurnSpeed();
+    }
+    std::cout << "Maximum turn speed: " << robotTurnSpeed << std::endl;
 
     const filesystem::path routeBasePath = "routes";
     filesystem::create_directory(routeBasePath);
@@ -196,16 +199,23 @@ runNavigation(Robots::Robot &robot,
         //     plotter.setTitle("Testing");
         // }
 
-        if (turnTimer.running() && turnTimer.finished()) {
-            robot.moveForward(forwardSpeed);
-            turnTimer.stop();
-        }
         if (joystick) {
             joystick->update();
         }
 
         renderer.update(poseGetter.getPose(), robot, trainingLine, testingLine);
         display.update();
+
+        if (turnTimer.running()) {
+            if (turnTimer.finished()) {
+                robot.moveForward(forwardSpeed);
+                std::cout << "(Turned for " << static_cast<millisecond_t>(turnTimer.elapsed()) << ")" << std::endl;
+                turnTimer.stop();
+            } else {
+                continue;
+            }
+        }
+
         if (videoInput.readGreyscaleFrame(frame)) {
             const auto pose = poseGetter.template getPose<millimeter_t>();
             if (trainingDatabase) {
@@ -219,7 +229,7 @@ runNavigation(Robots::Robot &robot,
                 } else if (heading > maxTurn) {
                     heading = maxTurn;
                 }
-                const auto turnTime = heading / robotTurnSpeed;
+                const auto turnTime = units::math::abs(heading) / robotTurnSpeed;
                 const EggTimer::Duration turnTimeDuration = turnTime;
                 if (turnTimeDuration > 1ms) { // If it's sub-millisecond, then ignore
                     robot.turnOnTheSpot(heading < 0_deg ? -turnSpeed : turnSpeed);
@@ -227,7 +237,7 @@ runNavigation(Robots::Robot &robot,
                         std::this_thread::sleep_for(turnTimeDuration);
                         robot.moveForward(forwardSpeed);
                     } else {
-                        turnTimer.start(turnTime);
+                        turnTimer.start(turnTimeDuration);
                     }
                 } else {
                     robot.moveForward(forwardSpeed);

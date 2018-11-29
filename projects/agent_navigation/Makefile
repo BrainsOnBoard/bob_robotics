@@ -1,4 +1,3 @@
-WITH_MATPLOTLIBCPP := 1
 WITH_LIBANTWORLD := 1
 include ../../make_common/bob_robotics.mk
 CXXFLAGS += `pkg-config --cflags sfml-graphics`
