@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "viz/plot_agent.h"
 #include "common/pose.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -11,9 +10,9 @@
 #include "robots/robot.h"
 #include "video/input.h"
 #include "video/unwrapped_input.h"
+#include "viz/agent_renderer.h"
 
 // Third-party includes
-#include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -25,6 +24,8 @@
 #include <atomic>
 #include <chrono>
 #include <iostream>
+#include <functional>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -38,87 +39,7 @@ using namespace units::literals;
 using namespace units::time;
 using namespace std::literals;
 
-namespace plt = matplotlibcpp;
-
 using ObjectType = std::pair<std::vector<millimeter_t>, std::vector<millimeter_t>>;
-
-template<typename PoseGetterType, typename LengthUnit>
-class Plotter
-{
-public:
-    Plotter(const std::vector<ObjectType> &objects, PoseGetterType &poseGetter,
-            const Position2<LengthUnit> xlim, const Position2<LengthUnit> ylim)
-      : m_Objects(objects)
-      , m_PoseGetter(poseGetter)
-      , m_Xlim(xlim)
-      , m_Ylim(ylim)
-      , m_Thread(&Plotter::run, this)
-      , m_Running(true)
-      , m_Finished(false)
-    {}
-
-    ~Plotter()
-    {
-        m_Running = false;
-        if (m_Thread.joinable()) {
-            m_Thread.join();
-        }
-    }
-
-    void setTitle(const std::string& title)
-    {
-        std::lock_guard<std::mutex> guard(m_TitleMutex);
-        m_Title = title;
-    }
-
-    bool isOpen() const { return m_Running; }
-
-private:
-    const std::vector<ObjectType> &m_Objects;
-    PoseGetterType &m_PoseGetter;
-    std::string m_Title;
-    const Position2<LengthUnit> m_Xlim, m_Ylim;
-    std::thread m_Thread;
-    std::mutex m_TitleMutex;
-    std::atomic_bool m_Running;
-    std::atomic_bool m_Finished;
-
-    void run()
-    {
-        do {
-            plt::figure(1);
-            plt::clf();
-
-            // Plot objects
-            // plt::subplot(2, 1, 1);
-            for (auto object : m_Objects) {
-                std::vector<double> x, y;
-
-                const auto mm2double = [](millimeter_t mm) { return mm.value(); };
-                std::transform(object.first.cbegin(), object.first.cend(), std::back_inserter(x), mm2double);
-                std::transform(object.second.cbegin(), object.second.cend(), std::back_inserter(y), mm2double);
-                x.push_back(x[0]);
-                y.push_back(y[0]);
-
-                plt::plot(x, y);
-            }
-
-            // Plot position of robot
-            Viz::plotAgent(m_PoseGetter, m_Xlim[0], m_Xlim[1], m_Ylim[0], m_Ylim[1]);
-
-            // Set title
-            {
-                std::lock_guard<std::mutex> guard(m_TitleMutex);
-                plt::title(m_Title);
-            }
-
-            plt::pause(0.1);
-        } while (m_Running && plt::fignum_exists(1));
-        plt::close();
-        m_Running = false;
-        m_Finished = true;
-    }
-}; // Plotter
 
 class EggTimer
 {
@@ -201,18 +122,18 @@ private:
     Navigation::ImageDatabase::RouteRecorder m_Recorder;
 };
 
-template<typename PoseGetterType, typename LengthUnit>
+template<typename LengthUnit, typename PoseGetterType, typename DisplayType>
 void
 runNavigation(Robots::Robot &robot,
               PoseGetterType &poseGetter,
               const float forwardSpeed,
               const float turnSpeed,
               Video::Input &videoInput,
-              const LengthUnit xLower,
-              const LengthUnit xUpper,
-              const LengthUnit yLower,
-              const LengthUnit yUpper,
-              const std::vector<ObjectType> &objects = {})
+              const Position2<LengthUnit> &minBounds,
+              const Position2<LengthUnit> &maxBounds,
+              DisplayType &display,
+              std::function<void()> resetPosition = nullptr,
+              const std::vector<std::vector<Position2<LengthUnit>>> &objects = {})
 {
     const auto robotTurnSpeed = robot.getMaximumTurnSpeed();
 
@@ -230,87 +151,107 @@ runNavigation(Robots::Robot &robot,
     auto &catcher = BackgroundExceptionCatcher::getInstance();
     catcher.trapSignals();
 
-    // Control robot with joystick
-    HID::Joystick joystick;
-    robot.addJoystick(joystick);
-    std::cout << "Joystick opened" << std::endl;
-
     bool testing = false;
     EggTimer turnTimer;
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
-        if (pressed) {
-            return false;
-        }
+    Viz::AgentRenderer<LengthUnit> renderer(10_cm, minBounds, maxBounds);
+    renderer.addObjects(objects);
+    auto trainingLine = renderer.createLine(sf::Color::Blue);
+    auto testingLine = renderer.createLine(sf::Color::Green);
 
-        switch (button) {
-        case HID::JButton::Y:
-            BOB_ASSERT(!testing);
+    // Control robot with joystick
+    std::unique_ptr<HID::Joystick> joystick;
+    try {
+        joystick = std::make_unique<HID::Joystick>();
+    } catch (std::runtime_error &) {
+        std::cerr << "Warning: Could not open joystick" << std::endl;
+    }
+    if (joystick) {
+        robot.addJoystick(*joystick);
+        std::cout << "Joystick opened" << std::endl;
 
-            if (trainingDatabase) {
-                trainingDatabase.reset();
-            } else {
-                trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, videoInput);
-                std::cout << "Recording training images" << std::endl;
+        joystick->addHandler([&](HID::JButton button, bool pressed) {
+            if (pressed) {
+                return false;
             }
-            return true;
-        case HID::JButton::X:
-            if (testing) {
-                robot.stopMoving();
-                testing = false;
-                turnTimer.stop();
-                std::cout << "Stopping testing" << std::endl;
-            } else {
+
+            switch (button) {
+            case HID::JButton::Y:
+                BOB_ASSERT(!testing);
+
                 if (trainingDatabase) {
                     trainingDatabase.reset();
+                } else {
+                    trainingDatabase = std::make_unique<TrainingDatabase>(numRoutes++, videoInput);
+                    trainingLine.clear();
+                    std::cout << "Recording training images" << std::endl;
                 }
+                return true;
+            case HID::JButton::X:
+                if (testing) {
+                    robot.stopMoving();
+                    testing = false;
+                    turnTimer.stop();
+                    std::cout << "Stopping testing" << std::endl;
+                } else {
+                    if (trainingDatabase) {
+                        trainingDatabase.reset();
+                    }
 
-                std::cout << "Starting testing" << std::endl;
-                if (pm.getNumSnapshots() == 0) {
-                    const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
-                    pm.trainRoute(database, /*imageStep=*/10);
-                    std::cout << pm.getNumSnapshots() << " snapshots loaded." << std::endl;
+                    std::cout << "Starting testing" << std::endl;
+                    testingLine.clear();
+                    if (pm.getNumSnapshots() == 0) {
+                        const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
+                        pm.trainRoute(database, /*imageStep=*/10);
+                        std::cout << pm.getNumSnapshots() << " snapshots loaded." << std::endl;
+                    }
+                    testing = true;
+
+                    robot.moveForward(forwardSpeed);
                 }
-                testing = true;
-
-                robot.moveForward(forwardSpeed);
+                return true;
+            case HID::JButton::B:
+                renderer.close();
+                return true;
+            case HID::JButton::Start:
+                if (resetPosition) {
+                    resetPosition();
+                    return true;
+                } else {
+                    return false;
+                }
+            default:
+                return !testing;
             }
-            return true;
-        default:
-            return !testing;
-        }
-    });
-
-    Plotter<PoseGetterType, LengthUnit> plotter(objects, poseGetter,
-                                                { xLower, xUpper }, { yLower, yUpper });
+        });
+    }
 
     cv::Mat frame;
-    // std::map<std::string, std::string> imshowKeywords{ { "cmap", "gray" } };
     do {
         catcher.check();
 
-        if (trainingDatabase) {
-            plotter.setTitle("Training");
-        } else if (testing) {
-            plotter.setTitle("Testing");
-        }
+        // if (trainingDatabase) {
+        //     plotter.setTitle("Training");
+        // } else if (testing) {
+        //     plotter.setTitle("Testing");
+        // }
 
-        joystick.update();
+        if (joystick) {
+            joystick->update();
+        }
         if (turnTimer.running()) {
             if (turnTimer.finished()) {
                 robot.moveForward(forwardSpeed);
                 turnTimer.stop();
-            } else {
-                continue;
             }
         }
 
+        renderer.update(poseGetter.getPose(), robot, trainingLine, testingLine);
+        display.update();
         if (videoInput.readGreyscaleFrame(frame)) {
-            // plt::subplot(2, 1, 2);
-            // plt::imshow(frame, imshowKeywords);
-
+            const auto pose = poseGetter.template getPose<millimeter_t>();
             if (trainingDatabase) {
-                const auto pose = poseGetter.template getPose<millimeter_t, degree_t>();
-                trainingDatabase->getRouteRecorder().record(pose.first, pose.second[0], frame);
+                trainingLine.append(pose);
+                trainingDatabase->getRouteRecorder().record(pose.position(), pose.yaw(), frame);
             } else if (testing) {
                 Timer<> t{ "Time to calculate: " };
                 const degree_t heading = std::get<0>(pm.getHeading(frame));
@@ -318,7 +259,10 @@ runNavigation(Robots::Robot &robot,
 
                 turnTimer.start(heading / robotTurnSpeed);
                 robot.turnOnTheSpot(heading < 0_deg ? -turnSpeed : turnSpeed);
+
+                testingLine.append(pose);
             }
         }
-    } while (!joystick.isPressed(HID::JButton::B) && plotter.isOpen());
+
+    } while (display.isOpen() && renderer.isOpen());
 }

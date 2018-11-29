@@ -11,7 +11,7 @@ endif
 
 .PHONY: all clean libantworld
 
-all: norbot_navigation robot
+all: norbot_navigation ant_agent_navigation
 
 -include norbot_navigation.d
 

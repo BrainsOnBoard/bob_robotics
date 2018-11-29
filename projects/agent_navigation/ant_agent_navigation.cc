@@ -1,4 +1,4 @@
-#include "ant_agent_navigation.h"
+#include "navigation_common.h"
 
 // BoB robotics includes
 #include "common/main.h"
@@ -63,7 +63,8 @@ bob_main(int, char **)
         ant.setAttitude(0_deg, 0_deg, 0_deg);
     };
 
-    runNavigation<meter_t>(ant, ant, ForwardSpeed, TurnSpeed, ant, minBound, maxBound, ant, resetPosition, objects);
+    runNavigation<meter_t>(ant, ant, ForwardSpeed, TurnSpeed, ant, minBound,
+                           maxBound, ant, resetPosition, objects);
 
     return EXIT_SUCCESS;
 }

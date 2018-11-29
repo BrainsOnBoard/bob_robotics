@@ -10,8 +10,10 @@
 
 // BoB robotics includes
 #include "common/main.h"
+#include "common/pose.h"
 #include "robots/tank.h"
 #include "vicon/udp.h"
+#include "video/display.h"
 #include "video/panoramic.h"
 #include "video/unwrapped_input.h"
 #ifdef NO_I2C_ROBOT
@@ -28,7 +30,7 @@ using namespace units::literals;
 auto
 loadObjects(const std::string &objectsPath)
 {
-    std::vector<ObjectType> objects;
+    std::vector<std::vector<Position2<millimeter_t>>> objects;
 
     std::cout << "Loading object positions from " << objectsPath << "..." << std::endl;
     cv::FileStorage fs(objectsPath, cv::FileStorage::READ);
@@ -37,8 +39,7 @@ loadObjects(const std::string &objectsPath)
         objects.emplace_back();
         for (auto vertexNode : objectNode) {
             vertexNode >> vertex;
-            objects.back().first.emplace_back(vertex[0]);
-            objects.back().second.emplace_back(vertex[1]);
+            objects.back().emplace_back(millimeter_t(vertex[0]), millimeter_t(vertex[1]));
         }
     }
 
@@ -103,9 +104,14 @@ bob_main(int argc, char **argv)
         std::cout << "Waiting for object" << std::endl;
     }
 
+    Video::Display display(camUnwrapped);
+
     auto viconObject = vicon.getObject(0);
-    const units::length::millimeter_t lim = 3000_mm;
-    runNavigation(*tank, viconObject, ForwardSpeed, TurnSpeed, camUnwrapped, -lim, lim, -lim, lim, objects);
+    const Position2<millimeter_t> minBound{ -3000_mm, -3000_mm };
+    const Position2<millimeter_t> maxBound{ 3000_mm, 3000_mm };
+    runNavigation<millimeter_t>(*tank, viconObject, ForwardSpeed, TurnSpeed,
+                                camUnwrapped, minBound, maxBound, display,
+                                nullptr, objects);
 
     return EXIT_SUCCESS;
 }
