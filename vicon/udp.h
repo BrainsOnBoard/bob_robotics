@@ -209,8 +209,8 @@ public:
         auto getPose() const
         {
             const auto data = getData();
-            return std::make_pair(data.template getPosition<LengthUnit>(),
-                                  data.template getAttitude<AngleUnit>());
+            return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
+                                                data.template getAttitude<AngleUnit>());
         }
 
         ObjectDataType getData() const
