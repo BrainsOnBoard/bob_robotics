@@ -68,7 +68,8 @@ public:
                   const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
-                 sf::Style::Titlebar | sf::Style::Close)
+                 sf::Style::Titlebar | sf::Style::Close,
+                 getContextSettings())
       , m_OriginLineHorizontal({ OriginLineLength, OriginLineThickness })
       , m_OriginLineVertical({ OriginLineThickness, OriginLineLength })
       , m_MinBounds(minBounds)
@@ -304,6 +305,13 @@ private:
 
     void draw()
     {}
+
+    static constexpr sf::ContextSettings getContextSettings()
+    {
+        sf::ContextSettings settings;
+        settings.antialiasingLevel = 8;
+        return settings;
+    }
 }; // AgentRenderer
 } // Viz
 } // BobRobotics
