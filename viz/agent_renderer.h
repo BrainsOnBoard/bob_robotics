@@ -306,7 +306,7 @@ private:
     void draw()
     {}
 
-    static constexpr sf::ContextSettings getContextSettings()
+    static sf::ContextSettings getContextSettings()
     {
         sf::ContextSettings settings;
         settings.antialiasingLevel = 8;
