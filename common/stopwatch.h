@@ -28,12 +28,41 @@ public:
         return elapsed;
     }
 
+    bool running() const
+    {
+        return m_StartTime != TimePoint::min();
+    }
+
+    void stop()
+    {
+        m_StartTime = TimePoint::min();
+    }
+
     static TimePoint now()
     {
         return std::chrono::high_resolution_clock::now();
     }
 
 private:
-    TimePoint m_StartTime;
+    TimePoint m_StartTime = TimePoint::min();
 }; // Stopwatch
+
+class EggTimer
+  : public Stopwatch
+{
+public:
+    void start(const std::chrono::nanoseconds duration)
+    {
+        Stopwatch::start();
+        m_Duration = duration;
+    }
+
+    bool finished() const
+    {
+        return elapsed() >= m_Duration;
+    }
+
+private:
+    std::chrono::nanoseconds m_Duration = std::chrono::nanoseconds::zero();
+}; // EggTimer
 } // BoBRobotics

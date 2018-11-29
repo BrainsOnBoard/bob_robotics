@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/pose.h"
+#include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
@@ -38,48 +39,6 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::time;
 using namespace std::literals;
-
-using ObjectType = std::pair<std::vector<millimeter_t>, std::vector<millimeter_t>>;
-
-class EggTimer
-{
-private:
-    using TimeType = std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds>;
-    TimeType m_StartTime;
-    std::chrono::nanoseconds m_Duration = std::chrono::nanoseconds::zero();
-
-public:
-    // void start(const nanosecond_t duration)
-    // {
-    //     start(std::chrono::nanoseconds(static_cast<int64_t>(duration.value())));
-    // }
-
-    void start(const std::chrono::nanoseconds duration)
-    {
-        m_StartTime = now();
-        m_Duration = duration;
-    }
-
-    bool running() const
-    {
-        return m_Duration != std::chrono::nanoseconds::zero();
-    }
-
-    void stop()
-    {
-        m_Duration = std::chrono::nanoseconds::zero();
-    }
-
-    bool finished() const
-    {
-        return (now() - m_StartTime) >= m_Duration;
-    }
-
-    static TimeType now()
-    {
-        return std::chrono::high_resolution_clock::now();
-    }
-}; // EggTimer
 
 filesystem::path
 getRoutePath(const int routeNum)
