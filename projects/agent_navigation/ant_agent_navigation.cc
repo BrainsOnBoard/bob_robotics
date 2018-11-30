@@ -30,14 +30,14 @@ bob_main(int, char **)
     const float TurnSpeed = 0.5f;
 
     // Initialise OpenGL
-    auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
+    auto window = AntWorld::AntAgent::initialiseWindow(RenderSize, /*skyRGBA=*/{ 1.f, 1.f, 1.f, 1.f });
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
     const std::vector<GLfloat> objectsGL = world.load("../../libantworld/world5000_gray.bin",
-                                                      { 0.0f, 1.0f, 0.0f },
-                                                      { 0.898f, 0.718f, 0.353f });
+                                                      { 0.1f, 0.1f, 0.1f },
+                                                      { 0.5f, 0.5f, 0.5f });
     const auto minBound = world.getMinBound();
     const auto maxBound = world.getMaxBound();
 
