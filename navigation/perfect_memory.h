@@ -171,8 +171,7 @@ public:
         }
 
         // Return result
-        return std::tuple_cat(RIDFProcessor()(this->getUnwrapResolution(), bestColumns, minDifferences),
-                              std::make_tuple(std::cref(m_RotatedDifferences)));
+        return RIDFProcessor()(this->getUnwrapResolution(), bestColumns, minDifferences, m_RotatedDifferences);
     }
 
 private:
