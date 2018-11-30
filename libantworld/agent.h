@@ -19,6 +19,7 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <array>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -199,7 +200,8 @@ public:
         m_MoveSpeed = clockwiseSpeed;
     }
 
-    static auto initialiseWindow(const cv::Size &size)
+    static auto initialiseWindow(const cv::Size &size,
+                                 const std::array<float, 4> skyRGBA = { 0.0f, 1.0f, 1.0f, 1.0f })
     {
         // Set GLFW error callback
         glfwSetErrorCallback(handleGLFWError);
@@ -235,7 +237,7 @@ public:
         glDebugMessageCallback(handleGLError, nullptr);
 
         // Set clear colour to match matlab and enable depth test
-        glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(skyRGBA[0], skyRGBA[1], skyRGBA[2], skyRGBA[3]);
         glEnable(GL_DEPTH_TEST);
         glLineWidth(4.0);
         glPointSize(4.0);
