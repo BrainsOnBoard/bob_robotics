@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/pose.h"
 #include "hid/joystick.h"
 #include "libantworld/agent.h"
 
@@ -43,15 +44,13 @@ main()
     agent.addJoystick(joystick);
 
     std::cout << "Press the B button to quit" << std::endl;
-    std::tuple<meter_t, meter_t, degree_t> lastPose;
+    Pose3<meter_t, degree_t> lastPose;
     while (!glfwWindowShouldClose(window.get()) && !joystick.isDown(HID::JButton::B)) {
         joystick.update();
 
-        const auto position = agent.getPosition<>();
-        const Vector3<degree_t> attitude = agent.getAttitude<>();
-        auto pose = std::make_tuple(position[0], position[1], attitude[0]);
+        const auto pose = agent.getPose<>();
         if (pose != lastPose) {
-            std::cout << "Pose: " << position[0] << ", " << position[1] << ", " << attitude[0] << std::endl;
+            std::cout << "Pose: " << pose.x() << ", " << pose.y() << ", " << pose.yaw() << std::endl;
             lastPose = pose;
         }
 
@@ -59,8 +58,8 @@ main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render first person
-        renderer.renderPanoramicView(position[0], position[1], position[2],
-                                     attitude[0], attitude[1], attitude[2],
+        renderer.renderPanoramicView(pose.x(), pose.y(), pose.z(),
+                                     pose.yaw(), pose.pitch(), pose.roll(),
                                      0, 0, RenderSize.width, RenderSize.height);
 
         // Swap front and back buffers

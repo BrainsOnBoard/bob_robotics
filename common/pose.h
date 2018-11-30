@@ -45,6 +45,16 @@ public:
         return *this;
     }
 
+    bool operator==(const VectorBase<T, N> &other) const
+    {
+        return std::equal(cbegin(), cend(), other.cbegin());
+    }
+
+    bool operator!=(const VectorBase<T, N> &other) const
+    {
+        return !(*this == other);
+    }
+
     operator const std::array<T, N> &() const { return m_Array; }
     T &operator[](size_t i) { return m_Array[i]; }
     const T &operator[](size_t i) const { return m_Array[i]; }
