@@ -35,9 +35,38 @@ circularMean(const T1 &angles, const T2 &weights)
 //! Winner-take all: derive heading using only the best-matching snapshot
 struct BestMatchingSnapshot
 {
-    auto operator()(const cv::Size &unwrapRes,
-                    std::vector<int> &bestCols,
-                    std::vector<float> &minDifferences)
+    class ReturnType
+      : public std::tuple<units::angle::radian_t, size_t, float, const std::vector<std::vector<float>> &>
+    {
+        using radian_t = units::angle::radian_t;
+
+    public:
+        ReturnType(const radian_t heading,
+                   const size_t bestSnapshot,
+                   const float difference,
+                   const std::vector<std::vector<float>> &rotatedDifferences)
+          : std::tuple<radian_t, size_t, float, const std::vector<std::vector<float>> &>(heading, bestSnapshot, difference, rotatedDifferences)
+        {}
+
+        void write(cv::FileStorage &fs) const
+        {
+            fs << "{"
+               << "heading" << std::get<0>(*this).value()
+               << "bestSnapshot" << static_cast<int>(std::get<1>(*this))
+               << "difference" << std::get<2>(*this);
+
+            fs << "rotatedDifferences" << "[";
+            for (auto &diffs : std::get<3>(*this)) {
+                fs << diffs;
+            }
+            fs << "]" << "}";
+        }
+    };
+
+    ReturnType operator()(const cv::Size &unwrapRes,
+                          std::vector<int> &bestCols,
+                          std::vector<float> &minDifferences,
+                          const std::vector<std::vector<float>> &rotatedDifferences)
     {
         // Get index corresponding to best-matching snapshot
         const auto bestPtr = std::min_element(std::begin(minDifferences), std::end(minDifferences));
@@ -56,18 +85,63 @@ struct BestMatchingSnapshot
         // Normalise to be between 0 and 1
         const float difference = minDifferences[bestSnapshot] / 255.0f;
 
-        // Bundle result as tuple
-        return std::make_tuple(heading, bestSnapshot, difference);
+        return ReturnType(heading, bestSnapshot, difference, rotatedDifferences);
     }
 };
+
+inline void
+write(cv::FileStorage &fs, const std::string &, const BestMatchingSnapshot::ReturnType &ret)
+{
+    ret.write(fs);
+}
 
 //! Dynamic weighting: use weighted average of $n$ best-matching snapshots' headings
 template<size_t numComp>
 struct WeightSnapshotsDynamic
 {
-    auto operator()(const cv::Size &unwrapRes,
-                    std::vector<int> &bestCols,
-                    std::vector<float> &minDifferences)
+    class ReturnType
+      : public std::tuple<units::angle::radian_t, std::array<size_t, numComp>, std::array<float, numComp>, const std::vector<std::vector<float>> &>
+    {
+        using radian_t = units::angle::radian_t;
+
+    public:
+        ReturnType(const radian_t heading,
+                   std::array<size_t, numComp> bestSnapshots,
+                   std::array<float, numComp> differences,
+                   const std::vector<std::vector<float>> &rotatedDifferences)
+          : std::tuple<units::angle::radian_t, std::array<size_t, numComp>, std::array<float, numComp>, const std::vector<std::vector<float>> &>(heading, bestSnapshots, differences, rotatedDifferences)
+        {}
+
+        void write(cv::FileStorage &fs) const
+        {
+            fs << "{"
+               << "heading" << std::get<0>(*this).value();
+
+            fs << "bestSnapshot" << "[:";
+            for (auto snapshot : std::get<1>(*this)) {
+                fs << static_cast<int>(snapshot);
+            }
+            fs << "]";
+
+
+            fs << "difference" << "[:";
+            for (auto diff : std::get<2>(*this)) {
+                fs << diff;
+            }
+            fs << "]";
+
+            fs << "rotatedDifferences" << "[";
+            for (auto &diffs : std::get<3>(*this)) {
+                fs << diffs;
+            }
+            fs << "]" << "}";
+        }
+    };
+
+    ReturnType operator()(const cv::Size &unwrapRes,
+                          std::vector<int> &bestCols,
+                          std::vector<float> &minDifferences,
+                          const std::vector<std::vector<float>> &rotatedDifferences)
     {
         using namespace units::angle;
 
@@ -83,7 +157,7 @@ struct WeightSnapshotsDynamic
 
         // Pop the best numComp indices off the heap into the output array
         std::array<size_t, numComp> snapshots;
-        for(size_t &s : snapshots) {
+        for (size_t &s : snapshots) {
             std::pop_heap(std::begin(idx), std::end(idx), comparator);
             s = idx.back();
             idx.pop_back();
@@ -94,31 +168,35 @@ struct WeightSnapshotsDynamic
             return units::make_unit<turn_t>((double) bestCols[s] / (double) unwrapRes.width);
         };
         std::array<radian_t, numComp> headings;
-        std::transform(snapshots.cbegin(), snapshots.cend(), headings.begin(),
-                       colsToHeadings);
+        std::transform(snapshots.cbegin(), snapshots.cend(), headings.begin(), colsToHeadings);
 
         // Normalise min differences to be between 0 and 1
         auto normaliseDiffs = [&minDifferences](const size_t i) {
             return minDifferences[i] / 255.0f;
         };
         std::array<float, numComp> minDifferencesOut;
-        std::transform(snapshots.cbegin(), snapshots.cend(),
-                       minDifferencesOut.begin(), normaliseDiffs);
+        std::transform(snapshots.cbegin(), snapshots.cend(), minDifferencesOut.begin(), normaliseDiffs);
 
         // Weights are 1 - min differences
         const auto diffsToWeights = [](const float f) {
             return 1.0f - f;
         };
         std::array<float, numComp> weights;
-        std::transform(minDifferencesOut.cbegin(), minDifferencesOut.cend(),
-                       weights.begin(), diffsToWeights);
+        std::transform(minDifferencesOut.cbegin(), minDifferencesOut.cend(), weights.begin(), diffsToWeights);
 
         // Best angle is a weighted cirular mean of headings
         const radian_t bestAngle = Internal::circularMean(headings, weights);
 
         // Bundle result as tuple
-        return std::make_tuple(bestAngle, std::move(snapshots), std::move(minDifferencesOut));
+        return ReturnType(bestAngle, snapshots, minDifferencesOut, rotatedDifferences);
     }
 };
+
+template<size_t numComp>
+inline void
+write(cv::FileStorage &fs, const std::string &, const typename WeightSnapshotsDynamic<numComp>::ReturnType &ret)
+{
+    ret.write(fs);
+}
 } // Navigation
 } // BoBRobotics
