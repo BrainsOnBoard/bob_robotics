@@ -49,7 +49,7 @@ main()
         std::cout << "Gantry moved.\n";
 
         // Print the gantry's current position
-        const auto pos = gantry.getPosition<>();
+        const auto &pos = gantry.position();
         std::cout << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
                   << pos[2] << "\n";
     } catch (std::exception &e) {

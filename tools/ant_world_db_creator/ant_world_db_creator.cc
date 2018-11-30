@@ -142,8 +142,8 @@ public:
         addMetadata(routeRecorder);
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
-            const auto pos = m_Agent.getPosition();
-            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
+            const auto &pose = m_Agent.pose();
+            routeRecorder.record(pose.position(), pose.yaw(), image);
         });
     }
 

@@ -25,7 +25,7 @@ int main()
     }
     for (int i = 0; i < 10000; i++) {
         auto objectData = vicon.getObjectData(0);
-        const auto &velocity = objectData.getVelocity();
+        const auto &velocity = objectData.velocity();
 
         std::cout << velocity[0] << ", " << velocity[1] << ", " << velocity[2] << std::endl;
     }

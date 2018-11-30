@@ -9,7 +9,9 @@ LINK_FLAGS += -L$(VICON_DATASTREAM_SDK_ROOT)/bin/Release \
 
 EXECUTABLE := vicon_arena_constructor
 
-.PHONY: clean vicon_data_stream_sdk
+.PHONY: all clean vicon_data_stream_sdk
+
+all: $(EXECUTABLE)
 
 -include $(EXECUTABLE).d
 

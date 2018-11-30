@@ -48,7 +48,7 @@ main()
     while (!glfwWindowShouldClose(window.get()) && !joystick.isDown(HID::JButton::B)) {
         joystick.update();
 
-        const auto pose = agent.getPose<>();
+        const auto &pose = agent.pose();
         if (pose != lastPose) {
             std::cout << "Pose: " << pose.x() << ", " << pose.y() << ", " << pose.yaw() << std::endl;
             lastPose = pose;

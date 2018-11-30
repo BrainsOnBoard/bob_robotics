@@ -31,21 +31,17 @@ public:
         return m_AxisLength;
     }
 
-    template<typename ReturnLengthUnit = LengthUnit>
-    Position3<ReturnLengthUnit> getPosition()
+    const auto &position()
     {
-        updatePose();
-        return { m_Pose.x(), m_Pose.y(), 0_m };
+        return pose().position();
     }
 
-    template<typename ReturnAngleUnit = AngleUnit>
-    Vector3<ReturnAngleUnit> getAttitude()
+    const auto &attitude()
     {
-        updatePose();
-        return { m_Pose.yaw(), 0_rad, 0_rad };
+        return pose().attitude();
     }
 
-    const auto &getPose()
+    const auto &pose()
     {
         updatePose();
         return m_Pose;

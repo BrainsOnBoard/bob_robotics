@@ -23,11 +23,11 @@ plotAgent(AgentType &agent,
                const LengthUnit yUpper)
 {
     // Get agent's pose
-    const auto pose = agent.template getPose<LengthUnit>();
+    const auto &pose = agent.pose();
 
     // Get vector components
-    const std::vector<double> vx{ pose.x().value() };
-    const std::vector<double> vy{ pose.y().value() };
+    const std::vector<double> vx{ static_cast<LengthUnit>(pose.x()).value() };
+    const std::vector<double> vy{ static_cast<LengthUnit>(pose.y()).value() };
     const std::vector<double> vu{ units::math::cos(pose.yaw()) };
     const std::vector<double> vv{ units::math::sin(pose.yaw()) };
 

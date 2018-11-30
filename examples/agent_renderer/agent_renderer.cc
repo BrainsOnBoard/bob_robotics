@@ -65,6 +65,6 @@ main(int, char **argv)
             std::this_thread::sleep_for(5ms);
         }
 
-        renderer.update(robot.getPose());
+        renderer.update(robot.pose());
     }
 }

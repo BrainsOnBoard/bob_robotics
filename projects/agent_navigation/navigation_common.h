@@ -208,7 +208,8 @@ runNavigation(Robots::Robot &robot,
             joystick->update();
         }
 
-        renderer.update(poseGetter.getPose(), robot, trainingLine, testingLine);
+        const auto &pose = poseGetter.pose();
+        renderer.update(pose, robot, trainingLine, testingLine);
         display.update();
 
         if (turnTimer.running()) {
@@ -222,7 +223,6 @@ runNavigation(Robots::Robot &robot,
         }
 
         if (videoInput.readGreyscaleFrame(frame)) {
-            const auto pose = poseGetter.template getPose<millimeter_t>();
             if (trainingDatabase) {
                 trainingLine.append(pose);
                 trainingDatabase->getRouteRecorder().record(pose.position(), pose.yaw(), frame);

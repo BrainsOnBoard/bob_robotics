@@ -48,7 +48,7 @@ main()
     bool reachedGoalAnnounced = false;
     while (display.isOpen()) {
         // Get the robot's current pose
-        const auto &pose = robot.getPose();
+        const auto &pose = robot.pose();
 
         // Run GUI events, get pressed key
         const auto key = display.runGUI(pose);

@@ -38,7 +38,7 @@ bob_main(int, char **)
 
     do {
         // Refresh display
-        display.runGUI(robot.getPose());
+        display.runGUI(robot.pose());
 
         // Check for joystick events
         if (!joystick.update()) {

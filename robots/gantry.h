@@ -115,8 +115,7 @@ public:
     }
 
     //! Get the current position of the gantry in the arena
-    template<class LengthUnit = millimeter_t>
-    Position3<LengthUnit> getPosition()
+    auto position()
     {
         // Request position from card
         Vector3<LONG> pulses;
@@ -124,13 +123,12 @@ public:
         checkError(P1240GetTheorecticalRegister(m_BoardId, Y_Axis, &pulses[1]), "Could not get y position");
         checkError(P1240GetTheorecticalRegister(m_BoardId, Z_Axis, &pulses[2]), "Could not get z position");
 
-        // Convert to LengthUnit
-        return pulsesToUnit<LengthUnit>(pulses);
+        // Convert to millimetres
+        return Position3<millimeter_t>(pulsesToUnit<millimeter_t>(pulses));
     }
 
     //! Get the gantry's current velocity
-    template<class VelocityUnit = meters_per_second_t>
-    Vector3<VelocityUnit> getVelocity()
+    auto getVelocity()
     {
         Vector3<DWORD> pulseRate;
 
@@ -148,7 +146,7 @@ public:
         }
 
         using InitialUnit = units::unit_t<units::compound_unit<units::length::millimeter, units::inverse<units::time::second>>>;
-        const auto velocity = pulsesToUnit<VelocityUnit, InitialUnit, DWORD>(pulseRate);
+        const auto velocity = pulsesToUnit<meters_per_second_t, InitialUnit, DWORD>(pulseRate);
         return velocity;
     }
 

@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
-#include "../common/default_get_pose.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
 #include "../os/net.h"
@@ -28,7 +27,7 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
-  : public DefaultGetPose<ObjectData, units::length::millimeter_t, units::angle::radian_t>
+  : public Pose3<units::length::millimeter_t, units::angle::radian_t>
 {
     using radian_t = units::angle::radian_t;
     using millimeter_t = units::length::millimeter_t;
@@ -36,10 +35,7 @@ class ObjectData
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
-      , m_Position{ 0_mm, 0_mm, 0_mm }
-      , m_Attitude{ 0_rad, 0_rad, 0_rad }
-    {
-    }
+    {}
 
     //----------------------------------------------------------------------------
     // Public API
@@ -55,12 +51,8 @@ public:
         m_ObjectName = objectName;
 
         // Copy vectors into class
-        m_Position[0] = x;
-        m_Position[1] = y;
-        m_Position[2] = z;
-        m_Attitude[0] = yaw;
-        m_Attitude[1] = pitch;
-        m_Attitude[2] = roll;
+        position() = { x, y, z };
+        attitude() = { yaw, pitch, roll };
     }
 
     auto getElapsedTime() const
@@ -83,18 +75,6 @@ public:
         return m_ObjectName;
     }
 
-    template<typename LengthUnit = millimeter_t>
-    Position3<LengthUnit> getPosition() const
-    {
-        return convertUnitArray<LengthUnit>(m_Position);
-    }
-
-    template<typename AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude() const
-    {
-        return convertUnitArray<AngleUnit>(m_Attitude);
-    }
-
 private:
     //----------------------------------------------------------------------------
     // Members
@@ -102,8 +82,6 @@ private:
     uint32_t m_FrameNumber;
     std::string m_ObjectName;
     Stopwatch::Duration m_ElapsedTime;
-    Position3<millimeter_t> m_Position;
-    Vector3<radian_t> m_Attitude;
 };
 
 //----------------------------------------------------------------------------
@@ -128,7 +106,7 @@ public:
                 millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
-        const Position3<millimeter_t> position {x, y, z};
+        const Position3<millimeter_t> newPosition{ x, y, z };
         constexpr millisecond_t frameS = 10_ms;
         constexpr millisecond_t smoothingS = 30_ms;
 
@@ -140,13 +118,12 @@ public:
         const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
         // Calculate instantaneous velocity
-        const auto oldPosition = getPosition<>();
         Vector3<meters_per_second_t> instVelocity;
         const auto calcVelocity = [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
         };
-        std::transform(std::begin(position), std::end(position),
-                       std::begin(oldPosition), std::begin(instVelocity),
+        std::transform(std::begin(newPosition), std::end(newPosition),
+                       std::begin(position()), std::begin(instVelocity),
                        calcVelocity);
 
         // Exponentially smooth velocity
@@ -161,10 +138,9 @@ public:
         ObjectData::update(frameNumber, std::move(objectName), x, y, z, yaw, pitch, roll);
     }
 
-    template<typename VelocityUnit = meters_per_second_t>
-    Vector3<VelocityUnit> getVelocity() const
+    const auto &velocity() const
     {
-        return convertUnitArray<VelocityUnit>(m_Velocity);
+        return m_Velocity;
     }
 
 private:
@@ -193,25 +169,9 @@ public:
           , m_Id(id)
         {}
 
-        template<typename LengthUnit = millimeter_t>
-        Position3<LengthUnit> getPosition() const
-        {
-            return getData().template getPosition<LengthUnit>();
-        }
-
-        template<typename AngleUnit = radian_t>
-        Vector3<AngleUnit> getAttitude() const
-        {
-            return getData().template getAttitude<AngleUnit>();
-        }
-
-        template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
-        auto getPose() const
-        {
-            const auto data = getData();
-            return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
-                                                data.template getAttitude<AngleUnit>());
-        }
+        auto position() const { return getData().position(); }
+        auto attitude() const { return getData().attitude(); }
+        auto pose() const { return getData(); }
 
         ObjectDataType getData() const
         {

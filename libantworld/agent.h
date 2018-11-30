@@ -89,24 +89,9 @@ public:
                 });
     }
 
-    template<typename LengthUnit = meter_t>
-    Position3<LengthUnit> getPosition()
-    {
-        std::lock_guard<std::mutex> guard(m_PoseMutex);
-        updatePose();
-        return convertUnitArray<LengthUnit>(m_Pose.position());
-    }
-
-    template<typename AngleUnit = degree_t>
-    Vector3<AngleUnit> getAttitude()
-    {
-        std::lock_guard<std::mutex> guard(m_PoseMutex);
-        updatePose();
-        return convertUnitArray<AngleUnit>(m_Pose.attitude());
-    }
-
-    template<typename LengthUnit = meter_t, typename AngleUnit = degree_t>
-    Pose3<LengthUnit, AngleUnit> getPose()
+    const auto &position() { return pose().position(); }
+    const auto &attitude() { return pose().attitude(); }
+    const Pose3<meter_t, degree_t> &pose()
     {
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();

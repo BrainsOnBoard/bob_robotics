@@ -10,14 +10,14 @@
 #include <vector>
 
 namespace BoBRobotics {
-
 template<typename T, size_t N>
 class VectorBase
 {
 public:
     VectorBase() = default;
 
-    VectorBase(std::initializer_list<T> list)
+    template<typename T2>
+    VectorBase(std::initializer_list<T2> list)
     {
         std::copy(list.begin(), list.end(), m_Array.begin());
     }
@@ -28,17 +28,17 @@ public:
     {}
 
     VectorBase(const VectorBase<T, N> &other)
-    {
-        m_Array = other.m_Array;
-    }
+      : m_Array(other.m_Array)
+    {}
 
-    auto &operator =(std::initializer_list<T> list)
+    template<typename T2>
+    auto &operator=(std::initializer_list<T2> list)
     {
         std::copy(list.begin(), list.end(), m_Array.begin());
         return *this;
     }
 
-    auto &operator =(const VectorBase<T, N> &other)
+    auto &operator=(const VectorBase<T, N> &other)
     {
         std::vector<double> test;
         m_Array = other.m_Array;
@@ -55,14 +55,20 @@ public:
         return !(*this == other);
     }
 
+    template<typename T2>
+    operator VectorBase<T2, N>() const
+    {
+        VectorBase<T2, N> out;
+        std::transform(cbegin(), cend(), out.begin(), [](const T &val) {
+            return static_cast<T2>(val);
+        });
+        return out;
+    }
+
     operator const std::array<T, N> &() const { return m_Array; }
     T &operator[](size_t i) { return m_Array[i]; }
     const T &operator[](size_t i) const { return m_Array[i]; }
     static constexpr size_t size() { return N; }
-
-    static constexpr units::angle::radian_t yaw() { return units::angle::radian_t(0); }
-    static constexpr units::angle::radian_t pitch() { return units::angle::radian_t(0); }
-    static constexpr units::angle::radian_t roll() { return units::angle::radian_t(0); }
 
     auto begin() { return m_Array.begin(); }
     auto begin() const { return m_Array.begin(); }
@@ -108,13 +114,19 @@ public:
       : Position2(array[0], array[1])
     {}
 
-    operator Position3<LengthUnit>() const { return Position3<LengthUnit>(x(), y(), z()); }
+    template<typename LengthUnit2>
+    operator Position2<LengthUnit2>() const { return Position2<LengthUnit2>(x(), y()); }
+    template<typename LengthUnit2>
+    operator Position3<LengthUnit2>() const { return Position3<LengthUnit2>(x(), y(), z()); }
 
     LengthUnit &x() { return (*this)[0]; }
     const LengthUnit &x() const { return (*this)[0]; }
     LengthUnit &y() { return (*this)[1]; }
     const LengthUnit &y() const { return (*this)[1]; }
     static constexpr LengthUnit z() { return LengthUnit(0); }
+    static constexpr units::angle::radian_t yaw() { return units::angle::radian_t(0); }
+    static constexpr units::angle::radian_t pitch() { return units::angle::radian_t(0); }
+    static constexpr units::angle::radian_t roll() { return units::angle::radian_t(0); }
 };
 
 template<typename LengthUnit>
@@ -122,7 +134,7 @@ class Position3
   : public VectorBase<LengthUnit, 3>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
-                "LengthUnit is not a unit of length");
+                  "LengthUnit is not a unit of length");
 
 public:
     Position3() = default;
@@ -139,7 +151,10 @@ public:
       : Position3(array[0], array[1], array[2])
     {}
 
-    operator Position2<LengthUnit>() const { return Position2<LengthUnit>(x(), y()); }
+    template<typename LengthUnit2>
+    operator Position2<LengthUnit2>() const { return Position2<LengthUnit2>(x(), y()); }
+    template<typename LengthUnit2>
+    operator Position3<LengthUnit2>() const { return Position3<LengthUnit2>(x(), y(), z()); }
 
     LengthUnit &x() { return (*this)[0]; }
     const LengthUnit &x() const { return (*this)[0]; }
@@ -147,6 +162,9 @@ public:
     const LengthUnit &y() const { return (*this)[1]; }
     LengthUnit &z() { return (*this)[2]; }
     const LengthUnit &z() const { return (*this)[2]; }
+    static constexpr units::angle::radian_t yaw() { return units::angle::radian_t(0); }
+    static constexpr units::angle::radian_t pitch() { return units::angle::radian_t(0); }
+    static constexpr units::angle::radian_t roll() { return units::angle::radian_t(0); }
 };
 
 template<typename LengthUnit, typename AngleUnit>
@@ -194,6 +212,8 @@ public:
     const AngleUnit &yaw() const { return std::get<1>(*this); }
     static constexpr AngleUnit pitch() { return AngleUnit(0); }
     static constexpr AngleUnit roll() { return AngleUnit(0); }
+
+    const auto &pose() const { return *this; }
 };
 
 //! A three-dimensional pose
@@ -242,6 +262,8 @@ public:
     const AngleUnit &pitch() const { return std::get<1>(*this)[1]; }
     AngleUnit &roll() { return std::get<1>(*this)[2]; }
     const AngleUnit &roll() const { return std::get<1>(*this)[2]; }
+
+    const auto &pose() const { return *this; }
 };
 
 //! Converts the input array to a unit-type of OutputUnit
