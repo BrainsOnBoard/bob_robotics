@@ -60,6 +60,10 @@ public:
     const T &operator[](size_t i) const { return m_Array[i]; }
     static constexpr size_t size() { return N; }
 
+    static constexpr units::angle::radian_t yaw() { return units::angle::radian_t(0); }
+    static constexpr units::angle::radian_t pitch() { return units::angle::radian_t(0); }
+    static constexpr units::angle::radian_t roll() { return units::angle::radian_t(0); }
+
     auto begin() { return m_Array.begin(); }
     auto begin() const { return m_Array.begin(); }
     auto end() { return m_Array.end(); }
