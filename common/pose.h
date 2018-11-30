@@ -4,40 +4,50 @@
 #include "../third_party/units.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <array>
 #include <tuple>
+#include <vector>
 
 namespace BoBRobotics {
 
-//! A generic template for 2D unit arrays
-template<typename T>
-using Vector2 = std::array<T, 2>;
-
-//! A generic template for 3D unit arrays
-template<typename T>
-using Vector3 = std::array<T, 3>;
-
-template<typename LengthUnit, size_t N>
-class PositionBase
+template<typename T, size_t N>
+class VectorBase
 {
-    static_assert(units::traits::is_length_unit<LengthUnit>::value,
-                  "LengthUnit is not a unit of length");
-
 public:
-    PositionBase() = default;
+    VectorBase() = default;
 
-    template<typename... Ts>
-    PositionBase(Ts &&... args)
-      : m_Array({ std::forward<Ts>(args)... })
-    {}
-
-    operator const std::array<LengthUnit, N> &() const
+    VectorBase(std::initializer_list<T> list)
     {
-        return m_Array;
+        std::copy(list.begin(), list.end(), m_Array.begin());
     }
 
-    LengthUnit &operator[](size_t i) { return m_Array[i]; }
-    const LengthUnit &operator[](size_t i) const { return m_Array[i]; }
+    template<typename... Ts>
+    VectorBase(Ts &&... args)
+      : m_Array(std::forward<Ts>(args)...)
+    {}
+
+    VectorBase(const VectorBase<T, N> &other)
+    {
+        m_Array = other.m_Array;
+    }
+
+    auto &operator =(std::initializer_list<T> list)
+    {
+        std::copy(list.begin(), list.end(), m_Array.begin());
+        return *this;
+    }
+
+    auto &operator =(const VectorBase<T, N> &other)
+    {
+        std::vector<double> test;
+        m_Array = other.m_Array;
+        return *this;
+    }
+
+    operator const std::array<T, N> &() const { return m_Array; }
+    T &operator[](size_t i) { return m_Array[i]; }
+    const T &operator[](size_t i) const { return m_Array[i]; }
     static constexpr size_t size() { return N; }
 
     auto begin() { return m_Array.begin(); }
@@ -48,24 +58,39 @@ public:
     auto cend() const { return m_Array.end(); }
 
 private:
-    std::array<LengthUnit, N> m_Array;
+    std::array<T, N> m_Array;
 };
+
+//! A generic template for 2D unit arrays
+template<typename T>
+using Vector2 = VectorBase<T, 2>;
+
+//! A generic template for 3D unit arrays
+template<typename T>
+using Vector3 = VectorBase<T, 3>;
 
 template<typename LengthUnit>
 class Position3;
 
 template<typename LengthUnit>
 class Position2
-  : public PositionBase<LengthUnit, 2>
+  : public VectorBase<LengthUnit, 2>
 {
+    static_assert(units::traits::is_length_unit<LengthUnit>::value,
+                  "LengthUnit is not a unit of length");
+
 public:
     Position2() = default;
 
     Position2(LengthUnit x, LengthUnit y)
-      : PositionBase<LengthUnit, 2>(x, y)
+      : VectorBase<LengthUnit, 2>({ x, y })
     {}
 
     Position2(const std::array<LengthUnit, 2> &array)
+      : Position2(array[0], array[1])
+    {}
+
+    Position2(const VectorBase<LengthUnit, 2> &array)
       : Position2(array[0], array[1])
     {}
 
@@ -80,16 +105,23 @@ public:
 
 template<typename LengthUnit>
 class Position3
-  : public PositionBase<LengthUnit, 3>
+  : public VectorBase<LengthUnit, 3>
 {
+    static_assert(units::traits::is_length_unit<LengthUnit>::value,
+                "LengthUnit is not a unit of length");
+
 public:
     Position3() = default;
 
     Position3(LengthUnit x, LengthUnit y, LengthUnit z)
-      : PositionBase<LengthUnit, 3>(x, y, z)
+      : VectorBase<LengthUnit, 3>({ x, y, z })
     {}
 
     Position3(const std::array<LengthUnit, 3> &array)
+      : Position3(array[0], array[1], array[2])
+    {}
+
+    Position3(const VectorBase<LengthUnit, 3> &array)
       : Position3(array[0], array[1], array[2])
     {}
 
