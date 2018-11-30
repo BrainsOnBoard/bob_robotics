@@ -58,8 +58,8 @@ public:
     AgentRenderer(const LengthUnit agentSize = 30_cm,
                   const Position2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
       : AgentRenderer(agentSize,
-                      { -arenaSize[0] / 2, -arenaSize[1] / 2 },
-                      { arenaSize[0] / 2, arenaSize[1] / 2 })
+                      Position2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
+                      Position2<LengthUnit>{ arenaSize[0] / 2, arenaSize[1] / 2 })
     {}
 
     template<typename MaxBoundsType>
