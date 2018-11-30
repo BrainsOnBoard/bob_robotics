@@ -521,10 +521,10 @@ bool hist(const std::vector<Numeric>& y, long bins=10,std::string color="b", dou
         // If color image, convert from BGR to RGB
         switch (image2.channels()) {
         case 3:
-            cv::cvtColor(image2, image2, CV_BGR2RGB);
+            cv::cvtColor(image2, image2, cv::COLOR_BGR2RGB);
             break;
         case 4:
-            cv::cvtColor(image2, image2, CV_BGRA2RGBA);
+            cv::cvtColor(image2, image2, cv::COLOR_BGRA2RGBA);
         }
 
         internal::imshow(image2.data, npy_type, image2.rows, image2.cols, image2.channels(), keywords);
