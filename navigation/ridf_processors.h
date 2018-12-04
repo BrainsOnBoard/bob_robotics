@@ -8,6 +8,9 @@
 #include <tuple>
 #include <vector>
 
+// Eigen
+#include <Eigen/Core>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -36,16 +39,16 @@ circularMean(const T1 &angles, const T2 &weights)
 struct BestMatchingSnapshot
 {
     class ReturnType
-      : public std::tuple<units::angle::radian_t, size_t, float, const std::vector<std::vector<float>> &>
+      : public std::tuple<units::angle::radian_t, Eigen::Index, float, const Eigen::ArrayXXf &>
     {
         using radian_t = units::angle::radian_t;
 
     public:
         ReturnType(const radian_t heading,
-                   const size_t bestSnapshot,
+                   const Eigen::Index bestSnapshot,
                    const float difference,
-                   const std::vector<std::vector<float>> &rotatedDifferences)
-          : std::tuple<radian_t, size_t, float, const std::vector<std::vector<float>> &>(heading, bestSnapshot, difference, rotatedDifferences)
+                   const Eigen::ArrayXXf &rotatedDifferences)
+          : std::tuple<radian_t, Eigen::Index, float, const Eigen::ArrayXXf &>(heading, bestSnapshot, difference, rotatedDifferences)
         {}
 
         void write(cv::FileStorage &fs)
@@ -55,25 +58,31 @@ struct BestMatchingSnapshot
                << "bestSnapshot" << static_cast<int>(std::get<1>(*this))
                << "difference" << std::get<2>(*this);
 
-            fs << "rotatedDifferences" << "[";
-            for (auto &diffs : std::get<3>(*this)) {
-                fs << diffs;
+            const auto &diffs = std::get<3>(*this);
+            fs << "rotatedDifferences"
+               << "[";
+            for (Eigen::Index s = 0; s < diffs.rows(); ++s) {
+                fs << "[:";
+                for (Eigen::Index i = 0; i < diffs.cols(); ++i) {
+                    fs << diffs(s, i);
+                }
+                fs << "]";
             }
-            fs << "]" << "}";
+            fs << "]";
         }
     };
 
     ReturnType operator()(const cv::Size &unwrapRes,
-                          std::vector<int> &bestCols,
-                          std::vector<float> &minDifferences,
-                          const std::vector<std::vector<float>> &rotatedDifferences)
+                          const Eigen::Matrix<Eigen::Index, Eigen::Dynamic, 1> &bestCols,
+                          const Eigen::VectorXf &minDifferences,
+                          const Eigen::ArrayXXf &rotatedDifferences)
     {
         // Get index corresponding to best-matching snapshot
-        const auto bestPtr = std::min_element(std::begin(minDifferences), std::end(minDifferences));
-        const auto bestSnapshot = static_cast<size_t>(std::distance(std::begin(minDifferences), bestPtr));
+        Eigen::Index bestSnapshot;
+        minDifferences.minCoeff(&bestSnapshot);
 
         // If column is > 180 deg, then subtract 360 deg
-        int col = bestCols[bestSnapshot];
+        Eigen::Index col = bestCols[bestSnapshot];
         if (col > (unwrapRes.width / 2)) {
             col -= unwrapRes.width;
         }
@@ -100,7 +109,7 @@ template<size_t numComp>
 struct WeightSnapshotsDynamic
 {
     class ReturnType
-      : public std::tuple<units::angle::radian_t, std::array<size_t, numComp>, std::array<float, numComp>, const std::vector<std::vector<float>> &>
+      : public std::tuple<units::angle::radian_t, std::array<size_t, numComp>, std::array<float, numComp>, const Eigen::ArrayXXf &>
     {
         using radian_t = units::angle::radian_t;
 
@@ -108,8 +117,8 @@ struct WeightSnapshotsDynamic
         ReturnType(const radian_t heading,
                    std::array<size_t, numComp> bestSnapshots,
                    std::array<float, numComp> differences,
-                   const std::vector<std::vector<float>> &rotatedDifferences)
-          : std::tuple<units::angle::radian_t, std::array<size_t, numComp>, std::array<float, numComp>, const std::vector<std::vector<float>> &>(heading, bestSnapshots, differences, rotatedDifferences)
+                   const Eigen::ArrayXXf &rotatedDifferences)
+          : std::tuple<units::angle::radian_t, std::array<size_t, numComp>, std::array<float, numComp>, const Eigen::ArrayXXf &>(heading, bestSnapshots, differences, rotatedDifferences)
         {}
 
         void write(cv::FileStorage &fs)
@@ -130,18 +139,24 @@ struct WeightSnapshotsDynamic
             }
             fs << "]";
 
-            fs << "rotatedDifferences" << "[";
-            for (auto &diffs : std::get<3>(*this)) {
-                fs << diffs;
+            const auto &diffs = std::get<3>(*this);
+            fs << "rotatedDifferences"
+               << "[";
+            for (Eigen::Index s = 0; s < diffs.rows(); ++s) {
+                fs << "[:";
+                for (Eigen::Index i = 0; i < diffs.cols(); ++i) {
+                    fs << diffs(s, i);
+                }
+                fs << "]";
             }
             fs << "]" << "}";
         }
     };
 
     ReturnType operator()(const cv::Size &unwrapRes,
-                          std::vector<int> &bestCols,
-                          std::vector<float> &minDifferences,
-                          const std::vector<std::vector<float>> &rotatedDifferences)
+                          const Eigen::Matrix<Eigen::Index, 1, -1> &bestCols,
+                          const Eigen::VectorXf &minDifferences,
+                          const Eigen::ArrayXXf &rotatedDifferences)
     {
         using namespace units::angle;
 

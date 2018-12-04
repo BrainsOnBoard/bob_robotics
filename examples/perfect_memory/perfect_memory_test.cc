@@ -24,7 +24,7 @@ main()
 {
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
-    std::vector<std::vector<float>> allDifferences;
+    Eigen::ArrayXXf allDifferences;
 
     {
         std::cout << "Testing with best-matching snapshot method..." << std::endl;

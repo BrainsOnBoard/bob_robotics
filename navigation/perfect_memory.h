@@ -10,6 +10,9 @@
 // Third-party includes
 #include "../third_party/units.h"
 
+// Eigen
+#include <Eigen/Core>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -129,8 +132,8 @@ public:
     template<class... Ts>
     PerfectMemoryRotater(const cv::Size unwrapRes, Ts &&... args)
     :   PerfectMemory<Store>(unwrapRes, std::forward<Ts>(args)...)
-    {
-    }
+    {}
+
     /*!
      * \brief Get differences between current view and stored snapshots
      *
@@ -140,7 +143,7 @@ public:
      * angles.
      */
     template<class... Ts>
-    const std::vector<std::vector<float>> &getImageDifferences(Ts &&... args) const
+    const Eigen::ArrayXXf &getImageDifferences(Ts &&... args) const
     {
         calcImageDifferences(std::forward<Ts>(args)...);
         return m_RotatedDifferences;
@@ -162,12 +165,10 @@ public:
         const size_t numSnapshots = this->getNumSnapshots();
 
         // Now get the minimum for each snapshot and the column this corresponds to
-        std::vector<int> bestColumns(numSnapshots);
-        std::vector<float> minDifferences(numSnapshots);
-        for (size_t i = 0; i < numSnapshots; i++) {
-            const auto elem = std::min_element(std::cbegin(m_RotatedDifferences[i]), std::cend(m_RotatedDifferences[i]));
-            bestColumns[i] = std::distance(std::cbegin(m_RotatedDifferences[i]), elem);
-            minDifferences[i] = *elem;
+        Eigen::Matrix<Eigen::Index, Eigen::Dynamic, 1> bestColumns(numSnapshots);
+        Eigen::VectorXf minDifferences(numSnapshots);
+        for (size_t s = 0; s < numSnapshots; s++) {
+            minDifferences(s) = m_RotatedDifferences.row(s).minCoeff(&bestColumns[s]);
         }
 
         // Return result
@@ -189,9 +190,7 @@ private:
         Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
 
         // Preallocate snapshot difference vectors
-        while (m_RotatedDifferences.size() < numSnapshots) {
-            m_RotatedDifferences.emplace_back(unwrapRes.width);
-        }
+        m_RotatedDifferences.resize(numSnapshots, unwrapRes.width);
 
         // Scan across image columns
         rotater.rotate(
@@ -200,7 +199,7 @@ private:
                 // Loop through snapshots
                 for (size_t s = 0; s < numSnapshots; s++) {
                     // Calculate difference
-                    m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
+                    m_RotatedDifferences(s, i) = this->calcSnapshotDifference(fr, mask, s);
                 }
             });
     }
@@ -208,7 +207,7 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    mutable std::vector<std::vector<float>> m_RotatedDifferences;
+    mutable Eigen::ArrayXXf m_RotatedDifferences;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics
