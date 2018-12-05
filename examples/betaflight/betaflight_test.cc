@@ -3,7 +3,7 @@
 #include "redirect_net.h"
 
 int main(int argc, char *argv[]){
-    const std::string device = (argc>1) ? std::string(argv[1]) : "/dev/ttyACM0";
+    const std::string device = (argc>1) ? std::string(argv[1]) : "/dev/ttyS3";
     const size_t baudrate = (argc>2) ? std::stoul(argv[2]) : 115200;
 
 	BoBRobotics::Robots::betaflight_uav my_drone(device, baudrate);
@@ -14,10 +14,10 @@ int main(int argc, char *argv[]){
     m_Send_Port = 50101;
 	
 	// set up the networking code needed to receive images:
-	if (!setupSockets()) {
-		// error
-		return -1;
-	}
+	//if (!setupSockets()) {
+	//	// error
+	//	return -1;
+	//}
 	
 	int count = 0;
 	int rx_timeout = 200;
