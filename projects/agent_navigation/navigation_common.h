@@ -108,6 +108,7 @@ runNavigation(Robots::Robot &robot,
     while (getRoutePath(++numRoutes).exists())
         ;
     std::unique_ptr<TrainingDatabase> trainingDatabase;
+    std::unique_ptr<cv::FileStorage> testLogFile;
 
     Navigation::PerfectMemoryRotater<> pm(videoInput.getOutputSize());
 
@@ -154,6 +155,8 @@ runNavigation(Robots::Robot &robot,
                     robot.stopMoving();
                     testing = false;
                     turnTimer.stop();
+                    *testLogFile << "}";
+                    testLogFile.reset();
                     std::cout << "Stopping testing" << std::endl;
                 } else {
                     if (trainingDatabase) {
@@ -164,6 +167,11 @@ runNavigation(Robots::Robot &robot,
                     testingLine.clear();
                     if (pm.getNumSnapshots() == 0) {
                         const Navigation::ImageDatabase database(getRoutePath(numRoutes - 1));
+
+                        testLogFile = std::make_unique<cv::FileStorage>((database.getPath() / "test_log.yaml").str(), cv::FileStorage::WRITE);
+                        *testLogFile << "data"
+                                     << "{";
+
                         const size_t imageStep = 10;
                         trainingLine.clear();
                         for (auto dbEntry = database.begin(); dbEntry < database.end(); dbEntry += imageStep) {
@@ -228,12 +236,20 @@ runNavigation(Robots::Robot &robot,
                 trainingDatabase->getRouteRecorder().record(pose.position(), pose.yaw(), frame);
             } else if (testing) {
                 Timer<> t{ "Time to calculate: " };
-                degree_t heading = std::get<0>(pm.getHeading(frame));
+                const auto testData = pm.getHeading(frame);
+                degree_t heading = std::get<0>(testData);
                 if (heading < -maxTurn) {
                     heading = -maxTurn;
                 } else if (heading > maxTurn) {
                     heading = maxTurn;
                 }
+
+                *testLogFile << "dataPoint"
+                             << "{"
+                             << "image" << frame
+                             << "data" << testData
+                             << "}";
+
                 const auto turnTime = units::math::abs(heading) / robotTurnSpeed;
                 const EggTimer::Duration turnTimeDuration = turnTime;
                 if (turnTimeDuration > 1ms) { // If it's sub-millisecond, then ignore

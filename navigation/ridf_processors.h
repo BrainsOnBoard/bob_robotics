@@ -51,7 +51,7 @@ struct BestMatchingSnapshot
           : std::tuple<radian_t, Eigen::Index, float, const Eigen::ArrayXXf &>(heading, bestSnapshot, difference, rotatedDifferences)
         {}
 
-        void write(cv::FileStorage &fs)
+        void write(cv::FileStorage &fs) const
         {
             fs << "{"
                << "heading" << std::get<0>(*this).value()
@@ -99,7 +99,7 @@ struct BestMatchingSnapshot
 };
 
 inline void
-write(cv::FileStorage &fs, const std::string &, BestMatchingSnapshot::ReturnType &ret)
+write(cv::FileStorage &fs, const std::string &, const BestMatchingSnapshot::ReturnType &ret)
 {
     ret.write(fs);
 }
