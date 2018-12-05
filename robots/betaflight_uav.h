@@ -84,7 +84,7 @@ namespace BetaFlight {
 	struct Callbacks {
 		void onIdent(const MyIdent &ident) {
 		    //std::cout << "Arming Flag: ";
-		    currentArmFlags.resize(0);
+		    currentArmFlags.clear();
 			int flag_data = *((int*) (&ident.raw_data[17]));
 			for (auto af : arm_flags) {
 				if (flag_data & (int) pow(2, af.err_num - 1)){
@@ -184,6 +184,8 @@ class betaflight_uav : public UAV {
         }
         
         void armDrone() {
+            // hold throttle low to arm
+            //M_RC_values[2] = 1100;
             M_RC_values[5] = 2000;
         }
         
