@@ -1,17 +1,16 @@
 #include "route_continuous.h"
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "common.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <tuple>
-
-// BoB robotics includes
-#include "../common/assert.h"
-
-// Libantworld includes
-#include "common.h"
 
 using namespace units::literals;
 using namespace units::angle;
@@ -96,9 +95,7 @@ RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries
 RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
     : RouteContinuous(arrowLength, maxRouteEntries)
 {
-    if(!load(filename)) {
-        throw std::runtime_error("Cannot load route");
-    }
+    load(filename);
 }
 //----------------------------------------------------------------------------
 RouteContinuous::~RouteContinuous()
@@ -119,13 +116,12 @@ RouteContinuous::~RouteContinuous()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool RouteContinuous::load(const std::string &filename)
+void RouteContinuous::load(const std::string &filename)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file: " << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open route file: " + filename);
     }
 
     // Seek to end of file, get size and rewind
@@ -208,7 +204,6 @@ bool RouteContinuous::load(const std::string &filename)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
-    return true;
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const

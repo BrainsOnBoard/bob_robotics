@@ -46,8 +46,8 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
-    bool loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    void load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
+    void loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
     void render() const;
 
@@ -122,7 +122,7 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    bool loadMaterials(const filesystem::path &basePath, const std::string &filename,
+    void loadMaterials(const filesystem::path &basePath, const std::string &filename,
                        GLint textureFormat, int maxTextureSize,
                        std::map<std::string, Texture*> &textureNames);
 

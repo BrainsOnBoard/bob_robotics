@@ -88,7 +88,7 @@ public:
     //! Return true if the display window is open
     bool isOpen() const
     {
-        return cvGetWindowHandle(WindowName) != nullptr;
+        return cv::getWindowProperty(WindowName, cv::WND_PROP_VISIBLE);
     }
 
     /*!
