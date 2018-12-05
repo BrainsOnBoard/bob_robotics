@@ -4,9 +4,6 @@
 #include "connection.h"
 #include "socket.h"
 
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // Standard C includes
 #include <cstdint>
 
