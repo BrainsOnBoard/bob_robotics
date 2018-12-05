@@ -2,7 +2,7 @@
 This file lists the build requirements for different BoB robotics modules and sample projects.
 
 ## Compiler
-On Linux, the earliest supported version of gcc is 4.9. For Windows, Visual Studio 2015 or newer is required.
+On Linux, the earliest supported version of gcc is 5.x. For Windows, Visual Studio 2015 or newer is required.
 
 ## Environment variables
 The ``BOB_ROBOTICS_PATH`` environment variable is used to help programs built with BoB robotics modules to find where this repository is on your machine. (Currently this is only needed so that the panoramic unwrapping code can find [the unwrapping parameters for different types of camera](../imgproc/unwrapparams).)

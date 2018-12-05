@@ -1,3 +1,5 @@
+#define NO_HEADER_DEFINITIONS
+
 #include "simulatorCommon.h"
 
 // Standard C++ includes

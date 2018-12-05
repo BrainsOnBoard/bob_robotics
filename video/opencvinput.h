@@ -1,19 +1,19 @@
 #pragma once
 
-// C++ includes
-#include <stdexcept>
+// BoB robotics includes
+#include "input.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// local includes
-#include "input.h"
-
-#define PIXPRO_USB_DEVICE_NAME "PIXPRO SP360 4K"
-#define WEBCAM360_DEVICE_NAME "USB 2.0 Camera"
+// Standard C++ includes
+#include <stdexcept>
 
 namespace BoBRobotics {
 namespace Video {
+constexpr const char *PixProUSBDeviceName = "PIXPRO SP360 4K";
+constexpr const char *Webcam360DeviceName = "USB 2.0 Camera";
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::OpenCVInput
 //----------------------------------------------------------------------------
@@ -28,7 +28,7 @@ public:
 
     /*!
      * \brief Create a video stream for a specific device
-     * 
+     *
      * @param device Integer or string representation of device (passed to
      *        cv::VideoCapture's constructor)
      * @param cameraName The short name to use for this camera (see getCameraName())
@@ -40,7 +40,7 @@ public:
 
     /*!
      * \brief Create a video stream for a specific device and a specified resolution
-     * 
+     *
      * @param device Integer or string representation of device (passed to
      *        cv::VideoCapture's constructor)
      * @param outSize Output resolution of camera
@@ -57,7 +57,7 @@ public:
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
-    virtual const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return m_CameraName;
     }
@@ -77,7 +77,7 @@ public:
             throw std::runtime_error("Could not read frame");
         }
 
-        // If there's no error, then we have updated frame and so return true        
+        // If there's no error, then we have updated frame and so return true
         return true;
     }
 

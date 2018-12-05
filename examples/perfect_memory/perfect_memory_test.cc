@@ -4,17 +4,18 @@
 // BoB robotics includes
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
-#include "navigation/perfect_memory_hog.h"
+#include "navigation/perfect_memory_store_raw.h"
+#include "navigation/perfect_memory_store_hog.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 
 template<typename T>
 void
-loadSnapshots(T &pm)
+trainRoute(T &pm)
 {
     // Load snapshots
-    pm.loadSnapshots("../../tools/ant_world_db_creator/ant1_route1", true);
+    pm.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
 }
 
@@ -22,15 +23,15 @@ int
 main()
 {
     const cv::Size imSize(180, 50);
-    degree_t heading;
+    units::angle::degree_t heading;
     std::vector<std::vector<float>> allDifferences;
 
     {
         std::cout << "Testing with best-matching snapshot method..." << std::endl;
 
         // Default algorithm: find best-matching snapshot, use abs diff
-        PerfectMemory<> pm(imSize);
-        loadSnapshots(pm);
+        PerfectMemoryRotater<> pm(imSize);
+        trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -47,8 +48,8 @@ main()
 
     {
         std::cout << std::endl << "Testing with RMS image difference..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, RMSDiff> pm(imSize);
-        loadSnapshots(pm);
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>> pm(imSize);
+        trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -66,8 +67,8 @@ main()
     {
         constexpr size_t numComp = 3;
         std::cout << std::endl <<  "Testing with " << numComp << " weighted snapshots..." << std::endl;
-        PerfectMemory<WeightSnapshotsDynamic<numComp>> pm(imSize);
-        loadSnapshots(pm);
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, WeightSnapshotsDynamic<numComp>> pm(imSize);
+        trainRoute(pm);
 
         Timer<> t{ "Time taken for testing: " };
 
@@ -86,8 +87,8 @@ main()
     {
         std::cout << std::endl << "Testing with HOG..." << std::endl;
 
-        PerfectMemoryHOG<> pm(imSize);
-        loadSnapshots(pm);
+        PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize);
+        trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -102,4 +103,6 @@ main()
         std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
         std::cout << "Difference score: " << difference << std::endl;
     }
+
+    return EXIT_SUCCESS;
 }

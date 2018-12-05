@@ -7,15 +7,12 @@
 // Windows headers
 #include "os/windows_include.h"
 
-// C++ includes
-#include <chrono>
-#include <iostream>
-#include <thread>
-
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
+#include "common/main.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
@@ -23,17 +20,27 @@
 #include "video/display.h"
 #include "video/netsource.h"
 
+// Standard C++ includes
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <thread>
+
 using namespace BoBRobotics;
 using namespace std::literals;
 
-int main(int argc, char **argv)
+int
+bob_main(int argc, char **argv)
 {
+    // Enable networking on Windows
+    OS::Net::WindowsNetworking::initialise();
+
     std::string robotIP;
     if (argc == 2) {
-        // get robot IP from commandline argument
+        // Get robot IP from command-line argument
         robotIP = argv[1];
     } else {
-        // get robot IP from terminal
+        // Get robot IP from terminal
         std::cout << "Robot IP [127.0.0.1]: ";
         std::getline(std::cin, robotIP);
         if (robotIP.empty()) {
@@ -41,36 +48,37 @@ int main(int argc, char **argv)
         }
     }
 
-    // start networking API on Windows
-    WSAStartup();
+    // Make connection to robot on default port
+    Net::Client client(robotIP);
 
-    // use a separate scope so that socket is closed before WSACleanup is called
-    {
-        // make connection to robot on default port
-        Net::Client client(robotIP);
-        client.runInBackground();
+    // Run client on background thread, catching any exceptions for rethrowing
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals(); // Catch Ctrl-C
+    client.runInBackground();
 
-        // read video stream from network
-        Video::NetSource video(client);
+    // Read video stream from network
+    Video::NetSource video(client);
 
-        // transmit motor commands over network
-        Robots::TankNetSink motor(client);
+    // Transmit motor commands over network
+    Robots::TankNetSink tank(client);
 
-        // add joystick for controlling Tank
-        HID::Joystick joystick;
-        motor.addJoystick(joystick); // send joystick events to motor
+    // Add joystick for controlling robot
+    HID::Joystick joystick;
+    tank.addJoystick(joystick);
 
-        // display video stream
-        Video::Display display(video, 1240, 500);
+    // Display video stream on screen
+    Video::Display display(video, { 1240, 500 });
+    while (display.isOpen()) {
+        // Rethrow any exceptions caught on background thread
+        catcher.check();
 
-        // poll joystick and video stream repeatedly
-        do {
-            if (!joystick.update() && !display.update()) {
-                std::this_thread::sleep_for(50ms);
-            }
-        } while (display.isOpen());
+        // Poll joystick and camera for updates
+        bool joystickUpdate = joystick.update();
+        bool displayUpdate = display.update();
+        if (!joystickUpdate && !displayUpdate) {
+            std::this_thread::sleep_for(50ms);
+        }
     }
 
-    // shutdown networking API on Windows
-    WSACleanup();
+    return EXIT_SUCCESS;
 }

@@ -2,7 +2,6 @@
 #include <iostream>
 
 // Standard C includes
-#include <cassert>
 #include <cmath>
 
 // Common includes

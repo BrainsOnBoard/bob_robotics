@@ -1,20 +1,17 @@
 #pragma once
 
+// BoB robotics includes
+#include "input.h"
+#include "v4l_camera.h"
+
+// OpenCV includes
+#include <opencv2/imgproc/imgproc.hpp>
+
 // Standard C++ includes
 #include <chrono>
 #include <numeric>
 #include <stdexcept>
 #include <thread>
-
-// OpenCV includes
-#include <opencv2/imgproc/imgproc.hpp>
-
-// Common includes
-#include "input.h"
-#include "v4l_camera.h"
-
-// Linux device name
-#define SEE3CAM_DEVICE_NAME "See3CAM_CU40"
 
 /* NEON version of captureSuperPixel - fun but doesn't actually help performance
 // Create tables to use for shuffling BGIR data into BGR
@@ -63,6 +60,9 @@ full of RGB data uint8x16_t out8 = vcombine_u8(outA, outB);
 
 namespace BoBRobotics {
 namespace Video {
+// Linux device name
+constexpr const char *See3CamDeviceName = "See3CAM_CU40";
+
 //------------------------------------------------------------------------
 // BoBRobotics::Video::See3CAM_CU40
 //------------------------------------------------------------------------
@@ -86,41 +86,31 @@ public:
 
     See3CAM_CU40(const std::string &device, Resolution res, bool resetToDefaults = true)
     {
-        if (!open(device, res, resetToDefaults)) {
-            throw std::runtime_error("Cannot open See3CAM_CU40");
-        }
+        open(device, res, resetToDefaults);
     }
 
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
-    virtual const std::string getCameraName() const override
+    virtual std::string getCameraName() const override
     {
         return "see3cam";
     }
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
-        // If outFrame is empty, first make it the appropriate size
-        if (outFrame.cols == 0) {
-            outFrame.create(getSuperPixelSize(), CV_8UC3);
-        }
-        
         // Try to read from camera and throw error if it fails
-        if (!captureSuperPixelWBU30(outFrame)) {
-            throw std::runtime_error("Could not read from See3Cam");
-        }
-
-        // If there's no error, then we have updated frame and so return true
+        outFrame.create(getSuperPixelSize(), CV_8UC3);
+        captureSuperPixelWBU30(outFrame);
         return true;
     }
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
     {
-        if (outFrame.cols == 0) {
-            outFrame.create(getSuperPixelSize(), CV_8UC1);
-        }
-        return captureSuperPixelGreyscale(outFrame);
+        // Try to read from camera and throw error if it fails
+        outFrame.create(getSuperPixelSize(), CV_8UC1);
+        captureSuperPixelGreyscale(outFrame);
+        return true;
     }
 
     virtual cv::Size getOutputSize() const override
@@ -131,7 +121,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool open(const std::string &device,
+    void open(const std::string &device,
               Resolution res,
               bool resetToDefaults = true)
     {
@@ -139,96 +129,80 @@ public:
         m_Resolution = res;
 
         // If camera was opened successfully
-        if (Video4LinuxCamera::open(
-                    device, getWidth(), getHeight(), V4L2_PIX_FMT_Y16)) {
-            // Query camera controls
-            if (!queryControl(V4L2_CID_BRIGHTNESS, m_BrightnessControl) ||
-                !queryControl(V4L2_CID_EXPOSURE_ABSOLUTE, m_ExposureControl)) {
-                return false;
-            }
+        Video4LinuxCamera::open(device, getWidth(), getHeight(), V4L2_PIX_FMT_Y16);
 
-            // If we should reset camera to default settings, do so
-            if (resetToDefaults) {
-                if (!setControlValue(V4L2_CID_BRIGHTNESS,
-                                     m_BrightnessControl.default_value) ||
-                    !setControlValue(V4L2_CID_EXPOSURE_ABSOLUTE,
-                                     m_ExposureControl.default_value)) {
-                    return false;
-                }
-            }
+        // Query camera controls
+        queryControl(V4L2_CID_BRIGHTNESS, m_BrightnessControl);
+        queryControl(V4L2_CID_EXPOSURE_ABSOLUTE, m_ExposureControl);
 
-            return true;
-        } else {
-            return false;
+        // If we should reset camera to default settings, do so
+        if (resetToDefaults) {
+            setControlValue(V4L2_CID_BRIGHTNESS, m_BrightnessControl.default_value);
+            setControlValue(V4L2_CID_EXPOSURE_ABSOLUTE, m_ExposureControl.default_value);
         }
     }
 
-    bool captureSuperPixel(cv::Mat &output)
+    void captureSuperPixel(cv::Mat &output)
     {
-        return captureSuperPixel<PixelScale>(output);
+        captureSuperPixel<PixelScale>(output);
     }
 
-    bool captureSuperPixelClamp(cv::Mat &output)
+    void captureSuperPixelClamp(cv::Mat &output)
     {
-        return captureSuperPixel<PixelClamp>(output);
+        captureSuperPixel<PixelClamp>(output);
     }
 
-    bool captureSuperPixelWBCoolWhite(cv::Mat &output)
+    void captureSuperPixelWBCoolWhite(cv::Mat &output)
     {
-        return captureSuperPixel<WhiteBalanceCoolWhite>(output);
+        captureSuperPixel<WhiteBalanceCoolWhite>(output);
     }
 
-    bool captureSuperPixelWBU30(cv::Mat &output)
+    void captureSuperPixelWBU30(cv::Mat &output)
     {
-        return captureSuperPixel<WhiteBalanceU30>(output);
+        captureSuperPixel<WhiteBalanceU30>(output);
     }
 
-    bool captureSuperPixelGreyscale(cv::Mat &output)
+    void captureSuperPixelGreyscale(cv::Mat &output)
     {
         // Check that output size is suitable for super-pixel output i.e. a
         // quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
-        assert(output.cols == (int) inputWidth / 2);
-        assert(output.rows == (int) inputHeight / 2);
-        assert(output.type() == CV_8UC1);
+        BOB_ASSERT(output.cols == (int) inputWidth / 2);
+        BOB_ASSERT(output.rows == (int) inputHeight / 2);
+        BOB_ASSERT(output.type() == CV_8UC1);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
         void *data = nullptr;
-        uint32_t sizeBytes = 0;
-        if (Video4LinuxCamera::capture(data, sizeBytes)) {
-            // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
-            const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
+        uint32_t sizeBytes = Video4LinuxCamera::capture(data);
 
-            // Loop through bayer pixels
-            for (unsigned int y = 0; y < inputHeight; y += 2) {
-                // Get pointers to start of both rows of Bayer data and output
-                // RGB data
-                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
-                const uint16_t *inR16Start =
-                        &bayerData[((y + 1) * inputWidth) + 1];
-                uint8_t *outStart = output.ptr(y / 2);
-                for (unsigned int x = 0; x < inputWidth; x += 2) {
-                    // Read Bayer pixels
-                    const uint16_t b = *(inBG16Start++);
-                    const uint16_t g = *(inBG16Start++);
-                    const uint16_t r = *inR16Start;
-                    inR16Start += 2;
+        // Check frame size is correct
+        BOB_ASSERT(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+        const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
 
-                    // Add channels together and divide by 3 to take average and
-                    // 4 to rescale from 10-bit per-channel to 8-bit
-                    const uint32_t gray = (b + g + r) / (3 * 4);
+        // Loop through bayer pixels
+        for (unsigned int y = 0; y < inputHeight; y += 2) {
+            // Get pointers to start of both rows of Bayer data and output
+            // RGB data
+            const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+            const uint16_t *inR16Start =
+                    &bayerData[((y + 1) * inputWidth) + 1];
+            uint8_t *outStart = output.ptr(y / 2);
+            for (unsigned int x = 0; x < inputWidth; x += 2) {
+                // Read Bayer pixels
+                const uint16_t b = *(inBG16Start++);
+                const uint16_t g = *(inBG16Start++);
+                const uint16_t r = *inR16Start;
+                inR16Start += 2;
 
-                    // Write back to BGR
-                    *(outStart++) = (uint8_t) gray;
-                }
+                // Add channels together and divide by 3 to take average and
+                // 4 to rescale from 10-bit per-channel to 8-bit
+                const uint32_t gray = (b + g + r) / (3 * 4);
+
+                // Write back to BGR
+                *(outStart++) = (uint8_t) gray;
             }
-
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -242,78 +216,75 @@ public:
 
         // Check validity of mask
         const bool noMask = (mask.cols == 0 && mask.rows == 0);
-        assert(noMask || (mask.cols == (int) (inputWidth / 2) &&
-                          mask.rows == (int) (inputHeight / 2)));
-        assert(noMask || mask.type() == CV_8UC1);
+        BOB_ASSERT(noMask || (mask.cols == (int) (inputWidth / 2) &&
+                              mask.rows == (int) (inputHeight / 2)));
+        BOB_ASSERT(noMask || mask.type() == CV_8UC1);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
         void *data = nullptr;
-        uint32_t sizeBytes = 0;
-        if (Video4LinuxCamera::capture(data, sizeBytes)) {
-            // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
-            const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
+        uint32_t sizeBytes = Video4LinuxCamera::capture(data);
 
-            // Zero a 10-bit RGB histogram for each colour channel
-            unsigned int hist[3][1024];
-            std::fill_n(hist[0], 1024, 0);
-            std::fill_n(hist[1], 1024, 0);
-            std::fill_n(hist[2], 1024, 0);
+        // Check frame size is correct
+        BOB_ASSERT(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+        const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
 
-            // Loop through bayer pixels
-            unsigned int numPixels = 0;
-            for (unsigned int y = 0; y < inputHeight; y += 2) {
-                // Get pointers to start of both rows of Bayer data and output
-                // RGB data
-                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
-                const uint16_t *inR16Start =
-                        &bayerData[((y + 1) * inputWidth) + 1];
-                for (unsigned int x = 0; x < inputWidth; x += 2) {
-                    // Read Bayer pixels
-                    const uint16_t b = *(inBG16Start++);
-                    const uint16_t g = *(inBG16Start++);
-                    const uint16_t r = *inR16Start;
-                    inR16Start += 2;
+        // Zero a 10-bit RGB histogram for each colour channel
+        unsigned int hist[3][1024];
+        std::fill_n(hist[0], 1024, 0);
+        std::fill_n(hist[1], 1024, 0);
+        std::fill_n(hist[2], 1024, 0);
 
-                    // If no mask is in use or this pixel isn't masked
-                    // **NOTE** divide by two as x and y are in terms of Bayer
-                    // pixels
-                    if (noMask || mask.at<uint8_t>(y / 2, x / 2) > 0) {
-                        // Increment histogram bins
-                        hist[0][r]++;
-                        hist[1][g]++;
-                        hist[2][b]++;
+        // Loop through bayer pixels
+        unsigned int numPixels = 0;
+        for (unsigned int y = 0; y < inputHeight; y += 2) {
+            // Get pointers to start of both rows of Bayer data and output
+            // RGB data
+            const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+            const uint16_t *inR16Start =
+                    &bayerData[((y + 1) * inputWidth) + 1];
+            for (unsigned int x = 0; x < inputWidth; x += 2) {
+                // Read Bayer pixels
+                const uint16_t b = *(inBG16Start++);
+                const uint16_t g = *(inBG16Start++);
+                const uint16_t r = *inR16Start;
+                inR16Start += 2;
 
-                        // Increment totals
-                        numPixels++;
-                    }
+                // If no mask is in use or this pixel isn't masked
+                // **NOTE** divide by two as x and y are in terms of Bayer
+                // pixels
+                if (noMask || mask.at<uint8_t>(y / 2, x / 2) > 0) {
+                    // Increment histogram bins
+                    hist[0][r]++;
+                    hist[1][g]++;
+                    hist[2][b]++;
+
+                    // Increment totals
+                    numPixels++;
                 }
             }
-
-            // Check pixel count
-            assert(!noMask || numPixels == (inputWidth * inputHeight / 4));
-
-            // Sum together entropy for each colour channel
-            float entropy = 0.0f;
-            for (unsigned int c = 0; c < 3; c++) {
-                entropy -= std::accumulate(
-                        std::begin(hist[c]),
-                        std::end(hist[c]),
-                        0.0f,
-                        [numPixels](float acc, unsigned int h) {
-                            if (h == 0) {
-                                return acc;
-                            } else {
-                                const float p = (float) h / (float) numPixels;
-                                return acc + (p * std::log(p));
-                            }
-                        });
-            }
-            return entropy;
-        } else {
-            throw std::runtime_error("Cannot read from camera");
         }
+
+        // Check pixel count
+        BOB_ASSERT(!noMask || numPixels == (inputWidth * inputHeight / 4));
+
+        // Sum together entropy for each colour channel
+        float entropy = 0.0f;
+        for (unsigned int c = 0; c < 3; c++) {
+            entropy -= std::accumulate(
+                    std::begin(hist[c]),
+                    std::end(hist[c]),
+                    0.0f,
+                    [numPixels](float acc, unsigned int h) {
+                        if (h == 0) {
+                            return acc;
+                        } else {
+                            const float p = (float) h / (float) numPixels;
+                            return acc + (p * std::log(p));
+                        }
+                    });
+        }
+        return entropy;
     }
 
     // Automatically configure camera exposure and brightness to optimise image
@@ -327,7 +298,7 @@ public:
         int32_t brightness = m_BrightnessControl.minimum;
         int32_t exposure = std::max(m_ExposureControl.minimum,
                                     brightness * brightnessExposureConstant);
-        assert(exposure < m_ExposureControl.maximum);
+        BOB_ASSERT(exposure < m_ExposureControl.maximum);
 
         // Loop until we've
         int32_t previousBrightness = 0;
@@ -347,8 +318,7 @@ public:
             // **NOTE** this is required because of double-buffering in
             // Video4LinuxCamera
             void *data = nullptr;
-            uint32_t sizeBytes = 0;
-            capture(data, sizeBytes);
+            capture(data);
 
             // Calculate image entropy
             const float entropy = calculateImageEntropy(mask);
@@ -378,40 +348,28 @@ public:
         }
     }
 
-    bool setBrightness(int32_t brightness)
+    void setBrightness(int32_t brightness)
     {
-        return setControlValue(
-                V4L2_CID_BRIGHTNESS,
-                std::max(m_BrightnessControl.minimum,
-                         std::min(m_BrightnessControl.maximum, brightness)));
+        setControlValue(V4L2_CID_BRIGHTNESS,
+                        std::max(m_BrightnessControl.minimum,
+                                 std::min(m_BrightnessControl.maximum, brightness)));
     }
 
-    bool setExposure(int32_t exposure)
+    void setExposure(int32_t exposure)
     {
-        return setControlValue(
-                V4L2_CID_EXPOSURE_ABSOLUTE,
-                std::max(m_ExposureControl.minimum,
-                         std::min(m_ExposureControl.maximum, exposure)));
+        setControlValue(V4L2_CID_EXPOSURE_ABSOLUTE,
+                        std::max(m_ExposureControl.minimum,
+                                 std::min(m_ExposureControl.maximum, exposure)));
     }
 
     int32_t getBrightness() const
     {
-        int32_t brightness;
-        if (getControlValue(V4L2_CID_BRIGHTNESS, brightness)) {
-            return brightness;
-        } else {
-            throw std::runtime_error("Cannot get brightness");
-        }
+        return getControlValue(V4L2_CID_BRIGHTNESS);
     }
 
     int32_t getExposure() const
     {
-        int32_t exposure;
-        if (getControlValue(V4L2_CID_EXPOSURE_ABSOLUTE, exposure)) {
-            return exposure;
-        } else {
-            throw std::runtime_error("Cannot get brightness");
-        }
+        return getControlValue(V4L2_CID_EXPOSURE_ABSOLUTE);
     }
 
     unsigned int getWidth() const
@@ -592,50 +550,45 @@ private:
     // Private API
     //------------------------------------------------------------------------
     template<typename T>
-    bool captureSuperPixel(cv::Mat &output)
+    void captureSuperPixel(cv::Mat &output)
     {
         // Check that output size is suitable for super-pixel output i.e. a
         // quarter input size
         const unsigned int inputWidth = getWidth();
         const unsigned int inputHeight = getHeight();
-        assert(output.cols == (int) inputWidth / 2);
-        assert(output.rows == (int) inputHeight / 2);
-        assert(output.type() == CV_8UC3);
+        BOB_ASSERT(output.cols == (int) inputWidth / 2);
+        BOB_ASSERT(output.rows == (int) inputHeight / 2);
+        BOB_ASSERT(output.type() == CV_8UC3);
 
         // Read data and size (in bytes) from camera
         // **NOTE** these pointers are only valid within one frame
         void *data = nullptr;
-        uint32_t sizeBytes = 0;
-        if (Video4LinuxCamera::capture(data, sizeBytes)) {
-            // Check frame size is correct
-            assert(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
-            const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
+        uint32_t sizeBytes = Video4LinuxCamera::capture(data);
 
-            // Loop through bayer pixels
-            for (unsigned int y = 0; y < inputHeight; y += 2) {
-                // Get pointers to start of both rows of Bayer data and output
-                // RGB data
-                const uint16_t *inBG16Start = &bayerData[y * inputWidth];
-                const uint16_t *inR16Start =
-                        &bayerData[((y + 1) * inputWidth) + 1];
-                uint8_t *outRGBStart = output.ptr(y / 2);
-                for (unsigned int x = 0; x < inputWidth; x += 2) {
-                    // Read Bayer pixels
-                    const uint16_t b = *(inBG16Start++);
-                    const uint16_t g = *(inBG16Start++);
-                    const uint16_t r = *inR16Start;
-                    inR16Start += 2;
+        // Check frame size is correct
+        BOB_ASSERT(sizeBytes == (inputWidth * inputHeight * sizeof(uint16_t)));
+        const uint16_t *bayerData = reinterpret_cast<uint16_t *>(data);
 
-                    // Write back to BGR
-                    *(outRGBStart++) = T::getB(r, g, b);
-                    *(outRGBStart++) = T::getG(r, g, b);
-                    *(outRGBStart++) = T::getR(r, g, b);
-                }
+        // Loop through bayer pixels
+        for (unsigned int y = 0; y < inputHeight; y += 2) {
+            // Get pointers to start of both rows of Bayer data and output
+            // RGB data
+            const uint16_t *inBG16Start = &bayerData[y * inputWidth];
+            const uint16_t *inR16Start =
+                    &bayerData[((y + 1) * inputWidth) + 1];
+            uint8_t *outRGBStart = output.ptr(y / 2);
+            for (unsigned int x = 0; x < inputWidth; x += 2) {
+                // Read Bayer pixels
+                const uint16_t b = *(inBG16Start++);
+                const uint16_t g = *(inBG16Start++);
+                const uint16_t r = *inR16Start;
+                inR16Start += 2;
+
+                // Write back to BGR
+                *(outRGBStart++) = T::getB(r, g, b);
+                *(outRGBStart++) = T::getG(r, g, b);
+                *(outRGBStart++) = T::getR(r, g, b);
             }
-
-            return true;
-        } else {
-            return false;
         }
     }
 

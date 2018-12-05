@@ -1,25 +1,25 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/pose.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// OpenGL includes
+#include <GL/glew.h>
+#include <GL/glu.h>
+
 // Standard C++ includes
 #include <array>
 #include <set>
 #include <string>
 #include <vector>
 
-// OpenGL includes
-#include <GL/glew.h>
-#include <GL/glu.h>
-
-// Third-party includes
-#include "../third_party/units.h"
-
 namespace BoBRobotics
 {
 namespace AntWorld
 {
-using namespace units::angle;
-using namespace units::length;
-
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
@@ -30,6 +30,9 @@ using namespace units::length;
  */
 class RouteArdin
 {
+    using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
+
 public:
     RouteArdin(float arrowLength, unsigned int maxRouteEntries);
     RouteArdin(float arrowLength, unsigned int maxRouteEntries, const std::string &filename, bool realign = true);
@@ -45,6 +48,16 @@ public:
     std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(meter_t x, meter_t y, bool error);
+
+    const Vector2<meter_t> &getMinBound()
+    {
+        return m_MinBound;
+    }
+
+    const Vector2<meter_t> &getMaxBound()
+    {
+        return m_MaxBound;
+    }
 
     size_t size() const{ return m_Waypoints.size(); }
 
@@ -73,6 +86,10 @@ private:
     GLuint m_OverlayVAO;
     GLuint m_OverlayPositionVBO;
     GLuint m_OverlayColoursVBO;
+
+    Vector2<meter_t> m_MinBound;
+    Vector2<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
+

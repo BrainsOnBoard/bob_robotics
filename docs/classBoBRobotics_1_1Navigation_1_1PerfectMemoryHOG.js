@@ -1,9 +1,9 @@
 var classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG =
 [
-    [ "PerfectMemoryHOG", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a096bfd6e917bf4d5800ed7800d535abe", null ],
-    [ "addSnapshot", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#ad490809ca62c2be1f99c206571f37065", null ],
-    [ "calcSnapshotDifference", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a4a345b08bd5818210bc8fdc70d4b532a", null ],
-    [ "getNumSnapshots", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#afc0a36cfd390a1ad5847e7abe533fd6e", null ],
-    [ "getSnapshot", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a211e117e31a78fe860e1bf7282c55de9", null ],
-    [ "m_HOGDescriptorSize", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a04428e19b806837c383f29da2972e83c", null ]
+    [ "PerfectMemoryHOG", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a129ceb684a15b932668f565fafc2a8c2", null ],
+    [ "addSnapshot", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a8a2681db5526ee39bf3ccd2ccc94b9b4", null ],
+    [ "calcSnapshotDifference", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a57992878aedd1f49036e145ae6104b5d", null ],
+    [ "getNumSnapshots", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a56d765e5e47b5b2ebf98a398aa74f355", null ],
+    [ "getSnapshot", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#a54c4e8a33fb399b6c9eceaecbe65a5b5", null ],
+    [ "m_HOGDescriptorSize", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryHOG.html#aa766cf1d7f03e2c4be7dbf610c49d3dd", null ]
 ];

@@ -1,20 +1,22 @@
 #pragma once
 
-// C++ includes
-#include <memory>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../robots/tank.h"
+#include "../video/input.h"
+#include "connection.h"
+#include "socket.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "../robots/tank.h"
-#include "../video/input.h"
+// Standard C includes
+#include <cstdint>
 
-// local includes
-#include "node.h"
-#include "socket.h"
+// Standard C++ includes
+#include <exception>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Net {
@@ -23,104 +25,61 @@ namespace Net {
 //----------------------------------------------------------------------------
 /*!
  * \brief A general-purpose TCP server
- * 
+ *
  * To be used with corresponding Client object. Various sink/source-type
  * objects are used for either sending or receiving data to the client.
  */
-class Server : public Node
+class Server
 {
 public:
     //! Create a new server, listening on the specified port
-    Server(int port = Socket::DefaultListenPort)
+    Server(uint16_t port = Connection::DefaultListenPort)
+      : m_ListenSocket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
     {
-        struct sockaddr_in addr;
-        int on = 1;
-
-        m_ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (m_ListenSocket == INVALID_SOCKET) {
-            goto error;
-        }
-
 #ifndef _WIN32
-        if (setsockopt(m_ListenSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-            goto error;
+        int on = 1;
+        if (setsockopt(m_ListenSocket.getHandle(), SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+            throw OS::Net::NetworkError("Could not set socket option");
         }
 #endif
 
+        struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
         addr.sin_port = htons(port);
 
-        if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
-            goto error;
+        if (bind(m_ListenSocket.getHandle(), (const sockaddr *) &addr, (int) sizeof(addr))) {
+            throw OS::Net::NetworkError("Could not bind to socket");
         }
 
-        return;
-
-    error:
-        std::cerr << "Error (" << errno << "): Could not bind to port " << port
-                  << std::endl;
-        exit(1);
-    }
-
-    //! Stop listening and stop background thread
-    virtual ~Server()
-    {
-        stop();
-
-        if (m_ListenSocket != INVALID_SOCKET) {
-            close(m_ListenSocket);
-        }
-    }
-
-    //! Get the socket associated with the current connection
-    Socket *getSocket() const override
-    {
-        return m_Socket.get();
-    }
-
-    /*!
-     * \brief Keep accepting connections and parsing input for ever
-     * 
-     * **NOTE**: Can only handle one connection at a time.
-     */
-    void run() override
-    {
         // Start listening
-        if (listen(m_ListenSocket, 10)) {
-            throw std::runtime_error("Error (" + std::to_string(errno) + "): Could not listen");
+        if (listen(m_ListenSocket.getHandle(), 10)) {
+            throw OS::Net::NetworkError("Error while listening for connection");
         }
+    }
 
-        // for incoming connection
+    Connection waitForConnection() const
+    {
+        // For address of incoming connection
         sockaddr_in addr;
         socklen_t addrlen = sizeof(addr);
 
-        // loop until stopped
-        while (m_DoRun) {
-            // wait for incoming TCP connection
-            std::cout << "Waiting for incoming connection..." << std::endl;
-            m_Socket = std::make_unique<Socket>(accept(m_ListenSocket, (sockaddr *) &addr, &addrlen));
-            m_Socket->send("HEY\n");
-            notifyConnectedHandlers();
+        // Wait for incoming TCP connection
+        std::cout << "Waiting for incoming connection..." << std::endl;
+        Socket socket(accept(m_ListenSocket.getHandle(), (sockaddr *) &addr, &addrlen));
+        socket.send("HEY\n");
 
-            // convert IP to string
-            char saddr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
-            std::cout << "Incoming connection from " << saddr << std::endl;
+        // Convert IP to string
+        char saddr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
+        std::cout << "Incoming connection from " << saddr << std::endl;
 
-            try {
-                Node::run();
-            } catch (SocketError &e) {
-                std::cout << "Connection closed [" + std::string(e.what()) + "]"
-                          << std::endl;
-            }
-        }
+        return Connection(std::move(socket));
     }
 
 private:
-    socket_t m_ListenSocket = INVALID_SOCKET;
-    std::unique_ptr<Socket> m_Socket;
+    const Socket m_ListenSocket;
 };
 } // Net
 } // BoBRobotics

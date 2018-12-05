@@ -1,7 +1,7 @@
 #pragma once
 
-// Standard C includes
-#include <cassert>
+// BoB robotics includes
+#include "assert.h"
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
@@ -47,7 +47,7 @@ public:
     bool update()
     {
         // Check a transition isn't already pending
-        assert(m_NextState == m_InvalidState);
+        BOB_ASSERT(m_NextState == m_InvalidState);
         
         // Set flag to show that current state is being update and update it
         m_Updating = true;
@@ -70,7 +70,7 @@ public:
         // If we're still updating current state
         if(m_Updating) {
             // After checking that there isn't already a transition queued, queue transition
-            assert(m_NextState == m_InvalidState);
+            BOB_ASSERT(m_NextState == m_InvalidState);
             m_NextState = state;
         }
         // Otherwise

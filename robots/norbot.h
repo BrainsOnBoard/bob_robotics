@@ -1,28 +1,31 @@
 #pragma once
 
-// Standard C++ includes
-#include <vector>
+// BoB robotics includes
+#include "../common/i2c_interface.h"
+#include "tank.h"
 
 // Standard C includes
 #include <cmath>
 #include <cstdint>
 
-// Common includes
-#include "../common/i2c_interface.h"
-#include "tank.h"
+// Standard C++ includes
+#include <vector>
 
 // third party includes
 #include "../third_party/units.h"
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
 class Norbot : public Tank
 {
-using millimeter_t = units::length::millimeter_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
 
 public:
     Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
@@ -34,8 +37,17 @@ public:
     //----------------------------------------------------------------------------
     // Tank virtuals
     //----------------------------------------------------------------------------
+    virtual ~Norbot() override
+    {
+        stopMoving();
+        stopReadingFromNetwork();
+    }
+
     virtual void tank(float left, float right) override
     {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
+
         // Cache left and right
         m_Left = left;
         m_Right = right;
@@ -47,14 +59,14 @@ public:
         write(buffer);
     }
 
-    virtual millimeter_t getRobotWheelRadius() override
+    virtual meters_per_second_t getMaximumSpeed() override
     {
-        return WheelRadius;
+        return 11_mps;
     }
 
     virtual millimeter_t getRobotAxisLength() override
     {
-        return AxisLength;
+        return 104_mm;
     }
 
     //----------------------------------------------------------------------------
@@ -99,9 +111,6 @@ private:
     BoBRobotics::I2CInterface m_I2C;
     float m_Left;
     float m_Right;
-
-    static constexpr millimeter_t WheelRadius{ 34 };
-    static constexpr millimeter_t AxisLength{ 104 };
 }; // Norbot
 } // Robots
 } // BoBRobotics

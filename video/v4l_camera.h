@@ -3,11 +3,13 @@
 // Standard C++ includes
 #include <functional>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 // Standard C includes
 #include <cstring>
 
-// Posix includes
+// POSIX includes
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -25,6 +27,15 @@ namespace Video {
 class Video4LinuxCamera
 {
 public:
+    class Error
+      : public std::runtime_error
+    {
+    public:
+        Error(const std::string &msg)
+          : std::runtime_error(msg + " (" + strerror(errno) +")")
+        {}
+    };
+
     Video4LinuxCamera()
       : m_Camera(-1)
       , m_Frame(0)
@@ -37,9 +48,7 @@ public:
                       uint32_t pixelFormat)
       : Video4LinuxCamera()
     {
-        if (!open(device, width, height, pixelFormat)) {
-            throw std::runtime_error("Cannot open camera");
-        }
+        open(device, width, height, pixelFormat);
     }
 
     ~Video4LinuxCamera()
@@ -48,14 +57,14 @@ public:
             // Stop video streaming
             int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             if (ioctl(m_Camera, VIDIOC_STREAMOFF, &type) < 0) {
-                std::cerr << "ERROR: Cannot stop streaming (" << strerror(errno)
+                std::cerr << "Warning: Could not stop streaming (" << strerror(errno)
                           << ")" << std::endl;
             }
 
             // munmap buffers
-            if (munmap(m_Buffer[0], m_BufferInfo[0].length) == -1 ||
-                munmap(m_Buffer[1], m_BufferInfo[1].length) == -1) {
-                std::cerr << "ERROR: Could not free buffers ("
+            if ((m_Buffer[0] && munmap(m_Buffer[0], m_BufferInfo[0].length) == -1) ||
+                (m_Buffer[1] && munmap(m_Buffer[1], m_BufferInfo[1].length) == -1)) {
+                std::cerr << "Warning: Could not free buffers ("
                           << strerror(errno) << ")" << std::endl;
             }
 
@@ -67,36 +76,30 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool open(const std::string &device,
+    void open(const std::string &device,
               unsigned int width,
               unsigned int height,
               uint32_t pixelFormat)
     {
         // Open camera
         if ((m_Camera = ::open(device.c_str(), O_RDWR)) < 0) {
-            return false;
+            throw Error("Could not open camera");
         }
 
         // Query capabilities
         v4l2_capability cap;
         if (ioctl(m_Camera, VIDIOC_QUERYCAP, &cap) < 0) {
-            std::cerr << "ERROR: Cannot query capabilities (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Could not query capabilities");
         }
 
         std::cout << "Opened device: " << cap.card << std::endl;
 
         // Check required capabilities
         if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-            std::cerr << "ERROR: Device cannot capture video ("
-                      << strerror(errno) << ")" << std::endl;
-            return false;
+            throw Error("Device cannot capture video");
         }
         if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-            std::cerr << "ERROR: Device cannot stream (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Device cannot stream");
         }
 
         // Fill format structure
@@ -109,9 +112,7 @@ public:
 
         // Set format
         if (ioctl(m_Camera, VIDIOC_S_FMT, &format) < 0) {
-            std::cerr << "ERROR: Cannot set format (" << strerror(errno) << ")"
-                      << std::endl;
-            return false;
+            throw Error("Cannot set format");
         }
 
         // Fill buffer request structure to request two buffers
@@ -122,9 +123,7 @@ public:
         bufferRequest.count = 2;
 
         if (ioctl(m_Camera, VIDIOC_REQBUFS, &bufferRequest) < 0) {
-            std::cerr << "ERROR: Cannot request buffers (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Cannot request buffers");
         }
 
         // Loop through buffers
@@ -137,9 +136,7 @@ public:
 
             // Query buffers
             if (ioctl(m_Camera, VIDIOC_QUERYBUF, &m_BufferInfo[i]) < 0) {
-                std::cerr << "ERROR: Cannot query buffer (" << strerror(errno)
-                          << ")" << std::endl;
-                return false;
+                throw Error("Cannot query buffer");
             }
 
             std::cout << "Queried " << m_BufferInfo[i].length << " byte buffer"
@@ -157,9 +154,7 @@ public:
                     m_BufferInfo[i].m.offset); // Offset into device 'file'
                                                // where buffer should be mapped
             if (m_Buffer[i] == MAP_FAILED) {
-                std::cerr << "ERROR: Cannot mmap buffer (" << strerror(errno)
-                          << ")" << std::endl;
-                return false;
+                throw Error("Cannot mmap buffer");
             }
 
             // Zero buffer
@@ -169,26 +164,19 @@ public:
         // Start video streaming
         int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (ioctl(m_Camera, VIDIOC_STREAMON, &type) < 0) {
-            std::cerr << "ERROR: Cannot start streaming (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Cannot start streaming");
         }
 
         // Enqueue our buffer onto the device's incoming queue
         if (ioctl(m_Camera, VIDIOC_QBUF, &m_BufferInfo[0]) < 0) {
-            std::cerr << "ERROR: Cannot enqueue buffer (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Cannot enqueue buffer");
         }
 
         // Ensure that frame is zeroed
         m_Frame = 0;
-
-        return true;
     }
 
-    bool enumerateControls(
-            std::function<void(const v4l2_queryctrl &)> processControl)
+    void enumerateControls(std::function<void(const v4l2_queryctrl &)> processControl)
     {
         // Fill control query structure
         v4l2_queryctrl queryControl;
@@ -203,57 +191,45 @@ public:
 
             queryControl.id |= V4L2_CTRL_FLAG_NEXT_CTRL;
         }
-        if (errno == EINVAL) {
-            return true;
-        } else {
-            std::cerr << "ERROR: Cannot query controls (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+        if (errno != EINVAL) {
+            throw Error("Cannot query controls");
         }
     }
 
-    bool queryControl(uint32_t id, v4l2_queryctrl &queryControl)
+    void queryControl(uint32_t id, v4l2_queryctrl &queryControl)
     {
         // Fill control query structure
         memset(&queryControl, 0, sizeof(v4l2_queryctrl));
         queryControl.id = id;
 
-        if (ioctl(m_Camera, VIDIOC_QUERYCTRL, &queryControl) == 0) {
-            return true;
-        } else {
-            std::cerr << "ERROR: Cannot query controls (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+        if (ioctl(m_Camera, VIDIOC_QUERYCTRL, &queryControl) < 0) {
+            throw Error("Cannot query controls");
         }
     }
 
-    bool capture(void *&buffer, uint32_t &sizeBytes)
+    uint32_t capture(void *&buffer)
     {
         // Dequeue this frame's buffer from device's outgoing queue
         if (ioctl(m_Camera, VIDIOC_DQBUF, &m_BufferInfo[m_Frame]) < 0) {
-            std::cerr << "ERROR: Cannot dequeue buffer (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Cannot dequeue buffer");
         }
 
         // Pass out buffer data and length
         buffer = m_Buffer[m_Frame];
-        sizeBytes = m_BufferInfo[m_Frame].length;
+        uint32_t sizebytes = m_BufferInfo[m_Frame].length;
 
         // Increment frame number
         m_Frame = (m_Frame + 1) % 2;
 
         // Enqueue next buffer onto the device's incoming queue
         if (ioctl(m_Camera, VIDIOC_QBUF, &m_BufferInfo[m_Frame]) < 0) {
-            std::cerr << "ERROR: Cannot enqueue buffer (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Cannot enqueue buffer");
         }
 
-        return true;
+        return sizebytes;
     }
 
-    bool getControlValue(uint32_t id, int32_t &value) const
+    int32_t getControlValue(uint32_t id) const
     {
         // Fill control structure
         v4l2_control control;
@@ -262,16 +238,13 @@ public:
 
         // Get control value
         if (ioctl(m_Camera, VIDIOC_G_CTRL, &control) < 0) {
-            std::cerr << "ERROR: Cannot get control value (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
+            throw Error("Cannot get control value");
         } else {
-            value = control.value;
-            return true;
+            return control.value;
         }
     }
 
-    bool setControlValue(uint32_t id, int32_t value)
+    void setControlValue(uint32_t id, int32_t value)
     {
         // Fill control structure
         v4l2_control control;
@@ -281,11 +254,7 @@ public:
 
         // Get control value
         if (ioctl(m_Camera, VIDIOC_S_CTRL, &control) < 0) {
-            std::cerr << "ERROR: Cannot set control value (" << strerror(errno)
-                      << ")" << std::endl;
-            return false;
-        } else {
-            return true;
+            throw Error("Cannot set control value");
         }
     }
 

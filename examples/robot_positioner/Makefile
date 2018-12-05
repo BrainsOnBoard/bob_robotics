@@ -1,23 +1,22 @@
+NO_OPENCV := 1
+WITH_I2C_ROBOT := 1
+include ../../make_common/bob_robotics.mk
 
-CC      = g++
-CFLAGS  = -std=c++14 -pthread `pkg-config --libs --cflags opencv`
-LDFLAGS = 
-SOURCE  = 
+# Ignore spurious gcc warning
+CXXFLAGS += -Wno-maybe-uninitialized
 
+EXECUTABLE := robot_positioner
 
-all: main clean
+.PHONY: all clean
 
-main: main.o
-	$(CC) $(SOURCE) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+all: $(EXECUTABLE)
 
-main.o: main.cpp 
-	$(CC) -c $(CFLAGS) $<
+-include $(EXECUTABLE).d
 
+$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
-.PHONY: clean cleanest
+%d: ;
 
 clean:
-	rm -f *.o
-
-cleanest: clean
-	rm -f main
+	rm -f $(EXECUTABLE) $(EXECUTABLE).d

@@ -1,9 +1,9 @@
+WITH_I2C := 1
+include ../../make_common/bob_robotics.mk
+
 EXECUTABLE      := simulatorVicon
 SOURCES         := simulatorVicon.cc simulatorCommon.cc robotCommon.cc
-LINK_FLAGS      := `pkg-config --libs opencv`
-CXXFLAGS        := `pkg-config --cflags opencv` -pthread -I../..
-CPU_ONLY        =1
-CPP_STANDARD    =c++14
+CPU_ONLY        = 1
 
 ifdef RECORD_ELECTROPHYS
     CXXFLAGS += -DRECORD_ELECTROPHYS

@@ -7,8 +7,8 @@
 #include <limits>
 #include <tuple>
 
-// Standard C includes
-#include <cassert>
+// BoB robotics includes
+#include "../common/assert.h"
 
 // Libantworld includes
 #include "common.h"
@@ -124,13 +124,13 @@ bool RouteContinuous::load(const std::string &filename)
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file:" << filename << std::endl;
+        std::cerr << "Cannot open route file: " << filename << std::endl;
         return false;
     }
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
-    const std::streampos numPoints = input.tellg() / (sizeof(double) * 3);
+    const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
     std::cout << "Route has " << numPoints << " points" << std::endl;
 
@@ -158,7 +158,7 @@ bool RouteContinuous::load(const std::string &filename)
 
     std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
     // Reserve headings
-    const unsigned int numSegments = m_Waypoints.size() - 1;
+    const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);
 
     // Reserve array of cumulative distances
@@ -322,7 +322,7 @@ void RouteContinuous::addPoint(meter_t x, meter_t y, bool error)
     const float position[2] = {(float) x.value(), (float) y.value()};
 
     // Check we haven't run out of buffer space
-    assert(m_RouteNumPoints < m_RouteMaxPoints);
+    BOB_ASSERT(m_RouteNumPoints < m_RouteMaxPoints);
 
     // Update this vertex's colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RouteColourVBO);

@@ -1,4 +1,4 @@
-include ../common/flags.mk
+include ../make_common/bob_robotics.mk
 
 # The current version of the avcodec code uses some deprecated functions, so
 # let's ignore compiler warnings about this. I should probably fix the code up
@@ -11,6 +11,10 @@ $(error Environment variable ARSDK_ROOT must be defined)
 endif
 AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
+
+# We don't want these definitions, because we'll get linking errors if they're
+# defined in whatever's linking against libbebop
+CXXFLAGS += -DNO_HEADER_DEFINITIONS
 
 SOURCES := bebop.cc video.cc
 OBJECTS := $(SOURCES:.cc=.o)

@@ -16,15 +16,13 @@
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::angle;
 
 namespace Internal {
 template<typename T1, typename T2>
-static radian_t
+static auto
 circularMean(const T1 &angles, const T2 &weights)
 {
-    scalar_t sumCos = 0.0;
-    scalar_t sumSin = 0.0;
+    units::dimensionless::scalar_t sumCos = 0.0, sumSin = 0.0;
     for (size_t i = 0; i < angles.size(); i++) {
         sumCos += weights[i] * units::math::cos(angles[i]);
         sumSin += weights[i] * units::math::sin(angles[i]);
@@ -43,7 +41,7 @@ struct BestMatchingSnapshot
     {
         // Get index corresponding to best-matching snapshot
         const auto bestPtr = std::min_element(std::begin(minDifferences), std::end(minDifferences));
-        const size_t bestSnapshot = std::distance(std::begin(minDifferences), bestPtr);
+        const auto bestSnapshot = static_cast<size_t>(std::distance(std::begin(minDifferences), bestPtr));
 
         // If column is > 180 deg, then subtract 360 deg
         int col = bestCols[bestSnapshot];
@@ -52,6 +50,7 @@ struct BestMatchingSnapshot
         }
 
         // Convert to radians
+        using namespace units::angle;
         const radian_t heading = units::make_unit<turn_t>((double) col / (double) unwrapRes.width);
 
         // Normalise to be between 0 and 1
@@ -70,6 +69,8 @@ struct WeightSnapshotsDynamic
                     std::vector<int> &bestCols,
                     std::vector<float> &minDifferences)
     {
+        using namespace units::angle;
+
         // Create vector of indices
         std::vector<size_t> idx(minDifferences.size());
         std::iota(std::begin(idx), std::end(idx), 0);

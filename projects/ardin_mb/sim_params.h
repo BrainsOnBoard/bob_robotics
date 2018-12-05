@@ -20,6 +20,10 @@ namespace SimParams
     constexpr meter_t errorDistance = 20.0_cm;
     constexpr unsigned int testStepLimit = 1000;
 
+    constexpr unsigned int numScanSteps = (unsigned int)(scanAngle / scanStep);
+
+    constexpr unsigned int numVectorFieldSteps = (unsigned int)(360.0_deg / scanStep);
+
     // Rendering parameters
     // What colour should the ground be?
     constexpr float groundColour[] = {0.898f, 0.718f, 0.353f};

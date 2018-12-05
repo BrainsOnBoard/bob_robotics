@@ -1,15 +1,22 @@
 #pragma once
 
-// C++ includes
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../hid/joystick.h"
+#include "../net/connection.h"
+#include "robot.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// Standard C includes
+#include <cmath>
+
+// Standard C++ includes
+#include <algorithm>
+#include <iostream>
 #include <stdexcept>
 #include <string>
-
-// BoB robotics includes
-#include "../hid/joystick.h"
-#include "../net/node.h"
-
-// third party includes
-#include "../third_party/units.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -18,51 +25,148 @@ namespace Robots {
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
 class Tank
+  : public Robot
 {
+    using _meter_t = units::length::meter_t;
+    using _millimeter_t = units::length::millimeter_t;
+    using _meters_per_second_t = units::velocity::meters_per_second_t;
+    using _radians_per_second_t = units::angular_velocity::radians_per_second_t;
+
 public:
-    virtual ~Tank()
-    {}
+    virtual void moveForward(float speed) override
+    {
+        tank(speed, speed);
+    }
+
+    virtual void turnOnTheSpot(float clockwiseSpeed) override
+    {
+        tank(clockwiseSpeed, -clockwiseSpeed);
+    }
+
+    virtual void stopMoving() override
+    {
+        tank(0.f, 0.f);
+    }
 
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
         joystick.addHandler(
-            [this, deadZone](HID::JAxis axis, float value)
-            {
-                return onJoystickEvent(axis, value, deadZone);
-            });
+                [this, deadZone](HID::JAxis axis, float value) {
+                    return onJoystickEvent(axis, value, deadZone);
+                });
+    }
+
+    void controlWithThumbsticks(HID::Joystick &joystick)
+    {
+        joystick.addHandler(
+                [this](HID::JAxis axis, float value) {
+                    static float left{}, right{};
+
+                    switch (axis) {
+                    case HID::JAxis::LeftStickVertical:
+                        left = -value;
+                        break;
+                    case HID::JAxis::RightStickVertical:
+                        right = -value;
+                        break;
+                    default:
+                        return false;
+                    }
+
+                    tank(left, right);
+                    return true;
+                });
     }
 
     void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-              joystick.getState(HID::JAxis::LeftStickVertical), deadZone);
+              joystick.getState(HID::JAxis::LeftStickVertical),
+              deadZone);
     }
 
+    void move(_meters_per_second_t v,
+              _radians_per_second_t clockwiseSpeed,
+              const bool maxScaled = false)
+    {
+        const _meter_t axisLength = getRobotAxisLength();
+        const _meters_per_second_t diff{
+            (clockwiseSpeed * axisLength / 2).value()
+        };
+        const _meters_per_second_t vL = v + diff;
+        const _meters_per_second_t vR = v - diff;
+        tank(vL, vR, maxScaled);
+    }
+
+    //! Set the left and right motors to the specified speed
     virtual void tank(float left, float right)
     {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
         std::cout << "Dummy motor: left: " << left << "; right: " << right
                   << std::endl;
     }
 
-    virtual units::length::millimeter_t getRobotWheelRadius() 
+    void tankMaxScaled(const float left, const float right)
     {
-        throw std::runtime_error("getRobotWheelRadius() is not implemented for this class");
+        const float larger = std::max(std::abs(left), std::abs(right));
+        if (larger <= 1.f) {
+            tank(left, right);
+        } else {
+            tank(left / larger, right / larger);
+        }
     }
 
-    virtual units::length::millimeter_t getRobotAxisLength() 
+    void tank(_meters_per_second_t left, _meters_per_second_t right, bool maxScaled = false)
+    {
+        const _meters_per_second_t maxSpeed = getMaximumSpeed();
+        const auto leftMotor = static_cast<float>(left / maxSpeed);
+        const auto rightMotor = static_cast<float>(right / maxSpeed);
+        if (maxScaled) {
+            tankMaxScaled(leftMotor, rightMotor);
+        } else {
+            tank(leftMotor, rightMotor);
+        }
+    }
+
+    virtual _millimeter_t getRobotAxisLength()
     {
         throw std::runtime_error("getRobotAxisLength() is not implemented for this class");
     }
 
-    void readFromNetwork(Net::Node &node)
+    virtual _meters_per_second_t getMaximumSpeed()
+    {
+        throw std::runtime_error("getMaximumSpeed() is not implemented for this class");
+    }
+
+    virtual _radians_per_second_t getMaximumTurnSpeed()
+    {
+        // max turn speed = v_max / r
+        return _radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<_meter_t>(getRobotAxisLength())).value() };
+    }
+
+    //! Controls the robot with a network stream
+    void readFromNetwork(Net::Connection &connection)
     {
         // handle incoming TNK commands
-        node.addCommandHandler("TNK", [this](Net::Node &node, const Net::Command &command) {
-            onCommandReceived(node, command);
-        });
+        connection.setCommandHandler("TNK",
+            [this](Net::Connection &connection, const Net::Command &command) {
+                onCommandReceived(connection, command);
+            });
+
+        m_Connection = &connection;
+    }
+
+    void stopReadingFromNetwork()
+    {
+        if (m_Connection) {
+            // Ignore TNK commands
+            m_Connection->setCommandHandler("TNK", nullptr);
+        }
     }
 
 private:
+    Net::Connection *m_Connection = nullptr;
     float m_X = 0;
     float m_Y = 0;
 
@@ -81,7 +185,8 @@ private:
             tank(x, -x);
         } else {
             // If length of joystick vector places it in deadZone, stop motors
-            const float r = sqrt((x * x) + (y * y));
+            float r = hypot(x, y);
+            r = std::min(1.f, r);
             const float theta = atan2(x, -y);
             const float twoTheta = 2.0f * theta;
 
@@ -98,7 +203,7 @@ private:
         }
     }
 
-    void onCommandReceived(Net::Node &, const Net::Command &command)
+    void onCommandReceived(Net::Connection &, const Net::Command &command)
     {
         // second space separates left and right parameters
         if (command.size() != 3) {

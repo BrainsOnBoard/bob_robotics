@@ -1,9 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "../net/node.h"
-
-// local includes
+#include "../net/connection.h"
 #include "tank.h"
 
 namespace BoBRobotics {
@@ -15,21 +13,38 @@ namespace Robots {
 class TankNetSink : public Tank
 {
 public:
-    TankNetSink(Net::Node &node)
-      : m_Node(&node)
+    TankNetSink(Net::Connection &connection)
+      : m_Connection(connection)
     {}
 
-    /* Motor command: send TNK command over TCP */
-    void tank(float left, float right) override
+    virtual ~TankNetSink()
     {
+        try {
+            stopMoving();
+        } catch (OS::Net::NetworkError &e) {
+            std::cerr << "Warning: Caught exception while trying to send command: "
+                      << e.what() << std::endl;
+        } catch (Net::SocketClosedError &) {
+            // Socket has already been cleanly closed
+        }
+
+        stopReadingFromNetwork();
+    }
+
+    //! Motor command: send TNK command over TCP
+    virtual void tank(float left, float right) override
+    {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
+
         // don't send a command if it's the same as the last one
         if (left == m_OldLeft && right == m_OldRight) {
             return;
         }
 
         // send steering command
-        m_Node->getSocket()->send("TNK " + std::to_string(left) + " " +
-                                  std::to_string(right) + "\n");
+        m_Connection.getSocketWriter().send("TNK " + std::to_string(left) + " " +
+                                            std::to_string(right) + "\n");
 
         // store current left/right values to compare next time
         m_OldLeft = left;
@@ -37,7 +52,7 @@ public:
     }
 
 private:
-    Net::Node *m_Node;
+    Net::Connection &m_Connection;
     float m_OldLeft = 0, m_OldRight = 0;
 };
 }

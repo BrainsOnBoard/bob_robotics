@@ -1,40 +1,40 @@
 #pragma once
 
-// Standard C includes
-#include <cmath>
-#include <cstdio>
-#include <cstring>
+// BoB robotics includes
+#include "tank.h"
 
-// POSIX includes
-#ifdef _WIN32
-#include <winsock2.h>
-#else
+// POSIX networking includes
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#endif
 
-// BoB robotics includes
-#include "tank.h"
+// Standard C includes
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
 /*!
  * \brief An interface for Active Robots' Surveyor line of robots
- * 
+ *
  * See https://www.active-robots.com/surveyor-rover.html
  */
 class Surveyor : public Tank
 {
+    using millimeter_t = units::length::millimeter_t;
+
 public:
-    Surveyor(const std::string &address, unsigned int port) :
-        m_robotWheelRadius(19_mm),
-        m_robotAxisLength(150_mm)
+    Surveyor(const std::string &address, uint16_t port)
     {
         // Create socket
         m_Socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -57,8 +57,11 @@ public:
         }
     }
 
-    ~Surveyor()
+    virtual ~Surveyor() override
     {
+        stopMoving();
+        stopReadingFromNetwork();
+
         if (m_Socket > 0) {
             close(m_Socket);
         }
@@ -69,9 +72,8 @@ public:
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) override
     {
-        // Clamp left and right within normalised range
-        left = std::min(1.0f, std::max(-1.0f, left));
-        right = std::min(1.0f, std::max(-1.0f, right));
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
 
         // Scale and convert to int
         int leftInt = (int) std::round(left * 100.0f);
@@ -87,14 +89,9 @@ public:
         }
     }
 
-    virtual millimeter_t getRobotWheelRadius() override
-    {
-        return m_robotWheelRadius;
-    }
-
     virtual millimeter_t getRobotAxisLength() override
     {
-        return m_robotAxisLength;
+        return 150_mm;
     }
 
 private:
@@ -102,8 +99,6 @@ private:
     // Private members
     //----------------------------------------------------------------------------
     int m_Socket;
-    millimeter_t m_robotWheelRadius;
-    millimeter_t m_robotAxisLength;
 }; // Surveyor
 } // Robots
 } // BoBRobotics

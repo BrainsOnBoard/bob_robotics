@@ -1,24 +1,30 @@
+WITH_LIBANTWORLD := 1
 WITH_MATPLOTLIBCPP := 1
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
-EXECUTABLE := perfect_memory_test
+.PHONY: all clean libantworld
 
-.PHONY: all clean
+all: perfect_memory_test perfect_memory_antworld_test plot_ridf
 
-all: $(EXECUTABLE) plot_ridf
+-include perfect_memory_test.d
 
--include $(EXECUTABLE).d
+perfect_memory_test: perfect_memory_test.cc perfect_memory_test.d libantworld
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
-	$(CXX) -o $(EXECUTABLE) $(EXECUTABLE).cc $(CXXFLAGS) $(LINK_FLAGS)
+-include perfect_memory_antworld_test.d
+
+perfect_memory_antworld_test: perfect_memory_antworld_test.cc perfect_memory_antworld_test.d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 -include plot_ridf.d
 
 plot_ridf: plot_ridf.cc plot_ridf.d
-	$(CXX) -o plot_ridf plot_ridf.cc $(CXXFLAGS) $(LINK_FLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+libantworld:
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
 
 %.d: ;
 
 clean:
-	rm -f $(EXECUTABLE) plot_ridf *.d
+	rm -f perfect_memory_test perfect_memory_antworld_test plot_ridf *.d

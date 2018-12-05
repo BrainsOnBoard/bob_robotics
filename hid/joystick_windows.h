@@ -45,7 +45,7 @@ using JAxis = JAxisWindows;
 
 /*!
  * \brief Controller buttons (Windows)
- * 
+ *
  * The left stick and right stick are also buttons (you can click them).
  */
 enum class JButtonWindows
@@ -68,7 +68,7 @@ using JButton = JButtonWindows;
 
 /*!
  * \brief Class for reading from joysticks on Windows.
- * 
+ *
  * *NOTE*: This class should not be used directly; see example in joystick_test.
  */
 class JoystickWindows : public JoystickBase<JAxisWindows, JButtonWindows>
@@ -89,6 +89,11 @@ public:
 
         // Set initial axis states
         updateAxes(state, true);
+    }
+
+    virtual ~JoystickWindows() override
+    {
+        stop();
     }
 
     //------------------------------------------------------------------------

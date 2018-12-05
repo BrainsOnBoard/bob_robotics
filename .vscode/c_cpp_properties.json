@@ -6,8 +6,9 @@
                 "${workspaceFolder}/**",
                 "${GENN_PATH}/lib/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
-                "/usr/include/python*",
-                "/usr/lib/python*/site-packages/numpy/core/include"
+                "/usr/include/python3.7m",
+                "/usr/lib/python3.7/site-packages/numpy/core/include",
+                "/usr/include/eigen3"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

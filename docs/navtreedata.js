@@ -63,6 +63,7 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
+        [ "Functions", "globals_func.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -72,18 +73,19 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classBoBRobotics_1_1LM9DS1.html#a9fc631db1d442a55bd096cf7a0578f78a47aeb943589019f143b481c1fffaedda",
-"classBoBRobotics_1_1Video_1_1NetSource.html#ac26041de5ba10e51c500e82742c924c5",
-"group__UnitMath.html#ga3e417de9376e1fc58cd07a8465c7e9c6",
-"structmatplotlibcpp_1_1select__npy__type_3_01int64__t_01_4.html",
-"units_8h.html#a10e7ba7719edeceef1294c640914e7b8",
-"units_8h.html#a32b711a1515d642038124088925beb37",
-"units_8h.html#a51186a83525ce332289ef3eff2d7313c",
-"units_8h.html#a71999c1b6e5f5e3635cf0f81bad8fe68",
-"units_8h.html#a91502d8fd717c4f8977da642b1b00e12",
-"units_8h.html#ab09ab48b40986f3170b42fc527b7dd96",
-"units_8h.html#ad0a18801bb11ecdda480ff98b00ad7db",
-"units_8h.html#af021d6a1c707638eb61a666ee52f53df"
+"classBoBRobotics_1_1LM9DS1.html#a9fc631db1d442a55bd096cf7a0578f78ab35fb9c77f2c972149705d508c11f1fc",
+"classBoBRobotics_1_1Video_1_1Display.html#a5c92b075e1a5003dc45a7f2b2f9d4717",
+"definitions_8h.html#a988e7742a77495306c8eb2554f57b2bd",
+"runner_8cc.html#a7269302b00100d2a1a742accce900bdc",
+"units_8h.html#a0567f011e36feee9e573048ac6ba17b5",
+"units_8h.html#a2655035f888f034aded9d5ee54ab6172",
+"units_8h.html#a449b0d62700bba9dee2f5e7addb94d62",
+"units_8h.html#a632fe8f2d069cd95dc82a1275a7f6c94",
+"units_8h.html#a83577f33e97ef9ea03d7f3260cb3f531",
+"units_8h.html#aa170d73c1be11fa66c270e4b85f709da",
+"units_8h.html#ac42c3bdfbaeab8630c72d4caba7227c0",
+"units_8h.html#ae30fda45439091c7fa81ee0dc0fa0526",
+"units_8h.html#ga0b889fb67e25ae0657813221eb9cc67b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

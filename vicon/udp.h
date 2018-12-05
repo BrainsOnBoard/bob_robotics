@@ -1,5 +1,11 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
+#include "../common/stopwatch.h"
+#include "../os/net.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
@@ -7,35 +13,14 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
-
-// Standard C includes
-#include <cassert>
-#include <cstring>
-
-// Networking includes
-#ifdef _WIN32
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
-    #include <sys/types.h>
-    #include <unistd.h>
-#endif
-
-// BoB robotics includes
-#include "../common/pose.h"
 
 namespace BoBRobotics
 {
 namespace Vicon
 {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
-using namespace units::time;
-using namespace units::velocity;
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
@@ -43,6 +28,9 @@ using namespace units::velocity;
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
@@ -69,19 +57,29 @@ public:
         m_Attitude[2] = roll;
     }
 
+    auto getElapsedTime() const
+    {
+        return m_ElapsedTime;
+    }
+
+    void setElapsedTime(const Stopwatch::Duration elapsed)
+    {
+        m_ElapsedTime = elapsed;
+    }
+
     uint32_t getFrameNumber() const
     {
         return m_FrameNumber;
     }
 
     template <class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude()
+    Vector3<AngleUnit> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
@@ -91,6 +89,7 @@ private:
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
+    Stopwatch::Duration m_ElapsedTime;
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
 };
@@ -101,6 +100,11 @@ private:
 //! Object data class which also calculate (un-filtered) velocity
 class ObjectDataVelocity : public ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+    using millisecond_t = units::time::millisecond_t;
+
 public:
     ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
     {}
@@ -166,11 +170,9 @@ class UDPClient
 {
 public:
     UDPClient(){}
-    UDPClient(unsigned int port)
+    UDPClient(uint16_t port)
     {
-        if(!connect(port)) {
-            throw std::runtime_error("Cannot connect");
-        }
+        connect(port);
     }
 
     virtual ~UDPClient()
@@ -185,13 +187,12 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(unsigned int port)
+    void connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
-            std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot open socket");
         }
 
         // Set socket to have 1s read timeout
@@ -204,8 +205,7 @@ public:
         timeout.tv_usec = 0;
 #endif
         if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
-            std::cerr << "Cannot set socket timeout: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot set socket timeout");
         }
 
         // Create socket address structure
@@ -217,14 +217,12 @@ public:
 
         // Bind socket to local port
         if(bind(socket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) < 0) {
-            std::cerr << "Cannot bind socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot bind socket");
         }
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
         m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
-        return true;
     }
 
     unsigned int getNumObjects()
@@ -237,7 +235,9 @@ public:
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
         if(id < m_ObjectData.size()) {
-            return m_ObjectData[id];
+            auto data = m_ObjectData[id].first;
+            data.setElapsedTime(m_ObjectData[id].second.elapsed());
+            return data;
         }
         else {
             throw std::runtime_error("Invalid object id: " + std::to_string(id));
@@ -256,24 +256,27 @@ private:
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
 
         // If no object data structure has been created for this ID, add one
-        if(id >= m_ObjectData.size()) {
+        if (id >= m_ObjectData.size()) {
             m_ObjectData.resize(id + 1);
         }
+        m_ObjectData[id].second.start();
 
         /*
          * Update object data with position and attitude.
-         * 
+         *
          * Note that we reorder the rotation angles we get from the Vicon system
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).
          */
-        m_ObjectData[id].update(frameNumber,
-                                units::make_unit<millimeter_t>(position[0]),
-                                units::make_unit<millimeter_t>(position[1]),
-                                units::make_unit<millimeter_t>(position[2]),
-                                units::make_unit<radian_t>(attitude[2]),
-                                units::make_unit<radian_t>(attitude[0]),
-                                units::make_unit<radian_t>(attitude[1]));
+        using namespace units::length;
+        using namespace units::angle;
+        m_ObjectData[id].first.update(frameNumber,
+                                      millimeter_t(position[0]),
+                                      millimeter_t(position[1]),
+                                      millimeter_t(position[2]),
+                                      radian_t(attitude[2]),
+                                      radian_t(attitude[0]),
+                                      radian_t(attitude[1]));
     }
 
     void readThread(int socket)
@@ -286,7 +289,7 @@ private:
         for(unsigned int f = 0; !m_ShouldQuit; f++) {
             // Read datagram
             const ssize_t bytesReceived = recvfrom(socket, &buffer[0], 1024,
-                                                   0, NULL, NULL);
+                                                   0, nullptr, nullptr);
 
             // If there was an error
             if(bytesReceived == -1) {
@@ -296,8 +299,7 @@ private:
                 }
                 // Otherwise, display error and stop
                 else {
-                    std::cerr << "Cannot read datagram: " << strerror(errno) << std::endl;
-                    break;
+                    throw OS::Net::NetworkError("Cannot read datagram");
                 }
             }
             // Otherwise, if data was received
@@ -318,7 +320,7 @@ private:
                     // Read size of item
                     uint16_t itemDataSize;
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
-                    assert(itemDataSize == 72);
+                    BOB_ASSERT(itemDataSize == 72);
 
                     // Read object position
                     Vector3<double> position;
@@ -349,7 +351,7 @@ private:
     void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;
-    std::vector<ObjectDataType> m_ObjectData;
+    std::vector<std::pair<ObjectDataType, Stopwatch>> m_ObjectData;
 };
 } // namespace Vicon
 } // BoBRobotics
