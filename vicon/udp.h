@@ -226,7 +226,7 @@ public:
         return m_ObjectData.at(id).first;
     }
 
-    auto timeSinceLastPacket(unsigned int objectId) const
+    auto timeSinceLastPacket(unsigned int objectId)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
         return m_ObjectData.at(objectId).second.elapsed();

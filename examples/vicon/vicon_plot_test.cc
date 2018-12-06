@@ -40,7 +40,7 @@ main()
         plt::figure(1);
         const auto data = vicon.getObjectData(0);
         plotAgent(data, { -2500, 2500 }, { -2500, 2500 });
-        if (data.getElapsedTime() > 500ms) {
+        if (vicon.timeSinceLastPacket(0) > 500ms) {
             if (!warningGiven) {
                 std::cerr << "Warning: Object is out of range" << std::endl;
                 warningGiven = true;
