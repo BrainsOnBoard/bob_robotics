@@ -57,16 +57,6 @@ public:
         m_Attitude[2] = roll;
     }
 
-    auto getElapsedTime() const
-    {
-        return m_ElapsedTime;
-    }
-
-    void setElapsedTime(const Stopwatch::Duration elapsed)
-    {
-        m_ElapsedTime = elapsed;
-    }
-
     uint32_t getFrameNumber() const
     {
         return m_FrameNumber;
@@ -89,7 +79,6 @@ private:
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
-    Stopwatch::Duration m_ElapsedTime;
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
 };
@@ -234,14 +223,13 @@ public:
     ObjectDataType getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        if(id < m_ObjectData.size()) {
-            auto data = m_ObjectData[id].first;
-            data.setElapsedTime(m_ObjectData[id].second.elapsed());
-            return data;
-        }
-        else {
-            throw std::runtime_error("Invalid object id: " + std::to_string(id));
-        }
+        return m_ObjectData.at(id).first;
+    }
+
+    auto timeSinceLastPacket(unsigned int objectId) const
+    {
+        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        return m_ObjectData.at(objectId).second.elapsed();
     }
 
 private:
