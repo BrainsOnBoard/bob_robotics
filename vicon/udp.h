@@ -13,7 +13,6 @@
 #include <mutex>
 #include <string>
 #include <thread>
-#include <utility>
 #include <vector>
 
 namespace BoBRobotics
@@ -45,6 +44,9 @@ public:
     void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
+        // Log the time when this packet was received
+        m_ReceivedTimer.start();
+
         // Cache frame number
         m_FrameNumber = frameNumber;
 
@@ -74,6 +76,8 @@ public:
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
 
+    auto timeSinceReceived() const { return m_ReceivedTimer.elapsed(); }
+
 private:
     //----------------------------------------------------------------------------
     // Members
@@ -81,6 +85,7 @@ private:
     uint32_t m_FrameNumber;
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
+    Stopwatch m_ReceivedTimer;
 };
 
 //----------------------------------------------------------------------------
@@ -104,7 +109,10 @@ public:
     void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
-        const Vector3<millimeter_t> position {x, y, z};
+        // Superclass
+        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
+
+        const Vector3<millimeter_t> position{ x, y, z };
         constexpr millisecond_t frameS = 10_ms;
         constexpr millisecond_t smoothingS = 30_ms;
 
@@ -132,9 +140,6 @@ public:
         std::transform(std::begin(instVelocity), std::end(instVelocity),
                        std::begin(m_Velocity), std::begin(m_Velocity),
                        smoothVelocity);
-
-        // Superclass
-        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
     template <class VelocityUnit = meters_per_second_t>
@@ -223,13 +228,7 @@ public:
     ObjectDataType getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        return m_ObjectData.at(id).first;
-    }
-
-    auto timeSinceLastPacket(unsigned int objectId)
-    {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        return m_ObjectData.at(objectId).second.elapsed();
+        return m_ObjectData.at(id);
     }
 
 private:
@@ -247,7 +246,6 @@ private:
         if (id >= m_ObjectData.size()) {
             m_ObjectData.resize(id + 1);
         }
-        m_ObjectData[id].second.start();
 
         /*
          * Update object data with position and attitude.
@@ -258,13 +256,13 @@ private:
          */
         using namespace units::length;
         using namespace units::angle;
-        m_ObjectData[id].first.update(frameNumber,
-                                      millimeter_t(position[0]),
-                                      millimeter_t(position[1]),
-                                      millimeter_t(position[2]),
-                                      radian_t(attitude[2]),
-                                      radian_t(attitude[0]),
-                                      radian_t(attitude[1]));
+        m_ObjectData[id].update(frameNumber,
+                                millimeter_t(position[0]),
+                                millimeter_t(position[1]),
+                                millimeter_t(position[2]),
+                                radian_t(attitude[2]),
+                                radian_t(attitude[0]),
+                                radian_t(attitude[1]));
     }
 
     void readThread(int socket)
@@ -339,7 +337,7 @@ private:
     void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;
-    std::vector<std::pair<ObjectDataType, Stopwatch>> m_ObjectData;
+    std::vector<ObjectDataType> m_ObjectData;
 };
 } // namespace Vicon
 } // BoBRobotics
