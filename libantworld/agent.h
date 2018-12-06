@@ -77,11 +77,71 @@ public:
         return Video::OpenGL::readFrame(frame);
     }
 
+    static auto initialiseWindow(const cv::Size &size)
+    {
+        // Set GLFW error callback
+        glfwSetErrorCallback(handleGLFWError);
+
+        // Initialize the library
+        if (!glfwInit()) {
+            throw std::runtime_error("Failed to initialize GLFW");
+        }
+
+        // Prevent window being resized
+        glfwWindowHint(GLFW_RESIZABLE, false);
+
+        GLFWwindow *ptr = glfwCreateWindow(size.width, size.height, "Ant world", nullptr, nullptr);
+        if (!ptr) {
+            glfwTerminate();
+            throw std::runtime_error("Failed to create window");
+        }
+
+        // Wrap in a unique_ptr so we can free it properly when we're done
+        std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow *)>> window(ptr, &glfwDestroyWindow);
+
+        // Make the window's context current
+        glfwMakeContextCurrent(window.get());
+
+        // Initialize GLEW
+        if (glewInit() != GLEW_OK) {
+            throw std::runtime_error("Failed to initialize GLEW");
+        }
+
+        // Enable VSync
+        glfwSwapInterval(1);
+
+        glDebugMessageCallback(handleGLError, nullptr);
+
+        // Set clear colour to match matlab and enable depth test
+        glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+        glEnable(GL_DEPTH_TEST);
+        glLineWidth(4.0);
+        glPointSize(4.0);
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
+        glEnable(GL_TEXTURE_2D);
+
+        return window;
+    }
+
 private:
     Vector3<degree_t> m_Attitude{{ 0_deg, 0_deg, 0_deg }};
     Vector3<meter_t> m_Position{{ 0_m, 0_m, 0_m }};
     Renderer &m_Renderer;
     GLFWwindow *m_Window;
+
+    static void handleGLFWError(int errorNumber, const char *message)
+    {
+        throw std::runtime_error("GLFW error number: " + std::to_string(errorNumber) + ", message:" + message);
+    }
+
+    static void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+    {
+        throw std::runtime_error(message);
+    }
+
 }; // AntAgent
 } // AntWorld
 } // BoBRobotics
