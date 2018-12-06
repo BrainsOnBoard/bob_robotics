@@ -31,57 +31,24 @@ public:
 };
 IMPLEMENT_MODEL(PoissonInput);
 
-//---------------------------------------------------------------------------
-// Standard LIF model extended to take an additional
-// input current from an extra global variable
-//---------------------------------------------------------------------------
-class LIFExtCurrent : public NeuronModels::Base
+class ExpStaticGraded : public WeightUpdateModels::Base
 {
 public:
-    DECLARE_MODEL(LIFExtCurrent, 7, 2);
+    DECLARE_WEIGHT_UPDATE_MODEL(ExpStaticGraded, 3, 1, 0, 0);
 
-    SET_SIM_CODE(
-        "if ($(RefracTime) <= 0.0) {\n"
-        "   scalar Iext = 0.0f;\n"
-        "   if($(Iext) != NULL) {\n"
-        "       Iext = $(IextScale) * $(Iext)[$(id)];\n"
-        "   }\n"
-        "   scalar alpha = (($(Isyn) + Iext) * $(Rmembrane)) + $(Vrest);\n"
-        "   $(V) = alpha - ($(ExpTC) * (alpha - $(V)));\n"
-        "}\n"
-        "else {\n"
-        "  $(RefracTime) -= DT;\n"
-        "}\n");
+    SET_PARAM_NAMES({"Vmid", "Vslope", "Vthresh"});
+    SET_VARS({{"g", "scalar"}});
 
-    SET_THRESHOLD_CONDITION_CODE("$(RefracTime) <= 0.0 && $(V) >= $(Vthresh)");
+    SET_EVENT_CODE("$(addToInSyn, DT * $(g) * max(0.0, 1.0 / (1.0 + exp(($(Vmid) - $(V_pre)) / $(Vslope)))));\n");
 
-    SET_RESET_CODE(
-        "$(V) = $(Vreset);\n"
-        "$(RefracTime) = $(TauRefrac);\n");
-
-    SET_PARAM_NAMES({
-        "C",            // 0 -Membrane capacitance
-        "TauM",         // 1 - Membrane time constant [ms]
-        "Vrest",        // 2 - Resting membrane potential [mV]
-        "Vreset",       // 3 - Reset voltage [mV]
-        "Vthresh",      // 4 - Spiking threshold [mV]
-        "TauRefrac",    // 5 - Refractory time [ms]
-        "IextScale"});  // 6 - Scaling factor to apply to external current
-
-    SET_DERIVED_PARAMS({
-        {"ExpTC", [](const vector<double> &pars, double dt){ return std::exp(-dt / pars[1]); }},
-        {"Rmembrane", [](const vector<double> &pars, double){ return  pars[1] / pars[0]; }}});
-
-    SET_VARS({{"V", "scalar"}, {"RefracTime", "scalar"}});
-
-    SET_EXTRA_GLOBAL_PARAMS({{"Iext", "float*"}});
+    SET_EVENT_THRESHOLD_CONDITION_CODE("$(V_pre) > $(Vthresh)");
 };
-IMPLEMENT_MODEL(LIFExtCurrent);
+IMPLEMENT_MODEL(ExpStaticGraded);
 
 void modelDefinition(NNmodel &model)
 {
     GENN_PREFERENCES::autoInitSparseVars = true;
-    GENN_PREFERENCES::defaultVarMode = VarMode::LOC_DEVICE_INIT_DEVICE;
+    GENN_PREFERENCES::defaultVarMode = VarMode::LOC_HOST_DEVICE_INIT_DEVICE;
 
     initGeNN();
     model.setDT(MBParams::timestepMs);
@@ -110,6 +77,15 @@ void modelDefinition(NNmodel &model)
         -60.0,                              // 3 - Vreset
         -50.0,                              // 4 - Vthresh
         0.0,                                // 5 - Ioffset
+        1.0);                               // 6 - TauRefrac
+
+    GeNNModels::LIF::ParamValues ggnParams(
+        0.2,                                // 0 - C
+        20.0,                               // 1 - TauM
+        -60.0,                              // 2 - Vrest
+        -60.0,                              // 3 - Vreset
+        10000.0,                            // 4 - Vthresh
+        0.0,                                // 5 - Ioffset
         2.0);                               // 6 - TauRefrac
 
     // LIF initial conditions
@@ -131,10 +107,18 @@ void modelDefinition(NNmodel &model)
     GeNNModels::ExpCurr::ParamValues kcToENPostsynapticParams(
         8.0);   // 0 - Synaptic time constant (ms)
 
+    // **TODO** experiment with tuning these
+    GeNNModels::ExpCurr::ParamValues kcToGGNPostsynapticParams(
+        5.0);   // 0 - Synaptic time constant (ms)
+
+    GeNNModels::ExpCurr::ParamValues ggnToKCPostsynapticParams(
+        4.0);   // 0 - Synaptic time constant (ms)
+
     //---------------------------------------------------------------------------
     // Weight update model parameters
     //---------------------------------------------------------------------------
     WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(MBParams::pnToKCWeight);
+    WeightUpdateModels::StaticPulse::VarValues kcToGGNWeightUpdateParams(MBParams::kcToGGNWeight);
 
     GeNNModels::STDPDopamine::ParamValues kcToENWeightUpdateParams(
         15.0,                       // 0 - Potentiation time constant (ms)
@@ -151,10 +135,17 @@ void modelDefinition(NNmodel &model)
         0.0,                        // Synaptic tag
         0.0);                       // Time of last synaptic tag update
 
+    ExpStaticGraded::ParamValues ggnToKCWeightUpdateParams(
+        -40.0,  // 0 - Vmid
+        2.0,    // 1 - Vslope
+        -60.0); // 2 - Vthresh
+    ExpStaticGraded::VarValues ggnToKCWeightUpdateInit(MBParams::ggnToKCWeight);
+
     // Create neuron populations
     auto pn = model.addNeuronPopulation<PoissonInput>("PN", MBParams::numPN, pnParams, pnInit);
     auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
     auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+    model.addNeuronPopulation<GeNNModels::LIF>("GGN", 1, ggnParams, lifInit);
     pn->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
     pn->setVarMode("rate", VarMode::LOC_HOST_DEVICE_INIT_HOST);
     pn->setVarMode("timeStepToSpike", VarMode::LOC_HOST_DEVICE_INIT_HOST);
@@ -173,6 +164,17 @@ void modelDefinition(NNmodel &model)
         kcToENWeightUpdateParams, kcToENWeightUpdateInitVars,
         kcToENPostsynapticParams, {});
 
+    model.addSynapsePopulation<WeightUpdateModels::StaticPulse, GeNNModels::ExpCurr>(
+        "kcToGGN", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
+        "KC", "GGN",
+        {}, kcToGGNWeightUpdateParams,
+        kcToGGNPostsynapticParams, {});
+
+    model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
+        "ggnToKC", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
+        "GGN","KC",
+        ggnToKCWeightUpdateParams, ggnToKCWeightUpdateInit,
+        ggnToKCPostsynapticParams, {});
 
     // Calculate max connections
     const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(MBParams::numPN, MBParams::numKC,

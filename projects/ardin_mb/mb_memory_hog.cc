@@ -117,11 +117,11 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
                    {
                        return f / magnitude;
                    });*/
-    std::cout << "HOG feature magnitude:" << magnitude << std::endl;
+    //std::cout << "HOG feature magnitude:" << magnitude << std::endl;
 
     // Copy HOG features into GeNN variable
     std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), ratePN);
-
+    std::fill_n(timeStepToSpikePN, MBParams::numPN, 0.0f);
 #ifndef CPU_ONLY
     pushPNStateToDevice();
 #endif
@@ -153,7 +153,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     while(iT < endTimestep) {
         // If we should stop presenting image
         if(iT == endPresentTimestep) {
-            std::fill_n(ratePN, MBParams::numPN, 0.0001f);
+            std::fill_n(timeStepToSpikePN, MBParams::numPN, 1000000.0f);
+
 #ifndef CPU_ONLY
             pushPNStateToDevice();
 #endif

@@ -29,16 +29,22 @@ namespace MBParams
 
     // Scale applied to convert image data to input rates for PNs
     // **NOTE** manually tuned to get approximately 50% PN activation
-    constexpr double inputRateScale = 3000.0;
+    constexpr double inputRateScale = 30000.0;
 
     // Weight of static synapses between PN and KC populations
     // **NOTE** manually tuend to get approximately 200/20000 KC firing sparsity
     //constexpr double pnToKCWeight = 0.0525;// 0.0705;
-    constexpr double pnToKCWeight = 0.0275;
+    constexpr double pnToKCWeight = 0.025;
 
     // Initial/maximum weight of plastic synapses between KC and EN populations
     // **NOTE** note manually tuned to get 15-20 spikes for a novel image
-    constexpr double kcToENWeight = 0.6;
+    constexpr double kcToENWeight = 0.2;
+
+    // **NOTE** manually tuned to result in a maximum depolarization of 20mv (peak membrane voltage of -40mv)
+    constexpr double kcToGGNWeight = 0.01;
+
+    // **NOTE** manually tuned to normalize number of active KCs
+    constexpr double ggnToKCWeight = -1.905;
 
     // Time constant of dopamine
     constexpr double tauD = 20.0;

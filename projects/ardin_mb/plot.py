@@ -5,7 +5,7 @@ import numpy as np
 stimuli_time = 40 + 200
 num_stimuli = 1
 duration_ms = stimuli_time * num_stimuli
-num_pn = 36 * 10
+num_pn = 108
 num_kc = 20000
 num_en = 1
 plot_synapse = False
@@ -61,11 +61,11 @@ with open("pn_spikes.csv", "rb") as pn_spikes_file, \
         start_time = i * stimuli_time
         end_time = start_time + stimuli_time
 
-        pn_spike_mask = (pn_spike_times >= start_time) & (pn_spike_times < end_time)
-        kc_spike_mask = (kc_spike_times >= start_time) & (kc_spike_times < end_time)
+        ##pn_spike_mask = (pn_spike_times >= start_time) & (pn_spike_times < end_time)
+        #kc_spike_mask = (kc_spike_times >= start_time) & (kc_spike_times < end_time)
 
-        print "\tPN:%u" % len(np.unique(pn_spike_neuron_id[pn_spike_mask]))
-        print "\tKC:%u" % len(np.unique(kc_spike_neuron_id[kc_spike_mask]))
+        print "\tPN:%u (%u)" % (len(np.unique(pn_spike_neuron_id)), len(pn_spike_neuron_id))
+        print "\tKC:%u (%u)" % (len(np.unique(kc_spike_neuron_id)), len(kc_spike_neuron_id))
 
     # Calculate activations per timestep
     bins = np.arange(duration_ms + 1)
@@ -102,6 +102,7 @@ with open("pn_spikes.csv", "rb") as pn_spikes_file, \
         axes2[0].set_title("Tag")
         axes2[1].set_title("Weight")
 
+    axes[-1].set_xlim((0, 240))
     # Show plot
     plt.show()
 

@@ -241,11 +241,11 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_AntY -= SimParams::antMoveStep * units::math::cos(m_AntHeading);
             }
             if(m_KeyBits.test(KeyTrainSnapshot)) {
-                m_VisualNavigation.train(m_Snapshot);
+                m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
 
             }
             if(m_KeyBits.test(KeyTestSnapshot)) {
-                std::cout << "Difference: " << m_VisualNavigation.test(m_Snapshot) << std::endl;
+                std::cout << "Difference: " << m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()) << std::endl;
             }
             if(m_KeyBits.test(KeySaveSnapshot)) {
                 cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());

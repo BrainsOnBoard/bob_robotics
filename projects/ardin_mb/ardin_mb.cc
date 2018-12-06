@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
     /*cv::Size unwrapRes(std::atoi(argv[2]), std::atoi(argv[3]));
     cv::Size cellSize(std::atoi(argv[4]), std::atoi(argv[5]));
     int numOrientation = std::atoi(argv[6]);*/
-    float jitterSD = std::atof(argv[2]);
+
     //std::cout << "Unwrap res: (" << unwrapRes.width << ", " << unwrapRes.height << "), cell size:(" << cellSize.width << "," << cellSize.height << "), num orientations:" << numOrientation << ", jitter sd:" << jitterSD << std::endl;*/
     // Create memory
     //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::HOG<>> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight),
@@ -161,6 +161,7 @@ int main(int argc, char *argv[])
     // Create state machine and set it as window user pointer
     const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
+    const float jitterSD = (argc > 2) ? std::atof(argv[2]) : 0.0f;
     StateHandler stateHandler(worldFilename, routeFilename, jitterSD, memory);
     glfwSetWindowUserPointer(window, &stateHandler);
 
