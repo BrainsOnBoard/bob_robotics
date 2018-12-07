@@ -113,7 +113,7 @@ public:
     {
         const Vector3<millimeter_t> position {x, y, z};
         constexpr millisecond_t frameS = 10_ms;
-        constexpr millisecond_t smoothingS = 30_ms;
+        constexpr millisecond_t smoothingS = 50_ms;
 
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
@@ -136,6 +136,7 @@ public:
         const auto smoothVelocity = [alpha](auto inst, auto prev) {
             return (alpha * inst) + ((1.0 - alpha) * prev);
         };
+
         std::transform(std::begin(instVelocity), std::end(instVelocity),
                        std::begin(m_Velocity), std::begin(m_Velocity),
                        smoothVelocity);
@@ -262,7 +263,7 @@ private:
 
         /*
          * Update object data with position and attitude.
-         * 
+         *
          * Note that we reorder the rotation angles we get from the Vicon system
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).

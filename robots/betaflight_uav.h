@@ -149,7 +149,7 @@ class betaflight_uav : public UAV {
         virtual void setVerticalSpeed(float up) override
         {
             up = std::min(1.0f, std::max(-1.0f, up));
-            M_RC_values[2] = 1500 + up*M_ControlScale;
+            M_RC_values[2] = 1500 + up*M_ThrottleScale;
         }
         virtual void setYawSpeed(float right) override
         {
@@ -191,6 +191,11 @@ class betaflight_uav : public UAV {
 
         void disarmDrone() {
             M_RC_values[5] = 1000;
+            // reset other values
+            M_RC_values[0] = 1500;
+            M_RC_values[1] = 1500;
+            M_RC_values[2] = 1040;
+            M_RC_values[3] = 1500;
         }
 
 	private:
@@ -199,7 +204,8 @@ class betaflight_uav : public UAV {
 		fcu::FlightController* m_Fcu = NULL;
 		BetaFlight::Callbacks m_Cbs;
 		uint16_t M_RC_values[8] = {1500,1500,1040,1500,2000,1000,1500,1500};
-		float M_ControlScale = 200.0f;
+		float M_ControlScale = 100.0f;
+    float M_ThrottleScale = 100.0f;
 
 
 

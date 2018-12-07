@@ -8,14 +8,9 @@
 #include "../../robots/betaflight_uav.h"
 #include "redirect_net.h"
 
-// BoB robotics includes
-#include "../../vicon/capture_control.h"
-#include "../../vicon/udp.h"
-
-
-
-using namespace BoBRobotics::Vicon;
 using namespace std::literals;
+
+#include "betaflight_vicon.h"
 
 std::string GetLineFromCin() {
     std::string line;
@@ -23,90 +18,65 @@ std::string GetLineFromCin() {
     return line;
 }
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
   // can be set from the command line - default to LINUX standards
   const std::string device = (argc>1) ? std::string(argv[1]) : "/dev/ttyUSB0";
   const size_t baudrate = (argc>2) ? std::stoul(argv[2]) : 115200;
 
-	BoBRobotics::Robots::betaflight_uav my_drone(device, baudrate);
+	BoBRobotics::Robots::betaflight_vicon my_drone(device, baudrate);
 
-  std::this_thread::sleep_for(1s);
-
-	my_drone.subscribe();
+  // limits for the VICON lab in Sheffield
+  my_drone.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
 
 	m_Port = 50091;
   m_Send_Port = 50101;
-
-  // initialise the vicon link
-  UDPClient<> vicon(51001);
-  //CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
-
-	int count = 0;
-	int rx_timeout = 50;
 
   auto future = std::async(std::launch::async, GetLineFromCin);
 
   bool mute = true;
   bool run = true;
+  bool controlOn = false;
+
+  my_drone.printStatus();
 
   while (run) {
-      if (my_drone.getArmStateAsString().size() > 0) {
-          std::cout << my_drone.getArmStateAsString() << std::endl;
-      }
-      if (!mute) std::cout << "V = " << my_drone.getVoltage() << std::endl;
 
-      ++count;
+    if (!mute) my_drone.printStatus();
 
-      if (vicon.getNumObjects() != 1) {
-        // safety - VICON dropout, or too many objects, should trigger RX loss
-        // note - this currently does not function as desired as dropout does not cause
-        // getNumObjects to return a lower number
-        rx_timeout--;
+    if (future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        auto line = future.get();
 
-      } else {
+        future = std::async(std::launch::async, GetLineFromCin);
 
-
-        auto objectData = vicon.getObjectData(0);
-        const auto position = objectData.getPosition<>();
-        const auto attitude = objectData.getAttitude<degree_t>();
-        if (!mute) std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
-                  << attitude[0] << ", " << attitude[1] << ", " << attitude[2] << std::endl;
-
-
-      /*  if (count > 3000 && count < 3100) {
-            my_drone.armDrone();
+        if (line == "m") {
+          mute = !mute;
         }
-        if (count > 20000) {
-            my_drone.disarmDrone();
+        if (line == "a") {
+          my_drone.armDrone();
         }
-        if (count > 6000) {
-            my_drone.setVerticalSpeed(-1.0);
+        if (line == "h") {
+          my_drone.setWaypoint(0,0,1.0);
+          controlOn = true;
         }
-        std::cout << count << std::endl; */
-
-        rx_timeout = 50;
-      }
-
-      std::this_thread::sleep_for(10ms);
-
-      if (future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-          auto line = future.get();
-
-          future = std::async(std::launch::async, GetLineFromCin);
-
-          if (line == "m") {
-            mute = !mute;
-          }
-          if (line == "q") {
-            run = false;
-          }
-      }
-
-  		if (rx_timeout > 0) {
-  		    my_drone.sendCommands();
-  		}
+        if (line == "l") {
+          my_drone.setWaypoint(0,0,0);
+          controlOn = true;
+        }
+        if (line == "d") {
+          my_drone.disarmDrone();
+          controlOn = false;
+        }
+        if (line == "q") {
+          run = false;
+        }
     }
 
-    // shut down threads
-    exit(0);
+  	my_drone.sendCommands(controlOn);
+
+  }
+
+  my_drone.disarmDrone();
+
+  // shut down threads
+  exit(0);
 }
