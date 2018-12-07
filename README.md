@@ -11,7 +11,7 @@ A full list of requirements for different projects can be found [in the document
 
 The main requirements are as follows:
 * GeNN 3.X - Stable releases of GeNN can be downloaded from https://github.com/genn-team/genn/releases. However some models in this repository may require the lastest version from the Github repository: https://github.com/genn-team/genn. It should also be passed to genn-buildmodel using the -i command line argument when building networks using the models in the [genn\_models](genn_models) folder i.e. ``genn-buildmodel.sh -i $BOB_ROBOTICS_PATH`` on \*nix or ``genn-buildmodel.bat -i %BOB_ROBOTICS_PATH%`` on Windows.
-* Open CV 3.X - OpenCV releases can be downloaded from https://opencv.org. Installation instructions for Jetson TX1 can be found [here](https://devtalk.nvidia.com/default/topic/965134/opencv-3-1-compilation-on-tx1-lets-collect-the-quot-definitive-quot-cmake-settings-).
+* Open CV 3.X or 4.X - OpenCV releases can be downloaded from https://opencv.org. Installation instructions for Jetson TX1 can be found [here](https://devtalk.nvidia.com/default/topic/965134/opencv-3-1-compilation-on-tx1-lets-collect-the-quot-definitive-quot-cmake-settings-). When using Open CV 4.X, build Open CV with the ``-DOPENCV_GENERATE_PKGCONFIG=ON and -DOPENCV_PC_FILE_NAME=opencv.pc`` cmake options to enable pkg config in a backward-compatible manner.
 
 ## Examples
 Example projects covering most of the capabilities of BoB robotics can be found [in the examples folder](examples).
