@@ -187,10 +187,10 @@ namespace Robots
     BoBRobotics::Robots::betaflight_uav m_MyDrone;
     UDPClient <ObjectDataVelocity> m_Vicon;
     RBounds m_RoomBounds;
-    Vector3 < float > m_Waypoint = {0,0,0};
-    Vector3 < float > m_VSetPoint = {0,0,0};
-    Vector3 <meters_per_second_t> m_OldVelocity = {0_mps,0_mps,0_mps};
-    Vector3  < float > m_IntegralTerm = {0,0,0};
+    Vector3 < float > m_Waypoint = {{0,0,0}};
+    Vector3 < float > m_VSetPoint = {{0,0,0}};
+    Vector3 <meters_per_second_t> m_OldVelocity = {{0_mps,0_mps,0_mps}};
+    Vector3  < float > m_IntegralTerm = {{0,0,0}};
 
   };
 
