@@ -110,26 +110,17 @@ class betaflight_uav : public UAV {
 
 public:
 
-    betaflight_uav(std::string device, int baud) :
-        m_Device(device),
-        m_Baud(baud)
+    betaflight_uav(const std::string &device, int baud) : m_Fcu(device, baud)
     {
         BetaFlight::setup_arm_flags();
-
-        m_Fcu = new fcu::FlightController(m_Device, m_Baud);
-        m_Fcu->initialise();
+        m_Fcu.initialise();
     }
 
     void subscribe() {
-        m_Fcu->subscribe(&BetaFlight::Callbacks::onIdent, &m_Cbs, 0.1);
-        m_Fcu->subscribe(&BetaFlight::Callbacks::onAnalog, &m_Cbs, 0.5);
+        m_Fcu.subscribe(&BetaFlight::Callbacks::onIdent, &m_Cbs, 0.1);
+        m_Fcu.subscribe(&BetaFlight::Callbacks::onAnalog, &m_Cbs, 0.5);
     }
 
-    ~betaflight_uav() {
-        if (m_Fcu) {
-            delete m_Fcu;
-        }
-    }
 
     virtual void takeOff() override {}
     virtual void land() override {}
@@ -177,7 +168,7 @@ public:
 
     void sendCommands() {
         std::vector<uint16_t> auxs;
-        m_Fcu->setRc(M_RC_values[0],M_RC_values[1],M_RC_values[3],M_RC_values[2],M_RC_values[4],M_RC_values[5],M_RC_values[6],M_RC_values[7], auxs);
+        m_Fcu.setRc(M_RC_values[0],M_RC_values[1],M_RC_values[3],M_RC_values[2],M_RC_values[4],M_RC_values[5],M_RC_values[6],M_RC_values[7], auxs);
     }
 
     void armDrone() {
@@ -196,9 +187,7 @@ public:
     }
 
 private:
-    std::string m_Device;
-    int m_Baud;
-    fcu::FlightController* m_Fcu = NULL;
+    fcu::FlightController m_Fcu;
     BetaFlight::Callbacks m_Cbs;
     uint16_t M_RC_values[8] = {1500,1500,1040,1500,2000,1000,1500,1500};
     float M_ControlScale = 100.0f;
