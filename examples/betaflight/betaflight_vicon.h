@@ -10,26 +10,27 @@ drone.
 #include "../../vicon/udp.h"
 
 
-namespace BoBRobotics {
+namespace BoBRobotics 
+{
 namespace Robots
 {
-
-  // limits of the room - default to a (hopefully) safe 1m^3
-  struct RBounds {
+// limits of the room - default to a (hopefully) safe 1m^3
+struct RBounds {
     float x[2] = {-0.5,0.5};
     float y[2] = {-0.5,0.5};
     float z[2] = {0,1};
-  };
+};
 
-  using namespace BoBRobotics::Vicon;
+using namespace BoBRobotics::Vicon;
 
-  class betaflight_vicon {
-
-  public:
-
+class betaflight_vicon 
+{
+    using degree_t = units::angle::degree_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+public:
     betaflight_vicon(std::string device, int baud) :
-      m_MyDrone(device, baud),
-      m_Vicon(51001)
+        m_MyDrone(device, baud),
+        m_Vicon(51001)
     {
 
         std::this_thread::sleep_for(0.1ms);
@@ -46,34 +47,34 @@ namespace Robots
 
     void printStatus() {
 
-      if (m_MyDrone.getArmStateAsString().size() > 0) {
-          std::cout << m_MyDrone.getArmStateAsString() << std::endl;
-      }
-      std::cout << "[V:" << std::setw(4) << m_MyDrone.getVoltage() << " ";
+        if (m_MyDrone.getArmStateAsString().size() > 0) {
+            std::cout << m_MyDrone.getArmStateAsString() << std::endl;
+        }
+        std::cout << "[V:" << std::setw(4) << m_MyDrone.getVoltage() << " ";
 
-      if (m_Vicon.getNumObjects() == 1) {
+        if (m_Vicon.getNumObjects() == 1) {
 
         auto objectData = m_Vicon.getObjectData(0);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
 
         for (int i = 0; i < 3; ++i) {
-          std::cout << std::setw(5) << std::fixed << std::setprecision(2) << float(position[i])/1000.0 << ", ";
+            std::cout << std::setw(5) << std::fixed << std::setprecision(2) << float(position[i])/1000.0 << ", ";
         }
         for (int i = 0; i < 3; ++i) {
-          std::cout << std::setw(6) << std::fixed << std::setprecision(2) << float(attitude[i]);
-          if (i < 2) std::cout << ", ";
+            std::cout << std::setw(6) << std::fixed << std::setprecision(2) << float(attitude[i]);
+            if (i < 2) std::cout << ", ";
         }
 
-      } else {
+        } else {
         std::cout << "NO VICON DATA";
-      }
-      std::cout << "]" << std::endl;
+        }
+        std::cout << "]" << std::endl;
 
     }
 
     void sendCommands(bool controlOn) {
-      if (controlOn) {
+        if (controlOn) {
         // update control
         auto objectData = m_Vicon.getObjectData(0);
         const auto position = objectData.getPosition<>();
@@ -83,7 +84,7 @@ namespace Robots
         // calc distance to m_Waypoint
         Vector3 <float> p_diff;
         for (int i = 0; i < 3; ++i) {
-          p_diff[i] = m_Waypoint[i] - float(position[i])/1000.0;
+            p_diff[i] = m_Waypoint[i] - float(position[i])/1000.0;
         }
 
         Vector3 < float > targetVSetpoint;
@@ -94,30 +95,30 @@ namespace Robots
         // calculate velocity setpoint
         float speed = 1.0;
         for (int i = 0; i < 3; ++i) {
-          if (p_diff[i] > 0.4) {
+            if (p_diff[i] > 0.4) {
             targetVSetpoint[i] = 0.5*speed;
-          } else if (p_diff[i] < -0.4) {
+            } else if (p_diff[i] < -0.4) {
             targetVSetpoint[i] = -0.5*speed;
-          } else {
+            } else {
             targetVSetpoint[i] = p_diff[i] * 1.25 *speed;
-          }
-          // smooth the v setpoint to avoid jerks
-          m_VSetPoint[i] = m_VSetPoint[i]*0.9 + targetVSetpoint[i]*0.1;
-          // calculate acceleration
-          acceleration[i] = m_OldVelocity[i] - velocity[i];
+            }
+            // smooth the v setpoint to avoid jerks
+            m_VSetPoint[i] = m_VSetPoint[i]*0.9 + targetVSetpoint[i]*0.1;
+            // calculate acceleration
+            acceleration[i] = m_OldVelocity[i] - velocity[i];
         }
 
         // CONTROL
         for (int i = 0; i < 3; ++i) {
-          // calculate Integral m_IntegralTerm
-          m_IntegralTerm[i] = m_IntegralTerm[i] + (m_VSetPoint[i] - float(velocity[i]));
+            // calculate Integral m_IntegralTerm
+            m_IntegralTerm[i] = m_IntegralTerm[i] + (m_VSetPoint[i] - float(velocity[i]));
         }
 
         float z_control;
         if (m_VSetPoint[2]-float(velocity[2]) > 0) {
-          z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))+0.25*float(acceleration[2])) / 150.0;
+            z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))+0.25*float(acceleration[2])) / 150.0;
         } else {
-          z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))-0.25*float(acceleration[2])) / 150.0;
+            z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))-0.25*float(acceleration[2])) / 150.0;
         }
         //std::cout << std::setw(6) << std::fixed<< std::setprecision(4) << m_VSetPoint[2] << " " << float(velocity[2]) << "," << std::endl;
 
@@ -149,14 +150,14 @@ namespace Robots
         //std::cout << std::endl;
 
         m_OldVelocity = velocity;
-      }
+        }
 
-      // NOTE: this is not currently a safe way of detecting dropout of VICON!
-      if (m_Vicon.getNumObjects() == 1) {
+        // NOTE: this is not currently a safe way of detecting dropout of VICON!
+        if (m_Vicon.getNumObjects() == 1) {
         m_MyDrone.sendCommands();
-      }
-      // wait so we do not overload the drone
-      std::this_thread::sleep_for(10ms);
+        }
+        // wait so we do not overload the drone
+        std::this_thread::sleep_for(10ms);
     }
 
     void setRoomBounds(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
@@ -175,14 +176,14 @@ namespace Robots
     }
     void setWaypoint(float x, float y, float z) {
 
-      if (x < m_RoomBounds.x[0] || x > m_RoomBounds.x[1] || y < m_RoomBounds.y[0] || y > m_RoomBounds.y[1] || z < m_RoomBounds.z[0] || z > m_RoomBounds.z[1]) {
+        if (x < m_RoomBounds.x[0] || x > m_RoomBounds.x[1] || y < m_RoomBounds.y[0] || y > m_RoomBounds.y[1] || z < m_RoomBounds.z[0] || z > m_RoomBounds.z[1]) {
         std::cout << "Attempted to move outside of room bounds" << std::endl;
         return;
-      } else {
-          m_Waypoint[0] = std::max(m_RoomBounds.x[0], std::min(m_RoomBounds.x[1], x));
-          m_Waypoint[1] = std::max(m_RoomBounds.y[0], std::min(m_RoomBounds.y[1], y));
-          m_Waypoint[2] = std::max(m_RoomBounds.z[0], std::min(m_RoomBounds.z[1], z));
-      }
+        } else {
+            m_Waypoint[0] = std::max(m_RoomBounds.x[0], std::min(m_RoomBounds.x[1], x));
+            m_Waypoint[1] = std::max(m_RoomBounds.y[0], std::min(m_RoomBounds.y[1], y));
+            m_Waypoint[2] = std::max(m_RoomBounds.z[0], std::min(m_RoomBounds.z[1], z));
+        }
 
     }
 
@@ -194,10 +195,6 @@ namespace Robots
     Vector3 < float > m_VSetPoint = {{0,0,0}};
     Vector3 <meters_per_second_t> m_OldVelocity = {{0_mps,0_mps,0_mps}};
     Vector3  < float > m_IntegralTerm = {{0,0,300.0f}};
-
-  };
-
-
-}
-
-}
+};
+}   // namespace Robots
+}   // namespace BoBRobotics
