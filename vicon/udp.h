@@ -232,7 +232,7 @@ public:
         return m_ObjectData.size();
     }
 
-    unsigned int findObjectID(const std::string &name) const
+    unsigned int findObjectID(const std::string &name)
     {
         // Search for object with name
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
