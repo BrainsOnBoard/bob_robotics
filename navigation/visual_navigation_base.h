@@ -1,7 +1,6 @@
 #pragma once
 
 // Standard C includes
-#include <cassert>
 #include <cstdint>
 
 // Standard C++ includes
@@ -13,7 +12,8 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#include "../common/image_database.h"
+#include "../common/assert.h"
+#include "image_database.h"
 
 // Third-party includes
 #include "../third_party/path.h"
@@ -27,9 +27,11 @@ namespace Navigation {
 class VisualNavigationBase
 {
 public:
-    VisualNavigationBase(const cv::Size unwrapRes)
+    VisualNavigationBase(const cv::Size &unwrapRes)
       : m_UnwrapRes(unwrapRes)
     {}
+
+    virtual ~VisualNavigationBase() {}
 
     //------------------------------------------------------------------------
     // Declared virtuals
@@ -37,28 +39,34 @@ public:
     //! Train the algorithm with the specified image
     virtual void train(const cv::Mat &image) = 0;
 
+    //! Test the algorithm with the specified image
+    virtual float test(const cv::Mat &image) const = 0;
+
+    //! Clears the training from memory
+    virtual void clearMemory() = 0;
+
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    //! Train with image at specified path
-    void train(const filesystem::path &imagePath, bool resizeImage = false)
-    {
-        if (!tryTrain(imagePath, resizeImage)) {
-            throw std::runtime_error("Path " + imagePath.str() + " does not exist");
-        }
-    }
-
     //! Train algorithm with specified route
-    void trainRoute(const filesystem::path &routePath, bool resizeImages = false)
+    void trainRoute(const ImageDatabase &imdb, bool resizeImages = false)
     {
-        if (!routePath.exists()) {
-            throw std::runtime_error("Path " + routePath.str() + " does not exist");
-        }
-
-        for (size_t i = 0;; i++) {
-            const auto filename = routePath / getRouteDatabaseFilename(i);
-            if (!tryTrain(filename, resizeImages)) {
-                return;
+        cv::Mat image;
+        if (resizeImages) {
+            cv::Mat imageResized;
+            for (const auto &e : imdb) {
+                image = e.loadGreyscale();
+                BOB_ASSERT(image.type() == CV_8UC1);
+                cv::resize(image, imageResized, m_UnwrapRes);
+                train(imageResized);
+            }
+        } else {
+            for (const auto &e : imdb) {
+                image = e.loadGreyscale();
+                BOB_ASSERT(image.type() == CV_8UC1);
+                BOB_ASSERT(image.cols == m_UnwrapRes.width);
+                BOB_ASSERT(image.rows == m_UnwrapRes.height);
+                train(image);
             }
         }
     }
@@ -67,9 +75,9 @@ public:
     void setMaskImage(const std::string &path)
     {
         m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
-        assert(m_MaskImage.cols == m_UnwrapRes.width);
-        assert(m_MaskImage.rows == m_UnwrapRes.height);
-        assert(m_MaskImage.type() == CV_8UC1);
+        BOB_ASSERT(m_MaskImage.cols == m_UnwrapRes.width);
+        BOB_ASSERT(m_MaskImage.rows == m_UnwrapRes.height);
+        BOB_ASSERT(m_MaskImage.type() == CV_8UC1);
     }
 
     //! Return mask image
@@ -90,28 +98,6 @@ private:
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
     cv::Mat m_MaskImage;
-
-    bool tryTrain(const filesystem::path &imagePath, bool resizeImage) noexcept
-    {
-        if (!imagePath.exists()) {
-            return false;
-        }
-
-        // Load image
-        cv::Mat image = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
-        assert(image.type() == CV_8UC1);
-        if (resizeImage) {
-            cv::resize(image, image, m_UnwrapRes);
-        } else {
-            assert(image.cols == m_UnwrapRes.width);
-            assert(image.rows == m_UnwrapRes.height);
-        }
-
-        // Add snapshot
-        train(image);
-
-        return true;
-    }
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

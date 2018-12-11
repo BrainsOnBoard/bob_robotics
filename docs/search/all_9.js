@@ -2,10 +2,13 @@ var searchData=
 [
   ['i2cinterface',['I2CInterface',['../classBoBRobotics_1_1I2CInterface.html',1,'BoBRobotics']]],
   ['illuminance_5funit',['illuminance_unit',['../namespaceunits_1_1category.html#a58394ebe6d7b2f0e0224e15b9f6a2637',1,'units::category']]],
-  ['imagedatabaserecorder',['ImageDatabaseRecorder',['../classBoBRobotics_1_1ImageDatabaseRecorder.html',1,'BoBRobotics']]],
+  ['imagedatabase',['ImageDatabase',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html',1,'BoBRobotics::Navigation']]],
   ['impedance_5funit',['impedance_unit',['../namespaceunits_1_1category.html#a30f314570cbe9c1c415d1f5d49ff1418',1,'units::category']]],
   ['inductance_5funit',['inductance_unit',['../namespaceunits_1_1category.html#ad2faf0f8cb76762e1534a8f35884f8ec',1,'units::category']]],
+  ['infomax',['InfoMax',['../classBoBRobotics_1_1Navigation_1_1InfoMax.html',1,'BoBRobotics::Navigation']]],
+  ['initialize',['initialize',['../definitions_8h.html#a25a40b6614565f755233080a384c35f1',1,'init.cc']]],
   ['input',['Input',['../classBoBRobotics_1_1Video_1_1Input.html',1,'BoBRobotics::Video']]],
+  ['insilicorotater',['InSilicoRotater',['../classBoBRobotics_1_1Navigation_1_1InSilicoRotater.html',1,'BoBRobotics::Navigation']]],
   ['inverse',['inverse',['../group__UnitManipulators.html#ga18b87c9f4576fb72ddc0b2a516a42d41',1,'units']]],
   ['is_5facceleration_5funit',['is_acceleration_unit',['../structunits_1_1traits_1_1is__acceleration__unit.html',1,'units::traits']]],
   ['is_5fangle_5funit',['is_angle_unit',['../structunits_1_1traits_1_1is__angle__unit.html',1,'units::traits']]],
@@ -56,6 +59,8 @@ var searchData=
   ['is_5fvolume_5funit',['is_volume_unit',['../structunits_1_1traits_1_1is__volume__unit.html',1,'units::traits']]],
   ['isconnected',['isConnected',['../classBoBRobotics_1_1Net_1_1Node.html#a4ba5ae9d710b1f5bc5b09b649376f846',1,'BoBRobotics::Net::Node']]],
   ['isdown',['isDown',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#af9f8a65d4d899022df9c7be0290f57f5',1,'BoBRobotics::HID::JoystickBase']]],
+  ['isemergencybuttonpressed',['isEmergencyButtonPressed',['../classBoBRobotics_1_1Robots_1_1Gantry.html#afb06e2c2cb586ec622b5693c2774d424',1,'BoBRobotics::Robots::Gantry']]],
+  ['ismoving',['isMoving',['../classBoBRobotics_1_1Robots_1_1Gantry.html#a2ec97c16695d7f167dda31aa6e8b4f47',1,'BoBRobotics::Robots::Gantry']]],
   ['isopen',['isOpen',['../classBoBRobotics_1_1Video_1_1Display.html#a2703492d14af0d269b7cb5dd708381fa',1,'BoBRobotics::Video::Display']]],
   ['ispressed',['isPressed',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a3c4d05d4cf33b06328c2866e6a266b33',1,'BoBRobotics::HID::JoystickBase']]],
   ['isreleased',['isReleased',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a93078c748b4675a40d550b04796749f1',1,'BoBRobotics::HID::JoystickBase']]]

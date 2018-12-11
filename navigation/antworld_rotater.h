@@ -1,17 +1,14 @@
 #pragma once
 
-// Standard C includes
-#include <cassert>
-
 // Third-party includes
 #include "../third_party/units.h"
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../libantworld/agent.h"
 
 namespace BoBRobotics {
 namespace Navigation {
-using namespace units::angle;
 using namespace units::literals;
 
 //------------------------------------------------------------------------
@@ -23,6 +20,8 @@ using namespace units::literals;
  */
 class AntWorldRotater
 {
+    using degree_t = units::angle::degree_t;
+
 public:
     AntWorldRotater(const cv::Size &unwrapRes,
                     const cv::Mat &maskImage,
@@ -35,10 +34,10 @@ public:
       , m_Pitch(pitch)
       , m_Roll(roll)
     {
-        assert(agent.getOutputSize() == unwrapRes);
+        BOB_ASSERT(agent.getOutputSize() == unwrapRes);
 
         // This rotater doesn't support mask images
-        assert(maskImage.empty());
+        BOB_ASSERT(maskImage.empty());
     }
 
     template<class Func>

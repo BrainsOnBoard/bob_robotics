@@ -6,10 +6,8 @@
 #include <sstream>
 #include <vector>
 
-// Standard C includes
-#include <cassert>
-
 // BoB robotics includes
+#include "common/assert.h"
 #include "third_party/path.h"
 
 #ifdef __GNUC__
@@ -330,8 +328,8 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
             // If a valid face has been parsed
             if(validFace) {
                 // Check all sizes match
-                assert(facePositionIndices.size() == faceTexCoordIndices.size());
-                assert(faceNormalIndices.empty() || faceTexCoordIndices.size() == faceNormalIndices.size());
+                BOB_ASSERT(facePositionIndices.size() == faceTexCoordIndices.size());
+                BOB_ASSERT(faceNormalIndices.empty() || faceTexCoordIndices.size() == faceNormalIndices.size());
                 
                 // Write new face
                 outputObjFile << "f ";

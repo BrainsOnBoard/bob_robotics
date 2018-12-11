@@ -2,15 +2,14 @@
 
 // BoB robotics includes
 #include "../hid/joystick.h"
+#include "robot.h"
 
 namespace BoBRobotics {
 namespace Robots {
 class UAV
+  : public Robot
 {
 public:
-    virtual ~UAV()
-    {}
-
     virtual void takeOff() = 0;
     virtual void land() = 0;
     virtual void setPitch(float pitch) = 0;
@@ -18,7 +17,22 @@ public:
     virtual void setVerticalSpeed(float up) = 0;
     virtual void setYawSpeed(float right) = 0;
 
-    virtual void stopMoving()
+    //! An alias for setPitch
+    virtual void moveForward(float speed) override
+    {
+        setPitch(speed);
+    }
+
+    //! Sets the yaw speed, stopping motion in all other axes
+    virtual void turnOnTheSpot(float clockwiseSpeed) override
+    {
+        setPitch(0.f);
+        setRoll(0.f);
+        setVerticalSpeed(0.f);
+        setYawSpeed(clockwiseSpeed);
+    }
+
+    virtual void stopMoving() override
     {
         setPitch(0.f);
         setRoll(0.f);

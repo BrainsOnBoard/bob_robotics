@@ -4,7 +4,8 @@
 // BoB robotics includes
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
-#include "navigation/perfect_memory_hog.h"
+#include "navigation/perfect_memory_store_raw.h"
+#include "navigation/perfect_memory_store_hog.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
@@ -22,14 +23,14 @@ int
 main()
 {
     const cv::Size imSize(180, 50);
-    degree_t heading;
+    units::angle::degree_t heading;
     std::vector<std::vector<float>> allDifferences;
 
     {
         std::cout << "Testing with best-matching snapshot method..." << std::endl;
 
         // Default algorithm: find best-matching snapshot, use abs diff
-        PerfectMemory<> pm(imSize);
+        PerfectMemoryRotater<> pm(imSize);
         trainRoute(pm);
 
         // Time testing phase
@@ -47,7 +48,7 @@ main()
 
     {
         std::cout << std::endl << "Testing with RMS image difference..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, InSilicoRotater, RMSDiff> pm(imSize);
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>> pm(imSize);
         trainRoute(pm);
 
         // Time testing phase
@@ -66,7 +67,7 @@ main()
     {
         constexpr size_t numComp = 3;
         std::cout << std::endl <<  "Testing with " << numComp << " weighted snapshots..." << std::endl;
-        PerfectMemory<WeightSnapshotsDynamic<numComp>> pm(imSize);
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, WeightSnapshotsDynamic<numComp>> pm(imSize);
         trainRoute(pm);
 
         Timer<> t{ "Time taken for testing: " };
@@ -86,14 +87,14 @@ main()
     {
         std::cout << std::endl << "Testing with HOG..." << std::endl;
 
-        PerfectMemoryHOG<> pm(imSize);
+        PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize, cv::Size(10, 10), 8);
         trainRoute(pm);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
 
         // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", CV_LOAD_IMAGE_GRAYSCALE);
+        cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", cv::IMREAD_GRAYSCALE);
         cv::resize(snap, snap, imSize);
         size_t snapshot;
         float difference;
@@ -102,4 +103,6 @@ main()
         std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
         std::cout << "Difference score: " << difference << std::endl;
     }
+
+    return EXIT_SUCCESS;
 }

@@ -1,8 +1,15 @@
 # temporary files
 *~
 
+# QT creator project files
+bob_robotics.config
+bob_robotics.creator
+bob_robotics.files
+bob_robotics.includes
+
 # Visual Studio code user files
 /.vscode/*.json
+!/.vscode/c_cpp_properties.json
 *.code-workspace
 
 # Ignore object files

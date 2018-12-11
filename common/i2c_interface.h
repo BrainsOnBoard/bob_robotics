@@ -2,12 +2,13 @@
 
 // Standard C++ includes
 #include <iostream>
+#include <string>
 #include <vector>
 
 // Standard C includes
 #include <cstring>
 
-// Posix includes
+// POSIX includes
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -37,9 +38,7 @@ public:
 
     I2CInterface(const char *path, int slaveAddress) : m_I2C(0)
     {
-        if(!setup(path, slaveAddress)) {
-            throw std::runtime_error("Cannot open I2C interface");
-        }
+        setup(path, slaveAddress);
     }
 
     ~I2CInterface()
@@ -53,99 +52,73 @@ public:
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
-    bool setup(const char *path, int slaveAddress )
+    void setup(const char *path, int slaveAddress )
     {
         m_I2C = open(path, O_RDWR);
         if (m_I2C < 0) {
-            std::cerr << "Error in setup:" << strerror(errno) << std::endl;
-            // the error is usually permission error which, on Ubuntu, can be fixed by
-            // creating a file /etc/udev/rules.d/90-i2c.rules and adding the following line:
-            // KERNEL=="i2c-[0-7]",MODE="0666"
-            return false;
+            throw std::runtime_error("Error in setup: " + std::string(strerror(errno)) + "\n" +
+                "The error is usually permission error which, on Ubuntu, can be fixed by" +
+                "creating a file /etc/udev/rules.d/90-i2c.rules and adding the following line:\n" +
+                "   KERNEL==\"i2c-[0-7]\",MODE=\"0666\"");
         }
 
         if (ioctl(m_I2C, I2C_SLAVE, slaveAddress) < 0) {
-            std::cerr << "Cannot connect to the slave" << std::endl;
-            return false;
-        }
-        else {
+            throw std::runtime_error("Cannot connect to I2C slave");
+        } else {
             std::cout << "I2C successfully initialized" << std::endl;
-            return true;
         }
     }
 
-    bool readByteCommand(uint8_t address, uint8_t &byte)
+    uint8_t readByteCommand(uint8_t address)
     {
-        auto data = i2c_smbus_read_byte_data(m_I2C, address);
+        const auto data = i2c_smbus_read_byte_data(m_I2C, address);
         if(data < 0) {
-            std::cerr << "Failed to read byte from i2c bus" << std::endl;
-            return false;
-        }
-        else {
-            byte = (uint8_t)data;
-            return true;
+            throw std::runtime_error("Failed to read byte from i2c bus");
+        } else {
+            return static_cast<uint8_t>(data);
         }
     }
 
-    bool readByte(uint8_t &byte)
+    uint8_t readByte()
     {
-        auto data = i2c_smbus_read_byte(m_I2C);
+        const auto data = i2c_smbus_read_byte(m_I2C);
         if(data < 0) {
-            std::cerr << "Failed to read byte from i2c bus" << std::endl;
-            return false;
-        }
-        else {
-            byte = (uint8_t)data;
-            return true;
+            throw std::runtime_error("Failed to read byte from i2c bus");
+        } else {
+            return static_cast<uint8_t>(data);
         }
     }
 
     template<typename T, size_t N>
-    bool read(T (&data)[N])
+    void read(T (&data)[N])
     {
         const size_t size = sizeof(T) * N;
         if (::read(m_I2C, &data[0], size) != size) {
-            std::cerr << "Failed to read from i2c bus" << std::endl;
-            return false;
-        }
-        else {
-            return true;
+            throw std::runtime_error("Failed to read from i2c bus");
         }
     }
 
-    bool writeByteCommand(uint8_t address, uint8_t byte)
+    void writeByteCommand(uint8_t address, uint8_t byte)
     {
         if(i2c_smbus_write_byte_data(m_I2C, address, byte) < 0) {
-            std::cerr << "Failed to write byte to i2c bus" << std::endl;
-            return false;
-        }
-        else {
-            return true;
+            throw std::runtime_error("Failed to write byte to i2c bus");
         }
     }
 
-    bool writeByte(uint8_t byte)
+    void writeByte(uint8_t byte)
     {
         if(i2c_smbus_write_byte(m_I2C, byte) < 0) {
-            std::cerr << "Failed to write byte to i2c bus" << std::endl;
-            return false;
-        }
-        else {
-            return true;
+            throw std::runtime_error("Failed to write byte to i2c bus");
         }
     }
 
     // writes data
     template<typename T, size_t N>
-    bool write(const T (&data)[N])
+    void write(const T (&data)[N])
     {
         const size_t size = sizeof(T) * N;
         if (::write(m_I2C, &data[0], size) != size) {
-            std::cerr << "Failed to write to i2c bus" << std::endl;
-            return false;
-        }
-        else {
-            return true;
+            throw std::runtime_error("Failed to write to i2c bus");
         }
     }
 

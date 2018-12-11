@@ -1,122 +1,215 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "differencers.h"
+#include "insilico_rotater.h"
+#include "perfect_memory_store_raw.h"
+#include "visual_navigation_base.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C includes
-#include <cassert>
 #include <cstdlib>
 
 // Standard C++ includes
+#include <algorithm>
+#include <array>
+#include <iostream>
+#include <functional>
+#include <limits>
 #include <numeric>
+#include <tuple>
 #include <vector>
-
-// OpenCV includes
-#include <opencv2/opencv.hpp>
-
-// Third-party includes
-#include "../third_party/path.h"
-
-// Local includes
-#include "differencers.h"
-#include "perfect_memory_base.h"
-#include "ridf_processors.h"
 
 namespace BoBRobotics {
 namespace Navigation {
+using namespace units::literals;
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemory
 //------------------------------------------------------------------------
-/*!
- * \brief The conventional perfect memory (RIDF) algorithm
- *
- * \tparam RIDFProcessor The method used to calculate the heading (e.g. single snapshot v. multi-snapshot)
- * \tparam Rotater Method used to rotate current view (e.g. InSilicoRotater or AntWorldRotater)
- * \tparam Differencer This can be AbsDiff or RMSDiff
- */
-template<typename RIDFProcessor = BestMatchingSnapshot,
-         typename Rotater = InSilicoRotater,
-         typename Differencer = AbsDiff>
-class PerfectMemory
-  : public PerfectMemoryBase<RIDFProcessor, Rotater>
+template<typename Store = PerfectMemoryStore::RawImage<>>
+class PerfectMemory : public VisualNavigationBase
 {
 public:
-    PerfectMemory(const cv::Size unwrapRes)
-      : PerfectMemoryBase<RIDFProcessor, Rotater>(unwrapRes)
-      , m_Differencer(unwrapRes.width * unwrapRes.height)
-      , m_DiffScratchImage(unwrapRes, CV_8UC1)
+    template<class... Ts>
+    PerfectMemory(const cv::Size &unwrapRes, Ts &&... args)
+      : VisualNavigationBase(unwrapRes)
+      , m_Store(unwrapRes, std::forward<Ts>(args)...)
     {}
 
     //------------------------------------------------------------------------
-    // Declared virtuals
+    // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
-    virtual size_t getNumSnapshots() const override
+    virtual void train(const cv::Mat &image) override
     {
-        return m_Snapshots.size();
+        const auto &unwrapRes = getUnwrapResolution();
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
+
+        // Add snapshot
+        m_Store.addSnapshot(image);
     }
 
-    virtual const cv::Mat &getSnapshot(size_t index) const override
+    virtual float test(const cv::Mat &image) const override
     {
-        assert(index < m_Snapshots.size());
-        return m_Snapshots[index];
+        const auto &unwrapRes = getUnwrapResolution();
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
+
+        const size_t numSnapshots = getNumSnapshots();
+        BOB_ASSERT(numSnapshots > 0);
+
+        // Clear differences (won't free)
+        m_Differences.clear();
+
+        // Loop through snapshots and caculate differences
+        for (size_t s = 0; s < numSnapshots; s++) {
+            m_Differences.push_back(calcSnapshotDifference(image, getMaskImage(), s));
+        }
+
+        // Return smallest difference
+        return *std::min_element(m_Differences.begin(), m_Differences.end());
+    }
+
+    virtual void clearMemory() override
+    {
+        m_Store.clear();
+    }
+
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
+     //! Return the number of snapshots that have been read into memory
+    size_t getNumSnapshots() const{ return m_Store.getNumSnapshots(); }
+
+    //! Return a specific snapshot
+    const cv::Mat &getSnapshot(size_t index) const{ return m_Store.getSnapshot(index); }
+
+    /*!
+     * \brief Get differences between current view and stored snapshots
+     */
+    const std::vector<float> &getImageDifferences(const cv::Mat &image) const
+    {
+        test(image);
+        return m_Differences;
     }
 
 protected:
-    virtual size_t addSnapshot(const cv::Mat &image) override
+    //------------------------------------------------------------------------
+    // Protected API
+    //------------------------------------------------------------------------
+    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const
     {
-        m_Snapshots.emplace_back();
-        image.copyTo(m_Snapshots.back());
-
-        // Return index of new snapshot
-        return (m_Snapshots.size() - 1);
-    }
-
-    virtual float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const override
-    {
-        // Calculate difference between image and stored image
-        const int imSize = image.rows * image.cols;
-        auto diffIter = m_Differencer(image, m_Snapshots[snapshot], m_DiffScratchImage);
-
-        // If there's no mask
-        if (imageMask.empty()) {
-            float sumDifference = std::accumulate(diffIter, diffIter + imSize, 0.0f);
-
-            // Return mean
-            return Differencer::mean(sumDifference, imSize);
-        }
-        // Otherwise
-        else {
-            // Get raw access to rotated mask associated with image and non-rotated mask associated with snapshot
-            uint8_t *imageMaskPtr = imageMask.data;
-            cv::Mat snapshotMask = this->getMaskImage();
-            uint8_t *snapshotMaskPtr = snapshotMask.data;
-
-            // Loop through pixels
-            float sumDifference = 0.0f;
-            unsigned int numUnmaskedPixels = 0;
-            const uint8_t *end = &imageMaskPtr[imSize];
-            while (imageMaskPtr < end) {
-                // If this pixel is masked by neither of the masks
-                if (*imageMaskPtr++ != 0 && *snapshotMaskPtr++) {
-                    // Accumulate sum of differences
-                    sumDifference += (float) *diffIter;
-
-                    // Increment unmasked pixels count
-                    numUnmaskedPixels++;
-                }
-                diffIter++;
-            }
-
-            // Return mean
-            return Differencer::mean(sumDifference, (float) numUnmaskedPixels);
-        }
+        return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMaskImage());
     }
 
 private:
     //------------------------------------------------------------------------
+    // Private members
+    //------------------------------------------------------------------------
+    Store m_Store;
+    mutable std::vector<float> m_Differences;
+};
+
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::PerfectMemoryRotater
+//------------------------------------------------------------------------
+template<typename Store = PerfectMemoryStore::RawImage<>, typename RIDFProcessor = BestMatchingSnapshot, typename Rotater = InSilicoRotater>
+class PerfectMemoryRotater : public PerfectMemory<Store>
+{
+public:
+    template<class... Ts>
+    PerfectMemoryRotater(const cv::Size unwrapRes, Ts &&... args)
+    :   PerfectMemory<Store>(unwrapRes, std::forward<Ts>(args)...)
+    {
+    }
+    /*!
+     * \brief Get differences between current view and stored snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step and for the AntWorldRotater, one passes in one or more
+     * angles.
+     */
+    template<class... Ts>
+    const std::vector<std::vector<float>> &getImageDifferences(Ts &&... args) const
+    {
+        calcImageDifferences(std::forward<Ts>(args)...);
+        return m_RotatedDifferences;
+    }
+
+    /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step and for the AntWorldRotater, one passes in one or more
+     * angles.
+     */
+    template<class... Ts>
+    auto getHeading(Ts &&... args) const
+    {
+        calcImageDifferences(std::forward<Ts>(args)...);
+        const size_t numSnapshots = this->getNumSnapshots();
+
+        // Now get the minimum for each snapshot and the column this corresponds to
+        std::vector<int> bestColumns(numSnapshots);
+        std::vector<float> minDifferences(numSnapshots);
+        for (size_t i = 0; i < numSnapshots; i++) {
+            const auto elem = std::min_element(std::cbegin(m_RotatedDifferences[i]), std::cend(m_RotatedDifferences[i]));
+            bestColumns[i] = std::distance(std::cbegin(m_RotatedDifferences[i]), elem);
+            minDifferences[i] = *elem;
+        }
+
+        // Return result
+        return std::tuple_cat(RIDFProcessor()(this->getUnwrapResolution(), bestColumns, minDifferences),
+                              std::make_tuple(std::cref(m_RotatedDifferences)));
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Private API
+    //------------------------------------------------------------------------
+    template<class... Ts>
+    void calcImageDifferences(Ts &&... args) const
+    {
+        const size_t numSnapshots = this->getNumSnapshots();
+        BOB_ASSERT(numSnapshots > 0);
+
+        // Object for rotating over images
+        const cv::Size unwrapRes = this->getUnwrapResolution();
+        Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+
+        // Preallocate snapshot difference vectors
+        while (m_RotatedDifferences.size() < numSnapshots) {
+            m_RotatedDifferences.emplace_back(unwrapRes.width);
+        }
+
+        // Scan across image columns
+        rotater.rotate(
+            [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i)
+            {
+                // Loop through snapshots
+                for (size_t s = 0; s < numSnapshots; s++) {
+                    // Calculate difference
+                    m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
+                }
+            });
+    }
+
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    std::vector<cv::Mat> m_Snapshots;
-    mutable Differencer m_Differencer;
-    mutable cv::Mat m_DiffScratchImage;
-}; // PerfectMemory
+    mutable std::vector<std::vector<float>> m_RotatedDifferences;
+}; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

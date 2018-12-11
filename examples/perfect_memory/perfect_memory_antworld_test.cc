@@ -97,11 +97,11 @@ main()
     agent.setPosition(5.5_m, 4_m, 10_mm);
 
     const cv::Size imSize(renderWidth, renderHeight);
-    degree_t heading;
+    units::angle::degree_t heading;
 
     {
         std::cout << "Using ant world rotater..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, AntWorldRotater> pm(imSize);
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, AntWorldRotater> pm(imSize);
         trainRoute(pm);
 
         size_t snapshot;
@@ -119,7 +119,7 @@ main()
 
     {
         std::cout << "Using in silico rotater..." << std::endl;
-        PerfectMemory<BestMatchingSnapshot, InSilicoRotater> pm(imSize);
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, InSilicoRotater> pm(imSize);
         trainRoute(pm);
 
         agent.setAttitude(0_deg, 0_deg, 0_deg);

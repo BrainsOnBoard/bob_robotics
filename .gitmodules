@@ -1,3 +1,6 @@
 [submodule "msp"]
 	path = msp
 	url = https://github.com/BrainsOnBoard/msp.git
+[submodule "third_party/arsdk3/arsdk_manifests"]
+	path = third_party/arsdk3/arsdk_manifests
+	url = https://github.com/Parrot-Developers/arsdk_manifests

@@ -1,5 +1,4 @@
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 # optionally disable I2C
 ifdef NO_I2C_ROBOT

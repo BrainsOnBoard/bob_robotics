@@ -27,7 +27,6 @@ namespace filesystem
 namespace BoBRobotics
 {
 using namespace units::literals;
-using namespace units::length;
 
 namespace AntWorld
 {
@@ -37,28 +36,29 @@ namespace AntWorld
 //! Provides a means for loading a world stored on disk into OpenGL
 class World
 {
+    using meter_t = units::length::meter_t;
+
 public:
     World()
-      : m_MinBound{0.0f, 0.0f, 0.0f}, m_MaxBound{0.0f, 0.0f, 0.0f}
-      , m_MinBoundM{0_m, 0_m, 0_m}, m_MaxBoundM{0_m, 0_m, 0_m}
+      : m_MinBound{0_m, 0_m, 0_m}, m_MaxBound{0_m, 0_m, 0_m}
     {}
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
-    bool loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    void load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
+    void loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
     void render() const;
 
     const Vector3<meter_t> &getMinBound()
     {
-        return m_MinBoundM;
+        return m_MinBound;
     }
 
     const Vector3<meter_t> &getMaxBound()
     {
-        return m_MaxBoundM;
+        return m_MaxBound;
     }
 
 private:
@@ -122,7 +122,7 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    bool loadMaterials(const filesystem::path &basePath, const std::string &filename,
+    void loadMaterials(const filesystem::path &basePath, const std::string &filename,
                        GLint textureFormat, int maxTextureSize,
                        std::map<std::string, Texture*> &textureNames);
 
@@ -136,10 +136,8 @@ private:
     std::vector<std::unique_ptr<Texture>> m_Textures;
 
     // World bounds
-    GLfloat m_MinBound[3];
-    GLfloat m_MaxBound[3];
-    Vector3<meter_t> m_MinBoundM;
-    Vector3<meter_t> m_MaxBoundM;
+    Vector3<meter_t> m_MinBound;
+    Vector3<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

@@ -1,23 +1,22 @@
 #include "world.h"
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "common.h"
+
+// Third-party includes
+#include "../third_party/path.h"
+
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <tuple>
-
-// Standard C includes
-#include <cassert>
-
-// OpenCV includes
-#include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "../third_party/path.h"
-
-// Antworld includes
-#include "common.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -35,7 +34,7 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
-    assert(stream.eof());
+    BOB_ASSERT(stream.eof());
 }
 
 void readFace(std::istringstream &lineStream,
@@ -70,7 +69,7 @@ void readFace(std::istringstream &lineStream,
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
-    assert(lineStream.eof());
+    BOB_ASSERT(lineStream.eof());
 }
 }
 
@@ -81,7 +80,7 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
+void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
     // Create single surface
@@ -92,13 +91,12 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open world file:" << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open world file:" + filename);
     }
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
-    const std::streampos numTriangles = input.tellg() / (sizeof(double) * 12);
+    const auto numTriangles = static_cast<size_t>(input.tellg()) / (sizeof(double) * 12);
     input.seekg(0);
     std::cout << "World has " << numTriangles << " triangles" << std::endl;
 
@@ -109,6 +107,9 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Reserve 3 XYZ positions for each triangle and 6 for the ground
         std::vector<GLfloat> positions((6 + (numTriangles * 3)) * 3);
 
+        // Initialise bounds to limits of underlying data types
+        std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
+        std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<meter_t>::min());
 
         // Loop through components(X, Y and Z)
         for(unsigned int c = 0; c < 3; c++) {
@@ -124,33 +125,28 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                     // **NOTE** after first ground polygons
                     positions[18 + (t * 9) + (v * 3) + c] = (GLfloat)trianglePosition;
 
-                    // If we're reading Z component, update max bound
-                    m_MinBound[c] = std::min(m_MinBound[c], (GLfloat)trianglePosition);
-                    m_MaxBound[c] = std::max(m_MaxBound[c], (GLfloat)trianglePosition);
+                    // Update bounds
+                    m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(trianglePosition));
+                    m_MaxBound[c] = units::math::max(m_MaxBound[c], meter_t(trianglePosition));
                 }
             }
         }
 
-        // Add first ground triangle vertex positions
-        positions[0] = m_MinBound[0];   positions[1] = m_MinBound[1];   positions[2] = 0.0f;
-        positions[3] = m_MaxBound[0];   positions[4] = m_MaxBound[1];   positions[5] = 0.0f;
-        positions[6] = m_MinBound[0];   positions[7] = m_MaxBound[1];   positions[8] = 0.0f;
+        // Add first ground plane triangle vertex positions
+        positions[0] = m_MinBound[0].value();   positions[1] = m_MinBound[1].value();   positions[2] = 0.0f;
+        positions[3] = m_MaxBound[0].value();   positions[4] = m_MaxBound[1].value();   positions[5] = 0.0f;
+        positions[6] = m_MinBound[0].value();   positions[7] = m_MaxBound[1].value();   positions[8] = 0.0f;
 
-        // Add second ground triangle vertex positions
-        positions[9] = m_MinBound[0];   positions[10] = m_MinBound[1];  positions[11] = 0.0f;
-        positions[12] = m_MaxBound[0];  positions[13] = m_MinBound[1];  positions[14] = 0.0f;
-        positions[15] = m_MaxBound[0];  positions[16] = m_MaxBound[1];  positions[17] = 0.0f;
+        // Add second ground plane triangle vertex positions
+        positions[9] = m_MinBound[0].value();   positions[10] = m_MinBound[1].value();  positions[11] = 0.0f;
+        positions[12] = m_MaxBound[0].value();  positions[13] = m_MinBound[1].value();  positions[14] = 0.0f;
+        positions[15] = m_MaxBound[0].value();  positions[16] = m_MaxBound[1].value();  positions[17] = 0.0f;
 
         // Upload positions
         surface.uploadPositions(positions);
 
-        // Convert min/max bounds to metre types (this is admittedly bit gross...)
-        m_MinBoundM[0] = makeM(m_MinBound[0]);
-        m_MinBoundM[1] = makeM(m_MinBound[1]);
-        m_MinBoundM[2] = makeM(m_MinBound[2]);
-        m_MaxBoundM[0] = makeM(m_MaxBound[0]);
-        m_MaxBoundM[1] = makeM(m_MaxBound[1]);
-        m_MaxBoundM[2] = makeM(m_MaxBound[2]);
+        std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")" << std::endl;
+        std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")" << std::endl;
     }
 
     {
@@ -183,11 +179,9 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Upload colours
         surface.uploadColours(colours);
     }
-
-    return true;
 }
 //----------------------------------------------------------------------------
-bool World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
+void World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
@@ -219,8 +213,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         // Open obj file
         std::ifstream objFile(filename);
         if(!objFile.good()) {
-            std::cerr << "Cannot open obj file: " << filename << std::endl;
-            return false;
+            throw std::runtime_error("Cannot open obj file: " + filename);
         }
 
         // Get base path to load materials etc relative to
@@ -274,7 +267,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "f") {
                 // Check that a surface has been begun
-                assert(!objSurfaces.empty());
+                BOB_ASSERT(!objSurfaces.empty());
 
                 // Read face
                 readFace(lineStream, rawPositions, rawTexCoords, objSurfaces.back());
@@ -288,12 +281,13 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
         std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
 
-        std::fill_n(&m_MinBound[0], 3, std::numeric_limits<GLfloat>::max());
-        std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<GLfloat>::min());
+        // Initialise bounds to limits of underlying data types
+        std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
+        std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<meter_t>::min());
         for(unsigned int i = 0; i < rawPositions.size(); i += 3) {
             for(unsigned int c = 0; c < 3; c++) {
-                m_MinBound[c] = std::min(m_MinBound[c], rawPositions[i + c]);
-                m_MaxBound[c] = std::max(m_MaxBound[c], rawPositions[i + c]);
+                m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(rawPositions[i + c]));
+                m_MaxBound[c] = units::math::max(m_MaxBound[c], meter_t(rawPositions[i + c]));
             }
         }
 
@@ -325,9 +319,6 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
             surface.setTexture(tex->second);
         }
     }
-
-
-    return true;
 }
 //----------------------------------------------------------------------------
 void World::render() const
@@ -339,15 +330,14 @@ void World::render() const
     }
 }
 //----------------------------------------------------------------------------
-bool World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
+void World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
                           GLint textureFormat, int maxTextureSize,
                           std::map<std::string, Texture*> &textureNames)
 {
     // Open obj file
     std::ifstream mtlFile((basePath / filename).str());
     if(!mtlFile.good()) {
-        std::cerr << "Cannot open mtl file: " << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open mtl file: " + filename);
     }
 
     std::cout << "Reading material file: " << filename << std::endl;
@@ -379,7 +369,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
             // ignore lighting properties
         }
         else if(commandString == "map_Kd") {
-            assert(!currentMaterialName.empty());
+            BOB_ASSERT(!currentMaterialName.empty());
 
             // Skip any whitespace preceeding texture filename
             while(lineStream.peek() == ' ') {
@@ -432,7 +422,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
                 // Add name to map
                 const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
-                assert(inserted);
+                BOB_ASSERT(inserted);
             }
         }
         else {
@@ -440,8 +430,6 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
         }
 
     }
-
-    return true;
 }
 
 //----------------------------------------------------------------------------

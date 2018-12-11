@@ -1,17 +1,16 @@
 #include "route_continuous.h"
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "common.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <tuple>
-
-// Standard C includes
-#include <cassert>
-
-// Libantworld includes
-#include "common.h"
 
 using namespace units::literals;
 using namespace units::angle;
@@ -96,9 +95,7 @@ RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries
 RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
     : RouteContinuous(arrowLength, maxRouteEntries)
 {
-    if(!load(filename)) {
-        throw std::runtime_error("Cannot load route");
-    }
+    load(filename);
 }
 //----------------------------------------------------------------------------
 RouteContinuous::~RouteContinuous()
@@ -119,18 +116,17 @@ RouteContinuous::~RouteContinuous()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool RouteContinuous::load(const std::string &filename)
+void RouteContinuous::load(const std::string &filename)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file:" << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open route file: " + filename);
     }
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
-    const std::streampos numPoints = input.tellg() / (sizeof(double) * 3);
+    const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
     std::cout << "Route has " << numPoints << " points" << std::endl;
 
@@ -158,7 +154,7 @@ bool RouteContinuous::load(const std::string &filename)
 
     std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
     // Reserve headings
-    const unsigned int numSegments = m_Waypoints.size() - 1;
+    const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);
 
     // Reserve array of cumulative distances
@@ -208,7 +204,6 @@ bool RouteContinuous::load(const std::string &filename)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
-    return true;
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
@@ -322,7 +317,7 @@ void RouteContinuous::addPoint(meter_t x, meter_t y, bool error)
     const float position[2] = {(float) x.value(), (float) y.value()};
 
     // Check we haven't run out of buffer space
-    assert(m_RouteNumPoints < m_RouteMaxPoints);
+    BOB_ASSERT(m_RouteNumPoints < m_RouteMaxPoints);
 
     // Update this vertex's colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RouteColourVBO);

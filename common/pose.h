@@ -7,7 +7,11 @@
 #include "../third_party/units.h"
 
 namespace BoBRobotics {
-//! A generic template for unit arrays
+//! A generic template for 2D unit arrays
+template<class T>
+using Vector2 = std::array<T, 2>;
+
+//! A generic template for 3D unit arrays
 template<class T>
 using Vector3 = std::array<T, 3>;
 

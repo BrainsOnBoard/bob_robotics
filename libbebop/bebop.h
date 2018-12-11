@@ -1,7 +1,10 @@
 #pragma once
 
-// Standard C++ includes
+// Standard C includes
 #include <cstdint>
+
+// Standard C++ includes
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -11,12 +14,6 @@
 #include <utility>
 
 // OpenCV
-#ifdef KEY_UP
-#undef KEY_UP
-#endif
-#ifdef KEY_DOWN
-#undef KEY_DOWN
-#endif
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
@@ -78,9 +75,6 @@ extern "C"
 namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
-using namespace units::angle;
-using namespace units::angular_velocity;
-using namespace units::velocity;
 
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
@@ -111,7 +105,11 @@ checkError(eARCONTROLLER_ERROR err)
 class Bebop
   : public UAV
 {
-    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
+    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *&)>>;
+
+    using degree_t = units::angle::degree_t;
+    using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
     //! Interface to the drone's built-in camera
@@ -119,9 +117,10 @@ public:
     {
     public:
         VideoStream(Bebop &bebop);
-        ~VideoStream();
+        virtual ~VideoStream() override;
         virtual bool readFrame(cv::Mat &) override;
         virtual cv::Size getOutputSize() const override;
+        virtual std::string getCameraName() const override;
 
     private:
         cv::Mat m_Frame;
@@ -149,11 +148,11 @@ public:
                            uint8_t *pps_buffer_ptr,
                            uint32_t pps_buffer_size);
         bool decode(const ARCONTROLLER_Frame_t *framePtr);
-        inline uint32_t getFrameWidth() const
+        inline int getFrameWidth() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->width : 0;
         }
-        inline uint32_t getFrameHeight() const
+        inline int getFrameHeight() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->height : 0;
         }
@@ -162,10 +161,20 @@ public:
         static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
+    //! The drone's current state
+    enum class State
+    {
+        Stopped = ARCONTROLLER_DEVICE_STATE_STOPPED,
+        Starting = ARCONTROLLER_DEVICE_STATE_STARTING,
+        Running = ARCONTROLLER_DEVICE_STATE_RUNNING,
+        Paused = ARCONTROLLER_DEVICE_STATE_PAUSED,
+        Stopping = ARCONTROLLER_DEVICE_STATE_STOPPING
+    };
+
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
-    ~Bebop();
+    virtual ~Bebop() override;
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -183,7 +192,12 @@ public:
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
 
+    // calibration
+    void doFlatTrimCalibration();
+
     // misc
+    float getBatteryLevel();
+    State getState();
     VideoStream &getVideoStream();
     void takePhoto();
     void setFlightEventHandler(FlightEventHandler);
@@ -262,22 +276,22 @@ private:
     };
 
     ControllerPtr m_Device;
-    Semaphore m_Semaphore;
+    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
+    std::atomic<unsigned char> m_BatteryLevel;
 
     inline void connect();
     inline void disconnect();
     void startStreaming();
     void stopStreaming();
     inline void addEventHandlers();
-    inline void onBatteryChanged(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict) const;
+    inline void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
-    inline eARCONTROLLER_DEVICE_STATE getState();
-    inline eARCONTROLLER_DEVICE_STATE getStateUpdate();
+    inline State getStateUpdate();
 
     // speed limits
     inline void setMaximumTilt(degree_t newValue);
@@ -287,6 +301,9 @@ private:
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
+    static void alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    static void magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,
                              const char *format,

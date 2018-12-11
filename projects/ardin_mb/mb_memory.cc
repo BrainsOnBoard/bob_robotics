@@ -32,9 +32,12 @@ unsigned int convertMsToTimesteps(double ms)
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
-MBMemory::MBMemory()
-#ifndef CPU_ONLY
-    : m_SnapshotFloatGPU(MBParams::inputWidth, MBParams::inputHeight, CV_32FC1)
+MBMemory::MBMemory(bool normaliseInput)
+    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)), m_NormaliseInput(normaliseInput)
+#ifdef CPU_ONLY
+        , m_SnapshotFloat(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
+#else
+        , m_SnapshotGPU(MBParams::inputHeight, MBParams::inputWidth, CV_8UC1), m_SnapshotFloatGPU(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
 #endif  // CPU_ONLY
 {
 
@@ -48,10 +51,6 @@ MBMemory::MBMemory()
     {
         Timer<> timer("Initialization:");
         initialize();
-
-        // Null unused external input pointers
-        IextKC = nullptr;
-        IextEN = nullptr;
     }
 
     {
@@ -68,24 +67,61 @@ MBMemory::MBMemory()
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &snapshotFloat, bool train)
+void MBMemory::train(const cv::Mat &image)
 {
-    std::mt19937 gen;
+    present(image, true);
+}
+//----------------------------------------------------------------------------
+float MBMemory::test(const cv::Mat &image) const
+{
+    // Get number of EN spikes
+    unsigned int numENSpikes = std::get<2>(present(image, false));
+    //std::cout << "\t" << numENSpikes << " EN spikes" << std::endl;
 
-    Timer<> timer("\tSimulation:");
+    // Largest difference would be expressed by EN firing every timestep
+    return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
+}
+//----------------------------------------------------------------------------
+void MBMemory::clearMemory()
+{
+    throw std::runtime_error("MBMemory does not currently support clearing");
+}
+//----------------------------------------------------------------------------
+std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train) const
+{
+    BOB_ASSERT(image.cols == MBParams::inputWidth);
+    BOB_ASSERT(image.rows == MBParams::inputHeight);
+    BOB_ASSERT(image.type() == CV_8UC1);
 
-#ifndef CPU_ONLY
-    // Upload final snapshot to GPU
-    m_SnapshotFloatGPU.upload(snapshotFloat);
+#ifdef CPU_ONLY
+    // Convert to float
+    image.convertTo(m_SnapshotFloat, CV_32FC1, 1.0 / 255.0);
+
+    // Normalise snapshot using L2 norm
+    if(m_NormaliseInput) {
+        cv::normalize(m_SnapshotFloat, m_SnapshotFloat);
+    }
+
+    // Extract step and data pointer directly from CPU Mat
+    const unsigned int snapshotStep = m_SnapshotFloat.cols;
+    float *snapshotData = reinterpret_cast<float*>(m_SnapshotFloat.data);
+#else
+    // Upload (uint8) snapshot to GPU
+    m_SnapshotGPU.upload(image);
+
+    // Convert to float
+    m_SnapshotGPU.convertTo(m_SnapshotFloatGPU, CV_32FC1, 1.0 / 255.0);
+
+    // Normalise snapshot using L2 norm
+    // **YUCK** why doesn't the CUDA version have default parameters!?
+    if(m_NormaliseInput) {
+        cv::cuda::normalize(m_SnapshotFloatGPU, m_SnapshotFloatGPU, 1.0, 0.0, cv::NORM_L2, -1);
+    }
 
     // Extract device pointers and step
     auto snapshotPtrStep = (cv::cuda::PtrStep<float>)m_SnapshotFloatGPU;
     const unsigned int snapshotStep = snapshotPtrStep.step / sizeof(float);
     float *snapshotData = snapshotPtrStep.data;
-#else
-    // Extract step and data pointer directly from CPU Mat
-    const unsigned int snapshotStep = snapshotFloat.cols;
-    float *snapshotData = reinterpret_cast<float*>(snapshotFloat.data);
 #endif
 
     // Convert simulation regime parameters to timesteps
@@ -115,8 +151,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     unsigned int numPNSpikes = 0;
     unsigned int numKCSpikes = 0;
     unsigned int numENSpikes = 0;
-    while(iT < endTimestep)
-    {
+    while(iT < endTimestep) {
         // If we should be presenting an image
         if(iT < endPresentTimestep) {
             IextPN = snapshotData;
@@ -141,8 +176,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
 #else
-        CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntPN, d_glbSpkCntPN, sizeof(unsigned int), cudaMemcpyDeviceToHost));
-        CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntKC, d_glbSpkCntKC, sizeof(unsigned int), cudaMemcpyDeviceToHost));
         CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntEN, d_glbSpkCntEN, sizeof(unsigned int), cudaMemcpyDeviceToHost));
 #endif
 #else
@@ -164,10 +197,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
             injectDopaminekcToEN = false;
         }
 
-        numPNSpikes += spikeCount_PN;
-        numKCSpikes += spikeCount_KC;
         numENSpikes += spikeCount_EN;
 #ifdef RECORD_SPIKES
+        numPNSpikes += spikeCount_PN;
+        numKCSpikes += spikeCount_KC;
         for(unsigned int i = 0; i < spikeCount_PN; i++) {
             pnSpikeBitset.set(spike_PN[i]);
         }

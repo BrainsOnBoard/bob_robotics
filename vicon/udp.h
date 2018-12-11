@@ -1,5 +1,11 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/assert.h"
+#include "../common/pose.h"
+#include "../common/stopwatch.h"
+#include "../os/net.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <atomic>
@@ -9,33 +15,11 @@
 #include <thread>
 #include <vector>
 
-// Standard C includes
-#include <cassert>
-#include <cstring>
-
-// Networking includes
-#ifdef _WIN32
-    #include <winsock2.h>
-#else
-    #include <arpa/inet.h>
-    #include <netinet/in.h>
-    #include <sys/socket.h>
-    #include <sys/types.h>
-    #include <unistd.h>
-#endif
-
-// BoB robotics includes
-#include "../common/pose.h"
-
 namespace BoBRobotics
 {
 namespace Vicon
 {
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
-using namespace units::time;
-using namespace units::velocity;
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectData
@@ -43,6 +27,9 @@ using namespace units::velocity;
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     ObjectData()
       : m_FrameNumber{ 0 }
@@ -54,9 +41,16 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+    void update(const char(&name)[24], uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
+        // Copy name
+        // **NOTE** this must already be NULL-terminated
+        memcpy(&m_Name[0], &name[0], 24);
+
+        // Log the time when this packet was received
+        m_ReceivedTimer.start();
+
         // Cache frame number
         m_FrameNumber = frameNumber;
 
@@ -75,24 +69,30 @@ public:
     }
 
     template <class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
     template <class AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude()
+    Vector3<AngleUnit> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
+
+    const char *getName() const{ return m_Name; }
+
+    auto timeSinceReceived() const { return m_ReceivedTimer.elapsed(); }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber;
+    char m_Name[24];
     Vector3<millimeter_t> m_Position;
     Vector3<radian_t> m_Attitude;
+    Stopwatch m_ReceivedTimer;
 };
 
 //----------------------------------------------------------------------------
@@ -101,6 +101,11 @@ private:
 //! Object data class which also calculate (un-filtered) velocity
 class ObjectDataVelocity : public ObjectData
 {
+    using radian_t = units::angle::radian_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+    using millisecond_t = units::time::millisecond_t;
+
 public:
     ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
     {}
@@ -108,10 +113,13 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
+    void update(const char(&name)[24], uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
-        const Vector3<millimeter_t> position {x, y, z};
+        // Superclass
+        ObjectData::update(name, frameNumber, x, y, z, yaw, pitch, roll);
+
+        const Vector3<millimeter_t> position{ x, y, z };
         constexpr millisecond_t frameS = 10_ms;
         constexpr millisecond_t smoothingS = 50_ms;
 
@@ -140,9 +148,6 @@ public:
         std::transform(std::begin(instVelocity), std::end(instVelocity),
                        std::begin(m_Velocity), std::begin(m_Velocity),
                        smoothVelocity);
-
-        // Superclass
-        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
     }
 
     template <class VelocityUnit = meters_per_second_t>
@@ -167,11 +172,9 @@ class UDPClient
 {
 public:
     UDPClient(){}
-    UDPClient(unsigned int port)
+    UDPClient(uint16_t port)
     {
-        if(!connect(port)) {
-            throw std::runtime_error("Cannot connect");
-        }
+        connect(port);
     }
 
     virtual ~UDPClient()
@@ -186,13 +189,12 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(unsigned int port)
+    void connect(uint16_t port)
     {
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
-            std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot open socket");
         }
 
         // Set socket to have 1s read timeout
@@ -205,8 +207,7 @@ public:
         timeout.tv_usec = 0;
 #endif
         if(setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
-            std::cerr << "Cannot set socket timeout: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot set socket timeout");
         }
 
         // Create socket address structure
@@ -218,14 +219,12 @@ public:
 
         // Bind socket to local port
         if(bind(socket, reinterpret_cast<sockaddr*>(&localAddress), sizeof(localAddress)) < 0) {
-            std::cerr << "Cannot bind socket: " << strerror(errno) << std::endl;
-            return false;
+            throw OS::Net::NetworkError("Cannot bind socket");
         }
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
         m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
-        return true;
     }
 
     unsigned int getNumObjects()
@@ -234,22 +233,38 @@ public:
         return m_ObjectData.size();
     }
 
+    unsigned int findObjectID(const std::string &name) const
+    {
+        // Search for object with name
+        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        auto objIter = std::find_if(m_ObjectData.cbegin(), m_ObjectData.cend(),
+            [&name](const ObjectDataType &object)
+            {
+                return (strcmp(object.getName(), name.c_str()) == 0);
+            });
+
+        // If object wasn't found, raise error
+        if(objIter == m_ObjectData.cend()) {
+            throw std::out_of_range("Cannot find object '" + name + "'");
+        }
+        // Otherwise, return its index i.e. object ID
+        else {
+            return (unsigned int)std::distance(m_ObjectData.cbegin(), objIter);
+        }
+    }
+
     ObjectDataType getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        if(id < m_ObjectData.size()) {
-            return m_ObjectData[id];
-        }
-        else {
-            throw std::runtime_error("Invalid object id: " + std::to_string(id));
-        }
+        return m_ObjectData.at(id);
     }
 
 private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, uint32_t frameNumber,
+    void updateObjectData(unsigned int id, const char(&name)[24],
+                          uint32_t frameNumber,
                           const Vector3<double> &position,
                           const Vector3<double> &attitude)
     {
@@ -257,7 +272,7 @@ private:
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
 
         // If no object data structure has been created for this ID, add one
-        if(id >= m_ObjectData.size()) {
+        if (id >= m_ObjectData.size()) {
             m_ObjectData.resize(id + 1);
         }
 
@@ -268,13 +283,15 @@ private:
          * so that they are in the order of yaw, pitch and roll (which seems to
          * be standard).
          */
-        m_ObjectData[id].update(frameNumber,
-                                units::make_unit<millimeter_t>(position[0]),
-                                units::make_unit<millimeter_t>(position[1]),
-                                units::make_unit<millimeter_t>(position[2]),
-                                units::make_unit<radian_t>(attitude[2]),
-                                units::make_unit<radian_t>(attitude[0]),
-                                units::make_unit<radian_t>(attitude[1]));
+        using namespace units::length;
+        using namespace units::angle;
+        m_ObjectData[id].update(name, frameNumber,
+                                millimeter_t(position[0]),
+                                millimeter_t(position[1]),
+                                millimeter_t(position[2]),
+                                radian_t(attitude[2]),
+                                radian_t(attitude[0]),
+                                radian_t(attitude[1]));
     }
 
     void readThread(int socket)
@@ -287,7 +304,7 @@ private:
         for(unsigned int f = 0; !m_ShouldQuit; f++) {
             // Read datagram
             const ssize_t bytesReceived = recvfrom(socket, &buffer[0], 1024,
-                                                   0, NULL, NULL);
+                                                   0, nullptr, nullptr);
 
             // If there was an error
             if(bytesReceived == -1) {
@@ -297,8 +314,7 @@ private:
                 }
                 // Otherwise, display error and stop
                 else {
-                    std::cerr << "Cannot read datagram: " << strerror(errno) << std::endl;
-                    break;
+                    throw OS::Net::NetworkError("Cannot read datagram");
                 }
             }
             // Otherwise, if data was received
@@ -319,7 +335,12 @@ private:
                     // Read size of item
                     uint16_t itemDataSize;
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
-                    assert(itemDataSize == 72);
+                    BOB_ASSERT(itemDataSize == 72);
+
+                    // Read object name and check it is NULL-terminated
+                    char objectName[24];
+                    memcpy(&objectName[0], &buffer[itemOffset + 3], 24);
+                    BOB_ASSERT(objectName[23] == '\0');
 
                     // Read object position
                     Vector3<double> position;
@@ -330,7 +351,7 @@ private:
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, frameNumber, position, attitude);
+                    updateObjectData(objectID, objectName, frameNumber, position, attitude);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;

@@ -48,21 +48,21 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
 {
     // Create IMU interface
     LM9DS1 imu;
-    
+
     // Initialise IMU magnetometer
     LM9DS1::MagnetoSettings magSettings;
     imu.initMagneto(magSettings);
-    
+
     // While quit signal isn't set
     for(numSamples = 0; !shouldQuit; numSamples++) {
         // Wait for magneto to become available
         while(!imu.isMagnetoAvailable()){
         }
-        
+
         // Read magneto
         float magnetoData[3];
         imu.readMagneto(magnetoData);
-            
+
         // Calculate heading angle from magneto data and set atomic value
         heading = atan2(magnetoData[0], magnetoData[2]);
     }
@@ -85,12 +85,12 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     cv::VideoCapture capture(cameraDevice);
 
     const cv::Size camRes(640, 480);
-    assert(capture.get(cv::CAP_PROP_FRAME_WIDTH) == camRes.width);
-    assert(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == camRes.height);
+    BOB_ASSERT(capture.get(cv::CAP_PROP_FRAME_WIDTH) == camRes.width);
+    BOB_ASSERT(capture.get(cv::CAP_PROP_FRAME_HEIGHT) == camRes.height);
 
     // Create unwrapper
     OpenCVUnwrap360 unwrapper(camRes, unwrapRes,
-                              0.5, 0.416, 0.173, 0.377, -180);
+                              0.5, 0.416, 0.173, 0.377, -180_deg);
 #endif
 
     // Create optical flow calculator
@@ -128,29 +128,29 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
         if(!capture.read(rgbInput)) {
             return;
         }
-        cv::cvtColor(rgbInput, greyscaleInput, CV_BGR2GRAY);
+        cv::cvtColor(rgbInput, greyscaleInput, cv::COLOR_BGR2GRAY);
 #endif
-  
+
         // Unwrap
         unwrapper.unwrap(greyscaleInput, outputImage);
 
         // Calculate optical flow
         if(opticalFlow.calculate(outputImage)) {
             // Reduce horizontal flow - summing along columns
-            cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, CV_REDUCE_SUM);
+            cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, cv::REDUCE_SUM);
 
             // Multiply summed flow by filters
             cv::multiply(flowXSum, velocityFilter, flowXSum);
 
             // Reduce filtered flow - summing along rows
-            cv::reduce(flowXSum, flowSum, 1, CV_REDUCE_SUM);
+            cv::reduce(flowXSum, flowSum, 1, cv::REDUCE_SUM);
 
             // Filter speed and set atomic
             prevSpeed = (alpha * flowSum.at<float>(0, 0)) + ((1.0f - alpha) * prevSpeed);
             speed = prevSpeed;
         }
     }
-    
+
 }
 }   // Anonymous namespace
 
@@ -158,13 +158,13 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
 int main(int argc, char *argv[])
 {
     const float velocityScale = 1.0f / 30.0f;
-    
+
     // Create joystick interface
     Joystick joystick;
-    
+
     // Create motor interface
     Norbot motor;
-    
+
     // Initialise GeNN
     allocateMem();
     initialize();
@@ -181,22 +181,22 @@ int main(int argc, char *argv[])
     // Build connectivity
     //---------------------------------------------------------------------------
     buildConnectivity();
-    
+
     initstone_cx();
-    
+
     // Atomic flag for quitting child threads
     std::atomic<bool> shouldQuit{false};
-    
+
     // Create thread to read from IMU
     unsigned int numIMUSamples = 0;
     std::atomic<float> imuHeading{0.0f};
-    std::thread imuThread(&imuThreadFunc, 
+    std::thread imuThread(&imuThreadFunc,
                           std::ref(shouldQuit), std::ref(imuHeading), std::ref(numIMUSamples));
-    
+
     // Create thread to calculate optical flow from camera device
     unsigned int numCameraFrames = 0;
     std::atomic<float> opticalFlowSpeed{0.0f};
-    std::thread opticalFlowThread(&opticalFlowThreadFunc, (argc > 1) ? std::atoi(argv[1]) : 0, 
+    std::thread opticalFlowThread(&opticalFlowThreadFunc, (argc > 1) ? std::atoi(argv[1]) : 0,
                                   std::ref(shouldQuit), std::ref(opticalFlowSpeed), std::ref(numCameraFrames));
 
 #ifdef RECORD_SENSORS
@@ -211,10 +211,10 @@ int main(int argc, char *argv[])
     for(;; numTicks++) {
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
-        
+
         // Read from joystick
         joystick.update();
-        
+
         // Stop if 2nd button is pressed
         if(joystick.isDown(JButton::B)) {
             break;
@@ -222,24 +222,24 @@ int main(int argc, char *argv[])
 
         // Update heading from IMU
         headingAngleTL = imuHeading;
-                
+
         // Update speed from IMU
         // **NOTE** robot is incapable of holonomic motion!
         const float flow =  ignoreFlow ? 0.0f : (opticalFlowSpeed * velocityScale);
         speedTN2[Parameters::HemisphereLeft] = speedTN2[Parameters::HemisphereRight] = flow;
-        
+
 #ifdef RECORD_SENSORS
 
         data << imuHeading << ", " << flow << std::endl;
 #endif
         // Step network
         stepTimeCPU();
-        
+
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
             motor.drive(joystick, RobotParameters::joystickDeadzone);
-            
+
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
@@ -254,16 +254,16 @@ int main(int argc, char *argv[])
             const float steer = driveMotorFromCPU1(motor, (numTicks % 100) == 0);
             ignoreFlow = (steer > 0.5f);
         }
-        
+
         // Record time at end of tick
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
-        
+
         // Calculate tick duration (in microseconds)
         const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
-        
+
         // Add to total
         totalMicroseconds += tickMicroseconds;
-        
+
         // If there is time left in tick, sleep for remainder
         if(tickMicroseconds < RobotParameters::targetTickMicroseconds) {
             std::this_thread::sleep_for(std::chrono::microseconds(RobotParameters::targetTickMicroseconds - tickMicroseconds));
@@ -273,20 +273,20 @@ int main(int argc, char *argv[])
             numOverflowTicks++;
         }
     }
-    
+
     // Set quit flag and wait for child threads to complete
     shouldQuit = true;
     imuThread.join();
     opticalFlowThread.join();
-    
+
     // Show stats
     std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
     std::cout << "IMU samples: " << numIMUSamples << ", ";
     std::cout << "Camera frames: " << numCameraFrames << std::endl;
-    
+
     // Stop motor
     motor.tank(0.0f, 0.0f);
-    
+
     // Exit
     return EXIT_SUCCESS;
 }
