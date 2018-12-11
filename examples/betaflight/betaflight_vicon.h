@@ -73,7 +73,6 @@ namespace Robots
     }
 
     void sendCommands(bool controlOn) {
-
       if (controlOn) {
         // update control
         auto objectData = m_Vicon.getObjectData(0);
@@ -116,9 +115,9 @@ namespace Robots
 
         float z_control;
         if (m_VSetPoint[2]-float(velocity[2]) > 0) {
-          z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))+0.25*float(acceleration[2])) / 100.0;
+          z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))+0.25*float(acceleration[2])) / 150.0;
         } else {
-          z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))-0.25*float(acceleration[2])) / 100.0;
+          z_control = (0.2*m_IntegralTerm[2]+35.0*(m_VSetPoint[2] - float(velocity[2]))-0.25*float(acceleration[2])) / 150.0;
         }
         //std::cout << std::setw(6) << std::fixed<< std::setprecision(4) << m_VSetPoint[2] << " " << float(velocity[2]) << "," << std::endl;
 
@@ -143,7 +142,7 @@ namespace Robots
         //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << pitch_control << ",";
         m_MyDrone.setPitch(pitch_control);
 
-        float yaw_control = 5.75*(-90.0-float(attitude[0]))/100.0; // was 20.75
+        float yaw_control = (-1.0f) * (180.0 / M_PI) * float(units::math::atan2(units::math::sin(m_Yaw - attitude[0]), units::math::cos(m_Yaw - attitude[0]))); // was 20.75
         //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << yaw_control << ",";
         m_MyDrone.setYawSpeed(yaw_control);
 
@@ -171,15 +170,18 @@ namespace Robots
 
     }
 
+    void setYaw(degree_t yaw) {
+        m_Yaw = yaw;
+    }
     void setWaypoint(float x, float y, float z) {
 
       if (x < m_RoomBounds.x[0] || x > m_RoomBounds.x[1] || y < m_RoomBounds.y[0] || y > m_RoomBounds.y[1] || z < m_RoomBounds.z[0] || z > m_RoomBounds.z[1]) {
         std::cout << "Attempted to move outside of room bounds" << std::endl;
         return;
       } else {
-          m_Waypoint[0] = x;
-          m_Waypoint[1] = y;
-          m_Waypoint[2] = z;
+          m_Waypoint[0] = std::max(m_RoomBounds.x[0], std::min(m_RoomBounds.x[1], x));
+          m_Waypoint[1] = std::max(m_RoomBounds.y[0], std::min(m_RoomBounds.y[1], y));
+          m_Waypoint[2] = std::max(m_RoomBounds.z[0], std::min(m_RoomBounds.z[1], z));
       }
 
     }
@@ -188,9 +190,10 @@ namespace Robots
     UDPClient <ObjectDataVelocity> m_Vicon;
     RBounds m_RoomBounds;
     Vector3 < float > m_Waypoint = {{0,0,0}};
+    degree_t m_Yaw = 0.0_deg;
     Vector3 < float > m_VSetPoint = {{0,0,0}};
     Vector3 <meters_per_second_t> m_OldVelocity = {{0_mps,0_mps,0_mps}};
-    Vector3  < float > m_IntegralTerm = {{0,0,0}};
+    Vector3  < float > m_IntegralTerm = {{0,0,300.0f}};
 
   };
 
