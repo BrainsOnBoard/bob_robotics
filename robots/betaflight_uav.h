@@ -154,7 +154,7 @@ class betaflight_uav : public UAV {
         virtual void setYawSpeed(float right) override
         {
             right = std::min(1.0f, std::max(-1.0f, right));
-            M_RC_values[4] = 1500 + right*M_ControlScale;
+            M_RC_values[3] = 1500 + right*M_ControlScale;
         }
 
         std::string getArmStateAsString() {
@@ -205,7 +205,7 @@ class betaflight_uav : public UAV {
 		BetaFlight::Callbacks m_Cbs;
 		uint16_t M_RC_values[8] = {1500,1500,1040,1500,2000,1000,1500,1500};
 		float M_ControlScale = 100.0f;
-    float M_ThrottleScale = 100.0f;
+    float M_ThrottleScale = 150.0f;
 
 
 
