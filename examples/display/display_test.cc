@@ -40,16 +40,16 @@ main(int argc, char **argv)
             display.run();
         } catch (std::invalid_argument &) {
             // ...else it's a filename/URL/RPiCam
-			if (*argv[1] == 'r') {
-				// RPicam
-				RPiCamera cam(50091);
-		        Display display(cam);
-		        display.run();
-			} else {
-		        OpenCVInput cam(argv[1]);
-		        Display display(cam);
-		        display.run();
-			}
+            if (*argv[1] == 'r') {
+                // RPicam
+                RPiCamera cam(50091);
+                Display display(cam);
+                display.run();
+            } else {
+                OpenCVInput cam(argv[1]);
+                Display display(cam);
+                display.run();
+            }
         }
     }
 }
