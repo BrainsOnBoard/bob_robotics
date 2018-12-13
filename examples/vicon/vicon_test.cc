@@ -12,21 +12,32 @@ using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 using namespace units::angle;
 
-int
-main()
+int main(int argc, char **argv)
 {
     UDPClient<> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
+
+    const std::string objectName = (argc > 1) ? argv[1] : "Norbot";
+
+    unsigned int norbotID;
+    while(true) {
+        try {
+            norbotID = vicon.findObjectID(objectName);
+            break;
+        }
+        catch(std::out_of_range &ex) {
+            std::this_thread::sleep_for(1s);
+            std::cout << "Waiting for object '" << objectName << "'" << std::endl;
+        }
     }
+
+    std::cout << "'" << objectName << "' found with id:" << norbotID << std::endl;
 
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
     for (int i = 0; i < 10000; i++) {
-        auto objectData = vicon.getObjectData(0);
+        auto objectData = vicon.getObjectData(norbotID);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
         std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
