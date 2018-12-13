@@ -1,5 +1,11 @@
-// Standard C++ includes
-#include <iostream>
+// BoB robotics includes
+#include "hid/joystick.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
+
+// Third-party includes
+#include "third_party/path.h"
+#include "third_party/units.h"
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -7,15 +13,9 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// BoB robotics includes
-#include "hid/joystick.h"
-
-// Libantworld includes
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-
-// Third-party includes
-#include "third_party/units.h"
+// Standard C++ includes
+#include <cstring>
+#include <iostream>
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -43,12 +43,15 @@ inline second_t getCurrentTime()
 }
 }
 
-int main()
+int main(int argc, char **argv)
 {
     const auto turnSpeed = 200_deg_per_s;
     const auto moveSpeed = 3_mps;
     const unsigned int width = 1024;
     const unsigned int height = 262;
+
+    // Whether to use the 3D reconstructed Rothamsted model
+    const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
@@ -99,8 +102,20 @@ int main()
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     AntWorld::Renderer renderer(512, 0.1);
-    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
-                             {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+    if (useRothamstedModel) {
+        const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
+        if (!modelPath) {
+            throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
+        }
+        renderer.getWorld().loadObj((filesystem::path(modelPath) / "flight_1_decimate.obj").str(),
+                                    0.1f,
+                                    4096,
+                                    GL_COMPRESSED_RGB);
+    } else {
+        renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+                                 { 0.0f, 1.0f, 0.0f },
+                                 { 0.898f, 0.718f, 0.353f });
+    }
 
     // Load world, keeping texture sizes below 4096 and compressing textures on upload
     //renderer.getWorld().loadObj("object.obj",
