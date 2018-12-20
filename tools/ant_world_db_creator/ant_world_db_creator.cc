@@ -1,5 +1,6 @@
 
 // BoB robotics includes
+#include "common/pose.h"
 #include "libantworld/agent.h"
 #include "libantworld/common.h"
 #include "libantworld/renderer.h"
@@ -38,7 +39,6 @@ using namespace units::math;
 *      -- AD
 */
 const cv::Size RenderSize{ 720, 150 };
-using Pose = std::tuple<meter_t, meter_t, degree_t>;
 
 class AntWorldDatabaseCreator {
 protected:
@@ -60,20 +60,16 @@ protected:
                                    {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
     }
 
-    template<typename RecordOp>
-    void run(const std::vector<Pose> &poses, RecordOp record)
+    template<typename PoseVectorType, typename RecordOp>
+    void run(const PoseVectorType &poses, RecordOp record)
     {
         // Host OpenCV array to hold pixels read from screen
         cv::Mat frame(RenderSize, CV_8UC3);
 
         for (auto it = poses.cbegin(); !glfwWindowShouldClose(m_Window) && it < poses.cend(); ++it) {
-            meter_t x, y;
-            degree_t heading;
-            std::tie(x, y, heading) = *it;
-
             // Update agent's position
-            m_Agent.setPosition(x, y, AgentHeight);
-            m_Agent.setAttitude(heading, 0_deg, 0_deg);
+            m_Agent.setPosition(it->x(), it->y(), AgentHeight);
+            m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
 
             // Get current view
             m_Agent.readFrameSync(frame);
@@ -115,17 +111,8 @@ public:
         auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, AgentHeight);
         addMetadata(gridRecorder);
 
-        // Convert positions to poses
-        const auto positions = gridRecorder.getPositions();
-        std::vector<Pose> poses;
-        poses.reserve(positions.size());
-        const auto pos2pose = [](const auto &pos) {
-            return std::make_tuple<meter_t, meter_t, degree_t>(pos[0], pos[1], 0_deg);
-        };
-        std::transform(positions.cbegin(), positions.cend(), std::back_inserter(poses), pos2pose);
-
         // Record image database
-        run(poses, [&gridRecorder](const cv::Mat &image) { gridRecorder.record(image); });
+        run(gridRecorder.getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder.record(image); });
     }
 };
 
@@ -142,9 +129,9 @@ public:
         const millimeter_t pathStep = 1_cm;
 
         // Make vector of agent's poses
-        std::vector<Pose> poses;
+        std::vector<Pose2<meter_t, degree_t>> poses;
         for (auto distance = 0_mm; distance < m_Route.getLength(); distance += pathStep) {
-            poses.emplace_back(m_Route.getPosition(distance));
+            poses.emplace_back(m_Route.getPose(distance));
         }
 
         // Record image database

@@ -1,15 +1,18 @@
 #pragma once
 
-// Standard C++ includes
-#include <array>
-#include <string>
-#include <vector>
+// BoB robotics includes
+#include "../common/pose.h"
 
 // OpenGL includes
 #include <GL/glew.h>
 
 // Third-party includes
 #include "../third_party/units.h"
+
+// Standard C++ includes
+#include <array>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics
 {
@@ -37,7 +40,7 @@ public:
 
     bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
     std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
-    std::tuple<meter_t, meter_t, degree_t> getPosition(meter_t distance) const;
+    Pose2<meter_t, degree_t> getPose(meter_t distance) const;
 
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(meter_t x, meter_t y, bool error);

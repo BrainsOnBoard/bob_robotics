@@ -17,12 +17,32 @@ using Array2 = std::array<T, 2>;
 template<typename T>
 using Array3 = std::array<T, 3>;
 
+template<typename Derived>
+class PoseBase
+{
+public:
+    template<typename PoseType>
+    bool operator==(const PoseType &pose) const
+    {
+        const auto derived = reinterpret_cast<const Derived *>(this);
+        return derived->x() == pose.x() && derived->y() == pose.y() && derived->z() == pose.z()
+                && derived->yaw() == pose.yaw() && derived->pitch() == pose.pitch() && derived->roll() == pose.roll();
+    }
+
+    template<typename PoseType>
+    bool operator!=(const PoseType &pose) const
+    {
+        return !(*this == pose);
+    }
+};
+
 //! Base class for vectors of length units
 template<typename LengthUnit, size_t N>
 class VectorBase
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
+    using radian_t = units::angle::radian_t;
 
 public:
     VectorBase() = default;
@@ -48,6 +68,10 @@ public:
     auto cbegin() const { return m_Array.cbegin(); }
     auto cend() const { return m_Array.end(); }
 
+    static constexpr radian_t yaw() { return radian_t(0); }
+    static constexpr radian_t pitch() { return radian_t(0); }
+    static constexpr radian_t roll() { return radian_t(0); }
+
 private:
     std::array<LengthUnit, N> m_Array;
 };
@@ -59,6 +83,7 @@ class Vector3;
 template<typename LengthUnit>
 class Vector2
   : public VectorBase<LengthUnit, 2>
+  , public PoseBase<Vector2<LengthUnit>>
 {
 public:
     Vector2() = default;
@@ -84,6 +109,7 @@ public:
 template<typename LengthUnit>
 class Vector3
   : public VectorBase<LengthUnit, 3>
+  , public PoseBase<Vector3<LengthUnit>>
 {
 public:
     Vector3() = default;
@@ -113,6 +139,7 @@ class Pose3;
 template<typename LengthUnit, typename AngleUnit>
 class Pose2
   : public std::tuple<Vector2<LengthUnit>, AngleUnit>
+  , public PoseBase<Pose2<LengthUnit, AngleUnit>>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
@@ -157,6 +184,7 @@ public:
 template<typename LengthUnit, typename AngleUnit>
 class Pose3
   : public std::tuple<Vector3<LengthUnit>, Array3<AngleUnit>>
+  , public PoseBase<Pose3<LengthUnit, AngleUnit>>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");

@@ -64,7 +64,7 @@ public:
     //------------------------------------------------------------------------
     // Operators
     //------------------------------------------------------------------------
-    std::tuple<meter_t, meter_t, degree_t> operator[](size_t waypoint) const;
+    Pose2<meter_t, degree_t> operator[](size_t waypoint) const;
 
 private:
     //------------------------------------------------------------------------
