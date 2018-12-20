@@ -14,6 +14,7 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::angle;
+using namespace units::literals;
 namespace plt = matplotlibcpp;
 
 auto now()
@@ -38,8 +39,8 @@ main()
     bool warningGiven = false;
     do {
         plt::figure(1);
-        const auto data = vicon.getObjectData(0);
-        plotAgent(data, { -2500, 2500 }, { -2500, 2500 });
+        auto data = vicon.getObjectData(0);
+        plotAgent(data, -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         if (data.timeSinceReceived() > 500ms) {
             if (!warningGiven) {
                 std::cerr << "Warning: Object is out of range" << std::endl;
