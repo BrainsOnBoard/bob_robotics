@@ -1,18 +1,24 @@
 WITH_LIBANTWORLD := 1
 include ../../make_common/bob_robotics.mk
 
-EXECUTABLE := perfect_memory
+.PHONY: all clean libantworld
 
-.PHONY: all clean
+all: perfect_memory save_route
 
-all: $(EXECUTABLE)
+-include perfect_memory.d
 
--include $(EXECUTABLE).d
-
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+perfect_memory: perfect_memory.cc perfect_memory.d libantworld
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+-include save_route.d
+
+save_route: save_route.cc save_route.d libantworld
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+libantworld:
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
 
 %d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f perfect_memory save_route *.d
