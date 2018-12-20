@@ -112,7 +112,7 @@ public:
         return m_Window;
     }
 
-    radians_per_second_t getMaximumTurnSpeed()
+    radians_per_second_t getMaximumTurnSpeed() const
     {
         return m_TurnSpeed;
     }
