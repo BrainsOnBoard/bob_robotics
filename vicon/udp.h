@@ -173,6 +173,47 @@ template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
 public:
+    class Object
+    {
+        using millimeter_t = units::length::millimeter_t;
+        using radian_t = units::angle::radian_t;
+
+    public:
+        Object(UDPClient<ObjectDataType> &client, const unsigned id)
+          : m_Client(client)
+          , m_Id(id)
+        {}
+
+        template<typename LengthUnit = millimeter_t>
+        Vector3<LengthUnit> getPosition() const
+        {
+            return getData().template getPosition<LengthUnit>();
+        }
+
+        template<typename AngleUnit = radian_t>
+        Array3<AngleUnit> getAttitude() const
+        {
+            return getData().template getAttitude<AngleUnit>();
+        }
+
+        template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
+        auto getPose() const
+        {
+            const auto data = getData();
+            return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
+                                                data.template getAttitude<AngleUnit>());
+        }
+
+        ObjectDataType getData() const
+        {
+            return m_Client.getObjectData(m_Id);
+        }
+
+    private:
+        UDPClient<ObjectDataType> &m_Client;
+        const unsigned m_Id;
+    };
+
     UDPClient(){}
     UDPClient(uint16_t port)
     {
@@ -259,6 +300,11 @@ public:
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
         return m_ObjectData.at(id);
+    }
+
+    Object getObject(unsigned int id)
+    {
+        return Object(*this, id);
     }
 
 private:
