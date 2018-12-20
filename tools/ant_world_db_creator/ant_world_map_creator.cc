@@ -93,8 +93,7 @@ int main()
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create input to read snapshots from screen
-    Video::OpenGL input(0, 0, renderWidth, renderHeight);
-
+    Video::OpenGL input({ renderWidth, renderHeight });
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat map(renderHeight, renderWidth, CV_8UC3);
