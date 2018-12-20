@@ -244,8 +244,6 @@ public:
     }
 
 private:
-    using TimeType = std::chrono::time_point<std::chrono::high_resolution_clock>;
-
     Pose3<meter_t, degree_t> m_Pose;
     meters_per_second_t m_Velocity;
     radians_per_second_t m_TurnSpeed;
@@ -296,11 +294,6 @@ private:
     static void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
     {
         throw std::runtime_error(message);
-    }
-
-    static TimeType now()
-    {
-        return std::chrono::high_resolution_clock::now();
     }
 }; // AntAgent
 
