@@ -9,14 +9,15 @@
 
 namespace BoBRobotics {
 
-//! A generic template for 2D unit arrays
+//! A generic template for 2D arrays
 template<typename T>
 using Array2 = std::array<T, 2>;
 
-//! A generic template for 3D unit arrays
+//! A generic template for 3D arrays
 template<typename T>
 using Array3 = std::array<T, 3>;
 
+//! Base class for vectors of length units
 template<typename LengthUnit, size_t N>
 class VectorBase
 {
@@ -54,6 +55,7 @@ private:
 template<typename LengthUnit>
 class Vector3;
 
+//! 2D length unit vector
 template<typename LengthUnit>
 class Vector2
   : public VectorBase<LengthUnit, 2>
@@ -78,6 +80,7 @@ public:
     static constexpr LengthUnit z() { return LengthUnit(0); }
 };
 
+//! 3D length unit vector
 template<typename LengthUnit>
 class Vector3
   : public VectorBase<LengthUnit, 3>
