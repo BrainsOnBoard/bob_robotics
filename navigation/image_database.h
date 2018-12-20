@@ -205,7 +205,7 @@ public:
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const Array3<size_t> &gridPosition)
+        Vector3<millimeter_t> getPosition(const Array3<size_t> &gridPosition) const
         {
             BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
             Vector3<millimeter_t> position;
