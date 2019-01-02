@@ -17,6 +17,11 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
+// IMGUI
+#include "third_party/imgui/imgui.h"
+#include "third_party/imgui/impl/imgui_impl_glfw.h"
+#include "third_party/imgui/impl/imgui_impl_opengl2.h"
+
 // BoB Robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
@@ -133,6 +138,20 @@ int main(int argc, char *argv[])
     // Enable VSync
     glfwSwapInterval(1);
 
+    // Setup ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL2_Init();
+
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
@@ -163,6 +182,7 @@ int main(int argc, char *argv[])
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     const float jitterSD = (argc > 2) ? std::atof(argv[2]) : 0.0f;
     StateHandler stateHandler(worldFilename, routeFilename, jitterSD, memory);
+
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback
@@ -170,6 +190,21 @@ int main(int argc, char *argv[])
 
      // Loop until window should close
     for(unsigned int frame = 0; !glfwWindowShouldClose(window); frame++) {
+        // Poll for and process events
+        glfwPollEvents();
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL2_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Hello, world!");
+        ImGui::Text("This is some useful text.");
+        ImGui::End();
+
+        // Generate ImGUI geometry
+        ImGui::Render();
+
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -178,13 +213,22 @@ int main(int argc, char *argv[])
             break;
         }
 
+        // Render UI
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+
         // Swap front and back buffers
         glfwSwapBuffers(window);
 
-        // Poll for and process events
-        glfwPollEvents();
+
     }
 
+     // Cleanup UI
+    ImGui_ImplOpenGL2_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
     return 0;
