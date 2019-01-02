@@ -50,7 +50,6 @@ ifdef WITH_LIBANTWORLD
 endif
 
 ifdef WITH_IMGUI
-	CXX_FLAGS += -I$(BOB_ROBOTICS_ROOT)/third_party/imgui
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/third_party/imgui -limgui -lglfw -lGL -lGLU -lGLEW
 endif
 
