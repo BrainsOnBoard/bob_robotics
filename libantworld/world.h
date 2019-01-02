@@ -75,6 +75,7 @@ private:
         // Public API
         //------------------------------------------------------------------------
         void bind() const;
+        void unbind() const;
         void upload(const cv::Mat &texture, GLint textureFormat);
 
     private:
@@ -98,6 +99,7 @@ private:
         // Public API
         //------------------------------------------------------------------------
         void bind() const;
+        void unbind() const;
         void render() const;
 
         void uploadPositions(const std::vector<GLfloat> &positions);

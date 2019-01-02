@@ -88,6 +88,10 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     // Set colour pointer and enable client state in VAO
     glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_COLOR_ARRAY);
+
+    // Unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,

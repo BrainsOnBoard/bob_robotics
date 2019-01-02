@@ -182,6 +182,9 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         surface.uploadColours(colours);
     }
 
+    // Unbind surface
+    surface.unbind();
+
     return true;
 }
 //----------------------------------------------------------------------------
@@ -323,6 +326,9 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         if(tex != textureNames.end()) {
             surface.setTexture(tex->second);
         }
+
+        // Unbind surface
+        surface.unbind();
     }
 
 
@@ -335,6 +341,7 @@ void World::render() const
     for(auto &surf : m_Surfaces) {
         surf.bind();
         surf.render();
+        surf.unbind();
     }
 }
 //----------------------------------------------------------------------------
@@ -462,6 +469,12 @@ void World::Texture::bind() const
     glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 //----------------------------------------------------------------------------
+void World::Texture::unbind() const
+{
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+//----------------------------------------------------------------------------
 void World::Texture::upload(const cv::Mat &texture, GLint textureFormat)
 {
     // Bind texture
@@ -520,6 +533,17 @@ void World::Surface::bind() const
     }
 }
 //----------------------------------------------------------------------------
+void World::Surface::unbind() const
+{
+    // If surface has a texture, bind it
+    if(m_Texture != nullptr) {
+        m_Texture->unbind();
+    }
+
+    // Unbind vertex array
+    glBindVertexArray(0);
+}
+//----------------------------------------------------------------------------
 void World::Surface::render() const
 {
     // Draw world
@@ -545,6 +569,9 @@ void World::Surface::uploadPositions(const std::vector<GLfloat> &positions)
 
     // Calculate number of vertices from positions
     m_NumVertices = positions.size() / 3;
+
+    // Unbind buffer
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 void World::Surface::uploadColours(const std::vector<GLfloat> &colours)
@@ -563,6 +590,9 @@ void World::Surface::uploadColours(const std::vector<GLfloat> &colours)
     // Set colour pointer and enable client state in VAO
     glColorPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_COLOR_ARRAY);
+
+    // Unbind buffer
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 void World::Surface::uploadTexCoords(const std::vector<GLfloat> &texCoords)
@@ -581,6 +611,9 @@ void World::Surface::uploadTexCoords(const std::vector<GLfloat> &texCoords)
     // Set colour pointer and enable client state in VAO
     glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    // Unbind buffer
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
