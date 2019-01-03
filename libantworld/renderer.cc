@@ -19,7 +19,7 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
-     // Create FBO for rendering to cubemap and bind
+    // Create FBO for rendering to cubemap and bind
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
@@ -29,6 +29,7 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
 
     // Create textures for all faces of cubemap
     // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
+    // **TODO** it would be better to use native format
     for(unsigned int t = 0; t < 6; t++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
                      m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -69,7 +70,8 @@ Renderer::~Renderer()
 //----------------------------------------------------------------------------
 void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                    degree_t yaw, degree_t pitch, degree_t roll,
-                                   GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
+                                   GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight,
+                                   GLuint drawFBO)
 {
     // Configure viewport to cubemap-sized square
     glViewport(0, 0, m_CubemapSize, m_CubemapSize);
@@ -110,8 +112,8 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
         m_World.render();
     }
 
-    // Unbind the FBO for onscreen rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // Rebind draw framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, drawFBO);
 
     // Set viewport to strip at stop of window
     glViewport(viewportX, viewportY,
@@ -256,6 +258,102 @@ void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
     glRotatef(pitch.value(), 1.0f, 0.0, 0.0);
     glRotatef(yaw.value(), 0.0, 0.0, 1.0f);
     glTranslatef(-x.value(), -y.value(), -z.value());
+}
+
+//----------------------------------------------------------------------------
+// Renderer::RenderTargetBase
+//----------------------------------------------------------------------------
+Renderer::RenderTargetBase::RenderTargetBase(Renderer &renderer, GLsizei width, GLsizei height)
+:   m_Renderer(renderer), m_Width(width), m_Height(height)
+{
+    // Create FBO for rendering to cubemap and bind
+    glGenFramebuffers(1, &m_FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+
+    // Create texture and bind
+    // **TODO** it would be better to use native format
+    glGenTextures(1, &m_Texture);
+    glBindTexture(GL_TEXTURE_2D, m_Texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // Attach frame texture to frame buffer
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture, 0);
+
+    // Set draw buffers
+    const GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, drawBuffers);
+
+    // Create depth render buffer
+    glGenRenderbuffers(1, &m_DepthBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
+    // Attach depth buffer to frame buffer
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBuffer);
+
+    // Check frame buffer is created correctly
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Frame buffer not complete");
+    }
+
+    // Unbind cube map and frame buffer
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+//----------------------------------------------------------------------------
+Renderer::RenderTargetBase::~RenderTargetBase()
+{
+    glDeleteRenderbuffers(1, &m_DepthBuffer);
+    glDeleteTextures(1, &m_Texture);
+    glDeleteFramebuffers(1, &m_FBO);
+}
+//----------------------------------------------------------------------------
+void Renderer::RenderTargetBase::bind()
+{
+    // Bind the cubemap FBO for offscreen rendering
+    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+}
+//----------------------------------------------------------------------------
+void Renderer::RenderTargetBase::unbind()
+{
+    // Unbind FBO
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+//----------------------------------------------------------------------------
+// Renderer::RenderTargetPanoramic
+//----------------------------------------------------------------------------
+void Renderer::RenderTargetPanoramic::render(meter_t x, meter_t y, meter_t z,
+                                             degree_t yaw, degree_t pitch, degree_t roll)
+{
+    bind();
+    getRenderer().renderPanoramicView(x, y, z, yaw, pitch, roll,
+                                      0, 0, getWidth(), getHeight(), getFBO());
+    unbind();
+}
+
+//----------------------------------------------------------------------------
+// Renderer::RenderTargetFirstPerson
+//----------------------------------------------------------------------------
+void Renderer::RenderTargetFirstPerson::render(meter_t x, meter_t y, meter_t z,
+                                             degree_t yaw, degree_t pitch, degree_t roll)
+{
+    bind();
+    getRenderer().renderFirstPersonView(x, y, z, yaw, pitch, roll,
+                                        0, 0, getWidth(), getHeight());
+    unbind();
+}
+
+//------------------------------------------------------------------------
+// RenderTargetTopDown
+//------------------------------------------------------------------------
+void Renderer::RenderTargetTopDown::render()
+{
+    bind();
+    getRenderer().renderTopDownView(0, 0, getWidth(), getHeight());
+    unbind();
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
