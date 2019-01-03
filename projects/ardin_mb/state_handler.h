@@ -16,6 +16,7 @@
 // Libantworld includes
 #include "libantworld/common.h"
 #include "libantworld/renderer.h"
+#include "libantworld/render_target.h"
 #include "libantworld/route_ardin.h"
 #include "libantworld/snapshot_processor_ardin.h"
 
@@ -113,8 +114,8 @@ private:
 
     //! Renderer used for ant world
     BoBRobotics::AntWorld::Renderer m_Renderer;
-    BoBRobotics::AntWorld::Renderer::RenderTargetTopDown m_RenderTargetTopDown;
-    BoBRobotics::AntWorld::Renderer::RenderTargetPanoramic m_RenderTargetPanoramic;
+    BoBRobotics::AntWorld::RenderTarget m_RenderTargetTopDown;
+    BoBRobotics::AntWorld::RenderTarget m_RenderTargetPanoramic;
 
     //! OpenGL video input used for reading image from framebuffer
     BoBRobotics::Video::OpenGL m_Input;

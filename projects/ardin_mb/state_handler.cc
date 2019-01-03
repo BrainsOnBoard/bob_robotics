@@ -23,7 +23,7 @@ using namespace units::length;
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
-    m_RenderTargetTopDown(m_Renderer, SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(m_Renderer, SimParams::displayRenderWidth, SimParams::displayRenderHeight),
+    m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
     m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
@@ -59,12 +59,29 @@ bool StateHandler::handleEvent(State state, Event event)
 {
     // If this event is an update
     if(event == Event::Update) {
-        // Render panoramsic view to target
-        m_RenderTargetPanoramic.render(m_AntY, m_AntX, 0.01_m,
-                                       m_AntHeading, 0.0_deg, 0.0_deg);
+        // Render panoramic view to target
+        m_Renderer.renderPanoramicView(m_AntX, m_AntY, 0.01_m,
+                                       m_AntHeading, 0.0_deg, 0.0_deg,
+                                       m_RenderTargetPanoramic);
+
+        // Bind top-down render target
+        m_RenderTargetTopDown.bind();
+
+        // Clear render target
+        m_RenderTargetTopDown.clear();
 
         // Render top down view to target
-        m_RenderTargetTopDown.render();
+        // **NOTE** disable automatic binding and clearing
+        m_Renderer.renderTopDownView(m_RenderTargetTopDown, false, false);
+
+        // Render route
+        m_Route.render(m_AntX, m_AntY, m_AntHeading);
+
+        // Render vector field
+        m_VectorField.render();
+
+        // Unbind top-down render target
+        m_RenderTargetTopDown.unbind();
 
         if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
         {
@@ -82,12 +99,6 @@ bool StateHandler::handleEvent(State state, Event event)
                          ImVec2(0, 1), ImVec2(1, 0));
         }
         ImGui::End();
-
-        // Render route
-        m_Route.render(m_AntX, m_AntY, m_AntHeading);
-
-        // Render vector field
-        m_VectorField.render();
 
         // Read pixels from framebuffer
         // **TODO** read frame from FBO
