@@ -17,6 +17,7 @@
 #include "libantworld/common.h"
 #include "libantworld/renderer.h"
 #include "libantworld/render_target.h"
+#include "libantworld/render_target_input.h"
 #include "libantworld/route_ardin.h"
 #include "libantworld/snapshot_processor_ardin.h"
 
@@ -118,7 +119,7 @@ private:
     BoBRobotics::AntWorld::RenderTarget m_RenderTargetPanoramic;
 
     //! OpenGL video input used for reading image from framebuffer
-    BoBRobotics::Video::OpenGL m_Input;
+    BoBRobotics::AntWorld::RenderTargetInput m_Input;
 
     //! Route handler - implements the various bits of route-regularizing weirdness from original paper
     BoBRobotics::AntWorld::RouteArdin m_Route;

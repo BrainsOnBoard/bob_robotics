@@ -24,7 +24,7 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
-    m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
+    m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
     m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
 
