@@ -26,6 +26,9 @@ bool RenderTargetInput::readFrame(cv::Mat &outFrame)
     // Read texture into outframe
     glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
 
+    // Flip image vertically
+    cv::flip(outFrame, outFrame, 0);
+
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
 
