@@ -66,8 +66,6 @@ public:
         KeyTrainSnapshot,
         KeyTestSnapshot,
         KeySaveSnapshot,
-        KeyRandomWalk,
-        KeyBuildVectorField,
         KeyMax
     };
 
@@ -100,6 +98,12 @@ private:
 
     //! Checks whether current position is still on route/at end etc
     bool checkAntPosition();
+
+    //! Load a route
+    bool loadRoute(const std::string &filename);
+
+    //! Update UI
+    bool updateUI();
 
     //------------------------------------------------------------------------
     // Members

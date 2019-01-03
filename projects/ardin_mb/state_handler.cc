@@ -34,16 +34,7 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 
     // If route is specified
     if(!routeFilename.empty()) {
-        // If loading route is successful
-        if(m_Route.load(routeFilename)) {
-            // Get bounds of route
-            const auto &routeMin = m_Route.getMinBound();
-            const auto &routeMax = m_Route.getMaxBound();
-
-            // Create vector field geometry to cover route bounds
-            m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
-                                         routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
-
+        if(loadRoute(routeFilename)) {
             // Start training
             m_StateMachine.transition(State::Training);
             return;
@@ -78,43 +69,20 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Route.render(m_AntX, m_AntY, m_AntHeading);
 
         // Render vector field
-        m_VectorField.render();
+        //m_VectorField.render();
 
         // Unbind top-down render target
         m_RenderTargetTopDown.unbind();
 
-        if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
-        {
-            ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
-                         ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
-                         ImVec2(0, 1), ImVec2(1, 0));
-
-        }
-        ImGui::End();
-
-        if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
-        {
-            ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
-                         ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
-                         ImVec2(0, 1), ImVec2(1, 0));
-        }
-        ImGui::End();
-
-        // Read pixels from framebuffer
-        // **TODO** read frame from FBO
+        // Read pixels from render target
         m_Input.readFrame(m_Snapshot);
 
         // Process snapshot
         m_SnapshotProcessor.process(m_Snapshot);
 
-        // If random walk key is pressed, transition to correct state
-        if(m_KeyBits.test(KeyRandomWalk)) {
-            m_StateMachine.transition(State::RandomWalk);
-        }
-
-        // If vector field key is pressed, transition to correct state
-        if(m_KeyBits.test(KeyBuildVectorField)) {
-            m_StateMachine.transition(State::BuildingVectorField);
+        // Update the UI
+        if(!updateUI()) {
+            return false;
         }
     }
 
@@ -150,7 +118,7 @@ bool StateHandler::handleEvent(State state, Event event)
                 std::cout << "Training complete (" << m_Route.size() << " snapshots)" << std::endl;
 
 
-                m_StateMachine.transition(State::Testing);
+                m_StateMachine.transition(State::FreeMovement);
             }
         }
     }
@@ -211,7 +179,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
                 // If new position means run is over - stop
                 if(!checkAntPosition()) {
-                    return false;
+                    m_StateMachine.transition(State::FreeMovement);
                 }
                 // Otherwise, reset scan
                 else {
@@ -244,7 +212,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // If new position means run is over - stop
             if(!checkAntPosition()) {
-                return false;
+                m_StateMachine.transition(State::FreeMovement);
             }
         }
     }
@@ -336,6 +304,18 @@ bool StateHandler::handleEvent(State state, Event event)
     return true;
 }
 //----------------------------------------------------------------------------
+void StateHandler::resetAntPosition()
+{
+    if(m_Route.size() > 0) {
+        std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[0];
+    }
+    else {
+        m_AntX = 5.0_m;
+        m_AntY = 5.0_m;
+        m_AntHeading = 270.0_deg;
+    }
+}
+//----------------------------------------------------------------------------
 bool StateHandler::checkAntPosition()
 {
     // If we've reached destination
@@ -392,14 +372,83 @@ bool StateHandler::checkAntPosition()
     }
 }
 //----------------------------------------------------------------------------
-void StateHandler::resetAntPosition()
+bool StateHandler::loadRoute(const std::string &filename)
 {
-    if(m_Route.size() > 0) {
-        std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[0];
+    // If loading route is successful
+    if(m_Route.load(filename)) {
+        // Get bounds of route
+        const auto &routeMin = m_Route.getMinBound();
+        const auto &routeMax = m_Route.getMaxBound();
+
+        // Create vector field geometry to cover route bounds
+        //m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
+        //                             routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+
+        return true;
     }
     else {
-        m_AntX = 5.0_m;
-        m_AntY = 5.0_m;
-        m_AntHeading = 270.0_deg;
+        return false;
     }
+}
+//----------------------------------------------------------------------------
+bool StateHandler::updateUI()
+{
+    // Draw panoramic view window
+    if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
+                        ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
+                        ImVec2(0, 1), ImVec2(1, 0));
+
+    }
+    ImGui::End();
+
+    // Draw top-down view window
+    if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
+                        ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
+                        ImVec2(0, 1), ImVec2(1, 0));
+    }
+    ImGui::End();
+
+    if(ImGui::BeginMainMenuBar()) {
+        if(ImGui::BeginMenu("File")) {
+            if(ImGui::BeginMenu("Open Route")) {
+                // **HACK**
+                char routeFilename[32];
+                std::string routePath = "/home/j/jk/jk421/genn_robotics/libantworld/";
+                for(unsigned int r = 1; r <= 14; r++) {
+                    sprintf(routeFilename, "ant1_route%u.bin", r);
+                    if(ImGui::MenuItem(routeFilename)) {
+                        loadRoute(routePath + routeFilename);
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            if(ImGui::MenuItem("Quit")) {
+                return false;
+            }
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("Tools")) {
+            const bool routeLoaded = (m_Route.size() > 0);
+            if(ImGui::MenuItem("Train route", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::Training);
+            }
+
+            if(ImGui::MenuItem("Test route", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::Testing);
+            }
+
+            if(ImGui::MenuItem("Random walk", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::RandomWalk);
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+    return true;
 }
