@@ -1,6 +1,6 @@
 include ../make_common/bob_robotics.mk
 
-SOURCES		:= renderer.cc render_mesh.cc world.cc snapshot_processor_ardin.cc route_ardin.cc route_continuous.cc
+SOURCES		:= renderer.cc render_mesh.cc render_target.cc world.cc snapshot_processor_ardin.cc route_ardin.cc route_continuous.cc
 OBJECTS		:=$(SOURCES:.cc=.o)
 DEPS		:=$(SOURCES:.cc=.d)
 ARFLAGS		:= -rcs
