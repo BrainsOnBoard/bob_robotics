@@ -3,6 +3,9 @@
 // Standard C++ includes
 #include <stdexcept>
 
+// Libantworld includes
+#include "render_target.h"
+
 //------------------------------------------------------------------------
 // BoBRobotics::AntWorld::Renderer
 //------------------------------------------------------------------------
@@ -139,6 +142,31 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glDisable(GL_TEXTURE_CUBE_MAP);
 }
 //----------------------------------------------------------------------------
+void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
+                                   degree_t yaw, degree_t pitch, degree_t roll,
+                                   RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderPanoramicView(x, y, z, yaw, pitch, roll,
+                        0, 0, renderTarget.getWidth(), renderTarget.getHeight(),
+                        renderTarget.getFBO());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
+}
+//----------------------------------------------------------------------------
 void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                                      degree_t yaw, degree_t pitch, degree_t roll,
                                      GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
@@ -170,6 +198,30 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
     m_World.render();
 }
 //----------------------------------------------------------------------------
+void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
+                                     degree_t yaw, degree_t pitch, degree_t roll,
+                                     RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderFirstPersonView(x, y, z, yaw, pitch, roll,
+                          0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
+}
+//----------------------------------------------------------------------------
 void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Set viewport to square at bottom of screen
@@ -191,6 +243,27 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
 
     // Render world
     m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderTopDownView(0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
 }
 //----------------------------------------------------------------------------
 void Renderer::generateCubeFaceLookAtMatrices()
@@ -260,100 +333,5 @@ void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
     glTranslatef(-x.value(), -y.value(), -z.value());
 }
 
-//----------------------------------------------------------------------------
-// Renderer::RenderTargetBase
-//----------------------------------------------------------------------------
-Renderer::RenderTargetBase::RenderTargetBase(Renderer &renderer, GLsizei width, GLsizei height)
-:   m_Renderer(renderer), m_Width(width), m_Height(height)
-{
-    // Create FBO for rendering to cubemap and bind
-    glGenFramebuffers(1, &m_FBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-
-    // Create texture and bind
-    // **TODO** it would be better to use native format
-    glGenTextures(1, &m_Texture);
-    glBindTexture(GL_TEXTURE_2D, m_Texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    // Attach frame texture to frame buffer
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_Texture, 0);
-
-    // Set draw buffers
-    const GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, drawBuffers);
-
-    // Create depth render buffer
-    glGenRenderbuffers(1, &m_DepthBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-
-    // Attach depth buffer to frame buffer
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBuffer);
-
-    // Check frame buffer is created correctly
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        throw std::runtime_error("Frame buffer not complete");
-    }
-
-    // Unbind cube map and frame buffer
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-//----------------------------------------------------------------------------
-Renderer::RenderTargetBase::~RenderTargetBase()
-{
-    glDeleteRenderbuffers(1, &m_DepthBuffer);
-    glDeleteTextures(1, &m_Texture);
-    glDeleteFramebuffers(1, &m_FBO);
-}
-//----------------------------------------------------------------------------
-void Renderer::RenderTargetBase::bind()
-{
-    // Bind the cubemap FBO for offscreen rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-}
-//----------------------------------------------------------------------------
-void Renderer::RenderTargetBase::unbind()
-{
-    // Unbind FBO
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-//----------------------------------------------------------------------------
-// Renderer::RenderTargetPanoramic
-//----------------------------------------------------------------------------
-void Renderer::RenderTargetPanoramic::render(meter_t x, meter_t y, meter_t z,
-                                             degree_t yaw, degree_t pitch, degree_t roll)
-{
-    bind();
-    getRenderer().renderPanoramicView(x, y, z, yaw, pitch, roll,
-                                      0, 0, getWidth(), getHeight(), getFBO());
-    unbind();
-}
-
-//----------------------------------------------------------------------------
-// Renderer::RenderTargetFirstPerson
-//----------------------------------------------------------------------------
-void Renderer::RenderTargetFirstPerson::render(meter_t x, meter_t y, meter_t z,
-                                             degree_t yaw, degree_t pitch, degree_t roll)
-{
-    bind();
-    getRenderer().renderFirstPersonView(x, y, z, yaw, pitch, roll,
-                                        0, 0, getWidth(), getHeight());
-    unbind();
-}
-
-//------------------------------------------------------------------------
-// RenderTargetTopDown
-//------------------------------------------------------------------------
-void Renderer::RenderTargetTopDown::render()
-{
-    bind();
-    getRenderer().renderTopDownView(0, 0, getWidth(), getHeight());
-    unbind();
-}
 }   // namespace AntWorld
 }   // namespace BoBRobotics
