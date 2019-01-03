@@ -1,6 +1,8 @@
 #pragma once
 
 // Standard C++ includes
+#include <bitset>
+#include <list>
 #include <tuple>
 #include <vector>
 
@@ -20,6 +22,11 @@ public:
     virtual ~MBMemoryHOG();
 
     //------------------------------------------------------------------------
+    // Typedefines
+    //------------------------------------------------------------------------
+    typedef std::list<std::pair<double, std::vector<unsigned int>>> Spikes;
+
+    //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
     //! Train the algorithm with the specified image
@@ -31,7 +38,21 @@ public:
     //! Clear the memory
     virtual void clearMemory() override;
 
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
+    const std::vector<float> &getHOGFeatures() const{ return m_HOGFeatures; }
+
+    const Spikes &getPNSpikes() const{ return m_PNSpikes; }
+    const Spikes &getKCSpikes() const{ return m_KCSpikes; }
+    const Spikes &getENSpikes() const{ return m_ENSpikes; }
+
+    unsigned int getNumUnusedWeights() const{ return m_NumUsedWeights; }
+
 private:
+    //------------------------------------------------------------------------
+    // Private API
+    //------------------------------------------------------------------------
     void setInput(const std::vector<float> &input);
     std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
 
@@ -40,8 +61,13 @@ private:
     //------------------------------------------------------------------------
     cv::HOGDescriptor m_HOG;
     mutable std::vector<float> m_HOGFeatures;
-
 #ifndef CPU_ONLY
     float *m_HOGFeaturesGPU;
 #endif
+
+    mutable Spikes m_PNSpikes;
+    mutable Spikes m_KCSpikes;
+    mutable Spikes m_ENSpikes;
+
+    mutable unsigned int m_NumUsedWeights;
 };

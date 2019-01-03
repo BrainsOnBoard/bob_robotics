@@ -8,7 +8,6 @@
 // BoB robotics includes
 #include "common/timer.h"
 #include "genn_utils/connectors.h"
-#include "genn_utils/spike_csv_recorder.h"
 
 // GeNN generated code includes
 #include "ardin_mb_CODE/definitions.h"
@@ -27,6 +26,20 @@ unsigned int convertMsToTimesteps(double ms)
 {
     return (unsigned int)std::round(ms / MBParams::timestepMs);
 }
+void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemoryHOG::Spikes &spikeOutput)
+{
+    // Add a new entry to the cache
+    spikeOutput.emplace_back();
+
+    // Fill in time
+    spikeOutput.back().first = t;
+
+    // Reserve vector to hold spikes
+    spikeOutput.back().second.reserve(spikeCount);
+
+    // Copy spikes into vector
+    std::copy_n(spikes, spikeCount, std::back_inserter(spikeOutput.back().second));
+}
 }   // Anonymous namespace
 
 //----------------------------------------------------------------------------
@@ -34,7 +47,7 @@ unsigned int convertMsToTimesteps(double ms)
 //----------------------------------------------------------------------------
 MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
-        m_HOGFeatures(MBParams::hogFeatureSize)
+        m_HOGFeatures(MBParams::hogFeatureSize), m_NumUsedWeights(MBParams::numKC * MBParams::numEN)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -136,15 +149,15 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     const unsigned long long endTimestep = iT + duration;
 
     // Open CSV output files
-#ifdef RECORD_SPIKES
     const float startTimeMs = t;
-    GeNNUtils::SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
-    GeNNUtils::SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
-    GeNNUtils::SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
+
+    // Clear spike records
+    m_PNSpikes.clear();
+    m_KCSpikes.clear();
+    m_ENSpikes.clear();
 
     std::bitset<MBParams::numPN> pnSpikeBitset;
     std::bitset<MBParams::numKC> kcSpikeBitset;
-#endif  // RECORD_SPIKES
 
     // Loop through timesteps
     unsigned int numPNSpikes = 0;
@@ -170,13 +183,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         stepTimeGPU();
 
         // Download spikes
-#ifdef RECORD_SPIKES
         pullPNCurrentSpikesFromDevice();
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
-#else
-        CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntEN, d_glbSpkCntEN, sizeof(unsigned int), cudaMemcpyDeviceToHost));
-#endif
 #else
         // Simulate on CPU
         stepTimeCPU();
@@ -197,7 +206,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         }
 
         numENSpikes += spikeCount_EN;
-#ifdef RECORD_SPIKES
         numPNSpikes += spikeCount_PN;
         numKCSpikes += spikeCount_KC;
         for(unsigned int i = 0; i < spikeCount_PN; i++) {
@@ -207,11 +215,11 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         for(unsigned int i = 0; i < spikeCount_KC; i++) {
             kcSpikeBitset.set(spike_KC[i]);
         }
+
         // Record spikes
-        pnSpikes.record(t - startTimeMs);
-        kcSpikes.record(t - startTimeMs);
-        enSpikes.record(t - startTimeMs);
-#endif  // RECORD_SPIKES
+        record(t - startTimeMs, spikeCount_PN, spike_PN, m_PNSpikes);
+        record(t - startTimeMs, spikeCount_KC, spike_KC, m_KCSpikes);
+        record(t - startTimeMs, spikeCount_EN, spike_EN, m_ENSpikes);
     }
 
 #ifdef RECORD_TERMINAL_SYNAPSE_STATE
@@ -237,8 +245,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         CHECK_CUDA_ERRORS(cudaMemcpy(gkcToEN, d_gkcToEN, numWeights * sizeof(scalar), cudaMemcpyDeviceToHost));
 #endif  // CPU_ONLY
 
-        unsigned int numUsedWeights = std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
-        std::cout << "\t" << numWeights - numUsedWeights << " unused weights" << std::endl;
+        // Cache number of unused weights
+        m_NumUsedWeights = numWeights - std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
     }
 
     return std::make_tuple(numPNSpikes, numKCSpikes, numENSpikes);

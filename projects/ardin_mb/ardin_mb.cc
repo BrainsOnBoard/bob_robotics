@@ -32,6 +32,7 @@
 #include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
+#include "visual_navigation_ui.h"
 
 using namespace BoBRobotics;
 
@@ -94,7 +95,6 @@ void handleGLFWError(int errorNumber, const char *message)
     std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
 }
 }   // anonymous namespace
-
 
 
 int main(int argc, char *argv[])
@@ -168,12 +168,13 @@ int main(int argc, char *argv[])
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
     //MBMemory memory;
     MBMemoryHOG memory;
+    MBHogUI ui(memory);
 
     // Create state machine and set it as window user pointer
     const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     const float jitterSD = (argc > 2) ? std::atof(argv[2]) : 0.0f;
-    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, memory);
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, memory, ui);
 
     glfwSetWindowUserPointer(window, &stateHandler);
 

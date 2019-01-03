@@ -33,6 +33,8 @@ namespace Navigation
 }
 }
 
+class VisualNavigationUI;
+
 //----------------------------------------------------------------------------
 // Enumerations
 //----------------------------------------------------------------------------
@@ -70,7 +72,7 @@ public:
     };
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
-                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
+                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
     // Public API
@@ -103,7 +105,7 @@ private:
     bool loadRoute(const std::string &filename);
 
     //! Update UI
-    bool updateUI();
+    bool handleUI();
 
     //------------------------------------------------------------------------
     // Members
@@ -175,6 +177,9 @@ private:
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
+
+    //! Object used to handle visual navigation model-specific UI
+    VisualNavigationUI &m_VisualNavigationUI;
 
     unsigned int m_CurrentVectorFieldPoint;
     std::vector<std::pair<units::angle::degree_t, float>> m_VectorFieldNovelty;

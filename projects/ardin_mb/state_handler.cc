@@ -12,6 +12,7 @@
 // Ardin MB includes
 #include "mb_params.h"
 #include "sim_params.h"
+#include "visual_navigation_ui.h"
 
 using namespace BoBRobotics;
 using namespace units::literals;
@@ -21,12 +22,13 @@ using namespace units::length;
 // StateHandler
 //----------------------------------------------------------------------------
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
-                           BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
+                           BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
-    m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+    m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
+    m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
 
 {
     // Load world
@@ -80,10 +82,13 @@ bool StateHandler::handleEvent(State state, Event event)
         // Process snapshot
         m_SnapshotProcessor.process(m_Snapshot);
 
-        // Update the UI
-        if(!updateUI()) {
+        // Handle UI
+        if(!handleUI()) {
             return false;
         }
+
+        // Handle visual navigation model-specific UI
+        m_VisualNavigationUI.handleUI();
     }
 
     // If we're in training state
@@ -93,10 +98,24 @@ bool StateHandler::handleEvent(State state, Event event)
             m_TrainPoint = 0;
 
             resetAntPosition();
+
+            ImGui::OpenPopup("Training...");
         }
         else if(event == Event::Update) {
             // Train memory with snapshot
             m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
+
+            // Handle visual navigation model-specific UI
+            m_VisualNavigationUI.handleUITraining();
+
+            // Show training progress
+            if(ImGui::BeginPopupModal("Training...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar((float)m_TrainPoint / (float)m_Route.size(), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
 
             // Mark results from previous training snapshot on route
             m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
@@ -106,18 +125,11 @@ bool StateHandler::handleEvent(State state, Event event)
                 // Snap ant to next snapshot point
                 std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[m_TrainPoint];
 
-                // Update window title
-                //std::string windowTitle = "Ant World - Training snaphot " + std::to_string(m_TrainPoint) + "/" + std::to_string(m_Route.size());
-                //glfwSetWindowTitle(window, windowTitle.c_str());
-
                 // Go onto next training point
                 m_TrainPoint++;
             }
             // Otherwise, if we've reached end of route
             else {
-                std::cout << "Training complete (" << m_Route.size() << " snapshots)" << std::endl;
-
-
                 m_StateMachine.transition(State::FreeMovement);
             }
         }
@@ -139,10 +151,24 @@ bool StateHandler::handleEvent(State state, Event event)
 
             m_BestTestHeading = 0.0_deg;
             m_LowestTestDifference = std::numeric_limits<float>::max();
+
+            ImGui::OpenPopup("Testing...");
         }
         else if(event == Event::Update) {
             // Test snapshot
             const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
+
+            // Handle visual navigation model-specific UI
+            m_VisualNavigationUI.handleUITesting();
+
+            // Show training progress
+            if(ImGui::BeginPopupModal("Testing...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar(std::min(1.0f, (float)m_NumTestSteps / (float)m_Route.size()), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
 
             // If this is an improvement on previous best spike count
             if(difference < m_LowestTestDifference) {
@@ -391,7 +417,7 @@ bool StateHandler::loadRoute(const std::string &filename)
     }
 }
 //----------------------------------------------------------------------------
-bool StateHandler::updateUI()
+bool StateHandler::handleUI()
 {
     // Draw panoramic view window
     if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
