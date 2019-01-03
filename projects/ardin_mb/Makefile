@@ -1,4 +1,5 @@
 WITH_LIBANTWORLD := 1
+WITH_IMGUI := 1
 include ../../make_common/bob_robotics.mk
 
 EXECUTABLE      := ardin_mb

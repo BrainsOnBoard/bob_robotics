@@ -3,6 +3,9 @@
 // Standard C includes
 #include <cmath>
 
+// IMGUI
+#include "third_party/imgui/imgui.h"
+
 // BoBRobotics includes
 #include "navigation/visual_navigation_base.h"
 
@@ -20,10 +23,11 @@ using namespace units::length;
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
+    m_RenderTargetTopDown(m_Renderer, SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(m_Renderer, SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
-    m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_VisualNavigation(visualNavigation)
+    m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+
 {
     // Load world
     m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
@@ -55,12 +59,29 @@ bool StateHandler::handleEvent(State state, Event event)
 {
     // If this event is an update
     if(event == Event::Update) {
+        // Render panoramsic view to target
+        m_RenderTargetPanoramic.render(m_AntY, m_AntX, 0.01_m,
+                                       m_AntHeading, 0.0_deg, 0.0_deg);
 
-        // Render top down and ants eye view
-        m_Renderer.renderPanoramicView(m_AntY, m_AntX, 0.01_m,
-                                        m_AntHeading, 0.0_deg, 0.0_deg,
-                                        0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
-        m_Renderer.renderTopDownView(0, 0, SimParams::displayRenderWidth, SimParams::displayRenderWidth);
+        // Render top down view to target
+        m_RenderTargetTopDown.render();
+
+        if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
+                         ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
+                         ImVec2(0, 1), ImVec2(1, 0));
+
+        }
+        ImGui::End();
+
+        if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
+        {
+            ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
+                         ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
+                         ImVec2(0, 1), ImVec2(1, 0));
+        }
+        ImGui::End();
 
         // Render route
         m_Route.render(m_AntX, m_AntY, m_AntHeading);
@@ -69,6 +90,7 @@ bool StateHandler::handleEvent(State state, Event event)
         m_VectorField.render();
 
         // Read pixels from framebuffer
+        // **TODO** read frame from FBO
         m_Input.readFrame(m_Snapshot);
 
         // Process snapshot
@@ -83,8 +105,6 @@ bool StateHandler::handleEvent(State state, Event event)
         if(m_KeyBits.test(KeyBuildVectorField)) {
             m_StateMachine.transition(State::BuildingVectorField);
         }
-
-        cv::waitKey(1);
     }
 
     // If we're in training state

@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_RESIZABLE, false);
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10,
+    GLFWwindow *window = glfwCreateWindow(1280, 1024,
                                           "Ant World", nullptr, nullptr);
     if(!window)
     {
@@ -193,17 +193,10 @@ int main(int argc, char *argv[])
         // Poll for and process events
         glfwPollEvents();
 
-        // Start the Dear ImGui frame
+        // Start ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
-        ImGui::Begin("Hello, world!");
-        ImGui::Text("This is some useful text.");
-        ImGui::End();
-
-        // Generate ImGUI geometry
-        ImGui::Render();
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -213,6 +206,9 @@ int main(int argc, char *argv[])
             break;
         }
 
+        // Generate ImGUI geometry
+        ImGui::Render();
+
         // Render UI
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -221,8 +217,6 @@ int main(int argc, char *argv[])
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
-
-
     }
 
      // Cleanup UI

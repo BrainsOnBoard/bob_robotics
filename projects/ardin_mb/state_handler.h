@@ -113,6 +113,8 @@ private:
 
     //! Renderer used for ant world
     BoBRobotics::AntWorld::Renderer m_Renderer;
+    BoBRobotics::AntWorld::Renderer::RenderTargetTopDown m_RenderTargetTopDown;
+    BoBRobotics::AntWorld::Renderer::RenderTargetPanoramic m_RenderTargetPanoramic;
 
     //! OpenGL video input used for reading image from framebuffer
     BoBRobotics::Video::OpenGL m_Input;
