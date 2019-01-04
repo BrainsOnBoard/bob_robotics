@@ -12,17 +12,17 @@
 //----------------------------------------------------------------------------
 namespace
 {
-void rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, float timeAxisStep = 20.0f, float pointSize = 1.0f)
+bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, float yScale = 1.0f, float timeAxisStep = 50.0f)
 {
     if(spikes.empty()) {
-        return;
+        return false;
     }
 
     // Create dummy widget
     // **TODO** handle different dt
     assert(MBParams::timestepMs == 1.0);
-    const float width = spikes.back().first * pointSize;
-    const float height = (float)numNeurons * pointSize;
+    const float width = spikes.back().first;
+    const float height = (float)numNeurons * yScale;
     const float leftBorder = 20.0f;
     const float topBorder = 10.0f;
     ImGui::Dummy(ImVec2(width + leftBorder, height + topBorder));
@@ -46,7 +46,7 @@ void rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
 
         snprintf(tickText, 32, "%0.1f", t);
         const auto tickDims = ImGui::CalcTextSize(tickText);
-        ImGui::GetWindowDrawList()->AddText(ImVec2(rasterLeft + (t * pointSize) - (tickDims.x * 0.5f), rasterTop + height + 2),
+        ImGui::GetWindowDrawList()->AddText(ImVec2(rasterLeft + t - (tickDims.x * 0.5f), rasterTop + height + 2),
                                             IM_COL32(128, 128, 128, 255), tickText);
     }
 
@@ -55,12 +55,14 @@ void rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
         // Loop through neuron ids which spiked this timestep
         for(unsigned int n : timestepSpikes.second) {
             // Calculate coordinate
-            const float x = rasterLeft + (timestepSpikes.first * pointSize);
-            const float y = rasterTop + ((float)n * pointSize);
-            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x + pointSize, y + pointSize),
+            const float x = rasterLeft + timestepSpikes.first;
+            const float y = rasterTop + ((float)n * yScale);
+            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x + 1.0f, y + 1.0f),
                                                       IM_COL32(255, 255, 255, 255));
         }
     }
+
+    return true;
 }
 }   // Anonymous namespace
 
@@ -86,14 +88,18 @@ void MBHogUI::handleUI()
     }
 
     if(ImGui::Begin("PN spikes")) {
-        rasterPlot(MBParams::numPN, m_Memory.getPNSpikes(), 50.0f);
+        if(rasterPlot(MBParams::numPN, m_Memory.getPNSpikes())){
+            ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParams::numPN);
+        }
         ImGui::End();
     }
 
-    /*if(ImGui::Begin("KC spikes")) {
-        rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), 0.1f);
+    if(ImGui::Begin("KC spikes")) {
+        if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), 0.025f)){
+            ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
+        }
         ImGui::End();
-    }*/
+    }
 
 }
 //----------------------------------------------------------------------------

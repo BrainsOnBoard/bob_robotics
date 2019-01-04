@@ -48,6 +48,8 @@ public:
     const Spikes &getENSpikes() const{ return m_ENSpikes; }
 
     unsigned int getNumUnusedWeights() const{ return m_NumUsedWeights; }
+    unsigned int getNumActivePN() const{ return m_NumActivePN; }
+    unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
 private:
     //------------------------------------------------------------------------
@@ -70,4 +72,6 @@ private:
     mutable Spikes m_ENSpikes;
 
     mutable unsigned int m_NumUsedWeights;
+    mutable unsigned int m_NumActivePN;
+    mutable unsigned int m_NumActiveKC;
 };

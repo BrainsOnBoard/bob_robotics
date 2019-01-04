@@ -47,7 +47,8 @@ void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemoryHOG
 //----------------------------------------------------------------------------
 MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
-        m_HOGFeatures(MBParams::hogFeatureSize), m_NumUsedWeights(MBParams::numKC * MBParams::numEN)
+        m_HOGFeatures(MBParams::hogFeatureSize), m_NumUsedWeights(MBParams::numKC * MBParams::numEN),
+        m_NumActivePN(0), m_NumActiveKC(0)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -234,10 +235,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     std::cout << "Final dopamine level:" << dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD) << std::endl;
 #endif  // RECORD_TERMINAL_SYNAPSE_STATE
 
-#ifdef RECORD_SPIKES
-    //d::ofstream activeNeuronStream("active_neurons.csv", std::ios_base::app);
-    std::cout << pnSpikeBitset.count() << "," << kcSpikeBitset.count() << "," << numENSpikes << std::endl;
-#endif  // RECORD_SPIKES
+    // Cache number of unique active cells
+    m_NumActivePN = pnSpikeBitset.count();
+    m_NumActiveKC = kcSpikeBitset.count();
+
     if(train) {
         constexpr unsigned int numWeights = MBParams::numKC * MBParams::numEN;
 
