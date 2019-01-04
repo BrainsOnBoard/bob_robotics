@@ -46,11 +46,16 @@ public:
     float *getKCToGGNWeight();
     float *getPNToKC();
 
+    float *getRateScalePN();
+
     const std::vector<float> &getHOGFeatures() const{ return m_HOGFeatures; }
 
     const Spikes &getPNSpikes() const{ return m_PNSpikes; }
     const Spikes &getKCSpikes() const{ return m_KCSpikes; }
     const Spikes &getENSpikes() const{ return m_ENSpikes; }
+
+    unsigned int getNumPNSpikes() const{ return m_NumPNSpikes; }
+    unsigned int getNumKCSpikes() const{ return m_NumKCSpikes; }
 
     unsigned int getNumUnusedWeights() const{ return m_NumUsedWeights; }
     unsigned int getNumActivePN() const{ return m_NumActivePN; }
@@ -75,10 +80,14 @@ private:
 #ifndef CPU_ONLY
     float *m_HOGFeaturesGPU;
 #endif
+    float m_RateScalePN;
 
     mutable Spikes m_PNSpikes;
     mutable Spikes m_KCSpikes;
     mutable Spikes m_ENSpikes;
+
+    mutable unsigned int m_NumPNSpikes;
+    mutable unsigned int m_NumKCSpikes;
 
     mutable unsigned int m_NumUsedWeights;
     mutable unsigned int m_NumActivePN;

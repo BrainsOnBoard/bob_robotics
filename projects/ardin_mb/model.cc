@@ -18,9 +18,10 @@ using namespace BoBRobotics;
 class PoissonInput : public NeuronModels::Base
 {
 public:
-    DECLARE_MODEL(PoissonInput, 1, 2);
+    DECLARE_MODEL(PoissonInput, 0, 2);
 
     SET_SIM_CODE(
+        "oldSpike = false;\n"
         "if($(timeStepToSpike) <= 0.0f) {\n"
         "    $(timeStepToSpike) += (1000.0 / ($(rateScale) * $(rate) * DT)) * $(gennrand_exponential);\n"
         "}\n"
@@ -29,10 +30,34 @@ public:
 
     SET_THRESHOLD_CONDITION_CODE("$(timeStepToSpike) <= 0.0");
 
-    SET_PARAM_NAMES({"rateScale"});
     SET_VARS({{"timeStepToSpike", "scalar"}, {"rate", "scalar"}});
+    SET_EXTRA_GLOBAL_PARAMS({{"rateScale", "scalar"}});
 };
 IMPLEMENT_MODEL(PoissonInput);
+
+//---------------------------------------------------------------------------
+// PoissonInputFast
+//---------------------------------------------------------------------------
+class PoissonInputFast : public NeuronModels::Base
+{
+public:
+    DECLARE_MODEL(PoissonInputFast, 0, 1);
+
+    SET_SIM_CODE(
+        "scalar p = 1.0f;\n"
+        "unsigned int numPoissonSpikes = 0;\n"
+        "do\n"
+        "{\n"
+        "    numPoissonSpikes++;\n"
+        "    p *= $(gennrand_uniform);\n"
+        "} while (p > $(expMinusLambda));\n"
+    );
+
+    SET_THRESHOLD_CONDITION_CODE("numPoissonSpikes > 1");
+
+    SET_VARS({{"expMinusLambda", "scalar"}});
+};
+IMPLEMENT_MODEL(PoissonInputFast);
 
 //---------------------------------------------------------------------------
 // ExpStaticGraded
@@ -69,6 +94,7 @@ void modelDefinition(NNmodel &model)
 {
     GENN_PREFERENCES::autoInitSparseVars = true;
     GENN_PREFERENCES::defaultVarMode = VarMode::LOC_HOST_DEVICE_INIT_DEVICE;
+    GENN_PREFERENCES::autoRefractory = false;
 
     initGeNN();
     model.setDT(MBParams::timestepMs);
@@ -77,10 +103,6 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Neuron model parameters
     //---------------------------------------------------------------------------
-    // LIF model parameters
-    PoissonInput::ParamValues pnParams(
-        MBParams::inputRateScale);       // 0 - rateScale
-
     GeNNModels::LIF::ParamValues kcParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
@@ -114,9 +136,8 @@ void modelDefinition(NNmodel &model)
         0.0);   // 1 - RefracTime
 
     // Poisson input initial conditions
-    PoissonInput::VarValues pnInit(
-        0.0,                    // 0 - timeStepToSpike
-        uninitialisedVar());    // 1 - rate
+    PoissonInputFast::VarValues pnInit(
+        uninitialisedVar());    // 0 - expMinusLambda
 
     //---------------------------------------------------------------------------
     // Postsynaptic model parameters
@@ -158,13 +179,12 @@ void modelDefinition(NNmodel &model)
         -60.0); // 2 - Vthresh
 
     // Create neuron populations
-    auto pn = model.addNeuronPopulation<PoissonInput>("PN", MBParams::numPN, pnParams, pnInit);
+    auto pn = model.addNeuronPopulation<PoissonInputFast>("PN", MBParams::numPN, {}, pnInit);
     auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
     auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
     model.addNeuronPopulation<GeNNModels::LIF>("GGN", 1, ggnParams, lifInit);
     pn->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
-    pn->setVarMode("rate", VarMode::LOC_HOST_DEVICE_INIT_HOST);
-    pn->setVarMode("timeStepToSpike", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    pn->setVarMode("expMinusLambda", VarMode::LOC_HOST_DEVICE_INIT_HOST);
     kc->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
     en->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 

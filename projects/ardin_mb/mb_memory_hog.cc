@@ -47,8 +47,8 @@ void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemoryHOG
 //----------------------------------------------------------------------------
 MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
-        m_HOGFeatures(MBParams::hogFeatureSize), m_NumUsedWeights(MBParams::numKC * MBParams::numEN),
-        m_NumActivePN(0), m_NumActiveKC(0)
+        m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0),
+        m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0), m_RateScalePN(1.0f)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -91,6 +91,7 @@ MBMemoryHOG::MBMemoryHOG()
     *getGGNToKCWeight() = MBParams::ggnToKCWeight;
     *getKCToGGNWeight() = MBParams::kcToGGNWeight;
     *getPNToKC() = MBParams::pnToKCWeight;
+    *getRateScalePN() = MBParams::inputRateScale;
 }
 //----------------------------------------------------------------------------
 MBMemoryHOG::~MBMemoryHOG()
@@ -135,6 +136,11 @@ float *MBMemoryHOG::getPNToKC()
     return &gpnToKC;
 }
 //----------------------------------------------------------------------------
+float *MBMemoryHOG::getRateScalePN()
+{
+    return &m_RateScalePN;
+}
+//----------------------------------------------------------------------------
 std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const cv::Mat &image, bool train) const
 {
     BOB_ASSERT(image.cols == MBParams::inputWidth);
@@ -145,7 +151,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     m_HOG.compute(image, m_HOGFeatures);
     BOB_ASSERT(m_HOGFeatures.size() == MBParams::hogFeatureSize);
 
-    const float magnitude = std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f);
+    //const float magnitude = std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f);
     /*std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), m_HOGFeatures.begin(),
                    [magnitude](float f)
                    {
@@ -153,9 +159,16 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
                    });*/
     //std::cout << "HOG feature magnitude:" << magnitude << std::endl;
 
+    // Convert HOG features into lamnda
+    std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), expMinusLambdaPN,
+                   [&](float f)
+                   {
+                       return std::exp(-((f * m_RateScalePN) / 1000.0) * MBParams::timestepMs);
+                   });
+
     // Copy HOG features into GeNN variable
-    std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), ratePN);
-    std::fill_n(timeStepToSpikePN, MBParams::numPN, 0.0f);
+    //std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), ratePN);
+
 #ifndef CPU_ONLY
     pushPNStateToDevice();
 #endif
@@ -185,13 +198,13 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     std::bitset<MBParams::numKC> kcSpikeBitset;
 
     // Loop through timesteps
-    unsigned int numPNSpikes = 0;
-    unsigned int numKCSpikes = 0;
+    m_NumPNSpikes = 0;
+    m_NumKCSpikes = 0;
     unsigned int numENSpikes = 0;
     while(iT < endTimestep) {
         // If we should stop presenting image
         if(iT == endPresentTimestep) {
-            std::fill_n(timeStepToSpikePN, MBParams::numPN, 1000000.0f);
+            std::fill_n(expMinusLambdaPN, MBParams::numPN, 1.0f);
 
 #ifndef CPU_ONLY
             pushPNStateToDevice();
@@ -232,8 +245,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         }
 
         numENSpikes += spikeCount_EN;
-        numPNSpikes += spikeCount_PN;
-        numKCSpikes += spikeCount_KC;
+        m_NumPNSpikes += spikeCount_PN;
+        m_NumKCSpikes += spikeCount_KC;
         for(unsigned int i = 0; i < spikeCount_PN; i++) {
             pnSpikeBitset.set(spike_PN[i]);
         }
@@ -278,5 +291,5 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         m_NumUsedWeights = numWeights - std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
     }
 
-    return std::make_tuple(numPNSpikes, numKCSpikes, numENSpikes);
+    return std::make_tuple(m_NumPNSpikes, m_NumKCSpikes, numENSpikes);
 }

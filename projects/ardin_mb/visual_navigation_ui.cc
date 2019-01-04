@@ -178,6 +178,7 @@ void MBHogUI::handleUI()
     if(ImGui::Begin("PN spikes")) {
         if(rasterPlot(MBParams::numPN, m_Memory.getPNSpikes())){
             ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParams::numPN);
+            ImGui::Text("%u spikes", m_Memory.getNumPNSpikes());
         }
         ImGui::End();
     }
@@ -185,6 +186,7 @@ void MBHogUI::handleUI()
     if(ImGui::Begin("KC spikes")) {
         if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), 0.025f)){
             ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
+            ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
         }
         ImGui::End();
     }
@@ -196,6 +198,9 @@ void MBHogUI::handleUI()
     }
 
     if(ImGui::Begin("MB parameters")) {
+        ImGui::Text("PN");
+        ImGui::SliderFloat("Rate scale", m_Memory.getRateScalePN(), 1000.0f, 100000.0f);
+
         ImGui::Text("Weights");
         ImGui::SliderFloat("GGN->KC", m_Memory.getGGNToKCWeight(), -3.0f, 0.0f);
         ImGui::SliderFloat("KC->GGN", m_Memory.getKCToGGNWeight(), 0.0f, 0.1f);
