@@ -82,6 +82,9 @@ bool StateHandler::handleEvent(State state, Event event)
         // Process snapshot
         m_SnapshotProcessor.process(m_Snapshot);
 
+        // Update the final snapshot texture with the snapshot processor's final output
+        m_FinalSnapshotTexture.update(m_SnapshotProcessor.getFinalSnapshot());
+
         // Handle UI
         if(!handleUI()) {
             return false;
@@ -423,8 +426,8 @@ bool StateHandler::handleUI()
     if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
     {
         ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
-                        ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
-                        ImVec2(0, 1), ImVec2(1, 0));
+                     ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
+                     ImVec2(0, 1), ImVec2(1, 0));
 
     }
     ImGui::End();
@@ -433,8 +436,16 @@ bool StateHandler::handleUI()
     if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
     {
         ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
-                        ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
-                        ImVec2(0, 1), ImVec2(1, 0));
+                     ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
+                     ImVec2(0, 1), ImVec2(1, 0));
+    }
+    ImGui::End();
+
+    // Draw processed snapshot view window
+    if(ImGui::Begin("Processed snapshot", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Image((void*)m_FinalSnapshotTexture.getTexture(),
+                     ImVec2(m_VisualNavigation.getUnwrapResolution().width * 4, m_VisualNavigation.getUnwrapResolution().height * 4));
     }
     ImGui::End();
 

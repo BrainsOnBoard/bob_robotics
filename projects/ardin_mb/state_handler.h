@@ -22,6 +22,7 @@
 #include "libantworld/snapshot_processor_ardin.h"
 
 // Ardin MB includes
+#include "opencv_texture.h"
 #include "vector_field.h"
 
 // Forward declarations
@@ -132,6 +133,9 @@ private:
 
     //! Snapshot processor - implements the strange resizing algorithm from original paper
     BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
+
+    //! OpenCV texture wrapper used to render final snapshot
+    OpenCVTexture m_FinalSnapshotTexture;
 
     //! Class for handling rendering of vector field
     VectorField m_VectorField;
