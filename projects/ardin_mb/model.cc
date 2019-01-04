@@ -12,6 +12,9 @@
 
 using namespace BoBRobotics;
 
+//---------------------------------------------------------------------------
+// PoissonInput
+//---------------------------------------------------------------------------
 class PoissonInput : public NeuronModels::Base
 {
 public:
@@ -31,19 +34,36 @@ public:
 };
 IMPLEMENT_MODEL(PoissonInput);
 
+//---------------------------------------------------------------------------
+// ExpStaticGraded
+//---------------------------------------------------------------------------
 class ExpStaticGraded : public WeightUpdateModels::Base
 {
 public:
-    DECLARE_WEIGHT_UPDATE_MODEL(ExpStaticGraded, 3, 1, 0, 0);
+    DECLARE_WEIGHT_UPDATE_MODEL(ExpStaticGraded, 3, 0, 0, 0);
 
     SET_PARAM_NAMES({"Vmid", "Vslope", "Vthresh"});
-    SET_VARS({{"g", "scalar"}});
+    SET_EXTRA_GLOBAL_PARAMS({{"g", "scalar"}});
 
     SET_EVENT_CODE("$(addToInSyn, DT * $(g) * max(0.0, 1.0 / (1.0 + exp(($(Vmid) - $(V_pre)) / $(Vslope)))));\n");
 
     SET_EVENT_THRESHOLD_CONDITION_CODE("$(V_pre) > $(Vthresh)");
 };
 IMPLEMENT_MODEL(ExpStaticGraded);
+
+//---------------------------------------------------------------------------
+// StaticPulseEGP
+//---------------------------------------------------------------------------
+class StaticPulseEGP : public WeightUpdateModels::Base
+{
+public:
+    DECLARE_WEIGHT_UPDATE_MODEL(StaticPulseEGP, 0, 0, 0, 0);
+
+    SET_EXTRA_GLOBAL_PARAMS({{"g", "scalar"}});
+
+    SET_SIM_CODE("$(addToInSyn, $(g));\n");
+};
+IMPLEMENT_MODEL(StaticPulseEGP);
 
 void modelDefinition(NNmodel &model)
 {
@@ -117,9 +137,6 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Weight update model parameters
     //---------------------------------------------------------------------------
-    WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(MBParams::pnToKCWeight);
-    WeightUpdateModels::StaticPulse::VarValues kcToGGNWeightUpdateParams(MBParams::kcToGGNWeight);
-
     GeNNModels::STDPDopamine::ParamValues kcToENWeightUpdateParams(
         15.0,                       // 0 - Potentiation time constant (ms)
         15.0,                       // 1 - Depression time constant (ms)
@@ -139,7 +156,6 @@ void modelDefinition(NNmodel &model)
         -40.0,  // 0 - Vmid
         2.0,    // 1 - Vslope
         -60.0); // 2 - Vthresh
-    ExpStaticGraded::VarValues ggnToKCWeightUpdateInit(MBParams::ggnToKCWeight);
 
     // Create neuron populations
     auto pn = model.addNeuronPopulation<PoissonInput>("PN", MBParams::numPN, pnParams, pnInit);
@@ -152,10 +168,10 @@ void modelDefinition(NNmodel &model)
     kc->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
     en->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 
-    auto pnToKC = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, GeNNModels::ExpCurr>(
+    auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, GeNNModels::ExpCurr>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
         "PN", "KC",
-        {}, pnToKCWeightUpdateParams,
+        {}, {},
         pnToKCPostsynapticParams, {});
 
     auto kcToEN = model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
@@ -164,16 +180,16 @@ void modelDefinition(NNmodel &model)
         kcToENWeightUpdateParams, kcToENWeightUpdateInitVars,
         kcToENPostsynapticParams, {});
 
-    model.addSynapsePopulation<WeightUpdateModels::StaticPulse, GeNNModels::ExpCurr>(
+    model.addSynapsePopulation<StaticPulseEGP, GeNNModels::ExpCurr>(
         "kcToGGN", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
         "KC", "GGN",
-        {}, kcToGGNWeightUpdateParams,
+        {}, {},
         kcToGGNPostsynapticParams, {});
 
     model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
         "ggnToKC", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
         "GGN","KC",
-        ggnToKCWeightUpdateParams, ggnToKCWeightUpdateInit,
+        ggnToKCWeightUpdateParams, {},
         ggnToKCPostsynapticParams, {});
 
     // Calculate max connections

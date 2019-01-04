@@ -195,6 +195,14 @@ void MBHogUI::handleUI()
         ImGui::End();
     }
 
+    if(ImGui::Begin("MB parameters")) {
+        ImGui::Text("Weights");
+        ImGui::SliderFloat("GGN->KC", m_Memory.getGGNToKCWeight(), -3.0f, 0.0f);
+        ImGui::SliderFloat("KC->GGN", m_Memory.getKCToGGNWeight(), 0.0f, 0.1f);
+        ImGui::SliderFloat("PN->KC", m_Memory.getPNToKC(), 0.0f, 0.1f);
+        ImGui::End();
+    }
+
 }
 //----------------------------------------------------------------------------
 void MBHogUI::handleUITraining()

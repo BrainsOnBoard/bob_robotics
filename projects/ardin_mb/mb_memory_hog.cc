@@ -86,6 +86,11 @@ MBMemoryHOG::MBMemoryHOG()
 #ifndef CPU_ONLY
     CHECK_CUDA_ERRORS(cudaMalloc(&m_HOGFeaturesGPU, MBParams::hogFeatureSize * sizeof(float)));
 #endif
+
+    // Set initial weights
+    *getGGNToKCWeight() = MBParams::ggnToKCWeight;
+    *getKCToGGNWeight() = MBParams::kcToGGNWeight;
+    *getPNToKC() = MBParams::pnToKCWeight;
 }
 //----------------------------------------------------------------------------
 MBMemoryHOG::~MBMemoryHOG()
@@ -113,6 +118,21 @@ float MBMemoryHOG::test(const cv::Mat &image) const
 void MBMemoryHOG::clearMemory()
 {
     throw std::runtime_error("MBMemory does not currently support clearing");
+}
+//----------------------------------------------------------------------------
+float *MBMemoryHOG::getGGNToKCWeight()
+{
+    return &gggnToKC;
+}
+//----------------------------------------------------------------------------
+float *MBMemoryHOG::getKCToGGNWeight()
+{
+    return &gkcToGGN;
+}
+//----------------------------------------------------------------------------
+float *MBMemoryHOG::getPNToKC()
+{
+    return &gpnToKC;
 }
 //----------------------------------------------------------------------------
 std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const cv::Mat &image, bool train) const

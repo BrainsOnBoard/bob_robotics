@@ -41,6 +41,11 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    // **NOTE** gross API but allows easy integration with UI
+    float *getGGNToKCWeight();
+    float *getKCToGGNWeight();
+    float *getPNToKC();
+
     const std::vector<float> &getHOGFeatures() const{ return m_HOGFeatures; }
 
     const Spikes &getPNSpikes() const{ return m_PNSpikes; }
@@ -52,6 +57,8 @@ public:
     unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
     const std::vector<float> &getGGNVoltage() const{ return m_GGNVoltage; }
+
+
 
 private:
     //------------------------------------------------------------------------
