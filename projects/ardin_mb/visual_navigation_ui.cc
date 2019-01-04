@@ -76,13 +76,21 @@ MBHogUI::MBHogUI(MBMemoryHOG &memory)
 //----------------------------------------------------------------------------
 void MBHogUI::handleUI()
 {
-    if(ImGui::Begin("Unused weights")) {
+    if(ImGui::Begin("Statistics")) {
         // Plot record of unused weights
-        ImGui::PlotLines("", m_UnusedWeightsData.data(), m_UnusedWeightsData.size(), 0, nullptr, 0,
-                         MBParams::numKC * MBParams::numEN, ImVec2(0, 200));
+        ImGui::PlotLines("Unused weights", m_UnusedWeightsData.data(), m_UnusedWeightsData.size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
+
+        ImGui::PlotLines("Active PN", m_ActivePNData.data(), m_ActivePNData.size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
+
+        ImGui::PlotLines("Active KC", m_ActiveKCData.data(), m_ActiveKCData.size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
 
         if(ImGui::Button("Clear")) {
             m_UnusedWeightsData.clear();
+            m_ActivePNData.clear();
+            m_ActiveKCData.clear();
         }
         ImGui::End();
     }
@@ -107,8 +115,15 @@ void MBHogUI::handleUITraining()
 {
     // Add number of unused weights to vector
     m_UnusedWeightsData.push_back((float)m_Memory.getNumUnusedWeights());
+
+    // Add number of active cells to vector
+    m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
+    m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
 }
 //----------------------------------------------------------------------------
 void MBHogUI::handleUITesting()
 {
+    // Add number of active cells to vector
+    m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
+    m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
 }

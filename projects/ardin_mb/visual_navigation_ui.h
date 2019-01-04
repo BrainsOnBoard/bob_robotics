@@ -44,4 +44,6 @@ private:
 
     // Data for plotting unused weights
     std::vector<float> m_UnusedWeightsData;
+    std::vector<float> m_ActivePNData;
+    std::vector<float> m_ActiveKCData;
 };
