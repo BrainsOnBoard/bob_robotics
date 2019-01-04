@@ -42,6 +42,11 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
                                         ImVec2(rasterLeft + width, rasterTop + height),
                                         IM_COL32(128, 128, 128, 255));
 
+    // Stimuli end
+    ImGui::GetWindowDrawList()->AddLine(ImVec2(rasterLeft + MBParams::presentDurationMs, rasterTop),
+                                        ImVec2(rasterLeft + MBParams::presentDurationMs, rasterTop + height),
+                                        IM_COL32(128, 128, 128, 255));
+
     char tickText[32];
     for(float t = 0.0f; t < spikes.back().first; t += timeAxisStep) {
 
@@ -181,6 +186,12 @@ void MBHogUI::handleUI()
         if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), 0.025f)){
             ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
         }
+        ImGui::End();
+    }
+
+    if(ImGui::Begin("GGN activity")) {
+        ImGui::PlotLines("Membrane\nvoltage", m_Memory.getGGNVoltage().data(), m_Memory.getGGNVoltage().size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
         ImGui::End();
     }
 

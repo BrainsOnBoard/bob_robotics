@@ -51,6 +51,8 @@ public:
     unsigned int getNumActivePN() const{ return m_NumActivePN; }
     unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
+    const std::vector<float> &getGGNVoltage() const{ return m_GGNVoltage; }
+
 private:
     //------------------------------------------------------------------------
     // Private API
@@ -74,4 +76,6 @@ private:
     mutable unsigned int m_NumUsedWeights;
     mutable unsigned int m_NumActivePN;
     mutable unsigned int m_NumActiveKC;
+
+    mutable std::vector<float> m_GGNVoltage;
 };

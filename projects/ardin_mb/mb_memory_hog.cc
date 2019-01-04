@@ -149,6 +149,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     const unsigned long long endPresentTimestep = iT + presentDuration;
     const unsigned long long endTimestep = iT + duration;
 
+    // Clear GGN voltage and reserve
+    m_GGNVoltage.clear();
+    m_GGNVoltage.reserve(duration);
+
     // Open CSV output files
     const float startTimeMs = t;
 
@@ -187,6 +191,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         pullPNCurrentSpikesFromDevice();
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
+        pullGGNStateFromDevice();
 #else
         // Simulate on CPU
         stepTimeCPU();
@@ -221,6 +226,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         record(t - startTimeMs, spikeCount_PN, spike_PN, m_PNSpikes);
         record(t - startTimeMs, spikeCount_KC, spike_KC, m_KCSpikes);
         record(t - startTimeMs, spikeCount_EN, spike_EN, m_ENSpikes);
+
+        // Record GGN voltage
+        m_GGNVoltage.push_back(VGGN[0]);
     }
 
 #ifdef RECORD_TERMINAL_SYNAPSE_STATE
