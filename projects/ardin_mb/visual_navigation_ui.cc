@@ -18,13 +18,14 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
         return false;
     }
 
-    // Create dummy widget
     // **TODO** handle different dt
     assert(MBParams::timestepMs == 1.0);
     const float width = spikes.back().first;
     const float height = (float)numNeurons * yScale;
-    const float leftBorder = 20.0f;
-    const float topBorder = 10.0f;
+    constexpr float leftBorder = 20.0f;
+    constexpr float topBorder = 10.0f;
+
+    // Create dummy widget to correctly layout window
     ImGui::Dummy(ImVec2(width + leftBorder, height + topBorder));
 
     const auto windowPos = ImGui::GetWindowPos();
@@ -64,6 +65,74 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
 
     return true;
 }
+//----------------------------------------------------------------------------
+bool hogPlot(const std::vector<float> &features, float drawScale)
+{
+    using namespace units::literals;
+    using namespace units::angle;
+
+    // Check feature size is correct
+    assert(features.size() == MBParams::hogFeatureSize);
+
+    // Precalculate sin and cos of each bin angle
+    // **THINK** just how unpleasant would a constexpr template metaprogramming solution be here?
+    constexpr degree_t oneBinAngle = 180.0_deg / MBParams::hogNumOrientations;
+    double binCos[MBParams::hogNumOrientations];
+    double binSin[MBParams::hogNumOrientations];
+    for(size_t b = 0; b < MBParams::hogNumOrientations; b++) {
+        const degree_t binAngle = (b * oneBinAngle) + (oneBinAngle * 0.5);
+        binCos[b] = units::math::cos(binAngle);
+        binSin[b] = units::math::sin(binAngle);
+    }
+
+    // Calculate number of cells
+    constexpr size_t numCellX = MBParams::inputWidth / MBParams::hogCellSize;
+    constexpr size_t numCellY = MBParams::inputHeight / MBParams::hogCellSize;
+    constexpr float leftBorder = 40.0f;
+    constexpr float topBorder = 10.0f;
+
+    // Calcualate render size of hog cells
+    const float drawCellSize = drawScale * (float)MBParams::hogCellSize;
+    const float halfDrawCellSize = 0.5f * drawCellSize;
+
+    // Create dummy widget to correctly layout window
+    const float height = (drawCellSize * numCellY) + topBorder;
+    ImGui::Dummy(ImVec2((drawCellSize * numCellX) + leftBorder, height));
+
+    const auto windowPos = ImGui::GetWindowPos();
+    const float hogLeft = windowPos.x + leftBorder;
+    const float hogBottom = windowPos.y + height;
+
+    // Loop through cells
+    size_t i = 0;
+    for(size_t y = 0; y < numCellY; y++) {
+        for(size_t x = 0; x < numCellX; x++) {
+            const float drawX = hogLeft + (drawCellSize * (float)x);
+            const float drawY = hogBottom - (drawCellSize * (float)y);
+
+            // Draw cell border
+            ImGui::GetWindowDrawList()->AddRect(ImVec2(drawX - halfDrawCellSize, drawY - halfDrawCellSize),
+                                                ImVec2(drawX + halfDrawCellSize, drawY + halfDrawCellSize),
+                                                IM_COL32(128, 128, 128, 255));
+            for(size_t b = 0; b < MBParams::hogNumOrientations; b++) {
+                // Get gradient strength
+                const float gradStrength = features[i++];
+
+                // Skip zero-strength gradients
+                if(gradStrength == 0.0f) {
+                    continue;
+                }
+
+                const float lineLength = gradStrength * drawCellSize;
+                ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - (binCos[b] * lineLength), drawY - binSin[b] * lineLength),
+                                                    ImVec2(drawX + (binCos[b] * lineLength), drawY + binSin[b] * lineLength),
+                                                    IM_COL32(255, 255, 255, 255));
+            }
+        }
+    }
+
+    return true;
+}
 }   // Anonymous namespace
 
 //----------------------------------------------------------------------------
@@ -78,7 +147,7 @@ void MBHogUI::handleUI()
 {
     if(ImGui::Begin("Statistics")) {
         // Plot record of unused weights
-        ImGui::PlotLines("Unused weights", m_UnusedWeightsData.data(), m_UnusedWeightsData.size(), 0, nullptr,
+        ImGui::PlotLines("Unused\nweights", m_UnusedWeightsData.data(), m_UnusedWeightsData.size(), 0, nullptr,
                          FLT_MAX, FLT_MAX, ImVec2(0, 50));
 
         ImGui::PlotLines("Active PN", m_ActivePNData.data(), m_ActivePNData.size(), 0, nullptr,
@@ -91,6 +160,12 @@ void MBHogUI::handleUI()
             m_UnusedWeightsData.clear();
             m_ActivePNData.clear();
             m_ActiveKCData.clear();
+        }
+        ImGui::End();
+    }
+
+    if(ImGui::Begin("HOG features", nullptr, ImGuiWindowFlags_NoResize)) {
+        if(hogPlot(m_Memory.getHOGFeatures(), 20.0f)) {
         }
         ImGui::End();
     }

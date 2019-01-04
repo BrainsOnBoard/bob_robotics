@@ -428,9 +428,8 @@ bool StateHandler::handleUI()
         ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
                      ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
                      ImVec2(0, 1), ImVec2(1, 0));
-
+        ImGui::End();
     }
-    ImGui::End();
 
     // Draw top-down view window
     if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
@@ -438,16 +437,16 @@ bool StateHandler::handleUI()
         ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
                      ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
                      ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::End();
     }
-    ImGui::End();
 
     // Draw processed snapshot view window
     if(ImGui::Begin("Processed snapshot", nullptr, ImGuiWindowFlags_NoResize))
     {
         ImGui::Image((void*)m_FinalSnapshotTexture.getTexture(),
                      ImVec2(m_VisualNavigation.getUnwrapResolution().width * 4, m_VisualNavigation.getUnwrapResolution().height * 4));
+        ImGui::End();
     }
-    ImGui::End();
 
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
