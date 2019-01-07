@@ -12,7 +12,7 @@
 //----------------------------------------------------------------------------
 namespace
 {
-bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, float yScale = 1.0f, float timeAxisStep = 50.0f)
+bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, float verticalLineTime, float yScale = 1.0f, float timeAxisStep = 50.0f)
 {
     if(spikes.empty()) {
         return false;
@@ -43,8 +43,8 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
                                         IM_COL32(128, 128, 128, 255));
 
     // Stimuli end
-    ImGui::GetWindowDrawList()->AddLine(ImVec2(rasterLeft + MBParams::presentDurationMs, rasterTop),
-                                        ImVec2(rasterLeft + MBParams::presentDurationMs, rasterTop + height),
+    ImGui::GetWindowDrawList()->AddLine(ImVec2(rasterLeft + verticalLineTime, rasterTop),
+                                        ImVec2(rasterLeft + verticalLineTime, rasterTop + height),
                                         IM_COL32(128, 128, 128, 255));
 
     char tickText[32];
@@ -146,6 +146,11 @@ bool hogPlot(const std::vector<float> &features, float drawScale)
 MBHogUI::MBHogUI(MBMemoryHOG &memory)
     : m_Memory(memory)
 {
+    // Load memory config
+    cv::FileStorage configFile("mb_memory_hog.yml", cv::FileStorage::READ);
+    if(configFile.isOpened()) {
+        m_Memory.read(configFile["config"]);
+    }
 }
 //----------------------------------------------------------------------------
 void MBHogUI::handleUI()
@@ -157,9 +162,17 @@ void MBHogUI::handleUI()
 
         ImGui::PlotLines("Active PN", m_ActivePNData.data(), m_ActivePNData.size(), 0, nullptr,
                          FLT_MAX, FLT_MAX, ImVec2(0, 50));
+        if(!m_ActivePNData.empty()) {
+            ImGui::Text("%.0f min, %.0f max", *std::min_element(m_ActivePNData.begin(), m_ActivePNData.end()),
+                        *std::max_element(m_ActivePNData.begin(), m_ActivePNData.end()));
+        }
 
         ImGui::PlotLines("Active KC", m_ActiveKCData.data(), m_ActiveKCData.size(), 0, nullptr,
                          FLT_MAX, FLT_MAX, ImVec2(0, 50));
+        if(!m_ActiveKCData.empty()) {
+            ImGui::Text("%.0f min, %.0f max", *std::min_element(m_ActiveKCData.begin(), m_ActiveKCData.end()),
+                        *std::max_element(m_ActiveKCData.begin(), m_ActiveKCData.end()));
+        }
 
         if(ImGui::Button("Clear")) {
             m_UnusedWeightsData.clear();
@@ -176,7 +189,7 @@ void MBHogUI::handleUI()
     }
 
     if(ImGui::Begin("PN spikes")) {
-        if(rasterPlot(MBParams::numPN, m_Memory.getPNSpikes())){
+        if(rasterPlot(MBParams::numPN, m_Memory.getPNSpikes(), *m_Memory.getPresentDurationMs())){
             ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParams::numPN);
             ImGui::Text("%u spikes", m_Memory.getNumPNSpikes());
         }
@@ -184,7 +197,7 @@ void MBHogUI::handleUI()
     }
 
     if(ImGui::Begin("KC spikes")) {
-        if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), 0.025f)){
+        if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
             ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
             ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
         }
@@ -198,13 +211,37 @@ void MBHogUI::handleUI()
     }
 
     if(ImGui::Begin("MB parameters")) {
-        ImGui::Text("PN");
-        ImGui::SliderFloat("Rate scale", m_Memory.getRateScalePN(), 1000.0f, 100000.0f);
+        if(ImGui::TreeNode("PN")) {
+            ImGui::SliderFloat("Rate scale", m_Memory.getRateScalePN(), 100.0f, 100000.0f);
+            ImGui::TreePop();
+        }
 
-        ImGui::Text("Weights");
-        ImGui::SliderFloat("GGN->KC", m_Memory.getGGNToKCWeight(), -3.0f, 0.0f);
-        ImGui::SliderFloat("KC->GGN", m_Memory.getKCToGGNWeight(), 0.0f, 0.1f);
-        ImGui::SliderFloat("PN->KC", m_Memory.getPNToKC(), 0.0f, 0.1f);
+        if(ImGui::TreeNode("GGN->KC")) {
+            ImGui::SliderFloat("Weight", m_Memory.getGGNToKCWeight(), -3.0f, 0.0f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("KC->GGN")) {
+            ImGui::SliderFloat("Weight", m_Memory.getKCToGGNWeight(), 0.0f, 0.1f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("PN->KC")) {
+            ImGui::SliderFloat("Weight", m_Memory.getPNToKC(), 0.0f, 0.25f);
+            ImGui::SliderFloat("TauSyn", m_Memory.getPNToKCTauSyn(), 1.0f, 20.0f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("Simulation")) {
+            ImGui::SliderFloat("Reward time", m_Memory.getRewardTimeMs(), 0.0f, 200.0f);
+            ImGui::SliderFloat("Present duration", m_Memory.getPresentDurationMs(), 0.0f, 200.0f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::Button("Save")) {
+            cv::FileStorage configFile("mb_memory_hog.yml", cv::FileStorage::WRITE);
+            m_Memory.write(configFile);
+        }
         ImGui::End();
     }
 

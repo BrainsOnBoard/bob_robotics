@@ -268,16 +268,9 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_AntX -= SimParams::antMoveStep * units::math::sin(m_AntHeading);
                 m_AntY -= SimParams::antMoveStep * units::math::cos(m_AntHeading);
             }
-            if(m_KeyBits.test(KeyTrainSnapshot)) {
-                m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
-
-            }
-            if(m_KeyBits.test(KeyTestSnapshot)) {
-                std::cout << "Difference: " << m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()) << std::endl;
-            }
-            if(m_KeyBits.test(KeySaveSnapshot)) {
-                cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());
-            }
+            //if(m_KeyBits.test(KeySaveSnapshot)) {
+            //    cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());
+            //}
         }
     }
     else if(state == State::BuildingVectorField) {
@@ -428,8 +421,16 @@ bool StateHandler::handleUI()
         ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
                      ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
                      ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::End();
+
+        if(ImGui::Button("Train")) {
+            m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Test")) {
+            std::cout << "Difference: " << m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()) << std::endl;
+        }
     }
+    ImGui::End();
 
     // Draw top-down view window
     if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
@@ -437,16 +438,16 @@ bool StateHandler::handleUI()
         ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
                      ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
                      ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::End();
     }
+    ImGui::End();
 
     // Draw processed snapshot view window
     if(ImGui::Begin("Processed snapshot", nullptr, ImGuiWindowFlags_NoResize))
     {
         ImGui::Image((void*)m_FinalSnapshotTexture.getTexture(),
                      ImVec2(m_VisualNavigation.getUnwrapResolution().width * 4, m_VisualNavigation.getUnwrapResolution().height * 4));
-        ImGui::End();
     }
+    ImGui::End();
 
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {

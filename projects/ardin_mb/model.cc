@@ -35,6 +35,23 @@ public:
 };
 IMPLEMENT_MODEL(PoissonInput);
 
+
+//---------------------------------------------------------------------------
+// PoissonInputSingleSpike
+//---------------------------------------------------------------------------
+class PoissonInputSingleSpike : public NeuronModels::Base
+{
+public:
+    DECLARE_MODEL(PoissonInputSingleSpike, 0, 1);
+
+    SET_SIM_CODE("");
+
+    SET_THRESHOLD_CONDITION_CODE("$(t) >= $(timeToSpike) && $(t) < ($(timeToSpike) + DT)");
+
+    SET_VARS({{"timeToSpike", "scalar"}});
+};
+IMPLEMENT_MODEL(PoissonInputSingleSpike);
+
 //---------------------------------------------------------------------------
 // PoissonInputFast
 //---------------------------------------------------------------------------
@@ -58,6 +75,19 @@ public:
     SET_VARS({{"expMinusLambda", "scalar"}});
 };
 IMPLEMENT_MODEL(PoissonInputFast);
+
+class ExpCurrEGP : public PostsynapticModels::Base
+{
+public:
+    DECLARE_MODEL(ExpCurrEGP, 0, 0);
+
+    SET_DECAY_CODE("$(inSyn)*=$(expDecay);");
+
+    SET_CURRENT_CONVERTER_CODE("$(init) * $(inSyn)");
+
+    SET_EXTRA_GLOBAL_PARAMS({{"expDecay", "scalar"}, {"init", "scalar"}});
+};
+IMPLEMENT_MODEL(ExpCurrEGP);
 
 //---------------------------------------------------------------------------
 // ExpStaticGraded
@@ -136,24 +166,24 @@ void modelDefinition(NNmodel &model)
         0.0);   // 1 - RefracTime
 
     // Poisson input initial conditions
-    PoissonInputFast::VarValues pnInit(
-        uninitialisedVar());    // 0 - expMinusLambda
+    PoissonInputSingleSpike::VarValues pnInit(
+        uninitialisedVar());    // 0 - timeToSpike
 
     //---------------------------------------------------------------------------
     // Postsynaptic model parameters
     //---------------------------------------------------------------------------
-    GeNNModels::ExpCurr::ParamValues pnToKCPostsynapticParams(
-        3.0);   // 0 - Synaptic time constant (ms)
+    //GeNNModels::ExpCurr::ParamValues pnToKCPostsynapticParams(
+    //    3.0);   // 0 - Synaptic time constant [from Ardin] (ms)
 
     GeNNModels::ExpCurr::ParamValues kcToENPostsynapticParams(
-        8.0);   // 0 - Synaptic time constant (ms)
+        8.0);   // 0 - Synaptic time constant [from Ardin] (ms)
 
     // **TODO** experiment with tuning these
     GeNNModels::ExpCurr::ParamValues kcToGGNPostsynapticParams(
         5.0);   // 0 - Synaptic time constant (ms)
 
     GeNNModels::ExpCurr::ParamValues ggnToKCPostsynapticParams(
-        4.0);   // 0 - Synaptic time constant (ms)
+        4.0);   // 0 - Synaptic time constant [from Nowotny](ms)
 
     //---------------------------------------------------------------------------
     // Weight update model parameters
@@ -179,20 +209,20 @@ void modelDefinition(NNmodel &model)
         -60.0); // 2 - Vthresh
 
     // Create neuron populations
-    auto pn = model.addNeuronPopulation<PoissonInputFast>("PN", MBParams::numPN, {}, pnInit);
+    auto pn = model.addNeuronPopulation<PoissonInputSingleSpike>("PN", MBParams::numPN, {}, pnInit);
     auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
     auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
     model.addNeuronPopulation<GeNNModels::LIF>("GGN", 1, ggnParams, lifInit);
     pn->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
-    pn->setVarMode("expMinusLambda", VarMode::LOC_HOST_DEVICE_INIT_HOST);
+    pn->setVarMode("timeToSpike", VarMode::LOC_HOST_DEVICE_INIT_HOST);
     kc->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
     en->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 
-    auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, GeNNModels::ExpCurr>(
+    auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, ExpCurrEGP>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
         "PN", "KC",
         {}, {},
-        pnToKCPostsynapticParams, {});
+        {}, {});
 
     auto kcToEN = model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
         "kcToEN", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY,

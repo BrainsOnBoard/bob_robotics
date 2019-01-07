@@ -48,7 +48,8 @@ void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemoryHOG
 MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
         m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0),
-        m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0), m_RateScalePN(1.0f)
+        m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0),
+        m_RateScalePN(MBParams::inputRateScale), m_PNToKCTauSyn(3.0f), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -91,7 +92,6 @@ MBMemoryHOG::MBMemoryHOG()
     *getGGNToKCWeight() = MBParams::ggnToKCWeight;
     *getKCToGGNWeight() = MBParams::kcToGGNWeight;
     *getPNToKC() = MBParams::pnToKCWeight;
-    *getRateScalePN() = MBParams::inputRateScale;
 }
 //----------------------------------------------------------------------------
 MBMemoryHOG::~MBMemoryHOG()
@@ -136,9 +136,48 @@ float *MBMemoryHOG::getPNToKC()
     return &gpnToKC;
 }
 //----------------------------------------------------------------------------
-float *MBMemoryHOG::getRateScalePN()
+void MBMemoryHOG::write(cv::FileStorage& fs) const
 {
-    return &m_RateScalePN;
+    fs << "config" << "{";
+    fs << "rewardTimeMs" << m_RewardTimeMs;
+    fs << "presentDurationMs" << m_PresentDurationMs;
+
+    fs << "ggnToKC" << "{";
+    fs << "weight" << gggnToKC;
+    fs << "}";
+
+    fs << "kcToGGC" << "{";
+    fs << "weight" << gkcToGGN;
+    fs << "}";
+
+    fs << "pnToKC" << "{";
+    fs << "weight" << gpnToKC;
+    fs << "tauSyn" << m_PNToKCTauSyn;
+    fs << "}";
+    fs << "}";
+}
+//----------------------------------------------------------------------------
+void MBMemoryHOG::read(const cv::FileNode &node)
+{
+    cv::read(node["rewardTimeMs"], m_RewardTimeMs, m_RewardTimeMs);
+    cv::read(node["presentDurationMs"], m_PresentDurationMs, m_PresentDurationMs);
+
+    const auto &ggnToKC = node["ggnToKC"];
+    if(ggnToKC.isMap()) {
+        ggnToKC["weight"] >> gggnToKC;
+    }
+
+    const auto &kcToGGC = node["kcToGGC"];
+    if(kcToGGC.isMap()) {
+        kcToGGC["weight"] >> gkcToGGN;
+    }
+
+    const auto &pnToKC = node["pnToKC"];
+    if(pnToKC.isMap()) {
+        pnToKC["weight"] >> gpnToKC;
+        pnToKC["tauSyn"] >> m_PNToKCTauSyn;
+    }
+
 }
 //----------------------------------------------------------------------------
 std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const cv::Mat &image, bool train) const
@@ -151,6 +190,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     m_HOG.compute(image, m_HOGFeatures);
     BOB_ASSERT(m_HOGFeatures.size() == MBParams::hogFeatureSize);
 
+
+    expDecaypnToKC = (float)std::exp(-MBParams::timestepMs / m_PNToKCTauSyn);
+    initpnToKC = (float)(m_PNToKCTauSyn * (1.0 - std::exp(-MBParams::timestepMs / m_PNToKCTauSyn))) * (1.0 / MBParams::timestepMs);
     //const float magnitude = std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f);
     /*std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), m_HOGFeatures.begin(),
                    [magnitude](float f)
@@ -160,27 +202,46 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     //std::cout << "HOG feature magnitude:" << magnitude << std::endl;
 
     // Convert HOG features into lamnda
-    std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), expMinusLambdaPN,
+    /*std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), expMinusLambdaPN,
                    [&](float f)
                    {
                        return std::exp(-((f * m_RateScalePN) / 1000.0) * MBParams::timestepMs);
-                   });
+                   });*/
 
     // Copy HOG features into GeNN variable
     //std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), ratePN);
+    /*std::exponential_distribution<float> standardExponentialDistribution(1.0f);
+    std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), timeToSpikePN,
+                   [this, &standardExponentialDistribution](float f)
+                   {
+                       return (1000.0f / (m_RateScalePN * f)) * standardExponentialDistribution(m_RNG);
+                   });*/
+    const float maxHOG = *std::max_element(m_HOGFeatures.begin(), m_HOGFeatures.end());
+    std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), timeToSpikePN,
+                   [this, maxHOG](float f)
+                   {
+                       return (maxHOG - f) * (m_PresentDurationMs / maxHOG);
+                   });
+
+    // Make sure KC state is reset before simulation
+    std::fill_n(VKC, MBParams::numKC, -60.0f);
+
 
 #ifndef CPU_ONLY
     pushPNStateToDevice();
+    pushKCStateToDevice();
 #endif
 
+    // Reset model time
+    iT = 0;
+    t = 0.0f;
+
     // Convert simulation regime parameters to timesteps
-    const unsigned long long rewardTimestep = iT + convertMsToTimesteps(MBParams::rewardTimeMs);
-    const unsigned int presentDuration = convertMsToTimesteps(MBParams::presentDurationMs);
+    const unsigned long long rewardTimestep = convertMsToTimesteps(m_RewardTimeMs);
+    const unsigned int endPresentTimestep = convertMsToTimesteps(m_PresentDurationMs);
     const unsigned int postStimuliDuration = convertMsToTimesteps(MBParams::postStimuliDurationMs);
 
-    const unsigned int duration = presentDuration + postStimuliDuration;
-    const unsigned long long endPresentTimestep = iT + presentDuration;
-    const unsigned long long endTimestep = iT + duration;
+    const long long duration = endPresentTimestep + postStimuliDuration;
 
     // Clear GGN voltage and reserve
     m_GGNVoltage.clear();
@@ -201,10 +262,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     m_NumPNSpikes = 0;
     m_NumKCSpikes = 0;
     unsigned int numENSpikes = 0;
-    while(iT < endTimestep) {
+    while(iT < duration) {
         // If we should stop presenting image
         if(iT == endPresentTimestep) {
-            std::fill_n(expMinusLambdaPN, MBParams::numPN, 1.0f);
+            std::fill_n(timeToSpikePN, MBParams::numPN, MBParams::postStimuliDurationMs + m_PresentDurationMs + 10.0f);
 
 #ifndef CPU_ONLY
             pushPNStateToDevice();
@@ -256,14 +317,15 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         }
 
         // Record spikes
-        record(t - startTimeMs, spikeCount_PN, spike_PN, m_PNSpikes);
-        record(t - startTimeMs, spikeCount_KC, spike_KC, m_KCSpikes);
-        record(t - startTimeMs, spikeCount_EN, spike_EN, m_ENSpikes);
+        record(t, spikeCount_PN, spike_PN, m_PNSpikes);
+        record(t, spikeCount_KC, spike_KC, m_KCSpikes);
+        record(t, spikeCount_EN, spike_EN, m_ENSpikes);
 
         // Record GGN voltage
         m_GGNVoltage.push_back(VGGN[0]);
     }
 
+    std::cout << std::endl;
 #ifdef RECORD_TERMINAL_SYNAPSE_STATE
     // Download synaptic state
     pullkcToENStateFromDevice();

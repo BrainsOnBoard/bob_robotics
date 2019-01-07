@@ -76,17 +76,6 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int)
             stateHandler->setKeyState(StateHandler::KeyReset, newKeyState);
             break;
 
-        case GLFW_KEY_SPACE:
-            stateHandler->setKeyState(StateHandler::KeyTrainSnapshot, newKeyState);
-            break;
-
-        case GLFW_KEY_ENTER:
-            stateHandler->setKeyState(StateHandler::KeyTestSnapshot, newKeyState);
-            break;
-
-        case GLFW_KEY_S:
-            stateHandler->setKeyState(StateHandler::KeySaveSnapshot, newKeyState);
-            break;
     }
 }
 //----------------------------------------------------------------------------

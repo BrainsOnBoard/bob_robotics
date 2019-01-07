@@ -3,6 +3,7 @@
 // Standard C++ includes
 #include <bitset>
 #include <list>
+#include <random>
 #include <tuple>
 #include <vector>
 
@@ -46,7 +47,9 @@ public:
     float *getKCToGGNWeight();
     float *getPNToKC();
 
-    float *getRateScalePN();
+    float *getRateScalePN(){ return &m_RateScalePN; }
+
+    float *getPNToKCTauSyn(){ return &m_PNToKCTauSyn; }
 
     const std::vector<float> &getHOGFeatures() const{ return m_HOGFeatures; }
 
@@ -63,7 +66,11 @@ public:
 
     const std::vector<float> &getGGNVoltage() const{ return m_GGNVoltage; }
 
+    float *getRewardTimeMs(){ return &m_RewardTimeMs; }
+    float *getPresentDurationMs(){ return &m_PresentDurationMs; }
 
+    void write(cv::FileStorage& fs) const;
+    void read(const cv::FileNode &node);
 
 private:
     //------------------------------------------------------------------------
@@ -82,6 +89,11 @@ private:
 #endif
     float m_RateScalePN;
 
+    float m_PNToKCTauSyn;
+
+    float m_RewardTimeMs;
+    float m_PresentDurationMs;
+
     mutable Spikes m_PNSpikes;
     mutable Spikes m_KCSpikes;
     mutable Spikes m_ENSpikes;
@@ -94,4 +106,6 @@ private:
     mutable unsigned int m_NumActiveKC;
 
     mutable std::vector<float> m_GGNVoltage;
+
+    mutable std::mt19937 m_RNG;
 };

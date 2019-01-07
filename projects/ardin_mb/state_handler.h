@@ -66,9 +66,6 @@ public:
         KeyUp,
         KeyDown,
         KeyReset,
-        KeyTrainSnapshot,
-        KeyTestSnapshot,
-        KeySaveSnapshot,
         KeyMax
     };
 
