@@ -63,6 +63,9 @@ void VectorField::createVertices(meter_t startX, meter_t endX, meter_t gridX,
         glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_VERTEX_ARRAY);
     }
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
 //------------------------------------------------------------------------
 VectorField::~VectorField()
@@ -81,6 +84,9 @@ void VectorField::render()
     glTranslatef(0.0f, 0.0f, 0.1f);
     glDrawArrays(GL_LINES, 0, getNumPoints() * 2);
     glPopMatrix();
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
 //------------------------------------------------------------------------
 std::tuple<meter_t, meter_t> VectorField::getPoint(unsigned int point) const
