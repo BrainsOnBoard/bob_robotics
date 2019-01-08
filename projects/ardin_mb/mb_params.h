@@ -49,6 +49,12 @@ namespace MBParams
     // Time constant of dopamine
     constexpr double tauD = 20.0;
 
+    constexpr double ggnToKCVMid = -40.0;
+
+    constexpr double ggnToKCVslope = 2.0;
+
+    constexpr double ggnToKCVthresh = -50.0;
+
     // Scale of each dopamine 'spike'
     // **NOTE** manually tuned for one-shot learning - also close to BA/phi
     constexpr double dopamineStrength = 0.03;

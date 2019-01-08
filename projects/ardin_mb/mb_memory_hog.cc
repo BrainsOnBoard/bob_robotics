@@ -92,6 +92,10 @@ MBMemoryHOG::MBMemoryHOG()
     *getGGNToKCWeight() = MBParams::ggnToKCWeight;
     *getKCToGGNWeight() = MBParams::kcToGGNWeight;
     *getPNToKC() = MBParams::pnToKCWeight;
+
+    *getGGNToKCVMid() = MBParams::ggnToKCVMid;
+    *getGGNToKCVslope() = MBParams::ggnToKCVslope;
+    *getGGNToKCVthresh() = MBParams::ggnToKCVthresh;
 }
 //----------------------------------------------------------------------------
 MBMemoryHOG::~MBMemoryHOG()
@@ -136,6 +140,21 @@ float *MBMemoryHOG::getPNToKC()
     return &gpnToKC;
 }
 //----------------------------------------------------------------------------
+float *MBMemoryHOG::getGGNToKCVMid()
+{
+    return &VmidggnToKC;
+}
+//----------------------------------------------------------------------------
+float *MBMemoryHOG::getGGNToKCVslope()
+{
+    return &VslopeggnToKC;
+}
+//----------------------------------------------------------------------------
+float *MBMemoryHOG::getGGNToKCVthresh()
+{
+    return &VthreshggnToKC;
+}
+//----------------------------------------------------------------------------
 void MBMemoryHOG::write(cv::FileStorage& fs) const
 {
     fs << "config" << "{";
@@ -144,6 +163,9 @@ void MBMemoryHOG::write(cv::FileStorage& fs) const
 
     fs << "ggnToKC" << "{";
     fs << "weight" << gggnToKC;
+    fs << "vMid" << VmidggnToKC;
+    fs << "vSlope" << VslopeggnToKC;
+    fs << "vThresh" << VthreshggnToKC;
     fs << "}";
 
     fs << "kcToGGC" << "{";
@@ -164,18 +186,21 @@ void MBMemoryHOG::read(const cv::FileNode &node)
 
     const auto &ggnToKC = node["ggnToKC"];
     if(ggnToKC.isMap()) {
-        ggnToKC["weight"] >> gggnToKC;
+        cv::read(ggnToKC["weight"], gggnToKC, gggnToKC);
+        cv::read(ggnToKC["vMid"], VmidggnToKC, VmidggnToKC);
+        cv::read(ggnToKC["vSlope"], VslopeggnToKC, VslopeggnToKC);
+        cv::read(ggnToKC["vThresh"], VthreshggnToKC, VthreshggnToKC);
     }
 
     const auto &kcToGGC = node["kcToGGC"];
     if(kcToGGC.isMap()) {
-        kcToGGC["weight"] >> gkcToGGN;
+        cv::read(kcToGGC["weight"], gkcToGGN, gkcToGGN);
     }
 
     const auto &pnToKC = node["pnToKC"];
     if(pnToKC.isMap()) {
-        pnToKC["weight"] >> gpnToKC;
-        pnToKC["tauSyn"] >> m_PNToKCTauSyn;
+        cv::read(pnToKC["weight"], gpnToKC, gpnToKC);
+        cv::read(pnToKC["tauSyn"], m_PNToKCTauSyn, m_PNToKCTauSyn);
     }
 
 }
@@ -223,13 +248,22 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
                        return (maxHOG - f) * (m_PresentDurationMs / maxHOG);
                    });
 
-    // Make sure KC state is reset before simulation
+    // Make sure KC state and GGN insyn are reset before simulation
+    initialize();
+    /*VGGN[0] = -60.0f;
+    inSynkcToGGN[0] = 0.0f;
     std::fill_n(VKC, MBParams::numKC, -60.0f);
-
+    std::fill_n(inSynggnToKC, MBParams::numKC, 0.0f);
+    std::fill_n(inSynpnToKC, MBParams::numKC, 0.0f);*/
 
 #ifndef CPU_ONLY
     pushPNStateToDevice();
-    pushKCStateToDevice();
+    /*pushKCStateToDevice();
+    pushGGNStateToDevice();
+
+    pushpnToKCStateToDevice();
+    pushkcToGGNStateToDevice();
+    pushggnToKCStateToDevice();*/
 #endif
 
     // Reset model time
@@ -246,6 +280,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     // Clear GGN voltage and reserve
     m_GGNVoltage.clear();
     m_GGNVoltage.reserve(duration);
+
+    m_KCInhInSyn.clear();
+    m_KCInhInSyn.reserve(duration);
 
     // Open CSV output files
     const float startTimeMs = t;
@@ -286,6 +323,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
         pullGGNStateFromDevice();
+
+        // **NOTE** very sub-optimal as we only use first!
+        pullggnToKCStateFromDevice();
 #else
         // Simulate on CPU
         stepTimeCPU();
@@ -323,6 +363,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
 
         // Record GGN voltage
         m_GGNVoltage.push_back(VGGN[0]);
+        m_KCInhInSyn.push_back(inSynggnToKC[0]);
     }
 
     std::cout << std::endl;

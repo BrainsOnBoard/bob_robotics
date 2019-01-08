@@ -44,6 +44,6 @@ namespace SimParams
 
     // Ant parameters
     // How fast does the ant move each timestep?
-    constexpr degree_t antTurnStep = 4.0_deg;
+    constexpr degree_t antTurnStep = 2.0_deg;
     constexpr meter_t antMoveStep = 0.05_m;
 }

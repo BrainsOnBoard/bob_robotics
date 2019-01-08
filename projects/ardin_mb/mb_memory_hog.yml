@@ -1,0 +1,15 @@
+%YAML:1.0
+---
+config:
+   rewardTimeMs: 20.
+   presentDurationMs: 20.
+   ggnToKC:
+      weight: -4.9460000991821289e+00
+      vMid: -5.0323001861572266e+01
+      vSlope: 2.0650000572204590e+00
+      vThresh: -60.
+   kcToGGC:
+      weight: 1.7000000225380063e-03
+   pnToKC:
+      weight: 2.5000000000000000e-01
+      tauSyn: 3.

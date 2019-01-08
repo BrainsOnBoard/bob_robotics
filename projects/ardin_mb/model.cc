@@ -95,10 +95,9 @@ IMPLEMENT_MODEL(ExpCurrEGP);
 class ExpStaticGraded : public WeightUpdateModels::Base
 {
 public:
-    DECLARE_WEIGHT_UPDATE_MODEL(ExpStaticGraded, 3, 0, 0, 0);
+    DECLARE_WEIGHT_UPDATE_MODEL(ExpStaticGraded, 0, 0, 0, 0);
 
-    SET_PARAM_NAMES({"Vmid", "Vslope", "Vthresh"});
-    SET_EXTRA_GLOBAL_PARAMS({{"g", "scalar"}});
+    SET_EXTRA_GLOBAL_PARAMS({{"g", "scalar"}, {"Vmid", "scalar"}, {"Vslope", "scalar"}, {"Vthresh", "scalar"}});
 
     SET_EVENT_CODE("$(addToInSyn, DT * $(g) * max(0.0, 1.0 / (1.0 + exp(($(Vmid) - $(V_pre)) / $(Vslope)))));\n");
 
@@ -203,11 +202,6 @@ void modelDefinition(NNmodel &model)
         0.0,                        // Synaptic tag
         0.0);                       // Time of last synaptic tag update
 
-    ExpStaticGraded::ParamValues ggnToKCWeightUpdateParams(
-        -40.0,  // 0 - Vmid
-        2.0,    // 1 - Vslope
-        -60.0); // 2 - Vthresh
-
     // Create neuron populations
     auto pn = model.addNeuronPopulation<PoissonInputSingleSpike>("PN", MBParams::numPN, {}, pnInit);
     auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
@@ -236,10 +230,10 @@ void modelDefinition(NNmodel &model)
         {}, {},
         kcToGGNPostsynapticParams, {});
 
-    model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
+    auto ggnToKC = model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
         "ggnToKC", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
         "GGN","KC",
-        ggnToKCWeightUpdateParams, {},
+        {}, {},
         ggnToKCPostsynapticParams, {});
 
     // Calculate max connections
@@ -249,6 +243,7 @@ void modelDefinition(NNmodel &model)
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);
     kcToEN->setWUVarMode("g", VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
+    ggnToKC->setInSynVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 
     model.finalize();
 }

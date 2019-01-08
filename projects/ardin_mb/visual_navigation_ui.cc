@@ -174,60 +174,63 @@ void MBHogUI::handleUI()
                         *std::max_element(m_ActiveKCData.begin(), m_ActiveKCData.end()));
         }
 
+
         if(ImGui::Button("Clear")) {
             m_UnusedWeightsData.clear();
             m_ActivePNData.clear();
             m_ActiveKCData.clear();
+            m_PeakGGNVoltage.clear();
         }
-        ImGui::End();
     }
+    ImGui::End();
 
     if(ImGui::Begin("HOG features", nullptr, ImGuiWindowFlags_NoResize)) {
         if(hogPlot(m_Memory.getHOGFeatures(), 20.0f)) {
         }
-        ImGui::End();
     }
+    ImGui::End();
 
     if(ImGui::Begin("PN spikes")) {
         if(rasterPlot(MBParams::numPN, m_Memory.getPNSpikes(), *m_Memory.getPresentDurationMs())){
             ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParams::numPN);
             ImGui::Text("%u spikes", m_Memory.getNumPNSpikes());
         }
-        ImGui::End();
     }
+    ImGui::End();
 
     if(ImGui::Begin("KC spikes")) {
         if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
             ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
             ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
         }
-        ImGui::End();
     }
+    ImGui::End();
 
     if(ImGui::Begin("GGN activity")) {
         ImGui::PlotLines("Membrane\nvoltage", m_Memory.getGGNVoltage().data(), m_Memory.getGGNVoltage().size(), 0, nullptr,
-                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
-        ImGui::End();
+                         -60.0f, -40.0f, ImVec2(0, 50));
+        ImGui::PlotLines("Inh out", m_Memory.getKCInhInSyn().data(), m_Memory.getKCInhInSyn().size(), 0, nullptr,
+                         -1.0f, 0.0f, ImVec2(0, 50));
     }
+    ImGui::End();
 
     if(ImGui::Begin("MB parameters")) {
-        if(ImGui::TreeNode("PN")) {
-            ImGui::SliderFloat("Rate scale", m_Memory.getRateScalePN(), 100.0f, 100000.0f);
-            ImGui::TreePop();
-        }
-
         if(ImGui::TreeNode("GGN->KC")) {
-            ImGui::SliderFloat("Weight", m_Memory.getGGNToKCWeight(), -3.0f, 0.0f);
+            ImGui::SliderFloat("Weight", m_Memory.getGGNToKCWeight(), -10.0f, 0.0f);
+
+            ImGui::SliderFloat("VMid", m_Memory.getGGNToKCVMid(), -60.0f, -20.0f);
+            ImGui::SliderFloat("Vslope", m_Memory.getGGNToKCVslope(), 1.0f, 4.0f);
+            ImGui::SliderFloat("Vthresh", m_Memory.getGGNToKCVthresh(), -60.0f, -20.0f);
             ImGui::TreePop();
         }
 
         if(ImGui::TreeNode("KC->GGN")) {
-            ImGui::SliderFloat("Weight", m_Memory.getKCToGGNWeight(), 0.0f, 0.1f);
+            ImGui::SliderFloat("Weight", m_Memory.getKCToGGNWeight(), 0.0f, 0.04f, "%.4f");
             ImGui::TreePop();
         }
 
         if(ImGui::TreeNode("PN->KC")) {
-            ImGui::SliderFloat("Weight", m_Memory.getPNToKC(), 0.0f, 0.25f);
+            ImGui::SliderFloat("Weight", m_Memory.getPNToKC(), 0.0f, 0.5f);
             ImGui::SliderFloat("TauSyn", m_Memory.getPNToKCTauSyn(), 1.0f, 20.0f);
             ImGui::TreePop();
         }
@@ -242,8 +245,8 @@ void MBHogUI::handleUI()
             cv::FileStorage configFile("mb_memory_hog.yml", cv::FileStorage::WRITE);
             m_Memory.write(configFile);
         }
-        ImGui::End();
     }
+    ImGui::End();
 
 }
 //----------------------------------------------------------------------------
@@ -255,6 +258,8 @@ void MBHogUI::handleUITraining()
     // Add number of active cells to vector
     m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
+
+    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
 }
 //----------------------------------------------------------------------------
 void MBHogUI::handleUITesting()
@@ -262,4 +267,6 @@ void MBHogUI::handleUITesting()
     // Add number of active cells to vector
     m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
+
+    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
 }

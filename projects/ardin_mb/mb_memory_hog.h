@@ -47,6 +47,10 @@ public:
     float *getKCToGGNWeight();
     float *getPNToKC();
 
+    float *getGGNToKCVMid();
+    float *getGGNToKCVslope();
+    float *getGGNToKCVthresh();
+
     float *getRateScalePN(){ return &m_RateScalePN; }
 
     float *getPNToKCTauSyn(){ return &m_PNToKCTauSyn; }
@@ -65,6 +69,8 @@ public:
     unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
     const std::vector<float> &getGGNVoltage() const{ return m_GGNVoltage; }
+    const std::vector<float> &getKCInhInSyn() const{ return m_KCInhInSyn; }
+
 
     float *getRewardTimeMs(){ return &m_RewardTimeMs; }
     float *getPresentDurationMs(){ return &m_PresentDurationMs; }
@@ -106,6 +112,7 @@ private:
     mutable unsigned int m_NumActiveKC;
 
     mutable std::vector<float> m_GGNVoltage;
+    mutable std::vector<float> m_KCInhInSyn;
 
     mutable std::mt19937 m_RNG;
 };
