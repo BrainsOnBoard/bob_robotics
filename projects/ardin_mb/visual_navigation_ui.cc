@@ -215,6 +215,12 @@ void MBHogUI::handleUI()
     ImGui::End();
 
     if(ImGui::Begin("MB parameters")) {
+        if(ImGui::TreeNode("PN")) {
+            ImGui::SliderFloat("InputCurrentScale", m_Memory.getPNInputCurrentScale(), 0.0f, 10.0f, "%.4f");
+            ImGui::SliderFloat("VThresh", m_Memory.getPNVthresh(), -60.0f, 0.0f);
+            ImGui::TreePop();
+        }
+
         if(ImGui::TreeNode("GGN->KC")) {
             ImGui::SliderFloat("Weight", m_Memory.getGGNToKCWeight(), -10.0f, 0.0f);
 

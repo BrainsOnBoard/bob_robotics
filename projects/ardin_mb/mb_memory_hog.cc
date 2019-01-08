@@ -49,7 +49,7 @@ MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
         m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0),
         m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0),
-        m_RateScalePN(MBParams::inputRateScale), m_PNToKCTauSyn(3.0f), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
+        m_PNToKCTauSyn(3.0f), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -92,6 +92,9 @@ MBMemoryHOG::MBMemoryHOG()
     *getGGNToKCWeight() = MBParams::ggnToKCWeight;
     *getKCToGGNWeight() = MBParams::kcToGGNWeight;
     *getPNToKC() = MBParams::pnToKCWeight;
+
+    *getPNInputCurrentScale() = MBParams::inputCurrentScale;
+    *getPNVthresh() = MBParams::pnVthresh;
 
     *getGGNToKCVMid() = MBParams::ggnToKCVMid;
     *getGGNToKCVslope() = MBParams::ggnToKCVslope;
@@ -155,11 +158,26 @@ float *MBMemoryHOG::getGGNToKCVthresh()
     return &VthreshggnToKC;
 }
 //----------------------------------------------------------------------------
+float *MBMemoryHOG::getPNInputCurrentScale()
+{
+    return &IextScalePN;
+}
+//----------------------------------------------------------------------------
+float *MBMemoryHOG::getPNVthresh()
+{
+    return &VthreshPN;
+}
+//----------------------------------------------------------------------------
 void MBMemoryHOG::write(cv::FileStorage& fs) const
 {
     fs << "config" << "{";
     fs << "rewardTimeMs" << m_RewardTimeMs;
     fs << "presentDurationMs" << m_PresentDurationMs;
+
+    fs << "pn" << "{";
+    fs << "inputCurrentScale" << IextScalePN;
+    fs << "vThresh" << VthreshPN;
+    fs << "}";
 
     fs << "ggnToKC" << "{";
     fs << "weight" << gggnToKC;
@@ -183,6 +201,12 @@ void MBMemoryHOG::read(const cv::FileNode &node)
 {
     cv::read(node["rewardTimeMs"], m_RewardTimeMs, m_RewardTimeMs);
     cv::read(node["presentDurationMs"], m_PresentDurationMs, m_PresentDurationMs);
+
+    const auto &pn = node["pn"];
+    if(pn.isMap()) {
+        cv::read(pn["inputCurrentScale"], IextScalePN, IextScalePN);
+        cv::read(pn["vThresh"], VthreshPN, VthreshPN);
+    }
 
     const auto &ggnToKC = node["ggnToKC"];
     if(ggnToKC.isMap()) {
@@ -241,29 +265,24 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
                    {
                        return (1000.0f / (m_RateScalePN * f)) * standardExponentialDistribution(m_RNG);
                    });*/
-    const float maxHOG = *std::max_element(m_HOGFeatures.begin(), m_HOGFeatures.end());
+    /*const float maxHOG = *std::max_element(m_HOGFeatures.begin(), m_HOGFeatures.end());
     std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), timeToSpikePN,
                    [this, maxHOG](float f)
                    {
                        return (maxHOG - f) * (m_PresentDurationMs / maxHOG);
-                   });
+                   });*/
+
+
 
     // Make sure KC state and GGN insyn are reset before simulation
     initialize();
-    /*VGGN[0] = -60.0f;
-    inSynkcToGGN[0] = 0.0f;
-    std::fill_n(VKC, MBParams::numKC, -60.0f);
-    std::fill_n(inSynggnToKC, MBParams::numKC, 0.0f);
-    std::fill_n(inSynpnToKC, MBParams::numKC, 0.0f);*/
 
+    // Copy HOG features into external input current
+    std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), IextPN);
 #ifndef CPU_ONLY
-    pushPNStateToDevice();
-    /*pushKCStateToDevice();
-    pushGGNStateToDevice();
+    // **NOTE** don't push whole state as voltage etc is initialised on device and therefore pushing state would push invalid value
+    CHECK_CUDA_ERRORS(cudaMemcpy(d_IextPN, IextPN, 108 * sizeof(scalar), cudaMemcpyHostToDevice));
 
-    pushpnToKCStateToDevice();
-    pushkcToGGNStateToDevice();
-    pushggnToKCStateToDevice();*/
 #endif
 
     // Reset model time
@@ -302,10 +321,11 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     while(iT < duration) {
         // If we should stop presenting image
         if(iT == endPresentTimestep) {
-            std::fill_n(timeToSpikePN, MBParams::numPN, MBParams::postStimuliDurationMs + m_PresentDurationMs + 10.0f);
+            std::fill_n(IextPN, MBParams::numPN, 0.0f);
 
 #ifndef CPU_ONLY
-            pushPNStateToDevice();
+            // **NOTE** don't push whole state as voltage etc is initialised on device and therefore pushing state would push invalid value
+            CHECK_CUDA_ERRORS(cudaMemcpy(d_IextPN, IextPN, 108 * sizeof(scalar), cudaMemcpyHostToDevice));
 #endif
         }
 

@@ -51,7 +51,8 @@ public:
     float *getGGNToKCVslope();
     float *getGGNToKCVthresh();
 
-    float *getRateScalePN(){ return &m_RateScalePN; }
+    float *getPNInputCurrentScale();
+    float *getPNVthresh();
 
     float *getPNToKCTauSyn(){ return &m_PNToKCTauSyn; }
 

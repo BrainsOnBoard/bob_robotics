@@ -27,9 +27,8 @@ namespace MBParams
     constexpr double presentDurationMs = 40.0;
     constexpr double postStimuliDurationMs = 200.0;
 
-    // Scale applied to convert image data to input rates for PNs
-    // **NOTE** manually tuned to get approximately 50% PN activation
-    constexpr double inputRateScale = 30000.0;
+    // Scale applied to convert image data to input currents for PNs
+    constexpr double inputCurrentScale = 30000.0;
 
     // Weight of static synapses between PN and KC populations
     // **NOTE** manually tuend to get approximately 200/20000 KC firing sparsity
@@ -54,6 +53,8 @@ namespace MBParams
     constexpr double ggnToKCVslope = 2.0;
 
     constexpr double ggnToKCVthresh = -50.0;
+
+    constexpr double pnVthresh = -50.0;
 
     // Scale of each dopamine 'spike'
     // **NOTE** manually tuned for one-shot learning - also close to BA/phi

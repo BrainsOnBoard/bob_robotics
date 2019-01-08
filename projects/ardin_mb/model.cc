@@ -12,70 +12,54 @@
 
 using namespace BoBRobotics;
 
+
 //---------------------------------------------------------------------------
-// PoissonInput
+// Standard LIF model extended to take an additional
+// input current from an extra global variable
 //---------------------------------------------------------------------------
-class PoissonInput : public NeuronModels::Base
+class LIFExtCurrent : public NeuronModels::Base
 {
 public:
-    DECLARE_MODEL(PoissonInput, 0, 2);
+    DECLARE_MODEL(LIFExtCurrent, 5, 3);
 
     SET_SIM_CODE(
-        "oldSpike = false;\n"
-        "if($(timeStepToSpike) <= 0.0f) {\n"
-        "    $(timeStepToSpike) += (1000.0 / ($(rateScale) * $(rate) * DT)) * $(gennrand_exponential);\n"
-        "}\n"
-        "$(timeStepToSpike) -= 1.0;\n"
-    );
-
-    SET_THRESHOLD_CONDITION_CODE("$(timeStepToSpike) <= 0.0");
-
-    SET_VARS({{"timeStepToSpike", "scalar"}, {"rate", "scalar"}});
-    SET_EXTRA_GLOBAL_PARAMS({{"rateScale", "scalar"}});
-};
-IMPLEMENT_MODEL(PoissonInput);
-
-
-//---------------------------------------------------------------------------
-// PoissonInputSingleSpike
-//---------------------------------------------------------------------------
-class PoissonInputSingleSpike : public NeuronModels::Base
-{
-public:
-    DECLARE_MODEL(PoissonInputSingleSpike, 0, 1);
-
-    SET_SIM_CODE("");
-
-    SET_THRESHOLD_CONDITION_CODE("$(t) >= $(timeToSpike) && $(t) < ($(timeToSpike) + DT)");
-
-    SET_VARS({{"timeToSpike", "scalar"}});
-};
-IMPLEMENT_MODEL(PoissonInputSingleSpike);
-
-//---------------------------------------------------------------------------
-// PoissonInputFast
-//---------------------------------------------------------------------------
-class PoissonInputFast : public NeuronModels::Base
-{
-public:
-    DECLARE_MODEL(PoissonInputFast, 0, 1);
-
-    SET_SIM_CODE(
-        "scalar p = 1.0f;\n"
-        "unsigned int numPoissonSpikes = 0;\n"
-        "do\n"
+        "if ($(RefracTime) <= 0.0)\n"
         "{\n"
-        "    numPoissonSpikes++;\n"
-        "    p *= $(gennrand_uniform);\n"
-        "} while (p > $(expMinusLambda));\n"
-    );
+        "   scalar alpha = (($(Isyn) + ($(IextScale) * $(Iext))) * $(Rmembrane)) + $(Vrest);\n"
+        "   $(V) = alpha - ($(ExpTC) * (alpha - $(V)));\n"
+        "}\n"
+        "else\n"
+        "{\n"
+        "  $(RefracTime) -= DT;\n"
+        "}\n");
 
-    SET_THRESHOLD_CONDITION_CODE("numPoissonSpikes > 1");
+    SET_THRESHOLD_CONDITION_CODE("$(RefracTime) <= 0.0 && $(V) >= $(Vthresh)");
 
-    SET_VARS({{"expMinusLambda", "scalar"}});
+    SET_RESET_CODE(
+        "$(V) = $(Vreset);\n"
+        "$(RefracTime) = $(TauRefrac);\n");
+
+    SET_PARAM_NAMES({
+        "C",            // 0 -Membrane capacitance
+        "TauM",         // 1 - Membrane time constant [ms]
+        "Vrest",        // 2 - Resting membrane potential [mV]
+        "Vreset",       // 3 - Reset voltage [mV]
+        "TauRefrac"});  // 6 - Scaling factor to apply to external current
+
+    SET_DERIVED_PARAMS({
+        {"ExpTC", [](const vector<double> &pars, double dt){ return std::exp(-dt / pars[1]); }},
+        {"Rmembrane", [](const vector<double> &pars, double){ return  pars[1] / pars[0]; }}});
+
+    SET_VARS({{"V", "scalar"}, {"RefracTime", "scalar"}, {"Iext", "scalar"}});
+
+    SET_EXTRA_GLOBAL_PARAMS({{"IextScale", "float"}, {"Vthresh", "scalar"}});
 };
-IMPLEMENT_MODEL(PoissonInputFast);
+IMPLEMENT_MODEL(LIFExtCurrent);
 
+//---------------------------------------------------------------------------
+// ExpCurrEGP
+//---------------------------------------------------------------------------
+// Standard exp curr P.S.M. modified so tau can be controlled with E.G.P.
 class ExpCurrEGP : public PostsynapticModels::Base
 {
 public:
@@ -108,6 +92,7 @@ IMPLEMENT_MODEL(ExpStaticGraded);
 //---------------------------------------------------------------------------
 // StaticPulseEGP
 //---------------------------------------------------------------------------
+// Standard static pulse W.U.M. modified so weight can be controlled with E.G.P.
 class StaticPulseEGP : public WeightUpdateModels::Base
 {
 public:
@@ -123,7 +108,7 @@ void modelDefinition(NNmodel &model)
 {
     GENN_PREFERENCES::autoInitSparseVars = true;
     GENN_PREFERENCES::defaultVarMode = VarMode::LOC_HOST_DEVICE_INIT_DEVICE;
-    GENN_PREFERENCES::autoRefractory = false;
+    //GENN_PREFERENCES::autoRefractory = false;
 
     initGeNN();
     model.setDT(MBParams::timestepMs);
@@ -132,6 +117,14 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Neuron model parameters
     //---------------------------------------------------------------------------
+    // LIF model parameters
+    LIFExtCurrent::ParamValues pnParams(
+        0.2,                                // 0 - C
+        20.0,                               // 1 - TauM
+        -60.0,                              // 2 - Vrest
+        -60.0,                              // 3 - Vreset
+        200.0);                               // 4 - TauRefrac **NOTE** essentially make neurons fire once
+
     GeNNModels::LIF::ParamValues kcParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
@@ -155,7 +148,7 @@ void modelDefinition(NNmodel &model)
         20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
         -60.0,                              // 3 - Vreset
-        10000.0,                            // 4 - Vthresh
+        10000.0,                            // 4 - Vthresh **NOTE** essentially non-spiking
         0.0,                                // 5 - Ioffset
         2.0);                               // 6 - TauRefrac
 
@@ -164,16 +157,15 @@ void modelDefinition(NNmodel &model)
         -60.0,  // 0 - V
         0.0);   // 1 - RefracTime
 
-    // Poisson input initial conditions
-    PoissonInputSingleSpike::VarValues pnInit(
-        uninitialisedVar());    // 0 - timeToSpike
+    // PN initial conditions
+    LIFExtCurrent::VarValues pnInit(
+        -60.0,  // 0 - V
+        0.0,    // 1 - RefracTime
+        0.0);   // 2 - Iext
 
     //---------------------------------------------------------------------------
     // Postsynaptic model parameters
     //---------------------------------------------------------------------------
-    //GeNNModels::ExpCurr::ParamValues pnToKCPostsynapticParams(
-    //    3.0);   // 0 - Synaptic time constant [from Ardin] (ms)
-
     GeNNModels::ExpCurr::ParamValues kcToENPostsynapticParams(
         8.0);   // 0 - Synaptic time constant [from Ardin] (ms)
 
@@ -203,14 +195,10 @@ void modelDefinition(NNmodel &model)
         0.0);                       // Time of last synaptic tag update
 
     // Create neuron populations
-    auto pn = model.addNeuronPopulation<PoissonInputSingleSpike>("PN", MBParams::numPN, {}, pnInit);
+    auto pn = model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, pnInit);
     auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
     auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
     model.addNeuronPopulation<GeNNModels::LIF>("GGN", 1, ggnParams, lifInit);
-    pn->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
-    pn->setVarMode("timeToSpike", VarMode::LOC_HOST_DEVICE_INIT_HOST);
-    kc->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
-    en->setSpikeVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
 
     auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, ExpCurrEGP>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
@@ -242,8 +230,5 @@ void modelDefinition(NNmodel &model)
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);
-    kcToEN->setWUVarMode("g", VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
-    ggnToKC->setInSynVarMode(VarMode::LOC_HOST_DEVICE_INIT_DEVICE);
-
     model.finalize();
 }
