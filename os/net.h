@@ -179,8 +179,9 @@ errorMessage(int err = lastError())
 class NetworkError : public std::runtime_error
 {
 public:
-    NetworkError(const std::string &msg)
-      : std::runtime_error(msg + " (" + std::to_string(OS::Net::lastError()) + ": " + OS::Net::errorMessage() + ")")
+    NetworkError(const std::string &msg, const int err = OS::Net::lastError())
+      : std::runtime_error(msg + " (" + std::to_string(err) + ": "
+                           + OS::Net::errorMessage(err) + ")")
     {}
 };
 } // Net

@@ -1,6 +1,7 @@
 #pragma once
 
 // BoBRobotics includes
+#include "../common/assert.h"
 #include "../os/net.h"
 #include "input.h"
 
@@ -85,19 +86,34 @@ public:
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
     {
-        unsigned char buffer[72 * 19];
-
-        if (m_Socket == INVALID_SOCKET) {
-            return false;
-        }
+        constexpr bufflen_t bufferLength = 72 * 19;
+        unsigned char buffer[bufferLength];
 
         // Make sure frame is correct size and type
         outFrame.create(72, 152, CV_32FC1);
 
+#ifdef _WIN32
+        constexpr int blocking = WSAEWOULDBLOCK;
+#else
+        constexpr ssize_t blocking = -EAGAIN;
+#endif
+
         // Get the most recent UDP frame (grayscale for now)
-        while (recv(m_Socket, reinterpret_cast<readbuff_t>(buffer), 72 * 19, 0) > 0) {
-            // fill in the outFrame
-            for (int i = 0; i < 72 * 19 - 1; ++i) {
+        while (true) {
+            const auto ret = recv(m_Socket, reinterpret_cast<readbuff_t>(buffer),
+                                  bufferLength, 0);
+            if (ret < 0) {
+                // If it's blocking, then we're done
+                if (ret == blocking) {
+                    break;
+                }
+
+                // Otherwise an error occurred
+                throw OS::Net::NetworkError("Could not read from socket", ret);
+            }
+
+            // Fill in the outFrame
+            for (int i = 0; i < (int) bufferLength; ++i) {
                 outFrame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[i]) / 255.0f;
             }
         }
