@@ -30,21 +30,22 @@ main(int argc, char *argv[])
 {
     using namespace units::literals;
     using namespace units::angle;
+
     // can be set from the command line - default to LINUX standards
     const std::string device = (argc > 1) ? std::string(argv[1]) : "/dev/ttyUSB0";
     const size_t baudrate = (argc > 2) ? std::stoul(argv[2]) : 115200;
 
-    BoBRobotics::Robots::betaflight_vicon my_drone(device, baudrate);
+    BoBRobotics::Robots::BetaflightVicon droneControl(device, baudrate);
 
     // limits for the VICON lab in Sheffield
-    //my_drone.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
-    my_drone.setRoomBounds(-1.5, 1.0, -1.0, 1.0, 0.0, 2.0);
+    //droneControl.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
+    droneControl.setRoomBounds(-1.5, 1.0, -1.0, 1.0, 0.0, 2.0);
 
     auto future = std::async(std::launch::async, GetLineFromCin);
 
     bool mute = true;
     bool controlOn = false;
-    my_drone.printStatus();
+    droneControl.printStatus();
 
     HID::Joystick js(0.1f);
 
@@ -56,13 +57,13 @@ main(int argc, char *argv[])
         js.update();
 
         // Move waypoint around
-        waypoint[0] = std::max(my_drone.m_RoomBounds.x[0], std::min(my_drone.m_RoomBounds.x[1], waypoint[0] + (speed * js.getState(HID::JAxis::RightStickHorizontal))));
-        waypoint[1] = std::max(my_drone.m_RoomBounds.y[0], std::min(my_drone.m_RoomBounds.y[1], waypoint[1] - (speed * js.getState(HID::JAxis::RightStickVertical))));
-        waypoint[2] = std::max(my_drone.m_RoomBounds.z[0], std::min(my_drone.m_RoomBounds.z[1], waypoint[2] - (speed * js.getState(HID::JAxis::LeftStickVertical))));
+        waypoint[0] = std::max(droneControl.m_RoomBounds.x[0], std::min(droneControl.m_RoomBounds.x[1], waypoint[0] + (speed * js.getState(HID::JAxis::RightStickHorizontal))));
+        waypoint[1] = std::max(droneControl.m_RoomBounds.y[0], std::min(droneControl.m_RoomBounds.y[1], waypoint[1] - (speed * js.getState(HID::JAxis::RightStickVertical))));
+        waypoint[2] = std::max(droneControl.m_RoomBounds.z[0], std::min(droneControl.m_RoomBounds.z[1], waypoint[2] - (speed * js.getState(HID::JAxis::LeftStickVertical))));
         yaw = std::max(-180.0f, std::min(180.0f, yaw + (1.0f * js.getState(HID::JAxis::LeftStickHorizontal))));
 
-        my_drone.setWaypoint(waypoint[0], waypoint[1], waypoint[2]);
-        my_drone.setYaw(degree_t(yaw));
+        droneControl.setWaypoint(waypoint[0], waypoint[1], waypoint[2]);
+        droneControl.setYaw(degree_t(yaw));
 
         if (js.isPressed(HID::JButton::X)) {
             break;
@@ -70,7 +71,7 @@ main(int argc, char *argv[])
 
         if (js.isPressed(HID::JButton::A)) {
             std::cout << "Turning on control and arming" << std::endl;
-            my_drone.armDrone();
+            droneControl.armDrone();
         }
 
         if (js.isPressed(HID::JButton::B)) {
@@ -84,7 +85,7 @@ main(int argc, char *argv[])
 
         if (js.isPressed(HID::JButton::LB)) {
             std::cout << "Turning off control and disarming" << std::endl;
-            my_drone.disarmDrone();
+            droneControl.disarmDrone();
             controlOn = false;
         }
 
@@ -95,13 +96,13 @@ main(int argc, char *argv[])
         if (!mute) {
             std::cout << "target:" << waypoint[0] << ", " << waypoint[1] << ", " << waypoint[2] << std::endl;
             std::cout << "yaw:" << yaw << std::endl;
-            my_drone.printStatus();
+            droneControl.printStatus();
         }
 
-        my_drone.sendCommands(controlOn);
+        droneControl.sendCommands(controlOn);
     }
 
-    my_drone.disarmDrone();
+    droneControl.disarmDrone();
 
     // shut down threads
     exit(0);

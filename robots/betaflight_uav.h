@@ -16,8 +16,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
-
-namespace BetaFlight {
+namespace Betaflight {
 
 std::string currentArmFlags;
 float currentVoltage = 0.0;
@@ -128,21 +127,21 @@ struct Callbacks
 };
 }
 
-class betaflight_uav : public UAV
+class BetaflightUAV : public UAV
 {
 
 public:
-    betaflight_uav(const std::string &device, int baud)
+    BetaflightUAV(const std::string &device, int baud)
       : m_Fcu(device, baud)
     {
-        BetaFlight::setup_arm_flags();
+        Betaflight::setup_arm_flags();
         m_Fcu.initialise();
     }
 
     void subscribe()
     {
-        m_Fcu.subscribe(&BetaFlight::Callbacks::onIdent, &m_Cbs, 0.1);
-        m_Fcu.subscribe(&BetaFlight::Callbacks::onAnalog, &m_Cbs, 0.5);
+        m_Fcu.subscribe(&Betaflight::Callbacks::onIdent, &m_Cbs, 0.1);
+        m_Fcu.subscribe(&Betaflight::Callbacks::onAnalog, &m_Cbs, 0.5);
     }
 
     virtual void takeOff() override
@@ -172,17 +171,17 @@ public:
 
     std::string getArmStateAsString()
     {
-        return BetaFlight::currentArmFlags.c_str();
+        return Betaflight::currentArmFlags.c_str();
     }
 
     float getVoltage()
     {
-        return BetaFlight::currentVoltage;
+        return Betaflight::currentVoltage;
     }
 
     float getAmpDraw()
     {
-        return BetaFlight::currentAmpDraw;
+        return Betaflight::currentAmpDraw;
     }
 
     // accessors for M_ControlScale
@@ -221,7 +220,7 @@ public:
 
 private:
     fcu::FlightController m_Fcu;
-    BetaFlight::Callbacks m_Cbs;
+    Betaflight::Callbacks m_Cbs;
     uint16_t M_RC_values[8] = { 1500, 1500, 1040, 1500, 2000, 1000, 1500, 1500 };
     float M_ControlScale = 100.0f;
     float M_ThrottleScale = 150.0f;
