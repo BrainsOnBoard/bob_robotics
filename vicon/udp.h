@@ -116,9 +116,6 @@ public:
     void update(const char(&name)[24], uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
                 radian_t yaw, radian_t pitch, radian_t roll)
     {
-        // Superclass
-        ObjectData::update(name, frameNumber, x, y, z, yaw, pitch, roll);
-
         const Vector3<millimeter_t> position{ x, y, z };
         constexpr millisecond_t frameS = 10_ms;
         constexpr millisecond_t smoothingS = 50_ms;
@@ -148,6 +145,10 @@ public:
         std::transform(std::begin(instVelocity), std::end(instVelocity),
                        std::begin(m_Velocity), std::begin(m_Velocity),
                        smoothVelocity);
+
+        // Superclass
+        // **NOTE** this is at the bottom so OLD position can be accessed
+        ObjectData::update(name, frameNumber, x, y, z, yaw, pitch, roll);
     }
 
     template <class VelocityUnit = meters_per_second_t>
@@ -233,7 +234,7 @@ public:
         return m_ObjectData.size();
     }
 
-    unsigned int findObjectID(const std::string &name) const
+    unsigned int findObjectID(const std::string &name)
     {
         // Search for object with name
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
