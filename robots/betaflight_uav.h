@@ -1,12 +1,18 @@
 #pragma once
 
-#include <FlightController.hpp>
-#include <iostream>
+// BoB robotics includes
+#include "uav.h"
+
+// Third-party includes
+#include <msp/FlightController.hpp>
+
+// Standard C includes
 #include <cmath>
+
+// Standard C++ includes
+#include <iostream>
 #include <string>
 #include <vector>
-
-#include "uav.h"
 
 namespace BoBRobotics {
 namespace Robots
