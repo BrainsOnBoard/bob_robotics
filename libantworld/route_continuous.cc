@@ -20,73 +20,144 @@ using namespace units::math;
 
 namespace
 {
-typedef std::tuple<meter_t, meter_t> OSCoordinate;
-typedef std::tuple<degree_t, degree_t> LatLon;
-typedef std::tuple<meter_t, meter_t, meter_t> Cartesian;
-typedef std::tuple<meter_t, meter_t, meter_t, double, radian_t, radian_t, radian_t> Transform;
-typedef std::tuple<meter_t, meter_t, double> Ellipsoid;
+// Transform from
 
-// Convert GPS latitude and longitude  to cartesian coordinate space
-Cartesian latLonToCartesian(const LatLon &latLon, const Ellipsoid &ellipsoid)
+struct Transform
 {
-    const meter_t ellipsoidA = std::get<0>(ellipsoid);
-    const double ellipsoidF = std::get<2>(ellipsoid);
+    // Translation
+    const meter_t tx;
+    const meter_t ty;
+    const meter_t tz;
 
+    // Scale
+    const double s;
+
+    // Rotation
+    const radian_t rx;
+    const radian_t ry;
+    const radian_t rz;
+};
+
+struct Ellipsoid
+{
+    // Major and minor axis
+    const meter_t a;
+    const meter_t b;
+
+    // Eccentricity
+    const double f;
+};
+
+// WGS84 datum
+struct WGS84
+{
+    static const Ellipsoid ellipsoid;
+};
+const Ellipsoid WGS84::ellipsoid{6378137_m, 6356752.314245_m, 1.0 / 298.257223563};
+
+// OSGB-36 datum
+struct OSGB36
+{
+    static const Transform transform;
+    static const Ellipsoid ellipsoid;
+};
+const Transform OSGB36::transform{-446.448_m, 125.157_m, -542.060_m,  20.4894, -0.1502_arcsec, -0.2470_arcsec, -0.8421_arcsec};
+const Ellipsoid OSGB36::ellipsoid{6377563.396_m, 6356256.909_m, 1.0 / 299.3249646};
+
+// An OS coordinate consisting of an 'easting' and 'northing' distance
+typedef std::tuple<meter_t, meter_t> OSCoordinate;
+
+// A latitude and longitude in the given space
+template<typename S>
+struct LatLon
+{
+    typedef S Space;
+
+    const degree_t lat;
+    const degree_t lon;
+};
+
+// A cartesian coordinate in the given space
+template<typename S>
+struct Cartesian
+{
+    typedef S Space;
+
+    const meter_t x;
+    const meter_t y;
+    const meter_t z;
+};
+
+
+// Convert latitude and longitude to cartesian
+// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+template<typename Space>
+Cartesian<Space> latLonToCartesian(const LatLon<Space> &latLon)
+{
     const meter_t h = 0.0_m; // height above ellipsoid - not currently used
-    const double sinPhi = sin(std::get<0>(latLon));
-    const double cosPhi = cos(std::get<0>(latLon));
-    const double sinLambda = sin(std::get<1>(latLon));
-    const double cosLambda = cos(std::get<1>(latLon));
+    const double sinPhi = sin(latLon.lat);
+    const double cosPhi = cos(latLon.lat);
+    const double sinLambda = sin(latLon.lon);
+    const double cosLambda = cos(latLon.lon);
 
-    const double eSq = 2.0 * ellipsoidF - ellipsoidF * ellipsoidF;          // 1st eccentricity squared ≡ (a²-b²)/a²
-    const meter_t nu = ellipsoidA / std::sqrt(1.0 - eSq * sinPhi * sinPhi); // radius of curvature in prime vertical
+    const double eSq = 2.0 * Space::ellipsoid.f - Space::ellipsoid.f * Space::ellipsoid.f;  // 1st eccentricity squared ≡ (a²-b²)/a²
+    const meter_t nu = Space::ellipsoid.a / std::sqrt(1.0 - eSq * sinPhi * sinPhi);         // radius of curvature in prime vertical
 
-    return std::make_tuple((nu + h) * cosPhi * cosLambda,
-                           (nu + h) * cosPhi * sinLambda,
-                           (nu * (1.0 - eSq) + h) * sinPhi);
+    return Cartesian<Space>{(nu + h) * cosPhi * cosLambda,
+                            (nu + h) * cosPhi * sinLambda,
+                            (nu * (1.0 - eSq) + h) * sinPhi};
 }
 
-Cartesian transform(const Cartesian &c, const Transform &t){
-    const double s1 = std::get<3>(t) / 1E6 + 1.0;            // scale: normalise parts-per-million to (s+1)
+// Transform cartesian coordinates from WGS84 into desired space
+// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+template<typename Space>
+Cartesian<Space> transformCartesian(const Cartesian<WGS84> &c)
+{
+    const double s1 = Space::transform.s / 1E6 + 1.0;            // scale: normalise parts-per-million to (s+1)
 
-    const double rx = std::get<4>(t).value();
-    const double ry = std::get<5>(t).value();
-    const double rz = std::get<6>(t).value();
+    const double rx = Space::transform.rx.value();
+    const double ry = Space::transform.ry.value();
+    const double rz = Space::transform.rz.value();
 
     // apply transform
-    return std::make_tuple(std::get<0>(t) + std::get<0>(c) * s1 - std::get<1>(c) * rz + std::get<2>(c) * ry,
-                           std::get<1>(t) + std::get<0>(c) * rz + std::get<1>(c) * s1 - std::get<2>(c) * rx,
-                           std::get<2>(t) - std::get<0>(c) * ry + std::get<1>(c) * rx + std::get<2>(c) * s1);
+    return Cartesian<Space>{Space::transform.tx + c.x * s1 - c.y * rz + c.z * ry,
+                            Space::transform.ty + c.x * rz + c.y * s1 - c.z * rx,
+                            Space::transform.tz - c.x * ry + c.y * rx + c.z * s1};
 }
 
-LatLon cartesianToLatLon(const Cartesian &c, const Ellipsoid &ellipsoid)
+// Convert cartesian coordinates back to latitude and longitude
+// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+template<typename Space>
+LatLon<Space> cartesianToLatLon(const Cartesian<Space> &c)
 {
-    const double e2 = 2.0 * std::get<2>(ellipsoid) - std::get<2>(ellipsoid) *std::get<2>(ellipsoid);    // 1st eccentricity squared ≡ (a²-b²)/a²
-    const double epsilon2 = e2 / (1.0 - e2);                                                            // 2nd eccentricity squared ≡ (a²-b²)/b²
-    const meter_t p = sqrt(std::get<0>(c) * std::get<0>(c) + std::get<1>(c) * std::get<1>(c));          // distance from minor axis
-    const meter_t r = sqrt(p * p + std::get<2>(c) * std::get<2>(c));                                      // polar radius
+    const double e2 = 2.0 * Space::ellipsoid.f - Space::ellipsoid.f *Space::ellipsoid.f;    // 1st eccentricity squared ≡ (a²-b²)/a²
+    const double epsilon2 = e2 / (1.0 - e2);                                                // 2nd eccentricity squared ≡ (a²-b²)/b²
+    const meter_t p = sqrt(c.x * c.x + c.y * c.y);  // distance from minor axis
+    const meter_t r = sqrt(p * p + c.z * c.z);      // polar radius
 
     // parametric latitude (Bowring eqn 17, replacing tanβ = z·a / p·b)
-    const double tanBeta = (std::get<1>(ellipsoid) * std::get<2>(c)) / (std::get<0>(ellipsoid) * p) * (1.0 + epsilon2 * std::get<1>(ellipsoid) / r);
+    const double tanBeta = (Space::ellipsoid.b * c.z) / (Space::ellipsoid.a * p) * (1.0 + epsilon2 * Space::ellipsoid.b / r);
     const double sinBeta = tanBeta / std::sqrt(1.0 + tanBeta * tanBeta);
     const double cosBeta = sinBeta / tanBeta;
 
     // geodetic latitude (Bowring eqn 18: tanφ = z+ε²bsin³β / p−e²cos³β)
-    const degree_t phi = std::isnan(cosBeta) ? 0.0_rad : atan2(std::get<2>(c) + epsilon2 * std::get<1>(ellipsoid) * sinBeta * sinBeta * sinBeta,
-                                                               p - e2 * std::get<0>(ellipsoid) * cosBeta * cosBeta * cosBeta);
+    const degree_t phi = std::isnan(cosBeta) ? 0.0_rad : atan2(c.z + epsilon2 * Space::ellipsoid.b * sinBeta * sinBeta * sinBeta,
+                                                               p - e2 * Space::ellipsoid.a * cosBeta * cosBeta * cosBeta);
 
     // longitude
-    const degree_t lambda = atan2(std::get<1>(c), std::get<0>(c));
+    const degree_t lambda = atan2(c.y, c.x);
 
     // height above ellipsoid (Bowring eqn 7) [not currently used]
     /*const double sinPhi = sin(phi), cosPhi = cos(phi);
     const meter_t nu = std::get<0>(ellipsoid) / std::sqrt(1.0 - e2 * sinPhi * sinPhi); // length of the normal terminated by the minor axis
     var h = p*cosφ + cartesian[2]*sinφ - (osgb36EllipseA*osgb36EllipseA/ν);*/
 
-    return std::make_tuple(phi, lambda);
+    return LatLon<Space>{phi, lambda};
 }
 
-OSCoordinate latLonToOS(const LatLon &latLon)
+// Convert latitude and longitude in the OSGB36 space to OS grid coordinates
+// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 {
     const meter_t a = 6377563.396_m, b = 6356256.909_m;                 // Airy 1830 major & minor semi-axes
     constexpr double f0 = 0.9996012717;                                 // NatGrid scale factor on central meridian;
@@ -95,8 +166,8 @@ OSCoordinate latLonToOS(const LatLon &latLon)
     const double e2 = 1.0 - (b * b) / (a * a);                      // eccentricity squared
     const double n = (a - b) / (a + b), n2 = n * n, n3 = n * n * n; // n, n², n³
 
-    const radian_t phi = std::get<0>(latLon);
-    const radian_t lambda = std::get<1>(latLon);
+    const radian_t phi = latLon.lat;
+    const radian_t lambda = latLon.lon;
 
     const double sinPhi = sin(phi);
     const double cosPhi = cos(phi);
@@ -274,57 +345,7 @@ void RouteContinuous::load(const std::string &filename)
     }
 
     std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
-    // Reserve headings
-    const size_t numSegments = m_Waypoints.size() - 1;
-    m_Headings.reserve(numSegments);
-
-    // Reserve array of cumulative distances
-    m_CumulativeDistance.reserve(m_Waypoints.size());
-    m_CumulativeDistance.push_back(0_m);
-
-    // Loop through route segments
-    for(unsigned int i = 0; i < numSegments; i++) {
-        // Get waypoints at start and end of segment
-        const auto &segmentStart = m_Waypoints[i];
-        const auto &segmentEnd = m_Waypoints[i + 1];
-
-        // Add segment heading to array
-        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
-                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
-
-        // Calculate segment length and
-        const meter_t segmentLength(distance(segmentStart, segmentEnd));
-        m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
-    }
-
-    // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_WaypointsVAO);
-
-    // Generate vertex buffer objects for positions and colours
-    glGenBuffers(1, &m_WaypointsPositionVBO);
-    glGenBuffers(1, &m_WaypointsColourVBO);
-
-    // Bind vertex array
-    glBindVertexArray(m_WaypointsVAO);
-
-    // Bind and upload positions buffer
-    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsPositionVBO);
-    glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(GLfloat) * 2, m_Waypoints.data(), GL_STATIC_DRAW);
-
-    // Set vertex pointer and enable client state in VAO
-    glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-    glEnableClientState(GL_VERTEX_ARRAY);
-
-    {
-        // Bind and upload zeros to colour buffer
-        std::vector<uint8_t> colours(m_Waypoints.size() * 3, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
-        glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(uint8_t) * 3, colours.data(), GL_DYNAMIC_DRAW);
-
-        // Set colour pointer and enable client state in VAO
-        glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_COLOR_ARRAY);
-    }
+    createGeometry();
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::loadRadarCSV(const std::string &filename)
@@ -335,28 +356,49 @@ void RouteContinuous::loadRadarCSV(const std::string &filename)
     // Read header, ignoring A LOT of extra  columns!
     in.read_header(io::ignore_extra_column, "TimeSinceStart", "DataGPSLat", "DataGPSLong");
 
-    const Transform osGB36Transform{-446.448_m, 125.157_m, -542.060_m,  20.4894, -0.1502_arcsec, -0.2470_arcsec, -0.8421_arcsec};
-    const Ellipsoid wgs84Ellipsoid{6378137_m, 6356752.314245_m, 1.0 / 298.257223563};
-    const Ellipsoid osGB36Ellipsoid{6377563.396_m, 6356256.909_m, 1.0/299.3249646};
-
-
+    // Read CSV rows
     double timeSinceStart, gpsLatRaw, gpsLongRaw;
+    GLfloat min[2] = {std::numeric_limits<GLfloat>::max(), std::numeric_limits<GLfloat>::max()};
+    GLfloat max[2] = {std::numeric_limits<GLfloat>::lowest(), std::numeric_limits<GLfloat>::lowest()};
     while(in.read_row(timeSinceStart, gpsLatRaw, gpsLongRaw)){
         const degree_t phiDegree{gpsLatRaw};
         const degree_t lambdaDegree{gpsLongRaw};
 
-        const Cartesian wgs84Cartesian = latLonToCartesian(std::make_tuple(phiDegree, lambdaDegree), wgs84Ellipsoid);
-        const Cartesian osGB36Cartesian = transform(wgs84Cartesian, osGB36Transform);
-        const LatLon osGBLatLon = cartesianToLatLon(osGB36Cartesian, osGB36Ellipsoid);
+        // 1) GPS coordinates are based on the WGS84 ellisoid, first convert to Cartesian
+        LatLon<WGS84> wgs84LatLon{phiDegree, lambdaDegree};
+        const auto wgs84Cartesian = latLonToCartesian(wgs84LatLon);
 
-        const OSCoordinate osCoord = latLonToOS(osGBLatLon);
+        // 2) Transform Cartesian into OSGB36 space
+        const auto osGB36Cartesian = transformCartesian<OSGB36>(wgs84Cartesian);
+
+        // 3) Convert cartesian back to latitude and longitude (now on OSGB36 ellipsoid)
+        const auto osGBLatLon = cartesianToLatLon(osGB36Cartesian);
+
+        // 4) Finally, convert latitude and longitude to OS coordinate
+        const auto osCoord = latLonToOS(osGBLatLon);
 
         std::cout << timeSinceStart << ", (" << phiDegree << ", " << lambdaDegree << ") = (" << std::get<0>(osCoord) << ", " << std::get<1>(osCoord) << ")" << std::endl;
 
-        /*N = Number(N.toFixed(3)); // round to mm precision
-        E = Number(E.toFixed(3));*/
-    }
+        m_Waypoints.emplace_back();
+        m_Waypoints.back()[0] = (GLfloat)std::get<0>(osCoord);
+        m_Waypoints.back()[1] = (GLfloat)std::get<1>(osCoord);
 
+        // Update min and max
+        min[0] = std::min(min[0], m_Waypoints.back()[0]);
+        min[1] = std::min(min[1], m_Waypoints.back()[1]);
+        max[0] = std::max(max[0], m_Waypoints.back()[0]);
+        max[1] = std::max(max[1], m_Waypoints.back()[1]);
+    }
+    std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
+    createGeometry();
+}
+//----------------------------------------------------------------------------
+void RouteContinuous::renderWaypoints(GLfloat height) const
+{
+    glPushMatrix();
+    glTranslatef(0.0f, 0.0f, height);
+    glDrawArrays(GL_POINTS, 0, m_Waypoints.size());
+    glPopMatrix();
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
@@ -483,6 +525,61 @@ void RouteContinuous::addPoint(meter_t x, meter_t y, bool error)
                     sizeof(float) * 2, position);
 
     m_RouteNumPoints++;
+}
+//----------------------------------------------------------------------------
+void RouteContinuous::createGeometry()
+{
+    // Reserve headings
+    const size_t numSegments = m_Waypoints.size() - 1;
+    m_Headings.reserve(numSegments);
+
+    // Reserve array of cumulative distances
+    m_CumulativeDistance.reserve(m_Waypoints.size());
+    m_CumulativeDistance.push_back(0_m);
+
+    // Loop through route segments
+    for(unsigned int i = 0; i < numSegments; i++) {
+        // Get waypoints at start and end of segment
+        const auto &segmentStart = m_Waypoints[i];
+        const auto &segmentEnd = m_Waypoints[i + 1];
+
+        // Add segment heading to array
+        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
+
+        // Calculate segment length and
+        const meter_t segmentLength(distance(segmentStart, segmentEnd));
+        m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
+    }
+
+    // Create a vertex array object to bind everything together
+    glGenVertexArrays(1, &m_WaypointsVAO);
+
+    // Generate vertex buffer objects for positions and colours
+    glGenBuffers(1, &m_WaypointsPositionVBO);
+    glGenBuffers(1, &m_WaypointsColourVBO);
+
+    // Bind vertex array
+    glBindVertexArray(m_WaypointsVAO);
+
+    // Bind and upload positions buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsPositionVBO);
+    glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(GLfloat) * 2, m_Waypoints.data(), GL_STATIC_DRAW);
+
+    // Set vertex pointer and enable client state in VAO
+    glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    {
+        // Bind and upload zeros to colour buffer
+        std::vector<uint8_t> colours(m_Waypoints.size() * 3, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
+        glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(uint8_t) * 3, colours.data(), GL_DYNAMIC_DRAW);
+
+        // Set colour pointer and enable client state in VAO
+        glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
+        glEnableClientState(GL_COLOR_ARRAY);
+    }
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
