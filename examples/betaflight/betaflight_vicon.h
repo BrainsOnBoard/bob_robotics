@@ -1,3 +1,5 @@
+#pragma once
+
 // BoB robotics includes
 /*
 This file provides a vicon based control overlay for the BetaFlight
@@ -10,7 +12,7 @@ drone.
 #include "../../vicon/udp.h"
 
 
-namespace BoBRobotics 
+namespace BoBRobotics
 {
 namespace Robots
 {
@@ -23,7 +25,7 @@ struct RBounds {
 
 using namespace BoBRobotics::Vicon;
 
-class betaflight_vicon 
+class betaflight_vicon
 {
     using degree_t = units::angle::degree_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -45,8 +47,8 @@ public:
     void armDrone() {m_MyDrone.armDrone();}
     void disarmDrone() {m_MyDrone.disarmDrone();}
 
-    void printStatus() {
-
+    void printStatus()
+    {
         if (m_MyDrone.getArmStateAsString().size() > 0) {
             std::cout << m_MyDrone.getArmStateAsString() << std::endl;
         }
@@ -160,8 +162,8 @@ public:
         std::this_thread::sleep_for(10ms);
     }
 
-    void setRoomBounds(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) {
-
+    void setRoomBounds(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max)
+    {
         m_RoomBounds.x[0] = x_min;
         m_RoomBounds.x[1] = x_max;
         m_RoomBounds.y[0] = y_min;
@@ -171,15 +173,17 @@ public:
 
     }
 
-    void setYaw(degree_t yaw) {
+    void setYaw(degree_t yaw)
+    {
         m_Yaw = yaw;
     }
-    void setWaypoint(float x, float y, float z) {
-
+    void setWaypoint(float x, float y, float z)
+    {
         if (x < m_RoomBounds.x[0] || x > m_RoomBounds.x[1] || y < m_RoomBounds.y[0] || y > m_RoomBounds.y[1] || z < m_RoomBounds.z[0] || z > m_RoomBounds.z[1]) {
-        std::cout << "Attempted to move outside of room bounds" << std::endl;
-        return;
-        } else {
+            std::cout << "Attempted to move outside of room bounds" << std::endl;
+            return;
+        }
+        else {
             m_Waypoint[0] = std::max(m_RoomBounds.x[0], std::min(m_RoomBounds.x[1], x));
             m_Waypoint[1] = std::max(m_RoomBounds.y[0], std::min(m_RoomBounds.y[1], y));
             m_Waypoint[2] = std::max(m_RoomBounds.z[0], std::min(m_RoomBounds.z[1], z));

@@ -1,3 +1,5 @@
+#pragma once
+
 // C++ includes
 #include <cstdlib>
 #include <iostream>
@@ -31,11 +33,11 @@ bool readFrame()
 	// get the most recent UDP frame (grayscale for now)
 	while (recv(m_Socket, buffer, 72*19, 0) > 0) {
 		// fill in the outFrame
-		//std::cout << (int) buffer[0] << std::endl;        
+		//std::cout << (int) buffer[0] << std::endl;
 		// ping the buffer onwards!
 		send(m_Send_Socket, buffer, 72*19, 0);
-		
-	} 
+
+	}
 	return true;
 }
 
@@ -61,7 +63,7 @@ bool setupSockets()
 	}
 
 	// non-blocking socket
-	fcntl(m_Socket, F_SETFL, O_NONBLOCK); 
+	fcntl(m_Socket, F_SETFL, O_NONBLOCK);
 	}
 	{
 	which_conn = 1;
@@ -87,7 +89,7 @@ bool setupSockets()
 	setsockopt (m_Send_Socket, IPPROTO_IP, IP_MULTICAST_IF, &interface_addr, sizeof(interface_addr));
 
 	// non-blocking socket
-	fcntl(m_Send_Socket, F_SETFL, O_NONBLOCK); 
+	fcntl(m_Send_Socket, F_SETFL, O_NONBLOCK);
 
 	struct sockaddr_in remoteaddr;
 	remoteaddr.sin_family = AF_INET;
@@ -99,7 +101,7 @@ bool setupSockets()
 	return true;
 
 error:
-	int port = which_conn > 0 ? m_Send_Port : m_Port; 
+	int port = which_conn > 0 ? m_Send_Port : m_Port;
 	std::cerr << "Error (" << errno << "): RPi Cam UDP " << port
 			  << std::endl;
 	exit(1);
@@ -113,10 +115,10 @@ struct cmds {
 	bool have_new;
 };
 
-cmds getMotorCommands() 
+cmds getMotorCommands()
 {
 	double buffer[4];
-	
+
 	cmds commands;
 	commands.have_new = false;
 
@@ -130,5 +132,5 @@ cmds getMotorCommands()
 	}
 
 	return commands;
-} 
+}
 

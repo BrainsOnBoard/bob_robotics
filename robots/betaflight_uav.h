@@ -1,3 +1,5 @@
+#pragma once
+
 #include <FlightController.hpp>
 #include <iostream>
 #include <cmath>
