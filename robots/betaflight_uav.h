@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/not_implemented.h"
 #include "uav.h"
 
 // Third-party includes
@@ -144,27 +145,27 @@ public:
         m_Fcu.subscribe(&Betaflight::Callbacks::onAnalog, &m_Cbs, 0.5);
     }
 
-    virtual void takeOff() override
-    {}
-
-    virtual void land() override
-    {}
+    BOB_NOT_IMPLEMENTED(virtual void takeOff() override)
+    BOB_NOT_IMPLEMENTED(virtual void land() override)
 
     virtual void setRoll(float right) override
     {
         right = std::min(1.0f, std::max(-1.0f, right));
         M_RC_values[0] = 1500 + right * M_ControlScale;
     }
+
     virtual void setPitch(float pitch) override
     {
         pitch = std::min(1.0f, std::max(-1.0f, pitch));
         M_RC_values[1] = 1500 + pitch * M_ControlScale;
     }
+
     virtual void setVerticalSpeed(float up) override
     {
         up = std::min(1.0f, std::max(-1.0f, up));
         M_RC_values[2] = 1500 + up * M_ThrottleScale;
     }
+
     virtual void setYawSpeed(float right) override
     {
         right = std::min(1.0f, std::max(-1.0f, right));

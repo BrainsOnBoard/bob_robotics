@@ -1,6 +1,7 @@
 #pragma once
 
 // BoBRobotics includes
+#include "../common/not_implemented.h"
 #include "../imgproc/opencv_unwrap_360.h"
 
 // OpenCV
@@ -80,10 +81,7 @@ public:
     }
 
     //! Set the output resolution of this video stream
-    virtual void setOutputSize(const cv::Size &)
-    {
-        throw std::runtime_error("This camera's resolution cannot be changed at runtime");
-    }
+    BOB_NOT_IMPLEMENTED(virtual void setOutputSize(const cv::Size &))
 
     //! Get the current output resolution of this video stream
     virtual cv::Size getOutputSize() const = 0;
