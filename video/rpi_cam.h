@@ -37,7 +37,6 @@ public:
     RPiCamera(int port)
       : m_Socket(0)
     {
-
         m_Port = port;
 
         // set up the networking code needed to receive images:
@@ -45,10 +44,6 @@ public:
             // error
             return;
         }
-
-        // setup temp frame
-        cv::Mat f(72, 152, CV_32FC1);
-        m_Frame = f;
     }
 
     virtual ~RPiCamera()
@@ -67,34 +62,30 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
+        // Frames from the RPi camera are always greyscale
+        return readGreyscaleFrame(outFrame);
+    }
+
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame)
+    {
         unsigned char buffer[72 * 19];
 
         if (!m_Socket) {
             return false;
         }
 
+        // Make sure frame is correct size and type
+        outFrame.create(72, 152, CV_32FC1);
+
         // get the most recent UDP frame (grayscale for now)
         while (recv(m_Socket, buffer, 72 * 19, 0) > 0) {
             // fill in the outFrame
-            //std::cout << (int) buffer[0] << std::endl;
-            int j = 0;
             for (int i = 0; i < 72 * 19 - 1; ++i) {
-                m_Frame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[j]) / 255.0f;
-                ++j;
+                outFrame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[i]) / 255.0f;
             }
         }
 
-        outFrame = m_Frame;
-
-        // return true for now, but not right as we are not fetching a colour frame
-        return true;
-    }
-
-    virtual bool readGreyscaleFrame(cv::Mat &outFrame)
-    {
-        readFrame(m_Frame);
-        outFrame = m_Frame;
-
+        // Return true to indicate success
         return true;
     }
 
@@ -144,8 +135,6 @@ private:
 
     int m_Socket;
     int m_Port;
-    cv::Mat m_Frame;
-    cv::Mat m_IntermediateFrame;
 }; // RPiCamera
 } // Video
 } // BoBRobotics
