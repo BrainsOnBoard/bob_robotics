@@ -26,8 +26,8 @@ public:
     SET_VARS({{"x", "scalar"}});
 
     SET_DERIVED_PARAMS({
-        {"expDecay", [](const vector<double> &pars, double dt){ return std::exp(-dt / pars[0]); }},
-        {"init", [](const vector<double> &pars, double){ return (std::exp(1) / pars[0]); }}});
+        {"expDecay", [](const std::vector<double> &pars, double dt){ return std::exp(-dt / pars[0]); }},
+        {"init", [](const std::vector<double> &pars, double){ return (std::exp(1) / pars[0]); }}});
 };
 IMPLEMENT_MODEL(AlphaCurr);
 } // GeNNModels
