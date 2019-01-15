@@ -32,10 +32,10 @@ main(int argc, char **argv)
     } else {
         try {
             // if the arg is an int, the user is specifying a camera...
-            int dev = std::stoi(argv[1]);
-            //OpenCVInput cam(dev);
-            //Display display(cam);
-            //display.run();
+            const int dev = std::stoi(argv[1]);
+            OpenCVInput cam(dev);
+            Display display(cam);
+            display.run();
         } catch (std::invalid_argument &) {
             // ...else it's a filename/URL/RPiCam
             if (*argv[1] == 'r') {
