@@ -1,7 +1,17 @@
 #pragma once
 
-// C++ includes
+// BoBRobotics includes
+#include "../os/net.h"
+#include "input.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C includes
+#include <cmath>
 #include <cstdlib>
+
+// Standard C++ includes
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -10,19 +20,9 @@
 
 // Extra 'nix includes
 #ifndef WIN32
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
 #endif
-
-#include <math.h>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// BoBRobotics includes
-#include "input.h"
-// standardise sockets across platforms
-#include "../os/net.h"
 
 namespace BoBRobotics {
 namespace Video {
@@ -30,13 +30,12 @@ namespace Video {
 class RPiCamera : public Input
 {
 public:
-
     RPiCamera()
       : RPiCamera(0)
     {}
 
-    RPiCamera(int port) 
-    : m_Socket(0)
+    RPiCamera(int port)
+      : m_Socket(0)
     {
 
         m_Port = port;
@@ -48,11 +47,10 @@ public:
         }
 
         // setup temp frame
-        cv::Mat f(72,152,CV_32FC1);
+        cv::Mat f(72, 152, CV_32FC1);
         m_Frame = f;
-
     }
-	
+
     virtual ~RPiCamera()
     {}
 
@@ -63,57 +61,41 @@ public:
 
     virtual cv::Size getOutputSize() const override
     {
-            // this is fixed
-            return cv::Size(152,72);
+        // this is fixed
+        return cv::Size(152, 72);
     }
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
-        unsigned char buffer[72*19];
+        unsigned char buffer[72 * 19];
 
         if (!m_Socket) {
             return false;
         }
 
         // get the most recent UDP frame (grayscale for now)
-        while (recv(m_Socket, buffer, 72*19, 0) > 0) {
+        while (recv(m_Socket, buffer, 72 * 19, 0) > 0) {
             // fill in the outFrame
-            //std::cout << (int) buffer[0] << std::endl;        
+            //std::cout << (int) buffer[0] << std::endl;
             int j = 0;
-            for (int i = 0; i < 72*19-1; ++i) {
-                m_Frame.at<float>(i%72,buffer[0]+floor(i/72)) = float(buffer[j])/255.0f;
+            for (int i = 0; i < 72 * 19 - 1; ++i) {
+                m_Frame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[j]) / 255.0f;
                 ++j;
             }
         }
 
         outFrame = m_Frame;
-        
-        // return true for now, but not right as we are not fetching a colour frame 
+
+        // return true for now, but not right as we are not fetching a colour frame
         return true;
     }
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame)
     {
-        // If reading (RGB frame) was succesful
-        /*if(readFrame(m_IntermediateFrame)) {
-            // If output frame isn't correct size, create it
-            if(outFrame.size() != m_IntermediateFrame.size()) {
-                outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
-            }
-
-            // Convert intermediate frame to greyscale - needed?
-            //cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
-            return true;
-        }
-        else {
-            return false;
-        }*/
-
         readFrame(m_Frame);
-        outFrame = m_Frame;	
-        
-        return true;
+        outFrame = m_Frame;
 
+        return true;
     }
 
     virtual bool needsUnwrapping() const
@@ -145,17 +127,17 @@ private:
         if (bind(m_Socket, (const sockaddr *) &addr, (int) sizeof(addr))) {
             goto error;
         }
-            
-            // non-blocking socket
-#ifdef WIN32		
+
+        // non-blocking socket
+#ifdef WIN32
         ulong nonblocking_enabled = 1;
         ioctlsocket(m_Socket, FIONBIO, &nonblocking_enabled);
-#else		
-        fcntl(m_Socket, F_SETFL, O_NONBLOCK); 
+#else
+        fcntl(m_Socket, F_SETFL, O_NONBLOCK);
 #endif
         return true;
-		
-error:
+
+    error:
         std::cerr << "Error (" << errno << "): RPi Cam UDP " << m_Port << std::endl;
         exit(1);
     }
