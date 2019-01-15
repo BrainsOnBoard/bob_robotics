@@ -26,40 +26,40 @@ struct RBounds
 
 using namespace BoBRobotics::Vicon;
 
-class betaflight_vicon
+class BetaflightVicon
 {
     using degree_t = units::angle::degree_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
-    betaflight_vicon(std::string device, int baud)
-      : m_MyDrone(device, baud)
+    BetaflightVicon(std::string device, int baud)
+      : m_Drone(device, baud)
       , m_Vicon(51001)
     {
 
         std::this_thread::sleep_for(0.1ms);
 
         // start streaming status data
-        m_MyDrone.subscribe();
+        m_Drone.subscribe();
 
         std::this_thread::sleep_for(0.1s);
     }
 
     void armDrone()
     {
-        m_MyDrone.armDrone();
+        m_Drone.armDrone();
     }
     void disarmDrone()
     {
-        m_MyDrone.disarmDrone();
+        m_Drone.disarmDrone();
     }
 
     void printStatus()
     {
-        if (m_MyDrone.getArmStateAsString().size() > 0) {
-            std::cout << m_MyDrone.getArmStateAsString() << std::endl;
+        if (m_Drone.getArmStateAsString().size() > 0) {
+            std::cout << m_Drone.getArmStateAsString() << std::endl;
         }
-        std::cout << "[V:" << std::setw(4) << m_MyDrone.getVoltage() << " ";
+        std::cout << "[V:" << std::setw(4) << m_Drone.getVoltage() << " ";
 
         if (m_Vicon.getNumObjects() == 1) {
 
@@ -133,7 +133,7 @@ public:
             //std::cout << std::setw(6) << std::fixed<< std::setprecision(4) << m_VSetPoint[2] << " " << float(velocity[2]) << "," << std::endl;
 
             //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << z_control << ",";
-            m_MyDrone.setVerticalSpeed(z_control);
+            m_Drone.setVerticalSpeed(z_control);
 
             float roll_control;
             float p_roll = -100.0 * (-sin(float(attitude[0] / 180.0 * M_PI)) * (m_VSetPoint[0] - float(velocity[0])) + cos(float(attitude[0] / 180.0 * M_PI)) * (m_VSetPoint[1] - float(velocity[1])));
@@ -142,7 +142,7 @@ public:
             roll_control = (p_roll + d_roll + i_roll) / 100.0;
 
             //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << roll_control << ",";
-            m_MyDrone.setRoll(roll_control);
+            m_Drone.setRoll(roll_control);
 
             float pitch_control;
             float p_pitch = -100.0 * (cos(float(attitude[0] / 180.0 * M_PI)) * (m_VSetPoint[0] - float(velocity[0])) + sin(float(attitude[0] / 180.0 * M_PI)) * (m_VSetPoint[1] - float(velocity[1])));
@@ -151,11 +151,11 @@ public:
             pitch_control = (p_pitch + d_pitch + i_pitch) / 100.0;
 
             //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << pitch_control << ",";
-            m_MyDrone.setPitch(pitch_control);
+            m_Drone.setPitch(pitch_control);
 
             float yaw_control = (-1.0f) * (180.0 / M_PI) * float(units::math::atan2(units::math::sin(m_Yaw - attitude[0]), units::math::cos(m_Yaw - attitude[0]))); // was 20.75
             //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << yaw_control << ",";
-            m_MyDrone.setYawSpeed(yaw_control);
+            m_Drone.setYawSpeed(yaw_control);
 
             //std::cout << std::endl;
 
@@ -164,7 +164,7 @@ public:
 
         // NOTE: this is not currently a safe way of detecting dropout of VICON!
         if (m_Vicon.getNumObjects() == 1) {
-            m_MyDrone.sendCommands();
+            m_Drone.sendCommands();
         }
         // wait so we do not overload the drone
         std::this_thread::sleep_for(10ms);
@@ -196,7 +196,7 @@ public:
         }
     }
 
-    BoBRobotics::Robots::betaflight_uav m_MyDrone;
+    BoBRobotics::Robots::BetaflightUAV m_Drone;
     UDPClient<ObjectDataVelocity> m_Vicon;
     RBounds m_RoomBounds;
     Vector3<float> m_Waypoint = { { 0, 0, 0 } };
@@ -204,6 +204,6 @@ public:
     Vector3<float> m_VSetPoint = { { 0, 0, 0 } };
     Vector3<meters_per_second_t> m_OldVelocity = { { 0_mps, 0_mps, 0_mps } };
     Vector3<float> m_IntegralTerm = { { 0, 0, 300.0f } };
-};
+}; // BetaflightUAV
 } // namespace Robots
 } // namespace BoBRobotics
