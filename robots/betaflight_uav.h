@@ -146,8 +146,10 @@ public:
 
     virtual void takeOff() override
     {}
+
     virtual void land() override
     {}
+
     virtual void setRoll(float right) override
     {
         right = std::min(1.0f, std::max(-1.0f, right));
@@ -201,14 +203,14 @@ public:
         m_Fcu.setRc(M_RC_values[0], M_RC_values[1], M_RC_values[3], M_RC_values[2], M_RC_values[4], M_RC_values[5], M_RC_values[6], M_RC_values[7], auxs);
     }
 
-    void armDrone()
+    void arm()
     {
         // hold throttle low to arm
         //M_RC_values[2] = 1100;
         M_RC_values[5] = 2000;
     }
 
-    void disarmDrone()
+    void disarm()
     {
         M_RC_values[5] = 1000;
         // reset other values
