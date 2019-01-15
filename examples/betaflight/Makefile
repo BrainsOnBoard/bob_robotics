@@ -1,4 +1,4 @@
-LIBMSPFLIGHT_PATH := ../../msp/build/
+LIBMSPFLIGHT_PATH := ../../third_party/msp/build/
 
 NO_OPENCV = ''
 
