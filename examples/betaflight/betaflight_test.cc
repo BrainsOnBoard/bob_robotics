@@ -1,4 +1,3 @@
-#include "redirect_net.h"
 #include "betaflight_vicon.h"
 
 // BoB robotics includes
@@ -40,9 +39,6 @@ main(int argc, char *argv[])
     // limits for the VICON lab in Sheffield
     //my_drone.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
     my_drone.setRoomBounds(-1.5, 1.0, -1.0, 1.0, 0.0, 2.0);
-
-    m_Port = 50091;
-    m_Send_Port = 50101;
 
     auto future = std::async(std::launch::async, GetLineFromCin);
 
