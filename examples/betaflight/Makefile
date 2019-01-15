@@ -3,7 +3,7 @@ LIBMSPFLIGHT_PATH := ../../third_party/msp/build/
 NO_OPENCV = ''
 
 include ../../make_common/bob_robotics.mk
-CXXFLAGS += -I$(LIBMSPFLIGHT_PATH)../inc/msp/
+CXXFLAGS += -I$(LIBMSPFLIGHT_PATH)../inc
 LINK_FLAGS := -L$(LIBMSPFLIGHT_PATH) -lmsp -lmsp_fcu -lmspclient -lpthread
 
 EXECUTABLE := betaflight_test

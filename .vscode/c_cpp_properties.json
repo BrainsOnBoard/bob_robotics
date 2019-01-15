@@ -6,6 +6,7 @@
                 "${workspaceFolder}/**",
                 "${GENN_PATH}/lib/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
+                "${workspaceFolder}/third_party/msp/inc",
                 "/usr/include/python3.7m",
                 "/usr/lib/python3.7/site-packages/numpy/core/include",
                 "/usr/include/eigen3",
