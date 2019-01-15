@@ -71,7 +71,7 @@ main(int argc, char *argv[])
 
         if (js.isPressed(HID::JButton::A)) {
             std::cout << "Turning on control and arming" << std::endl;
-            droneControl.armDrone();
+            droneControl.arm();
         }
 
         if (js.isPressed(HID::JButton::B)) {
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 
         if (js.isPressed(HID::JButton::LB)) {
             std::cout << "Turning off control and disarming" << std::endl;
-            droneControl.disarmDrone();
+            droneControl.disarm();
             controlOn = false;
         }
 
@@ -102,7 +102,7 @@ main(int argc, char *argv[])
         droneControl.sendCommands(controlOn);
     }
 
-    droneControl.disarmDrone();
+    droneControl.disarm();
 
     // shut down threads
     exit(0);

@@ -45,13 +45,14 @@ public:
         std::this_thread::sleep_for(0.1s);
     }
 
-    void armDrone()
+    void arm()
     {
-        m_Drone.armDrone();
+        m_Drone.arm();
     }
-    void disarmDrone()
+
+    void disarm()
     {
-        m_Drone.disarmDrone();
+        m_Drone.disarm();
     }
 
     void printStatus()
@@ -184,6 +185,7 @@ public:
     {
         m_Yaw = yaw;
     }
+
     void setWaypoint(float x, float y, float z)
     {
         if (x < m_RoomBounds.x[0] || x > m_RoomBounds.x[1] || y < m_RoomBounds.y[0] || y > m_RoomBounds.y[1] || z < m_RoomBounds.z[0] || z > m_RoomBounds.z[1]) {
