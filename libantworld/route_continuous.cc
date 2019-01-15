@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../third_party/csv.h"
 #include "common.h"
 
 // Standard C++ includes
@@ -17,6 +18,126 @@ using namespace units::angle;
 using namespace units::length;
 using namespace units::math;
 
+namespace
+{
+typedef std::tuple<meter_t, meter_t> OSCoordinate;
+typedef std::tuple<degree_t, degree_t> LatLon;
+typedef std::tuple<meter_t, meter_t, meter_t> Cartesian;
+typedef std::tuple<meter_t, meter_t, meter_t, double, radian_t, radian_t, radian_t> Transform;
+typedef std::tuple<meter_t, meter_t, double> Ellipsoid;
+
+// Convert GPS latitude and longitude  to cartesian coordinate space
+Cartesian latLonToCartesian(const LatLon &latLon, const Ellipsoid &ellipsoid)
+{
+    const meter_t ellipsoidA = std::get<0>(ellipsoid);
+    const double ellipsoidF = std::get<2>(ellipsoid);
+
+    const meter_t h = 0.0_m; // height above ellipsoid - not currently used
+    const double sinPhi = sin(std::get<0>(latLon));
+    const double cosPhi = cos(std::get<0>(latLon));
+    const double sinLambda = sin(std::get<1>(latLon));
+    const double cosLambda = cos(std::get<1>(latLon));
+
+    const double eSq = 2.0 * ellipsoidF - ellipsoidF * ellipsoidF;          // 1st eccentricity squared ≡ (a²-b²)/a²
+    const meter_t nu = ellipsoidA / std::sqrt(1.0 - eSq * sinPhi * sinPhi); // radius of curvature in prime vertical
+
+    return std::make_tuple((nu + h) * cosPhi * cosLambda,
+                           (nu + h) * cosPhi * sinLambda,
+                           (nu * (1.0 - eSq) + h) * sinPhi);
+}
+
+Cartesian transform(const Cartesian &c, const Transform &t){
+    const double s1 = std::get<3>(t) / 1E6 + 1.0;            // scale: normalise parts-per-million to (s+1)
+
+    const double rx = std::get<4>(t).value();
+    const double ry = std::get<5>(t).value();
+    const double rz = std::get<6>(t).value();
+
+    // apply transform
+    return std::make_tuple(std::get<0>(t) + std::get<0>(c) * s1 - std::get<1>(c) * rz + std::get<2>(c) * ry,
+                           std::get<1>(t) + std::get<0>(c) * rz + std::get<1>(c) * s1 - std::get<2>(c) * rx,
+                           std::get<2>(t) - std::get<0>(c) * ry + std::get<1>(c) * rx + std::get<2>(c) * s1);
+}
+
+LatLon cartesianToLatLon(const Cartesian &c, const Ellipsoid &ellipsoid)
+{
+    const double e2 = 2.0 * std::get<2>(ellipsoid) - std::get<2>(ellipsoid) *std::get<2>(ellipsoid);    // 1st eccentricity squared ≡ (a²-b²)/a²
+    const double epsilon2 = e2 / (1.0 - e2);                                                            // 2nd eccentricity squared ≡ (a²-b²)/b²
+    const meter_t p = sqrt(std::get<0>(c) * std::get<0>(c) + std::get<1>(c) * std::get<1>(c));          // distance from minor axis
+    const meter_t r = sqrt(p * p + std::get<2>(c) * std::get<2>(c));                                      // polar radius
+
+    // parametric latitude (Bowring eqn 17, replacing tanβ = z·a / p·b)
+    const double tanBeta = (std::get<1>(ellipsoid) * std::get<2>(c)) / (std::get<0>(ellipsoid) * p) * (1.0 + epsilon2 * std::get<1>(ellipsoid) / r);
+    const double sinBeta = tanBeta / std::sqrt(1.0 + tanBeta * tanBeta);
+    const double cosBeta = sinBeta / tanBeta;
+
+    // geodetic latitude (Bowring eqn 18: tanφ = z+ε²bsin³β / p−e²cos³β)
+    const degree_t phi = std::isnan(cosBeta) ? 0.0_rad : atan2(std::get<2>(c) + epsilon2 * std::get<1>(ellipsoid) * sinBeta * sinBeta * sinBeta,
+                                                               p - e2 * std::get<0>(ellipsoid) * cosBeta * cosBeta * cosBeta);
+
+    // longitude
+    const degree_t lambda = atan2(std::get<1>(c), std::get<0>(c));
+
+    // height above ellipsoid (Bowring eqn 7) [not currently used]
+    /*const double sinPhi = sin(phi), cosPhi = cos(phi);
+    const meter_t nu = std::get<0>(ellipsoid) / std::sqrt(1.0 - e2 * sinPhi * sinPhi); // length of the normal terminated by the minor axis
+    var h = p*cosφ + cartesian[2]*sinφ - (osgb36EllipseA*osgb36EllipseA/ν);*/
+
+    return std::make_tuple(phi, lambda);
+}
+
+OSCoordinate latLonToOS(const LatLon &latLon)
+{
+    const meter_t a = 6377563.396_m, b = 6356256.909_m;                 // Airy 1830 major & minor semi-axes
+    constexpr double f0 = 0.9996012717;                                 // NatGrid scale factor on central meridian;
+    const radian_t phi0 = 49.0_deg, lambda0 = -2.0_deg;                 // NatGrid true origin is 49°N,2°W
+    const meter_t n0 = -100000.0_m, e0 = 400000.0_m;                    // northing & easting of true origin, metres
+    const double e2 = 1.0 - (b * b) / (a * a);                      // eccentricity squared
+    const double n = (a - b) / (a + b), n2 = n * n, n3 = n * n * n; // n, n², n³
+
+    const radian_t phi = std::get<0>(latLon);
+    const radian_t lambda = std::get<1>(latLon);
+
+    const double sinPhi = sin(phi);
+    const double cosPhi = cos(phi);
+    const double tanPhi = tan(phi);
+    const double cos3Phi = cosPhi * cosPhi * cosPhi;
+    const double cos5Phi = cos3Phi * cosPhi * cosPhi;
+    const double tan2Phi = tanPhi * tanPhi;
+    const double tan4Phi = tan2Phi * tan2Phi;
+
+
+    const meter_t nu = a * f0 / std::sqrt(1.0 - e2 * sinPhi * sinPhi);                      // nu = transverse radius of curvature
+    const meter_t rho = a * f0 * (1.0 - e2) / std::pow(1.0 - e2 * sinPhi * sinPhi, 1.5);    // rho = meridional radius of curvature
+    const double eta2 = nu / rho - 1.0;                                                     // eta = ?
+
+    const double mA = (1.0 + n + (5.0 / 4.0) * n2 + (5.0 / 4.0) * n3) * (phi - phi0).value();
+    const double mB = (3.0 * n + 3.0 * n * n + (21.0 / 8.0) * n3) * sin(phi - phi0) * cos(phi + phi0);
+    const double mC = ((15.0 / 8.0) * n2 + (15.0 / 8.0) * n3) * sin(2.0 * (phi - phi0)) * cos(2.0 * (phi + phi0));
+    const double mD = (35.0 / 24.0) * n3 * sin(3.0 * (phi - phi0)) * cos(3.0 * (phi + phi0));
+    const meter_t m = b * f0 * (mA - mB + mC - mD);                                                                  // meridional arc
+
+    const meter_t i = m + n0;
+    const meter_t ii = (nu / 2.0) * sinPhi * cosPhi;
+    const meter_t iii = (nu / 24.0) * sinPhi * cos3Phi * (5.0 - tan2Phi + 9.0 * eta2);
+    const meter_t iiia = (nu / 720.0) * sinPhi * cos5Phi * (61.0 - 58.0 * tan2Phi + tan4Phi);
+    const meter_t iv = nu * cosPhi;
+    const meter_t v = (nu / 6.0) * cos3Phi * (nu / rho - tan2Phi);
+    const meter_t vi = (nu / 120.0) * cos5Phi * (5.0 - 18.0 * tan2Phi + tan4Phi+ 14.0 * eta2 - 58.0 * tan2Phi * eta2);
+
+
+    const double deltaLambda = (lambda - lambda0).value();
+    const double deltaLambda2 = deltaLambda * deltaLambda;
+    const double deltaLambda3 = deltaLambda2 * deltaLambda;
+    const double deltaLambda4 = deltaLambda3 * deltaLambda;
+    const double deltaLambda5 = deltaLambda4 * deltaLambda;
+    const double deltaLambda6 = deltaLambda5 * deltaLambda;
+
+    return std::make_tuple(e0 + (iv * deltaLambda) + (v * deltaLambda3) + (vi * deltaLambda5),
+                           i + (ii * deltaLambda2) + (iii * deltaLambda4) + (iiia * deltaLambda6));
+}
+
+}   // Anonymous namespace
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RouteContinuous
 //----------------------------------------------------------------------------
@@ -204,6 +325,38 @@ void RouteContinuous::load(const std::string &filename)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
+}
+//----------------------------------------------------------------------------
+void RouteContinuous::loadRadarCSV(const std::string &filename)
+{
+    // Create reader to efficiently read the three columns we care about
+    io::CSVReader<3> in(filename);
+
+    // Read header, ignoring A LOT of extra  columns!
+    in.read_header(io::ignore_extra_column, "TimeSinceStart", "DataGPSLat", "DataGPSLong");
+
+    const Transform osGB36Transform{-446.448_m, 125.157_m, -542.060_m,  20.4894, -0.1502_arcsec, -0.2470_arcsec, -0.8421_arcsec};
+    const Ellipsoid wgs84Ellipsoid{6378137_m, 6356752.314245_m, 1.0 / 298.257223563};
+    const Ellipsoid osGB36Ellipsoid{6377563.396_m, 6356256.909_m, 1.0/299.3249646};
+
+
+    double timeSinceStart, gpsLatRaw, gpsLongRaw;
+    while(in.read_row(timeSinceStart, gpsLatRaw, gpsLongRaw)){
+        const degree_t phiDegree{gpsLatRaw};
+        const degree_t lambdaDegree{gpsLongRaw};
+
+        const Cartesian wgs84Cartesian = latLonToCartesian(std::make_tuple(phiDegree, lambdaDegree), wgs84Ellipsoid);
+        const Cartesian osGB36Cartesian = transform(wgs84Cartesian, osGB36Transform);
+        const LatLon osGBLatLon = cartesianToLatLon(osGB36Cartesian, osGB36Ellipsoid);
+
+        const OSCoordinate osCoord = latLonToOS(osGBLatLon);
+
+        std::cout << timeSinceStart << ", (" << phiDegree << ", " << lambdaDegree << ") = (" << std::get<0>(osCoord) << ", " << std::get<1>(osCoord) << ")" << std::endl;
+
+        /*N = Number(N.toFixed(3)); // round to mm precision
+        E = Number(E.toFixed(3));*/
+    }
+
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
