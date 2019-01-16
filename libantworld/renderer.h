@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <functional>
 #include <string>
 
 // OpenGL includes
@@ -8,6 +9,7 @@
 
 // Antworld includes
 #include "render_mesh.h"
+#include "renderable.h"
 #include "world.h"
 
 // Third-party includes
@@ -56,6 +58,11 @@ public:
     World &getWorld(){ return m_World; }
     const World &getWorld() const{ return m_World; }
 
+    void addPanoramicRenderable(const Renderable &renderable)
+    {
+        m_PanoramicRenderables.push_back(std::cref(renderable));
+    }
+
 private:
     //------------------------------------------------------------------------
     // Private methods
@@ -74,6 +81,8 @@ private:
     GLuint m_FBO;
     GLuint m_DepthBuffer;
     GLfloat m_CubeFaceLookAtMatrices[6][16];
+
+    std::vector<std::reference_wrapper<const Renderable>> m_PanoramicRenderables;
 
     const GLsizei m_CubemapSize;
     const double m_NearClip;

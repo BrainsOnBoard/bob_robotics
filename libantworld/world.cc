@@ -526,6 +526,7 @@ void World::Surface::bind() const
 
     // If surface has a texture, bind it
     if(m_Texture != nullptr) {
+        glEnable(GL_TEXTURE_2D);
         m_Texture->bind();
     }
     // Otherwise make sure no textures are bound
@@ -538,6 +539,7 @@ void World::Surface::unbind() const
 {
     // If surface has a texture, bind it
     if(m_Texture != nullptr) {
+        glDisable(GL_TEXTURE_2D);
         m_Texture->unbind();
     }
 

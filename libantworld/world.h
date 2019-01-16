@@ -13,6 +13,9 @@
 // BoB robotics includes
 #include "../common/pose.h"
 
+// Antworld includes
+#include "renderable.h"
+
 // Forward declarations
 namespace cv
 {
@@ -34,7 +37,7 @@ namespace AntWorld
 // BoBRobotics::AntWorld::World
 //----------------------------------------------------------------------------
 //! Provides a means for loading a world stored on disk into OpenGL
-class World
+class World : public Renderable
 {
     using meter_t = units::length::meter_t;
 
@@ -44,12 +47,15 @@ public:
     {}
 
     //------------------------------------------------------------------------
+    // Renderable virtuals
+    //------------------------------------------------------------------------
+    virtual void render() const override;
+
+    //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     void load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
     void loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
-
-    void render() const;
 
     const Vector3<meter_t> &getMinBound()
     {

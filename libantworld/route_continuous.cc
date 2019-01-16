@@ -308,6 +308,14 @@ RouteContinuous::~RouteContinuous()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
+void RouteContinuous::render() const
+{
+    // Bind route VAO
+    glBindVertexArray(m_WaypointsVAO);
+
+    glDrawArrays(GL_QUAD_STRIP, 0, m_Waypoints.size() * 2);
+}
+//----------------------------------------------------------------------------
 void RouteContinuous::load(const std::string &filename)
 {
     // Open file for binary IO
@@ -392,16 +400,9 @@ void RouteContinuous::loadRadarCSV(const std::string &filename)
     std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
     createGeometry();
 }
+
 //----------------------------------------------------------------------------
-void RouteContinuous::renderWaypoints(GLfloat height) const
-{
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, height);
-    glDrawArrays(GL_POINTS, 0, m_Waypoints.size());
-    glPopMatrix();
-}
-//----------------------------------------------------------------------------
-void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
+/*void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
 {
     // Bind route VAO
     glBindVertexArray(m_WaypointsVAO);
@@ -424,7 +425,7 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
-}
+}*/
 //----------------------------------------------------------------------------
 bool RouteContinuous::atDestination(meter_t x, meter_t y, meter_t threshold) const
 {
@@ -555,31 +556,56 @@ void RouteContinuous::createGeometry()
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_WaypointsVAO);
 
-    // Generate vertex buffer objects for positions and colours
+    // Generate buffer objects for positions, colours and indices
     glGenBuffers(1, &m_WaypointsPositionVBO);
     glGenBuffers(1, &m_WaypointsColourVBO);
 
     // Bind vertex array
     glBindVertexArray(m_WaypointsVAO);
 
-    // Bind and upload positions buffer
-    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsPositionVBO);
-    glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(GLfloat) * 2, m_Waypoints.data(), GL_STATIC_DRAW);
+    {
+        std::vector<GLfloat> vertices;
+        vertices.reserve(m_Waypoints.size() * 2 * 3);
+        for(const auto &w : m_Waypoints) {
+            vertices.push_back(w[0]);
+            vertices.push_back(w[1]);
+            vertices.push_back(0.0f);
 
-    // Set vertex pointer and enable client state in VAO
-    glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-    glEnableClientState(GL_VERTEX_ARRAY);
+            vertices.push_back(w[0]);
+            vertices.push_back(w[1]);
+            vertices.push_back(150.0f);
+        }
+
+        // Bind and upload positions buffer
+        glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsPositionVBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+
+        // Set vertex pointer and enable client state in VAO
+        glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
+        glEnableClientState(GL_VERTEX_ARRAY);
+    }
 
     {
         // Bind and upload zeros to colour buffer
-        std::vector<uint8_t> colours(m_Waypoints.size() * 3, 0);
+        std::vector<uint8_t> colours;
+        colours.reserve(m_Waypoints.size() * 2 * 4);
+        for(unsigned int i = 0; i < m_Waypoints.size() * 2; i++) {
+            colours.push_back(255);
+            colours.push_back(0);
+            colours.push_back(0);
+            colours.push_back(128);
+        }
         glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
-        glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(uint8_t) * 3, colours.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, colours.size() * sizeof(uint8_t), colours.data(), GL_STATIC_DRAW);
 
         // Set colour pointer and enable client state in VAO
-        glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
+        glColorPointer(4, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
+
+    // Unbind buffer
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

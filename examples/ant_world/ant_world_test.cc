@@ -2,8 +2,10 @@
 #include "hid/joystick.h"
 #include "libantworld/common.h"
 #include "libantworld/renderer.h"
+#include "libantworld/route_continuous.h"
 
 // Third-party includes
+#include "third_party/csv.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -46,7 +48,7 @@ inline second_t getCurrentTime()
 int main(int argc, char **argv)
 {
     const auto turnSpeed = 200_deg_per_s;
-    const auto moveSpeed = 3_mps;
+    const auto moveSpeed = 30_mps;
     const unsigned int width = 1024;
     const unsigned int height = 262;
 
@@ -91,24 +93,24 @@ int main(int argc, char **argv)
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
     glLineWidth(4.0);
-    glPointSize(4.0);
+    glPointSize(40.0);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-
-    glEnable(GL_TEXTURE_2D);
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     AntWorld::Renderer renderer(512, 0.1);
     if (useRothamstedModel) {
-        const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
-        if (!modelPath) {
-            throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
-        }
-        renderer.getWorld().loadObj((filesystem::path(modelPath) / "flight_1_decimate.obj").str(),
-                                    0.1f,
+        //const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
+        //if (!modelPath) {
+        //    throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
+        //}
+        renderer.getWorld().loadObj("rothampstead/Flight_4_decimate.obj",
+                                    1.0f,
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
@@ -117,11 +119,12 @@ int main(int argc, char **argv)
                                  { 0.898f, 0.718f, 0.353f });
     }
 
-    // Load world, keeping texture sizes below 4096 and compressing textures on upload
-    //renderer.getWorld().loadObj("object.obj",
-    //                            0.1f, 4096, GL_COMPRESSED_RGB);
+    AntWorld::RouteContinuous route(10.0f, 100);
 
+    // Add route to panoramic render
+    renderer.addPanoramicRenderable(route);
 
+    route.loadRadarCSV("170531g_S1_BlTR88_02.csv");
     // Create HID device for controlling movement
     HID::Joystick joystick(0.25f);
 
@@ -134,6 +137,8 @@ int main(int argc, char **argv)
     degree_t yaw = 0_deg;
     degree_t pitch = 0_deg;
 
+    std::tie(x, y, yaw) = route.getPosition(0.0_m);
+    z = 200.0_m;
     bool ant = true;
     second_t lastTime = getCurrentTime();
     while (!glfwWindowShouldClose(window)) {
@@ -146,7 +151,8 @@ int main(int argc, char **argv)
         lastTime = currentTime;
 
         char buffer[100];
-        sprintf(buffer, "%d FPS", (int)std::round(1.0 / deltaTime.value()));
+        sprintf(buffer, "%d FPS (%f, %f, %f)", (int)std::round(1.0 / deltaTime.value()),
+                x.value(), y.value(), z.value());
         glfwSetWindowTitle(window, buffer);
 
         // Control yaw and pitch with left stick

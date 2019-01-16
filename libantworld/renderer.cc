@@ -62,6 +62,9 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
 
     // Pre-generate lookat matrices to point at cubemap faces
     generateCubeFaceLookAtMatrices();
+
+    // Always render the world
+    addPanoramicRenderable(m_World);
 }
 //----------------------------------------------------------------------------
 Renderer::~Renderer()
@@ -111,8 +114,10 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw world
-        m_World.render();
+        // Render renderables
+        for(const auto &r : m_PanoramicRenderables) {
+            r.get().render();
+        }
     }
 
     // Rebind draw framebuffer
