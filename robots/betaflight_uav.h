@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/not_implemented.h"
 #include "uav.h"
 
@@ -13,6 +14,7 @@
 
 // Standard C++ includes
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -25,7 +27,7 @@ class BetaflightUAV : public UAV
     using ampere_t = units::current::ampere_t;
 
 private:
-    struct MyIdent : public msp::Request
+    struct Ident : public msp::Request
     {
         msp::ByteVector rawData;
 
@@ -60,7 +62,7 @@ private:
     };
 
 public:
-    BetaflightUAV(const std::string &device, int baud)
+    BetaflightUAV(const std::string &device, const int baud)
       : m_Fcu(device, baud)
     {
         m_Fcu.initialise();
@@ -77,31 +79,31 @@ public:
 
     virtual void setRoll(float right) override
     {
-        right = std::min(1.0f, std::max(-1.0f, right));
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
         m_RCValues[0] = 1500 + right * m_ControlScale;
     }
 
     virtual void setPitch(float pitch) override
     {
-        pitch = std::min(1.0f, std::max(-1.0f, pitch));
+        BOB_ASSERT(pitch >= -1.f && pitch <= 1.f);
         m_RCValues[1] = 1500 + pitch * m_ControlScale;
     }
 
     virtual void setVerticalSpeed(float up) override
     {
-        up = std::min(1.0f, std::max(-1.0f, up));
+        BOB_ASSERT(up >= -1.f && up <= 1.f);
         m_RCValues[2] = 1500 + up * m_ThrottleScale;
     }
 
     virtual void setYawSpeed(float right) override
     {
-        right = std::min(1.0f, std::max(-1.0f, right));
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
         m_RCValues[3] = 1500 + right * m_ControlScale;
     }
 
-    const std::string &getArmStateAsString() const
+    std::string getArmState() const
     {
-        return m_CurrentArmFlags;
+        return m_CurrentArmFlags.str();
     }
 
     volt_t getVoltage() const
@@ -151,21 +153,20 @@ public:
 private:
     fcu::FlightController m_Fcu;
     uint16_t m_RCValues[8] = { 1500, 1500, 1040, 1500, 2000, 1000, 1500, 1500 };
-    std::string m_CurrentArmFlags;
+    std::stringstream m_CurrentArmFlags;
     volt_t m_CurrentVoltage;
     ampere_t m_CurrentAmpDraw;
     float m_ControlScale = 100.0f;
     float m_ThrottleScale = 150.0f;
 
-    void onIdent(const MyIdent &ident)
+    void onIdent(const Ident &ident)
     {
         m_CurrentArmFlags.clear();
 
         const int flagData = *((int *) (&ident.rawData[17]));
         for (size_t i = 0; i < ArmFlags.size(); i++) {
             if (flagData & (int) (1 << i)) {
-                m_CurrentArmFlags.append(ArmFlags[i]);
-                m_CurrentArmFlags.append(std::string(" (Error number ") + std::to_string(i) + std::string("), "));
+                m_CurrentArmFlags << ArmFlags[i] << " (Error number " << i << "), ";
             }
         }
     }
