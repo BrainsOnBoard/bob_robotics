@@ -15,7 +15,7 @@ CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 
 # We don't want these definitions, because we'll get linking errors if they're
 # defined in whatever's linking against libbebop
-CXXFLAGS += -DNO_BACKGROUND_EXCEPTION_CATCHER_DEFINITIONS
+CXXFLAGS += -DNO_HEADER_DEFINITIONS
 
 SOURCES := bebop.cc video.cc
 OBJECTS := $(SOURCES:.cc=.o)
