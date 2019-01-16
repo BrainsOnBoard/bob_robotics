@@ -184,8 +184,6 @@ void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
 
     // Unbind surface
     surface.unbind();
-
-    return true;
 }
 //----------------------------------------------------------------------------
 void World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
