@@ -24,7 +24,7 @@
 namespace
 {
 template<unsigned int N>
-void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale)
+void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale, bool assertIfNotEOF = true)
 {
     // Read components and push back
     GLfloat x;
@@ -34,7 +34,9 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
-    BOB_ASSERT(stream.eof());
+    if(assertIfNotEOF) {
+        BOB_ASSERT(stream.eof());
+    }
 }
 
 void readFace(std::istringstream &lineStream,
@@ -224,6 +226,11 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::string commandString;
         std::string parameterString;
         while(std::getline(objFile, lineString)) {
+            // If line has a Windows line ending, remove it
+            if(!lineString.empty() && lineString.back() == '\r') {
+                lineString.pop_back();
+            }
+
             // Entirely skip comment or empty lines
             if(lineString[0] == '#' || lineString.empty()) {
                 continue;
@@ -248,7 +255,8 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "v") {
                 // Read vertex
-                readVector<3>(lineStream, rawPositions, scale);
+                // **NOTE** don't assert - there can be vertex colour data here
+                readVector<3>(lineStream, rawPositions, scale, false);
             }
             else if(commandString == "vt") {
                 // Read texture coordinate
@@ -379,8 +387,12 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             // Treat remainder of line as texture filename
             std::string textureFilename;
             std::getline(lineStream, textureFilename);
+            const size_t firstNonQuote = textureFilename.find_first_not_of('"');
+            const size_t lastNonQuote = textureFilename.find_last_not_of('"');
+            textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote - 1);
 
-            std::cout << "\t\tTexture: " << textureFilename << std::endl;
+            std::cout << "\t\tTexture: '" << textureFilename << "'" << std::endl;
+
 
             // Load texture and add to map
             const std::string texturePath = (basePath / textureFilename).str();
@@ -391,7 +403,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
             // If texture couldn't be loaded, give warning
             if(texture.cols == 0 && texture.rows == 0) {
-                std::cerr << "WARNING:Cannot load texture" << std::endl;
+                std::cerr << "WARNING:Cannot load texture '" << texturePath << "'" << std::endl;
             }
             // Otherwise
             else {
