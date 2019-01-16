@@ -8,8 +8,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <cstdlib>
-#include <future>
 #include <iostream>
 #include <thread>
 
@@ -18,14 +16,6 @@ using namespace units::angle;
 using namespace units::literals;
 using namespace units::length;
 using namespace BoBRobotics;
-
-std::string
-GetLineFromCin()
-{
-    std::string line;
-    std::cin >> line;
-    return line;
-}
 
 void
 printStatus(Robots::BetaflightUAV &drone, Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon)
@@ -69,6 +59,7 @@ main(int argc, char *argv[])
     const size_t baudrate = (argc > 2) ? std::stoul(argv[2]) : 115200;
 
     // Interface to drone
+    std::cout << "Connecting to drone..." << std::endl;
     Robots::BetaflightUAV drone(device, baudrate);
 
     // Start streaming status data from drone
@@ -83,16 +74,18 @@ main(int argc, char *argv[])
         std::this_thread::sleep_for(1s);
     }
 
-    // limits for the VICON lab in Sheffield
+    // limits for the VICON lab in Sussex
     const Vicon::UAVControl::Bounds roomBounds{
         { -1.5_m, 1_m }, { -1_m, 1_m }, { 0_m, 2_m }
     };
-    //droneControl.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
+
+    // limits for the VICON lab in Sheffield
+    // const Vicon::UAVControl::Bounds roomBounds{
+    //     { -2.2_m, 2.6_m }, { -4.2_m, 3.4_m }, { 0_m, 2_m }
+    // };
 
     // Object for controlling the drone's position with the Vicon system
     Vicon::UAVControl droneControl(roomBounds);
-
-    auto future = std::async(std::launch::async, GetLineFromCin);
 
     bool mute = true;
     bool controlOn = false;
@@ -167,5 +160,4 @@ main(int argc, char *argv[])
     } while (!js.isPressed(HID::JButton::X));
 
     drone.disarm();
-    exit(0);
 }
