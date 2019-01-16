@@ -5,7 +5,8 @@
 #include "uav.h"
 
 // Third-party includes
-#include <msp/FlightController.hpp>
+#include "../third_party/units.h"
+#include "msp/FlightController.hpp"
 
 // Standard C includes
 #include <cmath>
@@ -20,40 +21,41 @@ namespace Robots {
 
 class BetaflightUAV : public UAV
 {
+    using volt_t = units::voltage::volt_t;
+    using ampere_t = units::current::ampere_t;
+
 private:
     struct MyIdent : public msp::Request
     {
-        msp::ID id() const
-        {
-            return msp::ID::MSP_STATUS_EX;
-        }
-
-        msp::ByteVector raw_data;
+        msp::ByteVector rawData;
 
         void decode(const msp::ByteVector &data)
         {
-            raw_data = data;
+            rawData = data;
+        }
+
+        msp::ID id() const override
+        {
+            return msp::ID::MSP_STATUS_EX;
         }
     };
 
     struct Analog : public msp::Request
     {
-        msp::ID id() const
-        {
-            return msp::ID::MSP_ANALOG;
-        }
+        volt_t voltage;
+        ampere_t current;
 
-        float vbat;          // Volt
-        float powerMeterSum; // Ah
-        size_t rssi;         // Received Signal Strength Indication [0; 1023]
-        float amperage;      // Ampere
-
-        void decode(const std::vector<uint8_t> &data)
+        void decode(const msp::ByteVector &data)
         {
-            vbat = data[0] / 10.0f;
+            voltage = volt_t{ data[0] / 10.0 };
+            current = ampere_t{ data[5] / 10.0 };
             //powerMeterSum = data[1]/1000.0f;
             //rssi          = data[3];
-            amperage = data[5] / 10.0f;
+        }
+
+        msp::ID id() const override
+        {
+            return msp::ID::MSP_ANALOG;
         }
     };
 
@@ -68,29 +70,6 @@ public:
     {
         m_Fcu.subscribe(&BetaflightUAV::onIdent, this, 0.1);
         m_Fcu.subscribe(&BetaflightUAV::onAnalog, this, 0.5);
-    }
-
-    void onIdent(const MyIdent &ident)
-    {
-        m_CurrentArmFlags.clear();
-
-        const int flagData = *((int *) (&ident.raw_data[17]));
-        for (size_t i = 0; i < ArmFlags.size(); i++) {
-            if (flagData & (int) (1 << i)) {
-                m_CurrentArmFlags.append(ArmFlags[i]);
-                m_CurrentArmFlags.append(std::string(" (Error number ") + std::to_string(i) + std::string("), "));
-            }
-        }
-    }
-
-    void onAnalog(const Analog &anog)
-    {
-        //std::cout << "Battery voltage level: " << anog.vbat << " V." << std::endl;
-        m_CurrentVoltage = anog.vbat;
-        //std::cout << "Power Meter Summery: " << anog.powerMeterSum << std::endl;
-        //std::cout << "Received Signal Strength Indication: " << anog.rssi << std::endl;
-        //std::cout << "Current level: " << anog.amperage << " mA." << std::endl;
-        m_CurrentAmpDraw = anog.amperage;
     }
 
     BOB_NOT_IMPLEMENTED(virtual void takeOff() override)
@@ -125,12 +104,12 @@ public:
         return m_CurrentArmFlags;
     }
 
-    float getVoltage() const
+    volt_t getVoltage() const
     {
         return m_CurrentVoltage;
     }
 
-    float getAmpDraw() const
+    ampere_t getAmpDraw() const
     {
         return m_CurrentAmpDraw;
     }
@@ -138,12 +117,12 @@ public:
     // accessors for m_ControlScale
     void setControlScale(float scale)
     {
-        this->m_ControlScale = scale;
+        m_ControlScale = scale;
     }
 
     float getControlScale()
     {
-        return this->m_ControlScale;
+        return m_ControlScale;
     }
 
     void sendCommands()
@@ -173,10 +152,29 @@ private:
     fcu::FlightController m_Fcu;
     uint16_t m_RCValues[8] = { 1500, 1500, 1040, 1500, 2000, 1000, 1500, 1500 };
     std::string m_CurrentArmFlags;
+    volt_t m_CurrentVoltage;
+    ampere_t m_CurrentAmpDraw;
     float m_ControlScale = 100.0f;
     float m_ThrottleScale = 150.0f;
-    float m_CurrentVoltage = 0.0;
-    float m_CurrentAmpDraw = 0.0;
+
+    void onIdent(const MyIdent &ident)
+    {
+        m_CurrentArmFlags.clear();
+
+        const int flagData = *((int *) (&ident.rawData[17]));
+        for (size_t i = 0; i < ArmFlags.size(); i++) {
+            if (flagData & (int) (1 << i)) {
+                m_CurrentArmFlags.append(ArmFlags[i]);
+                m_CurrentArmFlags.append(std::string(" (Error number ") + std::to_string(i) + std::string("), "));
+            }
+        }
+    }
+
+    void onAnalog(const Analog &anog)
+    {
+        m_CurrentVoltage = anog.voltage;
+        m_CurrentAmpDraw = anog.current;
+    }
 
     static constexpr std::array<const char *, 18> ArmFlags{
         "Gyro not detected",
