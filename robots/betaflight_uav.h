@@ -161,11 +161,15 @@ private:
     void onIdent(const Ident &ident)
     {
         m_CurrentArmFlags.clear();
+        m_CurrentArmFlags.str({});
 
         const int flagData = *((int *) (&ident.rawData[17]));
         for (size_t i = 0; i < ArmFlags.size(); i++) {
             if (flagData & (int) (1 << i)) {
-                m_CurrentArmFlags << ArmFlags[i] << " (Error number " << i << "), ";
+                if (!m_CurrentArmFlags.str().empty()) {
+                    m_CurrentArmFlags << ", ";
+                }
+                m_CurrentArmFlags << ArmFlags[i] << " (Error number " << i << ")";
             }
         }
     }
