@@ -36,7 +36,7 @@ private:
             rawData = data;
         }
 
-        msp::ID id() const override
+        virtual msp::ID id() const override
         {
             return msp::ID::MSP_STATUS_EX;
         }
@@ -55,7 +55,7 @@ private:
             //rssi          = data[3];
         }
 
-        msp::ID id() const override
+        virtual msp::ID id() const override
         {
             return msp::ID::MSP_ANALOG;
         }
@@ -122,15 +122,15 @@ public:
         m_ControlScale = scale;
     }
 
-    float getControlScale()
+    float getControlScale() const
     {
         return m_ControlScale;
     }
 
     void sendCommands()
     {
-        std::vector<uint16_t> auxs;
-        m_Fcu.setRc(m_RCValues[0], m_RCValues[1], m_RCValues[3], m_RCValues[2], m_RCValues[4], m_RCValues[5], m_RCValues[6], m_RCValues[7], auxs);
+        m_Fcu.setRc(m_RCValues[0], m_RCValues[1], m_RCValues[3], m_RCValues[2],
+                    m_RCValues[4], m_RCValues[5], m_RCValues[6], m_RCValues[7], {});
     }
 
     void arm()
