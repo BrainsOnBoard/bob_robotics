@@ -57,14 +57,13 @@ public:
 
     void printStatus()
     {
-        if (m_Drone.getArmStateAsString().size() > 0) {
-            std::cout << m_Drone.getArmStateAsString() << std::endl;
+        if (m_Drone.getArmState().size() > 0) {
+            std::cout << m_Drone.getArmState() << std::endl;
         }
         std::cout << "[V:" << std::setw(4) << m_Drone.getVoltage() << " ";
 
-        if (m_Vicon.getNumObjects() == 1) {
-
-            auto objectData = m_Vicon.getObjectData(0);
+        if (m_Vicon.getNumObjects() > 0) {
+            const auto objectData = m_Vicon.getObjectData(0);
             const auto position = objectData.getPosition<>();
             const auto attitude = objectData.getAttitude<degree_t>();
 
@@ -87,10 +86,10 @@ public:
     {
         if (controlOn) {
             // update control
-            auto objectData = m_Vicon.getObjectData(0);
+            const auto objectData = m_Vicon.getObjectData(0);
             const auto position = objectData.getPosition<>();
             const auto attitude = objectData.getAttitude<degree_t>();
-            const auto &velocity = objectData.getVelocity();
+            const auto velocity = objectData.getVelocity();
 
             // calc distance to m_Waypoint
             Vector3<float> p_diff;
