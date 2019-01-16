@@ -12,7 +12,9 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <bitset>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,41 +26,7 @@ class BetaflightUAV : public UAV
 {
     using volt_t = units::voltage::volt_t;
     using ampere_t = units::current::ampere_t;
-
-private:
-    struct Ident : public msp::Request
-    {
-        msp::ByteVector rawData;
-
-        void decode(const msp::ByteVector &data)
-        {
-            rawData = data;
-        }
-
-        virtual msp::ID id() const override
-        {
-            return msp::ID::MSP_STATUS_EX;
-        }
-    };
-
-    struct Analog : public msp::Request
-    {
-        volt_t voltage;
-        ampere_t current;
-
-        void decode(const msp::ByteVector &data)
-        {
-            voltage = volt_t{ data[0] / 10.0 };
-            current = ampere_t{ data[5] / 10.0 };
-            //powerMeterSum = data[1]/1000.0f;
-            //rssi          = data[3];
-        }
-
-        virtual msp::ID id() const override
-        {
-            return msp::ID::MSP_ANALOG;
-        }
-    };
+    using ErrorFlags = std::bitset<18>;
 
 public:
     BetaflightUAV(const std::string &device, const int baud)
@@ -100,9 +68,20 @@ public:
         m_RCValues[3] = 1500 + right * m_ControlScale;
     }
 
-    std::string getArmState() const
+    std::string getArmState()
     {
-        return m_CurrentArmFlags.str();
+        std::lock_guard<std::mutex> guard(m_ErrorsMutex);
+        std::stringstream ss;
+        for (size_t i = 0; i < ArmFlags.size(); i++) {
+            if (m_Errors[i]) {
+                if (!ss.str().empty()) {
+                    ss << ", ";
+                }
+                ss << ArmFlags[i] << " (Error number " << i << ")";
+            }
+        }
+
+        return ss.str();
     }
 
     volt_t getVoltage() const
@@ -152,33 +131,12 @@ public:
 private:
     fcu::FlightController m_Fcu;
     uint16_t m_RCValues[8] = { 1500, 1500, 1040, 1500, 2000, 1000, 1500, 1500 };
-    std::stringstream m_CurrentArmFlags;
+    ErrorFlags m_Errors;
     volt_t m_CurrentVoltage;
     ampere_t m_CurrentAmpDraw;
+    std::mutex m_ErrorsMutex;
     float m_ControlScale = 100.0f;
     float m_ThrottleScale = 150.0f;
-
-    void onIdent(const Ident &ident)
-    {
-        m_CurrentArmFlags.clear();
-        m_CurrentArmFlags.str({});
-
-        const int flagData = *((int *) (&ident.rawData[17]));
-        for (size_t i = 0; i < ArmFlags.size(); i++) {
-            if (flagData & (int) (1 << i)) {
-                if (!m_CurrentArmFlags.str().empty()) {
-                    m_CurrentArmFlags << ", ";
-                }
-                m_CurrentArmFlags << ArmFlags[i] << " (Error number " << i << ")";
-            }
-        }
-    }
-
-    void onAnalog(const Analog &anog)
-    {
-        m_CurrentVoltage = anog.voltage;
-        m_CurrentAmpDraw = anog.current;
-    }
 
     static constexpr std::array<const char *, 18> ArmFlags{
         "Gyro not detected",
@@ -200,6 +158,52 @@ private:
         "MSP connection is active, probably via Betaflight Configurator",
         "Arm switch is in an unsafe position"
     };
+
+    struct Ident : public msp::Request
+    {
+        ErrorFlags errors;
+
+        void decode(const msp::ByteVector &data)
+        {
+            errors = ErrorFlags(*reinterpret_cast<const int *>(data.data() + 17));
+        }
+
+        virtual msp::ID id() const override
+        {
+            return msp::ID::MSP_STATUS_EX;
+        }
+    };
+
+    struct Analog : public msp::Request
+    {
+        volt_t voltage;
+        ampere_t current;
+
+        void decode(const msp::ByteVector &data)
+        {
+            voltage = volt_t{ data[0] / 10.0 };
+            current = ampere_t{ data[5] / 10.0 };
+            //powerMeterSum = data[1]/1000.0f;
+            //rssi          = data[3];
+        }
+
+        virtual msp::ID id() const override
+        {
+            return msp::ID::MSP_ANALOG;
+        }
+    };
+
+    void onIdent(const Ident &ident)
+    {
+        std::lock_guard<std::mutex> guard(m_ErrorsMutex);
+        m_Errors = std::move(ident.errors);
+    }
+
+    void onAnalog(const Analog &anog)
+    {
+        m_CurrentVoltage = anog.voltage;
+        m_CurrentAmpDraw = anog.current;
+    }
 };
 
 /*
