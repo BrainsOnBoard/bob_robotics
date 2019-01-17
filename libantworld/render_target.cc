@@ -46,7 +46,7 @@ RenderTarget::RenderTarget(GLsizei width, GLsizei height)
     }
 
     // Unbind cube map and frame buffer
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 //----------------------------------------------------------------------------
