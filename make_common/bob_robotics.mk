@@ -111,3 +111,8 @@ ifdef WITH_I2C
 	LINK_FLAGS += -li2c
 	endif
 endif
+
+ifdef WITH_EIGEN
+	CXXFLAGS += `pkg-config --cflags eigen3`
+	LINK_FLAGS += -fopenmp
+endif
