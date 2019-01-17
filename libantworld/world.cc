@@ -405,7 +405,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             std::getline(lineStream, textureFilename);
             const size_t firstNonQuote = textureFilename.find_first_not_of('"');
             const size_t lastNonQuote = textureFilename.find_last_not_of('"');
-            textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote - 1);
+            textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 
             std::cout << "\t\tTexture: '" << textureFilename << "'" << std::endl;
 
