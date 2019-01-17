@@ -73,6 +73,14 @@ void readFace(std::istringstream &lineStream,
     // Check this is the end of the linestream i.e. there aren't extra components
     BOB_ASSERT(lineStream.eof());
 }
+
+void stripWindowsLineEnding(std::string &lineString)
+{
+    // If line has a Windows line ending, remove it
+    if(!lineString.empty() && lineString.back() == '\r') {
+        lineString.pop_back();
+    }
+}
 }
 
 //----------------------------------------------------------------------------
@@ -229,10 +237,8 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::string commandString;
         std::string parameterString;
         while(std::getline(objFile, lineString)) {
-            // If line has a Windows line ending, remove it
-            if(!lineString.empty() && lineString.back() == '\r') {
-                lineString.pop_back();
-            }
+            // Strip windows line endings
+            stripWindowsLineEnding(lineString);
 
             // Entirely skip comment or empty lines
             if(lineString[0] == '#' || lineString.empty()) {
@@ -363,6 +369,9 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
     std::string commandString;
     std::string parameterString;
     while(std::getline(mtlFile, lineString)) {
+        // Strip windows line endings
+        stripWindowsLineEnding(lineString);
+
         // Entirely skip comment or empty lines
         if(lineString[0] == '#' || lineString.empty()) {
             continue;
@@ -549,6 +558,8 @@ void World::Surface::unbind() const
 //----------------------------------------------------------------------------
 void World::Surface::render() const
 {
+    glEnable(GL_CULL_FACE);
+
     // Draw world
     glDrawArrays(GL_TRIANGLES, 0, m_NumVertices);
 }
