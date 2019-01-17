@@ -11,8 +11,6 @@
 // Third-party includes
 #include "../third_party/units.h"
 
-#include "renderable.h"
-
 namespace BoBRobotics
 {
 namespace AntWorld
@@ -21,7 +19,7 @@ namespace AntWorld
 // BoBRobotics::AntWorld::RouteContinuous
 //----------------------------------------------------------------------------
 //! Class for reading ant routes exported by Matlab and rendering them in ant world
-class RouteContinuous : public Renderable
+class RouteContinuous
 {
     using degree_t = units::angle::degree_t;
     using meter_t = units::length::meter_t;
@@ -31,16 +29,11 @@ public:
     RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename);
     ~RouteContinuous();
 
-    virtual void render() const override;
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     void load(const std::string &filename);
-    void loadRadarCSV(const std::string &filename);
-
-    //void renderWaypoints(GLfloat height) const;
-    //void render(meter_t antX, meter_t antY, degree_t antHeading) const;
-
+    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
     bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
     std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
@@ -53,9 +46,6 @@ public:
     size_t size() const{ return m_Waypoints.size(); }
 
 private:
-    // Private methods
-    void createGeometry();
-
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
