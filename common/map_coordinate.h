@@ -54,7 +54,7 @@ const Ellipsoid WGS84::ellipsoid{units::length::meter_t(6378137), units::length:
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::OSGB36
 //----------------------------------------------------------------------------
-// OSGB-36 datum - used for UK OS map coordinates
+//! OSGB-36 datum - used for UK OS map coordinates
 struct OSGB36
 {
     static const Transform transformFromWGS84;
@@ -102,8 +102,8 @@ struct Cartesian
 };
 
 
-// Convert latitude and longitude to cartesian
-// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+//! Convert latitude and longitude to cartesian
+/*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 template<typename Datum>
 Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
 {
@@ -125,8 +125,8 @@ Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
                             (nu * (1.0 - eSq) + h) * sinPhi};
 }
 
-// Transform cartesian coordinates from WGS84 into desired space
-// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+//! Transform cartesian coordinates from WGS84 into desired space
+/*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 template<typename Datum>
 Cartesian<Datum> transformCartesian(const Cartesian<WGS84> &c)
 {
@@ -142,8 +142,8 @@ Cartesian<Datum> transformCartesian(const Cartesian<WGS84> &c)
                             Datum::transformFromWGS84.tz - c.x * ry + c.y * rx + c.z * s1};
 }
 
-// Convert cartesian coordinates back to latitude and longitude
-// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+//! Convert cartesian coordinates back to latitude and longitude
+/*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 template<typename Datum>
 LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
 {
@@ -177,8 +177,8 @@ LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
     return LatLon<Datum>{phi, lambda};
 }
 
-// Convert latitude and longitude in the OSGB36 space to OS grid coordinates
-// Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence)
+//! Convert latitude and longitude in the OSGB36 space to OS grid coordinates
+/*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 {
     using namespace units::angle;
