@@ -24,18 +24,13 @@
 namespace
 {
 template<unsigned int N>
-void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale, bool assertIfNotEOF = true)
+void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale)
 {
     // Read components and push back
     GLfloat x;
     for(unsigned int i = 0; i < N; i++) {
         stream >> x;
         vector.push_back(x * scale);
-    }
-
-    // Check this is the end of the linestream i.e. there aren't extra components
-    if(assertIfNotEOF) {
-        BOB_ASSERT(stream.eof());
     }
 }
 
@@ -264,12 +259,12 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "v") {
                 // Read vertex
-                // **NOTE** don't assert - there can be vertex colour data here
-                readVector<3>(lineStream, rawPositions, scale, false);
+                readVector<3>(lineStream, rawPositions, scale);
             }
             else if(commandString == "vt") {
-                // Read texture coordinate
+                // Read texture coordinate and check there's no unhandled components following it
                 readVector<2>(lineStream, rawTexCoords, 1.0f);
+                BOB_ASSERT(lineStream.eof())
             }
             else if(commandString == "vn") {
                 // ignore vertex normals for now
