@@ -64,8 +64,15 @@ const Transform OSGB36::transform{units::length::meter_t(-446.448), units::lengt
                                   20.4894, units::angle::arcsecond_t(-0.1502), units::angle::arcsecond_t(-0.2470), units::angle::arcsecond_t(-0.8421)};
 const Ellipsoid OSGB36::ellipsoid{units::length::meter_t(6377563.396), units::length::meter_t(6356256.909), 1.0 / 299.3249646};
 
-// An OS coordinate consisting of an 'easting' and 'northing' distance
-typedef std::tuple<units::length::meter_t, units::length::meter_t> OSCoordinate;
+//----------------------------------------------------------------------------
+// BoBRobotics::MapCoordinate::OSCoordinate
+//----------------------------------------------------------------------------
+//! An OS coordinate consisting of an 'easting' and 'northing' distance
+struct OSCoordinate
+{
+    const units::length::meter_t easting;
+    const units::length::meter_t northing;
+};
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Ellipsoid
@@ -224,8 +231,8 @@ OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
     const double deltaLambda5 = deltaLambda4 * deltaLambda;
     const double deltaLambda6 = deltaLambda5 * deltaLambda;
 
-    return std::make_tuple(e0 + (iv * deltaLambda) + (v * deltaLambda3) + (vi * deltaLambda5),
-                           i + (ii * deltaLambda2) + (iii * deltaLambda4) + (iiia * deltaLambda6));
+    return OSCoordinate{e0 + (iv * deltaLambda) + (v * deltaLambda3) + (vi * deltaLambda5),
+                        i + (ii * deltaLambda2) + (iii * deltaLambda4) + (iiia * deltaLambda6)};
 }
 }   // namespace MapCoordinate
 }   // namespace BoBRobotics
