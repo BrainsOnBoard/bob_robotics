@@ -62,9 +62,6 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
 
     // Pre-generate lookat matrices to point at cubemap faces
     generateCubeFaceLookAtMatrices();
-
-    // Always render the world
-    addPanoramicRenderable(m_World);
 }
 //----------------------------------------------------------------------------
 Renderer::~Renderer()
@@ -86,6 +83,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
     // Configure perspective projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
@@ -114,10 +112,8 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render renderables
-        for(const auto &r : m_PanoramicRenderables) {
-            r.get().render();
-        }
+        // Render geometry
+        renderPanoramicGeometry();
     }
 
     // Rebind draw framebuffer
@@ -181,6 +177,7 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                viewportWidth, viewportHeight);
 
     // Configure perspective projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
@@ -199,8 +196,8 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
     // Clear colour and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Draw world
-    m_World.render();
+    // Render geometry
+    renderFirstPersonGeometry();
 }
 //----------------------------------------------------------------------------
 void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
@@ -237,6 +234,7 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     const auto &maxBound = getWorld().getMaxBound();
 
     // Configure top-down orthographic projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(minBound[0].value(), maxBound[0].value(),
@@ -246,8 +244,8 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Render world
-    m_World.render();
+    // Render geometry
+    renderTopDownGeometry();
 }
 //----------------------------------------------------------------------------
 void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool clear)
@@ -269,6 +267,21 @@ void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool cle
     if(bind) {
         renderTarget.unbind();
     }
+}
+//----------------------------------------------------------------------------
+void Renderer::renderPanoramicGeometry()
+{
+    m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderFirstPersonGeometry()
+{
+    m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderTopDownGeometry()
+{
+    m_World.render();
 }
 //----------------------------------------------------------------------------
 void Renderer::generateCubeFaceLookAtMatrices()

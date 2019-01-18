@@ -33,13 +33,13 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
         vector.push_back(x * scale);
     }
 }
-
+//----------------------------------------------------------------------------
 void readFace(std::istringstream &lineStream,
               const std::vector<GLfloat> &rawPositions,
               const std::vector<GLfloat> &rawTexCoords,
               std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>> &currentObjSurface)
 {
-     // Get references to current material's positions and texture coordinates
+    // Get references to current material's positions and texture coordinates
     auto &surfacePositions = std::get<1>(currentObjSurface);
     auto &surfaceTexCoords = std::get<2>(currentObjSurface);
 
@@ -68,7 +68,7 @@ void readFace(std::istringstream &lineStream,
     // Check this is the end of the linestream i.e. there aren't extra components
     BOB_ASSERT(lineStream.eof());
 }
-
+//----------------------------------------------------------------------------
 void stripWindowsLineEnding(std::string &lineString)
 {
     // If line has a Windows line ending, remove it

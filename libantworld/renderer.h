@@ -1,15 +1,15 @@
 #pragma once
 
 // Standard C++ includes
-#include <functional>
+#include <algorithm>
 #include <string>
+#include <vector>
 
 // OpenGL includes
 #include <GL/glew.h>
 
 // Antworld includes
 #include "render_mesh.h"
-#include "renderable.h"
 #include "world.h"
 
 // Third-party includes
@@ -34,7 +34,8 @@ class Renderer
 public:
     Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
-    ~Renderer();
+    virtual ~Renderer();
+
 
     //------------------------------------------------------------------------
     // Public API
@@ -58,11 +59,13 @@ public:
     World &getWorld(){ return m_World; }
     const World &getWorld() const{ return m_World; }
 
-    void addPanoramicRenderable(const Renderable &renderable)
-    {
-        m_PanoramicRenderables.push_back(std::cref(renderable));
-    }
-
+protected:
+    //------------------------------------------------------------------------
+    // Declared virtuals
+    //------------------------------------------------------------------------
+    virtual void renderPanoramicGeometry();
+    virtual void renderFirstPersonGeometry();
+    virtual void renderTopDownGeometry();
 private:
     //------------------------------------------------------------------------
     // Private methods
@@ -81,8 +84,6 @@ private:
     GLuint m_FBO;
     GLuint m_DepthBuffer;
     GLfloat m_CubeFaceLookAtMatrices[6][16];
-
-    std::vector<std::reference_wrapper<const Renderable>> m_PanoramicRenderables;
 
     const GLsizei m_CubemapSize;
     const double m_NearClip;
