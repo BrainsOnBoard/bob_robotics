@@ -36,9 +36,6 @@ struct Ellipsoid
     // Major and minor axis
     const units::length::meter_t a;
     const units::length::meter_t b;
-
-    // Eccentricity
-    const double f;
 };
 
 //----------------------------------------------------------------------------
@@ -49,7 +46,7 @@ struct WGS84
 {
     static const Ellipsoid ellipsoid;
 };
-const Ellipsoid WGS84::ellipsoid{units::length::meter_t(6378137), units::length::meter_t(6356752.314245), 1.0 / 298.257223563};
+const Ellipsoid WGS84::ellipsoid{units::length::meter_t(6378137), units::length::meter_t(6356752.314245)};
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::OSGB36
@@ -62,7 +59,7 @@ struct OSGB36
 };
 const Transform OSGB36::transformFromWGS84{units::length::meter_t(-446.448), units::length::meter_t(125.157), units::length::meter_t(-542.060),
                                            20.4894, units::angle::arcsecond_t(-0.1502), units::angle::arcsecond_t(-0.2470), units::angle::arcsecond_t(-0.8421)};
-const Ellipsoid OSGB36::ellipsoid{units::length::meter_t(6377563.396), units::length::meter_t(6356256.909), 1.0 / 299.3249646};
+const Ellipsoid OSGB36::ellipsoid{units::length::meter_t(6377563.396), units::length::meter_t(6356256.909)};
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::OSCoordinate
@@ -117,8 +114,8 @@ Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
     const double sinLambda = sin(latLon.lon);
     const double cosLambda = cos(latLon.lon);
 
-    const double eSq = 2.0 * Datum::ellipsoid.f - Datum::ellipsoid.f * Datum::ellipsoid.f;  // 1st eccentricity squared ≡ (a²-b²)/a²
-    const meter_t nu = Datum::ellipsoid.a / std::sqrt(1.0 - eSq * sinPhi * sinPhi);         // radius of curvature in prime vertical
+    const double eSq = 1.0 - (Datum::ellipsoid.b * Datum::ellipsoid.b) / (Datum::ellipsoid.a * Datum::ellipsoid.a); // 1st eccentricity squared
+    const meter_t nu = Datum::ellipsoid.a / std::sqrt(1.0 - eSq * sinPhi * sinPhi);                                 // radius of curvature in prime vertical
 
     return Cartesian<Datum>{(nu + h) * cosPhi * cosLambda,
                             (nu + h) * cosPhi * sinLambda,
@@ -152,26 +149,26 @@ LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
     using namespace units::math;
     using namespace units::literals;
 
-    const double e2 = 2.0 * Datum::ellipsoid.f - Datum::ellipsoid.f * Datum::ellipsoid.f;    // 1st eccentricity squared ≡ (a²-b²)/a²
-    const double epsilon2 = e2 / (1.0 - e2);                                                // 2nd eccentricity squared ≡ (a²-b²)/b²
-    const meter_t p = sqrt(c.x * c.x + c.y * c.y);  // distance from minor axis
-    const meter_t r = sqrt(p * p + c.z * c.z);      // polar radius
+    const double eSq = 1.0 - (Datum::ellipsoid.b * Datum::ellipsoid.b) / (Datum::ellipsoid.a * Datum::ellipsoid.a); // 1st eccentricity squared
+    const double epsilonSq = eSq / (1.0 - eSq);                                                                     // 2nd eccentricity squared
+    const meter_t p = sqrt(c.x * c.x + c.y * c.y);                                                                  // distance from minor axis
+    const meter_t r = sqrt(p * p + c.z * c.z);                                                                      // polar radius
 
     // parametric latitude (Bowring eqn 17, replacing tanβ = z·a / p·b)
-    const double tanBeta = (Datum::ellipsoid.b * c.z) / (Datum::ellipsoid.a * p) * (1.0 + epsilon2 * Datum::ellipsoid.b / r);
+    const double tanBeta = (Datum::ellipsoid.b * c.z) / (Datum::ellipsoid.a * p) * (1.0 + epsilonSq * Datum::ellipsoid.b / r);
     const double sinBeta = tanBeta / std::sqrt(1.0 + tanBeta * tanBeta);
     const double cosBeta = sinBeta / tanBeta;
 
     // geodetic latitude (Bowring eqn 18: tanφ = z+ε²bsin³β / p−e²cos³β)
-    const degree_t phi = std::isnan(cosBeta) ? 0.0_rad : atan2(c.z + epsilon2 * Datum::ellipsoid.b * sinBeta * sinBeta * sinBeta,
-                                                               p - e2 * Datum::ellipsoid.a * cosBeta * cosBeta * cosBeta);
+    const degree_t phi = std::isnan(cosBeta) ? 0.0_rad : atan2(c.z + epsilonSq * Datum::ellipsoid.b * sinBeta * sinBeta * sinBeta,
+                                                               p - eSq * Datum::ellipsoid.a * cosBeta * cosBeta * cosBeta);
 
     // longitude
     const degree_t lambda = atan2(c.y, c.x);
 
     // height above ellipsoid (Bowring eqn 7) [not currently used]
     /*const double sinPhi = sin(phi), cosPhi = cos(phi);
-    const meter_t nu = std::get<0>(ellipsoid) / std::sqrt(1.0 - e2 * sinPhi * sinPhi); // length of the normal terminated by the minor axis
+    const meter_t nu = std::get<0>(ellipsoid) / std::sqrt(1.0 - eSq * sinPhi * sinPhi); // length of the normal terminated by the minor axis
     var h = p*cosφ + cartesian[2]*sinφ - (osgb36EllipseA*osgb36EllipseA/ν);*/
 
     return LatLon<Datum>{phi, lambda};
@@ -190,8 +187,8 @@ OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
     constexpr double f0 = 0.9996012717;                                 // NatGrid scale factor on central meridian;
     const radian_t phi0 = 49.0_deg, lambda0 = -2.0_deg;                 // NatGrid true origin is 49°N,2°W
     const meter_t n0 = -100000.0_m, e0 = 400000.0_m;                    // northing & easting of true origin, metres
-    const double e2 = 1.0 - (b * b) / (a * a);                      // eccentricity squared
-    const double n = (a - b) / (a + b), n2 = n * n, n3 = n * n * n; // n, n², n³
+    const double eSq = 1.0 - (b * b) / (a * a);                         // eccentricity squared
+    const double n = (a - b) / (a + b), n2 = n * n, n3 = n * n * n;     // n, n², n³
 
     const radian_t phi = latLon.lat;
     const radian_t lambda = latLon.lon;
@@ -205,8 +202,8 @@ OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
     const double tan4Phi = tan2Phi * tan2Phi;
 
 
-    const meter_t nu = a * f0 / std::sqrt(1.0 - e2 * sinPhi * sinPhi);                      // nu = transverse radius of curvature
-    const meter_t rho = a * f0 * (1.0 - e2) / std::pow(1.0 - e2 * sinPhi * sinPhi, 1.5);    // rho = meridional radius of curvature
+    const meter_t nu = a * f0 / std::sqrt(1.0 - eSq * sinPhi * sinPhi);                     // nu = transverse radius of curvature
+    const meter_t rho = a * f0 * (1.0 - eSq) / std::pow(1.0 - eSq * sinPhi * sinPhi, 1.5);  // rho = meridional radius of curvature
     const double eta2 = nu / rho - 1.0;                                                     // eta = ?
 
     const double mA = (1.0 + n + (5.0 / 4.0) * n2 + (5.0 / 4.0) * n3) * (phi - phi0).value();
