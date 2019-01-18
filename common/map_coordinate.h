@@ -57,11 +57,11 @@ const Ellipsoid WGS84::ellipsoid{units::length::meter_t(6378137), units::length:
 // OSGB-36 datum - used for UK OS map coordinates
 struct OSGB36
 {
-    static const Transform transform;
+    static const Transform transformFromWGS84;
     static const Ellipsoid ellipsoid;
 };
-const Transform OSGB36::transform{units::length::meter_t(-446.448), units::length::meter_t(125.157), units::length::meter_t(-542.060),
-                                  20.4894, units::angle::arcsecond_t(-0.1502), units::angle::arcsecond_t(-0.2470), units::angle::arcsecond_t(-0.8421)};
+const Transform OSGB36::transformFromWGS84{units::length::meter_t(-446.448), units::length::meter_t(125.157), units::length::meter_t(-542.060),
+                                           20.4894, units::angle::arcsecond_t(-0.1502), units::angle::arcsecond_t(-0.2470), units::angle::arcsecond_t(-0.8421)};
 const Ellipsoid OSGB36::ellipsoid{units::length::meter_t(6377563.396), units::length::meter_t(6356256.909), 1.0 / 299.3249646};
 
 //----------------------------------------------------------------------------
@@ -130,16 +130,16 @@ Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
 template<typename Datum>
 Cartesian<Datum> transformCartesian(const Cartesian<WGS84> &c)
 {
-    const double s1 = Datum::transform.s / 1E6 + 1.0;            // scale: normalise parts-per-million to (s+1)
+    const double s1 = Datum::transformFromWGS84.s / 1E6 + 1.0;            // scale: normalise parts-per-million to (s+1)
 
-    const double rx = Datum::transform.rx.value();
-    const double ry = Datum::transform.ry.value();
-    const double rz = Datum::transform.rz.value();
+    const double rx = Datum::transformFromWGS84.rx.value();
+    const double ry = Datum::transformFromWGS84.ry.value();
+    const double rz = Datum::transformFromWGS84.rz.value();
 
     // apply transform
-    return Cartesian<Datum>{Datum::transform.tx + c.x * s1 - c.y * rz + c.z * ry,
-                            Datum::transform.ty + c.x * rz + c.y * s1 - c.z * rx,
-                            Datum::transform.tz - c.x * ry + c.y * rx + c.z * s1};
+    return Cartesian<Datum>{Datum::transformFromWGS84.tx + c.x * s1 - c.y * rz + c.z * ry,
+                            Datum::transformFromWGS84.ty + c.x * rz + c.y * s1 - c.z * rx,
+                            Datum::transformFromWGS84.tz - c.x * ry + c.y * rx + c.z * s1};
 }
 
 // Convert cartesian coordinates back to latitude and longitude
