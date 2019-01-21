@@ -14,16 +14,19 @@ OBJECTS		:=$(SOURCES:.cpp=.o)
 DEPS		:=$(OBJECTS:.o=.d)
 ARFLAGS		:= -rcs
 
-.PHONY: all clean
+.PHONY: all clean submodule
 
 all: libimgui.a
+
+submodule:
+	@git submodule update --init imgui
 
 libimgui.a: $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS)
 
 -include $(DEPS)
 
-%.o: %.cpp %.d
+%.o: %.cpp %.d submodule
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.d: ;
