@@ -52,11 +52,17 @@ public:
         }
 
         // non-blocking socket
-#ifdef WIN32
+#ifdef _WIN32
         ulong nonblocking_enabled = 1;
         ioctlsocket(m_Socket, FIONBIO, &nonblocking_enabled);
 #else
         fcntl(m_Socket, F_SETFL, O_NONBLOCK);
+
+        // So that we can reuse the port if the program exits
+        int on = 1;
+        if (setsockopt(m_Socket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+            throw OS::Net::NetworkError("Could not set socket option");
+        }
 #endif
     }
 
@@ -89,33 +95,31 @@ public:
         constexpr bufflen_t bufferLength = 72 * 19;
         unsigned char buffer[bufferLength];
 
-        // Make sure frame is correct size and type
-        outFrame.create(72, 152, CV_32FC1);
-
 #ifdef _WIN32
         constexpr int blocking = WSAEWOULDBLOCK;
 #else
-        constexpr ssize_t blocking = -EAGAIN;
+        constexpr ssize_t blocking = EAGAIN;
 #endif
 
         // Get the most recent UDP frame (grayscale for now)
-        while (true) {
-            const auto ret = recv(m_Socket, reinterpret_cast<readbuff_t>(buffer),
-                                  bufferLength, 0);
-            if (ret < 0) {
-                // If it's blocking, then we're done
-                if (ret == blocking) {
-                    break;
-                }
-
-                // Otherwise an error occurred
-                throw OS::Net::NetworkError("Could not read from socket", ret);
+        const auto ret = recv(m_Socket, reinterpret_cast<readbuff_t>(buffer),
+                                bufferLength, 0);
+        if (ret < 0) {
+            // If there's no data
+            if (OS::Net::lastError() == blocking) {
+                return false;
             }
 
-            // Fill in the outFrame
-            for (int i = 0; i < (int) bufferLength; ++i) {
-                outFrame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[i]) / 255.0f;
-            }
+            // Otherwise an error occurred
+            throw OS::Net::NetworkError("Could not read from socket");
+        }
+
+        // Make sure frame is correct size and type
+        outFrame.create(72, 152, CV_32FC1);
+
+        // Fill in the outFrame
+        for (int i = 0; i < (int) bufferLength; ++i) {
+            outFrame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[i]) / 255.0f;
         }
 
         // Return true to indicate success
