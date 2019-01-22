@@ -182,7 +182,7 @@ void modelDefinition(NNmodel &model)
         MBParams::kcToENWeight);  // 7 - Maximum weight
 
     GeNNModels::STDPDopamine::VarValues kcToENWeightUpdateInitVars(
-        MBParams::kcToENWeight,   // Synaptic weight
+        uninitialisedVar(),         // Synaptic weight
         0.0,                        // Synaptic tag
         0.0);                       // Time of last synaptic tag update
 
