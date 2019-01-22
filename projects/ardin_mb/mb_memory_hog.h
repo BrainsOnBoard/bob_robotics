@@ -45,11 +45,15 @@ public:
     // **NOTE** gross API but allows easy integration with UI
     float *getGGNToKCWeight();
     float *getKCToGGNWeight();
+    float *getKCToENWeight(){ return &m_KCToENWeight; };
     float *getPNToKC();
 
     float *getGGNToKCVMid();
     float *getGGNToKCVslope();
     float *getGGNToKCVthresh();
+
+    int *getKCToENSynapse(){ return &m_KCToENSynape; }
+    float *getKCToENDopamineStrength(){ return &m_KCToENDopamineStrength; }
 
     float *getPNInputCurrentScale();
     float *getPNVthresh();
@@ -75,6 +79,11 @@ public:
     const std::vector<float> &getGGNVoltage() const{ return m_GGNVoltage; }
     const std::vector<float> &getKCInhInSyn() const{ return m_KCInhInSyn; }
 
+    const std::vector<float> &getDKCToEN() const{ return m_DKCToEN; }
+    const std::vector<float> &getCKCToEN() const{ return m_CKCToEN; }
+    const std::vector<float> &getGKCToEN() const{ return m_GKCToEN; }
+
+    const std::vector<float> &getENVoltage() const{ return m_ENVoltage; }
 
     float *getRewardTimeMs(){ return &m_RewardTimeMs; }
     float *getPresentDurationMs(){ return &m_PresentDurationMs; }
@@ -103,10 +112,11 @@ private:
     float m_PNTauM;
     float m_PNC;
 
+    float m_KCToENWeight;
+    float m_KCToENDopamineStrength;
+
     float m_RewardTimeMs;
     float m_PresentDurationMs;
-
-
 
     mutable Spikes m_PNSpikes;
     mutable Spikes m_KCSpikes;
@@ -122,6 +132,13 @@ private:
 
     mutable std::vector<float> m_GGNVoltage;
     mutable std::vector<float> m_KCInhInSyn;
+
+    int m_KCToENSynape;
+    mutable std::vector<float> m_DKCToEN;
+    mutable std::vector<float> m_CKCToEN;
+    mutable std::vector<float> m_GKCToEN;
+
+    mutable std::vector<float> m_ENVoltage;
 
     mutable std::mt19937 m_RNG;
 };

@@ -225,6 +225,20 @@ void MBHogUI::handleUI()
     }
     ImGui::End();
 
+    if(ImGui::Begin("Dopamine activity")) {
+        ImGui::SliderInt("Selected synapse", m_Memory.getKCToENSynapse(), 0, MBParams::numKC);
+        ImGui::PlotLines("Dopamine", m_Memory.getDKCToEN().data(), m_Memory.getDKCToEN().size(), 0, nullptr,
+                         0.0f, 1.0f, ImVec2(0, 50));
+
+        ImGui::PlotLines("Tag", m_Memory.getCKCToEN().data(), m_Memory.getCKCToEN().size(), 0, nullptr,
+                         -1.0f, 0.0f, ImVec2(0, 50));
+        ImGui::PlotLines("Weight", m_Memory.getGKCToEN().data(), m_Memory.getGKCToEN().size(), 0, nullptr,
+                         0.0f, 0.5f, ImVec2(0, 50));
+        ImGui::PlotLines("EN Membrane\nvoltage", m_Memory.getENVoltage().data(), m_Memory.getENVoltage().size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
+    }
+    ImGui::End();
+
     if(ImGui::Begin("MB parameters")) {
         if(ImGui::TreeNode("PN")) {
             ImGui::SliderFloat("InputCurrentScale", m_Memory.getPNInputCurrentScale(), 0.0f, 10.0f, "%.4f");
@@ -251,6 +265,11 @@ void MBHogUI::handleUI()
         if(ImGui::TreeNode("PN->KC")) {
             ImGui::SliderFloat("Weight", m_Memory.getPNToKC(), 0.0f, 0.5f);
             ImGui::SliderFloat("TauSyn", m_Memory.getPNToKCTauSyn(), 1.0f, 20.0f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("KC->EN")) {
+            ImGui::SliderFloat("Dopamine strength", m_Memory.getKCToENDopamineStrength(), 0.0f, 1.0f);
             ImGui::TreePop();
         }
 

@@ -49,7 +49,8 @@ MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
         m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
         m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0),
-        m_PNToKCTauSyn(3.0f), m_PNTauM(10.0), m_PNC(1.0), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
+        m_PNToKCTauSyn(3.0f), m_PNTauM(10.0), m_PNC(1.0), m_KCToENDopamineStrength(MBParams::dopamineStrength),
+        m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs), m_KCToENSynape(893)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -196,6 +197,10 @@ void MBMemoryHOG::write(cv::FileStorage& fs) const
     fs << "weight" << gpnToKC;
     fs << "tauSyn" << m_PNToKCTauSyn;
     fs << "}";
+
+    fs << "kcToEN" << "{";
+    fs << "dopamineStrength" << m_KCToENDopamineStrength;
+    fs << "}";
     fs << "}";
 }
 //----------------------------------------------------------------------------
@@ -231,6 +236,11 @@ void MBMemoryHOG::read(const cv::FileNode &node)
         cv::read(pnToKC["tauSyn"], m_PNToKCTauSyn, m_PNToKCTauSyn);
     }
 
+    const auto &kcToEN = node["kcToEN"];
+    if(kcToEN.isMap()) {
+        cv::read(kcToEN["dopamineStrength"], m_KCToENDopamineStrength, m_KCToENDopamineStrength);
+    }
+
 }
 //----------------------------------------------------------------------------
 std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const cv::Mat &image, bool train) const
@@ -248,8 +258,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     RmembranePN = m_PNTauM / m_PNC;
     expDecaypnToKC = (float)std::exp(-MBParams::timestepMs / m_PNToKCTauSyn);
     initpnToKC = (float)(m_PNToKCTauSyn * (1.0 - std::exp(-MBParams::timestepMs / m_PNToKCTauSyn))) * (1.0 / MBParams::timestepMs);
-
-
 
     // Make sure KC state and GGN insyn are reset before simulation
     initialize();
@@ -280,6 +288,18 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     m_KCInhInSyn.clear();
     m_KCInhInSyn.reserve(duration);
 
+    m_DKCToEN.clear();
+    m_DKCToEN.reserve(duration);
+
+    m_CKCToEN.clear();
+    m_CKCToEN.reserve(duration);
+
+    m_GKCToEN.clear();
+    m_GKCToEN.reserve(duration);
+
+    m_ENVoltage.clear();
+    m_ENVoltage.reserve(duration);
+
     // Open CSV output files
     const float startTimeMs = t;
 
@@ -290,6 +310,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
 
     std::bitset<MBParams::numPN> pnSpikeBitset;
     std::bitset<MBParams::numKC> kcSpikeBitset;
+
+    // Reset time of last dopamine spike
+    tDkcToEN = std::numeric_limits<float>::lowest();
 
     // Loop through timesteps
     m_NumPNSpikes = 0;
@@ -308,6 +331,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
 
         // If we should reward in this timestep, inject dopamine
         if(train && iT == rewardTimestep) {
+            std::cout << "Injecting dopamine" << std::endl;
             injectDopaminekcToEN = true;
         }
 
@@ -320,9 +344,12 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
         pullGGNStateFromDevice();
+        pullENStateFromDevice();
 
         // **NOTE** very sub-optimal as we only use first!
         pullggnToKCStateFromDevice();
+        pullkcToENStateFromDevice();
+
 #else
         // Simulate on CPU
         stepTimeCPU();
@@ -333,7 +360,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
             dkcToEN = dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD);
 
             // Add effect of dopamine spike
-            dkcToEN += MBParams::dopamineStrength;
+            dkcToEN += m_KCToENDopamineStrength;
 
             // Update last reward time
             tDkcToEN = t;
@@ -353,6 +380,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
             kcSpikeBitset.set(spike_KC[i]);
         }
 
+
         // Record spikes
         record(t, spikeCount_PN, spike_PN, m_PNSpikes);
         record(t, spikeCount_KC, spike_KC, m_KCSpikes);
@@ -361,6 +389,10 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         // Record GGN voltage
         m_GGNVoltage.push_back(VGGN[0]);
         m_KCInhInSyn.push_back(inSynggnToKC[0]);
+        m_DKCToEN.push_back(dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD));
+        m_CKCToEN.push_back(ckcToEN[m_KCToENSynape]);
+        m_GKCToEN.push_back(gkcToEN[m_KCToENSynape]);
+        m_ENVoltage.push_back(VEN[0]);
     }
 
 #ifdef RECORD_TERMINAL_SYNAPSE_STATE
