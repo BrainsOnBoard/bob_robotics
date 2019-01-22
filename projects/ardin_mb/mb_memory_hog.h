@@ -53,6 +53,8 @@ public:
 
     float *getPNInputCurrentScale();
     float *getPNVthresh();
+    float *getPNTauM(){ return &m_PNTauM; }
+    float *getPNC(){ return &m_PNC; }
 
     float *getPNToKCTauSyn(){ return &m_PNToKCTauSyn; }
 
@@ -97,9 +99,13 @@ private:
     float m_RateScalePN;
 
     float m_PNToKCTauSyn;
+    float m_PNTauM;
+    float m_PNC;
 
     float m_RewardTimeMs;
     float m_PresentDurationMs;
+
+
 
     mutable Spikes m_PNSpikes;
     mutable Spikes m_KCSpikes;

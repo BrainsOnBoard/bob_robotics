@@ -4,8 +4,10 @@ config:
    rewardTimeMs: 20.
    presentDurationMs: 20.
    pn:
-      inputCurrentScale: 2.7957000732421875e+00
+      inputCurrentScale: 8.3248996734619141e+00
       vThresh: -50.
+      cm: 1.
+      tauM: 2.0152000427246094e+01
    ggnToKC:
       weight: -4.9460000991821289e+00
       vMid: -5.0323001861572266e+01

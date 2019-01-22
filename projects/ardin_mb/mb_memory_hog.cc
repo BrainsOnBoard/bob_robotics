@@ -49,7 +49,7 @@ MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
         m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0),
         m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0),
-        m_PNToKCTauSyn(3.0f), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
+        m_PNToKCTauSyn(3.0f), m_PNTauM(10.0), m_PNC(1.0), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
@@ -177,6 +177,8 @@ void MBMemoryHOG::write(cv::FileStorage& fs) const
     fs << "pn" << "{";
     fs << "inputCurrentScale" << IextScalePN;
     fs << "vThresh" << VthreshPN;
+    fs << "cm" << m_PNC;
+    fs << "tauM" << m_PNTauM;
     fs << "}";
 
     fs << "ggnToKC" << "{";
@@ -206,6 +208,8 @@ void MBMemoryHOG::read(const cv::FileNode &node)
     if(pn.isMap()) {
         cv::read(pn["inputCurrentScale"], IextScalePN, IextScalePN);
         cv::read(pn["vThresh"], VthreshPN, VthreshPN);
+        cv::read(pn["cm"], m_PNC, m_PNC);
+        cv::read(pn["tauM"], m_PNTauM, m_PNTauM);
     }
 
     const auto &ggnToKC = node["ggnToKC"];
@@ -239,7 +243,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     m_HOG.compute(image, m_HOGFeatures);
     BOB_ASSERT(m_HOGFeatures.size() == MBParams::hogFeatureSize);
 
-
+    // Set extra global params
+    ExpTCPN = std::exp(-MBParams::timestepMs / m_PNTauM);
+    RmembranePN = m_PNTauM / m_PNC;
     expDecaypnToKC = (float)std::exp(-MBParams::timestepMs / m_PNToKCTauSyn);
     initpnToKC = (float)(m_PNToKCTauSyn * (1.0 - std::exp(-MBParams::timestepMs / m_PNToKCTauSyn))) * (1.0 / MBParams::timestepMs);
     //const float magnitude = std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f);

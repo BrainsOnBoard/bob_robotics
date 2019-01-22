@@ -218,6 +218,8 @@ void MBHogUI::handleUI()
         if(ImGui::TreeNode("PN")) {
             ImGui::SliderFloat("InputCurrentScale", m_Memory.getPNInputCurrentScale(), 0.0f, 10.0f, "%.4f");
             ImGui::SliderFloat("VThresh", m_Memory.getPNVthresh(), -60.0f, 0.0f);
+            ImGui::SliderFloat("TauM", m_Memory.getPNTauM(), 1.0f, 50.0f);
+            ImGui::SliderFloat("CM", m_Memory.getPNC(), 1.0f, 50.0f);
             ImGui::TreePop();
         }
 

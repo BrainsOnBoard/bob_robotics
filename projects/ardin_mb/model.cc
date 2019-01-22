@@ -20,7 +20,7 @@ using namespace BoBRobotics;
 class LIFExtCurrent : public NeuronModels::Base
 {
 public:
-    DECLARE_MODEL(LIFExtCurrent, 5, 3);
+    DECLARE_MODEL(LIFExtCurrent, 3, 3);
 
     SET_SIM_CODE(
         "if ($(RefracTime) <= 0.0)\n"
@@ -40,19 +40,13 @@ public:
         "$(RefracTime) = $(TauRefrac);\n");
 
     SET_PARAM_NAMES({
-        "C",            // 0 -Membrane capacitance
-        "TauM",         // 1 - Membrane time constant [ms]
-        "Vrest",        // 2 - Resting membrane potential [mV]
-        "Vreset",       // 3 - Reset voltage [mV]
-        "TauRefrac"});  // 6 - Scaling factor to apply to external current
-
-    SET_DERIVED_PARAMS({
-        {"ExpTC", [](const vector<double> &pars, double dt){ return std::exp(-dt / pars[1]); }},
-        {"Rmembrane", [](const vector<double> &pars, double){ return  pars[1] / pars[0]; }}});
+        "Vrest",        // 0 - Resting membrane potential [mV]
+        "Vreset",       // 1 - Reset voltage [mV]
+        "TauRefrac"});  // 2 - Scaling factor to apply to external current
 
     SET_VARS({{"V", "scalar"}, {"RefracTime", "scalar"}, {"Iext", "scalar"}});
 
-    SET_EXTRA_GLOBAL_PARAMS({{"IextScale", "float"}, {"Vthresh", "scalar"}});
+    SET_EXTRA_GLOBAL_PARAMS({{"IextScale", "float"}, {"Vthresh", "scalar"}, {"ExpTC", "scalar"}, {"Rmembrane", "scalar"}});
 };
 IMPLEMENT_MODEL(LIFExtCurrent);
 
@@ -119,8 +113,6 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // LIF model parameters
     LIFExtCurrent::ParamValues pnParams(
-        0.2,                                // 0 - C
-        20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
         -60.0,                              // 3 - Vreset
         200.0);                               // 4 - TauRefrac **NOTE** essentially make neurons fire once
