@@ -47,7 +47,7 @@ void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemoryHOG
 //----------------------------------------------------------------------------
 MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
-        m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0),
+        m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
         m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0),
         m_PNToKCTauSyn(3.0f), m_PNTauM(10.0), m_PNC(1.0), m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs)
 {
@@ -248,35 +248,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     RmembranePN = m_PNTauM / m_PNC;
     expDecaypnToKC = (float)std::exp(-MBParams::timestepMs / m_PNToKCTauSyn);
     initpnToKC = (float)(m_PNToKCTauSyn * (1.0 - std::exp(-MBParams::timestepMs / m_PNToKCTauSyn))) * (1.0 / MBParams::timestepMs);
-    //const float magnitude = std::accumulate(m_HOGFeatures.begin(), m_HOGFeatures.end(), 0.0f);
-    /*std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), m_HOGFeatures.begin(),
-                   [magnitude](float f)
-                   {
-                       return f / magnitude;
-                   });*/
-    //std::cout << "HOG feature magnitude:" << magnitude << std::endl;
-
-    // Convert HOG features into lamnda
-    /*std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), expMinusLambdaPN,
-                   [&](float f)
-                   {
-                       return std::exp(-((f * m_RateScalePN) / 1000.0) * MBParams::timestepMs);
-                   });*/
-
-    // Copy HOG features into GeNN variable
-    //std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), ratePN);
-    /*std::exponential_distribution<float> standardExponentialDistribution(1.0f);
-    std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), timeToSpikePN,
-                   [this, &standardExponentialDistribution](float f)
-                   {
-                       return (1000.0f / (m_RateScalePN * f)) * standardExponentialDistribution(m_RNG);
-                   });*/
-    /*const float maxHOG = *std::max_element(m_HOGFeatures.begin(), m_HOGFeatures.end());
-    std::transform(m_HOGFeatures.begin(), m_HOGFeatures.end(), timeToSpikePN,
-                   [this, maxHOG](float f)
-                   {
-                       return (maxHOG - f) * (m_PresentDurationMs / maxHOG);
-                   });*/
 
 
 
@@ -323,7 +294,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     // Loop through timesteps
     m_NumPNSpikes = 0;
     m_NumKCSpikes = 0;
-    unsigned int numENSpikes = 0;
+    m_NumENSpikes = 0;
     while(iT < duration) {
         // If we should stop presenting image
         if(iT == endPresentTimestep) {
@@ -371,7 +342,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
             injectDopaminekcToEN = false;
         }
 
-        numENSpikes += spikeCount_EN;
+        m_NumENSpikes += spikeCount_EN;
         m_NumPNSpikes += spikeCount_PN;
         m_NumKCSpikes += spikeCount_KC;
         for(unsigned int i = 0; i < spikeCount_PN; i++) {
@@ -392,7 +363,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         m_KCInhInSyn.push_back(inSynggnToKC[0]);
     }
 
-    std::cout << std::endl;
 #ifdef RECORD_TERMINAL_SYNAPSE_STATE
     // Download synaptic state
     pullkcToENStateFromDevice();
@@ -420,5 +390,5 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         m_NumUsedWeights = numWeights - std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
     }
 
-    return std::make_tuple(m_NumPNSpikes, m_NumKCSpikes, numENSpikes);
+    return std::make_tuple(m_NumPNSpikes, m_NumKCSpikes, m_NumENSpikes);
 }

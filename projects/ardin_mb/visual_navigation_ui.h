@@ -46,5 +46,6 @@ private:
     std::vector<float> m_UnusedWeightsData;
     std::vector<float> m_ActivePNData;
     std::vector<float> m_ActiveKCData;
+    std::vector<float> m_NumENData;
     std::vector<float> m_PeakGGNVoltage;
 };

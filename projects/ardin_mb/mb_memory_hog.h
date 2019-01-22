@@ -66,6 +66,7 @@ public:
 
     unsigned int getNumPNSpikes() const{ return m_NumPNSpikes; }
     unsigned int getNumKCSpikes() const{ return m_NumKCSpikes; }
+    unsigned int getNumENSpikes() const{ return m_NumENSpikes; }
 
     unsigned int getNumUnusedWeights() const{ return m_NumUsedWeights; }
     unsigned int getNumActivePN() const{ return m_NumActivePN; }
@@ -113,6 +114,7 @@ private:
 
     mutable unsigned int m_NumPNSpikes;
     mutable unsigned int m_NumKCSpikes;
+    mutable unsigned int m_NumENSpikes;
 
     mutable unsigned int m_NumUsedWeights;
     mutable unsigned int m_NumActivePN;

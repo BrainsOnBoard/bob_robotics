@@ -23,7 +23,7 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
     const float width = spikes.back().first;
     const float height = (float)numNeurons * yScale;
     constexpr float leftBorder = 20.0f;
-    constexpr float topBorder = 10.0f;
+    constexpr float topBorder = 20.0f;
 
     // Create dummy widget to correctly layout window
     ImGui::Dummy(ImVec2(width + leftBorder, height + topBorder));
@@ -174,11 +174,15 @@ void MBHogUI::handleUI()
                         *std::max_element(m_ActiveKCData.begin(), m_ActiveKCData.end()));
         }
 
+        ImGui::PlotLines("Num EN", m_NumENData.data(), m_NumENData.size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
+
 
         if(ImGui::Button("Clear")) {
             m_UnusedWeightsData.clear();
             m_ActivePNData.clear();
             m_ActiveKCData.clear();
+            m_NumENData.clear();
             m_PeakGGNVoltage.clear();
         }
     }
@@ -202,6 +206,13 @@ void MBHogUI::handleUI()
         if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
             ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
             ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
+        }
+    }
+    ImGui::End();
+
+    if(ImGui::Begin("EN spikes")) {
+        if(rasterPlot(1, m_Memory.getENSpikes(), *m_Memory.getPresentDurationMs())){
+            ImGui::Text("%u spikes", m_Memory.getNumENSpikes());
         }
     }
     ImGui::End();
@@ -266,6 +277,7 @@ void MBHogUI::handleUITraining()
     // Add number of active cells to vector
     m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
+    m_NumENData.push_back((float)m_Memory.getNumENSpikes());
 
     m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
 }
@@ -275,6 +287,7 @@ void MBHogUI::handleUITesting()
     // Add number of active cells to vector
     m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
+    m_NumENData.push_back((float)m_Memory.getNumENSpikes());
 
     m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
 }
