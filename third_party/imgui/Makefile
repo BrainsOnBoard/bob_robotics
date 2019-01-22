@@ -21,12 +21,12 @@ all: libimgui.a
 submodule:
 	@git submodule update --init imgui
 
-libimgui.a: $(OBJECTS)
+libimgui.a: submodule $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS)
 
 -include $(DEPS)
 
-%.o: %.cpp %.d submodule
+%.o: %.cpp %.d
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.d: ;
