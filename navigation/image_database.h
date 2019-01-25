@@ -276,28 +276,31 @@ public:
         }
 
         //! Save a new image taken at the specified pose
-        void record(const Vector3<millimeter_t> &position, degree_t heading,
-                    const cv::Mat &image)
+        void record(const Vector3<millimeter_t> &position, degree_t heading, const cv::Mat &image)
         {
             const std::string filename = ImageDatabase::getFilename(size(), getImageFormat());
             addEntry(filename, image, position, heading);
         }
     };
 
-    ImageDatabase(const char *databasePath)
-      : ImageDatabase(filesystem::path(databasePath))
+    ImageDatabase(const char *databasePath, bool overwrite = false)
+      : ImageDatabase(filesystem::path(databasePath), overwrite)
     {}
 
-    ImageDatabase(const std::string &databasePath)
-      : ImageDatabase(filesystem::path(databasePath))
+    ImageDatabase(const std::string &databasePath, bool overwrite = false)
+      : ImageDatabase(filesystem::path(databasePath), overwrite)
     {}
 
-    ImageDatabase(const filesystem::path &databasePath)
+    ImageDatabase(const filesystem::path &databasePath, bool overwrite = false)
       : m_Path(databasePath)
     {
-        const auto entriesPath = m_Path / EntriesFilename;
+        if (overwrite && databasePath.exists()) {
+            std::cerr << "Warning: Database already exists; overwriting" << std::endl;
+            filesystem::remove_all(databasePath);
+		}
 
         // If we don't have any entries, it's an empty database
+        const auto entriesPath = m_Path / EntriesFilename;
         if (!entriesPath.exists()) {
             // Make sure we have a directory to save into
             filesystem::create_directory(m_Path);

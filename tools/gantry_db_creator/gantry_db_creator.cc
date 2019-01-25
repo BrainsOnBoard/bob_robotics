@@ -22,24 +22,24 @@ bob_main(int, char **)
     Navigation::Range yrange({ 0_mm, 1700_mm }, 100_mm);
     const auto z = 200_mm;
 
-    // Open gantry and home it
-    Robots::Gantry gantry;
-    std::cout << "Homing gantry." << std::endl;
-    gantry.raiseAndHome();
-    std::cout << "Gantry homed." << std::endl;
-
-    // Get gantry camera
+	// Get gantry camera
     const cv::Size imSize(720, 576);
     Video::OpenCVInput cam(0, "gantry");
     cam.setOutputSize(imSize);
 
     // Save images into a folder called gantry
-    Navigation::ImageDatabase database("gantry");
+    Navigation::ImageDatabase database("gantry_images", /*overwrite=*/true);
     auto gridRecorder = database.getGridRecorder(xrange, yrange, z);
     auto &metadata = gridRecorder.getMetadataWriter();
     metadata << "camera" << cam
              << "needsUnwrapping" << true
              << "isGreyscale" << false;
+
+    // Open gantry and home it
+    Robots::Gantry gantry;
+    std::cout << "Homing gantry." << std::endl;
+    gantry.raiseAndHome();
+    std::cout << "Gantry homed." << std::endl;
 
     cv::Mat frame(imSize, CV_8UC3);
     for (size_t x = 0, y = 0; x < gridRecorder.sizeX();) {
