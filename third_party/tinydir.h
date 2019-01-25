@@ -547,7 +547,17 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file)
 		dir->_e->d_name
 #endif
 	);
+
+	/*
+	 * My version of GCC (8.2.1) gives a warning for this line, so temporarily
+	 * disable it. -- AD
+	 */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas" // in case compiler doesn't know about -Wrestrict
+#pragma GCC diagnostic ignored "-Wrestrict"
 	_tinydir_strcat(file->path, file->name);
+#pragma GCC diagnostic pop
+
 #ifndef _MSC_VER
 #ifdef __MINGW32__
 	if (_tstat(

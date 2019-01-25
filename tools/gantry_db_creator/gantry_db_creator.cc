@@ -22,24 +22,24 @@ bob_main(int, char **)
     Navigation::Range yrange({ 0_mm, 1700_mm }, 100_mm);
     const auto z = 200_mm;
 
-    // Open gantry and home it
-    Robots::Gantry gantry;
-    std::cout << "Homing gantry." << std::endl;
-    gantry.raiseAndHome();
-    std::cout << "Gantry homed." << std::endl;
-
-    // Get gantry camera
+	// Get gantry camera
     const cv::Size imSize(720, 576);
     Video::OpenCVInput cam(0, "gantry");
     cam.setOutputSize(imSize);
 
     // Save images into a folder called gantry
-    Navigation::ImageDatabase database("gantry");
+    Navigation::ImageDatabase database("gantry_images", /*overwrite=*/true);
     auto gridRecorder = database.getGridRecorder(xrange, yrange, z);
     auto &metadata = gridRecorder.getMetadataWriter();
     metadata << "camera" << cam
              << "needsUnwrapping" << true
              << "isGreyscale" << false;
+
+    // Open gantry and home it
+    Robots::Gantry gantry;
+    std::cout << "Homing gantry." << std::endl;
+    gantry.raiseAndHome();
+    std::cout << "Gantry homed." << std::endl;
 
     cv::Mat frame(imSize, CV_8UC3);
     for (size_t x = 0, y = 0; x < gridRecorder.sizeX();) {
@@ -50,7 +50,7 @@ bob_main(int, char **)
         // While gantry is moving, poll for user keypress
         while (gantry.isMoving()) {
             if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
-                return 0;
+                return EXIT_SUCCESS;
             }
         }
 
@@ -63,7 +63,7 @@ bob_main(int, char **)
 
         // If we haven't finished moving along y, move along one more
         if ((x % 2) == 0) {
-            if (y < gridRecorder.size()) {
+            if (y < gridRecorder.sizeY() - 1) {
                 y++;
                 continue;
             }

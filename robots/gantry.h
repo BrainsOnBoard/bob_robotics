@@ -58,7 +58,7 @@ public:
         }
     }
 
-    ~Gantry()
+    ~Gantry() noexcept
     {
         // Stop the gantry moving
         stopMoving();
@@ -101,13 +101,13 @@ public:
      * Home position is (0, 0, 0). The gantry needs to be homed before use so that it
      * can reset its estimate of its position. This function does not block.
      */
-    void home(BYTE axis = XYZ_Axis)
+    void home(BYTE axis = XYZ_Axis) const
     {
         checkError(P1240MotHome(m_BoardId, axis), "Could not home axis");
     }
 
     //! Check if either of the emergency buttons are pressed down
-    bool isEmergencyButtonPressed()
+    bool isEmergencyButtonPressed() const
     {
         DWORD ret;
         checkError(P1240MotRdReg(m_BoardId, 1, RR2, &ret), "Could not read emergency button flag");
@@ -116,7 +116,7 @@ public:
 
     //! Get the current position of the gantry in the arena
     template<class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition() const
     {
         // Request position from card
         Vector3<LONG> pulses;
@@ -172,13 +172,13 @@ public:
     }
 
     //! Stop the gantry moving, optionally specifying a specific axis
-    void stopMoving(BYTE axis = XYZ_Axis) noexcept
+    void stopMoving(BYTE axis = XYZ_Axis) const noexcept
     {
         P1240MotStop(m_BoardId, axis, axis * SlowStop);
     }
 
     //! Check if the gantry is moving
-    bool isMoving(BYTE axis = XYZ_Axis)
+    bool isMoving(BYTE axis = XYZ_Axis) const
     {
         // Indicate whether specified axis/axes busy
         LRESULT res = P1240MotAxisBusy(m_BoardId, axis);
@@ -195,7 +195,7 @@ public:
     }
 
     //! Wait until the gantry has stopped moving
-    void waitToStopMoving(BYTE axis = XYZ_Axis)
+    void waitToStopMoving(BYTE axis = XYZ_Axis) const
     {
         // Repeatedly poll card to check whether gantry is moving
         while (isMoving(axis)) {
@@ -225,13 +225,13 @@ private:
     // These are the gantry's upper x, y and z limits (i.e. the size of the "arena")
     static constexpr Vector3<millimeter_t> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
-    void close() noexcept
+    void close() const noexcept
     {
         // Close PCI device
         P1240MotDevClose(m_BoardId);
     }
 
-    inline void checkEmergencyButton()
+    inline void checkEmergencyButton() const
     {
         if (isEmergencyButtonPressed()) {
             throw std::runtime_error("Gantry error: Emergency button is pressed");
