@@ -25,39 +25,37 @@ using namespace BoBRobotics;
 int
 bob_main(int, char **)
 {
-    // Use Arduino robot
-    Robots::Norbot tank;
+    std::unique_ptr<Video::Input> camera;
+    std::unique_ptr<HID::Joystick> joystick;
+    std::unique_ptr<Video::NetSink> netSink;
+
+    // Listen for incoming connection on default port
+    Net::Server server;
+    auto connection = server.waitForConnection();
 
     // Get panoramic camera
-    std::unique_ptr<Video::Input> camera;
     try {
         camera = Video::getPanoramicCamera();
     } catch (std::runtime_error &e) {
         // Camera not found
         std::cerr << e.what() << std::endl;
     }
+    if (camera) {
+        // Stream camera synchronously over network
+        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+    }
+
+    // Read motor commands from network
+    Robots::Norbot tank;
+    tank.readFromNetwork(connection);
 
     // Try to get joystick
-    std::unique_ptr<HID::Joystick> joystick;
     try {
         joystick = std::make_unique<HID::Joystick>();
         tank.addJoystick(*joystick);
     } catch (std::runtime_error &e) {
         // Joystick not found
         std::cerr << e.what() << std::endl;
-    }
-
-    // Listen for incoming connection on default port
-    Net::Server server;
-    auto connection = server.waitForConnection();
-
-    // Read motor commands from network
-    tank.readFromNetwork(connection);
-
-    std::unique_ptr<Video::NetSink> netSink;
-    if (camera) {
-        // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
     }
 
     // Run server in background,, catching any exceptions for rethrowing
