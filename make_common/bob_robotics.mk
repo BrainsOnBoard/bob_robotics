@@ -13,6 +13,9 @@ CPP_STANDARD ?= c++14
 # Build flags
 CXXFLAGS += -std=$(CPP_STANDARD) -Wall -Wpedantic -Wextra -MMD -MP
 
+# Silence warning in given by third_party/tinydir.h
+CXXFLAGS += -Wno-restrict
+
 # Include the root BoB robotics folder
 CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
