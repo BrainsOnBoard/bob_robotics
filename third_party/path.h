@@ -418,7 +418,12 @@ remove_all(const path &path)
 
         // For reading contents of directory
         tinydir_dir dir;
-        tinydir_open(&dir, path.wstr().c_str());
+#ifdef _WIN32
+        const auto path_cstr = path.wstr().c_str();
+#else
+        const auto path_cstr = path.str().c_str();
+#endif
+        tinydir_open(&dir, path_cstr);
         for (; dir.has_next; tinydir_next(&dir)) {
             tinydir_file file;
             tinydir_readfile(&dir, &file);
@@ -442,11 +447,11 @@ remove_all(const path &path)
 
         // Remove directory
 #ifdef _WIN32
-        BOB_ASSERT(::RemoveDirectoryW(path.wstr().c_str()));
+        BOB_ASSERT(::RemoveDirectoryW(path_cstr);
 #else
-        const int ret = ::rmdir(path.wstr().c_str());
+        const int ret = ::rmdir(path_cstr);
         if (ret == -1) {
-                throw std::runtime_error(std::string("Error: ") + strerror(errno)));
+                throw std::runtime_error(std::string("Error: ") + strerror(errno));
         }
 #endif
         return ++count;
