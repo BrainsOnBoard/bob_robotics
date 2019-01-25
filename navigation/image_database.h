@@ -561,7 +561,7 @@ private:
         }
     }
 
-    void writeImage(const std::string &filename, const cv::Mat &image)
+    void writeImage(const std::string &filename, const cv::Mat &image) const
     {
         const filesystem::path path = m_Path / filename;
         BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
