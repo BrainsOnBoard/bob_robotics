@@ -77,12 +77,16 @@ public:
 
     virtual ~Connection() override
     {
-        stop();
-
         if (m_Socket.isOpen()) {
             m_Socket.send("BYE\n");
+            m_Socket.close();
         }
+
+        // Wait for thread to terminate
+        stop();
     }
+
+    bool isOpen() const { return m_Socket.isOpen(); }
 
     /*!
      * \brief Add a handler for a specified type of command
