@@ -59,7 +59,7 @@ bob_main(int, char **)
     }
 
     // Run server in background,, catching any exceptions for rethrowing
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
     connection.runInBackground();
 
