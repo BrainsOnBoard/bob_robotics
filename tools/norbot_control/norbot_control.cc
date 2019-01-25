@@ -74,16 +74,16 @@ bob_main(int, char **)
     // Read motor commands from network
     tank.readFromNetwork(connection);
 
-    // Run server in background,, catching any exceptions for rethrowing
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
-    catcher.trapSignals(); // Catch Ctrl-C
-    connection.runInBackground();
-
     std::unique_ptr<Video::NetSink> netSink;
     if (camera) {
         // Stream camera synchronously over network
         netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
     }
+
+    // Run server in background,, catching any exceptions for rethrowing
+    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    catcher.trapSignals(); // Catch Ctrl-C
+    connection.runInBackground();
 
     cv::Mat frame;
     while (true) {
