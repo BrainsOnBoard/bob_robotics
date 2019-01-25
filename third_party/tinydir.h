@@ -553,6 +553,7 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file)
 	 * disable it. -- AD
 	 */
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas" // in case compiler doesn't know about -Wrestrict
 #pragma GCC diagnostic ignored "-Wrestrict"
 	_tinydir_strcat(file->path, file->name);
 #pragma GCC diagnostic pop
