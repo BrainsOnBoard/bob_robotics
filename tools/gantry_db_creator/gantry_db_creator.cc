@@ -50,7 +50,7 @@ bob_main(int, char **)
         // While gantry is moving, poll for user keypress
         while (gantry.isMoving()) {
             if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
-                return 0;
+                return EXIT_SUCCESS;
             }
         }
 
@@ -63,7 +63,7 @@ bob_main(int, char **)
 
         // If we haven't finished moving along y, move along one more
         if ((x % 2) == 0) {
-            if (y < gridRecorder.size()) {
+            if (y < gridRecorder.sizeY() - 1) {
                 y++;
                 continue;
             }
