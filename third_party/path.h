@@ -344,7 +344,9 @@ inline bool create_directory(const path& p) {
 inline void copy_file(const filesystem::path &from, const filesystem::path &to)
 {
     std::ifstream ifs(from.str());
+    BOB_ASSERT(ifs.good());
     std::ofstream ofs(to.str());
+    BOB_ASSERT(ofs.good());
     ofs << ifs.rdbuf();
 }
 
