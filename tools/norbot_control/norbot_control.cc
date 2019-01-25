@@ -66,7 +66,7 @@ bob_main(int, char **)
     connection.runInBackground();
 
     cv::Mat frame;
-    while (true) {
+    while (connection.isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 
