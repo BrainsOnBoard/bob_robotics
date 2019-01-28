@@ -92,7 +92,7 @@ public:
     }
 
     template<typename AngleUnit = degree_t>
-    Array3<AngleUnit> getAttitude()
+    std::array<AngleUnit, 3> getAttitude()
     {
         std::lock_guard<std::mutex> guard(m_PoseMutex);
         updatePose();

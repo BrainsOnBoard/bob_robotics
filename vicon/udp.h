@@ -77,7 +77,7 @@ public:
     }
 
     template<typename AngleUnit = radian_t>
-    Array3<AngleUnit> getAttitude() const
+    std::array<AngleUnit, 3> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
@@ -93,7 +93,7 @@ private:
     uint32_t m_FrameNumber;
     char m_Name[24];
     Vector3<millimeter_t> m_Position;
-    Array3<radian_t> m_Attitude;
+    std::array<radian_t, 3> m_Attitude;
     Stopwatch m_ReceivedTimer;
 };
 
@@ -131,7 +131,7 @@ public:
 
         // Calculate instantaneous velocity
         const auto oldPosition = getPosition<>();
-        Array3<meters_per_second_t> instVelocity;
+        std::array<meters_per_second_t, 3> instVelocity;
         const auto calcVelocity = [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
         };
@@ -153,7 +153,7 @@ public:
     }
 
     template<typename VelocityUnit = meters_per_second_t>
-    Array3<VelocityUnit> getVelocity() const
+    std::array<VelocityUnit, 3> getVelocity() const
     {
         return convertUnitArray<VelocityUnit>(m_Velocity);
     }
@@ -162,7 +162,7 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Array3<meters_per_second_t> m_Velocity;
+    std::array<meters_per_second_t, 3> m_Velocity;
 };
 
 //----------------------------------------------------------------------------
@@ -191,7 +191,7 @@ public:
         }
 
         template<typename AngleUnit = radian_t>
-        Array3<AngleUnit> getAttitude() const
+        std::array<AngleUnit, 3> getAttitude() const
         {
             return getData().template getAttitude<AngleUnit>();
         }
@@ -313,8 +313,8 @@ private:
     //----------------------------------------------------------------------------
     void updateObjectData(unsigned int id, const char(&name)[24],
                           uint32_t frameNumber,
-                          const Array3<double> &position,
-                          const Array3<double> &attitude)
+                          const std::array<double, 3> &position,
+                          const std::array<double, 3> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -391,11 +391,11 @@ private:
                     BOB_ASSERT(objectName[23] == '\0');
 
                     // Read object position
-                    Array3<double> position;
+                    std::array<double, 3> position;
                     memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
                     // Read object attitude
-                    Array3<double> attitude;
+                    std::array<double, 3> attitude;
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item

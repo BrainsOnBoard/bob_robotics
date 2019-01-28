@@ -81,7 +81,7 @@ public:
         Vector3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
-        Array3<size_t> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
+        std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
 
         cv::Mat load() const
         {
@@ -171,7 +171,7 @@ public:
 
         void addEntry(const std::string &filename, const cv::Mat &image,
                       const Vector3<millimeter_t> &position, const degree_t heading,
-                      const Array3<size_t> &gridPosition = { 0, 0, 0 })
+                      const std::array<size_t, 3> &gridPosition = { 0, 0, 0 })
         {
             BOB_ASSERT(m_Recording);
             m_ImageDatabase.writeImage(filename, image);
@@ -205,7 +205,7 @@ public:
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const Array3<size_t> &gridPosition) const
+        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const
         {
             BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
             Vector3<millimeter_t> position;
@@ -247,7 +247,7 @@ public:
         }
 
         //! Save a new image into the database at the specified coordinates
-        void record(const Array3<size_t> &gridPosition, const cv::Mat &image)
+        void record(const std::array<size_t, 3> &gridPosition, const cv::Mat &image)
         {
             const auto position = getPosition(gridPosition);
             const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
@@ -262,8 +262,8 @@ public:
     private:
         const degree_t m_Heading;
         const Vector3<millimeter_t> m_Begin, m_Separation;
-        const Array3<size_t> m_Size;
-        Array3<size_t> m_Current;
+        const std::array<size_t, 3> m_Size;
+        std::array<size_t, 3> m_Current;
     };
 
     //! For saving images recorded along a route
@@ -329,7 +329,7 @@ public:
                 break;
             }
 
-            Array3<size_t> gridPosition;
+            std::array<size_t, 3> gridPosition;
             if (fields.size() >= 8) {
                 if (!hasMetadata()) {
                     // Infer that it is a grid
@@ -506,7 +506,7 @@ public:
                                    const std::string &imageFormat = "png")
     {
         // Convert to integers
-        Array3<int> iposition;
+        std::array<int, 3> iposition;
         std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
             return static_cast<int>(units::math::round(mm));
         });

@@ -9,14 +9,6 @@
 
 namespace BoBRobotics {
 
-//! A generic template for 2D arrays
-template<typename T>
-using Array2 = std::array<T, 2>;
-
-//! A generic template for 3D arrays
-template<typename T>
-using Array3 = std::array<T, 3>;
-
 template<typename Derived>
 class PoseBase
 {
@@ -173,7 +165,7 @@ public:
     const LengthUnit &y() const { return std::get<0>(*this)[1]; }
     static constexpr LengthUnit z() { return LengthUnit(0); }
 
-    Array3<AngleUnit> attitude() const { return { yaw(), AngleUnit(0), AngleUnit(0) }; }
+    std::array<AngleUnit, 3> attitude() const { return { yaw(), AngleUnit(0), AngleUnit(0) }; }
     AngleUnit &yaw() { return std::get<1>(*this); }
     const AngleUnit &yaw() const { return std::get<1>(*this); }
     static constexpr AngleUnit pitch() { return AngleUnit(0); }
@@ -183,7 +175,7 @@ public:
 //! A three-dimensional pose
 template<typename LengthUnit, typename AngleUnit>
 class Pose3
-  : public std::tuple<Vector3<LengthUnit>, Array3<AngleUnit>>
+  : public std::tuple<Vector3<LengthUnit>, std::array<AngleUnit, 3>>
   , public PoseBase<Pose3<LengthUnit, AngleUnit>>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
@@ -194,8 +186,8 @@ class Pose3
 public:
     Pose3() = default;
 
-    Pose3(const Vector3<LengthUnit> &position, const Array3<AngleUnit> &attitude)
-      : std::tuple<Vector3<LengthUnit>, Array3<AngleUnit>>(position, attitude)
+    Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
+      : std::tuple<Vector3<LengthUnit>, std::array<AngleUnit, 3>>(position, attitude)
     {}
 
     template<typename LengthUnit2, typename AngleUnit2>
@@ -219,8 +211,8 @@ public:
     LengthUnit &z() { return std::get<0>(*this)[2]; }
     const LengthUnit &z() const { return std::get<0>(*this)[2]; }
 
-    Array3<AngleUnit> &attitude() { return std::get<1>(*this); }
-    const Array3<AngleUnit> &attitude() const { return std::get<1>(*this); }
+    std::array<AngleUnit, 3> &attitude() { return std::get<1>(*this); }
+    const std::array<AngleUnit, 3> &attitude() const { return std::get<1>(*this); }
     AngleUnit &yaw() { return std::get<1>(*this)[0]; }
     const AngleUnit &yaw() const { return std::get<1>(*this)[0]; }
     AngleUnit &pitch() { return std::get<1>(*this)[1]; }
@@ -231,7 +223,7 @@ public:
 
 //! Converts the input array to a unit-type of OutputUnit
 template<typename OutputUnit, typename ArrayType>
-inline constexpr Array3<OutputUnit>
+inline constexpr std::array<OutputUnit, 3>
 convertUnitArray(const ArrayType &values)
 {
     return { static_cast<OutputUnit>(values[0]),
