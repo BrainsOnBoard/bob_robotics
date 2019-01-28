@@ -20,7 +20,7 @@ using namespace units::length;
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
-    m_Input(0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight), m_Route(0.2f, 800),
+    m_Input({ SimParams::displayRenderWidth, SimParams::displayRenderHeight }, { 0, SimParams::displayRenderWidth + 10 }), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
     m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
 {
@@ -54,13 +54,13 @@ bool StateHandler::handleEvent(State state, Event event)
     if(event == Event::Update) {
 
         // Render top down and ants eye view
-        m_Renderer.renderPanoramicView(m_AntY, m_AntX, 0.01_m,
-                                        m_AntHeading, 0.0_deg, 0.0_deg,
-                                        0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
+        m_Renderer.renderPanoramicView(m_Pose.y(), m_Pose.x(), 0.01_m,
+                                       m_Pose.yaw(), 0.0_deg, 0.0_deg,
+                                       0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
         m_Renderer.renderTopDownView(0, 0, SimParams::displayRenderWidth, SimParams::displayRenderWidth);
 
         // Render route
-        m_Route.render(m_AntX, m_AntY, m_AntHeading);
+        m_Route.render(m_Pose.x(), m_Pose.y(), m_Pose.yaw());
 
         // Render vector field
         m_VectorField.render();
@@ -102,7 +102,7 @@ bool StateHandler::handleEvent(State state, Event event)
             // If GeNN isn't training and we have more route points to train
             if(m_TrainPoint < m_Route.size()) {
                 // Snap ant to next snapshot point
-                std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[m_TrainPoint];
+                m_Pose = m_Route[m_TrainPoint];
 
                 // Update window title
                 //std::string windowTitle = "Ant World - Training snaphot " + std::to_string(m_TrainPoint) + "/" + std::to_string(m_Route.size());
@@ -124,10 +124,10 @@ bool StateHandler::handleEvent(State state, Event event)
         if(event == Event::Enter) {
             // Snap ant back to start of route, facing in starting scan direction
             resetAntPosition();
-            m_AntHeading -= (SimParams::scanAngle / 2.0);
+            m_Pose.yaw() -= (SimParams::scanAngle / 2.0);
 
             // Add initial replay point to route
-            m_Route.addPoint(m_AntX, m_AntY, false);
+            m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
 
             m_TestingScan = 0;
 
@@ -144,7 +144,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // If this is an improvement on previous best spike count
             if(difference < m_LowestTestDifference) {
-                m_BestTestHeading = m_AntHeading;
+                m_BestTestHeading = m_Pose.yaw();
                 m_LowestTestDifference = difference;
 
                 //std::cout << "\tUpdated result: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
@@ -156,20 +156,20 @@ bool StateHandler::handleEvent(State state, Event event)
             // If scan isn't complete
             if(m_TestingScan < SimParams::numScanSteps) {
                 // Scan right
-                m_AntHeading += SimParams::scanStep;
+                m_Pose.yaw() += SimParams::scanStep;
             }
             else {
                 std::cout << "Scan complete: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
 
                 // Snap ant to it's best heading
-                m_AntHeading = m_BestTestHeading;
+                m_Pose.yaw() = m_BestTestHeading;
 
                 // Increment step count
                 m_NumTestSteps++;
 
                 // Move ant forward by snapshot distance
-                m_AntX += SimParams::snapshotDistance * units::math::sin(m_AntHeading);
-                m_AntY += SimParams::snapshotDistance * units::math::cos(m_AntHeading);
+                m_Pose.x() += SimParams::snapshotDistance * units::math::sin(m_Pose.yaw());
+                m_Pose.y() += SimParams::snapshotDistance * units::math::cos(m_Pose.yaw());
 
                 // If new position means run is over - stop
                 if(!checkAntPosition()) {
@@ -177,7 +177,7 @@ bool StateHandler::handleEvent(State state, Event event)
                 }
                 // Otherwise, reset scan
                 else {
-                    m_AntHeading -= (SimParams::scanAngle / 2.0);
+                    m_Pose.yaw() -= (SimParams::scanAngle / 2.0);
                     m_TestingScan = 0;
                     m_LowestTestDifference = std::numeric_limits<float>::max();
                 }
@@ -195,14 +195,14 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Pick random heading
-            m_AntHeading += units::make_unit<units::angle::degree_t>(m_RandomWalkAngleDistribution(m_RNG));
+            m_Pose.yaw() += degree_t{ m_RandomWalkAngleDistribution(m_RNG) };
 
              // Increment step count
             m_NumTestSteps++;
 
             // Move ant forward by snapshot distance
-            m_AntX += SimParams::snapshotDistance * units::math::sin(m_AntHeading);
-            m_AntY += SimParams::snapshotDistance * units::math::cos(m_AntHeading);
+            m_Pose.x() += SimParams::snapshotDistance * units::math::sin(m_Pose.yaw());
+            m_Pose.y() += SimParams::snapshotDistance * units::math::cos(m_Pose.yaw());
 
             // If new position means run is over - stop
             if(!checkAntPosition()) {
@@ -220,18 +220,18 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // Update heading and ant position based on keys
             if(m_KeyBits.test(KeyLeft)) {
-                m_AntHeading -= SimParams::antTurnStep;
+                m_Pose.yaw() -= SimParams::antTurnStep;
             }
             if(m_KeyBits.test(KeyRight)) {
-                m_AntHeading += SimParams::antTurnStep;
+                m_Pose.yaw() += SimParams::antTurnStep;
             }
             if(m_KeyBits.test(KeyUp)) {
-                m_AntX += SimParams::antMoveStep * units::math::sin(m_AntHeading);
-                m_AntY += SimParams::antMoveStep * units::math::cos(m_AntHeading);
+                m_Pose.x() += SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
+                m_Pose.y() += SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
             }
             if(m_KeyBits.test(KeyDown)) {
-                m_AntX -= SimParams::antMoveStep * units::math::sin(m_AntHeading);
-                m_AntY -= SimParams::antMoveStep * units::math::cos(m_AntHeading);
+                m_Pose.x() -= SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
+                m_Pose.y() -= SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
             }
             if(m_KeyBits.test(KeyTrainSnapshot)) {
                 m_VisualNavigation.train(m_Snapshot);
@@ -249,9 +249,9 @@ bool StateHandler::handleEvent(State state, Event event)
         if(event == Event::Enter) {
             // Reset ant heading and move it to first vector field position
             m_CurrentVectorFieldPoint = 0;
-            m_AntHeading = 0_deg;
+            m_Pose.yaw() = 0_deg;
             m_TestingScan = 0;
-            std::tie(m_AntX, m_AntY) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
+            std::tie(m_Pose.x(), m_Pose.y()) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
 
             // Clear vector of novelty values
             m_VectorFieldNovelty.clear();
@@ -261,14 +261,14 @@ bool StateHandler::handleEvent(State state, Event event)
             const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
 
             // Add novelty to vector
-            m_VectorFieldNovelty.push_back(std::make_pair(m_AntHeading, difference));
+            m_VectorFieldNovelty.push_back(std::make_pair(m_Pose.yaw(), difference));
 
             // Go onto next scan
             m_TestingScan++;
 
             // If scan isn't complete
             if(m_TestingScan < SimParams::numVectorFieldSteps) {
-                m_AntHeading += SimParams::scanStep;
+                m_Pose.yaw() += SimParams::scanStep;
             }
             else {
                 // Add novelty to vector field
@@ -280,9 +280,9 @@ bool StateHandler::handleEvent(State state, Event event)
 
                 // If there are more points to evaluate, re-enter state
                 if(m_CurrentVectorFieldPoint < m_VectorField.getNumPoints()) {
-                    m_AntHeading = 0_deg;
+                    m_Pose.yaw() = 0_deg;
                     m_TestingScan = 0;
-                    std::tie(m_AntX, m_AntY) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
+                    std::tie(m_Pose.x(), m_Pose.y()) = m_VectorField.getPoint(m_CurrentVectorFieldPoint);
                 }
                 // Otherwise go back to free testing
                 else {
@@ -301,11 +301,11 @@ bool StateHandler::handleEvent(State state, Event event)
 bool StateHandler::checkAntPosition()
 {
     // If we've reached destination
-    if(m_Route.atDestination(m_AntX, m_AntY, SimParams::errorDistance)) {
+    if(m_Route.atDestination(m_Pose.x(), m_Pose.y(), SimParams::errorDistance)) {
         std::cerr << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors" << std::endl;
 
         // Add final point to route
-        m_Route.addPoint(m_AntX, m_AntY, false);
+        m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
 
         // Stop
         return false;
@@ -322,7 +322,7 @@ bool StateHandler::checkAntPosition()
         // Calculate distance to route
         meter_t distanceToRoute;
         size_t nearestRouteWaypoint;
-        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_AntX, m_AntY);
+        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose.x(), m_Pose.y());
         std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
 
         // If we are further away than error threshold
@@ -333,13 +333,13 @@ bool StateHandler::checkAntPosition()
 
             // Snap ant to the waypoint after this (clamping to size of route)
             const size_t snapWaypoint = std::min(bestWaypoint + 1, m_Route.size() - 1);
-            std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[snapWaypoint];
+            m_Pose = m_Route[snapWaypoint];
 
             // Update maximum test point reached
             m_MaxTestPoint = std::max(m_MaxTestPoint, snapWaypoint);
 
             // Add error point to route
-            m_Route.addPoint(m_AntX, m_AntY, true);
+            m_Route.addPoint(m_Pose.x(), m_Pose.y(), true);
 
             // Increment error counter
             m_NumTestErrors++;
@@ -347,7 +347,7 @@ bool StateHandler::checkAntPosition()
         // Otherwise, update maximum test point reached and add 'correct' point to route
         else {
             m_MaxTestPoint = std::max(m_MaxTestPoint, nearestRouteWaypoint);
-            m_Route.addPoint(m_AntX, m_AntY, false);
+            m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
         }
 
         return true;
@@ -357,11 +357,11 @@ bool StateHandler::checkAntPosition()
 void StateHandler::resetAntPosition()
 {
     if(m_Route.size() > 0) {
-        std::tie(m_AntX, m_AntY, m_AntHeading) = m_Route[0];
+        m_Pose = m_Route[0];
     }
     else {
-        m_AntX = 5.0_m;
-        m_AntY = 5.0_m;
-        m_AntHeading = 270.0_deg;
+        m_Pose.x() = 5.0_m;
+        m_Pose.y() = 5.0_m;
+        m_Pose.yaw() = 270.0_deg;
     }
 }
