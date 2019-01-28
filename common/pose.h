@@ -5,7 +5,6 @@
 
 // Standard C++ includes
 #include <array>
-#include <tuple>
 
 namespace BoBRobotics {
 
@@ -65,7 +64,7 @@ public:
     static constexpr radian_t roll() { return radian_t(0); }
 
 private:
-    std::array<LengthUnit, N> m_Array;
+    std::array<LengthUnit, N> m_Array{};
 };
 
 template<typename LengthUnit>
@@ -124,14 +123,14 @@ public:
     const LengthUnit &z() const { return (*this)[2]; }
 };
 
+// Forward declaration
 template<typename LengthUnit, typename AngleUnit>
 class Pose3;
 
 //! A two-dimensional pose
 template<typename LengthUnit, typename AngleUnit>
 class Pose2
-  : public std::tuple<Vector2<LengthUnit>, AngleUnit>
-  , public PoseBase<Pose2<LengthUnit, AngleUnit>>
+  : public PoseBase<Pose2<LengthUnit, AngleUnit>>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
@@ -142,7 +141,8 @@ public:
     Pose2() = default;
 
     Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
-      : std::tuple<Vector2<LengthUnit>, AngleUnit>({ x, y }, angle)
+      : m_Position{ x, y }
+      , m_Angle(angle)
     {}
 
     template<typename LengthUnit2, typename AngleUnit2>
@@ -157,26 +157,29 @@ public:
         return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
     }
 
-    Vector2<LengthUnit> &position() { return std::get<0>(*this); }
-    const Vector2<LengthUnit> &position() const { return std::get<0>(*this); }
-    LengthUnit &x() { return std::get<0>(*this)[0]; }
-    const LengthUnit &x() const { return std::get<0>(*this)[0]; }
-    LengthUnit &y() { return std::get<0>(*this)[1]; }
-    const LengthUnit &y() const { return std::get<0>(*this)[1]; }
+    Vector2<LengthUnit> &position() { return m_Position; }
+    const Vector2<LengthUnit> &position() const { return m_Position; }
+    LengthUnit &x() { return m_Position[0]; }
+    const LengthUnit &x() const { return m_Position[0]; }
+    LengthUnit &y() { return m_Position[1]; }
+    const LengthUnit &y() const { return m_Position[1]; }
     static constexpr LengthUnit z() { return LengthUnit(0); }
 
     std::array<AngleUnit, 3> attitude() const { return { yaw(), AngleUnit(0), AngleUnit(0) }; }
-    AngleUnit &yaw() { return std::get<1>(*this); }
-    const AngleUnit &yaw() const { return std::get<1>(*this); }
+    AngleUnit &yaw() { return m_Angle; }
+    const AngleUnit &yaw() const { return m_Angle; }
     static constexpr AngleUnit pitch() { return AngleUnit(0); }
     static constexpr AngleUnit roll() { return AngleUnit(0); }
+
+private:
+    Vector2<LengthUnit> m_Position;
+    AngleUnit m_Angle;
 };
 
 //! A three-dimensional pose
 template<typename LengthUnit, typename AngleUnit>
 class Pose3
-  : public std::tuple<Vector3<LengthUnit>, std::array<AngleUnit, 3>>
-  , public PoseBase<Pose3<LengthUnit, AngleUnit>>
+  : public PoseBase<Pose3<LengthUnit, AngleUnit>>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
@@ -187,7 +190,8 @@ public:
     Pose3() = default;
 
     Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
-      : std::tuple<Vector3<LengthUnit>, std::array<AngleUnit, 3>>(position, attitude)
+      : m_Position(position)
+      , m_Attitude(attitude)
     {}
 
     template<typename LengthUnit2, typename AngleUnit2>
@@ -202,23 +206,27 @@ public:
         return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
     }
 
-    Vector3<LengthUnit> &position() { return std::get<0>(*this); }
-    const Vector3<LengthUnit> &position() const { return std::get<0>(*this); }
-    LengthUnit &x() { return std::get<0>(*this)[0]; }
-    const LengthUnit &x() const { return std::get<0>(*this)[0]; }
-    LengthUnit &y() { return std::get<0>(*this)[1]; }
-    const LengthUnit &y() const { return std::get<0>(*this)[1]; }
-    LengthUnit &z() { return std::get<0>(*this)[2]; }
-    const LengthUnit &z() const { return std::get<0>(*this)[2]; }
+    Vector3<LengthUnit> &position() { return m_Position; }
+    const Vector3<LengthUnit> &position() const { return m_Position; }
+    LengthUnit &x() { return m_Position[0]; }
+    const LengthUnit &x() const { return m_Position[0]; }
+    LengthUnit &y() { return m_Position[1]; }
+    const LengthUnit &y() const { return m_Position[1]; }
+    LengthUnit &z() { return m_Position[2]; }
+    const LengthUnit &z() const { return m_Position[2]; }
 
-    std::array<AngleUnit, 3> &attitude() { return std::get<1>(*this); }
-    const std::array<AngleUnit, 3> &attitude() const { return std::get<1>(*this); }
-    AngleUnit &yaw() { return std::get<1>(*this)[0]; }
-    const AngleUnit &yaw() const { return std::get<1>(*this)[0]; }
-    AngleUnit &pitch() { return std::get<1>(*this)[1]; }
-    const AngleUnit &pitch() const { return std::get<1>(*this)[1]; }
-    AngleUnit &roll() { return std::get<1>(*this)[2]; }
-    const AngleUnit &roll() const { return std::get<1>(*this)[2]; }
+    std::array<AngleUnit, 3> &attitude() { return m_Attitude; }
+    const std::array<AngleUnit, 3> &attitude() const { return m_Attitude; }
+    AngleUnit &yaw() { return m_Attitude[0]; }
+    const AngleUnit &yaw() const { return m_Attitude[0]; }
+    AngleUnit &pitch() { return m_Attitude[1]; }
+    const AngleUnit &pitch() const { return m_Attitude[1]; }
+    AngleUnit &roll() { return m_Attitude[2]; }
+    const AngleUnit &roll() const { return m_Attitude[2]; }
+
+private:
+    Vector3<LengthUnit> m_Position;
+    std::array<AngleUnit, 3> m_Attitude{};
 };
 
 //! Converts the input array to a unit-type of OutputUnit
