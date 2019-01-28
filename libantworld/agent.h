@@ -179,7 +179,7 @@ public:
 
         updatePose();
         m_MoveMode = MoveMode::MovingForward;
-        m_MoveSpeed = speed;
+        m_SpeedProportion = speed;
     }
 
     virtual void turnOnTheSpot(float clockwiseSpeed) override
@@ -191,7 +191,7 @@ public:
 
         updatePose();
         m_MoveMode = MoveMode::Turning;
-        m_MoveSpeed = clockwiseSpeed;
+        m_SpeedProportion = clockwiseSpeed;
     }
 
     static auto initialiseWindow(const cv::Size &size)
@@ -259,7 +259,7 @@ private:
         MovingForward,
         Turning
     } m_MoveMode = MoveMode::NotMoving;
-    float m_MoveSpeed;
+    float m_SpeedProportion; //! From -1 to 1: indicates proportion of max forward/turning speed
 
     void updatePose()
     {
@@ -268,12 +268,12 @@ private:
         using namespace units::math;
         switch (m_MoveMode) {
         case MoveMode::MovingForward: {
-            const meter_t dist = m_MoveSpeed * m_Velocity * elapsed;
+            const meter_t dist = m_SpeedProportion * m_Velocity * elapsed;
             m_Pose.x() += dist * cos(m_Pose.yaw());
             m_Pose.y() += dist * sin(m_Pose.yaw());
         } break;
         case MoveMode::Turning:
-            m_Pose.yaw() -= m_MoveSpeed * m_TurnSpeed * elapsed;
+            m_Pose.yaw() -= m_SpeedProportion * m_TurnSpeed * elapsed;
             while (m_Pose.yaw() > 360_deg) {
                 m_Pose.yaw() -= 360_deg;
             }
