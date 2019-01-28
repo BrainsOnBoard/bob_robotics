@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "libantworld/agent.h"
 
@@ -44,7 +45,16 @@ main()
 
     std::cout << "Press the B button to quit" << std::endl;
     Pose3<meter_t, degree_t> lastPose;
-    while (!glfwWindowShouldClose(window.get()) && !joystick.isDown(HID::JButton::B)) {
+    Stopwatch stopwatch;
+    stopwatch.start();
+    while (agent.isOpen() && !joystick.isDown(HID::JButton::B)) {
+        /*
+         * We need to recalculate pose *before* checking for joystick events,
+         * so that if the agent's velocity changes, it is starting from the
+         * correct point.
+         */
+        agent.updatePose(stopwatch.lap());
+
         // Poll joystick
         joystick.update();
 
@@ -54,18 +64,10 @@ main()
             continue;
         }
 
-        std::cout << "Pose: " << pose.x() << ", " << pose.y() << ", " << pose.yaw() << std::endl;
+        // std::cout << "Pose: " << pose.x() << ", " << pose.y() << ", " << pose.yaw() << std::endl;
         lastPose = pose;
 
-        // Clear colour and depth buffer
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Render first person
-        renderer.renderPanoramicView(pose.x(), pose.y(), pose.z(),
-                                     pose.yaw(), pose.pitch(), pose.roll(),
-                                     0, 0, RenderSize.width, RenderSize.height);
-
-        // Swap front and back buffers
-        glfwSwapBuffers(window.get());
+        // Update display
+        agent.update();
     }
 }
