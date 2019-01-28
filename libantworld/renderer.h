@@ -1,7 +1,9 @@
 #pragma once
 
 // Standard C++ includes
+#include <algorithm>
 #include <string>
+#include <vector>
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -17,6 +19,7 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+class RenderTarget;
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
@@ -31,21 +34,38 @@ class Renderer
 public:
     Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
-    ~Renderer();
+    virtual ~Renderer();
+
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     void renderPanoramicView(meter_t x, meter_t y, meter_t z,
                              degree_t yaw, degree_t pitch, degree_t roll,
-                             GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
+                             GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight,
+                             GLuint drawFBO = 0);
+    void renderPanoramicView(meter_t x, meter_t y, meter_t z,
+                             degree_t yaw, degree_t pitch, degree_t roll,
+                             RenderTarget &renderTarget, bool bind = true, bool clear = true);
     void renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                                degree_t yaw, degree_t pitch, degree_t roll,
                                GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
+    void renderFirstPersonView(meter_t x, meter_t y, meter_t z,
+                               degree_t yaw, degree_t pitch, degree_t roll,
+                               RenderTarget &renderTarget, bool bind = true, bool clear = true);
     void renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight);
+    void renderTopDownView(RenderTarget &renderTarget, bool bind = true, bool clear = true);
 
     World &getWorld(){ return m_World; }
     const World &getWorld() const{ return m_World; }
+
+protected:
+    //------------------------------------------------------------------------
+    // Declared virtuals
+    //------------------------------------------------------------------------
+    virtual void renderPanoramicGeometry();
+    virtual void renderFirstPersonGeometry();
+    virtual void renderTopDownGeometry();
 private:
     //------------------------------------------------------------------------
     // Private methods

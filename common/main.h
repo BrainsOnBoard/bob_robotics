@@ -25,12 +25,12 @@ main(int argc, char **argv)
     } catch (std::exception &e) {
         // Windows doesn't print exception details by default
         std::cerr << "Uncaught exception: " << e.what() << std::endl;
-#ifndef DEBUG
+#ifdef _DEBUG
+        throw;
+#else
         // There's no point telling Windows the program has crashed
         return EXIT_FAILURE;
-#else
-        throw;
-#endif // !DEBUG
+#endif // !_DEBUG
 #endif // _WIN32
     } catch (...) {
         // Rethrow the caught exception

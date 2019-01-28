@@ -49,6 +49,10 @@ ifdef WITH_LIBANTWORLD
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
 endif
 
+ifdef WITH_IMGUI
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/third_party/imgui -limgui -lglfw -lGL -lGLU -lGLEW
+endif
+
 # Build with OpenCV
 ifndef NO_OPENCV
 ifndef OPENCV_PKG_NAME
@@ -106,4 +110,9 @@ ifdef WITH_I2C
 	ifeq (0,$(shell $(CURRENT_DIR)/is_i2c_tools_new.sh; echo $$?))
 	LINK_FLAGS += -li2c
 	endif
+endif
+
+ifdef WITH_EIGEN
+	CXXFLAGS += `pkg-config --cflags eigen3`
+	LINK_FLAGS += -fopenmp
 endif

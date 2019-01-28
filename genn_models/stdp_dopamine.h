@@ -106,7 +106,7 @@ public:
     });
 
     SET_DERIVED_PARAMS({
-        {"scale", [](const vector<double> &pars, double){ return 1.0 / -((1.0 / pars[2]) + (1.0 / pars[3])); }}
+        {"scale", [](const std::vector<double> &pars, double){ return 1.0 / -((1.0 / pars[2]) + (1.0 / pars[3])); }}
     });
 
     SET_NEEDS_PRE_SPIKE_TIME(true);
