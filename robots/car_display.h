@@ -93,9 +93,9 @@ public:
         const auto key = pollEvents();
 
         // Update agent's position in pixels
-        setRobotPosition(agentPose.x, agentPose.y);
+        setRobotPosition(agentPose.x(), agentPose.y());
 
-        draw(agentPose.angle);
+        draw(agentPose.yaw());
 
         return key;
     }
@@ -114,7 +114,7 @@ private:
 
     millimeter_t m_MMPerPixel; // Scaling factor
 
-    Vector2<int> m_MouseClickPosition;
+    std::array<int, 2> m_MouseClickPosition;
 
     bool m_IsOpen = true;
     SDL_Window *m_Window;
