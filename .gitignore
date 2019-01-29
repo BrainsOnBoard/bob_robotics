@@ -1,3 +1,6 @@
+# Stupid file that KDE puts in folders sometimes
+.directory
+
 # Temporary files
 *~
 
