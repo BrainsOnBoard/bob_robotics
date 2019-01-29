@@ -88,9 +88,6 @@ bob_main(int argc, char **argv)
 #ifdef NO_I2C_ROBOT
         // Read on background thread
         client.runInBackground();
-
-        // Wait for robot params
-        bot.waitForParameters();
 #endif
 
         Robots::RobotPositioner robp(
