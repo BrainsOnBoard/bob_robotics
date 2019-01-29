@@ -1,26 +1,14 @@
-// Windows headers
-#include "os/windows_include.h"
-
-// If we're compiling on Windows, we know we don't need I2C
-#ifdef _WIN32
-#define NO_I2C_ROBOT
-#endif
-
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/tank.h"
+#include "robots/norbot.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
-
-#ifndef NO_I2C_ROBOT
-#include "robots/norbot.h"
-#endif
 
 // Standard C includes
 #include <cstring>
@@ -37,25 +25,31 @@ using namespace BoBRobotics;
 int
 bob_main(int, char **)
 {
-#ifdef NO_I2C_ROBOT
-    // Output motor commands to terminal
-    Robots::Tank tank;
-#else
-    // Use Arduino robot
-    Robots::Norbot tank;
-#endif
+    std::unique_ptr<Video::Input> camera;
+    std::unique_ptr<HID::Joystick> joystick;
+    std::unique_ptr<Video::NetSink> netSink;
+
+    // Listen for incoming connection on default port
+    Net::Server server;
+    auto connection = server.waitForConnection();
 
     // Get panoramic camera
-    std::unique_ptr<Video::Input> camera;
     try {
         camera = Video::getPanoramicCamera();
     } catch (std::runtime_error &e) {
         // Camera not found
         std::cerr << e.what() << std::endl;
     }
+    if (camera) {
+        // Stream camera synchronously over network
+        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+    }
+
+    // Read motor commands from network
+    Robots::Norbot tank;
+    tank.readFromNetwork(connection);
 
     // Try to get joystick
-    std::unique_ptr<HID::Joystick> joystick;
     try {
         joystick = std::make_unique<HID::Joystick>();
         tank.addJoystick(*joystick);
@@ -64,29 +58,13 @@ bob_main(int, char **)
         std::cerr << e.what() << std::endl;
     }
 
-    // Enable networking on Windows
-    OS::Net::WindowsNetworking::initialise();
-
-    // Listen for incoming connection on default port
-    Net::Server server;
-    auto connection = server.waitForConnection();
-
-    // Read motor commands from network
-    tank.readFromNetwork(connection);
-
     // Run server in background,, catching any exceptions for rethrowing
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
     connection.runInBackground();
 
-    std::unique_ptr<Video::NetSink> netSink;
-    if (camera) {
-        // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
-    }
-
     cv::Mat frame;
-    while (true) {
+    while (connection.isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 

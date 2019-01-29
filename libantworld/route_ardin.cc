@@ -89,6 +89,10 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     // Set colour pointer and enable client state in VAO
     glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_COLOR_ARRAY);
+
+    // Unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,
@@ -166,8 +170,8 @@ void RouteArdin::load(const std::string &filename, bool realign)
         const auto &segmentEnd = m_Waypoints[i + 1];
 
         // Calculate segment heading (NB: using unit.h's atan2, not cmath's)
-        const degree_t heading = units::math::atan2(makeM(segmentStart[1] - segmentEnd[1]),
-                                                    makeM(segmentEnd[0] - segmentStart[0]));
+        const degree_t heading = units::math::atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                                    units::length::meter_t(segmentEnd[0] - segmentStart[0]));
 
         // Round to nearest whole number and add to headings array
         m_Headings.push_back(units::math::round(heading * 0.5) * 2.0);
@@ -324,17 +328,17 @@ void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
+Pose2<meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
 {
-    const meter_t x = makeM(m_Waypoints[waypoint][0]);
-    const meter_t y = makeM(m_Waypoints[waypoint][1]);
+    const meter_t x{ m_Waypoints[waypoint][0] };
+    const meter_t y{ m_Waypoints[waypoint][1] };
 
     // If this isn't the last waypoint, return the heading of the segment from this waypoint
     if(waypoint < m_Headings.size()) {
-        return std::make_tuple(x, y, 90_deg + m_Headings[waypoint]);
+        return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[waypoint]);
     }
     else {
-        return std::make_tuple(x, y, 0_deg);
+        return Pose2<meter_t, degree_t>(x, y, 0_deg);
     }
 }
 }   // namespace AntWorld

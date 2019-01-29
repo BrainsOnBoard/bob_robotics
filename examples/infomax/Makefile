@@ -1,7 +1,7 @@
 WITH_MATPLOTLIBCPP := 1
+WITH_EIGEN := 1
 include ../../make_common/bob_robotics.mk
-CXXFLAGS += `pkg-config --cflags eigen3`
-LINK_FLAGS += -fopenmp
+
 
 .PHONY: all clean
 

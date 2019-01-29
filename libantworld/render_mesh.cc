@@ -126,6 +126,11 @@ RenderMesh::RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t st
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
     }
+
+    // Unbind vertex array and array buffers
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 RenderMesh::~RenderMesh()
@@ -144,6 +149,9 @@ void RenderMesh::render() const
 
     // Draw render mesh quads
     glDrawElements(GL_QUADS, m_NumIndices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

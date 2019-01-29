@@ -39,17 +39,15 @@ class World
     using meter_t = units::length::meter_t;
 
 public:
-    World()
-      : m_MinBound{0_m, 0_m, 0_m}, m_MaxBound{0_m, 0_m, 0_m}
+    World() : m_MinBound{0_m, 0_m, 0_m}, m_MaxBound{0_m, 0_m, 0_m}
     {}
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    void render() const;
     void load(const std::string &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
     void loadObj(const std::string &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
-
-    void render() const;
 
     const Vector3<meter_t> &getMinBound()
     {
@@ -75,6 +73,7 @@ private:
         // Public API
         //------------------------------------------------------------------------
         void bind() const;
+        void unbind() const;
         void upload(const cv::Mat &texture, GLint textureFormat);
 
     private:
@@ -98,6 +97,7 @@ private:
         // Public API
         //------------------------------------------------------------------------
         void bind() const;
+        void unbind() const;
         void render() const;
 
         void uploadPositions(const std::vector<GLfloat> &positions);

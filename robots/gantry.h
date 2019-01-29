@@ -2,6 +2,16 @@
 
 #include "os/windows_include.h"
 
+// BoB robotics includes
+#include "common/assert.h"
+#include "common/pose.h"
+
+// Third-party includes
+#include "third_party/units.h"
+
+// Gantry-specifc includes
+#include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <chrono>
@@ -9,16 +19,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-
-// Gantry-specifc includes
-#include "C:\Program Files\Advantech\Motion\PCI-1240\Examples\Include\Ads1240.h"
-
-// BoB robotics includes
-#include "common/assert.h"
-#include "common/pose.h"
-
-// Third-party includes
-#include "third_party/units.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -58,7 +58,7 @@ public:
         }
     }
 
-    ~Gantry()
+    ~Gantry() noexcept
     {
         // Stop the gantry moving
         stopMoving();
@@ -101,13 +101,13 @@ public:
      * Home position is (0, 0, 0). The gantry needs to be homed before use so that it
      * can reset its estimate of its position. This function does not block.
      */
-    void home(BYTE axis = XYZ_Axis)
+    void home(BYTE axis = XYZ_Axis) const
     {
         checkError(P1240MotHome(m_BoardId, axis), "Could not home axis");
     }
 
     //! Check if either of the emergency buttons are pressed down
-    bool isEmergencyButtonPressed()
+    bool isEmergencyButtonPressed() const
     {
         DWORD ret;
         checkError(P1240MotRdReg(m_BoardId, 1, RR2, &ret), "Could not read emergency button flag");
@@ -116,10 +116,10 @@ public:
 
     //! Get the current position of the gantry in the arena
     template<class LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition()
+    Vector3<LengthUnit> getPosition() const
     {
         // Request position from card
-        Vector3<LONG> pulses;
+        std::array<LONG, 3> pulses;
         checkError(P1240GetTheorecticalRegister(m_BoardId, X_Axis, &pulses[0]), "Could not get x position");
         checkError(P1240GetTheorecticalRegister(m_BoardId, Y_Axis, &pulses[1]), "Could not get y position");
         checkError(P1240GetTheorecticalRegister(m_BoardId, Z_Axis, &pulses[2]), "Could not get z position");
@@ -130,9 +130,9 @@ public:
 
     //! Get the gantry's current velocity
     template<class VelocityUnit = meters_per_second_t>
-    Vector3<VelocityUnit> getVelocity()
+    std::array<VelocityUnit, 3> getVelocity()
     {
-        Vector3<DWORD> pulseRate;
+        std::array<DWORD, 3> pulseRate;
 
         m_IsMovingLine = m_IsMovingLine && isMoving();
         if (m_IsMovingLine) {
@@ -165,20 +165,20 @@ public:
         BOB_ASSERT(z >= 0_mm && z <= Limits[2]);
 
         m_IsMovingLine = true;
-        const Vector3<LONG> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
+        const std::array<LONG, 3> pos = { (LONG) round(x.value() * PulsesPerMillimetre[0]),
                                     (LONG) round(y.value() * PulsesPerMillimetre[1]),
                                     (LONG) round(z.value() * PulsesPerMillimetre[2]) };
         checkError(P1240MotLine(m_BoardId, XYZ_Axis, TRUE, pos[0], pos[1], pos[2], 0), "Could not move gantry");
     }
 
     //! Stop the gantry moving, optionally specifying a specific axis
-    void stopMoving(BYTE axis = XYZ_Axis) noexcept
+    void stopMoving(BYTE axis = XYZ_Axis) const noexcept
     {
         P1240MotStop(m_BoardId, axis, axis * SlowStop);
     }
 
     //! Check if the gantry is moving
-    bool isMoving(BYTE axis = XYZ_Axis)
+    bool isMoving(BYTE axis = XYZ_Axis) const
     {
         // Indicate whether specified axis/axes busy
         LRESULT res = P1240MotAxisBusy(m_BoardId, axis);
@@ -195,7 +195,7 @@ public:
     }
 
     //! Wait until the gantry has stopped moving
-    void waitToStopMoving(BYTE axis = XYZ_Axis)
+    void waitToStopMoving(BYTE axis = XYZ_Axis) const
     {
         // Repeatedly poll card to check whether gantry is moving
         while (isMoving(axis)) {
@@ -220,18 +220,18 @@ private:
      * Johnson's Matlab code and I assume he just measured them empirically.
      * They seem pretty accurate. -- AD
      */
-    static constexpr Vector3<double> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
+    static constexpr std::array<double, 3> PulsesPerMillimetre = { 7.49625, 8.19672, 13.15789 };
 
     // These are the gantry's upper x, y and z limits (i.e. the size of the "arena")
-    static constexpr Vector3<millimeter_t> Limits = { 2996_mm, 1793_mm, 1203_mm };
+    static constexpr std::array<millimeter_t, 3> Limits = { 2996_mm, 1793_mm, 1203_mm };
 
-    void close() noexcept
+    void close() const noexcept
     {
         // Close PCI device
         P1240MotDevClose(m_BoardId);
     }
 
-    inline void checkEmergencyButton()
+    inline void checkEmergencyButton() const
     {
         if (isEmergencyButtonPressed()) {
             throw std::runtime_error("Gantry error: Emergency button is pressed");
@@ -254,9 +254,9 @@ private:
     }
 
     template<class UnitType, class InitialUnit = millimeter_t, class T>
-    static auto pulsesToUnit(const Vector3<T> &pulses)
+    static auto pulsesToUnit(const std::array<T, 3> &pulses)
     {
-        Vector3<UnitType> unitArray;
+        std::array<UnitType, 3> unitArray;
         std::transform(pulses.begin(), pulses.end(), PulsesPerMillimetre.begin(), unitArray.begin(), [](T pulse, double permm) {
             return units::make_unit<InitialUnit>((double) pulse / permm);
         });

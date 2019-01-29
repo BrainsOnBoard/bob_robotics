@@ -168,8 +168,8 @@ void RouteContinuous::load(const std::string &filename)
         const auto &segmentEnd = m_Waypoints[i + 1];
 
         // Add segment heading to array
-        m_Headings.push_back(atan2(makeM(segmentStart[1] - segmentEnd[1]),
-                                   makeM(segmentEnd[0] - segmentStart[0])));
+        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
 
         // Calculate segment length and
         const meter_t segmentLength(distance(segmentStart, segmentEnd));
@@ -263,7 +263,7 @@ std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter
     return std::make_tuple(minimumDistance, nearestWaypoint);
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, meter_t, degree_t> RouteContinuous::getPosition(meter_t distance) const
+Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
 {
     // Clamp distance at 0
     distance = max(0_m, distance);
@@ -290,11 +290,11 @@ std::tuple<meter_t, meter_t, degree_t> RouteContinuous::getPosition(meter_t dist
         ((distance - prevWaypointDistance) / (nextWaypointDistance - prevWaypointDistance)).value()));
 
     // Interpolate position
-    const meter_t x = makeM(prevWaypoint[0] + proportion * (nextWaypoint[0] - prevWaypoint[0]));
-    const meter_t y = makeM(prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]));
+    const meter_t x{ prevWaypoint[0] + proportion * (nextWaypoint[0] - prevWaypoint[0]) };
+    const meter_t y{ prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]) };
 
     // Return position
-    return std::make_tuple(x, y, 90_deg + m_Headings[prevWaypointIndex]);
+    return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[prevWaypointIndex]);
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)

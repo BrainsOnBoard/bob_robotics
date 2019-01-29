@@ -3,6 +3,9 @@
 // Standard C++ includes
 #include <stdexcept>
 
+// Libantworld includes
+#include "render_target.h"
+
 //------------------------------------------------------------------------
 // BoBRobotics::AntWorld::Renderer
 //------------------------------------------------------------------------
@@ -19,7 +22,7 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
     m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
     m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
 {
-     // Create FBO for rendering to cubemap and bind
+    // Create FBO for rendering to cubemap and bind
     glGenFramebuffers(1, &m_FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
@@ -29,6 +32,7 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
 
     // Create textures for all faces of cubemap
     // **NOTE** even though we don't need top and bottom faces we still need to create them or rendering fails
+    // **TODO** it would be better to use native format
     for(unsigned int t = 0; t < 6; t++) {
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + t, 0, GL_RGB,
                      m_CubemapSize, m_CubemapSize, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -69,7 +73,8 @@ Renderer::~Renderer()
 //----------------------------------------------------------------------------
 void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                    degree_t yaw, degree_t pitch, degree_t roll,
-                                   GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
+                                   GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight,
+                                   GLuint drawFBO)
 {
     // Configure viewport to cubemap-sized square
     glViewport(0, 0, m_CubemapSize, m_CubemapSize);
@@ -78,6 +83,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
     // Configure perspective projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
@@ -106,12 +112,12 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw world
-        m_World.render();
+        // Render geometry
+        renderPanoramicGeometry();
     }
 
-    // Unbind the FBO for onscreen rendering
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    // Rebind draw framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, drawFBO);
 
     // Set viewport to strip at stop of window
     glViewport(viewportX, viewportY,
@@ -137,6 +143,31 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glDisable(GL_TEXTURE_CUBE_MAP);
 }
 //----------------------------------------------------------------------------
+void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
+                                   degree_t yaw, degree_t pitch, degree_t roll,
+                                   RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderPanoramicView(x, y, z, yaw, pitch, roll,
+                        0, 0, renderTarget.getWidth(), renderTarget.getHeight(),
+                        renderTarget.getFBO());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
+}
+//----------------------------------------------------------------------------
 void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                                      degree_t yaw, degree_t pitch, degree_t roll,
                                      GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
@@ -146,6 +177,7 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                viewportWidth, viewportHeight);
 
     // Configure perspective projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
@@ -164,8 +196,32 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
     // Clear colour and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Draw world
-    m_World.render();
+    // Render geometry
+    renderFirstPersonGeometry();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
+                                     degree_t yaw, degree_t pitch, degree_t roll,
+                                     RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderFirstPersonView(x, y, z, yaw, pitch, roll,
+                          0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
 }
 //----------------------------------------------------------------------------
 void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
@@ -178,6 +234,7 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     const auto &maxBound = getWorld().getMaxBound();
 
     // Configure top-down orthographic projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(minBound[0].value(), maxBound[0].value(),
@@ -187,7 +244,43 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Render world
+    // Render geometry
+    renderTopDownGeometry();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderTopDownView(0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
+}
+//----------------------------------------------------------------------------
+void Renderer::renderPanoramicGeometry()
+{
+    m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderFirstPersonGeometry()
+{
+    m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderTopDownGeometry()
+{
     m_World.render();
 }
 //----------------------------------------------------------------------------
@@ -257,5 +350,6 @@ void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
     glRotatef(yaw.value(), 0.0, 0.0, 1.0f);
     glTranslatef(-x.value(), -y.value(), -z.value());
 }
+
 }   // namespace AntWorld
 }   // namespace BoBRobotics

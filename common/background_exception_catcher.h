@@ -7,46 +7,36 @@
 #include <csignal>
 
 // Standard C++ includes
+#include <algorithm>
 #include <array>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 namespace BoBRobotics {
-/*!
- * \brief A template for the singleton design pattern
- *
- * After: https://stackoverflow.com/questions/1008019/c-singleton-design-pattern
- */
-template<typename T>
-class Singleton
-{
-public:
-    Singleton()
-    {}
-
-    Singleton(Singleton const &) = delete;
-    void operator=(Singleton const &) = delete;
-
-    static T &getInstance()
-    {
-        static T instance; // Guaranteed to be destroyed.
-                           // Instantiated on first use.
-        return instance;
-    }
-};
-
 //----------------------------------------------------------------------------
 // BoBRobotics::BackgroundExceptionCatcher
 //----------------------------------------------------------------------------
 //! A wrapper for passing exceptions between threads (i.e. a background thread to the main one)
 class BackgroundExceptionCatcher
-  : public Singleton<BackgroundExceptionCatcher>
 {
 public:
     BackgroundExceptionCatcher()
     {
+        BOB_ASSERT(!CatcherExists); // Only allow one instance
         CatcherExists = true;
+    }
+
+    ~BackgroundExceptionCatcher()
+    {
+        /*
+         * Reset signal handlers to default, in case e.g. we get a hang in a
+         * destructor and want to ctrl+c out.
+         */
+        for (auto &sig : m_Signals) {
+            std::signal(sig, SIG_DFL);
+        }
     }
 
 #ifdef DEBUG
@@ -58,7 +48,8 @@ public:
     //! Trap specified signals like exceptions
     void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNALS)
     {
-        for (auto &sig : signals) {
+        std::copy(signals.begin(), signals.end(), std::back_inserter(m_Signals));
+        for (auto &sig : m_Signals) {
             std::signal(sig, &signalHandler);
         }
     }
@@ -82,6 +73,7 @@ public:
     }
 
 private:
+    std::vector<int> m_Signals;
     static bool CatcherExists;
     static std::exception_ptr ExceptionPtr;
 
