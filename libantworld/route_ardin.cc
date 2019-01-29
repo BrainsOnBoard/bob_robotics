@@ -328,17 +328,17 @@ void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
+Pose2<meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
 {
     const meter_t x{ m_Waypoints[waypoint][0] };
     const meter_t y{ m_Waypoints[waypoint][1] };
 
     // If this isn't the last waypoint, return the heading of the segment from this waypoint
     if(waypoint < m_Headings.size()) {
-        return std::make_tuple(x, y, 90_deg + m_Headings[waypoint]);
+        return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[waypoint]);
     }
     else {
-        return std::make_tuple(x, y, 0_deg);
+        return Pose2<meter_t, degree_t>(x, y, 0_deg);
     }
 }
 }   // namespace AntWorld

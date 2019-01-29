@@ -21,14 +21,12 @@ public:
     /*!
      * \brief Create a Video::Input for reading from an OpenGL window
      *
-     * @param readX, readY The starting coordinates to read from (from bottom left of screen)
-     * @param readWidth, readHeight Size of image
-     *
-     * **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
-     * from bottom left of screen which would require window size etc. to convert
+     * @param size Size of image
+     * @param bottomLeft The starting coordinates to read from (from bottom left of screen)
      */
-    OpenGL(GLint readX,  GLint readY,  GLsizei readWidth,  GLsizei readHeight)
-      : m_ReadX(readX), m_ReadY(readY), m_ReadWidth(readWidth), m_ReadHeight(readHeight)
+    OpenGL(const cv::Size &size, const cv::Point &bottomLeft = { 0, 0 })
+      : m_Size(size)
+      , m_BottomLeft(bottomLeft)
     {}
 
     //----------------------------------------------------------------------------
@@ -41,17 +39,17 @@ public:
 
     virtual cv::Size getOutputSize() const override
     {
-        return cv::Size(m_ReadWidth, m_ReadHeight);
+        return m_Size;
     }
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
         // Make sure frame is of right size and type
-        outFrame.create(m_ReadHeight, m_ReadWidth, CV_8UC3);
+        outFrame.create(m_Size, CV_8UC3);
 
         // Read pixels from framebuffer into outFrame
         // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
-        glReadPixels(m_ReadX, m_ReadY, m_ReadWidth, m_ReadHeight,
+        glReadPixels(m_BottomLeft.x, m_BottomLeft.y, m_Size.width, m_Size.height,
                      GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
 
         // Flip image vertically
@@ -66,13 +64,8 @@ public:
     }
 
 private:
-    //----------------------------------------------------------------------------
-    // Protected members
-    //----------------------------------------------------------------------------
-    const GLint m_ReadX;
-    const GLint m_ReadY;
-    const GLsizei m_ReadWidth;
-    const GLsizei m_ReadHeight;
+    const cv::Size m_Size;
+    const cv::Point m_BottomLeft;
 };
 }   // namespace Video
 }   // namespace BoBRobotics

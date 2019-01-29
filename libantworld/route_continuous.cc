@@ -263,7 +263,7 @@ std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter
     return std::make_tuple(minimumDistance, nearestWaypoint);
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, meter_t, degree_t> RouteContinuous::getPosition(meter_t distance) const
+Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
 {
     // Clamp distance at 0
     distance = max(0_m, distance);
@@ -294,7 +294,7 @@ std::tuple<meter_t, meter_t, degree_t> RouteContinuous::getPosition(meter_t dist
     const meter_t y{ prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]) };
 
     // Return position
-    return std::make_tuple(x, y, 90_deg + m_Headings[prevWaypointIndex]);
+    return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[prevWaypointIndex]);
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)

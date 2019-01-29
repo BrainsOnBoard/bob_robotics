@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/default_get_pose.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
 #include "../os/net.h"
@@ -26,6 +27,7 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
+  : public DefaultGetPose<ObjectData, units::length::millimeter_t, units::angle::radian_t>
 {
     using radian_t = units::angle::radian_t;
     using millimeter_t = units::length::millimeter_t;
@@ -68,14 +70,14 @@ public:
         return m_FrameNumber;
     }
 
-    template <class LengthUnit = millimeter_t>
+    template<typename LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Position);
     }
 
-    template <class AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude() const
+    template<typename AngleUnit = radian_t>
+    std::array<AngleUnit, 3> getAttitude() const
     {
         return convertUnitArray<AngleUnit>(m_Attitude);
     }
@@ -91,8 +93,63 @@ private:
     uint32_t m_FrameNumber;
     char m_Name[24];
     Vector3<millimeter_t> m_Position;
-    Vector3<radian_t> m_Attitude;
+    std::array<radian_t, 3> m_Attitude;
     Stopwatch m_ReceivedTimer;
+};
+
+// Forward declaration
+template<typename ObjectDataType>
+class UDPClient;
+
+//----------------------------------------------------------------------------
+// BoBRobotics::Vicon::ObjectReference
+//----------------------------------------------------------------------------
+/**!
+ *  \brief Holds a reference to a Vicon object
+ *
+ * The pose data is updated every time it is read, in contrast to ObjectData,
+ * which only contains static data.
+ */
+template<typename ObjectDataType = ObjectData>
+class ObjectReference
+{
+    using millimeter_t = units::length::millimeter_t;
+    using radian_t = units::angle::radian_t;
+
+public:
+    ObjectReference(UDPClient<ObjectDataType> &client, const unsigned id)
+        : m_Client(client)
+        , m_Id(id)
+    {}
+
+    template<typename LengthUnit = millimeter_t>
+    Vector3<LengthUnit> getPosition() const
+    {
+        return getData().template getPosition<LengthUnit>();
+    }
+
+    template<typename AngleUnit = radian_t>
+    std::array<AngleUnit, 3> getAttitude() const
+    {
+        return getData().template getAttitude<AngleUnit>();
+    }
+
+    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
+    auto getPose() const
+    {
+        const auto data = getData();
+        return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
+                                            data.template getAttitude<AngleUnit>());
+    }
+
+    ObjectDataType getData() const
+    {
+        return m_Client.getObjectData(m_Id);
+    }
+
+private:
+    UDPClient<ObjectDataType> &m_Client;
+    const unsigned m_Id;
 };
 
 //----------------------------------------------------------------------------
@@ -129,7 +186,7 @@ public:
 
         // Calculate instantaneous velocity
         const auto oldPosition = getPosition<>();
-        Vector3<meters_per_second_t> instVelocity;
+        std::array<meters_per_second_t, 3> instVelocity;
         const auto calcVelocity = [deltaS](auto curr, auto prev) {
             return (curr - prev) / deltaS;
         };
@@ -150,8 +207,8 @@ public:
         ObjectData::update(name, frameNumber, x, y, z, yaw, pitch, roll);
     }
 
-    template <class VelocityUnit = meters_per_second_t>
-    Vector3<VelocityUnit> getVelocity() const
+    template<typename VelocityUnit = meters_per_second_t>
+    std::array<VelocityUnit, 3> getVelocity() const
     {
         return convertUnitArray<VelocityUnit>(m_Velocity);
     }
@@ -160,7 +217,7 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Vector3<meters_per_second_t> m_Velocity;
+    std::array<meters_per_second_t, 3> m_Velocity;
 };
 
 //----------------------------------------------------------------------------
@@ -171,6 +228,8 @@ template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
 public:
+
+
     UDPClient(){}
     UDPClient(uint16_t port)
     {
@@ -253,10 +312,17 @@ public:
         }
     }
 
+    //! Get current pose information for specified object
     ObjectDataType getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
         return m_ObjectData.at(id);
+    }
+
+    //! Returns an object whose pose is updated by the Vicon system over time
+    auto getObjectReference(unsigned int id)
+    {
+        return ObjectReference<ObjectDataType>(*this, id);
     }
 
 private:
@@ -265,8 +331,8 @@ private:
     //----------------------------------------------------------------------------
     void updateObjectData(unsigned int id, const char(&name)[24],
                           uint32_t frameNumber,
-                          const Vector3<double> &position,
-                          const Vector3<double> &attitude)
+                          const std::array<double, 3> &position,
+                          const std::array<double, 3> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
@@ -343,11 +409,11 @@ private:
                     BOB_ASSERT(objectName[23] == '\0');
 
                     // Read object position
-                    Vector3<double> position;
+                    std::array<double, 3> position;
                     memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
                     // Read object attitude
-                    Vector3<double> attitude;
+                    std::array<double, 3> attitude;
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item

@@ -108,7 +108,7 @@ private:
  * object file. This currently only seems to be a problem when linking with
  * libbebop.
  */
-#ifndef NO_BACKGROUND_EXCEPTION_CATCHER_DEFINITIONS
+#ifndef NO_HEADER_DEFINITIONS
 bool BackgroundExceptionCatcher::CatcherExists = false;
 std::exception_ptr BackgroundExceptionCatcher::ExceptionPtr;
 #endif
