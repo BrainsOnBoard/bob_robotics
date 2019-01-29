@@ -56,7 +56,7 @@ bob_main(int, char **)
 
     // set goal pose
     const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
-    std::cout << "Goal: (" << goal.x << ", " << goal.y << ") at " << goal.angle << std::endl;
+    std::cout << "Goal: (" << goal.x() << ", " << goal.y() << ") at " << goal.yaw() << std::endl;
     robp.setGoalPose(goal);
 
     // drive robot with joystick
@@ -78,14 +78,14 @@ bob_main(int, char **)
 
         if (runPositioner) {
             const auto objectData = vicon.getObjectData(0);
-            if (objectData.getElapsedTime() > 10s) {
+            if (objectData.timeSinceReceived() > 10s) {
                 bot.stopMoving();
                 runPositioner = false;
                 std::cerr << "Error: Could not get position from Vicon system\n"
                           << "Stopping trial" << std::endl;
             } else {
-                const Vector3<millimeter_t> position = objectData.getPosition();
-                const Vector3<radian_t> attitude = objectData.getAttitude();
+                const auto position = objectData.getPosition();
+                const auto attitude = objectData.getAttitude();
                 robp.updateMotors(bot, { position[0], position[1], attitude[0] });
             }
         } else if (!joystickUpdate) {
