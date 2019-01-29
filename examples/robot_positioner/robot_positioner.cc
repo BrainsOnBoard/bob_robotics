@@ -76,22 +76,6 @@ bob_main(int argc, char **argv)
         std::cout << "Waiting for object" << std::endl;
     }
 
-    Robots::RobotPositioner robp(
-            stoppingDistance,
-            allowedHeadingError,
-            k1,
-            k2,
-            alpha,
-            beta,
-            bot.getMaximumSpeed(),
-            bot.getMaximumTurnSpeed());
-
-    // set goal pose
-    const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
-    std::cout << "Goal: (" << goal.x() << ", " << goal.y() << ") at " << goal.yaw() << std::endl;
-    robp.setGoalPose(goal);
-    std::cout << "Press Y to start homing" << std::endl;
-
     // drive robot with joystick
     HID::Joystick joystick;
     bot.addJoystick(joystick);
@@ -104,7 +88,26 @@ bob_main(int argc, char **argv)
 #ifdef NO_I2C_ROBOT
         // Read on background thread
         client.runInBackground();
+
+        // Wait for robot params
+        bot.waitForParameters();
 #endif
+
+        Robots::RobotPositioner robp(
+                stoppingDistance,
+                allowedHeadingError,
+                k1,
+                k2,
+                alpha,
+                beta,
+                bot.getMaximumSpeed(),
+                bot.getMaximumTurnSpeed());
+
+        // set goal pose
+        const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
+        std::cout << "Goal: (" << goal.x() << ", " << goal.y() << ") at " << goal.yaw() << std::endl;
+        robp.setGoalPose(goal);
+        std::cout << "Press Y to start homing" << std::endl;
 
         bool runPositioner = false;
         while (!joystick.isPressed(HID::JButton::B)) {

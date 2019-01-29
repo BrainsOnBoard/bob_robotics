@@ -15,8 +15,10 @@
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -148,29 +150,28 @@ public:
     //! Controls the robot with a network stream
     void readFromNetwork(Net::Connection &connection)
     {
-        {
-            auto sender = connection.getSocketWriter();
-
-            // Send maximum turn speed, if we know it
-            try {
-                sender.send("TRN " + std::to_string(getMaximumTurnSpeed().value()) + "\n");
-            } catch (std::runtime_error &) {
-                // Then getMaximumTurnSpeed() isn't implemented
-            }
-
-            // Send maximum forward speed
-            try {
-                sender.send("MAX " + std::to_string(getMaximumSpeed().value()) + "\n");
-            } catch (std::runtime_error &) {
-                // Then getMaximumSpeed() isn't implemented
-            }
-
-            try {
-                sender.send("AXS " + std::to_string(getRobotAxisLength().value()) + "\n");
-            } catch (std::runtime_error &) {
-                // Then getRobotAxisLength() isn't implemented
-            }
+        // Send robot parameters over network
+        constexpr double _nan = std::numeric_limits<double>::quiet_NaN();
+        double maxTurnSpeed = _nan, maxForwardSpeed = _nan, axisLength = _nan;
+        try {
+            maxTurnSpeed = getMaximumTurnSpeed().value();
+        } catch (std::runtime_error &) {
+            // Then getMaximumTurnSpeed() isn't implemented
         }
+        try {
+            maxForwardSpeed = getMaximumSpeed().value();
+        } catch (std::runtime_error &) {
+            // Then getMaximumSpeed() isn't implemented
+        }
+        try {
+            axisLength = getRobotAxisLength().value();
+        } catch (std::runtime_error &) {
+            // Then getRobotAxisLength() isn't implemented
+        }
+
+        std::stringstream ss;
+        ss << "TNK_PARAMS " << maxTurnSpeed << " " << maxForwardSpeed << " " << axisLength << "\n";
+        connection.getSocketWriter().send(ss.str());
 
         // Handle incoming TNK commands
         connection.setCommandHandler("TNK",
@@ -184,10 +185,7 @@ public:
     void stopReadingFromNetwork()
     {
         if (m_Connection) {
-            // Ignore incoming commands
-            m_Connection->setCommandHandler("AXS", nullptr);
-            m_Connection->setCommandHandler("TRN", nullptr);
-            m_Connection->setCommandHandler("MAX", nullptr);
+            // Ignore incoming TNK commands
             m_Connection->setCommandHandler("TNK", nullptr);
         }
     }

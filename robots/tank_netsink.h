@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/semaphore.h"
 #include "../net/connection.h"
 #include "tank.h"
 
@@ -28,6 +29,7 @@ private:
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
     Net::Connection &m_Connection;
+    Semaphore m_ParamsSemaphore;
     millimeter_t m_AxisLength{ std::numeric_limits<double>::quiet_NaN() };
     meters_per_second_t m_ForwardSpeed{ std::numeric_limits<double>::quiet_NaN() };
     radians_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
@@ -37,14 +39,17 @@ public:
     TankNetSink(Net::Connection &connection)
       : m_Connection(connection)
     {
-        connection.setCommandHandler("TRN", [this](Net::Connection &, const Net::Command &command) {
+        connection.setCommandHandler("TNK_PARAMS", [this](Net::Connection &, const Net::Command &command) {
+            if (command.size() != 4) {
+                throw Net::BadCommandError();
+            }
+
             m_TurnSpeed = radians_per_second_t(stod(command[1]));
-        });
-        connection.setCommandHandler("MAX", [this](Net::Connection &, const Net::Command &command) {
-            m_ForwardSpeed = meters_per_second_t(stod(command[1]));
-        });
-        connection.setCommandHandler("AXS", [this](Net::Connection &, const Net::Command &command) {
-            m_AxisLength = millimeter_t(stod(command[1]));
+            m_ForwardSpeed = meters_per_second_t(stod(command[2]));
+            m_AxisLength = millimeter_t(stod(command[3]));
+
+            // Trigger semaphore
+            m_ParamsSemaphore.notify();
         });
     }
 
@@ -59,7 +64,16 @@ public:
             // Socket has already been cleanly closed
         }
 
+        // Stop listening for incoming commands
+        m_Connection.setCommandHandler("TNK_PARAMS", nullptr);
+        m_ParamsSemaphore.notify();
+
         stopReadingFromNetwork();
+    }
+
+    void waitForParameters()
+    {
+        m_ParamsSemaphore.waitOnce();
     }
 
     //! Motor command: send TNK command over TCP
