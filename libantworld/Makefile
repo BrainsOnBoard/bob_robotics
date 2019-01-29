@@ -6,7 +6,7 @@ DEPS		:=$(SOURCES:.cc=.d)
 ARFLAGS		:= -rcs
 
 # Make sure we don't have multiple definitions for BackgroundException class
-CXXFLAGS += -DNO_BACKGROUND_EXCEPTION_CATCHER_DEFINITIONS
+CXXFLAGS += -DNO_HEADER_DEFINITIONS
 
 .PHONY: all clean
 
