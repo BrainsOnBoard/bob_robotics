@@ -67,13 +67,13 @@ run(Video::Input &camera)
     tank.readFromNetwork(connection);
 
     // Run server in background,, catching any exceptions for rethrowing
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
     connection.runInBackground();
 
     // Send frames over network
     cv::Mat frame;
-    while (true) {
+    while (connection.isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 
