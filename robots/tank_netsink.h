@@ -23,10 +23,12 @@ namespace Robots {
 class TankNetSink : public Tank
 {
 private:
+    using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
     Net::Connection &m_Connection;
+    millimeter_t m_AxisLength{ std::numeric_limits<double>::quiet_NaN() };
     meters_per_second_t m_ForwardSpeed{ std::numeric_limits<double>::quiet_NaN() };
     radians_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
     float m_OldLeft = 0, m_OldRight = 0;
@@ -40,6 +42,9 @@ public:
         });
         connection.setCommandHandler("MAX", [this](Net::Connection &, const Net::Command &command) {
             m_ForwardSpeed = meters_per_second_t(stod(command[1]));
+        });
+        connection.setCommandHandler("AXS", [this](Net::Connection &, const Net::Command &command) {
+            m_AxisLength = millimeter_t(stod(command[1]));
         });
     }
 
@@ -77,9 +82,18 @@ public:
         m_OldRight = right;
     }
 
+    virtual millimeter_t getRobotAxisLength() override
+    {
+        if (std::isnan(m_AxisLength.value())) {
+            return Tank::getRobotAxisLength();
+        } else {
+            return m_AxisLength;
+        }
+    }
+
     virtual meters_per_second_t getMaximumSpeed() override
     {
-        if (isnan(m_ForwardSpeed.value())) {
+        if (std::isnan(m_ForwardSpeed.value())) {
             return Tank::getMaximumSpeed();
         } else {
             return m_ForwardSpeed;
@@ -88,7 +102,7 @@ public:
 
     virtual radians_per_second_t getMaximumTurnSpeed() override
     {
-        if (isnan(m_TurnSpeed.value())) {
+        if (std::isnan(m_TurnSpeed.value())) {
             return Tank::getMaximumTurnSpeed();
         } else {
             return m_TurnSpeed;

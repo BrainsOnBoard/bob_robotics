@@ -157,10 +157,18 @@ public:
             } catch (std::runtime_error &) {
                 // Then getMaximumTurnSpeed() isn't implemented
             }
+
+            // Send maximum forward speed
             try {
                 sender.send("MAX " + std::to_string(getMaximumSpeed().value()) + "\n");
             } catch (std::runtime_error &) {
                 // Then getMaximumSpeed() isn't implemented
+            }
+
+            try {
+                sender.send("AXS " + std::to_string(getRobotAxisLength().value()) + "\n");
+            } catch (std::runtime_error &) {
+                // Then getRobotAxisLength() isn't implemented
             }
         }
 
@@ -177,6 +185,7 @@ public:
     {
         if (m_Connection) {
             // Ignore incoming commands
+            m_Connection->setCommandHandler("AXS", nullptr);
             m_Connection->setCommandHandler("TRN", nullptr);
             m_Connection->setCommandHandler("MAX", nullptr);
             m_Connection->setCommandHandler("TNK", nullptr);
