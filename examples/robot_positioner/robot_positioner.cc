@@ -1,8 +1,9 @@
 // BoB robotics includes
-#include "robots/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
+#include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "robots/robot_positioner.h"
 #include "vicon/udp.h"
 
 // This program can be run locally on the robot or remotely
@@ -80,6 +81,9 @@ bob_main(int argc, char **argv)
     HID::Joystick joystick;
     bot.addJoystick(joystick);
 
+    // Print distance timer
+    Stopwatch printTimer;
+
     {
         // Catch exceptions on background threads
         BackgroundExceptionCatcher catcher;
@@ -117,6 +121,7 @@ bob_main(int argc, char **argv)
                 runPositioner = !runPositioner;
                 if (runPositioner) {
                     std::cout << "Starting positioner" << std::endl;
+                    printTimer.start();
                 } else {
                     bot.stopMoving();
                     std::cout << "Stopping positioner" << std::endl;
@@ -126,6 +131,8 @@ bob_main(int argc, char **argv)
             // Get motor commands from positioner, if it's running
             if (runPositioner) {
                 const auto objectData = vicon.getObjectData(0);
+                const auto position = objectData.getPosition();
+                const auto attitude = objectData.getAttitude();
                 if (objectData.timeSinceReceived() > 10s) {
                     bot.stopMoving();
                     runPositioner = false;
@@ -133,11 +140,24 @@ bob_main(int argc, char **argv)
                               << "Stopping trial" << std::endl;
                 } else if (robp.reachedGoal()) {
                     std::cout << "Reached goal" << std::endl;
+                    std::cout << "Final position: " << position.x() << ", " << position.y() << std::endl;
+                    std::cout << "Goal: " << goal.x() << ", " << goal.y() << std::endl;
+                    std::cout << "Distance to goal: "
+                              << goal.distance2D(position)
+                              << " (" << goal.yaw() - attitude[0] << ")"
+                              << std::endl;
                     runPositioner = false;
                 } else {
-                    const auto position = objectData.getPosition();
-                    const auto attitude = objectData.getAttitude();
                     robp.updateMotors(bot, { position[0], position[1], attitude[0] });
+
+                    // Print status
+                    if (printTimer.elapsed() > 500ms) {
+                        printTimer.start();
+                        std::cout << "Distance to goal: "
+                                  << goal.distance2D(position)
+                                  << " (" << goal.yaw() - attitude[0] << ")"
+                                  << std::endl;
+                    }
                 }
             } else if (!joystickUpdate) {
                 std::this_thread::sleep_for(5ms);
