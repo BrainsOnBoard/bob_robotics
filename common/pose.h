@@ -208,7 +208,7 @@ public:
 
 private:
     Vector2<LengthUnit> m_Position;
-    AngleUnit m_Angle;
+    AngleUnit m_Angle{};
 };
 
 //! A three-dimensional pose
