@@ -47,18 +47,19 @@ private:
 
     static radian_t angleWrapAround(radian_t angle)
     {
-
-        while (angle < 0_deg) {
+        while (angle < -180_deg) {
             angle += 360_deg;
         }
-        while (angle > 360_deg) {
-            angle -= 360_deg;
-        }
-        if (angle > 180_deg) {
+        while (angle > 180_deg) {
             angle -= 360_deg;
         }
 
         return angle;
+    }
+
+    static radian_t circularDistance(radian_t a, radian_t b)
+    {
+        return angleWrapAround(a - b);
     }
 
     // updates the range and bearing from the goal location
@@ -72,7 +73,7 @@ private:
         m_DistanceToGoal = units::math::hypot(delta_x, delta_y);
 
         // calculate bearing
-        m_HeadingToGoal = m_RobotPose.yaw() - units::math::atan2(delta_y, delta_x);
+        m_HeadingToGoal = circularDistance(m_RobotPose.yaw(), units::math::atan2(delta_y, delta_x));
 
         // changing from <0,360> to <-180, 180>
         m_HeadingToGoal = angleWrapAround(m_HeadingToGoal);
@@ -143,8 +144,7 @@ public:
         }
 
         // orientation of Target with respect to the line of sight from the observer to the target
-        radian_t theta = m_GoalPose.yaw() - m_HeadingToGoal;
-        theta = angleWrapAround(theta);
+        radian_t theta = circularDistance(m_GoalPose.yaw(), m_HeadingToGoal);
 
         using namespace units::dimensionless; // scalar_t
         const radian_t delta = units::math::atan(scalar_t((-m_K1 * theta).value()));
