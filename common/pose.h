@@ -15,7 +15,7 @@ public:
     template<typename PoseType>
     bool operator==(const PoseType &pose) const
     {
-        const auto derived = reinterpret_cast<const Derived *>(this);
+        const auto derived = static_cast<const Derived *>(this);
         return derived->x() == pose.x() && derived->y() == pose.y() && derived->z() == pose.z()
                 && derived->yaw() == pose.yaw() && derived->pitch() == pose.pitch() && derived->roll() == pose.roll();
     }
@@ -25,11 +25,26 @@ public:
     {
         return !(*this == pose);
     }
+
+    template<typename PositionType>
+    auto distance2D(const PositionType &point) const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return derived->position().distance2D(point.position());
+    }
+
+    template<typename PositionType>
+    auto distance3D(const PositionType &point) const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return derived->position().distance3D(point.position());
+    }
 };
 
 //! Base class for vectors of length units
-template<typename LengthUnit, size_t N>
+template<typename LengthUnit, size_t N, typename Derived>
 class VectorBase
+  : public PoseBase<Derived>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
@@ -40,7 +55,8 @@ public:
 
     template<typename... Ts>
     VectorBase(Ts &&... args)
-      : m_Array({ std::forward<Ts>(args)... })
+      : PoseBase<Derived>()
+      , m_Array({ std::forward<Ts>(args)... })
     {}
 
     operator const std::array<LengthUnit, N> &() const
@@ -48,9 +64,30 @@ public:
         return m_Array;
     }
 
+    template<typename PositionType>
+    LengthUnit distance3D(const PositionType &point) const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        using namespace units::math;
+        return sqrt(pow<2>(derived->x() - point.x()) +
+                    pow<2>(derived->y() - point.y()) +
+                    pow<2>(derived->z() - point.z()));
+    }
+
+    template<typename PositionType>
+    LengthUnit distance2D(const PositionType &point) const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        using namespace units::math;
+        return hypot(derived->x() - point.x(), derived->y() - point.y());
+    }
+
     LengthUnit &operator[](size_t i) { return m_Array[i]; }
     const LengthUnit &operator[](size_t i) const { return m_Array[i]; }
     static constexpr size_t size() { return N; }
+
+    const auto &position() const { return static_cast<const Derived &>(*this); }
+    auto &position() { return static_cast<Derived &>(*this); }
 
     auto begin() { return m_Array.begin(); }
     auto begin() const { return m_Array.begin(); }
@@ -73,14 +110,13 @@ class Vector3;
 //! 2D length unit vector
 template<typename LengthUnit>
 class Vector2
-  : public VectorBase<LengthUnit, 2>
-  , public PoseBase<Vector2<LengthUnit>>
+  : public VectorBase<LengthUnit, 2, Vector2<LengthUnit>>
 {
 public:
     Vector2() = default;
 
     Vector2(LengthUnit x, LengthUnit y)
-      : VectorBase<LengthUnit, 2>(x, y)
+      : VectorBase<LengthUnit, 2, Vector2<LengthUnit>>(x, y)
     {}
 
     Vector2(const std::array<LengthUnit, 2> &array)
@@ -99,14 +135,13 @@ public:
 //! 3D length unit vector
 template<typename LengthUnit>
 class Vector3
-  : public VectorBase<LengthUnit, 3>
-  , public PoseBase<Vector3<LengthUnit>>
+  : public VectorBase<LengthUnit, 3, Vector3<LengthUnit>>
 {
 public:
     Vector3() = default;
 
     Vector3(LengthUnit x, LengthUnit y, LengthUnit z)
-      : VectorBase<LengthUnit, 3>(x, y, z)
+      : VectorBase<LengthUnit, 3, Vector3<LengthUnit>>(x, y, z)
     {}
 
     Vector3(const std::array<LengthUnit, 3> &array)
