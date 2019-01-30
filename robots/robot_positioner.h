@@ -126,7 +126,7 @@ public:
             radians_per_second_t &omega) // angular velocity to update
     {
         // If we're already at the goal, then we're done
-        if (didReachGoal()) {
+        if (reachedGoal()) {
             v = 0_mps;
             omega = 0_rad_per_s;
             return;
@@ -180,7 +180,7 @@ public:
     }
 
     //! returns true if the robot reached the goal position
-    bool didReachGoal()
+    bool reachedGoal() const
     {
         return m_DistanceToGoal < m_StoppingDistance &&
                units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;

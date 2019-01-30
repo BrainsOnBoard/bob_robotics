@@ -101,7 +101,7 @@ main()
             robp.updateMotors(robot, pose);
 
             // Check if the robot is within threshold distance and bearing of goal
-            if (robp.didReachGoal()) {
+            if (robp.reachedGoal()) {
                 if (!reachedGoalAnnounced) {
                     std::cout << "Reached goal" << std::endl;
                     reachedGoalAnnounced = true;

@@ -131,6 +131,9 @@ bob_main(int argc, char **argv)
                     runPositioner = false;
                     std::cerr << "Error: Could not get position from Vicon system\n"
                               << "Stopping trial" << std::endl;
+                } else if (robp.reachedGoal()) {
+                    std::cout << "Reached goal" << std::endl;
+                    runPositioner = false;
                 } else {
                     const auto position = objectData.getPosition();
                     const auto attitude = objectData.getAttitude();
