@@ -1,0 +1,11 @@
+%YAML:1.0
+---
+metadata:
+   time: "2019-01-29 13:07:15"
+   type: route
+   camera:
+      name: opengl
+      resolution: [ 720, 150 ]
+      isPanoramic: 0
+   needsUnwrapping: 0
+   isGreyscale: 0
