@@ -119,7 +119,7 @@ bob_main(int argc, char **argv)
     std::cout << "Connected to " << ipAddress << std::endl;
 
     // Run client in background, checking for background errors thrown
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
+    BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch ctrl-C
     client.runInBackground();
 
