@@ -118,11 +118,6 @@ bob_main(int argc, char **argv)
     Net::Client client(ipAddress);
     std::cout << "Connected to " << ipAddress << std::endl;
 
-    // Run client in background, checking for background errors thrown
-    BackgroundExceptionCatcher catcher;
-    catcher.trapSignals(); // Catch ctrl-C
-    client.runInBackground();
-
     // Send motor commands to robot
     Robots::TankNetSink robot(client);
 
@@ -175,6 +170,10 @@ bob_main(int argc, char **argv)
     }
     std::cout << "Connected to Vicon system" << std::endl;
 
+    // Run client in background, checking for background errors thrown
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Catch ctrl-C
+    client.runInBackground();
     while (!joystick.isPressed(HID::JButton::B)) {
         // Check for errors
         catcher.check();
