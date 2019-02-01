@@ -61,7 +61,7 @@ public:
 
     virtual meters_per_second_t getMaximumSpeed() override
     {
-        return 11_mps;
+        return 0.11_mps;
     }
 
     virtual millimeter_t getRobotAxisLength() override
