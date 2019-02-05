@@ -32,7 +32,10 @@ public:
       : m_I2C(path, slaveAddress)
       , m_Left(0.0f)
       , m_Right(0.0f)
-    {}
+    {
+        // Sometimes Norbots get stuck driving, so let's stop it if we need to
+        stopMoving();
+    }
 
     //----------------------------------------------------------------------------
     // Tank virtuals
