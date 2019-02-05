@@ -232,11 +232,11 @@ bob_main(int argc, char **argv)
                         runPositioner = false;
                         std::cout << "Reached last goal" << std::endl;
                     } else {
-                        if (canPlaySound) {
-                            system(PLAY_PATH " -q " SOUND_FILE_PATH);
-                        } else {
-                            std::this_thread::sleep_for(1s);
-                        }
+                        std::this_thread::sleep_for(1s);
+                    }
+
+                    if (canPlaySound) {
+                        system(PLAY_PATH " -q " SOUND_FILE_PATH);
                     }
                 }
                 if (runPositioner) {
