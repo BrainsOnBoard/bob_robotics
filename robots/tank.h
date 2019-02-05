@@ -114,13 +114,14 @@ public:
                   << std::endl;
     }
 
-    void tankMaxScaled(const float left, const float right)
+    void tankMaxScaled(const float left, const float right, const float max = 1.f)
     {
         const float larger = std::max(std::abs(left), std::abs(right));
-        if (larger <= 1.f) {
+        if (larger <= max) {
             tank(left, right);
         } else {
-            tank(left / larger, right / larger);
+            const float ratio = max / larger;
+            tank(ratio * left, ratio * right);
         }
     }
 
