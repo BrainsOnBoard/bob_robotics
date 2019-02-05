@@ -1,4 +1,3 @@
-NO_OPENCV := 1
 WITH_I2C_ROBOT := 1
 include ../../make_common/bob_robotics.mk
 
