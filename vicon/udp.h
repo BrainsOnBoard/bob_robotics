@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
-#include "../common/default_get_pose.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
 #include "../os/net.h"
@@ -27,19 +26,11 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
-  : public DefaultGetPose<ObjectData, units::length::millimeter_t, units::angle::radian_t>
 {
     using radian_t = units::angle::radian_t;
     using millimeter_t = units::length::millimeter_t;
 
 public:
-    ObjectData()
-      : m_FrameNumber{ 0 }
-      , m_Position{ 0_mm, 0_mm, 0_mm }
-      , m_Attitude{ 0_rad, 0_rad, 0_rad }
-    {
-    }
-
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
@@ -57,12 +48,12 @@ public:
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        m_Position[0] = x;
-        m_Position[1] = y;
-        m_Position[2] = z;
-        m_Attitude[0] = yaw;
-        m_Attitude[1] = pitch;
-        m_Attitude[2] = roll;
+        m_Pose.x() = x;
+        m_Pose.y() = y;
+        m_Pose.z() = z;
+        m_Pose.yaw() = yaw;
+        m_Pose.pitch() = pitch;
+        m_Pose.roll() = roll;
     }
 
     uint32_t getFrameNumber() const
@@ -73,13 +64,18 @@ public:
     template<typename LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition() const
     {
-        return convertUnitArray<LengthUnit>(m_Position);
+        return m_Pose.position();
     }
 
     template<typename AngleUnit = radian_t>
     std::array<AngleUnit, 3> getAttitude() const
     {
-        return convertUnitArray<AngleUnit>(m_Attitude);
+        return convertUnitArray<AngleUnit>(m_Pose.attitude());
+    }
+
+    const auto &getPose() const
+    {
+        return m_Pose;
     }
 
     const char *getName() const{ return m_Name; }
@@ -90,10 +86,9 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    uint32_t m_FrameNumber;
+    uint32_t m_FrameNumber = 0;
     char m_Name[24];
-    Vector3<millimeter_t> m_Position;
-    std::array<radian_t, 3> m_Attitude;
+    Pose3<millimeter_t, radian_t> m_Pose;
     Stopwatch m_ReceivedTimer;
 };
 
