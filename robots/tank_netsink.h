@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/stopwatch.h"
 #include "../net/connection.h"
 #include "tank.h"
 
@@ -11,6 +12,7 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <iostream>
 #include <limits>
 #include <string>
 
@@ -80,9 +82,22 @@ public:
             return;
         }
 
+        // time how long it takes to send command
+        Stopwatch netTimer;
+        netTimer.start();
+
         // send steering command
         m_Connection.getSocketWriter().send("TNK " + std::to_string(left) + " " +
                                             std::to_string(right) + "\n");
+
+        // print warning if steering command was slow to send
+        using namespace std::literals;
+        const auto duration = netTimer.elapsed();
+        if (duration > 100ms) {
+            std::cerr << "Warning: Network is slow ("
+                      << static_cast<units::time::millisecond_t>(duration)
+                      << " to send motor command)" << std::endl;
+        }
 
         // store current left/right values to compare next time
         m_OldLeft = left;
