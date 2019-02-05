@@ -162,6 +162,10 @@ bob_main(int argc, char **argv)
         plt::title("Close when you're ready");
         plt::show();
 
+        // Drop the repeated last elements from these vectors for saving
+        vertexX.resize(numVertices);
+        vertexY.resize(numVertices);
+
         // User input to decide what to do next
         do {
             std::cout << "Would you like to enter another object? [y|n|r = redo|q = quit] " << std::flush;
@@ -169,7 +173,7 @@ bob_main(int argc, char **argv)
             std::cin >> c;
             switch (c) {
             case 'n': // Save and quit
-                objects.emplace_back(std::move(markerX), std::move(markerY));
+                objects.emplace_back(std::move(vertexX), std::move(vertexY));
 
                 {
                     const std::string filename = "objects.yaml";
