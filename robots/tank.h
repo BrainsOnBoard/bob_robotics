@@ -91,7 +91,7 @@ public:
               _radians_per_second_t clockwiseSpeed,
               const bool maxScaled = false)
     {
-        const _meter_t axisLength = getRobotAxisLength();
+        const _meter_t axisLength = getRobotWidth();
         const _meters_per_second_t diff{
             (clockwiseSpeed * axisLength / 2).value()
         };
@@ -131,9 +131,9 @@ public:
         }
     }
 
-    virtual _millimeter_t getRobotAxisLength()
+    virtual _millimeter_t getRobotWidth()
     {
-        throw std::runtime_error("getRobotAxisLength() is not implemented for this class");
+        throw std::runtime_error("getRobotWidth() is not implemented for this class");
     }
 
     virtual _meters_per_second_t getMaximumSpeed()
@@ -144,7 +144,7 @@ public:
     virtual _radians_per_second_t getMaximumTurnSpeed()
     {
         // max turn speed = v_max / r
-        return _radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<_meter_t>(getRobotAxisLength())).value() };
+        return _radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<_meter_t>(getRobotWidth())).value() };
     }
 
     //! Controls the robot with a network stream
@@ -164,9 +164,9 @@ public:
             // Then getMaximumSpeed() isn't implemented
         }
         try {
-            axisLength = getRobotAxisLength().value();
+            axisLength = getRobotWidth().value();
         } catch (std::runtime_error &) {
-            // Then getRobotAxisLength() isn't implemented
+            // Then getRobotWidth() isn't implemented
         }
 
         std::stringstream ss;

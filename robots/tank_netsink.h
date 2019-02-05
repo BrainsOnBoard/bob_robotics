@@ -89,10 +89,10 @@ public:
         m_OldRight = right;
     }
 
-    virtual millimeter_t getRobotAxisLength() override
+    virtual millimeter_t getRobotWidth() override
     {
         if (std::isnan(m_AxisLength.value())) {
-            return Tank::getRobotAxisLength();
+            return Tank::getRobotWidth();
         } else {
             return m_AxisLength;
         }

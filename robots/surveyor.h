@@ -89,7 +89,7 @@ public:
         }
     }
 
-    virtual millimeter_t getRobotAxisLength() override
+    virtual millimeter_t getRobotWidth() override
     {
         return 150_mm;
     }
