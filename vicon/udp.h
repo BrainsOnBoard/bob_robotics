@@ -73,7 +73,8 @@ public:
         return convertUnitArray<AngleUnit>(m_Pose.attitude());
     }
 
-    const auto &getPose() const
+    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
+    Pose3<LengthUnit, AngleUnit> getPose() const
     {
         return m_Pose;
     }
