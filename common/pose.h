@@ -5,6 +5,7 @@
 
 // Standard C++ includes
 #include <array>
+#include <ostream>
 
 namespace BoBRobotics {
 
@@ -274,3 +275,17 @@ convertUnitArray(const ArrayType &values)
              static_cast<OutputUnit>(values[2]) };
 }
 } // BoBRobotics
+
+template<typename LengthUnit>
+std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector2<LengthUnit> &position)
+{
+    os << "(" << position.x() << ", " << position.y() << ")";
+    return os;
+}
+
+template<typename LengthUnit>
+std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector3<LengthUnit> &position)
+{
+    os << "(" << position.x() << ", " << position.y() << ", " << position.z() << ")";
+    return os;
+}
