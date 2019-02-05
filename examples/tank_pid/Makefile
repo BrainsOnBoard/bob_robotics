@@ -1,4 +1,5 @@
 WITH_I2C_ROBOT := 1
+WITH_MATPLOTLIBCPP := 1
 include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := tank_pid

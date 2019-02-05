@@ -1,9 +1,10 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
+#include "common/plot_agent.h"
 #include "common/read_objects.h"
 #include "hid/joystick.h"
+#include "robots/tank_pid.h"
 #include "vicon/udp.h"
 
 // This program can be run locally on the robot or remotely
@@ -15,6 +16,7 @@
 #endif
 
 // Third-party includes
+#include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -34,6 +36,7 @@ using namespace units::angle;
 using namespace units::angular_velocity;
 using namespace units::velocity;
 using namespace std::literals;
+namespace plt = matplotlibcpp;
 
 // For sound
 #define PLAY_PATH "/usr/bin/play"
@@ -144,7 +147,6 @@ bob_main(int argc, char **argv)
 
     Robots::TankPID pid(kp, ki, kd, averageSpeed);
     bool runPositioner = false;
-    Stopwatch printTimer;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
@@ -155,7 +157,6 @@ bob_main(int argc, char **argv)
             runPositioner = !runPositioner;
             if (runPositioner) {
                 std::cout << "Starting positioner" << std::endl;
-                printTimer.start();
                 commandTimer.start();
                 pid.start();
 
@@ -196,16 +197,41 @@ bob_main(int argc, char **argv)
         std::cout << std::endl
                   << "Press Y to start homing" << std::endl;
 
-        while (!joystick.isPressed(HID::JButton::B)) {
+        // For plotting goal positions
+        std::vector<double> goalX, goalY, currentGoalX(1), currentGoalY(1);
+        for (auto &goal : goals) {
+            goalX.push_back(goal.x().value());
+            goalY.push_back(goal.y().value());
+        }
+        do {
             // Check for background exceptions
             catcher.check();
 
             // Poll for joystick events
-            const bool joystickUpdate = joystick.update();
+            joystick.update();
+
+            // Get robot's position from Vicon system
+            const auto objectData = vicon.getObjectData(0);
+
+            plt::figure(1);
+            plt::clf();
+
+            // Plot goal positions
+            plt::plot(goalX, goalY, "b+");
+
+            if (runPositioner) {
+                // Plot current goal in green
+                currentGoalX[0] = goalsIter->x().value();
+                currentGoalY[0] = goalsIter->y().value();
+                plt::plot(currentGoalX, currentGoalY, "g+");
+            }
+
+            // Plot robot's pose with an arrow
+            plotAgent(objectData, -2000_mm, 2000_mm, -2000_mm, 2000_mm);
+            plt::pause(0.025);
 
             // Get motor commands from positioner, if it's running
             if (runPositioner) {
-                const auto objectData = vicon.getObjectData(0);
                 if (objectData.timeSinceReceived() > 10s) {
                     robot.stopMoving();
                     runPositioner = false;
@@ -239,24 +265,17 @@ bob_main(int argc, char **argv)
                         system(PLAY_PATH " -q " SOUND_FILE_PATH);
                     }
                 }
-                if (runPositioner) {
-                    // Drive robot with PID, throttling number of commands sent
-                    if (commandTimer.elapsed() > commandSpacing) {
-                        commandTimer.start();
-                        pid.drive(robot, objectData.getPose(), *goalsIter);
-                    }
 
-                    // Print status
-                    if (printTimer.elapsed() > 500ms) {
-                        printTimer.start();
-                        printGoalStats(*goalsIter, position);
-                    }
+                // We throttle the number of commands sent
+                if (runPositioner && commandTimer.elapsed() > commandSpacing) {
+                    commandTimer.start();
+                    pid.drive(robot, objectData.getPose(), *goalsIter);
                 }
-            } else if (!joystickUpdate) {
-                std::this_thread::sleep_for(5ms);
             }
-        }
+        } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
     }
+
+    plt::close();
 
     return EXIT_SUCCESS;
 }
