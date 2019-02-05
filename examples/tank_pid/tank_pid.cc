@@ -62,7 +62,7 @@ int
 bob_main(int argc, char **argv)
 {
     // Parameters
-    constexpr meter_t stoppingDistance = 5_cm; // if the robot's distance from goal < stopping dist, robot stops
+    constexpr meter_t stoppingDistance = 3_cm; // if the robot's distance from goal < stopping dist, robot stops
     constexpr float kp = 0.1f;
     constexpr float ki = 0.1f;
     constexpr float kd = 0.1f;
