@@ -4,3 +4,6 @@
 [submodule "third_party/imgui/imgui"]
 	path = third_party/imgui/imgui
 	url = ../../ocornut/imgui.git
+[submodule "third_party/vicon_data_stream_sdk"]
+	path = third_party/vicon_data_stream_sdk
+	url = https://github.com/BrainsOnBoard/ViconDataStreamSDK
