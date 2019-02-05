@@ -79,8 +79,30 @@ bob_main(int argc, char **argv)
     HID::Joystick joystick;
     robot.addJoystick(joystick);
 
-    // Print distance timer
+    // Throttle the number of motor commands we send
+    Stopwatch commandTimer;
+    constexpr auto commandSpacing = 100ms;
+
+    Robots::TankPID pid(kp, ki, kd, averageSpeed);
+    bool runPositioner = false;
     Stopwatch printTimer;
+    joystick.addHandler([&](HID::JButton button, bool pressed) {
+        if (pressed && button == HID::JButton::Y) {
+            runPositioner = !runPositioner;
+            if (runPositioner) {
+                std::cout << "Starting positioner" << std::endl;
+                printTimer.start();
+                commandTimer.start();
+                pid.start();
+            } else {
+                robot.stopMoving();
+                std::cout << "Stopping positioner" << std::endl;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    });
 
     {
         // Catch exceptions on background threads
@@ -92,31 +114,17 @@ bob_main(int argc, char **argv)
         client.runInBackground();
 #endif
 
-        Robots::TankPID pid(kp, ki, kd, averageSpeed);
-
         // set goal pose
         const Vector2<millimeter_t> goal{ 0_mm, 0_mm };
         std::cout << "Goal: (" << goal.x() << ", " << goal.y() << ")" << std::endl;
         std::cout << "Press Y to start homing" << std::endl;
 
-        bool runPositioner = false;
         while (!joystick.isPressed(HID::JButton::B)) {
             // Check for background exceptions
             catcher.check();
 
             // Poll for joystick events
             const bool joystickUpdate = joystick.update();
-            if (joystick.isPressed(HID::JButton::Y)) {
-                runPositioner = !runPositioner;
-                if (runPositioner) {
-                    std::cout << "Starting positioner" << std::endl;
-                    printTimer.start();
-                    pid.start();
-                } else {
-                    robot.stopMoving();
-                    std::cout << "Stopping positioner" << std::endl;
-                }
-            }
 
             // Get motor commands from positioner, if it's running
             if (runPositioner) {
@@ -143,7 +151,11 @@ bob_main(int argc, char **argv)
                     robot.stopMoving();
                     runPositioner = false;
                 } else {
-                    pid.drive(robot, objectData.getPose(), goal);
+                    // Drive robot with PID, throttling number of commands sent
+                    if (commandTimer.elapsed() > commandSpacing) {
+                        pid.drive(robot, objectData.getPose(), goal);
+                        commandTimer.start();
+                    }
 
                     // Print status
                     if (printTimer.elapsed() > 500ms) {
