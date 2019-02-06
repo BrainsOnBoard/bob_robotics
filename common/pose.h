@@ -9,6 +9,18 @@
 
 namespace BoBRobotics {
 
+template<typename LengthUnit>
+class Vector3;
+
+template<typename LengthUnit>
+class Vector2;
+
+template<typename LengthUnit, typename AngleUnit>
+class Pose3;
+
+template<typename LengthUnit, typename AngleUnit>
+class Pose2;
+
 template<typename Derived>
 class PoseBase
 {
@@ -27,6 +39,35 @@ public:
         return !(*this == pose);
     }
 
+    template<typename LengthUnit2>
+    operator Vector2<LengthUnit2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return Vector2<LengthUnit2>(derived->x(), derived->y());
+    }
+
+    template<typename LengthUnit2>
+    operator Vector3<LengthUnit2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return Vector3<LengthUnit2>(derived->x(), derived->y(), derived->z());
+    }
+
+    template<typename LengthUnit2, typename AngleUnit2>
+    operator Pose2<LengthUnit2, AngleUnit2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return Pose2<LengthUnit2, AngleUnit2>{ derived->x(), derived->y(), derived->yaw() };
+    }
+
+    template<typename LengthUnit2, typename AngleUnit2>
+    operator Pose3<LengthUnit2, AngleUnit2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return Pose3<LengthUnit2, AngleUnit2>{ { derived->x(), derived->y(), derived->z() },
+                                               { derived->yaw(), derived->pitch(), derived->roll() } };
+    }
+
     template<typename PositionType>
     auto distance2D(const PositionType &point) const
     {
@@ -41,12 +82,6 @@ public:
         return derived->position().distance3D(point.position());
     }
 };
-
-template<typename LengthUnit>
-class Vector3;
-
-template<typename LengthUnit>
-class Vector2;
 
 //! Base class for vectors of length units
 template<typename LengthUnit, size_t N, typename Derived>
@@ -69,20 +104,6 @@ public:
     operator const std::array<LengthUnit, N> &() const
     {
         return m_Array;
-    }
-
-    template<typename LengthUnit2>
-    operator Vector2<LengthUnit2>() const
-    {
-        const auto derived = static_cast<const Derived *>(this);
-        return Vector2<LengthUnit2>(derived->x(), derived->y());
-    }
-
-    template<typename LengthUnit2>
-    operator Vector3<LengthUnit2>() const
-    {
-        const auto derived = static_cast<const Derived *>(this);
-        return Vector3<LengthUnit2>(derived->x(), derived->y(), derived->z());
     }
 
     template<typename PositionType>
@@ -196,18 +217,6 @@ public:
       , m_Angle(angle)
     {}
 
-    template<typename LengthUnit2, typename AngleUnit2>
-    operator Pose2<LengthUnit2, AngleUnit2>() const
-    {
-        return Pose2<LengthUnit2, AngleUnit2>{ x(), y(), yaw() };
-    }
-
-    template<typename LengthUnit2, typename AngleUnit2>
-    operator Pose3<LengthUnit2, AngleUnit2>() const
-    {
-        return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
-    }
-
     Vector2<LengthUnit> &position() { return m_Position; }
     const Vector2<LengthUnit> &position() const { return m_Position; }
     LengthUnit &x() { return m_Position[0]; }
@@ -302,5 +311,20 @@ template<typename LengthUnit>
 std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector3<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ", " << position.z() << ")";
+    return os;
+}
+
+template<typename LengthUnit, typename AngleUnit>
+std::ostream &operator<<(std::ostream &os, const BoBRobotics::Pose2<LengthUnit, AngleUnit> &pose)
+{
+    os << pose.position() << " at " << pose.yaw();
+    return os;
+}
+
+template<typename LengthUnit, typename AngleUnit>
+std::ostream &operator<<(std::ostream &os, const BoBRobotics::Pose3<LengthUnit, AngleUnit> &pose)
+{
+    os << pose.position()
+       << " at (" << pose.yaw() << ", " << pose.pitch() << ", " << pose.roll() << ")";
     return os;
 }
