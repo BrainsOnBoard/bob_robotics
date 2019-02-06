@@ -20,11 +20,14 @@
 namespace BoBRobotics {
 namespace Robots {
 
+using namespace units::literals;
+
 enum class TankPIDState
 {
     Invalid,
     OrientingToGoal,
-    DrivingToGoal
+    DrivingToGoal,
+    AtGoal
 };
 
 class TankPID
@@ -36,9 +39,15 @@ class TankPID
     using Event = FSM<TankPIDState>::StateHandler::Event;
 
 public:
-    TankPID(Tank &robot, float Kp, float Ki, float Kd, float averageSpeed = 0.5f)
+    TankPID(Tank &robot, float Kp, float Ki, float Kd,
+            meter_t distanceTolerance = 5_cm,
+            radian_t angleTolerance = 3_deg,
+            radian_t startTurningThreshold = 45_deg, float averageSpeed = 0.5f)
       : m_StateMachine(this, TankPIDState::Invalid)
       , m_Robot(robot)
+      , m_DistanceTolerance(distanceTolerance)
+      , m_AngleTolerance(angleTolerance)
+      , m_StartTurningThreshold(startTurningThreshold)
       , m_Kp(Kp)
       , m_Ki(Ki)
       , m_Kd(Kd)
@@ -56,7 +65,7 @@ public:
         m_StateMachine.transition(TankPIDState::OrientingToGoal);
     }
 
-    void update(const Pose2<meter_t, radian_t> &robotPose)
+    bool driveRobot(const Pose2<meter_t, radian_t> &robotPose)
     {
         m_RobotPose = robotPose;
         const radian_t headingToGoal = units::math::atan2(m_Goal.y() - m_RobotPose.y(),
@@ -65,11 +74,19 @@ public:
 
         // Get state machine to carry out appropriate action
         m_StateMachine.update();
+
+        // Return true if we're at goal (within m_DistanceTolerance)
+        return m_StateMachine.getCurrentState() == TankPIDState::AtGoal;
     }
 
     virtual bool handleEvent(TankPIDState state, Event event) override
     {
         using namespace units::math;
+
+        if (event == Event::Update && m_Goal.distance2D(m_RobotPose) < m_DistanceTolerance) {
+            m_StateMachine.transition(TankPIDState::AtGoal);
+            return true;
+        }
 
         switch (state) {
         case TankPIDState::OrientingToGoal:
@@ -80,7 +97,7 @@ public:
                  * If m_HeadingOffset is suitably small, we've finished turning
                  * towards the goal.
                  */
-                if (abs(m_HeadingOffset) <= 3_deg) {
+                if (abs(m_HeadingOffset) <= m_AngleTolerance) {
                     // Start driving to the goal in a straight(ish) line
                     m_StateMachine.transition(TankPIDState::DrivingToGoal);
                 } else if (m_HeadingOffset < 0_deg) {
@@ -102,7 +119,7 @@ public:
                 m_Stopwatch.start();
             } else if (event == Event::Update) {
                 // If the heading offset is big, then start turning on the spot
-                if (abs(m_HeadingOffset) > 45_deg) {
+                if (abs(m_HeadingOffset) > m_StartTurningThreshold) {
                     m_StateMachine.transition(TankPIDState::OrientingToGoal);
                     return true;
                 }
@@ -131,6 +148,11 @@ public:
             // Keep track of previous error for I and D terms of PID
             m_LastError = error;
         } break;
+        case TankPIDState::AtGoal:
+            if (event == Event::Enter) {
+                std::cout << "Reached goal" << std::endl;
+            }
+            break;
         case TankPIDState::Invalid:
             break;
         }
@@ -143,6 +165,8 @@ private:
     Tank &m_Robot;
     Pose2<meter_t, radian_t> m_RobotPose;
     Vector2<meter_t> m_Goal;
+    const meter_t m_DistanceTolerance;
+    const radian_t m_AngleTolerance, m_StartTurningThreshold;
     radian_t m_HeadingOffset;
     double m_LastError = std::numeric_limits<double>::quiet_NaN();
     Stopwatch m_Stopwatch;

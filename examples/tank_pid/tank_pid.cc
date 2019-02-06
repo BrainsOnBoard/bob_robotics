@@ -1,10 +1,10 @@
 // BoB robotics includes
+#include "robots/tank_pid.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/plot_agent.h"
 #include "common/read_objects.h"
 #include "hid/joystick.h"
-#include "robots/tank_pid.h"
 #include "vicon/udp.h"
 
 // This program can be run locally on the robot or remotely
@@ -128,7 +128,9 @@ bob_main(int argc, char **argv)
     if (goals.empty()) {
         goals.emplace_back(0_mm, 0_mm);
     }
-    auto goalsIter = goals.begin();
+
+    // For iterating through the goals
+    decltype(goals)::iterator goalsIter;
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
@@ -145,7 +147,7 @@ bob_main(int argc, char **argv)
     Stopwatch commandTimer;
     constexpr auto commandSpacing = 100ms;
 
-    Robots::TankPID pid(robot, kp, ki, kd, averageSpeed);
+    Robots::TankPID pid(robot, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (!pressed) {
@@ -159,7 +161,8 @@ bob_main(int argc, char **argv)
                 std::cout << "Starting positioner" << std::endl;
                 commandTimer.start();
 
-                // Aim for the current goal
+                // Start by aiming for the first goal
+                goalsIter = goals.begin();
                 pid.start(*goalsIter);
 
                 printGoalStats(*goalsIter, vicon.getObjectData(0).getPosition());
@@ -243,35 +246,34 @@ bob_main(int argc, char **argv)
                 }
 
                 const auto position = objectData.getPosition();
-                const auto distance = goalsIter->distance2D(position);
-                if (distance <= stoppingDistance) {
-                    // Move on to next goal
-                    goalsIter++;
-
-                    // Print stats
-                    printGoalStats(*goalsIter, position);
-                    std::cout << "Reached goal "
-                              << std::distance(goals.begin(), goalsIter)
-                              << "/" << goals.size() << std::endl;
-                    std::cout << "Final position: " << position << std::endl;
-
-                    robot.stopMoving();
-                    if (goalsIter == goals.cend()) {
-                        runPositioner = false;
-                        std::cout << "Reached last goal" << std::endl;
-                    } else {
-                        std::this_thread::sleep_for(1s);
-                    }
-
-                    if (canPlaySound) {
-                        system(PLAY_PATH " -q " SOUND_FILE_PATH);
-                    }
-                }
 
                 // We throttle the number of commands sent
                 if (runPositioner && commandTimer.elapsed() > commandSpacing) {
                     commandTimer.start();
-                    pid.update(objectData.getPose());
+                    if (pid.driveRobot(objectData.getPose())) {
+                        // Then we've reached the goal...
+                        // Move on to next goal
+                        goalsIter++;
+
+                        // Print stats
+                        printGoalStats(*goalsIter, position);
+                        std::cout << "Reached goal "
+                                  << std::distance(goals.begin(), goalsIter)
+                                  << "/" << goals.size() << std::endl;
+                        std::cout << "Final position: " << position << std::endl;
+
+                        robot.stopMoving();
+                        if (goalsIter == goals.cend()) {
+                            runPositioner = false;
+                            std::cout << "Reached last goal" << std::endl;
+                        } else {
+                            pid.start(*goalsIter);
+                        }
+
+                        if (canPlaySound) {
+                            system(PLAY_PATH " -q " SOUND_FILE_PATH);
+                        }
+                    }
                 }
             }
         } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));

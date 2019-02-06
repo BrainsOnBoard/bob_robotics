@@ -24,7 +24,7 @@ bob_main(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
     Robots::CarDisplay display;                     // For displaying the agent
-    Robots::TankPID pid(robot, .1f, .1f, .1f, 0.5f);       // PID controller
+    Robots::TankPID pid(robot, .1f, .1f, .1f);      // PID controller
 
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
@@ -64,8 +64,9 @@ bob_main(int, char **)
         display.runGUI(robotPose);
 
         // Run PID controller
-        if (pidRunning) {
-            pid.update(robotPose);
+        if (pidRunning && pid.driveRobot(robotPose)) {
+            // Stop PID if we're at goal
+            pidRunning = false;
         }
 
         // Check for joystick events
