@@ -34,8 +34,9 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const char(&name)[24], uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
-                radian_t yaw, radian_t pitch, radian_t roll)
+    void update(const char(&name)[24],
+                uint32_t frameNumber,
+                Pose3<millimeter_t, radian_t> pose)
     {
         // Copy name
         // **NOTE** this must already be NULL-terminated
@@ -48,12 +49,7 @@ public:
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        m_Pose.x() = x;
-        m_Pose.y() = y;
-        m_Pose.z() = z;
-        m_Pose.yaw() = yaw;
-        m_Pose.pitch() = pitch;
-        m_Pose.roll() = roll;
+        m_Pose = std::move(pose);
     }
 
     uint32_t getFrameNumber() const
@@ -96,6 +92,75 @@ private:
 // Forward declaration
 template<typename ObjectDataType>
 class UDPClient;
+
+//----------------------------------------------------------------------------
+// Vicon::ObjectDataVelocity
+//----------------------------------------------------------------------------
+//! Object data class which also calculate (un-filtered) velocity
+class ObjectDataVelocity : public ObjectData
+{
+    using radian_t = units::angle::radian_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+    using millisecond_t = units::time::millisecond_t;
+
+public:
+    ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
+    {}
+
+    //----------------------------------------------------------------------------
+    // Public API
+    //----------------------------------------------------------------------------
+    void update(const char(&name)[24],
+                uint32_t frameNumber,
+                Pose3<millimeter_t, radian_t> pose)
+    {
+        const Vector3<millimeter_t> position = pose.position();
+        constexpr millisecond_t frameS = 10_ms;
+        constexpr millisecond_t smoothingS = 30_ms;
+
+        // Calculate time since last frame
+        const uint32_t deltaFrames = frameNumber - getFrameNumber();
+        const auto deltaS = frameS * deltaFrames;
+
+        // Calculate exponential smoothing factor
+        const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
+
+        // Calculate instantaneous velocity
+        const auto oldPosition = getPosition<>();
+        std::array<meters_per_second_t, 3> instVelocity;
+        const auto calcVelocity = [deltaS](auto curr, auto prev) {
+            return (curr - prev) / deltaS;
+        };
+        std::transform(std::begin(position), std::end(position),
+                       std::begin(oldPosition), std::begin(instVelocity),
+                       calcVelocity);
+
+        // Exponentially smooth velocity
+        const auto smoothVelocity = [alpha](auto inst, auto prev) {
+            return (alpha * inst) + ((1.0 - alpha) * prev);
+        };
+        std::transform(std::begin(instVelocity), std::end(instVelocity),
+                       std::begin(m_Velocity), std::begin(m_Velocity),
+                       smoothVelocity);
+
+        // Superclass
+        // **NOTE** this is at the bottom so OLD position can be accessed
+        ObjectData::update(name, frameNumber, pose);
+    }
+
+    template<typename VelocityUnit = meters_per_second_t>
+    std::array<VelocityUnit, 3> getVelocity() const
+    {
+        return convertUnitArray<VelocityUnit>(m_Velocity);
+    }
+
+private:
+    //----------------------------------------------------------------------------
+    // Members
+    //----------------------------------------------------------------------------
+    std::array<meters_per_second_t, 3> m_Velocity;
+};
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Vicon::ObjectReference
@@ -148,73 +213,6 @@ private:
     const unsigned m_Id;
 };
 
-//----------------------------------------------------------------------------
-// Vicon::ObjectDataVelocity
-//----------------------------------------------------------------------------
-//! Object data class which also calculate (un-filtered) velocity
-class ObjectDataVelocity : public ObjectData
-{
-    using radian_t = units::angle::radian_t;
-    using meters_per_second_t = units::velocity::meters_per_second_t;
-    using millimeter_t = units::length::millimeter_t;
-    using millisecond_t = units::time::millisecond_t;
-
-public:
-    ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
-    {}
-
-    //----------------------------------------------------------------------------
-    // Public API
-    //----------------------------------------------------------------------------
-    void update(const char(&name)[24], uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
-                radian_t yaw, radian_t pitch, radian_t roll)
-    {
-        const Vector3<millimeter_t> position{ x, y, z };
-        constexpr millisecond_t frameS = 10_ms;
-        constexpr millisecond_t smoothingS = 30_ms;
-
-        // Calculate time since last frame
-        const uint32_t deltaFrames = frameNumber - getFrameNumber();
-        const auto deltaS = frameS * deltaFrames;
-
-        // Calculate exponential smoothing factor
-        const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
-
-        // Calculate instantaneous velocity
-        const auto oldPosition = getPosition<>();
-        std::array<meters_per_second_t, 3> instVelocity;
-        const auto calcVelocity = [deltaS](auto curr, auto prev) {
-            return (curr - prev) / deltaS;
-        };
-        std::transform(std::begin(position), std::end(position),
-                       std::begin(oldPosition), std::begin(instVelocity),
-                       calcVelocity);
-
-        // Exponentially smooth velocity
-        const auto smoothVelocity = [alpha](auto inst, auto prev) {
-            return (alpha * inst) + ((1.0 - alpha) * prev);
-        };
-        std::transform(std::begin(instVelocity), std::end(instVelocity),
-                       std::begin(m_Velocity), std::begin(m_Velocity),
-                       smoothVelocity);
-
-        // Superclass
-        // **NOTE** this is at the bottom so OLD position can be accessed
-        ObjectData::update(name, frameNumber, x, y, z, yaw, pitch, roll);
-    }
-
-    template<typename VelocityUnit = meters_per_second_t>
-    std::array<VelocityUnit, 3> getVelocity() const
-    {
-        return convertUnitArray<VelocityUnit>(m_Velocity);
-    }
-
-private:
-    //----------------------------------------------------------------------------
-    // Members
-    //----------------------------------------------------------------------------
-    std::array<meters_per_second_t, 3> m_Velocity;
-};
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Vicon::UDPClient
@@ -348,12 +346,12 @@ private:
         using namespace units::length;
         using namespace units::angle;
         m_ObjectData[id].update(name, frameNumber,
-                                millimeter_t(position[0]),
-                                millimeter_t(position[1]),
-                                millimeter_t(position[2]),
-                                radian_t(attitude[2]),
-                                radian_t(attitude[0]),
-                                radian_t(attitude[1]));
+                                { { millimeter_t(position[0]),
+                                    millimeter_t(position[1]),
+                                    millimeter_t(position[2])},
+                                  { radian_t(attitude[2]),
+                                    radian_t(attitude[0]),
+                                    radian_t(attitude[1]) } });
     }
 
     void readThread(int socket)
