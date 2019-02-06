@@ -42,6 +42,12 @@ public:
     }
 };
 
+template<typename LengthUnit>
+class Vector3;
+
+template<typename LengthUnit>
+class Vector2;
+
 //! Base class for vectors of length units
 template<typename LengthUnit, size_t N, typename Derived>
 class VectorBase
@@ -63,6 +69,20 @@ public:
     operator const std::array<LengthUnit, N> &() const
     {
         return m_Array;
+    }
+
+    template<typename LengthUnit2>
+    operator Vector2<LengthUnit2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return Vector2<LengthUnit>(derived->x(), derived->y());
+    }
+
+    template<typename LengthUnit2>
+    operator Vector3<LengthUnit2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return Vector3<LengthUnit>(derived->x(), derived->y(), derived->z());
     }
 
     template<typename PositionType>
@@ -105,9 +125,6 @@ private:
     std::array<LengthUnit, N> m_Array{};
 };
 
-template<typename LengthUnit>
-class Vector3;
-
 //! 2D length unit vector
 template<typename LengthUnit>
 class Vector2
@@ -123,8 +140,6 @@ public:
     Vector2(const std::array<LengthUnit, 2> &array)
       : Vector2(array[0], array[1])
     {}
-
-    operator Vector3<LengthUnit>() const { return Vector3<LengthUnit>(x(), y(), z()); }
 
     LengthUnit &x() { return (*this)[0]; }
     const LengthUnit &x() const { return (*this)[0]; }
