@@ -252,11 +252,11 @@ bob_main(int argc, char **argv)
                     commandTimer.start();
                     if (pid.driveRobot(objectData.getPose())) {
                         // Then we've reached the goal...
+                        printGoalStats(*goalsIter, position);
+
                         // Move on to next goal
                         goalsIter++;
 
-                        // Print stats
-                        printGoalStats(*goalsIter, position);
                         std::cout << "Reached goal "
                                   << std::distance(goals.begin(), goalsIter)
                                   << "/" << goals.size() << std::endl;
