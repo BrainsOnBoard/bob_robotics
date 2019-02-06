@@ -143,10 +143,6 @@ bob_main(int argc, char **argv)
     HID::Joystick joystick;
     robot.addJoystick(joystick);
 
-    // Throttle the number of motor commands we send
-    Stopwatch commandTimer;
-    constexpr auto commandSpacing = 100ms;
-
     Robots::TankPID pid(robot, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
@@ -159,7 +155,6 @@ bob_main(int argc, char **argv)
             runPositioner = !runPositioner;
             if (runPositioner) {
                 std::cout << "Starting positioner" << std::endl;
-                commandTimer.start();
 
                 // Start by aiming for the first goal
                 goalsIter = goals.begin();
@@ -248,31 +243,28 @@ bob_main(int argc, char **argv)
                 const auto position = objectData.getPosition();
 
                 // We throttle the number of commands sent
-                if (runPositioner && commandTimer.elapsed() > commandSpacing) {
-                    commandTimer.start();
-                    if (pid.driveRobot(objectData.getPose())) {
-                        // Then we've reached the goal...
-                        printGoalStats(*goalsIter, position);
+                if (runPositioner && pid.driveRobot(objectData.getPose())) {
+                    // Then we've reached the goal...
+                    printGoalStats(*goalsIter, position);
 
-                        // Move on to next goal
-                        goalsIter++;
+                    // Move on to next goal
+                    goalsIter++;
 
-                        std::cout << "Reached goal "
-                                  << std::distance(goals.begin(), goalsIter)
-                                  << "/" << goals.size() << std::endl;
-                        std::cout << "Final position: " << position << std::endl;
+                    std::cout << "Reached goal "
+                              << std::distance(goals.begin(), goalsIter)
+                              << "/" << goals.size() << std::endl;
+                    std::cout << "Final position: " << position << std::endl;
 
-                        robot.stopMoving();
-                        if (goalsIter == goals.cend()) {
-                            runPositioner = false;
-                            std::cout << "Reached last goal" << std::endl;
-                        } else {
-                            pid.start(*goalsIter);
-                        }
+                    robot.stopMoving();
+                    if (goalsIter == goals.cend()) {
+                        runPositioner = false;
+                        std::cout << "Reached last goal" << std::endl;
+                    } else {
+                        pid.start(*goalsIter);
+                    }
 
-                        if (canPlaySound) {
-                            system(PLAY_PATH " -q " SOUND_FILE_PATH);
-                        }
+                    if (canPlaySound) {
+                        system(PLAY_PATH " -q " SOUND_FILE_PATH);
                     }
                 }
             }
