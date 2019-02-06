@@ -75,14 +75,14 @@ public:
     operator Vector2<LengthUnit2>() const
     {
         const auto derived = static_cast<const Derived *>(this);
-        return Vector2<LengthUnit>(derived->x(), derived->y());
+        return Vector2<LengthUnit2>(derived->x(), derived->y());
     }
 
     template<typename LengthUnit2>
     operator Vector3<LengthUnit2>() const
     {
         const auto derived = static_cast<const Derived *>(this);
-        return Vector3<LengthUnit>(derived->x(), derived->y(), derived->z());
+        return Vector3<LengthUnit2>(derived->x(), derived->y(), derived->z());
     }
 
     template<typename PositionType>
