@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/circstat.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
 #include "../os/net.h"
@@ -100,14 +101,12 @@ class UDPClient;
 class ObjectDataVelocity : public ObjectData
 {
     using radian_t = units::angle::radian_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using millimeter_t = units::length::millimeter_t;
-    using millisecond_t = units::time::millisecond_t;
+    using second_t = units::time::millisecond_t;
 
 public:
-    ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
-    {}
-
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
@@ -115,9 +114,8 @@ public:
                 uint32_t frameNumber,
                 Pose3<millimeter_t, radian_t> pose)
     {
-        const Vector3<millimeter_t> position = pose.position();
-        constexpr millisecond_t frameS = 10_ms;
-        constexpr millisecond_t smoothingS = 30_ms;
+        constexpr second_t frameS = 10_ms;
+        constexpr second_t smoothingS = 30_ms;
 
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
@@ -126,23 +124,16 @@ public:
         // Calculate exponential smoothing factor
         const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
-        // Calculate instantaneous velocity
+        // Calculate velocities (m/s)
         const auto oldPosition = getPosition<>();
-        std::array<meters_per_second_t, 3> instVelocity;
-        const auto calcVelocity = [deltaS](auto curr, auto prev) {
-            return (curr - prev) / deltaS;
-        };
-        std::transform(std::begin(position), std::end(position),
-                       std::begin(oldPosition), std::begin(instVelocity),
-                       calcVelocity);
+        calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<millimeter_t>());
 
-        // Exponentially smooth velocity
-        const auto smoothVelocity = [alpha](auto inst, auto prev) {
-            return (alpha * inst) + ((1.0 - alpha) * prev);
+        // Calculate angular velocities (rad/s)
+        const auto oldAttitude = getAttitude<>();
+        const auto circDist = [](auto angle1, auto angle2) {
+            return circularDistance(angle1, angle2);
         };
-        std::transform(std::begin(instVelocity), std::end(instVelocity),
-                       std::begin(m_Velocity), std::begin(m_Velocity),
-                       smoothVelocity);
+        calculateVelocities(pose.attitude(), oldAttitude, m_AngularVelocity, deltaS, alpha, circDist);
 
         // Superclass
         // **NOTE** this is at the bottom so OLD position can be accessed
@@ -155,11 +146,47 @@ public:
         return convertUnitArray<VelocityUnit>(m_Velocity);
     }
 
+    template<typename AngularVelocityUnit = radians_per_second_t>
+    std::array<AngularVelocityUnit, 3> getAngularVelocity() const
+    {
+        return convertUnitArray<AngularVelocityUnit>(m_AngularVelocity);
+    }
+
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    std::array<meters_per_second_t, 3> m_Velocity;
+    std::array<meters_per_second_t, 3> m_Velocity{};
+    std::array<radians_per_second_t, 3> m_AngularVelocity{};
+
+    template<typename VectorType, typename VelocityType, typename DiffFunc>
+    static void calculateVelocities(const VectorType &current,
+                                    const VectorType &old,
+                                    std::array<VelocityType, 3> &velocityOut,
+                                    const second_t &deltaS,
+                                    const double alpha,
+                                    DiffFunc diff
+                                    )
+    {
+        // Temporary array
+        std::array<VelocityType, 3> instVelocity;
+
+        // Calculate instantaneous velocity
+        const auto calcVelocity = [deltaS, diff](auto curr, auto prev) {
+            return diff(curr, prev) / deltaS;
+        };
+        std::transform(std::cbegin(current), std::cend(current),
+                       std::cbegin(old), std::begin(instVelocity),
+                       calcVelocity);
+
+        // Exponentially smooth velocity
+        const auto smoothVelocity = [alpha](auto inst, auto prev) {
+            return (alpha * inst) + ((1.0 - alpha) * prev);
+        };
+        std::transform(std::cbegin(instVelocity), std::cend(instVelocity),
+                       std::cbegin(velocityOut), std::begin(velocityOut),
+                       smoothVelocity);
+    }
 };
 
 //----------------------------------------------------------------------------
