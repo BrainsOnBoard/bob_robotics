@@ -145,7 +145,7 @@ bob_main(int argc, char **argv)
     Stopwatch commandTimer;
     constexpr auto commandSpacing = 100ms;
 
-    Robots::TankPID pid(kp, ki, kd, averageSpeed);
+    Robots::TankPID pid(robot, kp, ki, kd, averageSpeed);
     bool runPositioner = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (!pressed) {
@@ -158,7 +158,9 @@ bob_main(int argc, char **argv)
             if (runPositioner) {
                 std::cout << "Starting positioner" << std::endl;
                 commandTimer.start();
-                pid.start();
+
+                // Aim for the current goal
+                pid.start(*goalsIter);
 
                 printGoalStats(*goalsIter, vicon.getObjectData(0).getPosition());
             } else {
@@ -269,7 +271,7 @@ bob_main(int argc, char **argv)
                 // We throttle the number of commands sent
                 if (runPositioner && commandTimer.elapsed() > commandSpacing) {
                     commandTimer.start();
-                    pid.drive(robot, objectData.getPose(), *goalsIter);
+                    pid.update(objectData.getPose());
                 }
             }
         } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));

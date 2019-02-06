@@ -24,7 +24,7 @@ bob_main(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
     Robots::CarDisplay display;                     // For displaying the agent
-    Robots::TankPID pid(.1f, .1f, .1f, 0.5f);       // PID controller
+    Robots::TankPID pid(robot, .1f, .1f, .1f, 0.5f);       // PID controller
 
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
@@ -44,7 +44,7 @@ bob_main(int, char **)
             pidRunning = !pidRunning;
             if (pidRunning) {
                 std::cout << "PID control started" << std::endl;
-                pid.start();
+                pid.start(goal);
             } else {
                 std::cout << "PID control stopped" << std::endl;
                 robot.stopMoving();
@@ -65,7 +65,7 @@ bob_main(int, char **)
 
         // Run PID controller
         if (pidRunning) {
-            pid.drive(robot, robotPose, goal);
+            pid.update(robotPose);
         }
 
         // Check for joystick events
