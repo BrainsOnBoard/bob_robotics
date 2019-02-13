@@ -93,6 +93,9 @@ class VectorBase
     using radian_t = units::angle::radian_t;
 
 public:
+    using LengthType = LengthUnit;
+    using AngleType = radian_t;
+
     VectorBase() = default;
 
     template<typename... Ts>
@@ -210,6 +213,9 @@ class Pose2
                   "AngleUnit is not a unit of angle");
 
 public:
+    using LengthType = LengthUnit;
+    using AngleType = AngleUnit;
+
     Pose2() = default;
 
     Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
@@ -247,6 +253,9 @@ class Pose3
                   "AngleUnit is not a unit of angle");
 
 public:
+    using LengthType = LengthUnit;
+    using AngleType = AngleUnit;
+
     Pose3() = default;
 
     Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)

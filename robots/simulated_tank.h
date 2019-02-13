@@ -21,6 +21,8 @@ class SimulatedTank
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
+    using PoseType = Pose2<LengthUnit, AngleUnit>;
+
     SimulatedTank(const meters_per_second_t maximumSpeed, const millimeter_t axisLength)
       : m_MaximumSpeed(maximumSpeed)
       , m_AxisLength(axisLength)
@@ -72,7 +74,7 @@ public:
     }
 
 private:
-    Pose2<LengthUnit, AngleUnit> m_Pose;
+    PoseType m_Pose;
     Stopwatch m_MoveStopwatch;
     const meters_per_second_t m_MaximumSpeed;
     const millimeter_t m_AxisLength;
