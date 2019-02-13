@@ -13,20 +13,17 @@
 #include <vector>
 
 namespace BoBRobotics {
-template<typename LengthUnit, typename AgentType>
+template<typename PoseType, typename LengthUnit>
 void
-plotAgent(AgentType &agent,
+plotAgent(const PoseType &pose,
           const LengthUnit xLower,
           const LengthUnit xUpper,
           const LengthUnit yLower,
           const LengthUnit yUpper)
 {
-    // Get agent's pose
-    const auto pose = agent.template getPose<LengthUnit>();
-
     // Get vector components
-    const std::vector<double> vx{ pose.x().value() };
-    const std::vector<double> vy{ pose.y().value() };
+    const std::vector<double> vx{ static_cast<LengthUnit>(pose.x()).value() };
+    const std::vector<double> vy{ static_cast<LengthUnit>(pose.y()).value() };
     const std::vector<double> vu{ units::math::cos(pose.yaw()) };
     const std::vector<double> vv{ units::math::sin(pose.yaw()) };
 
@@ -44,5 +41,5 @@ plotAgent(AgentType &agent,
     const std::string abbrev = units::abbreviation(xLower);
     plt::xlabel("x (" + abbrev + ")");
     plt::ylabel("y (" + abbrev + ")");
-} // Viz
+}
 } // BoBRobotics

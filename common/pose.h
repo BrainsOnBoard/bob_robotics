@@ -254,18 +254,6 @@ public:
       , m_Attitude(attitude)
     {}
 
-    template<typename LengthUnit2, typename AngleUnit2>
-    operator Pose2<LengthUnit2, AngleUnit2>() const
-    {
-        return Pose2<LengthUnit2, AngleUnit2>{ x(), y(), yaw() };
-    }
-
-    template<typename LengthUnit2, typename AngleUnit2>
-    operator Pose3<LengthUnit2, AngleUnit2>() const
-    {
-        return Pose3<LengthUnit2, AngleUnit2>{ { x(), y(), z() }, { yaw(), pitch(), roll() } };
-    }
-
     Vector3<LengthUnit> &position() { return m_Position; }
     const Vector3<LengthUnit> &position() const { return m_Position; }
     LengthUnit &x() { return m_Position[0]; }

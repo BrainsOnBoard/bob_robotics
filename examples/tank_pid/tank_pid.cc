@@ -227,7 +227,7 @@ bob_main(int argc, char **argv)
             }
 
             // Plot robot's pose with an arrow
-            plotAgent(objectData, -2000_mm, 2000_mm, -2000_mm, 2000_mm);
+            plotAgent(objectData.getPose<>(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
             plt::pause(0.025);
 
             // Get motor commands from positioner, if it's running
