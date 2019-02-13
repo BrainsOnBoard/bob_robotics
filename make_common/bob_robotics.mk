@@ -18,6 +18,13 @@ CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
 CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
 
+# For building with Google Test
+ifdef WITH_GTEST
+	DEBUG := 1
+	CXXFLAGS += `pkg-config --cflags gtest`
+	LINK_FLAGS += `pkg-config --libs gtest`
+endif
+
 # Debug mode: includes debug symbols, disables optimisation and sets DEBUG macro
 ifdef DEBUG
 	CXXFLAGS += -g -O0 -DDEBUG
