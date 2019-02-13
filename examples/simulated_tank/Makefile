@@ -1,7 +1,7 @@
 NO_OPENCV := 1
 WITH_MATPLOTLIBCPP := 1
+WITH_SDL2 := 1
 include ../../make_common/bob_robotics.mk
-CXXFLAGS += `pkg-config --libs --cflags sdl2`
 
 EXECUTABLE := simulated_tank
 
