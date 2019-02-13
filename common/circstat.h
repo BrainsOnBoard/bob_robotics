@@ -20,7 +20,7 @@ normaliseAngle180(AngleType angle)
     static_assert(units::traits::is_angle_unit<AngleType>::value,
                   "AngleType is not a unit of angle");
 
-    while (angle < -180_deg) {
+    while (angle <= -180_deg) {
         angle += 360_deg;
     }
     while (angle > 180_deg) {
