@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
+#include "robots/tank_positioner.h"
 #include "common/main.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
@@ -22,9 +22,9 @@ using namespace units::length;
 int
 bob_main(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    Robots::CarDisplay display;                     // For displaying the agent
-    Robots::TankPID pid(robot, .1f, .1f, .1f);      // PID controller
+    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);   // Tank agent
+    Robots::CarDisplay display;                       // For displaying the agent
+    Robots::TankPositioner pid(robot, .1f, .1f, .1f); // PID controller
 
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);

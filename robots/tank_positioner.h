@@ -22,7 +22,7 @@ namespace Robots {
 
 using namespace units::literals;
 
-enum class TankPIDState
+enum class TankPositionerState
 {
     Invalid,
     OrientingToGoal,
@@ -30,20 +30,20 @@ enum class TankPIDState
     AtGoal
 };
 
-class TankPID
-  : public FSM<TankPIDState>::StateHandler
+class TankPositioner
+  : public FSM<TankPositionerState>::StateHandler
 {
     using meter_t = units::length::meter_t;
     using radian_t = units::angle::radian_t;
     using second_t = units::time::second_t;
-    using Event = FSM<TankPIDState>::StateHandler::Event;
+    using Event = FSM<TankPositionerState>::StateHandler::Event;
 
 public:
-    TankPID(Tank &robot, float Kp, float Ki, float Kd,
+    TankPositioner(Tank &robot, float Kp, float Ki, float Kd,
             meter_t distanceTolerance = 5_cm,
             radian_t angleTolerance = 3_deg,
             radian_t startTurningThreshold = 45_deg, float averageSpeed = 0.5f)
-      : m_StateMachine(this, TankPIDState::Invalid)
+      : m_StateMachine(this, TankPositionerState::Invalid)
       , m_Robot(robot)
       , m_DistanceTolerance(distanceTolerance)
       , m_AngleTolerance(angleTolerance)
@@ -62,7 +62,7 @@ public:
          * We start off assuming that the heading is way off and that we need to
          * turn on the spot.
          */
-        m_StateMachine.transition(TankPIDState::OrientingToGoal);
+        m_StateMachine.transition(TankPositionerState::OrientingToGoal);
     }
 
     bool driveRobot(const Pose2<meter_t, radian_t> &robotPose)
@@ -76,20 +76,20 @@ public:
         m_StateMachine.update();
 
         // Return true if we're at goal (within m_DistanceTolerance)
-        return m_StateMachine.getCurrentState() == TankPIDState::AtGoal;
+        return m_StateMachine.getCurrentState() == TankPositionerState::AtGoal;
     }
 
-    virtual bool handleEvent(TankPIDState state, Event event) override
+    virtual bool handleEvent(TankPositionerState state, Event event) override
     {
         using namespace units::math;
 
         if (event == Event::Update && m_Goal.distance2D(m_RobotPose) < m_DistanceTolerance) {
-            m_StateMachine.transition(TankPIDState::AtGoal);
+            m_StateMachine.transition(TankPositionerState::AtGoal);
             return true;
         }
 
         switch (state) {
-        case TankPIDState::OrientingToGoal:
+        case TankPositionerState::OrientingToGoal:
             if (event == Event::Enter) {
                 std::cout << "Starting turning" << std::endl;
             } else if (event == Event::Update) {
@@ -99,7 +99,7 @@ public:
                  */
                 if (abs(m_HeadingOffset) <= m_AngleTolerance) {
                     // Start driving to the goal in a straight(ish) line
-                    m_StateMachine.transition(TankPIDState::DrivingToGoal);
+                    m_StateMachine.transition(TankPositionerState::DrivingToGoal);
                 } else if (m_HeadingOffset < 0_deg) {
                     m_Robot.tank(1.f, -1.f);
                 } else {
@@ -110,7 +110,7 @@ public:
                 std::cout << "Stopping turning" << std::endl;
             }
             break;
-        case TankPIDState::DrivingToGoal: {
+        case TankPositionerState::DrivingToGoal: {
             // Error value used in PID control
             const float error = m_HeadingOffset.value();
 
@@ -120,7 +120,7 @@ public:
             } else if (event == Event::Update) {
                 // If the heading offset is big, then start turning on the spot
                 if (abs(m_HeadingOffset) > m_StartTurningThreshold) {
-                    m_StateMachine.transition(TankPIDState::OrientingToGoal);
+                    m_StateMachine.transition(TankPositionerState::OrientingToGoal);
                     return true;
                 }
 
@@ -148,12 +148,12 @@ public:
             // Keep track of previous error for I and D terms of PID
             m_LastError = error;
         } break;
-        case TankPIDState::AtGoal:
+        case TankPositionerState::AtGoal:
             if (event == Event::Enter) {
                 std::cout << "Reached goal" << std::endl;
             }
             break;
-        case TankPIDState::Invalid:
+        case TankPositionerState::Invalid:
             break;
         }
 
@@ -161,7 +161,7 @@ public:
     }
 
 private:
-    FSM<TankPIDState> m_StateMachine;
+    FSM<TankPositionerState> m_StateMachine;
     Tank &m_Robot;
     Pose2<meter_t, radian_t> m_RobotPose;
     Vector2<meter_t> m_Goal;
@@ -171,6 +171,6 @@ private:
     double m_LastError = std::numeric_limits<double>::quiet_NaN();
     Stopwatch m_Stopwatch;
     const float m_Kp, m_Ki, m_Kd, m_AverageSpeed;
-}; // TankPID
+}; // TankPositioner
 } // Robots
 } // BoBRobotics

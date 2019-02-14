@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
+#include "robots/tank_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/plot_agent.h"
@@ -143,7 +143,7 @@ bob_main(int argc, char **argv)
     HID::Joystick joystick;
     robot.addJoystick(joystick);
 
-    Robots::TankPID pid(robot, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
+    Robots::TankPositioner pid(robot, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (!pressed) {
