@@ -57,7 +57,10 @@ getStraightLineEquation(const PoseType &pose)
 
 template<typename PoseType>
 auto
-calculate(const PoseType &lastPose, const PoseType &currentPose, const second_t elapsed)
+calculate(const PoseType &lastPose,
+          const PoseType &currentPose,
+          const second_t elapsed,
+          const meter_t width)
 {
     const auto lineLast = getStraightLineEquation(lastPose);
     const auto lineCurrent = getStraightLineEquation(currentPose);
@@ -80,16 +83,26 @@ calculate(const PoseType &lastPose, const PoseType &currentPose, const second_t 
 
     const meter_t radius = centre.distance2D(currentPose);
 
-    meters_per_second_t velocity;
+    meters_per_second_t velocity, velocityLeft, velocityRight;
     if (lineLast.m == lineCurrent.m) { // Straight line
-        // **NOTE**: Currently only gives +ve velocities!
         velocity = currentPose.distance2D(lastPose) / elapsed;
+        velocityLeft = velocity;
+        velocityRight = velocity;
     } else {
-        velocity = meters_per_second_t{ radius.value() * angularVelocity.value() };
+        velocity = abs(meters_per_second_t{ radius.value() * angularVelocity.value() });
+        velocityLeft = meters_per_second_t{ abs(angularVelocity.value()) * (radius + width / 2).value() };
+        velocityRight = meters_per_second_t{ abs(angularVelocity.value()) * (radius - width / 2).value() };
+    }
+
+    const radian_t ang = atan2(lastPose.y() - currentPose.y(), lastPose.x() - currentPose.x());
+    if (abs(circularDistance(ang, currentPose.yaw())) < 90_deg) {
+        velocity = -velocity;
+        velocityLeft = -velocityLeft;
+        velocityRight = -velocityRight;
     }
 
     // Return the radius of turning circle
-    return std::make_tuple(velocity, angularVelocity, centre, radius);
+    return std::make_tuple(velocity, velocityLeft, velocityRight, angularVelocity, centre, radius);
 }
 
 int
@@ -122,11 +135,11 @@ bob_main(int, char **)
         plt::clf();
         plotAgent(currentPose, -1.6_m, 1.6_m, -1.6_m, 1.6_m);
         if (lastPose != currentPose) {
-            meters_per_second_t velocity;
+            meters_per_second_t velocity, velocityLeft, velocityRight;
             degrees_per_second_t angularVelocity;
             Vector2<meter_t> centre;
             meter_t radius;
-            std::tie(velocity, angularVelocity, centre, radius) = calculate(lastPose, currentPose, elapsed);
+            std::tie(velocity, velocityLeft, velocityRight, angularVelocity, centre, radius) = calculate(lastPose, currentPose, elapsed, robot.getRobotWidth() / 2);
             std::cout << centre << " (r = " << radius << ")" << std::endl;
             if (!std::isinf(radius.value())) {
                 x[0] = centre.x().value();
@@ -134,7 +147,7 @@ bob_main(int, char **)
                 plt::plot(x, y, "g+");
             }
             std::stringstream ss;
-            ss << "Radius = " << radius << "; velocity = " << velocity << "; angular velocity = " << angularVelocity;
+            ss << "r = " << radius << "; v = " << velocity << "; v_l/r = " << velocityLeft << "/" << velocityRight << "; w = " << angularVelocity;
             plt::title(ss.str());
         }
         plt::pause(0.05);
@@ -144,7 +157,7 @@ bob_main(int, char **)
         // Check for joystick events
         joystick.update();
 
-    } while (true); //!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
+    } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
     plt::close();
 
     return EXIT_SUCCESS;
