@@ -16,12 +16,17 @@
 // Standard C++ includes
 #include <iostream>
 #include <limits>
-#include <utility>
+#include <tuple>
 #include <vector>
 
 using namespace BoBRobotics;
 using namespace units::literals;
+using namespace units::angle;
 using namespace units::length;
+using namespace units::math;
+using namespace units::time;
+using namespace units::angular_velocity;
+using namespace units::velocity;
 namespace plt = matplotlibcpp;
 
 template<typename PoseType>
@@ -44,7 +49,7 @@ getStraightLineEquation(const PoseType &pose)
         p.m = std::numeric_limits<double>::infinity();
         p.c = typename PoseType::LengthType{ std::numeric_limits<double>::signaling_NaN() };
     } else {
-        p.m = units::math::tan(angle + 90_deg);
+        p.m = tan(angle + 90_deg);
         p.c = pose.y() - p.m * pose.x();
     }
     return p;
@@ -52,7 +57,7 @@ getStraightLineEquation(const PoseType &pose)
 
 template<typename PoseType>
 auto
-calculate(const PoseType &lastPose, const PoseType &currentPose)
+calculate(const PoseType &lastPose, const PoseType &currentPose, const second_t elapsed)
 {
     const auto lineLast = getStraightLineEquation(lastPose);
     const auto lineCurrent = getStraightLineEquation(currentPose);
@@ -68,8 +73,23 @@ calculate(const PoseType &lastPose, const PoseType &currentPose)
         centre.y() = lineLast.m * centre.x() + lineLast.c;
     }
 
+    const radian_t currentAngle = atan2(currentPose.y() - centre.y(), currentPose.x() - centre.x());
+    const radian_t lastAngle = atan2(lastPose.y() - centre.y(), lastPose.x() - centre.x());
+    const radian_t dtheta = circularDistance(currentAngle, lastAngle);
+    const radians_per_second_t angularVelocity = dtheta / elapsed;
+
+    const meter_t radius = centre.distance2D(currentPose);
+
+    meters_per_second_t velocity;
+    if (lineLast.m == lineCurrent.m) { // Straight line
+        // **NOTE**: Currently only gives +ve velocities!
+        velocity = currentPose.distance2D(lastPose) / elapsed;
+    } else {
+        velocity = meters_per_second_t{ radius.value() * angularVelocity.value() };
+    }
+
     // Return the radius of turning circle
-    return std::make_pair(centre, centre.distance2D(currentPose));
+    return std::make_tuple(velocity, angularVelocity, centre, radius);
 }
 
 int
@@ -93,21 +113,28 @@ bob_main(int, char **)
 
     decltype(robot)::PoseType lastPose;
     std::vector<double> x(1), y(1);
+    Stopwatch stopwatch;
+    stopwatch.start();
     do {
+        const second_t elapsed = stopwatch.lap();
         const auto &currentPose = robot.getPose();
 
         plt::clf();
         plotAgent(currentPose, -1.6_m, 1.6_m, -1.6_m, 1.6_m);
         if (lastPose != currentPose) {
-            const auto pos = calculate(lastPose, currentPose);
-            std::cout << pos.first << " (r = " << pos.second << ")" << std::endl;
-            if (!std::isinf(pos.second.value())) {
-                x[0] = pos.first.x().value();
-                y[0] = pos.first.y().value();
+            meters_per_second_t velocity;
+            degrees_per_second_t angularVelocity;
+            Vector2<meter_t> centre;
+            meter_t radius;
+            std::tie(velocity, angularVelocity, centre, radius) = calculate(lastPose, currentPose, elapsed);
+            std::cout << centre << " (r = " << radius << ")" << std::endl;
+            if (!std::isinf(radius.value())) {
+                x[0] = centre.x().value();
+                y[0] = centre.y().value();
                 plt::plot(x, y, "g+");
             }
             std::stringstream ss;
-            ss << "Radius = " << pos.second;
+            ss << "Radius = " << radius << "; velocity = " << velocity << "; angular velocity = " << angularVelocity;
             plt::title(ss.str());
         }
         plt::pause(0.05);
@@ -117,7 +144,7 @@ bob_main(int, char **)
         // Check for joystick events
         joystick.update();
 
-    } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
+    } while (true); //!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));
     plt::close();
 
     return EXIT_SUCCESS;
