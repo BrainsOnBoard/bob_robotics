@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <utility>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -63,7 +64,7 @@ public:
                 });
     }
 
-    void controlWithThumbsticks(HID::Joystick &joystick)
+    virtual void controlWithThumbsticks(HID::Joystick &joystick)
     {
         joystick.addHandler(
                 [this](HID::JAxis axis, float value) {
@@ -93,8 +94,7 @@ public:
     }
 
     void move(meters_per_second_t v,
-              radians_per_second_t clockwiseSpeed,
-              const bool maxScaled = false)
+              radians_per_second_t clockwiseSpeed)
     {
         const meter_t axisLength = getRobotWidth();
         const meters_per_second_t diff{
@@ -102,7 +102,7 @@ public:
         };
         const meters_per_second_t vL = v + diff;
         const meters_per_second_t vR = v - diff;
-        tank(vL, vR, maxScaled);
+        tankVelocities(vL, vR);
     }
 
     //! Set the left and right motors to the specified speed
@@ -125,16 +125,12 @@ public:
         }
     }
 
-    void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false)
+    virtual void tankVelocities(meters_per_second_t left, meters_per_second_t right)
     {
         const meters_per_second_t maxSpeed = getMaximumSpeed();
         const auto leftMotor = static_cast<float>(left / maxSpeed);
         const auto rightMotor = static_cast<float>(right / maxSpeed);
-        if (maxScaled) {
-            tankMaxScaled(leftMotor, rightMotor);
-        } else {
-            tank(leftMotor, rightMotor);
-        }
+        tank(leftMotor, rightMotor);
     }
 
     virtual millimeter_t getRobotWidth()
