@@ -76,7 +76,8 @@ endif
 
 ifdef WITH_LIBBEBOP
 	# libbebop
-	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop \
+					-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
 
 	# ARSDK
 	# We set the rpath so that compiled programs can find the folder with the ARSDK
@@ -87,8 +88,7 @@ $(error Environment variable ARSDK_ROOT must be defined)
 	endif
 	AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 	AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
-	CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include \
-		-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
+	CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 	LINK_FLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
 		$(AR_LIB_PATH)/libarcontroller.so $(AR_LIB_PATH)/libarnetworkal.so \
 		$(AR_LIB_PATH)/libarcommands.so $(AR_LIB_PATH)/libmux.so \
