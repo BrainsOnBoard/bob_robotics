@@ -2,18 +2,21 @@ WITH_MATPLOTLIBCPP := 1
 NO_OPENCV := 1
 include ../../make_common/bob_robotics.mk
 
-EXECUTABLE := tank_wheel_pid
-
 .PHONY: all clean
 
-all: $(EXECUTABLE)
+all: tank_wheel_pid_simulated tank_wheel_pid_robot
 
--include $(EXECUTABLE).d
+-include tank_wheel_pid_simulated.d
 
-$(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d
+tank_wheel_pid_simulated: tank_wheel_pid_simulated.cc tank_wheel_pid_simulated.d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+-include tank_wheel_pid_simulated.d
+
+tank_wheel_pid_robot: tank_wheel_pid_robot.cc tank_wheel_pid_robot.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 %d: ;
 
 clean:
-	rm -f $(EXECUTABLE) $(EXECUTABLE).d
+	rm -f tank_wheel_pid_simulated tank_wheel_pid_robot *.d

@@ -1,11 +1,13 @@
+#pragma once
+
 // BoB robotics includes
 #include "common/assert.h"
+#include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/main.h"
 #include "common/plot_agent.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "robots/simulated_tank.h"
 #include "robots/tank_pid.h"
 
 // Third-party includes
@@ -30,32 +32,24 @@ using namespace units::angular_velocity;
 using namespace units::velocity;
 namespace plt = matplotlibcpp;
 
-int
-bob_main(int, char **)
+template<typename TankPIDType, typename PoseableType>
+void
+runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 {
-    Robots::TankPID<Robots::SimulatedTank<>> robot(1.f, 0.f, 0.f, 0.3_mps, 104_mm);
-    robot.updatePose(Pose2<meter_t, radian_t>{}, 0_s);
+    std::cout << "Drive the robot using the two thumbsticks: each stick is for one motor" << std::endl;
 
-    HID::Joystick joystick(0.25f);
-    robot.controlWithThumbsticks(joystick);
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Catch Ctrl-C
 
-    joystick.addHandler([&robot](HID::JButton button, bool pressed) {
-        if (pressed && button == HID::JButton::Start) {
-            robot.setPose({}); // Reset to origin
-            return true;
-        } else {
-            return false;
-        }
-    });
-
-    std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
-
-    decltype(robot)::PoseType lastPose;
+    Pose2<meter_t, radian_t> lastPose;
     std::vector<double> x(1), y(1);
     Stopwatch stopwatch;
     stopwatch.start();
     do {
-        const auto &currentPose = robot.getPose();
+        // Rethrow any exceptions caught on background thread
+        catcher.check();
+
+        const auto &currentPose = poseable.getPose();
 
         plt::figure(1);
         plt::clf();
@@ -72,6 +66,4 @@ bob_main(int, char **)
 
     } while (plt::fignum_exists(1));
     plt::close();
-
-    return EXIT_SUCCESS;
 }
