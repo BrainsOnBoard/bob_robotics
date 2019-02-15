@@ -6,8 +6,10 @@
 
 // Standard C includes
 #include <cstdint>
+#include <cstdlib>
 
 // Standard C++ includes
+#include <iostream>
 #include <limits>
 #include <string>
 #include <vector>
@@ -28,8 +30,9 @@ class Client
 {
 public:
     //! Create client and connect to host over TCP
-    Client(const std::string &host, uint16_t port = DefaultListenPort)
+    Client(const std::string &host = getDefaultIP(), uint16_t port = DefaultListenPort)
       : Connection(AF_INET, SOCK_STREAM, 0)
+      , m_IP(host)
     {
         // Create socket address structure
         in_addr addr;
@@ -50,6 +53,24 @@ public:
 
         std::cout << "Opened socket" << std::endl;
     }
+
+    const std::string &getIP() const { return m_IP; }
+
+    static std::string getDefaultIP()
+    {
+        constexpr const char *envVar = "NORBOT_IP", *defaultIP = "127.0.0.1";
+
+        std::string ip = std::getenv(envVar);
+        if (ip.empty()) {
+            std::cerr << "WARNING: Environment variable " << envVar
+                      << " not set; using " << defaultIP << std::endl;
+            ip = defaultIP;
+        }
+        return ip;
+    }
+
+    private:
+        const std::string m_IP;
 }; // Client
 } // Net
 } // BoBRobotics
