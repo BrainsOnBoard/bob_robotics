@@ -68,21 +68,7 @@ public:
     {
         joystick.addHandler(
                 [this](HID::JAxis axis, float value) {
-                    static float left{}, right{};
-
-                    switch (axis) {
-                    case HID::JAxis::LeftStickVertical:
-                        left = -value;
-                        break;
-                    case HID::JAxis::RightStickVertical:
-                        right = -value;
-                        break;
-                    default:
-                        return false;
-                    }
-
-                    tank(left, right);
-                    return true;
+                    return drive(axis, value);
                 });
     }
 
@@ -261,6 +247,26 @@ private:
 
         // drive robot with joystick
         drive(m_X, m_Y, deadZone);
+        return true;
+    }
+
+protected:
+    bool drive(HID::JAxis axis, float value)
+    {
+        static float left{}, right{};
+
+        switch (axis) {
+        case HID::JAxis::LeftStickVertical:
+            left = -value;
+            break;
+        case HID::JAxis::RightStickVertical:
+            right = -value;
+            break;
+        default:
+            return false;
+        }
+
+        tank(left, right);
         return true;
     }
 }; // Tank

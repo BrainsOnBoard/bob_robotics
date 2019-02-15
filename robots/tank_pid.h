@@ -83,19 +83,20 @@ public:
         return std::make_tuple(velocity, velocityLeft, velocityRight, angularVelocity, centre, radius);
     }
 
+    void start()
+    {
+        m_LeftWheelPID.initialise(0.f, 0.f);
+        m_RightWheelPID.initialise(0.f, 0.f);
+    }
+
     template<typename PoseType>
     void updatePose(const PoseType &pose, second_t elapsed)
     {
-        if (m_LeftWheelPID.isInitialised()) {
-            meters_per_second_t velocity;
-            degrees_per_second_t angularVelocity;
-            Vector2<meter_t> centre;
-            meter_t radius;
-            std::tie(velocity, m_CurrentLeft, m_CurrentRight, angularVelocity, centre, radius) = TankPID<BaseTankType>::getVelocities(pose, m_LastPose, elapsed, this->getRobotWidth());
-        } else {
-            m_LeftWheelPID.initialise(0.f, 0.f);
-            m_RightWheelPID.initialise(0.f, 0.f);
-        }
+        meters_per_second_t velocity;
+        degrees_per_second_t angularVelocity;
+        Vector2<meter_t> centre;
+        meter_t radius;
+        std::tie(velocity, m_CurrentLeft, m_CurrentRight, angularVelocity, centre, radius) = TankPID<BaseTankType>::getVelocities(pose, m_LastPose, elapsed, this->getRobotWidth());
         m_LastPose = pose;
 
         updateMotors();
@@ -106,6 +107,10 @@ public:
         joystick.addHandler(
                 [this](HID::JAxis axis, float value) {
                     static meters_per_second_t left{}, right{};
+
+                    if (!m_DriveWithVelocities) {
+                        return this->drive(axis, value);
+                    }
 
                     switch (axis) {
                     case HID::JAxis::LeftStickVertical:
@@ -123,6 +128,11 @@ public:
                 });
     }
 
+    void setDriveWithVelocities(const bool flag)
+    {
+        m_DriveWithVelocities = flag;
+    }
+
     virtual void tankVelocities(meters_per_second_t left,
                                 meters_per_second_t right) override
     {
@@ -135,6 +145,7 @@ private:
     Pose2<meter_t, radian_t> m_LastPose;
     PID m_LeftWheelPID, m_RightWheelPID;
     meters_per_second_t m_CurrentLeft, m_CurrentRight, m_LeftSetPoint, m_RightSetPoint;
+    bool m_DriveWithVelocities = false;
 
     void updateMotors()
     {

@@ -47,6 +47,24 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
     std::vector<double> x(1), y(1);
     Stopwatch stopwatch;
     stopwatch.start();
+    bool driveWithVelocities = false;
+    joystick.addHandler([&](HID::JButton button, bool pressed) {
+        if (pressed && button == HID::JButton::Y) {
+            robot.stopMoving();
+            driveWithVelocities = !driveWithVelocities;
+            if (driveWithVelocities) {
+                std::cout << "Driving using velocities" << std::endl;
+                stopwatch.start();
+                robot.start();
+            } else {
+                std::cout << "Driving using standard controls" << std::endl;
+            }
+            robot.setDriveWithVelocities(driveWithVelocities);
+            return true;
+        } else {
+            return false;
+        }
+    });
     do {
         // Rethrow any exceptions caught on background thread
         catcher.check();
@@ -56,7 +74,7 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
         plt::figure(1);
         plt::clf();
         plotAgent(currentPose, -1.6_m, 1.6_m, -1.6_m, 1.6_m);
-        if (lastPose != currentPose) {
+        if (driveWithVelocities && lastPose != currentPose) {
             robot.updatePose(currentPose, stopwatch.lap());
         }
         plt::pause(0.1);
@@ -65,7 +83,6 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 
         // Check for joystick events
         joystick.update();
-
     } while (plt::fignum_exists(1));
     plt::close();
 }
