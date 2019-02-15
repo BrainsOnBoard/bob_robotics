@@ -39,7 +39,7 @@ public:
     }
 
     // Get output based on setpoint
-    float update(float setpoint, float input)
+    float update(float setpoint, float input, bool debug)
     {
         BOB_ASSERT(isInitialised());
 
@@ -58,6 +58,9 @@ public:
 
         // Update last input
         m_LastInput = input;
+
+        if (debug)
+            std::cout << "error: " << error << " | output: " << output << std::endl;
 
         return output;
     }

@@ -16,7 +16,7 @@ using namespace std::literals;
 int
 bob_main(int, char **)
 {
-    constexpr float kp = 10.f;
+    constexpr float kp = 5.f;
     constexpr float ki = 0.f;
     constexpr float kd = 0.f;
 

@@ -36,6 +36,8 @@ template<typename TankPIDType, typename PoseableType>
 void
 runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 {
+    constexpr meter_t plotLimits = 2_m;
+
     robot.controlWithThumbsticks(joystick);
 
     std::cout << "Drive the robot using the two thumbsticks: each stick is for one motor" << std::endl;
@@ -56,10 +58,11 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
                 std::cout << "Driving using velocities" << std::endl;
                 stopwatch.start();
                 robot.start();
+                robot.tankVelocities(0.05_mps, 0_mps);
             } else {
                 std::cout << "Driving using standard controls" << std::endl;
             }
-            robot.setDriveWithVelocities(driveWithVelocities);
+            // robot.setDriveWithVelocities(driveWithVelocities);
             return true;
         } else {
             return false;
@@ -73,7 +76,7 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 
         plt::figure(1);
         plt::clf();
-        plotAgent(currentPose, -1.6_m, 1.6_m, -1.6_m, 1.6_m);
+        plotAgent(currentPose, -plotLimits, plotLimits, -plotLimits, plotLimits);
         if (driveWithVelocities && lastPose != currentPose) {
             robot.updatePose(currentPose, stopwatch.lap());
         }

@@ -4,19 +4,25 @@ include ../../make_common/bob_robotics.mk
 
 .PHONY: all clean
 
-all: tank_wheel_pid_simulated tank_wheel_pid_robot
+all: simulated robot robot_tune
 
--include tank_wheel_pid_simulated.d
+-include robot.d
 
-tank_wheel_pid_simulated: tank_wheel_pid_simulated.cc tank_wheel_pid_simulated.d
+robot: robot.cc robot.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
--include tank_wheel_pid_simulated.d
+-include robot_tune.d
 
-tank_wheel_pid_robot: tank_wheel_pid_robot.cc tank_wheel_pid_robot.d
+robot_tune: robot_tune.cc robot_tune.d
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+
+-include simulated.d
+
+simulated: simulated.cc simulated.d
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 %d: ;
 
 clean:
-	rm -f tank_wheel_pid_simulated tank_wheel_pid_robot *.d
+	rm -f simulated robot robot_tune *.d
