@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/stopwatch.h"
 #include "../net/connection.h"
 #include "tank.h"
@@ -48,6 +49,12 @@ public:
             m_ForwardSpeed = meters_per_second_t(stod(command[2]));
             m_AxisLength = millimeter_t(stod(command[3]));
         });
+
+        /*
+         * If we start running the connection on a separate thread before this,
+         * there's a chance the TNK_PARAMS command won't be caught.
+         */
+        BOB_ASSERT(!connection.isRunning());
 
         // Wait for command
         while (connection.readNextCommand() != "TNK_PARAMS")
