@@ -206,7 +206,8 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        Rotater rotater(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        const auto &unwrapRes = this->getUnwrapResolution();
+        Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
         std::vector<FloatType> outputs;
         outputs.reserve(rotater.max());
         rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
@@ -214,12 +215,12 @@ public:
         });
 
         const auto el = std::min_element(outputs.begin(), outputs.end());
-        size_t bestIndex = std::distance(outputs.begin(), el);
-        if (bestIndex > outputs.size() / 2) {
-            bestIndex -= outputs.size();
+        int bestIndex = std::distance(outputs.begin(), el);
+        if (bestIndex > (unwrapRes.width / 2)) {
+            bestIndex -= unwrapRes.width;
         }
         using namespace units::angle;
-        const radian_t heading = turn_t((double) bestIndex / (double) outputs.size());
+        const radian_t heading = turn_t((double)bestIndex / (double)unwrapRes.width);
 
         return std::make_tuple(heading, *el, std::move(outputs));
     }
