@@ -204,26 +204,55 @@ public:
     // Public API
     //------------------------------------------------------------------------
     template<class... Ts>
+    const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
+    {
+        calcImageDifferences(std::forward<Ts>(args)...);
+        return m_RotatedDifferences;
+    }
+
+    template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        const auto &unwrapRes = this->getUnwrapResolution();
-        Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
-        std::vector<FloatType> outputs;
-        outputs.reserve(rotater.max());
-        rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
-            outputs.push_back(this->test(image));
-        });
+        calcImageDifferences(std::forward<Ts>(args)...);
 
-        const auto el = std::min_element(outputs.begin(), outputs.end());
-        int bestIndex = std::distance(outputs.begin(), el);
+        const auto el = std::min_element(m_RotatedDifferences.cbegin(), m_RotatedDifferences.cend());
+        int bestIndex = std::distance(m_RotatedDifferences.cbegin(), el);
+        const cv::Size unwrapRes = this->getUnwrapResolution();
         if (bestIndex > (unwrapRes.width / 2)) {
             bestIndex -= unwrapRes.width;
         }
+
         using namespace units::angle;
         const radian_t heading = turn_t((double)bestIndex / (double)unwrapRes.width);
 
-        return std::make_tuple(heading, *el, std::move(outputs));
+        return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
     }
+
+private:
+    //------------------------------------------------------------------------
+    // Private API
+    //------------------------------------------------------------------------
+    template<class... Ts>
+    void calcImageDifferences(Ts &&... args) const
+    {
+        // Object for rotating over images
+        const cv::Size unwrapRes = this->getUnwrapResolution();
+        Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+
+        // Ensure there's enough space in rotated differe
+        m_RotatedDifferences.reserve(rotater.max());
+        m_RotatedDifferences.clear();
+
+        // Populate rotated differences with results
+        rotater.rotate([this] (const cv::Mat &image, auto, auto) {
+            m_RotatedDifferences.push_back(this->test(image));
+        });
+    }
+
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    mutable std::vector<FloatType> m_RotatedDifferences;
 };
 } // Navigation
 } // BoBRobotics
