@@ -27,7 +27,7 @@ bob_main(int, char **)
         std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
     }
-    auto object = vicon.getObjectReference(0);
+    auto object = vicon.getObjectReference(0, 5_s);
 
     // Make connection to robot on default port
     Net::Client client;
