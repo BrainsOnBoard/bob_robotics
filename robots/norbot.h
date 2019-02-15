@@ -51,6 +51,19 @@ public:
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
 
+        /*
+         * Motor signals lower than 0.25 make the Norbot crawl slowly
+         * *backwards*. This is weird behaviour and it's confusing my PID
+         * controllers, so let's clamp these values.
+         *      -- AD
+         */
+        if (left > 0.f && left < 0.25f) {
+            left = 0.f;
+        }
+        if (right > 0.f && right < 0.25f) {
+            right = 0.f;
+        }
+
         // Cache left and right
         m_Left = left;
         m_Right = right;
