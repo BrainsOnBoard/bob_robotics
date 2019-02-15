@@ -101,23 +101,12 @@ private:
 };
 
 int
-bob_main(int argc, char **argv)
+bob_main(int, char **)
 {
-    std::string ipAddress;
-    if (argc > 1) {
-        ipAddress = argv[1];
-    } else {
-        std::cout << "IP address [127.0.0.1]: ";
-        std::getline(std::cin, ipAddress);
-        if (ipAddress.empty()) {
-            ipAddress = "127.0.0.1";
-        }
-    }
-
     // Connect to robot
     std::cout << "Connecting to robot" << std::endl;
-    Net::Client client(ipAddress);
-    std::cout << "Connected to " << ipAddress << std::endl;
+    Net::Client client;
+    std::cout << "Connected to " << client.getIP() << std::endl;
 
     // Send motor commands to robot
     Robots::TankNetSink robot(client);
