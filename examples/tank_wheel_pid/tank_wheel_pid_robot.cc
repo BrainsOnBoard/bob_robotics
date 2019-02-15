@@ -33,7 +33,6 @@ bob_main(int, char **)
     Net::Client client;
 
     Robots::TankPID<Robots::TankNetSink> robot(kp, ki, kd, client);
-    robot.controlWithThumbsticks(joystick);
 
     client.runInBackground();
     runWheelPID(joystick, robot, object);

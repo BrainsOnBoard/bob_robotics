@@ -36,6 +36,8 @@ template<typename TankPIDType, typename PoseableType>
 void
 runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 {
+    robot.controlWithThumbsticks(joystick);
+
     std::cout << "Drive the robot using the two thumbsticks: each stick is for one motor" << std::endl;
 
     BackgroundExceptionCatcher catcher;
