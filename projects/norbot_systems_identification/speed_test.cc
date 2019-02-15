@@ -56,6 +56,7 @@ public:
         // Start driving robot forwards; start stopwatch
         robot.tank(robotSpeed, robotSpeed);
         m_Stopwatch.start();
+        m_StopwatchSample.start();
 
         std::cout << "Recording" << std::endl;
     }
