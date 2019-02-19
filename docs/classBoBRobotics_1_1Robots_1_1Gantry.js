@@ -1,13 +1,14 @@
 var classBoBRobotics_1_1Robots_1_1Gantry =
 [
     [ "Gantry", "classBoBRobotics_1_1Robots_1_1Gantry.html#a566dc48e4685a0d816c28e5b78681b6c", null ],
-    [ "~Gantry", "classBoBRobotics_1_1Robots_1_1Gantry.html#a2770b38c3801e949424d69907c87e7a9", null ],
-    [ "getPosition", "classBoBRobotics_1_1Robots_1_1Gantry.html#a42afbcfc9893e5af00ea68ea50fa738e", null ],
-    [ "getVelocity", "classBoBRobotics_1_1Robots_1_1Gantry.html#a8d2b98d10a9a9702a1f12600ed33238d", null ],
-    [ "home", "classBoBRobotics_1_1Robots_1_1Gantry.html#a1afc9c46fc71328410cef9b3c1070f6d", null ],
-    [ "isEmergencyButtonPressed", "classBoBRobotics_1_1Robots_1_1Gantry.html#afb06e2c2cb586ec622b5693c2774d424", null ],
-    [ "isMoving", "classBoBRobotics_1_1Robots_1_1Gantry.html#a2ec97c16695d7f167dda31aa6e8b4f47", null ],
+    [ "~Gantry", "classBoBRobotics_1_1Robots_1_1Gantry.html#a69aa04e93e90ff3ff2ed265764b4ca02", null ],
+    [ "getPosition", "classBoBRobotics_1_1Robots_1_1Gantry.html#a16f836a2ed39cbb88ad6ab6a50490dbb", null ],
+    [ "getVelocity", "classBoBRobotics_1_1Robots_1_1Gantry.html#a20342f0aa5e5440ae86b765d2e1b2ada", null ],
+    [ "home", "classBoBRobotics_1_1Robots_1_1Gantry.html#afc37845096e56ea500488df364e02c7b", null ],
+    [ "isEmergencyButtonPressed", "classBoBRobotics_1_1Robots_1_1Gantry.html#a07723516c8cb2c195fb924564ab279ef", null ],
+    [ "isMoving", "classBoBRobotics_1_1Robots_1_1Gantry.html#a71609becaceaf5308bb8c8a45cf62295", null ],
+    [ "raiseAndHome", "classBoBRobotics_1_1Robots_1_1Gantry.html#a4ba2deb29340f87e757346c88c349cca", null ],
     [ "setPosition", "classBoBRobotics_1_1Robots_1_1Gantry.html#a9f25b4030181f829384429ae1cb668b6", null ],
-    [ "stopMoving", "classBoBRobotics_1_1Robots_1_1Gantry.html#a3afa18652c7b051dbb01aebea30bb192", null ],
-    [ "waitToStopMoving", "classBoBRobotics_1_1Robots_1_1Gantry.html#a2e2bc97c8af5e1620f0a7b6e5306a9d5", null ]
+    [ "stopMoving", "classBoBRobotics_1_1Robots_1_1Gantry.html#a24d8f5abf5ffefce00d607a42dc2c74d", null ],
+    [ "waitToStopMoving", "classBoBRobotics_1_1Robots_1_1Gantry.html#a3b2b2528c996771649ea9d25380f177d", null ]
 ];
