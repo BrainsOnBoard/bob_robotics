@@ -243,6 +243,11 @@ public:
                                             data.template getAttitude<AngleUnit>());
     }
 
+    auto timeSinceReceived() const
+    {
+        return getData().timeSinceReceived();
+    }
+
     ObjectDataType getData() const
     {
         const auto objectData = m_Client.getObjectData(m_Id);
