@@ -108,18 +108,18 @@ public:
     template<typename... Ts>
     TankPID(float kp, float ki, float kd, Ts &&... baseTankArgs)
       : BaseTankType(std::forward<Ts>(baseTankArgs)...)
-      , m_LeftWheelPID(kp, ki, kd, -1.f, 1.f)
-      , m_RightWheelPID(0.f, 0.f, 0.f, -1.f, 1.f)
+      , m_LeftWheelPID(kp, ki, kd, -.8f, .8f)
+      , m_RightWheelPID(kp, ki, kd, -.8f, .8f)
     {}
 
     void start()
     {
-        m_LeftWheelPID.initialise(0.f, 0.f);
-        m_RightWheelPID.initialise(0.f, 0.f);
+        m_LeftWheelPID.initialise(1.f, 0.1f);
+        m_RightWheelPID.initialise(1.f, 0.1f);
     }
 
     template<typename PoseType>
-    void updatePose(const PoseType &pose, second_t elapsed)
+    auto updatePose(const PoseType &pose, second_t elapsed)
     {
         meters_per_second_t velocity;
         degrees_per_second_t angularVelocity;
@@ -129,6 +129,8 @@ public:
         m_LastPose = pose;
 
         updateMotors();
+
+        return -m_CurrentLeft;
     }
 
     virtual void controlWithThumbsticks(HID::Joystick &joystick) override
@@ -179,9 +181,19 @@ private:
     void updateMotors()
     {
         // std::cout << "target: " << m_LeftSetPoint << " | current: " << m_CurrentLeft << std::endl;
-        const float leftMotor = m_LeftWheelPID.update(m_LeftSetPoint.value(), -m_CurrentLeft.value(), true);
-        // const float rightMotor = m_RightWheelPID.update(m_RightSetPoint.value(), m_CurrentRight.value(), false);
-        BaseTankType::tank(leftMotor, 0.f);
+        float leftMotor = m_LeftWheelPID.update(m_LeftSetPoint.value(), -m_CurrentLeft.value(), true);
+        float rightMotor = m_RightWheelPID.update(m_RightSetPoint.value(), -m_CurrentRight.value(), false);
+        if (leftMotor > 0.f) {
+            leftMotor += 0.2;
+        } else {
+            leftMotor -= 0.2;
+        }
+        if (rightMotor > 0.f) {
+            rightMotor += 0.2;
+        } else {
+            rightMotor -= 0.2;
+        }
+        BaseTankType::tank(leftMotor, rightMotor);
     }
 }; // TankPID
 } // Robots

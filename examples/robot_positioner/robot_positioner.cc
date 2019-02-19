@@ -4,6 +4,7 @@
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "robots/robot_positioner.h"
+#include "robots/tank_pid.h"
 #include "vicon/udp.h"
 
 // This program can be run locally on the robot or remotely
@@ -39,8 +40,8 @@ bob_main(int argc, char **argv)
     // Parameters
     constexpr meter_t stoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-    constexpr double k1 = 0.025;                    // curveness of the path to the goal
-    constexpr double k2 = 400;                      // speed of turning on the curves
+    constexpr double k1 = 0.5;                      // curveness of the path to the goal
+    constexpr double k2 = 30;                       // speed of turning on the curves
     constexpr double alpha = 1.03;                  // causes more sharply peaked curves
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
@@ -58,9 +59,13 @@ bob_main(int argc, char **argv)
         }
     }
 
+    constexpr float kp = 2.f;
+    constexpr float ki = 0.5f;
+    constexpr float kd = 0.1f;
+
     // Make connection to robot on default port
     Net::Client client(robotIP);
-    Robots::TankNetSink bot(client);
+    Robots::TankPID<Robots::TankNetSink> bot(kp, ki, kd, client);
 #else
     // Silence warning about unused vars
     (void) argc;
@@ -82,7 +87,7 @@ bob_main(int argc, char **argv)
     bot.addJoystick(joystick);
 
     // Print distance timer
-    Stopwatch printTimer;
+    Stopwatch printTimer, pidTimer;
 
     {
         // Catch exceptions on background threads
@@ -121,7 +126,10 @@ bob_main(int argc, char **argv)
                 runPositioner = !runPositioner;
                 if (runPositioner) {
                     std::cout << "Starting positioner" << std::endl;
+                    pidTimer.start();
                     printTimer.start();
+                    bot.start();
+                    robp.start();
                 } else {
                     bot.stopMoving();
                     std::cout << "Stopping positioner" << std::endl;
@@ -147,7 +155,9 @@ bob_main(int argc, char **argv)
                               << " (" << goal.yaw() - attitude[0] << ")"
                               << std::endl;
                     runPositioner = false;
+                    bot.stopMoving();
                 } else {
+                    bot.updatePose(objectData.getPose(), pidTimer.elapsed());
                     robp.updateMotors(bot, { position[0], position[1], attitude[0] });
 
                     // Print status

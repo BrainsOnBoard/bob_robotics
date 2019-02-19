@@ -23,6 +23,7 @@
 #include <vector>
 
 using namespace BoBRobotics;
+using namespace std::literals;
 using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
@@ -47,27 +48,43 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 
     Pose2<meter_t, radian_t> lastPose;
     std::vector<double> x(1), y(1);
-    Stopwatch stopwatch;
+    Stopwatch stopwatch, globalStopwatch;
     stopwatch.start();
     bool driveWithVelocities = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
-        if (pressed && button == HID::JButton::Y) {
-            robot.stopMoving();
-            driveWithVelocities = !driveWithVelocities;
-            if (driveWithVelocities) {
+        if (!pressed) {
+            return false;
+        }
+
+        switch (button) {
+        case HID::JButton::Y:
+            if (!driveWithVelocities) {
+                robot.stopMoving();
+                driveWithVelocities = true;
                 std::cout << "Driving using velocities" << std::endl;
                 stopwatch.start();
                 robot.start();
-                robot.tankVelocities(0.05_mps, 0_mps);
-            } else {
+                globalStopwatch.start();
+                robot.tankVelocities(0.1_mps, 0.1_mps);
+            }
+            return true;
+        case HID::JButton::X:
+            if (driveWithVelocities) {
+                driveWithVelocities = !driveWithVelocities;
                 std::cout << "Driving using standard controls" << std::endl;
             }
-            // robot.setDriveWithVelocities(driveWithVelocities);
             return true;
-        } else {
-            return false;
+        default:
+            break;
         }
+        return false;
     });
+
+    std::vector<double> mps, t, targetX, targetY, originY;
+    targetX = { 0.0, 1000.0 };
+    targetY = { 0.1, 0.1 };
+    originY = { 0.0, 0.0 };
+    constexpr second_t updateInterval = 200_ms;
     do {
         // Rethrow any exceptions caught on background thread
         catcher.check();
@@ -76,16 +93,28 @@ runWheelPID(HID::Joystick &joystick, TankPIDType &robot, PoseableType &poseable)
 
         plt::figure(1);
         plt::clf();
+        plt::subplot(2, 1, 1);
         plotAgent(currentPose, -plotLimits, plotLimits, -plotLimits, plotLimits);
-        if (driveWithVelocities && lastPose != currentPose) {
-            robot.updatePose(currentPose, stopwatch.lap());
+        if (driveWithVelocities && poseable.timeSinceReceived() < 200ms) {
+            mps.push_back(robot.updatePose(currentPose, stopwatch.lap()).value());
+            t.push_back(static_cast<second_t>(globalStopwatch.elapsed()).value());
+
+            plt::subplot(2, 1, 2);
+            plt::plot(t, mps, "b", targetX, targetY, "r--", targetX, originY, "k");
+            plt::ylim(0.0, 0.2);
+            if (t.back() > 30.0) {
+                plt::xlim(t.back() - 30.0, t.back());
+            } else {
+                plt::xlim(0, 30);
+            }
         }
-        plt::pause(0.1);
+
+        plt::pause(updateInterval.value());
 
         lastPose = currentPose;
 
         // Check for joystick events
         joystick.update();
-    } while (plt::fignum_exists(1));
+    } while (plt::fignum_exists(1) && !joystick.isPressed(HID::JButton::B));
     plt::close();
 }

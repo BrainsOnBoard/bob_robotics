@@ -44,6 +44,7 @@ private:
     const double m_K2;                         // speed of turning on the curves
     const double m_Alpha;                      // causes more sharply peaked curves
     const double m_Beta;                       // causes to drop velocity if 'k'(curveness) increases
+    bool m_Started = false;
 
     static radian_t angleWrapAround(radian_t angle)
     {
@@ -102,6 +103,11 @@ public:
       , m_Alpha(alpha)
       , m_Beta(beta)
     {}
+
+    void start()
+    {
+        m_Started = true;
+    }
 
     //! sets the goal pose (x, y, angle)
     void setGoalPose(const Pose2<meter_t, radian_t> &pose)
@@ -176,14 +182,22 @@ public:
          * for the robot's pose, but the Tank interface turns robots clockwise.
          * If the motor commands are out of range, they will be scaled down.
          */
-        bot.move(v, -omega, true);
+        bot.move(v, -omega);
     }
 
     //! returns true if the robot reached the goal position
-    bool reachedGoal() const
+    bool reachedGoal()
     {
-        return m_DistanceToGoal < m_StoppingDistance &&
-               units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;
+        if (!m_Started) {
+            return false;
+        } else {
+            bool ret = m_DistanceToGoal < m_StoppingDistance &&
+                       units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;
+            if (ret) {
+                m_Started = false;
+            }
+            return ret;
+        }
     }
 
 }; // RobotPositioner
