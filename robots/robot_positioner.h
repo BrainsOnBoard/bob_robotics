@@ -44,6 +44,7 @@ private:
     const double m_K2;                         // speed of turning on the curves
     const double m_Alpha;                      // causes more sharply peaked curves
     const double m_Beta;                       // causes to drop velocity if 'k'(curveness) increases
+    bool m_Started = false;
 
     static radian_t angleWrapAround(radian_t angle)
     {
@@ -103,6 +104,11 @@ public:
       , m_Beta(beta)
     {}
 
+    void start()
+    {
+        m_Started = true;
+    }
+
     //! sets the goal pose (x, y, angle)
     void setGoalPose(const Pose2<meter_t, radian_t> &pose)
     {
@@ -119,14 +125,16 @@ public:
         updateRangeAndBearing();
     }
 
-    //! updates the velocities in order to get to a goal location. This function can be used
-    //! without a robot interface, where only velocities are calculated but no robot actions
-    //! will be executed.
-    void updateVelocities(
-            meters_per_second_t &v,      // velocity to update
-            radians_per_second_t &omega) // angular velocity to update
+    //! This function will update the motors so it drives towards a previously set goal location
+    void updateMotors(BoBRobotics::Robots::Tank &bot,
+                      const Pose2<meter_t, radian_t> &pose)
     {
-        // If we're already at the goal, then we're done
+        setPose(pose);
+
+        // Calculate velocities for new course
+        meters_per_second_t v;
+        radians_per_second_t omega;
+                // If we're already at the goal, then we're done
         if (reachedGoal()) {
             v = 0_mps;
             omega = 0_rad_per_s;
@@ -153,37 +161,43 @@ public:
                                                            units::math::pow<2>(m_K1 * theta).value())) }) *
                                units::math::sin(m_HeadingToGoal);
 
-        const auto k = -(part1 + part2) / m_DistanceToGoal; // in rad/mm
+        const float curvature = (-(part1 + part2) / m_DistanceToGoal).value(); // in rad/m
+        // std::cout << "curvature: " << curvature << std::endl;
 
-        v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
-        omega = k * v;
-    }
+        const float differential = curvature / 100.f;
 
-    //! This function will update the motors so it drives towards a previously set goal location
-    void updateMotors(BoBRobotics::Robots::Tank &bot,
-                      const Pose2<meter_t, radian_t> &pose)
-    {
-        setPose(pose);
+        float v1, v2;
+        if (fabs(curvature) > 50.f) {
+            if (curvature > 0.f) {
+                v1 = 1.f;
+                v2 = -1.f;
+            } else {
+                v1 = -1.f;
+                v2 = 1.f;
+            }
+        } else {
+            constexpr float averageSpeed = 0.5f;
+            v1 = std::min(1.f, std::max(0.f, averageSpeed + differential));
+            v2 = std::min(1.f, std::max(0.f, averageSpeed - differential));
+        }
 
-        // Calculate velocities for new course
-        meters_per_second_t v;
-        radians_per_second_t omega;
-        updateVelocities(v, omega);
-
-        /*
-         * Drive robot with specified velocities.
-         * We invert the turning direction because we're counting anti-clockwise
-         * for the robot's pose, but the Tank interface turns robots clockwise.
-         * If the motor commands are out of range, they will be scaled down.
-         */
-        bot.move(v, -omega, true);
+        // std::cout << "motors: " << v2 << ", " << v1 << std::endl;
+        bot.tank(v2, v1);
     }
 
     //! returns true if the robot reached the goal position
-    bool reachedGoal() const
+    bool reachedGoal()
     {
-        return m_DistanceToGoal < m_StoppingDistance &&
-               units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;
+        if (!m_Started) {
+            return false;
+        } else {
+            bool ret = m_DistanceToGoal < m_StoppingDistance &&
+                       units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;
+            if (ret) {
+                m_Started = false;
+            }
+            return ret;
+        }
     }
 
 }; // RobotPositioner

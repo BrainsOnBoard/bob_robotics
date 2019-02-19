@@ -40,7 +40,7 @@ bob_main(int argc, char **argv)
     constexpr meter_t stoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 5_deg; // the amount of error allowed in the final heading
     constexpr double k1 = 0.025;                    // curveness of the path to the goal
-    constexpr double k2 = 400;                      // speed of turning on the curves
+    constexpr double k2 = 50;                       // speed of turning on the curves
     constexpr double alpha = 1.03;                  // causes more sharply peaked curves
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
@@ -116,12 +116,13 @@ bob_main(int argc, char **argv)
             catcher.check();
 
             // Poll for joystick events
-            const bool joystickUpdate = joystick.update();
+            joystick.update();
             if (joystick.isPressed(HID::JButton::Y)) {
                 runPositioner = !runPositioner;
                 if (runPositioner) {
                     std::cout << "Starting positioner" << std::endl;
                     printTimer.start();
+                    robp.start();
                 } else {
                     bot.stopMoving();
                     std::cout << "Stopping positioner" << std::endl;
@@ -139,6 +140,8 @@ bob_main(int argc, char **argv)
                     std::cerr << "Error: Could not get position from Vicon system\n"
                               << "Stopping trial" << std::endl;
                 } else if (robp.reachedGoal()) {
+                    bot.stopMoving();
+
                     std::cout << "Reached goal" << std::endl;
                     std::cout << "Final position: " << position.x() << ", " << position.y() << std::endl;
                     std::cout << "Goal: " << goal.x() << ", " << goal.y() << std::endl;
@@ -159,9 +162,9 @@ bob_main(int argc, char **argv)
                                   << std::endl;
                     }
                 }
-            } else if (!joystickUpdate) {
-                std::this_thread::sleep_for(5ms);
             }
+
+            std::this_thread::sleep_for(20ms);
         }
     }
 
