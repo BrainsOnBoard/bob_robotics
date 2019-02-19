@@ -12,6 +12,7 @@
 #include <atomic>
 #include <iostream>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -189,6 +190,15 @@ private:
     }
 };
 
+class TimedOutError
+  : public std::runtime_error
+{
+public:
+    TimedOutError()
+      : std::runtime_error("Timed out waiting for Vicon data")
+    {}
+};
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Vicon::ObjectReference
 //----------------------------------------------------------------------------
@@ -205,9 +215,12 @@ class ObjectReference
     using radian_t = units::angle::radian_t;
 
 public:
-    ObjectReference(UDPClient<ObjectDataType> &client, const unsigned id)
+    ObjectReference(UDPClient<ObjectDataType> &client,
+                    const unsigned id,
+                    const Stopwatch::Duration timeoutDuration)
         : m_Client(client)
         , m_Id(id)
+        , m_TimeoutDuration(timeoutDuration)
     {}
 
     template<typename LengthUnit = millimeter_t>
@@ -232,14 +245,18 @@ public:
 
     ObjectDataType getData() const
     {
-        return m_Client.getObjectData(m_Id);
+        const auto objectData = m_Client.getObjectData(m_Id);
+        if (objectData.timeSinceReceived() > m_TimeoutDuration) {
+            throw TimedOutError();
+        }
+        return objectData;
     }
 
 private:
     UDPClient<ObjectDataType> &m_Client;
     const unsigned m_Id;
+    const Stopwatch::Duration m_TimeoutDuration;
 };
-
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Vicon::UDPClient
@@ -341,9 +358,10 @@ public:
     }
 
     //! Returns an object whose pose is updated by the Vicon system over time
-    auto getObjectReference(unsigned int id)
+    auto getObjectReference(unsigned int id,
+                            Stopwatch::Duration timeoutDuration = Stopwatch::Duration::max())
     {
-        return ObjectReference<ObjectDataType>(*this, id);
+        return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
     }
 
 private:
