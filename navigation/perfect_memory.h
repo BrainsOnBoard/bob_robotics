@@ -191,7 +191,7 @@ private:
 
         // Preallocate snapshot difference vectors
         while (m_RotatedDifferences.size() < numSnapshots) {
-            m_RotatedDifferences.emplace_back(unwrapRes.width);
+            m_RotatedDifferences.emplace_back(rotater.max());
         }
 
         // Scan across image columns

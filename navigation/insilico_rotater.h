@@ -22,8 +22,10 @@ public:
     InSilicoRotater(const cv::Size &unwrapRes,
                     const cv::Mat &maskImage,
                     const cv::Mat &image,
-                    const unsigned int scanStep = 1)
-      : m_ScanStep(scanStep)
+                    size_t scanStep = 1,
+                    size_t beginRoll = 0,
+                    size_t endRoll = std::numeric_limits<size_t>::max())
+      : m_ScanStep(scanStep), m_BeginRoll(beginRoll), m_EndRoll(endRoll)
     {
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
@@ -36,12 +38,12 @@ public:
     template<class Func>
     void rotate(Func func)
     {
-        size_t i = 0;
+        size_t i = m_BeginRoll;
         while (true) {
             func(m_Image, m_MaskImage, i);
 
             i += m_ScanStep;
-            if (i >= (size_t) m_Image.cols) {
+            if ((i >= (size_t) m_Image.cols) || (i >= (size_t)m_EndRoll)) {
                 break;
             }
 
@@ -58,7 +60,9 @@ public:
     }
 
 private:
-    const unsigned int m_ScanStep;
+    const size_t m_ScanStep;
+    const size_t m_BeginRoll;
+    const size_t m_EndRoll;
     cv::Mat m_Image, m_MaskImage;
 
     void rollImage(cv::Mat &image)
