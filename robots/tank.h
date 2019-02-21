@@ -104,7 +104,11 @@ private:
         } else {
             // If length of joystick vector places it in deadZone, stop motors
             float r = hypot(x, y);
-            r = std::min(1.f, r);
+
+            // By removing deadzone, we're preventing it being possible to drive at low speed
+            // So subtract deadzone, rescale the result and clamp so it's back on (0,1)
+            r = std::min(1.f, (r - deadZone) / (1.0f - deadZone));
+
             const float theta = atan2(x, -y);
             const float twoTheta = 2.0f * theta;
 
