@@ -25,7 +25,8 @@ public:
                     size_t scanStep = 1,
                     size_t beginRoll = 0,
                     size_t endRoll = std::numeric_limits<size_t>::max())
-      : m_ScanStep(scanStep), m_BeginRoll(beginRoll), m_EndRoll(endRoll)
+    :   m_ScanStep(scanStep), m_BeginRoll(beginRoll), 
+        m_EndRoll((endRoll == std::numeric_limits<size_t>::max()) ? static_cast<size_t>(m_Image.cols) : endRoll)
     {
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
@@ -38,25 +39,32 @@ public:
     template<class Func>
     void rotate(Func func)
     {
+        if(m_BeginRoll != 0) {
+            rollImage(m_Image, m_BeginRoll);
+            if (!m_MaskImage.empty()) {
+                rollImage(m_MaskImage, m_BeginRoll);
+            }
+        }
+        
         size_t i = m_BeginRoll;
         while (true) {
-            func(m_Image, m_MaskImage, i);
+            func(m_Image, m_MaskImage, i - m_BeginRoll);
 
             i += m_ScanStep;
-            if ((i >= (size_t) m_Image.cols) || (i >= (size_t)m_EndRoll)) {
+            if (i >= (size_t)m_EndRoll) {
                 break;
             }
 
-            rollImage(m_Image);
+            rollImage(m_Image, m_ScanStep);
             if (!m_MaskImage.empty()) {
-                rollImage(m_MaskImage);
+                rollImage(m_MaskImage, m_ScanStep);
             }
         }
     }
 
     size_t max() const
     {
-        return static_cast<size_t>(m_Image.cols) / m_ScanStep;
+        return (m_EndRoll - m_BeginRoll) / m_ScanStep;
     }
 
 private:
@@ -65,7 +73,7 @@ private:
     const size_t m_EndRoll;
     cv::Mat m_Image, m_MaskImage;
 
-    void rollImage(cv::Mat &image)
+    static void rollImage(cv::Mat &image, size_t pixels)
     {
         // Loop through rows
         for (int y = 0; y < image.rows; y++) {
@@ -73,7 +81,7 @@ private:
             uint8_t *rowPtr = image.ptr(y);
 
             // Rotate row to left by m_ScanStep pixels
-            std::rotate(rowPtr, rowPtr + m_ScanStep, rowPtr + image.cols);
+            std::rotate(rowPtr, rowPtr + pixels, rowPtr + image.cols);
         }
     }
 };
