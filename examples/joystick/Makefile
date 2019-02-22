@@ -1,3 +1,4 @@
+NO_OPENCV := 1
 include ../../make_common/bob_robotics.mk
 
 .PHONY: all clean
