@@ -5,5 +5,5 @@
 	path = third_party/imgui/imgui
 	url = ../../ocornut/imgui.git
 [submodule "third_party/ev3dev-lang-cpp"]
-	path = third_party/ev3dev-lang-cpp
+	path = third_party/ev3dev-lang-cpp/ev3dev-lang-cpp
 	url = https://github.com/ddemidov/ev3dev-lang-cpp
