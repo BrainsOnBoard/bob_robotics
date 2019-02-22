@@ -1,13 +1,8 @@
 #pragma once
 
 // BoB robotics includes
-#include "../robots/tank.h"
-#include "../video/input.h"
 #include "connection.h"
 #include "socket.h"
-
-// OpenCV
-#include <opencv2/opencv.hpp>
 
 // Standard C includes
 #include <cstdint>

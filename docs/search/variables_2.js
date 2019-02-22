@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['printdebug',['PrintDebug',['../classBoBRobotics_1_1Net_1_1Socket.html#ab49f5310cab03fb69ceaef462fd90c10',1,'BoBRobotics::Net::Socket']]]
+  ['green',['green',['../structGLFWgammaramp.html#affccc6f5df47820b6562d709da3a5a3a',1,'GLFWgammaramp']]],
+  ['greenbits',['greenBits',['../structGLFWvidmode.html#a292fdd281f3485fb3ff102a5bda43faa',1,'GLFWvidmode']]]
 ];

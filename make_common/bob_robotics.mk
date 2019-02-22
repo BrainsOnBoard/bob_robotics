@@ -112,7 +112,7 @@ ifdef WITH_MATPLOTLIBCPP
 
 	# extract python version from PYTHON_INCLUDE
 	PYTHON_VERSION       := $(shell echo $(PYTHON_INCLUDE) | cut -f 1 -d " " | grep -e python... -o)
-	PYTHON_NUMPY_INCLUDE ?= $(shell find $$($(PYTHON_CONFIG) --prefix)/lib -type d -path "*/*-packages/numpy/core/include" | grep -m 1 $(PYTHON_VERSION))
+	PYTHON_NUMPY_INCLUDE ?= $(shell $(PYTHON_BIN) $(CURRENT_DIR)/find_numpy.py)
 
 	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
@@ -133,6 +133,6 @@ ifdef WITH_I2C
 endif
 
 ifdef WITH_EIGEN
-	CXXFLAGS += `pkg-config --cflags eigen3`
+	CXXFLAGS += `pkg-config --cflags eigen3` -fopenmp
 	LINK_FLAGS += -fopenmp
 endif

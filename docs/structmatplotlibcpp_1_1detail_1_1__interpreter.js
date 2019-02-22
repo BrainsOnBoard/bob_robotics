@@ -7,6 +7,7 @@ var structmatplotlibcpp_1_1detail_1_1__interpreter =
     [ "s_python_function_close", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a43f3de18936dd4d4ffef3046b64d686e", null ],
     [ "s_python_function_draw", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a3c4981fa6eea6f2bfc9bb2e685109032", null ],
     [ "s_python_function_errorbar", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a082b7b746d5ebe138b1a136944d0a4ca", null ],
+    [ "s_python_function_fignum_exists", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a3e29885c00054c68a9fc0d83e366c2d2", null ],
     [ "s_python_function_figure", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a5d283724b9e24217b5f4aef9950789fa", null ],
     [ "s_python_function_fill_between", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#af9e80729f91e2295b88e6ed5788652c0", null ],
     [ "s_python_function_grid", "structmatplotlibcpp_1_1detail_1_1__interpreter.html#a38630747267b258d93229eaea64610eb", null ],
