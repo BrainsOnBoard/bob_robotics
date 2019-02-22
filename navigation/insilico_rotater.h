@@ -26,7 +26,7 @@ public:
                     size_t beginRoll = 0,
                     size_t endRoll = std::numeric_limits<size_t>::max())
     :   m_ScanStep(scanStep), m_BeginRoll(beginRoll), 
-        m_EndRoll((endRoll == std::numeric_limits<size_t>::max()) ? static_cast<size_t>(m_Image.cols) : endRoll)
+        m_EndRoll((endRoll == std::numeric_limits<size_t>::max()) ? static_cast<size_t>(image.cols) : endRoll)
     {
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
@@ -39,7 +39,9 @@ public:
     template<class Func>
     void rotate(Func func)
     {
+        // If we are starting scanning from a point other than zero
         if(m_BeginRoll != 0) {
+            // Roll image and mask (if required)
             rollImage(m_Image, m_BeginRoll);
             if (!m_MaskImage.empty()) {
                 rollImage(m_MaskImage, m_BeginRoll);
@@ -51,7 +53,7 @@ public:
             func(m_Image, m_MaskImage, i - m_BeginRoll);
 
             i += m_ScanStep;
-            if (i >= (size_t)m_EndRoll) {
+            if (i >= m_EndRoll) {
                 break;
             }
 
@@ -75,12 +77,13 @@ private:
 
     static void rollImage(cv::Mat &image, size_t pixels)
     {
+        BOB_ASSERT(image.isContinuous());
         // Loop through rows
         for (int y = 0; y < image.rows; y++) {
             // Get pointer to start of row
             uint8_t *rowPtr = image.ptr(y);
 
-            // Rotate row to left by m_ScanStep pixels
+            // Rotate row to left by pixels
             std::rotate(rowPtr, rowPtr + pixels, rowPtr + image.cols);
         }
     }
