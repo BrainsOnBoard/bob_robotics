@@ -18,11 +18,12 @@ class EV3
   : public Tank
 {
 public:
-    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
+    EV3(const float proportionMaxSpeed = 0.7f,
+        const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
         const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_A)
       : m_MotorLeft(leftMotorPort)
       , m_MotorRight(rightMotorPort)
-      , m_MaxSpeed(m_MotorLeft.max_speed())
+      , m_MaxSpeed(proportionMaxSpeed * m_MotorLeft.max_speed())
     {}
 
     virtual ~EV3() override
