@@ -131,6 +131,7 @@ public:
     :   PerfectMemory<Store>(unwrapRes, std::forward<Ts>(args)...)
     {
     }
+
     /*!
      * \brief Get differences between current view and stored snapshots
      *
@@ -142,7 +143,8 @@ public:
     template<class... Ts>
     const std::vector<std::vector<float>> &getImageDifferences(Ts &&... args) const
     {
-        calcImageDifferences(std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
 
@@ -158,20 +160,23 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        calcImageDifferences(std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
         const size_t numSnapshots = this->getNumSnapshots();
 
         // Now get the minimum for each snapshot and the column this corresponds to
-        std::vector<int> bestColumns(numSnapshots);
-        std::vector<float> minDifferences(numSnapshots);
+        std::vector<size_t> bestColumns;
+        bestColumns.reserve(numSnapshots);
+        std::vector<float> minDifferences;
+        minDifferences.reserve(numSnapshots);
         for (size_t i = 0; i < numSnapshots; i++) {
             const auto elem = std::min_element(std::cbegin(m_RotatedDifferences[i]), std::cend(m_RotatedDifferences[i]));
-            bestColumns[i] = std::distance(std::cbegin(m_RotatedDifferences[i]), elem);
-            minDifferences[i] = *elem;
+            bestColumns.push_back(std::distance(std::cbegin(m_RotatedDifferences[i]), elem));
+            minDifferences.push_back(*elem);
         }
 
         // Return result
-        return std::tuple_cat(RIDFProcessor()(this->getUnwrapResolution(), bestColumns, minDifferences),
+        return std::tuple_cat(RIDFProcessor()(bestColumns, minDifferences, rotater),
                               std::make_tuple(std::cref(m_RotatedDifferences)));
     }
 
@@ -179,31 +184,26 @@ private:
     //------------------------------------------------------------------------
     // Private API
     //------------------------------------------------------------------------
-    template<class... Ts>
-    void calcImageDifferences(Ts &&... args) const
+    template<class RotaterType>
+    void calcImageDifferences(RotaterType &rotater) const
     {
         const size_t numSnapshots = this->getNumSnapshots();
         BOB_ASSERT(numSnapshots > 0);
 
-        // Object for rotating over images
-        const cv::Size unwrapRes = this->getUnwrapResolution();
-        Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
-
         // Preallocate snapshot difference vectors
         while (m_RotatedDifferences.size() < numSnapshots) {
-            m_RotatedDifferences.emplace_back(rotater.max());
+            m_RotatedDifferences.emplace_back(rotater.numRotations());
         }
 
         // Scan across image columns
         rotater.rotate(
-            [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i)
-            {
-                // Loop through snapshots
-                for (size_t s = 0; s < numSnapshots; s++) {
-                    // Calculate difference
-                    m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
-                }
-            });
+                [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
+                    // Loop through snapshots
+                    for (size_t s = 0; s < numSnapshots; s++) {
+                        // Calculate difference
+                        m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
+                    }
+                });
     }
 
     //------------------------------------------------------------------------

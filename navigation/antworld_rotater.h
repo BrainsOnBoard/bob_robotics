@@ -1,11 +1,11 @@
 #pragma once
 
-// Third-party includes
-#include "../third_party/units.h"
-
 // BoB robotics includes
 #include "../common/assert.h"
 #include "../libantworld/agent.h"
+
+// Third-party includes
+#include "../third_party/units.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -26,13 +26,14 @@ public:
     AntWorldRotater(const cv::Size &unwrapRes,
                     const cv::Mat &maskImage,
                     AntWorld::AntAgent &agent,
-                    const degree_t yawStep = 1_deg,
-                    const degree_t pitch = 0_deg,
-                    const degree_t roll = 0_deg)
+                    const degree_t &yawStep = 1_deg,
+                    const degree_t &pitch = 0_deg,
+                    const degree_t &roll = 0_deg)
       : m_Agent(agent)
       , m_YawStep(yawStep)
       , m_Pitch(pitch)
       , m_Roll(roll)
+      , m_UnwrapRes(unwrapRes)
     {
         BOB_ASSERT(agent.getOutputSize() == unwrapRes);
 
@@ -52,14 +53,27 @@ public:
         }
     }
 
-    size_t max() const
+    size_t numRotations() const
     {
         return 360_deg / m_YawStep;
     }
 
+    units::angle::radian_t columnToHeading(size_t column) const
+    {
+        return units::angle::turn_t{ (double) column / (double) m_UnwrapRes.width };
+    }
+
+    template<typename... Ts>
+    static auto
+    create(Ts &&... args)
+    {
+        return AntWorldRotater(std::forward<Ts>(args)...);
+    }
+
 private:
     AntWorld::AntAgent &m_Agent;
-    const degree_t m_YawStep, m_Pitch, m_Roll;
+    const degree_t &m_YawStep, &m_Pitch, &m_Roll;
+    const cv::Size &m_UnwrapRes;
 }; // AntWorldRotater
 } // Navigation
 } // BoBRobotics
