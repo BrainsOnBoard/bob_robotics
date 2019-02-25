@@ -2,10 +2,14 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/circstat.h"
 #include "tank.h"
 
 // EV3 library
 #include "ev3dev.h"
+
+// Third-party includes
+#include "../third_party/units.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -41,6 +45,19 @@ public:
         m_MotorRight.set_speed_sp(m_MaxSpeed * right);
         m_MotorLeft.run_forever();
         m_MotorRight.run_forever();
+    }
+
+    virtual millimeter_t getRobotWidth() override
+    {
+        return 12_cm;
+    }
+
+    virtual meters_per_second_t getMaximumSpeed() override
+    {
+        constexpr units::length::meter_t wheelRadius = 5.5_cm / 2;
+        const double turnsPerTacho = 1.0 / m_MotorLeft.count_per_rot();
+        const double angularVelocity{ m_MaxSpeed * 2 * pi() * turnsPerTacho };
+        return meters_per_second_t{ angularVelocity * wheelRadius.value() };
     }
 
 private:
