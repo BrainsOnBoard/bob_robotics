@@ -81,9 +81,11 @@ public:
 
     virtual void setMaximumSpeedProportion(float value) override
     {
-        Tank::setMaximumSpeedProportion(value);
+        if (value != getMaximumSpeedProportion()) {
+            Tank::setMaximumSpeedProportion(value);
 
-        m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
+            m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
+        }
     }
 
     //! Motor command: send TNK command over TCP

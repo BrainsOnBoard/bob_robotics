@@ -1,7 +1,6 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/assert.h"
 #include "../common/circstat.h"
 #include "tank.h"
 
@@ -32,21 +31,22 @@ public:
     virtual ~EV3() override
     {
         stopMoving();
+        stopReadingFromNetwork();
     }
 
     virtual void stopMoving() override
     {
         m_MotorLeft.stop();
         m_MotorRight.stop();
+        setWheelSpeeds(0.f, 0.f);
     }
 
     virtual void tank(float left, float right) override
     {
-        BOB_ASSERT(left >= -1.f && left <= 1.f);
-        BOB_ASSERT(right >= -1.f && right <= 1.f);
+        setWheelSpeeds(left, right);
 
         const float maxTachos = getMaximumSpeedProportion() * m_MaxSpeedTachos;
-        m_MotorLeft.set_speed_sp(maxTachos *left);
+        m_MotorLeft.set_speed_sp(maxTachos * left);
         m_MotorRight.set_speed_sp(maxTachos * right);
         m_MotorLeft.run_forever();
         m_MotorRight.run_forever();

@@ -19,6 +19,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -203,6 +204,7 @@ public:
         connection.setCommandHandler("TNK_MAX",
                                      [this](Net::Connection &, const Net::Command &command) {
                                          Tank::setMaximumSpeedProportion(stof(command.at(1)));
+                                         tank(m_Left, m_Right);
                                      });
 
         m_Connection = &connection;
@@ -218,7 +220,7 @@ public:
 
 private:
     Net::Connection *m_Connection = nullptr;
-    float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f;
+    float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
 
     void drive(float x, float y, float deadZone)
     {
@@ -289,6 +291,26 @@ private:
         // drive robot with joystick
         drive(m_X, m_Y, deadZone);
         return true;
+    }
+
+    float getLeft() const
+    {
+        return m_Left;
+    }
+
+    float getRight() const
+    {
+        return m_Right;
+    }
+
+protected:
+    void setWheelSpeeds(float left, float right)
+    {
+        BOB_ASSERT(left >= -1.f && left <= 1.f);
+        BOB_ASSERT(right >= -1.f && right <= 1.f);
+
+        m_Left = left;
+        m_Right = right;
     }
 }; // Tank
 } // Robots

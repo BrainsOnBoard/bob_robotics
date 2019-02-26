@@ -72,8 +72,7 @@ public:
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) override
     {
-        BOB_ASSERT(left >= -1.f && left <= 1.f);
-        BOB_ASSERT(right >= -1.f && right <= 1.f);
+        setWheelSpeeds(left, right);
 
         // Scale and convert to int
         const float maxSpeed = 100.f * getMaximumSpeedProportion();
