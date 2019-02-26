@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/circstat.h"
 #include "../common/pose.h"
 #include "../robots/tank.h"
 
@@ -42,6 +43,7 @@ private:
     const double m_K2;                    // speed of turning on the curves
     const double m_Alpha;                 // causes more sharply peaked curves
     const double m_Beta;                  // causes to drop velocity if 'k'(curveness) increases
+    bool m_Running = false;
 
     static radian_t angleWrapAround(radian_t angle)
     {
@@ -113,6 +115,11 @@ public:
         updateRangeAndBearing();
     }
 
+    void reset()
+    {
+        m_Running = false;
+    }
+
     //! updates the velocities in order to get to a goal location. This function can be used
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
@@ -121,12 +128,8 @@ public:
             meters_per_second_t &v,      // velocity to update
             radians_per_second_t &omega) // angular velocity to update
     {
-        // If we're already at the goal, then we're done
-        if (reachedGoal()) {
-            v = 0_mps;
-            omega = 0_rad_per_s;
-            return;
-        }
+        // Set flag to show we've updated at least once
+        m_Running = true;
 
         /*
          * Special case: if we're exactly on the goal, but at the wrong heading,
@@ -178,8 +181,8 @@ public:
     //! returns true if the robot reached the goal position
     bool reachedGoal() const
     {
-        return m_DistanceToGoal < m_StoppingDistance &&
-               units::math::abs(m_RobotPose.yaw() - m_GoalPose.yaw()) < m_AllowedHeadingError;
+        return m_Running && m_DistanceToGoal < m_StoppingDistance &&
+               units::math::abs(circularDistance(m_RobotPose.yaw(), m_GoalPose.yaw())) < m_AllowedHeadingError;
     }
 
 }; // RobotPositioner
