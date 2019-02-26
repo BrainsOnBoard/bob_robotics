@@ -153,6 +153,17 @@ public:
         return radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<meter_t>(getRobotWidth())).value() };
     }
 
+    virtual void setMaximumSpeedProportion(float value)
+    {
+        BOB_ASSERT(value >= -1.f && value <= 1.f);
+        m_MaximumSpeedProportion = value;
+    }
+
+    virtual float getMaximumSpeedProportion() const
+    {
+        return m_MaximumSpeedProportion;
+    }
+
     //! Controls the robot with a network stream
     void readFromNetwork(Net::Connection &connection)
     {
@@ -198,8 +209,7 @@ public:
 
 private:
     Net::Connection *m_Connection = nullptr;
-    float m_X = 0;
-    float m_Y = 0;
+    float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f;
 
     void drive(float x, float y, float deadZone)
     {

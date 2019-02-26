@@ -21,12 +21,11 @@ class EV3
   : public Tank
 {
 public:
-    EV3(const float proportionMaxSpeed = 0.7f,
-        const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
+    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
         const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_A)
       : m_MotorLeft(leftMotorPort)
       , m_MotorRight(rightMotorPort)
-      , m_MaxSpeedTachos(proportionMaxSpeed * m_MotorLeft.max_speed())
+      , m_MaxSpeedTachos(m_MotorLeft.max_speed())
       , m_TachoCountPerRotation(m_MotorLeft.count_per_rot())
     {}
 
@@ -46,8 +45,9 @@ public:
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
 
-        m_MotorLeft.set_speed_sp(m_MaxSpeedTachos * left);
-        m_MotorRight.set_speed_sp(m_MaxSpeedTachos * right);
+        const float maxTachos = getMaximumSpeedProportion() * m_MaxSpeedTachos;
+        m_MotorLeft.set_speed_sp(maxTachos *left);
+        m_MotorRight.set_speed_sp(maxTachos * right);
         m_MotorLeft.run_forever();
         m_MotorRight.run_forever();
     }
@@ -59,7 +59,7 @@ public:
 
     virtual meters_per_second_t getMaximumSpeed() override
     {
-        return tachoToSpeed(m_MaxSpeedTachos);
+        return getMaximumSpeedProportion() * tachoToSpeed(m_MaxSpeedTachos);
     }
 
     auto getWheelVelocities() const

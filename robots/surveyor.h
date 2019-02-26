@@ -76,8 +76,9 @@ public:
         BOB_ASSERT(right >= -1.f && right <= 1.f);
 
         // Scale and convert to int
-        int leftInt = (int) std::round(left * 100.0f);
-        int rightInt = (int) std::round(right * 100.0f);
+        const float maxSpeed = 100.f * getMaximumSpeedProportion();
+        int leftInt = (int) std::round(left * maxSpeed);
+        int rightInt = (int) std::round(right * maxSpeed);
 
         // Generate command string
         char command[16];

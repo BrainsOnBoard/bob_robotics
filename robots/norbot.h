@@ -52,8 +52,9 @@ public:
         BOB_ASSERT(right >= -1.f && right <= 1.f);
 
         // Cache left and right
-        m_Left = left;
-        m_Right = right;
+        const float maxSpeed = getMaximumSpeedProportion();
+        m_Left = maxSpeed * left;
+        m_Right = maxSpeed * right;
 
         // Convert standard (-1,1) values to bytes in order to send to I2C slave
         uint8_t buffer[2] = { floatToI2C(left), floatToI2C(right) };
@@ -64,7 +65,7 @@ public:
 
     virtual meters_per_second_t getMaximumSpeed() override
     {
-        return 0.11_mps;
+        return getMaximumSpeedProportion() * 0.11_mps;
     }
 
     virtual millimeter_t getRobotWidth() override
