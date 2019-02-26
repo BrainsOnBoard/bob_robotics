@@ -60,12 +60,12 @@ public:
         write(buffer);
     }
 
-    virtual meters_per_second_t getMaximumSpeed() override
+    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
-        return getMaximumSpeedProportion() * 0.11_mps;
+        return 0.11_mps;
     }
 
-    virtual millimeter_t getRobotWidth() override
+    virtual millimeter_t getRobotWidth() const override
     {
         return 104_mm;
     }

@@ -32,8 +32,8 @@ private:
 
     Net::Connection &m_Connection;
     millimeter_t m_AxisLength{ std::numeric_limits<double>::quiet_NaN() };
-    meters_per_second_t m_ForwardSpeed{ std::numeric_limits<double>::quiet_NaN() };
-    radians_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
+    mutable meters_per_second_t m_ForwardSpeed{ std::numeric_limits<double>::quiet_NaN() };
+    mutable radians_per_second_t m_TurnSpeed{ std::numeric_limits<double>::quiet_NaN() };
     float m_OldLeft = 0, m_OldRight = 0;
 
 public:
@@ -121,7 +121,7 @@ public:
         m_OldRight = right;
     }
 
-    virtual millimeter_t getRobotWidth() override
+    virtual millimeter_t getRobotWidth() const override
     {
         if (std::isnan(m_AxisLength.value())) {
             return Tank::getRobotWidth();
@@ -130,19 +130,19 @@ public:
         }
     }
 
-    virtual meters_per_second_t getMaximumSpeed() override
+    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
         if (std::isnan(m_ForwardSpeed.value())) {
-            return Tank::getMaximumSpeed();
+            return Tank::getAbsoluteMaximumSpeed();
         } else {
             return m_ForwardSpeed;
         }
     }
 
-    virtual radians_per_second_t getMaximumTurnSpeed() override
+    virtual radians_per_second_t getAbsoluteMaximumTurnSpeed() const override
     {
         if (std::isnan(m_TurnSpeed.value())) {
-            return Tank::getMaximumTurnSpeed();
+            return Tank::getAbsoluteMaximumTurnSpeed();
         } else {
             return m_TurnSpeed;
         }

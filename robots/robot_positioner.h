@@ -117,7 +117,7 @@ public:
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
-            Tank &bot,
+            const Tank &bot,
             meters_per_second_t &v,      // velocity to update
             radians_per_second_t &omega) // angular velocity to update
     {

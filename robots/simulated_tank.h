@@ -51,7 +51,7 @@ public:
         return m_Pose;
     }
 
-    virtual meters_per_second_t getMaximumSpeed() override
+    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
         return m_MaximumSpeed;
     }

@@ -89,7 +89,7 @@ public:
         }
     }
 
-    virtual millimeter_t getRobotWidth() override
+    virtual millimeter_t getRobotWidth() const override
     {
         return 150_mm;
     }

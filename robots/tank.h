@@ -138,20 +138,30 @@ public:
         }
     }
 
-    virtual millimeter_t getRobotWidth()
+    virtual millimeter_t getRobotWidth() const
     {
         throw std::runtime_error("getRobotWidth() is not implemented for this class");
     }
 
-    virtual meters_per_second_t getMaximumSpeed()
+    virtual meters_per_second_t getMaximumSpeed() const
     {
-        throw std::runtime_error("getMaximumSpeed() is not implemented for this class");
+        return getMaximumSpeedProportion() * getAbsoluteMaximumSpeed();
     }
 
-    virtual radians_per_second_t getMaximumTurnSpeed()
+    virtual meters_per_second_t getAbsoluteMaximumSpeed() const
+    {
+        throw std::runtime_error("getAbsoluteMaximumSpeed() is not implemented for this class");
+    }
+
+    virtual radians_per_second_t getMaximumTurnSpeed() const
+    {
+        return getMaximumSpeedProportion() * getAbsoluteMaximumTurnSpeed();
+    }
+
+    virtual radians_per_second_t getAbsoluteMaximumTurnSpeed() const
     {
         // max turn speed = v_max / r
-        return radians_per_second_t{ (getMaximumSpeed() * 2 / static_cast<meter_t>(getRobotWidth())).value() };
+        return radians_per_second_t{ (getAbsoluteMaximumSpeed() * 2 / static_cast<meter_t>(getRobotWidth())).value() };
     }
 
     virtual void setMaximumSpeedProportion(float value)
@@ -172,12 +182,12 @@ public:
         constexpr double _nan = std::numeric_limits<double>::quiet_NaN();
         double maxTurnSpeed = _nan, maxForwardSpeed = _nan, axisLength = _nan;
         try {
-            maxTurnSpeed = getMaximumTurnSpeed().value();
+            maxTurnSpeed = getAbsoluteMaximumTurnSpeed().value();
         } catch (std::runtime_error &) {
             // Then getMaximumTurnSpeed() isn't implemented
         }
         try {
-            maxForwardSpeed = getMaximumSpeed().value();
+            maxForwardSpeed = getAbsoluteMaximumSpeed().value();
         } catch (std::runtime_error &) {
             // Then getMaximumSpeed() isn't implemented
         }

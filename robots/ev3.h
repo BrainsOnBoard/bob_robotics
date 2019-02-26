@@ -52,14 +52,14 @@ public:
         m_MotorRight.run_forever();
     }
 
-    virtual millimeter_t getRobotWidth() override
+    virtual millimeter_t getRobotWidth() const override
     {
         return 12_cm;
     }
 
-    virtual meters_per_second_t getMaximumSpeed() override
+    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
-        return getMaximumSpeedProportion() * tachoToSpeed(m_MaxSpeedTachos);
+        return tachoToSpeed(m_MaxSpeedTachos);
     }
 
     auto getWheelVelocities() const
