@@ -14,6 +14,7 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <thread>
 
@@ -53,6 +54,7 @@ public:
       , m_PositionerMaxSpeed(positionerMaxSpeed)
       , m_PositionerMinSpeed(positionerMinSpeed)
       , m_StartSlowingDownAt(startSlowingDownAt)
+      , m_ReachedGoal(false)
     {
         // Drive robot with joystick
         m_Tank.addJoystick(m_Joystick);
@@ -92,6 +94,16 @@ public:
         m_StateMachine.transition(ControlWithJoystick);
     }
 
+    void setHomingStartedHandler(std::function<void()> handler)
+    {
+        m_HomingStartedHandler = handler;
+    }
+
+    void setHomingStoppedHandler(std::function<void(bool)> handler)
+    {
+        m_HomingStoppedHandler = handler;
+    }
+
     void run()
     {
         m_Catcher.trapSignals(); // Catch ctrl+c etc.
@@ -100,7 +112,6 @@ public:
 
         while (!m_Joystick.isPressed(HID::JButton::B)) {
             m_StateMachine.update();
-
             std::this_thread::sleep_for(20ms);
         }
     }
@@ -128,11 +139,20 @@ public:
                 std::cout << "Goal: " << getGoalPose() << std::endl;
                 m_PrintTimer.start();
                 m_Tank.setMaximumSpeedProportion(m_PositionerMaxSpeed);
+                m_ReachedGoal = false;
+
+                if (m_HomingStartedHandler) {
+                    m_HomingStartedHandler();
+                }
                 break;
             case Event::Exit:
                 std::cout << "Stopping homing" << std::endl;
                 m_Positioner.reset();
                 m_PrintTimer.reset();
+
+                if (m_HomingStoppedHandler) {
+                    m_HomingStoppedHandler(m_ReachedGoal);
+                }
                 break;
             case Event::Update: {
                 const auto objectData = m_Vicon.getObjectData(0);
@@ -142,7 +162,7 @@ public:
                     std::cerr << "Error: Could not get position from Vicon system\n"
                               << "Stopping trial" << std::endl;
 
-                    m_StateMachine.transition(ControlWithJoystick);
+                    stopHoming();
                     return true;
                 }
 
@@ -156,6 +176,7 @@ public:
                               << " (" << circularDistance(getGoalPose().yaw(), attitude[0]) << ")"
                               << std::endl;
 
+                    m_ReachedGoal = true;
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
                 }
@@ -172,9 +193,9 @@ public:
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
                     std::cout << "Distance to goal: "
-                                << distance
-                                << " (" << circularDistance(getGoalPose().yaw(), attitude[0]) << ")"
-                                << std::endl;
+                              << distance
+                              << " (" << circularDistance(getGoalPose().yaw(), attitude[0]) << ")"
+                              << std::endl;
                 }
             }
             }
@@ -190,7 +211,20 @@ public:
         m_Positioner.setGoalPose(pose);
     }
 
-    const Pose2<meter_t, radian_t> &getGoalPose() const { return m_Positioner.getGoalPose(); }
+    void startHoming()
+    {
+        m_StateMachine.transition(Homing);
+    }
+
+    void stopHoming()
+    {
+        m_StateMachine.transition(ControlWithJoystick);
+    }
+
+    const Pose2<meter_t, radian_t> &getGoalPose() const
+    {
+        return m_Positioner.getGoalPose();
+    }
 
 private:
     Robots::Tank &m_Tank;
@@ -200,8 +234,11 @@ private:
     FSM<RobotPositionerControlState> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
+    std::function<void()> m_HomingStartedHandler;
+    std::function<void(bool)> m_HomingStoppedHandler;
     const float m_JoystickMaxSpeed, m_PositionerMaxSpeed, m_PositionerMinSpeed;
     const meter_t m_StartSlowingDownAt;
+    bool m_ReachedGoal;
 }; // RobotPositionerControl
 } // Robots
 } // BoBRobotics
