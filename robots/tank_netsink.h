@@ -41,13 +41,14 @@ public:
       : m_Connection(connection)
     {
         connection.setCommandHandler("TNK_PARAMS", [this](Net::Connection &, const Net::Command &command) {
-            if (command.size() != 4) {
+            if (command.size() != 5) {
                 throw Net::BadCommandError();
             }
 
             m_TurnSpeed = radians_per_second_t(stod(command[1]));
             m_ForwardSpeed = meters_per_second_t(stod(command[2]));
             m_AxisLength = millimeter_t(stod(command[3]));
+            Tank::setMaximumSpeedProportion(stof(command[4]));
         });
 
         /*
@@ -76,6 +77,13 @@ public:
         m_Connection.setCommandHandler("TNK_PARAMS", nullptr);
 
         stopReadingFromNetwork();
+    }
+
+    virtual void setMaximumSpeedProportion(float value) override
+    {
+        Tank::setMaximumSpeedProportion(value);
+
+        m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
     }
 
     //! Motor command: send TNK command over TCP

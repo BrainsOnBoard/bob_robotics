@@ -16,9 +16,9 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -187,14 +187,23 @@ public:
         }
 
         std::stringstream ss;
-        ss << "TNK_PARAMS " << maxTurnSpeed << " " << maxForwardSpeed << " " << axisLength << "\n";
+        ss << "TNK_PARAMS "
+           << maxTurnSpeed << " "
+           << maxForwardSpeed << " "
+           << axisLength << " "
+           << getMaximumSpeedProportion() << "\n";
         connection.getSocketWriter().send(ss.str());
 
         // Handle incoming TNK commands
         connection.setCommandHandler("TNK",
-            [this](Net::Connection &connection, const Net::Command &command) {
-                onCommandReceived(connection, command);
-            });
+                                     [this](Net::Connection &connection, const Net::Command &command) {
+                                         onCommandReceived(connection, command);
+                                     });
+
+        connection.setCommandHandler("TNK_MAX",
+                                     [this](Net::Connection &, const Net::Command &command) {
+                                         Tank::setMaximumSpeedProportion(stof(command.at(1)));
+                                     });
 
         m_Connection = &connection;
     }
