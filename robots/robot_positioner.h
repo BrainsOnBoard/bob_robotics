@@ -83,7 +83,6 @@ private:
     //-----------------PUBLIC API---------------------------------------------------------------------
 public:
     RobotPositioner(
-
             meter_t stoppingDistance,     // if the robot's distance from goal < stopping dist, robot stops
             radian_t allowedHeadingError, // the amount of error allowed in the final heading
             double k1,                    // curveness of the path to the goal
@@ -104,6 +103,11 @@ public:
     {
         m_GoalPose = pose;
         updateRangeAndBearing();
+    }
+
+    const Pose2<meter_t, radian_t> &getGoalPose() const
+    {
+        return m_GoalPose;
     }
 
     //! updates the agent's current pose
