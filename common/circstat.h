@@ -30,9 +30,9 @@ normaliseAngle180(AngleType angle)
     return angle;
 }
 
-template<typename AngleType>
+template<typename AngleType1, typename AngleType2>
 auto
-circularDistance(AngleType angle1, AngleType angle2)
+circularDistance(AngleType1 angle1, AngleType2 angle2)
 {
     return normaliseAngle180(angle1 - angle2);
 }
