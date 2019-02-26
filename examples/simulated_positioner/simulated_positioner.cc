@@ -40,9 +40,7 @@ main()
             k1,
             k2,
             alpha,
-            beta,
-            robot.getMaximumSpeed(),
-            robot.getMaximumTurnSpeed());
+            beta);
 
     bool runPositioner = false;
     bool reachedGoalAnnounced = false;

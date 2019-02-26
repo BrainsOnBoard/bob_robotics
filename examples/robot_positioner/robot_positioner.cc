@@ -1,18 +1,13 @@
 // BoB robotics includes
+#include "robots/robot_positioner.h"
 #include "common/background_exception_catcher.h"
+#include "common/circstat.h"
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "robots/robot_positioner.h"
-#include "vicon/udp.h"
-
-// This program can be run locally on the robot or remotely
-#ifdef NO_I2C_ROBOT
 #include "net/client.h"
 #include "robots/tank_netsink.h"
-#else
-#include "robots/norbot.h"
-#endif
+#include "vicon/udp.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -39,12 +34,11 @@ bob_main(int argc, char **argv)
     // Parameters
     constexpr meter_t stoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-    constexpr double k1 = 0.025;                    // curveness of the path to the goal
-    constexpr double k2 = 400;                      // speed of turning on the curves
+    constexpr double k1 = 0.2;                      // curveness of the path to the goal
+    constexpr double k2 = 5;                        // speed of turning on the curves
     constexpr double alpha = 1.03;                  // causes more sharply peaked curves
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
-#ifdef NO_I2C_ROBOT
     std::string robotIP;
     if (argc == 2) {
         // Get robot IP from command-line argument
@@ -61,14 +55,9 @@ bob_main(int argc, char **argv)
     // Make connection to robot on default port
     Net::Client client(robotIP);
     Robots::TankNetSink bot(client);
-#else
-    // Silence warning about unused vars
-    (void) argc;
-    (void) argv;
 
-    // Connect to motors over I2C
-    Robots::Norbot bot;
-#endif
+    constexpr float initialMaxSpeed = 0.5f;
+    bot.setMaximumSpeedProportion(initialMaxSpeed);
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
@@ -89,10 +78,8 @@ bob_main(int argc, char **argv)
         BackgroundExceptionCatcher catcher;
         catcher.trapSignals(); // Trap signals e.g. ctrl+c
 
-#ifdef NO_I2C_ROBOT
         // Read on background thread
         client.runInBackground();
-#endif
 
         Robots::RobotPositioner robp(
                 stoppingDistance,
@@ -100,9 +87,7 @@ bob_main(int argc, char **argv)
                 k1,
                 k2,
                 alpha,
-                beta,
-                bot.getMaximumSpeed(),
-                bot.getMaximumTurnSpeed());
+                beta);
 
         // set goal pose
         const Pose2<millimeter_t, degree_t> goal{ 0_mm, 0_mm, 15_deg };
@@ -141,21 +126,29 @@ bob_main(int argc, char **argv)
                 } else if (robp.reachedGoal()) {
                     std::cout << "Reached goal" << std::endl;
                     std::cout << "Final position: " << position.x() << ", " << position.y() << std::endl;
-                    std::cout << "Goal: " << goal.x() << ", " << goal.y() << std::endl;
+                    std::cout << "Goal: " << goal << std::endl;
                     std::cout << "Distance to goal: "
                               << goal.distance2D(position)
-                              << " (" << goal.yaw() - attitude[0] << ")"
+                              << " (" << circularDistance(goal.yaw(), attitude[0]) << ")"
                               << std::endl;
+
+                    bot.setMaximumSpeedProportion(initialMaxSpeed);
                     runPositioner = false;
                 } else {
+                    const auto distance = goal.distance2D(position);
+                    if (distance < 40_cm) {
+                        constexpr float minSpeed = 0.2f;
+                        bot.setMaximumSpeedProportion(minSpeed + (initialMaxSpeed - minSpeed) * distance / 40_cm);
+                    }
+
                     robp.updateMotors(bot, { position[0], position[1], attitude[0] });
 
                     // Print status
                     if (printTimer.elapsed() > 500ms) {
                         printTimer.start();
                         std::cout << "Distance to goal: "
-                                  << goal.distance2D(position)
-                                  << " (" << goal.yaw() - attitude[0] << ")"
+                                  << distance
+                                  << " (" << circularDistance(goal.yaw(), attitude[0]) << ")"
                                   << std::endl;
                     }
                 }

@@ -36,14 +36,12 @@ private:
     radian_t m_HeadingToGoal; // bearing (angle) from goal coordinate
 
     // user variables
-    const meter_t m_StoppingDistance;          // if the robot's distance from goal < stopping dist, robot stops
-    const radian_t m_AllowedHeadingError;      // the amount of error allowed in the final heading
-    const meters_per_second_t m_MaxVelocity;   // max velocity
-    const radians_per_second_t m_MaxTurnSpeed; // max turning velocity
-    const double m_K1;                         // curveness of the path to the goal
-    const double m_K2;                         // speed of turning on the curves
-    const double m_Alpha;                      // causes more sharply peaked curves
-    const double m_Beta;                       // causes to drop velocity if 'k'(curveness) increases
+    const meter_t m_StoppingDistance;     // if the robot's distance from goal < stopping dist, robot stops
+    const radian_t m_AllowedHeadingError; // the amount of error allowed in the final heading
+    const double m_K1;                    // curveness of the path to the goal
+    const double m_K2;                    // speed of turning on the curves
+    const double m_Alpha;                 // causes more sharply peaked curves
+    const double m_Beta;                  // causes to drop velocity if 'k'(curveness) increases
 
     static radian_t angleWrapAround(radian_t angle)
     {
@@ -84,19 +82,15 @@ private:
 public:
     RobotPositioner(
 
-            meter_t stoppingDistance,         // if the robot's distance from goal < stopping dist, robot stops
-            radian_t allowedHeadingError,     // the amount of error allowed in the final heading
-            double k1,                        // curveness of the path to the goal
-            double k2,                        // speed of turning on the curves
-            double alpha,                     // causes more sharply peaked curves
-            double beta,                      // causes to drop velocity if 'k'(curveness) increases
-            meters_per_second_t maxVelocity,  // max velocity
-            radians_per_second_t maxTurnSpeed // max turning speed
+            meter_t stoppingDistance,     // if the robot's distance from goal < stopping dist, robot stops
+            radian_t allowedHeadingError, // the amount of error allowed in the final heading
+            double k1,                    // curveness of the path to the goal
+            double k2,                    // speed of turning on the curves
+            double alpha,                 // causes more sharply peaked curves
+            double beta                   // causes to drop velocity if 'k'(curveness) increases
             )
       : m_StoppingDistance(stoppingDistance)
       , m_AllowedHeadingError(allowedHeadingError)
-      , m_MaxVelocity(maxVelocity)
-      , m_MaxTurnSpeed(maxTurnSpeed)
       , m_K1(k1)
       , m_K2(k2)
       , m_Alpha(alpha)
@@ -123,6 +117,7 @@ public:
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
+            Tank &bot,
             meters_per_second_t &v,      // velocity to update
             radians_per_second_t &omega) // angular velocity to update
     {
@@ -139,7 +134,8 @@ public:
          */
         if (m_DistanceToGoal == 0_m) {
             v = 0_mps;
-            omega = (m_HeadingToGoal < 0_rad) ? -m_MaxTurnSpeed : m_MaxTurnSpeed;
+            const radians_per_second_t maxTurnSpeed = bot.getMaximumTurnSpeed();
+            omega = (m_HeadingToGoal < 0_rad) ? -maxTurnSpeed : maxTurnSpeed;
             return;
         }
 
@@ -155,7 +151,7 @@ public:
 
         const auto k = -(part1 + part2) / m_DistanceToGoal; // in rad/mm
 
-        v = m_MaxVelocity / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
+        v = bot.getMaximumSpeed() / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
         omega = k * v;
     }
 
@@ -168,7 +164,7 @@ public:
         // Calculate velocities for new course
         meters_per_second_t v;
         radians_per_second_t omega;
-        updateVelocities(v, omega);
+        updateVelocities(bot, v, omega);
 
         /*
          * Drive robot with specified velocities.
