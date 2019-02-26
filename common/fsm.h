@@ -73,8 +73,8 @@ public:
             BOB_ASSERT(m_NextState == m_InvalidState);
             m_NextState = state;
         }
-        // Otherwise
-        else {
+        // Only transition if it's a new state
+        else if (m_CurrentState != state) {
             // If we are currently in a valid state, exit it
             if(m_CurrentState != m_InvalidState) {
                 m_StateHandler->handleEvent(m_CurrentState, StateHandler::Event::Exit);
