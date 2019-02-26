@@ -58,7 +58,7 @@ public:
 
     static std::string getDefaultIP()
     {
-        constexpr const char *envVar = "NORBOT_IP", *defaultIP = "127.0.0.1";
+        constexpr const char *envVar = "ROBOT_IP", *defaultIP = "127.0.0.1";
 
         std::string ip = std::getenv(envVar);
         if (ip.empty()) {

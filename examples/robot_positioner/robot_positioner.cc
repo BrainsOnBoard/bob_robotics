@@ -29,7 +29,7 @@ using namespace units::velocity;
 using namespace std::literals;
 
 int
-bob_main(int argc, char **argv)
+bob_main(int, char **)
 {
     // Parameters
     constexpr meter_t stoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
@@ -39,21 +39,8 @@ bob_main(int argc, char **argv)
     constexpr double alpha = 1.03;                  // causes more sharply peaked curves
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
-    std::string robotIP;
-    if (argc == 2) {
-        // Get robot IP from command-line argument
-        robotIP = argv[1];
-    } else {
-        // Get robot IP from terminal
-        std::cout << "Robot IP [10.0.0.3]: ";
-        std::getline(std::cin, robotIP);
-        if (robotIP.empty()) {
-            robotIP = "10.0.0.3";
-        }
-    }
-
     // Make connection to robot on default port
-    Net::Client client(robotIP);
+    Net::Client client;
     Robots::TankNetSink bot(client);
 
     constexpr float initialMaxSpeed = 0.5f;
