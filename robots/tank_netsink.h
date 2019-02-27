@@ -79,10 +79,10 @@ public:
         stopReadingFromNetwork();
     }
 
-    virtual void setMaximumSpeedProportion(float value) override
+    virtual void setMaximumSpeedProportion(float value, bool) override
     {
         if (value != getMaximumSpeedProportion()) {
-            Tank::setMaximumSpeedProportion(value);
+            Tank::setMaximumSpeedProportion(value, false);
 
             m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
         }
