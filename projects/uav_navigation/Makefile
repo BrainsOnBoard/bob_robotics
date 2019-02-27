@@ -1,8 +1,6 @@
-LIBBEBOP_PATH := ../../libbebop
 WITH_LIBBEBOP := 1
 WITH_MATPLOTLIBCPP := 1
-include ../../common/flags.mk
-CXXFLAGS += -I../..
+include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := uav_navigation
 
@@ -16,7 +14,7 @@ $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libbebop
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 libbebop:
-	$(MAKE) -C $(LIBBEBOP_PATH)
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libbebop
 
 %.d: ;
 
