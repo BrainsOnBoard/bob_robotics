@@ -10,9 +10,14 @@ all: $(EXECUTABLE)
 -include $(EXECUTABLE).d
 
 $(EXECUTABLE): $(EXECUTABLE).cc $(EXECUTABLE).d libbebop
-	$(CXX) $(CXXFLAGS) -o $(EXECUTABLE) $(EXECUTABLE).cc $(LINK_FLAGS)
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
-$(EXECUTABLE).d: ;
+-include bebop_relative_move_test.d
+
+bebop_relative_move_test: bebop_relative_move_test.cc bebop_relative_move_test.d libbebop
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
+
+%.d: ;
 
 libbebop:
 	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libbebop

@@ -17,6 +17,7 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "../common/pose.h"
 #include "../common/semaphore.h"
 #include "../hid/joystick.h"
 #include "../video/input.h"
@@ -107,7 +108,9 @@ class Bebop
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *&)>>;
 
+    using radian_t = units::angle::radian_t;
     using degree_t = units::angle::degree_t;
+    using meter_t = units::length::meter_t;
     using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
@@ -171,6 +174,17 @@ public:
         Stopping = ARCONTROLLER_DEVICE_STATE_STOPPING
     };
 
+    enum class RelativeMoveState
+    {
+        InitialState = -2,
+        Moving = -1,
+        Success = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_OK,
+        ErrorUnknown = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_UNKNOWN,
+        ErrorBusy = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_BUSY,
+        ErrorNotAvailable = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_NOTAVAILABLE,
+        ErrorInterrupted = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_INTERRUPTED
+    };
+
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
@@ -191,6 +205,10 @@ public:
     virtual void setRoll(float right) override;
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
+    void relativeMove(meter_t dx, meter_t dy, meter_t dz, radian_t dpsi = 0_rad);
+    RelativeMoveState getRelativeMoveState() const;
+    std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
+    void resetRelativeMoveState();
 
     // calibration
     void doFlatTrimCalibration();
@@ -283,6 +301,9 @@ private:
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<unsigned char> m_BatteryLevel;
+    std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Success };
+    Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
+    radian_t m_RelativeMoveAngleDistance{ 0_rad };
 
     inline void connect();
     inline void disconnect();
@@ -301,6 +322,7 @@ private:
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
+    void relativeMoveEnded(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static void alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     static void magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
