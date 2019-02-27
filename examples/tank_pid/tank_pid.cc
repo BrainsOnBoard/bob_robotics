@@ -264,7 +264,7 @@ bob_main(int argc, char **argv)
                     }
 
                     if (canPlaySound) {
-                        system(PLAY_PATH " -q " SOUND_FILE_PATH);
+                        (void) system(PLAY_PATH " -q " SOUND_FILE_PATH);
                     }
                 }
             }
