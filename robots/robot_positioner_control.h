@@ -57,34 +57,6 @@ public:
       , m_ReachedGoal(false)
       , m_StartHoming(false)
     {
-        // Drive robot with joystick
-        m_Tank.addJoystick(m_Joystick);
-
-        // Toggle homing with Y button
-        m_Joystick.addHandler([this](HID::JButton button, bool pressed) {
-            if (pressed && button == HID::JButton::Y) {
-                const auto state = m_StateMachine.getCurrentState();
-                if (state == ControlWithJoystick) {
-                    m_StateMachine.transition(Homing);
-                } else if (state == Homing) {
-                    m_StateMachine.transition(ControlWithJoystick);
-                }
-                return true;
-            } else {
-                return false;
-            }
-        });
-
-        // Ignore thumbsticks while robot is homing
-        m_Joystick.addHandler([this](HID::JAxis, float) {
-            if (m_StateMachine.getCurrentState() == Homing) {
-                std::cout << "Ignoring joystick while homing" << std::endl;
-                return true;
-            } else {
-                return false;
-            }
-        });
-
         // Wait for Vicon system to spot our robot
         while (m_Vicon.getNumObjects() == 0) {
             std::this_thread::sleep_for(1s);
@@ -130,7 +102,20 @@ public:
             m_Catcher.check();
 
             // Poll for joystick events
-            m_Joystick.update();
+            if (m_Joystick.update()) {
+                const auto state = m_StateMachine.getCurrentState();
+
+                // Toggle whether the positioner is "on" with Y button
+                if (m_Joystick.isPressed(HID::JButton::Y)) {
+                    if (state == ControlWithJoystick) {
+                        m_StateMachine.transition(Homing);
+                    } else if (state == Homing) {
+                        m_StateMachine.transition(ControlWithJoystick);
+                    }
+                } else if (state == ControlWithJoystick) {
+                    m_Tank.drive(m_Joystick);
+                }
+            }
         }
 
         if (state == Homing) {

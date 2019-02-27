@@ -51,7 +51,7 @@ public:
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        m_Pose = std::move(pose);
+        m_Pose = pose;
     }
 
     uint32_t getFrameNumber() const
