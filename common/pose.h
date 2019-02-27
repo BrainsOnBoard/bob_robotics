@@ -289,28 +289,28 @@ convertUnitArray(const ArrayType &values)
 } // BoBRobotics
 
 template<typename LengthUnit>
-std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector2<LengthUnit> &position)
+inline std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector2<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ")";
     return os;
 }
 
 template<typename LengthUnit>
-std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector3<LengthUnit> &position)
+inline std::ostream &operator<<(std::ostream &os, const BoBRobotics::Vector3<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ", " << position.z() << ")";
     return os;
 }
 
 template<typename LengthUnit, typename AngleUnit>
-std::ostream &operator<<(std::ostream &os, const BoBRobotics::Pose2<LengthUnit, AngleUnit> &pose)
+inline std::ostream &operator<<(std::ostream &os, const BoBRobotics::Pose2<LengthUnit, AngleUnit> &pose)
 {
     os << pose.position() << " at " << pose.yaw();
     return os;
 }
 
 template<typename LengthUnit, typename AngleUnit>
-std::ostream &operator<<(std::ostream &os, const BoBRobotics::Pose3<LengthUnit, AngleUnit> &pose)
+inline std::ostream &operator<<(std::ostream &os, const BoBRobotics::Pose3<LengthUnit, AngleUnit> &pose)
 {
     os << pose.position()
        << " at (" << pose.yaw() << ", " << pose.pitch() << ", " << pose.roll() << ")";
