@@ -11,20 +11,29 @@
 // Standard C++ includes
 #include <vector>
 
+// third party includes
+#include "../third_party/units.h"
+
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Norbot
 //----------------------------------------------------------------------------
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
 class Norbot : public Tank
 {
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
       : m_I2C(path, slaveAddress)
-      , m_Left(0.0f)
-      , m_Right(0.0f)
-    {}
+    {
+        // Sometimes Norbots get stuck driving, so let's stop it if we need to
+        stopMoving();
+    }
 
     //----------------------------------------------------------------------------
     // Tank virtuals
@@ -37,18 +46,28 @@ public:
 
     virtual void tank(float left, float right) override
     {
-        BOB_ASSERT(left >= -1.f && left <= 1.f);
-        BOB_ASSERT(right >= -1.f && right <= 1.f);
+        setWheelSpeeds(left, right);
 
         // Cache left and right
-        m_Left = left;
-        m_Right = right;
+        const float maxSpeed = getMaximumSpeedProportion();
+        left *= maxSpeed;
+        right *= maxSpeed;
 
         // Convert standard (-1,1) values to bytes in order to send to I2C slave
         uint8_t buffer[2] = { floatToI2C(left), floatToI2C(right) };
 
         // Send buffer
         write(buffer);
+    }
+
+    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
+    {
+        return 0.11_mps;
+    }
+
+    virtual millimeter_t getRobotWidth() const override
+    {
+        return 104_mm;
     }
 
     //----------------------------------------------------------------------------
@@ -66,16 +85,6 @@ public:
         m_I2C.write(data);
     }
 
-    float getLeft() const
-    {
-        return m_Left;
-    }
-
-    float getRight() const
-    {
-        return m_Right;
-    }
-
 private:
     //----------------------------------------------------------------------------
     // Private methods
@@ -91,8 +100,6 @@ private:
     // Private members
     //----------------------------------------------------------------------------
     BoBRobotics::I2CInterface m_I2C;
-    float m_Left;
-    float m_Right;
 }; // Norbot
 } // Robots
 } // BoBRobotics

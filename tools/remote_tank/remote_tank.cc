@@ -33,13 +33,13 @@ bob_main(int argc, char **argv)
     // Make connection to robot on default port
     Net::Client client(robotIP);
 
+    // Transmit motor commands over network
+    Robots::TankNetSink tank(client);
+
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
     client.runInBackground();
-
-    // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
 
     // Add joystick for controlling robot
     HID::Joystick joystick;
@@ -51,7 +51,8 @@ bob_main(int argc, char **argv)
 
         // Poll joystick
         joystick.update();
-        std::this_thread::sleep_for(20ms);
+
+        std::this_thread::sleep_for(100ms);
     }
 
     return EXIT_SUCCESS;

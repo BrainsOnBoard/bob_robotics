@@ -1,4 +1,4 @@
-.PHONY: all
+.PHONY: all clean
 
 all:
 ifeq ("$(wildcard ev3dev-lang-cpp/CMakeLists.txt)","")
@@ -10,3 +10,6 @@ ifeq ("$(wildcard build/libev3dev.a)","")
 		-DCMAKE_C_COMPILER=/usr/bin/arm-linux-gnueabi-gcc \
 		-DCMAKE_CXX_COMPILER=/usr/bin/arm-linux-gnueabi-g++ && $(MAKE)
 endif
+
+clean:
+	rm -rf build

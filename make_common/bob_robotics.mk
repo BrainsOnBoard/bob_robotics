@@ -18,6 +18,13 @@ CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
 CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
 
+# For building with Google Test
+ifdef WITH_GTEST
+	DEBUG := 1
+	CXXFLAGS += `pkg-config --cflags gtest`
+	LINK_FLAGS += `pkg-config --libs gtest`
+endif
+
 # Debug mode: includes debug symbols, disables optimisation and sets DEBUG macro
 ifdef DEBUG
 	CXXFLAGS += -g -O0 -DDEBUG
@@ -53,6 +60,11 @@ ifdef WITH_IMGUI
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/third_party/imgui -limgui -lglfw -lGL -lGLU -lGLEW
 endif
 
+ifdef WITH_SDL2
+	CXXFLAGS += `pkg-config --cflags sdl2`
+	LINK_FLAGS += `pkg-config --libs sdl2`
+endif
+
 # Build with OpenCV
 ifndef NO_OPENCV
 ifndef OPENCV_PKG_NAME
@@ -64,7 +76,8 @@ endif
 
 ifdef WITH_LIBBEBOP
 	# libbebop
-	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop \
+					-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
 
 	# ARSDK
 	# We set the rpath so that compiled programs can find the folder with the ARSDK
@@ -75,8 +88,7 @@ $(error Environment variable ARSDK_ROOT must be defined)
 	endif
 	AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 	AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
-	CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include \
-		-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
+	CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 	LINK_FLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
 		$(AR_LIB_PATH)/libarcontroller.so $(AR_LIB_PATH)/libarnetworkal.so \
 		$(AR_LIB_PATH)/libarcommands.so $(AR_LIB_PATH)/libmux.so \
@@ -104,6 +116,14 @@ ifdef WITH_MATPLOTLIBCPP
 
 	CXXFLAGS += $(shell $(PYTHON_CONFIG) --includes) -I$(PYTHON_NUMPY_INCLUDE)
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
+endif
+
+ifdef WITH_I2C_ROBOT
+ifdef NO_I2C_ROBOT
+	CXXFLAGS += -DNO_I2C_ROBOT
+else
+	WITH_I2C := 1
+endif
 endif
 
 ifdef WITH_I2C

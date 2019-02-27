@@ -13,6 +13,7 @@ int bob_main(int, char **)
 
     // Read motor commands from network
     Robots::EV3 tank;
+    tank.setMaximumSpeedProportion(0.7f); // Sensible default
     tank.readFromNetwork(connection);
 
     // Run server on main thread
