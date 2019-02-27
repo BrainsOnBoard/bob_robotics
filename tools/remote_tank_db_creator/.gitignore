@@ -1,1 +1,6 @@
 /remote_tank_db_creator
+
+# Image databases
+*.png
+*.csv
+*.yaml

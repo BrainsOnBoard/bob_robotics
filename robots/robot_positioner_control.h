@@ -55,6 +55,7 @@ public:
       , m_PositionerMinSpeed(positionerMinSpeed)
       , m_StartSlowingDownAt(startSlowingDownAt)
       , m_ReachedGoal(false)
+      , m_StartHoming(false)
     {
         // Drive robot with joystick
         m_Tank.addJoystick(m_Joystick);
@@ -99,7 +100,7 @@ public:
         m_HomingStartedHandler = handler;
     }
 
-    void setHomingStoppedHandler(std::function<void(bool)> handler)
+    void setHomingStoppedHandler(std::function<bool(bool)> handler)
     {
         m_HomingStoppedHandler = handler;
     }
@@ -150,9 +151,7 @@ public:
                 m_Positioner.reset();
                 m_PrintTimer.reset();
 
-                if (m_HomingStoppedHandler) {
-                    m_HomingStoppedHandler(m_ReachedGoal);
-                }
+                m_StartHoming = m_HomingStoppedHandler && m_HomingStoppedHandler(m_ReachedGoal);
                 break;
             case Event::Update: {
                 const auto objectData = m_Vicon.getObjectData(0);
@@ -190,7 +189,7 @@ public:
                 m_Positioner.updateMotors(m_Tank, objectData.getPose());
 
                 // Print status
-                if (m_PrintTimer.elapsed() > 500ms) {
+                if (m_PrintTimer.elapsed() > 2s) {
                     m_PrintTimer.start();
                     std::cout << "Distance to goal: "
                               << distance
@@ -200,7 +199,11 @@ public:
             }
             }
         } else if (event == Event::Enter) { // Controlling with joystick
-            m_Tank.setMaximumSpeedProportion(m_JoystickMaxSpeed);
+            if (m_StartHoming) {
+                m_StateMachine.transition(Homing);
+            } else {
+                m_Tank.setMaximumSpeedProportion(m_JoystickMaxSpeed);
+            }
         }
 
         return true;
@@ -235,10 +238,11 @@ private:
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
     std::function<void()> m_HomingStartedHandler;
-    std::function<void(bool)> m_HomingStoppedHandler;
+    std::function<bool(bool)> m_HomingStoppedHandler;
     const float m_JoystickMaxSpeed, m_PositionerMaxSpeed, m_PositionerMinSpeed;
     const meter_t m_StartSlowingDownAt;
     bool m_ReachedGoal;
+    bool m_StartHoming;
 }; // RobotPositionerControl
 } // Robots
 } // BoBRobotics

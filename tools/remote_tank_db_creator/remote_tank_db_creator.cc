@@ -23,7 +23,7 @@ using namespace units::angle;
 using namespace units::literals;
 
 constexpr const char *databasePrefix = "database";
-const Navigation::Range xrange{ { -1_m, 1_m }, 25_cm };
+const Navigation::Range xrange{ { -1_m, 1_m }, 200_cm };
 const Navigation::Range yrange = xrange;
 
 class DatabaseRecorder {
@@ -115,13 +115,14 @@ bob_main(int, char **)
             if (recorder->moveNextGoal()) {
                 control.setGoalPose(recorder->currentGoal());
                 control.startHoming();
-                return;
+                return true;
             }
 
             std::cout << "\nFinished all goals" << std::endl;
         }
 
         recorder.reset();
+        return false;
     });
 
     control.run();
