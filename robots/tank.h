@@ -164,10 +164,14 @@ public:
         return radians_per_second_t{ (getAbsoluteMaximumSpeed() * 2 / static_cast<meter_t>(getRobotWidth())).value() };
     }
 
-    virtual void setMaximumSpeedProportion(float value)
+    virtual void setMaximumSpeedProportion(float value, bool recalcSpeed = true)
     {
         BOB_ASSERT(value >= -1.f && value <= 1.f);
         m_MaximumSpeedProportion = value;
+
+        if (recalcSpeed) {
+            tank(m_Left, m_Right);
+        }
     }
 
     virtual float getMaximumSpeedProportion() const
@@ -214,7 +218,6 @@ public:
         connection.setCommandHandler("TNK_MAX",
                                      [this](Net::Connection &, const Net::Command &command) {
                                          Tank::setMaximumSpeedProportion(stof(command.at(1)));
-                                         tank(m_Left, m_Right);
                                      });
 
         m_Connection = &connection;
