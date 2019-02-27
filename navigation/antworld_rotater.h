@@ -26,9 +26,9 @@ public:
     AntWorldRotater(const cv::Size &unwrapRes,
                     const cv::Mat &maskImage,
                     AntWorld::AntAgent &agent,
-                    const degree_t &yawStep = 1_deg,
-                    const degree_t &pitch = 0_deg,
-                    const degree_t &roll = 0_deg)
+                    const degree_t yawStep = 1_deg,
+                    const degree_t pitch = 0_deg,
+                    const degree_t roll = 0_deg)
       : m_Agent(agent)
       , m_YawStep(yawStep)
       , m_Pitch(pitch)
@@ -72,8 +72,8 @@ public:
 
 private:
     AntWorld::AntAgent &m_Agent;
-    const degree_t &m_YawStep, &m_Pitch, &m_Roll;
-    const cv::Size &m_UnwrapRes;
+    const degree_t m_YawStep, m_Pitch, m_Roll;
+    const cv::Size m_UnwrapRes;
 }; // AntWorldRotater
 } // Navigation
 } // BoBRobotics
