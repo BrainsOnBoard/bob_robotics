@@ -172,7 +172,7 @@ main()
     const auto toPixels = [&](const auto &limits) {
         return static_cast<int>((limits.second - limits.first) / gridSize);
     };
-    cv::Mat arenaObjects(toPixels(xLimits), toPixels(yLimits), CV_8UC1, cv::Scalar{ 0 });
+    cv::Mat arenaObjects(toPixels(yLimits), toPixels(xLimits), CV_8UC1, cv::Scalar{ 0 });
 
     const auto objects = readObjects("objects.yaml");
     std::vector<cv::Point2i> points;
