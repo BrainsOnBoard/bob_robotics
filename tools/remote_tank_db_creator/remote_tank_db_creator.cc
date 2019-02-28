@@ -6,10 +6,14 @@
 #include "net/client.h"
 #include "robots/robot_positioner_control.h"
 #include "robots/tank_netsink.h"
+#include "video/netsource.h"
 
 // Third-party includes
 #include "third_party/path.h"
 #include "third_party/units.h"
+
+// OpenCV
+#include "opencv2/opencv.hpp"
 
 // Standard C++ includes
 #include <memory>
@@ -21,9 +25,10 @@ using namespace BoBRobotics;
 using namespace units::length;
 using namespace units::angle;
 using namespace units::literals;
+using namespace std::literals;
 
 constexpr const char *databasePrefix = "database";
-const Navigation::Range xrange{ { -1_m, 1_m }, 200_cm };
+const Navigation::Range xrange{ { -1_m, 1_m }, 20_cm };
 const Navigation::Range yrange = xrange;
 
 class DatabaseRecorder {
@@ -43,8 +48,9 @@ public:
         }
     }
 
-    bool moveNextGoal()
+    bool recordAndMoveNext(const cv::Mat &fr)
     {
+        m_DatabaseRecorder.record(fr);
         return ++m_GoalsIter < m_Goals.end();
     }
 
@@ -86,6 +92,10 @@ bob_main(int, char **)
     // Connect to robot over network
     Robots::TankNetSink tank(client);
 
+    // Get images over network
+    Video::NetSource video(client);
+    cv::Mat fr;
+
     // Positioner parameters
     constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
@@ -110,9 +120,14 @@ bob_main(int, char **)
             control.setGoalPose(recorder->currentGoal());
         }
     });
-    control.setHomingStoppedHandler([&recorder, &control](bool reachedGoal) {
+    control.setHomingStoppedHandler([&](bool reachedGoal) {
         if (reachedGoal) {
-            if (recorder->moveNextGoal()) {
+            // Pause so the image isn't blurry and take photo
+            std::this_thread::sleep_for(500ms);
+            video.readFrameSync(fr);
+
+            // Save the image and, if there are more goals, aim for the next one
+            if (recorder->recordAndMoveNext(fr)) {
                 control.setGoalPose(recorder->currentGoal());
                 control.startHoming();
                 return true;
@@ -121,10 +136,12 @@ bob_main(int, char **)
             std::cout << "\nFinished all goals" << std::endl;
         }
 
+        // Write the image database metadata
         recorder.reset();
         return false;
     });
 
+    client.runInBackground();
     control.run();
 
     return EXIT_SUCCESS;
