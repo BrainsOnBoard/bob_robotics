@@ -212,8 +212,8 @@ private:
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 
-    template<typename VectorType, typename... Drawables>
-    void draw(const VectorType &drawables, Drawables&& ...others)
+    template<typename DrawableType, typename... Drawables>
+    void draw(const std::vector<DrawableType> &drawables, Drawables&& ...others)
     {
         for (auto &drawable : drawables) {
             m_Window.draw(drawable);

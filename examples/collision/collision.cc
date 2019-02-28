@@ -2,6 +2,10 @@
 #include "common/pose.h"
 #include "common/read_objects.h"
 #include "common/sfml_renderer.h"
+#include "hid/joystick.h"
+#include "net/client.h"
+#include "vicon/udp.h"
+#include "robots/tank_netsink.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -12,6 +16,7 @@
 // Standard C++ includes
 #include <array>
 #include <chrono>
+#include <iostream>
 #include <utility>
 #include <thread>
 
@@ -24,8 +29,96 @@ using namespace std::literals;
 
 constexpr millimeter_t gridSize = 1_cm;
 constexpr millimeter_t bufferSize = 10_cm;
-constexpr std::pair<millimeter_t, millimeter_t> xLimits = { -0.5_m, 0.5_m };
+constexpr std::pair<millimeter_t, millimeter_t> xLimits = { -2_m, 2_m };
 constexpr std::pair<millimeter_t, millimeter_t> yLimits = xLimits;
+
+template<class MatrixType, class VectorArray>
+void vectorToEigen(MatrixType &matrix, const VectorArray &vectors)
+{
+    for (size_t i = 0; i < vectors.size(); i++) {
+        matrix(i, 0) = static_cast<millimeter_t>(vectors[i].x()).value();
+        matrix(i, 1) = static_cast<millimeter_t>(vectors[i].y()).value();
+    }
+}
+
+template<class MatrixType, class PointsArray>
+void eigenToPoints(PointsArray &points, const MatrixType &matrix)
+{
+    for (int i = 0; i < matrix.rows(); i++) {
+        points[i] = cv::Point2i{ static_cast<int>((matrix(i, 0) - xLimits.first()) / gridSize),
+                                 static_cast<int>((matrix(i, 1) - yLimits.first()) / gridSize) };
+    }
+}
+
+class Agent
+  : public sf::Drawable
+{
+public:
+    Agent(const SFMLRenderer<> &renderer, const cv::Mat &arenaObjects)
+      : m_Renderer(renderer)
+      , m_ArenaObjects(arenaObjects)
+      , m_Shape(m_Dimensions.rows())
+      , m_ArenaRobot(arenaObjects.size(), arenaObjects.type())
+    {
+        m_Dimensions << -75, 70,
+                75, 70,
+                75, -120,
+                -75, -120;
+
+        m_Shape.setFillColor(sf::Color::Blue);
+    }
+
+    template<class PoseType>
+    void setPose(const PoseType &pose)
+    {
+        // Rotate coords
+        const double sinth = sin(pose.yaw()), costh = cos(pose.yaw());
+        Eigen::Matrix<double, 2, 2> rotationMatrix;
+        rotationMatrix << costh, -sinth,
+                          sinth, costh;
+        m_CurrentDimensions = m_Dimensions * rotationMatrix;
+
+        // Translate
+        m_CurrentDimensions.col(0).array() += static_cast<millimeter_t>(pose.x()).value();
+        m_CurrentDimensions.col(1).array() += static_cast<millimeter_t>(pose.y()).value();
+    }
+
+    bool hasCollided()
+    {
+        // Zero matrix
+        m_ArenaRobot = cv::Scalar{ 0 };
+
+        // Draw agent in matrix
+        std::array<cv::Point2i, 4> points;
+        eigenToPoints(points, m_CurrentDimensions);
+        fillConvexPoly(m_ArenaRobot, points, cv::Scalar{ 0xff });
+
+        // Check for collisions
+        for (int i = 0; i < m_ArenaRobot.size().area(); i++) {
+            if (m_ArenaObjects.data[i] & m_ArenaRobot.data[i]) {
+                return true;
+            }
+        }
+
+        // No collision
+        return false;
+    }
+
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+    {
+        for (int i = 0; i < m_Dimensions.rows(); i++) {
+            m_Shape.setPoint(i, m_Renderer.vectorToPixel(m_CurrentDimensions(i, 0), m_CurrentDimensions(i, 1)));
+        }
+        target.draw(m_Shape, states);
+    }
+
+private:
+    const SFMLRenderer<> &m_Renderer;
+    const cv::Mat &m_ArenaObjects;
+    Eigen::Matrix<double, 4, 2> m_Dimensions, m_CurrentDimensions;
+    mutable sf::ConvexShape m_Shape;
+    cv::Mat m_ArenaRobot;
+};
 
 class ArenaObject
   : public sf::Drawable
@@ -60,27 +153,20 @@ private:
     sf::ConvexShape m_GreenShape, m_RedShape;
 };
 
-template<class MatrixType, class VectorArray>
-void vectorToEigen(MatrixType &matrix, const VectorArray &vectors)
-{
-    for (size_t i = 0; i < vectors.size(); i++) {
-        matrix(i, 0) = static_cast<millimeter_t>(vectors[i].x()).value();
-        matrix(i, 1) = static_cast<millimeter_t>(vectors[i].y()).value();
-    }
-}
-
-template<class MatrixType, class PointsArray>
-void eigenToPoints(PointsArray &points, const MatrixType &matrix)
-{
-    for (int i = 0; i < matrix.rows(); i++) {
-        points[i] = cv::Point2i{ static_cast<int>((matrix(i, 0) - xLimits.first()) / gridSize),
-                                 static_cast<int>((matrix(i, 1) - yLimits.first()) / gridSize) };
-    }
-}
-
 int
 main()
 {
+    Vicon::UDPClient<> vicon(51001);
+    while (vicon.getNumObjects() == 0) {
+        std::this_thread::sleep_for(1s);
+        std::cout << "Waiting for object" << std::endl;
+    }
+
+    HID::Joystick joystick;
+    Net::Client client;
+    Robots::TankNetSink tank(client);
+    tank.addJoystick(joystick);
+
     SFMLRenderer<> renderer(Vector2<millimeter_t>{ -0.5_m, -0.5_m }, Vector2<millimeter_t>{ 0.5_m, 0.5_m });
 
     const auto toPixels = [&](const auto &limits) {
@@ -123,8 +209,24 @@ main()
         objectShapes.emplace_back(object, matrix, renderer);
     }
 
-    while (renderer.isOpen()) {
-        renderer.update(objectShapes);
+    client.runInBackground();
+    bool printedCollisionMessage = false;
+    Agent agent(renderer, arenaObjects);
+    while (renderer.isOpen() && !joystick.isPressed(HID::JButton::B)) {
+        joystick.update();
+
+        agent.setPose(vicon.getObjectData(0).getPose());
+        if (agent.hasCollided()) {
+            if (!printedCollisionMessage) {
+                tank.stopMoving();
+                std::cout << "COLLISION!!!" << std::endl;
+                printedCollisionMessage = true;
+            }
+        } else {
+            printedCollisionMessage = false;
+        }
+
+        renderer.update(objectShapes, agent);
         std::this_thread::sleep_for(20ms);
     }
 }
