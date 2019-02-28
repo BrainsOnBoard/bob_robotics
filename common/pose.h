@@ -25,6 +25,8 @@ template<typename Derived>
 class PoseBase
 {
 public:
+    constexpr PoseBase() = default;
+
     template<typename PoseType>
     bool operator==(const PoseType &pose) const
     {
@@ -93,10 +95,10 @@ class VectorBase
     using radian_t = units::angle::radian_t;
 
 public:
-    VectorBase() = default;
+    constexpr VectorBase() = default;
 
     template<typename... Ts>
-    VectorBase(Ts &&... args)
+    constexpr VectorBase(Ts &&... args)
       : PoseBase<Derived>()
       , m_Array({ std::forward<Ts>(args)... })
     {}
@@ -152,13 +154,13 @@ class Vector2
   : public VectorBase<LengthUnit, 2, Vector2<LengthUnit>>
 {
 public:
-    Vector2() = default;
+    constexpr Vector2() = default;
 
-    Vector2(LengthUnit x, LengthUnit y)
+    constexpr Vector2(LengthUnit x, LengthUnit y)
       : VectorBase<LengthUnit, 2, Vector2<LengthUnit>>(x, y)
     {}
 
-    Vector2(const std::array<LengthUnit, 2> &array)
+    constexpr Vector2(const std::array<LengthUnit, 2> &array)
       : Vector2(array[0], array[1])
     {}
 
@@ -175,13 +177,13 @@ class Vector3
   : public VectorBase<LengthUnit, 3, Vector3<LengthUnit>>
 {
 public:
-    Vector3() = default;
+    constexpr Vector3() = default;
 
-    Vector3(LengthUnit x, LengthUnit y, LengthUnit z)
+    constexpr Vector3(LengthUnit x, LengthUnit y, LengthUnit z)
       : VectorBase<LengthUnit, 3, Vector3<LengthUnit>>(x, y, z)
     {}
 
-    Vector3(const std::array<LengthUnit, 3> &array)
+    constexpr Vector3(const std::array<LengthUnit, 3> &array)
       : Vector3(array[0], array[1], array[2])
     {}
 
@@ -210,9 +212,9 @@ class Pose2
                   "AngleUnit is not a unit of angle");
 
 public:
-    Pose2() = default;
+    constexpr Pose2() = default;
 
-    Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
+    constexpr Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
       : m_Position{ x, y }
       , m_Angle(angle)
     {}
@@ -247,9 +249,9 @@ class Pose3
                   "AngleUnit is not a unit of angle");
 
 public:
-    Pose3() = default;
+    constexpr Pose3() = default;
 
-    Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
+    constexpr Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
       : m_Position(position)
       , m_Attitude(attitude)
     {}
