@@ -205,7 +205,7 @@ public:
     virtual void setRoll(float right) override;
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
-    void relativeMove(meter_t dx, meter_t dy, meter_t dz, radian_t dpsi = 0_rad);
+    void relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw = 0_rad);
     RelativeMoveState getRelativeMoveState() const;
     std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
     void resetRelativeMoveState();

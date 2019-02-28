@@ -238,10 +238,10 @@ Bebop::doFlatTrimCalibration()
 
 //! Move to a new pose relative to the current one
 void
-Bebop::relativeMove(meter_t dx, meter_t dy, meter_t dz, radian_t dpsi)
+Bebop::relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw)
 {
     m_RelativeMoveState = Bebop::RelativeMoveState::Moving;
-    DRONE_COMMAND(sendPilotingMoveBy, (float) dx.value(), (float) dy.value(), (float) dz.value(), (float) dpsi.value());
+    DRONE_COMMAND(sendPilotingMoveBy, (float) x.value(), (float) y.value(), (float) z.value(), (float) yaw.value());
 }
 
 //! Get the status of a relative move operation
