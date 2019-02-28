@@ -33,9 +33,9 @@ struct InSilicoRotater
         RotaterInternal(const cv::Size &unwrapRes,
                         const cv::Mat &maskImage,
                         const cv::Mat &image,
+                        size_t scanStep,
                         IterType beginRoll,
-                        IterType endRoll,
-                        size_t scanStep)
+                        IterType endRoll)
           : m_ScanStep(scanStep)
           , m_BeginRoll(beginRoll)
           , m_EndRoll(endRoll)
@@ -134,30 +134,30 @@ struct InSilicoRotater
            const cv::Mat &maskImage,
            const cv::Mat &image,
            IterType beginRoll,
-           IterType endRoll,
-           size_t scanStep = 1)
+           IterType endRoll)
     {
-        return RotaterInternal<IterType>(unwrapRes, maskImage, image, beginRoll, endRoll, scanStep);
+        return RotaterInternal<IterType>(unwrapRes, maskImage, image, 1, beginRoll, endRoll);
     }
 
     static auto
     create(const cv::Size &unwrapRes,
            const cv::Mat &maskImage,
            const cv::Mat &image,
+           size_t scanStep,
            size_t beginRoll,
-           size_t endRoll,
-           size_t scanStep = 1)
+           size_t endRoll)
     {
-        return RotaterInternal<size_t>(unwrapRes, maskImage, image, beginRoll, endRoll, scanStep);
+        return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, endRoll);
     }
 
     static auto
     create(const cv::Size &unwrapRes,
            const cv::Mat &maskImage,
            const cv::Mat &image,
+           size_t scanStep = 1,
            size_t beginRoll = 0)
     {
-        return RotaterInternal<size_t>(unwrapRes, maskImage, image, beginRoll, image.cols, 1);
+        return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, image.cols);
     }
 };
 } // Navigation
