@@ -36,6 +36,7 @@ public:
       , m_UnwrapRes(unwrapRes)
     {
         BOB_ASSERT(agent.getOutputSize() == unwrapRes);
+        BOB_ASSERT(units::math::fmod(360_deg, m_YawStep) == 0_deg);
 
         // This rotater doesn't support mask images
         BOB_ASSERT(maskImage.empty());
