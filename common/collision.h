@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "assert.h"
+
 // Third-party includes
 #include "../third_party/units.h"
 
@@ -37,6 +40,9 @@ public:
         if (objects.size() == 0) {
             return;
         }
+
+        // Maximum number of supported objects
+        BOB_ASSERT(objects.size() <= 254);
 
         // Calculate vertices of objects after resizing to take into account buffer
         m_ResizedObjects.reserve(objects.size());
@@ -96,10 +102,10 @@ public:
 
         // Draw each of the objects as a filled polygon on m_ObjectsMap
         std::vector<cv::Point2i> points;
-        for (auto &object : m_ResizedObjects) {
-            points.resize(object.rows());
-            eigenToPoints(points, object);
-            fillConvexPoly(m_ObjectsMap, points, cv::Scalar{ 0xff });
+        for (size_t i = 0; i < m_ResizedObjects.size(); i++) {
+            points.resize(m_ResizedObjects[i].rows());
+            eigenToPoints(points, m_ResizedObjects[i]);
+            fillConvexPoly(m_ObjectsMap, points, cv::Scalar{ static_cast<double>(i + 1) });
         }
     }
 
@@ -129,8 +135,11 @@ public:
         return m_RobotVertices;
     }
 
-    bool collisionOccurred() const
+    bool collisionOccurred()
     {
+        // Clear this value
+        m_CollidedObjectId = std::numeric_limits<size_t>::max();
+
         // If there aren't obstacles, we can't have hit them
         if (m_ResizedObjects.size() == 0) {
             return false;
@@ -146,6 +155,7 @@ public:
         // Check for collision
         for (int i = 0; i < m_RobotMap.size().area(); i++) {
             if (m_ObjectsMap.data[i] & m_RobotMap.data[i]) {
+                m_CollidedObjectId = m_ObjectsMap.data[i] - 1;
                 return true;
             }
         }
@@ -154,15 +164,21 @@ public:
         return false;
     }
 
+    size_t getCollidedObjectId() const
+    {
+        return m_CollidedObjectId;
+    }
+
 private:
     const meter_t m_GridSize;
     const Eigen::MatrixX2d m_RobotDimensions;
     Eigen::MatrixX2d m_RobotVertices;
-    mutable std::vector<cv::Point2i> m_RobotVerticesPoints;
+    std::vector<cv::Point2i> m_RobotVerticesPoints;
     meter_t m_XLower, m_YLower;
     cv::Mat m_ObjectsMap;
-    mutable cv::Mat m_RobotMap;
+    cv::Mat m_RobotMap;
     std::vector<Eigen::MatrixX2d> m_ResizedObjects;
+    size_t m_CollidedObjectId = std::numeric_limits<size_t>::max();
 
     //! Convert Eigen Matrix to OpenCV pionts
     template<class MatrixType, class PointsArray>

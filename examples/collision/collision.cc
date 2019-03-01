@@ -145,7 +145,7 @@ main()
         if (collisionDetector.collisionOccurred()) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();
-                std::cout << "COLLISION!!!" << std::endl;
+                std::cout << "Collided with object " << collisionDetector.getCollidedObjectId() << std::endl;
                 printedCollisionMessage = true;
             }
         } else {
