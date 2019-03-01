@@ -25,42 +25,15 @@ public:
     template<class RobotVertices, class ObjectVertices>
     CollisionDetector(const RobotVertices &robotDimensions,
                       const std::vector<ObjectVertices> &objects,
-                      meter_t bufferSize = 20_cm,
+                      meter_t bufferSize = 30_cm,
                       meter_t gridSize = 1_cm)
         : m_GridSize(gridSize)
         , m_RobotDimensions(vectorToEigen(robotDimensions))
+        , m_RobotVerticesPoints(robotDimensions.size())
         , m_XLower(inf())
         , m_YLower(inf())
     {
-        // Calculate x and y limits
-        meter_t xUpper = -inf(), yUpper = -inf();
-        for (auto &object : objects) {
-            for (auto &vertex : object) {
-                if (vertex.x() < m_XLower) {
-                    m_XLower = vertex.x();
-                }
-                if (vertex.x() > xUpper) {
-                    xUpper = vertex.x();
-                }
-                if (vertex.y() < m_YLower) {
-                    m_YLower = vertex.y();
-                }
-                if (vertex.y() > yUpper) {
-                    yUpper = vertex.y();
-                }
-            }
-        }
-
-        // Create maps to draw objects and robot on
-        const auto toPixels = [&](meter_t lower, meter_t upper) {
-            return static_cast<int>((upper - lower) / gridSize);
-        };
-        m_ObjectsMap.create(toPixels(m_YLower, yUpper), toPixels(m_XLower, xUpper), CV_8UC1);
-        m_ObjectsMap = cv::Scalar{ 0 }; // Fill with zeroes
-        m_RobotMap.create(m_ObjectsMap.size(), CV_8UC1);
-
-        // Draw objects onto map
-        std::vector<cv::Point2i> points;
+        // Calculate vertices of objects after resizing to take into account buffer
         m_ResizedObjects.reserve(objects.size());
         for (auto &object : objects) {
             auto matrix = vectorToEigen(object);
@@ -83,13 +56,45 @@ public:
             matrix.col(0).array() += centre[0];
             matrix.col(1).array() += centre[1];
 
-            // Convert to OpenCV points and draw shape on image
-            points.clear();
-            points.resize(object.size());
-            eigenToPoints(points, matrix);
-            fillConvexPoly(m_ObjectsMap, points, cv::Scalar{ 0xff });
-
+            // Store for later
             m_ResizedObjects.emplace_back(std::move(matrix));
+        }
+
+        // Calculate x and y limits
+        meter_t xUpper = -inf(), yUpper = -inf();
+        for (auto &object : m_ResizedObjects) {
+            const auto xmin = object.col(0).minCoeff();
+            const auto xmax = object.col(0).maxCoeff();
+            const auto ymin = object.col(1).minCoeff();
+            const auto ymax = object.col(1).maxCoeff();
+            if (xmin < m_XLower.value()) {
+                m_XLower = meter_t{ xmin };
+            }
+            if (xmax > xUpper.value()) {
+                xUpper = meter_t{ xmax };
+            }
+            if (ymin < m_YLower.value()) {
+                m_YLower = meter_t{ ymin };
+            }
+            if (ymax > yUpper.value()) {
+                yUpper = meter_t{ ymax };
+            }
+        }
+
+        // Create maps to draw objects and robot on
+        const auto toPixels = [&](meter_t lower, meter_t upper) {
+            return static_cast<int>((upper - lower) / gridSize);
+        };
+        m_ObjectsMap.create(toPixels(m_YLower, yUpper), toPixels(m_XLower, xUpper), CV_8UC1);
+        m_ObjectsMap = cv::Scalar{ 0 }; // Fill with zeroes
+        m_RobotMap.create(m_ObjectsMap.size(), CV_8UC1);
+
+        // Draw each of the objects as a filled polygon on m_ObjectsMap
+        std::vector<cv::Point2i> points;
+        for (auto &object : m_ResizedObjects) {
+            points.resize(object.rows());
+            eigenToPoints(points, object);
+            fillConvexPoly(m_ObjectsMap, points, cv::Scalar{ 0xff });
         }
     }
 
@@ -125,9 +130,8 @@ public:
         m_RobotMap = cv::Scalar{ 0 };
 
         // Draw agent onto map
-        std::array<cv::Point2i, 4> points;
-        eigenToPoints(points, m_RobotVertices);
-        fillConvexPoly(m_RobotMap, points, cv::Scalar{ 0xff });
+        eigenToPoints(m_RobotVerticesPoints, m_RobotVertices);
+        fillConvexPoly(m_RobotMap, m_RobotVerticesPoints, cv::Scalar{ 0xff });
 
         // Check for collision
         for (int i = 0; i < m_RobotMap.size().area(); i++) {
@@ -144,6 +148,7 @@ private:
     const meter_t m_GridSize;
     const Eigen::MatrixX2d m_RobotDimensions;
     Eigen::MatrixX2d m_RobotVertices;
+    mutable std::vector<cv::Point2i> m_RobotVerticesPoints;
     meter_t m_XLower, m_YLower;
     cv::Mat m_ObjectsMap;
     mutable cv::Mat m_RobotMap;
@@ -154,8 +159,8 @@ private:
     void eigenToPoints(PointsArray &points, const MatrixType &matrix) const
     {
         for (int i = 0; i < matrix.rows(); i++) {
-            points[i] = cv::Point2i{ static_cast<int>((matrix(i, 0) - m_XLower()) / m_GridSize),
-                                     static_cast<int>((matrix(i, 1) - m_YLower()) / m_GridSize) };
+            points[i] = cv::Point2i{ static_cast<int>((meter_t{ matrix(i, 0) } - m_XLower) / m_GridSize),
+                                     static_cast<int>((meter_t{ matrix(i, 1) } - m_YLower) / m_GridSize) };
         }
     }
 

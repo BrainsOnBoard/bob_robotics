@@ -114,7 +114,7 @@ main()
 
     // Read objects from file
     const auto objects = readObjects("objects.yaml");
-    CollisionDetector collisionDetector{ robotDimensions, objects, 20_cm, 1_cm };
+    CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
 
     // Object size + buffer around
     const auto &resizedObjects = collisionDetector.getResizedObjects();
