@@ -127,6 +127,13 @@ public:
         return SocketWriter(*this);
     }
 
+    std::string readNextCommand()
+    {
+        Command command = readCommand();
+        parseCommand(command);
+        return command[0];
+    }
+
     // Object is non-copyable
     Connection(const Connection &) = delete;
     void operator=(const Connection &) = delete;

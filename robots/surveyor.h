@@ -1,10 +1,7 @@
 #pragma once
 
-// Standard C includes
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
+// BoB robotics includes
+#include "tank.h"
 
 // POSIX networking includes
 #include <arpa/inet.h>
@@ -13,11 +10,17 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// BoB robotics includes
-#include "tank.h"
+// Standard C includes
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+
 
 namespace BoBRobotics {
 namespace Robots {
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Surveyor
 //----------------------------------------------------------------------------
@@ -28,6 +31,8 @@ namespace Robots {
  */
 class Surveyor : public Tank
 {
+    using millimeter_t = units::length::millimeter_t;
+
 public:
     Surveyor(const std::string &address, uint16_t port)
     {
@@ -67,12 +72,12 @@ public:
     //----------------------------------------------------------------------------
     virtual void tank(float left, float right) override
     {
-        BOB_ASSERT(left >= -1.f && left <= 1.f);
-        BOB_ASSERT(right >= -1.f && right <= 1.f);
+        setWheelSpeeds(left, right);
 
         // Scale and convert to int
-        int leftInt = (int) std::round(left * 100.0f);
-        int rightInt = (int) std::round(right * 100.0f);
+        const float maxSpeed = 100.f * getMaximumSpeedProportion();
+        int leftInt = (int) std::round(left * maxSpeed);
+        int rightInt = (int) std::round(right * maxSpeed);
 
         // Generate command string
         char command[16];
@@ -82,6 +87,11 @@ public:
         if (write(m_Socket, command, strlen(command)) < 0) {
             throw std::runtime_error("Cannot write to socket");
         }
+    }
+
+    virtual millimeter_t getRobotWidth() const override
+    {
+        return 150_mm;
     }
 
 private:
