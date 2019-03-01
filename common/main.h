@@ -16,6 +16,14 @@
 int
 bob_main(int argc, char **argv);
 
+#ifdef DEBUG
+// Don't catch exceptions if we're debugging - we want the debugger to catch them
+int
+main(int argc, char **argv)
+{
+    return bob_main(argc, argv);
+}
+#else
 int
 main(int argc, char **argv)
 {
@@ -37,3 +45,4 @@ main(int argc, char **argv)
         throw;
     }
 }
+#endif // DEBUG
