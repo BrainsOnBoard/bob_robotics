@@ -18,7 +18,7 @@
 namespace BoBRobotics {
 using namespace units::literals;
 
-template<typename LengthUnit = units::length::millimeter_t>
+template<typename LengthUnit = units::length::meter_t>
 class SFMLRenderer
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
@@ -54,16 +54,13 @@ public:
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    SFMLRenderer(const LengthUnit agentSize = 30_cm,
-                  const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
-      : SFMLRenderer(agentSize,
-                      Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
-                      Vector2<LengthUnit>{ arenaSize[0] / 2, arenaSize[1] / 2 })
+    SFMLRenderer(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
+      : SFMLRenderer(Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
+                     Vector2<LengthUnit>{ arenaSize[0] / 2, arenaSize[1] / 2 })
     {}
 
     template<typename MaxBoundsType>
-    SFMLRenderer(
-                 const Vector2<LengthUnit> &minBounds,
+    SFMLRenderer(const Vector2<LengthUnit> &minBounds,
                  const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",

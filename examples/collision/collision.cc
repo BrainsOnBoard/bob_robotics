@@ -1,4 +1,6 @@
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
+#include "common/collision.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
 #include "common/sfml_renderer.h"
@@ -10,114 +12,43 @@
 // Eigen
 #include <Eigen/Core>
 
-// OpenCV
-#include "opencv2/opencv.hpp"
-
 // Standard C++ includes
 #include <array>
 #include <chrono>
 #include <iostream>
-#include <utility>
 #include <thread>
 
 using namespace BoBRobotics;
-using namespace units::angle;
-using namespace units::length;
 using namespace units::literals;
-using namespace units::math;
+using namespace units::length;
 using namespace std::literals;
-
-constexpr millimeter_t gridSize = 1_cm;
-constexpr millimeter_t bufferSize = 10_cm;
-constexpr std::pair<millimeter_t, millimeter_t> xLimits = { -2_m, 2_m };
-constexpr std::pair<millimeter_t, millimeter_t> yLimits = xLimits;
-
-template<class MatrixType, class VectorArray>
-void vectorToEigen(MatrixType &matrix, const VectorArray &vectors)
-{
-    for (size_t i = 0; i < vectors.size(); i++) {
-        matrix(i, 0) = static_cast<millimeter_t>(vectors[i].x()).value();
-        matrix(i, 1) = static_cast<millimeter_t>(vectors[i].y()).value();
-    }
-}
-
-template<class MatrixType, class PointsArray>
-void eigenToPoints(PointsArray &points, const MatrixType &matrix)
-{
-    for (int i = 0; i < matrix.rows(); i++) {
-        points[i] = cv::Point2i{ static_cast<int>((matrix(i, 0) - xLimits.first()) / gridSize),
-                                 static_cast<int>((matrix(i, 1) - yLimits.first()) / gridSize) };
-    }
-}
 
 class Agent
   : public sf::Drawable
 {
 public:
-    Agent(const SFMLRenderer<> &renderer, const cv::Mat &arenaObjects)
+    Agent(const SFMLRenderer<> &renderer, size_t numVertices)
       : m_Renderer(renderer)
-      , m_ArenaObjects(arenaObjects)
-      , m_Shape(m_Dimensions.rows())
-      , m_ArenaRobot(arenaObjects.size(), arenaObjects.type())
+      , m_Shape(numVertices)
     {
-        m_Dimensions << -75, 70,
-                75, 70,
-                75, -120,
-                -75, -120;
-
         m_Shape.setFillColor(sf::Color::Blue);
     }
 
-    template<class PoseType>
-    void setPose(const PoseType &pose)
+    void setVertices(const Eigen::MatrixX2d &vertices)
     {
-        // Rotate coords
-        const double sinth = sin(pose.yaw()), costh = cos(pose.yaw());
-        Eigen::Matrix<double, 2, 2> rotationMatrix;
-        rotationMatrix << costh, -sinth,
-                          sinth, costh;
-        m_CurrentDimensions = m_Dimensions * rotationMatrix;
-
-        // Translate
-        m_CurrentDimensions.col(0).array() += static_cast<millimeter_t>(pose.x()).value();
-        m_CurrentDimensions.col(1).array() += static_cast<millimeter_t>(pose.y()).value();
-    }
-
-    bool hasCollided()
-    {
-        // Zero matrix
-        m_ArenaRobot = cv::Scalar{ 0 };
-
-        // Draw agent in matrix
-        std::array<cv::Point2i, 4> points;
-        eigenToPoints(points, m_CurrentDimensions);
-        fillConvexPoly(m_ArenaRobot, points, cv::Scalar{ 0xff });
-
-        // Check for collisions
-        for (int i = 0; i < m_ArenaRobot.size().area(); i++) {
-            if (m_ArenaObjects.data[i] & m_ArenaRobot.data[i]) {
-                return true;
-            }
+        for (int i = 0; i < vertices.rows(); i++) {
+            m_Shape.setPoint(i, m_Renderer.vectorToPixel(vertices(i, 0), vertices(i, 1)));
         }
-
-        // No collision
-        return false;
     }
 
     virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
     {
-        for (int i = 0; i < m_Dimensions.rows(); i++) {
-            m_Shape.setPoint(i, m_Renderer.vectorToPixel(m_CurrentDimensions(i, 0), m_CurrentDimensions(i, 1)));
-        }
         target.draw(m_Shape, states);
     }
 
 private:
     const SFMLRenderer<> &m_Renderer;
-    const cv::Mat &m_ArenaObjects;
-    Eigen::Matrix<double, 4, 2> m_Dimensions, m_CurrentDimensions;
-    mutable sf::ConvexShape m_Shape;
-    cv::Mat m_ArenaRobot;
+    sf::ConvexShape m_Shape;
 };
 
 class ArenaObject
@@ -125,7 +56,7 @@ class ArenaObject
 {
 public:
     template<class VectorArrayType, class MatrixType>
-    ArenaObject(const VectorArrayType &original, const MatrixType &resized, const SFMLRenderer<> &renderer)
+    ArenaObject(const SFMLRenderer<> &renderer, const VectorArrayType &original, const MatrixType &resized)
       : m_GreenShape(original.size())
       , m_RedShape(original.size())
     {
@@ -156,67 +87,62 @@ private:
 int
 main()
 {
+    // The x and y dimensions of the robot
+    using V = Vector2<meter_t>;
+    constexpr std::array<V, 4> robotDimensions = {
+        V{ -75_mm, 70_mm},
+        V{ 75_mm, 70_mm },
+        V{ 75_mm, -120_mm },
+        V{ -75_mm, -120_mm }
+    };
+
+    // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
     while (vicon.getNumObjects() == 0) {
         std::this_thread::sleep_for(1s);
         std::cout << "Waiting for object" << std::endl;
     }
 
+    // Control robot with joystick over network
     HID::Joystick joystick;
     Net::Client client;
     Robots::TankNetSink tank(client);
     tank.addJoystick(joystick);
 
-    SFMLRenderer<> renderer(Vector2<millimeter_t>{ -0.5_m, -0.5_m }, Vector2<millimeter_t>{ 0.5_m, 0.5_m });
+    // Display for robot + objects
+    SFMLRenderer<> renderer{ V{ 5_m, 5_m } };
 
-    const auto toPixels = [&](const auto &limits) {
-        return static_cast<int>((limits.second - limits.first) / gridSize);
-    };
-    cv::Mat arenaObjects(toPixels(yLimits), toPixels(xLimits), CV_8UC1, cv::Scalar{ 0 });
-
+    // Read objects from file
     const auto objects = readObjects("objects.yaml");
-    std::vector<cv::Point2i> points;
+    CollisionDetector collisionDetector{ robotDimensions, objects, 20_cm, 1_cm };
+
+    // Object size + buffer around
+    const auto &resizedObjects = collisionDetector.getResizedObjects();
+
+    // Create drawable objects
     std::vector<ArenaObject> objectShapes;
     objectShapes.reserve(objects.size());
-    for (auto &object : objects) {
-        Eigen::MatrixX2d matrix(object.size(), 2);
-        vectorToEigen(matrix, object);
-
-        // Centre the object on the origin
-        const Eigen::Vector2d centre = matrix.colwise().mean();
-        Eigen::Matrix<double, 2, 2> translation;
-        matrix.col(0).array() -= centre[0];
-        matrix.col(1).array() -= centre[1];
-
-        // Scale the object so we figure out the buffer zone around it
-        const double width = matrix.col(0).maxCoeff() - matrix.col(0).minCoeff();
-        const double scale = 1.0 + (bufferSize.value() / width);
-        Eigen::Matrix<double, 2, 2> scaleMatrix;
-        scaleMatrix << scale, 0,
-                       0, scale;
-        matrix *= scale;
-
-        // Translate the object back to its origin location
-        matrix.col(0).array() += centre[0];
-        matrix.col(1).array() += centre[1];
-
-        // Convert to OpenCV points and draw shape on image
-        points.clear();
-        points.resize(object.size());
-        eigenToPoints(points, matrix);
-        fillConvexPoly(arenaObjects, points, cv::Scalar{ 0xff });
-
-        objectShapes.emplace_back(object, matrix, renderer);
+    for (size_t i = 0; i < objects.size(); i++) {
+        objectShapes.emplace_back(renderer, objects[i], resizedObjects[i]);
     }
 
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Ctrl+C etc.
+
+    // Listen for messages on background thread
     client.runInBackground();
+
     bool printedCollisionMessage = false;
-    Agent agent(renderer, arenaObjects);
+    Agent agent(renderer, robotDimensions.size()); // Drawable agent
     while (renderer.isOpen() && !joystick.isPressed(HID::JButton::B)) {
+        // Check for exceptions on background thread
+        catcher.check();
+
+        // Poll for joystick events
         joystick.update();
 
-        agent.setPose(vicon.getObjectData(0).getPose());
-        if (agent.hasCollided()) {
+        collisionDetector.setRobotPose(vicon.getObjectData(0).getPose());
+        if (collisionDetector.collisionOccurred()) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();
                 std::cout << "COLLISION!!!" << std::endl;
@@ -226,7 +152,11 @@ main()
             printedCollisionMessage = false;
         }
 
+        // Render on display
+        agent.setVertices(collisionDetector.getRobotVertices());
         renderer.update(objectShapes, agent);
+
+        // Small delay so we don't hog CPU
         std::this_thread::sleep_for(20ms);
     }
 }
