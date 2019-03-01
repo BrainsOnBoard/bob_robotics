@@ -180,11 +180,11 @@ private:
         case JAxis::LeftStickVertical:
         case JAxis::RightStickHorizontal:
         case JAxis::RightStickVertical:
-            return value > 0 ? static_cast<float>(value) / int16_maxf
-                             : static_cast<float>(value) / int16_absminf;
+            return value > 0 ? static_cast<float>(value) / int16_maxf()
+                             : static_cast<float>(value) / int16_absminf();
         case JAxis::LeftTrigger:
         case JAxis::RightTrigger:
-            return (static_cast<float>(value) + int16_absminf) /
+            return (static_cast<float>(value) + int16_absminf()) /
                     static_cast<float>(std::numeric_limits<uint16_t>::max());
         case JAxis::DpadHorizontal:
         case JAxis::DpadVertical:

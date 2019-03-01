@@ -1,11 +1,11 @@
 #pragma once
 
-// Third-party includes
-#include "../third_party/units.h"
-
 // BoB robotics includes
 #include "../common/assert.h"
 #include "../libantworld/agent.h"
+
+// Third-party includes
+#include "../third_party/units.h"
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -33,8 +33,10 @@ public:
       , m_YawStep(yawStep)
       , m_Pitch(pitch)
       , m_Roll(roll)
+      , m_UnwrapRes(unwrapRes)
     {
         BOB_ASSERT(agent.getOutputSize() == unwrapRes);
+        BOB_ASSERT(units::math::fmod(360_deg, m_YawStep) == 0_deg);
 
         // This rotater doesn't support mask images
         BOB_ASSERT(maskImage.empty());
@@ -52,14 +54,27 @@ public:
         }
     }
 
-    size_t max() const
+    size_t numRotations() const
     {
         return 360_deg / m_YawStep;
+    }
+
+    units::angle::radian_t columnToHeading(size_t column) const
+    {
+        return units::angle::turn_t{ (double) column / (double) m_UnwrapRes.width };
+    }
+
+    template<typename... Ts>
+    static auto
+    create(Ts &&... args)
+    {
+        return AntWorldRotater(std::forward<Ts>(args)...);
     }
 
 private:
     AntWorld::AntAgent &m_Agent;
     const degree_t m_YawStep, m_Pitch, m_Roll;
+    const cv::Size m_UnwrapRes;
 }; // AntWorldRotater
 } // Navigation
 } // BoBRobotics
