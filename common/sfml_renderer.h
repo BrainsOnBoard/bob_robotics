@@ -24,34 +24,6 @@ class SFMLRenderer
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
 
 public:
-    class LineStrip
-      : public sf::Drawable
-    {
-    public:
-        LineStrip(const SFMLRenderer<LengthUnit> &renderer, const sf::Color &colour)
-          : m_Renderer(renderer)
-          , m_Colour(colour)
-        {}
-
-        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
-        {
-            target.draw(&m_Vertices[0], m_Vertices.size(), sf::PrimitiveType::LinesStrip, states);
-        }
-
-        template<typename PositionType>
-        void append(const PositionType &position)
-        {
-            m_Vertices.emplace_back(m_Renderer.vectorToPixel(position.x(), position.y()), m_Colour);
-        }
-
-        void clear() { m_Vertices.clear(); }
-
-    private:
-        std::vector<sf::Vertex> m_Vertices;
-        const SFMLRenderer<LengthUnit> &m_Renderer;
-        const sf::Color m_Colour;
-    };
-
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
     SFMLRenderer(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
@@ -97,46 +69,6 @@ public:
                                              origin.y - (OriginLineThickness / 2.f) });
         m_OriginLineVertical.setPosition({ origin.x - (OriginLineThickness / 2.f),
                                            origin.y - (OriginLineLength / 2.f) });
-    }
-
-    LineStrip createLine(const sf::Color &colour) const
-    {
-        return LineStrip(*this, colour);
-    }
-
-    template<typename PoseType, typename... Drawables>
-    auto update(const PoseType &agentPose, Robots::Robot &robot, Drawables&& ...drawables)
-    {
-        const auto ret = update(agentPose, std::forward<Drawables>(drawables)...);
-        if (ret.second) { // Key down
-            switch (ret.first) {
-            case sf::Keyboard::Key::Up:
-                robot.moveForward(1.f);
-                break;
-            case sf::Keyboard::Key::Down:
-                robot.moveForward(-1.f);
-                break;
-            case sf::Keyboard::Key::Right:
-                robot.turnOnTheSpot(1.f);
-                break;
-            case sf::Keyboard::Key::Left:
-                robot.turnOnTheSpot(-1.f);
-            default:
-                break;
-            }
-        } else { // Possible key up
-            switch (ret.first) {
-            case sf::Keyboard::Key::Up:
-            case sf::Keyboard::Key::Down:
-            case sf::Keyboard::Key::Right:
-            case sf::Keyboard::Key::Left:
-                robot.stopMoving();
-            default:
-                break;
-            }
-        }
-
-        return ret;
     }
 
     template<typename... Drawables>
