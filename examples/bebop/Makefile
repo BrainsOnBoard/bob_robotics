@@ -5,7 +5,7 @@ include ../../make_common/bob_robotics.mk
 
 EXECUTABLE := bebop_test
 
-all: $(EXECUTABLE)
+all: $(EXECUTABLE) bebop_relative_move_test
 
 -include $(EXECUTABLE).d
 
