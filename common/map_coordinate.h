@@ -46,8 +46,9 @@ struct WGS84
 {
     static const Ellipsoid ellipsoid;
 };
+#ifndef STATIC_HACK
 const Ellipsoid WGS84::ellipsoid{units::length::meter_t(6378137), units::length::meter_t(6356752.314245)};
-
+#endif
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::OSGB36
 //----------------------------------------------------------------------------
@@ -57,10 +58,12 @@ struct OSGB36
     static const Transform transformFromWGS84;
     static const Ellipsoid ellipsoid;
 };
+
+#ifndef STATIC_HACK
 const Transform OSGB36::transformFromWGS84{units::length::meter_t(-446.448), units::length::meter_t(125.157), units::length::meter_t(-542.060),
                                            20.4894, units::angle::arcsecond_t(-0.1502), units::angle::arcsecond_t(-0.2470), units::angle::arcsecond_t(-0.8421)};
 const Ellipsoid OSGB36::ellipsoid{units::length::meter_t(6377563.396), units::length::meter_t(6356256.909)};
-
+#endif
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::OSCoordinate
 //----------------------------------------------------------------------------
@@ -102,7 +105,7 @@ struct Cartesian
 //! Convert latitude and longitude to cartesian
 /*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 template<typename Datum>
-Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
+inline Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
 {
     using namespace units::math;
     using namespace units::length;
@@ -125,7 +128,7 @@ Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
 //! Transform cartesian coordinates from WGS84 into desired space
 /*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 template<typename Datum>
-Cartesian<Datum> transformCartesian(const Cartesian<WGS84> &c)
+inline Cartesian<Datum> transformCartesian(const Cartesian<WGS84> &c)
 {
     const double s1 = Datum::transformFromWGS84.s / 1E6 + 1.0;            // scale: normalise parts-per-million to (s+1)
 
@@ -142,7 +145,7 @@ Cartesian<Datum> transformCartesian(const Cartesian<WGS84> &c)
 //! Convert cartesian coordinates back to latitude and longitude
 /*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
 template<typename Datum>
-LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
+inline LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
 {
     using namespace units::angle;
     using namespace units::length;
@@ -176,7 +179,7 @@ LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
 
 //! Convert latitude and longitude in the OSGB36 space to OS grid coordinates
 /*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
-OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
+inline OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 {
     using namespace units::angle;
     using namespace units::length;
@@ -230,6 +233,21 @@ OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 
     return OSCoordinate{e0 + (iv * deltaLambda) + (v * deltaLambda3) + (vi * deltaLambda5),
                         i + (ii * deltaLambda2) + (iii * deltaLambda4) + (iiia * deltaLambda6)};
+}
+
+//! Helper function to use above functionality to convert from latitude longitute in WGS84 i.e. GPS coordinates to OS map coordinates
+inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon) 
+{
+    const auto wgs84Cartesian = latLonToCartesian(wgs84LatLon);
+
+    // 2) Transform Cartesian into OSGB36 space
+    const auto osGB36Cartesian = transformCartesian<OSGB36>(wgs84Cartesian);
+
+    // 3) Convert cartesian back to latitude and longitude (now on OSGB36 ellipsoid)
+    const auto osGBLatLon = cartesianToLatLon(osGB36Cartesian);
+
+    // 4) Finally, convert latitude and longitude to OS coordinate
+    return latLonToOS(osGBLatLon);
 }
 }   // namespace MapCoordinate
 }   // namespace BoBRobotics
