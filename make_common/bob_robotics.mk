@@ -65,15 +65,6 @@ ifdef WITH_SDL2
 	LINK_FLAGS += `pkg-config --libs sdl2`
 endif
 
-# Build with OpenCV
-ifndef NO_OPENCV
-ifndef OPENCV_PKG_NAME
-	OPENCV_PKG_NAME := opencv
-endif
-	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
-	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
-endif
-
 ifdef WITH_LIBBEBOP
 	# libbebop
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop \
@@ -103,6 +94,15 @@ $(error Environment variable ARSDK_ROOT must be defined)
 
 	# Fixes compiler warnings for code deep inside ARSDK
 	CXXFLAGS += -Wno-implicit-fallthrough
+endif
+
+# Build with OpenCV
+ifndef NO_OPENCV
+ifndef OPENCV_PKG_NAME
+	OPENCV_PKG_NAME := opencv
+endif
+	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
+	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
 endif
 
 ifdef WITH_MATPLOTLIBCPP
