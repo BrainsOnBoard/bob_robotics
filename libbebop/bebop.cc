@@ -263,7 +263,7 @@ void
 Bebop::resetRelativeMoveState()
 {
     BOB_ASSERT(m_RelativeMoveState != RelativeMoveState::Moving);
-    m_RelativeMoveState = RelativeMoveState::InitialState;
+    m_RelativeMoveState = RelativeMoveState::Initial;
 }
 
 /*!

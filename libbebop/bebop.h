@@ -176,7 +176,7 @@ public:
 
     enum class RelativeMoveState
     {
-        InitialState = -2,
+        Initial = -2,
         Moving = -1,
         Success = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_OK,
         ErrorUnknown = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_UNKNOWN,
@@ -301,7 +301,7 @@ private:
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<unsigned char> m_BatteryLevel;
-    std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Success };
+    std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
 
