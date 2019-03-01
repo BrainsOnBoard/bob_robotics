@@ -1,7 +1,6 @@
 WITH_EIGEN := 1
+WITH_SFML_GRAPHICS := 1
 include ../../make_common/bob_robotics.mk
-CXXFLAGS += `pkg-config --cflags sfml-graphics`
-LINK_FLAGS += `pkg-config --libs sfml-graphics`
 
 EXECUTABLE := collision
 

@@ -136,3 +136,8 @@ ifdef WITH_EIGEN
 	CXXFLAGS += `pkg-config --cflags eigen3` -fopenmp
 	LINK_FLAGS += -fopenmp
 endif
+
+ifdef WITH_SFML_GRAPHICS
+        CXXFLAGS += `pkg-config --cflags sfml-graphics`
+        LINK_FLAGS += `pkg-config --libs sfml-graphics`
+endif
