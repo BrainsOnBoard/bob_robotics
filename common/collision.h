@@ -33,6 +33,11 @@ public:
         , m_XLower(inf())
         , m_YLower(inf())
     {
+        // If there are no obstacles, then our job is easy
+        if (objects.size() == 0) {
+            return;
+        }
+
         // Calculate vertices of objects after resizing to take into account buffer
         m_ResizedObjects.reserve(objects.size());
         for (auto &object : objects) {
@@ -126,6 +131,11 @@ public:
 
     bool collisionOccurred() const
     {
+        // If there aren't obstacles, we can't have hit them
+        if (m_ResizedObjects.size() == 0) {
+            return false;
+        }
+
         // Fill map with zeroes
         m_RobotMap = cv::Scalar{ 0 };
 
