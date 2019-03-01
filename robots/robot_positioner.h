@@ -45,23 +45,6 @@ private:
     const double m_Beta;                  // causes to drop velocity if 'k'(curveness) increases
     bool m_Running = false;
 
-    static radian_t angleWrapAround(radian_t angle)
-    {
-        while (angle < -180_deg) {
-            angle += 360_deg;
-        }
-        while (angle > 180_deg) {
-            angle -= 360_deg;
-        }
-
-        return angle;
-    }
-
-    static radian_t circularDistance(radian_t a, radian_t b)
-    {
-        return angleWrapAround(a - b);
-    }
-
     // updates the range and bearing from the goal location
     void updateRangeAndBearing()
     {
@@ -76,8 +59,8 @@ private:
         m_HeadingToGoal = circularDistance(m_RobotPose.yaw(), units::math::atan2(delta_y, delta_x));
 
         // changing from <0,360> to <-180, 180>
-        m_HeadingToGoal = angleWrapAround(m_HeadingToGoal);
-        m_RobotPose.yaw() = angleWrapAround(m_RobotPose.yaw());
+        m_HeadingToGoal = normaliseAngle180(m_HeadingToGoal);
+        m_RobotPose.yaw() = normaliseAngle180(m_RobotPose.yaw());
     }
 
     //-----------------PUBLIC API---------------------------------------------------------------------
