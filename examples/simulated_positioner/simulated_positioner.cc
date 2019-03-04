@@ -27,6 +27,12 @@ main()
     SFMLDisplay<> display;
     auto car = display.createCarAgent();
 
+    // A circle to show where the goal is
+    sf::CircleShape goalCircle(10);
+    goalCircle.setFillColor(sf::Color::Blue);
+    goalCircle.setOrigin(10, 10);
+    goalCircle.setPosition(SFMLDisplay<>::WindowWidth / 2, SFMLDisplay<>::WindowHeight / 2);
+
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading
     constexpr double k1 = 1.51;                     // curveness of the path to the goal
@@ -51,11 +57,12 @@ main()
 
         // Run GUI events
         car.setPose(pose);
-        sf::Event event = display.updateAndDrive(robot, car);
+        sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
         // Spacebar toggles whether positioner is running
         if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
             runPositioner = !runPositioner;
+            robot.stopMoving();
         }
 
         if (runPositioner) {
@@ -65,6 +72,8 @@ main()
 
                 // Set the goal to this position
                 robp.setGoalPose({ mousePosition.x(), mousePosition.y(), 15_deg });
+
+                goalCircle.setPosition(display.vectorToPixel(mousePosition));
             }
 
             // Update course and drive robot
@@ -74,6 +83,7 @@ main()
             if (robp.reachedGoal()) {
                 if (!reachedGoalAnnounced) {
                     std::cout << "Reached goal" << std::endl;
+                    robot.stopMoving();
                     reachedGoalAnnounced = true;
                 }
             } else {
