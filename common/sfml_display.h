@@ -12,7 +12,6 @@
 #include <SFML/Graphics.hpp>
 
 // Standard C++ includes#
-#include <utility>
 #include <vector>
 #include <stdexcept>
 
@@ -49,6 +48,7 @@ public:
             const auto widthPx = display.lengthToPixel(carWidth);
             const auto scale = widthPx / static_cast<float>(imageSize.y);
             m_Sprite.setOrigin(imageSize.x / 2.f, imageSize.y / 2.f);
+            m_Sprite.scale(scale, scale);
         }
 
         template<class PoseType>
@@ -122,7 +122,7 @@ public:
     }
 
     template<typename... Drawables>
-    void update(Drawables&& ...drawables)
+    sf::Event update(Drawables&& ...drawables)
     {
         // Set m_Window to be active OpenGL context
         m_Window.setActive(true);
@@ -130,29 +130,84 @@ public:
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (m_Window.pollEvent(event)) {
-            // "Close requested" event: we close the window
-            if (event.type == sf::Event::Closed ||
-                    (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Q)) {
-                m_Window.close();
-                return;
+            if (handleEvents(event)) {
+                return event;
             }
         }
 
-        // Set background colour
-        m_Window.clear(sf::Color::White);
-
-        // Draw cross at origin
-        m_Window.draw(m_OriginLineHorizontal);
-        m_Window.draw(m_OriginLineVertical);
-
-        // Draw extra drawable things
-        draw(std::forward<Drawables>(drawables)...);
-
-        // Swap buffers
-        m_Window.display();
+        // Draw on screen
+        doDrawing(std::forward<Drawables...>(drawables)...);
 
         // We don't need to be the current OpenGL context any more
         m_Window.setActive(false);
+
+        return event;
+    }
+
+    template<typename... Drawables>
+    sf::Event updateAndDrive(Robots::Robot &robot, Drawables&& ...drawables)
+    {
+        // Set m_Window to be active OpenGL context
+        m_Window.setActive(true);
+
+        // Check all the window's events that were triggered since the last iteration of the loop
+        sf::Event event;
+        while (m_Window.pollEvent(event)) {
+            if (handleEvents(event)) {
+                return event;
+            }
+
+            switch (event.type) {
+            case sf::Event::KeyPressed:
+                switch (event.key.code) {
+                case sf::Keyboard::Up:
+                    robot.moveForward(1.f);
+                    break;
+                case sf::Keyboard::Down:
+                    robot.moveForward(-1.f);
+                    break;
+                case sf::Keyboard::Left:
+                    robot.turnOnTheSpot(-0.5f);
+                    break;
+                case sf::Keyboard::Right:
+                    robot.turnOnTheSpot(0.5f);
+                    break;
+                default:
+                    break;
+                }
+                break;
+            case sf::Event::KeyReleased:
+                switch (event.key.code) {
+                case sf::Keyboard::Up:
+                case sf::Keyboard::Down:
+                case sf::Keyboard::Left:
+                case sf::Keyboard::Right:
+                    robot.stopMoving();
+                default:
+                    break;
+                }
+            default:
+                break;
+            }
+        }
+
+        // Draw on screen
+        doDrawing(std::forward<Drawables...>(drawables)...);
+
+        // We don't need to be the current OpenGL context any more
+        m_Window.setActive(false);
+
+        return event;
+    }
+
+    bool mouseClicked() const
+    {
+        return !m_MouseClickPosition.isnan();
+    }
+
+    auto mouseClickPosition() const
+    {
+        return m_MouseClickPosition;
     }
 
     bool isOpen() const
@@ -168,6 +223,11 @@ public:
     float lengthToPixel(const LengthUnit value) const
     {
         return static_cast<float>((value / m_UnitPerPixel).value());
+    }
+
+    auto pixelToVector(int x, int y)
+    {
+        return Vector2<LengthUnit>(m_UnitPerPixel * x, m_UnitPerPixel * y);
     }
 
     template<class VectorType>
@@ -188,8 +248,43 @@ private:
     sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
     const Vector2<LengthUnit> m_MinBounds;
     LengthUnit m_UnitPerPixel;
+    Vector2<LengthUnit> m_MouseClickPosition = Vector2<LengthUnit>::nan();
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
+
+    bool handleEvents(sf::Event &event)
+    {
+        m_MouseClickPosition = Vector2<LengthUnit>::nan();
+
+        if (event.type == sf::Event::Closed ||
+                (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Q)) {
+            m_Window.close();
+            return true;
+        }
+
+        // Left mouse button pressed
+        if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
+            m_MouseClickPosition = pixelToVector(event.mouseButton.x, event.mouseButton.y);
+        }
+        return false;
+    }
+
+    template<typename... Drawables>
+    void doDrawing(Drawables&& ...drawables)
+    {
+        // Set background colour
+        m_Window.clear(sf::Color::White);
+
+        // Draw cross at origin
+        m_Window.draw(m_OriginLineHorizontal);
+        m_Window.draw(m_OriginLineVertical);
+
+        // Draw extra drawable things
+        draw(std::forward<Drawables>(drawables)...);
+
+        // Swap buffers
+        m_Window.display();
+    }
 
     template<typename DrawableType, typename... Drawables>
     void draw(const std::vector<DrawableType> &drawables, Drawables&& ...others)
