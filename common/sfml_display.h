@@ -40,7 +40,7 @@ public:
                 throw std::runtime_error("BOB_ROBOTICS_PATH environment variable is not set");
             }
 
-            const std::string imageFilePath = std::string(brPath) + "/common/car.bmp";
+            const std::string imageFilePath = std::string(brPath) + "/robots/car.bmp";
             if (!m_Texture.loadFromFile(imageFilePath)) {
                 throw std::runtime_error("Could not load " + imageFilePath);
             }
