@@ -60,11 +60,6 @@ ifdef WITH_IMGUI
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/third_party/imgui -limgui -lglfw -lGL -lGLU -lGLEW
 endif
 
-ifdef WITH_SDL2
-	CXXFLAGS += `pkg-config --cflags sdl2`
-	LINK_FLAGS += `pkg-config --libs sdl2`
-endif
-
 # Build with OpenCV
 ifndef NO_OPENCV
 ifndef OPENCV_PKG_NAME
