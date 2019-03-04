@@ -227,7 +227,8 @@ public:
 
     auto pixelToVector(int x, int y)
     {
-        return Vector2<LengthUnit>(m_UnitPerPixel * x, m_UnitPerPixel * y);
+        return Vector2<LengthUnit>(m_MinBounds[0] + m_UnitPerPixel * x,
+                                   m_MinBounds[1] + m_UnitPerPixel * (WindowHeight - y));
     }
 
     template<class VectorType>
