@@ -136,7 +136,7 @@ public:
         }
 
         // Draw on screen
-        doDrawing(std::forward<Drawables...>(drawables)...);
+        doDrawing(std::forward<Drawables>(drawables)...);
 
         // We don't need to be the current OpenGL context any more
         m_Window.setActive(false);
@@ -192,7 +192,7 @@ public:
         }
 
         // Draw on screen
-        doDrawing(std::forward<Drawables...>(drawables)...);
+        doDrawing(std::forward<Drawables>(drawables)...);
 
         // We don't need to be the current OpenGL context any more
         m_Window.setActive(false);
