@@ -2,7 +2,7 @@
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
-#include "robots/car_display.h"
+#include "common/sfml_display.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -20,7 +20,8 @@ int
 bob_main(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    Robots::CarDisplay display;                     // For displaying the agent
+    SFMLDisplay<> display;                          // For displaying the agent
+    auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
@@ -38,7 +39,8 @@ bob_main(int, char **)
 
     do {
         // Refresh display
-        display.runGUI(robot.getPose());
+        car.setPose(robot.getPose());
+        display.update(car);
 
         // Check for joystick events
         if (!joystick.update()) {

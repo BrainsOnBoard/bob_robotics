@@ -11,9 +11,10 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
-// Standard C++ includes
-#include <vector>
+// Standard C++ includes#
 #include <utility>
+#include <vector>
+#include <stdexcept>
 
 namespace BoBRobotics {
 using namespace units::literals;
@@ -24,6 +25,50 @@ class SFMLDisplay
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
 
 public:
+    class CarAgent
+      : public sf::Drawable
+    {
+    public:
+        CarAgent(const SFMLDisplay<LengthUnit> &display, LengthUnit carWidth)
+          : m_Display(display)
+        {
+            std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
+            const char *brPath = std::getenv("BOB_ROBOTICS_PATH");
+            if (!brPath) {
+                throw std::runtime_error("BOB_ROBOTICS_PATH environment variable is not set");
+            }
+
+            const std::string imageFilePath = std::string(brPath) + "/robots/car.bmp";
+            if (!m_Texture.loadFromFile(imageFilePath)) {
+                throw std::runtime_error("Could not load " + imageFilePath);
+            }
+
+            // Make car sprite: scale and set origin to centre of image
+            const auto imageSize = m_Texture.getSize();
+            m_Sprite.setTexture(m_Texture);
+            const auto widthPx = display.lengthToPixel(carWidth);
+            const auto scale = widthPx / static_cast<float>(imageSize.y);
+            m_Sprite.setOrigin(imageSize.x / 2.f, imageSize.y / 2.f);
+        }
+
+        template<class PoseType>
+        void setPose(const PoseType& pose)
+        {
+            m_Sprite.setRotation(-static_cast<units::angle::degree_t>(pose.yaw()).value());
+            m_Sprite.setPosition(m_Display.vectorToPixel(pose));
+        }
+
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+        {
+            target.draw(m_Sprite, states);
+        }
+
+    private:
+        const SFMLDisplay<LengthUnit> &m_Display;
+        sf::Texture m_Texture;
+        sf::Sprite m_Sprite;
+    };
+
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
     SFMLDisplay(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
@@ -69,6 +114,11 @@ public:
                                              origin.y - (OriginLineThickness / 2.f) });
         m_OriginLineVertical.setPosition({ origin.x - (OriginLineThickness / 2.f),
                                            origin.y - (OriginLineLength / 2.f) });
+    }
+
+    CarAgent createCarAgent(LengthUnit carWidth = 16.4_cm)
+    {
+        return CarAgent(*this, carWidth);
     }
 
     template<typename... Drawables>
