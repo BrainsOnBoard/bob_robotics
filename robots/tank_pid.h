@@ -65,6 +65,9 @@ public:
         m_StateMachine.transition(TankPIDState::OrientingToGoal);
     }
 
+    auto &getRobot() { return m_Robot; }
+    const auto &getRobot() const { return m_Robot; }
+
     bool driveRobot(const Pose2<meter_t, radian_t> &robotPose)
     {
         m_RobotPose = robotPose;

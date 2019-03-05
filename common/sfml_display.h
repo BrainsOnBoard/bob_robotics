@@ -91,7 +91,7 @@ public:
         template<typename PositionType>
         void append(const PositionType &position)
         {
-            m_Vertices.emplace_back(m_Renderer.vectorToPixel(position.x(), position.y()), m_Colour);
+            m_Vertices.emplace_back(m_Renderer.vectorToPixel(position), m_Colour);
         }
 
         void clear() { m_Vertices.clear(); }
