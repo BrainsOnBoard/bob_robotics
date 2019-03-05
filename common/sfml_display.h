@@ -74,6 +74,34 @@ public:
         sf::Sprite m_Sprite;
     };
 
+    class LineStrip
+      : public sf::Drawable
+    {
+    public:
+        LineStrip(const SFMLDisplay<LengthUnit> &renderer, const sf::Color &colour)
+          : m_Renderer(renderer)
+          , m_Colour(colour)
+        {}
+
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+        {
+            target.draw(&m_Vertices[0], m_Vertices.size(), sf::PrimitiveType::LinesStrip, states);
+        }
+
+        template<typename PositionType>
+        void append(const PositionType &position)
+        {
+            m_Vertices.emplace_back(m_Renderer.vectorToPixel(position.x(), position.y()), m_Colour);
+        }
+
+        void clear() { m_Vertices.clear(); }
+
+    private:
+        std::vector<sf::Vertex> m_Vertices;
+        const SFMLDisplay<LengthUnit> &m_Renderer;
+        const sf::Color m_Colour;
+    };
+
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
     SFMLDisplay(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
@@ -124,6 +152,11 @@ public:
     CarAgent createCarAgent(LengthUnit carWidth = 16.4_cm)
     {
         return CarAgent(*this, carWidth);
+    }
+
+    LineStrip createLine(const sf::Color &colour) const
+    {
+        return LineStrip(*this, colour);
     }
 
     template<typename... Drawables>
