@@ -15,8 +15,6 @@
 #include <Eigen/Core>
 #include <Eigen/StdVector>
 
-// Standard C includes
-
 // Standard C++ includes
 #include <algorithm>
 #include <array>
@@ -32,8 +30,6 @@ using namespace units::literals;
 using namespace units::length;
 using namespace units::math;
 using namespace std::literals;
-
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::MatrixXd)
 
 int lines = 0;
 namespace plt = matplotlibcpp;
@@ -189,9 +185,6 @@ main()
     Eigen::Vector2d robotCentre;
     robotCentre << halfWidth.value(), halfLength.value();
 
-    HID::Joystick joystick;
-    tank.addJoystick(joystick);
-
     // Read objects from file
     const auto objects = readObjects("objects.yaml");
     CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
@@ -206,25 +199,24 @@ main()
         objectShapes.emplace_back(display, objects[i], resizedObjects[i]);
     }
 
-    std::vector<Eigen::Matrix2d> robotLines, objectLines;
-    sf::ConvexShape perimeterShape;
-    perimeterShape.setFillColor(sf::Color::Transparent);
-    perimeterShape.setOutlineColor(sf::Color::Transparent);
+    std::vector<Eigen::Matrix2d, Eigen::aligned_allocator<Eigen::Matrix2d>> robotLines, objectLines;
+    const auto robotVerts = collisionDetector.getRobotVertices();
+    polygonToLines(robotLines, robotVerts);
 
+    /*
+     * For drawing the agent's route around the perimeter.
+     * Initially make invisible.
+     */
     auto avoidLine = display.createLine(sf::Color::Blue);
 
     bool printedCollisionMessage = false;
     do {
-        // Poll joystick for events
-        joystick.update();
-
         const auto pose = tank.getPose();
         if (goals.empty()) {
             collisionDetector.setRobotPose(pose);
             if (collisionDetector.collisionOccurred()) {
                 size_t objectId = collisionDetector.getCollidedObjectId();
 
-                const auto robotVerts = collisionDetector.getRobotVertices();
                 const auto objectVerts = resizedObjects[objectId];
                 Eigen::Vector2d objectCentre;
                 objectCentre << objectVerts.col(0).mean(), objectVerts.col(1).mean();
@@ -233,9 +225,12 @@ main()
                     tank.stopMoving();
                     std::cout << "Collided with object " << objectId << std::endl;
                     printedCollisionMessage = true;
-                    polygonToLines(robotLines, robotVerts);
                     polygonToLines(objectLines, objectVerts);
 
+                    /*
+                     * For every intersection point between robot and perimeter,
+                     * get the angle relative to the centre of the object.
+                     */
                     std::vector<radian_t> intersectionAngles;
                     for (auto &objectLine : objectLines) {
                         for (auto &robotLine : robotLines) {
@@ -248,8 +243,12 @@ main()
                         }
                     }
 
+                    /*
+                     * Take the mean of these angles and figure out which line on
+                     * the perimeter it corresponds to.
+                     */
                     const radian_t meanAngle = circularMean(intersectionAngles);
-                    auto whichLine = 0;
+                    int whichLine = 0;
                     for (; whichLine < objectVerts.rows(); whichLine++) {
                         const double dy = objectVerts(whichLine, 1) - objectCentre(1);
                         const double dx = objectVerts(whichLine, 0) - objectCentre(0);
@@ -264,35 +263,26 @@ main()
                         whichLine--;
                     }
 
-                    // Get perimeter around object
+                    // Get perimeter around object, resize it for calculating route
                     Eigen::MatrixX2d objectPerimeter = resizedObjects[objectId];
-                    perimeterShape.setPointCount(objectPerimeter.rows());
-                    for (int i = 0; i < objectPerimeter.rows(); i++) {
-                        perimeterShape.setPoint(i, display.vectorToPixel(objectPerimeter(i, 0), objectPerimeter(i, 1)));
-                    }
-                    perimeterShape.setOutlineColor(sf::Color::Black);
-                    perimeterShape.setOutlineThickness(4);
-
                     CollisionDetector::resizeObjectBy(objectPerimeter, tank.getRobotWidth());
-                    //                std::cout << "Perimeter: " << std::endl
-                    //                          << objectPerimeter << std::endl;
-                    std::vector<Eigen::MatrixX2d> perimeterLines(objectPerimeter.size());
+                    std::vector<Eigen::MatrixX2d, Eigen::aligned_allocator<Eigen::MatrixX2d>> perimeterLines(objectPerimeter.size());
                     polygonToLines(perimeterLines, objectPerimeter);
 
+                    // Calculate the robot's goal assuming it's trying to go straight through the object
                     Eigen::Vector2d robotGoal;
                     robotGoal << 100 * cos(pose.yaw()), 100 * sin(pose.yaw());
                     auto distToGoal = std::numeric_limits<double>::infinity();
                     Eigen::Vector2d leavePoint;
-                    size_t whichLeaveLine;
+                    int whichLeaveLine;
                     Eigen::Matrix2d robotLine;
                     robotLine(0, 0) = unitToDouble(pose.x());
                     robotLine(0, 1) = unitToDouble(pose.y());
                     robotLine(1, 0) = unitToDouble(pose.x()) + 10 * cos(pose.yaw()).value();
                     robotLine(1, 1) = unitToDouble(pose.x()) + 10 * sin(pose.yaw()).value();
 
-                    std::cout << "Robot line: " << robotLine << std::endl;
-
-                    for (size_t i = 0; i < perimeterLines.size(); i++) {
+                    // Take the nearest point on the opposite side of the perimeter as the goal
+                    for (int i = 0; i < objectPerimeter.rows(); i++) {
                         Eigen::Vector2d point;
                         if (calculateIntersection(point, perimeterLines[i], robotLine)) {
                             const auto dx = point(0) - robotGoal(0);
@@ -306,61 +296,25 @@ main()
                         }
                     }
                     BOB_ASSERT(!std::isinf(distToGoal));
-                    // if (whichLeaveLine == 0) {
-                    //     whichLeaveLine = objectVerts.rows() - 1;
-                    // } else {
-                    //     whichLeaveLine--;
-                    // }
+                    BOB_ASSERT(whichLeaveLine != whichLine);
 
+                    // Append the waypoints to avoidLine (for display) and goals (for homing)
+                    const int lineMax = ((whichLine < whichLeaveLine) ? whichLeaveLine : (whichLeaveLine + objectPerimeter.rows()));
+                    avoidLine.clear();
                     Eigen::Vector2d robotPoint;
                     robotPoint << unitToDouble(pose.x()), unitToDouble(pose.y());
-
-                    // Eigen::Vector2d startPoint;
-                    // BOB_ASSERT(calculateIntersection(startPoint, outwardLine, perimeterLines[whichLine]));
-
-                    std::vector<double> cumulativePerimeterLengths;
-                    const auto max = objectPerimeter.rows() - 1;
-                    for (int i = 0; i < max; i++) {
-                        const auto dx = objectPerimeter(i + 1, 0) - objectPerimeter(i, 0);
-                        const auto dy = objectPerimeter(i + 1, 1) - objectPerimeter(i + 1, 1);
-                        cumulativePerimeterLengths.push_back(hypot(dx, dy));
-                    }
-                    const auto dx = objectPerimeter(0, 0) - objectPerimeter(max, 0);
-                    const auto dy = objectPerimeter(0, 1) - objectPerimeter(max, 1);
-                    cumulativePerimeterLengths.push_back(hypot(dx, dy));
-
-                    //                std::vector<Vector2<meter_t>> avoidPath;
-                    //                avoidPath.emplace_back(meter_t{ startPoint.x() }, meter_t{ startPoint.y() });
-                    // std::cout << std::endl
-                    //           << "Start line: " << std::endl;
-                    avoidLine.clear();
-                    BOB_ASSERT(whichLeaveLine != whichLine);
-                    int lineMax = ((whichLine < whichLeaveLine) ? whichLeaveLine : (whichLeaveLine + objectPerimeter.rows()));
-                    // if (lineMax == 0) {
-                    //     lineMax = objectPerimeter.rows();
-                    // } else {
-                    //     lineMax--;
-                    // }
-                    std::cout << "Lims: " << whichLine << ", " << lineMax << std::endl;
                     avoidLine.append(robotPoint);
-                    for (int i = whichLine; i < lineMax; i++) {
-                        const Eigen::Vector2d next = objectPerimeter.row((i + 1) % objectPerimeter.rows());
-                        //                    avoidPath.emplace_back(meter_t{ next.x() }, meter_t{ next.y() });
+                    for (int i = whichLine + 1; i < lineMax; i++) {
+                        const Eigen::Vector2d next = objectPerimeter.row(i % objectPerimeter.rows());
                         avoidLine.append(next);
                         goals.emplace_back(meter_t{ next.x() }, meter_t{ next.y() });
-                        // std::cout << next << std::endl
-                        //           << "." << std::endl;
                     }
                     avoidLine.append(leavePoint);
                     goals.emplace_back(meter_t{ leavePoint.x() }, meter_t{ leavePoint.y() });
+
+                    // Start PID control of robot
                     std::cout << "Driving to " << goals.front() << std::endl;
                     pid.start(goals.front());
-                    //                avoidPath.emplace_back(meter_t{ leavePoint.x() }, meter_t{leavePoint.y()});
-
-                    // std::cout << "Starting point:" << std::endl << robotPoint << std::endl;
-                    // std::cout << "." << std::endl
-                    //           << "End point" << std::endl
-                    //           << leavePoint << std::endl;
                 }
             } else {
                 printedCollisionMessage = false;
