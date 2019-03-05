@@ -1,5 +1,14 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/circstat.h"
+
+// Third-party includes
+#include "../third_party/units.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C++ includes
 #include <algorithm>
 #include <array>
@@ -8,48 +17,9 @@
 #include <tuple>
 #include <vector>
 
-// OpenCV
-#include <opencv2/opencv.hpp>
-
-// Third-party includes
-#include "../third_party/units.h"
-
 namespace BoBRobotics {
 namespace Navigation {
 using namespace units::literals;
-
-namespace Internal {
-template<typename T1, typename T2>
-static auto
-circularMean(const T1 &angles, const T2 &weights)
-{
-    units::dimensionless::scalar_t sumCos = 0.0, sumSin = 0.0;
-    for (size_t i = 0; i < angles.size(); i++) {
-        sumCos += weights[i] * units::math::cos(angles[i]);
-        sumSin += weights[i] * units::math::sin(angles[i]);
-    }
-
-    return units::math::atan2(sumSin / angles.size(), sumCos / angles.size());
-}
-
-template<typename AngleType>
-auto
-normaliseAngle180(AngleType angle)
-{
-    static_assert(units::traits::is_angle_unit<AngleType>::value,
-                  "AngleType is not a unit of angle");
-
-    while (angle <= -180_deg) {
-        angle += 360_deg;
-    }
-    while (angle > 180_deg) {
-        angle -= 360_deg;
-    }
-
-    return angle;
-}
-
-}
 
 //! Winner-take all: derive heading using only the best-matching snapshot
 struct BestMatchingSnapshot
@@ -130,7 +100,7 @@ struct WeightSnapshotsDynamic
                        weights.begin(), diffsToWeights);
 
         // Best angle is a weighted cirular mean of headings
-        const radian_t bestAngle = Internal::circularMean(headings, weights);
+        const radian_t bestAngle = circularMean(headings, weights);
 
         // Bundle result as tuple
         return std::make_tuple(bestAngle, std::move(snapshots), std::move(minDifferencesOut));
