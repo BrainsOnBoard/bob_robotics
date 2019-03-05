@@ -109,6 +109,8 @@ private:
         auto distToGoal = std::numeric_limits<double>::infinity();
         Eigen::Vector2d leavePoint;
         int whichLeaveLine = -1;
+
+        // **TODO**: Change this to use an infinite straight line -- this is a bit gross
         Eigen::Matrix2d robotLine;
         robotLine(0, 0) = robotPose.x().value();
         robotLine(0, 1) = robotPose.y().value();

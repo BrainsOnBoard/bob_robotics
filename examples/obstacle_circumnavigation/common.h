@@ -1,11 +1,12 @@
+#pragma once
+
 // BoB robotics includes
 #include "common/collision.h"
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
 #include "common/sfml_display.h"
-#include "hid/joystick.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -26,7 +27,7 @@ using namespace units::length;
 using namespace std::literals;
 
 class ArenaObject
-        : public sf::Drawable
+ : public sf::Drawable
 {
 public:
     template<class VectorArrayType, class MatrixType>
@@ -58,15 +59,17 @@ private:
     sf::ConvexShape m_GreenShape, m_RedShape;
 };
 
-int
-main()
+struct Noop
+{
+    void operator()()
+    {}
+};
+
+template<class PoseGetterType, class Func = Noop>
+void
+runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func extraCalls = Noop())
 {
     using V = Vector2<meter_t>;
-
-    // Our tank-like agent
-    Robots::SimulatedTank<> tank;
-    constexpr Pose2<meter_t, degree_t> initialPose{ 0.3_m, 0_m, 180_deg };
-    tank.setPose(initialPose);
 
     // Display for robot + objects
     SFMLDisplay<> display{ V{ 5_m, 5_m } };
@@ -86,7 +89,7 @@ main()
     const auto objects = readObjects("objects.yaml");
 
     // Objects for controlling circumnavigation
-    CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
+    CollisionDetector collisionDetector{ robotDimensions, objects, 40_cm, 1_cm };
     ObstacleCircumnavigator circum(tank, collisionDetector);
 
     // Create drawable objects
@@ -101,7 +104,10 @@ main()
     auto routeLines = display.createLine(sf::Color::Blue);
 
     do {
-        const Pose2<meter_t, radian_t> pose = tank.getPose();
+        // Extra functions specified by caller
+        extraCalls();
+
+        const Pose2<meter_t, radian_t> pose = poseGetter.getPose();
         circum.update(pose);
 
         // If we've just started circumnavigation, draw the waypoints on screen
