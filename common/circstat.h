@@ -14,7 +14,7 @@ pi()
 }
 
 template<typename AngleType>
-auto
+constexpr auto
 normaliseAngle180(AngleType angle)
 {
     static_assert(units::traits::is_angle_unit<AngleType>::value,
@@ -30,10 +30,37 @@ normaliseAngle180(AngleType angle)
     return angle;
 }
 
+template<typename T>
+constexpr auto
+circularMean(const T &angles)
+{
+    units::dimensionless::scalar_t sumCos = 0.0, sumSin = 0.0;
+    for (size_t i = 0; i < angles.size(); i++) {
+        sumCos += units::math::cos(angles[i]);
+        sumSin += units::math::sin(angles[i]);
+    }
+
+    return units::math::atan2(sumSin / angles.size(), sumCos / angles.size());
+}
+
+template<typename T1, typename T2>
+constexpr auto
+circularMean(const T1 &angles, const T2 &weights)
+{
+    units::dimensionless::scalar_t sumCos = 0.0, sumSin = 0.0;
+    for (size_t i = 0; i < angles.size(); i++) {
+        sumCos += weights[i] * units::math::cos(angles[i]);
+        sumSin += weights[i] * units::math::sin(angles[i]);
+    }
+
+    return units::math::atan2(sumSin / angles.size(), sumCos / angles.size());
+}
+
 template<typename AngleType1, typename AngleType2>
-auto
+constexpr auto
 circularDistance(AngleType1 angle1, AngleType2 angle2)
 {
     return normaliseAngle180(angle1 - angle2);
 }
+
 } // BoBRobotics
