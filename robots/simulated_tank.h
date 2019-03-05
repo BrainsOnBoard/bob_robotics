@@ -21,7 +21,7 @@ class SimulatedTank
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
-    SimulatedTank(const meters_per_second_t maximumSpeed, const millimeter_t axisLength)
+    SimulatedTank(const meters_per_second_t maximumSpeed = 0.3_mps, const millimeter_t axisLength = 104_mm)
       : m_MaximumSpeed(maximumSpeed)
       , m_AxisLength(axisLength)
     {}
