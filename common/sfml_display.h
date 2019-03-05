@@ -49,7 +49,11 @@ public:
             const auto scale = widthPx / static_cast<float>(imageSize.y);
             m_Sprite.setOrigin(imageSize.x / 2.f, imageSize.y / 2.f);
             m_Sprite.scale(scale, scale);
+
+            m_Size = Vector2<LengthUnit>(carWidth, carWidth * (static_cast<float>(imageSize.y) / static_cast<float>(imageSize.x)));
         }
+
+        const auto &getSize() const { return m_Size; }
 
         template<class PoseType>
         void setPose(const PoseType& pose)
@@ -65,6 +69,7 @@ public:
 
     private:
         const SFMLDisplay<LengthUnit> &m_Display;
+        Vector2<LengthUnit> m_Size;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
     };
