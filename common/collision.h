@@ -49,23 +49,8 @@ public:
         for (auto &object : objects) {
             auto matrix = vectorToEigen(object);
 
-            // Centre the object on the origin
-            const Eigen::Vector2d centre = matrix.colwise().mean();
-            Eigen::Matrix<double, 2, 2> translation;
-            matrix.col(0).array() -= centre[0];
-            matrix.col(1).array() -= centre[1];
-
-            // Scale the object so we figure out the buffer zone around it
-            const double width = matrix.col(0).maxCoeff() - matrix.col(0).minCoeff();
-            const double scale = 1.0 + (bufferSize.value() / width);
-            Eigen::Matrix<double, 2, 2> scaleMatrix;
-            scaleMatrix << scale, 0,
-                           0, scale;
-            matrix *= scale;
-
-            // Translate the object back to its origin location
-            matrix.col(0).array() += centre[0];
-            matrix.col(1).array() += centre[1];
+            // Scale the object to include a "buffer" around it
+            CollisionDetector::resizeObjectBy(matrix, bufferSize);
 
             // Store for later
             m_ResizedObjects.emplace_back(std::move(matrix));
@@ -120,7 +105,7 @@ public:
         // Rotate coords
         using namespace units::math;
         const double sinth = sin(pose.yaw()), costh = cos(pose.yaw());
-        Eigen::Matrix<double, 2, 2> rotationMatrix;
+        Eigen::Matrix2d rotationMatrix;
         rotationMatrix << costh, -sinth,
                           sinth, costh;
         m_RobotVertices = m_RobotDimensions * rotationMatrix;
@@ -167,6 +152,27 @@ public:
     size_t getCollidedObjectId() const
     {
         return m_CollidedObjectId;
+    }
+
+    static void resizeObjectBy(Eigen::MatrixX2d &matrix, meter_t extraSize)
+    {
+        // Centre the object on the origin
+        const Eigen::Vector2d centre = matrix.colwise().mean();
+        Eigen::Matrix2d translation;
+        matrix.col(0).array() -= centre[0];
+        matrix.col(1).array() -= centre[1];
+
+        // Scale the object so we figure out the buffer zone around it
+        const double width = matrix.col(0).maxCoeff() - matrix.col(0).minCoeff();
+        const double scale = 1.0 + (extraSize.value() / width);
+        Eigen::Matrix2d scaleMatrix;
+        scaleMatrix << scale, 0,
+                       0, scale;
+        matrix *= scale;
+
+        // Translate the object back to its origin location
+        matrix.col(0).array() += centre[0];
+        matrix.col(1).array() += centre[1];
     }
 
 private:
