@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "assert.h"
+#include "geometry.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -32,6 +33,7 @@ public:
                       meter_t gridSize = 1_cm)
         : m_GridSize(gridSize)
         , m_RobotDimensions(vectorToEigen(robotDimensions))
+        , m_RobotVertices(m_RobotDimensions)
         , m_RobotVerticesPoints(robotDimensions.size())
         , m_XLower(inf())
         , m_YLower(inf())
@@ -50,7 +52,7 @@ public:
             auto matrix = vectorToEigen(object);
 
             // Scale the object to include a "buffer" around it
-            CollisionDetector::resizeObjectBy(matrix, bufferSize);
+            resizePolygonBy(matrix, bufferSize);
 
             // Store for later
             m_ResizedObjects.emplace_back(std::move(matrix));
@@ -152,27 +154,6 @@ public:
     size_t getCollidedObjectId() const
     {
         return m_CollidedObjectId;
-    }
-
-    static void resizeObjectBy(Eigen::MatrixX2d &matrix, meter_t extraSize)
-    {
-        // Centre the object on the origin
-        const Eigen::Vector2d centre = matrix.colwise().mean();
-        Eigen::Matrix2d translation;
-        matrix.col(0).array() -= centre[0];
-        matrix.col(1).array() -= centre[1];
-
-        // Scale the object so we figure out the buffer zone around it
-        const double width = matrix.col(0).maxCoeff() - matrix.col(0).minCoeff();
-        const double scale = 1.0 + (extraSize.value() / width);
-        Eigen::Matrix2d scaleMatrix;
-        scaleMatrix << scale, 0,
-                       0, scale;
-        matrix *= scale;
-
-        // Translate the object back to its origin location
-        matrix.col(0).array() += centre[0];
-        matrix.col(1).array() += centre[1];
     }
 
 private:
