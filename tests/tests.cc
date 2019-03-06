@@ -4,6 +4,9 @@
 // Google Test
 #include "gtest/gtest.h"
 
+// Standard C++ includes
+#include <string>
+
 // Put these using declarations here so we don't have to bother putting it in the test headers
 namespace BoBRobotics {}
 using namespace BoBRobotics;
