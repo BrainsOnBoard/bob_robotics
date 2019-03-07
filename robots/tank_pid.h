@@ -5,6 +5,7 @@
 #include "../common/fsm.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
+#include "../vicon/udp.h"
 #include "tank.h"
 
 // Third-party includes
@@ -19,8 +20,19 @@
 
 namespace BoBRobotics {
 namespace Robots {
-
 using namespace units::literals;
+
+// Forward declaration
+template<class PoseGetterType>
+class TankPID;
+
+template<class PoseGetterType, class... Args>
+auto createTankPID(Robots::Tank &tank,
+                           PoseGetterType &poseGetter,
+                           Args&&... otherArgs)
+{
+    return TankPID<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+}
 
 enum class TankPIDState
 {
@@ -30,8 +42,9 @@ enum class TankPIDState
     AtGoal
 };
 
+template<class PoseGetterType>
 class TankPID
-  : public FSM<TankPIDState>::StateHandler
+  : FSM<TankPIDState>::StateHandler
 {
     using meter_t = units::length::meter_t;
     using radian_t = units::angle::radian_t;
@@ -39,12 +52,15 @@ class TankPID
     using Event = FSM<TankPIDState>::StateHandler::Event;
 
 public:
-    TankPID(Tank &robot, float Kp, float Ki, float Kd,
+    TankPID(Tank &robot,
+            PoseGetterType &poseGetter,
+            float Kp, float Ki, float Kd,
             meter_t distanceTolerance = 5_cm,
             radian_t angleTolerance = 3_deg,
             radian_t startTurningThreshold = 45_deg, float averageSpeed = 0.5f)
       : m_StateMachine(this, TankPIDState::Invalid)
       , m_Robot(robot)
+      , m_PoseGetter(poseGetter)
       , m_DistanceTolerance(distanceTolerance)
       , m_AngleTolerance(angleTolerance)
       , m_StartTurningThreshold(startTurningThreshold)
@@ -54,7 +70,7 @@ public:
       , m_AverageSpeed(averageSpeed)
     {}
 
-    void start(const Vector2<meter_t> &goal)
+    void moveTo(const Vector2<meter_t> &goal)
     {
         m_Goal = goal;
 
@@ -67,10 +83,11 @@ public:
 
     auto &getRobot() { return m_Robot; }
     const auto &getRobot() const { return m_Robot; }
+    const auto &getPose() const { return m_RobotPose; }
 
-    bool driveRobot(const Pose2<meter_t, radian_t> &robotPose)
+    bool pollPositioner()
     {
-        m_RobotPose = robotPose;
+        m_RobotPose = m_PoseGetter.getPose();
         const radian_t headingToGoal = units::math::atan2(m_Goal.y() - m_RobotPose.y(),
                                                           m_Goal.x() - m_RobotPose.x());
         m_HeadingOffset = circularDistance(headingToGoal, m_RobotPose.yaw());
@@ -81,6 +98,19 @@ public:
         // Return true if we're at goal (within m_DistanceTolerance)
         return m_StateMachine.getCurrentState() == TankPIDState::AtGoal;
     }
+
+private:
+    FSM<TankPIDState> m_StateMachine;
+    Tank &m_Robot;
+    PoseGetterType &m_PoseGetter;
+    Pose2<meter_t, radian_t> m_RobotPose;
+    Vector2<meter_t> m_Goal;
+    const meter_t m_DistanceTolerance;
+    const radian_t m_AngleTolerance, m_StartTurningThreshold;
+    radian_t m_HeadingOffset;
+    double m_LastError = std::numeric_limits<double>::quiet_NaN();
+    Stopwatch m_Stopwatch;
+    const float m_Kp, m_Ki, m_Kd, m_AverageSpeed;
 
     virtual bool handleEvent(TankPIDState state, Event event) override
     {
@@ -162,18 +192,6 @@ public:
 
         return true;
     }
-
-private:
-    FSM<TankPIDState> m_StateMachine;
-    Tank &m_Robot;
-    Pose2<meter_t, radian_t> m_RobotPose;
-    Vector2<meter_t> m_Goal;
-    const meter_t m_DistanceTolerance;
-    const radian_t m_AngleTolerance, m_StartTurningThreshold;
-    radian_t m_HeadingOffset;
-    double m_LastError = std::numeric_limits<double>::quiet_NaN();
-    Stopwatch m_Stopwatch;
-    const float m_Kp, m_Ki, m_Kd, m_AverageSpeed;
 }; // TankPID
 } // Robots
 } // BoBRobotics
