@@ -11,7 +11,10 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
-// Standard C++ includes#
+// Standard C includes
+#include <cstring>
+
+// Standard C++ includes
 #include <vector>
 #include <stdexcept>
 
@@ -167,6 +170,7 @@ public:
 
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
+        memset(static_cast<void *>(&event), 0, sizeof(event));
         while (m_Window.pollEvent(event)) {
             if (handleEvents(event)) {
                 return event;
@@ -190,6 +194,7 @@ public:
 
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
+        memset(static_cast<void *>(&event), 0, sizeof(event));
         while (m_Window.pollEvent(event)) {
             if (handleEvents(event)) {
                 return event;
