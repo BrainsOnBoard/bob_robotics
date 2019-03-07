@@ -70,6 +70,8 @@ public:
       , m_AverageSpeed(averageSpeed)
     {}
 
+    void reset() {}
+
     void moveTo(const Vector2<meter_t> &goal)
     {
         m_Goal = goal;

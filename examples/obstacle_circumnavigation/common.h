@@ -90,7 +90,6 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
 
     // Objects for controlling circumnavigation
     CollisionDetector collisionDetector{ robotDimensions, objects, 20_cm, 1_cm };
-    const auto verts = collisionDetector.getRobotVertices();
     ObstacleCircumnavigator<PoseGetterType> circum(tank, poseGetter, collisionDetector);
 
     // Create drawable objects

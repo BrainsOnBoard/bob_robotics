@@ -22,9 +22,11 @@
 namespace BoBRobotics {
 using namespace units::literals;
 
-// Forward declaration
+// Forward declarations
 template<class PoseGetterType>
 class ObstacleCircumnavigator;
+template<class PositionerType, class PoseGetterType>
+class ObstacleAvoidingPositioner;
 
 template<class PoseGetterType, class... Args>
 auto createObstacleCircumnavigator(Robots::Tank &tank,
@@ -34,11 +36,59 @@ auto createObstacleCircumnavigator(Robots::Tank &tank,
     return ObstacleCircumnavigator<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
 }
 
+template<class PositionerType, class PoseGetterType>
+auto createObstacleAvoidingPositioner(PositionerType &positioner,
+                                      ObstacleCircumnavigator<PoseGetterType> &circumnavigator)
+{
+    return ObstacleAvoidingPositioner<PositionerType, PoseGetterType>{ positioner, circumnavigator };
+}
+
 enum class ObstacleCircumnavigatorState {
     DoingNothing,
     StartingCircumnavigation,
     Circumnavigating
 };
+
+template<class PositionerType, class PoseGetterType>
+class ObstacleAvoidingPositioner
+{
+public:
+    ObstacleAvoidingPositioner(PositionerType &positioner,
+                               ObstacleCircumnavigator<PoseGetterType> &circumnavigator)
+      : m_Positioner(positioner)
+      , m_Circumnavigator(circumnavigator)
+    {}
+
+    void reset()
+    {
+        m_Positioner.reset();
+    }
+
+    const auto &getPose() const
+    {
+        return m_Positioner.getPose();
+    }
+
+    template<class PoseType>
+    void moveTo(const PoseType &pose)
+    {
+        m_Positioner.moveTo(pose);
+    }
+
+    bool pollPositioner()
+    {
+        m_Circumnavigator.update();
+        if (m_Circumnavigator.getState() == ObstacleCircumnavigatorState::DoingNothing) {
+            return m_Positioner.pollPositioner();
+        } else {
+            return false;
+        }
+    }
+
+private:
+    PositionerType &m_Positioner;
+    ObstacleCircumnavigator<PoseGetterType> &m_Circumnavigator;
+}; // ObstacleAvoidingPositioner
 
 template<class PoseGetterType>
 class ObstacleCircumnavigator {
