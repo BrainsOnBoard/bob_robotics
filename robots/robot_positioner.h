@@ -133,6 +133,11 @@ public:
         return m_GoalPose;
     }
 
+    auto distanceToGoal() const
+    {
+        return m_DistanceToGoal;
+    }
+
     void reset()
     {
         m_Running = false;

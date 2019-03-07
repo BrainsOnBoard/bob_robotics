@@ -39,30 +39,19 @@ class RobotPositionerControl
 
 public:
     RobotPositionerControl(Robots::Tank &tank,
-                           Robots::RobotPositioner &positioner,
+                           Robots::RobotPositioner<Vicon::ObjectReference<>> &positioner,
                            HID::Joystick &joystick,
                            float joystickMaxSpeed = 1.f,
-                           float positionerMaxSpeed = 0.5f,
-                           float positionerMinSpeed = 0.2f,
-                           meter_t startSlowingDownAt = 40_cm)
+                           float positionerMaxSpeed = 0.5f)
       : m_Tank(tank)
-      , m_Vicon(51001)
       , m_Joystick(joystick)
       , m_Positioner(positioner)
       , m_StateMachine(this, InvalidState)
       , m_JoystickMaxSpeed(joystickMaxSpeed)
       , m_PositionerMaxSpeed(positionerMaxSpeed)
-      , m_PositionerMinSpeed(positionerMinSpeed)
-      , m_StartSlowingDownAt(startSlowingDownAt)
       , m_ReachedGoal(false)
       , m_StartHoming(false)
     {
-        // Wait for Vicon system to spot our robot
-        while (m_Vicon.getNumObjects() == 0) {
-            std::this_thread::sleep_for(1s);
-            std::cout << "Waiting for object" << std::endl;
-        }
-
         // Start controlling with joystick
         m_StateMachine.transition(ControlWithJoystick);
     }
@@ -139,25 +128,15 @@ public:
                 m_StartHoming = m_HomingStoppedHandler && m_HomingStoppedHandler(m_ReachedGoal);
                 break;
             case Event::Update: {
-                const auto objectData = m_Vicon.getObjectData(0);
-                const auto position = objectData.getPosition();
-                const auto attitude = objectData.getAttitude();
-                if (objectData.timeSinceReceived() > 10s) {
-                    std::cerr << "Error: Could not get position from Vicon system\n"
-                              << "Stopping trial" << std::endl;
 
-                    stopHoming();
-                    return true;
-                }
-
-                const auto distance = getGoalPose().distance2D(position);
-                if (m_Positioner.reachedGoal()) {
+                if (m_Positioner.pollPositioner()) {
+                    const auto &pose = m_Positioner.getPose();
                     std::cout << "Reached goal" << std::endl;
-                    std::cout << "Final position: " << position.x() << ", " << position.y() << std::endl;
+                    std::cout << "Final position: " << pose.x() << ", " << pose.y() << std::endl;
                     std::cout << "Goal: " << getGoalPose() << std::endl;
                     std::cout << "Distance to goal: "
-                              << distance
-                              << " (" << circularDistance(getGoalPose().yaw(), attitude[0]) << ")"
+                              << m_Positioner.distanceToGoal()
+                              << " (" << circularDistance(getGoalPose().yaw(), pose.yaw()) << ")"
                               << std::endl;
 
                     m_ReachedGoal = true;
@@ -165,20 +144,12 @@ public:
                     return true;
                 }
 
-                if (distance < m_StartSlowingDownAt) {
-                    const auto speedRange = m_PositionerMaxSpeed - m_PositionerMinSpeed;
-                    const auto speedProp = speedRange * distance / m_StartSlowingDownAt;
-                    m_Tank.setMaximumSpeedProportion(m_PositionerMinSpeed + speedProp);
-                }
-
-                m_Positioner.updateMotors(m_Tank, objectData.getPose());
-
                 // Print status
                 if (m_PrintTimer.elapsed() > 2s) {
                     m_PrintTimer.start();
                     std::cout << "Distance to goal: "
-                              << distance
-                              << " (" << circularDistance(getGoalPose().yaw(), attitude[0]) << ")"
+                              << m_Positioner.distanceToGoal()
+                              << " (" << circularDistance(getGoalPose().yaw(), m_Positioner.getPose().yaw()) << ")"
                               << std::endl;
                 }
             }
@@ -194,9 +165,9 @@ public:
         return true;
     }
 
-    void setGoalPose(const Pose2<meter_t, radian_t> &pose)
+    void moveTo(const Pose2<meter_t, radian_t> &pose)
     {
-        m_Positioner.setGoalPose(pose);
+        m_Positioner.moveTo(pose);
     }
 
     void startHoming()
@@ -216,16 +187,14 @@ public:
 
 private:
     Robots::Tank &m_Tank;
-    Vicon::UDPClient<> m_Vicon;
     HID::Joystick &m_Joystick;
-    Robots::RobotPositioner &m_Positioner;
+    Robots::RobotPositioner<Vicon::ObjectReference<>> &m_Positioner;
     FSM<RobotPositionerControlState> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
     std::function<void()> m_HomingStartedHandler;
     std::function<bool(bool)> m_HomingStoppedHandler;
-    const float m_JoystickMaxSpeed, m_PositionerMaxSpeed, m_PositionerMinSpeed;
-    const meter_t m_StartSlowingDownAt;
+    const float m_JoystickMaxSpeed, m_PositionerMaxSpeed;
     bool m_ReachedGoal;
     bool m_StartHoming;
 }; // RobotPositionerControl

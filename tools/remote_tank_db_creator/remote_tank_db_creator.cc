@@ -6,7 +6,8 @@
 #include "net/client.h"
 #include "robots/robot_positioner_control.h"
 #include "robots/tank_netsink.h"
-#include "video/netsource.h"
+#include "vicon/udp.h"
+#include "video/randominput.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -81,10 +82,18 @@ private:
 int
 bob_main(int, char **)
 {
+    HID::Joystick joystick;
+
     // Wrapper for image database
     std::unique_ptr<DatabaseRecorder> recorder;
 
-    HID::Joystick joystick;
+    // Connect to Vicon system
+    Vicon::UDPClient<> vicon(51001);
+    while (vicon.getNumObjects() == 0) {
+        std::this_thread::sleep_for(1s);
+        std::cout << "Waiting for object" << std::endl;
+    }
+    auto viconObject = vicon.getObjectReference(0);
 
     // Make connection to robot on default port
     Net::Client client;
@@ -93,7 +102,7 @@ bob_main(int, char **)
     Robots::TankNetSink tank(client);
 
     // Get images over network
-    Video::NetSource video(client);
+    Video::RandomInput<> video({ 720, 360 });
     cv::Mat fr;
 
     // Positioner parameters
@@ -105,19 +114,21 @@ bob_main(int, char **)
     constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
     // Object which drives robot to position
-    Robots::RobotPositioner positioner(StoppingDistance,
-                                       AllowedHeadingError,
-                                       K1,
-                                       K2,
-                                       Alpha,
-                                       Beta);
+    auto positioner = createRobotPositioner(tank,
+                                            viconObject,
+                                            StoppingDistance,
+                                            AllowedHeadingError,
+                                            K1,
+                                            K2,
+                                            Alpha,
+                                            Beta);
 
     // Handles joystick, Vicon system etc.
     Robots::RobotPositionerControl control(tank, positioner, joystick);
     control.setHomingStartedHandler([&recorder, &control]() {
         if (!recorder) {
             recorder = std::make_unique<DatabaseRecorder>();
-            control.setGoalPose(recorder->currentGoal());
+            control.moveTo(recorder->currentGoal());
         }
     });
     control.setHomingStoppedHandler([&](bool reachedGoal) {
@@ -128,7 +139,7 @@ bob_main(int, char **)
 
             // Save the image and, if there are more goals, aim for the next one
             if (recorder->recordAndMoveNext(fr)) {
-                control.setGoalPose(recorder->currentGoal());
+                control.moveTo(recorder->currentGoal());
                 control.startHoming();
                 return true;
             }
