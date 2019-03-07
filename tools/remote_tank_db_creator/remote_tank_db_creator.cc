@@ -36,7 +36,7 @@ class DatabaseRecorder {
 public:
     DatabaseRecorder()
       : m_Database(getNewDatabaseName())
-      , m_DatabaseRecorder(m_Database.getGridRecorder(xrange, yrange))
+      , m_DatabaseRecorder(m_Database.getGridRecorder<true>(xrange, yrange))
       , m_Goals(m_DatabaseRecorder.getPositions())
       , m_GoalsIter(m_Goals.begin())
     {}
@@ -62,7 +62,7 @@ public:
 
 private:
     Navigation::ImageDatabase m_Database;
-    Navigation::ImageDatabase::GridRecorder m_DatabaseRecorder;
+    Navigation::ImageDatabase::GridRecorder<true> m_DatabaseRecorder;
     std::vector<Vector3<millimeter_t>> m_Goals;
     decltype(m_Goals)::iterator m_GoalsIter;
 

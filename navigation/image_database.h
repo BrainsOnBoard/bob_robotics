@@ -42,7 +42,7 @@ struct Range
     const millimeter_t end;
     const millimeter_t separation;
 
-    Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd, const millimeter_t separation)
+    constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd, const millimeter_t separation)
       : begin(beginAndEnd.first)
       , end(beginAndEnd.second)
       , separation(separation)
@@ -55,7 +55,7 @@ struct Range
         }
     }
 
-    Range(const millimeter_t value)
+    constexpr Range(const millimeter_t value)
       : Range({value, value}, 0_mm)
     {}
 
@@ -182,6 +182,7 @@ public:
     };
 
     //! For recording a grid of images at a fixed heading
+    template<bool alternateX = false, bool alternateY = false>
     class GridRecorder : public Recorder {
     public:
         GridRecorder(ImageDatabase &imageDatabase, const Range &xrange, const Range &yrange,
@@ -192,7 +193,7 @@ public:
           , m_Begin(xrange.begin, yrange.begin, zrange.begin)
           , m_Separation(xrange.separation, yrange.separation, zrange.separation)
           , m_Size({ xrange.size(), yrange.size(), zrange.size() })
-          , m_Current({ 0, 0, 0 })
+          , m_Current(0)
         {
             BOB_ASSERT(!imageDatabase.isRoute());
 
@@ -202,10 +203,44 @@ public:
                    << "separationMM" << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
                    << "size" << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
                    << "}";
+
+            m_GridPositions.reserve(maximumSize());
+            bool xDecreasing = false, yDecreasing = false;
+            const auto xloop = [&](size_t y, size_t z)
+            {
+                if (xDecreasing) {
+                    for (int x = sizeX() - 1; x >= 0; x--) {
+                        const std::array<size_t, 3> pos = { (size_t) x, (size_t) y, z };
+                        m_GridPositions.push_back(pos);
+                    }
+                } else {
+                    for (int x = 0; x < (int) sizeX(); x++) {
+                        const std::array<size_t, 3> pos = { (size_t) x, (size_t) y, z };
+                        m_GridPositions.push_back(pos);
+                    }
+                }
+                if (alternateX) {
+                    xDecreasing = !xDecreasing;
+                }
+            };
+            for (size_t z = 0; z < sizeZ(); z++) {
+                if (yDecreasing) {
+                    for (int y = sizeY() - 1; y >= 0; y--) {
+                        xloop(y, z);
+                    }
+                } else {
+                    for (int y = 0; y < (int) sizeY(); y++) {
+                        xloop(y, z);
+                    }
+                }
+                if (alternateY) {
+                    yDecreasing = !yDecreasing;
+                }
+            }
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const
+        auto getPosition(const std::array<size_t, 3> &gridPosition) const
         {
             BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
             Vector3<millimeter_t> position;
@@ -216,34 +251,28 @@ public:
         }
 
         //! Get a vector of all possible positions for this grid
-        auto getPositions()
+        auto getPositions() const
         {
             std::vector<Vector3<millimeter_t>> positions;
             positions.reserve(maximumSize());
 
-            for (size_t x = 0; x < sizeX(); x++) {
-                for (size_t y = 0; y < sizeY(); y++) {
-                    for (size_t z = 0; z < sizeZ(); z++) {
-                        positions.emplace_back(getPosition({ x, y, z }));
-                    }
-                }
+            for (auto &gridPosition : m_GridPositions) {
+                positions.emplace_back(getPosition(gridPosition));
             }
             return positions;
         }
 
-        //! Save a new image into the database
-        void record(const cv::Mat &image)
+        auto getPosition() const
         {
-            BOB_ASSERT(m_Current[2] < sizeZ());
-            record(m_Current, image);
+            return getPosition(m_GridPositions[m_Current]);
+        }
 
-            if (++m_Current[0] == sizeX()) {
-                m_Current[0] = 0;
-                if (++m_Current[1] == sizeY()) {
-                    m_Current[1] = 0;
-                    m_Current[2]++;
-                }
-            }
+        //! Save a new image into the database
+        bool record(const cv::Mat &image)
+        {
+            BOB_ASSERT(m_Current < m_GridPositions.size());
+            record(m_GridPositions[m_Current], image);
+            return ++m_Current < m_GridPositions.size();
         }
 
         //! Save a new image into the database at the specified coordinates
@@ -262,8 +291,9 @@ public:
     private:
         const degree_t m_Heading;
         const Vector3<millimeter_t> m_Begin, m_Separation;
+        std::vector<std::array<size_t, 3>> m_GridPositions;
         const std::array<size_t, 3> m_Size;
-        std::array<size_t, 3> m_Current;
+        size_t m_Current;
     };
 
     //! For saving images recorded along a route
@@ -410,12 +440,13 @@ public:
     std::string getName() const { return m_Path.filename(); }
 
     //! Start recording a grid of images
-    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
-                                 const Range &zrange = Range(0_mm),
-                                 degree_t heading = 0_deg,
-                                 const std::string &imageFormat = "png")
+    template<bool alternateX = false, bool alternateY = false>
+    auto getGridRecorder(const Range &xrange, const Range &yrange,
+                         const Range &zrange = Range(0_mm),
+                         degree_t heading = 0_deg,
+                         const std::string &imageFormat = "png")
     {
-        return GridRecorder(*this, xrange, yrange, zrange, heading, imageFormat);
+        return GridRecorder<alternateX, alternateY>(*this, xrange, yrange, zrange, heading, imageFormat);
     }
 
     //! Start recording a route

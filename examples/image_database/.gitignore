@@ -1,0 +1,6 @@
+/image_database
+
+# Image databases
+*.png
+*.csv
+*.yaml
