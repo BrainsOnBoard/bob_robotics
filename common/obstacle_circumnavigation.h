@@ -22,39 +22,58 @@
 namespace BoBRobotics {
 using namespace units::literals;
 
+// Forward declaration
+template<class PoseGetterType>
+class ObstacleCircumnavigator;
+
+template<class PoseGetterType, class... Args>
+auto createObstacleCircumnavigator(Robots::Tank &tank,
+                                   PoseGetterType &poseGetter,
+                                   Args&&... otherArgs)
+{
+    return ObstacleCircumnavigator<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+}
+
+enum class ObstacleCircumnavigatorState {
+    DoingNothing,
+    StartingCircumnavigation,
+    Circumnavigating
+};
+
+template<class PoseGetterType>
 class ObstacleCircumnavigator {
     using meter_t = units::length::meter_t;
     using radian_t = units::angle::radian_t;
 
 public:
-    enum class State {
-        DoingNothing,
-        StartingCircumnavigation,
-        Circumnavigating
-    };
+    using State = ObstacleCircumnavigatorState;
 
     ObstacleCircumnavigator(Robots::Tank &robot,
+                            PoseGetterType &poseGetter,
                             CollisionDetector &collisionDetector,
                             meter_t stoppingDistance = 3_cm,
                             float kp = 0.1f,
                             float ki = 0.1f,
                             float kd = 0.1f,
                             float averageSpeed = 0.5f)
-        : m_TankPID(robot, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed)
+        : m_TankPID(robot, poseGetter, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed)
+        , m_PoseGetter(poseGetter)
         , m_CollisionDetector(collisionDetector)
     {}
 
-    void update(const Pose2<meter_t, radian_t> &robotPose)
+    void update()
     {
         if (m_PIDWaypoints.empty()) {
+            const auto pose = m_PoseGetter.getPose();
+
             // ... not following route
-            m_CollisionDetector.setRobotPose(robotPose);
+            m_CollisionDetector.setRobotPose(pose);
             if (m_CollisionDetector.collisionOccurred()) {
                 m_TankPID.getRobot().stopMoving();
-                startCircumnavigating(robotPose);
+                startCircumnavigating(pose);
             }
         } else {
-            updatePID(robotPose);
+            updatePID();
         }
     }
 
@@ -63,7 +82,8 @@ public:
     const auto &getPIDWaypoints() const { return m_PIDWaypoints; }
 
 private:
-    Robots::TankPID m_TankPID;
+    Robots::TankPID<PoseGetterType> m_TankPID;
+    PoseGetterType &m_PoseGetter;
     EigenSTDVector<Eigen::Matrix2d> m_ObjectLines;
     std::list<Vector2<meter_t>> m_PIDWaypoints;
     Eigen::MatrixX2d m_ObjectPerimeter;
@@ -150,16 +170,16 @@ private:
 
             // Start PID control of robot
             std::cout << "Driving to " << m_PIDWaypoints.front() << std::endl;
-            m_TankPID.start(m_PIDWaypoints.front());
+            m_TankPID.moveTo(m_PIDWaypoints.front());
             m_State = State::StartingCircumnavigation;
         }
     }
 
-    void updatePID(const Pose2<meter_t, radian_t> &robotPose)
+    void updatePID()
     {
         m_State = State::Circumnavigating;
 
-        if (m_TankPID.driveRobot(robotPose)) {
+        if (m_TankPID.pollPositioner()) {
             // ... then we've reached a waypoint
             m_PIDWaypoints.pop_front();
 
@@ -168,7 +188,7 @@ private:
                 m_State = State::DoingNothing;
             } else {
                 std::cout << "Driving to " << m_PIDWaypoints.front() << std::endl;
-                m_TankPID.start(m_PIDWaypoints.front());
+                m_TankPID.moveTo(m_PIDWaypoints.front());
             }
         }
     }

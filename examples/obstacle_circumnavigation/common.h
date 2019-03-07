@@ -91,7 +91,7 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
     // Objects for controlling circumnavigation
     CollisionDetector collisionDetector{ robotDimensions, objects, 20_cm, 1_cm };
     const auto verts = collisionDetector.getRobotVertices();
-    ObstacleCircumnavigator circum(tank, collisionDetector);
+    ObstacleCircumnavigator<PoseGetterType> circum(tank, poseGetter, collisionDetector);
 
     // Create drawable objects
     const auto &resizedObjects = collisionDetector.getResizedObjects();
@@ -108,11 +108,12 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
         // Extra functions specified by caller
         extraCalls();
 
-        const Pose2<meter_t, radian_t> pose = poseGetter.getPose();
-        circum.update(pose);
+        // Run circumnavigator
+        circum.update();
+        const auto &pose = poseGetter.getPose();
 
         // If we've just started circumnavigation, draw the waypoints on screen
-        if (circum.getState() == ObstacleCircumnavigator::State::StartingCircumnavigation) {
+        if (circum.getState() == ObstacleCircumnavigatorState::StartingCircumnavigation) {
             routeLines.clear();
 
             // The robot's location is the first point
@@ -126,7 +127,7 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
 
         // Render display
         car.setPose(pose);
-        if (circum.getState() == ObstacleCircumnavigator::State::DoingNothing) {
+        if (circum.getState() == ObstacleCircumnavigatorState::DoingNothing) {
             display.updateAndDrive(tank, objectShapes, car);
         } else {
             // Also draw routeLines
