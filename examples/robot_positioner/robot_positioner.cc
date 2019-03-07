@@ -37,7 +37,7 @@ enum State
 };
 
 class PositionerExample
-  : FSM<State>::StateHandler
+        : FSM<State>::StateHandler
 {
 private:
     using Event = FSM<State>::StateHandler::Event;
@@ -59,15 +59,18 @@ private:
 
 public:
     PositionerExample()
-      : m_Tank(m_Client)
-      , m_Vicon(51001)
-      , m_Positioner(StoppingDistance,
-                     AllowedHeadingError,
-                     K1,
-                     K2,
-                     Alpha,
-                     Beta)
-      , m_StateMachine(this, InvalidState)
+        : m_Tank(m_Client)
+        , m_Vicon(51001)
+        , m_Positioner(StoppingDistance,
+                       AllowedHeadingError,
+                       K1,
+                       K2,
+                       Alpha,
+                       Beta,
+                       StartSlowingDownAt,
+                       PositionerMinSpeed,
+                       PositionerMaxSpeed)
+        , m_StateMachine(this, InvalidState)
     {
         // Goal is currently hard-coded
         std::cout << "Goal: " << Goal << std::endl;
@@ -159,17 +162,10 @@ public:
                     std::cout << "Distance to goal: "
                               << Goal.distance2D(position)
                               << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                              << std::endl;
+                                                                                   << std::endl;
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
-                }
-
-                const auto distance = Goal.distance2D(position);
-                if (distance < StartSlowingDownAt) {
-                    const auto speedRange = PositionerMaxSpeed - PositionerMinSpeed;
-                    const auto speedProp = speedRange * distance / StartSlowingDownAt;
-                    m_Tank.setMaximumSpeedProportion(PositionerMinSpeed + speedProp);
                 }
 
                 m_Positioner.updateMotors(m_Tank, objectData.getPose());
@@ -178,9 +174,9 @@ public:
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
                     std::cout << "Distance to goal: "
-                                << distance
-                                << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                                << std::endl;
+                              << Goal.distance2D(position)
+                              << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
+                                                                                   << std::endl;
                 }
             }
             }

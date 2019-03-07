@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/assert.h"
 #include "../common/circstat.h"
 #include "../common/pose.h"
 #include "../robots/tank.h"
@@ -43,6 +44,8 @@ private:
     const double m_K2;                    // speed of turning on the curves
     const double m_Alpha;                 // causes more sharply peaked curves
     const double m_Beta;                  // causes to drop velocity if 'k'(curveness) increases
+    const meter_t m_StartSlowingAt;
+    const float m_MinSpeed, m_MaxSpeed;
     bool m_Running = false;
 
     // updates the range and bearing from the goal location
@@ -66,21 +69,31 @@ private:
     //-----------------PUBLIC API---------------------------------------------------------------------
 public:
     RobotPositioner(
-
             meter_t stoppingDistance,     // if the robot's distance from goal < stopping dist, robot stops
             radian_t allowedHeadingError, // the amount of error allowed in the final heading
             double k1,                    // curveness of the path to the goal
             double k2,                    // speed of turning on the curves
             double alpha,                 // causes more sharply peaked curves
-            double beta                   // causes to drop velocity if 'k'(curveness) increases
-            )
+            double beta,                  // causes to drop velocity if 'k'(curveness) increases
+            meter_t startSlowingAt = 0_m,
+            float robotMinSpeed = 0.2f,
+            float robotMaxSpeed = 1.0f)
       : m_StoppingDistance(stoppingDistance)
       , m_AllowedHeadingError(allowedHeadingError)
       , m_K1(k1)
       , m_K2(k2)
       , m_Alpha(alpha)
       , m_Beta(beta)
-    {}
+      , m_StartSlowingAt(startSlowingAt)
+      , m_MinSpeed(robotMinSpeed)
+      , m_MaxSpeed(robotMaxSpeed)
+    {
+        BOB_ASSERT(stoppingDistance >= 0_m);
+        BOB_ASSERT(allowedHeadingError >= 0_rad);
+        BOB_ASSERT(startSlowingAt >= 0_m);
+        BOB_ASSERT(robotMaxSpeed >= 0.f && robotMaxSpeed <= 1.f);
+        BOB_ASSERT(robotMinSpeed >= 0.f && robotMinSpeed <= 1.f);
+    }
 
     //! sets the goal pose (x, y, angle)
     void setGoalPose(const Pose2<meter_t, radian_t> &pose)
@@ -107,7 +120,7 @@ public:
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
-            const Tank &bot,
+            Tank &bot,
             meters_per_second_t &v,      // velocity to update
             radians_per_second_t &omega) // angular velocity to update
     {
@@ -123,6 +136,13 @@ public:
             const radians_per_second_t maxTurnSpeed = bot.getMaximumTurnSpeed();
             omega = (m_HeadingToGoal < 0_rad) ? -maxTurnSpeed : maxTurnSpeed;
             return;
+        }
+
+        // Extra logic for slowing the robot as it approaches the goal
+        if (m_DistanceToGoal < m_StartSlowingAt) {
+            const auto speedRange = m_MaxSpeed - m_MinSpeed;
+            const auto speedProp = speedRange * m_DistanceToGoal / m_StartSlowingAt;
+            bot.setMaximumSpeedProportion(m_MinSpeed + speedProp);
         }
 
         // orientation of Target with respect to the line of sight from the observer to the target
