@@ -134,9 +134,9 @@ private:
                     // Start driving to the goal in a straight(ish) line
                     m_StateMachine.transition(TankPIDState::DrivingToGoal);
                 } else if (m_HeadingOffset < 0_deg) {
-                    m_Robot.tank(1.f, -1.f);
+                    m_Robot.tank(0.4f, -0.4f);
                 } else {
-                    m_Robot.tank(-1.f, 1.f);
+                    m_Robot.tank(-0.4f, 0.4f);
                 }
             } else { // Exit
                 m_Robot.stopMoving();
