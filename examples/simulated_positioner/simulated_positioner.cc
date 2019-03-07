@@ -52,13 +52,9 @@ main()
             beta);
 
     bool runPositioner = false;
-    bool reachedGoalAnnounced = false;
     while (display.isOpen()) {
-        // Get the robot's current pose
-        const auto pose = positioner.getPoseFromGetter();
-
         // Run GUI events
-        car.setPose(pose);
+        car.setPose(robot.getPose());
         const sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
         // Spacebar toggles whether positioner is running
@@ -80,14 +76,9 @@ main()
 
             // Check if the robot is within threshold distance and bearing of goal
             if (positioner.pollPositioner()) {
-
-                if (!reachedGoalAnnounced) {
-                    std::cout << "Reached goal" << std::endl;
-                    robot.stopMoving();
-                    reachedGoalAnnounced = true;
-                }
-            } else {
-                reachedGoalAnnounced = false;
+                runPositioner = false;
+                std::cout << "Reached goal" << std::endl;
+                robot.stopMoving();
             }
         }
 

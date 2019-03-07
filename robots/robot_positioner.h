@@ -128,11 +128,6 @@ public:
         return m_RobotPose;
     }
 
-    const auto getPoseFromGetter()
-    {
-        return m_PoseGetter.getPose();
-    }
-
     void reset()
     {
         m_Running = false;
