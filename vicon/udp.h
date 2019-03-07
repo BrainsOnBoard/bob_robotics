@@ -21,6 +21,7 @@ namespace BoBRobotics
 {
 namespace Vicon
 {
+using namespace std::literals;
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
@@ -217,7 +218,7 @@ class ObjectReference
 public:
     ObjectReference(UDPClient<ObjectDataType> &client,
                     const unsigned id,
-                    const Stopwatch::Duration timeoutDuration)
+                    const Stopwatch::Duration timeoutDuration = 10s)
         : m_Client(client)
         , m_Id(id)
         , m_TimeoutDuration(timeoutDuration)
