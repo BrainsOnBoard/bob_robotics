@@ -29,6 +29,21 @@ using namespace units::angular_velocity;
 using namespace units::velocity;
 using namespace std::literals;
 
+// Positioner parameters
+static constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
+static constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
+static constexpr double K1 = 0.2;                      // curveness of the path to the goal
+static constexpr double K2 = 5;                        // speed of turning on the curves
+static constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
+static constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
+const Pose2<millimeter_t, degree_t> Goal{ 0_mm, 0_mm, 15_deg };
+
+// Speed parameters
+static constexpr float JoystickMaxSpeed = 1.f;
+static constexpr float PositionerMaxSpeed = 0.5f;
+static constexpr float PositionerMinSpeed = 0.2f;
+static constexpr meter_t StartSlowingDownAt = 40_cm;
+
 enum State
 {
     InvalidState,
@@ -37,44 +52,32 @@ enum State
 };
 
 class PositionerExample
-        : FSM<State>::StateHandler
+  : FSM<State>::StateHandler
 {
 private:
     using Event = FSM<State>::StateHandler::Event;
 
-    // Positioner parameters
-    static constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
-    static constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-    static constexpr double K1 = 0.2;                      // curveness of the path to the goal
-    static constexpr double K2 = 5;                        // speed of turning on the curves
-    static constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
-    static constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
-    const Pose2<millimeter_t, degree_t> Goal{ 0_mm, 0_mm, 15_deg };
-
-    // Speed parameters
-    static constexpr float JoystickMaxSpeed = 1.f;
-    static constexpr float PositionerMaxSpeed = 0.5f;
-    static constexpr float PositionerMinSpeed = 0.2f;
-    static constexpr meter_t StartSlowingDownAt = 40_cm;
-
 public:
     PositionerExample()
-        : m_Tank(m_Client)
-        , m_Vicon(51001)
-        , m_Positioner(StoppingDistance,
-                       AllowedHeadingError,
-                       K1,
-                       K2,
-                       Alpha,
-                       Beta,
-                       StartSlowingDownAt,
-                       PositionerMinSpeed,
-                       PositionerMaxSpeed)
-        , m_StateMachine(this, InvalidState)
+      : m_Tank(m_Client)
+      , m_Vicon(51001)
+      , m_ViconObject(m_Vicon.getObjectReference(0))
+      , m_Positioner(m_Tank,
+                     m_ViconObject,
+                     StoppingDistance,
+                     AllowedHeadingError,
+                     K1,
+                     K2,
+                     Alpha,
+                     Beta,
+                     StartSlowingDownAt,
+                     PositionerMinSpeed,
+                     PositionerMaxSpeed)
+      , m_StateMachine(this, InvalidState)
     {
         // Goal is currently hard-coded
         std::cout << "Goal: " << Goal << std::endl;
-        m_Positioner.setGoalPose(Goal);
+        m_Positioner.moveTo(Goal);
 
         // Wait for Vicon system to spot our robot
         while (m_Vicon.getNumObjects() == 0) {
@@ -144,10 +147,21 @@ public:
                 m_PrintTimer.reset();
                 break;
             case Event::Update: {
-                const auto objectData = m_Vicon.getObjectData(0);
-                const auto position = objectData.getPosition();
-                const auto attitude = objectData.getAttitude();
-                if (objectData.timeSinceReceived() > 10s) {
+                try {
+                    if (m_Positioner.pollPositioner()) {
+                        const auto &finalPose = m_Positioner.getPose();
+                        std::cout << "Reached goal" << std::endl;
+                        std::cout << "Final position: " << finalPose.x() << ", " << finalPose.y() << std::endl;
+                        std::cout << "Goal: " << Goal << std::endl;
+                        std::cout << "Distance to goal: "
+                                  << Goal.distance2D(finalPose)
+                                  << " (" << circularDistance(Goal.yaw(), finalPose.yaw()) << ")"
+                                  << std::endl;
+
+                        m_StateMachine.transition(ControlWithJoystick);
+                        return true;
+                    }
+                } catch (Vicon::TimedOutError &) {
                     std::cerr << "Error: Could not get position from Vicon system\n"
                               << "Stopping trial" << std::endl;
 
@@ -155,28 +169,15 @@ public:
                     return true;
                 }
 
-                if (m_Positioner.reachedGoal()) {
-                    std::cout << "Reached goal" << std::endl;
-                    std::cout << "Final position: " << position.x() << ", " << position.y() << std::endl;
-                    std::cout << "Goal: " << Goal << std::endl;
-                    std::cout << "Distance to goal: "
-                              << Goal.distance2D(position)
-                              << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                                                                                   << std::endl;
-
-                    m_StateMachine.transition(ControlWithJoystick);
-                    return true;
-                }
-
-                m_Positioner.updateMotors(m_Tank, objectData.getPose());
-
                 // Print status
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
+
+                    const auto &pose = m_Positioner.getPose();
                     std::cout << "Distance to goal: "
-                              << Goal.distance2D(position)
-                              << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                                                                                   << std::endl;
+                              << Goal.distance2D(pose)
+                              << " (" << circularDistance(Goal.yaw(), pose.yaw()) << ")"
+                              << std::endl;
                 }
             }
             }
@@ -191,8 +192,9 @@ private:
     Net::Client m_Client;
     Robots::TankNetSink m_Tank;
     Vicon::UDPClient<> m_Vicon;
+    Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
-    Robots::RobotPositioner m_Positioner;
+    Robots::RobotPositioner<Vicon::ObjectReference<>> m_Positioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;

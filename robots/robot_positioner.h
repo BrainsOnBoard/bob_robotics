@@ -16,6 +16,18 @@ namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
 
+// Forward declaration
+template<class PoseGetterType>
+class RobotPositioner;
+
+template<class PoseGetterType, class... Args>
+auto createRobotPositioner(Robots::Tank &tank,
+                           PoseGetterType &poseGetter,
+                           Args&&... otherArgs)
+{
+    return RobotPositioner<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+}
+
 /*!
  * \brief A tool for moving a tank robot to a specified position in space
  *
@@ -23,6 +35,7 @@ using namespace units::literals;
  * with, e.g. a Vicon system (see Vicon::UDPClient). The algorithm used is drawn
  * from: https://web.eecs.umich.edu/~kuipers/papers/Park-icra-11.pdf
  */
+template<class PoseGetterType>
 class RobotPositioner
 {
     using meter_t = units::length::meter_t;
@@ -31,6 +44,10 @@ class RobotPositioner
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 private:
+    // Hardware
+    Robots::Tank &m_Tank;
+    PoseGetterType &m_PoseGetter;
+
     // Robot variables
     Pose2<meter_t, radian_t> m_RobotPose;
     Pose2<meter_t, radian_t> m_GoalPose;
@@ -51,7 +68,6 @@ private:
     // updates the range and bearing from the goal location
     void updateRangeAndBearing()
     {
-
         const meter_t delta_x = m_GoalPose.x() - m_RobotPose.x();
         const meter_t delta_y = m_GoalPose.y() - m_RobotPose.y();
 
@@ -69,6 +85,8 @@ private:
     //-----------------PUBLIC API---------------------------------------------------------------------
 public:
     RobotPositioner(
+            Robots::Tank &tank,
+            PoseGetterType &poseGetter,
             meter_t stoppingDistance,     // if the robot's distance from goal < stopping dist, robot stops
             radian_t allowedHeadingError, // the amount of error allowed in the final heading
             double k1,                    // curveness of the path to the goal
@@ -77,8 +95,10 @@ public:
             double beta,                  // causes to drop velocity if 'k'(curveness) increases
             meter_t startSlowingAt = 0_m,
             float robotMinSpeed = 0.2f,
-            float robotMaxSpeed = 1.0f)
-      : m_StoppingDistance(stoppingDistance)
+            float robotMaxSpeed = 1.f)
+      : m_Tank(tank)
+      , m_PoseGetter(poseGetter)
+      , m_StoppingDistance(stoppingDistance)
       , m_AllowedHeadingError(allowedHeadingError)
       , m_K1(k1)
       , m_K2(k2)
@@ -95,20 +115,22 @@ public:
         BOB_ASSERT(robotMinSpeed >= 0.f && robotMinSpeed <= 1.f);
     }
 
-    //! sets the goal pose (x, y, angle)
-    void setGoalPose(const Pose2<meter_t, radian_t> &pose)
+    void moveTo(const Pose2<meter_t, radian_t> &pose)
     {
         m_GoalPose = pose;
-        updateRangeAndBearing();
-    }
-
-    //! updates the agent's current pose
-    void setPose(const Pose2<meter_t, radian_t> &pose)
-    {
-        m_RobotPose = pose;
 
         // Recompute heading and distance from goal
         updateRangeAndBearing();
+    }
+
+    const auto &getPose() const
+    {
+        return m_RobotPose;
+    }
+
+    const auto getPoseFromGetter()
+    {
+        return m_PoseGetter.getPose();
     }
 
     void reset()
@@ -116,11 +138,32 @@ public:
         m_Running = false;
     }
 
+    bool pollPositioner()
+    {
+        // Update robot's position
+        m_RobotPose = m_PoseGetter.getPose();
+        updateRangeAndBearing();
+
+        // Calculate velocities for new course
+        meters_per_second_t v;
+        radians_per_second_t omega;
+        updateVelocities(v, omega);
+
+        /*
+         * Drive robot with specified velocities.
+         * We invert the turning direction because we're counting anti-clockwise
+         * for the robot's pose, but the Tank interface turns robots clockwise.
+         * If the motor commands are out of range, they will be scaled down.
+         */
+        m_Tank.move(v, -omega, true);
+
+        return reachedGoal();
+    }
+
     //! updates the velocities in order to get to a goal location. This function can be used
     //! without a robot interface, where only velocities are calculated but no robot actions
     //! will be executed.
     void updateVelocities(
-            Tank &bot,
             meters_per_second_t &v,      // velocity to update
             radians_per_second_t &omega) // angular velocity to update
     {
@@ -133,7 +176,7 @@ public:
          */
         if (m_DistanceToGoal == 0_m) {
             v = 0_mps;
-            const radians_per_second_t maxTurnSpeed = bot.getMaximumTurnSpeed();
+            const radians_per_second_t maxTurnSpeed = m_Tank.getMaximumTurnSpeed();
             omega = (m_HeadingToGoal < 0_rad) ? -maxTurnSpeed : maxTurnSpeed;
             return;
         }
@@ -142,7 +185,7 @@ public:
         if (m_DistanceToGoal < m_StartSlowingAt) {
             const auto speedRange = m_MaxSpeed - m_MinSpeed;
             const auto speedProp = speedRange * m_DistanceToGoal / m_StartSlowingAt;
-            bot.setMaximumSpeedProportion(m_MinSpeed + speedProp);
+            m_Tank.setMaximumSpeedProportion(m_MinSpeed + speedProp);
         }
 
         // orientation of Target with respect to the line of sight from the observer to the target
@@ -157,28 +200,8 @@ public:
 
         const auto k = -(part1 + part2) / m_DistanceToGoal; // in rad/mm
 
-        v = bot.getMaximumSpeed() / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
+        v = m_Tank.getMaximumSpeed() / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
         omega = k * v;
-    }
-
-    //! This function will update the motors so it drives towards a previously set goal location
-    void updateMotors(BoBRobotics::Robots::Tank &bot,
-                      const Pose2<meter_t, radian_t> &pose)
-    {
-        setPose(pose);
-
-        // Calculate velocities for new course
-        meters_per_second_t v;
-        radians_per_second_t omega;
-        updateVelocities(bot, v, omega);
-
-        /*
-         * Drive robot with specified velocities.
-         * We invert the turning direction because we're counting anti-clockwise
-         * for the robot's pose, but the Tank interface turns robots clockwise.
-         * If the motor commands are out of range, they will be scaled down.
-         */
-        bot.move(v, -omega, true);
     }
 
     //! returns true if the robot reached the goal position

@@ -41,7 +41,9 @@ main()
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
     // construct the positioner
-    Robots::RobotPositioner robp(
+    auto positioner = Robots::createRobotPositioner(
+            robot,
+            robot,
             stoppingDistance,
             allowedHeadingError,
             k1,
@@ -53,11 +55,11 @@ main()
     bool reachedGoalAnnounced = false;
     while (display.isOpen()) {
         // Get the robot's current pose
-        const auto &pose = robot.getPose();
+        const auto pose = positioner.getPoseFromGetter();
 
         // Run GUI events
         car.setPose(pose);
-        sf::Event event = display.updateAndDrive(robot, goalCircle, car);
+        const sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
         // Spacebar toggles whether positioner is running
         if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
@@ -71,16 +73,14 @@ main()
                 const auto mousePosition = display.mouseClickPosition();
 
                 // Set the goal to this position
-                robp.setGoalPose({ mousePosition.x(), mousePosition.y(), 15_deg });
+                positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
 
                 goalCircle.setPosition(display.vectorToPixel(mousePosition));
             }
 
-            // Update course and drive robot
-            robp.updateMotors(robot, pose);
-
             // Check if the robot is within threshold distance and bearing of goal
-            if (robp.reachedGoal()) {
+            if (positioner.pollPositioner()) {
+
                 if (!reachedGoalAnnounced) {
                     std::cout << "Reached goal" << std::endl;
                     robot.stopMoving();
