@@ -296,7 +296,7 @@ public:
     {
         if (overwrite && databasePath.exists()) {
             std::cerr << "Warning: Database already exists; overwriting" << std::endl;
-            filesystem::remove_all(databasePath);
+            deleteAll();
 		}
 
         // If we don't have any entries, it's an empty database
@@ -355,6 +355,8 @@ public:
             m_Entries.push_back(entry);
         }
     }
+
+    void deleteAll() { filesystem::remove_all(m_Path); }
 
     //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const { return m_Path; }

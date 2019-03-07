@@ -128,6 +128,11 @@ public:
         return m_RobotPose;
     }
 
+    const auto &getGoalPose() const
+    {
+        return m_GoalPose;
+    }
+
     void reset()
     {
         m_Running = false;
