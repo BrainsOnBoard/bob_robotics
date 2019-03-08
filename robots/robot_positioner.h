@@ -123,6 +123,18 @@ public:
         updateRangeAndBearing();
     }
 
+    template<class Func>
+    bool moveToSync(const Pose2<meter_t, radian_t> &pose, Func extraCalls)
+    {
+        moveTo(pose);
+        while (pollPositioner()) {
+            if (!extraCalls()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     const auto &getPose() const
     {
         return m_RobotPose;

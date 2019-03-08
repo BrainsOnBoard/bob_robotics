@@ -83,6 +83,18 @@ public:
         m_StateMachine.transition(TankPIDState::OrientingToGoal);
     }
 
+    template<class Func>
+    bool moveToSync(const Vector2<meter_t> &position, Func extraCalls)
+    {
+        moveTo(position);
+        while (pollPositioner()) {
+            if (!extraCalls()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     auto &getRobot() { return m_Robot; }
     const auto &getRobot() const { return m_Robot; }
     const auto &getPose() const { return m_RobotPose; }

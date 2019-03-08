@@ -123,6 +123,26 @@ public:
         m_Pose.attitude() = { yaw, pitch, roll };
     }
 
+    void moveTo(const Pose3<meter_t, degree_t> &pose)
+    {
+        BOB_ASSERT(m_MoveMode == MoveMode::NotMoving);
+        m_Pose = pose;
+    }
+
+    template<class Func>
+    bool moveToSync(const Pose3<meter_t, degree_t> &pose, Func)
+    {
+        moveTo(pose);
+        return true;
+    }
+
+    template<class Func>
+    bool moveTo(const Pose3<meter_t, degree_t> &pose, Func)
+    {
+        moveTo(pose);
+        return true;
+    }
+
     bool update()
     {
         // Render to m_Window

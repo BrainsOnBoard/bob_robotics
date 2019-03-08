@@ -75,6 +75,12 @@ public:
         m_Positioner.moveTo(pose);
     }
 
+    template<class PoseType>
+    void moveToSync(const PoseType &pose)
+    {
+        m_Positioner.moveToSync(pose);
+    }
+
     bool pollPositioner()
     {
         m_Circumnavigator.update();
