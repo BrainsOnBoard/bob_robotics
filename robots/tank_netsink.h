@@ -79,8 +79,10 @@ public:
         stopReadingFromNetwork();
     }
 
-    virtual void setMaximumSpeedProportion(float value, bool) override
+    virtual void setMaximumSpeedProportion(float value, bool recalcSpeed = false) override
     {
+        (void) recalcSpeed;
+
         if (value != getMaximumSpeedProportion()) {
             Tank::setMaximumSpeedProportion(value, false);
 
