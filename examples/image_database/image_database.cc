@@ -24,6 +24,16 @@ auto getNewDatabaseName()
     return databaseName;
 }
 
+struct Agent
+{
+    template<class PositionType, class Func>
+    bool moveToSync(const PositionType &position, Func)
+    {
+        std::cout << "Position: " << position << std::endl;
+        return true;
+    }
+};
+
 int main()
 {
     /*
@@ -37,14 +47,10 @@ int main()
     constexpr Navigation::Range zrange({ 10_mm, 30_mm }, 10_mm);
 
     // Fake camera device
-    Video::RandomInput<> camera({ 200, 100 });
+    Video::RandomInput<> video({ 200, 100 });
 
     Navigation::ImageDatabase database(getNewDatabaseName());
     auto recorder = database.getGridRecorder<alternateX, alternateY>(xrange, yrange, zrange);
-    cv::Mat image;
-    do {
-        // NB: For a real agent, this is where you would set the position
-        std::cout << "Position: " << recorder.getPosition() << std::endl;
-        camera.readFrame(image);
-    } while (recorder.record(image));
+    Agent agent;
+    recorder.run(agent, video);
 }

@@ -4,6 +4,7 @@
 #include "../common/assert.h"
 #include "../common/pose.h"
 #include "../imgproc/opencv_unwrap_360.h"
+#include "../video/input.h"
 
 // Third-party includes
 #include "../third_party/path.h"
@@ -181,6 +182,14 @@ public:
         }
     };
 
+    struct Noop
+    {
+        bool operator()()
+        {
+            return true;
+        }
+    };
+
     //! For recording a grid of images at a fixed heading
     template<bool alternateX = false, bool alternateY = false>
     class GridRecorder : public Recorder {
@@ -281,6 +290,24 @@ public:
             const auto position = getPosition(gridPosition);
             const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
             addEntry(filename, image, position, m_Heading, { gridPosition[0], gridPosition[1], gridPosition[2] });
+        }
+
+        template<class AgentType, class Func = Noop>
+        bool run(AgentType &agent, Video::Input &video, Func extraCalls = Noop())
+        {
+            BOB_ASSERT(m_Current == 0);
+
+            cv::Mat fr;
+            for (auto &gridPosition : m_GridPositions) {
+                const auto pos = getPosition(gridPosition);
+                if (!agent.moveToSync(pos, extraCalls)) {
+                    return false;
+                }
+
+                video.readFrameSync(fr);
+                record(gridPosition, fr);
+            }
+            return true;
         }
 
         size_t maximumSize() const { return sizeX() * sizeY() * sizeZ(); }
