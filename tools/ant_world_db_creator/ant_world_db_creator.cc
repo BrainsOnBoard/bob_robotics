@@ -19,9 +19,9 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <string>
 #include <fstream>
 #include <iostream>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -39,119 +39,33 @@ using namespace units::math;
 *      -- AD
 */
 const cv::Size RenderSize{ 720, 150 };
+constexpr millimeter_t AgentHeight = 1_cm;
 
-class AntWorldDatabaseCreator {
-protected:
-    ImageDatabase m_Database;
-    GLFWwindow *m_Window;
-    AntWorld::Renderer m_Renderer;
-    AntWorld::AntAgent m_Agent;
-
-    AntWorldDatabaseCreator(const std::string &databaseName, GLFWwindow *window)
-      : m_Database(databaseName)
-      , m_Window(window)
-      , m_Renderer(256, 0.001, 1000.0, 360_deg)
-      , m_Agent(window, m_Renderer, RenderSize)
-    {
-        BOB_ASSERT(m_Database.empty());
-
-        // Create renderer
-        m_Renderer.getWorld().load("../../libantworld/world5000_gray.bin",
-                                   {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
-    }
-
-    template<typename PoseVectorType, typename RecordOp>
-    void run(const PoseVectorType &poses, RecordOp record)
-    {
-        // Host OpenCV array to hold pixels read from screen
-        cv::Mat frame(RenderSize, CV_8UC3);
-
-        for (auto it = poses.cbegin(); !glfwWindowShouldClose(m_Window) && it < poses.cend(); ++it) {
-            // Update agent's position
-            m_Agent.setPosition(it->x(), it->y(), AgentHeight);
-            m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
-
-            // Get current view
-            m_Agent.readFrameSync(frame);
-
-            // Write to image database
-            record(frame);
-        }
-    }
-
-    void addMetadata(ImageDatabase::Recorder &recorder)
-    {
-        // Record "camera" info
-        auto &metadata = recorder.getMetadataWriter();
-        metadata << "camera" << m_Agent
-                 << "needsUnwrapping" << false
-                 << "isGreyscale" << false;
-    }
-
-    const millimeter_t AgentHeight = 1_cm;
-};
-
-class GridDatabaseCreator : AntWorldDatabaseCreator {
-public:
-    GridDatabaseCreator(GLFWwindow *window)
-      : AntWorldDatabaseCreator("world5000_grid", window)
-    {}
-
-    void runForGrid()
-    {
-        const millimeter_t gridSpacing = 10_cm;
-
-        // Get world bounds
-        const auto &worldMinBound = m_Renderer.getWorld().getMinBound();
-        const auto &worldMaxBound = m_Renderer.getWorld().getMaxBound();
-
-        // Make GridRecorder
-        Range xrange({worldMinBound[0], worldMaxBound[0]}, gridSpacing);
-        Range yrange({worldMinBound[1], worldMaxBound[1]}, gridSpacing);
-        auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, AgentHeight);
-        addMetadata(gridRecorder);
-
-        // Record image database
-        run(gridRecorder.getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder.record(image); });
-    }
-};
-
-class RouteDatabaseCreator : AntWorldDatabaseCreator {
-public:
-    RouteDatabaseCreator(const std::string &databaseName, GLFWwindow *window,
-                         AntWorld::RouteContinuous &route)
-      : AntWorldDatabaseCreator(databaseName, window)
-      , m_Route(route)
-    {}
-
-    void runForRoute()
-    {
-        const millimeter_t pathStep = 1_cm;
-
-        // Make vector of agent's poses
-        std::vector<Pose2<meter_t, degree_t>> poses;
-        for (auto distance = 0_mm; distance < m_Route.getLength(); distance += pathStep) {
-            poses.emplace_back(m_Route.getPose(distance));
-        }
-
-        // Record image database
-        auto routeRecorder = m_Database.getRouteRecorder();
-        addMetadata(routeRecorder);
-
-        run(poses, [&routeRecorder, this](const cv::Mat &image) {
-            const auto pos = m_Agent.getPosition();
-            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
-        });
-    }
-
-private:
-    AntWorld::RouteContinuous &m_Route;
-};
+void
+addMetadata(const AntWorld::AntAgent &agent, ImageDatabase::Recorder &recorder)
+{
+    // Record "camera" info
+    auto &metadata = recorder.getMetadataWriter();
+    metadata << "camera" << agent
+             << "needsUnwrapping" << false
+             << "isGreyscale" << false;
+}
 
 int
 main(int argc, char **argv)
 {
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
+    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
+    AntWorld::AntAgent agent(window.get(), renderer, RenderSize);
+
+    // Load world
+    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+                             { 0.0f, 1.0f, 0.0f },
+                             { 0.898f, 0.718f, 0.353f });
+
+    const auto checkWindow = [&window]() {
+        return !glfwWindowShouldClose(window.get());
+    };
 
     if (argc > 1) {
         // Create route object and load route file specified by command line
@@ -167,10 +81,38 @@ main(int argc, char **argv)
             databaseName = databaseName.substr(0, pos);
         }
 
-        RouteDatabaseCreator creator(databaseName, window.get(), route);
-        creator.runForRoute();
+        constexpr millimeter_t pathStep = 1_cm;
+
+        // Make vector of agent's poses
+        std::vector<Pose3<millimeter_t, degree_t>> poses;
+        for (auto distance = 0_mm; distance < route.getLength(); distance += pathStep) {
+            Pose3<millimeter_t, degree_t> pose = route.getPose(distance);
+            pose.z() = AgentHeight;
+            poses.push_back(pose);
+        }
+
+        Navigation::ImageDatabase database(databaseName);
+        auto routeRecorder = database.getRouteRecorder();
+        addMetadata(agent, routeRecorder);
+
+        // Save images
+        routeRecorder.run(agent, agent, poses, checkWindow);
     } else {
-        GridDatabaseCreator creator(window.get());
-        creator.runForGrid();
+        Navigation::ImageDatabase database("world5000_grid");
+
+        const millimeter_t gridSpacing = 10_cm;
+
+        // Get world bounds
+        const auto &worldMinBound = renderer.getWorld().getMinBound();
+        const auto &worldMaxBound = renderer.getWorld().getMaxBound();
+
+        // Make GridRecorder
+        Range xrange({ worldMinBound[0], worldMaxBound[0] }, gridSpacing);
+        Range yrange({ worldMinBound[1], worldMaxBound[1] }, gridSpacing);
+        auto gridRecorder = database.getGridRecorder(xrange, yrange, AgentHeight);
+        addMetadata(agent, gridRecorder);
+
+        // Save images
+        gridRecorder.run(agent, agent, checkWindow);
     }
 }
