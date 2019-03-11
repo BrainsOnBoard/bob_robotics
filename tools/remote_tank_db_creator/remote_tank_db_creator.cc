@@ -33,17 +33,13 @@ using namespace units::angle;
 using namespace units::literals;
 using namespace std::literals;
 
-constexpr const char *databasePrefix = "database";
-const Navigation::Range xrange{ { -1_m, 1_m }, 0.5_m };
-const Navigation::Range yrange = xrange;
-
 filesystem::path getNewDatabaseName()
 {
     filesystem::path databaseName;
     int databaseCount = 0;
     do {
         std::stringstream ss;
-        ss << databasePrefix << ++databaseCount;
+        ss << "database" << ++databaseCount;
         databaseName = ss.str();
     } while (databaseName.exists());
     return databaseName;
@@ -52,6 +48,21 @@ filesystem::path getNewDatabaseName()
 int
 bob_main(int, char **)
 {
+    // Image database parameters
+    constexpr Navigation::Range xRange{ { -1_m, 0_m }, 0.5_m };
+    constexpr Navigation::Range yRange = xRange;
+
+    // Positioner parameters
+    constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
+    constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
+    constexpr double K1 = 0.6;                      // curveness of the path to the goal
+    constexpr double K2 = 5;                        // speed of turning on the curves
+    constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
+    constexpr double Beta = 0.05;                   // causes to drop velocity if 'k'(curveness) increases
+    constexpr meter_t StartSlowingAt = 10_cm;
+    constexpr float MinSpeed = 0.2f;
+    constexpr float MaxSpeed = 1.0f;
+
     HID::Joystick joystick;
 
     // Connect to Vicon system
@@ -70,7 +81,6 @@ bob_main(int, char **)
 
     // Connect to robot over network and drive with joystick
     Robots::TankNetSink tank(client);
-    tank.addJoystick(joystick);
 
     // The x and y dimensions of the robot
     using V = Vector2<meter_t>;
@@ -86,16 +96,8 @@ bob_main(int, char **)
     Video::RandomInput<> video({ 720, 360 });
     cv::Mat fr;
 
-    // Positioner parameters
-    constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
-    constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-    constexpr double K1 = 0.2;                      // curveness of the path to the goal
-    constexpr double K2 = 5;                        // speed of turning on the curves
-    constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
-    constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
-
     const auto objects = readObjects("objects.yaml");
-    CollisionDetector collisionDetector(robotDimensions, objects, 30_cm);
+    CollisionDetector collisionDetector(robotDimensions, objects, 15_cm);
 
     // Object which drives robot to position
     auto positioner = Robots::createRobotPositioner(tank,
@@ -105,8 +107,12 @@ bob_main(int, char **)
                                                     K1,
                                                     K2,
                                                     Alpha,
-                                                    Beta);
+                                                    Beta,
+                                                    StartSlowingAt,
+                                                    MinSpeed,
+                                                    MaxSpeed);
 
+    // For driving around objects
     auto circum = createObstacleCircumnavigator(tank, viconObject, collisionDetector);
     auto avoider = createObstacleAvoidingPositioner(positioner, circum);
 
@@ -115,11 +121,14 @@ bob_main(int, char **)
     client.runInBackground();
 
     std::cout << "Ready" << std::endl;
+    bool collisionMessagePrinted = false;
     const auto check = [&]() {
         std::this_thread::sleep_for(20ms);
 
+        // Check for exceptions on background threads
         catcher.check();
 
+        // If Y or B pressed, abort database collection
         if (joystick.update()) {
             return !(joystick.isPressed(HID::JButton::B) || joystick.isPressed(HID::JButton::Y));
         } else {
@@ -127,13 +136,16 @@ bob_main(int, char **)
         }
     };
     do {
+        // Check for exceptions on background threads
         catcher.check();
+
+        // If Y is pressed, start collecting images
         if (joystick.update() && joystick.isPressed(HID::JButton::Y)) {
             if (vicon.getNumObjects() == 0) {
                 std::cerr << "Error: Still waiting for Vicon system" << std::endl;
             } else {
                 Navigation::ImageDatabase database(getNewDatabaseName());
-                auto recorder = database.getGridRecorder<true>(xrange, yrange);
+                auto recorder = database.getGridRecorder<true>(xRange, yRange);
 
                 // Check if any of the points would lead to a collision and remove them
                 std::vector<std::array<size_t, 3>> goodPositions;
@@ -145,11 +157,27 @@ bob_main(int, char **)
                         goodPositions.push_back(gridPosition);
                     }
                 }
+
+                // Iterate through points and save images
                 if (!recorder.runAtPositions(avoider, video, goodPositions, check)) {
                     std::cout << "Recording aborted" << std::endl;
                     recorder.abortSave();
                 }
             }
+        }
+
+        // Control robot with joystick
+        tank.drive(joystick);
+
+        // Stop robot colliding with objects
+        if (collisionDetector.wouldCollide(viconObject.getPose())) {
+            if (!collisionMessagePrinted) {
+                tank.stopMoving();
+                std::cout << "Collision!" << std::endl;
+                collisionMessagePrinted = true;
+            }
+        } else {
+            collisionMessagePrinted = false;
         }
 
         std::this_thread::sleep_for(20ms);
