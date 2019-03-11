@@ -77,8 +77,13 @@ public:
 
     virtual ~Connection() override
     {
+        close();
+    }
+
+    void close()
+    {
         if (m_Socket.isOpen()) {
-            m_Socket.send("BYE\n");
+            getSocketWriter().send("BYE\n");
             m_Socket.close();
         }
 

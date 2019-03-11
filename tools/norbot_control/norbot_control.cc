@@ -27,15 +27,15 @@ using namespace BoBRobotics;
 int
 bob_main(int, char **)
 {
-    std::unique_ptr<Video::Input> camera;
-    std::unique_ptr<HID::Joystick> joystick;
-    std::unique_ptr<Video::NetSink> netSink;
-    std::unique_ptr<Net::Client> client;
-    std::unique_ptr<Robots::Tank> tank;
-
     // Listen for incoming connection on default port
     Net::Server server;
     auto connection = server.waitForConnection();
+
+    std::unique_ptr<Video::Input> camera;
+    std::unique_ptr<Video::NetSink> netSink;
+    std::unique_ptr<Net::Client> client;
+    std::unique_ptr<Robots::Tank> tank;
+    std::unique_ptr<HID::Joystick> joystick;
 
     // Get panoramic camera
     try {
