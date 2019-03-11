@@ -122,6 +122,13 @@ public:
         return m_RobotVertices;
     }
 
+    template<class PoseType>
+    bool wouldCollide(const PoseType &pose)
+    {
+        setRobotPose(pose);
+        return collisionOccurred();
+    }
+
     bool collisionOccurred()
     {
         // Clear this value

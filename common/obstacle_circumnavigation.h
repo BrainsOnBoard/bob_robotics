@@ -4,6 +4,7 @@
 #include "collision.h"
 #include "geometry.h"
 #include "pose.h"
+#include "../robots/positioner.h"
 #include "../robots/tank.h"
 #include "../robots/tank_pid.h"
 
@@ -51,6 +52,7 @@ enum class ObstacleCircumnavigatorState {
 
 template<class PositionerType, class PoseGetterType>
 class ObstacleAvoidingPositioner
+  : public Robots::PositionerBase<ObstacleAvoidingPositioner<PositionerType, PoseGetterType>>
 {
 public:
     ObstacleAvoidingPositioner(PositionerType &positioner,
@@ -69,16 +71,14 @@ public:
         return m_Positioner.getPose();
     }
 
+    const auto &getRobot() const { return m_Positioner.getRobot(); }
+    auto &getRobot() { return m_Positioner.getRobot(); }
+
     template<class PoseType>
     void moveTo(const PoseType &pose)
     {
+        BOB_ASSERT(!m_Circumnavigator.wouldCollide(pose));
         m_Positioner.moveTo(pose);
-    }
-
-    template<class PoseType>
-    void moveToSync(const PoseType &pose)
-    {
-        m_Positioner.moveToSync(pose);
     }
 
     bool pollPositioner()
@@ -87,7 +87,7 @@ public:
         if (m_Circumnavigator.getState() == ObstacleCircumnavigatorState::DoingNothing) {
             return m_Positioner.pollPositioner();
         } else {
-            return false;
+            return true;
         }
     }
 
@@ -132,6 +132,9 @@ public:
             updatePID();
         }
     }
+
+    template<class PoseType>
+    bool wouldCollide(const PoseType &pose) { return m_CollisionDetector.wouldCollide(pose); }
 
     auto getState() const { return m_State; }
 
@@ -235,7 +238,7 @@ private:
     {
         m_State = State::Circumnavigating;
 
-        if (m_TankPID.pollPositioner()) {
+        if (!m_TankPID.pollPositioner()) {
             // ... then we've reached a waypoint
             m_PIDWaypoints.pop_front();
 

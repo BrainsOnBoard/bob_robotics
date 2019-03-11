@@ -153,7 +153,7 @@ public:
                 break;
             case Event::Update: {
                 try {
-                    if (m_AvoidingPositioner.pollPositioner()) {
+                    if (!m_AvoidingPositioner.pollPositioner()) {
                         const auto &finalPose = m_AvoidingPositioner.getPose();
                         std::cout << "Reached goal" << std::endl;
                         std::cout << "Final position: " << finalPose.x() << ", " << finalPose.y() << std::endl;

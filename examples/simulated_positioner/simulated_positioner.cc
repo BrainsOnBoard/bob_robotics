@@ -75,7 +75,7 @@ main()
             }
 
             // Check if the robot is within threshold distance and bearing of goal
-            if (positioner.pollPositioner()) {
+            if (!positioner.pollPositioner()) {
                 runPositioner = false;
                 std::cout << "Reached goal" << std::endl;
                 robot.stopMoving();

@@ -208,7 +208,7 @@ bob_main(int argc, char **argv)
             plt::pause(0.025);
 
             // Get motor commands from positioner, if it's running
-            if (runPositioner && pid.pollPositioner()) {
+            if (runPositioner && !pid.pollPositioner()) {
                 // Then we've reached the goal...
                 const auto &pose = pid.getPose();
                 printGoalStats(*goalsIter, pose);

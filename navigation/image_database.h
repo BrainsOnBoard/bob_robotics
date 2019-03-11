@@ -271,6 +271,11 @@ public:
             return positions;
         }
 
+        const auto &getGridPositions() const
+        {
+             return m_GridPositions;
+        }
+
         auto getPosition() const
         {
             return getPosition(m_GridPositions[m_Current]);
@@ -296,10 +301,18 @@ public:
         bool run(AgentType &agent, Video::Input &video, Func extraCalls = Noop())
         {
             BOB_ASSERT(m_Current == 0);
+            runAtPositions(agent, video, m_GridPositions, extraCalls);
+        }
+
+        template<class AgentType, class GridPositionsType, class Func = Noop>
+        bool runAtPositions(AgentType &agent, Video::Input &video, const GridPositionsType &gridPositions, Func extraCalls = Noop())
+        {
+            BOB_ASSERT(gridPositions.size() > 0);
 
             cv::Mat fr;
-            for (auto &gridPosition : m_GridPositions) {
+            for (auto &gridPosition : gridPositions) {
                 const auto pos = getPosition(gridPosition);
+                std::cout << "Moving to: " << pos << std::endl;
                 if (!agent.moveToSync(pos, extraCalls)) {
                     return false;
                 }

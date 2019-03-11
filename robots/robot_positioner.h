@@ -4,7 +4,8 @@
 #include "../common/assert.h"
 #include "../common/circstat.h"
 #include "../common/pose.h"
-#include "../robots/tank.h"
+#include "positioner.h"
+#include "tank.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -37,6 +38,7 @@ auto createRobotPositioner(Robots::Tank &tank,
  */
 template<class PoseGetterType>
 class RobotPositioner
+  : public PositionerBase<RobotPositioner<PoseGetterType>>
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -123,17 +125,8 @@ public:
         updateRangeAndBearing();
     }
 
-    template<class Func>
-    bool moveToSync(const Pose2<meter_t, radian_t> &pose, Func extraCalls)
-    {
-        moveTo(pose);
-        while (pollPositioner()) {
-            if (!extraCalls()) {
-                return false;
-            }
-        }
-        return true;
-    }
+    const auto &getRobot() const { return m_Tank; }
+    auto &getRobot() { return m_Tank; }
 
     const auto &getPose() const
     {
@@ -174,7 +167,7 @@ public:
          */
         m_Tank.move(v, -omega, true);
 
-        return reachedGoal();
+        return !reachedGoal();
     }
 
     //! updates the velocities in order to get to a goal location. This function can be used

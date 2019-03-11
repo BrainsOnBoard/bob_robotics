@@ -6,6 +6,7 @@
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
 #include "../vicon/udp.h"
+#include "positioner.h"
 #include "tank.h"
 
 // Third-party includes
@@ -28,8 +29,8 @@ class TankPID;
 
 template<class PoseGetterType, class... Args>
 auto createTankPID(Robots::Tank &tank,
-                           PoseGetterType &poseGetter,
-                           Args&&... otherArgs)
+                   PoseGetterType &poseGetter,
+                   Args&&... otherArgs)
 {
     return TankPID<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
 }
@@ -44,7 +45,8 @@ enum class TankPIDState
 
 template<class PoseGetterType>
 class TankPID
-  : FSM<TankPIDState>::StateHandler
+        : public PositionerBase<TankPID<PoseGetterType>>
+        , FSM<TankPIDState>::StateHandler
 {
     using meter_t = units::length::meter_t;
     using radian_t = units::angle::radian_t;
@@ -58,16 +60,16 @@ public:
             meter_t distanceTolerance = 5_cm,
             radian_t angleTolerance = 3_deg,
             radian_t startTurningThreshold = 45_deg, float averageSpeed = 0.5f)
-      : m_StateMachine(this, TankPIDState::Invalid)
-      , m_Robot(robot)
-      , m_PoseGetter(poseGetter)
-      , m_DistanceTolerance(distanceTolerance)
-      , m_AngleTolerance(angleTolerance)
-      , m_StartTurningThreshold(startTurningThreshold)
-      , m_Kp(Kp)
-      , m_Ki(Ki)
-      , m_Kd(Kd)
-      , m_AverageSpeed(averageSpeed)
+        : m_StateMachine(this, TankPIDState::Invalid)
+        , m_Robot(robot)
+        , m_PoseGetter(poseGetter)
+        , m_DistanceTolerance(distanceTolerance)
+        , m_AngleTolerance(angleTolerance)
+        , m_StartTurningThreshold(startTurningThreshold)
+        , m_Kp(Kp)
+        , m_Ki(Ki)
+        , m_Kd(Kd)
+        , m_AverageSpeed(averageSpeed)
     {}
 
     void reset() {}
@@ -81,18 +83,6 @@ public:
          * turn on the spot.
          */
         m_StateMachine.transition(TankPIDState::OrientingToGoal);
-    }
-
-    template<class Func>
-    bool moveToSync(const Vector2<meter_t> &position, Func extraCalls)
-    {
-        moveTo(position);
-        while (pollPositioner()) {
-            if (!extraCalls()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     auto &getRobot() { return m_Robot; }
@@ -110,7 +100,7 @@ public:
         m_StateMachine.update();
 
         // Return true if we're at goal (within m_DistanceTolerance)
-        return m_StateMachine.getCurrentState() == TankPIDState::AtGoal;
+        return m_StateMachine.getCurrentState() != TankPIDState::AtGoal;
     }
 
 private:

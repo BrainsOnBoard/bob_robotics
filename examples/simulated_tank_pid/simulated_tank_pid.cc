@@ -68,7 +68,7 @@ bob_main(int, char **)
         display.update(car);
 
         // Run PID controller
-        if (pidRunning && pid.pollPositioner()) {
+        if (pidRunning && !pid.pollPositioner()) {
             // Stop PID if we're at goal
             pidRunning = false;
         }
