@@ -301,7 +301,7 @@ public:
         bool run(AgentType &agent, Video::Input &video, Func extraCalls = Noop())
         {
             BOB_ASSERT(m_Current == 0);
-            runAtPositions(agent, video, m_GridPositions, extraCalls);
+            return runAtPositions(agent, video, m_GridPositions, extraCalls);
         }
 
         template<class AgentType, class GridPositionsType, class Func = Noop>
