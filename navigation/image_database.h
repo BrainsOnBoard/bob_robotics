@@ -338,6 +338,20 @@ public:
             const std::string filename = ImageDatabase::getFilename(size(), getImageFormat());
             addEntry(filename, image, position, heading);
         }
+
+        template<class AgentType, class ContainerOfPoses, class Func = Noop>
+        bool run(AgentType &agent, Video::Input &video, const ContainerOfPoses &poses, Func extraCalls = Noop())
+        {
+            cv::Mat fr;
+            for (auto &pose : poses) {
+                if (!agent.moveToSync(pose, extraCalls())) {
+                    return false;
+                }
+                video.readFrameSync(fr);
+                record(pose.position(), pose.yaw(), fr);
+            }
+            return true;
+        }
     };
 
     ImageDatabase(const char *databasePath, bool overwrite = false)
