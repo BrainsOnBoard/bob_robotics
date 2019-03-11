@@ -5,6 +5,7 @@
 #include "../common/circstat.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
+#include "../common/thread.h"
 #include "../os/net.h"
 
 // Standard C++ includes
@@ -282,11 +283,8 @@ public:
 
     virtual ~UDPClient()
     {
-        // Set quit flag and join read thread
-        if(m_ReadThread.joinable()) {
-            m_ShouldQuit = true;
-            m_ReadThread.join();
-        }
+        // Set quit flag
+        m_ShouldQuit = true;
     }
 
     //----------------------------------------------------------------------------
@@ -327,7 +325,7 @@ public:
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
-        m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
+        m_ReadThread = Thread<>(&UDPClient::readThread, this, socket);
     }
 
     unsigned int getNumObjects()
@@ -478,7 +476,7 @@ private:
     // Members
     //----------------------------------------------------------------------------
     std::atomic<bool> m_ShouldQuit;
-    std::thread m_ReadThread;
+    Thread<> m_ReadThread;
     void *m_ReadUserData;
 
     std::mutex m_ObjectDataMutex;

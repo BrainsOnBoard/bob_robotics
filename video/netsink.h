@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "../common/background_exception_catcher.h"
 #include "../common/semaphore.h"
+#include "../common/thread.h"
 #include "../net/connection.h"
 #include "input.h"
 
@@ -15,7 +16,6 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <vector>
 
 namespace BoBRobotics {
@@ -73,10 +73,8 @@ public:
         // Ignore IMG commands
         m_Connection.setCommandHandler("IMG", nullptr);
 
+        // Set stop flag
         m_DoRun = false;
-        if (m_Thread.joinable()) {
-            m_Thread.join();
-        }
     }
 
     //----------------------------------------------------------------------------
@@ -122,7 +120,7 @@ private:
         onCommandReceived(command);
 
         // start thread to transmit images in background
-        m_Thread = std::thread(&NetSink::runAsync, this);
+        m_Thread = Thread<>(&NetSink::runAsync, this);
     }
 
     void onCommandReceivedSync(const Net::Command &command)
@@ -157,7 +155,7 @@ private:
     Semaphore m_AckSemaphore;
     const std::string m_Name;
     std::vector<uchar> m_Buffer;
-    std::thread m_Thread;
+    Thread<> m_Thread;
     const cv::Size m_FrameSize;
     Input *m_Input;
     std::atomic<bool> m_DoRun{ true };

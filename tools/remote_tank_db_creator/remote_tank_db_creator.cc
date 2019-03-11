@@ -3,6 +3,7 @@
 #include "common/main.h"
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
+#include "common/thread.h"
 #include "common/read_objects.h"
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
@@ -48,34 +49,6 @@ filesystem::path getNewDatabaseName()
     return databaseName;
 }
 
-class ViconThread {
-public:
-    ViconThread(Vicon::UDPClient<> &vicon)
-      : m_Vicon(vicon)
-      , m_WaitThread(&ViconThread::waitForObject, this)
-    {}
-
-    ~ViconThread()
-    {
-        if (m_WaitThread.joinable()) {
-            m_WaitThread.detach();
-        }
-    }
-
-private:
-    Vicon::UDPClient<> &m_Vicon;
-    std::thread m_WaitThread;
-
-    void waitForObject()
-    {
-        while (m_Vicon.getNumObjects() == 0) {
-            std::cout << "Waiting for object" << std::endl;
-            std::this_thread::sleep_for(1s);
-        }
-        std::cout << "Got object" << std::endl;
-    }
-};
-
 int
 bob_main(int, char **)
 {
@@ -83,7 +56,13 @@ bob_main(int, char **)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    ViconThread viconWaitThread(vicon);
+    Thread<false> viconWaitThread([&vicon]() {
+        while (vicon.getNumObjects() == 0) {
+            std::cout << "Waiting for object" << std::endl;
+            std::this_thread::sleep_for(1s);
+        }
+        std::cout << "Got object" << std::endl;
+    });
     auto viconObject = vicon.getObjectReference(0);
 
     // Make connection to robot on default port

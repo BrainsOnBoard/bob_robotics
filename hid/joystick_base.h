@@ -12,7 +12,7 @@
 #include <vector>
 
 // BoB robotics includes
-#include "../common/threadable.h"
+#include "../common/thread.h"
 
 namespace BoBRobotics {
 namespace HID {
