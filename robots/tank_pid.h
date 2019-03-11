@@ -169,14 +169,9 @@ private:
                 const float d = m_Kd * (m_LastError - error) / dt;
 
                 const float differential = p + i + d;
-
-                const float v1 = std::min(1.f, std::max(0.f, m_AverageSpeed + differential));
-                const float v2 = std::min(1.f, std::max(0.f, m_AverageSpeed - differential));
-                if (differential >= 0.f) {
-                    m_Robot.tank(v1, v2);
-                } else {
-                    m_Robot.tank(v2, v1);
-                }
+                const float v1 = std::min(1.f, std::max(0.f, m_AverageSpeed - differential));
+                const float v2 = std::min(1.f, std::max(0.f, m_AverageSpeed + differential));
+                m_Robot.tank(v1, v2);
             } else { // Exit
                 m_Robot.stopMoving();
                 return true;
