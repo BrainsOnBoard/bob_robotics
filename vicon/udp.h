@@ -221,7 +221,7 @@ public:
     ObjectReference(UDPClient<ObjectDataType> &client,
                     const size_t id,
                     const std::string &objectName,
-                    const Stopwatch::Duration timeoutDuration = 10s)
+                    const Stopwatch::Duration timeoutDuration)
         : m_Client(client)
         , m_Id(id)
         , m_Name(objectName)
@@ -321,6 +321,9 @@ public:
     //----------------------------------------------------------------------------
     void connect(uint16_t port)
     {
+        // Lock until we have at least one packet from Vicon system
+        m_ConnectionMutex.lock();
+
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
@@ -359,12 +362,15 @@ public:
 
     size_t getNumObjects()
     {
+        waitUntilConnected();
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.size();
     }
 
     size_t findObjectID(const std::string &name)
     {
+        waitUntilConnected();
+
         // Search for object with name
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
         const auto objIter = std::find(m_ObjectNames.cbegin(), m_ObjectNames.cend(), name);
@@ -382,14 +388,23 @@ public:
     //! Get current pose information for specified object
     ObjectDataType getObjectData(size_t id)
     {
+        waitUntilConnected();
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.at(id);
     }
 
     //! Returns an object whose pose is updated by the Vicon system over time
     auto getObjectReference(size_t id,
-                            Stopwatch::Duration timeoutDuration = Stopwatch::Duration::max())
+                            Stopwatch::Duration timeoutDuration = 10s)
     {
+        waitUntilConnected();
+        return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
+    }
+
+    auto getObjectReference(const std::string& name,
+                            Stopwatch::Duration timeoutDuration = 10s)
+    {
+        const auto id = findObjectID(name);
         return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
     }
 
@@ -407,6 +422,7 @@ private:
         // ...and, if not, create one
         size_t id;
         if (pos == m_ObjectNames.cend()) {
+            std::cout << "Vicon: Found new object: " << data.objectName << std::endl;
             id = m_ObjectData.size();
             m_ObjectNames.emplace_back(data.objectName);
             m_ObjectData.emplace_back(m_ObjectNames.back());
@@ -473,11 +489,28 @@ private:
                     BOB_ASSERT(data.itemDataSize == 72);
                     updateObjectData(frameNumber, data);
                 });
+
+                // If this is the first packet we've received, signal that we're connected
+                if (!m_IsConnected) {
+                    m_IsConnected = true;
+                    m_ConnectionMutex.unlock();
+                }
             }
         }
 
         // Close socket
         close(socket);
+    }
+
+    void waitUntilConnected()
+    {
+        /*
+         * The Vicon system transmits packets at a high frequency, so if we don't
+         * receive data almost immediately then we're not connected.
+         */
+        if (!m_IsConnected && !m_ConnectionMutex.try_lock_for(1s)) {
+            throw std::runtime_error("Could not connect to Vicon system");
+        }
     }
 
     //----------------------------------------------------------------------------
@@ -487,7 +520,9 @@ private:
     std::vector<ObjectDataType> m_ObjectData;
     std::vector<std::string> m_ObjectNames;
     std::atomic<bool> m_ShouldQuit;
+    std::timed_mutex m_ConnectionMutex;
+    bool m_IsConnected = false;
     Thread<> m_ReadThread;
 };
-} // namespace Vicon
+} // Vicon
 } // BoBRobotics

@@ -19,18 +19,7 @@ int main(int argc, char **argv)
 
     const std::string objectName = (argc > 1) ? argv[1] : "Norbot";
 
-    size_t norbotID;
-    while(true) {
-        try {
-            norbotID = vicon.findObjectID(objectName);
-            break;
-        }
-        catch(std::out_of_range &ex) {
-            std::this_thread::sleep_for(1s);
-            std::cout << "Waiting for object '" << objectName << "'" << std::endl;
-        }
-    }
-
+    size_t norbotID = vicon.findObjectID(objectName);
     std::cout << "'" << objectName << "' found with id: " << norbotID << std::endl;
 
     if (!viconCaptureControl.startRecording("test1")) {
