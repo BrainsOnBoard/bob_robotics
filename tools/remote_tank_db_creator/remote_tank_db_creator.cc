@@ -3,7 +3,6 @@
 #include "common/main.h"
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
-#include "common/thread.h"
 #include "common/read_objects.h"
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
@@ -67,14 +66,6 @@ bob_main(int, char **)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    Thread<false> viconWaitThread([&vicon]() {
-        while (vicon.getNumObjects() == 0) {
-            std::cout << "Waiting for object" << std::endl;
-            std::this_thread::sleep_for(1s);
-        }
-        std::cout << "Got object" << std::endl;
-    });
-    auto viconObject = vicon.getObjectReference(0);
 
     // Make connection to robot on default port
     Net::Client client;
@@ -99,29 +90,11 @@ bob_main(int, char **)
     const auto objects = readObjects("objects.yaml");
     CollisionDetector collisionDetector(robotDimensions, objects, 15_cm);
 
-    // Object which drives robot to position
-    auto positioner = Robots::createRobotPositioner(tank,
-                                                    viconObject,
-                                                    StoppingDistance,
-                                                    AllowedHeadingError,
-                                                    K1,
-                                                    K2,
-                                                    Alpha,
-                                                    Beta,
-                                                    StartSlowingAt,
-                                                    MinSpeed,
-                                                    MaxSpeed);
-
-    // For driving around objects
-    auto circum = createObstacleCircumnavigator(tank, viconObject, collisionDetector);
-    auto avoider = createObstacleAvoidingPositioner(positioner, circum);
-
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
     client.runInBackground();
 
     std::cout << "Ready" << std::endl;
-    bool collisionMessagePrinted = false;
     const auto check = [&]() {
         std::this_thread::sleep_for(20ms);
 
@@ -141,9 +114,28 @@ bob_main(int, char **)
 
         // If Y is pressed, start collecting images
         if (joystick.update() && joystick.isPressed(HID::JButton::Y)) {
-            if (vicon.getNumObjects() == 0) {
+            if (!vicon.connected()) {
                 std::cerr << "Error: Still waiting for Vicon system" << std::endl;
             } else {
+                auto viconObject = vicon.getObjectReference("EV3");
+
+                // Object which drives robot to position
+                auto positioner = Robots::createRobotPositioner(tank,
+                                                                viconObject,
+                                                                StoppingDistance,
+                                                                AllowedHeadingError,
+                                                                K1,
+                                                                K2,
+                                                                Alpha,
+                                                                Beta,
+                                                                StartSlowingAt,
+                                                                MinSpeed,
+                                                                MaxSpeed);
+
+                // For driving around objects
+                auto circum = createObstacleCircumnavigator(tank, viconObject, collisionDetector);
+                auto avoider = createObstacleAvoidingPositioner(positioner, circum);
+
                 Navigation::ImageDatabase database(getNewDatabaseName());
                 auto recorder = database.getGridRecorder<true>(xRange, yRange);
 
@@ -168,17 +160,6 @@ bob_main(int, char **)
 
         // Control robot with joystick
         tank.drive(joystick);
-
-        // Stop robot colliding with objects
-        if (collisionDetector.wouldCollide(viconObject.getPose())) {
-            if (!collisionMessagePrinted) {
-                tank.stopMoving();
-                std::cout << "Collision!" << std::endl;
-                collisionMessagePrinted = true;
-            }
-        } else {
-            collisionMessagePrinted = false;
-        }
 
         std::this_thread::sleep_for(20ms);
     } while (!joystick.isPressed(HID::JButton::B));
