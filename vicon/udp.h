@@ -398,15 +398,17 @@ public:
                             Stopwatch::Duration timeoutDuration = 10s)
     {
         waitUntilConnected();
-        return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
+        return ObjectReference<ObjectDataType>(*this, id, m_ObjectNames[id], timeoutDuration);
     }
 
     auto getObjectReference(const std::string& name,
                             Stopwatch::Duration timeoutDuration = 10s)
     {
         const auto id = findObjectID(name);
-        return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
+        return ObjectReference<ObjectDataType>(*this, id, m_ObjectNames[id], timeoutDuration);
     }
+
+    bool connected() const { return m_IsConnected; }
 
 private:
     //----------------------------------------------------------------------------
