@@ -179,18 +179,15 @@ private:
         const int whichLine = static_cast<int>(std::distance(m_ObjectLines.cbegin(), pos));
 
         // Calculate the robot's goal assuming it's trying to go straight through the object
-        Eigen::Vector2d robotGoal;
-        robotGoal << 100 * cos(robotPose.yaw()), 100 * sin(robotPose.yaw());
-        auto distToGoal = std::numeric_limits<double>::infinity();
+        auto distFromRobot = 0.0;
         Eigen::Vector2d leavePoint;
         int whichLeaveLine = -1;
 
-        // **TODO**: Change this to use an infinite straight line -- this is a bit gross
-        Eigen::Matrix2d robotLine;
-        robotLine(0, 0) = robotPose.x().value();
-        robotLine(0, 1) = robotPose.y().value();
-        robotLine(1, 0) = robotPose.x().value() + 10 * cos(robotPose.yaw()).value();
-        robotLine(1, 1) = robotPose.x().value() + 10 * sin(robotPose.yaw()).value();
+        // Straight line from robot's pose
+        const auto m = tan(robotPose.yaw()).value();
+        const auto c = robotPose.y() - m * robotPose.x();
+        StraightLine robotLine{ m, c.value() };
+        const Eigen::Vector2d robotPosition = { robotPose.x().value(), robotPose.y().value() };
 
         // Get perimeter around object, resize it for calculating route
         m_ObjectPerimeter = objectVerts;
@@ -202,13 +199,11 @@ private:
         for (int i = 0; i < m_ObjectPerimeter.rows(); i++) {
             Eigen::Vector2d point;
             if (calculateIntersection(point, perimeterLines[i], robotLine)) {
-                const auto dx = point(0) - robotGoal(0);
-                const auto dy = point(1) - robotGoal(1);
-                const auto dist = hypot(dx, dy);
-                if (dist < distToGoal) {
+                const auto dist = distance2D(point, robotPosition);
+                if (dist > distFromRobot) {
                     whichLeaveLine = i;
                     leavePoint = point;
-                    distToGoal = dist;
+                    distFromRobot = dist;
                 }
             }
         }
@@ -238,22 +233,22 @@ private:
             }
 
             // Get total distance going one way around object
-            Eigen::Vector2d last = robotLine.row(0);
+            Eigen::Vector2d last = robotPosition;
             for (auto i : incIndices) {
                 const Eigen::Vector2d next = m_ObjectPerimeter.row(i % numVerts);
-                distanceAntiClockwise += hypot(next.x() - last.x(), next.y() - last.y());
+                distanceAntiClockwise += distance2D(last, next);
                 last = next;
             }
-            distanceAntiClockwise += hypot(leavePoint.x() - last.x(), leavePoint.y() - last.y());
+            distanceAntiClockwise += distance2D(last, leavePoint);
 
             // Get total distance going the other way
-            last = robotLine.row(0);
+            last = robotPosition;
             for (auto i : decIndices) {
                 const Eigen::Vector2d next = m_ObjectPerimeter.row(i % numVerts);
-                distanceClockwise += hypot(next.x() - last.x(), next.y() - last.y());
+                distanceClockwise += distance2D(last, next);
                 last = next;
             }
-            distanceClockwise += hypot(leavePoint.x() - last.x(), leavePoint.y() - last.y());
+            distanceClockwise += distance2D(last, leavePoint);
 
             // Pick the shortest path
             for (auto i : (distanceAntiClockwise < distanceClockwise) ? incIndices : decIndices) {

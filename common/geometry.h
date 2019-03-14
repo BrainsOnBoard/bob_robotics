@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "assert.h"
+#include "circstat.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -14,6 +15,7 @@
 #include <cmath>
 
 // Standard C++ includes
+#include <ostream>
 #include <limits>
 #include <vector>
 
@@ -21,6 +23,152 @@ template<class T>
 using EigenSTDVector = std::vector<T, Eigen::aligned_allocator<T>>;
 
 namespace BoBRobotics {
+
+double
+distance2D(const Eigen::Vector2d &p1, const Eigen::Vector2d &p2)
+{
+    return hypot(p2.x() - p1.x(), p2.y() - p1.y());
+}
+
+template<class T = double>
+constexpr inline T inf()
+{
+    return std::numeric_limits<T>::infinity();
+}
+
+constexpr inline bool
+approxEq(double a, double b)
+{
+    return std::abs(a - b) < 1e-5;
+}
+
+struct StraightLine
+{
+    double m, c;
+
+    constexpr StraightLine(double m, double c)
+      : m(m)
+      , c(c)
+    {}
+
+    auto perpendicular(const Eigen::Vector2d &point) const
+    {
+        double mPerp, cPerp;
+        BOB_ASSERT(isPointOnLine(point));
+
+        if (isVertical()) {
+            mPerp = 0.0;
+            cPerp = point.y();
+        } else if (isHorizontal()) {
+            mPerp = inf();
+            cPerp = point.x();
+        } else {
+            mPerp = -1.0 / m;
+            cPerp = point.y() - mPerp * point.x();
+        }
+        return StraightLine(mPerp, cPerp);
+    }
+
+    bool isHorizontal() const { return approxEq(m, 0.0); }
+    bool isVertical() const { return std::isinf(m); }
+
+    bool isParallel(const StraightLine &line) const
+    {
+        return (isVertical() && line.isVertical()) || approxEq(m, line.m);
+    }
+
+    bool isPointOnLine(const Eigen::Vector2d &point) const
+    {
+        if (isVertical()) {
+            return approxEq(c, point.x());
+        } else {
+            return approxEq(point.y(), getY(point.x()));
+        }
+    }
+
+    Eigen::Vector2d intersection(const StraightLine &line) const
+    {
+        double x, y;
+        BOB_ASSERT(!isParallel(line));
+
+        if (isVertical()) {
+            x = c;
+            y = line.getY(x);
+        } else if (isHorizontal()) {
+            y = c;
+            x = line.getX(y);
+        } else {
+            x = (line.c - c) / (m - line.m);
+            y = getY(x);
+        }
+
+        return { x, y };
+    }
+
+    double angle() const
+    {
+        return atan(m);
+    }
+
+    Eigen::Vector2d pointAlong(const Eigen::Vector2d &startPoint, double distance) const
+    {
+        BOB_ASSERT(isPointOnLine(startPoint));
+
+        const auto th = angle();
+        const auto dy = distance * sin(th);
+        const auto dx = distance * cos(th);
+        return { startPoint.x() + dx, startPoint.y() + dy };
+    }
+
+    double getX(double y) const
+    {
+        if (isVertical()) {
+            return c;
+        } else {
+            return (y - c) / m;
+        }
+    }
+
+    double getY(double x) const
+    {
+        return m * x + c;
+    }
+
+    bool operator==(const StraightLine &line) const
+    {
+        if (!approxEq(c, line.c)) {
+            return false;
+        } else if (isVertical()) {
+            return line.isVertical();
+        } else {
+            return (approxEq(m, line.m) && approxEq(c, line.c));
+        }
+    }
+
+    static auto fromPoints(const Eigen::Vector2d &p1, const Eigen::Vector2d &p2)
+    {
+        double m, c;
+
+        const auto dy = p2.y() - p1.y();
+        const auto dx = p2.x() - p1.x();
+        if (approxEq(dx, 0.0)) {
+            // Vertical line
+            m = inf();
+            c = p1.x();
+        } else {
+            m = dy / dx;
+
+            if (approxEq(m, 0.0)) {
+                // Horizontal line
+                c = p1.y();
+            } else {
+                c = p2.y() - m * p2.x();
+            }
+        }
+
+        return StraightLine(m, c);
+    }
+};
 
 template<int Rows>
 inline void
@@ -64,31 +212,18 @@ polygonToLines(EigenSTDVector<Eigen::Matrix2d> &lines, const Eigen::Matrix<doubl
                     polygon(0, 0), polygon(0, 1);
 }
 
+const auto min = [](const auto &line, int index) {
+    return line.col(index).minCoeff();
+};
+const auto max = [](const auto &line, int index) {
+    return line.col(index).maxCoeff();
+};
+
 inline bool
-calculateIntersection(Eigen::Vector2d &point, const Eigen::Matrix2d &line1, const Eigen::Matrix2d &line2)
+calculateIntersection(Eigen::Vector2d &point, const Eigen::Matrix2d &line1, const StraightLine &lineEq2)
 {
-    const auto a1 = line1(1, 1) - line1(0, 1);
-    const auto b1 = line1(0, 0) - line1(1, 0);
-    const auto c1 = a1 * line1(0, 0) + b1 * line1(0, 1);
-    const auto a2 = line2(1, 1) - line2(0, 1);
-    const auto b2 = line2(0, 0) - line2(1, 0);
-    const auto c2 = a2 * line2(0, 0) + b2 * line2(0, 1);
-
-    const auto det = a1 * b2 - a2 * b1;
-    if (det == 0.0) {
-        // Lines are parallel
-        return false;
-    }
-
-    point << (b2 * c1 - b1 * c2) / det,
-             (a1 * c2 - a2 * c1) / det;
-
-    const auto min = [](const auto &line, int index) {
-        return line.col(index).minCoeff();
-    };
-    const auto max = [](const auto &line, int index) {
-        return line.col(index).maxCoeff();
-    };
+    const auto lineEq1 = StraightLine::fromPoints(line1.row(0), line1.row(1));
+    point = lineEq1.intersection(lineEq2);
 
     // Margin of error for floating-point numbers
     constexpr double tol = std::numeric_limits<double>::epsilon();
@@ -98,6 +233,19 @@ calculateIntersection(Eigen::Vector2d &point, const Eigen::Matrix2d &line1, cons
     const bool b = max(line1, 0) >= point(0) - tol;
     const bool c = min(line1, 1) <= point(1) + tol;
     const bool d = max(line1, 1) >= point(1) - tol;
+    return a && b && c && d;
+}
+
+inline bool
+calculateIntersection(Eigen::Vector2d &point, const Eigen::Matrix2d &line1, const Eigen::Matrix2d &line2)
+{
+    const auto lineEq2 = StraightLine::fromPoints(line2.row(0), line2.row(1));
+    if (!calculateIntersection(point, line1, lineEq2)) {
+        return false;
+    }
+
+    // Margin of error for floating-point numbers
+    constexpr double tol = std::numeric_limits<double>::epsilon();
 
     // Check that the point is on line 2
     const bool e = min(line2, 0) <= point(0) + tol;
@@ -105,6 +253,18 @@ calculateIntersection(Eigen::Vector2d &point, const Eigen::Matrix2d &line1, cons
     const bool g = min(line2, 1) <= point(1) + tol;
     const bool h = max(line2, 1) >= point(1) - tol;
 
-    return a && b && c && d && e && f && g && h;
+    return e && f && g && h;
 }
 } // BoBRobotics
+
+std::ostream &operator<<(std::ostream &os, const BoBRobotics::StraightLine &line)
+{
+    if (line.isVertical()) {
+        os << "x = " << line.c << " (m=" << line.m << ")";
+    } else if (line.isHorizontal()) {
+        os << "y = " << line.c;
+    } else {
+        os << "y = " << line.m << "* x + " << line.c;
+    }
+    return os;
+}
