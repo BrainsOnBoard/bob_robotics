@@ -220,9 +220,44 @@ private:
             m_State = State::DoingNothing;
         } else {
             // Append the waypoints to avoidLine (for display) and goals (for homing)
-            const int lineMax = ((whichLine < whichLeaveLine) ? whichLeaveLine : (whichLeaveLine + m_ObjectPerimeter.rows()));
-            for (int i = whichLine + 1; i <= lineMax; i++) {
-                const Eigen::Vector2d next = m_ObjectPerimeter.row(i % m_ObjectPerimeter.rows());
+            const int numVerts = m_ObjectPerimeter.rows();
+            double distanceClockwise = 0.0, distanceAntiClockwise = 0.0;
+
+            std::vector<int> incIndices, decIndices;
+            int lineMaxInc = ((whichLine < whichLeaveLine) ? whichLeaveLine : (whichLeaveLine + numVerts));
+            const int lineMin = (whichLine + 1) % numVerts;
+            if ((lineMaxInc % numVerts) == lineMin) {
+                lineMaxInc = lineMin;
+            }
+            for (int i = lineMin; i <= lineMaxInc; i++) {
+                incIndices.push_back(i % numVerts);
+            }
+            const int lineMaxDec = (whichLeaveLine > whichLine) ? (whichLine + numVerts) : whichLine;
+            for (int i = lineMaxDec; i > whichLeaveLine; i--) {
+                decIndices.push_back(i % numVerts);
+            }
+
+            // Get total distance going one way around object
+            Eigen::Vector2d last = robotLine.row(0);
+            for (auto i : incIndices) {
+                const Eigen::Vector2d next = m_ObjectPerimeter.row(i % numVerts);
+                distanceAntiClockwise += hypot(next.x() - last.x(), next.y() - last.y());
+                last = next;
+            }
+            distanceAntiClockwise += hypot(leavePoint.x() - last.x(), leavePoint.y() - last.y());
+
+            // Get total distance going the other way
+            last = robotLine.row(0);
+            for (auto i : decIndices) {
+                const Eigen::Vector2d next = m_ObjectPerimeter.row(i % numVerts);
+                distanceClockwise += hypot(next.x() - last.x(), next.y() - last.y());
+                last = next;
+            }
+            distanceClockwise += hypot(leavePoint.x() - last.x(), leavePoint.y() - last.y());
+
+            // Pick the shortest path
+            for (auto i : (distanceAntiClockwise < distanceClockwise) ? incIndices : decIndices) {
+                const Eigen::Vector2d next = m_ObjectPerimeter.row(i % numVerts);
                 m_PIDWaypoints.emplace_back(meter_t{ next.x() }, meter_t{ next.y() });
             }
             m_PIDWaypoints.emplace_back(meter_t{ leavePoint.x() }, meter_t{ leavePoint.y() });

@@ -8,7 +8,7 @@ main()
 {
     // Our tank-like agent
     Robots::SimulatedTank<> tank;
-    constexpr Pose2<meter_t, degree_t> initialPose{ 1_m, 0_m, 180_deg };
+    constexpr Pose2<meter_t, degree_t> initialPose{ 0_m, 0_m, 180_deg };
     tank.setPose(initialPose);
 
     runObstacleCircumnavigation(tank, tank);
