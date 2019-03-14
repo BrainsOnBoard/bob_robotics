@@ -22,26 +22,24 @@ using EigenSTDVector = std::vector<T, Eigen::aligned_allocator<T>>;
 
 namespace BoBRobotics {
 
-//! **TODO**: This function is currently broken...
 template<int Rows>
 inline void
 resizePolygonBy(Eigen::Matrix<double, Rows, 2> &polygon, units::length::meter_t extraSize)
 {
     BOB_ASSERT(polygon.rows() > 2); // Check it's a polygon
+    const auto cols = polygon.colwise();
 
     // Centre the object on the origin
-    const Eigen::Vector2d centre = polygon.colwise().mean();
+    const Eigen::Vector2d centre = cols.mean();
     Eigen::Matrix2d translation;
     polygon.col(0).array() -= centre[0];
     polygon.col(1).array() -= centre[1];
 
     // Scale the object so we figure out the buffer zone around it
-    const auto width = polygon.col(0).maxCoeff() - polygon.col(0).minCoeff();
-    const double scale = 1.0 + (2.0 * extraSize.value() / width);
-    Eigen::Matrix2d scaleMatrix;
-    scaleMatrix << scale, 0,
-                   0, scale;
-    polygon *= scale;
+    const Eigen::Array2d width = cols.maxCoeff() - cols.minCoeff();
+    const auto scale = 1.0 + (2.0 * extraSize.value()) / width;
+    polygon.col(0).array() *= scale(0);
+    polygon.col(1).array() *= scale(1);
 
     // Translate the object back to its original location
     polygon.col(0).array() += centre[0];
