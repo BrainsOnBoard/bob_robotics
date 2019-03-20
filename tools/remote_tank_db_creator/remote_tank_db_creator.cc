@@ -97,6 +97,7 @@ bob_main(int, char **)
     SFMLDisplay<> display{ V{ 5_m, 5_m } };
     auto car = display.createCarAgent(tank.getRobotWidth());
     auto objectShapes = ArenaObject::fromObjects(display, objects, collisionDetector.getResizedObjects());
+    std::vector<CrossShape> imagePoints;
 
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
@@ -112,7 +113,12 @@ bob_main(int, char **)
         // Update display
         const auto pose = vicon.getObjectData(0).getPose();
         car.setPose(pose);
-        display.update(objectShapes, car);
+        display.update(objectShapes, imagePoints, car);
+
+        // If window is closed, stop
+        if (!display.isOpen()) {
+            return false;
+        }
 
         // If Y or B pressed, abort database collection
         if (joystick.update()) {
@@ -157,14 +163,16 @@ bob_main(int, char **)
                 Navigation::ImageDatabase database(getNewDatabaseName());
                 auto recorder = database.getGridRecorder<true>(xRange, yRange);
 
-                // Check if any of the points would lead to a collision and remove them
+                // Check if any of the points would lead to a collision and remove them, if so
                 std::vector<std::array<size_t, 3>> goodPositions;
+                imagePoints.clear();
                 for (auto &gridPosition : recorder.getGridPositions()) {
                     const auto pos = recorder.getPosition(gridPosition);
                     if (collisionDetector.wouldCollide(pos)) {
                         std::cerr << "Warning: Would collide at: " << pos << "; will not collect image here" << std::endl;
                     } else {
                         goodPositions.push_back(gridPosition);
+                        imagePoints.emplace_back(display.vectorToPixel(pos), 20.f, 2.f, sf::Color::Green);
                     }
                 }
 
@@ -180,7 +188,7 @@ bob_main(int, char **)
         tank.drive(joystick);
 
         std::this_thread::sleep_for(20ms);
-    } while (!joystick.isPressed(HID::JButton::B));
+    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;
 }

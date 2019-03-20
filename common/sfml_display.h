@@ -15,11 +15,38 @@
 #include <cstring>
 
 // Standard C++ includes
+#include <memory>
 #include <vector>
 #include <stdexcept>
 
 namespace BoBRobotics {
 using namespace units::literals;
+
+class CrossShape
+  : public sf::Drawable
+{
+public:
+    CrossShape(const sf::Vector2f &position, float size, float thickness, const sf::Color &colour)
+        : m_Horizontal({ size, thickness })
+        , m_Vertical({ thickness, size })
+    {
+        m_Horizontal.setOrigin(size / 2.f, thickness / 2.f);
+        m_Vertical.setOrigin(thickness / 2.f, size / 2.f);
+        m_Horizontal.setPosition(position);
+        m_Vertical.setPosition(position);
+        m_Horizontal.setFillColor(colour);
+        m_Vertical.setFillColor(colour);
+    }
+
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+    {
+        target.draw(m_Horizontal, states);
+        target.draw(m_Vertical, states);
+    }
+
+private:
+    sf::RectangleShape m_Horizontal, m_Vertical;
+}; // CrossShape
 
 template<typename LengthUnit = units::length::meter_t>
 class SFMLDisplay
@@ -119,8 +146,6 @@ public:
                  "BoB robotics",
                  sf::Style::Titlebar | sf::Style::Close,
                  getContextSettings())
-      , m_OriginLineHorizontal({ OriginLineLength, OriginLineThickness })
-      , m_OriginLineVertical({ OriginLineThickness, OriginLineLength })
       , m_MinBounds(minBounds)
     {
         m_Window.setVerticalSyncEnabled(true);
@@ -143,13 +168,8 @@ public:
         }
 
         // Put cross at origin
-        m_OriginLineHorizontal.setFillColor(sf::Color::Black);
-        m_OriginLineVertical.setFillColor(sf::Color::Black);
         const auto origin = vectorToPixel(0.0, 0.0);
-        m_OriginLineHorizontal.setPosition({ origin.x - (OriginLineLength / 2.f),
-                                             origin.y - (OriginLineThickness / 2.f) });
-        m_OriginLineVertical.setPosition({ origin.x - (OriginLineThickness / 2.f),
-                                           origin.y - (OriginLineLength / 2.f) });
+        m_OriginCross = std::make_unique<CrossShape>(origin, OriginLineLength, OriginLineThickness, sf::Color::Black);
     }
 
     CarAgent createCarAgent(LengthUnit carWidth = 16.4_cm)
@@ -157,9 +177,15 @@ public:
         return CarAgent(*this, carWidth);
     }
 
-    LineStrip createLine(const sf::Color &colour) const
+    LineStrip createLineStrip(const sf::Color &colour) const
     {
         return LineStrip(*this, colour);
+    }
+
+    template<class VectorType>
+    CrossShape createCrossShape(const VectorType &position, float size, float thickness, const sf::Color &colour)
+    {
+        return CrossShape(vectorToPixel(position), size, thickness, colour);
     }
 
     template<typename... Drawables>
@@ -289,7 +315,7 @@ public:
 
 private:
     sf::RenderWindow m_Window;
-    sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
+    std::unique_ptr<CrossShape> m_OriginCross;
     const Vector2<LengthUnit> m_MinBounds;
     LengthUnit m_UnitPerPixel;
     Vector2<LengthUnit> m_MouseClickPosition = Vector2<LengthUnit>::nan();
@@ -319,12 +345,8 @@ private:
         // Set background colour
         m_Window.clear(sf::Color::White);
 
-        // Draw cross at origin
-        m_Window.draw(m_OriginLineHorizontal);
-        m_Window.draw(m_OriginLineVertical);
-
-        // Draw extra drawable things
-        draw(std::forward<Drawables>(drawables)...);
+        // Draw objects
+        draw(*m_OriginCross, std::forward<Drawables>(drawables)...);
 
         // Swap buffers
         m_Window.display();

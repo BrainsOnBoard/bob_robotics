@@ -65,7 +65,7 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
     auto objectShapes = ArenaObject::fromObjects(display, objects, resizedObjects);
 
     // For drawing the agent's route around the perimeter
-    auto routeLines = display.createLine(sf::Color::Blue);
+    auto routeLines = display.createLineStrip(sf::Color::Blue);
 
     do {
         // Extra functions specified by caller
