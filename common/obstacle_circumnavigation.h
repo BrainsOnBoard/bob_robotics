@@ -117,7 +117,8 @@ public:
         , m_CollisionDetector(collisionDetector)
     {}
 
-    void update()
+    template<class VectorType = Vector2<meter_t>>
+    void update(const VectorType &robotGoal = Vector2<meter_t>::nan())
     {
         if (m_PIDWaypoints.empty()) {
             const auto pose = m_PoseGetter.getPose();
@@ -126,7 +127,7 @@ public:
             m_CollisionDetector.setRobotPose(pose);
             if (m_CollisionDetector.collisionOccurred()) {
                 m_TankPID.getRobot().stopMoving();
-                startCircumnavigating(pose);
+                startCircumnavigating(pose, robotGoal);
             }
         } else {
             updatePID();
@@ -149,7 +150,8 @@ private:
     State m_State = State::DoingNothing;
     CollisionDetector &m_CollisionDetector;
 
-    void startCircumnavigating(const Pose2<meter_t, radian_t> &robotPose)
+    void startCircumnavigating(const Pose2<meter_t, radian_t> &robotPose,
+                               const Vector2<meter_t> &robotGoal)
     {
         using namespace units::math;
 
@@ -183,11 +185,17 @@ private:
         Eigen::Vector2d leavePoint;
         int whichLeaveLine = -1;
 
-        // Straight line from robot's pose
-        const auto m = tan(robotPose.yaw()).value();
-        const auto c = robotPose.y() - m * robotPose.x();
-        StraightLine robotLine{ m, c.value() };
         const Eigen::Vector2d robotPosition = { robotPose.x().value(), robotPose.y().value() };
+        StraightLine robotLine;
+        if (std::isnan(robotGoal.x().value())) {
+            // No goal specified: assume robot wants to go in a straight line
+            robotLine.m = tan(robotPose.yaw()).value();
+            robotLine.c = robotPose.y().value() - robotLine.m * robotPose.x().value();
+        } else {
+            // Aim for robot's actual goal
+            const Eigen::Vector2d goal = { robotGoal.x().value(), robotGoal.y().value() };
+            robotLine = StraightLine::fromPoints(robotPosition, goal);
+        }
 
         // Get perimeter around object, resize it for calculating route
         m_ObjectPerimeter = objectVerts;
@@ -195,8 +203,12 @@ private:
         EigenSTDVector<Eigen::Matrix2d> perimeterLines(m_ObjectPerimeter.size());
         polygonToLines(perimeterLines, m_ObjectPerimeter);
 
-        // Take the nearest point on the opposite side of the perimeter as the goal
-        for (int i = 0; i < m_ObjectPerimeter.rows(); i++) {
+        /*
+         * Take our (proximate) goal as the furthest point along robotLine that
+         * intersects with m_ObjectPerimeter.
+         */
+        const int numVerts = m_ObjectPerimeter.rows();
+        for (int i = 0; i < numVerts; i++) {
             Eigen::Vector2d point;
             if (calculateIntersection(point, perimeterLines[i], robotLine)) {
                 const auto dist = distance2D(point, robotPosition);
@@ -215,7 +227,6 @@ private:
             m_State = State::DoingNothing;
         } else {
             // Append the waypoints to avoidLine (for display) and goals (for homing)
-            const int numVerts = m_ObjectPerimeter.rows();
             double distanceClockwise = 0.0, distanceAntiClockwise = 0.0;
 
             std::vector<int> incIndices, decIndices;

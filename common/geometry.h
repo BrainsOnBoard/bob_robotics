@@ -46,6 +46,11 @@ struct StraightLine
 {
     double m, c;
 
+    constexpr StraightLine()
+      : m(0)
+      , c(0)
+    {}
+
     constexpr StraightLine(double m, double c)
       : m(m)
       , c(c)

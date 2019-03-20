@@ -88,7 +88,7 @@ bob_main(int, char **)
     cv::Mat fr;
 
     const auto objects = readObjects("objects.yaml");
-    CollisionDetector collisionDetector(robotDimensions, objects, 15_cm);
+    CollisionDetector collisionDetector(robotDimensions, objects, 20_cm);
 
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
