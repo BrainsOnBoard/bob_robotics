@@ -142,7 +142,7 @@ public:
             m_Window.setSize(windowSize);
         }
 
-        // Put red cross at origin
+        // Put cross at origin
         m_OriginLineHorizontal.setFillColor(sf::Color::Black);
         m_OriginLineVertical.setFillColor(sf::Color::Black);
         const auto origin = vectorToPixel(0.0, 0.0);

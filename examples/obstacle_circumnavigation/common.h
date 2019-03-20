@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/arena_object.h"
 #include "common/collision.h"
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
@@ -25,39 +26,6 @@ using namespace units::angle;
 using namespace units::literals;
 using namespace units::length;
 using namespace std::literals;
-
-class ArenaObject
- : public sf::Drawable
-{
-public:
-    template<class VectorArrayType, class MatrixType>
-    ArenaObject(const SFMLDisplay<> &display, const VectorArrayType &original, const MatrixType &resized)
-        : m_GreenShape(original.size())
-        , m_RedShape(original.size())
-    {
-        // Dark green
-        m_GreenShape.setFillColor(sf::Color{ 0x00, 0x88, 0x00 });
-
-        // Add each vertex to the shape
-        for (size_t i = 0; i < original.size(); i++) {
-            m_GreenShape.setPoint(i, display.vectorToPixel(original[i]));
-        }
-
-        m_RedShape.setFillColor(sf::Color::Red);
-        for (size_t i = 0; i < original.size(); i++) {
-            m_RedShape.setPoint(i, display.vectorToPixel(resized(i, 0), resized(i, 1)));
-        }
-    }
-
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
-    {
-        target.draw(m_RedShape, states);
-        target.draw(m_GreenShape, states);
-    }
-
-private:
-    sf::ConvexShape m_GreenShape, m_RedShape;
-};
 
 struct Noop
 {
@@ -94,11 +62,7 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
 
     // Create drawable objects
     const auto &resizedObjects = collisionDetector.getResizedObjects();
-    std::vector<ArenaObject> objectShapes;
-    objectShapes.reserve(objects.size());
-    for (size_t i = 0; i < objects.size(); i++) {
-        objectShapes.emplace_back(display, objects[i], resizedObjects[i]);
-    }
+    auto objectShapes = ArenaObject::fromObjects(display, objects, resizedObjects);
 
     // For drawing the agent's route around the perimeter
     auto routeLines = display.createLine(sf::Color::Blue);

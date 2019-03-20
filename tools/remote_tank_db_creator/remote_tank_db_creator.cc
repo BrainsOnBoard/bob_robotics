@@ -1,9 +1,11 @@
 // BoB robotics includes
+#include "common/arena_object.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
+#include "common/sfml_display.h"
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
 #include "net/client.h"
@@ -90,6 +92,12 @@ bob_main(int, char **)
     const auto objects = readObjects("objects.yaml");
     CollisionDetector collisionDetector(robotDimensions, objects, 20_cm);
 
+    // Display for robot + objects
+    using V = Vector2<meter_t>;
+    SFMLDisplay<> display{ V{ 5_m, 5_m } };
+    auto car = display.createCarAgent(tank.getRobotWidth());
+    auto objectShapes = ArenaObject::fromObjects(display, objects, collisionDetector.getResizedObjects());
+
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
     client.runInBackground();
@@ -101,6 +109,11 @@ bob_main(int, char **)
         // Check for exceptions on background threads
         catcher.check();
 
+        // Update display
+        const auto pose = vicon.getObjectData(0).getPose();
+        car.setPose(pose);
+        display.update(objectShapes, car);
+
         // If Y or B pressed, abort database collection
         if (joystick.update()) {
             return !(joystick.isPressed(HID::JButton::B) || joystick.isPressed(HID::JButton::Y));
@@ -111,6 +124,11 @@ bob_main(int, char **)
     do {
         // Check for exceptions on background threads
         catcher.check();
+
+        // Update display
+        const auto pose = vicon.getObjectData(0).getPose();
+        car.setPose(pose);
+        display.update(objectShapes, car);
 
         // If Y is pressed, start collecting images
         if (joystick.update() && joystick.isPressed(HID::JButton::Y)) {

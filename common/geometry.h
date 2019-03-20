@@ -19,10 +19,10 @@
 #include <limits>
 #include <vector>
 
-template<class T>
-using EigenSTDVector = std::vector<T, Eigen::aligned_allocator<T>>;
 
 namespace BoBRobotics {
+template<class T>
+using EigenSTDVector = std::vector<T, Eigen::aligned_allocator<T>>;
 
 double
 distance2D(const Eigen::Vector2d &p1, const Eigen::Vector2d &p2)
