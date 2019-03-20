@@ -171,7 +171,7 @@ private:
     meter_t m_XLower, m_YLower;
     cv::Mat m_ObjectsMap;
     cv::Mat m_RobotMap;
-    std::vector<Eigen::MatrixX2d> m_ResizedObjects;
+    std::vector<Eigen::MatrixX2d, Eigen::aligned_allocator<Eigen::MatrixX2d>> m_ResizedObjects;
     size_t m_CollidedObjectId = std::numeric_limits<size_t>::max();
 
     //! Convert Eigen Matrix to OpenCV pionts
