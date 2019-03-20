@@ -20,8 +20,8 @@ class EV3
   : public Tank
 {
 public:
-    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_A,
-        const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_D)
+    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
+        const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_A)
       : m_MotorLeft(leftMotorPort)
       , m_MotorRight(rightMotorPort)
       , m_MaxSpeedTachos(m_MotorLeft.max_speed())
@@ -46,8 +46,8 @@ public:
         setWheelSpeeds(left, right);
 
         const float maxTachos = getMaximumSpeedProportion() * m_MaxSpeedTachos;
-        m_MotorLeft.set_speed_sp(maxTachos * left);
-        m_MotorRight.set_speed_sp(maxTachos * right);
+        m_MotorLeft.set_speed_sp(-maxTachos * left);
+        m_MotorRight.set_speed_sp(-maxTachos * right);
         m_MotorLeft.run_forever();
         m_MotorRight.run_forever();
     }
