@@ -12,7 +12,6 @@
 #include "../third_party/units.h"
 
 // Standard C++ includes
-#include <algorithm>
 #include <utility>
 
 namespace BoBRobotics {
@@ -55,9 +54,9 @@ public:
         m_MotorLeft.run_forever();
         m_MotorRight.run_forever();
 
-        // Every 5s check if the motors are overloaded
+        // Every 3s check if the motors are overloaded
         using namespace std::literals;
-        if (m_MotorStatusTimer.elapsed() > 5s) {
+        if (m_MotorStatusTimer.elapsed() > 3s) {
             // Restart timer
             m_MotorStatusTimer.start();
 
@@ -97,8 +96,10 @@ private:
     void checkMotor(const ev3dev::large_motor &motor, const std::string &label)
     {
         const auto states = motor.state();
-        if (std::binary_search(states.cbegin(), states.cend(), "overloaded")) {
-            std::cerr << "Warning: " << label << " motor is overloaded" << std::endl;
+        for (auto &state : states) {
+            if (state == "overloaded" || state == "stalled") {
+                std::cerr << "Warning: " << label << " motor is " << state << std::endl;
+            }
         }
     }
 };
