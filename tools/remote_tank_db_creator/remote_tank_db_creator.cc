@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/arena_object.h"
+#include "common/assert.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/obstacle_circumnavigation.h"
@@ -22,6 +23,7 @@
 #include "opencv2/opencv.hpp"
 
 // Standard C++ includes
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <sstream>
@@ -46,12 +48,38 @@ filesystem::path getNewDatabaseName()
     return databaseName;
 }
 
+// Take the second highest & lowest x/y values as the limits, so we're always within bounds
+auto getArenaLimits()
+{
+    auto lims = readObjects("arena_limits.yaml").at(0);
+    BOB_ASSERT(lims.size() == 4);
+
+    std::sort(lims.begin(), lims.end(), [](const auto &vec1, const auto &vec2) {
+        return vec1.x() < vec2.x();
+    });
+    const auto xLow = lims[1].x();
+    const auto xHigh = lims[2].x();
+
+    std::sort(lims.begin(), lims.end(), [](const auto &vec1, const auto &vec2) {
+        return vec1.y() < vec2.y();
+    });
+
+    const auto offset = 25_cm;
+    Vector2<meter_t> low{ xLow + offset, lims[1].y() + offset };
+    Vector2<meter_t> high{ xHigh - offset, lims[2].y() - offset };
+
+    return std::make_pair(low, high);
+}
+
 int
 bob_main(int argc, char **argv)
 {
     // Image database parameters
-    constexpr Navigation::Range xRange{ { -1_m, 0_m }, 0.5_m };
-    constexpr Navigation::Range yRange = xRange;
+    constexpr auto ImageSeparation = 10_cm;
+    const auto arenaLimits = getArenaLimits();
+    std::cout << "Arena limts: " << arenaLimits.first << " to " << arenaLimits.second << std::endl;
+    const Navigation::Range xRange{ { arenaLimits.first.x(), arenaLimits.second.x() }, ImageSeparation };
+    const Navigation::Range yRange{ { arenaLimits.first.y(), arenaLimits.second.y() }, ImageSeparation };
 
     // Positioner parameters
     constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
