@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "../common/background_exception_catcher.h"
-#include "../common/semaphore.h"
 #include "../common/thread.h"
 #include "../net/connection.h"
 #include "input.h"
@@ -81,12 +80,13 @@ public:
     // Public API
     //----------------------------------------------------------------------------
     //! Send a frame over the network (when operating in synchronous mode)
-    void sendFrame(const cv::Mat &frame)
+    bool sendFrame(const cv::Mat &frame)
     {
-        // Wait for start acknowledgement
-        m_AckSemaphore.waitOnce();
-
-        sendFrameInternal(frame);
+        const bool ackReceived = m_AckReceived;
+        if (ackReceived) {
+            sendFrameInternal(frame);
+        }
+        return ackReceived;
     }
 
 private:
@@ -128,8 +128,8 @@ private:
         // Handle command
         onCommandReceived(command);
 
-        // Raise semaphore
-        m_AckSemaphore.notify();
+        // Set flag
+        m_AckReceived = true;
     }
 
     void runAsync()
@@ -152,13 +152,12 @@ private:
     // Members
     //----------------------------------------------------------------------------
     Net::Connection &m_Connection;
-    Semaphore m_AckSemaphore;
     const std::string m_Name;
     std::vector<uchar> m_Buffer;
     Thread<> m_Thread;
     const cv::Size m_FrameSize;
     Input *m_Input;
-    std::atomic<bool> m_DoRun{ true };
+    std::atomic<bool> m_DoRun{ true }, m_AckReceived{ false };
 };
 } // Video
 } // BoBRobotics
