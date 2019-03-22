@@ -12,7 +12,7 @@
 #include "robots/robot_positioner.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
-#include "video/randominput.h"
+#include "video/netsource.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -47,7 +47,7 @@ filesystem::path getNewDatabaseName()
 }
 
 int
-bob_main(int, char **)
+bob_main(int argc, char **argv)
 {
     // Image database parameters
     constexpr Navigation::Range xRange{ { -1_m, 0_m }, 0.5_m };
@@ -61,7 +61,7 @@ bob_main(int, char **)
     constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
     constexpr double Beta = 0.05;                   // causes to drop velocity if 'k'(curveness) increases
     constexpr meter_t StartSlowingAt = 10_cm;
-    constexpr float MinSpeed = 0.2f;
+    constexpr float MinSpeed = 0.4f;
     constexpr float MaxSpeed = 1.0f;
 
     HID::Joystick joystick;
@@ -85,11 +85,18 @@ bob_main(int, char **)
         V{ -halfWidth, -halfWidth }
     };
 
-    // Fake video input
-    Video::RandomInput<> video({ 720, 360 });
+    // Read video over network
+    Video::NetSource video(client);
     cv::Mat fr;
 
-    const auto objects = readObjects("objects.yaml");
+    const ObjectVector objects = [&]() {
+        if (argc > 1) {
+            std::cout << "Loading objects from " << argv[1] << std::endl;
+            return readObjects(argv[1]);
+        } else {
+            return ObjectVector{};
+        }
+    }();
     CollisionDetector collisionDetector(robotDimensions, objects, 20_cm);
 
     // Display for robot + objects
@@ -162,6 +169,7 @@ bob_main(int, char **)
 
                 Navigation::ImageDatabase database(getNewDatabaseName());
                 auto recorder = database.getGridRecorder<true>(xRange, yRange);
+                recorder.addMetadata(video, true, false);
 
                 // Check if any of the points would lead to a collision and remove them, if so
                 std::vector<std::array<size_t, 3>> goodPositions;

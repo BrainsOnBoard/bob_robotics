@@ -14,6 +14,8 @@
 #include <vector>
 
 namespace BoBRobotics {
+using ObjectVector = std::vector<std::vector<Vector2<units::length::millimeter_t>>>;
+
 /**!
  *  \brief Read a set of objects (vertices) from a YAML file
  *
@@ -24,7 +26,7 @@ auto readObjects(const filesystem::path &objectFilePath) {
     BOB_ASSERT(objectFilePath.exists());
 
     using namespace units::length;
-    std::vector<std::vector<Vector2<millimeter_t>>> objects;
+    ObjectVector objects;
 
     cv::FileStorage fs(objectFilePath.str(), cv::FileStorage::READ);
     std::vector<double> vertex(2);

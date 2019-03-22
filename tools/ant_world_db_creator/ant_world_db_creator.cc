@@ -41,16 +41,6 @@ using namespace units::math;
 const cv::Size RenderSize{ 720, 150 };
 constexpr millimeter_t AgentHeight = 1_cm;
 
-void
-addMetadata(const AntWorld::AntAgent &agent, ImageDatabase::Recorder &recorder)
-{
-    // Record "camera" info
-    auto &metadata = recorder.getMetadataWriter();
-    metadata << "camera" << agent
-             << "needsUnwrapping" << false
-             << "isGreyscale" << false;
-}
-
 int
 main(int argc, char **argv)
 {
@@ -93,7 +83,7 @@ main(int argc, char **argv)
 
         Navigation::ImageDatabase database(databaseName);
         auto routeRecorder = database.getRouteRecorder();
-        addMetadata(agent, routeRecorder);
+        routeRecorder.addMetadata(agent, false, false);
 
         // Save images
         routeRecorder.run(agent, agent, poses, checkWindow);
@@ -110,7 +100,7 @@ main(int argc, char **argv)
         Range xrange({ worldMinBound[0], worldMaxBound[0] }, gridSpacing);
         Range yrange({ worldMinBound[1], worldMaxBound[1] }, gridSpacing);
         auto gridRecorder = database.getGridRecorder(xrange, yrange, AgentHeight);
-        addMetadata(agent, gridRecorder);
+        gridRecorder.addMetadata(agent, false, false);
 
         // Save images
         gridRecorder.run(agent, agent, checkWindow);

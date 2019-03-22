@@ -107,6 +107,13 @@ public:
             }
         }
 
+        void addMetadata(const Video::Input &video, bool needsUnwrapping, bool isGreyscale)
+        {
+            m_YAML << "camera" << video
+                   << "needsUnwrapping" << needsUnwrapping
+                   << "isGreyscale" << isGreyscale;
+        }
+
         //! Get an object for writing additional metadata to
         cv::FileStorage &getMetadataWriter() { return m_YAML; }
 
@@ -487,7 +494,7 @@ public:
     cv::FileNode getMetadata() const
     {
         BOB_ASSERT(hasMetadata());
-        return m_MetadataYAML->operator[]("metadata");
+        return (*m_MetadataYAML)["metadata"];
     }
 
     //! Get the (directory) name of this database
