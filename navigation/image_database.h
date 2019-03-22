@@ -564,7 +564,7 @@ public:
             std::getline(ss, line);
             std::getline(ss, line);
             while (std::getline(ss, line)) {
-                ofs << "  " << line << "\n";
+                ofs << "   " << line << "\n";
             }
         }
 
