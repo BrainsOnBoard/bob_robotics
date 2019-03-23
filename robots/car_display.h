@@ -107,6 +107,30 @@ public:
         return out;
     }
 
+    std::vector<float> getMouseClickPixelPosition() const
+    {
+        std::vector<float> out;
+        out.push_back(m_MouseClickPosition[0]);
+        out.push_back(m_MouseClickPosition[1]);
+        return out;
+    }
+
+    //! draws the rectangle at the desired coordinates
+    void drawRectangleAtCoordinates(const SDL_Rect &rectangle)
+    {
+        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(m_Renderer, &rectangle);
+    }
+
+    SDL_Renderer* getRenderer() {
+        return m_Renderer;
+    }
+
+    void clearScreen() {
+        // Clear the entire screen to our selected color.
+        SDL_RenderClear(m_Renderer);
+    }
+
 private:
     // Window size
     static constexpr int WindowWidth = 800;
@@ -148,17 +172,13 @@ private:
         return std::make_pair(0, false);
     }
 
-    //! draws the rectangle at the desired coordinates
-    void drawRectangleAtCoordinates(const SDL_Rect &rectangle)
-    {
-        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 255, 255);
-        SDL_RenderFillRect(m_Renderer, &rectangle);
-    }
+
+   
 
     void draw(const degree_t agentAngle)
     {
         // Clear the entire screen to our selected color.
-        SDL_RenderClear(m_Renderer);
+        //SDL_RenderClear(m_Renderer);
 
         // draw a rectangle at the goal position
         drawRectangleAtCoordinates({ m_MouseClickPosition[0], m_MouseClickPosition[1], 5, 5 });
