@@ -22,7 +22,7 @@ namespace BoBRobotics {
 using namespace units::literals;
 
 template<typename LengthUnit = units::length::meter_t>
-class SFMLDisplay
+class SFMLWorld
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
 
@@ -31,7 +31,7 @@ public:
       : public sf::Drawable
     {
     public:
-        CarAgent(const SFMLDisplay<LengthUnit> &display, LengthUnit carWidth)
+        CarAgent(const SFMLWorld<LengthUnit> &display, LengthUnit carWidth)
           : m_Display(display)
         {
             std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
@@ -67,20 +67,20 @@ public:
         }
 
     private:
-        const SFMLDisplay<LengthUnit> &m_Display;
+        const SFMLWorld<LengthUnit> &m_Display;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
     };
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    SFMLDisplay(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
-      : SFMLDisplay(Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
+    SFMLWorld(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
+      : SFMLWorld(Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
                      Vector2<LengthUnit>{ arenaSize[0] / 2, arenaSize[1] / 2 })
     {}
 
     template<typename MaxBoundsType>
-    SFMLDisplay(const Vector2<LengthUnit> &minBounds,
+    SFMLWorld(const Vector2<LengthUnit> &minBounds,
                  const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
@@ -317,5 +317,5 @@ private:
         settings.antialiasingLevel = 8;
         return settings;
     }
-}; // SFMLDisplay
+}; // SFMLWorld
 } // BobRobotics
