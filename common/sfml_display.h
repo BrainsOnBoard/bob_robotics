@@ -11,6 +11,9 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
+// Standard C includes
+#include <cstring>
+
 // Standard C++ includes
 #include <vector>
 #include <utility>
@@ -79,6 +82,7 @@ public:
 
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
+        memset(&event, 0, sizeof(event));
         while (m_Window.pollEvent(event)) {
             // "Close requested" event: we close the window
             if (event.type == sf::Event::Closed ||
