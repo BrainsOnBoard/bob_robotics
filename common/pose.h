@@ -3,8 +3,12 @@
 // Third-party includes
 #include "../third_party/units.h"
 
+// Standard C includes
+#include <cmath>
+
 // Standard C++ includes
 #include <array>
+#include <limits>
 #include <ostream>
 
 namespace BoBRobotics {
@@ -140,6 +144,12 @@ public:
     auto cbegin() const { return m_Array.cbegin(); }
     auto cend() const { return m_Array.end(); }
 
+    bool isnan() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return std::isnan(derived->x().value()) || std::isnan(derived->y().value()) || std::isnan(derived->z().value());
+    }
+
     static constexpr radian_t yaw() { return radian_t(0); }
     static constexpr radian_t pitch() { return radian_t(0); }
     static constexpr radian_t roll() { return radian_t(0); }
@@ -169,6 +179,12 @@ public:
     LengthUnit &y() { return (*this)[1]; }
     const LengthUnit &y() const { return (*this)[1]; }
     static constexpr LengthUnit z() { return LengthUnit(0); }
+
+    static constexpr auto nan()
+    {
+        constexpr auto nan = LengthUnit{ std::numeric_limits<double>::quiet_NaN() };
+        return Vector2<LengthUnit>(nan, nan);
+    }
 };
 
 //! 3D length unit vector
@@ -195,6 +211,12 @@ public:
     const LengthUnit &y() const { return (*this)[1]; }
     LengthUnit &z() { return (*this)[2]; }
     const LengthUnit &z() const { return (*this)[2]; }
+
+    static constexpr auto nan()
+    {
+        constexpr auto nan = LengthUnit{ std::numeric_limits<double>::quiet_NaN() };
+        return Vector3<LengthUnit>(nan, nan, nan);
+    }
 };
 
 // Forward declaration

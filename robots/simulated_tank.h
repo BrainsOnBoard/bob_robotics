@@ -26,7 +26,7 @@ public:
       , m_AxisLength(axisLength)
     {}
 
-    virtual millimeter_t getRobotWidth()
+    virtual millimeter_t getRobotWidth() const override
     {
         return m_AxisLength;
     }

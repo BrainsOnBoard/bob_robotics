@@ -1,8 +1,8 @@
 // BoB robotics includes
 #include "common/pose.h"
+#include "common/sfml_display.h"
 #include "robots/robot_positioner.h"
 #include "robots/simulated_tank.h"
-#include "robots/car_display.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -24,7 +24,14 @@ int
 main()
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
-    Robots::CarDisplay display;
+    SFMLDisplay<> display;
+    auto car = display.createCarAgent();
+
+    // A circle to show where the goal is
+    sf::CircleShape goalCircle(10);
+    goalCircle.setFillColor(sf::Color::Blue);
+    goalCircle.setOrigin(10, 10);
+    goalCircle.setPosition(SFMLDisplay<>::WindowWidth / 2, SFMLDisplay<>::WindowHeight / 2);
 
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading
@@ -48,52 +55,26 @@ main()
         // Get the robot's current pose
         const auto &pose = robot.getPose();
 
-        // Run GUI events, get pressed key
-        const auto key = display.runGUI(pose);
-        if (key.second) { // Key down
-            switch (key.first) {
-            case SDLK_LEFT:
-                robot.tank(-0.5f, 0.5f);
-                break;
-            case SDLK_RIGHT:
-                robot.tank(0.5f, -0.5f);
-                break;
-            case SDLK_UP:
-                robot.tank(1.f, 1.f);
-                break;
-            case SDLK_DOWN:
-                robot.tank(-1.f, -1.f);
-                break;
-            case SDLK_SPACE:
-                // start/stop positioner
-                runPositioner = !runPositioner;
-                if (runPositioner) {
-                    std::cout << "Starting simulation" << std::endl;
-                } else {
-                    std::cout << "Stopping simulation" << std::endl;
-                    robot.stopMoving();
+        // Run GUI events
+        car.setPose(pose);
+        sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
-                    // Reset agent's position to origin
-                    robot.setPose({});
-                }
-            }
-        } else { // Key up
-            switch (key.first) {
-            case SDLK_LEFT:
-            case SDLK_RIGHT:
-            case SDLK_UP:
-            case SDLK_DOWN:
-                robot.stopMoving();
-                break;
-            }
+        // Spacebar toggles whether positioner is running
+        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
+            runPositioner = !runPositioner;
+            robot.stopMoving();
         }
 
         if (runPositioner) {
-            // Set a new goal position if user clicks in the window
-            const auto mousePosition = display.getMouseClickPosition();
+            if (display.mouseClicked()) {
+                // Set a new goal position if user clicks in the window
+                const auto mousePosition = display.mouseClickPosition();
 
-            // Set the goal to this position
-            robp.setGoalPose({ mousePosition[0], mousePosition[1], 15_deg });
+                // Set the goal to this position
+                robp.setGoalPose({ mousePosition.x(), mousePosition.y(), 15_deg });
+
+                goalCircle.setPosition(display.vectorToPixel(mousePosition));
+            }
 
             // Update course and drive robot
             robp.updateMotors(robot, pose);
@@ -102,6 +83,7 @@ main()
             if (robp.reachedGoal()) {
                 if (!reachedGoalAnnounced) {
                     std::cout << "Reached goal" << std::endl;
+                    robot.stopMoving();
                     reachedGoalAnnounced = true;
                 }
             } else {

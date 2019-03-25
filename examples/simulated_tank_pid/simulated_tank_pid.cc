@@ -2,8 +2,8 @@
 #include "robots/tank_pid.h"
 #include "common/main.h"
 #include "common/pose.h"
+#include "common/sfml_display.h"
 #include "hid/joystick.h"
-#include "robots/car_display.h"
 #include "robots/simulated_tank.h"
 
 // Third-party includes
@@ -23,8 +23,9 @@ int
 bob_main(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    Robots::CarDisplay display;                     // For displaying the agent
+    SFMLDisplay<> display;                          // For displaying the agent
     Robots::TankPID pid(robot, .1f, .1f, .1f);      // PID controller
+    auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
@@ -61,7 +62,8 @@ bob_main(int, char **)
         const auto robotPose = robot.getPose();
 
         // Refresh display
-        display.runGUI(robotPose);
+        car.setPose(robotPose);
+        display.update(car);
 
         // Run PID controller
         if (pidRunning && pid.driveRobot(robotPose)) {
