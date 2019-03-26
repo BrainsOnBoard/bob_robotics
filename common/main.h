@@ -9,6 +9,9 @@
 
 #pragma once
 
+// BoB robotics includes
+#include "logging.h"
+
 // Standard C++ includes
 #include <exception>
 #include <iostream>
@@ -21,18 +24,21 @@ bob_main(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
+    BoBRobotics::initialiseLogging();
     return bob_main(argc, argv);
 }
 #else
 int
 main(int argc, char **argv)
 {
+    BoBRobotics::initialiseLogging();
+
     try {
         return bob_main(argc, argv);
 #ifdef _WIN32
     } catch (std::exception &e) {
         // Windows doesn't print exception details by default
-        std::cerr << "Uncaught exception: " << e.what() << std::endl;
+        LOG_FATAL << "Uncaught exception: " << e.what() << std::endl;
 #ifdef _DEBUG
         throw;
 #else

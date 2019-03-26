@@ -51,6 +51,10 @@ CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
+# Always build using our logging library
+EXTRA_DEPS += plog
+CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)/third_party/plog/include
+
 # Add support for libantworld
 ifdef WITH_LIBANTWORLD
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
