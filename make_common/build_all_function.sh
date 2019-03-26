@@ -19,9 +19,14 @@ build_all() {
         if [ -f $project/MakefileTest ]; then
             makefile="-f MakefileTest"
         else
+            if [ ! -f $project/Makefile ]; then
+                # There's no makefile, so skip it
+                continue
+            fi
+
             makefile=
         fi
-        
+
         echo -e "\e[34m========== BUILDING $project ==========\e[39m"
         cd "$project"
         make clean $makefile
