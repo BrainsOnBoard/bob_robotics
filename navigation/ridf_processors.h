@@ -19,27 +19,24 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+using namespace units::literals;
 
 //! Winner-take all: derive heading using only the best-matching snapshot
 struct BestMatchingSnapshot
 {
-    auto operator()(const cv::Size &unwrapRes,
-                    std::vector<int> &bestCols,
-                    std::vector<float> &minDifferences)
+    template<typename Rotater>
+    auto operator()(std::vector<size_t> &bestCols,
+                    std::vector<float> &minDifferences,
+                    const Rotater &rotater)
     {
         // Get index corresponding to best-matching snapshot
         const auto bestPtr = std::min_element(std::begin(minDifferences), std::end(minDifferences));
         const auto bestSnapshot = static_cast<size_t>(std::distance(std::begin(minDifferences), bestPtr));
 
-        // If column is > 180 deg, then subtract 360 deg
-        int col = bestCols[bestSnapshot];
-        if (col > (unwrapRes.width / 2)) {
-            col -= unwrapRes.width;
-        }
-
         // Convert to radians
         using namespace units::angle;
-        const radian_t heading = units::make_unit<turn_t>((double) col / (double) unwrapRes.width);
+        // const radian_t heading = units::make_unit<turn_t>((double) col / (double) unwrapRes.width);
+        const radian_t heading = normaliseAngle180(rotater.columnToHeading(bestCols[bestSnapshot]));
 
         // Normalise to be between 0 and 1
         const float difference = minDifferences[bestSnapshot] / 255.0f;
@@ -53,9 +50,10 @@ struct BestMatchingSnapshot
 template<size_t numComp>
 struct WeightSnapshotsDynamic
 {
-    auto operator()(const cv::Size &unwrapRes,
-                    std::vector<int> &bestCols,
-                    std::vector<float> &minDifferences)
+    template<typename Rotater>
+    auto operator()(std::vector<size_t> &bestCols,
+                    std::vector<float> &minDifferences,
+                    const Rotater &rotater)
     {
         using namespace units::angle;
 
@@ -78,8 +76,8 @@ struct WeightSnapshotsDynamic
         }
 
         // Convert best columns to headings
-        auto colsToHeadings = [&bestCols, &unwrapRes](const size_t s) {
-            return units::make_unit<turn_t>((double) bestCols[s] / (double) unwrapRes.width);
+        auto colsToHeadings = [&bestCols, &rotater](const size_t s) {
+            return rotater.columnToHeading(bestCols[s]);
         };
         std::array<radian_t, numComp> headings;
         std::transform(snapshots.cbegin(), snapshots.cend(), headings.begin(),

@@ -6,7 +6,7 @@
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
-#include "common/sfml_display.h"
+#include "common/sfml_world.h"
 #include "robots/tank.h"
 
 // Eigen
@@ -40,7 +40,7 @@ runObstacleCircumnavigation(Robots::Tank &tank, PoseGetterType &poseGetter, Func
     using V = Vector2<meter_t>;
 
     // Display for robot + objects
-    SFMLDisplay<> display{ V{ 5_m, 5_m } };
+    SFMLWorld<> display{ V{ 5_m, 5_m } };
     auto car = display.createCarAgent(tank.getRobotWidth());
     const auto halfWidth = car.getSize().x() / 2;
     const auto halfLength = car.getSize().y() / 2;

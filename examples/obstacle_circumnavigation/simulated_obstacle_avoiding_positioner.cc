@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
-#include "common/sfml_display.h"
+#include "common/sfml_world.h"
 #include "robots/robot_positioner.h"
 #include "robots/simulated_tank.h"
 
@@ -25,14 +25,14 @@ int
 main()
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
-    SFMLDisplay<> display;
+    SFMLWorld<> display;
     auto car = display.createCarAgent();
 
     // A circle to show where the goal is
     sf::CircleShape goalCircle(10);
     goalCircle.setFillColor(sf::Color::Blue);
     goalCircle.setOrigin(10, 10);
-    goalCircle.setPosition(SFMLDisplay<>::WindowWidth / 2, SFMLDisplay<>::WindowHeight / 2);
+    goalCircle.setPosition(SFMLWorld<>::WindowWidth / 2, SFMLWorld<>::WindowHeight / 2);
 
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading

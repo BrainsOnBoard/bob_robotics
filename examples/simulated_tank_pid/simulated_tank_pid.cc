@@ -2,7 +2,7 @@
 #include "robots/tank_pid.h"
 #include "common/main.h"
 #include "common/pose.h"
-#include "common/sfml_display.h"
+#include "common/sfml_world.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 
@@ -22,9 +22,9 @@ using namespace units::length;
 int
 bob_main(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    SFMLDisplay<> display;                          // For displaying the agent
-    auto pid = Robots::createTankPID(robot, robot, .1f, .1f, .1f);      // PID controller
+    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
+    SFMLWorld<> display;                                           // For displaying the agent
+    auto pid = Robots::createTankPID(robot, robot, .1f, .1f, .1f); // PID controller
     auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);

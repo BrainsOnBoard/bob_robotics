@@ -6,7 +6,7 @@
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
-#include "common/sfml_display.h"
+#include "common/sfml_world.h"
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
 #include "net/client.h"
@@ -129,7 +129,7 @@ bob_main(int argc, char **argv)
 
     // Display for robot + objects
     using V = Vector2<meter_t>;
-    SFMLDisplay<> display{ V{ 5_m, 5_m } };
+    SFMLWorld<> display{ V{ 5_m, 5_m } };
     auto car = display.createCarAgent(tank.getRobotWidth());
     auto objectShapes = ArenaObject::fromObjects(display, objects, collisionDetector.getResizedObjects());
     std::vector<CrossShape> imagePoints;

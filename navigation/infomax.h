@@ -237,10 +237,10 @@ private:
     {
         // Object for rotating over images
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        Rotater rotater(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
 
         // Ensure there's enough space in rotated differe
-        m_RotatedDifferences.reserve(rotater.max());
+        m_RotatedDifferences.reserve(rotater.numRotations());
         m_RotatedDifferences.clear();
 
         // Populate rotated differences with results

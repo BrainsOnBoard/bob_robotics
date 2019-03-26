@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "sfml_display.h"
+#include "sfml_world.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -12,7 +12,7 @@ class ArenaObject
 {
 public:
     template<class VectorArrayType, class MatrixType>
-    ArenaObject(const SFMLDisplay<> &display, const VectorArrayType &original, const MatrixType &resized)
+    ArenaObject(const SFMLWorld<> &display, const VectorArrayType &original, const MatrixType &resized)
       : m_GreenShape(original.size())
       , m_RedShape(original.size())
     {
@@ -37,7 +37,7 @@ public:
     }
 
     template<class VectorOfObjects, class VectorOfMatrices>
-    static auto fromObjects(const SFMLDisplay<> &display,
+    static auto fromObjects(const SFMLWorld<> &display,
                             const VectorOfObjects &objects,
                             const VectorOfMatrices &resized)
     {

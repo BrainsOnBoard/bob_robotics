@@ -198,7 +198,7 @@ private:
 
     static constexpr meter_t inf()
     {
-        return meter_t{ std::numeric_limits<double>::infinity() };
+        return meter_t{ std::numeric_limits<UNIT_LIB_DEFAULT_TYPE>::infinity() };
     }
 
 }; // CollisionDetector
