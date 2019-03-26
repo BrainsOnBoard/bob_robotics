@@ -32,11 +32,6 @@ else
 	CXXFLAGS += -O2
 endif
 
-# For printing network messages (see net/ folder)
-ifdef TRACE_NET
-	CXXFLAGS += -DTRACE_NET
-endif
-
 # Improves build time
 CXXFLAGS += -pipe
 
