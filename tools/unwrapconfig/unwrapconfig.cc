@@ -1,17 +1,18 @@
 // windows.h
 #include "os/windows_include.h"
 
-// C++ includes
-#include <memory>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // BoB robotics includes
+#include "common/logging.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <memory>
 
 using namespace BoBRobotics;
 
@@ -30,6 +31,8 @@ drawCalibrationLine(cv::Mat &imorig, cv::Point p1, cv::Point p2)
 int
 main(int argc, char **argv)
 {
+    initialiseLogging();
+
     // TODO: add option to calibrate see3cam too
     std::unique_ptr<Video::Input> pcam;
     if (argc == 1) {

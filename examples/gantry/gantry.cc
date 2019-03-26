@@ -10,6 +10,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
+#include "common/logging.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
@@ -26,6 +27,8 @@ using namespace units::literals;
 int
 main()
 {
+    initialiseLogging();
+
     try {
         // Object to interface with gantry robot
         Robots::Gantry gantry;

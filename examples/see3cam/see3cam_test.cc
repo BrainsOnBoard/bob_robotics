@@ -1,14 +1,16 @@
-#include <map>
-#include <numeric>
-
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// Common includes
+// BoB robotics includes
+#include "common/logging.h"
 #include "common/pid.h"
 #include "common/timer.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/see3cam_cu40.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <map>
+#include <numeric>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
@@ -44,6 +46,8 @@ void setMode(Mode newMode, Mode &mode, cv::Mat &output, cv::Mat &unwrapped) {
 
 int main(int argc, char *argv[])
 {
+    initialiseLogging();
+
     // Open camera
     const unsigned int deviceIndex = (argc > 1) ? std::atoi(argv[1]) : 0;
     const std::string device = "/dev/video" + std::to_string(deviceIndex);

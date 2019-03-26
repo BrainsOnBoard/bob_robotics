@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_raw.h"
@@ -23,6 +24,8 @@ trainRoute(T &pm)
 int
 main()
 {
+    initialiseLogging();
+
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
     std::vector<std::vector<float>> allDifferences;

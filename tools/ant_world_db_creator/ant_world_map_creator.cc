@@ -1,5 +1,12 @@
-// Standard C++ includes
-#include <iostream>
+// BoB robotics includes
+#include "common/logging.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
+#include "libantworld/route_continuous.h"
+#include "video/opengl.h"
+
+// Third-party includes
+#include "third_party/path.h"
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -7,14 +14,8 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// BoB robotics includes
-#include "third_party/path.h"
-#include "video/opengl.h"
-
-// Libantworld includes
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_continuous.h"
+// Standard C++ includes
+#include <iostream>
 
 using namespace BoBRobotics;
 
@@ -35,6 +36,8 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *messag
 
 int main()
 {
+    initialiseLogging();
+
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
 

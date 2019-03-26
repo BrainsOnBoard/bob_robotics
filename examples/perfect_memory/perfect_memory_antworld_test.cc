@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "navigation/antworld_rotater.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/plot.h"
@@ -24,6 +25,8 @@ trainRoute(T &pm)
 int
 main()
 {
+    initialiseLogging();
+
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
      * images we get from the robot gantry, but the height is greater (cf. 58)

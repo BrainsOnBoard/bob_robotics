@@ -1,13 +1,14 @@
-// Standard C++ includes
-#include <fstream>
-
 // BoB robotics includes
+#include "common/logging.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "robots/norbot.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
+
+// Standard C++ includes
+#include <fstream>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::HID;
@@ -18,6 +19,8 @@ using namespace std::literals;
 
 int main()
 {
+    initialiseLogging();
+
     constexpr unsigned int recordingInterval = 10;
     constexpr float joystickDeadzone = 0.25f;
 

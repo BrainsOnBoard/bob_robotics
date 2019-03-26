@@ -1,5 +1,6 @@
 
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/pose.h"
 #include "libantworld/agent.h"
 #include "libantworld/common.h"
@@ -151,6 +152,7 @@ private:
 int
 main(int argc, char **argv)
 {
+    initialiseLogging();
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
     if (argc > 1) {

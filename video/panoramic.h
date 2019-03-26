@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "input.h"
 #include "opencvinput.h"
 #ifndef _WIN32
@@ -66,8 +67,8 @@ inline std::unique_ptr<Input> getPanoramicCamera()
         throw std::runtime_error("No camera found");
     }
 
-    std::cout << "Selected camera #" << deviceNum << ": "
-              << OS::Video::getCameraName(deviceNum) << std::endl;
+    LOG_INFO << "Selected camera #" << deviceNum << ": "
+             << OS::Video::getCameraName(deviceNum) << std::endl;
 
     // SeeCam
     if(prefCamNum == 0) {
