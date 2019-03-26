@@ -3,7 +3,7 @@
 #include "common/collision.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
-#include "common/sfml_display.h"
+#include "common/sfml_world.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "vicon/udp.h"
@@ -27,7 +27,7 @@ class Agent
   : public sf::Drawable
 {
 public:
-    Agent(const SFMLDisplay<> &renderer, size_t numVertices)
+    Agent(const SFMLWorld<> &renderer, size_t numVertices)
       : m_Renderer(renderer)
       , m_Shape(numVertices)
     {
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    const SFMLDisplay<> &m_Renderer;
+    const SFMLWorld<> &m_Renderer;
     sf::ConvexShape m_Shape;
 };
 
@@ -56,7 +56,7 @@ class ArenaObject
 {
 public:
     template<class VectorArrayType, class MatrixType>
-    ArenaObject(const SFMLDisplay<> &renderer, const VectorArrayType &original, const MatrixType &resized)
+    ArenaObject(const SFMLWorld<> &renderer, const VectorArrayType &original, const MatrixType &resized)
       : m_GreenShape(original.size())
       , m_RedShape(original.size())
     {
@@ -110,7 +110,7 @@ main()
     tank.addJoystick(joystick);
 
     // Display for robot + objects
-    SFMLDisplay<> renderer{ V{ 5_m, 5_m } };
+    SFMLWorld<> renderer{ V{ 5_m, 5_m } };
 
     // Read objects from file
     const auto objects = readObjects("objects.yaml");

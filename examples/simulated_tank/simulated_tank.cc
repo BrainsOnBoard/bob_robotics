@@ -2,7 +2,7 @@
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
-#include "common/sfml_display.h"
+#include "common/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -20,7 +20,7 @@ int
 bob_main(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    SFMLDisplay<> display;                          // For displaying the agent
+    SFMLWorld<> display;                            // For displaying the agent
     auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);

@@ -11,7 +11,10 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
-// Standard C++ includes#
+// Standard C includes
+#include <cstring>
+
+// Standard C++ includes
 #include <vector>
 #include <stdexcept>
 
@@ -19,7 +22,7 @@ namespace BoBRobotics {
 using namespace units::literals;
 
 template<typename LengthUnit = units::length::meter_t>
-class SFMLDisplay
+class SFMLWorld
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
 
@@ -28,7 +31,7 @@ public:
       : public sf::Drawable
     {
     public:
-        CarAgent(const SFMLDisplay<LengthUnit> &display, LengthUnit carWidth)
+        CarAgent(const SFMLWorld<LengthUnit> &display, LengthUnit carWidth)
           : m_Display(display)
         {
             std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
@@ -37,7 +40,7 @@ public:
                 throw std::runtime_error("BOB_ROBOTICS_PATH environment variable is not set");
             }
 
-            const std::string imageFilePath = std::string(brPath) + "/common/car.bmp";
+            const std::string imageFilePath = std::string(brPath) + "/robots/car.bmp";
             if (!m_Texture.loadFromFile(imageFilePath)) {
                 throw std::runtime_error("Could not load " + imageFilePath);
             }
@@ -64,20 +67,20 @@ public:
         }
 
     private:
-        const SFMLDisplay<LengthUnit> &m_Display;
+        const SFMLWorld<LengthUnit> &m_Display;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
     };
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    SFMLDisplay(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
-      : SFMLDisplay(Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
+    SFMLWorld(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
+      : SFMLWorld(Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
                      Vector2<LengthUnit>{ arenaSize[0] / 2, arenaSize[1] / 2 })
     {}
 
     template<typename MaxBoundsType>
-    SFMLDisplay(const Vector2<LengthUnit> &minBounds,
+    SFMLWorld(const Vector2<LengthUnit> &minBounds,
                  const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
@@ -129,6 +132,7 @@ public:
 
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
+        memset(static_cast<void *>(&event), 0, sizeof(event));
         while (m_Window.pollEvent(event)) {
             if (handleEvents(event)) {
                 return event;
@@ -152,6 +156,7 @@ public:
 
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
+        memset(static_cast<void *>(&event), 0, sizeof(event));
         while (m_Window.pollEvent(event)) {
             if (handleEvents(event)) {
                 return event;
@@ -312,5 +317,5 @@ private:
         settings.antialiasingLevel = 8;
         return settings;
     }
-}; // SFMLDisplay
+}; // SFMLWorld
 } // BobRobotics

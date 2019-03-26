@@ -63,13 +63,9 @@ ifdef WITH_IMGUI
 	EXTRA_DEPS += imgui
 endif
 
-# Build with OpenCV
-ifndef NO_OPENCV
-ifndef OPENCV_PKG_NAME
-	OPENCV_PKG_NAME := opencv
-endif
-	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
-	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
+ifdef WITH_SDL2
+	CXXFLAGS += `pkg-config --cflags sdl2`
+	LINK_FLAGS += `pkg-config --libs sdl2`
 endif
 
 ifdef WITH_LIBBEBOP
@@ -104,6 +100,15 @@ $(error Environment variable ARSDK_ROOT must be defined)
 
 	# For default.mk
 	EXTRA_DEPS += libbebop
+endif
+
+# Build with OpenCV
+ifndef NO_OPENCV
+ifndef OPENCV_PKG_NAME
+	OPENCV_PKG_NAME := opencv
+endif
+	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
+	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
 endif
 
 ifdef WITH_MATPLOTLIBCPP
