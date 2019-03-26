@@ -1,9 +1,9 @@
 [submodule "third_party/arsdk3/arsdk_manifests"]
 	path = third_party/arsdk3/arsdk_manifests
 	url = https://github.com/Parrot-Developers/arsdk_manifests
-[submodule "third_party/imgui/imgui"]
-	path = third_party/imgui/imgui
-	url = ../../ocornut/imgui.git
 [submodule "third_party/ev3dev-lang-cpp"]
 	path = third_party/ev3dev-lang-cpp/ev3dev-lang-cpp
 	url = https://github.com/ddemidov/ev3dev-lang-cpp
+[submodule "third_party/imgui/imgui"]
+	path = third_party/imgui/imgui
+	url = https://github.com/ocornut/imgui.git
