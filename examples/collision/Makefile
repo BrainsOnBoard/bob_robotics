@@ -1,8 +1,8 @@
-NO_OPENCV := 1
+WITH_EIGEN := 1
 WITH_SFML_GRAPHICS := 1
 include ../../make_common/bob_robotics.mk
 
-EXECUTABLE := simulated_tank_pid
+EXECUTABLE := collision
 
 .PHONY: all clean
 

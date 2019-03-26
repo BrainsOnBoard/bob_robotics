@@ -114,7 +114,7 @@ bob_main(int argc, char **argv)
             return EXIT_FAILURE;
         }
 
-        goals = std::move(read_objects(argv[2]).at(0));
+        goals = std::move(readObjects(argv[2]).at(0));
         std::cout << "Path read from " << argv[2] << std::endl;
         break;
     case 1:

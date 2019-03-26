@@ -60,8 +60,8 @@ public:
     {
         constexpr const char *envVar = "ROBOT_IP", *defaultIP = "127.0.0.1";
 
-        std::string ip = std::getenv(envVar);
-        if (ip.empty()) {
+        const char *ip = std::getenv(envVar);
+        if (!ip) {
             std::cerr << "WARNING: Environment variable " << envVar
                       << " not set; using " << defaultIP << std::endl;
             ip = defaultIP;

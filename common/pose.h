@@ -3,8 +3,12 @@
 // Third-party includes
 #include "../third_party/units.h"
 
+// Standard C includes
+#include <cmath>
+
 // Standard C++ includes
 #include <array>
+#include <limits>
 #include <ostream>
 
 namespace BoBRobotics {
@@ -25,6 +29,8 @@ template<typename Derived>
 class PoseBase
 {
 public:
+    constexpr PoseBase() = default;
+
     template<typename PoseType>
     bool operator==(const PoseType &pose) const
     {
@@ -93,10 +99,10 @@ class VectorBase
     using radian_t = units::angle::radian_t;
 
 public:
-    VectorBase() = default;
+    constexpr VectorBase() = default;
 
     template<typename... Ts>
-    VectorBase(Ts &&... args)
+    constexpr VectorBase(Ts &&... args)
       : PoseBase<Derived>()
       , m_Array({ std::forward<Ts>(args)... })
     {}
@@ -138,6 +144,12 @@ public:
     auto cbegin() const { return m_Array.cbegin(); }
     auto cend() const { return m_Array.end(); }
 
+    bool isnan() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return std::isnan(derived->x().value()) || std::isnan(derived->y().value()) || std::isnan(derived->z().value());
+    }
+
     static constexpr radian_t yaw() { return radian_t(0); }
     static constexpr radian_t pitch() { return radian_t(0); }
     static constexpr radian_t roll() { return radian_t(0); }
@@ -152,13 +164,13 @@ class Vector2
   : public VectorBase<LengthUnit, 2, Vector2<LengthUnit>>
 {
 public:
-    Vector2() = default;
+    constexpr Vector2() = default;
 
-    Vector2(LengthUnit x, LengthUnit y)
+    constexpr Vector2(LengthUnit x, LengthUnit y)
       : VectorBase<LengthUnit, 2, Vector2<LengthUnit>>(x, y)
     {}
 
-    Vector2(const std::array<LengthUnit, 2> &array)
+    constexpr Vector2(const std::array<LengthUnit, 2> &array)
       : Vector2(array[0], array[1])
     {}
 
@@ -167,6 +179,12 @@ public:
     LengthUnit &y() { return (*this)[1]; }
     const LengthUnit &y() const { return (*this)[1]; }
     static constexpr LengthUnit z() { return LengthUnit(0); }
+
+    static constexpr auto nan()
+    {
+        constexpr auto nan = LengthUnit{ std::numeric_limits<double>::quiet_NaN() };
+        return Vector2<LengthUnit>(nan, nan);
+    }
 };
 
 //! 3D length unit vector
@@ -175,13 +193,13 @@ class Vector3
   : public VectorBase<LengthUnit, 3, Vector3<LengthUnit>>
 {
 public:
-    Vector3() = default;
+    constexpr Vector3() = default;
 
-    Vector3(LengthUnit x, LengthUnit y, LengthUnit z)
+    constexpr Vector3(LengthUnit x, LengthUnit y, LengthUnit z)
       : VectorBase<LengthUnit, 3, Vector3<LengthUnit>>(x, y, z)
     {}
 
-    Vector3(const std::array<LengthUnit, 3> &array)
+    constexpr Vector3(const std::array<LengthUnit, 3> &array)
       : Vector3(array[0], array[1], array[2])
     {}
 
@@ -193,6 +211,12 @@ public:
     const LengthUnit &y() const { return (*this)[1]; }
     LengthUnit &z() { return (*this)[2]; }
     const LengthUnit &z() const { return (*this)[2]; }
+
+    static constexpr auto nan()
+    {
+        constexpr auto nan = LengthUnit{ std::numeric_limits<double>::quiet_NaN() };
+        return Vector3<LengthUnit>(nan, nan, nan);
+    }
 };
 
 // Forward declaration
@@ -210,9 +234,9 @@ class Pose2
                   "AngleUnit is not a unit of angle");
 
 public:
-    Pose2() = default;
+    constexpr Pose2() = default;
 
-    Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
+    constexpr Pose2(LengthUnit x, LengthUnit y, AngleUnit angle)
       : m_Position{ x, y }
       , m_Angle(angle)
     {}
@@ -247,9 +271,9 @@ class Pose3
                   "AngleUnit is not a unit of angle");
 
 public:
-    Pose3() = default;
+    constexpr Pose3() = default;
 
-    Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
+    constexpr Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
       : m_Position(position)
       , m_Attitude(attitude)
     {}
