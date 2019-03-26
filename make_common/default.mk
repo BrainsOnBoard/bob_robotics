@@ -4,17 +4,17 @@
 # include (path to BoB robotics)/make_common/bob_robotics.mk
 include $(abspath $(dir $(lastword $(MAKEFILE_LIST))))/bob_robotics.mk
 
-SOURCES ?= $(wildcard *.cc)
-OBJECTS := $(foreach obj,$(basename $(SOURCES)),$(OBJECT_PATH)$(obj))
-DEPS    := $(foreach dep,$(basename $(SOURCES)),$(OBJECT_PATH)$(dep).d)
+SOURCES     ?= $(wildcard *.cc)
+EXECUTABLES := $(foreach exec,$(basename $(SOURCES)),$(OBJECT_PATH)$(exec))
+DEPS        := $(foreach dep,$(basename $(SOURCES)),$(OBJECT_PATH)$(dep).d)
 
 .PHONY: all clean $(EXTRA_DEPS)
 
-all: $(OBJECTS)
+all: $(EXECUTABLES)
 
 -include $(DEPS)
 
-$(OBJECTS): %: %.cc $(DEPS) $(EXTRA_DEPS)
+$(EXECUTABLES): %: %.cc $(DEPS) $(EXTRA_DEPS)
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
 
 libantworld:
@@ -29,4 +29,4 @@ imgui:
 %d: ;
 
 clean:
-	rm -f $(OBJECTS) $(DEPS)
+	rm -f $(EXECUTABLES) $(DEPS)
