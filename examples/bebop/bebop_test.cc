@@ -4,44 +4,46 @@
 #include "libbebop/bebop.h"
 #include "video/display.h"
 
+// Third-party includes
+#include "third_party/units.h"
+
 // Standard C++ includes
 #include <chrono>
 #include <iostream>
 #include <stdexcept>
 #include <thread>
+#include <utility>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
 
-template<class T>
-void
-print(T limits)
-{
-    std::cout << " (limits: " << limits.first << ", "
-              << limits.second << ")" << std::endl;
-}
+template<typename T>
+using Limits = std::pair<T, T>;
 
 void
 printSpeedLimits(Bebop &drone)
 {
     // max tilt
-    auto maxTilt = drone.getMaximumTilt();
-    auto tiltLimits = drone.getTiltLimits();
-    std::cout << "Max tilt: " << maxTilt;
-    print(tiltLimits);
+    using namespace units::angle;
+    const degree_t maxTilt = drone.getMaximumTilt();
+    const Limits<degree_t> tiltLimits = drone.getTiltLimits();
+    std::cout << "Max tilt: " << maxTilt << " (limits: " << tiltLimits.first << ", "
+              << tiltLimits.second << ")" << std::endl;
 
     // max yaw speed
-    auto maxYawSpeed = drone.getMaximumYawSpeed();
-    auto yawLimits = drone.getYawSpeedLimits();
-    std::cout << "Max yaw speed: " << maxYawSpeed;
-    print(yawLimits);
+    using namespace units::angular_velocity;
+    const degrees_per_second_t maxYawSpeed = drone.getMaximumYawSpeed();
+    const Limits<degrees_per_second_t> yawLimits = drone.getYawSpeedLimits();
+    std::cout << "Max yaw speed: " << maxYawSpeed << " (limits: " << yawLimits.first << ", "
+              << yawLimits.second << ")" << std::endl;
 
     // max vertical speed
-    auto maxVertSpeed = drone.getMaximumVerticalSpeed();
-    auto vertSpeedLimits = drone.getVerticalSpeedLimits();
-    std::cout << "Max vertical speed: " << maxVertSpeed;
-    print(vertSpeedLimits);
+    using namespace units::velocity;
+    const meters_per_second_t maxVertSpeed = drone.getMaximumVerticalSpeed();
+    const Limits<meters_per_second_t> vertSpeedLimits = drone.getVerticalSpeedLimits();
+    std::cout << "Max vertical speed: " << maxVertSpeed << " (limits: " << vertSpeedLimits.first << ", "
+              << vertSpeedLimits.second << ")" << std::endl;
 }
 
 int
