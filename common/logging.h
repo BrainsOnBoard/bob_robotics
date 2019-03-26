@@ -8,6 +8,12 @@
 #include <cstdlib>
 
 namespace BoBRobotics {
+#ifdef DEBUG
+constexpr plog::Severity DefaultLogLevel = plog::Severity::debug;
+#else
+constexpr plog::Severity DefaultLogLevel = plog::Severity::info;
+#endif
+
 //! Initialises our logging library with default options
 inline void initialiseLogging()
 {
@@ -20,7 +26,7 @@ inline void initialiseLogging()
         }
         severity = plog::severityFromString(severityEnvVar);
     } else {
-        severity = plog::Severity::info; // Default log level
+        severity = DefaultLogLevel; // Default log level
     }
 
     // Get filename to log to, if specified in env var
