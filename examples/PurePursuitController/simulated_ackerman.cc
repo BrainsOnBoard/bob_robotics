@@ -19,22 +19,22 @@ using namespace std::literals;
 using namespace units::literals;
 
 void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *renderer) {
-        if (!listRects.empty()) {
+    if (!listRects.empty()) {
 
-            for (unsigned int i = 0; i < listRects.size()-1; i++) {
-                SDL_Rect current_rectangle = listRects.at(i);
-                SDL_Rect next_rectangle = listRects.at(i+1);
+        for (unsigned int i = 0; i < listRects.size()-1; i++) {
+            SDL_Rect current_rectangle = listRects.at(i);
+            SDL_Rect next_rectangle = listRects.at(i+1);
 
-                float lineStartX = current_rectangle.x;
-                float lineStartY = current_rectangle.y;
-                float lineEndX = next_rectangle.x;
-                float lineEndY = next_rectangle.y;
-                
-                SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);
-                
-            }
+            float lineStartX = current_rectangle.x;
+            float lineStartY = current_rectangle.y;
+            float lineEndX = next_rectangle.x;
+            float lineEndY = next_rectangle.y;
+            
+            SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);
+            
         }
     }
+}
 
 
 
@@ -52,6 +52,7 @@ bob_main(int, char **)
     units::angle::degree_t deg = units::angle::degree_t(0);
 
   
+    BoBRobotics::Robots::PurePursuitController controller(units::length::meter_t(4));
 
     while(display.isOpen()) {
         

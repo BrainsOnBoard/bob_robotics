@@ -131,6 +131,18 @@ public:
         SDL_RenderClear(m_Renderer);
     }
 
+    void pixelToMM(const int x, const int y, millimeter_t &xMM, millimeter_t &yMM) const
+    {
+        xMM = (x - (WindowWidth / 2)) * m_MMPerPixel;
+        yMM = -(y - (WindowHeight / 2)) * m_MMPerPixel;
+    }
+
+    void mmToPixel(const millimeter_t x, const millimeter_t y, int &xPixel, int &yPixel) const
+    {
+        xPixel = static_cast<int>(x / m_MMPerPixel) + (WindowWidth / 2);
+        yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
+    }
+
 private:
     // Window size
     static constexpr int WindowWidth = 800;
@@ -191,18 +203,6 @@ private:
                          -agentAngle.value(), nullptr, SDL_FLIP_NONE);
 
         SDL_RenderPresent(m_Renderer);
-    }
-
-    void pixelToMM(const int x, const int y, millimeter_t &xMM, millimeter_t &yMM) const
-    {
-        xMM = (x - (WindowWidth / 2)) * m_MMPerPixel;
-        yMM = -(y - (WindowHeight / 2)) * m_MMPerPixel;
-    }
-
-    void mmToPixel(const millimeter_t x, const millimeter_t y, int &xPixel, int &yPixel) const
-    {
-        xPixel = static_cast<int>(x / m_MMPerPixel) + (WindowWidth / 2);
-        yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
     }
 
     void setRobotPosition(const millimeter_t x, const millimeter_t y)
