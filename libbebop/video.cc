@@ -1,5 +1,8 @@
 #include "bebop.h"
 
+// BoB robotics includes
+#include "common/logging.h"
+
 namespace BoBRobotics {
 namespace Robots {
 bool
@@ -49,7 +52,7 @@ Bebop::VideoStream::initCodec()
 
         av_init_packet(&m_Packet);
     } catch (const std::runtime_error &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        LOG_ERROR << "Error: " << e.what();
         reset();
         return false;
     }
@@ -107,7 +110,7 @@ Bebop::VideoStream::reallocateBuffers()
                                                 nullptr,
                                                 nullptr);
     } catch (const std::runtime_error &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        LOG_ERROR << "Error: " << e.what();
         reset(); // reset() is intentional
         return false;
     }
@@ -207,7 +210,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
 {
     if (!m_CodecInitialised) {
         if (!initCodec()) {
-            std::cerr << "Codec initialization failed!" << std::endl;
+            LOG_ERROR << "Codec initialization failed!";
             return false;
         }
     }
@@ -233,14 +236,13 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
             // success, skip this step until next codec update
             m_UpdateCodecParams = false;
         } else {
-            std::cerr << "Unexpected error while updating H264 parameters."
-                      << std::endl;
+            LOG_ERROR << "Unexpected error while updating H264 parameters.";
             return false;
         }
     }
 
     if (!framePtr->data || !framePtr->used) {
-        std::cerr << "Invalid frame data. Skipping." << std::endl;
+        LOG_WARNING << "Invalid frame data. Skipping.";
         return false;
     }
 
@@ -261,7 +263,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
             if ((getFrameWidth() != width_prev) ||
                 (getFrameHeight() != height_prev)) {
                 if (!reallocateBuffers()) {
-                    std::cerr << "Buffer reallocation failed!" << std::endl;
+                    LOG_WARNING << "Buffer reallocation failed!";
                 }
             }
             convertFrameToBGR();

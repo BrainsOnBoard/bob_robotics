@@ -1,7 +1,8 @@
 #include "bebop.h"
 
 // BoB robotics includes
-#include "../common/assert.h"
+#include "common/assert.h"
+#include "common/logging.h"
 
 using namespace units::angle;
 using namespace units::length;
@@ -95,7 +96,7 @@ Bebop::~Bebop()
 void
 Bebop::takeOff()
 {
-    std::cout << "Taking off..." << std::endl;
+    LOG_INFO << "Taking off...";
     DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
 
     if (m_FlightEventHandler) {
@@ -109,7 +110,7 @@ Bebop::takeOff()
 void
 Bebop::land()
 {
-    std::cout << "Landing..." << std::endl;
+    LOG_INFO << "Landing...";
     DRONE_COMMAND_NO_ARG(sendPilotingLanding);
 
     if (m_FlightEventHandler) {
@@ -328,9 +329,7 @@ Bebop::disconnect()
             state = getStateUpdate();
         } while (state == Bebop::State::Stopping);
 
-        if (state != Bebop::State::Stopped) {
-            std::cerr << "Warning: Could not disconnect from drone" << std::endl;
-        }
+        LOG_WARNING_IF(state != Bebop::State::Stopped) << "Could not disconnect from drone";
     }
 }
 
@@ -498,22 +497,22 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
-        std::cout << "Drone stopped" << std::endl;
+        LOG_INFO << "Drone stopped";
         break;
     case ARCONTROLLER_DEVICE_STATE_STARTING:
-        std::cout << "Drone starting..." << std::endl;
+        LOG_INFO << "Drone starting...";
         break;
     case ARCONTROLLER_DEVICE_STATE_RUNNING:
-        std::cout << "Drone started" << std::endl;
+        LOG_INFO << "Drone started";
         break;
     case ARCONTROLLER_DEVICE_STATE_PAUSED:
-        std::cout << "Drone is paused" << std::endl;
+        LOG_INFO << "Drone is paused";
         break;
     case ARCONTROLLER_DEVICE_STATE_STOPPING:
-        std::cout << "Drone stopping..." << std::endl;
+        LOG_INFO << "Drone stopping...";
         break;
     default:
-        std::cerr << "Unknown state!" << std::endl;
+        LOG_WARNING << "Unknown drone state!";
     }
 }
 
@@ -572,7 +571,7 @@ Bebop::magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *d
         ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED, arg);
         if (arg && arg->value.U8) {
-            std::cout << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!" << std::endl;
+            LOG_WARNING << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!";
         }
     }
 }
@@ -620,19 +619,19 @@ Bebop::alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     if (arg) {
         switch (arg->value.I32) {
         case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
-            std::cout << "Alert! User emergency alert" << std::endl;
+            LOG_ERROR << "Alert! User emergency alert";
             break;
         case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
-            std::cout << "Alert! Drone has cut out" << std::endl;
+            LOG_ERROR << "Alert! Drone has cut out";
             break;
         case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
-            std::cout << "Alert! Battery level is critical" << std::endl;
+            LOG_WARNING << "Alert! Battery level is critical";
             break;
         case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
-            std::cout << "Alert! Battery level is low" << std::endl;
+            LOG_WARNING << "Alert! Battery level is low";
             break;
         case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
-            std::cout << "Alert! The angle of the drone is too high" << std::endl;
+            LOG_WARNING << "Alert! The angle of the drone is too high";
             break;
         default:
             break;
@@ -649,13 +648,9 @@ Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
     if (elem) {
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
-        if (arg) {
-            std::cout << "Bebop software version: " << arg->value.String << std::endl;
-        }
+        LOG_VERBOSE_IF(arg) << "Bebop software version: " << arg->value.String;
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
-        if (arg) {
-            std::cout << "Bebop hardware version: " << arg->value.String << std::endl;
-        }
+        LOG_VERBOSE_IF(arg) << "Bebop hardware version: " << arg->value.String;
     }
 }
 } // Robots
