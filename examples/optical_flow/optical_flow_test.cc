@@ -37,8 +37,6 @@ void buildFilter(cv::Mat &filter, float preferredAngle)
 
 int main()
 {
-    BoBRobotics::initialiseLogging();
-
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;
 

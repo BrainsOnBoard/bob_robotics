@@ -13,8 +13,6 @@ using namespace BoBRobotics::Video;
 
 int main()
 {
-    BoBRobotics::initialiseLogging();
-
     auto cam = getPanoramicCamera();
     Display display(*cam, {1240, 600});
     display.run();

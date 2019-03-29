@@ -27,8 +27,6 @@ using namespace units::literals;
 int
 main()
 {
-    initialiseLogging();
-
     try {
         // Object to interface with gantry robot
         Robots::Gantry gantry;

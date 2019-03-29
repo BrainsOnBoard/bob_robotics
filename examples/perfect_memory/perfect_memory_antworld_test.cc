@@ -25,8 +25,6 @@ trainRoute(T &pm)
 int
 main()
 {
-    initialiseLogging();
-
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
      * images we get from the robot gantry, but the height is greater (cf. 58)

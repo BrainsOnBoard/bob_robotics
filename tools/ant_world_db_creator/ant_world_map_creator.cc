@@ -36,8 +36,6 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *messag
 
 int main()
 {
-    initialiseLogging();
-
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
 

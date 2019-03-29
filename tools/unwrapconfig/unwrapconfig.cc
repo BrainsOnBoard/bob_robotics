@@ -31,8 +31,6 @@ drawCalibrationLine(cv::Mat &imorig, cv::Point p1, cv::Point p2)
 int
 main(int argc, char **argv)
 {
-    initialiseLogging();
-
     // TODO: add option to calibrate see3cam too
     std::unique_ptr<Video::Input> pcam;
     if (argc == 1) {

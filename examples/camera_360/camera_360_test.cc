@@ -16,8 +16,6 @@ using namespace BoBRobotics::Video;
 
 int main()
 {
-    initialiseLogging();
-
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;
 

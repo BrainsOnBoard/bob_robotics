@@ -24,15 +24,12 @@ bob_main(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
-    BoBRobotics::initialiseLogging();
     return bob_main(argc, argv);
 }
 #else
 int
 main(int argc, char **argv)
 {
-    BoBRobotics::initialiseLogging();
-
     try {
         return bob_main(argc, argv);
 #ifdef _WIN32

@@ -24,8 +24,6 @@ using namespace BoBRobotics::Video;
 int
 main(int argc, char **argv)
 {
-    BoBRobotics::initialiseLogging();
-
     if (argc == 1) {
         // if no args supplied, use default webcam
         OpenCVInput cam;

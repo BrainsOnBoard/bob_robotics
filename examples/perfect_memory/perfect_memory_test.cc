@@ -24,8 +24,6 @@ trainRoute(T &pm)
 int
 main()
 {
-    initialiseLogging();
-
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
     std::vector<std::vector<float>> allDifferences;
