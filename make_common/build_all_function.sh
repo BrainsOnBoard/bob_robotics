@@ -1,6 +1,9 @@
 #!/bin/bash
 
 build_all() {
+    # Make sure plog headers are available before we start building things
+    git submodule update --init $(dirname "$0")/../third_party/plog
+
     types=$1; shift
     goodcount=0
     projectcount=0
