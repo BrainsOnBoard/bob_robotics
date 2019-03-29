@@ -19,6 +19,7 @@ constexpr plog::Severity DefaultLogLevel = plog::Severity::debug;
 constexpr plog::Severity DefaultLogLevel = plog::Severity::info;
 #endif
 
+//! Dummy class for initialising logging before main() is called
 class Logger
 {
 public:
@@ -29,6 +30,31 @@ public:
     }
 
 private:
+    //! Plog's default TxtFormatter is a bit verbose, so let's implement our own
+    struct Formatter
+    {
+        static plog::util::nstring header()
+        {
+            return plog::util::nstring();
+        }
+
+        static plog::util::nstring format(const plog::Record& record)
+        {
+            tm t;
+            plog::util::localtime_s(&t, &record.getTime().time);
+            plog::util::nostringstream ss;
+            ss << std::setfill(PLOG_NSTR('0')) << std::setw(2) << t.tm_hour << PLOG_NSTR(":") << std::setfill(PLOG_NSTR('0')) << std::setw(2) << t.tm_min << PLOG_NSTR(":") << std::setfill(PLOG_NSTR('0')) << std::setw(2) << t.tm_sec << PLOG_NSTR(".") << std::setfill(PLOG_NSTR('0')) << std::setw(3) << record.getTime().millitm << PLOG_NSTR(" ");
+            ss << PLOG_NSTR("[") << record.getFunc() << PLOG_NSTR("@") << record.getLine() << PLOG_NSTR("] ");
+            const auto severity = record.getSeverity();
+            if (severity != plog::Severity::info && severity != plog::Severity::verbose && severity != plog::Severity::none) {
+                ss << plog::severityToString(severity) << PLOG_NSTR(": ");
+            }
+            ss << record.getMessage() << PLOG_NSTR("\n");
+
+            return ss.str();
+        }
+    };
+
     Logger()
     {
         // Get log level
@@ -50,7 +76,7 @@ private:
          *
          * The plog documentation reports that this should have static scope.
          */
-        static plog::ColorConsoleAppender<plog::TxtFormatter> appender;
+        static plog::ColorConsoleAppender<Formatter> appender;
         plog::get()->addAppender(&appender);
     }
 
