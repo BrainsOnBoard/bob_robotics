@@ -5,12 +5,16 @@
 #include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "robots/tank_netsink.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
+
+#ifndef NO_I2C_ROBOT
+#include "robots/norbot.h"
+#endif
 
 // Standard C includes
 #include <cstring>
@@ -51,6 +55,9 @@ bob_main(int, char **)
         }
 
         // Try to connect to servos over I2C and if that fails, try to connect to EV3
+#ifdef NO_I2C_ROBOT
+        tank = std::make_unique<Robots::Tank>();
+#else
         try {
             tank = std::make_unique<Robots::Norbot>();
         } catch (std::runtime_error &) {
@@ -58,6 +65,7 @@ bob_main(int, char **)
             client = std::make_unique<Net::Client>("10.42.0.130");
             tank = std::make_unique<Robots::TankNetSink>(*client);
         }
+#endif
 
         // Read motor commands from network
         tank->readFromNetwork(connection);

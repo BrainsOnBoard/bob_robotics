@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 #include "differencers.h"
 #include "ridf_processors.h"
 
@@ -40,7 +41,7 @@ public:
     :   m_HOGDescriptorSize(numOrientations * ((unwrapRes.width - blockSize.width)/blockStride.width + 1) * ((unwrapRes.height - blockSize.height)/blockStride.height + 1)),
         m_Differencer(m_HOGDescriptorSize)
     {
-        std::cout << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features" << std::endl;
+        LOG_INFO << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features";
 
         // Configure HOG features
         m_HOG.winSize = unwrapRes;

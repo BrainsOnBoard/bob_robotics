@@ -2,6 +2,8 @@
 
 // BoB robotics includes
 #include "../common/background_exception_catcher.h"
+#include "../common/logging.h"
+#include "../common/semaphore.h"
 #include "../common/thread.h"
 #include "../net/connection.h"
 #include "input.h"
@@ -69,11 +71,15 @@ public:
 
     virtual ~NetSink()
     {
+        LOG_DEBUG << "Waiting for Video::NetSink to finish...";
+
         // Ignore IMG commands
         m_Connection.setCommandHandler("IMG", nullptr);
 
         // Set stop flag
         m_DoRun = false;
+
+        LOG_DEBUG << "Video::NetSink stopped";
     }
 
     //----------------------------------------------------------------------------

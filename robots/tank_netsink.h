@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 #include "../common/stopwatch.h"
 #include "../net/connection.h"
 #include "tank.h"
@@ -67,8 +68,8 @@ public:
         try {
             stopMoving();
         } catch (OS::Net::NetworkError &e) {
-            std::cerr << "Warning: Caught exception while trying to send command: "
-                      << e.what() << std::endl;
+            LOG_WARNING << "Caught exception while trying to send command: "
+                        << e.what();
         } catch (Net::SocketClosedError &) {
             // Socket has already been cleanly closed
         }
@@ -112,11 +113,9 @@ public:
         // print warning if steering command was slow to send
         using namespace std::literals;
         const auto duration = netTimer.elapsed();
-        if (duration > 100ms) {
-            std::cerr << "Warning: Network is slow ("
-                      << static_cast<units::time::millisecond_t>(duration)
-                      << " to send motor command)" << std::endl;
-        }
+        LOG_WARNING_IF(duration > 100ms) << "Network is slow ("
+                                         << static_cast<units::time::millisecond_t>(duration)
+                                         << " to send motor command)";
 
         // store current left/right values to compare next time
         m_OldLeft = left;

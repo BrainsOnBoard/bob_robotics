@@ -1,6 +1,9 @@
 #pragma once
 
-// C++ includes
+// BoB robotics includes
+#include "../common/logging.h"
+
+// Standard C++ includes
 #include <iostream>
 #include <string>
 #include <vector>
@@ -26,8 +29,7 @@ inline const std::string getCameraName(int deviceNumber)
 
     v4l2_capability video_cap;
     if (ioctl(fd, VIDIOC_QUERYCAP, &video_cap) == -1) {
-        std::cerr << "Warning: Could not get video device capabilities"
-                  << std::endl;
+        LOG_WARNING << "Could not get video device capabilities";
         close(fd);
         return "";
     }

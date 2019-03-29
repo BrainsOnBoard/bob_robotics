@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "connection.h"
 #include "socket.h"
 
@@ -61,14 +62,14 @@ public:
         socklen_t addrlen = sizeof(addr);
 
         // Wait for incoming TCP connection
-        std::cout << "Waiting for incoming connection..." << std::endl;
+        LOG_INFO << "Waiting for incoming connection..." << std::endl;
         Socket socket(accept(m_ListenSocket.getHandle(), (sockaddr *) &addr, &addrlen));
         socket.send("HEY\n");
 
         // Convert IP to string
         char saddr[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
-        std::cout << "Incoming connection from " << saddr << std::endl;
+        LOG_INFO << "Incoming connection from " << saddr << std::endl;
 
         return Connection(std::move(socket));
     }

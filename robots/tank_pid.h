@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "../common/circstat.h"
 #include "../common/fsm.h"
+#include "../common/logging.h"
 #include "../common/pose.h"
 #include "../common/stopwatch.h"
 #include "../vicon/udp.h"
@@ -128,7 +129,7 @@ private:
         switch (state) {
         case TankPIDState::OrientingToGoal:
             if (event == Event::Enter) {
-                std::cout << "Starting turning" << std::endl;
+                LOG_INFO << "Starting turning";
             } else if (event == Event::Update) {
                 /*
                  * If m_HeadingOffset is suitably small, we've finished turning
@@ -144,7 +145,7 @@ private:
                 }
             } else { // Exit
                 m_Robot.stopMoving();
-                std::cout << "Stopping turning" << std::endl;
+                LOG_INFO << "Stopping turning";
             }
             break;
         case TankPIDState::DrivingToGoal: {
@@ -182,7 +183,7 @@ private:
         } break;
         case TankPIDState::AtGoal:
             if (event == Event::Enter) {
-                std::cout << "Reached goal" << std::endl;
+                LOG_INFO << "Reached goal";
             }
             break;
         case TankPIDState::Invalid:
