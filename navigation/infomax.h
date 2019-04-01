@@ -140,7 +140,7 @@ public:
         weights.colwise() -= means;
         // LOG_INFO << "Weights after subtracting means" << weights;
 
-        const auto newmeans = weights.rowwise().mean();
+        // const auto newmeans = weights.rowwise().mean();
         // LOG_INFO << "New means" << newmeans;
 
         const auto sd = matrixSD(weights);
@@ -149,7 +149,7 @@ public:
         weights = weights.array().colwise() / sd;
         // LOG_INFO << "Weights after dividing by SD" << weights;
 
-        const auto newsd = matrixSD(weights);
+        // const auto newsd = matrixSD(weights);
         // LOG_INFO << "New SD" << newsd;
 
         return weights.transpose();
