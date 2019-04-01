@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../os/windows_include.h"
+
 // BoB robotics includes
 #include "logging.h"
 
@@ -19,7 +21,7 @@
 int
 bob_main(int argc, char **argv);
 
-#ifdef DEBUG
+#if !defined(_WIN32) && defined(DEBUG)
 // Don't catch exceptions if we're debugging - we want the debugger to catch them
 int
 main(int argc, char **argv)
@@ -36,16 +38,17 @@ main(int argc, char **argv)
     } catch (std::exception &e) {
         // Windows doesn't print exception details by default
         LOG_FATAL << "Uncaught exception: " << e.what();
-#ifdef _DEBUG
+#ifdef DEBUG
         throw;
 #else
         // There's no point telling Windows the program has crashed
         return EXIT_FAILURE;
-#endif // !_DEBUG
+#endif // !DEBUG
 #endif // _WIN32
     } catch (...) {
         // Rethrow the caught exception
         throw;
     }
 }
-#endif // DEBUG
+#endif
+

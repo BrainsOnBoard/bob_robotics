@@ -22,4 +22,9 @@
 #define NOMINMAX
 
 #include <windows.h>
+
+// Use the same macro name for Windows and *nix
+#ifdef _DEBUG
+#define DEBUG
+#endif
 #endif
