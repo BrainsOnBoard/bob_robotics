@@ -2,6 +2,7 @@
 #include "common/arena_object.h"
 #include "common/assert.h"
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "common/obstacle_circumnavigation.h"
 #include "common/pose.h"
@@ -77,7 +78,7 @@ bob_main(int argc, char **argv)
     // Image database parameters
     constexpr auto ImageSeparation = 10_cm;
     const auto arenaLimits = getArenaLimits();
-    std::cout << "Arena limts: " << arenaLimits.first << " to " << arenaLimits.second << std::endl;
+    LOG_INFO << "Arena limits: " << arenaLimits.first << " to " << arenaLimits.second;
     const Navigation::Range xRange{ { arenaLimits.first.x(), arenaLimits.second.x() }, ImageSeparation };
     const Navigation::Range yRange{ { arenaLimits.first.y(), arenaLimits.second.y() }, ImageSeparation };
 
@@ -119,7 +120,7 @@ bob_main(int argc, char **argv)
 
     const ObjectVector objects = [&]() {
         if (argc > 1) {
-            std::cout << "Loading objects from " << argv[1] << std::endl;
+            LOG_INFO << "Loading objects from " << argv[1];
             return readObjects(argv[1]);
         } else {
             return ObjectVector{};
@@ -138,7 +139,7 @@ bob_main(int argc, char **argv)
     catcher.trapSignals();
     client.runInBackground();
 
-    std::cout << "Ready" << std::endl;
+    LOG_INFO << "Ready";
     const auto check = [&]() {
         std::this_thread::sleep_for(20ms);
 
@@ -174,7 +175,7 @@ bob_main(int argc, char **argv)
         // If Y is pressed, start collecting images
         if (joystick.update() && joystick.isPressed(HID::JButton::Y)) {
             if (!vicon.connected()) {
-                std::cerr << "Error: Still waiting for Vicon system" << std::endl;
+                LOG_ERROR << "Still waiting for Vicon system";
             } else {
                 auto viconObject = vicon.getObjectReference("EV3");
 
@@ -205,7 +206,7 @@ bob_main(int argc, char **argv)
                 for (auto &gridPosition : recorder.getGridPositions()) {
                     const auto pos = recorder.getPosition(gridPosition);
                     if (collisionDetector.wouldCollide(pos)) {
-                        std::cerr << "Warning: Would collide at: " << pos << "; will not collect image here" << std::endl;
+                        LOG_WARNING << "Would collide at: " << pos << "; will not collect image here";
                     } else {
                         goodPositions.push_back(gridPosition);
                         imagePoints.emplace_back(display.vectorToPixel(pos), 20.f, 2.f, sf::Color::Green);
@@ -214,7 +215,7 @@ bob_main(int argc, char **argv)
 
                 // Iterate through points and save images
                 if (!recorder.runAtPositions(avoider, video, goodPositions, check)) {
-                    std::cout << "Recording aborted" << std::endl;
+                    LOG_INFO << "Recording aborted";
                     recorder.abortSave();
                 }
             }
