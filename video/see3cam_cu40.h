@@ -329,7 +329,7 @@ public:
                 LOG_INFO << "Optimal exposure and brightness settings found: "
                             "exposure="
                          << previousExposure
-                         << ", brightness=" << previousBrightness << std::endl;
+                         << ", brightness=" << previousBrightness;
                 setExposure(previousExposure);
                 setBrightness(previousBrightness);
                 return;
