@@ -68,7 +68,7 @@ inline std::unique_ptr<Input> getPanoramicCamera()
     }
 
     LOG_INFO << "Selected camera #" << deviceNum << ": "
-             << OS::Video::getCameraName(deviceNum) << std::endl;
+             << OS::Video::getCameraName(deviceNum);
 
     // SeeCam
     if(prefCamNum == 0) {

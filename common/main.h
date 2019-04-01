@@ -35,7 +35,7 @@ main(int argc, char **argv)
 #ifdef _WIN32
     } catch (std::exception &e) {
         // Windows doesn't print exception details by default
-        LOG_FATAL << "Uncaught exception: " << e.what() << std::endl;
+        LOG_FATAL << "Uncaught exception: " << e.what();
 #ifdef _DEBUG
         throw;
 #else

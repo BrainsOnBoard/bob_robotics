@@ -131,32 +131,26 @@ public:
             }
         }
 
-        // LOG_INFO << "Initial weights" << std::endl
-        //           << weights;
+        // LOG_INFO << "Initial weights" << weights;
 
         // Normalise mean and SD for row so mean == 0 and SD == 1
         const auto means = weights.rowwise().mean();
-        // LOG_INFO << "Means" << std::endl
-        //           << means;
+        // LOG_INFO << "Means" << means;
 
         weights.colwise() -= means;
-        // LOG_INFO << "Weights after subtracting means" << std::endl << weights;
+        // LOG_INFO << "Weights after subtracting means" << weights;
 
-        // const auto newmeans = weights.rowwise().mean();
-        // LOG_INFO << "New means" << std::endl
-        //           << newmeans;
+        const auto newmeans = weights.rowwise().mean();
+        // LOG_INFO << "New means" << newmeans;
 
         const auto sd = matrixSD(weights);
-        // LOG_INFO << "SD" << std::endl
-        //           << sd;
+        // LOG_INFO << "SD" << sd;
 
         weights = weights.array().colwise() / sd;
-        // LOG_INFO << "Weights after dividing by SD" << std::endl
-        //           << weights;
+        // LOG_INFO << "Weights after dividing by SD" << weights;
 
-        // const auto newsd = matrixSD(weights);
-        // LOG_INFO << "New SD" << std::endl
-        //           << newsd;
+        const auto newsd = matrixSD(weights);
+        // LOG_INFO << "New SD" << newsd;
 
         return weights.transpose();
     }

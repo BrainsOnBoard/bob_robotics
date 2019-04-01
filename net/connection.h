@@ -221,7 +221,7 @@ private:
                     debitBytes(i + 1);
 
                     std::string outstring = oss.str();
-                    LOG_VERBOSE << "<<< " << outstring << std::endl;
+                    LOG_VERBOSE << "<<< " << outstring;
 
                     return outstring;
                 }
