@@ -52,7 +52,7 @@ public:
                                         std::to_string(port));
         }
 
-        LOG_INFO << "Opened socket" << std::endl;
+        LOG_INFO << "Opened socket";
     }
 
     const std::string &getIP() const { return m_IP; }
@@ -64,7 +64,7 @@ public:
         const char *ip = std::getenv(envVar);
         if (!ip) {
             LOG_WARNING << "Environment variable " << envVar
-                        << " not set; using " << defaultIP << std::endl;
+                        << " not set; using " << defaultIP;
             ip = defaultIP;
         }
         return ip;
