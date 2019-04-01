@@ -89,11 +89,15 @@ public:
 
         // Set initial axis states
         updateAxes(state, true);
+
+        LOG_INFO << "Joystick opened";
     }
 
     virtual ~JoystickWindows() override
     {
+        LOG_DEBUG << "Waiting for joystick to stop...";
         stop();
+        LOG_DEBUG << "Joystick stopped";
     }
 
     //------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "joystick_base.h"
 
 // Linux includes
@@ -110,13 +111,17 @@ public:
                          event.value ? StateDown : 0, true);
             }
         }
+
+        LOG_INFO << "Joystick opened";
     }
 
     //! Close connection to controller
     virtual ~JoystickLinux() override
     {
+        LOG_DEBUG << "Waiting for joystick to stop...";
         stop();
         ::close(m_Fd);
+        LOG_DEBUG << "Joystick stopped";
     }
 
 protected:
