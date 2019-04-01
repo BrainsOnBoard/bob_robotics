@@ -1,8 +1,8 @@
 var classBoBRobotics_1_1Vector3 =
 [
-    [ "Vector3", "classBoBRobotics_1_1Vector3.html#ac960a8ccc27ff720eeaa2f11d1143515", null ],
-    [ "Vector3", "classBoBRobotics_1_1Vector3.html#aa530d24cae7cafcd3483095f61e87eb7", null ],
-    [ "Vector3", "classBoBRobotics_1_1Vector3.html#a0d55d997797692d40c67434e16f2cb4b", null ],
+    [ "Vector3", "classBoBRobotics_1_1Vector3.html#ab4f57bbbc2d345c456f60f78b2e11456", null ],
+    [ "Vector3", "classBoBRobotics_1_1Vector3.html#a7354eedbf3b9bc1dffbc0e7415a5f6bd", null ],
+    [ "Vector3", "classBoBRobotics_1_1Vector3.html#af7c9b69e8cbe3e945ac38905b8ccdd3c", null ],
     [ "operator Vector2< LengthUnit >", "classBoBRobotics_1_1Vector3.html#a5e66f1c49198075c0b0263104f752262", null ],
     [ "x", "classBoBRobotics_1_1Vector3.html#a3e16629f3e43989983e139f6fa9b3e04", null ],
     [ "x", "classBoBRobotics_1_1Vector3.html#a826b9ffc614169c7f15c67015fa70964", null ],

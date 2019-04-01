@@ -11,6 +11,7 @@ var classBoBRobotics_1_1Net_1_1Connection =
     [ "operator=", "classBoBRobotics_1_1Net_1_1Connection.html#ae5ad1d86d8077f45c28003d488139b12", null ],
     [ "operator=", "classBoBRobotics_1_1Net_1_1Connection.html#aaf8db5aae2b57bdf44daeab18ee8aa5d", null ],
     [ "read", "classBoBRobotics_1_1Net_1_1Connection.html#aa408605b3aa7edf6531148aec37988ba", null ],
+    [ "readNextCommand", "classBoBRobotics_1_1Net_1_1Connection.html#a67e5975cb340d22496cf3b3240b6f69f", null ],
     [ "runInternal", "classBoBRobotics_1_1Net_1_1Connection.html#a8dc1d203be754603cf6de2b30db6e996", null ],
     [ "setCommandHandler", "classBoBRobotics_1_1Net_1_1Connection.html#a3724e11e462945434bcee2dbbbf9033a", null ]
 ];

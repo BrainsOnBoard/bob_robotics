@@ -143,7 +143,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1BackgroundExceptionCatcher.html">BackgroundExceptionCatcher</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapper for passing exceptions between threads (i.e. a background thread to the main one)  <a href="classBoBRobotics_1_1BackgroundExceptionCatcher.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1DefaultGetPose.html">DefaultGetPose</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1CollisionDetector.html">CollisionDetector</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1FSM.html">FSM</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finite-state machine class - makes logic of implementing robots etc. much cleaner.  <a href="classBoBRobotics_1_1FSM.html#details">More...</a><br /></td></tr>
@@ -166,6 +166,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Semaphore.html">Semaphore</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A basic C++ semaphore class.  <a href="classBoBRobotics_1_1Semaphore.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1SFMLWorld.html">SFMLWorld</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Stopwatch.html">Stopwatch</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,20 +195,57 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a35ec768bcea8e5d6f748dfa25da315ca"><td class="memTemplParams" colspan="2"><a id="a35ec768bcea8e5d6f748dfa25da315ca"></a>
-template&lt;typename LengthUnit , typename AgentType &gt; </td></tr>
-<tr class="memitem:a35ec768bcea8e5d6f748dfa25da315ca"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>plotAgent</b> (AgentType &amp;agent, const LengthUnit xLower, const LengthUnit xUpper, const LengthUnit yLower, const LengthUnit yUpper)</td></tr>
-<tr class="separator:a35ec768bcea8e5d6f748dfa25da315ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f413361a1a5dcc386971c6ef05b8b57"><td class="memTemplParams" colspan="2"><a id="a8f413361a1a5dcc386971c6ef05b8b57"></a>
+template&lt;class T  = double&gt; </td></tr>
+<tr class="memitem:a8f413361a1a5dcc386971c6ef05b8b57"><td class="memTemplItemLeft" align="right" valign="top">constexpr T&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pi</b> ()</td></tr>
+<tr class="separator:a8f413361a1a5dcc386971c6ef05b8b57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6957a6b32fd6487f05109f65bbefa45"><td class="memTemplParams" colspan="2"><a id="ad6957a6b32fd6487f05109f65bbefa45"></a>
+template&lt;typename AngleType &gt; </td></tr>
+<tr class="memitem:ad6957a6b32fd6487f05109f65bbefa45"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>normaliseAngle180</b> (AngleType angle)</td></tr>
+<tr class="separator:ad6957a6b32fd6487f05109f65bbefa45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c8b9b11a278deacb1bf3d65be6825b6"><td class="memTemplParams" colspan="2"><a id="a7c8b9b11a278deacb1bf3d65be6825b6"></a>
+template&lt;typename AngleType1 , typename AngleType2 &gt; </td></tr>
+<tr class="memitem:a7c8b9b11a278deacb1bf3d65be6825b6"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>circularDistance</b> (AngleType1 angle1, AngleType2 angle2)</td></tr>
+<tr class="separator:a7c8b9b11a278deacb1bf3d65be6825b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d44475f5e8d96f6deefc4d5d98d814e"><td class="memTemplParams" colspan="2"><a id="a1d44475f5e8d96f6deefc4d5d98d814e"></a>
+template&lt;typename PoseType , typename LengthUnit &gt; </td></tr>
+<tr class="memitem:a1d44475f5e8d96f6deefc4d5d98d814e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>plotAgent</b> (const PoseType &amp;pose, const LengthUnit xLower, const LengthUnit xUpper, const LengthUnit yLower, const LengthUnit yUpper)</td></tr>
+<tr class="separator:a1d44475f5e8d96f6deefc4d5d98d814e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b59cf44f0c1c5c35f3bcf2262fc6658"><td class="memTemplParams" colspan="2"><a id="a6b59cf44f0c1c5c35f3bcf2262fc6658"></a>
 template&lt;typename OutputUnit , typename ArrayType &gt; </td></tr>
 <tr class="memitem:a6b59cf44f0c1c5c35f3bcf2262fc6658"><td class="memTemplItemLeft" align="right" valign="top">constexpr std::array&lt; OutputUnit, 3 &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceBoBRobotics.html#a6b59cf44f0c1c5c35f3bcf2262fc6658">convertUnitArray</a> (const ArrayType &amp;values)</td></tr>
 <tr class="memdesc:a6b59cf44f0c1c5c35f3bcf2262fc6658"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the input array to a unit-type of OutputUnit. <br /></td></tr>
 <tr class="separator:a6b59cf44f0c1c5c35f3bcf2262fc6658"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5311fdad50b873e2e68d8083eedf63ee"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceBoBRobotics.html#a5311fdad50b873e2e68d8083eedf63ee">readObjects</a> (const <a class="el" href="classfilesystem_1_1path.html">filesystem::path</a> &amp;objectFilePath)</td></tr>
+<tr class="memdesc:a5311fdad50b873e2e68d8083eedf63ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a set of objects (vertices) from a YAML file.  <a href="#a5311fdad50b873e2e68d8083eedf63ee">More...</a><br /></td></tr>
+<tr class="separator:a5311fdad50b873e2e68d8083eedf63ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Root namespace for the BoB robotics project. </p>
 <p>Read a video stream from a libantworld RenderTarget. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="a5311fdad50b873e2e68d8083eedf63ee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5311fdad50b873e2e68d8083eedf63ee">&#9670;&nbsp;</a></span>readObjects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto BoBRobotics::readObjects </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classfilesystem_1_1path.html">filesystem::path</a> &amp;&#160;</td>
+          <td class="paramname"><em>objectFilePath</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read a set of objects (vertices) from a YAML file. </p>
+<p>! The files are of the form generated by save_object, which can be found here: <a href="https://github.com/BrainsOnBoard/vicon_marker_tools">https://github.com/BrainsOnBoard/vicon_marker_tools</a> </p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

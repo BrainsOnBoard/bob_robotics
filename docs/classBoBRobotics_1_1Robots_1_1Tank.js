@@ -1,11 +1,27 @@
 var classBoBRobotics_1_1Robots_1_1Tank =
 [
+    [ "meter_t", "classBoBRobotics_1_1Robots_1_1Tank.html#a8f0f23695a951ba66df3f7748fb370b7", null ],
+    [ "meters_per_second_t", "classBoBRobotics_1_1Robots_1_1Tank.html#a41535cde7913fde876155ffa061e23aa", null ],
+    [ "millimeter_t", "classBoBRobotics_1_1Robots_1_1Tank.html#afcc9da75ac26655b1cd7e6cd83b393c3", null ],
+    [ "radians_per_second_t", "classBoBRobotics_1_1Robots_1_1Tank.html#ab130ed8ac6baba2c7ac6a811f5ea683f", null ],
     [ "addJoystick", "classBoBRobotics_1_1Robots_1_1Tank.html#ada4eaa92ad7818902263cf1008758231", null ],
+    [ "controlWithThumbsticks", "classBoBRobotics_1_1Robots_1_1Tank.html#a7e5791b9f1b7b4bf815672bb381a1285", null ],
     [ "drive", "classBoBRobotics_1_1Robots_1_1Tank.html#a22c8daecff1431509492f5ae1fd42858", null ],
+    [ "getAbsoluteMaximumSpeed", "classBoBRobotics_1_1Robots_1_1Tank.html#abc18f445aac974c64f0f9d5c9b4f4801", null ],
+    [ "getAbsoluteMaximumTurnSpeed", "classBoBRobotics_1_1Robots_1_1Tank.html#a79b35868b67c534851f99473af705d1d", null ],
+    [ "getMaximumSpeed", "classBoBRobotics_1_1Robots_1_1Tank.html#ab6e8e5a247bab5568e537dc4bd750421", null ],
+    [ "getMaximumSpeedProportion", "classBoBRobotics_1_1Robots_1_1Tank.html#af1eef8e180ae299bd7656ce9eb1013e4", null ],
+    [ "getMaximumTurnSpeed", "classBoBRobotics_1_1Robots_1_1Tank.html#a93ca59333e56ce79bc936e6bc9f0c1bf", null ],
+    [ "getRobotWidth", "classBoBRobotics_1_1Robots_1_1Tank.html#a3c3abb204bcbf46aa87e6e983cb905cd", null ],
+    [ "move", "classBoBRobotics_1_1Robots_1_1Tank.html#a24070a11956ab0a97abd832e7958727b", null ],
     [ "moveForward", "classBoBRobotics_1_1Robots_1_1Tank.html#af512f678e97c20e4b4be83cbd11f0f4d", null ],
     [ "readFromNetwork", "classBoBRobotics_1_1Robots_1_1Tank.html#a93bb16916492c28883b23c952dcb7ae0", null ],
+    [ "setMaximumSpeedProportion", "classBoBRobotics_1_1Robots_1_1Tank.html#ab8b3ca004039dafb086c2774d55fe07b", null ],
+    [ "setWheelSpeeds", "classBoBRobotics_1_1Robots_1_1Tank.html#a9a8a3a167e94aa8e0597dbd43f501c78", null ],
     [ "stopMoving", "classBoBRobotics_1_1Robots_1_1Tank.html#a8555bfb9144b1814d04a007c28855808", null ],
     [ "stopReadingFromNetwork", "classBoBRobotics_1_1Robots_1_1Tank.html#aa59b6c14261e4fc78a1f7e637672e630", null ],
     [ "tank", "classBoBRobotics_1_1Robots_1_1Tank.html#af5bd26611b70f0c28bf51eaa96c4fd8a", null ],
+    [ "tank", "classBoBRobotics_1_1Robots_1_1Tank.html#a8c5ca385ff6ef440833e630cd1021f6c", null ],
+    [ "tankMaxScaled", "classBoBRobotics_1_1Robots_1_1Tank.html#a0e3f3ad18b7257dea84d1835984b8393", null ],
     [ "turnOnTheSpot", "classBoBRobotics_1_1Robots_1_1Tank.html#ae38816fa5dfadb5c5ec7d584eae393ab", null ]
 ];

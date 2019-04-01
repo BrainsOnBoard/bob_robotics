@@ -11,6 +11,7 @@ var searchData=
   ['addhandler',['addHandler',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a5943d48ad182b67d2d9eb386c0ba420d',1,'BoBRobotics::HID::JoystickBase::addHandler(AxisHandler handler)'],['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a6736e009a54091f7c4df0182fe31bac4',1,'BoBRobotics::HID::JoystickBase::addHandler(ButtonHandler handler)']]],
   ['addjoystick',['addJoystick',['../classBoBRobotics_1_1Robots_1_1UAV.html#abbbbbee6cd6b6c22998ba19d4526f98c',1,'BoBRobotics::Robots::UAV']]],
   ['adexp',['AdExp',['../classBoBRobotics_1_1GeNNModels_1_1AdExp.html',1,'BoBRobotics::GeNNModels']]],
+  ['agent',['Agent',['../classAgent.html',1,'']]],
   ['alphacurr',['AlphaCurr',['../classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html',1,'BoBRobotics::GeNNModels']]],
   ['analoguecsvrecorder',['AnalogueCSVRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html',1,'BoBRobotics::GeNNUtils']]],
   ['angle_5funit',['angle_unit',['../namespaceunits_1_1category.html#a72f2400dc89006d0f0a79e3c2869b460',1,'units::category']]],
@@ -18,8 +19,8 @@ var searchData=
   ['antagent',['AntAgent',['../classBoBRobotics_1_1AntWorld_1_1AntAgent.html',1,'BoBRobotics::AntWorld']]],
   ['antworlddatabasecreator',['AntWorldDatabaseCreator',['../classAntWorldDatabaseCreator.html',1,'']]],
   ['antworldrotater',['AntWorldRotater',['../classBoBRobotics_1_1Navigation_1_1AntWorldRotater.html',1,'BoBRobotics::Navigation']]],
-  ['appdelegate',['AppDelegate',['../interfaceAppDelegate.html',1,'']]],
   ['area_5funit',['area_unit',['../namespaceunits_1_1category.html#af7fb1ded463a284094f448de4c154faf',1,'units::category']]],
+  ['arenaobject',['ArenaObject',['../classArenaObject.html',1,'']]],
   ['asin',['asin',['../group__UnitMath.html#ga6070806b3322a08af3ee934731ddcc31',1,'units::math']]],
   ['asinh',['asinh',['../group__UnitMath.html#gaffaf53aeed1529243100d0922bdce834',1,'units::math']]],
   ['assertionfailedexception',['AssertionFailedException',['../classBoBRobotics_1_1AssertionFailedException.html',1,'BoBRobotics']]],
@@ -28,6 +29,5 @@ var searchData=
   ['atan2',['atan2',['../group__UnitMath.html#ga845823260245af2abc83d2cf47f6e74b',1,'units::math']]],
   ['atanh',['atanh',['../group__UnitMath.html#ga8262877321f58e73f76a90e1317e1608',1,'units::math']]],
   ['atto',['atto',['../group__UnitManipulators.html#gaae513fa68478da5ffc6dd1b739da560f',1,'units']]],
-  ['ardin_20et_20al_2e_20model_20of_20navigation',['Ardin et al. Model of navigation',['../md_projects_ardin_mb_README.html',1,'']]],
-  ['ardronesdk3',['ARDroneSDK3',['../md_third_party_arsdk3_arsdk_manifests_README.html',1,'']]]
+  ['ardin_20et_20al_2e_20model_20of_20navigation',['Ardin et al. Model of navigation',['../md_projects_ardin_mb_README.html',1,'']]]
 ];
