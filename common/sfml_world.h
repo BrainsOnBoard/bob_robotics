@@ -378,4 +378,12 @@ private:
         return settings;
     }
 }; // SFMLWorld
-} // BobRobotics
+
+#ifndef NO_HEADER_DEFINITIONS
+template<class LengthUnit>
+constexpr float SFMLWorld<LengthUnit>::OriginLineThickness;
+
+template<class LengthUnit>
+constexpr float SFMLWorld<LengthUnit>::OriginLineLength;
+#endif
+} // BoBRobotics

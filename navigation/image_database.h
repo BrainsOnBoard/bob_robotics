@@ -709,5 +709,9 @@ private:
            << e.position[2]() << ", " << e.heading() << ", " << e.path.filename();
     }
 }; // ImageDatabase
+
+#ifndef NO_HEADER_DEFINITIONS
+constexpr const char *ImageDatabase::MetadataFilename, *ImageDatabase::EntriesFilename;
+#endif
 } // Navigation
 } // BoB robotics
