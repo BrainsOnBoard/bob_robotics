@@ -3,7 +3,7 @@ WITH_MATPLOTLIBCPP := 1
 WITH_SDL2 := 1
 include ../../make_common/bob_robotics.mk
 
-EXECUTABLE := simulated_ackerman
+EXECUTABLE := purePursuitControllerExample
 
 .PHONY: all clean
 
