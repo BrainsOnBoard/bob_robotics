@@ -6,7 +6,7 @@
 // Third-party includes
 #include "third_party/units.h"
 
-#include "robots/PurePursuitController.h"
+#include "robots/purePursuitController.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -48,11 +48,22 @@ bob_main(int, char **)
 
     float currentX = 0, currentY = 0;
 
+
+    //-------------------------------------------------------------------
+    units::length::millimeter_t xMM, yMM;
+    display.pixelToMM(currentX, currentY,  xMM,  yMM);
+    std::vector<std::vector<units::length::millimeter_t>> wpCoordinates; 
+    std::vector<units::length::millimeter_t> firstCoord;
+    firstCoord.push_back(xMM);
+    firstCoord.push_back(yMM);
+    wpCoordinates.push_back(firstCoord);
+    //-------------------------------------------------------------------
+
     auto mmps = 0_mps;
     units::angle::degree_t deg = units::angle::degree_t(0);
 
   
-    BoBRobotics::Robots::PurePursuitController controller(units::length::meter_t(4));
+    BoBRobotics::Robots::PurePursuitController controller(units::length::millimeter_t(3000));
 
     while(display.isOpen()) {
         
@@ -72,9 +83,26 @@ bob_main(int, char **)
             currentY = yp;
 
             rekt_list.push_back(rekt);
+            
+            
+            display.pixelToMM(xp, yp,  xMM,  yMM);
+            std::vector<units::length::millimeter_t> coords;
+            coords.push_back(xMM);
+            coords.push_back(yMM);
+            wpCoordinates.push_back(coords);
+
+            std::cout << " x " << xMM.value() << " y " << yMM.value() << std::endl;
         }
         //------------------------------------------------------------------------
-        
+
+
+        controller.setWayPoints(wpCoordinates);
+        controller.getTurningAngle(car.getPose().x(), car.getPose().y());
+
+
+
+
+
 
         car.move(mmps, deg);
         auto key = display.runGUI(car.getPose());
@@ -109,4 +137,4 @@ bob_main(int, char **)
         
     }
     return EXIT_SUCCESS;
-};
+}
