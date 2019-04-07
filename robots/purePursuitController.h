@@ -28,6 +28,7 @@ class PurePursuitController {
     using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using second_t = units::time::second_t;
+    using radian_t = units::angle::radian_t;
 
 public:
 
@@ -35,7 +36,8 @@ public:
 
     }
 
-    PurePursuitController(units::length::millimeter_t lookahead) : lookAheadDistance(lookahead) {
+    PurePursuitController(millimeter_t lookahead, millimeter_t wheelBaseLength) : 
+                          lookAheadDistance(lookahead), wheelBase(wheelBaseLength) {
 
     }
 
@@ -43,16 +45,19 @@ public:
         wayPoints = wp;
     }
 
-
-    void getTurningAngle(millimeter_t x, millimeter_t y) {
-        getLookAheadPoint(x,y, lookAheadDistance);
+    
+    //! calculates the turning angle needed to follow the path 
+    degree_t getTurningAngle(millimeter_t x, millimeter_t y, radian_t heading) {
+        std::vector<millimeter_t> lookPoint = getLookAheadPoint(x,y, lookAheadDistance);
+        if (!lookPoint.empty()) return computeTurningAngle(x,y, lookPoint.at(0), lookPoint.at(1), heading);
+        return degree_t(0);
     }
 
-
+    //! calculates the look-ahead point the robot follows
     std::vector<millimeter_t> getLookAheadPoint(millimeter_t x, millimeter_t y, millimeter_t r) {
         std::vector<millimeter_t> lookahead;
 
-         if (wayPoints.size() > 1) {
+        if (wayPoints.size() > 1) {
             for (unsigned int i = 0; i < wayPoints.size()-1; i++) {
                 // path points
                 std::vector<millimeter_t> segmentStart = wayPoints.at(i);
@@ -83,10 +88,10 @@ public:
 
                 // if there is 2 intersections possible with the circle, we select the second one, 
                 // as that will be closer to the end point of the segment
-                bool validIntersection1 = units::math::min(p1x, p2x) < x1 && x1 < units::math::max(p1x, p2x) ||
-                                          units::math::min(p1y, p2y) < y1 && y1 < units::math::max(p1y,p2y);
-                bool validIntersection2 = units::math::min(p1x, p2x) < x2 && x2 < units::math::max(p1x, p2x) ||
-                                          units::math::min(p1y, p2y) < y2 && y2 < units::math::max(p1y,p2y);
+                bool validIntersection1 = (units::math::min(p1x, p2x) < x1 && x1 < units::math::max(p1x, p2x)) ||
+                                          (units::math::min(p1y, p2y) < y1 && y1 < units::math::max(p1y,p2y));
+                bool validIntersection2 = (units::math::min(p1x, p2x) < x2 && x2 < units::math::max(p1x, p2x)) ||
+                                          (units::math::min(p1y, p2y) < y2 && y2 < units::math::max(p1y,p2y));
 
                 if (validIntersection1 || validIntersection2) lookahead.clear(); 
                 if (validIntersection1) {
@@ -107,14 +112,31 @@ public:
             return lookahead;
 
         }
+        return lookahead;
     }
 
 private:
 
     millimeter_t lookAheadDistance;
+    millimeter_t wheelBase;
     std::vector<std::vector<millimeter_t>> wayPoints;
 
 
+    degree_t computeTurningAngle(millimeter_t xrobot, millimeter_t yrobot 
+                            ,millimeter_t xlookahead, millimeter_t ylookahead, radian_t heading) {
+
+        // calculating bearing [robot-lookahead point]
+        auto dx = xlookahead-xrobot;
+        auto dy = ylookahead-yrobot;
+        degree_t bearing = units::math::atan2(dy,dx)-heading;
+       
+        // calculating turning angle
+        auto xlength = units::math::sin(bearing) * lookAheadDistance;
+        auto kb = (2*xlength*wheelBase)/(units::math::pow<2>(lookAheadDistance));
+        degree_t turningAngle = units::math::atan(kb);
+        return turningAngle;
+
+    }
     
 
 
