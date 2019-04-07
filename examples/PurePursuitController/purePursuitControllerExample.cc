@@ -62,8 +62,8 @@ bob_main(int, char **)
     auto mmps = 0_mps;
     units::angle::degree_t deg = units::angle::degree_t(0);
 
-  
-    BoBRobotics::Robots::PurePursuitController controller(units::length::millimeter_t(3000));
+    auto wheelBase = car.getDistanceBetweenAxis();
+    BoBRobotics::Robots::PurePursuitController controller(units::length::millimeter_t(2000), wheelBase);
 
     while(display.isOpen()) {
         
@@ -97,14 +97,10 @@ bob_main(int, char **)
 
 
         controller.setWayPoints(wpCoordinates);
-        controller.getTurningAngle(car.getPose().x(), car.getPose().y());
+        //controller.getTurningAngle(car.getPose().x(), car.getPose().y());
 
 
-
-
-
-
-        car.move(mmps, deg);
+        
         auto key = display.runGUI(car.getPose());
         display.clearScreen();
 
@@ -112,8 +108,39 @@ bob_main(int, char **)
             display.drawRectangleAtCoordinates(rekt_list.at(i));
         }
 
+
         // draw lines between waypoints
         drawLinesBetweenRects(rekt_list, display.getRenderer());
+
+
+        // draw lookahead point
+        std::vector<units::length::millimeter_t> lookPoint =  controller.getLookAheadPoint(car.getPose().x(), car.getPose().y(),units::length::millimeter_t(1000));
+        int pxx, pxy;
+        auto robx = car.getPose().x();
+        auto roby = car.getPose().y();
+        auto heading = car.getPose().yaw();
+
+        if (lookPoint.size() > 1) {
+            display.mmToPixel(lookPoint.at(0),lookPoint.at(1),pxx,pxy);
+            std::vector<SDL_Rect> rektVec;
+            SDL_Rect rkt, rkt_rob;
+            rkt.x = pxx;
+            rkt.y = pxy;
+            
+            int rx,ry;
+            display.mmToPixel(robx, roby, rx,ry);
+            rkt_rob.x = rx;
+            rkt_rob.y = ry;
+            display.drawRectangleAtCoordinates(rkt);
+            rektVec.push_back(rkt);
+            rektVec.push_back(rkt_rob);
+            drawLinesBetweenRects(rektVec, display.getRenderer());
+        }
+        auto turningAngle = controller.getTurningAngle(robx, roby, heading);
+        units::angle::degree_t turningAngleDeg = turningAngle;
+        
+
+    
 
         if (key.first == SDLK_UP) {
             mmps = 1.4_mps;
@@ -125,14 +152,19 @@ bob_main(int, char **)
 
         if (key.first == SDLK_LEFT) {
             deg = units::angle::degree_t(30);
+            car.move(mmps, deg);
         }
 
         else if (key.first == SDLK_RIGHT) {
             deg = units::angle::degree_t(-30);
+            car.move(mmps, deg);
         }
 
         else {
             deg = units::angle::degree_t(0);
+            //auto heading = car.getPose().yaw();
+            car.move(mmps, turningAngleDeg);
+            std::cout << turningAngleDeg.value() << std::endl;
         }
         
     }
