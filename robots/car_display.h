@@ -122,25 +122,47 @@ public:
         SDL_RenderFillRect(m_Renderer, &rectangle);
     }
 
+    //! return the current SDL_Renderer pointer if we want to draw additional graphics
+    //! elements to the screen.
     SDL_Renderer* getRenderer() {
         return m_Renderer;
     }
 
+    //! clears the screen to the selected color. Call this first, before draw()
     void clearScreen() {
         // Clear the entire screen to our selected color.
         SDL_RenderClear(m_Renderer);
     }
 
+    //! changes pixel to millimeter
     void pixelToMM(const int x, const int y, millimeter_t &xMM, millimeter_t &yMM) const
     {
         xMM = (x - (WindowWidth / 2)) * m_MMPerPixel;
         yMM = -(y - (WindowHeight / 2)) * m_MMPerPixel;
     }
 
+    //! change from millimeter to pixel
     void mmToPixel(const millimeter_t x, const millimeter_t y, int &xPixel, int &yPixel) const
     {
         xPixel = static_cast<int>(x / m_MMPerPixel) + (WindowWidth / 2);
         yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
+    }
+
+    //! draw lines between a list of points 
+    void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *renderer) {
+        if (!listRects.empty()) {
+            for (unsigned int i = 0; i < listRects.size()-1; i++) {
+                SDL_Rect current_rectangle = listRects.at(i);
+                SDL_Rect next_rectangle = listRects.at(i+1);
+
+                float lineStartX = current_rectangle.x;
+                float lineStartY = current_rectangle.y;
+                float lineEndX = next_rectangle.x;
+                float lineEndY = next_rectangle.y;
+                
+                SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);           
+            }
+        }
     }
 
 private:
@@ -184,14 +206,8 @@ private:
         return std::make_pair(0, false);
     }
 
-
-   
-
     void draw(const degree_t agentAngle)
     {
-        // Clear the entire screen to our selected color.
-        //SDL_RenderClear(m_Renderer);
-
         // draw a rectangle at the goal position
         drawRectangleAtCoordinates({ m_MouseClickPosition[0], m_MouseClickPosition[1], 5, 5 });
 
