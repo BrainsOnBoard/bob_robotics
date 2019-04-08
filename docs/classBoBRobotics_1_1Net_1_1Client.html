@@ -89,6 +89,7 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Net_1_1Client.html
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classBoBRobotics_1_1Net_1_1Client-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">BoBRobotics::Net::Client Class Reference</div>  </div>
@@ -112,10 +113,13 @@ Inheritance diagram for BoBRobotics::Net::Client:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a265b6f473cfe47afa837c5ed4bfae2ea"><td class="memItemLeft" align="right" valign="top"><a id="a265b6f473cfe47afa837c5ed4bfae2ea"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Net_1_1Client.html#a265b6f473cfe47afa837c5ed4bfae2ea">Client</a> (const std::string &amp;host, uint16_t port=<a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html#ac05d605db17203e864ac3502a25f877d">DefaultListenPort</a>)</td></tr>
-<tr class="memdesc:a265b6f473cfe47afa837c5ed4bfae2ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create client and connect to host over TCP. <br /></td></tr>
-<tr class="separator:a265b6f473cfe47afa837c5ed4bfae2ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5d14328607f4d1a7fc7657d8a18180d"><td class="memItemLeft" align="right" valign="top"><a id="af5d14328607f4d1a7fc7657d8a18180d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Net_1_1Client.html#af5d14328607f4d1a7fc7657d8a18180d">Client</a> (const std::string &amp;host=getDefaultIP(), uint16_t port=<a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html#ac05d605db17203e864ac3502a25f877d">DefaultListenPort</a>)</td></tr>
+<tr class="memdesc:af5d14328607f4d1a7fc7657d8a18180d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create client and connect to host over TCP. <br /></td></tr>
+<tr class="separator:af5d14328607f4d1a7fc7657d8a18180d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a002ff3a87e733a1e90f940eb6ee31eb2"><td class="memItemLeft" align="right" valign="top"><a id="a002ff3a87e733a1e90f940eb6ee31eb2"></a>
+const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getIP</b> () const</td></tr>
+<tr class="separator:a002ff3a87e733a1e90f940eb6ee31eb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classBoBRobotics_1_1Net_1_1Connection')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html">BoBRobotics::Net::Connection</a></td></tr>
 <tr class="memitem:a42c0098a64cf3b5ca2b1f3e342bdb5a3 inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="memTemplParams" colspan="2"><a id="a42c0098a64cf3b5ca2b1f3e342bdb5a3"></a>
 template&lt;typename... Ts&gt; </td></tr>
@@ -136,6 +140,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a class="el" href="classBoBRobotics_1_1Net_1_1Connection_1_1SocketWriter.html">SocketWriter</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html#ab0477a914e25e5c7369543190afeda60">getSocketWriter</a> ()</td></tr>
 <tr class="memdesc:ab0477a914e25e5c7369543190afeda60 inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a transaction object for writing to this <a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html" title="An abstract class representing a network connection, inherited by Server and Client classes.">Connection</a>'s <a class="el" href="classBoBRobotics_1_1Net_1_1Socket.html" title="A class for operating on sockets in a platform-independent way.">Socket</a>. <br /></td></tr>
 <tr class="separator:ab0477a914e25e5c7369543190afeda60 inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67e5975cb340d22496cf3b3240b6f69f inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="memItemLeft" align="right" valign="top"><a id="a67e5975cb340d22496cf3b3240b6f69f"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><b>readNextCommand</b> ()</td></tr>
+<tr class="separator:a67e5975cb340d22496cf3b3240b6f69f inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bef41ec673e510285afa097ea9d92cc inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="memItemLeft" align="right" valign="top"><a id="a0bef41ec673e510285afa097ea9d92cc"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Connection</b> (const <a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html">Connection</a> &amp;)=delete</td></tr>
 <tr class="separator:a0bef41ec673e510285afa097ea9d92cc inherit pub_methods_classBoBRobotics_1_1Net_1_1Connection"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -177,6 +184,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const 
 <tr class="memitem:a160e7482d6f9604e5f59be6012615cab inherit pub_methods_classBoBRobotics_1_1Threadable"><td class="memItemLeft" align="right" valign="top"><a id="a160e7482d6f9604e5f59be6012615cab"></a>
 <a class="el" href="classBoBRobotics_1_1Threadable.html">Threadable</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="classBoBRobotics_1_1Threadable.html">Threadable</a> &amp;&amp;old)=default</td></tr>
 <tr class="separator:a160e7482d6f9604e5f59be6012615cab inherit pub_methods_classBoBRobotics_1_1Threadable"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a203d623c0f7c27b87fc912fbc76f6485"><td class="memItemLeft" align="right" valign="top"><a id="a203d623c0f7c27b87fc912fbc76f6485"></a>
+static std::string&#160;</td><td class="memItemRight" valign="bottom"><b>getDefaultIP</b> ()</td></tr>
+<tr class="separator:a203d623c0f7c27b87fc912fbc76f6485"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>

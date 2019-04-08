@@ -2,9 +2,10 @@ var searchData=
 [
   ['tank',['Tank',['../classBoBRobotics_1_1Robots_1_1Tank.html',1,'BoBRobotics::Robots']]],
   ['tanknetsink',['TankNetSink',['../classBoBRobotics_1_1Robots_1_1TankNetSink.html',1,'BoBRobotics::Robots']]],
-  ['textrange',['TextRange',['../structImGuiTextFilter_1_1TextRange.html',1,'ImGuiTextFilter']]],
+  ['tankpid',['TankPID',['../classBoBRobotics_1_1Robots_1_1TankPID.html',1,'BoBRobotics::Robots']]],
   ['threadable',['Threadable',['../classBoBRobotics_1_1Threadable.html',1,'BoBRobotics']]],
   ['throw_5fon_5foverflow',['throw_on_overflow',['../structio_1_1throw__on__overflow.html',1,'io']]],
+  ['timedouterror',['TimedOutError',['../classBoBRobotics_1_1Vicon_1_1TimedOutError.html',1,'BoBRobotics::Vicon']]],
   ['timer',['Timer',['../classBoBRobotics_1_1Timer.html',1,'BoBRobotics']]],
   ['timeraccumulate',['TimerAccumulate',['../classBoBRobotics_1_1TimerAccumulate.html',1,'BoBRobotics']]],
   ['tinydir_5fdir',['tinydir_dir',['../structtinydir__dir.html',1,'']]],

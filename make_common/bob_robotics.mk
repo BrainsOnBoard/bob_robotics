@@ -54,10 +54,13 @@ LINK_FLAGS += -lm -lstdc++ -pthread
 # Add support for libantworld
 ifdef WITH_LIBANTWORLD
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+	EXTRA_DEPS += libantworld
 endif
 
 ifdef WITH_IMGUI
+	CXXFLAGS += $(BOB_ROBOTICS_ROOT)/third_party/imgui
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/third_party/imgui -limgui -lglfw -lGL -lGLU -lGLEW
+	EXTRA_DEPS += imgui
 endif
 
 ifdef WITH_SDL2
@@ -94,6 +97,9 @@ $(error Environment variable ARSDK_ROOT must be defined)
 
 	# Fixes compiler warnings for code deep inside ARSDK
 	CXXFLAGS += -Wno-implicit-fallthrough
+
+	# For default.mk
+	EXTRA_DEPS += libbebop
 endif
 
 # Build with OpenCV
@@ -135,4 +141,9 @@ endif
 ifdef WITH_EIGEN
 	CXXFLAGS += `pkg-config --cflags eigen3` -fopenmp
 	LINK_FLAGS += -fopenmp
+endif
+
+ifdef WITH_SFML_GRAPHICS
+        CXXFLAGS += `pkg-config --cflags sfml-graphics`
+        LINK_FLAGS += `pkg-config --libs sfml-graphics`
 endif

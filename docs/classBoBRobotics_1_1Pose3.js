@@ -1,11 +1,9 @@
 var classBoBRobotics_1_1Pose3 =
 [
-    [ "Pose3", "classBoBRobotics_1_1Pose3.html#a0df90f71440742e60b433e47cbd0ae30", null ],
-    [ "Pose3", "classBoBRobotics_1_1Pose3.html#a302b031fcd138a20c99e86a2a2388adc", null ],
+    [ "Pose3", "classBoBRobotics_1_1Pose3.html#af331083cd2972f6234b1e9e8f354d0c9", null ],
+    [ "Pose3", "classBoBRobotics_1_1Pose3.html#a8d70f3bc2e871306962d61f00e202c44", null ],
     [ "attitude", "classBoBRobotics_1_1Pose3.html#a927399f1521159ff2bec69dcf7ae003d", null ],
     [ "attitude", "classBoBRobotics_1_1Pose3.html#ac4c5ad4a7fd33a1e8e790e4f1854738a", null ],
-    [ "operator Pose2< LengthUnit2, AngleUnit2 >", "classBoBRobotics_1_1Pose3.html#ae43cbb4347e71fef36fba2d9442217e2", null ],
-    [ "operator Pose3< LengthUnit2, AngleUnit2 >", "classBoBRobotics_1_1Pose3.html#a621f7b3284bc5fe711c70b947800769e", null ],
     [ "pitch", "classBoBRobotics_1_1Pose3.html#a59ff0a69aa049b19a89e268ee1bf3a44", null ],
     [ "pitch", "classBoBRobotics_1_1Pose3.html#ac72371e284dd6c553cdef2b6a46a33eb", null ],
     [ "position", "classBoBRobotics_1_1Pose3.html#a2ffe3567315998913feda72ef327d7c5", null ],

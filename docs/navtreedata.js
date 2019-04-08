@@ -38,15 +38,6 @@ var NAVTREE =
     [ "Ardin et al. Model of navigation", "md_projects_ardin_mb_README.html", null ],
     [ "Stone et al. Model of path integration", "md_projects_stone_cx_README.html", null ],
     [ "README", "md_README.html", null ],
-    [ "ARDroneSDK3", "md_third_party_arsdk3_arsdk_manifests_README.html", null ],
-    [ "issue_template", "md_third_party_imgui_imgui_docs_issue_template.html", null ],
-    [ "pull_request_template", "md_third_party_imgui_imgui_docs_pull_request_template.html", null ],
-    [ "dear imgui", "md_third_party_imgui_imgui_docs_README.html", null ],
-    [ "Configuration", "md_third_party_imgui_imgui_examples_example_allegro5_README.html", null ],
-    [ "iOS / OSX Metal example", "md_third_party_imgui_imgui_examples_example_apple_metal_README.html", null ],
-    [ "How to Build", "md_third_party_imgui_imgui_examples_example_sdl_opengl2_README.html", null ],
-    [ "How to Build", "md_third_party_imgui_imgui_examples_example_sdl_opengl3_README.html", null ],
-    [ "imgui_freetype", "md_third_party_imgui_imgui_misc_freetype_README.html", null ],
     [ "Generic tool for controlling a Norbot", "md_tools_norbot_control_README.html", null ],
     [ "Modules", "modules.html", "modules" ],
     [ "Namespaces", "namespaces.html", [
@@ -75,8 +66,6 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
-        [ "Functions", "globals_func.html", null ],
-        [ "Typedefs", "globals_type.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -86,28 +75,21 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classBoBRobotics_1_1ImgProc_1_1OpenCVOpticalFlow.html#a7e20bd342353e963e59d23029bcac222",
-"classBoBRobotics_1_1Net_1_1Socket.html#a5b19117469fef26a462c20bf0d506184",
-"classBoBRobotics_1_1Video_1_1Input.html",
-"classio_1_1detail_1_1SynchronousReader.html#a9d6b2c888cc7020df1bb81c8bb5c58bc",
-"group__context.html#gac84759b1f6c2d271a4fea8ae89ec980d",
-"group__keys.html#gaec011d9ba044058cb54529da710e9791",
-"namespaceBoBRobotics_1_1OS.html",
-"structImDrawList.html#a405377158f0028ad8b4fb6509eef4532",
-"structImGuiColumnsSet.html#a61470bb069a752930fc8a838e9f552d3",
-"structImGuiIO.html#ae77a1beed11820366800645232a6ad1c",
-"structImGuiStyle.html#ab518a0a67df8f14765acc491d7b460f4",
-"structImGui__ImplVulkan__InitInfo.html#a51c934190a99b91180bf95ce56a36407",
-"structmatplotlibcpp_1_1detail_1_1__interpreter.html#ad4cc1ddd59ab9f4008269ade1a219ffa",
-"structunits_1_1unit.html#a0f2b640f43170629369706775699fdbe",
-"units_8h.html#a1fb9fe43206c5a75b2315f40ba091d58",
-"units_8h.html#a3d4750c24c1dca8e76a54a587754a140",
-"units_8h.html#a5e09c1f815682365fc16f85a246ecf90",
-"units_8h.html#a7d28ba2c3a4ac1a88d65032eb613c357",
-"units_8h.html#a9b175ec1e9e25632da910ab1d84effe9",
-"units_8h.html#abc548fd4574a5c85b42bc5a0f4d388d3",
-"units_8h.html#adc1082a4337ed0d7008f4735b1ca55c0",
-"units_8h.html#afa133ac0d4a83f0afb9007d921c94399"
+"classBoBRobotics_1_1I2CInterface.html#aae9fe20c83712096f6f52c5e363c3c1c",
+"classBoBRobotics_1_1Net_1_1Connection_1_1SocketWriter.html#a98a3b266206b5aa8be8ff041f0b300ee",
+"classBoBRobotics_1_1Stopwatch.html#a088c8e4e677564a2d518afb30341699c",
+"classStateHandler.html#a0d0688dcffdd0d6ca15ef542352681d8af8380cdd44b17e9824a9d3e0ab8e39d4",
+"group__UnitMath.html#ga8262877321f58e73f76a90e1317e1608",
+"structio_1_1single__line__comment.html",
+"units_8h.html#a0b845c077825a8679d26e84458420800",
+"units_8h.html#a2e0b10e407c37824c3f33c93e70fc493",
+"units_8h.html#a4b6d926ddfd6f761bb7675984fbf0585",
+"units_8h.html#a6a3051486cb83bb1a9d94ef8a9faefdc",
+"units_8h.html#a8a9844649b3c0e277f53da842a87b8cd",
+"units_8h.html#aa924b93c75d56d4098565be2006d618a",
+"units_8h.html#aca50dd759a47f994fca3a424b2543499",
+"units_8h.html#aea3b535bb1e678db6dd0571ba3364d43",
+"units_8h.html#gae66a8996b06be0e044209702a4ff9aac"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

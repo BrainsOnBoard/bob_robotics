@@ -15,23 +15,10 @@ using namespace BoBRobotics;
 using namespace std::literals;
 
 int
-bob_main(int argc, char **argv)
+bob_main(int, char **)
 {
-    std::string robotIP;
-    if (argc == 2) {
-        // Get robot IP from command-line argument
-        robotIP = argv[1];
-    } else {
-        // Get robot IP from terminal
-        std::cout << "Robot IP [127.0.0.1]: ";
-        std::getline(std::cin, robotIP);
-        if (robotIP.empty()) {
-            robotIP = "127.0.0.1";
-        }
-    }
-
     // Make connection to robot on default port
-    Net::Client client(robotIP);
+    Net::Client client;
 
     // Transmit motor commands over network
     Robots::TankNetSink tank(client);

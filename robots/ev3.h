@@ -20,8 +20,8 @@ class EV3
   : public Tank
 {
 public:
-    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
-        const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_A)
+    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_A,
+        const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_D)
       : m_MotorLeft(leftMotorPort)
       , m_MotorRight(rightMotorPort)
       , m_MaxSpeedTachos(m_MotorLeft.max_speed())
