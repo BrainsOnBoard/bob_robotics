@@ -70,6 +70,8 @@ public:
         m_steeringWheelAngle = steeringAngle;
     }
 
+    
+
 
 private:
     Pose2<LengthUnit, AngleUnit> m_Pose;
