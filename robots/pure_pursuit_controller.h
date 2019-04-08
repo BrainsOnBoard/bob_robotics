@@ -15,10 +15,7 @@
 #include <iostream>
 #include <thread>
 
-// sign function
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-}
+
 
 namespace BoBRobotics {
 namespace Robots {
@@ -39,71 +36,69 @@ public:
     }
 
     PurePursuitController(millimeter_t lookahead, millimeter_t wheelBaseLength) : 
-                          lookAheadDistance(lookahead), wheelBase(wheelBaseLength) {
+                          m_lookAheadDistance(lookahead), m_wheelBase(wheelBaseLength) {
 
     }
 
     //! set waypoints which forms a path to be followed
-    void setWayPoints(std::vector<Vector2<millimeter_t>> wp) {
-        wayPoints = wp;
+    void setWayPoints(const std::vector<Vector2<millimeter_t>> &wp) {
+        m_wayPoints = wp;
     }
 
     //! adds to the list of waypoints
-    void addToWayPoint(Vector2<millimeter_t> wayPoint) {
-        wayPoints.push_back(wayPoint);
+    void addToWayPoint(const Vector2<millimeter_t> wayPoint) {
+        m_wayPoints.push_back(wayPoint);
     }
 
     //! sets the lookahead distance. Large values causes the car to cut corners,
     //! where small values makes the car follow the path more closely
-    void setLookAheadDistance(millimeter_t distance) {
-        lookAheadDistance = distance;
+    void setlookAheadDistance(const millimeter_t distance) {
+        m_lookAheadDistance = distance;
     }
 
     //! sets the distance between the car's wheel bases
-    void setWheelBaseLength(millimeter_t length) {
-        wheelBase = length;
+    void setWheelBaseLength(const millimeter_t length) {
+        m_wheelBase = length;
     }
   
     //! calculates the turning angle needed to follow the path 
-    degree_t getTurningAngle(millimeter_t x, millimeter_t y, radian_t heading) {
-        std::vector<millimeter_t> lookPoint = getLookAheadPoint(x,y, lookAheadDistance);
-        if (!lookPoint.empty()) return computeTurningAngle(x,y, lookPoint.at(0), lookPoint.at(1), heading);
+    degree_t getTurningAngle(const millimeter_t x, const millimeter_t y, const radian_t heading) {
+        Vector2<millimeter_t> lookPoint = getLookAheadPoint(x,y, m_lookAheadDistance);
+        if (!lookPoint.isnan()) return computeTurningAngle(x,y, lookPoint.x(), lookPoint.y(), heading);
         return 0_deg; 
     }
 
     //! calculates the look-ahead point the robot follows
-    std::vector<millimeter_t> getLookAheadPoint(millimeter_t x, millimeter_t y, millimeter_t r) {
-        std::vector<millimeter_t> lookahead;
-
-        if (wayPoints.size() > 1) {
-            for (unsigned int i = 0; i < wayPoints.size()-1; i++) {
+    Vector2<millimeter_t> getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r) {
+        Vector2<millimeter_t> lookaheadVector;
+        if (m_wayPoints.size() > 1) {
+            for (unsigned int i = 0; i < m_wayPoints.size()-1; i++) {
 
                 // path points
-                Vector2<millimeter_t> segmentStart = wayPoints.at(i);
-                Vector2<millimeter_t> segmentEnd = wayPoints.at(i+1);
+                const Vector2<millimeter_t> segmentStart = m_wayPoints.at(i);
+                const Vector2<millimeter_t> segmentEnd = m_wayPoints.at(i+1);
 
-                std::vector<millimeter_t> p1,p2;
-                auto p1x = segmentStart.x() - x;
-                auto p1y = segmentStart.y() - y;
-                auto p2x = segmentEnd.x() - x;
-                auto p2y = segmentEnd.y() - y;
+                const auto p1x = segmentStart.x() - x;
+                const auto p1y = segmentStart.y() - y;
+                const auto p2x = segmentEnd.x() - x;
+                const auto p2y = segmentEnd.y() - y;
 
                 // intersection point with circle
-                auto dx = p2x - p1x;
-                auto dy = p2y - p1y;
-                auto d = sqrt(dx * dx + dy * dy);
-                auto D = p1x * p2y - p2x * p1y;
+                const auto dx = p2x - p1x;
+                const auto dy = p2y - p1y;
+                const auto d = sqrt(dx * dx + dy * dy);
+                const auto D = p1x * p2y - p2x * p1y;
 
                 // if the discriminant is zero -> no intersection
-                auto discriminant = r * r * d * d - D * D;
+                const auto discriminant = r * r * d * d - D * D;
                 if (discriminant.value() < 0) continue;
 
                 // x components of the intersection point
-                auto x1 = (D * dy + sgn(dy.value()) * dx * sqrt(discriminant)) / (d*d);
-                auto x2 = (D * dy - sgn(dy.value()) * dx * sqrt(discriminant)) / (d*d);
+                const auto x1 = (D * dy + sgn(dy.value()) * dx * sqrt(discriminant)) / (d*d);
+                const auto x2 = (D * dy - sgn(dy.value()) * dx * sqrt(discriminant)) / (d*d);
                 // y components of the intersection point
-                auto y1 = (-D * dx + fabs(dy) * sqrt(discriminant)) / (d*d);
-                auto y2 = (-D * dx - fabs(dy) * sqrt(discriminant)) / (d*d);
+                const auto y1 = (-D * dx + fabs(dy) * sqrt(discriminant)) / (d*d);
+                const auto y2 = (-D * dx - fabs(dy) * sqrt(discriminant)) / (d*d);
 
                 // if there is 2 intersections possible with the circle, we select the second one, 
                 // as that will be closer to the end point of the segment
@@ -114,38 +109,36 @@ public:
 
                 // we always want the latest path segment point so if we have a 
                 // valid point, we delete the previous point
-                if (validIntersection1 || validIntersection2) lookahead.clear(); 
                 if (validIntersection1) {
-                    lookahead.push_back((x1 + x));
-                    lookahead.push_back((y1 + y));
+                    lookaheadVector.x() = x1 + x;
+                    lookaheadVector.y() = y1 + y;
                 }
 
                 // if there is a valid 2. intersection point, we keep that and remove
                 // the first one
                 if (validIntersection2) {
-                    if (lookahead.empty() || fabs(x1 - p2x) > fabs(x2 - p2x) ||
+                    if (lookaheadVector.isnan() || fabs(x1 - p2x) > fabs(x2 - p2x) ||
                         fabs(y1 - p2y) > fabs(y2 - p2y)) {
                             
-                        lookahead.clear();
-                        lookahead.push_back((x2 + x)); 
-                        lookahead.push_back((y2 + y));
+                        lookaheadVector.x() = x2 + x;
+                        lookaheadVector.y() = y2 + y;
                     }
                 }
             }
-            return lookahead;
-        }
-        return lookahead;
+        } 
+        return lookaheadVector;
     }
 
 private:
 
-    millimeter_t lookAheadDistance;                 // the distance to look ahead
-    millimeter_t wheelBase;                         // length between wheel bases
-    std::vector<Vector2<millimeter_t>> wayPoints;   // list of waypoint coordinates
+    millimeter_t m_lookAheadDistance;                 // the distance to look ahead
+    millimeter_t m_wheelBase;                         // length between wheel bases
+    std::vector<Vector2<millimeter_t>> m_wayPoints;   // list of waypoint coordinates
 
     // computes the turning angle using the lookahead point
-    degree_t computeTurningAngle(millimeter_t xrobot, millimeter_t yrobot 
-                            ,millimeter_t xlookahead, millimeter_t ylookahead, radian_t heading) {
+    degree_t computeTurningAngle(const millimeter_t xrobot, const millimeter_t yrobot 
+                                ,const millimeter_t xlookahead, const millimeter_t ylookahead
+                                ,const radian_t heading) {
 
         // calculating bearing [robot-lookahead point]
         auto dx = xlookahead-xrobot;
@@ -153,12 +146,17 @@ private:
         degree_t bearing = atan2(dy,dx)-heading;
        
         // calculating turning angle
-        auto xlength = sin(bearing) * lookAheadDistance;
+        auto xlength = sin(bearing) * m_lookAheadDistance;
 
         // calculating arc to turn
-        auto kb = (2*xlength*wheelBase)/(pow<2>(lookAheadDistance));
+        auto kb = (2*xlength*m_wheelBase)/(pow<2>(m_lookAheadDistance));
         degree_t turningAngle = atan(kb);
         return turningAngle;
+    }
+
+    // sign function
+    template <typename T> int sgn(T val) {
+        return (T(0) < val) - (val < T(0));
     }
 }; // PurePursuitController
 }  // Robot

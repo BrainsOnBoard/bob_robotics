@@ -148,23 +148,6 @@ public:
         yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
     }
 
-    //! draw lines between a list of points 
-    void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *renderer) {
-        if (!listRects.empty()) {
-            for (unsigned int i = 0; i < listRects.size()-1; i++) {
-                SDL_Rect current_rectangle = listRects.at(i);
-                SDL_Rect next_rectangle = listRects.at(i+1);
-
-                float lineStartX = current_rectangle.x;
-                float lineStartY = current_rectangle.y;
-                float lineEndX = next_rectangle.x;
-                float lineEndY = next_rectangle.y;
-                
-                SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);           
-            }
-        }
-    }
-
 private:
     // Window size
     static constexpr int WindowWidth = 800;
