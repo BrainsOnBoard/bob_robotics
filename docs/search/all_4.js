@@ -2,11 +2,10 @@ var searchData=
 [
   ['data_5ftransfer_5frate_5funit',['data_transfer_rate_unit',['../namespaceunits_1_1category.html#ae23b54e3a6efd89baa3daa8f9369b59f',1,'units::category']]],
   ['data_5funit',['data_unit',['../namespaceunits_1_1category.html#a5daae6818590f1cb7cb00f802a45688a',1,'units::category']]],
+  ['datafile',['DataFile',['../classDataFile.html',1,'']]],
   ['deca',['deca',['../group__UnitManipulators.html#ga38a0917f3f85a5eac09b31f774931490',1,'units']]],
   ['deci',['deci',['../group__UnitManipulators.html#ga3af81695b9701ebe2db4f058f082a615',1,'units']]],
   ['decibel_5fscale',['decibel_scale',['../structunits_1_1decibel__scale.html',1,'units']]],
-  ['defaultgetpose',['DefaultGetPose',['../classBoBRobotics_1_1DefaultGetPose.html',1,'BoBRobotics']]],
-  ['defaultgetpose_3c_20objectdata_2c_20units_3a_3alength_3a_3amillimeter_5ft_2c_20units_3a_3aangle_3a_3aradian_5ft_20_3e',['DefaultGetPose&lt; ObjectData, units::length::millimeter_t, units::angle::radian_t &gt;',['../classBoBRobotics_1_1DefaultGetPose.html',1,'BoBRobotics']]],
   ['defaultlistenport',['DefaultListenPort',['../classBoBRobotics_1_1Net_1_1Connection.html#ac05d605db17203e864ac3502a25f877d',1,'BoBRobotics::Net::Connection']]],
   ['defaultmaximumtilt',['DefaultMaximumTilt',['../classBoBRobotics_1_1Robots_1_1Bebop.html#aed2e2cefb32001aec8809d957bad48d1',1,'BoBRobotics::Robots::Bebop']]],
   ['defaultmaximumverticalspeed',['DefaultMaximumVerticalSpeed',['../classBoBRobotics_1_1Robots_1_1Bebop.html#a12dd1af94f86a0efbc29ef9ec4c8d44c',1,'BoBRobotics::Robots::Bebop']]],
@@ -18,6 +17,5 @@ var searchData=
   ['doflattrimcalibration',['doFlatTrimCalibration',['../classBoBRobotics_1_1Robots_1_1Bebop.html#ab418997fde3cf3cff9aaa5dfcd15210c',1,'BoBRobotics::Robots::Bebop']]],
   ['double_5fquote_5fescape',['double_quote_escape',['../structio_1_1double__quote__escape.html',1,'io']]],
   ['duplicated_5fcolumn_5fin_5fheader',['duplicated_column_in_header',['../structio_1_1error_1_1duplicated__column__in__header.html',1,'io::error']]],
-  ['default_20drone_20joystick_20controls',['Default drone joystick controls',['../md_libbebop_README.html',1,'']]],
-  ['dear_20imgui',['dear imgui',['../md_third_party_imgui_imgui_docs_README.html',1,'']]]
+  ['default_20drone_20joystick_20controls',['Default drone joystick controls',['../md_libbebop_README.html',1,'']]]
 ];

@@ -9,8 +9,6 @@ var searchData=
   ['bebop',['Bebop',['../classBoBRobotics_1_1Robots_1_1Bebop.html',1,'BoBRobotics::Robots::Bebop'],['../classBoBRobotics_1_1Robots_1_1Bebop.html#a90cc82bc65ac45f0afff72835dcd9c2c',1,'BoBRobotics::Robots::Bebop::Bebop()']]],
   ['begin',['begin',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a14ea37742fd1e5cb5ebbcb05deacc58f',1,'BoBRobotics::Navigation::ImageDatabase']]],
   ['bestmatchingsnapshot',['BestMatchingSnapshot',['../structBoBRobotics_1_1Navigation_1_1BestMatchingSnapshot.html',1,'BoBRobotics::Navigation']]],
-  ['blue',['blue',['../structGLFWgammaramp.html#acf0c836d0efe29c392fe8d1a1042744b',1,'GLFWgammaramp']]],
-  ['bluebits',['blueBits',['../structGLFWvidmode.html#af310977f58d2e3b188175b6e3d314047',1,'GLFWvidmode']]],
   ['bobrobotics',['BoBRobotics',['../namespaceBoBRobotics.html',1,'']]],
   ['buttonstate',['ButtonState',['../namespaceBoBRobotics_1_1HID.html#a71b9d0f7acdc0b32f717ada7451fed1d',1,'BoBRobotics::HID']]],
   ['bytesourcebase',['ByteSourceBase',['../classio_1_1ByteSourceBase.html',1,'io']]],
