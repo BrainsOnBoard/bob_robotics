@@ -6,9 +6,9 @@
 
 // BoB robotics includes
 #include "common/main.h"
-#include "robots/simulatedAckermanCar.h"
+#include "robots/simulated_ackerman_car.h"
 #include "robots/car_display.h"
-#include "robots/purePursuitController.h"
+#include "robots/pure_pursuit_controller.h"
 
 // Third-party includes
 #include "third_party/units.h"
