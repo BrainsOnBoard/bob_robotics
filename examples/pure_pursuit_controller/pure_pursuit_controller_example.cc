@@ -61,7 +61,7 @@ int bob_main(int, char **)
     degree_t deg = 0_deg; // angle of steering of robot car
     constexpr millimeter_t lookaheadDistance = 1000_mm; // lookahead distance
 
-    auto wheelBase = car.getDistanceBetweenAxis(); // distance between wheel bases
+    const auto wheelBase = car.getDistanceBetweenAxis(); // distance between wheel bases
     BoBRobotics::Robots::PurePursuitController controller(lookaheadDistance, wheelBase);
 
     while(display.isOpen()) {
@@ -93,7 +93,7 @@ int bob_main(int, char **)
         controller.setWayPoints(wpCoordinates);
 
         // run a GUI step    
-        auto key = display.runGUI(car.getPose());
+        const auto key = display.runGUI(car.getPose());
         display.clearScreen();
 
         // draw all the waypoints on the screen
@@ -130,7 +130,7 @@ int bob_main(int, char **)
         }
 
         // calculate turning angle with controller
-        degree_t turningAngle = controller.getTurningAngle(robx, roby, heading);
+        const degree_t turningAngle = controller.getTurningAngle(robx, roby, heading);
        
     
         // if there is a key command, move car with keys, othwerwise listen to 
