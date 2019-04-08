@@ -20,7 +20,7 @@
 namespace BoBRobotics {
 namespace Robots {
 
-using namespace units::math;
+
 using namespace units::literals;
 
 class PurePursuitController {
@@ -70,6 +70,8 @@ public:
 
     //! calculates the look-ahead point the robot follows
     Vector2<millimeter_t> getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r) {
+        using namespace units::math;
+
         Vector2<millimeter_t> lookaheadVector;
         if (m_wayPoints.size() > 1) {
             for (unsigned int i = 0; i < m_wayPoints.size()-1; i++) {
@@ -102,9 +104,9 @@ public:
 
                 // if there is 2 intersections possible with the circle, we select the second one, 
                 // as that will be closer to the end point of the segment
-                bool validIntersection1 = (min(p1x, p2x) < x1 && x1 < max(p1x, p2x)) ||
+                const bool validIntersection1 = (min(p1x, p2x) < x1 && x1 < max(p1x, p2x)) ||
                                           (min(p1y, p2y) < y1 && y1 < max(p1y,p2y));
-                bool validIntersection2 = (min(p1x, p2x) < x2 && x2 < max(p1x, p2x)) ||
+                const bool validIntersection2 = (min(p1x, p2x) < x2 && x2 < max(p1x, p2x)) ||
                                           (min(p1y, p2y) < y2 && y2 < max(p1y,p2y));
 
                 // we always want the latest path segment point so if we have a 
@@ -139,18 +141,18 @@ private:
     degree_t computeTurningAngle(const millimeter_t xrobot, const millimeter_t yrobot 
                                 ,const millimeter_t xlookahead, const millimeter_t ylookahead
                                 ,const radian_t heading) {
-
+        using namespace units::math;
         // calculating bearing [robot-lookahead point]
-        auto dx = xlookahead-xrobot;
-        auto dy = ylookahead-yrobot;
-        degree_t bearing = atan2(dy,dx)-heading;
+        const auto dx = xlookahead-xrobot;
+        const auto dy = ylookahead-yrobot;
+        const degree_t bearing = atan2(dy,dx)-heading;
        
         // calculating turning angle
-        auto xlength = sin(bearing) * m_lookAheadDistance;
+        const auto xlength = sin(bearing) * m_lookAheadDistance;
 
         // calculating arc to turn
-        auto kb = (2*xlength*m_wheelBase)/(pow<2>(m_lookAheadDistance));
-        degree_t turningAngle = atan(kb);
+        const auto kb = (2*xlength*m_wheelBase)/(pow<2>(m_lookAheadDistance));
+        const degree_t turningAngle = atan(kb);
         return turningAngle;
     }
 
