@@ -109,8 +109,8 @@ private:
             return DefaultLogLevel;
         }
 
-        // Convert to uppsercase
-        for (char *c = severityEnvVar; *c; c++) {
+        // Convert to uppercase
+        for (char *c = severityEnvVar; *c != '\0'; c++) {
             *c = std::toupper(*c);
         }
 

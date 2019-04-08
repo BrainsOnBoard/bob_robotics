@@ -205,7 +205,7 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         maxTextureSize = std::min(maxTextureSize, hardwareMaxTextureSize);
     }
 
-    LOG_INFO << "Max texture size: " << maxTextureSize;
+    LOG_DEBUG << "Max texture size: " << maxTextureSize;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
@@ -256,7 +256,7 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
-                LOG_INFO << "Reading object: " << parameterString;
+                LOG_DEBUG << "Reading object: " << parameterString;
             }
             else if(commandString == "v") {
                 // Read vertex
@@ -357,7 +357,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
         throw std::runtime_error("Cannot open mtl file: " + filename);
     }
 
-    LOG_INFO << "Reading material file: " << filename;
+    LOG_DEBUG << "Reading material file: " << filename;
 
     // Read lines into strings
     std::string currentMaterialName;
@@ -403,7 +403,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             const size_t lastNonQuote = textureFilename.find_last_not_of('"');
             textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 
-            LOG_INFO << "\t\tTexture: '" << textureFilename << "'";
+            LOG_DEBUG << "\t\tTexture: '" << textureFilename << "'";
 
 
             // Load texture and add to map
@@ -419,7 +419,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             }
             // Otherwise
             else {
-                LOG_INFO << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows;
+                LOG_DEBUG << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows;
 
                 // If texture isn't square, use longest side as size
                 int size = texture.cols;
@@ -432,7 +432,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
                 // Perform resize if required
                 if(size != texture.cols || size != texture.rows) {
-                    LOG_INFO << "\t\t\tResizing to: " << size << "x" << size;
+                    LOG_DEBUG << "\t\t\tResizing to: " << size << "x" << size;
                     cv::resize(texture, texture, cv::Size(size, size), 0, 0, cv::INTER_CUBIC);
                 }
 

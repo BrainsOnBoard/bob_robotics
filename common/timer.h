@@ -24,7 +24,7 @@ public:
     //! Stop the timer and print current elapsed time to terminal
     ~Timer()
     {
-        LOG_NONE << m_Title << get();
+        LOG_INFO << m_Title << get();
     }
 
     //------------------------------------------------------------------------

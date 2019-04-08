@@ -345,7 +345,7 @@ public:
     {
         // Cache magneto sensitivity
         m_MagnetoSensitivity = getMagnetoSensitivity(settings.scale);
-        LOG_INFO << m_MagnetoSensitivity;
+        LOG_DEBUG << m_MagnetoSensitivity;
         // CTRL_REG1_M (Default value: 0x10)
         // [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
         // TEMP_COMP - Temperature compensation
@@ -451,8 +451,8 @@ public:
         setFIFOEnabled(false);
         setFIFOMode(FIFOMode::Off, 0);
 
-        LOG_INFO << "\tAccel bias:" << m_AccelBias[0] << "," << m_AccelBias[1] << "," << m_AccelBias[2];
-        LOG_INFO << "\tGyro bias:" << m_GyroBias[0] << "," << m_GyroBias[1] << "," << m_GyroBias[2];
+        LOG_DEBUG << "\tAccel bias:" << m_AccelBias[0] << "," << m_AccelBias[1] << "," << m_AccelBias[2];
+        LOG_DEBUG << "\tGyro bias:" << m_GyroBias[0] << "," << m_GyroBias[1] << "," << m_GyroBias[2];
     }
 
     /*void calibrateMagneto()
@@ -485,7 +485,7 @@ public:
         //int16_t magBias[3];
         std::transform(std::begin(magMin), std::end(magMin), std::begin(magMax), std::begin(m_MagnetoBias),
                        [](int16_t min, int16_t max){ return (min + max) / 2; });
-        LOG_INFO << "\tBias: " << m_MagnetoBias[0] << ", " << m_MagnetoBias[1] << ", " << m_MagnetoBias[2];
+        LOG_DEBUG << "\tBias: " << m_MagnetoBias[0] << ", " << m_MagnetoBias[1] << ", " << m_MagnetoBias[2];
 
         // Set device bias
         // **NOTE** I have no idea why this isn't working
