@@ -157,7 +157,7 @@ private:
     }
 
     // sign function
-    template <typename T> int sgn(T val) {
+    template <typename T>static int sgn(T val) {
         return (T(0) < val) - (val < T(0));
     }
 }; // PurePursuitController
