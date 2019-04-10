@@ -1,4 +1,6 @@
 #pragma once
+
+// Standard C++ includes
 #include <condition_variable>
 #include <mutex>
 
@@ -16,31 +18,13 @@ class Semaphore
 {
 public:
     //! Stop wait() blocking on another thread if it's running
-    void notify()
-    {
-        std::unique_lock<std::mutex> lock(mtx);
-        fired = true;
-        cv.notify_one();
-    }
+    void notify();
 
     //! Wait for notify() to be invoked by another thread
-    void wait()
-    {
-        std::unique_lock<std::mutex> lock(mtx);
-        while (!fired) {
-            cv.wait(lock);
-        }
-        fired = false;
-    }
+    void wait();
 
     //! Wait for notify() to be invoked by another thread, but do not reset
-    void waitOnce()
-    {
-        std::unique_lock<std::mutex> lock(mtx);
-        while (!fired) {
-            cv.wait(lock);
-        }
-    }
+    void waitOnce();
 
 private:
     std::condition_variable cv;

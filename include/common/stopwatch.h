@@ -1,8 +1,5 @@
 #pragma once
 
-// BoBRobotics includes
-#include "assert.h"
-
 // Standard C++ includes
 #include <chrono>
 
@@ -14,44 +11,22 @@ public:
     using Duration = std::chrono::high_resolution_clock::duration;
 
     //! Start measuring elapsed time from now
-    void start()
-    {
-        m_StartTime = now();
-    }
+    void start();
 
     //! Check if stopwatch has been started
-    bool started() const
-    {
-        return m_StartTime != TimePoint::min();
-    }
+    bool started() const;
 
     //! Reset stopwatch to zero
-    void reset()
-    {
-        m_StartTime = TimePoint::min();
-    }
+    void reset();
 
     //! Returns elapsed time since start() was called
-    Duration elapsed() const
-    {
-        BOB_ASSERT(started());
-        return now() - m_StartTime;
-    }
+    Duration elapsed() const;
 
     //! Returns the current elapsed time and restarts the Stopwatch
-    Duration lap()
-    {
-        const TimePoint currentTime = now();
-        const Duration elapsed = currentTime - m_StartTime;
-        m_StartTime = currentTime;
-        return elapsed;
-    }
+    Duration lap();
 
     //! Get the current time
-    static TimePoint now()
-    {
-        return std::chrono::high_resolution_clock::now();
-    }
+    static TimePoint now();
 
 private:
     TimePoint m_StartTime = TimePoint::min();

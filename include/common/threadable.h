@@ -1,12 +1,7 @@
 #pragma once
 
-// BoB robotics includes
-#include "background_exception_catcher.h"
-
 // Standard C++ includes
 #include <atomic>
-#include <memory>
-#include <stdexcept>
 #include <thread>
 
 namespace BoBRobotics {
@@ -24,61 +19,31 @@ namespace BoBRobotics {
 class Threadable
 {
 public:
-    Threadable()
-      : m_DoRun(false)
-    {}
-
-    virtual ~Threadable()
-    {}
+    Threadable();
+    virtual ~Threadable();
 
     //! Run on the current thread, blocking until process ends
-    virtual void run()
-    {
-        m_DoRun = true;
-        runInternal();
-    }
+    virtual void run();
 
     //! Check if the run() function has been called
-    virtual bool isRunning()
-    {
-        return m_DoRun;
-    }
+    virtual bool isRunning();
 
     //! Run the process on a background thread
-    virtual void runInBackground()
-    {
-        m_Thread = std::thread(&Threadable::runCatchExceptions, this);
-    }
+    virtual void runInBackground();
 
     //! Stop the background thread
-    virtual void stop()
-    {
-        m_DoRun = false;
-        if (m_Thread.joinable()) {
-            m_Thread.join();
-        }
-    }
+    virtual void stop();
 
     Threadable(const Threadable &old) = delete;
     void operator=(const Threadable &old) = delete;
-    Threadable(Threadable &&old)
-      : m_Thread(std::move(old.m_Thread))
-      , m_DoRun(old.m_DoRun.load())
-    {}
+    Threadable(Threadable &&old);
     Threadable &operator=(Threadable &&old) = default;
 
 private:
     std::thread m_Thread;
     std::atomic<bool> m_DoRun;
 
-    void runCatchExceptions()
-    {
-        try {
-            run();
-        } catch (...) {
-            BackgroundExceptionCatcher::set(std::current_exception());
-        }
-    }
+    void runCatchExceptions();
 
 protected:
     virtual void runInternal() = 0;
