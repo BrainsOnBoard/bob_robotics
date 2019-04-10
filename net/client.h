@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "connection.h"
 #include "socket.h"
 
@@ -51,7 +52,7 @@ public:
                                         std::to_string(port));
         }
 
-        std::cout << "Opened socket" << std::endl;
+        LOG_INFO << "Opened socket";
     }
 
     const std::string &getIP() const { return m_IP; }
@@ -62,8 +63,8 @@ public:
 
         const char *ip = std::getenv(envVar);
         if (!ip) {
-            std::cerr << "WARNING: Environment variable " << envVar
-                      << " not set; using " << defaultIP << std::endl;
+            LOG_WARNING << "Environment variable " << envVar
+                        << " not set; using " << defaultIP;
             ip = defaultIP;
         }
         return ip;

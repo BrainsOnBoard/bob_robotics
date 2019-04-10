@@ -1,17 +1,18 @@
 // windows.h
 #include "os/windows_include.h"
 
-// C++ includes
-#include <memory>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // BoB robotics includes
+#include "common/logging.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <memory>
 
 using namespace BoBRobotics;
 

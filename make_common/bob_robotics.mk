@@ -32,11 +32,6 @@ else
 	CXXFLAGS += -O2
 endif
 
-# For printing network messages (see net/ folder)
-ifdef TRACE_NET
-	CXXFLAGS += -DTRACE_NET
-endif
-
 # Improves build time
 CXXFLAGS += -pipe
 
@@ -50,6 +45,10 @@ CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
 
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
+
+# Always build using our logging library
+EXTRA_DEPS += plog
+CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)/third_party/plog/include
 
 # Add support for libantworld
 ifdef WITH_LIBANTWORLD

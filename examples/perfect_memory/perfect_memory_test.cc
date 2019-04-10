@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_raw.h"

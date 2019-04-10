@@ -26,6 +26,10 @@ libbebop:
 imgui:
 	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/third_party/imgui
 
+# It's a header-only library, but make sure git submodule is checked out
+plog:
+	@git submodule update --init $(BOB_ROBOTICS_ROOT)/third_party/plog
+
 %d: ;
 
 clean:

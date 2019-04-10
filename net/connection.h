@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "../common/threadable.h"
 #include "socket.h"
 
@@ -83,7 +84,9 @@ public:
         }
 
         // Wait for thread to terminate
+        LOG_DEBUG << "Waiting for connection to close...";
         stop();
+        LOG_DEBUG << "Connection closed";
     }
 
     bool isOpen() const { return m_Socket.isOpen(); }
@@ -213,9 +216,8 @@ private:
                     debitBytes(i + 1);
 
                     std::string outstring = oss.str();
-#ifdef TRACE_NET
-                    std::cout << "<<< " << outstring << std::endl;
-#endif
+                    LOG_VERBOSE << "<<< " << outstring;
+
                     return outstring;
                 }
             }

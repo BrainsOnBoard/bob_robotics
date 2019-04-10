@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 #include "../hid/joystick.h"
 #include "../net/connection.h"
 #include "robot.h"
@@ -111,8 +112,7 @@ public:
     {
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
-        std::cout << "Dummy motor: left: " << left << "; right: " << right
-                  << std::endl;
+        LOG_INFO << "Dummy motor: left: " << left << "; right: " << right;
     }
 
     void tankMaxScaled(const float left, const float right, const float max = 1.f)
