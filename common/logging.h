@@ -1,8 +1,11 @@
 #pragma once
 
 // Third-party includes
+#include "assert.h"
+#define assert BOB_ASSERT
 #include "plog/Appenders/ColorConsoleAppender.h"
 #include "plog/Log.h"
+#undef assert
 
 // Standard C includes
 #include <cstdlib>

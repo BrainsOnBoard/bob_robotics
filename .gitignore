@@ -1,3 +1,6 @@
+# CMake build dir
+**/build/*
+
 # Stupid file that KDE puts in folders sometimes
 .directory
 
