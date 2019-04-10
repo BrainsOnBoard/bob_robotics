@@ -289,7 +289,7 @@ public:
         }
         writeAccelGyroByte(AccelGyroReg::ORIENT_CFG_G, orientCfgValue);
 
-        std::cout << "Gyro initialised" << std::endl;
+        LOG_INFO << "Gyro initialised";
     }
 
     void initAccel(const AccelSettings &settings)
@@ -337,7 +337,7 @@ public:
         // HPIS1 - HPF enabled for interrupt function
         writeAccelGyroByte(AccelGyroReg::CTRL_REG7_XL, static_cast<uint8_t>(settings.highResBandwidth));
 
-        std::cout << "Accelerometer initialised" << std::endl;
+        LOG_INFO << "Accelerometer initialised";
     }
 
 
@@ -345,7 +345,7 @@ public:
     {
         // Cache magneto sensitivity
         m_MagnetoSensitivity = getMagnetoSensitivity(settings.scale);
-        std::cout << m_MagnetoSensitivity << std::endl;
+        LOG_DEBUG << m_MagnetoSensitivity;
         // CTRL_REG1_M (Default value: 0x10)
         // [TEMP_COMP][OM1][OM0][DO2][DO1][DO0][0][ST]
         // TEMP_COMP - Temperature compensation
@@ -400,12 +400,12 @@ public:
         // 0:continuous, 1:not updated until MSB/LSB are read
         writeMagnetoByte(MagnetoReg::CTRL_REG5, 0);
 
-        std::cout << "Magnetometer initialised" << std::endl;
+        LOG_INFO << "Magnetometer initialised";
     }
 
     void calibrateAccelGyro()
     {
-        std::cout << "Calibrating accelerometer and gyroscope" << std::endl;
+        LOG_INFO << "Calibrating accelerometer and gyroscope";
 
         setFIFOEnabled(true);
         setFIFOMode(FIFOMode::Threshold, 31);
@@ -451,13 +451,13 @@ public:
         setFIFOEnabled(false);
         setFIFOMode(FIFOMode::Off, 0);
 
-        std::cout << "\tAccel bias:" << m_AccelBias[0] << "," << m_AccelBias[1] << "," << m_AccelBias[2] << std::endl;
-        std::cout << "\tGyro bias:" << m_GyroBias[0] << "," << m_GyroBias[1] << "," << m_GyroBias[2] << std::endl;
+        LOG_DEBUG << "\tAccel bias:" << m_AccelBias[0] << "," << m_AccelBias[1] << "," << m_AccelBias[2];
+        LOG_DEBUG << "\tGyro bias:" << m_GyroBias[0] << "," << m_GyroBias[1] << "," << m_GyroBias[2];
     }
 
     /*void calibrateMagneto()
     {
-        std::cout << "Calibrating magnetometer" << std::endl;
+        LOG_INFO << "Calibrating magnetometer";
 
         int16_t magMin[3];
         int16_t magMax[3];
@@ -473,7 +473,7 @@ public:
             int16_t magSample[3];
             readMagneto(magSample);
 
-            //std::cout << magSample[0] << ", " << magSample[1] << ", " << magSample[2] << std::endl;
+            //LOG_INFO << magSample[0] << ", " << magSample[1] << ", " << magSample[2];
             // Update max and min
             std::transform(std::begin(magSample), std::end(magSample), std::begin(magMin), std::begin(magMin),
                            [](int16_t v, int16_t min){ return std::min(v, min); });
@@ -485,7 +485,7 @@ public:
         //int16_t magBias[3];
         std::transform(std::begin(magMin), std::end(magMin), std::begin(magMax), std::begin(m_MagnetoBias),
                        [](int16_t min, int16_t max){ return (min + max) / 2; });
-        std::cout << "\tBias: " << m_MagnetoBias[0] << ", " << m_MagnetoBias[1] << ", " << m_MagnetoBias[2] << std::endl;
+        LOG_DEBUG << "\tBias: " << m_MagnetoBias[0] << ", " << m_MagnetoBias[1] << ", " << m_MagnetoBias[2];
 
         // Set device bias
         // **NOTE** I have no idea why this isn't working

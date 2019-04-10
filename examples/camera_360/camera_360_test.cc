@@ -1,13 +1,14 @@
+// BoB robotics includes
+#include "common/logging.h"
+#include "common/timer.h"
+#include "imgproc/opencv_unwrap_360.h"
+#include "video/panoramic.h"
+
 // Standard C++ includes
 #include <iostream>
 
 // Standard C includes
 #include <cmath>
-
-// Common includes
-#include "common/timer.h"
-#include "imgproc/opencv_unwrap_360.h"
-#include "video/panoramic.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;

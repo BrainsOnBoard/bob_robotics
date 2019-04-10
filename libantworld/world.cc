@@ -1,11 +1,12 @@
+#include "common.h"
 #include "world.h"
 
 // BoB robotics includes
-#include "../common/assert.h"
-#include "common.h"
+#include "common/assert.h"
+#include "common/logging.h"
 
 // Third-party includes
-#include "../third_party/path.h"
+#include "third_party/path.h"
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
@@ -103,7 +104,7 @@ void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     input.seekg(0, std::ios_base::end);
     const auto numTriangles = static_cast<size_t>(input.tellg()) / (sizeof(double) * 12);
     input.seekg(0);
-    std::cout << "World has " << numTriangles << " triangles" << std::endl;
+    LOG_INFO << "World has " << numTriangles << " triangles";
 
     // Bind surface vertex array
     surface.bind();
@@ -150,8 +151,8 @@ void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Upload positions
         surface.uploadPositions(positions);
 
-        std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")" << std::endl;
-        std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")" << std::endl;
+        LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")";
+        LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")";
     }
 
     {
@@ -204,7 +205,7 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         maxTextureSize = std::min(maxTextureSize, hardwareMaxTextureSize);
     }
 
-    std::cout << "Max texture size: " << maxTextureSize << std::endl;
+    LOG_DEBUG << "Max texture size: " << maxTextureSize;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
@@ -255,7 +256,7 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
-                std::cout << "Reading object: " << parameterString << std::endl;
+                LOG_DEBUG << "Reading object: " << parameterString;
             }
             else if(commandString == "v") {
                 // Read vertex
@@ -271,7 +272,7 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "usemtl") {
                 lineStream >> parameterString;
-                std::cout << "\tReading surface: " << parameterString << std::endl;
+                LOG_INFO << "\tReading surface: " << parameterString;
                 objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
             }
             else if(commandString == "s") {
@@ -285,13 +286,13 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
                 readFace(lineStream, rawPositions, rawTexCoords, objSurfaces.back());
             }
             else {
-                std::cerr << "WARNING: unhandled obj tag '" << commandString << "'" << std::endl;
+                LOG_WARNING << "Unhandled obj tag '" << commandString << "'";
             }
 
         }
 
-        std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
-        std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
+        LOG_INFO << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
+        LOG_INFO << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures";
 
         // Initialise bounds to limits of underlying data types
         std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
@@ -303,8 +304,8 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
         }
 
-        std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")" << std::endl;
-        std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")" << std::endl;
+        LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")";
+        LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")";
     }
 
     // Remove any existing surfaces
@@ -356,7 +357,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
         throw std::runtime_error("Cannot open mtl file: " + filename);
     }
 
-    std::cout << "Reading material file: " << filename << std::endl;
+    LOG_DEBUG << "Reading material file: " << filename;
 
     // Read lines into strings
     std::string currentMaterialName;
@@ -379,7 +380,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
         lineStream >> commandString;
         if(commandString == "newmtl") {
             lineStream >> currentMaterialName;
-            std::cout << "\tReading material: " << currentMaterialName << std::endl;
+            LOG_INFO << "\tReading material: " << currentMaterialName;
         }
         else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
             || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
@@ -402,7 +403,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             const size_t lastNonQuote = textureFilename.find_last_not_of('"');
             textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 
-            std::cout << "\t\tTexture: '" << textureFilename << "'" << std::endl;
+            LOG_DEBUG << "\t\tTexture: '" << textureFilename << "'";
 
 
             // Load texture and add to map
@@ -414,11 +415,11 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
             // If texture couldn't be loaded, give warning
             if(texture.cols == 0 && texture.rows == 0) {
-                std::cerr << "WARNING:Cannot load texture '" << texturePath << "'" << std::endl;
+                LOG_WARNING << "Cannot load texture '" << texturePath << "'";
             }
             // Otherwise
             else {
-                std::cout << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows << std::endl;
+                LOG_DEBUG << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows;
 
                 // If texture isn't square, use longest side as size
                 int size = texture.cols;
@@ -431,7 +432,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
                 // Perform resize if required
                 if(size != texture.cols || size != texture.rows) {
-                    std::cout << "\t\t\tResizing to: " << size << "x" << size << std::endl;
+                    LOG_DEBUG << "\t\t\tResizing to: " << size << "x" << size;
                     cv::resize(texture, texture, cv::Size(size, size), 0, 0, cv::INTER_CUBIC);
                 }
 
@@ -449,7 +450,7 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             }
         }
         else {
-            std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
+            LOG_WARNING << "Unhandled mtl tag '" << commandString << "'";
         }
 
     }
