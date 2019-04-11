@@ -74,9 +74,10 @@ int bob_main(int, char **)
     degree_t deg = 0_deg; // angle of steering of robot car
     constexpr millimeter_t lookaheadDistance = 1000_mm; // lookahead distance
     constexpr meters_per_second_t max_speed = 1.4_mps;  // car's max speed
+    constexpr millimeter_t stopping_dist = 1_cm;        // car's stopping distance
 
     const auto wheelBase = car.getDistanceBetweenAxis(); // distance between wheel bases
-    BoBRobotics::Robots::PurePursuitController controller(lookaheadDistance, wheelBase);
+    Robots::PurePursuitController controller(lookaheadDistance, wheelBase, stopping_dist);
 
     while(display.isOpen()) {
         
