@@ -31,12 +31,10 @@ class PurePursuitController {
    
 public:
 
-    PurePursuitController() {
+    PurePursuitController() {}
 
-    }
-
-    PurePursuitController(millimeter_t lookahead, millimeter_t wheelBaseLength) : 
-                          m_lookAheadDistance(lookahead), m_wheelBase(wheelBaseLength) {
+    PurePursuitController(millimeter_t lookahead, millimeter_t wheelBaseLength, millimeter_t stopping_dist) : 
+                          m_lookAheadDistance(lookahead), m_wheelBase(wheelBaseLength), m_stoppingDistance(stopping_dist) {
 
     }
 
@@ -60,20 +58,55 @@ public:
     void setWheelBaseLength(const millimeter_t length) {
         m_wheelBase = length;
     }
+
+    //! sets the stopping distance. If the car is within this distance, the controller stops
+    void setStoppingDistance(const millimeter_t distance) {
+        m_stoppingDistance = distance;
+    }
   
-    //! calculates the turning angle needed to follow the path 
-    degree_t getTurningAngle(const millimeter_t x, const millimeter_t y, const radian_t heading) {
-        Vector2<millimeter_t> lookPoint = getLookAheadPoint(x,y, m_lookAheadDistance);
-        if (!lookPoint.isnan()) return computeTurningAngle(x,y, lookPoint.x(), lookPoint.y(), heading);
-        return 0_deg; 
+    //! calculates the turning angle needed to follow the path, returns true if there is a valid angle.
+    bool getTurningAngle(const millimeter_t x, const millimeter_t y, const radian_t heading, degree_t &turningAngle) {
+
+        using namespace units::math;
+        Vector2<millimeter_t> lookPoint;                                           // lookahead point
+        bool didGetPoint = getLookAheadPoint(x,y, m_lookAheadDistance, lookPoint); // did we get a valid lookahead point (and also calculate the point)
+        const millimeter_t wx = m_wayPoints.back().x();                            // last wp x
+        const millimeter_t wy = m_wayPoints.back().y();                            // last wp y
+        const millimeter_t dist = sqrt( pow<2>(wx-x) + pow<2>(wy-y) );             // distance to last point
+
+        // lookAhead distance changes based on the distance between robot and last waypint
+        millimeter_t  lookAheadDistance = m_lookAheadDistance;            
+        // if we arrived to the last waypoint, stop 
+        if (dist < m_stoppingDistance) return false; 
+
+        // if we have a valid lookahead point
+        if (didGetPoint) {         
+            // if the distance to the last point is less than the lookahead distance, set 
+            // the lookaheadDistance to the distance between robot and last point
+            if (dist <= m_lookAheadDistance && !m_wayPoints.empty()) {
+                lookAheadDistance = dist;
+                lookPoint.x() = wx;
+                lookPoint.y() = wy;
+            }  
+            turningAngle = computeTurningAngle(x,y, lookPoint.x(), lookPoint.y(), lookAheadDistance, heading);
+            return true;
+        }
+        // if we don't have a valid lookahead point and we are closer the last waypoint than the lookahead distance
+        else if (!didGetPoint && dist < m_lookAheadDistance) {
+            lookAheadDistance = dist; 
+            turningAngle = computeTurningAngle(x,y, wx, wy, lookAheadDistance, heading);
+            return true;
+        }
+        
+        return false;
     }
 
-    //! calculates the look-ahead point the robot follows
-    Vector2<millimeter_t> getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r) {
+    //! calculates the look-ahead point the robot follows. returns true if there is a valid point
+    bool getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r, Vector2<millimeter_t> &lookaheadPoint) {
         using namespace units::math;
 
-        Vector2<millimeter_t> lookaheadVector;
         if (m_wayPoints.size() > 1) {
+            bool didGetIntersection = false;
             for (unsigned int i = 0; i < m_wayPoints.size()-1; i++) {
 
                 // path points
@@ -112,35 +145,39 @@ public:
                 // we always want the latest path segment point so if we have a 
                 // valid point, we delete the previous point
                 if (validIntersection1) {
-                    lookaheadVector.x() = x1 + x;
-                    lookaheadVector.y() = y1 + y;
+                    lookaheadPoint.x() = x1 + x;
+                    lookaheadPoint.y() = y1 + y;
+                    didGetIntersection = true;
                 }
 
                 // if there is a valid 2. intersection point, we keep that and remove
                 // the first one
                 if (validIntersection2) {
-                    if (lookaheadVector.isnan() || fabs(x1 - p2x) > fabs(x2 - p2x) ||
-                        fabs(y1 - p2y) > fabs(y2 - p2y)) {
-                            
-                        lookaheadVector.x() = x2 + x;
-                        lookaheadVector.y() = y2 + y;
+                    if (lookaheadPoint.isnan() || fabs(x1 - p2x) > fabs(x2 - p2x) ||
+                        fabs(y1 - p2y) > fabs(y2 - p2y)) {            
+                        lookaheadPoint.x() = x2 + x;
+                        lookaheadPoint.y() = y2 + y;
+                        didGetIntersection = true;
                     }
                 }
             }
+            if (didGetIntersection) return true;
         } 
-        return lookaheadVector;
+        return false;
     }
 
 private:
 
     millimeter_t m_lookAheadDistance;                 // the distance to look ahead
     millimeter_t m_wheelBase;                         // length between wheel bases
+    millimeter_t m_stoppingDistance;                  // stopping distance.
     std::vector<Vector2<millimeter_t>> m_wayPoints;   // list of waypoint coordinates
 
     // computes the turning angle using the lookahead point
     degree_t computeTurningAngle(const millimeter_t xrobot, const millimeter_t yrobot 
                                 ,const millimeter_t xlookahead, const millimeter_t ylookahead
-                                ,const radian_t heading) {
+                                ,const millimeter_t lookAheadDistance ,const radian_t heading) {
+
         using namespace units::math;
         // calculating bearing [robot-lookahead point]
         const auto dx = xlookahead-xrobot;
@@ -148,10 +185,10 @@ private:
         const degree_t bearing = atan2(dy,dx)-heading;
        
         // calculating turning angle
-        const auto xlength = sin(bearing) * m_lookAheadDistance;
+        const auto xlength = sin(bearing) * lookAheadDistance;
 
         // calculating arc to turn
-        const auto kb = (2*xlength*m_wheelBase)/(pow<2>(m_lookAheadDistance));
+        const auto kb = (2*xlength*m_wheelBase)/(pow<2>(lookAheadDistance));
         const degree_t turningAngle = atan(kb);
         return turningAngle;
     }
