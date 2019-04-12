@@ -1,24 +1,18 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/threadable.h"
-#include "../imgproc/opencv_unwrap_360.h"
-#include "../os/keycodes.h"
+#include "common/threadable.h"
+#include "imgproc/opencv_unwrap_360.h"
 #include "input.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
-#include <chrono>
 #include <memory>
-#include <stdexcept>
-#include <string>
-#include <thread>
 
 namespace BoBRobotics {
 namespace Video {
-using namespace std::literals;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::Display
@@ -43,18 +37,7 @@ public:
      * @param videoInput The video source to display
      * @param fullScreen Whether or not to display fullscreen
      */
-    Display(Input &videoInput, const bool fullScreen = false)
-      : m_VideoInput(videoInput)
-    {
-        // set opencv window to display full screen
-        if (fullScreen) {
-            cv::namedWindow(WindowName, cv::WINDOW_NORMAL);
-            setWindowProperty(WindowName, cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
-        } else {
-            cv::namedWindow(WindowName, cv::WINDOW_AUTOSIZE);
-        }
-    }
-
+    Display(Input &videoInput, const bool fullScreen = false);
 
     /*!
      * \brief Create a new display with unwrapping enabled if the videoInput supports it
@@ -63,96 +46,33 @@ public:
      * @param unwrapRes The size of the target image after unwrapping
      * @param fullScreen Whether or not to display fullscreen
      */
-    Display(Input &videoInput, const cv::Size &unwrapRes, const bool fullScreen = false)
-      : Display(videoInput, fullScreen)
-    {
-        if (videoInput.needsUnwrapping()) {
-            m_ShowUnwrapped = true;
-            auto unwrapper = videoInput.createUnwrapper(unwrapRes);
-            m_Unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(std::move(unwrapper));
-        }
-    }
+    Display(Input &videoInput,
+            const cv::Size &unwrapRes,
+            const bool fullScreen = false);
 
     //! Close display window and destroy this object
-    virtual ~Display() override
-    {
-        close();
-    }
+    virtual ~Display() override;
 
     //! Gets the Video::Input object this Display is reading from
-    Video::Input &getVideoInput()
-    {
-        return m_VideoInput;
-    }
+    Video::Input &getVideoInput();
 
     //! Return true if the display window is open
-    bool isOpen()
-    {
-        return m_IsOpen;
-    }
+    bool isOpen();
 
     /*!
      * \brief Try to read a new frame from the video source and display it
      *
      * \return Whether a new frame was successfully read
      */
-    bool update()
-    {
-        cv::Mat frame;
-        bool newFrame = readFrame(frame);
-        if (newFrame) {
-            // display the frame on screen
-            cv::imshow(WindowName, frame);
-        }
-
-        // get keyboard input
-        switch (cv::waitKeyEx(1) & OS::KeyMask) {
-        case 'u': // toggle unwrapping
-            m_ShowUnwrapped = !m_ShowUnwrapped;
-            break;
-        case OS::KeyCodes::Escape:
-            close();
-        }
-
-        return newFrame;
-    }
+    bool update();
 
     //! Close the display and stop the background thread if needed
-    virtual void close()
-    {
-        stop();
-        if (isOpen()) {
-            cv::destroyWindow(WindowName);
-            m_IsOpen = false;
-        }
-    }
+    virtual void close();
 
 protected:
-    virtual bool readFrame(cv::Mat &frame)
-    {
-        if (!m_VideoInput.readFrame(m_Frame)) {
-            return false;
-        }
+    virtual bool readFrame(cv::Mat &frame);
 
-        // unwrap frame if required
-        if (m_Unwrapper && m_ShowUnwrapped) {
-            m_Unwrapper->unwrap(m_Frame, m_Unwrapped);
-            frame = m_Unwrapped;
-        } else {
-            frame = m_Frame;
-        }
-        return true;
-    }
-
-    virtual void runInternal() override
-    {
-        while (isRunning()) {
-            // check for a new frame
-            if (!update()) {
-                std::this_thread::sleep_for(25ms);
-            }
-        }
-    }
+    virtual void runInternal() override;
 
 private:
     Input &m_VideoInput;
