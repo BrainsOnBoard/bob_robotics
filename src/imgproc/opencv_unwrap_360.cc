@@ -211,14 +211,6 @@ OpenCVUnwrap360::read(const cv::FileNode &node)
            flip);
 }
 
-//------------------------------------------------------------------------
-// Private members
-//------------------------------------------------------------------------
-cv::Size m_CameraResolution;
-cv::Size m_UnwrappedResolution;
-cv::Mat m_UnwrapMapX;
-cv::Mat m_UnwrapMapY;
-
 void
 OpenCVUnwrap360::createMaps()
 {
@@ -227,21 +219,18 @@ OpenCVUnwrap360::createMaps()
     updateMaps();
 }
 
-} // ImgProc
-} // BoBRobotics
-
 void
 write(cv::FileStorage &fs,
       const std::string &,
-      const BoBRobotics::ImgProc::OpenCVUnwrap360 &config)
+      const OpenCVUnwrap360 &config)
 {
     config.write(fs);
 }
 
 void
 read(const cv::FileNode &node,
-     BoBRobotics::ImgProc::OpenCVUnwrap360 &x,
-     BoBRobotics::ImgProc::OpenCVUnwrap360 defaultValue)
+     OpenCVUnwrap360 &x,
+     OpenCVUnwrap360 defaultValue)
 {
     if (node.empty()) {
         x = defaultValue;
@@ -249,3 +238,6 @@ read(const cv::FileNode &node,
         x.read(node);
     }
 }
+
+} // ImgProc
+} // BoBRobotics

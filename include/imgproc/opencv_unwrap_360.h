@@ -80,15 +80,16 @@ private:
     void createMaps();
 }; // OpenCVUnwrap360
 
-} // ImgProc
-} // BoBRobotics
-
 void
 write(cv::FileStorage &fs,
       const std::string &,
-      const BoBRobotics::ImgProc::OpenCVUnwrap360 &config);
+      const OpenCVUnwrap360 &config);
 
 void
 read(const cv::FileNode &node,
-     BoBRobotics::ImgProc::OpenCVUnwrap360 &x,
-     BoBRobotics::ImgProc::OpenCVUnwrap360 defaultValue = BoBRobotics::ImgProc::OpenCVUnwrap360());
+     OpenCVUnwrap360 &x,
+     OpenCVUnwrap360 defaultValue = OpenCVUnwrap360());
+
+} // ImgProc
+} // BoBRobotics
+

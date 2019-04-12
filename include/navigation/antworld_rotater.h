@@ -1,7 +1,6 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/assert.h"
 #include "../antworld/agent.h"
 
 // Third-party includes
@@ -28,19 +27,7 @@ public:
                     AntWorld::AntAgent &agent,
                     const degree_t yawStep = 1_deg,
                     const degree_t pitch = 0_deg,
-                    const degree_t roll = 0_deg)
-      : m_Agent(agent)
-      , m_YawStep(yawStep)
-      , m_Pitch(pitch)
-      , m_Roll(roll)
-      , m_UnwrapRes(unwrapRes)
-    {
-        BOB_ASSERT(agent.getOutputSize() == unwrapRes);
-        BOB_ASSERT(units::math::fmod(360_deg, m_YawStep) == 0_deg);
-
-        // This rotater doesn't support mask images
-        BOB_ASSERT(maskImage.empty());
-    }
+                    const degree_t roll = 0_deg);
 
     template<class Func>
     void rotate(Func func)
@@ -54,15 +41,9 @@ public:
         }
     }
 
-    size_t numRotations() const
-    {
-        return 360_deg / m_YawStep;
-    }
+    size_t numRotations() const;
 
-    units::angle::radian_t columnToHeading(size_t column) const
-    {
-        return units::angle::turn_t{ (double) column / (double) m_UnwrapRes.width };
-    }
+    units::angle::radian_t columnToHeading(size_t column) const;
 
     template<typename... Ts>
     static auto
