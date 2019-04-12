@@ -108,6 +108,47 @@ public:
         return out;
     }
 
+    std::vector<float> getMouseClickPixelPosition() const
+    {
+        std::vector<float> out;
+        out.push_back(m_MouseClickPosition[0]);
+        out.push_back(m_MouseClickPosition[1]);
+        return out;
+    }
+
+    //! draws the rectangle at the desired coordinates
+    void drawRectangleAtCoordinates(const SDL_Rect &rectangle)
+    {
+        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(m_Renderer, &rectangle);
+    }
+
+    //! return the current SDL_Renderer pointer if we want to draw additional graphics
+    //! elements to the screen.
+    SDL_Renderer* getRenderer() {
+        return m_Renderer;
+    }
+
+    //! clears the screen to the selected color. Call this first, before draw()
+    void clearScreen() {
+        // Clear the entire screen to our selected color.
+        SDL_RenderClear(m_Renderer);
+    }
+
+    //! changes pixel to millimeter
+    void pixelToMM(const int x, const int y, millimeter_t &xMM, millimeter_t &yMM) const
+    {
+        xMM = (x - (WindowWidth / 2)) * m_MMPerPixel;
+        yMM = -(y - (WindowHeight / 2)) * m_MMPerPixel;
+    }
+
+    //! change from millimeter to pixel
+    void mmToPixel(const millimeter_t x, const millimeter_t y, int &xPixel, int &yPixel) const
+    {
+        xPixel = static_cast<int>(x / m_MMPerPixel) + (WindowWidth / 2);
+        yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
+    }
+
 private:
     // Window size
     static constexpr int WindowWidth = 800;
@@ -149,18 +190,8 @@ private:
         return std::make_pair(0, false);
     }
 
-    //! draws the rectangle at the desired coordinates
-    void drawRectangleAtCoordinates(const SDL_Rect &rectangle)
-    {
-        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 255, 255);
-        SDL_RenderFillRect(m_Renderer, &rectangle);
-    }
-
     void draw(const degree_t agentAngle)
     {
-        // Clear the entire screen to our selected color.
-        SDL_RenderClear(m_Renderer);
-
         // draw a rectangle at the goal position
         drawRectangleAtCoordinates({ m_MouseClickPosition[0], m_MouseClickPosition[1], 5, 5 });
 
@@ -172,18 +203,6 @@ private:
                          -agentAngle.value(), nullptr, SDL_FLIP_NONE);
 
         SDL_RenderPresent(m_Renderer);
-    }
-
-    void pixelToMM(const int x, const int y, millimeter_t &xMM, millimeter_t &yMM) const
-    {
-        xMM = (x - (WindowWidth / 2)) * m_MMPerPixel;
-        yMM = -(y - (WindowHeight / 2)) * m_MMPerPixel;
-    }
-
-    void mmToPixel(const millimeter_t x, const millimeter_t y, int &xPixel, int &yPixel) const
-    {
-        xPixel = static_cast<int>(x / m_MMPerPixel) + (WindowWidth / 2);
-        yPixel = -static_cast<int>(y / m_MMPerPixel) + (WindowHeight / 2);
     }
 
     void setRobotPosition(const millimeter_t x, const millimeter_t y)

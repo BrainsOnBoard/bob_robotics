@@ -1,8 +1,9 @@
 # CMake build dir
 **/build/*
 
-# Stupid file that KDE puts in folders sometimes
+# OS-specific files
 .directory
+.DS_Store
 
 # Temporary files
 *~
