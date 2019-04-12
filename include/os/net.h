@@ -7,7 +7,9 @@
 
 #pragma once
 
+// Standard C++ includes
 #include <string>
+#include <stdexcept>
 
 // Headers to be included
 #ifdef _WIN32
@@ -19,18 +21,11 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-// Standard C includes
-#include <cwchar>
-
 // Macro defined in Linux but not Windows
 #define INET_ADDRSTRLEN 22
 
 #pragma comment(lib, "Ws2_32.lib")
 #else
-
-// Standard C includes
-#include <cerrno>
-#include <cstring>
 
 // POSIX includes
 #include <arpa/inet.h>
@@ -82,9 +77,9 @@ namespace Net {
  * will terminate the program.
  */
 #ifdef _WIN32
-const int sendFlags = 0;
+constexpr int sendFlags = 0;
 #else
-const int sendFlags = MSG_NOSIGNAL;
+constexpr int sendFlags = MSG_NOSIGNAL;
 #endif
 
 /*!
@@ -106,82 +101,29 @@ const int sendFlags = MSG_NOSIGNAL;
 class WindowsNetworking
 {
 public:
+    static void initialise();
+
 #ifdef _WIN32
-    static void initialise()
-    {
-        static WindowsNetworking net;
-    }
-
 private:
-    WindowsNetworking()
-    {
-        WSADATA wsaData;
-        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        if (result != NO_ERROR) {
-            throw std::runtime_error("Error at WSAStartup");
-        }
-    }
-
-    ~WindowsNetworking()
-    {
-        WSACleanup();
-    }
+    WindowsNetworking();
+    ~WindowsNetworking();
 #else
-    static void initialise() {}
     WindowsNetworking() = delete;
 #endif
 }; // WindowsNetworking
 
-#ifdef _WIN32
 //! Get the last networking error code
-inline int
-lastError()
-{
-    return WSAGetLastError();
-}
+int
+lastError();
 
-//! Get the error messgae which corresponds to the given code
-inline std::string
-errorMessage(int err = lastError())
-{
-    wchar_t *s = nullptr;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                  nullptr,
-                  err,
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPWSTR) &s,
-                  0,
-                  nullptr);
-
-    // Convert wide chars to regular string
-    std::string msg(&s[0], &s[wcslen(s)]);
-
-    // Free memory from heap
-    LocalFree(s);
-
-    return msg;
-}
-#else
-inline int
-lastError()
-{
-    return errno;
-}
-
-inline std::string
-errorMessage(int err = lastError())
-{
-    return std::strerror(err);
-}
-#endif
+std::string
+errorMessage(int err = lastError());
 
 //! An exception thrown if an error signal is given by network interface
 class NetworkError : public std::runtime_error
 {
 public:
-    NetworkError(const std::string &msg)
-      : std::runtime_error(msg + " (" + std::to_string(OS::Net::lastError()) + ": " + OS::Net::errorMessage() + ")")
-    {}
+    NetworkError(const std::string &msg);
 };
 } // Net
 } // OS

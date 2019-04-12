@@ -1,6 +1,6 @@
 #pragma once
 
-// C++ includes
+// Standard C++ includes
 #include <limits>
 
 namespace BoBRobotics {
