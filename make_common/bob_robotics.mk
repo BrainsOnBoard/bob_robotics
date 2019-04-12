@@ -16,7 +16,7 @@ CXXFLAGS += -std=$(CPP_STANDARD) -Wall -Wpedantic -Wextra -MMD -MP
 # Include the root BoB robotics folder
 CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
-CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
+CXXFLAGS += -I$(BOB_ROBOTICS_ROOT) -I$(BOB_ROBOTICS_ROOT)/include
 
 # For building with Google Test
 ifdef WITH_GTEST
