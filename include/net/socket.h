@@ -6,18 +6,12 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/logging.h"
-#include "../os/net.h"
+#include "os/net.h"
 
 // Standard C++ includes
-#include <algorithm>
 #include <atomic>
-#include <iostream>
-#include <iterator>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <vector>
 
 namespace BoBRobotics {
@@ -30,17 +24,14 @@ using Command = std::vector<std::string>;
 class SocketClosedError : public std::runtime_error
 {
 public:
-    SocketClosedError() : std::runtime_error("Socket is closed")
-    {}
+    SocketClosedError();
 };
 
 //! An exception thrown if a command received over the network is badly formed
 class BadCommandError : public std::runtime_error
 {
 public:
-    BadCommandError()
-      : std::runtime_error("Bad command received")
-    {}
+    BadCommandError();
 };
 
 //----------------------------------------------------------------------------
@@ -60,93 +51,40 @@ public:
 class Socket
 {
 public:
-    Socket(const socket_t handle)
-      : m_Handle(handle)
-    {
-        if (!isOpen()) {
-            throw OS::Net::NetworkError("Could not initialise socket");
-        }
-    }
+    Socket(const socket_t handle);
 
-    Socket(int domain, int type, int protocol)
-      : Socket(socket(domain, type, protocol))
-    {}
+    Socket(int domain, int type, int protocol);
 
-    virtual ~Socket()
-    {
-        close();
-    }
+    virtual ~Socket();
 
     //! Close the socket
-    void close()
-    {
-        const socket_t handle = m_Handle.exchange(INVALID_SOCKET);
-        if (handle != INVALID_SOCKET) {
-            ::close(handle);
-        }
-    }
+    void close();
 
     //! Check if socket is still open
-    bool isOpen() const { return m_Handle != INVALID_SOCKET; }
+    bool isOpen() const;
 
     //! Get the current socket handle this object holds
-    socket_t getHandle() const { return m_Handle; }
+    socket_t getHandle() const;
 
-    size_t read(void *buffer, const size_t length)
-    {
-        const auto nbytes = recv(m_Handle,
-                                 reinterpret_cast<readbuff_t>(buffer),
-                                 static_cast<bufflen_t>(length),
-                                 0);
-        if (nbytes == -1) {
-            throwError("Could not read from socket");
-        }
-
-        return static_cast<size_t>(nbytes);
-    }
+    size_t read(void *buffer, const size_t length);
 
     //! Send a buffer of specified length through the socket
-    void send(const void *buffer, size_t length)
-    {
-        const auto ret = ::send(m_Handle,
-                                reinterpret_cast<sendbuff_t>(buffer),
-                                static_cast<bufflen_t>(length),
-                                OS::Net::sendFlags);
-        if (ret == -1) {
-            throwError("Could not send");
-        }
-    }
+    void send(const void *buffer, size_t length);
 
     //! Send a string over the socket.
-    void send(const std::string &msg)
-    {
-        send(msg.c_str(), msg.size());
-        LOG_VERBOSE << ">>> " << msg;
-    }
+    void send(const std::string &msg);
 
     // Object is non-copyable
     Socket(const Socket &) = delete;
     void operator=(const Socket &) = delete;
     Socket &operator=(Socket &&) = default;
 
-    Socket(Socket &&old)
-      : m_Handle(old.m_Handle.load())
-    {
-        old.m_Handle = INVALID_SOCKET;
-    }
+    Socket(Socket &&old);
 
 private:
     std::atomic<socket_t> m_Handle;
 
-    void throwError(const std::string &msg)
-    {
-        if (isOpen()) {
-            close();
-            throw OS::Net::NetworkError(msg);
-        } else {
-            throw SocketClosedError();
-        }
-    }
+    void throwError(const std::string &msg);
 }; // Socket
 } // Net
 } // BoBRobotics
