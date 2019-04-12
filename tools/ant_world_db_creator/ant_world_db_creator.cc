@@ -2,10 +2,10 @@
 // BoB robotics includes
 #include "common/logging.h"
 #include "common/pose.h"
-#include "libantworld/agent.h"
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_continuous.h"
+#include "antworld/agent.h"
+#include "antworld/common.h"
+#include "antworld/renderer.h"
+#include "antworld/route_continuous.h"
 #include "navigation/image_database.h"
 #include "video/opengl.h"
 
@@ -57,7 +57,7 @@ protected:
         BOB_ASSERT(m_Database.empty());
 
         // Create renderer
-        m_Renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+        m_Renderer.getWorld().load("../../include/antworld/world5000_gray.bin",
                                    {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
     }
 

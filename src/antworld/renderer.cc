@@ -1,10 +1,9 @@
-#include "renderer.h"
+// BoB robotics includes
+#include "antworld/renderer.h"
+#include "antworld/render_target.h"
 
 // Standard C++ includes
 #include <stdexcept>
-
-// Libantworld includes
-#include "render_target.h"
 
 //------------------------------------------------------------------------
 // BoBRobotics::AntWorld::Renderer

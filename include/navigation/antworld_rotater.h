@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
-#include "../libantworld/agent.h"
+#include "../antworld/agent.h"
 
 // Third-party includes
 #include "../third_party/units.h"

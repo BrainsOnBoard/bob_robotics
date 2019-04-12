@@ -1,10 +1,9 @@
-#include "render_mesh.h"
+// BoB robotics includes
+#include "antworld/common.h"
+#include "antworld/render_mesh.h"
 
 // Standard C++ includes
 #include <vector>
-
-// Antworld includes
-#include "common.h"
 
 using namespace units::angle;
 using namespace units::math; // cmath functions for unit types

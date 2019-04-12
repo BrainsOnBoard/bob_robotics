@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "libantworld/agent.h"
+#include "antworld/agent.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -30,7 +30,7 @@ main()
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
-    world.load("../../libantworld/world5000_gray.bin",
+    world.load("../../include/antworld/world5000_gray.bin",
                { 0.0f, 1.0f, 0.0f },
                { 0.898f, 0.718f, 0.353f });
     const auto minBound = world.getMinBound();

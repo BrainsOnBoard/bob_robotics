@@ -1,7 +1,6 @@
-#include "snapshot_processor_ardin.h"
-
 // BoB robotics includes
-#include "../common/assert.h"
+#include "antworld/snapshot_processor_ardin.h"
+#include "common/assert.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::SnapshotProcessorArdin

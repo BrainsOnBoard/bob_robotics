@@ -37,7 +37,7 @@ main()
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
-    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+    renderer.getWorld().load("../../include/antworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object

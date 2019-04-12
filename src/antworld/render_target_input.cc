@@ -1,7 +1,6 @@
-#include "render_target_input.h"
-
-// Libantworld includes
-#include "render_target.h"
+// BoB robotics includes
+#include "antworld/render_target.h"
+#include "antworld/render_target_input.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderTargetInput

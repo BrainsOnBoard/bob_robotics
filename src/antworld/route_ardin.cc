@@ -1,34 +1,31 @@
-#include "route_continuous.h"
-#include "common.h"
-
 // BoB robotics includes
-#include "common/assert.h"
+#include "antworld/common.h"
+#include "antworld/route_ardin.h"
 #include "common/logging.h"
 
 // Standard C++ includes
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
 
-using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
-using namespace units::math;
+using namespace units::literals;
 
 //----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RouteContinuous
+// BoBRobotics::AntWorld::RouteArdin
 //----------------------------------------------------------------------------
 namespace BoBRobotics
 {
 namespace AntWorld
 {
-RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries)
+RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
     : m_WaypointsVAO(0), m_WaypointsPositionVBO(0), m_WaypointsColourVBO(0),
-    m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0), m_RouteMaxPoints(maxRouteEntries),
-    m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0)
+    m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0),
+    m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0),
+    m_MinBound{0_m, 0_m}, m_MaxBound{0_m, 0_m}
 {
     const GLfloat arrowPositions[] = {
         0.0f, 0.0f,
@@ -66,6 +63,7 @@ RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries
     glColorPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_COLOR_ARRAY);
 
+
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_RouteVAO);
 
@@ -91,15 +89,20 @@ RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries
     // Set colour pointer and enable client state in VAO
     glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_COLOR_ARRAY);
+
+    // Unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
-RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
-    : RouteContinuous(arrowLength, maxRouteEntries)
+RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,
+                       const std::string &filename, bool realign)
+    : RouteArdin(arrowLength, maxRouteEntries)
 {
-    load(filename);
+    load(filename, realign);
 }
 //----------------------------------------------------------------------------
-RouteContinuous::~RouteContinuous()
+RouteArdin::~RouteArdin()
 {
     // Delete waypoint objects
     glDeleteBuffers(1, &m_WaypointsPositionVBO);
@@ -117,7 +120,7 @@ RouteContinuous::~RouteContinuous()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-void RouteContinuous::load(const std::string &filename)
+void RouteArdin::load(const std::string &filename, bool realign)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
@@ -131,36 +134,34 @@ void RouteContinuous::load(const std::string &filename)
     input.seekg(0);
     LOG_INFO << "Route has " << numPoints << " points";
 
-    // Allocate path points
-    m_Waypoints.resize(numPoints);
+    {
+        // Loop through components(X and Y, ignoring heading)
+        std::vector<std::array<float, 2>> fullRoute(numPoints);
+        for(unsigned int c = 0; c < 2; c++) {
+            // Loop through points on path
+            for(unsigned int i = 0; i < numPoints; i++) {
+                // Read point component
+                double pointPosition;
+                input.read(reinterpret_cast<char*>(&pointPosition), sizeof(double));
 
-    // Loop through components(X and Y, ignoring heading)
-    GLfloat min[2] = {std::numeric_limits<GLfloat>::max(), std::numeric_limits<GLfloat>::max()};
-    GLfloat max[2] = {std::numeric_limits<GLfloat>::lowest(), std::numeric_limits<GLfloat>::lowest()};
-    for(unsigned int c = 0; c < 2; c++) {
-        // Loop through points on path
-        for(unsigned int i = 0; i < numPoints; i++) {
-            // Read point component
-            double pointPosition;
-            input.read(reinterpret_cast<char*>(&pointPosition), sizeof(pointPosition));
+                // Convert to float, scale to metres and insert into route
+                fullRoute[i][c] = (float)pointPosition * (1.0f / 100.0f);
+            }
+        }
 
-            // Scale to metres and insert into route
-            m_Waypoints[i][c] = static_cast<GLfloat>(pointPosition / 100.0);
+        // Reserve correctly sized vector for waypoints
+        m_Waypoints.reserve((numPoints / 10) + 1);
 
-            // Update min and max
-            min[c] = std::min(min[c], m_Waypoints[i][c]);
-            max[c] = std::max(max[c], m_Waypoints[i][c]);
+        // Loop through every 10 path points and add waypoint
+        for(unsigned int i = 0; i < numPoints; i += 10)
+        {
+            m_Waypoints.push_back(fullRoute[i]);
         }
     }
 
-    LOG_INFO << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")";
     // Reserve headings
     const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);
-
-    // Reserve array of cumulative distances
-    m_CumulativeDistance.reserve(m_Waypoints.size());
-    m_CumulativeDistance.push_back(0_m);
 
     // Loop through route segments
     for(unsigned int i = 0; i < numSegments; i++) {
@@ -168,14 +169,45 @@ void RouteContinuous::load(const std::string &filename)
         const auto &segmentStart = m_Waypoints[i];
         const auto &segmentEnd = m_Waypoints[i + 1];
 
-        // Add segment heading to array
-        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
-                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
+        // Calculate segment heading (NB: using unit.h's atan2, not cmath's)
+        const degree_t heading = units::math::atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                                    units::length::meter_t(segmentEnd[0] - segmentStart[0]));
 
-        // Calculate segment length and
-        const meter_t segmentLength(distance(segmentStart, segmentEnd));
-        m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
+        // Round to nearest whole number and add to headings array
+        m_Headings.push_back(units::math::round(heading * 0.5) * 2.0);
     }
+
+    // Loop through waypoints other than first
+    if(realign) {
+        for(unsigned int i = 1; i < m_Waypoints.size(); i++)
+        {
+            // Get previous and current waypoiny
+            const auto &prevWaypoint = m_Waypoints[i - 1];
+            auto &waypoint = m_Waypoints[i];
+
+            // Convert the segment heading back to radians
+            const radian_t heading = m_Headings[i - 1];
+
+            // Realign segment to this angle
+            waypoint[0] = prevWaypoint[0] + (0.1 * units::math::cos(heading));
+            waypoint[1] = prevWaypoint[1] - (0.1 * units::math::sin(heading));
+        }
+    }
+
+    // Initialise bounds to limits of underlying data types
+    std::fill_n(&m_MinBound[0], 2, std::numeric_limits<meter_t>::max());
+    std::fill_n(&m_MaxBound[0], 2, std::numeric_limits<meter_t>::min());
+
+    // Calculate bounds from waypoints
+    for(const auto &w : m_Waypoints) {
+        for(unsigned int c = 0; c < 2; c++) {
+            m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(w[c]));
+            m_MaxBound[c] = units::math::max(m_MaxBound[c], meter_t(w[c]));
+        }
+    }
+
+    LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")";
+    LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
 
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_WaypointsVAO);
@@ -207,7 +239,7 @@ void RouteContinuous::load(const std::string &filename)
     }
 }
 //----------------------------------------------------------------------------
-void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
+void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
 {
     // Bind route VAO
     glBindVertexArray(m_WaypointsVAO);
@@ -225,14 +257,14 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(antX.value(), antY.value(), 0.1);
-    glRotatef(-antHeading.value(), 0.0, 0.0, 1.0);
+    glTranslatef(antX.value(), antY.value(), 0.1f);
+    glRotatef(-antHeading.value(), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
 }
 //----------------------------------------------------------------------------
-bool RouteContinuous::atDestination(meter_t x, meter_t y, meter_t threshold) const
+bool RouteArdin::atDestination(meter_t x, meter_t y, meter_t threshold) const
 {
     // If route's empty, there is no destination so return false
     if(m_Waypoints.empty()) {
@@ -240,11 +272,11 @@ bool RouteContinuous::atDestination(meter_t x, meter_t y, meter_t threshold) con
     }
     // Otherwise return true if
     else {
-        return distance(m_Waypoints.back(), x, y) < threshold;
+        return (distance(m_Waypoints.back(), x, y) < threshold);
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter_t y) const
+std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(meter_t x, meter_t y) const
 {
     // Loop through segments
     meter_t minimumDistance = std::numeric_limits<meter_t>::max();
@@ -264,41 +296,7 @@ std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter
     return std::make_tuple(minimumDistance, nearestWaypoint);
 }
 //----------------------------------------------------------------------------
-Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
-{
-    // Clamp distance at 0
-    distance = max(0_m, distance);
-
-    // Find waypoint AFTER distance
-    auto nextWaypointIter = std::upper_bound(m_CumulativeDistance.cbegin(), m_CumulativeDistance.cend(), distance);
-
-    // Get its index (if we are beyond end of route use last waypoint)
-    const size_t nextWaypointIndex = (nextWaypointIter == m_CumulativeDistance.cend())
-        ? (m_CumulativeDistance.size() - 1)
-        : (size_t)std::distance(m_CumulativeDistance.cbegin(), nextWaypointIter);
-
-    // Get next waypoint's distance and position
-    const meter_t nextWaypointDistance = m_CumulativeDistance[nextWaypointIndex];
-    const auto &nextWaypoint = m_Waypoints[nextWaypointIndex];
-
-    // Get index, distance and position of PREVIOUS waypoint
-    const size_t prevWaypointIndex = nextWaypointIndex - 1;
-    const meter_t prevWaypointDistance = m_CumulativeDistance[prevWaypointIndex];
-    const auto &prevWaypoint = m_Waypoints[prevWaypointIndex];
-
-    // Determine what proportion of segment distance is at
-    const double proportion = std::min(1.0, std::max(0.0,
-        ((distance - prevWaypointDistance) / (nextWaypointDistance - prevWaypointDistance)).value()));
-
-    // Interpolate position
-    const meter_t x{ prevWaypoint[0] + proportion * (nextWaypoint[0] - prevWaypoint[0]) };
-    const meter_t y{ prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]) };
-
-    // Return position
-    return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[prevWaypointIndex]);
-}
-//----------------------------------------------------------------------------
-void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)
+void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
 {
     // Convert familiarity to a grayscale colour
     const uint8_t intensity = (uint8_t)std::min(255.0, std::max(0.0, std::round(255.0 * familiarity)));
@@ -310,27 +308,38 @@ void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)
 
 }
 //----------------------------------------------------------------------------
-void RouteContinuous::addPoint(meter_t x, meter_t y, bool error)
+void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
 {
-    constexpr static uint8_t errorColour[3] = {0xFF, 0, 0};
-    constexpr static uint8_t correctColour[3] = {0, 0xFF, 0};
+    const static uint8_t errorColour[3] = {0xFF, 0, 0};
+    const static uint8_t correctColour[3] = {0, 0xFF, 0};
 
-    const float position[2] = {(float) x.value(), (float) y.value()};
+    const float position[2] = { (float)x.value(), (float)y.value() };
 
-    // Check we haven't run out of buffer space
-    BOB_ASSERT(m_RouteNumPoints < m_RouteMaxPoints);
-
-    // Update this vertex's colour in colour buffer
+    // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RouteColourVBO);
     glBufferSubData(GL_ARRAY_BUFFER, m_RouteNumPoints * sizeof(uint8_t) * 3,
                     sizeof(uint8_t) * 3, error ? errorColour : correctColour);
 
-    // Update this vertex's position in position buffer
+    // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RoutePositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, m_RouteNumPoints * sizeof(float) * 2,
                     sizeof(float) * 2, position);
 
     m_RouteNumPoints++;
+}
+//----------------------------------------------------------------------------
+Pose2<meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
+{
+    const meter_t x{ m_Waypoints[waypoint][0] };
+    const meter_t y{ m_Waypoints[waypoint][1] };
+
+    // If this isn't the last waypoint, return the heading of the segment from this waypoint
+    if(waypoint < m_Headings.size()) {
+        return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[waypoint]);
+    }
+    else {
+        return Pose2<meter_t, degree_t>(x, y, 0_deg);
+    }
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

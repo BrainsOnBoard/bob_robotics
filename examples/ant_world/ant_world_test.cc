@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
+#include "antworld/common.h"
+#include "antworld/renderer.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
-        renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+        renderer.getWorld().load("../../include/antworld/world5000_gray.bin",
                                  { 0.0f, 1.0f, 0.0f },
                                  { 0.898f, 0.718f, 0.353f });
     }
