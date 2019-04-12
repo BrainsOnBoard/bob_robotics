@@ -1,14 +1,17 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/assert.h"
-#include "../common/circstat.h"
-#include "../common/pose.h"
-#include "../common/stopwatch.h"
-#include "../os/net.h"
+#include "common/assert.h"
+#include "common/pose.h"
+#include "common/stopwatch.h"
+#include "os/net.h"
+
+// Standard C includes
+#include <cstring>
 
 // Standard C++ includes
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <iostream>
 #include <mutex>
@@ -36,28 +39,11 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const char(&name)[24],
+    void update(const char (&name)[24],
                 uint32_t frameNumber,
-                Pose3<millimeter_t, radian_t> pose)
-    {
-        // Copy name
-        // **NOTE** this must already be NULL-terminated
-        memcpy(&m_Name[0], &name[0], 24);
+                Pose3<millimeter_t, radian_t> pose);
 
-        // Log the time when this packet was received
-        m_ReceivedTimer.start();
-
-        // Cache frame number
-        m_FrameNumber = frameNumber;
-
-        // Copy vectors into class
-        m_Pose = pose;
-    }
-
-    uint32_t getFrameNumber() const
-    {
-        return m_FrameNumber;
-    }
+    uint32_t getFrameNumber() const;
 
     template<typename LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition() const
@@ -77,9 +63,9 @@ public:
         return m_Pose;
     }
 
-    const char *getName() const{ return m_Name; }
+    const char *getName() const;
 
-    auto timeSinceReceived() const { return m_ReceivedTimer.elapsed(); }
+    Stopwatch::Duration timeSinceReceived() const;
 
 private:
     //----------------------------------------------------------------------------
@@ -111,35 +97,9 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const char(&name)[24],
+    void update(const char (&name)[24],
                 uint32_t frameNumber,
-                Pose3<millimeter_t, radian_t> pose)
-    {
-        constexpr second_t frameS = 10_ms;
-        constexpr second_t smoothingS = 30_ms;
-
-        // Calculate time since last frame
-        const uint32_t deltaFrames = frameNumber - getFrameNumber();
-        const auto deltaS = frameS * deltaFrames;
-
-        // Calculate exponential smoothing factor
-        const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
-
-        // Calculate velocities (m/s)
-        const auto oldPosition = getPosition<>();
-        calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<millimeter_t>());
-
-        // Calculate angular velocities (rad/s)
-        const auto oldAttitude = getAttitude<>();
-        const auto circDist = [](auto angle1, auto angle2) {
-            return circularDistance(angle1, angle2);
-        };
-        calculateVelocities(pose.attitude(), oldAttitude, m_AngularVelocity, deltaS, alpha, circDist);
-
-        // Superclass
-        // **NOTE** this is at the bottom so OLD position can be accessed
-        ObjectData::update(name, frameNumber, pose);
-    }
+                Pose3<millimeter_t, radian_t> pose);
 
     template<typename VelocityUnit = meters_per_second_t>
     std::array<VelocityUnit, 3> getVelocity() const
@@ -194,9 +154,7 @@ class TimedOutError
   : public std::runtime_error
 {
 public:
-    TimedOutError()
-      : std::runtime_error("Timed out waiting for Vicon data")
-    {}
+    TimedOutError();
 };
 
 //----------------------------------------------------------------------------
@@ -271,9 +229,8 @@ template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
 public:
+    UDPClient() {}
 
-
-    UDPClient(){}
     UDPClient(uint16_t port)
     {
         connect(port);
