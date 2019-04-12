@@ -30,6 +30,23 @@ normaliseAngle180(AngleType angle)
     return angle;
 }
 
+template<typename AngleType>
+constexpr auto
+normaliseAngle360(AngleType angle)
+{
+    static_assert(units::traits::is_angle_unit<AngleType>::value,
+                  "AngleType is not a unit of angle");
+
+    while (angle < 0_deg) {
+        angle += 360_deg;
+    }
+    while (angle > 360_deg) {
+        angle -= 360_deg;
+    }
+
+    return angle;
+}
+
 template<typename T>
 constexpr auto
 circularMean(const T &angles)
