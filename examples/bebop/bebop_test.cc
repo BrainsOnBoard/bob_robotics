@@ -1,7 +1,7 @@
 // BoB robotics includes
+#include "bebop/bebop.h"
 #include "common/main.h"
 #include "hid/joystick.h"
-#include "bebop/bebop.h"
 #include "video/display.h"
 
 // Third-party includes

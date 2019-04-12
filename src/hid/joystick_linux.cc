@@ -1,6 +1,7 @@
 #ifdef linux
 // BoB robotics includes
 #include "hid/joystick_linux.h"
+#include "joystick_base.inc"
 
 // Standard C includes
 #include <cstring>

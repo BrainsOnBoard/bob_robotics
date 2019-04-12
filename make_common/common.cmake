@@ -9,7 +9,8 @@ function(ADD_LDFLAGS EXTRA_ARGS)
 endfunction()
 
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
-include_directories(${BOB_ROBOTICS_PATH}/include
+include_directories(${BOB_ROBOTICS_PATH}
+                    ${BOB_ROBOTICS_PATH}/include
                     ${BOB_ROBOTICS_PATH}/third_party/plog/include)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
