@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "assert.h"
-#include "background_exception_catcher.h"
+#include "common/assert.h"
+#include "common/background_exception_catcher.h"
 
 // Standard C includes
 #include <csignal>

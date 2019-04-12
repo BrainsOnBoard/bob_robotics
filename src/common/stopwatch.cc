@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "stopwatch.h"
-#include "assert.h"
+#include "common/assert.h"
+#include "common/stopwatch.h"
 
 namespace BoBRobotics {
 void

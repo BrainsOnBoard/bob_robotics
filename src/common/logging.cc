@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "assert.h"
-#include "logging.h"
+#include "common/assert.h"
+#include "common/logging.h"
 
 // Third-party includes
 #include "plog/Appenders/ColorConsoleAppender.h"

@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}",
                 "${workspaceFolder}/third_party/ev3dev-lang-cpp/ev3dev-lang-cpp",
                 "${workspaceFolder}/third_party/plog/include",
                 "${GENN_PATH}/lib/include",

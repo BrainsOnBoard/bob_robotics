@@ -1,6 +1,5 @@
-#include "bebop.h"
-
 // BoB robotics includes
+#include "bebop/bebop.h"
 #include "common/assert.h"
 #include "common/logging.h"
 

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "semaphore.h"
+#include "common/semaphore.h"
 
 namespace BoBRobotics {
 //! Stop wait() blocking on another thread if it's running

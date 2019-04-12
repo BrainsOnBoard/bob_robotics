@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "lm9ds1_imu.h"
-#include "logging.h"
+#include "common/lm9ds1_imu.h"
+#include "common/logging.h"
 
 // Standard C++ includes
 #include <algorithm>

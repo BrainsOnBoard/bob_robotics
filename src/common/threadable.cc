@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "background_exception_catcher.h"
-#include "threadable.h"
+#include "common/background_exception_catcher.h"
+#include "common/threadable.h"
 
 // Standard C++ includes
 #include <stdexcept>
