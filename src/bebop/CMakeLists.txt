@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-include(../../../make_common/module.cmake)
+include(../../make_common/module.cmake)
 ADD_CXXFLAGS("-Wno-deprecated-declarations -Wno-implicit-fallthrough")
 BoB_build_module(bebop)
 

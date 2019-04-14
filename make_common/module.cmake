@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
+include(../../make_common/common.cmake)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
