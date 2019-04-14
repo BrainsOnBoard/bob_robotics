@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 include(../../make_common/common.cmake)
-add_subdirectory(${BOB_ROBOTICS_PATH}/src/bebop ${BOB_ROBOTICS_PATH}/src/common)
+# add_subdirectory(${BOB_ROBOTICS_PATH}/src/robots/bebop)
+# add_subdirectory(${BOB_ROBOTICS_PATH}/src/common)
+# add_subdirectory(${BOB_ROBOTICS_PATH}/src/video)
 add_executable(bebop_test bebop_test.cc)
 
 find_package(OpenCV REQUIRED)
@@ -36,7 +38,10 @@ target_link_libraries(bebop_test PUBLIC ${OpenCV_LIBS}
                                         ${AR_LIB_PATH}/libulog.so
                                         ${AR_LIB_PATH}/libarmedia.so
                                         ${AR_LIB_PATH}/libfutils.so
+                                        ${BOB_ROBOTICS_PATH}/lib/libbob_robots.a
                                         ${BOB_ROBOTICS_PATH}/lib/libbob_bebop.a
                                         ${BOB_ROBOTICS_PATH}/lib/libbob_hid.a
+                                        ${BOB_ROBOTICS_PATH}/lib/libbob_video.a
+                                        ${BOB_ROBOTICS_PATH}/lib/libbob_imgproc.a
                                         ${BOB_ROBOTICS_PATH}/lib/libbob_common.a
                                         ${CMAKE_THREAD_LIBS_INIT})

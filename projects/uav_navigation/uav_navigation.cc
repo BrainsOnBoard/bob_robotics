@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/assert.h"
 #include "hid/joystick.h"
-#include "bebop/bebop.h"
+#include "robots/bebop/bebop.h"
 #include "navigation/perfect_memory.h"
 #include "os/keycodes.h"
 

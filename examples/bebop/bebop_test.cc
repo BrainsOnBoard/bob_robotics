@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "bebop/bebop.h"
+#include "robots/bebop/bebop.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "video/display.h"
