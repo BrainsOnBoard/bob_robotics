@@ -224,30 +224,6 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
     }
 }
 //----------------------------------------------------------------------------
-void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
-                                     degree_t yaw, degree_t pitch, degree_t roll,
-                                     RenderTarget &renderTarget, bool bind, bool clear)
-{
-    // If we should do so, bind
-    if(bind) {
-        renderTarget.bind();
-    }
-
-    // If we should do so, clear
-    if(clear) {
-        renderTarget.clear();
-    }
-
-    // Render view into target
-    renderFirstPersonView(x, y, z, yaw, pitch, roll,
-                          0, 0, renderTarget.getWidth(), renderTarget.getHeight());
-
-    // If we should do so, unbind
-    if(bind) {
-        renderTarget.unbind();
-    }
-}
-//----------------------------------------------------------------------------
 void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight)
 {
     // Set viewport to square at bottom of screen
@@ -306,27 +282,6 @@ void Renderer::renderFirstPersonGeometry()
 void Renderer::renderTopDownGeometry()
 {
     m_World.render();
-}
-//----------------------------------------------------------------------------
-void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool clear)
-{
-    // If we should do so, bind
-    if(bind) {
-        renderTarget.bind();
-    }
-
-    // If we should do so, clear
-    if(clear) {
-        renderTarget.clear();
-    }
-
-    // Render view into target
-    renderTopDownView(0, 0, renderTarget.getWidth(), renderTarget.getHeight());
-
-    // If we should do so, unbind
-    if(bind) {
-        renderTarget.unbind();
-    }
 }
 //----------------------------------------------------------------------------
 void Renderer::generateCubeFaceLookAtMatrices()
