@@ -1,4 +1,4 @@
-#ifdef linux
+#ifdef __linux__
 // BoB robotics includes
 #include "robots/norbot.h"
 

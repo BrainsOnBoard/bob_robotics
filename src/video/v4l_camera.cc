@@ -1,4 +1,4 @@
-#ifdef linux
+#ifdef __linux__
 // BoB robotics includes
 #include "video/v4l_camera.h"
 #include "common/logging.h"
