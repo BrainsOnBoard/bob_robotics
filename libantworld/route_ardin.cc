@@ -6,6 +6,9 @@
 #include <limits>
 #include <tuple>
 
+// BoB robotics includes
+#include "../common/logging.h"
+
 // Libantworld includes
 #include "common.h"
 
@@ -31,7 +34,7 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
         0.0f, arrowLength,
     };
 
-    const GLfloat arrowColours[] = {ss
+    const GLfloat arrowColours[] = {
         1.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 0.0f
     };
