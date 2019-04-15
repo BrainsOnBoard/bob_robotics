@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_RESIZABLE, false);
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(1280, 1024,
+    GLFWwindow *window = glfwCreateWindow(1440, 1024,
                                           "Ant World", nullptr, nullptr);
     if(!window)
     {
