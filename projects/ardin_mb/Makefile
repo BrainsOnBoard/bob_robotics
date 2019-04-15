@@ -3,7 +3,7 @@ WITH_IMGUI := 1
 include ../../make_common/bob_robotics.mk
 
 GENERATED_CODE_DIR	:=ardin_mb_CODE
-CXXFLAGS 		+=-I../.. `pkg-config --cflags eigen3`
+CXXFLAGS 		+=-I../.. `pkg-config --cflags eigen3` -DNO_HEADER_DEFINITIONS
 
 ifdef RECORD_SPIKES
     CXXFLAGS += -DRECORD_SPIKES

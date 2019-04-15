@@ -103,9 +103,7 @@ private:
     //------------------------------------------------------------------------
     cv::HOGDescriptor m_HOG;
     mutable std::vector<float> m_HOGFeatures;
-#ifndef CPU_ONLY
-    float *m_HOGFeaturesGPU;
-#endif
+
     float m_RateScalePN;
 
     float m_PNToKCTauSyn;

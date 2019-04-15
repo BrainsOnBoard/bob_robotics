@@ -85,9 +85,6 @@ MBMemoryHOG::MBMemoryHOG()
         Timer<> timer("Sparse init:");
         initializeSparse();
     }
-#ifndef CPU_ONLY
-    CHECK_CUDA_ERRORS(cudaMalloc(&m_HOGFeaturesGPU, MBParams::hogFeatureSize * sizeof(float)));
-#endif
 
     // Set initial weights
     *getGGNToKCWeight() = MBParams::ggnToKCWeight;
@@ -104,9 +101,6 @@ MBMemoryHOG::MBMemoryHOG()
 //----------------------------------------------------------------------------
 MBMemoryHOG::~MBMemoryHOG()
 {
-#ifndef CPU_ONLY
-    CHECK_CUDA_ERRORS(cudaFree(m_HOGFeaturesGPU));
-#endif
 }
 //----------------------------------------------------------------------------
 void MBMemoryHOG::train(const cv::Mat &image)

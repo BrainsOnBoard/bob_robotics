@@ -1,3 +1,5 @@
+#undef NO_HEADER_DEFINITIONS
+
 // Standard C++ includes
 #include <bitset>
 #include <fstream>

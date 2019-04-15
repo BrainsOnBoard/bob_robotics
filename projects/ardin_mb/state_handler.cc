@@ -397,7 +397,8 @@ bool StateHandler::checkAntPosition()
 void StateHandler::loadRoute(const std::string &filename)
 {
     // If loading route is successful
-    m_Route.load(filename)) {
+    m_Route.load(filename);
+
     // Get bounds of route
     const auto &routeMin = m_Route.getMinBound();
     const auto &routeMax = m_Route.getMaxBound();
