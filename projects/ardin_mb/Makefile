@@ -17,11 +17,11 @@ ifdef RECORD_TERMINAL_SYNAPSE_STATE
     CXXFLAGS += -DRECORD_TERMINAL_SYNAPSE_STATE
 endif
 
-.PHONY: all clean generated_code
+.PHONY: all clean generated_code libantworld
 
 all: ardin_mb
 
-ardin_mb: $(OBJECTS) generated_code
+ardin_mb: $(OBJECTS) generated_code libantworld
 	$(CXX) $(CXXFLAGS) $(OBJECTS) -o ardin_mb $(LINK_FLAGS) -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath=$(GENERATED_CODE_DIR)
 
 -include $(DEPS)
@@ -33,3 +33,9 @@ ardin_mb: $(OBJECTS) generated_code
 
 generated_code:
 	$(MAKE) -C $(GENERATED_CODE_DIR)
+
+libantworld:
+	$(MAKE) -C $(BOB_ROBOTICS_ROOT)/libantworld
+
+clean:
+	@rm -f ardin_mb *.o *.d
