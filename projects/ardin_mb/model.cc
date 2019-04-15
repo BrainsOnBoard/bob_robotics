@@ -2,8 +2,6 @@
 #include "modelSpec.h"
 
 // BoB robotics includes
-#include "../../genn_models/exp_curr.h"
-#include "../../genn_models/lif.h"
 #include "../../genn_models/stdp_dopamine.h"
 #include "../../genn_utils/connectors.h"
 
@@ -112,7 +110,7 @@ void modelDefinition(NNmodel &model)
         -60.0,                              // 3 - Vreset
         200.0);                               // 4 - TauRefrac **NOTE** essentially make neurons fire once
 
-    GeNNModels::LIF::ParamValues kcParams(
+    NeuronModels::LIF::ParamValues kcParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
@@ -121,7 +119,7 @@ void modelDefinition(NNmodel &model)
         0.0,                                // 5 - Ioffset
         2.0);                               // 6 - TauRefrac
 
-    GeNNModels::LIF::ParamValues enParams(
+    NeuronModels::LIF::ParamValues enParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
@@ -130,7 +128,7 @@ void modelDefinition(NNmodel &model)
         0.0,                                // 5 - Ioffset
         1.0);                               // 6 - TauRefrac
 
-    GeNNModels::LIF::ParamValues ggnParams(
+    NeuronModels::LIF::ParamValues ggnParams(
         0.2,                                // 0 - C
         20.0,                               // 1 - TauM
         -60.0,                              // 2 - Vrest
@@ -140,7 +138,7 @@ void modelDefinition(NNmodel &model)
         2.0);                               // 6 - TauRefrac
 
     // LIF initial conditions
-    GeNNModels::LIF::VarValues lifInit(
+    NeuronModels::LIF::VarValues lifInit(
         -60.0,  // 0 - V
         0.0);   // 1 - RefracTime
 
@@ -153,14 +151,14 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Postsynaptic model parameters
     //---------------------------------------------------------------------------
-    GeNNModels::ExpCurr::ParamValues kcToENPostsynapticParams(
+    PostsynapticModels::ExpCurr::ParamValues kcToENPostsynapticParams(
         8.0);   // 0 - Synaptic time constant [from Ardin] (ms)
 
     // **TODO** experiment with tuning these
-    GeNNModels::ExpCurr::ParamValues kcToGGNPostsynapticParams(
+    PostsynapticModels::ExpCurr::ParamValues kcToGGNPostsynapticParams(
         5.0);   // 0 - Synaptic time constant (ms)
 
-    GeNNModels::ExpCurr::ParamValues ggnToKCPostsynapticParams(
+    PostsynapticModels::ExpCurr::ParamValues ggnToKCPostsynapticParams(
         4.0);   // 0 - Synaptic time constant [from Nowotny](ms)
 
     //---------------------------------------------------------------------------
@@ -183,9 +181,9 @@ void modelDefinition(NNmodel &model)
 
     // Create neuron populations
     model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, pnInit);
-    model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
-    model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
-    model.addNeuronPopulation<GeNNModels::LIF>("GGN", 1, ggnParams, lifInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("GGN", 1, ggnParams, lifInit);
 
     auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, ExpCurrEGP>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
@@ -193,19 +191,19 @@ void modelDefinition(NNmodel &model)
         {}, {},
         {}, {});
 
-    model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
+    model.addSynapsePopulation<GeNNModels::STDPDopamine, PostsynapticModels::ExpCurr>(
         "kcToEN", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY,
         "KC", "EN",
         kcToENWeightUpdateParams, kcToENWeightUpdateInitVars,
         kcToENPostsynapticParams, {});
 
-    model.addSynapsePopulation<StaticPulseEGP, GeNNModels::ExpCurr>(
+    model.addSynapsePopulation<StaticPulseEGP, PostsynapticModels::ExpCurr>(
         "kcToGGN", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
         "KC", "GGN",
         {}, {},
         kcToGGNPostsynapticParams, {});
 
-    model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
+    model.addSynapsePopulation<ExpStaticGraded, PostsynapticModels::ExpCurr>(
         "ggnToKC", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
         "GGN","KC",
         {}, {},

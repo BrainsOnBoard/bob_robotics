@@ -32,8 +32,7 @@ public:
     });
 
     SET_SIM_CODE(
-        "$(addtoinSyn) = $(g);\n"
-        "$(updatelinsyn);\n"
+        "$(addToInSyn, $(g));\n"
         "// Calculate how much tag has decayed since last update\n"
         "scalar tagDT = $(t) - $(tC);\n"
         "scalar tagDecay = exp(-tagDT / $(tauC));\n"
@@ -48,8 +47,7 @@ public:
         "// Decay tag and apply STDP\n"
         "scalar newTag = $(c) * tagDecay;\n"
         "scalar dt = $(t) - $(sT_post);\n"
-        "if (dt > 0)\n"
-        "{\n"
+        "if (dt > 0) {\n"
         "    scalar timing = exp(-dt / $(tauMinus));\n"
         "    newTag -= ($(aMinus) * timing);\n"
         "}\n"
@@ -88,8 +86,7 @@ public:
         "// Decay tag and apply STDP\n"
         "scalar newTag = $(c) * tagDecay;\n"
         "scalar dt = $(t) - $(sT_pre);\n"
-        "if (dt > 0)\n"
-        "{\n"
+        "if (dt > 0) {\n"
         "    scalar timing = exp(-dt / $(tauPlus));\n"
         "    newTag += ($(aPlus) * timing);\n"
         "}\n"
