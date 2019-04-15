@@ -1,20 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
-add_executable(bebop_test bebop_test.cc)
-
-function(BoB_module NAME)
-    add_subdirectory(${BOB_ROBOTICS_PATH}/src/${NAME} ${BOB_ROBOTICS_PATH}/src/${NAME}/build)
-    add_dependencies(bebop_test bob_${NAME})
-endfunction()
-BoB_module(robots)
-BoB_module(hid)
-BoB_module(bebop)
-BoB_module(video)
-BoB_module(imgproc)
-BoB_module(common)
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
+BoB_project(bebop_test)
+BoB_modules(robots hid bebop video imgproc common)
 
 find_package(OpenCV REQUIRED)
 find_package(Threads REQUIRED)
@@ -49,10 +36,5 @@ target_link_libraries(bebop_test PUBLIC ${OpenCV_LIBS}
                                         ${AR_LIB_PATH}/libulog.so
                                         ${AR_LIB_PATH}/libarmedia.so
                                         ${AR_LIB_PATH}/libfutils.so
-                                        ${BOB_ROBOTICS_PATH}/lib/libbob_bebop.a
-                                        ${BOB_ROBOTICS_PATH}/lib/libbob_video.a
-                                        ${BOB_ROBOTICS_PATH}/lib/libbob_imgproc.a
-                                        ${BOB_ROBOTICS_PATH}/lib/libbob_robots.a
-                                        ${BOB_ROBOTICS_PATH}/lib/libbob_hid.a
-                                        ${BOB_ROBOTICS_PATH}/lib/libbob_common.a
+                                        $ENV{BOB_LIBS}
                                         ${CMAKE_THREAD_LIBS_INIT})

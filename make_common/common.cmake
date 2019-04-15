@@ -1,11 +1,24 @@
 cmake_minimum_required(VERSION 3.1)
 
-function(ADD_CXXFLAGS EXTRA_ARGS)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
-endfunction()
+macro(ADD_CXXFLAGS EXTRA_ARGS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
+endmacro()
 
-function(ADD_LDFLAGS EXTRA_ARGS)
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
+macro(ADD_LDFLAGS EXTRA_ARGS)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
+endmacro()
+
+macro(BoB_project NAME)
+    project(${NAME})
+    add_executable(${NAME} ${NAME}.cc)
+endmacro()
+
+function(BoB_modules)
+    foreach(module IN LISTS ARGV)
+        add_subdirectory(${BOB_ROBOTICS_PATH}/src/${module} ${BOB_ROBOTICS_PATH}/src/${module}/build)
+        add_dependencies(${PROJECT_NAME} bob_${module})
+        set(ENV{BOB_LIBS} "$ENV{BOB_LIBS};${BOB_ROBOTICS_PATH}/lib/libbob_${module}.a")
+    endforeach()
 endfunction()
 
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
