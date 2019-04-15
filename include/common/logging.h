@@ -1,9 +1,7 @@
 #pragma once
 
 // Third-party includes
-#define assert BOB_ASSERT
 #include "plog/Log.h"
-#undef assert
 
 namespace BoBRobotics {
 namespace Logging {
