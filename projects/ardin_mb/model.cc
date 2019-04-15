@@ -100,11 +100,6 @@ IMPLEMENT_MODEL(StaticPulseEGP);
 
 void modelDefinition(NNmodel &model)
 {
-    GENN_PREFERENCES::autoInitSparseVars = true;
-    GENN_PREFERENCES::defaultVarMode = VarMode::LOC_HOST_DEVICE_INIT_DEVICE;
-    //GENN_PREFERENCES::autoRefractory = false;
-
-    initGeNN();
     model.setDT(MBParams::timestepMs);
     model.setName("ardin_mb");
 
@@ -187,9 +182,9 @@ void modelDefinition(NNmodel &model)
         0.0);                       // Time of last synaptic tag update
 
     // Create neuron populations
-    auto pn = model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, pnInit);
-    auto kc = model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
-    auto en = model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, pnInit);
+    model.addNeuronPopulation<GeNNModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
+    model.addNeuronPopulation<GeNNModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
     model.addNeuronPopulation<GeNNModels::LIF>("GGN", 1, ggnParams, lifInit);
 
     auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, ExpCurrEGP>(
@@ -198,7 +193,7 @@ void modelDefinition(NNmodel &model)
         {}, {},
         {}, {});
 
-    auto kcToEN = model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
+    model.addSynapsePopulation<GeNNModels::STDPDopamine, GeNNModels::ExpCurr>(
         "kcToEN", SynapseMatrixType::DENSE_INDIVIDUALG, NO_DELAY,
         "KC", "EN",
         kcToENWeightUpdateParams, kcToENWeightUpdateInitVars,
@@ -210,7 +205,7 @@ void modelDefinition(NNmodel &model)
         {}, {},
         kcToGGNPostsynapticParams, {});
 
-    auto ggnToKC = model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
+    model.addSynapsePopulation<ExpStaticGraded, GeNNModels::ExpCurr>(
         "ggnToKC", SynapseMatrixType::DENSE_GLOBALG, NO_DELAY,
         "GGN","KC",
         {}, {},
@@ -222,5 +217,4 @@ void modelDefinition(NNmodel &model)
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);
-    model.finalize();
 }
