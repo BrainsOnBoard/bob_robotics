@@ -13,11 +13,23 @@ macro(BoB_project NAME)
     add_executable(${NAME} ${NAME}.cc)
 endmacro()
 
+macro(BoB_add_link_libraries)
+    set(ENV{BOB_LINK_LIBS} "$ENV{BOB_LINK_LIBS};${ARGV}")
+endmacro()
+
+function(BoB_add_include_directories)
+    # Include directory locally...
+    include_directories(${ARGV})
+
+    # ...and export to parent project
+    set(ENV{BOB_INCLUDE_DIRS} "$ENV{BOB_INCLUDE_DIRS};${ARGV}")
+endfunction()
+
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
         add_subdirectory(${BOB_ROBOTICS_PATH}/src/${module} ${BOB_ROBOTICS_PATH}/src/${module}/build)
         add_dependencies(${PROJECT_NAME} bob_${module})
-        set(ENV{BOB_LIBS} "$ENV{BOB_LIBS};${BOB_ROBOTICS_PATH}/lib/libbob_${module}.a")
+        BoB_add_link_libraries("${BOB_ROBOTICS_PATH}/lib/libbob_${module}.a")
     endforeach()
 endfunction()
 

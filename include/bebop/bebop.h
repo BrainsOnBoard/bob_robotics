@@ -17,14 +17,14 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
-#include "../common/pose.h"
-#include "../common/semaphore.h"
-#include "../hid/joystick.h"
-#include "../video/input.h"
-#include "../robots/uav.h"
+#include "common/pose.h"
+#include "common/semaphore.h"
+#include "hid/joystick.h"
+#include "video/input.h"
+#include "robots/uav.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // POSIX includes
 #include <signal.h>
