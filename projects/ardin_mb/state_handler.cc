@@ -4,7 +4,7 @@
 #include <cmath>
 
 // IMGUI
-#include "third_party/imgui/imgui.h"
+#include "imgui.h"
 
 // BoBRobotics includes
 #include "navigation/visual_navigation_base.h"

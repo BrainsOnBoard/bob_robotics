@@ -18,7 +18,7 @@ endif
 all: ardin_mb
 
 ardin_mb: ardin_mb.cc state_handler.cc mb_memory_hog.cc vector_field.cc visual_navigation_ui.cc opencv_texture.cc generated_code
-	$(CXX) $(CXXFLAGS)  ardin_mb.cc state_handler.cc mb_memory_hog.cc vector_field.cc visual_navigation_ui.cc opencv_texture.cc -o ardin_mb -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath=$(GENERATED_CODE_DIR)
+	$(CXX) $(CXXFLAGS)  ardin_mb.cc state_handler.cc mb_memory_hog.cc vector_field.cc visual_navigation_ui.cc opencv_texture.cc -o ardin_mb $(LINK_FLAGS) -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath=$(GENERATED_CODE_DIR)
 
 generated_code:
 	$(MAKE) -C $(GENERATED_CODE_DIR)

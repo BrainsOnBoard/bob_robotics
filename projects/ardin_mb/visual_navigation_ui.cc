@@ -1,7 +1,7 @@
 #include "visual_navigation_ui.h"
 
 // IMGUI
-#include "third_party/imgui/imgui.h"
+#include "imgui.h"
 
 // Antworld includes
 #include "mb_memory_hog.h"

@@ -20,9 +20,9 @@
 #include <GLFW/glfw3.h>
 
 // IMGUI
-#include "third_party/imgui/imgui.h"
-#include "third_party/imgui/impl/imgui_impl_glfw.h"
-#include "third_party/imgui/impl/imgui_impl_opengl2.h"
+#include "imgui.h"
+#include "examples/imgui_impl_glfw.h"
+#include "examples/imgui_impl_opengl2.h"
 
 // BoB Robotics includes
 #include "navigation/infomax.h"
