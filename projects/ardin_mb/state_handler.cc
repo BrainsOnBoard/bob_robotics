@@ -447,12 +447,14 @@ bool StateHandler::handleUI()
     if(ImGui::BeginMainMenuBar()) {
         if(ImGui::BeginMenu("File")) {
             if(ImGui::BeginMenu("Open Route")) {
-                // **HACK**
                 char routeFilename[32];
-                std::string routePath = "/home/j/jk/jk421/genn_robotics/libantworld/";
                 for(unsigned int r = 1; r <= 14; r++) {
                     sprintf(routeFilename, "ant1_route%u.bin", r);
                     if(ImGui::MenuItem(routeFilename)) {
+                        const char *bobRoboticsPath = std::getenv("BOB_ROBOTICS_PATH");
+                        assert(bobRoboticsPath != nullptr);
+                        std::string routePath = std::string(bobRoboticsPath) + "/libantworld/";
+
                         loadRoute(routePath + routeFilename);
                     }
                 }
