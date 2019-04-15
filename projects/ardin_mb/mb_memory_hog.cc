@@ -78,6 +78,10 @@ MBMemoryHOG::MBMemoryHOG()
 
         GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC, MBParams::numPNSynapsesPerKC,
                                                 rowLengthpnToKC, indpnToKC, maxRowLengthpnToKC, gen);
+
+        // Manually initialise weights
+        // **NOTE** this is a little bit of a hack as we're only doing this so repeated calls to initialise won't overwrite
+        std::fill_n(&gkcToEN[0], MBParams::numKC * MBParams::numEN, MBParams::kcToENWeight);
     }
 
     // Final setup
