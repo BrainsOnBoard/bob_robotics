@@ -76,14 +76,14 @@ MBMemoryHOG::MBMemoryHOG()
     {
         Timer<> timer("Building connectivity:");
 
-        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC,
-                                                MBParams::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
+        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC, MBParams::numPNSynapsesPerKC,
+                                                rowLengthpnToKC, indpnToKC, maxRowLengthpnToKC, gen);
     }
 
     // Final setup
     {
         Timer<> timer("Sparse init:");
-        initardin_mb();
+        initializeSparse();
     }
 #ifndef CPU_ONLY
     CHECK_CUDA_ERRORS(cudaMalloc(&m_HOGFeaturesGPU, MBParams::hogFeatureSize * sizeof(float)));
@@ -264,11 +264,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
 
     // Copy HOG features into external input current
     std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), IextPN);
-#ifndef CPU_ONLY
-    // **NOTE** don't push whole state as voltage etc is initialised on device and therefore pushing state would push invalid value
-    CHECK_CUDA_ERRORS(cudaMemcpy(d_IextPN, IextPN, 108 * sizeof(scalar), cudaMemcpyHostToDevice));
-
-#endif
+    pushIextPNToDevice();
 
     // Reset model time
     iT = 0;
@@ -323,10 +319,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         if(iT == endPresentTimestep) {
             std::fill_n(IextPN, MBParams::numPN, 0.0f);
 
-#ifndef CPU_ONLY
-            // **NOTE** don't push whole state as voltage etc is initialised on device and therefore pushing state would push invalid value
-            CHECK_CUDA_ERRORS(cudaMemcpy(d_IextPN, IextPN, 108 * sizeof(scalar), cudaMemcpyHostToDevice));
-#endif
+            // Copy external input current to device
+            pushIextPNToDevice();
         }
 
         // If we should reward in this timestep, inject dopamine
@@ -335,9 +329,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
             injectDopaminekcToEN = true;
         }
 
-#ifndef CPU_ONLY
         // Simulate on GPU
-        stepTimeGPU();
+        stepTime();
 
         // Download spikes
         pullPNCurrentSpikesFromDevice();
@@ -350,10 +343,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
         pullggnToKCStateFromDevice();
         pullkcToENStateFromDevice();
 
-#else
-        // Simulate on CPU
-        stepTimeCPU();
-#endif
         // If a dopamine spike has been injected this timestep
         if(injectDopaminekcToEN) {
             // Decay global dopamine traces
@@ -414,9 +403,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     if(train) {
         constexpr unsigned int numWeights = MBParams::numKC * MBParams::numEN;
 
-#ifndef CPU_ONLY
-        CHECK_CUDA_ERRORS(cudaMemcpy(gkcToEN, d_gkcToEN, numWeights * sizeof(scalar), cudaMemcpyDeviceToHost));
-#endif  // CPU_ONLY
+        // Pull weights from device
+        pullgkcToENFromDevice();
 
         // Cache number of unused weights
         m_NumUsedWeights = numWeights - std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
