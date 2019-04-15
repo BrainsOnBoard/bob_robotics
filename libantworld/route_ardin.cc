@@ -1,15 +1,13 @@
-#include "common.h"
 #include "route_ardin.h"
-
-// BoB robotics includes
-#include "common/logging.h"
 
 // Standard C++ includes
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <stdexcept>
 #include <tuple>
+
+// Libantworld includes
+#include "common.h"
 
 using namespace units::angle;
 using namespace units::length;
@@ -33,7 +31,7 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries)
         0.0f, arrowLength,
     };
 
-    const GLfloat arrowColours[] = {
+    const GLfloat arrowColours[] = {ss
         1.0f, 0.0f, 0.0f,
         1.0f, 0.0f, 0.0f
     };
@@ -123,6 +121,11 @@ RouteArdin::~RouteArdin()
 //----------------------------------------------------------------------------
 void RouteArdin::load(const std::string &filename, bool realign)
 {
+    // Clear existing waypoints and headings
+    m_Waypoints.clear();
+    m_Headings.clear();
+    m_TrainedSnapshots.clear();
+
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
@@ -211,11 +214,18 @@ void RouteArdin::load(const std::string &filename, bool realign)
     LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
 
     // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_WaypointsVAO);
+    if(m_WaypointsVAO == 0) {
+        glGenVertexArrays(1, &m_WaypointsVAO);
+    }
 
     // Generate vertex buffer objects for positions and colours
-    glGenBuffers(1, &m_WaypointsPositionVBO);
-    glGenBuffers(1, &m_WaypointsColourVBO);
+    if(m_WaypointsPositionVBO == 0) {
+        glGenBuffers(1, &m_WaypointsPositionVBO);
+    }
+
+    if(m_WaypointsColourVBO == 0) {
+        glGenBuffers(1, &m_WaypointsColourVBO);
+    }
 
     // Bind vertex array
     glBindVertexArray(m_WaypointsVAO);
@@ -238,6 +248,10 @@ void RouteArdin::load(const std::string &filename, bool realign)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
+
+    // Unbind VAOs
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
@@ -263,6 +277,8 @@ void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
+    // Unbind VAOs
+    glBindVertexArray(0);
 }
 //----------------------------------------------------------------------------
 bool RouteArdin::atDestination(meter_t x, meter_t y, meter_t threshold) const
@@ -306,7 +322,7 @@ void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
     glBufferSubData(GL_ARRAY_BUFFER, pos * sizeof(uint8_t) * 3, sizeof(uint8_t) * 3, colour);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
@@ -325,7 +341,7 @@ void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
     glBindBuffer(GL_ARRAY_BUFFER, m_RoutePositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, m_RouteNumPoints * sizeof(float) * 2,
                     sizeof(float) * 2, position);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
