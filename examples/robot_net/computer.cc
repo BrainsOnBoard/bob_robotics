@@ -51,16 +51,16 @@ bob_main(int argc, char **argv)
     // Make connection to robot on default port
     Net::Client client(robotIP);
 
-    // Run client on background thread, catching any exceptions for rethrowing
-    auto &catcher = BackgroundExceptionCatcher::getInstance();
-    catcher.trapSignals(); // Catch Ctrl-C
-    client.runInBackground();
-
     // Read video stream from network
     Video::NetSource video(client);
 
     // Transmit motor commands over network
     Robots::TankNetSink tank(client);
+
+    // Run client on background thread, catching any exceptions for rethrowing
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Catch Ctrl-C
+    client.runInBackground();
 
     // Add joystick for controlling robot
     HID::Joystick joystick;

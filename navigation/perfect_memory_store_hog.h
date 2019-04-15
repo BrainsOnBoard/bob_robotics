@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 #include "differencers.h"
 #include "ridf_processors.h"
 
@@ -32,7 +33,7 @@ public:
     :   m_HOGDescriptorSize(numOrientations * (unwrapRes.width / cellSize.width) * (unwrapRes.height / cellSize.height)),
         m_Differencer(m_HOGDescriptorSize)
     {
-        std::cout << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features" << std::endl;
+        LOG_INFO << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features";
 
         // Configure HOG features - we want to normalise over the whole image (i.e. one block is the entire image)
         m_HOG.winSize = unwrapRes;

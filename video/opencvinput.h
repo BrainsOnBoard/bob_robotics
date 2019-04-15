@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/assert.h"
 #include "input.h"
 
 // OpenCV
@@ -36,7 +37,9 @@ public:
     template<class T>
     OpenCVInput(T device, const std::string &cameraName = DefaultCameraName)
       : m_Device(device), m_CameraName(cameraName)
-    {}
+    {
+        BOB_ASSERT(m_Device.isOpened());
+    }
 
     /*!
      * \brief Create a video stream for a specific device and a specified resolution

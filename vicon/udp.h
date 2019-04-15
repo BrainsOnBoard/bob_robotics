@@ -2,7 +2,9 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/circstat.h"
 #include "../common/pose.h"
+#include "../common/stopwatch.h"
 #include "../os/net.h"
 
 // Standard C++ includes
@@ -10,6 +12,7 @@
 #include <atomic>
 #include <iostream>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -30,29 +33,25 @@ class ObjectData
     using millimeter_t = units::length::millimeter_t;
 
 public:
-    ObjectData()
-      : m_FrameNumber{ 0 }
-      , m_Position{ 0_mm, 0_mm, 0_mm }
-      , m_Attitude{ 0_rad, 0_rad, 0_rad }
-    {
-    }
-
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
-                radian_t yaw, radian_t pitch, radian_t roll)
+    void update(const char(&name)[24],
+                uint32_t frameNumber,
+                Pose3<millimeter_t, radian_t> pose)
     {
+        // Copy name
+        // **NOTE** this must already be NULL-terminated
+        memcpy(&m_Name[0], &name[0], 24);
+
+        // Log the time when this packet was received
+        m_ReceivedTimer.start();
+
         // Cache frame number
         m_FrameNumber = frameNumber;
 
         // Copy vectors into class
-        m_Position[0] = x;
-        m_Position[1] = y;
-        m_Position[2] = z;
-        m_Attitude[0] = yaw;
-        m_Attitude[1] = pitch;
-        m_Attitude[2] = roll;
+        m_Pose = pose;
     }
 
     uint32_t getFrameNumber() const
@@ -60,26 +59,41 @@ public:
         return m_FrameNumber;
     }
 
-    template <class LengthUnit = millimeter_t>
+    template<typename LengthUnit = millimeter_t>
     Vector3<LengthUnit> getPosition() const
     {
-        return convertUnitArray<LengthUnit>(m_Position);
+        return m_Pose.position();
     }
 
-    template <class AngleUnit = radian_t>
-    Vector3<AngleUnit> getAttitude() const
+    template<typename AngleUnit = radian_t>
+    std::array<AngleUnit, 3> getAttitude() const
     {
-        return convertUnitArray<AngleUnit>(m_Attitude);
+        return convertUnitArray<AngleUnit>(m_Pose.attitude());
     }
+
+    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
+    Pose3<LengthUnit, AngleUnit> getPose() const
+    {
+        return m_Pose;
+    }
+
+    const char *getName() const{ return m_Name; }
+
+    auto timeSinceReceived() const { return m_ReceivedTimer.elapsed(); }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    uint32_t m_FrameNumber;
-    Vector3<millimeter_t> m_Position;
-    Vector3<radian_t> m_Attitude;
+    uint32_t m_FrameNumber = 0;
+    char m_Name[24];
+    Pose3<millimeter_t, radian_t> m_Pose;
+    Stopwatch m_ReceivedTimer;
 };
+
+// Forward declaration
+template<typename ObjectDataType>
+class UDPClient;
 
 //----------------------------------------------------------------------------
 // Vicon::ObjectDataVelocity
@@ -88,23 +102,21 @@ private:
 class ObjectDataVelocity : public ObjectData
 {
     using radian_t = units::angle::radian_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using millimeter_t = units::length::millimeter_t;
-    using millisecond_t = units::time::millisecond_t;
+    using second_t = units::time::millisecond_t;
 
 public:
-    ObjectDataVelocity() : m_Velocity{0_mps, 0_mps, 0_mps}
-    {}
-
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(uint32_t frameNumber, millimeter_t x, millimeter_t y, millimeter_t z,
-                radian_t yaw, radian_t pitch, radian_t roll)
+    void update(const char(&name)[24],
+                uint32_t frameNumber,
+                Pose3<millimeter_t, radian_t> pose)
     {
-        const Vector3<millimeter_t> position {x, y, z};
-        constexpr millisecond_t frameS = 10_ms;
-        constexpr millisecond_t smoothingS = 30_ms;
+        constexpr second_t frameS = 10_ms;
+        constexpr second_t smoothingS = 30_ms;
 
         // Calculate time since last frame
         const uint32_t deltaFrames = frameNumber - getFrameNumber();
@@ -113,39 +125,142 @@ public:
         // Calculate exponential smoothing factor
         const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
-        // Calculate instantaneous velocity
+        // Calculate velocities (m/s)
         const auto oldPosition = getPosition<>();
-        Vector3<meters_per_second_t> instVelocity;
-        const auto calcVelocity = [deltaS](auto curr, auto prev) {
-            return (curr - prev) / deltaS;
-        };
-        std::transform(std::begin(position), std::end(position),
-                       std::begin(oldPosition), std::begin(instVelocity),
-                       calcVelocity);
+        calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<millimeter_t>());
 
-        // Exponentially smooth velocity
-        const auto smoothVelocity = [alpha](auto inst, auto prev) {
-            return (alpha * inst) + ((1.0 - alpha) * prev);
+        // Calculate angular velocities (rad/s)
+        const auto oldAttitude = getAttitude<>();
+        const auto circDist = [](auto angle1, auto angle2) {
+            return circularDistance(angle1, angle2);
         };
-        std::transform(std::begin(instVelocity), std::end(instVelocity),
-                       std::begin(m_Velocity), std::begin(m_Velocity),
-                       smoothVelocity);
+        calculateVelocities(pose.attitude(), oldAttitude, m_AngularVelocity, deltaS, alpha, circDist);
 
         // Superclass
-        ObjectData::update(frameNumber, x, y, z, yaw, pitch, roll);
+        // **NOTE** this is at the bottom so OLD position can be accessed
+        ObjectData::update(name, frameNumber, pose);
     }
 
-    template <class VelocityUnit = meters_per_second_t>
-    Vector3<VelocityUnit> getVelocity() const
+    template<typename VelocityUnit = meters_per_second_t>
+    std::array<VelocityUnit, 3> getVelocity() const
     {
         return convertUnitArray<VelocityUnit>(m_Velocity);
+    }
+
+    template<typename AngularVelocityUnit = radians_per_second_t>
+    std::array<AngularVelocityUnit, 3> getAngularVelocity() const
+    {
+        return convertUnitArray<AngularVelocityUnit>(m_AngularVelocity);
     }
 
 private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    Vector3<meters_per_second_t> m_Velocity;
+    std::array<meters_per_second_t, 3> m_Velocity{};
+    std::array<radians_per_second_t, 3> m_AngularVelocity{};
+
+    template<typename VectorType, typename VelocityType, typename DiffFunc>
+    static void calculateVelocities(const VectorType &current,
+                                    const VectorType &old,
+                                    std::array<VelocityType, 3> &velocityOut,
+                                    const second_t &deltaS,
+                                    const double alpha,
+                                    DiffFunc diff
+                                    )
+    {
+        // Temporary array
+        std::array<VelocityType, 3> instVelocity;
+
+        // Calculate instantaneous velocity
+        const auto calcVelocity = [deltaS, diff](auto curr, auto prev) {
+            return diff(curr, prev) / deltaS;
+        };
+        std::transform(std::cbegin(current), std::cend(current),
+                       std::cbegin(old), std::begin(instVelocity),
+                       calcVelocity);
+
+        // Exponentially smooth velocity
+        const auto smoothVelocity = [alpha](auto inst, auto prev) {
+            return (alpha * inst) + ((1.0 - alpha) * prev);
+        };
+        std::transform(std::cbegin(instVelocity), std::cend(instVelocity),
+                       std::cbegin(velocityOut), std::begin(velocityOut),
+                       smoothVelocity);
+    }
+};
+
+class TimedOutError
+  : public std::runtime_error
+{
+public:
+    TimedOutError()
+      : std::runtime_error("Timed out waiting for Vicon data")
+    {}
+};
+
+//----------------------------------------------------------------------------
+// BoBRobotics::Vicon::ObjectReference
+//----------------------------------------------------------------------------
+/**!
+ *  \brief Holds a reference to a Vicon object
+ *
+ * The pose data is updated every time it is read, in contrast to ObjectData,
+ * which only contains static data.
+ */
+template<typename ObjectDataType = ObjectData>
+class ObjectReference
+{
+    using millimeter_t = units::length::millimeter_t;
+    using radian_t = units::angle::radian_t;
+
+public:
+    ObjectReference(UDPClient<ObjectDataType> &client,
+                    const unsigned id,
+                    const Stopwatch::Duration timeoutDuration)
+        : m_Client(client)
+        , m_Id(id)
+        , m_TimeoutDuration(timeoutDuration)
+    {}
+
+    template<typename LengthUnit = millimeter_t>
+    Vector3<LengthUnit> getPosition() const
+    {
+        return getData().template getPosition<LengthUnit>();
+    }
+
+    template<typename AngleUnit = radian_t>
+    std::array<AngleUnit, 3> getAttitude() const
+    {
+        return getData().template getAttitude<AngleUnit>();
+    }
+
+    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
+    auto getPose() const
+    {
+        const auto data = getData();
+        return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
+                                            data.template getAttitude<AngleUnit>());
+    }
+
+    auto timeSinceReceived() const
+    {
+        return getData().timeSinceReceived();
+    }
+
+    ObjectDataType getData() const
+    {
+        const auto objectData = m_Client.getObjectData(m_Id);
+        if (objectData.timeSinceReceived() > m_TimeoutDuration) {
+            throw TimedOutError();
+        }
+        return objectData;
+    }
+
+private:
+    UDPClient<ObjectDataType> &m_Client;
+    const unsigned m_Id;
+    const Stopwatch::Duration m_TimeoutDuration;
 };
 
 //----------------------------------------------------------------------------
@@ -156,6 +271,8 @@ template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
 public:
+
+
     UDPClient(){}
     UDPClient(uint16_t port)
     {
@@ -218,30 +335,54 @@ public:
         return m_ObjectData.size();
     }
 
+    unsigned int findObjectID(const std::string &name)
+    {
+        // Search for object with name
+        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        auto objIter = std::find_if(m_ObjectData.cbegin(), m_ObjectData.cend(),
+            [&name](const ObjectDataType &object)
+            {
+                return (strcmp(object.getName(), name.c_str()) == 0);
+            });
+
+        // If object wasn't found, raise error
+        if(objIter == m_ObjectData.cend()) {
+            throw std::out_of_range("Cannot find object '" + name + "'");
+        }
+        // Otherwise, return its index i.e. object ID
+        else {
+            return (unsigned int)std::distance(m_ObjectData.cbegin(), objIter);
+        }
+    }
+
+    //! Get current pose information for specified object
     ObjectDataType getObjectData(unsigned int id)
     {
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        if(id < m_ObjectData.size()) {
-            return m_ObjectData[id];
-        }
-        else {
-            throw std::runtime_error("Invalid object id: " + std::to_string(id));
-        }
+        return m_ObjectData.at(id);
+    }
+
+    //! Returns an object whose pose is updated by the Vicon system over time
+    auto getObjectReference(unsigned int id,
+                            Stopwatch::Duration timeoutDuration = Stopwatch::Duration::max())
+    {
+        return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
     }
 
 private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, uint32_t frameNumber,
-                          const Vector3<double> &position,
-                          const Vector3<double> &attitude)
+    void updateObjectData(unsigned int id, const char(&name)[24],
+                          uint32_t frameNumber,
+                          const std::array<double, 3> &position,
+                          const std::array<double, 3> &attitude)
     {
         // Lock mutex
         std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
 
         // If no object data structure has been created for this ID, add one
-        if(id >= m_ObjectData.size()) {
+        if (id >= m_ObjectData.size()) {
             m_ObjectData.resize(id + 1);
         }
 
@@ -254,13 +395,13 @@ private:
          */
         using namespace units::length;
         using namespace units::angle;
-        m_ObjectData[id].update(frameNumber,
-                                millimeter_t(position[0]),
-                                millimeter_t(position[1]),
-                                millimeter_t(position[2]),
-                                radian_t(attitude[2]),
-                                radian_t(attitude[0]),
-                                radian_t(attitude[1]));
+        m_ObjectData[id].update(name, frameNumber,
+                                { { millimeter_t(position[0]),
+                                    millimeter_t(position[1]),
+                                    millimeter_t(position[2])},
+                                  { radian_t(attitude[2]),
+                                    radian_t(attitude[0]),
+                                    radian_t(attitude[1]) } });
     }
 
     void readThread(int socket)
@@ -306,16 +447,21 @@ private:
                     memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
                     BOB_ASSERT(itemDataSize == 72);
 
+                    // Read object name and check it is NULL-terminated
+                    char objectName[24];
+                    memcpy(&objectName[0], &buffer[itemOffset + 3], 24);
+                    BOB_ASSERT(objectName[23] == '\0');
+
                     // Read object position
-                    Vector3<double> position;
+                    std::array<double, 3> position;
                     memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
 
                     // Read object attitude
-                    Vector3<double> attitude;
+                    std::array<double, 3> attitude;
                     memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
 
                     // Update item
-                    updateObjectData(objectID, frameNumber, position, attitude);
+                    updateObjectData(objectID, objectName, frameNumber, position, attitude);
 
                     // Update offset for next offet
                     itemOffset += itemDataSize;

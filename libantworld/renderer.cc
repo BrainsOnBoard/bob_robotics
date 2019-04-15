@@ -83,6 +83,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
     // Configure perspective projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
@@ -111,8 +112,8 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw world
-        m_World.render();
+        // Render geometry
+        renderPanoramicGeometry();
     }
 
     // Rebind draw framebuffer
@@ -176,6 +177,7 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
                viewportWidth, viewportHeight);
 
     // Configure perspective projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(90.0,
@@ -194,8 +196,32 @@ void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
     // Clear colour and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Draw world
-    m_World.render();
+    // Render geometry
+    renderFirstPersonGeometry();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
+                                     degree_t yaw, degree_t pitch, degree_t roll,
+                                     RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderFirstPersonView(x, y, z, yaw, pitch, roll,
+                          0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
 }
 //----------------------------------------------------------------------------
 void Renderer::renderFirstPersonView(meter_t x, meter_t y, meter_t z,
@@ -232,6 +258,7 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     const auto &maxBound = getWorld().getMaxBound();
 
     // Configure top-down orthographic projection matrix
+    // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(minBound[0].value(), maxBound[0].value(),
@@ -241,7 +268,43 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    // Render world
+    // Render geometry
+    renderTopDownGeometry();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderTopDownView(RenderTarget &renderTarget, bool bind, bool clear)
+{
+    // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render view into target
+    renderTopDownView(0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
+}
+//----------------------------------------------------------------------------
+void Renderer::renderPanoramicGeometry()
+{
+    m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderFirstPersonGeometry()
+{
+    m_World.render();
+}
+//----------------------------------------------------------------------------
+void Renderer::renderTopDownGeometry()
+{
     m_World.render();
 }
 //----------------------------------------------------------------------------

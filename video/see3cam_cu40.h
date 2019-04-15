@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "input.h"
 #include "v4l_camera.h"
 
@@ -325,10 +326,10 @@ public:
 
             // If we have passed entropy peak
             if (entropy < previousEntropy) {
-                std::cout << "Optimal exposure and brightness settings found: "
-                             "exposure="
-                          << previousExposure
-                          << ", brightness=" << previousBrightness << std::endl;
+                LOG_INFO << "Optimal exposure and brightness settings found: "
+                            "exposure="
+                         << previousExposure
+                         << ", brightness=" << previousBrightness;
                 setExposure(previousExposure);
                 setBrightness(previousBrightness);
                 return;
@@ -427,14 +428,14 @@ public:
                    cv::Point(centreXPixel, centreYPixel),
                    outerPixel,
                    cv::Scalar::all(255),
-                   CV_FILLED);
+                   cv::FILLED);
 
         // Draw inner black circle
         cv::circle(mask,
                    cv::Point(centreXPixel, centreYPixel),
                    innerPixel,
                    cv::Scalar::all(0),
-                   CV_FILLED);
+                   cv::FILLED);
 
         return mask;
     }

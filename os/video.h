@@ -1,6 +1,9 @@
 #pragma once
 
-// C++ includes
+// BoB robotics includes
+#include "../common/logging.h"
+
+// Standard C++ includes
 #include <iostream>
 #include <string>
 #include <vector>
@@ -17,8 +20,7 @@ namespace OS {
 namespace Video {
 typedef std::pair<int, std::string> CameraDevice;
 
-const std::string
-getCameraName(int deviceNumber)
+inline const std::string getCameraName(int deviceNumber)
 {
     int fd = open(("/dev/video" + std::to_string(deviceNumber)).c_str(), O_RDONLY);
     if (fd == -1) {
@@ -27,8 +29,7 @@ getCameraName(int deviceNumber)
 
     v4l2_capability video_cap;
     if (ioctl(fd, VIDIOC_QUERYCAP, &video_cap) == -1) {
-        std::cerr << "Warning: Could not get video device capabilities"
-                  << std::endl;
+        LOG_WARNING << "Could not get video device capabilities";
         close(fd);
         return "";
     }
@@ -50,8 +51,7 @@ getCameraName(int deviceNumber)
     return std::string((char *) video_cap.card);
 }
 
-std::vector<CameraDevice>
-getCameras()
+inline std::vector<CameraDevice> getCameras()
 {
     std::vector<CameraDevice> cameras;
     for (int i = 0; i < 64; i++) {

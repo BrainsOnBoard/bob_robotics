@@ -1,0 +1,15 @@
+%YAML:1.0
+---
+metadata:
+   time: "2019-01-29 13:05:14"
+   type: grid
+   grid:
+      beginAtMM: [ 0., 0., 10. ]
+      separationMM: [ 1000., 1000., 0. ]
+      size: [ 2, 2, 1 ]
+   camera:
+      name: opengl
+      resolution: [ 720, 150 ]
+      isPanoramic: 0
+   needsUnwrapping: 0
+   isGreyscale: 0

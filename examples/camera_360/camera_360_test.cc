@@ -1,13 +1,14 @@
+// BoB robotics includes
+#include "common/logging.h"
+#include "common/timer.h"
+#include "imgproc/opencv_unwrap_360.h"
+#include "video/panoramic.h"
+
 // Standard C++ includes
 #include <iostream>
 
 // Standard C includes
 #include <cmath>
-
-// Common includes
-#include "common/timer.h"
-#include "imgproc/opencv_unwrap_360.h"
-#include "video/panoramic.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
@@ -28,11 +29,11 @@ int main()
     cv::Mat outputImage(unwrapRes, CV_8UC3);
 
     // Create motor
-    cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
+    cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapRes.width * outputScale,
                      unwrapRes.height * outputScale);
 
-    cv::namedWindow("Original", CV_WINDOW_NORMAL);
+    cv::namedWindow("Original", cv::WINDOW_NORMAL);
     cv::resizeWindow("Original", cameraRes.width, cameraRes.height);
 
     {

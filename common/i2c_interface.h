@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "logging.h"
+
 // Standard C++ includes
 #include <iostream>
 #include <string>
@@ -47,6 +50,8 @@ public:
         if(m_I2C >= 0) {
             close(m_I2C);
         }
+
+        LOG_DEBUG << "I2C closed";
     }
 
     //---------------------------------------------------------------------
@@ -65,7 +70,7 @@ public:
         if (ioctl(m_I2C, I2C_SLAVE, slaveAddress) < 0) {
             throw std::runtime_error("Cannot connect to I2C slave");
         } else {
-            std::cout << "I2C successfully initialized" << std::endl;
+            LOG_INFO << "I2C successfully initialized";
         }
     }
 

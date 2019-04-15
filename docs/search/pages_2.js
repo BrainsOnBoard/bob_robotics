@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['default_20drone_20joystick_20controls',['Default drone joystick controls',['../md_libbebop_README.html',1,'']]]
+  ['common_20makefile_20bits',['Common makefile bits',['../md_make_common_README.html',1,'']]]
 ];

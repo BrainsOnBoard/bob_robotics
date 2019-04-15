@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 #include "../common/pose.h"
 #include "../imgproc/opencv_unwrap_360.h"
 
@@ -81,7 +82,7 @@ public:
         Vector3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
-        Vector3<size_t> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
+        std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
 
         cv::Mat load() const
         {
@@ -123,7 +124,7 @@ public:
                 m_YAML << "}";
 
                 const auto path = (m_ImageDatabase.m_Path / MetadataFilename).str();
-                std::cout << "Writing metadata to " << path << "..." << std::endl;
+                LOG_INFO << "Writing metadata to " << path << "...";
                 std::ofstream os(path);
                 os << m_YAML.releaseAndGetString();
             }
@@ -171,7 +172,7 @@ public:
 
         void addEntry(const std::string &filename, const cv::Mat &image,
                       const Vector3<millimeter_t> &position, const degree_t heading,
-                      const Vector3<size_t> &gridPosition = { 0, 0, 0 })
+                      const std::array<size_t, 3> &gridPosition = { 0, 0, 0 })
         {
             BOB_ASSERT(m_Recording);
             m_ImageDatabase.writeImage(filename, image);
@@ -189,8 +190,8 @@ public:
                      const std::string &imageFormat = "png")
           : Recorder(imageDatabase, false, imageFormat)
           , m_Heading(heading)
-          , m_Begin({ xrange.begin, yrange.begin, zrange.begin })
-          , m_Separation({ xrange.separation, yrange.separation, zrange.separation })
+          , m_Begin(xrange.begin, yrange.begin, zrange.begin)
+          , m_Separation(xrange.separation, yrange.separation, zrange.separation)
           , m_Size({ xrange.size(), yrange.size(), zrange.size() })
           , m_Current({ 0, 0, 0 })
         {
@@ -205,7 +206,7 @@ public:
         }
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const Vector3<size_t> &gridPosition)
+        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const
         {
             BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
             Vector3<millimeter_t> position;
@@ -247,7 +248,7 @@ public:
         }
 
         //! Save a new image into the database at the specified coordinates
-        void record(const Vector3<size_t> &gridPosition, const cv::Mat &image)
+        void record(const std::array<size_t, 3> &gridPosition, const cv::Mat &image)
         {
             const auto position = getPosition(gridPosition);
             const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
@@ -262,8 +263,8 @@ public:
     private:
         const degree_t m_Heading;
         const Vector3<millimeter_t> m_Begin, m_Separation;
-        const Vector3<size_t> m_Size;
-        Vector3<size_t> m_Current;
+        const std::array<size_t, 3> m_Size;
+        std::array<size_t, 3> m_Current;
     };
 
     //! For saving images recorded along a route
@@ -276,28 +277,31 @@ public:
         }
 
         //! Save a new image taken at the specified pose
-        void record(const Vector3<millimeter_t> &position, degree_t heading,
-                    const cv::Mat &image)
+        void record(const Vector3<millimeter_t> &position, degree_t heading, const cv::Mat &image)
         {
             const std::string filename = ImageDatabase::getFilename(size(), getImageFormat());
             addEntry(filename, image, position, heading);
         }
     };
 
-    ImageDatabase(const char *databasePath)
-      : ImageDatabase(filesystem::path(databasePath))
+    ImageDatabase(const char *databasePath, bool overwrite = false)
+      : ImageDatabase(filesystem::path(databasePath), overwrite)
     {}
 
-    ImageDatabase(const std::string &databasePath)
-      : ImageDatabase(filesystem::path(databasePath))
+    ImageDatabase(const std::string &databasePath, bool overwrite = false)
+      : ImageDatabase(filesystem::path(databasePath), overwrite)
     {}
 
-    ImageDatabase(const filesystem::path &databasePath)
+    ImageDatabase(const filesystem::path &databasePath, bool overwrite = false)
       : m_Path(databasePath)
     {
-        const auto entriesPath = m_Path / EntriesFilename;
+        if (overwrite && databasePath.exists()) {
+            LOG_WARNING << "Database already exists; overwriting";
+            filesystem::remove_all(databasePath);
+		}
 
         // If we don't have any entries, it's an empty database
+        const auto entriesPath = m_Path / EntriesFilename;
         if (!entriesPath.exists()) {
             // Make sure we have a directory to save into
             filesystem::create_directory(m_Path);
@@ -326,7 +330,7 @@ public:
                 break;
             }
 
-            Vector3<size_t> gridPosition;
+            std::array<size_t, 3> gridPosition;
             if (fields.size() >= 8) {
                 if (!hasMetadata()) {
                     // Infer that it is a grid
@@ -484,7 +488,7 @@ public:
         for (auto &entry : m_Entries) {
             unwrapper.unwrap(entry.load(), unwrapped);
             outPath = (destination / entry.path.filename()).str();
-            std::cout << "Writing to " << outPath << std::endl;
+            LOG_INFO << "Writing to " << outPath;
             BOB_ASSERT(cv::imwrite(outPath, unwrapped));
         }
     }
@@ -503,7 +507,7 @@ public:
                                    const std::string &imageFormat = "png")
     {
         // Convert to integers
-        Vector3<int> iposition;
+        std::array<int, 3> iposition;
         std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
             return static_cast<int>(units::math::round(mm));
         });
@@ -531,7 +535,7 @@ private:
         const auto metadataPath = m_Path / MetadataFilename;
         const bool metadataPresent = metadataPath.exists();
         if (!metadataPresent) {
-            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
+            LOG_WARNING << "No " << MetadataFilename << " file found";
             m_IsRoute = true;
             m_MetadataYAML.reset();
         } else {
@@ -561,7 +565,7 @@ private:
         }
     }
 
-    void writeImage(const std::string &filename, const cv::Mat &image)
+    void writeImage(const std::string &filename, const cv::Mat &image) const
     {
         const filesystem::path path = m_Path / filename;
         BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
@@ -571,12 +575,12 @@ private:
     void addNewEntries(std::vector<Entry> &newEntries)
     {
         if (newEntries.empty()) {
-            std::cerr << "Warning: no new entries added, nothing will be written" << std::endl;
+            LOG_WARNING << "No new entries added, nothing will be written";
             return;
         }
 
         const std::string path = (m_Path / EntriesFilename).str();
-        std::cout << "Writing entries to " << path << "..." << std::endl;
+        LOG_INFO << "Writing entries to " << path << "...";
 
         // Move new entries into this object's vector
         m_Entries.reserve(m_Entries.size() + newEntries.size());

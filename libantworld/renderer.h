@@ -1,7 +1,9 @@
 #pragma once
 
 // Standard C++ includes
+#include <algorithm>
 #include <string>
+#include <vector>
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -32,7 +34,8 @@ class Renderer
 public:
     Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
              degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
-    ~Renderer();
+    virtual ~Renderer();
+
 
     //------------------------------------------------------------------------
     // Public API
@@ -56,6 +59,13 @@ public:
     World &getWorld(){ return m_World; }
     const World &getWorld() const{ return m_World; }
 
+protected:
+    //------------------------------------------------------------------------
+    // Declared virtuals
+    //------------------------------------------------------------------------
+    virtual void renderPanoramicGeometry();
+    virtual void renderFirstPersonGeometry();
+    virtual void renderTopDownGeometry();
 private:
     //------------------------------------------------------------------------
     // Private methods

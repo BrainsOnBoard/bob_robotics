@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "logging.h"
+
 // Standard C++ includes
 #include <iostream>
 #include <stdexcept>
@@ -18,7 +21,7 @@ public:
       : std::runtime_error("Assertion failed: " + test + " (in " + file + " at line " + std::to_string(line) + ")")
     {
 #ifdef _WIN32
-        std::cerr << what() << std::endl;
+        LOG_ERROR << what();
 #endif
     }
 }; // AssertionFailedException

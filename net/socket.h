@@ -6,6 +6,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "../common/logging.h"
 #include "../os/net.h"
 
 // Standard C++ includes
@@ -120,10 +121,7 @@ public:
     void send(const std::string &msg)
     {
         send(msg.c_str(), msg.size());
-
-#ifdef TRACE_NET
-        std::cout << ">>> " << msg;
-#endif
+        LOG_VERBOSE << ">>> " << msg;
     }
 
     // Object is non-copyable

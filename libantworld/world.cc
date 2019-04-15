@@ -1,23 +1,23 @@
+#include "common.h"
 #include "world.h"
+
+// BoB robotics includes
+#include "common/assert.h"
+#include "common/logging.h"
+
+// Third-party includes
+#include "third_party/path.h"
+
+// OpenCV includes
+#include <opencv2/opencv.hpp>
 
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <tuple>
-
-// OpenCV includes
-#include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "../common/assert.h"
-
-// Third-party includes
-#include "../third_party/path.h"
-
-// Antworld includes
-#include "common.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -33,17 +33,14 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
         stream >> x;
         vector.push_back(x * scale);
     }
-
-    // Check this is the end of the linestream i.e. there aren't extra components
-    BOB_ASSERT(stream.eof());
 }
-
+//----------------------------------------------------------------------------
 void readFace(std::istringstream &lineStream,
               const std::vector<GLfloat> &rawPositions,
               const std::vector<GLfloat> &rawTexCoords,
               std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>> &currentObjSurface)
 {
-     // Get references to current material's positions and texture coordinates
+    // Get references to current material's positions and texture coordinates
     auto &surfacePositions = std::get<1>(currentObjSurface);
     auto &surfaceTexCoords = std::get<2>(currentObjSurface);
 
@@ -72,6 +69,14 @@ void readFace(std::istringstream &lineStream,
     // Check this is the end of the linestream i.e. there aren't extra components
     BOB_ASSERT(lineStream.eof());
 }
+//----------------------------------------------------------------------------
+void stripWindowsLineEnding(std::string &lineString)
+{
+    // If line has a Windows line ending, remove it
+    if(!lineString.empty() && lineString.back() == '\r') {
+        lineString.pop_back();
+    }
+}
 }
 
 //----------------------------------------------------------------------------
@@ -81,7 +86,7 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
+void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
     // Create single surface
@@ -92,15 +97,14 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open world file:" << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open world file:" + filename);
     }
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
     const auto numTriangles = static_cast<size_t>(input.tellg()) / (sizeof(double) * 12);
     input.seekg(0);
-    std::cout << "World has " << numTriangles << " triangles" << std::endl;
+    LOG_INFO << "World has " << numTriangles << " triangles";
 
     // Bind surface vertex array
     surface.bind();
@@ -147,8 +151,8 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
         // Upload positions
         surface.uploadPositions(positions);
 
-        std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")" << std::endl;
-        std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")" << std::endl;
+        LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")";
+        LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")";
     }
 
     {
@@ -184,11 +188,9 @@ bool World::load(const std::string &filename, const GLfloat (&worldColour)[3],
 
     // Unbind surface
     surface.unbind();
-
-    return true;
 }
 //----------------------------------------------------------------------------
-bool World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
+void World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
@@ -203,7 +205,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         maxTextureSize = std::min(maxTextureSize, hardwareMaxTextureSize);
     }
 
-    std::cout << "Max texture size: " << maxTextureSize << std::endl;
+    LOG_DEBUG << "Max texture size: " << maxTextureSize;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
@@ -220,8 +222,7 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         // Open obj file
         std::ifstream objFile(filename);
         if(!objFile.good()) {
-            std::cerr << "Cannot open obj file: " << filename << std::endl;
-            return false;
+            throw std::runtime_error("Cannot open obj file: " + filename);
         }
 
         // Get base path to load materials etc relative to
@@ -232,6 +233,9 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::string commandString;
         std::string parameterString;
         while(std::getline(objFile, lineString)) {
+            // Strip windows line endings
+            stripWindowsLineEnding(lineString);
+
             // Entirely skip comment or empty lines
             if(lineString[0] == '#' || lineString.empty()) {
                 continue;
@@ -252,22 +256,23 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
-                std::cout << "Reading object: " << parameterString << std::endl;
+                LOG_DEBUG << "Reading object: " << parameterString;
             }
             else if(commandString == "v") {
                 // Read vertex
                 readVector<3>(lineStream, rawPositions, scale);
             }
             else if(commandString == "vt") {
-                // Read texture coordinate
+                // Read texture coordinate and check there's no unhandled components following it
                 readVector<2>(lineStream, rawTexCoords, 1.0f);
+                BOB_ASSERT(lineStream.eof())
             }
             else if(commandString == "vn") {
                 // ignore vertex normals for now
             }
             else if(commandString == "usemtl") {
                 lineStream >> parameterString;
-                std::cout << "\tReading surface: " << parameterString << std::endl;
+                LOG_INFO << "\tReading surface: " << parameterString;
                 objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
             }
             else if(commandString == "s") {
@@ -281,13 +286,13 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
                 readFace(lineStream, rawPositions, rawTexCoords, objSurfaces.back());
             }
             else {
-                std::cerr << "WARNING: unhandled obj tag '" << commandString << "'" << std::endl;
+                LOG_WARNING << "Unhandled obj tag '" << commandString << "'";
             }
 
         }
 
-        std::cout << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
-        std::cout << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures" << std::endl;
+        LOG_INFO << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
+        LOG_INFO << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures";
 
         // Initialise bounds to limits of underlying data types
         std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
@@ -299,8 +304,8 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
             }
         }
 
-        std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")" << std::endl;
-        std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")" << std::endl;
+        LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")";
+        LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")";
     }
 
     // Remove any existing surfaces
@@ -330,9 +335,6 @@ bool World::loadObj(const std::string &filename, float scale, int maxTextureSize
         // Unbind surface
         surface.unbind();
     }
-
-
-    return true;
 }
 //----------------------------------------------------------------------------
 void World::render() const
@@ -345,18 +347,17 @@ void World::render() const
     }
 }
 //----------------------------------------------------------------------------
-bool World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
+void World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
                           GLint textureFormat, int maxTextureSize,
                           std::map<std::string, Texture*> &textureNames)
 {
     // Open obj file
     std::ifstream mtlFile((basePath / filename).str());
     if(!mtlFile.good()) {
-        std::cerr << "Cannot open mtl file: " << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open mtl file: " + filename);
     }
 
-    std::cout << "Reading material file: " << filename << std::endl;
+    LOG_DEBUG << "Reading material file: " << filename;
 
     // Read lines into strings
     std::string currentMaterialName;
@@ -364,6 +365,9 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
     std::string commandString;
     std::string parameterString;
     while(std::getline(mtlFile, lineString)) {
+        // Strip windows line endings
+        stripWindowsLineEnding(lineString);
+
         // Entirely skip comment or empty lines
         if(lineString[0] == '#' || lineString.empty()) {
             continue;
@@ -376,7 +380,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
         lineStream >> commandString;
         if(commandString == "newmtl") {
             lineStream >> currentMaterialName;
-            std::cout << "\tReading material: " << currentMaterialName << std::endl;
+            LOG_INFO << "\tReading material: " << currentMaterialName;
         }
         else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
             || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
@@ -395,8 +399,12 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
             // Treat remainder of line as texture filename
             std::string textureFilename;
             std::getline(lineStream, textureFilename);
+            const size_t firstNonQuote = textureFilename.find_first_not_of('"');
+            const size_t lastNonQuote = textureFilename.find_last_not_of('"');
+            textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 
-            std::cout << "\t\tTexture: " << textureFilename << std::endl;
+            LOG_DEBUG << "\t\tTexture: '" << textureFilename << "'";
+
 
             // Load texture and add to map
             const std::string texturePath = (basePath / textureFilename).str();
@@ -407,11 +415,11 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
             // If texture couldn't be loaded, give warning
             if(texture.cols == 0 && texture.rows == 0) {
-                std::cerr << "WARNING:Cannot load texture" << std::endl;
+                LOG_WARNING << "Cannot load texture '" << texturePath << "'";
             }
             // Otherwise
             else {
-                std::cout << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows << std::endl;
+                LOG_DEBUG << "\t\t\tOriginal dimensions: " << texture.cols << "x" << texture.rows;
 
                 // If texture isn't square, use longest side as size
                 int size = texture.cols;
@@ -424,7 +432,7 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
                 // Perform resize if required
                 if(size != texture.cols || size != texture.rows) {
-                    std::cout << "\t\t\tResizing to: " << size << "x" << size << std::endl;
+                    LOG_DEBUG << "\t\t\tResizing to: " << size << "x" << size;
                     cv::resize(texture, texture, cv::Size(size, size), 0, 0, cv::INTER_CUBIC);
                 }
 
@@ -442,12 +450,10 @@ bool World::loadMaterials(const filesystem::path &basePath, const std::string &f
             }
         }
         else {
-            std::cerr << "WARNING: unhandled mtl tag '" << commandString << "'" << std::endl;
+            LOG_WARNING << "Unhandled mtl tag '" << commandString << "'";
         }
 
     }
-
-    return true;
 }
 
 //----------------------------------------------------------------------------
@@ -525,6 +531,7 @@ void World::Surface::bind() const
 
     // If surface has a texture, bind it
     if(m_Texture != nullptr) {
+        glEnable(GL_TEXTURE_2D);
         m_Texture->bind();
     }
     // Otherwise make sure no textures are bound
@@ -537,6 +544,7 @@ void World::Surface::unbind() const
 {
     // If surface has a texture, bind it
     if(m_Texture != nullptr) {
+        glDisable(GL_TEXTURE_2D);
         m_Texture->unbind();
     }
 
@@ -546,6 +554,8 @@ void World::Surface::unbind() const
 //----------------------------------------------------------------------------
 void World::Surface::render() const
 {
+    glEnable(GL_CULL_FACE);
+
     // Draw world
     glDrawArrays(GL_TRIANGLES, 0, m_NumVertices);
 }

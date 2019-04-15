@@ -1,4 +1,4 @@
-#define NO_BACKGROUND_EXCEPTION_CATCHER_DEFINITIONS
+#define NO_HEADER_DEFINITIONS
 
 #include "simulatorCommon.h"
 

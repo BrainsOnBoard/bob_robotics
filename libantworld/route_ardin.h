@@ -41,7 +41,7 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool load(const std::string &filename, bool realign = true);
+    void load(const std::string &filename, bool realign = true);
     void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
     bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
@@ -64,7 +64,7 @@ public:
     //------------------------------------------------------------------------
     // Operators
     //------------------------------------------------------------------------
-    std::tuple<meter_t, meter_t, degree_t> operator[](size_t waypoint) const;
+    Pose2<meter_t, degree_t> operator[](size_t waypoint) const;
 
 private:
     //------------------------------------------------------------------------

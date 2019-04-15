@@ -1,14 +1,16 @@
-#include <map>
-#include <numeric>
-
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// Common includes
+// BoB robotics includes
+#include "common/logging.h"
 #include "common/pid.h"
 #include "common/timer.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/see3cam_cu40.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <map>
+#include <numeric>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
@@ -53,15 +55,15 @@ int main(int argc, char *argv[])
     cam.enumerateControls(
         [&cam](const v4l2_queryctrl &control)
         {
-            std::cout << control.name << " (" << std::hex << control.id << std::dec << ")" << std::endl;
+            LOG_INFO << control.name << " (" << std::hex << control.id << std::dec << ")";
             if(control.type == V4L2_CTRL_TYPE_INTEGER) {
-                std::cout << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value << std::endl;
+                LOG_INFO << "\tInteger - min=" << control.minimum << ", max=" << control.maximum << ", step=" << control.step << ", default=" << control.default_value;
 
                 int32_t currentValue = cam.getControlValue(control.id);
-                std::cout << "\tCurrent value=" << currentValue << std::endl;
+                LOG_INFO << "\tCurrent value=" << currentValue;
             }
             else {
-                std::cout << "\tUnknown type " << control.type << std::endl;
+                LOG_INFO << "\tUnknown type " << control.type;
             }
         });
 
@@ -80,9 +82,9 @@ int main(int argc, char *argv[])
 
     auto autoExposureMask = cam.createBubblescopeMask(cv::Size(rawWidth, rawHeight));
 
-    cv::namedWindow("Raw", CV_WINDOW_NORMAL);
+    cv::namedWindow("Raw", cv::WINDOW_NORMAL);
     cv::resizeWindow("Raw", rawWidth, rawHeight);
-    cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
+    cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapWidth, unwrapHeight);
 
     cv::Mat output(rawHeight, rawWidth, CV_8UC1);
@@ -122,23 +124,23 @@ int main(int argc, char *argv[])
             const int key = cv::waitKey(1);
             if(key == '1') {
                 setMode(Mode::Clamp, mode, output, unwrapped);
-                std::cout << "Clamp mode" << std::endl;
+                LOG_INFO << "Clamp mode";
             }
             else if(key == '2') {
                 setMode(Mode::Shift, mode, output, unwrapped);
-                std::cout << "Scale mode" << std::endl;
+                LOG_INFO << "Scale mode";
             }
             else if(key == '3') {
                 setMode(Mode::WhiteBalanceCoolWhite, mode, output, unwrapped);
-                std::cout << "White balance (cool white)" << std::endl;
+                LOG_INFO << "White balance (cool white)";
             }
             else if(key == '4') {
                 setMode(Mode::WhiteBalanceU30, mode, output, unwrapped);
-                std::cout << "White balance (U30)" << std::endl;
+                LOG_INFO << "White balance (U30)";
             }
             else if(key == '5') {
                 setMode(Mode::Greyscale, mode, output, unwrapped);
-                std::cout << "Greyscale" << std::endl;
+                LOG_INFO << "Greyscale";
             }
             else if(key == 'c') {
                 char filename[255];
@@ -152,28 +154,28 @@ int main(int argc, char *argv[])
                 if(brightness > 1) {
                     brightness--;
                     cam.setBrightness(brightness);
-                    std::cout << "Brightness:" << brightness << std::endl;
+                    LOG_INFO << "Brightness:" << brightness;
                 }
             }
             else if(key == '+') {
                 if(brightness < 40) {
                     brightness++;
                     cam.setBrightness(brightness);
-                    std::cout << "Brightness:" << brightness << std::endl;
+                    LOG_INFO << "Brightness:" << brightness;
                 }
             }
             else if(key == ',') {
                 if(exposure > 1) {
                     exposure--;
                     cam.setExposure(exposure);
-                    std::cout << "Exposure:" << exposure << std::endl;
+                    LOG_INFO << "Exposure:" << exposure;
                 }
             }
             else if(key == '.') {
                 if(exposure < 9999) {
                     exposure++;
                     cam.setExposure(exposure);
-                    std::cout << "Exposure:" << exposure << std::endl;
+                    LOG_INFO << "Exposure:" << exposure;
                 }
             }
             else if(key == 27) {
@@ -182,7 +184,7 @@ int main(int argc, char *argv[])
         }
 
         const double msPerFrame = timer.get() / (double)frame;
-        std::cout << "FPS:" << 1000.0 / msPerFrame << std::endl;
+        LOG_INFO << "FPS:" << 1000.0 / msPerFrame;
     }
     return 0;
 }

@@ -9,6 +9,9 @@
 
 #pragma once
 
+// BoB robotics includes
+#include "logging.h"
+
 // Standard C++ includes
 #include <exception>
 #include <iostream>
@@ -16,6 +19,14 @@
 int
 bob_main(int argc, char **argv);
 
+#ifdef DEBUG
+// Don't catch exceptions if we're debugging - we want the debugger to catch them
+int
+main(int argc, char **argv)
+{
+    return bob_main(argc, argv);
+}
+#else
 int
 main(int argc, char **argv)
 {
@@ -24,16 +35,17 @@ main(int argc, char **argv)
 #ifdef _WIN32
     } catch (std::exception &e) {
         // Windows doesn't print exception details by default
-        std::cerr << "Uncaught exception: " << e.what() << std::endl;
-#ifndef DEBUG
+        LOG_FATAL << "Uncaught exception: " << e.what();
+#ifdef _DEBUG
+        throw;
+#else
         // There's no point telling Windows the program has crashed
         return EXIT_FAILURE;
-#else
-        throw;
-#endif // !DEBUG
+#endif // !_DEBUG
 #endif // _WIN32
     } catch (...) {
         // Rethrow the caught exception
         throw;
     }
 }
+#endif // DEBUG

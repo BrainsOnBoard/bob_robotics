@@ -86,9 +86,9 @@ public:
     }
 
     //! Return true if the display window is open
-    bool isOpen() const
+    bool isOpen()
     {
-        return cvGetWindowHandle(WindowName) != nullptr;
+        return m_IsOpen;
     }
 
     /*!
@@ -123,6 +123,7 @@ public:
         stop();
         if (isOpen()) {
             cv::destroyWindow(WindowName);
+            m_IsOpen = false;
         }
     }
 
@@ -158,7 +159,7 @@ private:
     cv::Mat m_Frame, m_Unwrapped;
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
     static constexpr const char *WindowName = "BoB robotics display";
-    bool m_ShowUnwrapped = false;
+    bool m_ShowUnwrapped = false, m_IsOpen = true;
 }; // Display
 } // Video
 } // BoBRobotics

@@ -1,13 +1,15 @@
+#include "common.h"
 #include "route_ardin.h"
+
+// BoB robotics includes
+#include "common/logging.h"
 
 // Standard C++ includes
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <tuple>
-
-// Libantworld includes
-#include "common.h"
 
 using namespace units::angle;
 using namespace units::length;
@@ -98,9 +100,7 @@ RouteArdin::RouteArdin(float arrowLength, unsigned int maxRouteEntries,
                        const std::string &filename, bool realign)
     : RouteArdin(arrowLength, maxRouteEntries)
 {
-    if(!load(filename, realign)) {
-        throw std::runtime_error("Cannot load route");
-    }
+    load(filename, realign);
 }
 //----------------------------------------------------------------------------
 RouteArdin::~RouteArdin()
@@ -121,25 +121,19 @@ RouteArdin::~RouteArdin()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool RouteArdin::load(const std::string &filename, bool realign)
+void RouteArdin::load(const std::string &filename, bool realign)
 {
-    // Clear existing waypoints and headings
-    m_Waypoints.clear();
-    m_Headings.clear();
-    m_TrainedSnapshots.clear();
-
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file:" << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open route file: " + filename);
     }
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
     const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
-    std::cout << "Route has " << numPoints << " points" << std::endl;
+    LOG_INFO << "Route has " << numPoints << " points";
 
     {
         // Loop through components(X and Y, ignoring heading)
@@ -177,8 +171,8 @@ bool RouteArdin::load(const std::string &filename, bool realign)
         const auto &segmentEnd = m_Waypoints[i + 1];
 
         // Calculate segment heading (NB: using unit.h's atan2, not cmath's)
-        const degree_t heading = units::math::atan2(makeM(segmentStart[1] - segmentEnd[1]),
-                                                    makeM(segmentEnd[0] - segmentStart[0]));
+        const degree_t heading = units::math::atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                                    units::length::meter_t(segmentEnd[0] - segmentStart[0]));
 
         // Round to nearest whole number and add to headings array
         m_Headings.push_back(units::math::round(heading * 0.5) * 2.0);
@@ -213,22 +207,15 @@ bool RouteArdin::load(const std::string &filename, bool realign)
         }
     }
 
-    std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")" << std::endl;
-    std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")" << std::endl;
+    LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")";
+    LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
 
     // Create a vertex array object to bind everything together
-    if(m_WaypointsVAO == 0) {
-        glGenVertexArrays(1, &m_WaypointsVAO);
-    }
+    glGenVertexArrays(1, &m_WaypointsVAO);
 
     // Generate vertex buffer objects for positions and colours
-    if(m_WaypointsPositionVBO == 0) {
-        glGenBuffers(1, &m_WaypointsPositionVBO);
-    }
-
-    if(m_WaypointsColourVBO == 0) {
-        glGenBuffers(1, &m_WaypointsColourVBO);
-    }
+    glGenBuffers(1, &m_WaypointsPositionVBO);
+    glGenBuffers(1, &m_WaypointsColourVBO);
 
     // Bind vertex array
     glBindVertexArray(m_WaypointsVAO);
@@ -251,12 +238,6 @@ bool RouteArdin::load(const std::string &filename, bool realign)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
-
-    // Unbind VAOs
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    return true;
 }
 //----------------------------------------------------------------------------
 void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
@@ -281,9 +262,6 @@ void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
     glRotatef(-antHeading.value(), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
-
-    // Unbind VAOs
-    glBindVertexArray(0);
 
 }
 //----------------------------------------------------------------------------
@@ -328,7 +306,7 @@ void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
     glBufferSubData(GL_ARRAY_BUFFER, pos * sizeof(uint8_t) * 3, sizeof(uint8_t) * 3, colour);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 //----------------------------------------------------------------------------
 void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
@@ -347,21 +325,21 @@ void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
     glBindBuffer(GL_ARRAY_BUFFER, m_RoutePositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, m_RouteNumPoints * sizeof(float) * 2,
                     sizeof(float) * 2, position);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     m_RouteNumPoints++;
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
+Pose2<meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
 {
-    const meter_t x = makeM(m_Waypoints[waypoint][0]);
-    const meter_t y = makeM(m_Waypoints[waypoint][1]);
+    const meter_t x{ m_Waypoints[waypoint][0] };
+    const meter_t y{ m_Waypoints[waypoint][1] };
 
     // If this isn't the last waypoint, return the heading of the segment from this waypoint
     if(waypoint < m_Headings.size()) {
-        return std::make_tuple(x, y, 90_deg + m_Headings[waypoint]);
+        return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[waypoint]);
     }
     else {
-        return std::make_tuple(x, y, 0_deg);
+        return Pose2<meter_t, degree_t>(x, y, 0_deg);
     }
 }
 }   // namespace AntWorld

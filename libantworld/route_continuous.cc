@@ -1,17 +1,17 @@
 #include "route_continuous.h"
+#include "common.h"
+
+// BoB robotics includes
+#include "common/assert.h"
+#include "common/logging.h"
 
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <tuple>
-
-// BoB robotics includes
-#include "../common/assert.h"
-
-// Libantworld includes
-#include "common.h"
 
 using namespace units::literals;
 using namespace units::angle;
@@ -96,9 +96,7 @@ RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries
 RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
     : RouteContinuous(arrowLength, maxRouteEntries)
 {
-    if(!load(filename)) {
-        throw std::runtime_error("Cannot load route");
-    }
+    load(filename);
 }
 //----------------------------------------------------------------------------
 RouteContinuous::~RouteContinuous()
@@ -119,20 +117,19 @@ RouteContinuous::~RouteContinuous()
     glDeleteVertexArrays(1, &m_OverlayVAO);
 }
 //----------------------------------------------------------------------------
-bool RouteContinuous::load(const std::string &filename)
+void RouteContinuous::load(const std::string &filename)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
-        std::cerr << "Cannot open route file: " << filename << std::endl;
-        return false;
+        throw std::runtime_error("Cannot open route file: " + filename);
     }
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
     const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
-    std::cout << "Route has " << numPoints << " points" << std::endl;
+    LOG_INFO << "Route has " << numPoints << " points";
 
     // Allocate path points
     m_Waypoints.resize(numPoints);
@@ -156,7 +153,7 @@ bool RouteContinuous::load(const std::string &filename)
         }
     }
 
-    std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
+    LOG_INFO << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")";
     // Reserve headings
     const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);
@@ -172,8 +169,8 @@ bool RouteContinuous::load(const std::string &filename)
         const auto &segmentEnd = m_Waypoints[i + 1];
 
         // Add segment heading to array
-        m_Headings.push_back(atan2(makeM(segmentStart[1] - segmentEnd[1]),
-                                   makeM(segmentEnd[0] - segmentStart[0])));
+        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
 
         // Calculate segment length and
         const meter_t segmentLength(distance(segmentStart, segmentEnd));
@@ -208,7 +205,6 @@ bool RouteContinuous::load(const std::string &filename)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
-    return true;
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
@@ -268,7 +264,7 @@ std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter
     return std::make_tuple(minimumDistance, nearestWaypoint);
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, meter_t, degree_t> RouteContinuous::getPosition(meter_t distance) const
+Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
 {
     // Clamp distance at 0
     distance = max(0_m, distance);
@@ -295,11 +291,11 @@ std::tuple<meter_t, meter_t, degree_t> RouteContinuous::getPosition(meter_t dist
         ((distance - prevWaypointDistance) / (nextWaypointDistance - prevWaypointDistance)).value()));
 
     // Interpolate position
-    const meter_t x = makeM(prevWaypoint[0] + proportion * (nextWaypoint[0] - prevWaypoint[0]));
-    const meter_t y = makeM(prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]));
+    const meter_t x{ prevWaypoint[0] + proportion * (nextWaypoint[0] - prevWaypoint[0]) };
+    const meter_t y{ prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]) };
 
     // Return position
-    return std::make_tuple(x, y, 90_deg + m_Headings[prevWaypointIndex]);
+    return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[prevWaypointIndex]);
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)

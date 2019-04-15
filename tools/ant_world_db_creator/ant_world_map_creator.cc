@@ -1,5 +1,12 @@
-// Standard C++ includes
-#include <iostream>
+// BoB robotics includes
+#include "common/logging.h"
+#include "libantworld/common.h"
+#include "libantworld/renderer.h"
+#include "libantworld/route_continuous.h"
+#include "video/opengl.h"
+
+// Third-party includes
+#include "third_party/path.h"
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -7,14 +14,8 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// BoB robotics includes
-#include "third_party/path.h"
-#include "video/opengl.h"
-
-// Libantworld includes
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_continuous.h"
+// Standard C++ includes
+#include <iostream>
 
 using namespace BoBRobotics;
 
@@ -93,8 +94,7 @@ int main()
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create input to read snapshots from screen
-    Video::OpenGL input(0, 0, renderWidth, renderHeight);
-
+    Video::OpenGL input({ renderWidth, renderHeight });
 
     // Host OpenCV array to hold pixels read from screen
     cv::Mat map(renderHeight, renderWidth, CV_8UC3);

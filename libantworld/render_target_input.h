@@ -23,13 +23,7 @@ class RenderTargetInput : public Video::Input
 {
 public:
     /*!
-     * \brief Create a Video::Input for reading from an OpenGL window
-     *
-     * @param readX, readY The starting coordinates to read from (from bottom left of screen)
-     * @param readWidth, readHeight Size of image
-     *
-     * **NOTE** intentionally NOT using a cv::Rect as OpenGL coordinates are (typically)
-     * from bottom left of screen which would require window size etc. to convert
+     * \brief Create a Video::Input for reading from a LibAntWorld RenderTarget
      */
     RenderTargetInput(RenderTarget &renderTarget, bool needsUnwrapping = false)
         : m_RenderTarget(renderTarget), m_NeedsUnwrapping(needsUnwrapping)

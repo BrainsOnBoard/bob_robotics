@@ -1,5 +1,12 @@
-# temporary files
+# OS-specific files
+.directory
+.DS_Store
+
+# Temporary files
 *~
+
+# Temporary Jupyter notebook files
+**/.ipynb_checkpoints/
 
 # QT creator project files
 bob_robotics.config

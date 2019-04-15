@@ -25,6 +25,7 @@ var NAVTREE =
 [
   [ "BoB robotics", "index.html", [
     [ "BoB robotics Documentation", "index.html", null ],
+    [ "Example image databases", "md_docs_source_example_image_databases_README.html", null ],
     [ "Build requirements", "md_docs_source_requirements.html", null ],
     [ "Norbot shopping list", "md_docs_source_robot-shopping-list.html", null ],
     [ "Joystick test", "md_examples_joystick_README.html", null ],
@@ -33,9 +34,11 @@ var NAVTREE =
     [ "Robot test programs", "md_examples_robot_net_README.html", null ],
     [ "Vicon test", "md_examples_vicon_README.html", null ],
     [ "Default drone joystick controls", "md_libbebop_README.html", null ],
+    [ "Common makefile bits", "md_make_common_README.html", null ],
     [ "Ardin et al. Model of navigation", "md_projects_ardin_mb_README.html", null ],
     [ "Stone et al. Model of path integration", "md_projects_stone_cx_README.html", null ],
     [ "README", "md_README.html", null ],
+    [ "Generic tool for controlling a Norbot", "md_tools_norbot_control_README.html", null ],
     [ "Modules", "modules.html", "modules" ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
@@ -52,8 +55,8 @@ var NAVTREE =
       [ "Class Index", "classes.html", null ],
       [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Class Members", "functions.html", [
-        [ "All", "functions.html", null ],
-        [ "Functions", "functions_func.html", null ],
+        [ "All", "functions.html", "functions_dup" ],
+        [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", null ],
         [ "Typedefs", "functions_type.html", null ],
         [ "Enumerations", "functions_enum.html", null ]
@@ -63,7 +66,6 @@ var NAVTREE =
       [ "File List", "files.html", "files_dup" ],
       [ "File Members", "globals.html", [
         [ "All", "globals.html", null ],
-        [ "Functions", "globals_func.html", null ],
         [ "Macros", "globals_defs.html", null ]
       ] ]
     ] ]
@@ -73,19 +75,21 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 ".html",
-"classBoBRobotics_1_1LM9DS1.html#a9fc631db1d442a55bd096cf7a0578f78ab35fb9c77f2c972149705d508c11f1fc",
-"classBoBRobotics_1_1Video_1_1Display.html#a5c92b075e1a5003dc45a7f2b2f9d4717",
-"definitions_8h.html#a988e7742a77495306c8eb2554f57b2bd",
-"runner_8cc.html#a7269302b00100d2a1a742accce900bdc",
-"units_8h.html#a0567f011e36feee9e573048ac6ba17b5",
-"units_8h.html#a2655035f888f034aded9d5ee54ab6172",
-"units_8h.html#a449b0d62700bba9dee2f5e7addb94d62",
-"units_8h.html#a632fe8f2d069cd95dc82a1275a7f6c94",
-"units_8h.html#a83577f33e97ef9ea03d7f3260cb3f531",
-"units_8h.html#aa170d73c1be11fa66c270e4b85f709da",
-"units_8h.html#ac42c3bdfbaeab8630c72d4caba7227c0",
-"units_8h.html#ae30fda45439091c7fa81ee0dc0fa0526",
-"units_8h.html#ga0b889fb67e25ae0657813221eb9cc67b"
+"classBoBRobotics_1_1I2CInterface.html#aae9fe20c83712096f6f52c5e363c3c1c",
+"classBoBRobotics_1_1Net_1_1Connection_1_1SocketWriter.html#a98a3b266206b5aa8be8ff041f0b300ee",
+"classBoBRobotics_1_1Stopwatch.html#a088c8e4e677564a2d518afb30341699c",
+"classStateHandler.html#a0d0688dcffdd0d6ca15ef542352681d8af8380cdd44b17e9824a9d3e0ab8e39d4",
+"group__UnitMath.html#ga8262877321f58e73f76a90e1317e1608",
+"structio_1_1single__line__comment.html",
+"units_8h.html#a0b845c077825a8679d26e84458420800",
+"units_8h.html#a2e0b10e407c37824c3f33c93e70fc493",
+"units_8h.html#a4b6d926ddfd6f761bb7675984fbf0585",
+"units_8h.html#a6a3051486cb83bb1a9d94ef8a9faefdc",
+"units_8h.html#a8a9844649b3c0e277f53da842a87b8cd",
+"units_8h.html#aa924b93c75d56d4098565be2006d618a",
+"units_8h.html#aca50dd759a47f994fca3a424b2543499",
+"units_8h.html#aea3b535bb1e678db6dd0571ba3364d43",
+"units_8h.html#gae66a8996b06be0e044209702a4ff9aac"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

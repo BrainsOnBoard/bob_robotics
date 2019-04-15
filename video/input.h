@@ -1,6 +1,7 @@
 #pragma once
 
-// BoBRobotics includes
+// BoB robotics includes
+#include "../common/logging.h"
 #include "../imgproc/opencv_unwrap_360.h"
 
 // OpenCV
@@ -26,14 +27,16 @@ class Input
 {
 public:
     virtual ~Input()
-    {}
+    {
+        LOG_DEBUG << "Camera closed";
+    }
 
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
      *
      * @param unwrapRes The resolution of the unwrapped image
      */
-    ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes)
+    ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes) const
     {
         // Create unwrapper and return
         return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes,
@@ -64,7 +67,7 @@ public:
             outFrame.create(m_IntermediateFrame.size(), CV_8UC1);
 
             // Convert intermediate frame to greyscale
-            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            cv::cvtColor(m_IntermediateFrame, outFrame, cv::COLOR_BGR2GRAY);
             return true;
         }
         else {

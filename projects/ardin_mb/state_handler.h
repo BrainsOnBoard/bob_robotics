@@ -10,6 +10,7 @@
 
 // BoB robotics includes
 #include "common/fsm.h"
+#include "common/pose.h"
 #include "third_party/units.h"
 #include "video/opengl.h"
 
@@ -54,6 +55,9 @@ enum class State
 //----------------------------------------------------------------------------
 class StateHandler : public BoBRobotics::FSM<State>::StateHandler
 {
+    using meter_t = units::length::meter_t;
+    using degree_t = units::angle::degree_t;
+
 public:
     //------------------------------------------------------------------------
     // Enumerations
@@ -100,7 +104,7 @@ private:
     bool checkAntPosition();
 
     //! Load a route
-    bool loadRoute(const std::string &filename);
+    void loadRoute(const std::string &filename);
 
     //! Update UI
     bool handleUI();
@@ -137,14 +141,8 @@ private:
     //! Class for handling rendering of vector field
     VectorField m_VectorField;
 
-    //! X position of ant
-    units::length::meter_t m_AntX;
-
-    //! Y position of ant
-    units::length::meter_t m_AntY;
-
-    //! Ant's heading
-    units::angle::degree_t m_AntHeading;
+    //! Ant's current pose
+    BoBRobotics::Pose2<meter_t, degree_t> m_Pose;
 
     //! When training, index of current snapshot
     size_t m_TrainPoint;

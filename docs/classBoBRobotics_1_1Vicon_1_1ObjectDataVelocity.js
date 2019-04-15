@@ -1,6 +1,6 @@
 var classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity =
 [
-    [ "ObjectDataVelocity", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html#a04e7baa3ad08575d9eeffa8b944c56f0", null ],
-    [ "getVelocity", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html#af1c5203f4a57fdb5927a600070d99e65", null ],
-    [ "update", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html#a5cadcf9755aa681483f76ab8b3acf3d8", null ]
+    [ "getAngularVelocity", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html#aac5711ed5e9b8f7f2efc86ed32aa0bd8", null ],
+    [ "getVelocity", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html#ad17700b20e79202de62fa188d05ecf0e", null ],
+    [ "update", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html#a2cec84fff694f723e925cc8f51698213", null ]
 ];
