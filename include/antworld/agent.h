@@ -1,10 +1,10 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/pose.h"
-#include "../hid/joystick.h"
-#include "../robots/robot.h"
-#include "../video/opengl.h"
+#include "common/pose.h"
+#include "hid/joystick.h"
+#include "robots/robot.h"
+#include "video/opengl.h"
 #include "renderer.h"
 
 // OpenGL includes

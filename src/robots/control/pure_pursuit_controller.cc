@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/pure_pursuit_controller.h"
+#include "robots/control/pure_pursuit_controller.h"
 
 using namespace units::angle;
 using namespace units::length;

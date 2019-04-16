@@ -5,7 +5,7 @@
 #include "ridf_processors.h"
 
 // Third-party includes
-#include "../third_party/path.h"
+#include "third_party/path.h"
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>

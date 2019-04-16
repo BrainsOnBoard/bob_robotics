@@ -1,14 +1,14 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/circstat.h"
+#include "common/circstat.h"
 #include "tank.h"
 
 // EV3 library
 #include "ev3dev.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // Standard C++ includes
 #include <utility>

@@ -1,10 +1,10 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/circstat.h"
+#include "common/circstat.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>

@@ -11,7 +11,7 @@
 #include <GL/glu.h>
 
 // BoB robotics includes
-#include "../common/pose.h"
+#include "common/pose.h"
 
 // Forward declarations
 namespace cv

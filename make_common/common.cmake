@@ -15,6 +15,7 @@ endmacro()
 
 function(BoB_build_module NAME)
     set(MODULE_NAME bob_${NAME})
+    string(REPLACE / _ MODULE_NAME ${MODULE_NAME})
     project(${MODULE_NAME})
     BoB_include_module_deps(${NAME})
 
@@ -46,11 +47,13 @@ endfunction()
 
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
+        set(module_path ${BOB_ROBOTICS_PATH}/src/${module})
+        string(REPLACE / _ module ${module})
         add_dependencies(${PROJECT_NAME} bob_${module})
 
         set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module}.a")
         if(NOT "$ENV{BOB_LINK_LIBS}" MATCHES ${LIB_PATH})
-            add_subdirectory(${BOB_ROBOTICS_PATH}/src/${module} ${BOB_ROBOTICS_PATH}/src/${module}/build)
+            add_subdirectory(${module_path} ${module_path}/build)
             BoB_add_link_libraries(${LIB_PATH})
         endif()
 
@@ -99,11 +102,10 @@ function(BoB_third_party)
     endforeach()
 endfunction()
 
+set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
-
-set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 
 # Assume we always need plog
 BoB_third_party(plog)

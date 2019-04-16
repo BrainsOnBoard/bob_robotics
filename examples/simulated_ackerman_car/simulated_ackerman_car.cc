@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "robots/simulated_ackerman_car.h"
-#include "robots/car_display.h"
+#include "viz/car_display/car_display.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -20,9 +20,9 @@ using namespace units::length;
 
 int bob_main(int, char **)
 {
-    Robots::SimulatedAckermanCar<> car(1.4_mps, 500_mm);   // simulated ackerman car
-    Robots::CarDisplay display(10.2_m, 160_mm);            // For displaying the agent
-    
+    Robots::SimulatedAckermanCar<> car(1.4_mps, 500_mm); // simulated ackerman car
+    Viz::CarDisplay display(10.2_m, 160_mm);             // For displaying the agent
+
     auto mmps = 0_mps;
     degree_t deg = 0_deg;
     while(display.isOpen()) {
@@ -34,11 +34,11 @@ int bob_main(int, char **)
 
         // run GUI 1 step and get user key command
         const auto key = display.runGUI(car.getPose());
-        
+
         // if key up -> add speed
         if (key.first == SDLK_UP) {
             mmps = 1.4_mps;
-        } 
+        }
 
         // if key down -> stop
         if (key.first == SDLK_DOWN) {
@@ -57,7 +57,7 @@ int bob_main(int, char **)
         else {
             deg = 0_deg;
         }
-        
+
     }
     return EXIT_SUCCESS;
 }

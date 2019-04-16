@@ -13,7 +13,7 @@
 #include "world.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 namespace BoBRobotics
 {

@@ -1,2 +1,2 @@
-BoB_external_libraries(opencv)
+BoB_external_libraries(opencv eigen3)
 BoB_third_party(matplotlibcpp)

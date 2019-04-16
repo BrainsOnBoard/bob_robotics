@@ -1,10 +1,10 @@
 #pragma once
 
 // BoB robotics includes
-#include "../antworld/agent.h"
+#include "antworld/agent.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 namespace BoBRobotics {
 namespace Navigation {

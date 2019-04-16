@@ -1,10 +1,10 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/pose.h"
+#include "common/pose.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // OpenGL includes
 #include <GL/glew.h>

@@ -1,12 +1,12 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/assert.h"
-#include "../common/pose.h"
-#include "../robots/robot.h"
+#include "common/assert.h"
+#include "common/pose.h"
+#include "robots/robot.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // SFML
 #include <SFML/Graphics.hpp>
@@ -16,72 +16,44 @@
 
 // Standard C++ includes
 #include <vector>
-#include <stdexcept>
 
 namespace BoBRobotics {
+namespace Viz {
 using namespace units::literals;
 
-template<typename LengthUnit = units::length::meter_t>
 class SFMLWorld
 {
-    static_assert(units::traits::is_length_unit<LengthUnit>::value, "LengthUnit is not a unit length type");
+    using meter_t = units::length::meter_t;
 
 public:
     class CarAgent
       : public sf::Drawable
     {
     public:
-        CarAgent(const SFMLWorld<LengthUnit> &display, LengthUnit carWidth)
-          : m_Display(display)
-        {
-            std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
-            const char *brPath = std::getenv("BOB_ROBOTICS_PATH");
-            if (!brPath) {
-                throw std::runtime_error("BOB_ROBOTICS_PATH environment variable is not set");
-            }
-
-            const std::string imageFilePath = std::string(brPath) + "/robots/car.bmp";
-            if (!m_Texture.loadFromFile(imageFilePath)) {
-                throw std::runtime_error("Could not load " + imageFilePath);
-            }
-
-            // Make car sprite: scale and set origin to centre of image
-            const auto imageSize = m_Texture.getSize();
-            m_Sprite.setTexture(m_Texture);
-            const auto widthPx = display.lengthToPixel(carWidth);
-            const auto scale = widthPx / static_cast<float>(imageSize.y);
-            m_Sprite.setOrigin(imageSize.x / 2.f, imageSize.y / 2.f);
-            m_Sprite.scale(scale, scale);
-        }
+        CarAgent(const SFMLWorld &display, meter_t carWidth);
 
         template<class PoseType>
-        void setPose(const PoseType& pose)
+        void setPose(const PoseType &pose)
         {
             m_Sprite.setRotation(-static_cast<units::angle::degree_t>(pose.yaw()).value());
             m_Sprite.setPosition(m_Display.vectorToPixel(pose));
         }
 
-        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
-        {
-            target.draw(m_Sprite, states);
-        }
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     private:
-        const SFMLWorld<LengthUnit> &m_Display;
+        const SFMLWorld &m_Display;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
     };
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    SFMLWorld(const Vector2<LengthUnit> &arenaSize = { 3.2_m, 3.2_m })
-      : SFMLWorld(Vector2<LengthUnit>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
-                     Vector2<LengthUnit>{ arenaSize[0] / 2, arenaSize[1] / 2 })
-    {}
+    SFMLWorld(const Vector2<meter_t> &arenaSize = { 3.2_m, 3.2_m });
 
     template<typename MaxBoundsType>
-    SFMLWorld(const Vector2<LengthUnit> &minBounds,
-                 const MaxBoundsType &maxBounds)
+    SFMLWorld(const Vector2<meter_t> &minBounds,
+              const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
                  sf::Style::Titlebar | sf::Style::Close,
@@ -92,8 +64,8 @@ public:
     {
         m_Window.setVerticalSyncEnabled(true);
 
-        const LengthUnit width = maxBounds[0] - minBounds[0];
-        const LengthUnit height = maxBounds[1] - minBounds[1];
+        const meter_t width = maxBounds[0] - minBounds[0];
+        const meter_t height = maxBounds[1] - minBounds[1];
         BOB_ASSERT(width > 0_m && height > 0_m);
 
         sf::Vector2u windowSize;
@@ -119,10 +91,7 @@ public:
                                            origin.y - (OriginLineLength / 2.f) });
     }
 
-    CarAgent createCarAgent(LengthUnit carWidth = 16.4_cm)
-    {
-        return CarAgent(*this, carWidth);
-    }
+    CarAgent createCarAgent(meter_t carWidth = 16.4_cm);
 
     template<typename... Drawables>
     sf::Event update(Drawables&& ...drawables)
@@ -205,36 +174,12 @@ public:
         return event;
     }
 
-    bool mouseClicked() const
-    {
-        return !m_MouseClickPosition.isnan();
-    }
-
-    auto mouseClickPosition() const
-    {
-        return m_MouseClickPosition;
-    }
-
-    bool isOpen() const
-    {
-        return m_Window.isOpen();
-    }
-
-    void close()
-    {
-        m_Window.close();
-    }
-
-    float lengthToPixel(const LengthUnit value) const
-    {
-        return static_cast<float>((value / m_UnitPerPixel).value());
-    }
-
-    auto pixelToVector(int x, int y)
-    {
-        return Vector2<LengthUnit>(m_MinBounds[0] + m_UnitPerPixel * x,
-                                   m_MinBounds[1] + m_UnitPerPixel * (WindowHeight - y));
-    }
+    bool mouseClicked() const;
+    auto mouseClickPosition() const;
+    bool isOpen() const;
+    void close();
+    float lengthToPixel(const meter_t value) const;
+    auto pixelToVector(int x, int y);
 
     template<class VectorType>
     sf::Vector2f vectorToPixel(const VectorType &point) const
@@ -243,37 +188,18 @@ public:
                  static_cast<float>(WindowHeight) - lengthToPixel(point.y() - m_MinBounds[1]) };
     }
 
-    sf::Vector2f vectorToPixel(double x, double y) const
-    {
-        return { lengthToPixel(LengthUnit{ x } - m_MinBounds[0]),
-                 static_cast<float>(WindowHeight) - lengthToPixel(LengthUnit{ y } - m_MinBounds[1]) };
-    }
+    sf::Vector2f vectorToPixel(double x, double y) const;
 
 private:
     sf::RenderWindow m_Window;
     sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
-    const Vector2<LengthUnit> m_MinBounds;
-    LengthUnit m_UnitPerPixel;
-    Vector2<LengthUnit> m_MouseClickPosition = Vector2<LengthUnit>::nan();
+    const Vector2<meter_t> m_MinBounds;
+    meter_t m_UnitPerPixel;
+    Vector2<meter_t> m_MouseClickPosition = Vector2<meter_t>::nan();
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 
-    bool handleEvents(sf::Event &event)
-    {
-        m_MouseClickPosition = Vector2<LengthUnit>::nan();
-
-        if (event.type == sf::Event::Closed ||
-                (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Q)) {
-            m_Window.close();
-            return true;
-        }
-
-        // Left mouse button pressed
-        if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
-            m_MouseClickPosition = pixelToVector(event.mouseButton.x, event.mouseButton.y);
-        }
-        return false;
-    }
+    bool handleEvents(sf::Event &event);
 
     template<typename... Drawables>
     void doDrawing(Drawables&& ...drawables)
@@ -311,11 +237,8 @@ private:
     void draw()
     {}
 
-    static sf::ContextSettings getContextSettings()
-    {
-        sf::ContextSettings settings;
-        settings.antialiasingLevel = 8;
-        return settings;
-    }
+    static sf::ContextSettings getContextSettings();
+
 }; // SFMLWorld
+} // Viz
 } // BobRobotics

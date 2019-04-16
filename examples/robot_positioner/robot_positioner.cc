@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/robot_positioner.h"
+#include "robots/control/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"

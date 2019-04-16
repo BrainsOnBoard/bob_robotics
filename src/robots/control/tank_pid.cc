@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/circstat.h"
 #include "common/logging.h"
-#include "robots/tank_pid.h"
+#include "robots/control/tank_pid.h"
 
 // Standard C includes
 #include <cmath>

@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/threadable.h"
+#include "common/threadable.h"
 
 // Standard C includes
 #include <cstdint>

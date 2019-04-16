@@ -1,8 +1,8 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/assert.h"
-#include "../common/logging.h"
+#include "common/assert.h"
+#include "common/logging.h"
 #include "differencers.h"
 #include "ridf_processors.h"
 

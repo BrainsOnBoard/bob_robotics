@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "bebop/bebop.h"
+#include "robots/bebop/bebop.h"
 
 // Standard C++ includes
 #include <iostream>

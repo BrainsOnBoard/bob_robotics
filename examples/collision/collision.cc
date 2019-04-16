@@ -1,12 +1,12 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/collision.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
-#include "common/sfml_world.h"
+#include "viz/sfml_world/sfml_world.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "vicon/udp.h"
+#include "robots/control/collision_detector.h"
 #include "robots/tank_netsink.h"
 
 // Eigen
@@ -114,7 +114,7 @@ main()
 
     // Read objects from file
     const auto objects = readObjects("objects.yaml");
-    CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
+    Robots::CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
 
     // Object size + buffer around
     const auto &resizedObjects = collisionDetector.getResizedObjects();

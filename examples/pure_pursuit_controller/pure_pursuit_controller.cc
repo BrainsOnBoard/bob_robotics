@@ -3,10 +3,10 @@
     takes a list of coordinates as waypoint and calculates a desired turning angle
     to steer the car for a smooth path tracking.
     To create a path, press the left mouse button to place a waypoint to the screen
-    making a path. Then, pressing the space button will start the controller algorithm 
+    making a path. Then, pressing the space button will start the controller algorithm
     to make the robot follow the path
-    
-    key commands: 
+
+    key commands:
         [    ARROW UP     ] = apply max speed to car
         [   ARROW DOWN    ] = stop car
         [   ARROW LEFT    ] = turn steering wheel by 30 degrees left
@@ -18,8 +18,8 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "robots/simulated_ackerman_car.h"
-#include "robots/car_display.h"
-#include "robots/pure_pursuit_controller.h"
+#include "viz/car_display/car_display.h"
+#include "robots/control/pure_pursuit_controller.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -36,7 +36,7 @@ using namespace units::length;
 using namespace units::angle;
 using namespace units::velocity;
 
-//! draw lines between a list of points 
+//! draw lines between a list of points
 void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *renderer) {
     if (!listRects.empty()) {
         for (unsigned int i = 0; i < listRects.size()-1; i++) {
@@ -47,8 +47,8 @@ void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *render
             float lineStartY = current_rectangle.y;
             float lineEndX = next_rectangle.x;
             float lineEndY = next_rectangle.y;
-            
-            SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);           
+
+            SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);
         }
     }
 }
@@ -57,7 +57,7 @@ int bob_main(int, char **)
 {
 
     Robots::SimulatedAckermanCar<> car(1.4_mps, 500_mm);   // simulated car
-    Robots::CarDisplay display(10.2_m,160_mm);             // For displaying the agent
+    Viz::CarDisplay display(10.2_m,160_mm);             // For displaying the agent
     std::vector<SDL_Rect> rekt_list;                       // list of waypoints
     float currentX = 0, currentY = 0;                      // current mouse coordinate click
     bool isControllerOn = true;
@@ -66,7 +66,7 @@ int bob_main(int, char **)
     //-------------------------------------------------------------------
     millimeter_t xMM, yMM;
     display.pixelToMM(currentX, currentY,  xMM,  yMM);
-    std::vector<Vector2<millimeter_t>> wpCoordinates; 
+    std::vector<Vector2<millimeter_t>> wpCoordinates;
     wpCoordinates.emplace_back(xMM, yMM);
     //-------------------------------------------------------------------
 
@@ -80,12 +80,12 @@ int bob_main(int, char **)
     Robots::PurePursuitController controller(lookaheadDistance, wheelBase, stopping_dist);
 
     while(display.isOpen()) {
-        
-        // each click will spawn a way point which is connected together 
+
+        // each click will spawn a way point which is connected together
         std::vector<float> mousePos = display.getMouseClickPixelPosition();
         const float xp = mousePos[0];
         const float yp = mousePos[1];
-        
+
         // click to the screen to store waypoint in list
         if (xp != currentX && yp != currentY) {
             // draw a rectangle at the goal position
@@ -97,26 +97,26 @@ int bob_main(int, char **)
             currentX = xp;
             currentY = yp;
             rekt_list.push_back(rekt); // save rectangle
-            
+
             // we store the physical unit coordinate in the waypoint list
             display.pixelToMM(xp, yp,  xMM,  yMM);
             wpCoordinates.emplace_back(xMM,yMM);
         }
-        
+
         // set waypoints in controller
         controller.setWayPoints(wpCoordinates);
 
-        // run a GUI step    
+        // run a GUI step
         const auto key = display.runGUI(car.getPose());
 
         // clear screen before drawing other elements
-        display.clearScreen(); 
+        display.clearScreen();
 
         // draw all the waypoints on the screen
         for (auto &r : rekt_list) {
             display.drawRectangleAtCoordinates(r);
         }
-    
+
         // draw lines between waypoints to form a path
         if (rekt_list.size() > 1) {
             drawLinesBetweenRects(rekt_list, display.getRenderer());
@@ -137,7 +137,7 @@ int bob_main(int, char **)
             SDL_Rect rkt, rkt_rob;
             rkt.x = pxx;
             rkt.y = pxy;
-            
+
             int rx,ry;
             display.mmToPixel(robx, roby, rx,ry);
             rkt_rob.x = rx;
@@ -149,14 +149,14 @@ int bob_main(int, char **)
             drawLinesBetweenRects(rektVec, display.getRenderer());
         }
 
-        // calculate turning angle with controller 
+        // calculate turning angle with controller
         degree_t turningAngle;
         const bool didGetAngle = controller.getTurningAngle(robx, roby, heading, turningAngle);
-        
 
-        // if there is a key command, move car with keys, othwerwise listen to 
+
+        // if there is a key command, move car with keys, othwerwise listen to
         // the controller command to turn the car so it follows the path
-        if (key.second) { 
+        if (key.second) {
             switch (key.first)
             {
                 case SDLK_UP:
@@ -177,15 +177,15 @@ int bob_main(int, char **)
                 case SDLK_SPACE:
                     if (isControllerOn) {
                         mmps = 0_mps;
-                        deg = 0_deg;         
+                        deg = 0_deg;
                     } else {
                         mmps = max_speed;
                         deg = 0_deg;
                         controller.setlookAheadDistance(lookaheadDistance); // reset lookahead distance
-                    }    
+                    }
                     isControllerOn = !isControllerOn;
                     break;
-                default:             
+                default:
                     break;
             }
         }

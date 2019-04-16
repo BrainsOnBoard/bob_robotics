@@ -1,7 +1,7 @@
 #pragma once
 
 // Windows includes
-#include "../os/windows_include.h"
+#include "os/windows_include.h"
 #include <xinput.h>
 #pragma comment(lib, "XInput.lib")
 

@@ -1,13 +1,13 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/assert.h"
-#include "../common/logging.h"
+#include "common/assert.h"
+#include "common/logging.h"
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // Eigen
 #include <Eigen/Core>

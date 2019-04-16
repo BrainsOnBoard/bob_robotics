@@ -1,7 +1,7 @@
 #pragma once
 
 // Third-party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -15,6 +15,7 @@
 #include <vector>
 
 namespace BoBRobotics {
+namespace Robots {
 using namespace units::literals;
 
 class CollisionDetector {
@@ -103,10 +104,7 @@ public:
         }
     }
 
-    const auto &getResizedObjects() const
-    {
-        return m_ResizedObjects;
-    }
+    const std::vector<Eigen::MatrixX2d> &getResizedObjects() const;
 
     template<class PoseType>
     void setRobotPose(const PoseType &pose)
@@ -124,35 +122,8 @@ public:
         m_RobotVertices.col(1).array() += static_cast<meter_t>(pose.y()).value();
     }
 
-    const auto &getRobotVertices() const
-    {
-        return m_RobotVertices;
-    }
-
-    bool collisionOccurred() const
-    {
-        // If there aren't obstacles, we can't have hit them
-        if (m_ResizedObjects.size() == 0) {
-            return false;
-        }
-
-        // Fill map with zeroes
-        m_RobotMap = cv::Scalar{ 0 };
-
-        // Draw agent onto map
-        eigenToPoints(m_RobotVerticesPoints, m_RobotVertices);
-        fillConvexPoly(m_RobotMap, m_RobotVerticesPoints, cv::Scalar{ 0xff });
-
-        // Check for collision
-        for (int i = 0; i < m_RobotMap.size().area(); i++) {
-            if (m_ObjectsMap.data[i] & m_RobotMap.data[i]) {
-                return true;
-            }
-        }
-
-        // No collision
-        return false;
-    }
+    const Eigen::MatrixX2d &getRobotVertices() const;
+    bool collisionOccurred() const;
 
 private:
     const meter_t m_GridSize;
@@ -192,4 +163,5 @@ private:
     }
 
 }; // CollisionDetector
+} // Robots
 } // BoBRobotics

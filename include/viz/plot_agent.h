@@ -4,8 +4,8 @@
 #include "pose.h"
 
 // Third-party includes
-#include "../third_party/matplotlibcpp.h"
-#include "../third_party/units.h"
+#include "third_party/matplotlibcpp.h"
+#include "third_party/units.h"
 
 // Standard C++ includes
 #include <string>
@@ -13,9 +13,10 @@
 #include <vector>
 
 namespace BoBRobotics {
+namespace Viz {
 template<typename PoseType, typename LengthUnit>
 void
-plotAgent(const PoseType &pose,
+Viz::plotAgent(const PoseType &pose,
           const LengthUnit xLower,
           const LengthUnit xUpper,
           const LengthUnit yLower,
@@ -42,4 +43,5 @@ plotAgent(const PoseType &pose,
     plt::xlabel("x (" + abbrev + ")");
     plt::ylabel("y (" + abbrev + ")");
 }
+} // Viz
 } // BoBRobotics

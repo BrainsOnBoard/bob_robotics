@@ -4,8 +4,8 @@
 #include "common/pose.h"
 
 // Third-party includes
-#include "../third_party/path.h"
-#include "../third_party/units.h"
+#include "third_party/path.h"
+#include "third_party/units.h"
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>

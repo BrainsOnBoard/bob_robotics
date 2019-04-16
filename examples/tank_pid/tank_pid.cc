@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
+#include "robots/control/tank_pid.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/plot_agent.h"
@@ -227,7 +227,7 @@ bob_main(int argc, char **argv)
             }
 
             // Plot robot's pose with an arrow
-            plotAgent(objectData.getPose<>(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
+            Viz::plotAgent(objectData.getPose<>(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
             plt::pause(0.025);
 
             // Get motor commands from positioner, if it's running

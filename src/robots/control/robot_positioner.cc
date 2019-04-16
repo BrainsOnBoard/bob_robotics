@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "robots/robot_positioner.h"
+#include "robots/control/robot_positioner.h"
 
 // Standard C includes
 #include <cmath>

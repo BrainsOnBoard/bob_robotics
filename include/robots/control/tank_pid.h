@@ -4,7 +4,7 @@
 #include "common/fsm.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "tank.h"
+#include "robots/tank.h"
 
 // Third-party includes
 #include "third_party/units.h"

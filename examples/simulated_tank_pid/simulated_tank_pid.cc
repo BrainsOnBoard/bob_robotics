@@ -1,8 +1,8 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
+#include "robots/control/tank_pid.h"
 #include "common/main.h"
 #include "common/pose.h"
-#include "common/sfml_world.h"
+#include "viz/sfml_world/sfml_world.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 
@@ -23,7 +23,7 @@ int
 bob_main(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    SFMLWorld<> display;                            // For displaying the agent
+    Viz::SFMLWorld display;                         // For displaying the agent
     Robots::TankPID pid(robot, .1f, .1f, .1f);      // PID controller
     auto car = display.createCarAgent();
 
