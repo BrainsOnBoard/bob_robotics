@@ -113,8 +113,8 @@ bool hogPlot(const std::vector<float> &features, float drawScale)
 
     // Loop through cells
     size_t i = 0;
-    for(size_t y = 0; y < numCellY; y++) {
-        for(size_t x = 0; x < numCellX; x++) {
+    for(size_t x = 0; x < numCellX; x++) {
+        for(size_t y = 0; y < numCellY; y++) {
             const float drawX = hogLeft + (drawCellSize * (float)x);
             const float drawY = hogBottom - (drawCellSize * (float)y);
 
@@ -179,7 +179,10 @@ void MBHogUI::handleUI()
 
         ImGui::PlotLines("Num EN", m_NumENData.data(), m_NumENData.size(), 0, nullptr,
                          FLT_MAX, FLT_MAX, ImVec2(0, 50));
-
+        if(!m_NumENData.empty()) {
+            ImGui::Text("%.0f min, %.0f max", *std::min_element(m_NumENData.begin(), m_NumENData.end()),
+                        *std::max_element(m_NumENData.begin(), m_NumENData.end()));
+        }
 
         if(ImGui::Button("Clear")) {
             m_UnusedWeightsData.clear();
