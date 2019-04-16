@@ -106,6 +106,25 @@ function(BoB_external_libraries)
             pkg_check_modules(${lib} REQUIRED ${lib})
             BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
             BoB_add_link_libraries(${${lib}_LIBRARIES})
+
+            # For Eigen, enable OpenMP for improved performance
+            if(${lib} STREQUAL eigen3)
+                find_package(OpenMP)
+
+                # For CMake < 3.9, we need to make the target ourselves
+                if(NOT OpenMP_CXX_FOUND)
+                    find_package(Threads REQUIRED)
+                    add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+                    set_property(TARGET OpenMP::OpenMP_CXX
+                    PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+
+                    # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+                    set_property(TARGET OpenMP::OpenMP_CXX
+                    PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
+                endif()
+
+                BoB_add_link_libraries(OpenMP::OpenMP_CXX)
+            endif()
         endif()
     endforeach()
 endfunction()
