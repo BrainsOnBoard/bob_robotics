@@ -25,11 +25,24 @@ function(BoB_add_include_directories)
     set(ENV{BOB_INCLUDE_DIRS} "$ENV{BOB_INCLUDE_DIRS};${ARGV}")
 endfunction()
 
+function(BoB_include_module_deps MODULE)
+    set(DEPS_PATH ${BOB_ROBOTICS_PATH}/src/${MODULE}/deps.cmake)
+    if(EXISTS "${DEPS_PATH}")
+        include("${DEPS_PATH}")
+    endif()
+endfunction()
+
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
-        add_subdirectory(${BOB_ROBOTICS_PATH}/src/${module} ${BOB_ROBOTICS_PATH}/src/${module}/build)
         add_dependencies(${PROJECT_NAME} bob_${module})
-        BoB_add_link_libraries("${BOB_ROBOTICS_PATH}/lib/libbob_${module}.a")
+
+        set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module}.a")
+        if(NOT "$ENV{BOB_LINK_LIBS}" MATCHES ${LIB_PATH})
+            add_subdirectory(${BOB_ROBOTICS_PATH}/src/${module} ${BOB_ROBOTICS_PATH}/src/${module}/build)
+            BoB_add_link_libraries(${LIB_PATH})
+        endif()
+
+        BoB_include_module_deps(${module})
     endforeach()
 endfunction()
 

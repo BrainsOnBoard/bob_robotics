@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
 BoB_project(bebop_test)
-BoB_modules(robots hid bebop video imgproc common)
+BoB_modules(bebop common hid video)
 
 find_package(OpenCV REQUIRED)
 find_package(Threads REQUIRED)

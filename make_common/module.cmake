@@ -7,8 +7,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 function(BoB_build_module NAME)
     set(MODULE_NAME bob_${NAME})
     project(${MODULE_NAME})
-
-    include_directories(${BOB_ROBOTICS_PATH}/include)
+    BoB_include_module_deps(${NAME})
 
     file(GLOB SRC_FILES
         "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
