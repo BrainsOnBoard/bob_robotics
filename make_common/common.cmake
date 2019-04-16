@@ -87,3 +87,10 @@ find_package(PkgConfig REQUIRED)
 # Assume we always want threading
 find_package(Threads REQUIRED)
 BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
+
+# Don't allow in-source builds
+if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+    message(FATAL_ERROR "In-source builds not allowed.
+    Please make a new directory (called a build directory) and run CMake from there.
+    You may need to remove CMakeCache.txt." )
+endif()
