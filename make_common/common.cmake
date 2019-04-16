@@ -46,18 +46,32 @@ function(BoB_modules)
     endforeach()
 endfunction()
 
+function(BoB_external_libraries)
+    foreach(lib IN LISTS ARGV)
+        pkg_check_modules(${lib} REQUIRED ${lib})
+        BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
+        BoB_add_link_libraries(${${lib}_LIBRARIES})
+    endforeach()
+endfunction()
+
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 include_directories(${BOB_ROBOTICS_PATH}
                     ${BOB_ROBOTICS_PATH}/include
                     ${BOB_ROBOTICS_PATH}/third_party/plog/include)
 
+# Use C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Flags for gcc
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    ADD_CXXFLAGS("-std=c++14 -Wall -Wpedantic -Wextra")
-    ADD_LDFLAGS("-pthread")
+    ADD_CXXFLAGS("-Wall -Wpedantic -Wextra")
 endif()
 
+# BoB robotics libs are output here
 link_directories(${BOB_ROBOTICS_PATH}/lib)
 
+# Disable some of the units types in units.h for faster compilation
 add_compile_definitions(
     DISABLE_PREDEFINED_UNITS
     ENABLE_PREDEFINED_LENGTH_UNITS
@@ -66,3 +80,10 @@ add_compile_definitions(
     ENABLE_PREDEFINED_VELOCITY_UNITS
     ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
 )
+
+# pkg-config used to get packages on *nix
+find_package(PkgConfig REQUIRED)
+
+# Assume we always want threading
+find_package(Threads REQUIRED)
+BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})

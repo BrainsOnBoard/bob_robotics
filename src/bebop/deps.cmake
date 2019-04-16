@@ -1,3 +1,6 @@
+# Needed for video
+BoB_external_libraries(libavcodec libavformat libavutil libswscale)
+
 set(AR_STAGING_PATH $ENV{ARSDK_ROOT}/out/arsdk-native/staging)
 set(AR_LIB_PATH ${AR_STAGING_PATH}/lib)
 BoB_add_include_directories(${AR_STAGING_PATH}/include)
