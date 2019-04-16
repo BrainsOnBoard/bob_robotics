@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/assert.h"
 #include "common/pose.h"
 
 // Third-party includes
@@ -32,9 +33,22 @@ struct Range
     const millimeter_t begin, end, separation;
 
     constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
-                    const millimeter_t separation);
+                    const millimeter_t separation)
+    : begin(beginAndEnd.first)
+    , end(beginAndEnd.second)
+    , separation(separation)
+    {
+        if (begin == end) {
+            BOB_ASSERT(separation == 0_mm);
+        } else {
+            BOB_ASSERT(begin < end);
+            BOB_ASSERT(separation > 0_mm);
+        }
+    }
 
-    constexpr Range(const millimeter_t value);
+    constexpr Range(const millimeter_t value)
+      : Range({ value, value }, 0_mm)
+    {}
 
     size_t size() const;
 };

@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/assert.h"
 #include "common/logging.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
@@ -23,24 +22,6 @@ namespace Navigation {
 
 constexpr const char *ImageDatabase::MetadataFilename;
 constexpr const char *ImageDatabase::EntriesFilename;
-
-constexpr Range::Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
-                       const millimeter_t separation)
-  : begin(beginAndEnd.first)
-  , end(beginAndEnd.second)
-  , separation(separation)
-{
-    if (begin == end) {
-        BOB_ASSERT(separation == 0_mm);
-    } else {
-        BOB_ASSERT(begin < end);
-        BOB_ASSERT(separation > 0_mm);
-    }
-}
-
-constexpr Range::Range(const millimeter_t value)
-  : Range({ value, value }, 0_mm)
-{}
 
 size_t
 Range::size() const
