@@ -9,12 +9,14 @@ config:
       cm: 1.
       tauM: 2.0152000427246094e+01
    ggnToKC:
-      weight: -4.9460000991821289e+00
-      vMid: -5.0323001861572266e+01
-      vSlope: 2.0650000572204590e+00
+      weight: -5
+      vMid: -56
+      vSlope: 1
       vThresh: -60.
    kcToGGC:
-      weight: 1.7000000225380063e-03
+      weight: 0.0038
    pnToKC:
       weight: 2.5000000000000000e-01
       tauSyn: 3.
+   kcToEN:
+      dopamineStrength: 2.9999999329447746e-02
