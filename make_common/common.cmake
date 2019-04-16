@@ -172,7 +172,7 @@ function(BoB_build)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Flags for gcc
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         ADD_CXXFLAGS("-Wall -Wpedantic -Wextra")
     endif()
 
