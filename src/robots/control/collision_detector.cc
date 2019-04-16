@@ -4,6 +4,12 @@
 namespace BoBRobotics {
 namespace Robots {
 
+const std::vector<Eigen::MatrixX2d> &
+CollisionDetector::getResizedObjects() const
+{
+    return m_ResizedObjects;
+}
+
 const Eigen::MatrixX2d &
 CollisionDetector::getRobotVertices() const
 {

@@ -104,8 +104,6 @@ public:
         }
     }
 
-    const std::vector<Eigen::MatrixX2d> &getResizedObjects() const;
-
     template<class PoseType>
     void setRobotPose(const PoseType &pose)
     {
@@ -122,6 +120,7 @@ public:
         m_RobotVertices.col(1).array() += static_cast<meter_t>(pose.y()).value();
     }
 
+    const std::vector<Eigen::MatrixX2d> &getResizedObjects() const;
     const Eigen::MatrixX2d &getRobotVertices() const;
     bool collisionOccurred() const;
 

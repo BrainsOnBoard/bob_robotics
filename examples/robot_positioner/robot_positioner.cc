@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "robots/control/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
@@ -7,6 +6,7 @@
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
+#include "robots/control/robot_positioner.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
 
@@ -36,26 +36,27 @@ enum State
     Homing
 };
 
+// Positioner parameters
+constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
+constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
+constexpr double K1 = 0.2;                      // curveness of the path to the goal
+constexpr double K2 = 5;                        // speed of turning on the curves
+constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
+constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
+constexpr Pose2<millimeter_t, degree_t> Goal{ 0_mm, 0_mm, 15_deg };
+
+// Speed parameters
+constexpr float JoystickMaxSpeed = 1.f;
+constexpr float PositionerMaxSpeed = 0.5f;
+constexpr float PositionerMinSpeed = 0.2f;
+constexpr meter_t StartSlowingDownAt = 40_cm;
+
 class PositionerExample
   : FSM<State>::StateHandler
 {
 private:
     using Event = FSM<State>::StateHandler::Event;
 
-    // Positioner parameters
-    static constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
-    static constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-    static constexpr double K1 = 0.2;                      // curveness of the path to the goal
-    static constexpr double K2 = 5;                        // speed of turning on the curves
-    static constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
-    static constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
-    const Pose2<millimeter_t, degree_t> Goal{ 0_mm, 0_mm, 15_deg };
-
-    // Speed parameters
-    static constexpr float JoystickMaxSpeed = 1.f;
-    static constexpr float PositionerMaxSpeed = 0.5f;
-    static constexpr float PositionerMinSpeed = 0.2f;
-    static constexpr meter_t StartSlowingDownAt = 40_cm;
 
 public:
     PositionerExample()

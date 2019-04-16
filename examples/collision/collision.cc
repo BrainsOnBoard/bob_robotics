@@ -2,12 +2,12 @@
 #include "common/background_exception_catcher.h"
 #include "common/pose.h"
 #include "common/read_objects.h"
-#include "viz/sfml_world/sfml_world.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "vicon/udp.h"
 #include "robots/control/collision_detector.h"
 #include "robots/tank_netsink.h"
+#include "viz/sfml_world/sfml_world.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -27,7 +27,7 @@ class Agent
   : public sf::Drawable
 {
 public:
-    Agent(const SFMLWorld<> &renderer, size_t numVertices)
+    Agent(const Viz::SFMLWorld &renderer, size_t numVertices)
       : m_Renderer(renderer)
       , m_Shape(numVertices)
     {
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    const SFMLWorld<> &m_Renderer;
+    const Viz::SFMLWorld &m_Renderer;
     sf::ConvexShape m_Shape;
 };
 
@@ -56,7 +56,7 @@ class ArenaObject
 {
 public:
     template<class VectorArrayType, class MatrixType>
-    ArenaObject(const SFMLWorld<> &renderer, const VectorArrayType &original, const MatrixType &resized)
+    ArenaObject(const Viz::SFMLWorld &renderer, const VectorArrayType &original, const MatrixType &resized)
       : m_GreenShape(original.size())
       , m_RedShape(original.size())
     {
@@ -110,7 +110,7 @@ main()
     tank.addJoystick(joystick);
 
     // Display for robot + objects
-    SFMLWorld<> renderer{ V{ 5_m, 5_m } };
+    Viz::SFMLWorld renderer{ V{ 5_m, 5_m } };
 
     // Read objects from file
     const auto objects = readObjects("objects.yaml");

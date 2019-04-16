@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/assert.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "tank.h"

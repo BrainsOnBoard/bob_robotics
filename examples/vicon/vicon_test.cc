@@ -1,12 +1,12 @@
+// BoB robotics includes
+#include "vicon/capture_control.h"
+#include "vicon/udp.h"
+
 // C++ includes
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
-
-// BoB robotics includes
-#include "vicon/capture_control.h"
-#include "vicon/udp.h"
 
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;

@@ -57,7 +57,7 @@ bool SFMLWorld::mouseClicked() const
     return !m_MouseClickPosition.isnan();
 }
 
-auto SFMLWorld::mouseClickPosition() const
+Vector2<meter_t> SFMLWorld::mouseClickPosition() const
 {
     return m_MouseClickPosition;
 }
@@ -77,7 +77,7 @@ float SFMLWorld::lengthToPixel(const meter_t value) const
     return static_cast<float>((value / m_UnitPerPixel).value());
 }
 
-auto SFMLWorld::pixelToVector(int x, int y)
+Vector2<meter_t> SFMLWorld::pixelToVector(int x, int y)
 {
     return Vector2<meter_t>(m_MinBounds[0] + m_UnitPerPixel * x,
                                 m_MinBounds[1] + m_UnitPerPixel * (WindowHeight - y));

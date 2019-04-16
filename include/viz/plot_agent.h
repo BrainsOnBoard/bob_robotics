@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "pose.h"
+#include "common/pose.h"
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"
@@ -16,7 +16,7 @@ namespace BoBRobotics {
 namespace Viz {
 template<typename PoseType, typename LengthUnit>
 void
-Viz::plotAgent(const PoseType &pose,
+plotAgent(const PoseType &pose,
           const LengthUnit xLower,
           const LengthUnit xUpper,
           const LengthUnit yLower,

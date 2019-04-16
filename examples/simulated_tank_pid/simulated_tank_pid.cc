@@ -1,10 +1,10 @@
 // BoB robotics includes
-#include "robots/control/tank_pid.h"
 #include "common/main.h"
 #include "common/pose.h"
-#include "viz/sfml_world/sfml_world.h"
 #include "hid/joystick.h"
+#include "robots/control/tank_pid.h"
 #include "robots/simulated_tank.h"
+#include "viz/sfml_world/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"

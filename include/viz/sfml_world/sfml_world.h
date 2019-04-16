@@ -175,11 +175,11 @@ public:
     }
 
     bool mouseClicked() const;
-    auto mouseClickPosition() const;
+    Vector2<meter_t> mouseClickPosition() const;
     bool isOpen() const;
     void close();
     float lengthToPixel(const meter_t value) const;
-    auto pixelToVector(int x, int y);
+    Vector2<meter_t> pixelToVector(int x, int y);
 
     template<class VectorType>
     sf::Vector2f vectorToPixel(const VectorType &point) const
