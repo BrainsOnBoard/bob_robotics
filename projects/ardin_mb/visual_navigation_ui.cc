@@ -1,5 +1,8 @@
 #include "visual_navigation_ui.h"
 
+// Standard C++ includes
+#include <fstream>
+
 // IMGUI
 #include "imgui.h"
 
@@ -309,4 +312,17 @@ void MBHogUI::handleUITesting()
     m_NumENData.push_back((float)m_Memory.getNumENSpikes());
 
     m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
+}
+//----------------------------------------------------------------------------
+void MBHogUI::saveLogs(const std::string &filename)
+{
+    assert(m_ActiveKCData.size() == m_ActivePNData.size());
+
+    std::cout << "Logging..." << std::endl;
+    std::ofstream log(filename);
+
+    log << "Num active PNs, Num active KCs" << std::endl;
+    for(size_t i = 0; i < m_ActiveKCData.size(); i++) {
+        log << m_ActivePNData[i] << ", " << m_ActiveKCData[i] << std::endl;
+    }
 }

@@ -21,14 +21,14 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 // StateHandler
 //----------------------------------------------------------------------------
-StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
+StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
     m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
+    m_QuitAfterTrain(quitAfterTrain), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
 
 {
     // Load world
@@ -38,6 +38,7 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
     if(!routeFilename.empty()) {
         loadRoute(routeFilename);
 
+        //handleUI();
         // Start training
         m_StateMachine.transition(State::Training);
         return;
@@ -101,10 +102,11 @@ bool StateHandler::handleEvent(State state, Event event)
             m_TrainPoint = 0;
 
             resetAntPosition();
-
-            ImGui::OpenPopup("Training...");
         }
         else if(event == Event::Update) {
+            if(!ImGui::IsPopupOpen("Training...")) {
+                ImGui::OpenPopup("Training...");
+            }
             // Train memory with snapshot
             m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
 
@@ -133,7 +135,12 @@ bool StateHandler::handleEvent(State state, Event event)
             }
             // Otherwise, if we've reached end of route
             else {
-                m_StateMachine.transition(State::FreeMovement);
+                if(m_QuitAfterTrain) {
+                    return false;
+                }
+                else {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
             }
         }
     }

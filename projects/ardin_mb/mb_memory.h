@@ -9,6 +9,8 @@
 // BoB robotics includes
 #include "navigation/visual_navigation_base.h"
 
+
+
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
@@ -30,6 +32,9 @@ public:
     virtual void clearMemory() override;
 
 private:
+    //------------------------------------------------------------------------
+    // Private methods
+    //------------------------------------------------------------------------
     std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
 
     //------------------------------------------------------------------------

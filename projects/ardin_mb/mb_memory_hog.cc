@@ -5,6 +5,9 @@
 #include <fstream>
 #include <random>
 
+// CLI11 includes
+#include "third_party/CLI11.hpp"
+
 // BoB robotics includes
 #include "common/timer.h"
 #include "genn_utils/connectors.h"
@@ -238,7 +241,15 @@ void MBMemoryHOG::read(const cv::FileNode &node)
     if(kcToEN.isMap()) {
         cv::read(kcToEN["dopamineStrength"], m_KCToENDopamineStrength, m_KCToENDopamineStrength);
     }
-
+}
+//----------------------------------------------------------------------------
+void MBMemoryHOG::addCLIArguments(CLI::App &app)
+{
+    app.add_option("--ggn-to-kc-weight", *getGGNToKCWeight(), "GGN to KC weight", true);
+    app.add_option("--kc-to-ggn-weight", *getKCToGGNWeight(), "KC to GGN weight", true);
+    app.add_option("--ggn-to-kc-vmid", *getGGNToKCVMid(), "GGN to KC sigmoid midpoint", true);
+    app.add_option("--ggn-to-kc-vslope", *getGGNToKCVslope(), "GGN to KC sigmoid slope", true);
+    app.add_option("--ggn-to-kc-vthresh", *getGGNToKCVthresh(), "GGN to KC activation threshold", true);
 }
 //----------------------------------------------------------------------------
 std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const cv::Mat &image, bool train) const
@@ -323,7 +334,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
 
         // If we should reward in this timestep, inject dopamine
         if(train && iT == rewardTimestep) {
-            std::cout << "Injecting dopamine" << std::endl;
             injectDopaminekcToEN = true;
         }
 

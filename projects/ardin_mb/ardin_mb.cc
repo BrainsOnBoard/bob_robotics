@@ -19,6 +19,9 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
+// CLI11 includes
+#include "third_party/CLI11.hpp"
+
 // IMGUI
 #include "imgui.h"
 #include "examples/imgui_impl_glfw.h"
@@ -144,6 +147,20 @@ int main(int argc, char *argv[])
     const char *bobRoboticsPath = std::getenv("BOB_ROBOTICS_PATH");
     assert(bobRoboticsPath != nullptr);
 
+    // Default parameters"
+    std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
+    std::string routeFilename = "";
+    std::string logFilename = "";
+    float jitterSD = 0.0f;
+    bool quitAfterTrain = false;
+
+    CLI::App app{"Mushroom body navigation model"};
+    app.add_option("--jitter", jitterSD, "Amount of jitter (cm) to apply when recapitulating routes", true);
+    app.add_option("--world", worldFilename, "File to load world from", true);
+    app.add_option("--log", logFilename, "File to log to", true);
+    app.add_flag("--quit-after-train", quitAfterTrain, "Whether to quit once model is trained");
+    app.add_option("route", routeFilename, "Filename of route");
+
     /*cv::Size unwrapRes(std::atoi(argv[2]), std::atoi(argv[3]));
     cv::Size cellSize(std::atoi(argv[4]), std::atoi(argv[5]));
     int numOrientation = std::atoi(argv[6]);*/
@@ -159,14 +176,16 @@ int main(int argc, char *argv[])
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
     //MBMemory memory;
     MBMemoryHOG memory;
+    memory.addCLIArguments(app);
+
+    // Create UI
     MBHogUI ui(memory);
 
-    // Create state machine and set it as window user pointer
-    const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
-    const std::string routeFilename = (argc > 1) ? argv[1] : "";
-    const float jitterSD = (argc > 2) ? std::atof(argv[2]) : 0.0f;
-    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, memory, ui);
+    // Parse command line arguments
+    CLI11_PARSE(app, argc, argv);
 
+    // Create state machine and set it as window user pointer
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, memory, ui);
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback
@@ -202,6 +221,10 @@ int main(int argc, char *argv[])
         // Swap front and back buffers
         glfwSwapBuffers(window);
     }
+
+    // Save logs
+    // **YUCK** this probably shouldn't be part of UI
+    ui.saveLogs(logFilename);
 
      // Cleanup UI
     ImGui_ImplOpenGL2_Shutdown();

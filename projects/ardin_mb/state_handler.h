@@ -73,7 +73,7 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD,
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain,
                  BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
@@ -173,6 +173,9 @@ private:
 
     //! Distribution of angles to turn for random walk
     std::uniform_real_distribution<float> m_RandomWalkAngleDistribution;
+
+    //! Should we quit after training? (useful for automated parameter sweeping)
+    const bool m_QuitAfterTrain;
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;

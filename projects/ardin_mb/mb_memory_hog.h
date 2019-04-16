@@ -13,6 +13,12 @@
 // BoB robotics includes
 #include "navigation/visual_navigation_base.h"
 
+// Forward declarations
+namespace CLI
+{
+class App;
+}
+
 //----------------------------------------------------------------------------
 // MBMemoryHOG
 //----------------------------------------------------------------------------
@@ -90,6 +96,8 @@ public:
 
     void write(cv::FileStorage& fs) const;
     void read(const cv::FileNode &node);
+
+    void addCLIArguments(CLI::App &app);
 
 private:
     //------------------------------------------------------------------------
