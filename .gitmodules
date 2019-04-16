@@ -2,7 +2,7 @@
 	path = third_party/arsdk3/arsdk_manifests
 	url = ../Parrot-Developers/arsdk_manifests
 [submodule "third_party/ev3dev-lang-cpp"]
-	path = third_party/ev3dev-lang-cpp/ev3dev-lang-cpp
+	path = third_party/ev3dev-lang-cpp
 	url = ../ddemidov/ev3dev-lang-cpp
 [submodule "third_party/imgui/imgui"]
 	path = third_party/imgui/imgui

@@ -1,3 +1,7 @@
+// BoB robotics includes
+#include "common/assert.h"
+#include "third_party/path.h"
+
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
@@ -5,10 +9,6 @@
 #include <map>
 #include <sstream>
 #include <vector>
-
-// BoB robotics includes
-#include "common/assert.h"
-#include "third_party/path.h"
 
 #ifdef __GNUC__
 #include <fcntl.h>
@@ -95,10 +95,10 @@ void findBounds(std::istream &inputObjFile)
     std::cout << "\tMax: (" << maxBound[0] << ", " << maxBound[1] << ", " << maxBound[2] << ")" << std::endl;
 }
 
-void copyPositions(const float(&min)[3], const float(&max)[3], 
+void copyPositions(const float(&min)[3], const float(&max)[3],
                    std::istream &inputObjFile, std::ofstream &outputObjFile,
                    std::map<int, int> &positionIndices)
-{    
+{
     std::cout << "1/3 - Copy positions:" << std::endl;
     std::string lineString;
     std::string commandString;
@@ -135,7 +135,7 @@ void copyPositions(const float(&min)[3], const float(&max)[3],
                 // Incrememnt remapped vertex ID
                 remappedPositionID++;
             }
-            
+
             // Remap original vertex ID
             originalPositionID++;
         }
@@ -147,7 +147,7 @@ void copyPositions(const float(&min)[3], const float(&max)[3],
             break;
         }
     }
-   
+
 
     std::cout << "\t" << remappedPositionID - 1 << "/" << originalPositionID - 1 << " vertices" << std::endl;
 }
@@ -213,7 +213,7 @@ void findFaces(std::istream &inputObjFile,
                     std::transform(faceNormalIndices.cbegin(), faceNormalIndices.cend(), std::inserter(normalIndices, normalIndices.end()),
                                 [](int id){ return std::make_pair(id, 0); });
                 }
-                
+
                 // Increment number of faces in bounds
                 facesInBounds++;
             }
@@ -330,7 +330,7 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                 // Check all sizes match
                 BOB_ASSERT(facePositionIndices.size() == faceTexCoordIndices.size());
                 BOB_ASSERT(faceNormalIndices.empty() || faceTexCoordIndices.size() == faceNormalIndices.size());
-                
+
                 // Write new face
                 outputObjFile << "f ";
                 for(size_t i = 0; i < facePositionIndices.size(); i++) {
@@ -340,13 +340,13 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                     else {
                         outputObjFile << facePositionIndices[i] << "/" << faceTexCoordIndices[i] << "/" << faceNormalIndices[i];
                     }
-                    
+
                     // If this isn't the last face vertex, add whitespace
                     if(i != (facePositionIndices.size() - 1)) {
                         outputObjFile << " ";
                     }
                 }
-                
+
                 outputObjFile << std::endl;
             }
         }
@@ -371,7 +371,7 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                 outputObjFile << "l ";
                 for(size_t i = 0; i < facePositionIndices.size(); i++) {
                     outputObjFile << facePositionIndices[i];
-                    
+
                     // If this isn't the last line vertex, add whitespace
                     if(i != (facePositionIndices.size() - 1)) {
                         outputObjFile << " ";

@@ -143,17 +143,30 @@ function(BoB_third_party)
             exec_or_fail("python" "${BOB_ROBOTICS_PATH}/make_common/find_numpy.py")
             BoB_add_include_directories(${SHELL_OUTPUT})
         else()
+            # Checkout git submodules under this path
             find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
-                        WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
+                         WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
+
+            # If this folder is a cmake project, then build it
+            set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
+            if(EXISTS ${module_path}/CMakeLists.txt)
+                add_subdirectory(${module_path} ${module_path}/build)
+            endif()
+
+            # Add to include path
+            set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
+            include_directories(${module_path} ${module_path}/include)
+
+            # Extra actions
+            if(${module} STREQUAL ev3dev-lang-cpp)
+                BoB_add_link_libraries(${BOB_ROBOTICS_PATH}/lib/libev3dev.a)
+            endif()
         endif()
     endforeach()
 endfunction()
 
 function(BoB_build)
-    # Assume we always need plog
-    BoB_third_party(plog)
-
     # Use C++14
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -191,6 +204,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 
+# Assume we always need plog
+BoB_third_party(plog)
+
 # Don't allow in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "In-source builds not allowed.
@@ -200,8 +216,7 @@ endif()
 
 # Default include paths
 include_directories(${BOB_ROBOTICS_PATH}
-                    ${BOB_ROBOTICS_PATH}/include
-                    ${BOB_ROBOTICS_PATH}/third_party/plog/include)
+                    ${BOB_ROBOTICS_PATH}/include)
 
 # pkg-config used to get packages on *nix
 find_package(PkgConfig REQUIRED)

@@ -1,3 +1,5 @@
+BoB_modules(robots hid video common)
+
 # Needed for video
 BoB_external_libraries(libavcodec libavformat libavutil libswscale)
 
