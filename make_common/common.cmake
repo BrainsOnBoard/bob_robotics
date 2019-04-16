@@ -8,9 +8,18 @@ macro(ADD_LDFLAGS EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
-macro(BoB_project NAME)
-    project(${NAME})
-    add_executable(${NAME} ${NAME}.cc)
+macro(BoB_parse_arguments)
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSED_ARGS "" "NAME" "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY" "${ARGV}")
+
+    # Need to give a name for the project
+    if(NOT PARSED_ARGS_NAME)
+        message(FATAL_ERROR "You must provide a name")
+    endif(NOT PARSED_ARGS_NAME)
+
+    # Replace slashes with underscores (used in BoB modules, e.g. robots/bebop)
+    string(REPLACE / _ PARSED_ARGS_NAME ${PARSED_ARGS_NAME})
+    project(${PARSED_ARGS_NAME})
 endmacro()
 
 function(BoB_build_module NAME)
@@ -25,6 +34,41 @@ function(BoB_build_module NAME)
     )
     add_library(${MODULE_NAME} STATIC ${SRC_FILES})
 endfunction()
+
+macro(BoB_project)
+    BoB_parse_arguments(${ARGN})
+
+    file(GLOB SRC_FILES
+        "*.cc"
+    )
+    foreach(file IN LISTS SRC_FILES)
+        get_filename_component(shortname ${file} NAME)
+        string(REGEX REPLACE "\\.[^.]*$" "" file_without_ext ${shortname})
+        add_executable(${file_without_ext} ${file})
+        set(BOB_TARGETS "${BOB_TARGETS};${file_without_ext}")
+    endforeach()
+
+    BoB_modules(${PARSED_ARGS_BOB_MODULES})
+    BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
+    BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+    BoB_build()
+endmacro()
+
+# function(BoB_module)
+#     BoB_parse_arguments(${ARGN})
+#     BoB_include_module_deps(${PARSED_ARGS_NAME})
+
+#     file(GLOB SRC_FILES
+#         "${BOB_ROBOTICS_PATH}/include/${PARSED_ARGS_NAME}/*.h"
+#         "*.cc"
+#     )
+#     add_library(${PARSED_ARGS_NAME} STATIC ${SRC_FILES})
+
+#     BoB_modules(${PARSED_ARGS_BOB_MODULES})
+#     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
+#     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+#     BoB_build()
+# endfunction()
 
 macro(BoB_add_link_libraries)
     set(ENV{BOB_LINK_LIBS} "${ARGV};$ENV{BOB_LINK_LIBS}")
@@ -49,7 +93,11 @@ function(BoB_modules)
     foreach(module IN LISTS ARGV)
         set(module_path ${BOB_ROBOTICS_PATH}/src/${module})
         string(REPLACE / _ module_name ${module})
-        add_dependencies(${PROJECT_NAME} bob_${module_name})
+        foreach(target IN LISTS BOB_TARGETS)
+            if(NOT "${target}" STREQUAL "")
+                add_dependencies(${target} bob_${module_name})
+            endif()
+        endforeach()
 
         set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module_name}.a")
         if(NOT "$ENV{BOB_LINK_LIBS}" MATCHES ${LIB_PATH})
@@ -102,47 +150,46 @@ function(BoB_third_party)
     endforeach()
 endfunction()
 
+function(BoB_build)
+    # Assume we always need plog
+    BoB_third_party(plog)
+
+    # Use C++14
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # Flags for gcc
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        ADD_CXXFLAGS("-Wall -Wpedantic -Wextra")
+    endif()
+
+    # BoB robotics libs are output here
+    link_directories(${BOB_ROBOTICS_PATH}/lib)
+
+    # Disable some of the units types in units.h for faster compilation
+    add_compile_definitions(
+        DISABLE_PREDEFINED_UNITS
+        ENABLE_PREDEFINED_LENGTH_UNITS
+        ENABLE_PREDEFINED_TIME_UNITS
+        ENABLE_PREDEFINED_ANGLE_UNITS
+        ENABLE_PREDEFINED_VELOCITY_UNITS
+        ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+    )
+
+    # Link threading lib
+    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
+
+    foreach(target IN LISTS BOB_TARGETS)
+        if(NOT "${target}" STREQUAL "")
+            target_link_libraries(${target} PUBLIC $ENV{BOB_LINK_LIBS})
+        endif()
+    endforeach()
+endfunction()
+
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
-
-# Assume we always need plog
-BoB_third_party(plog)
-
-# Default include paths
-include_directories(${BOB_ROBOTICS_PATH}
-                    ${BOB_ROBOTICS_PATH}/include
-                    ${BOB_ROBOTICS_PATH}/third_party/plog/include)
-
-# Use C++14
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Flags for gcc
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    ADD_CXXFLAGS("-Wall -Wpedantic -Wextra")
-endif()
-
-# BoB robotics libs are output here
-link_directories(${BOB_ROBOTICS_PATH}/lib)
-
-# Disable some of the units types in units.h for faster compilation
-add_compile_definitions(
-    DISABLE_PREDEFINED_UNITS
-    ENABLE_PREDEFINED_LENGTH_UNITS
-    ENABLE_PREDEFINED_TIME_UNITS
-    ENABLE_PREDEFINED_ANGLE_UNITS
-    ENABLE_PREDEFINED_VELOCITY_UNITS
-    ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
-)
-
-# pkg-config used to get packages on *nix
-find_package(PkgConfig REQUIRED)
-
-# Assume we always want threading
-find_package(Threads REQUIRED)
-BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
 # Don't allow in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
@@ -150,3 +197,14 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     Please make a new directory (called a build directory) and run CMake from there.
     You may need to remove CMakeCache.txt." )
 endif()
+
+# Default include paths
+include_directories(${BOB_ROBOTICS_PATH}
+                    ${BOB_ROBOTICS_PATH}/include
+                    ${BOB_ROBOTICS_PATH}/third_party/plog/include)
+
+# pkg-config used to get packages on *nix
+find_package(PkgConfig REQUIRED)
+
+# Assume we always want threading
+find_package(Threads REQUIRED)

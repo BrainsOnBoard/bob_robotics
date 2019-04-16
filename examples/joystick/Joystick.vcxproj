@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="joystick_test.cc" />
+    <ClCompile Include="joystick.cc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

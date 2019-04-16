@@ -1,10 +1,10 @@
-// C++ includes
+// BoB robotics includes
+#include "hid/joystick.h"
+
+// Standard C++ includes
 #include <chrono>
 #include <iostream>
 #include <thread>
-
-// BoB robotics includes
-#include "hid/joystick.h"
 
 using namespace BoBRobotics::HID;
 

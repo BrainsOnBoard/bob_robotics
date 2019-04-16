@@ -1,0 +1,1 @@
+BoB_external_libraries(opencv)

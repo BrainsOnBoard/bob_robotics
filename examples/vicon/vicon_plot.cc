@@ -1,15 +1,15 @@
-// C++ includes
-#include <chrono>
-#include <iostream>
-#include <thread>
-
 // BoB robotics includes
-#include "common/plot_agent.h"
+#include "viz/plot_agent.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"
+
+// Standard C++ includes
+#include <chrono>
+#include <iostream>
+#include <thread>
 
 using namespace BoBRobotics;
 using namespace std::literals;
