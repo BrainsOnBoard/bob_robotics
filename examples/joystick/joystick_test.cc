@@ -1,9 +1,9 @@
-// C++ includes
+// BoB robotics includes
+#include "hid/joystick.h"
+
+// Standard C++ includes
 #include <iostream>
 #include <string>
-
-// local includes
-#include "hid/joystick.h"
 
 using namespace BoBRobotics::HID;
 
@@ -13,7 +13,7 @@ onAxisEvent(JAxis axis, float value)
     std::string name = Joystick::getName(axis);
     std::cout << "Axis " << name << " (" << static_cast<int>(axis) << "): "
               << value << std::endl;
-    
+
     // we handle all axis events
     return true;
 }
