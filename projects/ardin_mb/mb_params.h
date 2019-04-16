@@ -37,7 +37,7 @@ namespace MBParams
 
     // Initial/maximum weight of plastic synapses between KC and EN populations
     // **NOTE** note manually tuned to get 15-20 spikes for a novel image
-    constexpr double kcToENWeight = 0.2;
+    constexpr double kcToENWeight = 1.0;
 
     // **NOTE** manually tuned to result in a maximum depolarization of 20mv (peak membrane voltage of -40mv)
     constexpr double kcToGGNWeight = 0.01;
