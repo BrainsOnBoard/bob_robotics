@@ -21,6 +21,9 @@ using namespace units::length;
 namespace BoBRobotics {
 namespace Navigation {
 
+constexpr const char *ImageDatabase::MetadataFilename;
+constexpr const char *ImageDatabase::EntriesFilename;
+
 constexpr Range::Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
                        const millimeter_t separation)
   : begin(beginAndEnd.first)

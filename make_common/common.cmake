@@ -13,6 +13,18 @@ macro(BoB_project NAME)
     add_executable(${NAME} ${NAME}.cc)
 endmacro()
 
+function(BoB_build_module NAME)
+    set(MODULE_NAME bob_${NAME})
+    project(${MODULE_NAME})
+    BoB_include_module_deps(${NAME})
+
+    file(GLOB SRC_FILES
+        "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
+        "*.cc"
+    )
+    add_library(${MODULE_NAME} STATIC ${SRC_FILES})
+endfunction()
+
 macro(BoB_add_link_libraries)
     set(ENV{BOB_LINK_LIBS} "$ENV{BOB_LINK_LIBS};${ARGV}")
 endmacro()
@@ -54,16 +66,13 @@ function(BoB_external_libraries)
     endforeach()
 endfunction()
 
-function(BoB_build_module NAME)
-    set(MODULE_NAME bob_${NAME})
-    project(${MODULE_NAME})
-    BoB_include_module_deps(${NAME})
-
-    file(GLOB SRC_FILES
-        "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
-        "*.cc"
-    )
-    add_library(${MODULE_NAME} STATIC ${SRC_FILES})
+function(BoB_third_party NAME)
+    if("${NAME}" STREQUAL matplotlibcpp)
+        find_package(PythonLibs REQUIRED)
+        add_compile_definitions(WITHOUT_NUMPY)
+        BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
+        BoB_add_link_libraries(${PYTHON_LIBRARIES})
+    endif()
 endfunction()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
