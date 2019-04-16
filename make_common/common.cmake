@@ -54,6 +54,22 @@ function(BoB_external_libraries)
     endforeach()
 endfunction()
 
+function(BoB_build_module NAME)
+    set(MODULE_NAME bob_${NAME})
+    project(${MODULE_NAME})
+    BoB_include_module_deps(${NAME})
+
+    file(GLOB SRC_FILES
+        "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
+        "*.cc"
+    )
+    add_library(${MODULE_NAME} STATIC ${SRC_FILES})
+endfunction()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
+
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 include_directories(${BOB_ROBOTICS_PATH}
                     ${BOB_ROBOTICS_PATH}/include
