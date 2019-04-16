@@ -69,9 +69,11 @@ endfunction()
 function(BoB_third_party NAME)
     if("${NAME}" STREQUAL matplotlibcpp)
         find_package(PythonLibs REQUIRED)
-        add_compile_definitions(WITHOUT_NUMPY)
         BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
         BoB_add_link_libraries(${PYTHON_LIBRARIES})
+
+        execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/make_common/find_numpy.py" OUTPUT_VARIABLE ov)
+        BoB_add_include_directories(${ov})
     endif()
 endfunction()
 
