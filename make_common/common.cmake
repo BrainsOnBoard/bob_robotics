@@ -66,15 +66,27 @@ function(BoB_external_libraries)
     endforeach()
 endfunction()
 
-function(BoB_third_party NAME)
-    if("${NAME}" STREQUAL matplotlibcpp)
-        find_package(PythonLibs REQUIRED)
-        BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
-        BoB_add_link_libraries(${PYTHON_LIBRARIES})
-
-        execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/make_common/find_numpy.py" OUTPUT_VARIABLE ov)
-        BoB_add_include_directories(${ov})
+macro(exec_or_fail)
+    execute_process(COMMAND ${ARGV} RESULT_VARIABLE rv OUTPUT_VARIABLE SHELL_OUTPUT)
+    if(NOT ${rv} EQUAL 0)
+        message(FATAL_ERROR "Error while executing: ${ARGV}")
     endif()
+endmacro()
+
+function(BoB_third_party)
+    foreach(module IN LISTS ARGV)
+        if("${module}" STREQUAL matplotlibcpp)
+            find_package(PythonLibs REQUIRED)
+            BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
+            BoB_add_link_libraries(${PYTHON_LIBRARIES})
+
+            exec_or_fail("python" "${BOB_ROBOTICS_PATH}/make_common/find_numpy.py")
+            BoB_add_include_directories(${SHELL_OUTPUT})
+        else()
+            exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
+                        WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
+        endif()
+    endforeach()
 endfunction()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -82,6 +94,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
+
+# Assume we always need plog
+BoB_third_party(plog)
+
+# Default include paths
 include_directories(${BOB_ROBOTICS_PATH}
                     ${BOB_ROBOTICS_PATH}/include
                     ${BOB_ROBOTICS_PATH}/third_party/plog/include)
@@ -107,6 +124,9 @@ add_compile_definitions(
     ENABLE_PREDEFINED_VELOCITY_UNITS
     ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
 )
+
+# git needed for submodules
+find_package(Git REQUIRED)
 
 # pkg-config used to get packages on *nix
 find_package(PkgConfig REQUIRED)
