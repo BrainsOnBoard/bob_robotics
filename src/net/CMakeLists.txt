@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
-BoB_build_module(net)
+BoB_module(net)
 BoB_modules(common os)

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
-BoB_build_module(os)
+BoB_module(os)
 BoB_modules(common)
 
 find_package(OpenCV REQUIRED)

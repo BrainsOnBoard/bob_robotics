@@ -22,7 +22,7 @@ macro(BoB_parse_arguments)
     project(${PARSED_ARGS_NAME})
 endmacro()
 
-function(BoB_build_module NAME)
+function(BoB_module NAME)
     set(MODULE_NAME bob_${NAME})
     string(REPLACE / _ MODULE_NAME ${MODULE_NAME})
     project(${MODULE_NAME})
@@ -53,22 +53,6 @@ macro(BoB_project)
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
     BoB_build()
 endmacro()
-
-# function(BoB_module)
-#     BoB_parse_arguments(${ARGN})
-#     BoB_include_module_deps(${PARSED_ARGS_NAME})
-
-#     file(GLOB SRC_FILES
-#         "${BOB_ROBOTICS_PATH}/include/${PARSED_ARGS_NAME}/*.h"
-#         "*.cc"
-#     )
-#     add_library(${PARSED_ARGS_NAME} STATIC ${SRC_FILES})
-
-#     BoB_modules(${PARSED_ARGS_BOB_MODULES})
-#     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
-#     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
-#     BoB_build()
-# endfunction()
 
 macro(BoB_add_link_libraries)
     set(ENV{BOB_LINK_LIBS} "${ARGV};$ENV{BOB_LINK_LIBS}")
