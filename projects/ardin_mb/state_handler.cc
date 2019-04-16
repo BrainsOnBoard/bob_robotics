@@ -104,9 +104,12 @@ bool StateHandler::handleEvent(State state, Event event)
             resetAntPosition();
         }
         else if(event == Event::Update) {
+            // Open popup
+            // **YUCK** OpenPopup crashes if you try and call in enter of 1st state
             if(!ImGui::IsPopupOpen("Training...")) {
                 ImGui::OpenPopup("Training...");
             }
+
             // Train memory with snapshot
             m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
 
@@ -224,6 +227,45 @@ bool StateHandler::handleEvent(State state, Event event)
                     m_LowestTestDifference = std::numeric_limits<float>::max();
                 }
             }
+        }
+    }
+    else if(state == State::BuildingRIDF) {
+        if(event == Event::Enter) {
+            m_Pose.yaw() -= (SimParams::scanAngle / 2.0);
+
+            m_TestingScan = 0;
+
+            m_RIDFNovelty.clear();
+            m_RIDFNovelty.reserve(SimParams::numScanSteps);
+            ImGui::OpenPopup("Calculating RIDF...");
+
+        }
+        else if(event == Event::Update) {
+            // Test snapshot and add difference to vector
+            m_RIDFNovelty.push_back(m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()));
+
+            // Show training progress
+            if(ImGui::BeginPopupModal("Calculating RIDF...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar(std::min(1.0f, (float)m_TestingScan / (float)SimParams::numScanSteps), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
+
+            // Go onto next scan
+            m_TestingScan++;
+
+            // If scan isn't complete
+            if(m_TestingScan < SimParams::numScanSteps) {
+                // Scan right
+                m_Pose.yaw() += SimParams::scanStep;
+            }
+            else {
+                m_StateMachine.transition(State::FreeMovement);
+            }
+
+
         }
     }
     else if(state == State::RandomWalk) {
@@ -431,6 +473,10 @@ bool StateHandler::handleUI()
         if(ImGui::Button("Test")) {
             std::cout << "Difference: " << m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()) << std::endl;
         }
+        ImGui::SameLine();
+        if(ImGui::Button("RIDF")) {
+            m_StateMachine.transition(State::BuildingRIDF);
+        }
     }
     ImGui::End();
 
@@ -448,6 +494,14 @@ bool StateHandler::handleUI()
     {
         ImGui::Image((void*)m_FinalSnapshotTexture.getTexture(),
                      ImVec2(m_VisualNavigation.getUnwrapResolution().width * 4, m_VisualNavigation.getUnwrapResolution().height * 4));
+    }
+    ImGui::End();
+
+    // Draw processed snapshot view window
+    if(ImGui::Begin("RIDF", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::PlotLines("", m_RIDFNovelty.data(), m_RIDFNovelty.size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(SimParams::numScanSteps * 5, 50));
     }
     ImGui::End();
 

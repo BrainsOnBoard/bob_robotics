@@ -45,6 +45,7 @@ enum class State
     Invalid,
     Training,
     Testing,
+    BuildingRIDF,
     RandomWalk,
     FreeMovement,
     BuildingVectorField,
@@ -185,4 +186,6 @@ private:
 
     unsigned int m_CurrentVectorFieldPoint;
     std::vector<std::pair<units::angle::degree_t, float>> m_VectorFieldNovelty;
+
+    std::vector<float> m_RIDFNovelty;
 };
