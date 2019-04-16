@@ -36,7 +36,7 @@ struct BestMatchingSnapshot
         // Convert to radians
         using namespace units::angle;
         // const radian_t heading = units::make_unit<turn_t>((double) col / (double) unwrapRes.width);
-        const radian_t heading = Internal::normaliseAngle180(rotater.columnToHeading(bestCols[bestSnapshot]));
+        const radian_t heading = normaliseAngle180(rotater.columnToHeading(bestCols[bestSnapshot]));
 
         // Normalise to be between 0 and 1
         const float difference = minDifferences[bestSnapshot] / 255.0f;
