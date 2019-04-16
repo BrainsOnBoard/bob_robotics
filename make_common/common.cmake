@@ -60,9 +60,18 @@ endfunction()
 
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
-        pkg_check_modules(${lib} REQUIRED ${lib})
-        BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
-        BoB_add_link_libraries(${${lib}_LIBRARIES})
+        # Special handling for i2c: no pkg-config + only link against lib for new version
+        if(${lib} STREQUAL i2c)
+            execute_process(COMMAND "${BOB_ROBOTICS_PATH}/make_common/is_i2c_tools_new.sh"
+                            RESULT_VARIABLE rv)
+            if(${rv} STREQUAL 0)
+                BoB_add_link_libraries("i2c")
+            endif()
+        else()
+            pkg_check_modules(${lib} REQUIRED ${lib})
+            BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
+            BoB_add_link_libraries(${${lib}_LIBRARIES})
+        endif()
     endforeach()
 endfunction()
 
@@ -83,6 +92,7 @@ function(BoB_third_party)
             exec_or_fail("python" "${BOB_ROBOTICS_PATH}/make_common/find_numpy.py")
             BoB_add_include_directories(${SHELL_OUTPUT})
         else()
+            find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
                         WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
         endif()
@@ -124,9 +134,6 @@ add_compile_definitions(
     ENABLE_PREDEFINED_VELOCITY_UNITS
     ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
 )
-
-# git needed for submodules
-find_package(Git REQUIRED)
 
 # pkg-config used to get packages on *nix
 find_package(PkgConfig REQUIRED)

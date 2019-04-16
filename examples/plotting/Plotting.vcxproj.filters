@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="plotting_test.cc">
+    <ClCompile Include="plotting.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

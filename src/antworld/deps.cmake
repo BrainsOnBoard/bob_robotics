@@ -1,1 +1,1 @@
-BoB_external_libraries(opencv)
+BoB_external_libraries(opencv glfw3 glew)

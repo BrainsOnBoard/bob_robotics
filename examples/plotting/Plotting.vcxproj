@@ -98,7 +98,7 @@ xcopy /d /y "$(ANACONDA_DIR)\Library\plugins\platforms\*" "$(TargetDir)\platform
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="plotting_test.cc" />
+    <ClCompile Include="plotting.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
