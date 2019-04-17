@@ -41,13 +41,13 @@ std::string
 errorMessage(int err)
 {
     wchar_t *s = nullptr;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                  nullptr,
-                  err,
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPWSTR) &s,
-                  0,
-                  nullptr);
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                   nullptr,
+                   err,
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (LPWSTR) &s,
+                   0,
+                   nullptr);
 
     // Convert wide chars to regular string
     std::string msg(&s[0], &s[wcslen(s)]);

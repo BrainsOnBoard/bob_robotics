@@ -71,7 +71,7 @@ getLogLevel(plog::Severity defaultLogLevel)
 
     // Convert to uppercase
     for (char *c = severityEnvVar; *c != '\0'; c++) {
-        *c = std::toupper(*c);
+        *c = toupper(*c);
     }
 
     // Match to enum member
@@ -98,7 +98,7 @@ Logger::Logger(plog::Severity defaultLogLevel)
     plog::util::nstring filename;
     if (filenameEnvVar) {
         // String conversion is necessary for Windows (which uses wchar_t)
-        filename = filenameEnvVar;
+        filename = plog::util::nstring{ &filenameEnvVar[0], &filenameEnvVar[strlen(filenameEnvVar)] };
     }
 
     // Do initialisation
