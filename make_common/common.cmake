@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.1)
 
-macro(ADD_CXXFLAGS EXTRA_ARGS)
+macro(add_compile_flags EXTRA_ARGS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
-macro(ADD_LDFLAGS EXTRA_ARGS)
+macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
@@ -176,7 +176,7 @@ function(BoB_build)
 
     # Flags for gcc
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        ADD_CXXFLAGS("-Wall -Wpedantic -Wextra")
+        add_compile_flags("-Wall -Wpedantic -Wextra")
     endif()
 
     # BoB robotics libs are output here
@@ -206,9 +206,6 @@ set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
-
-# Assume we always need plog
-BoB_third_party(plog)
 
 # Don't allow in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
