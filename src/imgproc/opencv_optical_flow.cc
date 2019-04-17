@@ -82,8 +82,8 @@ OpenCVOpticalFlow::render(cv::Mat &outputImage, int scale)
         for (int y = 0; y < m_FlowX.rows; y++) {
             // Draw line showing direction of optical flow
             const cv::Point start(x * scale, y * scale);
-            const cv::Point end = start + cv::Point((float) scale * m_FlowX.at<float>(y, x),
-                                                    (float) scale * m_FlowY.at<float>(y, x));
+            const cv::Point end = start + cv::Point((int) roundf((float) scale * m_FlowX.at<float>(y, x)),
+                                                    (int) roundf((float) scale * m_FlowY.at<float>(y, x)));
             cv::line(outputImage, start, end, CV_RGB(0xFF, 0xFF, 0xFF));
         }
     }

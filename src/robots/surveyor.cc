@@ -1,4 +1,4 @@
-#ifndef _WIN32
+#ifdef unix
 // BoB robotics includes
 #include "robots/surveyor.h"
 

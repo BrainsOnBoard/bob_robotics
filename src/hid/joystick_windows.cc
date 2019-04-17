@@ -1,7 +1,8 @@
 #ifdef _WIN32
+#include "joystick_base.inc"
+
 // BoB robotics includes
 #include "hid/joystick_windows.h"
-#include "joystick_base.inc"
 
 // Standard C includes
 #include <cstdint>
@@ -37,7 +38,7 @@ read(XINPUT_STATE &state)
 namespace BoBRobotics {
 namespace HID {
 
-JoystickWindowsJoystickWindows(float deadZone)
+JoystickWindows::JoystickWindows(float deadZone)
   : JoystickBase(deadZone)
   , m_LastPacketNumber(-1)
 {
@@ -63,7 +64,7 @@ JoystickWindows::~JoystickWindows()
 // JoystickBase virtuals
 //------------------------------------------------------------------------
 bool
-updateState()
+JoystickWindows::updateState()
 {
     // Read XInput state
     XINPUT_STATE state;

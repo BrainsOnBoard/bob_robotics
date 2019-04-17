@@ -15,6 +15,7 @@
 
 // Standard C++ includes
 #include <memory>
+#include <mutex>
 
 namespace BoBRobotics {
 namespace AntWorld {

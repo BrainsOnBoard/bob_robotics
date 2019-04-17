@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __linux__
 
 // BoB robotics includes
 #include "common/i2c_interface.h"
@@ -56,3 +57,4 @@ private:
 }; // Norbot
 } // Robots
 } // BoBRobotics
+#endif // __linux__
