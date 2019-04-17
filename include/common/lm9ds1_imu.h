@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __linux__
 
 // BoB robotics includes
 #include "i2c_interface.h"
@@ -354,3 +355,4 @@ private:
     I2CInterface m_MagnetoI2C;
 };
 } // BoBRobotics
+#endif // __linux__

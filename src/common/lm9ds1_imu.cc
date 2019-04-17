@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 // BoB robotics includes
 #include "common/lm9ds1_imu.h"
 #include "common/logging.h"
@@ -6,10 +8,6 @@
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
-
-namespace {
-
-}
 
 namespace BoBRobotics {
 float
@@ -475,3 +473,4 @@ LM9DS1::getNumFIFOSamples()
     return readAccelGyroByte(AccelGyroReg::FIFO_SRC) & 0x3F;
 }
 } // BoBRobotics
+#endif // __linux__

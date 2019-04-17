@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 // BoB robotics includes
 #include "common/logging.h"
 #include "os/video.h"
@@ -57,3 +59,4 @@ std::vector<CameraDevice> getCameras()
 } // Video
 } // OS
 } // BoBRobotics
+#endif // __linux__

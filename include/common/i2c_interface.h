@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __linux__
 
 // POSIX includes
 #include <unistd.h>
@@ -54,3 +55,4 @@ private:
     int m_I2C; // i2c file
 };
 } // BoBRobotics
+#endif // __linux__

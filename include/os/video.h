@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __linux__
 
 // Standard C++ includes
 #include <string>
@@ -19,3 +20,4 @@ getCameras();
 } // Video
 } // OS
 } // BoBRobotics
+#endif // __linux__
