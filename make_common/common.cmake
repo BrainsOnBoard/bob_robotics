@@ -291,15 +291,6 @@ function(BoB_third_party)
 endfunction()
 
 function(BoB_build)
-    # Use C++14
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-    # Flags for gcc
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        add_compile_flags("-Wall -Wpedantic -Wextra")
-    endif()
-
     # BoB robotics libs are output here
     link_directories(${BOB_ROBOTICS_PATH}/lib)
 
@@ -319,6 +310,15 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "In-source builds not allowed.
     Please make a new directory (called a build directory) and run CMake from there.
     You may need to remove CMakeCache.txt." )
+endif()
+
+# Use C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Flags for gcc
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    add_compile_flags("-Wall -Wpedantic -Wextra")
 endif()
 
 # Set output directories for libs and executables
