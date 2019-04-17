@@ -26,6 +26,8 @@ bob_robotics.includes
 **/*.a
 **/*.o
 **/*.obj
+**/*.lib
+**/*.dll
 
 # Ignore dependency files
 **/*.d
@@ -372,5 +374,5 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder
 .mfractor/
 
-# Whitelist bin folder in root
-!/bin/
+# Whitelist bob_make tool
+!/bin/bob_make

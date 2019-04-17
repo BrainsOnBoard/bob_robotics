@@ -4,9 +4,6 @@
  */
 
 #ifdef _WIN32
-// without this, using some functions e.g. getenv causes build failures
-#define _CRT_SECURE_NO_WARNINGS
-
 // the version of the Windows API that we want
 #define _WIN32_WINNT _WIN32_WINNT_WIN7
 

@@ -33,25 +33,40 @@ function(BoB_module NAME)
         "*.cc"
     )
     add_library(${MODULE_NAME} STATIC ${SRC_FILES})
+    set_target_properties(${MODULE_NAME} PROPERTIES PREFIX ./lib)
+
+    # Link threading lib
+    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 endfunction()
 
 macro(BoB_project)
     BoB_parse_arguments(${ARGN})
 
-    file(GLOB SRC_FILES
-        "*.cc"
-    )
-    foreach(file IN LISTS SRC_FILES)
+    file(GLOB CC_FILES "*.cc")
+    file(GLOB H_FILES "*.h")
+    foreach(file IN LISTS CC_FILES)
         get_filename_component(shortname ${file} NAME)
-        string(REGEX REPLACE "\\.[^.]*$" "" file_without_ext ${shortname})
-        add_executable(${file_without_ext} ${file})
-        set(BOB_TARGETS "${BOB_TARGETS};${file_without_ext}")
+        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+        add_executable(${target} "${file}" "${H_FILES}")
+        set(BOB_TARGETS "${BOB_TARGETS};${target}")
     endforeach()
 
     BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
     BoB_build()
+
+    if(WIN32)
+        file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
+        foreach(file IN LISTS dll_files)
+            get_filename_component(filename "${file}" NAME)
+            if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
+                message("Copying ${filename} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}...")
+                file(COPY "${file}"
+                     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+            endif()
+        endforeach()
+    endif()
 endmacro()
 
 macro(BoB_add_link_libraries)
@@ -83,7 +98,7 @@ function(BoB_modules)
             endif()
         endforeach()
 
-        set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module_name}.a")
+        set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module_name}${CMAKE_STATIC_LIBRARY_SUFFIX}")
         if(NOT "$ENV{BOB_LINK_LIBS}" MATCHES ${LIB_PATH})
             add_subdirectory(${module_path} ${module_path}/build)
             BoB_add_link_libraries(${LIB_PATH})
@@ -93,38 +108,70 @@ function(BoB_modules)
     endforeach()
 endfunction()
 
+function(BoB_find_package)
+    find_package(${ARGV})
+    BoB_add_include_directories(${${ARGV0}_INCLUDE_DIRS})
+    BoB_add_link_libraries(${${ARGV0}_LIBS} ${${ARGV0}_LIBRARIES})
+endfunction()
+
+function(BoB_add_pkg_config_libraries)
+    find_package(PkgConfig)
+    foreach(lib IN LISTS ARGV)
+        pkg_check_modules(${lib} REQUIRED ${lib})
+        BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
+        BoB_add_link_libraries(${${lib}_LIBRARIES})
+    endforeach()
+endfunction()
+
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
-        # Special handling for i2c: no pkg-config + only link against lib for new version
         if(${lib} STREQUAL i2c)
+            # Special handling for i2c: only link against lib for new version of i2c-tools
             execute_process(COMMAND "${BOB_ROBOTICS_PATH}/make_common/is_i2c_tools_new.sh"
                             RESULT_VARIABLE rv)
             if(${rv} STREQUAL 0)
                 BoB_add_link_libraries("i2c")
             endif()
-        else()
-            pkg_check_modules(${lib} REQUIRED ${lib})
-            BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
-            BoB_add_link_libraries(${${lib}_LIBRARIES})
+        elseif(${lib} STREQUAL opencv)
+            BoB_find_package(OpenCV REQUIRED)
+        elseif(${lib} STREQUAL eigen3)
+            find_package(Eigen3 REQUIRED)
+            BoB_add_link_libraries(Eigen3::Eigen)
 
-            # For Eigen, enable OpenMP for improved performance
-            if(${lib} STREQUAL eigen3)
-                find_package(OpenMP)
+            # Enable OpenMP for parallelisation support
+            find_package(OpenMP)
 
-                # For CMake < 3.9, we need to make the target ourselves
-                if(NOT OpenMP_CXX_FOUND)
-                    find_package(Threads REQUIRED)
-                    add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
-                    set_property(TARGET OpenMP::OpenMP_CXX
-                    PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+            # For CMake < 3.9, we need to make the target ourselves
+            if(NOT OpenMP_CXX_FOUND)
+                find_package(Threads REQUIRED)
+                add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+                set_property(TARGET OpenMP::OpenMP_CXX
+                PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
 
-                    # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
-                    set_property(TARGET OpenMP::OpenMP_CXX
-                    PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
-                endif()
-
-                BoB_add_link_libraries(OpenMP::OpenMP_CXX)
+                # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+                set_property(TARGET OpenMP::OpenMP_CXX
+                PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
             endif()
+
+            BoB_add_link_libraries(OpenMP::OpenMP_CXX)
+        elseif(${lib} STREQUAL sfml-graphics)
+            if(UNIX)
+                BoB_add_pkg_config_libraries(sfml-graphics)
+            else()
+                find_package(SFML REQUIRED graphics)
+                BoB_add_include_directories(${SFML_INCLUDE_DIR})
+                BoB_add_link_libraries(${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+            endif()
+        elseif(${lib} STREQUAL sdl2)
+            if(UNIX)
+                BoB_add_pkg_config_libraries(sdl2)
+            else()
+                find_package(SDL2 REQUIRED)
+                BoB_add_include_directories(${SDL2_INCLUDE_DIRS})
+                BoB_add_link_libraries(${SDL2_LIBRARIES})
+            endif()
+        else()
+            message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
     endforeach()
 endfunction()
@@ -163,7 +210,7 @@ function(BoB_third_party)
 
             # Extra actions
             if(${module} STREQUAL ev3dev-lang-cpp)
-                BoB_add_link_libraries(${BOB_ROBOTICS_PATH}/lib/libev3dev.a)
+                BoB_add_link_libraries(${BOB_ROBOTICS_PATH}/lib/libev3dev${CMAKE_STATIC_LIBRARY_SUFFIX})
             endif()
         endif()
     endforeach()
@@ -182,30 +229,16 @@ function(BoB_build)
     # BoB robotics libs are output here
     link_directories(${BOB_ROBOTICS_PATH}/lib)
 
-    # Disable some of the units types in units.h for faster compilation
-    add_compile_definitions(
-        DISABLE_PREDEFINED_UNITS
-        ENABLE_PREDEFINED_LENGTH_UNITS
-        ENABLE_PREDEFINED_TIME_UNITS
-        ENABLE_PREDEFINED_ANGLE_UNITS
-        ENABLE_PREDEFINED_VELOCITY_UNITS
-        ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
-    )
-
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
+    # Link libs against all targets
     foreach(target IN LISTS BOB_TARGETS)
         if(NOT "${target}" STREQUAL "")
             target_link_libraries(${target} PUBLIC $ENV{BOB_LINK_LIBS})
         endif()
     endforeach()
 endfunction()
-
-set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/lib)
 
 # Don't allow in-source builds
 if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
@@ -214,12 +247,59 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     You may need to remove CMakeCache.txt." )
 endif()
 
+# Set output directories for libs and executables
+set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
+if(WIN32)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
+else()
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${BOB_ROBOTICS_PATH}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${BOB_ROBOTICS_PATH}/lib")
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BOB_ROBOTICS_PATH}/lib")
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BOB_ROBOTICS_PATH}/lib")
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${BOB_ROBOTICS_PATH}/lib")
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${BOB_ROBOTICS_PATH}/lib")
+
+# Use vcpkg on Windows
+if(WIN32)
+    # Use vcpkg's cmake toolchain
+    if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING "")
+    endif()
+
+    # The vcpkg toolchain in theory should do something like this already, but
+    # if we don't do this, then cmake can't find any of vcpkg's packages
+    file(GLOB children "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows")
+    foreach(child IN LISTS children)
+        if(IS_DIRECTORY "${child}")
+            list(APPEND CMAKE_PREFIX_PATH "${child}")
+        endif()
+    endforeach()
+
+    # Suppress warnings about std::getenv being insecure
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
+
+# Assume we always need plog
+BoB_third_party(plog)
+
+# Assume we always want threading
+find_package(Threads REQUIRED)
+
 # Default include paths
 include_directories(${BOB_ROBOTICS_PATH}
                     ${BOB_ROBOTICS_PATH}/include)
 
-# pkg-config used to get packages on *nix
-find_package(PkgConfig REQUIRED)
-
-# Assume we always want threading
-find_package(Threads REQUIRED)
+# Disable some of the units types in units.h for faster compilation
+add_compile_definitions(
+    DISABLE_PREDEFINED_UNITS
+    ENABLE_PREDEFINED_LENGTH_UNITS
+    ENABLE_PREDEFINED_TIME_UNITS
+    ENABLE_PREDEFINED_ANGLE_UNITS
+    ENABLE_PREDEFINED_VELOCITY_UNITS
+    ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+)

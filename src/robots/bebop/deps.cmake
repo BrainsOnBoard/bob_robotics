@@ -1,7 +1,7 @@
 BoB_modules(robots hid video common)
 
 # Needed for video
-BoB_external_libraries(libavcodec libavformat libavutil libswscale)
+BoB_add_pkg_config_libraries(libavcodec libavformat libavutil libswscale)
 
 set(AR_STAGING_PATH $ENV{ARSDK_ROOT}/out/arsdk-native/staging)
 set(AR_LIB_PATH ${AR_STAGING_PATH}/lib)
