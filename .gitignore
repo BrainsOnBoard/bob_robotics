@@ -376,3 +376,16 @@ ASALocalRun/
 
 # Whitelist bob_make tool
 !/bin/bob_make
+
+# Ignore CMake output files
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
