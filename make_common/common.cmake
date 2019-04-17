@@ -10,7 +10,11 @@ endmacro()
 
 macro(BoB_parse_arguments)
     include(CMakeParseArguments)
-    cmake_parse_arguments(PARSED_ARGS "" "NAME" "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY" "${ARGV}")
+    cmake_parse_arguments(PARSED_ARGS
+                          ""
+                          "NAME"
+                          "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "${ARGV}")
 
     # Need to give a name for the project
     if(NOT PARSED_ARGS_NAME)
@@ -51,6 +55,7 @@ macro(BoB_project)
         set(BOB_TARGETS "${BOB_TARGETS};${target}")
     endforeach()
 
+    BoB_platforms(${PARSED_ARGS_PLATFORMS})
     BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
@@ -68,6 +73,55 @@ macro(BoB_project)
         endforeach()
     endif()
 endmacro()
+
+function(BoB_platforms)
+    # If it's an empty list, return
+    if(${ARGC} EQUAL 0)
+        return()
+    endif()
+
+    # Check the platforms are valid
+    foreach(platform IN LISTS ARGV)
+        if(NOT "${platform}" STREQUAL unix AND NOT "${platform}" STREQUAL linux AND NOT "${platform}" STREQUAL windows AND NOT "${platform}" STREQUAL all)
+            message(FATAL_ERROR "Bad platform: ${platform}. Possible platforms are unix, linux, windows or all.")
+        endif()
+    endforeach()
+
+    # Check for platform all
+    list(FIND ARGV all index)
+    if(${index} GREATER -1)
+        message("all matched")
+        return()
+    endif()
+
+    # Check for platform unix
+    if(UNIX)
+        list(FIND ARGV unix index)
+        if(${index} GREATER -1)
+            message("unix matched")
+            return()
+        endif()
+
+        # Check for platform linux
+        if("${CMAKE_SYSTEM_NAME}" STREQUAL Linux)
+            list(FIND ARGV linux index)
+            if(${index} GREATER -1)
+                return()
+            endif()
+        endif()
+    endif()
+
+    # Check for platform windows
+    if(WIN32)
+        list(FIND ARGV windows index)
+        if(${index} GREATER -1)
+            return()
+        endif()
+    endif()
+
+    # Otherwise we haven't matched any platforms
+    message(FATAL_ERROR "This machine is not one of the supported platforms for this project (${ARGV}).")
+endfunction()
 
 macro(BoB_add_link_libraries)
     set(ENV{BOB_LINK_LIBS} "${ARGV};$ENV{BOB_LINK_LIBS}")
