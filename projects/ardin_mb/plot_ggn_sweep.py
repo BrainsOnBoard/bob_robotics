@@ -21,7 +21,7 @@ for f in glob(argv[1] + "/*.csv"):
 
     titles.append("KC->GGN weight:%f\nGGN->KC weight:%f\nGGN->KC VMid:%f\nGGN->KC VSlope:%f" % tuple(sweep_params))
 
-    mean_num_kc.append(np.average(data["num_kc"]))
+    mean_num_kc.append(np.median(data["num_kc"]))
     var_num_kc.append(np.std(data["num_kc"]) / mean_num_kc[-1])
 
 fig, axis = plt.subplots()
