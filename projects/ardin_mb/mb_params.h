@@ -14,9 +14,11 @@ namespace MBParams
     constexpr int hogNumOrientations = 3;
     constexpr int hogRFSize = 8;
     constexpr int hogRFStride = 6;
+    constexpr int hogNumRFX = 14;
+    constexpr int hogNumRFY = 3;
 
     // Calculate hog feature size
-    constexpr int hogFeatureSize = 126;
+    constexpr int hogFeatureSize = hogNumOrientations * hogNumRFX * hogNumRFY;
 
     // Network dimensions
     constexpr unsigned int numPN = (unsigned int)hogFeatureSize;
