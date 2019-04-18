@@ -5,6 +5,9 @@
 #include <fstream>
 #include <random>
 
+// Standard C includes
+#include <cmath>
+
 // CLI11 includes
 #include "third_party/CLI11.hpp"
 
@@ -15,10 +18,10 @@
 // GeNN generated code includes
 #include "ardin_mb_CODE/definitions.h"
 
-// Antworld includes
-#include "mb_params.h"
-
 using namespace BoBRobotics;
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::math;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -50,19 +53,23 @@ void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemoryHOG
 //----------------------------------------------------------------------------
 MBMemoryHOG::MBMemoryHOG()
     :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)),
-        m_HOGFeatures(MBParams::hogFeatureSize), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
+        m_SnapshotFloat(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1), m_SobelX(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1),
+        m_SobelY(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1), m_PixelOrientations(MBParams::inputHeight, MBParams::inputWidth, CV_MAKETYPE(CV_32F, MBParams::hogNumOrientations)),
+        m_HOGFeatures(3, 14, CV_MAKETYPE(CV_32F, MBParams::hogNumOrientations)), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
         m_NumUsedWeights(MBParams::numKC * MBParams::numEN), m_NumActivePN(0), m_NumActiveKC(0),
         m_PNToKCTauSyn(3.0f), m_PNTauM(10.0), m_PNC(1.0), m_KCToENDopamineStrength(MBParams::dopamineStrength),
         m_RewardTimeMs(MBParams::rewardTimeMs), m_PresentDurationMs(MBParams::presentDurationMs), m_KCToENSynape(893)
 {
     std::cout << "HOG feature vector length:" << MBParams::hogFeatureSize << std::endl;
 
-    // Configure HOG features
-    m_HOG.winSize = cv::Size(MBParams::inputWidth, MBParams::inputHeight);
-    m_HOG.blockSize = m_HOG.winSize;
-    m_HOG.blockStride = m_HOG.winSize;
-    m_HOG.cellSize = cv::Size(MBParams::hogCellSize, MBParams::hogCellSize);
-    m_HOG.nbins = MBParams::hogNumOrientations;
+    // Build orientation vectors
+    radian_t orient = 90_deg;
+    for(auto &d : m_HOGDirections) {
+        d[0] = sin(orient);
+        d[1] = cos(orient);
+        orient += 60_deg;
+    }
+
 
     std::mt19937 gen;
 
@@ -258,9 +265,37 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     BOB_ASSERT(image.rows == MBParams::inputHeight);
     BOB_ASSERT(image.type() == CV_8UC1);
 
-    // Compute HOG features
-    m_HOG.compute(image, m_HOGFeatures);
-    BOB_ASSERT(m_HOGFeatures.size() == MBParams::hogFeatureSize);
+    // Convert image to float
+    image.convertTo(m_SnapshotFloat, CV_32FC1, 1.0 / 255.0);
+
+    // Apply Sobel operator to image
+    cv::Sobel(m_SnapshotFloat, m_SobelX, CV_32F, 1, 0, 1);
+    cv::Sobel(m_SnapshotFloat, m_SobelY, CV_32F, 0, 1, 1);
+
+    // At each pixel, take dot product of vector formed from x and y sobel operator and each direction vector
+    typedef cv::Vec<float, MBParams::hogNumOrientations> PixelFeatures;
+    std::transform(m_SobelX.begin<float>(), m_SobelX.end<float>(), m_SobelY.begin<float>(), m_PixelOrientations.begin<PixelFeatures>(),
+                   [this](float x, float y)
+                   {
+                       PixelFeatures pix;
+                       for(size_t d = 0; d < MBParams::hogNumOrientations; d++) {
+                           pix[d] = std::abs((x * m_HOGDirections[d][0]) + (y * m_HOGDirections[d][1]));
+                       }
+                       return pix;
+                   });
+
+    // Loop through receptive fields
+    auto hogOut = m_HOGFeatures.begin<PixelFeatures>();
+    for(int rfY = 0; rfY <= (MBParams::inputHeight - MBParams::hogRFSize); rfY += MBParams::hogRFStride) {
+        for(int rfX = 0; rfX <= (MBParams::inputWidth - MBParams::hogRFSize); rfX += MBParams::hogRFStride) {
+            // Get ROI into hog directions representing pixels within receptive field
+            const cv::Mat rfInput(m_PixelOrientations, cv::Rect(rfX, rfY, MBParams::hogRFSize, MBParams::hogRFSize));
+
+            // Sum all pixels within receptive field
+            const cv::Scalar sum = cv::sum(rfInput);
+            (*hogOut++) = PixelFeatures(sum[0], sum[1], sum[2]);
+        }
+    }
 
     // Set extra global params
     ExpTCPN = std::exp(-MBParams::timestepMs / m_PNTauM);
@@ -272,7 +307,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
     initialize();
 
     // Copy HOG features into external input current
-    std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), IextPN);
+    //std::copy(m_HOGFeatures.begin(), m_HOGFeatures.end(), IextPN);
     pushIextPNToDevice();
 
     // Reset model time

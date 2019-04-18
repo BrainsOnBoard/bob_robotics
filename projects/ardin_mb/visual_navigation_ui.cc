@@ -74,66 +74,48 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
     return true;
 }
 //----------------------------------------------------------------------------
-bool hogPlot(const std::vector<float> &features, float drawScale)
+bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParams::hogNumOrientations> &directions, float drawScale)
 {
-    using namespace units::literals;
-    using namespace units::angle;
-
-    // Check feature size is correct
-    assert(features.size() == MBParams::hogFeatureSize);
-
-    // Precalculate sin and cos of each bin angle
-    // **THINK** just how unpleasant would a constexpr template metaprogramming solution be here?
-    constexpr degree_t oneBinAngle = 180.0_deg / MBParams::hogNumOrientations;
-    double binCos[MBParams::hogNumOrientations];
-    double binSin[MBParams::hogNumOrientations];
-    for(size_t b = 0; b < MBParams::hogNumOrientations; b++) {
-        const degree_t binAngle = (b * oneBinAngle) + (oneBinAngle * 0.5);
-        binCos[b] = units::math::cos(binAngle);
-        binSin[b] = units::math::sin(binAngle);
-    }
-
     // Calculate number of cells
-    constexpr size_t numCellX = MBParams::inputWidth / MBParams::hogCellSize;
-    constexpr size_t numCellY = MBParams::inputHeight / MBParams::hogCellSize;
+    const size_t numCellX = features.cols;
+    const size_t numCellY = features.rows;
     constexpr float leftBorder = 40.0f;
-    constexpr float topBorder = 10.0f;
+    constexpr float topBorder = 50.0f;
 
     // Calcualate render size of hog cells
-    const float drawCellSize = drawScale * (float)MBParams::hogCellSize;
-    const float halfDrawCellSize = 0.5f * drawCellSize;
+    const float halfDrawScale = 0.5f * drawScale;
 
     // Create dummy widget to correctly layout window
-    const float height = (drawCellSize * numCellY) + topBorder;
-    ImGui::Dummy(ImVec2((drawCellSize * numCellX) + leftBorder, height));
+    const float height = (drawScale * numCellY) + topBorder;
+    ImGui::Dummy(ImVec2((drawScale * numCellX) + leftBorder, height));
 
     const auto windowPos = ImGui::GetWindowPos();
     const float hogLeft = windowPos.x + leftBorder;
-    const float hogBottom = windowPos.y + height;
+    const float hogTop = windowPos.y + topBorder;
 
     // Loop through cells
-    size_t i = 0;
     for(size_t x = 0; x < numCellX; x++) {
         for(size_t y = 0; y < numCellY; y++) {
-            const float drawX = hogLeft + (drawCellSize * (float)x);
-            const float drawY = hogBottom - (drawCellSize * (float)y);
+            const float drawX = hogLeft + (drawScale * (float)x);
+            const float drawY = hogTop + (drawScale * (float)y);
 
             // Draw cell border
-            ImGui::GetWindowDrawList()->AddRect(ImVec2(drawX - halfDrawCellSize, drawY - halfDrawCellSize),
-                                                ImVec2(drawX + halfDrawCellSize, drawY + halfDrawCellSize),
+            ImGui::GetWindowDrawList()->AddRect(ImVec2(drawX - halfDrawScale, drawY - halfDrawScale),
+                                                ImVec2(drawX + halfDrawScale, drawY + halfDrawScale),
                                                 IM_COL32(128, 128, 128, 255));
-            for(size_t b = 0; b < MBParams::hogNumOrientations; b++) {
-                // Get gradient strength
-                const float gradStrength = features[i++];
 
+            // Get magnitude of features in cell
+            const auto cellFeatures = features.at<cv::Vec<float, MBParams::hogNumOrientations>>(y, x);
+
+            for(size_t b = 0; b < MBParams::hogNumOrientations; b++) {
                 // Skip zero-strength gradients
-                if(gradStrength == 0.0f) {
+                if(cellFeatures[b] == 0.0f) {
                     continue;
                 }
 
-                const float lineLength = gradStrength * drawCellSize;
-                ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - (binCos[b] * lineLength), drawY - binSin[b] * lineLength),
-                                                    ImVec2(drawX + (binCos[b] * lineLength), drawY + binSin[b] * lineLength),
+                const float lineLength = cellFeatures[b];
+                ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - (directions[b][0] * lineLength), drawY - directions[b][1] * lineLength),
+                                                    ImVec2(drawX + (directions[b][0] * lineLength), drawY + directions[b][1] * lineLength),
                                                     IM_COL32(255, 255, 255, 255));
             }
         }
@@ -195,7 +177,7 @@ void MBHogUI::handleUI()
     ImGui::End();
 
     if(ImGui::Begin("HOG features", nullptr, ImGuiWindowFlags_NoResize)) {
-        if(hogPlot(m_Memory.getHOGFeatures(), 20.0f)) {
+        if(hogPlot(m_Memory.getHOGFeatures(), m_Memory.getHOGDirections(), 60.0f)) {
         }
     }
     ImGui::End();

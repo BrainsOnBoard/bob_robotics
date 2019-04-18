@@ -7,15 +7,16 @@ namespace MBParams
 {
     constexpr double timestepMs = 1.0;
 
-    constexpr unsigned int inputWidth = 36;
-    constexpr unsigned int inputHeight = 9;
+    constexpr unsigned int inputWidth = 86;
+    constexpr unsigned int inputHeight = 20;
 
     // HOG feature configuration
-    constexpr int hogCellSize = 3;
     constexpr int hogNumOrientations = 3;
+    constexpr int hogRFSize = 8;
+    constexpr int hogRFStride = 6;
 
     // Calculate hog feature size
-    constexpr int hogFeatureSize = hogNumOrientations * (inputWidth / hogCellSize) * (inputHeight / hogCellSize);
+    constexpr int hogFeatureSize = 126;
 
     // Network dimensions
     constexpr unsigned int numPN = (unsigned int)hogFeatureSize;

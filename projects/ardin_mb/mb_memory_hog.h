@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <array>
 #include <bitset>
 #include <list>
 #include <random>
@@ -12,6 +13,9 @@
 
 // BoB robotics includes
 #include "navigation/visual_navigation_base.h"
+
+// Antworld includes
+#include "mb_params.h"
 
 // Forward declarations
 namespace CLI
@@ -68,7 +72,7 @@ public:
 
     float *getPNToKCTauSyn(){ return &m_PNToKCTauSyn; }
 
-    const std::vector<float> &getHOGFeatures() const{ return m_HOGFeatures; }
+    const cv::Mat &getHOGFeatures() const{ return m_HOGFeatures; }
 
     const Spikes &getPNSpikes() const{ return m_PNSpikes; }
     const Spikes &getKCSpikes() const{ return m_KCSpikes; }
@@ -99,6 +103,8 @@ public:
 
     void addCLIArguments(CLI::App &app);
 
+    const std::array<cv::Vec2f, MBParams::hogNumOrientations> &getHOGDirections() const{ return m_HOGDirections; }
+
 private:
     //------------------------------------------------------------------------
     // Private API
@@ -109,8 +115,16 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    cv::HOGDescriptor m_HOG;
-    mutable std::vector<float> m_HOGFeatures;
+    mutable cv::Mat m_SnapshotFloat;
+
+    // Sobel operator output
+    mutable cv::Mat m_SobelX;
+    mutable cv::Mat m_SobelY;
+
+    // Image containing pixel orientations - one channel per orientation
+    mutable cv::Mat m_PixelOrientations;
+
+    mutable cv::Mat m_HOGFeatures;
 
     float m_RateScalePN;
 
@@ -147,4 +161,6 @@ private:
     mutable std::vector<float> m_ENVoltage;
 
     mutable std::mt19937 m_RNG;
+
+    std::array<cv::Vec2f, MBParams::hogNumOrientations> m_HOGDirections;
 };

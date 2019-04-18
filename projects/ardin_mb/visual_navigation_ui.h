@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+// Ardin MB includes
+#include "opencv_texture.h"
+
 // Forward declarations
 class MBMemoryHOG;
 
@@ -45,6 +48,7 @@ private:
     // Members
     //----------------------------------------------------------------------------
     MBMemoryHOG &m_Memory;
+
     // Data for plotting unused weights
     std::vector<float> m_UnusedWeightsData;
     std::vector<float> m_ActivePNData;
