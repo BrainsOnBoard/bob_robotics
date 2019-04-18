@@ -20,7 +20,7 @@
 #include "libantworld/render_target.h"
 #include "libantworld/render_target_input.h"
 #include "libantworld/route_ardin.h"
-#include "libantworld/snapshot_processor_ardin.h"
+#include "libantworld/snapshot_processor_segment_sky.h"
 
 // Ardin MB includes
 #include "opencv_texture.h"
@@ -134,7 +134,7 @@ private:
     BoBRobotics::AntWorld::RouteArdin m_Route;
 
     //! Snapshot processor - implements the strange resizing algorithm from original paper
-    BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
+    BoBRobotics::AntWorld::SnapshotProcessorSegmentSky m_SnapshotProcessor;
 
     //! OpenCV texture wrapper used to render final snapshot
     OpenCVTexture m_FinalSnapshotTexture;
