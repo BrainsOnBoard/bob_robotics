@@ -4,19 +4,19 @@ config:
    rewardTimeMs: 20.
    presentDurationMs: 20.
    pn:
-      inputCurrentScale: 8.3248996734619141e+00
+      inputCurrentScale: 1.4419999718666077e-01
       vThresh: -50.
       cm: 1.
       tauM: 2.0152000427246094e+01
    ggnToKC:
-      weight: -5
-      vMid: -56
-      vSlope: 1
+      weight: -3.5
+      vMid: -54.
+      vSlope: 1.
       vThresh: -60.
    kcToGGC:
-      weight: 0.0038
+      weight: 0.0064
    pnToKC:
-      weight: 2.5000000000000000e-01
+      weight: 1.0700000280141830e-01
       tauSyn: 3.
    kcToEN:
       dopamineStrength: 2.9999999329447746e-02
