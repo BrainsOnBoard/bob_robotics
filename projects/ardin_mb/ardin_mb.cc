@@ -124,6 +124,9 @@ int main(int argc, char *argv[])
     // Enable VSync
     glfwSwapInterval(1);
 
+    // Turn off padding so weird size textures render correctly in OGL
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
     // Setup ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
