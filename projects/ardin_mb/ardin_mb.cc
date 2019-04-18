@@ -175,13 +175,17 @@ int main(int argc, char *argv[])
     //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::HOG<>> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight),
     //                                                                        cv::Size(6, 6), cv::Size(4, 4), 4);
     //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::HOG<>> memory(unwrapRes, cellSize, numOrientation);
-    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
+    //VisualNavigationUI ui;
     //MBMemory memory;
+
+
+    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+    //VisualNavigationUI ui;
+
+    // Mushroom body with orientation features
     MBMemoryHOG memory;
     memory.addCLIArguments(app);
-
-    // Create UI
     MBHogUI ui(memory);
 
     // Parse command line arguments
