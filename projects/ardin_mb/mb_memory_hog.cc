@@ -291,7 +291,20 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemoryHOG::present(const 
 
             // Sum all pixels within receptive field
             const cv::Scalar sum = cv::sum(rfInput);
-            (*hogOut++) = PixelFeatures(sum[0], sum[1], sum[2]);
+
+            // Calculate the exponential of each receptive field response
+            std::array<float, MBParams::hogNumOrientations> exponentials;
+            std::transform(&sum[0], &sum[MBParams::hogNumOrientations], exponentials.begin(),
+                [](float s){ return std::exp(s); });
+
+            // Sum these to get softmax scaling factor
+            const float scale = std::accumulate(exponentials.cbegin(), exponentials.cend(), 0.0f);
+
+            // Fill in features with softmax of orientations at location
+            PixelFeatures features;
+            std::transform(exponentials.cbegin(), exponentials.cend(), &features[0],
+                           [scale](float e){ return e / scale; });
+            (*hogOut++) = features;
         }
     }
 

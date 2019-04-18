@@ -113,7 +113,7 @@ bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParams::hogN
                     continue;
                 }
 
-                const float lineLength = cellFeatures[b];
+                const float lineLength = cellFeatures[b] * 10.0f;
                 ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - (directions[b][0] * lineLength), drawY - directions[b][1] * lineLength),
                                                     ImVec2(drawX + (directions[b][0] * lineLength), drawY + directions[b][1] * lineLength),
                                                     IM_COL32(255, 255, 255, 255));
