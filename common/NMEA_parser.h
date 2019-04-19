@@ -31,13 +31,15 @@ type 1 or 9 update, null field when DGPS is not used
 
 class NMEA_parser {
     
-    using meter_t = units::length::millimeter_t;
+    using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
+    
 
     private:
+  
 
-    std::vector<std::string> parseNMEAstringGGA(const std::string textToParse) {
+    static std::vector<std::string> parseNMEAstringGGA(const std::string textToParse) {
         const std::string delimiter = "$";      // sentences separated by $
         const std::string w_delimiter = ",";    // elements separated by ,
         std::string s = textToParse;
@@ -76,23 +78,41 @@ class NMEA_parser {
     
     public:
 
-    bool parseText(const std::string toParse, degree_t latitude) {
-        using namespace std;
-        vector<string> elements= parseNMEAstringGGA(toParse);
-        string timeUTC = elements[1];
-        
+    static bool parseTextGPS(const std::string &toParse,             // text to parse
+                             degree_t          &latitude,           // latitude
+                             arcminute_t       &latitudeMinutes,    // minute part of latitude
+                             std::string       &latDirection,       // latitude direction North or South (N | S)
+                             degree_t          &longitude,          // longitude
+                             arcminute_t       &longitudeMinutes,   // minute part of longitude
+                             std::string       &longDirection,      // longitude direction East or West (E | W)
+                             meter_t           &altitude            // altitude in meters
+                             ) {
 
+        using namespace std;
+        vector<string> elements= parseNMEAstringGGA(toParse); // parse string 
         latitude = degree_t(std::stod(elements[2].substr(0,2)));
-        arcminute_t m_latMinute = arcminute_t(std::stod(elements[2].substr(2,8)));     
-        string latDirection = elements[3];
-        degree_t longitude = degree_t(std::stod(elements[4].substr(0,3)));
-        arcminute_t longMinute = arcminute_t(std::stod(elements[4].substr(3,9)));
-        string longDirection = elements[5];
-        int gpsQualityIndicator = stoi(elements[6]);
-        int numSats = stoi(elements[7]);
-        double horizontalDilution = stod(elements[8]);
-        meter_t altitude = meter_t(stod(elements[9]));
-        
+        latitudeMinutes = arcminute_t(std::stod(elements[2].substr(2,8)));     
+        latDirection = elements[3];
+        longitude = degree_t(std::stod(elements[4].substr(0,3)));
+        longitudeMinutes = arcminute_t(std::stod(elements[4].substr(3,9)));
+        longDirection = elements[5];
+        altitude = meter_t(stod(elements[9]));
+        return true;
+    }
+
+    static bool parseTextOther(const std::string &toParse,          // text to parse
+                               std::string &timeUTC,                // time UTC
+                               int         &gpsQualityIndicator,    // 0 = Invalid, 1 = Valid SPS, 2 = Valid DGPS, 3 = Valid PPS
+                               int         &numberOfSatelites,      // number of satelites
+                               double      &horizontalDilution      // horizontal dilution, lower is better
+                              ) {
+
+        using namespace std;
+        vector<string> elements= parseNMEAstringGGA(toParse); // parse string 
+        timeUTC = elements[1]; // need to store and return somehow
+        gpsQualityIndicator = stoi(elements[6]);
+        numberOfSatelites = stoi(elements[7]);
+        horizontalDilution = stod(elements[8]);
     }
 
 
