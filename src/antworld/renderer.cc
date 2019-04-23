@@ -344,10 +344,10 @@ void Renderer::generateCubeFaceLookAtMatrices()
 void Renderer::applyFrame(meter_t x, meter_t y, meter_t z,
                           degree_t yaw, degree_t pitch, degree_t roll)
 {
-    glRotatef(roll.value(), 0.0, 1.0f, 0.0);
-    glRotatef(pitch.value(), 1.0f, 0.0, 0.0);
-    glRotatef(yaw.value(), 0.0, 0.0, 1.0f);
-    glTranslatef(-x.value(), -y.value(), -z.value());
+    glRotatef((float) roll.value(), 0.f, 1.f, 0.f);
+    glRotatef((float) pitch.value(), 1.f, 0., 0.f);
+    glRotatef((float) yaw.value(), 0.f, 0.f, 1.f);
+    glTranslatef((float) -x.value(), (float) -y.value(), (float) -z.value());
 }
 
 }   // namespace AntWorld
