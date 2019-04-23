@@ -1,3 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
 BoB_module(antworld)
+BoB_modules(common hid robots video)
+BoB_external_libraries(opencv glfw3 glew)

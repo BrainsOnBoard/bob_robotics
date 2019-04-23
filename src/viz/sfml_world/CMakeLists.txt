@@ -1,3 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../../make_common/common.cmake)
 BoB_module(viz/sfml_world)
+BoB_external_libraries(sfml-graphics)

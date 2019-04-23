@@ -26,23 +26,33 @@ macro(BoB_parse_arguments)
     project(${PARSED_ARGS_NAME})
 endmacro()
 
-function(BoB_module NAME)
-    set(MODULE_NAME bob_${NAME})
-    string(REPLACE / _ MODULE_NAME ${MODULE_NAME})
-    project(${MODULE_NAME})
-    BoB_include_module_deps(${NAME})
+macro(base_packages)
+    if(NOT TARGET Eigen3::Eigen)
+        find_package(Eigen3)
+    endif()
+    if(NOT TARGET OpenMP::OpenMP_CXX)
+        find_package(OpenMP)
+    endif()
+    if(NOT TARGET GLEW::GLEW)
+        find_package(GLEW)
+    endif()
+endmacro()
+
+macro(BoB_module NAME)
+    set(BOB_TARGETS bob_${NAME})
+    string(REPLACE / _ BOB_TARGETS ${BOB_TARGETS})
+    project(${BOB_TARGETS})
 
     file(GLOB SRC_FILES
         "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
         "*.cc"
     )
-    add_library(${MODULE_NAME} STATIC ${SRC_FILES})
-    set_target_properties(${MODULE_NAME} PROPERTIES PREFIX ./lib)
+    add_library(${BOB_TARGETS} STATIC ${SRC_FILES})
+    set_target_properties(${BOB_TARGETS} PROPERTIES PREFIX ./lib)
     add_compile_definitions(NO_HEADER_DEFINITIONS)
 
-    # Link threading lib
-    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
-endfunction()
+    base_packages()
+endmacro()
 
 macro(BoB_project)
     BoB_parse_arguments(${ARGN})
@@ -56,11 +66,18 @@ macro(BoB_project)
         set(BOB_TARGETS "${BOB_TARGETS};${target}")
     endforeach()
 
+    base_packages()
+
     BoB_platforms(${PARSED_ARGS_PLATFORMS})
     BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
-    BoB_build()
+
+    # BoB robotics libs are output here
+    link_directories(${BOB_ROBOTICS_PATH}/lib)
+
+    # Link threading lib
+    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
     if(WIN32)
         file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
@@ -123,7 +140,15 @@ function(BoB_platforms)
 endfunction()
 
 macro(BoB_add_link_libraries)
-    set(ENV{BOB_LINK_LIBS} "${ARGV};$ENV{BOB_LINK_LIBS}")
+    foreach(target IN LISTS BOB_TARGETS)
+        if(NOT "${target}" STREQUAL "")
+            target_link_libraries(${target} ${ARGV})
+        endif()
+    endforeach()
+
+    set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${ARGV}"
+        CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
+    list(REMOVE_DUPLICATES ${PROJECT_NAME}_LIBRARIES)
 endmacro()
 
 function(BoB_add_include_directories)
@@ -131,14 +156,9 @@ function(BoB_add_include_directories)
     include_directories(${ARGV})
 
     # ...and export to parent project
-    set(ENV{BOB_INCLUDE_DIRS} "$ENV{BOB_INCLUDE_DIRS};${ARGV}")
-endfunction()
-
-function(BoB_include_module_deps MODULE)
-    set(DEPS_PATH ${BOB_ROBOTICS_PATH}/src/${MODULE}/deps.cmake)
-    if(EXISTS "${DEPS_PATH}")
-        include("${DEPS_PATH}")
-    endif()
+    set(${PROJECT_NAME}_INCLUDE_DIRS "${${PROJECT_NAME}_INCLUDE_DIRS};${ARGV}"
+        CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
+    list(REMOVE_DUPLICATES ${PROJECT_NAME}_INCLUDE_DIRS)
 endfunction()
 
 function(BoB_modules)
@@ -151,13 +171,13 @@ function(BoB_modules)
             endif()
         endforeach()
 
-        set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module_name}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        if(NOT "$ENV{BOB_LINK_LIBS}" MATCHES ${LIB_PATH})
-            add_subdirectory(${module_path} ${module_path}/build)
-            BoB_add_link_libraries(${LIB_PATH})
+        if(NOT TARGET bob_${module_name})
+        add_subdirectory(${module_path} "${module_path}/build")
         endif()
 
-        BoB_include_module_deps(${module})
+        BoB_add_include_directories(${bob_${module_name}_INCLUDE_DIRS})
+        set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module_name}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        BoB_add_link_libraries(${bob_${module_name}_LIBRARIES} ${LIB_PATH})
     endforeach()
 endfunction()
 
@@ -188,25 +208,24 @@ function(BoB_external_libraries)
         elseif(${lib} STREQUAL opencv)
             BoB_find_package(OpenCV REQUIRED)
         elseif(${lib} STREQUAL eigen3)
-            find_package(Eigen3 REQUIRED)
+            if(NOT TARGET Eigen3::Eigen)
+                message(FATAL_ERROR "Eigen 3 not found")
+            endif()
             BoB_add_link_libraries(Eigen3::Eigen)
-
-            # Enable OpenMP for parallelisation support
-            find_package(OpenMP)
 
             # For CMake < 3.9, we need to make the target ourselves
             if(NOT OpenMP_CXX_FOUND)
                 find_package(Threads REQUIRED)
                 add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
                 set_property(TARGET OpenMP::OpenMP_CXX
-                PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+                             PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
 
                 # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
                 set_property(TARGET OpenMP::OpenMP_CXX
-                PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
-            endif()
+                             PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
 
-            BoB_add_link_libraries(OpenMP::OpenMP_CXX)
+                BoB_add_link_libraries(OpenMP::OpenMP_CXX)
+            endif()
         elseif(${lib} STREQUAL sfml-graphics)
             if(UNIX)
                 BoB_add_pkg_config_libraries(sfml-graphics)
@@ -228,7 +247,10 @@ function(BoB_external_libraries)
             BoB_add_link_libraries(glfw)
             BoB_external_libraries(opengl)
         elseif(${lib} STREQUAL glew)
-            find_package(GLEW REQUIRED)
+            if(NOT TARGET GLEW::GLEW)
+                message(FATAL_ERROR "Could not find glew")
+            endif()
+
             BoB_add_link_libraries(GLEW::GLEW)
             BoB_external_libraries(opengl)
         elseif(${lib} STREQUAL opengl)
@@ -274,7 +296,7 @@ function(BoB_third_party)
             # If this folder is a cmake project, then build it
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
             if(EXISTS ${module_path}/CMakeLists.txt)
-                add_subdirectory(${module_path} ${module_path}/build)
+                add_subdirectory(${module_path}) # ${module_path}/build)
             endif()
 
             # Add to include path
@@ -285,21 +307,6 @@ function(BoB_third_party)
             if(${module} STREQUAL ev3dev-lang-cpp)
                 BoB_add_link_libraries(${BOB_ROBOTICS_PATH}/lib/libev3dev${CMAKE_STATIC_LIBRARY_SUFFIX})
             endif()
-        endif()
-    endforeach()
-endfunction()
-
-function(BoB_build)
-    # BoB robotics libs are output here
-    link_directories(${BOB_ROBOTICS_PATH}/lib)
-
-    # Link threading lib
-    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
-
-    # Link libs against all targets
-    foreach(target IN LISTS BOB_TARGETS)
-        if(NOT "${target}" STREQUAL "")
-            target_link_libraries(${target} PUBLIC $ENV{BOB_LINK_LIBS})
         endif()
     endforeach()
 endfunction()
