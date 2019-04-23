@@ -10,42 +10,30 @@
 #pragma once
 
 // BoB robotics includes
-#include "logging.h"
+#include "common/logging.h"
 
 // Standard C++ includes
 #include <exception>
-#include <iostream>
 
+//! Add a definition for this function to your own main *.cc file
 int
 bob_main(int argc, char **argv);
 
-#ifdef DEBUG
-// Don't catch exceptions if we're debugging - we want the debugger to catch them
-int
-main(int argc, char **argv)
-{
-    return bob_main(argc, argv);
-}
-#else
 int
 main(int argc, char **argv)
 {
     try {
         return bob_main(argc, argv);
-#ifdef _WIN32
     } catch (std::exception &e) {
+#ifdef _WIN32
         // Windows doesn't print exception details by default
         LOG_FATAL << "Uncaught exception: " << e.what();
-#ifdef _DEBUG
+#endif
+
+        // Rethrow exception so it can be handled by OS's default handler
         throw;
-#else
-        // There's no point telling Windows the program has crashed
-        return EXIT_FAILURE;
-#endif // !_DEBUG
-#endif // _WIN32
     } catch (...) {
-        // Rethrow the caught exception
+        // Rethrow exceptions not of type std::exception
         throw;
     }
 }
-#endif // DEBUG
