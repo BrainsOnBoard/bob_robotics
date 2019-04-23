@@ -14,7 +14,7 @@ using namespace units::literals;
 
 template<typename LengthUnit = units::length::millimeter_t,
          typename AngleUnit = units::angle::degree_t>
-class SimulatedAckermanCar
+class SimulatedAckermannCar
 {
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -22,7 +22,7 @@ class SimulatedAckermanCar
     using second_t = units::time::second_t;
 
 public:
-    SimulatedAckermanCar(const meters_per_second_t maximumSpeed, const millimeter_t axis_dist)
+    SimulatedAckermannCar(const meters_per_second_t maximumSpeed, const millimeter_t axis_dist)
       : m_MaximumSpeed(maximumSpeed)
       , m_distanceBetweenAxis(axis_dist)
     {}
