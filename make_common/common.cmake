@@ -38,6 +38,7 @@ function(BoB_module NAME)
     )
     add_library(${MODULE_NAME} STATIC ${SRC_FILES})
     set_target_properties(${MODULE_NAME} PROPERTIES PREFIX ./lib)
+    add_compile_definitions(NO_HEADER_DEFINITIONS)
 
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})

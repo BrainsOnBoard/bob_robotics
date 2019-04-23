@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "common/assert.h"
 #include "common/logging.h"
+#include "common/assert.h"
 
 // Third-party includes
 #include "plog/Appenders/ColorConsoleAppender.h"
@@ -113,12 +113,12 @@ Logger::Logger(plog::Severity defaultLogLevel)
     plog::get()->addAppender(&appender);
 }
 
-/*
- * We use this dummy object with global scope so that logging is initialised
- * before main() is called.
- */
-#ifndef NO_HEADER_DEFINITIONS
-Logger &loggerObject = Logger::getInstance();
-#endif
+Logger &
+Logger::getInstance()
+{
+    static Logger logger(DefaultLogLevel);
+    return logger;
+}
+
 } // Logging
 } // BoBRobotics
