@@ -172,7 +172,7 @@ function(BoB_modules)
         endforeach()
 
         if(NOT TARGET bob_${module_name})
-        add_subdirectory(${module_path} "${module_path}/build")
+            add_subdirectory(${module_path} "${CMAKE_CURRENT_BINARY_DIR}/bob_modules/${module_name}")
         endif()
 
         BoB_add_include_directories(${bob_${module_name}_INCLUDE_DIRS})
@@ -296,7 +296,7 @@ function(BoB_third_party)
             # If this folder is a cmake project, then build it
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
             if(EXISTS ${module_path}/CMakeLists.txt)
-                add_subdirectory(${module_path}) # ${module_path}/build)
+                add_subdirectory(${module_path} "${CMAKE_CURRENT_BINARY_DIR}/bob_third_party/${module}")
             endif()
 
             # Add to include path
