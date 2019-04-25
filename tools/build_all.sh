@@ -1,7 +1,15 @@
 #!/bin/bash
 
-source ../make_common/build_all_function.sh
+builddir=$(dirname "$0")/build
+if [ -d $builddir ]; then
+    echo Removing old build directory...
+    rm -rf $builddir
+fi
+OLDPWD=$PWD
+mkdir $builddir && cd $builddir
 
-basename=$(dirname "$0")
+cmake .. && make -k -j `nproc`
+ret=$?
+cd $OLDPWD
 
-build_all tools "$basename"/*
+exit $ret
