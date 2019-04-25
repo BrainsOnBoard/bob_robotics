@@ -447,6 +447,8 @@ function(BoB_third_party)
             # Extra actions
             if(${module} STREQUAL ev3dev-lang-cpp)
                 BoB_add_link_libraries(ev3dev)
+            elseif(${module} STREQUAL imgui)
+                BoB_add_link_libraries(imgui)
             endif()
         endif()
     endforeach()
