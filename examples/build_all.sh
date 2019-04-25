@@ -1,12 +1,15 @@
 #!/bin/bash
 
-source ../make_common/build_all_function.sh
+builddir=$(dirname "$0")/build
+if [ -d $builddir ]; then
+    echo Removing old build directory...
+    rm -rf $builddir
+fi
+OLDPWD=$PWD
+mkdir $builddir && cd $builddir
 
-basename=$(dirname "$0")
+cmake .. && make -k -j `nproc`
+ret=$?
+cd $OLDPWD
 
-echo Cleaning libs...
-for lib in "$basename"/../lib*; do
-    make -C "$lib" clean
-done
-
-build_all examples "$basename"/*
+exit $ret

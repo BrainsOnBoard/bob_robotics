@@ -1,54 +1,14 @@
 cmake_minimum_required(VERSION 3.1)
 
-macro(add_compile_flags EXTRA_ARGS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
+# Build a module from sources in current folder. All *.cc files are compiled
+# into a static library.
+macro(BoB_module)
+    BoB_module_custom(${ARGN})
+    BoB_build()
 endmacro()
 
-macro(add_linker_flags EXTRA_ARGS)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
-endmacro()
-
-macro(BoB_parse_arguments)
-    include(CMakeParseArguments)
-    cmake_parse_arguments(PARSED_ARGS
-                          ""
-                          ""
-                          "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
-                          "${ARGV}")
-
-    # # Replace slashes with underscores (used in BoB modules, e.g. robots/bebop)
-    # string(REPLACE / _ PARSED_ARGS_NAME ${PARSED_ARGS_NAME})
-    # project(${PARSED_ARGS_NAME})
-endmacro()
-
-macro(base_packages)
-    if(NOT TARGET Eigen3::Eigen)
-        find_package(Eigen3)
-    endif()
-    if(NOT TARGET OpenMP::OpenMP_CXX)
-        find_package(OpenMP)
-    endif()
-    if(NOT TARGET GLEW::GLEW)
-        find_package(GLEW)
-    endif()
-endmacro()
-
-macro(BoB_module NAME)
-    set(BOB_TARGETS bob_${NAME})
-    string(REPLACE / _ BOB_TARGETS ${BOB_TARGETS})
-    project(${BOB_TARGETS})
-
-    file(GLOB SRC_FILES
-        "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
-        "*.cc"
-    )
-    add_library(${BOB_TARGETS} STATIC ${SRC_FILES})
-    set_target_properties(${BOB_TARGETS} PROPERTIES PREFIX ./lib)
-    add_compile_definitions(NO_HEADER_DEFINITIONS)
-
-    base_packages()
-endmacro()
-
+# Build a "project" in the current folder (e.g. example, etc.). Each *.cc file
+# found is compiled into a separate executable.
 macro(BoB_project)
     BoB_parse_arguments(${ARGN})
 
@@ -63,22 +23,14 @@ macro(BoB_project)
         get_filename_component(shortname ${file} NAME)
         string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
         add_executable(${target} "${file}" "${H_FILES}")
-        set(BOB_TARGETS "${BOB_TARGETS};${target}")
+        list(APPEND BOB_TARGETS ${target})
     endforeach()
 
-    base_packages()
-    BoB_platforms(${PARSED_ARGS_PLATFORMS})
-    BoB_modules(${PARSED_ARGS_BOB_MODULES})
-    BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
-    BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+    # Do linking etc.
+    BoB_build()
 
-    # BoB robotics libs are output here
-    link_directories(${BOB_ROBOTICS_PATH}/lib)
-
-    # Link threading lib
-    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
-
-    # Copy all DLLs over from vcpkg dir
+    # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
+    # but it would be a hassle to figure out which ones we need.
     if(WIN32)
         file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
         foreach(file IN LISTS dll_files)
@@ -92,7 +44,90 @@ macro(BoB_project)
     endif()
 endmacro()
 
-function(BoB_platforms)
+# Build a module with extra libraries etc. Currently used by robots/bebop
+# module because the stock BoB_module() isn't flexible enough.
+macro(BoB_module_custom)
+    BoB_parse_arguments(${ARGN})
+
+    # Module name is based on path relative to src/
+    file(RELATIVE_PATH NAME "${BOB_ROBOTICS_PATH}/src" "${CMAKE_CURRENT_SOURCE_DIR}")
+    set(BOB_TARGETS bob_${NAME})
+    string(REPLACE / _ BOB_TARGETS ${BOB_TARGETS})
+    project(${BOB_TARGETS})
+
+    file(GLOB SRC_FILES
+        "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
+        "*.cc"
+    )
+    add_library(${BOB_TARGETS} STATIC ${SRC_FILES})
+    set_target_properties(${BOB_TARGETS} PROPERTIES PREFIX ./lib)
+    add_compile_definitions(NO_HEADER_DEFINITIONS)
+endmacro()
+
+macro(add_compile_flags EXTRA_ARGS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
+endmacro()
+
+macro(add_linker_flags EXTRA_ARGS)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
+endmacro()
+
+# Parse arguments passed to BoB_module() or BoB_project().
+macro(BoB_parse_arguments)
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSED_ARGS
+                          ""
+                          ""
+                          "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "${ARGV}")
+
+    # Check we're on a supported platform
+    check_platform(${PARSED_ARGS_PLATFORMS})
+endmacro()
+
+macro(always_included_packages)
+    # Assume we always want threading
+    find_package(Threads REQUIRED)
+
+    # Annoyingly, these packages export a target rather than simply variables
+    # with the include path and link flags and it seems that this target isn't
+    # "passed up" by add_subdirectory(), so we always include these packages on
+    # the off-chance we need them.
+    if(NOT TARGET Eigen3::Eigen)
+        find_package(Eigen3)
+    endif()
+    if(NOT TARGET OpenMP::OpenMP_CXX)
+        find_package(OpenMP)
+    endif()
+    if(NOT TARGET GLEW::GLEW)
+        find_package(GLEW)
+    endif()
+endmacro()
+
+macro(BoB_build)
+    # Set include dirs and link libraries for this module/project
+    always_included_packages()
+    BoB_modules(${PARSED_ARGS_BOB_MODULES})
+    BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
+    BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+
+    # Link threading lib
+    BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
+
+    # The list of linked libraries can end up very long with lots of duplicate
+    # entries and this can break ld, so remove them. We remove from the start,
+    # so that dependencies will always (I think!) be in the right order.
+    list(REVERSE ${PROJECT_NAME}_LIBRARIES)
+    list(REMOVE_DUPLICATES ${PROJECT_NAME}_LIBRARIES)
+    list(REVERSE ${PROJECT_NAME}_LIBRARIES)
+
+    # Link all targets against the libraries
+    foreach(target IN LISTS BOB_TARGETS)
+        target_link_libraries(${target} ${${PROJECT_NAME}_LIBRARIES})
+    endforeach()
+endmacro()
+
+function(check_platform)
     # If it's an empty list, return
     if(${ARGC} EQUAL 0)
         return()
@@ -100,7 +135,10 @@ function(BoB_platforms)
 
     # Check the platforms are valid
     foreach(platform IN LISTS ARGV)
-        if(NOT "${platform}" STREQUAL unix AND NOT "${platform}" STREQUAL linux AND NOT "${platform}" STREQUAL windows AND NOT "${platform}" STREQUAL all)
+        if(NOT "${platform}" STREQUAL unix
+           AND NOT "${platform}" STREQUAL linux
+           AND NOT "${platform}" STREQUAL windows
+           AND NOT "${platform}" STREQUAL all)
             message(FATAL_ERROR "Bad platform: ${platform}. Possible platforms are unix, linux, windows or all.")
         endif()
     endforeach()
@@ -140,15 +178,8 @@ function(BoB_platforms)
 endfunction()
 
 macro(BoB_add_link_libraries)
-    foreach(target IN LISTS BOB_TARGETS)
-        if(NOT "${target}" STREQUAL "")
-            target_link_libraries(${target} ${ARGV})
-        endif()
-    endforeach()
-
     set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${ARGV}"
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
-    list(REMOVE_DUPLICATES ${PROJECT_NAME}_LIBRARIES)
 endmacro()
 
 function(BoB_add_include_directories)
@@ -164,20 +195,23 @@ endfunction()
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
         set(module_path ${BOB_ROBOTICS_PATH}/src/${module})
+
+        # Some (sub)modules have a slash in the name; replace with underscore
         string(REPLACE / _ module_name ${module})
+
+        # All of our targets depend on this module
         foreach(target IN LISTS BOB_TARGETS)
-            if(NOT "${target}" STREQUAL "")
-                add_dependencies(${target} bob_${module_name})
-            endif()
+            add_dependencies(${target} bob_${module_name})
         endforeach()
 
+        # Build subdirectory
         if(NOT TARGET bob_${module_name})
-            add_subdirectory(${module_path} "${CMAKE_CURRENT_BINARY_DIR}/bob_modules/${module_name}")
+            add_subdirectory(${module_path} "${BOB_DIR}/modules/${module_name}")
         endif()
 
+        # Link against BoB module static lib + its dependencies
+        BoB_add_link_libraries(bob_${module_name} ${bob_${module_name}_LIBRARIES})
         BoB_add_include_directories(${bob_${module_name}_INCLUDE_DIRS})
-        set(LIB_PATH "${BOB_ROBOTICS_PATH}/lib/libbob_${module_name}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        BoB_add_link_libraries(${bob_${module_name}_LIBRARIES} ${LIB_PATH})
     endforeach()
 endfunction()
 
@@ -296,7 +330,7 @@ function(BoB_third_party)
             # If this folder is a cmake project, then build it
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
             if(EXISTS ${module_path}/CMakeLists.txt)
-                add_subdirectory(${module_path} "${CMAKE_CURRENT_BINARY_DIR}/bob_third_party/${module}")
+                add_subdirectory(${module_path} "${BOB_DIR}/third_party/${module}")
             endif()
 
             # Add to include path
@@ -305,7 +339,7 @@ function(BoB_third_party)
 
             # Extra actions
             if(${module} STREQUAL ev3dev-lang-cpp)
-                BoB_add_link_libraries(${BOB_ROBOTICS_PATH}/lib/libev3dev${CMAKE_STATIC_LIBRARY_SUFFIX})
+                BoB_add_link_libraries(ev3dev)
             endif()
         endif()
     endforeach()
@@ -322,33 +356,45 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Flags for gcc
+# Enable extra warnings for gcc and clang
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     add_compile_flags("-Wall -Wpedantic -Wextra")
 endif()
 
 # Set output directories for libs and executables
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
-if(WIN32)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
-else()
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+# If this var is defined then this project is being included in another build
+if(NOT DEFINED BOB_DIR)
+    if(WIN32)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
+    else()
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    endif()
+
+    # Folder to build BoB modules + third-party modules
+    set(BOB_DIR "${CMAKE_CURRENT_BINARY_DIR}/BoB")
 endif()
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${BOB_ROBOTICS_PATH}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${BOB_ROBOTICS_PATH}/lib")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${BOB_ROBOTICS_PATH}/lib")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${BOB_ROBOTICS_PATH}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${BOB_ROBOTICS_PATH}/lib")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${BOB_ROBOTICS_PATH}/lib")
+
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_BINARY_DIR}")
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_BINARY_DIR}")
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_BINARY_DIR}")
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Use vcpkg on Windows
 if(WIN32)
     # Use vcpkg's cmake toolchain
-    if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "")
+    if(DEFINED ENV{VCPKG_ROOT})
+        if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+            set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                CACHE STRING "")
+        endif()
+    else()
+        message(FATAL_ERROR "The environment VCPKG_ROOT must be set on Windows")
     endif()
 
     # The vcpkg toolchain in theory should do something like this already, but
@@ -366,9 +412,6 @@ endif()
 
 # Assume we always need plog
 BoB_third_party(plog)
-
-# Assume we always want threading
-find_package(Threads REQUIRED)
 
 # Default include paths
 include_directories(${BOB_ROBOTICS_PATH}

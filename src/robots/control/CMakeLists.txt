@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../../make_common/common.cmake)
-BoB_module(robots/control)
-BoB_modules(common robots)
-BoB_external_libraries(eigen3 opencv)
+BoB_module(BOB_MODULES common robots
+           EXTERNAL_LIBS eigen3 opencv)

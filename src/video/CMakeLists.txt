@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
-BoB_module(video)
-BoB_modules(common net imgproc)
-BoB_external_libraries(opencv)
+BoB_module(BOB_MODULES common net imgproc
+           EXTERNAL_LIBS opencv)

@@ -1,4 +1,3 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../../make_common/common.cmake)
-BoB_module(viz/car_display)
-BoB_external_libraries(sdl2)
+BoB_module(EXTERNAL_LIBS sdl2)
