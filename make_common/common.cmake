@@ -12,18 +12,13 @@ macro(BoB_parse_arguments)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           ""
-                          "NAME"
+                          ""
                           "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
                           "${ARGV}")
 
-    # Need to give a name for the project
-    if(NOT PARSED_ARGS_NAME)
-        message(FATAL_ERROR "You must provide a name")
-    endif(NOT PARSED_ARGS_NAME)
-
-    # Replace slashes with underscores (used in BoB modules, e.g. robots/bebop)
-    string(REPLACE / _ PARSED_ARGS_NAME ${PARSED_ARGS_NAME})
-    project(${PARSED_ARGS_NAME})
+    # # Replace slashes with underscores (used in BoB modules, e.g. robots/bebop)
+    # string(REPLACE / _ PARSED_ARGS_NAME ${PARSED_ARGS_NAME})
+    # project(${PARSED_ARGS_NAME})
 endmacro()
 
 macro(base_packages)
@@ -57,6 +52,11 @@ endmacro()
 macro(BoB_project)
     BoB_parse_arguments(${ARGN})
 
+    # Use current folder as project name
+    get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+    project(${NAME})
+
+    # Build each *.cc file as a separate executable
     file(GLOB CC_FILES "*.cc")
     file(GLOB H_FILES "*.h")
     foreach(file IN LISTS CC_FILES)
@@ -67,7 +67,6 @@ macro(BoB_project)
     endforeach()
 
     base_packages()
-
     BoB_platforms(${PARSED_ARGS_PLATFORMS})
     BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
@@ -79,6 +78,7 @@ macro(BoB_project)
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
+    # Copy all DLLs over from vcpkg dir
     if(WIN32)
         file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
         foreach(file IN LISTS dll_files)

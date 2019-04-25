@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../make_common/common.cmake)
-BoB_project(NAME see3cam
-            BOB_MODULES common imgproc video
+BoB_project(BOB_MODULES common imgproc video
             PLATFORMS linux)
