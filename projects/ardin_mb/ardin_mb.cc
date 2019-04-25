@@ -1,3 +1,6 @@
+// This is the main file, so we do want header definitions for this object
+#undef NO_HEADER_DEFINITIONS
+
 // Standard C++ includes
 #include <bitset>
 #include <fstream>
@@ -18,6 +21,7 @@
 #include <GLFW/glfw3.h>
 
 // BoB Robotics includes
+#include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
