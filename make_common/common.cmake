@@ -10,21 +10,90 @@ endmacro()
 # Build a "project" in the current folder (e.g. example, etc.). Each *.cc file
 # found is compiled into a separate executable.
 macro(BoB_project)
-    BoB_parse_arguments(${ARGN})
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSED_ARGS
+                          "GENN_CPU_ONLY"
+                          "EXECUTABLE;GENN_MODEL"
+                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "${ARGV}")
 
-    # Use current folder as project name
-    get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+    # Check we're on a supported platform
+    check_platform(${PARSED_ARGS_PLATFORMS})
+
+    if(PARSED_ARGS_EXECUTABLE)
+        set(NAME ${PARSED_ARGS_EXECUTABLE})
+    else()
+        # Use current folder as project name
+        get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+    endif()
     project(${NAME})
 
-    # Build each *.cc file as a separate executable
-    file(GLOB CC_FILES "*.cc")
+    # Include local *.h files in project. We don't strictly need to do this, but
+    # if we don't then they won't be included in generated Visual Studio
+    # projects.
     file(GLOB H_FILES "*.h")
-    foreach(file IN LISTS CC_FILES)
-        get_filename_component(shortname ${file} NAME)
-        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
-        add_executable(${target} "${file}" "${H_FILES}")
-        list(APPEND BOB_TARGETS ${target})
-    endforeach()
+
+    if(PARSED_ARGS_SOURCES)
+        # Build a single executable from these source files
+        add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
+        set(BOB_TARGETS ${NAME})
+    else()
+        # Build each *.cc file as a separate executable
+        file(GLOB CC_FILES "*.cc")
+        foreach(file IN LISTS CC_FILES)
+            get_filename_component(shortname ${file} NAME)
+            string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+            add_executable(${target} "${file}" "${H_FILES}")
+            list(APPEND BOB_TARGETS ${target})
+        endforeach()
+    endif()
+
+    if(PARSED_ARGS_GENN_MODEL)
+        get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+        set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
+        set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
+        set(genn_model_dest "${genn_model_dir}/runner.cc")
+
+        if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
+            set(GENN_CPU_ONLY TRUE)
+        else()
+            set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+        endif()
+        if(GENN_CPU_ONLY)
+            add_library(${PROJECT_NAME}_genn_model STATIC ${genn_model_dest})
+            add_compile_definitions(CPU_ONLY)
+            set(CPU_FLAG -c)
+        else() # Build with CUDA
+            find_package(CUDA REQUIRED)
+
+            # This is required as by default cmake builds files not ending in .cu
+            # with the default compiler
+            set_source_files_properties("${genn_model_dest}" PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
+            cuda_add_library(${PROJECT_NAME}_genn_model STATIC "${genn_model_dest}")
+            set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -x cu -arch sm_30")
+        endif()
+
+        add_custom_command(OUTPUT ${genn_model_dest}
+                           DEPENDS ${genn_model_src}
+                           COMMAND $ENV{GENN_PATH}/lib/bin/genn-buildmodel.sh
+                                   ${genn_model_src}
+                                   ${CPU_FLAG}
+                                   -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
+                           COMMENT "Generating source code with GeNN")
+
+        add_custom_target(${PROJECT_NAME}_genn_model_src ALL DEPENDS ${genn_model_dest})
+        add_dependencies(${PROJECT_NAME}_genn_model ${PROJECT_NAME}_genn_model_src)
+
+        foreach(target IN LISTS BOB_TARGETS)
+            BoB_add_link_libraries(${PROJECT_NAME}_genn_model)
+        endforeach()
+
+        # We need GeNN support
+        BoB_external_libraries(genn)
+
+        # So code can access headers in the *_CODE folder
+        BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    endif()
 
     # Do linking etc.
     BoB_build()
@@ -47,7 +116,15 @@ endmacro()
 # Build a module with extra libraries etc. Currently used by robots/bebop
 # module because the stock BoB_module() isn't flexible enough.
 macro(BoB_module_custom)
-    BoB_parse_arguments(${ARGN})
+    include(CMakeParseArguments)
+    cmake_parse_arguments(PARSED_ARGS
+                          ""
+                          ""
+                          "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "${ARGV}")
+
+    # Check we're on a supported platform
+    check_platform(${PARSED_ARGS_PLATFORMS})
 
     # Module name is based on path relative to src/
     file(RELATIVE_PATH NAME "${BOB_ROBOTICS_PATH}/src" "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -70,19 +147,6 @@ endmacro()
 
 macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
-endmacro()
-
-# Parse arguments passed to BoB_module() or BoB_project().
-macro(BoB_parse_arguments)
-    include(CMakeParseArguments)
-    cmake_parse_arguments(PARSED_ARGS
-                          ""
-                          ""
-                          "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
-                          "${ARGV}")
-
-    # Check we're on a supported platform
-    check_platform(${PARSED_ARGS_PLATFORMS})
 endmacro()
 
 macro(always_included_packages)
@@ -323,6 +387,20 @@ function(BoB_external_libraries)
             find_package(OpenGL REQUIRED)
             BoB_add_include_directories(${OPENGL_INCLUDE_DIR})
             BoB_add_link_libraries(${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
+        elseif(${lib} STREQUAL genn)
+            if(NOT DEFINED ENV{GENN_PATH})
+                message(FATAL_ERROR "GENN_PATH environment variable is not set")
+            endif()
+
+            BoB_add_include_directories("$ENV{GENN_PATH}/lib/include" "$ENV{GENN_PATH}/userproject/include")
+            if(GENN_CPU_ONLY)
+                BoB_add_link_libraries("$ENV{GENN_PATH}/lib/lib/libgenn_CPU_ONLY${CMAKE_STATIC_LIBRARY_SUFFIX}")
+            else()
+                BoB_add_link_libraries("$ENV{GENN_PATH}/lib/lib/libgenn${CMAKE_STATIC_LIBRARY_SUFFIX}")
+                BoB_external_libraries(cuda)
+            endif()
+        elseif(${lib} STREQUAL cuda)
+            BoB_find_package(CUDA REQUIRED)
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
