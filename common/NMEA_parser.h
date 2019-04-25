@@ -24,7 +24,7 @@ type 1 or 9 update, null field when DGPS is not used
 14) Differential reference station ID, 0000-1023
 15) Checksum
 */
-
+#pragma once
 #include<string>
 #include<vector>
 #include "../third_party/units.h"
@@ -37,19 +37,19 @@ class NMEA_parser {
     
 
     private:
-  
 
     static std::vector<std::string> parseNMEAstringGGA(const std::string textToParse) {
-        const std::string delimiter = "$";      // sentences separated by $
-        const std::string w_delimiter = ",";    // elements separated by ,
-        std::string s = textToParse;
+        using namespace std;
+        const string delimiter = "$";      // sentences separated by [$]
+        const string w_delimiter = ",";    // elements separated by  [,]
+        string s = textToParse;
 
         size_t pos = 0;
-        std::string token;
-        std::vector<std::string> tokens,words;
+        string token;
+        vector<string> tokens,words;
 
         // separating the lines 
-        while ((pos = s.find(delimiter)) != std::string::npos) {
+        while ((pos = s.find(delimiter)) != string::npos) {
             token = s.substr(0, pos);
             tokens.push_back(token);
             s.erase(0, pos + delimiter.length());
@@ -57,9 +57,9 @@ class NMEA_parser {
 
         // separating the words
         for (auto &f : tokens) {         
-            std::string word;
+            string word;
             pos = 0;   
-            while ((pos = f.find(w_delimiter)) != std::string::npos) {
+            while ((pos = f.find(w_delimiter)) != string::npos) {
                 word = f.substr(0,pos);
                 words.push_back(word);
                 f.erase(0, pos + w_delimiter.length());         
@@ -78,7 +78,7 @@ class NMEA_parser {
     
     public:
 
-    static bool parseTextGPS(const std::string &toParse,             // text to parse
+    static bool parseTextGPS(const std::string &toParse,            // text to parse
                              degree_t          &latitude,           // latitude
                              arcminute_t       &latitudeMinutes,    // minute part of latitude
                              std::string       &latDirection,       // latitude direction North or South (N | S)
@@ -100,20 +100,30 @@ class NMEA_parser {
         return true;
     }
 
-    static bool parseTextOther(const std::string &toParse,          // text to parse
-                               std::string &timeUTC,                // time UTC
-                               int         &gpsQualityIndicator,    // 0 = Invalid, 1 = Valid SPS, 2 = Valid DGPS, 3 = Valid PPS
-                               int         &numberOfSatelites,      // number of satelites
-                               double      &horizontalDilution      // horizontal dilution, lower is better
+    static bool parseTextForMiscData(const   std::string &toParse,    // text to parse     
+                                     int     &gpsQualityIndicator,    // 0 = Invalid, 1 = Valid SPS, 2 = Valid DGPS, 3 = Valid PPS, 4 = rtk gps
+                                     int     &numberOfSatelites,      // number of satelites
+                                     double  &horizontalDilution      // horizontal dilution, lower is better
                               ) {
 
         using namespace std;
         vector<string> elements= parseNMEAstringGGA(toParse); // parse string 
-        timeUTC = elements[1]; // need to store and return somehow
         gpsQualityIndicator = stoi(elements[6]);
         numberOfSatelites = stoi(elements[7]);
         horizontalDilution = stod(elements[8]);
+
+        // need to implement return logic
+        return true;
+
     }
+
+
+
+    //0: Fix not valid 
+    //1: GPS fix 
+    //2: Differential GPS fix, OmniSTAR VBS 
+    //4: Real-Time Kinematic, fixed integers 
+    //5: Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK
 
 
 };
