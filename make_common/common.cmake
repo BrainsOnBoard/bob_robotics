@@ -105,6 +105,35 @@ macro(always_included_packages)
 endmacro()
 
 macro(BoB_build)
+    # Default to building release type
+    if (NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+    endif()
+
+    # Set DEBUG macro when compiling in debug mode
+    add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+
+    # Use C++14
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # Flags for gcc and clang
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        # Default to building with -march=native
+        if(NOT DEFINED ENV{ARCH})
+            set(ENV{ARCH} native)
+        endif()
+
+        # Enable warnings and set architecture
+        add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
+
+        # Disable optimisation, enable debug symbols
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
+
+        # Enable optimisations at level O2
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+    endif()
+
     # Set include dirs and link libraries for this module/project
     always_included_packages()
     BoB_modules(${PARSED_ARGS_BOB_MODULES})
@@ -352,15 +381,6 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     You may need to remove CMakeCache.txt." )
 endif()
 
-# Use C++14
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Enable extra warnings for gcc and clang
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    add_compile_flags("-Wall -Wpedantic -Wextra")
-endif()
-
 # Set output directories for libs and executables
 set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
 
@@ -377,13 +397,6 @@ if(NOT DEFINED BOB_DIR)
     # Folder to build BoB modules + third-party modules
     set(BOB_DIR "${CMAKE_CURRENT_BINARY_DIR}/BoB")
 endif()
-
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_BINARY_DIR}")
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_BINARY_DIR}")
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_BINARY_DIR}")
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Use vcpkg on Windows
 if(WIN32)
