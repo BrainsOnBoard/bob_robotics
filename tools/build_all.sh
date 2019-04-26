@@ -1,12 +1,11 @@
 #!/bin/bash
 
 builddir=$(dirname "$0")/build
-if [ -d $builddir ]; then
-    echo Removing old build directory...
-    rm -rf $builddir
-fi
 OLDPWD=$PWD
-mkdir $builddir && cd $builddir
+if [ ! -d $builddir ]; then
+    mkdir $builddir
+fi
+cd $builddir
 
 cmake .. && make -k -j `nproc`
 ret=$?

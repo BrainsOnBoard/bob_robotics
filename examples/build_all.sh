@@ -1,1 +1,1 @@
-../make_common/build_all_function.sh
+../cmake/build_all_function.sh
