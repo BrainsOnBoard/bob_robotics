@@ -10,10 +10,7 @@ endmacro()
 # Build a "project" in the current folder (e.g. example, etc.). Each *.cc file
 # found is compiled into a separate executable.
 macro(BoB_project)
-    # CMake defaults to 32-bit builds on Windows
-    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
-        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
-    endif()
+    BoB_init()
 
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
@@ -123,10 +120,7 @@ endmacro()
 # Build a module with extra libraries etc. Currently used by robots/bebop
 # module because the stock BoB_module() isn't flexible enough.
 macro(BoB_module_custom)
-    # CMake defaults to 32-bit builds on Windows
-    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
-        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
-    endif()
+    BoB_init()
 
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
@@ -151,6 +145,21 @@ macro(BoB_module_custom)
     add_library(${BOB_TARGETS} STATIC ${SRC_FILES})
     set_target_properties(${BOB_TARGETS} PROPERTIES PREFIX ./lib)
     add_compile_definitions(NO_HEADER_DEFINITIONS)
+endmacro()
+
+macro(BoB_init)
+    # CMake defaults to 32-bit builds on Windows
+    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
+        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
+    endif()
+
+    # For release builds, CMake disables assertions, but a) this isn't what we
+    # want and b) it will break code.
+    if(MSVC)
+        string(REPLACE "/DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    else()
+        string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    endif()
 endmacro()
 
 macro(add_compile_flags EXTRA_ARGS)
