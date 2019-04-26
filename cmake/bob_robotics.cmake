@@ -10,6 +10,11 @@ endmacro()
 # Build a "project" in the current folder (e.g. example, etc.). Each *.cc file
 # found is compiled into a separate executable.
 macro(BoB_project)
+    # CMake defaults to 32-bit builds on Windows
+    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
+        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
+    endif()
+
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
@@ -116,6 +121,11 @@ endmacro()
 # Build a module with extra libraries etc. Currently used by robots/bebop
 # module because the stock BoB_module() isn't flexible enough.
 macro(BoB_module_custom)
+    # CMake defaults to 32-bit builds on Windows
+    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
+        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
+    endif()
+
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           ""
