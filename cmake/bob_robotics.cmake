@@ -179,6 +179,7 @@ macro(always_included_packages)
 endmacro()
 
 macro(BoB_build)
+    # Don't build i2c code if NO_I2C environment variable is set
     if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (DEFINED ENV{NO_I2C} AND NOT ENV{NO_I2C} EQUAL 0)))
         set(I2C_MESSAGE_DISPLAYED TRUE)
         message("NO_I2C is set: not building i2c code")
@@ -346,7 +347,7 @@ function(BoB_external_libraries)
             # With cmake you don't get errors for linking against a non-existent
             # library, but we might as well not bother if we definitely don't
             # need it.
-            if(NOT NO_I2C)
+            if(NOT WIN32 AND NOT NO_I2C)
                 BoB_add_link_libraries("i2c")
             endif()
         elseif(${lib} STREQUAL opencv)
