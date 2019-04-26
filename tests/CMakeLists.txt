@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-include(../make_common/common.cmake)
+include(../cmake/bob_robotics.cmake)
 BoB_project(BOB_MODULES imgproc
             EXTERNAL_LIBS gtest)
 
