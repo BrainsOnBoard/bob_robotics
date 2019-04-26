@@ -1,4 +1,8 @@
+// BoB robotics includes
 #include "os/video.h"
+
+// Standard C++ includes
+#include <iostream>
 
 int main()
 {
