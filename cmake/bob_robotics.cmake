@@ -115,6 +115,8 @@ macro(BoB_project)
                      DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
             endif()
         endforeach()
+
+        link_directories("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     endif()
 endmacro()
 
