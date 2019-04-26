@@ -1,4 +1,4 @@
-#ifdef __linux__
+#if defined(__linux__) && !defined(NO_I2C)
 
 // BoB robotics includes
 #include "common/i2c_interface.h"
@@ -113,5 +113,4 @@ I2CInterface::writeByte(uint8_t byte)
     }
 }
 } // BoBRobotics
-
-#endif // __linux__
+#endif // __linux__ && !NO_I2C

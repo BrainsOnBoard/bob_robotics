@@ -8,7 +8,7 @@
 #include "viz/plot_agent.h"
 
 // This program can be run locally on the robot or remotely
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
 #include "net/client.h"
 #include "robots/tank_netsink.h"
 #else
@@ -46,7 +46,7 @@ void
 usage(const char *programName)
 {
     std::cout << programName;
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     std::cout << " [robot IP]";
 #endif
     std::cout << " [-p path_file.yaml]" << std::endl;
@@ -73,7 +73,7 @@ bob_main(int argc, char **argv)
 
     bool canPlaySound = false;
 
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     std::string robotIP;
     if (argc > 1 && strcmp(argv[1], "-p") != 0) {
         // Get robot IP from command-line argument
@@ -185,7 +185,7 @@ bob_main(int argc, char **argv)
         BackgroundExceptionCatcher catcher;
         catcher.trapSignals(); // Trap signals e.g. ctrl+c
 
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
         // Read on background thread
         client.runInBackground();
 #endif

@@ -124,8 +124,8 @@ ifdef WITH_MATPLOTLIBCPP
 endif
 
 ifdef WITH_I2C_ROBOT
-ifdef NO_I2C_ROBOT
-	CXXFLAGS += -DNO_I2C_ROBOT
+ifdef NO_I2C
+	CXXFLAGS += -DNO_I2C
 else
 	WITH_I2C := 1
 endif

@@ -1,4 +1,4 @@
-#ifdef __linux__
+#if defined(__linux__) && !defined(NO_I2C)
 
 // BoB robotics includes
 #include "common/lm9ds1_imu.h"
@@ -473,4 +473,4 @@ LM9DS1::getNumFIFOSamples()
     return readAccelGyroByte(AccelGyroReg::FIFO_SRC) & 0x3F;
 }
 } // BoBRobotics
-#endif // __linux__
+#endif // __linux__ && !NO_I2C

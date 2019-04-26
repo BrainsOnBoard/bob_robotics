@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "net/server.h"
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
 #include "robots/tank.h"
 #else
 #include "robots/norbot.h"
@@ -25,7 +25,7 @@ bob_main(int, char **)
     Net::Server server;
     auto connection = server.waitForConnection();
 
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     // Print motor commands
     Robots::Tank robot;
 #else

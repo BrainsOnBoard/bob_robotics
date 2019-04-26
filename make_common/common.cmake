@@ -169,6 +169,13 @@ macro(always_included_packages)
 endmacro()
 
 macro(BoB_build)
+    if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (DEFINED ENV{NO_I2C} AND NOT ENV{NO_I2C} EQUAL 0)))
+        set(I2C_MESSAGE_DISPLAYED TRUE)
+        message("NO_I2C is set: not building i2c code")
+        set(NO_I2C TRUE)
+        add_compile_definitions(NO_I2C)
+    endif()
+
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
@@ -326,10 +333,10 @@ endfunction()
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
         if(${lib} STREQUAL i2c)
-            # Special handling for i2c: only link against lib for new version of i2c-tools
-            execute_process(COMMAND "${BOB_ROBOTICS_PATH}/make_common/is_i2c_tools_new.sh"
-                            RESULT_VARIABLE rv)
-            if(${rv} STREQUAL 0)
+            # With cmake you don't get errors for linking against a non-existent
+            # library, but we might as well not bother if we definitely don't
+            # need it.
+            if(NOT NO_I2C)
                 BoB_add_link_libraries("i2c")
             endif()
         elseif(${lib} STREQUAL opencv)
