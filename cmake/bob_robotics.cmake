@@ -211,7 +211,7 @@ macro(BoB_build)
         set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     else()
         message(WARNING "ccache not found. Install for faster repeat builds.")
-    else()
+    endif()
 
     endif(CCACHE_FOUND)
 
