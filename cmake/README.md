@@ -20,7 +20,8 @@ Next, we call the ``BoB_project()`` function to specify which modules,
 third-party libraries and external libraries we are using. All of these
 parameters are optional.
 ```cmake
-BoB_project(BOB_MODULES common hid antworld video
+BoB_project(SOURCES my_program.cc
+            BOB_MODULES common hid antworld video
             THIRD_PARTY third_party_modules
             EXTERNAL_LIBS sdl2)
 ```
@@ -42,9 +43,9 @@ If a project will only work on a particular platform, then you should specify
 possible platforms in the ``PLATFORMS`` array. Possible options are ``unix``,
 ``linux``, ``windows`` and ``all``. The default is ``all``.
 
-Note that by default, ``BoB_project()`` builds every ``*.cc`` file in the
-current directory as a separate executable. If you want to make a single
-executable from multiple ``*.cc`` files instead, do the following:
+Note that by default, ``BoB_project()`` builds every file in ``SOURCES`` array
+as a separate executable. If you want to make a single executable from multiple
+``*.cc`` files instead, specify a name for the executable, like so:
 ```cmake
 BoB_project(EXECUTABLE my_program
             SOURCES my_program.cc common.cc

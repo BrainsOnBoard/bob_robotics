@@ -1,10 +1,10 @@
 # This file is a simple template for your CMakeLists.txt file. For documentation
 # on how to use CMake with BoB robotics, please see the readme file in This
 # folder.
-
 cmake_minimum_required(VERSION 3.1)
 include([path to BoB robotics]/cmake/bob_robotics.cmake)
-BoB_project(BOB_MODULES common hid antworld video
+BoB_project(SOURCES my_program.cc
+            BOB_MODULES common hid antworld video
             THIRD_PARTY third_party_modules
             EXTERNAL_LIBS sdl2
             PLATFORMS unix)

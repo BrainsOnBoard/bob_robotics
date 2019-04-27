@@ -1,3 +1,4 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../cmake/bob_robotics.cmake)
-BoB_project(THIRD_PARTY matplotlibcpp)
+BoB_project(SOURCES plotting.cc
+            THIRD_PARTY matplotlibcpp)

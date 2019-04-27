@@ -18,6 +18,9 @@ macro(BoB_project)
                           "EXECUTABLE;GENN_MODEL"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
                           "${ARGV}")
+    if(NOT PARSED_ARGS_SOURCES)
+        message(FATAL_ERROR "SOURCES not defined for BoB project")
+    endif()
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
@@ -35,14 +38,13 @@ macro(BoB_project)
     # projects.
     file(GLOB H_FILES "*.h")
 
-    if(PARSED_ARGS_SOURCES)
+    if(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set(BOB_TARGETS ${NAME})
     else()
         # Build each *.cc file as a separate executable
-        file(GLOB CC_FILES "*.cc")
-        foreach(file IN LISTS CC_FILES)
+        foreach(file IN LISTS PARSED_ARGS_SOURCES)
             get_filename_component(shortname ${file} NAME)
             string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
             add_executable(${target} "${file}" "${H_FILES}")
@@ -126,8 +128,11 @@ macro(BoB_module_custom)
     cmake_parse_arguments(PARSED_ARGS
                           ""
                           ""
-                          "BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
                           "${ARGV}")
+    if(NOT PARSED_ARGS_SOURCES)
+        message(FATAL_ERROR "SOURCES not defined for BoB module")
+    endif()
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
@@ -138,11 +143,8 @@ macro(BoB_module_custom)
     string(REPLACE / _ BOB_TARGETS ${BOB_TARGETS})
     project(${BOB_TARGETS})
 
-    file(GLOB SRC_FILES
-        "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h"
-        "*.cc"
-    )
-    add_library(${BOB_TARGETS} STATIC ${SRC_FILES})
+    file(GLOB H_FILES "${BOB_ROBOTICS_PATH}/include/${NAME}/*.h")
+    add_library(${BOB_TARGETS} STATIC ${PARSED_ARGS_SOURCES} ${H_FILES})
     set_target_properties(${BOB_TARGETS} PROPERTIES PREFIX ./lib)
     add_definitions(-DNO_HEADER_DEFINITIONS)
 endmacro()
@@ -206,7 +208,6 @@ macro(BoB_build)
     # Use ccache if present to speed up repeat builds
     find_program(CCACHE_FOUND ccache)
     if(CCACHE_FOUND)
-        message("ccache found")
         set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
         set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     else()
