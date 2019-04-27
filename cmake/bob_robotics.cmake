@@ -213,8 +213,6 @@ macro(BoB_build)
         message(WARNING "ccache not found. Install for faster repeat builds.")
     endif()
 
-    endif(CCACHE_FOUND)
-
     # Set DEBUG macro when compiling in debug mode
     add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
 
