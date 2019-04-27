@@ -1,7 +1,5 @@
 #!/bin/bash
 
-git submodule deinit ../third_party -f
-
 builddir=$(dirname "$0")/build
 OLDPWD=$PWD
 if [ ! -d $builddir ]; then
