@@ -162,9 +162,6 @@ macro(BoB_init)
     else()
         string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
     endif()
-
-    # Tell CMake to search in this folder for packages
-    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}")
 endmacro()
 
 macro(add_compile_flags EXTRA_ARGS)
@@ -192,7 +189,10 @@ macro(always_included_packages)
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW)
     endif()
-    if(NOT TARGET SDL2::SDL2)
+
+    # On Unix we use pkg-config to find SDL2, because the CMake package may not
+    # be present
+    if(NOT UNIX AND NOT TARGET SDL2::SDL2)
         find_package(SDL2)
     endif()
 endmacro()
@@ -415,11 +415,14 @@ function(BoB_external_libraries)
                 BoB_add_link_libraries(sfml-graphics)
             endif()
         elseif(${lib} STREQUAL sdl2)
-            if(NOT SDL2_FOUND)
+            # On Unix we use pkg-config to find SDL2, because the CMake package may not
+            # be present
+            if(UNIX)
+                BoB_add_pkg_config_libraries(sdl2)
+            elseif(NOT SDL2_FOUND)
                 message(FATAL_ERROR "Could not find SDL2")
+                BoB_add_link_libraries(SDL2::SDL2)
             endif()
-
-            BoB_add_link_libraries(SDL2::SDL2)
         elseif(${lib} STREQUAL glfw3)
             find_package(glfw3 REQUIRED)
             BoB_add_link_libraries(glfw)
