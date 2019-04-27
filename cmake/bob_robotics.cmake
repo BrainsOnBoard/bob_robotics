@@ -305,6 +305,10 @@ macro(BoB_add_link_libraries)
 endmacro()
 
 function(BoB_add_include_directories)
+    # Sometimes we get newline characters in an *_INCLUDE_DIRS variable (e.g.
+    # with the OpenCV package) and this breaks CMake
+    string(REPLACE "\n" " " ARGV "${ARGV}")
+
     # Include directory locally...
     include_directories(${ARGV})
 
