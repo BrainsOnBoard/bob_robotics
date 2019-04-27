@@ -203,6 +203,18 @@ macro(BoB_build)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
     endif()
 
+    # Use ccache if present to speed up repeat builds
+    find_program(CCACHE_FOUND ccache)
+    if(CCACHE_FOUND)
+        message("ccache found")
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    else()
+        message(WARNING "ccache not found. Install for faster repeat builds.")
+    else()
+
+    endif(CCACHE_FOUND)
+
     # Set DEBUG macro when compiling in debug mode
     add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
 
