@@ -6,4 +6,4 @@ BoB_project(EXECUTABLE ardin_mb
             BOB_MODULES antworld common navigation)
 
 # Kludge to stop Logger::logger being defined multiple times
-add_compile_definitions(NO_HEADER_DEFINITIONS)
+add_definitions(-DNO_HEADER_DEFINITIONS)

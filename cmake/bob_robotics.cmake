@@ -63,7 +63,7 @@ macro(BoB_project)
         endif()
         if(GENN_CPU_ONLY)
             add_library(${PROJECT_NAME}_genn_model STATIC ${genn_model_dest})
-            add_compile_definitions(CPU_ONLY)
+            add_definitions(-DCPU_ONLY)
             set(CPU_FLAG -c)
         else() # Build with CUDA
             find_package(CUDA REQUIRED)
@@ -144,7 +144,7 @@ macro(BoB_module_custom)
     )
     add_library(${BOB_TARGETS} STATIC ${SRC_FILES})
     set_target_properties(${BOB_TARGETS} PROPERTIES PREFIX ./lib)
-    add_compile_definitions(NO_HEADER_DEFINITIONS)
+    add_definitions(-DNO_HEADER_DEFINITIONS)
 endmacro()
 
 macro(BoB_init)
@@ -195,7 +195,7 @@ macro(BoB_build)
         set(I2C_MESSAGE_DISPLAYED TRUE)
         message("NO_I2C is set: not building i2c code")
         set(NO_I2C TRUE)
-        add_compile_definitions(NO_I2C)
+        add_definitions(-DNO_I2C)
     endif()
 
     # Default to building release type
@@ -456,7 +456,7 @@ function(BoB_third_party)
 
             # Also include numpy headers on *nix (gives better performance)
             if(WIN32)
-                add_compile_definitions(WITHOUT_NUMPY)
+                add_definitions(-DWITHOUT_NUMPY)
             else()
                 exec_or_fail("python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py")
                 BoB_add_include_directories(${SHELL_OUTPUT})
@@ -533,7 +533,7 @@ if(WIN32)
     endforeach()
 
     # Suppress warnings about std::getenv being insecure
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 # Assume we always need plog
@@ -544,11 +544,11 @@ include_directories(${BOB_ROBOTICS_PATH}
                     ${BOB_ROBOTICS_PATH}/include)
 
 # Disable some of the units types in units.h for faster compilation
-add_compile_definitions(
-    DISABLE_PREDEFINED_UNITS
-    ENABLE_PREDEFINED_LENGTH_UNITS
-    ENABLE_PREDEFINED_TIME_UNITS
-    ENABLE_PREDEFINED_ANGLE_UNITS
-    ENABLE_PREDEFINED_VELOCITY_UNITS
-    ENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+add_definitions(
+    -DDISABLE_PREDEFINED_UNITS
+    -DENABLE_PREDEFINED_LENGTH_UNITS
+    -DENABLE_PREDEFINED_TIME_UNITS
+    -DENABLE_PREDEFINED_ANGLE_UNITS
+    -DENABLE_PREDEFINED_VELOCITY_UNITS
+    -DENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
 )
