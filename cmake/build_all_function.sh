@@ -7,7 +7,7 @@ if [ ! -d $builddir ]; then
 fi
 cd $builddir
 
-cmake .. && make -k -j `nproc`
+time sh -c "cmake .. && make -k -j `nproc`"
 ret=$?
 cd $OLDPWD
 
