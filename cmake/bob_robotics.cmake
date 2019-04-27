@@ -212,6 +212,8 @@ macro(BoB_build)
 
     # Flags for gcc and clang
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        set(GNU_TYPE_COMPILER TRUE)
+
         # Default to building with -march=native
         if(NOT DEFINED ENV{ARCH})
             set(ENV{ARCH} native)
