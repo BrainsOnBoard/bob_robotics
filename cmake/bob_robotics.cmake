@@ -162,6 +162,9 @@ macro(BoB_init)
     else()
         string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
     endif()
+
+    # Tell CMake to search in this folder for packages
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}")
 endmacro()
 
 macro(add_compile_flags EXTRA_ARGS)
