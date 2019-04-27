@@ -492,7 +492,10 @@ function(BoB_third_party)
 
             # Add to include path
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
-            include_directories(${module_path} ${module_path}/include)
+            include_directories(${module_path} ${module_path}/include ${${module}_INCLUDE_DIRS})
+
+            # Link against extra libs, if needed
+            BoB_add_link_libraries(${${module}_LIBRARIES})
 
             # Extra actions
             if(${module} STREQUAL ev3dev-lang-cpp)
