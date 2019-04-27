@@ -22,12 +22,11 @@ macro(BoB_project)
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
 
-    get_filename_component(folder_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     if(PARSED_ARGS_EXECUTABLE)
-        set(NAME ${folder_name}_${PARSED_ARGS_EXECUTABLE})
+        set(NAME ${PARSED_ARGS_EXECUTABLE})
     else()
         # Use current folder as project name
-        set(NAME ${folder_name})
+        get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     endif()
     project(${NAME})
 
@@ -46,8 +45,8 @@ macro(BoB_project)
         foreach(file IN LISTS CC_FILES)
             get_filename_component(shortname ${file} NAME)
             string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
-            add_executable(${folder_name}_${target} "${file}" "${H_FILES}")
-            list(APPEND BOB_TARGETS ${folder_name}_${target})
+            add_executable(${target} "${file}" "${H_FILES}")
+            list(APPEND BOB_TARGETS ${target})
         endforeach()
     endif()
 
