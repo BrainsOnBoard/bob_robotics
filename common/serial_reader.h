@@ -94,8 +94,8 @@ class Serial_reader {
 
 
     public:
-    static std::string readSerialUSB() {
-        return getSerialData("/dev/cu.usbmodem1D11401");
+    static std::string readSerialUSB(char *device_path) {
+        return getSerialData(device_path);
     }
 
 };
