@@ -1,38 +1,101 @@
 // USB-reader
 #include <string>
+#include "termios.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <fstream>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <chrono>
+#include <thread>
+
+/* baudrate settings are defined in <asm/termbits.h>, which is
+   included by <termios.h> */
+#define BAUDRATE B9600  // Change as needed, keep B
+
+/* change this definition for the correct port */
+#define MODEMDEVICE "/dev/ttyO1" //Beaglebone Black serial port
+
+#define _POSIX_SOURCE 1 /* POSIX compliant source */
+
+#define FALSE 0
+#define TRUE 1
 
 class Serial_reader {
     private:
+    
+
+
+
+    
+    static std::string getSerialData(char* serial_device_path) {
+        //  /dev/cu.usbserial
+        // http://bradsmc.blogspot.com/2013/11/c-code-to-read-gps-data-via-serial-on.html
+
+        struct termios oldtio, newtio;
+        int fd, c, res;
+        char buf[255];
+        // Load the pin configuration
+        
+        /* Open modem device for reading and writing and not as controlling tty
+        because we don't want to get killed if linenoise sends CTRL-C. */
+        fd = open(serial_device_path, O_RDWR | O_NOCTTY );
+        if (fd < 0) { perror(serial_device_path); exit(-1); }
+
+        bzero(&newtio, sizeof(newtio)); /* clear struct for new port settings */
+
+        /* BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
+        CRTSCTS : output hardware flow control (only used if the cable has
+                    all necessary lines. See sect. 7 of Serial-HOWTO)
+        CS8     : 8n1 (8bit,no parity,1 stopbit)
+        CLOCAL  : local connection, no modem contol
+        CREAD   : enable receiving characters */
+        newtio.c_cflag = BAUDRATE | CRTSCTS | CS8 | CLOCAL | CREAD;
+
+        /* IGNPAR  : ignore bytes with parity errors
+        otherwise make device raw (no other input processing) */
+        newtio.c_iflag = IGNPAR;
+
+        /*  Raw output  */
+        newtio.c_oflag = 0;
+
+        /* ICANON  : enable canonical input
+        disable all echo functionality, and don't send signals to calling program */
+        newtio.c_lflag = ICANON;
+        /* now clean the modem line and activate the settings for the port */
+        tcflush(fd, TCIFLUSH);
+        tcsetattr(fd,TCSANOW,&newtio);
+        // NMEA command to ouput all sentences
+        // Note that this code & format values in manual are hexadecimal
+        //write(fd, "$PTNLSNM,273F,01*27\r\n", 21);
+        /* terminal settings done, now handle input*/
+        int ii = 0;
+        std::string serialString;
+        while (ii <22) {    
+            /*  read blocks program execution until a line terminating character is
+                input, even if more than 255 chars are input. If the number
+                of characters read is smaller than the number of chars available,
+                subsequent reads will return the remaining chars. res will be set
+                to the actual number of characters actually read */
+            res = read(fd, buf, 255);
+            buf[res] = 0;             /* set end of string, so we can printf */
+            //printf("%s", buf, res);
+            ii++;
+            serialString += buf;
+        }
+        std::cout << serialString << std::endl;
+        tcsetattr(fd, TCSANOW, &oldtio);
+        close(fd);
+        return serialString;
+                
+    }
 
 
     public:
     static std::string readSerialUSB() {
-        // example
-        const std::string s =
-        "$GNRMC,165248.00,A,5048.14814,N,00000.00158,E,0.078,,170419,,,A,V*10" 
-        "$GNVTG,,T,,M,0.078,N,0.144,K,A*33" 
-        "$GNGGA,165248.00,5048.14814,N,00000.00158,E,1,12,0.85,57.0,M,45.2,M,,*7C"
-        "$GNGSA,A,3,27,16,21,20,26,29,,,,,,,1.49,0.85,1.22,1*0D" 
-        "$GNGSA,A,3,76,77,78,87,86,70,71,,,,,,1.49,0.85,1.22,2*0C" 
-        "$GNGSA,A,3,,,,,,,,,,,,,1.49,0.85,1.22,3*03" 
-        "$GNGSA,A,3,,,,,,,,,,,,,1.49,0.85,1.22,4*04" 
-        "$GPGSV,3,1,11,05,03,021,,07,06,334,20,08,04,268,,10,06,157,17,1*66" 
-        "$GPGSV,3,2,11,16,65,295,28,20,24,139,32,21,68,087,34,26,75,187,14,1*63" 
-        "$GPGSV,3,3,11,27,36,271,11,29,13,080,21,31,11,195,,1*5D" 
-        "$GPGSV,3,1,11,05,03,021,,07,06,334,,08,04,268,,10,06,157,,6*65" 
-        "$GPGSV,3,2,11,16,65,295,,20,24,139,,21,68,087,,26,75,187,20,6*6F" 
-        "$GPGSV,3,3,11,27,36,271,23,29,13,080,24,31,11,195,,6*5E" 
-        "$GLGSV,3,1,10,69,04,350,,70,19,042,26,71,11,091,33,76,28,178,31,1*72" 
-        "$GLGSV,3,2,10,77,66,269,11,78,25,326,08,85,01,057,,86,54,041,31,1*74" 
-        "$GLGSV,3,3,10,87,57,260,25,88,12,244,,1*76" 
-        "$GLGSV,3,1,10,69,04,350,,70,19,042,,71,11,091,29,76,28,178,,3*7D" 
-        "$GLGSV,3,2,10,77,66,269,,78,25,326,23,85,01,057,,86,54,041,13,3*7F" 
-        "$GLGSV,3,3,10,87,57,260,19,88,12,244,,3*7B" 
-        "$GAGSV,1,1,00,*44" 
-        "$GAGSV,1,1,00,*44" 
-        "$GBGSV,1,1,00,*47" 
-        "$GNGLL,5048.14814,N,00000.00158,E,165248.00,A,A*76";
-        return s;
+        return getSerialData("/dev/cu.usbmodem1D11401");
     }
 
 };

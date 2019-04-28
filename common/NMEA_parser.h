@@ -34,11 +34,13 @@ class NMEA_parser {
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
+    using meters_per_second_t = units::velocity::meters_per_second_t;
+    using knot_t = units::velocity::knot_t;
     
 
     private:
 
-    static std::vector<std::string> parseNMEAstringGGA(const std::string textToParse) {
+    static std::vector<std::string> parseNMEAstring(const std::string textToParse, const std::string NMEA_sentence_id) {
         using namespace std;
         const string delimiter = "$";      // sentences separated by [$]
         const string w_delimiter = ",";    // elements separated by  [,]
@@ -65,8 +67,8 @@ class NMEA_parser {
                 f.erase(0, pos + w_delimiter.length());         
             }
 
-            // if we find gngga, we stop 
-            if (!words.empty() && words.at(0) == "GNGGA") {          
+            // if we find the one, we stop 
+            if (!words.empty() && words.at(0) == NMEA_sentence_id) {          
                 break;
             } else {
                 words.clear();
@@ -78,25 +80,34 @@ class NMEA_parser {
     
     public:
 
-    static bool parseTextGPS(const std::string &toParse,            // text to parse
-                             degree_t          &latitude,           // latitude
-                             arcminute_t       &latitudeMinutes,    // minute part of latitude
-                             std::string       &latDirection,       // latitude direction North or South (N | S)
-                             degree_t          &longitude,          // longitude
-                             arcminute_t       &longitudeMinutes,   // minute part of longitude
-                             std::string       &longDirection,      // longitude direction East or West (E | W)
-                             meter_t           &altitude            // altitude in meters
+    static bool parseTextGPS(const std::string   &toParse,            // text to parse
+                             degree_t            &latitude,           // latitude
+                             arcminute_t         &latitudeMinutes,    // minute part of latitude
+                             std::string         &latDirection,       // latitude direction North or South (N | S)
+                             degree_t            &longitude,          // longitude
+                             arcminute_t         &longitudeMinutes,   // minute part of longitude
+                             std::string         &longDirection,      // longitude direction East or West (E | W)
+                             meter_t             &altitude,           // altitude in meters
+                             meters_per_second_t &velocity
                              ) {
 
         using namespace std;
-        vector<string> elements= parseNMEAstringGGA(toParse); // parse string 
-        latitude = degree_t(std::stod(elements[2].substr(0,2)));
-        latitudeMinutes = arcminute_t(std::stod(elements[2].substr(2,8)));     
-        latDirection = elements[3];
-        longitude = degree_t(std::stod(elements[4].substr(0,3)));
-        longitudeMinutes = arcminute_t(std::stod(elements[4].substr(3,9)));
-        longDirection = elements[5];
-        altitude = meter_t(stod(elements[9]));
+        try {
+            vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
+            latitude = degree_t(std::stod(elements[2].substr(0,2)));
+            latitudeMinutes = arcminute_t(std::stod(elements[2].substr(2,8)));     
+            latDirection = elements[3];
+            longitude = degree_t(std::stod(elements[4].substr(0,3)));
+            longitudeMinutes = arcminute_t(std::stod(elements[4].substr(3,9)));
+            longDirection = elements[5];
+            altitude = meter_t(stod(elements[9]));
+
+            // prse GNRMC for velocity
+            vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse string 
+            velocity = knot_t(stod(elementsRMC[7])); 
+        } catch(...) {
+            return false;
+        }   
         return true;
     }
 
@@ -107,23 +118,14 @@ class NMEA_parser {
                               ) {
 
         using namespace std;
-        vector<string> elements= parseNMEAstringGGA(toParse); // parse string 
-        gpsQualityIndicator = stoi(elements[6]);
-        numberOfSatelites = stoi(elements[7]);
-        horizontalDilution = stod(elements[8]);
-
-        // need to implement return logic
+        try {
+            vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
+            gpsQualityIndicator = stoi(elements[6]);
+            numberOfSatelites = stoi(elements[7]);
+            horizontalDilution = stod(elements[8]); 
+        } catch(...) {
+            return false;
+        }
         return true;
-
     }
-
-
-
-    //0: Fix not valid 
-    //1: GPS fix 
-    //2: Differential GPS fix, OmniSTAR VBS 
-    //4: Real-Time Kinematic, fixed integers 
-    //5: Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK
-
-
 };
