@@ -12,17 +12,19 @@
 class Gps {
     using degree_t = units::angle::degree_t;
     using meter_t = units::length::meter_t;
-  
+    using meters_per_second_t = units::velocity::meters_per_second_t;
     private:
     
+    char *m_device_path;
     int m_currentNumberOfSats;
     int m_gpsQuality;
     double m_horizontalDilution;
     meter_t m_altitude;
     degree_t m_longitude;
     degree_t m_latitude;
+    meters_per_second_t m_velocity;
 
-    void getGPSPosition() {
+    bool getGPSPosition() {
         using namespace units::angle;
         using namespace units::literals;
 
@@ -34,8 +36,9 @@ class Gps {
         std::string longDir;
 
         // reading and parsing serial data
-        std::string serialString =  Serial_reader::readSerialUSB();
-        NMEA_parser::parseTextGPS(serialString, lat, latmin, latDir, longitude, longmin, longDir, m_altitude);
+        std::string serialString = Serial_reader::readSerialUSB(m_device_path);
+        bool didParse = NMEA_parser::parseTextGPS(serialString, lat, latmin, latDir, longitude, longmin, longDir, m_altitude, m_velocity);
+
         m_latitude = lat + latmin;
         m_longitude = longitude + longmin;
 
@@ -43,27 +46,36 @@ class Gps {
         if (longDir == "W") m_longitude = 0_deg - m_longitude;
         if (latDir == "S")  m_latitude  = 0_deg - m_latitude;
 
+        return didParse;
+
     }
 
-    void getGpsDescription() {
-        std::string serialString =  Serial_reader::readSerialUSB();
+    bool getGpsDescription() {
+        std::string serialString =  Serial_reader::readSerialUSB(m_device_path);
         int quality, numsat;
         double horizontalDilution;
-        NMEA_parser::parseTextForMiscData(serialString, quality, numsat, horizontalDilution);
+        bool didParse = NMEA_parser::parseTextForMiscData(serialString, quality, numsat, horizontalDilution);
         m_gpsQuality = quality;
         m_currentNumberOfSats = numsat;
         m_horizontalDilution = horizontalDilution;
+
+        return didParse;
+
     }
 
 
     public:
 
+    Gps(char *device_path) : m_device_path(device_path)  { }
+
     bool getPosition(degree_t &lat, degree_t &lon, meter_t &altitude) {
-        getGPSPosition(); 
+        bool didGetGps = getGPSPosition(); 
         lat = m_latitude;
         lon = m_longitude;
         altitude = m_altitude;
-        return true;
+
+        return didGetGps;
+        
     }
 
     int getNumberOfSatelites() {
