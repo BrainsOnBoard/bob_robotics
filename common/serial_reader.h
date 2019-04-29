@@ -1,4 +1,6 @@
 // USB-reader
+#pragma once
+
 #include <string>
 #include "termios.h"
 #include <sys/types.h>
@@ -25,11 +27,7 @@
 
 class Serial_reader {
     private:
-    
 
-
-
-    
     static std::string getSerialData(char* serial_device_path) {
         //  /dev/cu.usbserial
         // http://bradsmc.blogspot.com/2013/11/c-code-to-read-gps-data-via-serial-on.html
@@ -48,7 +46,7 @@ class Serial_reader {
 
         /* BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
         CRTSCTS : output hardware flow control (only used if the cable has
-                    all necessary lines. See sect. 7 of Serial-HOWTO)
+                    all necessary lines. 
         CS8     : 8n1 (8bit,no parity,1 stopbit)
         CLOCAL  : local connection, no modem contol
         CREAD   : enable receiving characters */
@@ -67,10 +65,8 @@ class Serial_reader {
         /* now clean the modem line and activate the settings for the port */
         tcflush(fd, TCIFLUSH);
         tcsetattr(fd,TCSANOW,&newtio);
-        // NMEA command to ouput all sentences
-        // Note that this code & format values in manual are hexadecimal
-        //write(fd, "$PTNLSNM,273F,01*27\r\n", 21);
-        /* terminal settings done, now handle input*/
+
+        
         int ii = 0;
         std::string serialString;
         while (ii <22) {    
@@ -94,6 +90,7 @@ class Serial_reader {
 
 
     public:
+    //! reads the serial port (USB) and returns the string from it
     static std::string readSerialUSB(char *device_path) {
         return getSerialData(device_path);
     }
