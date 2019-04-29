@@ -228,6 +228,16 @@ public:
         }
     }
 
+    float getLeft() const
+    {
+        return m_Left;
+    }
+
+    float getRight() const
+    {
+        return m_Right;
+    }
+
 private:
     Net::Connection *m_Connection = nullptr;
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
@@ -303,15 +313,7 @@ private:
         return true;
     }
 
-    float getLeft() const
-    {
-        return m_Left;
-    }
-
-    float getRight() const
-    {
-        return m_Right;
-    }
+    
 
 protected:
     void setWheelSpeeds(float left, float right)
