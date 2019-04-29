@@ -12,6 +12,7 @@
 
 // Standard C++ includes
 #include <iostream>
+#include <thread>
 
 // Standard C includes
 #include <cmath>
@@ -21,6 +22,29 @@ using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 using namespace units::angle;
 using namespace units::length;
+
+void gpsThreadFunc(const char *device, std::mutex &mutex, degree_t &latOut, degree_t &lonOut, meter_t &altitudeOut)
+{
+    //create GPS
+    Gps gps("/dev/ttyACM0");
+
+    std::cout << "GPS created" << std::endl;
+    while(true)
+    {
+        
+        // get gps data
+        degree_t lat,lon;
+        meter_t altitude;
+        bool didGetGps = gps.getPosition(lat,lon, altitude);
+
+        {
+            std::lock_guard<mutex> g;
+            latOut = lat;
+            lonOut = lon;
+            altitudeOut = altitude;
+        }
+    }
+}
 int main()
 {
     const cv::Size unwrapRes(720, 150);
@@ -31,8 +55,7 @@ int main()
     auto unwrapper = cam->createUnwrapper(unwrapRes);
     const auto cameraRes = cam->getOutputSize();
 
-    //create GPS
-    Gps gps("/dev/ttyACM0");
+    
 
 
     // Create images
@@ -54,6 +77,10 @@ int main()
     time_t rawtime;
     struct tm * timeinfo;
     
+    degree_t lat,lon;
+    meter_t altitude;
+    std::mutex gpsMutex;
+    std::thread gpsThread(gpsThreadFunc, std::ref(gpsMutex), std::ref(lat), std::ref(lon), std::ref(altitude));
 
     {
         unsigned int frame = 0;
@@ -71,15 +98,11 @@ int main()
             sprintf(filename, "file_%u.jpg", frame);
             cv::imwrite(filename, outputImage);
 
-            // get gps data
-            degree_t lat,lon;
-            meter_t altitude;
-            bool didGetGps = gps.getPosition(lat,lon, altitude);
-
             time (&rawtime);
             timeinfo = localtime (&rawtime);
             
-            if (didGetGps) {
+            {
+                std::lock_guard(gpsMutex);
                 // saving gps coords
                 file << lat.value() << "," << lon.value() << "," << robot.getLeft() << "," << robot.getRight() << "," << frame << "," << asctime(timeinfo) << std::endl;
             }
