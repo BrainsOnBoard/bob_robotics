@@ -7,6 +7,7 @@
 #include "../../third_party/units.h"
 #include "../../hid/joystick.h"
 #include "../../robots/norbot.h"
+#include "../../common/lm9ds1_imu.h"
 #include <time.h> 
 
 // Standard C++ includes
@@ -83,12 +84,16 @@ int main()
                 file << lat.value() << "," << lon.value() << "," << robot.getLeft() << "," << robot.getRight() << "," << frame << "," << asctime(timeinfo) << std::endl;
             }
             
-            // Read joystick
-            if (!joystick.isDown(BoBRobotics::HID::JButton::B)) {
-                joystick.update();
+            joystick.update();
+           
+                
       
-                // Use joystick to drive motor
-                robot.drive(joystick);
+            // Use joystick to drive motor
+            robot.drive(joystick);
+            
+
+            if(joystick.isDown(BoBRobotics::HID::JButton::B)) {
+                break;
             }
             
         }
