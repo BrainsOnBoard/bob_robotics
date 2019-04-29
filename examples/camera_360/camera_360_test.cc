@@ -80,7 +80,7 @@ int main()
     degree_t lat,lon;
     meter_t altitude;
     std::mutex gpsMutex;
-    std::thread gpsThread(gpsThreadFunc, std::ref(gpsMutex), std::ref(lat), std::ref(lon), std::ref(altitude));
+    std::thread gpsThread(gpsThreadFunc, "/dev/ttyACM0", std::ref(gpsMutex), std::ref(lat), std::ref(lon), std::ref(altitude));
 
     {
         unsigned int frame = 0;
