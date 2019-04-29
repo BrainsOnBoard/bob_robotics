@@ -146,3 +146,8 @@ ifdef WITH_SFML_GRAPHICS
         CXXFLAGS += `pkg-config --cflags sfml-graphics`
         LINK_FLAGS += `pkg-config --libs sfml-graphics`
 endif
+
+ifdef WITH_LIBSERIAL
+        LINK_FLAGS += `pkg-config libserial --libs`
+        CXXFLAGS += `pkg-config libserial --cflags`
+endif
