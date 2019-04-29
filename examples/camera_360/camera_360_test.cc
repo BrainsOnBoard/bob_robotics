@@ -5,6 +5,8 @@
 #include "../../video/panoramic.h"
 #include "../../common/gps.h"
 #include "../../third_party/units.h"
+#include "../../hid/joystick.h"
+#include "../../robots/norbot.h"
 #include <time.h> 
 
 // Standard C++ includes
