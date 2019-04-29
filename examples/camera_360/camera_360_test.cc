@@ -38,7 +38,7 @@ void gpsThreadFunc(const char *device, std::mutex &mutex, degree_t &latOut, degr
         bool didGetGps = gps.getPosition(lat,lon, altitude);
 
         {
-            std::lock_guard<mutex> g;
+            std::lock_guard<std::mutex> g(mutex);
             latOut = lat;
             lonOut = lon;
             altitudeOut = altitude;
@@ -102,7 +102,7 @@ int main()
             timeinfo = localtime (&rawtime);
             
             {
-                std::lock_guard(gpsMutex);
+                std::lock_guard<std::mutex> g(gpsMutex);
                 // saving gps coords
                 file << lat.value() << "," << lon.value() << "," << robot.getLeft() << "," << robot.getRight() << "," << frame << "," << asctime(timeinfo) << std::endl;
             }
