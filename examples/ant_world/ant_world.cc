@@ -107,12 +107,12 @@ int main(int argc, char **argv)
         if (!modelPath) {
             throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
         }
-        renderer.getWorld().loadObj((filesystem::path(modelPath) / "flight_1_decimate.obj").str(),
+        renderer.getWorld().loadObj((filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj").str(),
                                     0.1f,
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
-        renderer.getWorld().load("../../include/antworld/world5000_gray.bin",
+        renderer.getWorld().load(filesystem::path(argv[0]) / "../../resources/antworld/world5000_gray.bin",
                                  { 0.0f, 1.0f, 0.0f },
                                  { 0.898f, 0.718f, 0.353f });
     }

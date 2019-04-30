@@ -4,6 +4,9 @@
 #include "navigation/perfect_memory.h"
 #include "navigation/plot.h"
 
+// Third-party includes
+#include "third_party/path.h"
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -15,7 +18,7 @@ using namespace BoBRobotics::Navigation;
 
 template<typename T>
 void
-trainRoute(T &pm)
+trainRoute(T &pm, const filesystem::path &executablePath)
 {
     // Load snapshots
     pm.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
@@ -23,7 +26,7 @@ trainRoute(T &pm)
 }
 
 int
-main()
+main(int, char **argv)
 {
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped
@@ -32,12 +35,13 @@ main()
      *      -- AD
      */
     const cv::Size RenderSize{ 180, 50 };
+    const auto &execuablePath = filesystem::path(argv[0]).parent_path();
 
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
-    renderer.getWorld().load("../../include/antworld/world5000_gray.bin",
+    renderer.getWorld().load("../../resources/antworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object
@@ -49,7 +53,7 @@ main()
     {
         std::cout << "Using ant world rotater..." << std::endl;
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, AntWorldRotater> pm(RenderSize);
-        trainRoute(pm);
+        trainRoute(pm, execuablePath);
 
         size_t snapshot;
         float difference;
@@ -67,7 +71,7 @@ main()
     {
         std::cout << "Using in silico rotater..." << std::endl;
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, InSilicoRotater> pm(RenderSize);
-        trainRoute(pm);
+        trainRoute(pm, execuablePath);
 
         agent.setAttitude(0_deg, 0_deg, 0_deg);
         cv::Mat fr;

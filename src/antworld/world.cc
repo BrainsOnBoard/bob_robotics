@@ -85,7 +85,7 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
+void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
     // Create single surface
@@ -94,9 +94,9 @@ void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     auto &surface = m_Surfaces.back();
 
     // Open file for binary IO
-    std::ifstream input(filename, std::ios::binary);
+    std::ifstream input(filename.str(), std::ios::binary);
     if(!input.good()) {
-        throw std::runtime_error("Cannot open world file:" + filename);
+        throw std::runtime_error("Cannot open world file:" + filename.str());
     }
 
     // Seek to end of file, get size and rewind
@@ -189,7 +189,7 @@ void World::load(const std::string &filename, const GLfloat (&worldColour)[3],
     surface.unbind();
 }
 //----------------------------------------------------------------------------
-void World::loadObj(const std::string &filename, float scale, int maxTextureSize, GLint textureFormat)
+void World::loadObj(const filesystem::path &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
@@ -219,13 +219,13 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         std::vector<GLfloat> rawTexCoords;
 
         // Open obj file
-        std::ifstream objFile(filename);
+        std::ifstream objFile(filename.str());
         if(!objFile.good()) {
-            throw std::runtime_error("Cannot open obj file: " + filename);
+            throw std::runtime_error("Cannot open obj file: " + filename.str());
         }
 
         // Get base path to load materials etc relative to
-        const auto basePath = filesystem::path(filename).make_absolute().parent_path();
+        const auto basePath = filename.make_absolute().parent_path();
 
         // Read lines into strings
         std::string lineString;

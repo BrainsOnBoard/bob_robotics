@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
     MBMemory memory;
 
     // Create state machine and set it as window user pointer
-    const std::string worldFilename = std::string(bobRoboticsPath) + "/include/antworld/world5000_gray.bin";
+    const std::string worldFilename = std::string(bobRoboticsPath) + "/resources/antworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     StateHandler stateHandler(worldFilename, routeFilename, memory);
     glfwSetWindowUserPointer(window, &stateHandler);

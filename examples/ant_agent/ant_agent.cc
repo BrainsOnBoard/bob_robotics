@@ -5,6 +5,9 @@
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 
+// Third-party includes
+#include "third_party/path.h"
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -19,7 +22,7 @@ using namespace units::angle;
 using namespace units::length;
 
 int
-bob_main(int, char **)
+bob_main(int, char **argv)
 {
     const cv::Size RenderSize{ 720, 150 };
     const meter_t AntHeight = 1_cm;
@@ -28,10 +31,11 @@ bob_main(int, char **)
 
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
+
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
-    world.load("../../include/antworld/world5000_gray.bin",
+    world.load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
                { 0.0f, 1.0f, 0.0f },
                { 0.898f, 0.718f, 0.353f });
     const auto minBound = world.getMinBound();
