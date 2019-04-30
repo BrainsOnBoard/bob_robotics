@@ -32,7 +32,7 @@ CarDisplay::CarDisplay(const millimeter_t screenHeight, const millimeter_t carWi
 
     m_Renderer = SDL_CreateRenderer(m_Window, -1, 0);
 
-    const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
+    const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/resources/car.bmp";
     SDL_Surface *image = SDL_LoadBMP(imagePath.c_str());
     BOB_ASSERT(image != nullptr); // Check file exists
 

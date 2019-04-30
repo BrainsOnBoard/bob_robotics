@@ -16,13 +16,12 @@ namespace Viz {
 SFMLWorld::CarAgent::CarAgent(const SFMLWorld &display, meter_t carWidth)
   : m_Display(display)
 {
-    std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/robots/car.bmp";
     const char *brPath = std::getenv("BOB_ROBOTICS_PATH");
     if (!brPath) {
         throw std::runtime_error("BOB_ROBOTICS_PATH environment variable is not set");
     }
 
-    const std::string imageFilePath = std::string(brPath) + "/robots/car.bmp";
+    const std::string imageFilePath = std::string(brPath) + "/resources/car.bmp";
     if (!m_Texture.loadFromFile(imageFilePath)) {
         throw std::runtime_error("Could not load " + imageFilePath);
     }
