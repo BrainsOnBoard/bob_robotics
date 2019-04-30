@@ -4,7 +4,7 @@
 #include <string>
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 
 // Third-party includes
 #include "third_party/units.h"

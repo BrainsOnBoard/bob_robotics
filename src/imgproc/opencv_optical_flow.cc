@@ -6,6 +6,7 @@
 #include <cmath>
 
 // OpenCV includes
+#include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/superres/optical_flow.hpp>
 
@@ -17,11 +18,12 @@ namespace ImgProc {
 
 OpenCVOpticalFlow::OpenCVOpticalFlow()
   : m_Frame(0)
+  , m_OpticalFlow(cv::superres::createOptFlow_Farneback())
 {
 }
 
 OpenCVOpticalFlow::OpenCVOpticalFlow(const cv::Size &inputRes)
-  : m_Frame(0)
+  : OpenCVOpticalFlow()
 {
     create(inputRes);
 }

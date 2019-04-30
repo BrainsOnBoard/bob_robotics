@@ -1,8 +1,13 @@
 #pragma once
 
 // OpenCV includes
-#include <opencv2/opencv.hpp>
-#include <opencv2/superres/optical_flow.hpp>
+#include <opencv2/core.hpp>
+
+namespace cv {
+namespace superres {
+class FarnebackOpticalFlow;
+}
+}
 
 namespace BoBRobotics {
 namespace ImgProc {
@@ -35,7 +40,7 @@ private:
     cv::Mat m_Frames[2];
     unsigned int m_Frame;
 
-    cv::Ptr<cv::superres::FarnebackOpticalFlow> m_OpticalFlow = cv::superres::createOptFlow_Farneback();
+    cv::Ptr<cv::superres::FarnebackOpticalFlow> m_OpticalFlow;
     cv::Mat m_FlowX;
     cv::Mat m_FlowY;
 }; // OpenCVOpticalFlow
