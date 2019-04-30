@@ -9,16 +9,15 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace BoBRobotics {
 float
-getGyroSensitivity(LM9DS1::GyroScale scale)
+getGyroSensitivity(BoBRobotics::LM9DS1::GyroScale scale)
 {
     switch (scale) {
-    case LM9DS1::GyroScale::DPS245:
+    case BoBRobotics::LM9DS1::GyroScale::DPS245:
         return 0.00875f;
-    case LM9DS1::GyroScale::DPS500:
+    case BoBRobotics::LM9DS1::GyroScale::DPS500:
         return 0.0175f;
-    case LM9DS1::GyroScale::DPS2000:
+    case BoBRobotics::LM9DS1::GyroScale::DPS2000:
         return 0.07f;
     default:
         throw std::runtime_error("Invalid parameter");
@@ -26,16 +25,16 @@ getGyroSensitivity(LM9DS1::GyroScale scale)
 }
 
 float
-getAccelSensitivity(LM9DS1::AccelScale scale)
+getAccelSensitivity(BoBRobotics::LM9DS1::AccelScale scale)
 {
     switch (scale) {
-    case LM9DS1::AccelScale::G2:
+    case BoBRobotics::LM9DS1::AccelScale::G2:
         return 0.000061f;
-    case LM9DS1::AccelScale::G4:
+    case BoBRobotics::LM9DS1::AccelScale::G4:
         return 0.000122f;
-    case LM9DS1::AccelScale::G8:
+    case BoBRobotics::LM9DS1::AccelScale::G8:
         return 0.000244f;
-    case LM9DS1::AccelScale::G16:
+    case BoBRobotics::LM9DS1::AccelScale::G16:
         return 0.000732f;
     default:
         throw std::runtime_error("Invalid parameter");
@@ -43,22 +42,23 @@ getAccelSensitivity(LM9DS1::AccelScale scale)
 }
 
 float
-getMagnetoSensitivity(LM9DS1::MagnetoScale scale)
+getMagnetoSensitivity(BoBRobotics::LM9DS1::MagnetoScale scale)
 {
     switch (scale) {
-    case LM9DS1::MagnetoScale::GS4:
+    case BoBRobotics::LM9DS1::MagnetoScale::GS4:
         return 0.00014f;
-    case LM9DS1::MagnetoScale::GS8:
+    case BoBRobotics::LM9DS1::MagnetoScale::GS8:
         return 0.00029f;
-    case LM9DS1::MagnetoScale::GS12:
+    case BoBRobotics::LM9DS1::MagnetoScale::GS12:
         return 0.00043f;
-    case LM9DS1::MagnetoScale::GS16:
+    case BoBRobotics::LM9DS1::MagnetoScale::GS16:
         return 0.00058f;
     default:
         throw std::runtime_error("Invalid parameter");
     }
 }
 
+namespace BoBRobotics {
 //----------------------------------------------------------------------------
 // Constants
 //----------------------------------------------------------------------------
