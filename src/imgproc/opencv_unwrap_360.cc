@@ -57,8 +57,7 @@ OpenCVUnwrap360::OpenCVUnwrap360(const cv::Size &cameraResolution,
     if (!filePath.exists()) {
         // next check if there is a local bob_robotics folder (i.e. git
         // submodule)
-        const filesystem::path paramsDir = filesystem::path("include") /
-                                           filesystem::path("imgproc") / "unwrapparams";
+        const filesystem::path paramsDir = filesystem::path("resources") / "panoramic_camera_parameters";
 
         filePath = filesystem::path("bob_robotics") / paramsDir / fileName;
         if (!filePath.exists()) {
