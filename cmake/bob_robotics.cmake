@@ -378,11 +378,14 @@ endfunction()
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
         if(${lib} STREQUAL i2c)
-            # With cmake you don't get errors for linking against a non-existent
-            # library, but we might as well not bother if we definitely don't
-            # need it.
             if(NOT WIN32 AND NOT NO_I2C)
-                BoB_add_link_libraries("i2c")
+                # If it's a new version of i2c-tools then we need to link
+                # against an additonal library
+                execute_process(COMMAND "${CMAKE_CURRENT_LIST_DIR}/is_i2c_tools_new.sh"
+                                RESULT_VARIABLE rv)
+                if(${rv} EQUAL 0)
+                    BoB_add_link_libraries("i2c")
+                endif()
             endif()
         elseif(${lib} STREQUAL opencv)
             BoB_find_package(OpenCV REQUIRED)
