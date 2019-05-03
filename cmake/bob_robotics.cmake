@@ -181,13 +181,13 @@ macro(always_included_packages)
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
     if(NOT TARGET Eigen3::Eigen)
-        find_package(Eigen3)
+        find_package(Eigen3 QUIET)
     endif()
     if(NOT TARGET OpenMP::OpenMP_CXX)
-        find_package(OpenMP)
+        find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
-        find_package(GLEW)
+        find_package(GLEW QUIET)
     endif()
 
     # On Unix we use pkg-config to find SDL2, because the CMake package may not
