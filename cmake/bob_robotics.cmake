@@ -583,3 +583,6 @@ add_definitions(
     -DENABLE_PREDEFINED_VELOCITY_UNITS
     -DENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
 )
+
+# Look for additional CMake packages in the current folder
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
