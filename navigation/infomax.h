@@ -41,32 +41,49 @@ class InfoMax : public VisualNavigationBase
 public:
     InfoMax(const cv::Size &unwrapRes,
             const MatrixType &initialWeights,
-            FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
-      , m_LearningRate(learningRate)
-      , m_Weights(initialWeights)
-    {}
+            FloatType learningRate = 0.0001,
+            size_t numNonRetinatopicInputs = 0,
+            size_t nonRetinatopicInputPixels = 1)
+      : VisualNavigationBase(unwrapRes),
+        m_NumNonRetinatopicInputs(numNonRetinatopicInputs),
+        m_NonRetinatopicInputPixels(nonRetinatopicInputPixels),
+        m_NumNonRetinatopicRows(ceil((double)(numNonRetinatopicInputs * nonRetinatopicInputPixels) / (double)unwrapRes.width)),
+        m_ZeroNonRetinatopicInput(numNonRetinatopicInputs, 0),
+        m_LearningRate(learningRate),
+        m_Weights(initialWeights)
+    {
+        // Create 'fused' image to hold unwrapped image AND non-retinatopic inputs
+        m_FusedImage.create(unwrapRes.height + m_NumNonRetinatopicRows, unwrapRes.width, CV_8UC1);
+    }
 
-    InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
-      , m_LearningRate(learningRate)
-      , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
-                                    1 + unwrapRes.width * unwrapRes.height))
-    {}
+    InfoMax(const cv::Size &unwrapRes,
+            FloatType learningRate = 0.0001,
+            size_t numNonRetinatopicInputs = 0,
+            size_t nonRetinatopicInputPixels = 1)
+      : VisualNavigationBase(unwrapRes),
+        m_NumNonRetinatopicInputs(numNonRetinatopicInputs),
+        m_NonRetinatopicInputPixels(nonRetinatopicInputPixels),
+        m_NumNonRetinatopicRows(ceil((double)(numNonRetinatopicInputs * nonRetinatopicInputPixels) / (double)unwrapRes.width)),
+        m_ZeroNonRetinatopicInput(numNonRetinatopicInputs, 0),
+        m_LearningRate(learningRate),
+        m_Weights(getInitialWeights((unwrapRes.width * unwrapRes.height) + (numNonRetinatopicInputs * nonRetinatopicInputPixels),
+                                    1 + (unwrapRes.width * unwrapRes.height) + (numNonRetinatopicInputs * nonRetinatopicInputPixels)))
+    {
+        // Create 'fused' image to hold unwrapped image AND non-retinatopic inputs
+        m_FusedImage.create(unwrapRes.height + m_NumNonRetinatopicRows, unwrapRes.width, CV_8UC1);
+    }
 
     //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
     virtual void train(const cv::Mat &image) override
     {
-        calculateUY(image);
-        trainUY();
+        train(image, m_ZeroNonRetinatopicInput);
     }
 
     virtual float test(const cv::Mat &image) const override
     {
-        const auto decs = m_Weights * getFloatVector(image);
-        return decs.array().abs().sum();
+        return test(image, m_ZeroNonRetinatopicInput);
     }
 
     //! Generates new random weights
@@ -83,9 +100,59 @@ public:
         return m_Weights;
     }
 
+    void train(const cv::Mat &image, const std::vector<FloatType> &nonRetinatopicInput)
+    {
+        setFusedImage(image);
+        setFusedNonRetinatopic(nonRetinatopicInput);
+
+        calculateUY(m_FusedImage);
+        trainUY();
+    }
+
+    float test(const cv::Mat &image, const std::vector<FloatType> &nonRetinatopicInput) const
+    {
+        setFusedImage(image);
+        setFusedNonRetinatopic(nonRetinatopicInput);
+
+        const auto decs = m_Weights * getFloatVector(m_FusedImage);
+        return decs.array().abs().sum();
+    }
+
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
 #endif
+    void setFusedImage(const cv::Mat &image) const
+    {
+        const cv::Size &unwrapRes = getUnwrapResolution();
+        cv::Mat imageROI = m_FusedImage(cv::Rect(0, 0, unwrapRes.width, unwrapRes.height));
+
+        // Copy image into ROI
+        image.copyTo(imageROI);
+    }
+
+    void setFusedNonRetinatopic(const std::vector<FloatType> &nonRetinatopicInput) const
+    {
+        BOB_ASSERT(nonRetinatopicInput.size() == m_NumNonRetinatopicInputs);
+
+        const cv::Size &unwrapRes = getUnwrapResolution();
+        cv::Mat nonRetinatopicROI = m_FusedImage(cv::Rect(0, unwrapRes.height,
+                                                          unwrapRes.width, unwrapRes.height + m_NumNonRetinatopicRows));
+
+        // Loop through non-retinatopic inputs
+        auto nonRetinatopicIter = nonRetinatopicROI.begin<uint8_t>();
+        for(FloatType r : nonRetinatopicInput) {
+            // Conver component to a byte
+            const uint8_t byte = (uint8_t)std::max(0.0f, std::min(255.0f, std::round(r * 255.0f)));
+
+            for(size_t i = 0; i < m_NonRetinatopicInputPixels; i++) {
+                *nonRetinatopicIter++ = byte;
+            }
+        }
+
+        // Fill remainder of ROI with zeros
+        std::fill(nonRetinatopicIter, nonRetinatopicROI.end<uint8_t>(), 0);
+    }
+
     void trainUY()
     {
         // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
@@ -153,10 +220,17 @@ public:
     }
 
 private:
+    const size_t m_NumNonRetinatopicInputs;
+    const size_t m_NonRetinatopicInputPixels;
+    const size_t m_NumNonRetinatopicRows;
+    const std::vector<FloatType> m_ZeroNonRetinatopicInput;
+
     size_t m_SnapshotCount = 0;
     FloatType m_LearningRate;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
+
+    mutable cv::Mat m_FusedImage;
 
     static auto getFloatVector(const cv::Mat &image)
     {
