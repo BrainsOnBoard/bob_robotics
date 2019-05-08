@@ -36,10 +36,10 @@ bob_robotics.includes
 **/*_CODE
 
 # Ignore generator executables
-**/generateALL_CPU_ONLY
-**/generateALL_CPU_ONLY.exe
-**/generateALL
-**/generateALL.exe
+**/generator_CPU_ONLY
+**/generator_CPU_ONLY.exe
+**/generator
+**/generator.exe
 
 # Ignore auto-generated Makefiles
 **/sm_version.mk

@@ -64,36 +64,34 @@ macro(BoB_project)
             set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
         endif()
         if(GENN_CPU_ONLY)
-            add_library(${PROJECT_NAME}_genn_model STATIC ${genn_model_dest})
             add_definitions(-DCPU_ONLY)
             set(CPU_FLAG -c)
-        else() # Build with CUDA
-            find_package(CUDA REQUIRED)
-
-            # This is required as by default cmake builds files not ending in .cu
-            # with the default compiler
-            set_source_files_properties("${genn_model_dest}" PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT OBJ)
-            cuda_add_library(${PROJECT_NAME}_genn_model STATIC "${genn_model_dest}")
-            set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -x cu -arch sm_30")
         endif()
 
-        add_custom_command(OUTPUT ${genn_model_dest}
+        # Custom command to generate source code with GeNN
+        add_custom_command(PRE_BUILD
+                           OUTPUT ${genn_model_dest}
                            DEPENDS ${genn_model_src}
-                           COMMAND $ENV{GENN_PATH}/lib/bin/genn-buildmodel.sh
+                           COMMAND genn-buildmodel.sh
                                    ${genn_model_src}
                                    ${CPU_FLAG}
                                    -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
                            COMMENT "Generating source code with GeNN")
 
-        add_custom_target(${PROJECT_NAME}_genn_model_src ALL DEPENDS ${genn_model_dest})
-        add_dependencies(${PROJECT_NAME}_genn_model ${PROJECT_NAME}_genn_model_src)
+        # Custom command to generate librunner.so
+        add_custom_command(PRE_BUILD
+                           OUTPUT ${genn_model_dir}/librunner.so
+                           DEPENDS ${genn_model_dest}
+                           COMMAND make -C "${genn_model_dir}")
 
+        add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+
+        # Our targets depend on librunner.so
+        BoB_add_include_directories(/usr/include/genn)
+        BoB_add_link_libraries(${genn_model_dir}/librunner.so)
         foreach(target IN LISTS BOB_TARGETS)
-            BoB_add_link_libraries(${PROJECT_NAME}_genn_model)
+            add_dependencies(${target} ${PROJECT_NAME}_genn_model)
         endforeach()
-
-        # We need GeNN support
-        BoB_external_libraries(genn)
 
         # So code can access headers in the *_CODE folder
         BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -444,20 +442,6 @@ function(BoB_external_libraries)
             find_package(OpenGL REQUIRED)
             BoB_add_include_directories(${OPENGL_INCLUDE_DIR})
             BoB_add_link_libraries(${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
-        elseif(${lib} STREQUAL genn)
-            if(NOT DEFINED ENV{GENN_PATH})
-                message(FATAL_ERROR "GENN_PATH environment variable is not set")
-            endif()
-
-            BoB_add_include_directories("$ENV{GENN_PATH}/lib/include" "$ENV{GENN_PATH}/userproject/include")
-            if(GENN_CPU_ONLY)
-                BoB_add_link_libraries("$ENV{GENN_PATH}/lib/lib/libgenn_CPU_ONLY${CMAKE_STATIC_LIBRARY_SUFFIX}")
-            else()
-                BoB_add_link_libraries("$ENV{GENN_PATH}/lib/lib/libgenn${CMAKE_STATIC_LIBRARY_SUFFIX}")
-                BoB_external_libraries(cuda)
-            endif()
-        elseif(${lib} STREQUAL cuda)
-            BoB_find_package(CUDA REQUIRED)
         elseif(${lib} STREQUAL gtest)
             find_package(GTest REQUIRED)
             BoB_add_include_directories(${GTEST_INCLUDE_DIRS})
