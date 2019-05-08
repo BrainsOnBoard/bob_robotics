@@ -13,17 +13,7 @@
 #include <chrono>
 #include <thread>
 
-/* baudrate settings are defined in <asm/termbits.h>, which is
-   included by <termios.h> */
 #define BAUDRATE B9600  // Change as needed, keep B
-
-/* change this definition for the correct port */
-#define MODEMDEVICE "/dev/ttyO1" //Beaglebone Black serial port
-
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-
-#define FALSE 0
-#define TRUE 1
 
 class Serial_reader {
     private:
