@@ -32,8 +32,7 @@ public:
     });
 
     SET_SIM_CODE(
-        "$(addtoinSyn) = $(g);\n"
-        "$(updatelinsyn);\n"
+        "$(addToInSyn, $(g));\n"
         "// Calculate how much tag has decayed since last update\n"
         "scalar tagDT = $(t) - $(tC);\n"
         "scalar tagDecay = exp(-tagDT / $(tauC));\n"
