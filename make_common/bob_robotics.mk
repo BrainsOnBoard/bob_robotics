@@ -67,20 +67,6 @@ ifdef WITH_SDL2
 	LINK_FLAGS += `pkg-config --libs sdl2`
 endif
 
-ifdef WITH_GTK
-	CXXFLAGS += `pkg-config --cflags gtk+-3.0`
-	LINK_FLAGS += `pkg-config --libs gtk+-3.0`
-endif
-
-ifdef WITH_OSM_GPS_MAP
-	CXXFLAGS += `pkg-config --cflags osmgpsmap-1.0`
-	LINK_FLAGS += `pkg-config --libs osmgpsmap-1.0`
-	CXXFLAGS += `pkg-config --cflags libffi`
-	LINK_FLAGS += `pkg-config --libs libffi`
-	
-endif
-
-
 ifdef WITH_LIBBEBOP
 	# libbebop
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop \
