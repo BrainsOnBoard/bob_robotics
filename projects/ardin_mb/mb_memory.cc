@@ -52,8 +52,8 @@ MBMemory::MBMemory(bool normaliseInput)
     {
         Timer<> timer("Building connectivity:");
 
-        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC,
-                                                MBParams::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
+        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC, MBParams::numPNSynapsesPerKC,
+                                                rowLengthpnToKC, indpnToKC, maxRowLengthpnToKC, gen);
 
         // Manually initialise weights
         // **NOTE** this is a little bit of a hack as we're only doing this so repeated calls to initialise won't overwrite
@@ -102,11 +102,11 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     }
 
     // Convert simulation regime parameters to timesteps
-    const unsigned long long rewardTimestep = convertMsToTimesteps(m_RewardTimeMs);
-    const unsigned int endPresentTimestep = convertMsToTimesteps(m_PresentDurationMs);
+    const unsigned long long rewardTimestep = convertMsToTimesteps(MBParams::rewardTimeMs);
+    const unsigned int endPresentTimestep = convertMsToTimesteps(MBParams::presentDurationMs);
     const unsigned int postStimuliDuration = convertMsToTimesteps(MBParams::postStimuliDurationMs);
 
-    const long long duration = endPresentTimestep + postStimuliDuration;
+    const unsigned long long duration = endPresentTimestep + postStimuliDuration;
 
     // Open CSV output files
 #ifdef RECORD_SPIKES
@@ -134,7 +134,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     unsigned int numPNSpikes = 0;
     unsigned int numKCSpikes = 0;
     unsigned int numENSpikes = 0;
-    while(iT < endTimestep) {
+    while(iT < duration) {
         // If we should stop presenting image
         if(iT == endPresentTimestep) {
             std::fill_n(IextPN, MBParams::numPN, 0.0f);
