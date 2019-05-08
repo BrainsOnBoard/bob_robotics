@@ -17,6 +17,17 @@ class EV3
   : public Tank
 {
 public:
+    /*
+     * BrickPis are hardcoded to treat all motors as NXT motors, so we pretend
+     * our large Lego motors are NXT motors, otherwise ev3dev-lang-cpp will give
+     * an error.
+     */
+#if defined(EV3DEV_PLATFORM_BRICKPI) || defined(EV3DEV_PLATFORM_BRICKPI3)
+    using MotorType = ev3dev::nxt_motor;
+#else
+    using MotorType = ev3dev::large_motor;
+#endif
+
     EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_A,
         const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_D);
     virtual ~EV3() override;
@@ -28,7 +39,7 @@ public:
     std::pair<meters_per_second_t, meters_per_second_t> getWheelVelocities() const;
 
 private:
-    ev3dev::large_motor m_MotorLeft, m_MotorRight;
+    MotorType m_MotorLeft, m_MotorRight;
     const int m_MaxSpeedTachos, m_TachoCountPerRotation;
 
     meters_per_second_t tachoToSpeed(int tachos) const;
