@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "net/server.h"
-#include "robots/ev3.h"
+#include "robots/ev3/ev3.h"
 
 using namespace BoBRobotics;
 
