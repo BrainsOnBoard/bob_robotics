@@ -21,7 +21,7 @@ void
 trainRoute(T &pm, const filesystem::path &executablePath)
 {
     // Load snapshots
-    pm.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
+    pm.trainRoute(executablePath / ".." / ".." / "tools" / "ant_world_db_creator" / "ant1_route1", true);
     std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
 }
 
@@ -41,7 +41,7 @@ main(int, char **argv)
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
-    renderer.getWorld().load("../../resources/antworld/world5000_gray.bin",
+    renderer.getWorld().load(execuablePath / ".." / ".." / "resources" / "antworld" / "world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object
