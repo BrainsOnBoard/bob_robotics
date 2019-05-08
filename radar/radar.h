@@ -1,21 +1,22 @@
 #pragma once
 
+// Standard C includes
 #include <cassert>
+#include <cmath>
+
 // Serial port includes
 #include <SerialPort.h>
 
 // BoB robotics includes
 #include "common/fsm.h"
 
-#include <cmath>
-
 
 //----------------------------------------------------------------------------
-// BoBRobotics::ENoseState
+// BoBRobotics::RadarState
 //----------------------------------------------------------------------------
 namespace BoBRobotics
 {
-enum class ENoseState
+enum class RadarState
 {
     Invalid,
     Waiting,
@@ -34,9 +35,9 @@ enum class ENoseState
 };
 
 //----------------------------------------------------------------------------
-// StateHandler
+// Radar
 //----------------------------------------------------------------------------
-class ENose : public FSM<ENoseState>::StateHandler
+class Radar : public FSM<RadarState>::StateHandler
 {
     size_t m_GoodFrame = 0;
     size_t m_Counts;
@@ -140,21 +141,21 @@ class ENose : public FSM<ENoseState>::StateHandler
 
     double xyzQFormat = std::pow(2,9);
 
-
+    //std::ofstream m_Stream;
 public:
-    ENose(const char *device) : m_Counts(0), m_FSM(this, ENoseState::Invalid), m_SerialPort(device), m_HasData(false), m_BufferPosition(0)
+    Radar(const char *device) : m_Counts(0), m_FSM(this, RadarState::Invalid), m_SerialPort(device), m_HasData(false), m_BufferPosition(0)//, m_Stream("radar_bytes.csv")
     {
         // Open serial port
         m_SerialPort.Open(SerialPort::BAUD_921600);
 
         // Wait for data
-        m_FSM.transition(ENoseState::Waiting);
+        m_FSM.transition(RadarState::Waiting);
     }
 
     //------------------------------------------------------------------------
     // Statehandler virtuals
     //------------------------------------------------------------------------
-    virtual bool handleEvent(ENoseState state, Event event) override
+    virtual bool handleEvent(RadarState state, Event event) override
     {
         uint8_t byte;
 	if(event == Event::Update) {
@@ -163,6 +164,7 @@ public:
 	    // If buffer size is 4096 then go to append old slice
             //byte = m_SerialPort.ReadByte(5000);//readByte();
             byte = readByte();
+            //m_Stream << (unsigned int)byte << ",";
             if (malformation_flag == 1){
                 //std::cout << "Next bytes "<< (unsigned int)byte <<std::endl;
             }
@@ -170,14 +172,14 @@ public:
 
 	}
 
-	if (state == ENoseState::Waiting){
+	if (state == RadarState::Waiting){
                 if(event == Event::Update) {
 			if((byte == 2) && (counter == 0)){ // First Character of the Magic word
 				counter = 1; // First word detected
 				//std::cout << "Byte 2 detected";
 				header[header_char_count] = byte;
 				header_char_count++;
-				m_FSM.transition(ENoseState::SearchKeyword);
+				m_FSM.transition(RadarState::SearchKeyword);
 					}
 			else {
 		                //std::cout << (unsigned int)byte;
@@ -186,7 +188,7 @@ public:
 					}
              	}
 	}
-	else if (state == ENoseState::SearchKeyword){ // MagicWord = [2,1,4,3,6,5,8,7]
+	else if (state == RadarState::SearchKeyword){ // MagicWord = [2,1,4,3,6,5,8,7]
                 if(event == Event::Update) {
 			//std::cout << "Searching for keyword"<<std::endl; // Add std::endl otherwise sometimes it doesnt print
 
@@ -238,17 +240,18 @@ public:
 				// std::cout << "header[6]" << (unsigned int)header[6] << "" <<std::endl; // Magic Word
 				// std::cout << "header[7]" << (unsigned int)header[7] << "" <<std::endl; // Magic Word
 
-				m_FSM.transition(ENoseState::GetHeader);
+                                //m_Stream << std::endl;
+				m_FSM.transition(RadarState::GetHeader);
 				// 7 is the last char of the MagicWOrd. Jump to Get the header
 
 				}
 			else { // No luck
 				counter = 0;
-				m_FSM.transition(ENoseState::Waiting);
+				m_FSM.transition(RadarState::Waiting);
 			}
 		}
 	}
-	else if (state == ENoseState::GetHeader){
+	else if (state == RadarState::GetHeader){
                 if(event == Event::Update) {
 			//std::cout << "Get Header";
 			header[header_char_count] = byte; // FIrst one to be stored is number 8
@@ -285,10 +288,10 @@ public:
 				TLV_required = 1; // Search for this TLV. We can't jump to 2 and 3 in this byte based approach
 
         if ((packet_length_int < 3000)&&(numDetObj_int<=100)){
-				      m_FSM.transition(ENoseState::SearchTLV);
+				      m_FSM.transition(RadarState::SearchTLV);
         }
         else { // Malformed Packet length
-              m_FSM.transition(ENoseState::MalformedPacket);
+              m_FSM.transition(RadarState::MalformedPacket);
 #ifdef DEBUG_OUT
               std::cout << " " <<std::endl;
 					    std::cout << "Malformed Packet Length or numDetObj_int in GetHeader" << std::endl;
@@ -301,7 +304,7 @@ public:
 
 		}
 	}
-	else if (state == ENoseState::SearchTLV){ // Any TLV 2, 3 or 1 in that order
+	else if (state == RadarState::SearchTLV){ // Any TLV 2, 3 or 1 in that order
 		if(event == Event::Update){
 			// Get the length and the type
 			TLV_header[tlv_counter] = byte;
@@ -322,7 +325,7 @@ public:
 				tlv_counter = 0;
 
 				if ((TLV_required == 2) && (TLV_required == TLV_index) && (TLV_length == 512)){ // If we were looking for TLV 2
-					m_FSM.transition(ENoseState::GetRangeProfile);
+					m_FSM.transition(RadarState::GetRangeProfile);
 #ifdef DEBUG_OUT
           std::cout << " " <<std::endl;
 					std::cout << "Going to state GetRangeProfile" << std::endl;
@@ -336,7 +339,7 @@ public:
 
 						}
 				else if ((TLV_required == 3) && (TLV_required == TLV_index) && TLV_length == 512) {
-					m_FSM.transition(ENoseState::GetNoiseProfile);
+					m_FSM.transition(RadarState::GetNoiseProfile);
 #ifdef DEBUG_OUT
           std::cout << " " <<std::endl;
 					std::cout << "Going to GetNoiseProfile" << std::endl;
@@ -350,7 +353,7 @@ public:
 						}
         else if ((TLV_required == 6) && (TLV_required == TLV_index)) {
 
-          m_FSM.transition(ENoseState::GetStats);
+          m_FSM.transition(RadarState::GetStats);
           #ifdef DEBUG_OUT
           std::cout << " " <<std::endl;
           std::cout << "Going to GetStats" << std::endl;
@@ -362,7 +365,7 @@ public:
 
 				else if ((TLV_required == 1) && (TLV_required == TLV_index) && (TLV_length == (4+12*numDetObj_int))) {
 
-          m_FSM.transition(ENoseState::GetHeaderOfObjects);
+          m_FSM.transition(RadarState::GetHeaderOfObjects);
           #ifdef DEBUG_OUT
           std::cout << " " << std::endl;
           std::cout << "Going to GetHeaderOfObjects" << std::endl;
@@ -372,7 +375,7 @@ public:
 
 						}
 				else { // Malformed packet
-					m_FSM.transition(ENoseState::MalformedPacket);
+					m_FSM.transition(RadarState::MalformedPacket);
 #ifdef DEBUG_OUT
           std::cout << " " <<std::endl;
 					std::cout << "Malformed Packet in Search TLV" << std::endl;
@@ -389,7 +392,7 @@ public:
 			}
 		}
 	}
-  else if (state == ENoseState::GetHeaderOfObjects){ // 4 bytes only. This gets executed after TLV 1, which contains the object.
+  else if (state == RadarState::GetHeaderOfObjects){ // 4 bytes only. This gets executed after TLV 1, which contains the object.
 		if(event == Event::Update){ // oNE PROBlem can be in get objects and the counters
 
       switch (count_obj_header_bytes){
@@ -428,7 +431,7 @@ public:
 			if (count_obj_header_bytes == 4){ // The object header goes from 0 to 3
               count_obj_header_bytes = 0; // Restart
 
-              m_FSM.transition(ENoseState::GetObjects);
+              m_FSM.transition(RadarState::GetObjects);
 #ifdef DEBUG_OUT
               std::cout << " " << std::endl;
               std::cout << "Going to GetObjects" << std::endl;
@@ -443,7 +446,7 @@ public:
           }
 
   }
-	else if (state == ENoseState::GetObjects){
+	else if (state == RadarState::GetObjects){
 		if(event == Event::Update){
       //std::cout << " " <<std::endl;
       //std::cout << "GETOBJECTS STATE: bytes "<< (unsigned int)byte <<std::endl;
@@ -574,7 +577,7 @@ public:
 
 				tlv_counter = 0;
 				TLV_required = 2;
-				m_FSM.transition(ENoseState::SearchTLV); // Go and search for TLV 2
+				m_FSM.transition(RadarState::SearchTLV); // Go and search for TLV 2
 		#ifdef DEBUG_OUT
         std::cout << "Going to Search TLV 2" << std::endl;
         std::cout << " " << std::endl;
@@ -587,7 +590,7 @@ public:
 		}
 
 	}
-	else if (state == ENoseState::GetRangeProfile){
+	else if (state == RadarState::GetRangeProfile){
 		if(event == Event::Update){
 
        if(counter_bytes_in_range_profile % 2 == 0){ // Even byte
@@ -608,7 +611,7 @@ public:
 
             tlv_counter = 0;
     				TLV_required = 3;
-    				m_FSM.transition(ENoseState::SearchTLV); // Go and search for TLV 2
+    				m_FSM.transition(RadarState::SearchTLV); // Go and search for TLV 2
 
   #ifdef DEBUG_OUT
             std::cout << " " << std::endl;
@@ -624,7 +627,7 @@ public:
 				// After getting the range profile we could go to get the NOiseProfile
 		}
 	}
-	else if (state == ENoseState::GetNoiseProfile){
+	else if (state == RadarState::GetNoiseProfile){
 		if(event == Event::Update){
 
 				// After getting the Noise profile we could go for a possible cleaning of the objects using a loop and the info from range and noise profile
@@ -646,7 +649,7 @@ public:
 
             tlv_counter = 0;
      				TLV_required = 6;
-            m_FSM.transition(ENoseState::SearchTLV); // Go and search for TLV 2
+            m_FSM.transition(RadarState::SearchTLV); // Go and search for TLV 2
      				// Probably to restart pos_next_TLV, but I dont think it is necessary
 #ifdef DEBUG_OUT
             std::cout << " " << std::endl;
@@ -660,7 +663,7 @@ public:
 		}
 
 	}
-  else if (state == ENoseState::GetStats){
+  else if (state == RadarState::GetStats){
 		if(event == Event::Update){
 
       // After getting the Noise profile we could go for a possible cleaning of the objects using a loop and the info from range and noise profile
@@ -682,7 +685,7 @@ public:
 
           //tlv_counter = 0;
           //TLV_required = 6;
-          m_FSM.transition(ENoseState::Preprocessing); // Go and search for TLV 2
+          m_FSM.transition(RadarState::Preprocessing); // Go and search for TLV 2
 #ifdef DEBUG_OUT
           std::cout << " " << std::endl;
           std::cout << "Current State Stats Profile" << std::endl;
@@ -695,9 +698,9 @@ public:
 
     }
   }
-  else if (state == ENoseState::Preprocessing){ // If we preprocess, do we lose bytes?
+  else if (state == RadarState::Preprocessing){ // If we preprocess, do we lose bytes?
 		if(event == Event::Update){ // So far no preprocessing is implemented, so just start again
-      m_FSM.transition(ENoseState::SearchKeyword); // Are we losing a frame here? Are we having consecutive frames?
+      m_FSM.transition(RadarState::SearchKeyword); // Are we losing a frame here? Are we having consecutive frames?
 #ifdef DEBUG_OUT
       std::cout << " " << std::endl;
       std::cout << "Current State Preprocessing" << std::endl; // Not implemented yet
@@ -705,14 +708,14 @@ public:
 #endif
     }
   }
-	else if (state == ENoseState::MalformedPacket){
+	else if (state == RadarState::MalformedPacket){
 		if(event == Event::Update){
       #ifdef DEBUG_OUT
       std::cout << " " << std::endl;
       std::cout << "Current State Malformed packet :(" << std::endl; // Not implemented yet
       std::cout << " " << std::endl;
 #endif
-      m_FSM.transition(ENoseState::SearchKeyword); // Go and start looking for the next keyword because this packet is malformed
+      m_FSM.transition(RadarState::SearchKeyword); // Go and start looking for the next keyword because this packet is malformed
 		}
 
 	}
@@ -763,7 +766,7 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    FSM<ENoseState> m_FSM;
+    FSM<RadarState> m_FSM;
 
     SerialPort m_SerialPort;
 
