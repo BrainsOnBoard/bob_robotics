@@ -1,6 +1,4 @@
 #ifdef __linux__
-#include "joystick_base.inc"
-
 // BoB robotics includes
 #include "hid/joystick_linux.h"
 

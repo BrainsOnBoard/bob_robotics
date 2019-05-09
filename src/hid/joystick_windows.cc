@@ -1,6 +1,4 @@
 #ifdef _WIN32
-#include "joystick_base.inc"
-
 // BoB robotics includes
 #include "hid/joystick_windows.h"
 

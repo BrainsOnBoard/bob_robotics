@@ -56,9 +56,6 @@ enum class JButtonWindows
 //! JButton is set to JButtonLinux on Linux and JButtonWindows on Windows
 using JButton = JButtonWindows;
 
-// Explicitly instantiate class
-template class JoystickBase<JAxisWindows, JButtonWindows>;
-
 /*!
  * \brief Class for reading from joysticks on Windows.
  *
