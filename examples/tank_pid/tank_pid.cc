@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
-#include "common/read_objects.h"
+#include "navigation/read_objects.h"
 #include "hid/joystick.h"
 #include "robots/control/tank_pid.h"
 #include "vicon/udp.h"
@@ -114,7 +114,7 @@ bob_main(int argc, char **argv)
             return EXIT_FAILURE;
         }
 
-        goals = std::move(readObjects(argv[2]).at(0));
+        goals = std::move(Navigation::readObjects(argv[2]).at(0));
         std::cout << "Path read from " << argv[2] << std::endl;
         break;
     case 1:

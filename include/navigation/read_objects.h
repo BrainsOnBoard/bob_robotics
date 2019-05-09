@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "pose.h"
+#include "common/pose.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -11,6 +11,7 @@
 #include <vector>
 
 namespace BoBRobotics {
+namespace Navigation {
 /**!
  *  \brief Read a set of objects (vertices) from a YAML file
  *
@@ -19,5 +20,5 @@ namespace BoBRobotics {
  */
 std::vector<std::vector<Vector2<units::length::millimeter_t>>>
 readObjects(const filesystem::path &objectFilePath);
-
+} // Navigation
 } // BoBRobotics

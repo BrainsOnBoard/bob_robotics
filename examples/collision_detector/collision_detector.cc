@@ -1,8 +1,8 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/pose.h"
-#include "common/read_objects.h"
 #include "hid/joystick.h"
+#include "navigation/read_objects.h"
 #include "net/client.h"
 #include "vicon/udp.h"
 #include "robots/control/collision_detector.h"
@@ -113,7 +113,7 @@ main()
     Viz::SFMLWorld renderer{ V{ 5_m, 5_m } };
 
     // Read objects from file
-    const auto objects = readObjects("objects.yaml");
+    const auto objects = Navigation::readObjects("objects.yaml");
     Robots::CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
 
     // Object size + buffer around
