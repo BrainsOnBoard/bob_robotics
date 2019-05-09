@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "video/opengl.h"
+#include "video/opengl/opengl.h"
 
 // OpenGL includes
 #include <GL/glew.h>

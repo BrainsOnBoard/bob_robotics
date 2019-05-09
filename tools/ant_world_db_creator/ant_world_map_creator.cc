@@ -3,7 +3,7 @@
 #include "antworld/common.h"
 #include "antworld/renderer.h"
 #include "antworld/route_continuous.h"
-#include "video/opengl.h"
+#include "video/opengl/opengl.h"
 
 // Third-party includes
 #include "third_party/path.h"

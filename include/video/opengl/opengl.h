@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "input.h"
+#include "video/input.h"
 
 // Standard C++ includes
 #include <string>

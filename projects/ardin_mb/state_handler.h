@@ -12,7 +12,7 @@
 #include "common/fsm.h"
 #include "common/pose.h"
 #include "third_party/units.h"
-#include "video/opengl.h"
+#include "video/opengl/opengl.h"
 
 // Libantworld includes
 #include "antworld/common.h"

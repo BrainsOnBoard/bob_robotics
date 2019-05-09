@@ -4,7 +4,7 @@
 #include "common/pose.h"
 #include "hid/joystick.h"
 #include "robots/robot.h"
-#include "video/opengl.h"
+#include "video/opengl/opengl.h"
 #include "renderer.h"
 
 // OpenGL includes
