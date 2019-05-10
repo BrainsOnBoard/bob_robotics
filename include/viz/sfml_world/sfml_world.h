@@ -15,11 +15,24 @@
 #include <cstring>
 
 // Standard C++ includes
+#include <memory>
 #include <vector>
 
 namespace BoBRobotics {
 namespace Viz {
 using namespace units::literals;
+
+class CrossShape
+  : public sf::Drawable
+{
+public:
+    CrossShape(const sf::Vector2f &position, float size, float thickness, const sf::Color &colour);
+
+    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
+
+private:
+    sf::RectangleShape m_Horizontal, m_Vertical;
+}; // CrossShape
 
 class SFMLWorld
 {
@@ -32,6 +45,8 @@ public:
     public:
         CarAgent(const SFMLWorld &display, meter_t carWidth);
 
+        const auto &getSize() const { return m_Size; }
+
         template<class PoseType>
         void setPose(const PoseType &pose)
         {
@@ -43,8 +58,37 @@ public:
 
     private:
         const SFMLWorld &m_Display;
+        Vector2<meter_t> m_Size;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
+    };
+
+    class LineStrip
+      : public sf::Drawable
+    {
+    public:
+        LineStrip(const SFMLWorld &renderer, const sf::Color &colour)
+          : m_Renderer(renderer)
+          , m_Colour(colour)
+        {}
+
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+        {
+            target.draw(&m_Vertices[0], m_Vertices.size(), sf::PrimitiveType::LinesStrip, states);
+        }
+
+        template<typename PositionType>
+        void append(const PositionType &position)
+        {
+            m_Vertices.emplace_back(m_Renderer.vectorToPixel(position), m_Colour);
+        }
+
+        void clear() { m_Vertices.clear(); }
+
+    private:
+        std::vector<sf::Vertex> m_Vertices;
+        const SFMLWorld &m_Renderer;
+        const sf::Color m_Colour;
     };
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
@@ -58,8 +102,6 @@ public:
                  "BoB robotics",
                  sf::Style::Titlebar | sf::Style::Close,
                  getContextSettings())
-      , m_OriginLineHorizontal({ OriginLineLength, OriginLineThickness })
-      , m_OriginLineVertical({ OriginLineThickness, OriginLineLength })
       , m_MinBounds(minBounds)
     {
         m_Window.setVerticalSyncEnabled(true);
@@ -81,17 +123,23 @@ public:
             m_Window.setSize(windowSize);
         }
 
-        // Put red cross at origin
-        m_OriginLineHorizontal.setFillColor(sf::Color::Black);
-        m_OriginLineVertical.setFillColor(sf::Color::Black);
+        // Put cross at origin
         const auto origin = vectorToPixel(0.0, 0.0);
-        m_OriginLineHorizontal.setPosition({ origin.x - (OriginLineLength / 2.f),
-                                             origin.y - (OriginLineThickness / 2.f) });
-        m_OriginLineVertical.setPosition({ origin.x - (OriginLineThickness / 2.f),
-                                           origin.y - (OriginLineLength / 2.f) });
+        m_OriginCross = std::make_unique<CrossShape>(origin, OriginLineLength, OriginLineThickness, sf::Color::Black);
     }
 
     CarAgent createCarAgent(meter_t carWidth = 16.4_cm);
+
+    LineStrip createLineStrip(const sf::Color &colour) const
+    {
+        return LineStrip(*this, colour);
+    }
+
+    template<class VectorType>
+    CrossShape createCrossShape(const VectorType &position, float size, float thickness, const sf::Color &colour)
+    {
+        return CrossShape(vectorToPixel(position), size, thickness, colour);
+    }
 
     template<typename... Drawables>
     sf::Event update(Drawables&& ...drawables)
@@ -192,7 +240,7 @@ public:
 
 private:
     sf::RenderWindow m_Window;
-    sf::RectangleShape m_OriginLineHorizontal, m_OriginLineVertical;
+    std::unique_ptr<CrossShape> m_OriginCross;
     const Vector2<meter_t> m_MinBounds;
     meter_t m_UnitPerPixel;
     Vector2<meter_t> m_MouseClickPosition = Vector2<meter_t>::nan();
@@ -207,12 +255,8 @@ private:
         // Set background colour
         m_Window.clear(sf::Color::White);
 
-        // Draw cross at origin
-        m_Window.draw(m_OriginLineHorizontal);
-        m_Window.draw(m_OriginLineVertical);
-
-        // Draw extra drawable things
-        draw(std::forward<Drawables>(drawables)...);
+        // Draw objects
+        draw(*m_OriginCross, std::forward<Drawables>(drawables)...);
 
         // Swap buffers
         m_Window.display();
@@ -240,5 +284,6 @@ private:
     static sf::ContextSettings getContextSettings();
 
 }; // SFMLWorld
+
 } // Viz
 } // BobRobotics
