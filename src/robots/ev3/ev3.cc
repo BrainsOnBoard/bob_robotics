@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/circstat.h"
+#include "common/logging.h"
 #include "robots/ev3/ev3.h"
 
 // Third-party includes
@@ -14,6 +15,17 @@ using namespace units::literals;
 
 namespace BoBRobotics {
 namespace Robots {
+void
+checkMotor(const EV3::MotorType &motor, const std::string &label)
+{
+    const auto states = motor.state();
+    for (auto &state : states) {
+        if (state == "overloaded" || state == "stalled") {
+            LOGW << label << " motor is " << state;
+        }
+    }
+}
+
 EV3::EV3(const ev3dev::address_type leftMotorPort,
          const ev3dev::address_type rightMotorPort)
   : m_MotorLeft(leftMotorPort)
@@ -46,6 +58,16 @@ EV3::tank(float left, float right)
     m_MotorRight.set_speed_sp(maxTachos * right);
     m_MotorLeft.run_forever();
     m_MotorRight.run_forever();
+
+    // Every 3s check if the motors are overloaded
+    using namespace std::literals;
+    if (m_MotorStatusTimer.elapsed() > 3s) {
+        // Restart timer
+        m_MotorStatusTimer.start();
+
+        checkMotor(m_MotorLeft, "left");
+        checkMotor(m_MotorRight, "right");
+    }
 }
 
 millimeter_t
