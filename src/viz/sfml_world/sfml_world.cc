@@ -13,6 +13,26 @@ using namespace units::length;
 namespace BoBRobotics {
 namespace Viz {
 
+CrossShape::CrossShape(const sf::Vector2f &position, float size, float thickness, const sf::Color &colour)
+    : m_Horizontal({ size, thickness })
+    , m_Vertical({ thickness, size })
+{
+    m_Horizontal.setOrigin(size / 2.f, thickness / 2.f);
+    m_Vertical.setOrigin(thickness / 2.f, size / 2.f);
+    m_Horizontal.setPosition(position);
+    m_Vertical.setPosition(position);
+    m_Horizontal.setFillColor(colour);
+    m_Vertical.setFillColor(colour);
+}
+
+void CrossShape::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+    target.draw(m_Horizontal, states);
+    target.draw(m_Vertical, states);
+}
+
+constexpr float SFMLWorld::OriginLineThickness, SFMLWorld::OriginLineLength;
+
 SFMLWorld::CarAgent::CarAgent(const SFMLWorld &display, meter_t carWidth)
   : m_Display(display)
 {
