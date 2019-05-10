@@ -72,6 +72,22 @@ public:
 
     void setAttitude(degree_t yaw, degree_t pitch, degree_t roll);
 
+    void moveTo(const Pose3<meter_t, degree_t> &pose);
+
+    template<class Func>
+    bool moveToSync(const Pose3<meter_t, degree_t> &pose, Func)
+    {
+        moveTo(pose);
+        return true;
+    }
+
+    template<class Func>
+    bool moveTo(const Pose3<meter_t, degree_t> &pose, Func)
+    {
+        moveTo(pose);
+        return true;
+    }
+
     bool update();
 
     bool isOpen() const;
