@@ -5,9 +5,10 @@
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "net/client.h"
-#include "vicon/udp.h"
 #include "robots/control/collision_detector.h"
 #include "robots/tank_netsink.h"
+#include "vicon/udp.h"
+#include "viz/sfml_world/arena_object.h"
 #include "viz/sfml_world/sfml_world.h"
 
 // Eigen
@@ -51,39 +52,6 @@ private:
     sf::ConvexShape m_Shape;
 };
 
-class ArenaObject
-  : public sf::Drawable
-{
-public:
-    template<class VectorArrayType, class MatrixType>
-    ArenaObject(const Viz::SFMLWorld &renderer, const VectorArrayType &original, const MatrixType &resized)
-      : m_GreenShape(original.size())
-      , m_RedShape(original.size())
-    {
-        // Dark green
-        m_GreenShape.setFillColor(sf::Color{ 0x00, 0x88, 0x00 });
-
-        // Add each vertex to the shape
-        for (size_t i = 0; i < original.size(); i++) {
-            m_GreenShape.setPoint(i, renderer.vectorToPixel(original[i]));
-        }
-
-        m_RedShape.setFillColor(sf::Color::Red);
-        for (size_t i = 0; i < original.size(); i++) {
-            m_RedShape.setPoint(i, renderer.vectorToPixel(resized(i, 0), resized(i, 1)));
-        }
-    }
-
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
-    {
-        target.draw(m_RedShape, states);
-        target.draw(m_GreenShape, states);
-    }
-
-private:
-    sf::ConvexShape m_GreenShape, m_RedShape;
-};
-
 int
 main()
 {
@@ -116,7 +84,7 @@ main()
     const auto &resizedObjects = collisionDetector.getResizedObjects();
 
     // Create drawable objects
-    std::vector<ArenaObject> objectShapes;
+    std::vector<Viz::ArenaObject> objectShapes;
     objectShapes.reserve(objects.size());
     for (size_t i = 0; i < objects.size(); i++) {
         objectShapes.emplace_back(renderer, objects[i], resizedObjects[i]);
