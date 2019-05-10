@@ -2,6 +2,7 @@
     Pure Pursuit Controller. The controller takes a list of waypoints as a path to follow,
     then it calculates the optimal turning angle to stay on the path
 */
+#pragma once
 
 // BoB robotics includes
 #include "common/pose.h"
