@@ -134,10 +134,6 @@ bob_main(int argc, char **argv)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     // Drive robot with joystick
     HID::Joystick joystick;

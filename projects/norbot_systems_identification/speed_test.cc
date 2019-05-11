@@ -153,13 +153,6 @@ bob_main(int, char **)
         }
     });
 
-    // Wait for Vicon system
-    while (vicon.getNumObjects() == 0) {
-        std::cout << "Waiting for object" << std::endl;
-        std::this_thread::sleep_for(1s);
-    }
-    std::cout << "Connected to Vicon system" << std::endl;
-
     // Run client in background, checking for background errors thrown
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch ctrl-C
