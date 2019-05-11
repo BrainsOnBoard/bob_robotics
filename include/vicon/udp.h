@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "common/assert.h"
 #include "common/circstat.h"
+#include "common/logging.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "common/thread.h"
@@ -387,7 +388,7 @@ private:
         // ...and, if not, create one
         size_t id;
         if (pos == m_ObjectNames.cend()) {
-            std::cout << "Vicon: Found new object: " << data.objectName << std::endl;
+            LOGI << "Vicon: Found new object: " << data.objectName;
             id = m_ObjectData.size();
             m_ObjectNames.emplace_back(data.objectName);
             m_ObjectData.emplace_back(m_ObjectNames.back());
