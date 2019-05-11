@@ -2,8 +2,10 @@
 
 // BoB robotics includes
 #include "common/assert.h"
+#include "common/circstat.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
+#include "common/thread.h"
 #include "os/net.h"
 
 // Standard C includes
@@ -24,6 +26,7 @@ namespace BoBRobotics
 {
 namespace Vicon
 {
+using namespace std::literals;
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
@@ -36,11 +39,14 @@ class ObjectData
     using millimeter_t = units::length::millimeter_t;
 
 public:
+    ObjectData(const std::string &objectName)
+      : m_Name(objectName)
+    {}
+
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const char (&name)[24],
-                uint32_t frameNumber,
+    void update(uint32_t frameNumber,
                 Pose3<millimeter_t, radian_t> pose);
 
     uint32_t getFrameNumber() const;
@@ -63,7 +69,7 @@ public:
         return m_Pose;
     }
 
-    const char *getName() const;
+    const std::string &getName() const;
 
     Stopwatch::Duration timeSinceReceived() const;
 
@@ -72,7 +78,7 @@ private:
     // Members
     //----------------------------------------------------------------------------
     uint32_t m_FrameNumber = 0;
-    char m_Name[24];
+    const std::string &m_Name;
     Pose3<millimeter_t, radian_t> m_Pose;
     Stopwatch m_ReceivedTimer;
 };
@@ -94,11 +100,14 @@ class ObjectDataVelocity : public ObjectData
     using second_t = units::time::millisecond_t;
 
 public:
+    ObjectDataVelocity(const std::string &name)
+      : ObjectData(name)
+    {}
+
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void update(const char (&name)[24],
-                uint32_t frameNumber,
+    void update(uint32_t frameNumber,
                 Pose3<millimeter_t, radian_t> pose);
 
     template<typename VelocityUnit = meters_per_second_t>
@@ -126,8 +135,7 @@ private:
                                     std::array<VelocityType, 3> &velocityOut,
                                     const second_t &deltaS,
                                     const double alpha,
-                                    DiffFunc diff
-                                    )
+                                    DiffFunc diff)
     {
         // Temporary array
         std::array<VelocityType, 3> instVelocity;
@@ -174,10 +182,12 @@ class ObjectReference
 
 public:
     ObjectReference(UDPClient<ObjectDataType> &client,
-                    const unsigned id,
+                    const size_t id,
+                    const std::string &objectName,
                     const Stopwatch::Duration timeoutDuration)
         : m_Client(client)
         , m_Id(id)
+        , m_Name(objectName)
         , m_TimeoutDuration(timeoutDuration)
     {}
 
@@ -201,6 +211,8 @@ public:
                                             data.template getAttitude<AngleUnit>());
     }
 
+    const auto &getName() const { return m_Name; }
+
     auto timeSinceReceived() const
     {
         return getData().timeSinceReceived();
@@ -217,7 +229,8 @@ public:
 
 private:
     UDPClient<ObjectDataType> &m_Client;
-    const unsigned m_Id;
+    const size_t m_Id;
+    const std::string &m_Name;
     const Stopwatch::Duration m_TimeoutDuration;
 };
 
@@ -228,9 +241,33 @@ private:
 template<typename ObjectDataType = ObjectData>
 class UDPClient
 {
-public:
-    UDPClient() {}
+private:
+    /*
+     * NB: The first member of this struct *should* be object ID, but the
+     * Vicon system seems to just give a value of zero for every item, which
+     * isn't terribly helpful. So instead we distinguish objects based on their
+     * names.
+     */
+#ifdef _MSVC
+#pragma pack(push, 1)
+    struct RawObjectData {
+        uint8_t unused;
+        uint16_t itemDataSize;
+        char objectName[24];
+        double position[3], attitude[3];
+    };
+    #pragma pack(pop)
+#else
+    struct __attribute__((__packed__)) RawObjectData {
+        uint8_t unused;
+        uint16_t itemDataSize;
+        char objectName[24];
+        std::array<double, 3> position, attitude;
+    };
+#endif
 
+public:
+    UDPClient() = default;
     UDPClient(uint16_t port)
     {
         connect(port);
@@ -238,11 +275,8 @@ public:
 
     virtual ~UDPClient()
     {
-        // Set quit flag and join read thread
-        if(m_ReadThread.joinable()) {
-            m_ShouldQuit = true;
-            m_ReadThread.join();
-        }
+        // Set quit flag
+        m_ShouldQuit = true;
     }
 
     //----------------------------------------------------------------------------
@@ -250,6 +284,9 @@ public:
     //----------------------------------------------------------------------------
     void connect(uint16_t port)
     {
+        // Lock until we have at least one packet from Vicon system
+        m_ConnectionMutex.lock();
+
         // Create socket
         int socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(socket < 0) {
@@ -283,64 +320,79 @@ public:
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
-        m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
+        m_ReadThread = Thread<>(&UDPClient::readThread, this, socket);
     }
 
-    unsigned int getNumObjects()
+    size_t getNumObjects()
     {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        waitUntilConnected();
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.size();
     }
 
-    unsigned int findObjectID(const std::string &name)
+    size_t findObjectID(const std::string &name)
     {
+        waitUntilConnected();
+
         // Search for object with name
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
-        auto objIter = std::find_if(m_ObjectData.cbegin(), m_ObjectData.cend(),
-            [&name](const ObjectDataType &object)
-            {
-                return (strcmp(object.getName(), name.c_str()) == 0);
-            });
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
+        const auto objIter = std::find(m_ObjectNames.cbegin(), m_ObjectNames.cend(), name);
 
         // If object wasn't found, raise error
-        if(objIter == m_ObjectData.cend()) {
+        if(objIter == m_ObjectNames.cend()) {
             throw std::out_of_range("Cannot find object '" + name + "'");
         }
         // Otherwise, return its index i.e. object ID
         else {
-            return (unsigned int)std::distance(m_ObjectData.cbegin(), objIter);
+            return static_cast<size_t>(std::distance(m_ObjectNames.cbegin(), objIter));
         }
     }
 
     //! Get current pose information for specified object
-    ObjectDataType getObjectData(unsigned int id)
+    ObjectDataType getObjectData(size_t id)
     {
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        waitUntilConnected();
+        std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.at(id);
     }
 
     //! Returns an object whose pose is updated by the Vicon system over time
-    auto getObjectReference(unsigned int id,
-                            Stopwatch::Duration timeoutDuration = Stopwatch::Duration::max())
+    auto getObjectReference(size_t id,
+                            Stopwatch::Duration timeoutDuration = 10s)
     {
-        return ObjectReference<ObjectDataType>(*this, id, timeoutDuration);
+        waitUntilConnected();
+        return ObjectReference<ObjectDataType>(*this, id, m_ObjectNames[id], timeoutDuration);
     }
+
+    auto getObjectReference(const std::string& name,
+                            Stopwatch::Duration timeoutDuration = 10s)
+    {
+        const auto id = findObjectID(name);
+        return ObjectReference<ObjectDataType>(*this, id, m_ObjectNames[id], timeoutDuration);
+    }
+
+    bool connected() const { return m_IsConnected; }
 
 private:
     //----------------------------------------------------------------------------
     // Private API
     //----------------------------------------------------------------------------
-    void updateObjectData(unsigned int id, const char(&name)[24],
-                          uint32_t frameNumber,
-                          const std::array<double, 3> &position,
-                          const std::array<double, 3> &attitude)
+    void updateObjectData(uint32_t frameNumber, const RawObjectData &data)
     {
-        // Lock mutex
-        std::lock_guard<std::mutex> guard(m_ObjectDataMutex);
+        // Check if we already have a data structure for this object...
+        const auto pos = std::find_if(m_ObjectNames.cbegin(), m_ObjectNames.cend(), [&data](const auto &name) {
+            return strcmp(data.objectName, name.c_str()) == 0;
+        });
 
-        // If no object data structure has been created for this ID, add one
-        if (id >= m_ObjectData.size()) {
-            m_ObjectData.resize(id + 1);
+        // ...and, if not, create one
+        size_t id;
+        if (pos == m_ObjectNames.cend()) {
+            std::cout << "Vicon: Found new object: " << data.objectName << std::endl;
+            id = m_ObjectData.size();
+            m_ObjectNames.emplace_back(data.objectName);
+            m_ObjectData.emplace_back(m_ObjectNames.back());
+        } else {
+            id = static_cast<size_t>(std::distance(m_ObjectNames.cbegin(), pos));
         }
 
         /*
@@ -352,13 +404,13 @@ private:
          */
         using namespace units::length;
         using namespace units::angle;
-        m_ObjectData[id].update(name, frameNumber,
-                                { { millimeter_t(position[0]),
-                                    millimeter_t(position[1]),
-                                    millimeter_t(position[2])},
-                                  { radian_t(attitude[2]),
-                                    radian_t(attitude[0]),
-                                    radian_t(attitude[1]) } });
+        m_ObjectData[id].update(frameNumber,
+                                { { millimeter_t(data.position[0]),
+                                    millimeter_t(data.position[1]),
+                                    millimeter_t(data.position[2])},
+                                  { radian_t(data.attitude[2]),
+                                    radian_t(data.attitude[0]),
+                                    radian_t(data.attitude[1]) } });
     }
 
     void readThread(int socket)
@@ -368,13 +420,13 @@ private:
         uint8_t buffer[1024];
 
         // Loop until quit flag is set
-        for(unsigned int f = 0; !m_ShouldQuit; f++) {
+        while (!m_ShouldQuit) {
             // Read datagram
             const ssize_t bytesReceived = recvfrom(socket, &buffer[0], 1024,
                                                    0, nullptr, nullptr);
 
             // If there was an error
-            if(bytesReceived == -1) {
+            if (bytesReceived == -1) {
                 // If this was a timeout, continue
                 if(errno == EAGAIN || errno == EINTR) {
                     continue;
@@ -391,37 +443,22 @@ private:
                 memcpy(&frameNumber, &buffer[0], sizeof(uint32_t));
 
                 // Read items in block
-                const unsigned int itemsInBlock = (unsigned int)buffer[4];
+                const size_t itemsInBlock = (size_t) buffer[4];
 
-                // Loop through items in blcok
-                unsigned int itemOffset = 5;
-                for(unsigned int i = 0; i < itemsInBlock; i++) {
-                    // Read object ID
-                    const unsigned int objectID = (unsigned int)buffer[itemOffset];
+                // Lock mutex
+                std::lock_guard<std::mutex> guard(m_ObjectMutex);
 
-                    // Read size of item
-                    uint16_t itemDataSize;
-                    memcpy(&itemDataSize, &buffer[itemOffset + 1], sizeof(uint16_t));
-                    BOB_ASSERT(itemDataSize == 72);
+                const auto objectData = reinterpret_cast<RawObjectData *>(&buffer[5]);
+                std::for_each(objectData, &objectData[itemsInBlock], [&frameNumber, this](auto &data) {
+                    data.objectName[23] = '\0';
+                    BOB_ASSERT(data.itemDataSize == 72);
+                    updateObjectData(frameNumber, data);
+                });
 
-                    // Read object name and check it is NULL-terminated
-                    char objectName[24];
-                    memcpy(&objectName[0], &buffer[itemOffset + 3], 24);
-                    BOB_ASSERT(objectName[23] == '\0');
-
-                    // Read object position
-                    std::array<double, 3> position;
-                    memcpy(&position[0], &buffer[itemOffset + 27], 3 * sizeof(double));
-
-                    // Read object attitude
-                    std::array<double, 3> attitude;
-                    memcpy(&attitude[0], &buffer[itemOffset + 51], 3 * sizeof(double));
-
-                    // Update item
-                    updateObjectData(objectID, objectName, frameNumber, position, attitude);
-
-                    // Update offset for next offet
-                    itemOffset += itemDataSize;
+                // If this is the first packet we've received, signal that we're connected
+                if (!m_IsConnected) {
+                    m_IsConnected = true;
+                    m_ConnectionMutex.unlock();
                 }
             }
         }
@@ -430,15 +467,27 @@ private:
         close(socket);
     }
 
+    void waitUntilConnected()
+    {
+        /*
+         * The Vicon system transmits packets at a high frequency, so if we don't
+         * receive data almost immediately then we're not connected.
+         */
+        if (!m_IsConnected && !m_ConnectionMutex.try_lock_for(1s)) {
+            throw std::runtime_error("Could not connect to Vicon system");
+        }
+    }
+
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    std::atomic<bool> m_ShouldQuit;
-    std::thread m_ReadThread;
-    void *m_ReadUserData;
-
-    std::mutex m_ObjectDataMutex;
+    std::mutex m_ObjectMutex;
     std::vector<ObjectDataType> m_ObjectData;
+    std::vector<std::string> m_ObjectNames;
+    std::atomic<bool> m_ShouldQuit;
+    std::timed_mutex m_ConnectionMutex;
+    bool m_IsConnected = false;
+    Thread<> m_ReadThread;
 };
-} // namespace Vicon
+} // Vicon
 } // BoBRobotics

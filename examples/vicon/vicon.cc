@@ -2,7 +2,7 @@
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
-// C++ includes
+// Standard C++ includes
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -19,24 +19,13 @@ int main(int argc, char **argv)
 
     const std::string objectName = (argc > 1) ? argv[1] : "Norbot";
 
-    unsigned int norbotID;
-    while(true) {
-        try {
-            norbotID = vicon.findObjectID(objectName);
-            break;
-        }
-        catch(std::out_of_range &ex) {
-            std::this_thread::sleep_for(1s);
-            std::cout << "Waiting for object '" << objectName << "'" << std::endl;
-        }
-    }
-
-    std::cout << "'" << objectName << "' found with id:" << norbotID << std::endl;
+    size_t norbotID = vicon.findObjectID(objectName);
+    std::cout << "'" << objectName << "' found with id: " << norbotID << std::endl;
 
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 1000; i++) {
         auto objectData = vicon.getObjectData(norbotID);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
