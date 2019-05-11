@@ -1,18 +1,18 @@
 #pragma once
 
-// C includes
+// BoB robotics includes
+#include "common/thread.h"
+
+// Standard C includes
 #include <cmath>
 #include <cstdint>
 
-// C++ includes
+// Standard C++ includes
 #include <array>
 #include <functional>
 #include <limits>
 #include <string>
 #include <vector>
-
-// BoB robotics includes
-#include "../common/thread.h"
 
 namespace BoBRobotics {
 namespace HID {
