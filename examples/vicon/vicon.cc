@@ -22,13 +22,7 @@ int main(int argc, char **argv)
      * If command-line argument is provided, search for an object with specified
      * name, otherwise return first discovered object.
      */
-    ObjectData objectData = [&]() {
-        if (argc > 1) {
-            return vicon.getObjectData(argv[1]);
-        } else {
-            return vicon.getObjectData();
-        }
-    }();
+    ObjectData objectData = (argc > 1) ? vicon.getObjectData(argv[1]) : vicon.getObjectData();
     const std::string objectName = objectData.getName();
     LOGI << "Found object: " << objectName;
 
