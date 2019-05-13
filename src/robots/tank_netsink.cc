@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/logging.h"
 #include "common/stopwatch.h"
 #include "robots/tank_netsink.h"

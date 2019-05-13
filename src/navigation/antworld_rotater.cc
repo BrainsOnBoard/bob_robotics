@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "navigation/antworld_rotater.h"
-#include "common/assert.h"
+#include "common/macros.h"
 
 using namespace units::angle;
 

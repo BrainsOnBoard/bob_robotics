@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "viz/car_display/car_display.h"
 
 // Standard C++ includes

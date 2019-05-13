@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/stopwatch.h"

@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "antworld/route_continuous.h"
 #include "antworld/common.h"
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/logging.h"
 
 // Standard C++ includes
