@@ -186,10 +186,10 @@ public:
                     const size_t id,
                     const std::string &objectName,
                     const Stopwatch::Duration timeoutDuration)
-        : m_Client(client)
-        , m_Id(id)
-        , m_Name(objectName)
-        , m_TimeoutDuration(timeoutDuration)
+      : m_Client(client)
+      , m_Id(id)
+      , m_Name(objectName)
+      , m_TimeoutDuration(timeoutDuration)
     {}
 
     template<typename LengthUnit = millimeter_t>
@@ -263,7 +263,7 @@ private:
         uint8_t unused;
         uint16_t itemDataSize;
         char objectName[24];
-        std::array<double, 3> position, attitude;
+        double position[3], attitude[3];
     };
 #endif
 
