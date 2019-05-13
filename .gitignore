@@ -12,6 +12,8 @@
 **/.ipynb_checkpoints/
 
 # QT creator project files
+bob_robotics.cflags
+bob_robotics.cxxflags
 bob_robotics.config
 bob_robotics.creator
 bob_robotics.files
