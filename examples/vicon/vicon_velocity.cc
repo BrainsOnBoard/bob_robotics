@@ -21,7 +21,7 @@ int main()
         return EXIT_FAILURE;
     }
     for (int i = 0; i < 120; i++) {
-        auto objectData = vicon.getObjectData(0);
+        auto objectData = vicon.getObjectData();
         const auto velocity = objectData.getVelocity();
         const auto angularVelocity = objectData.getAngularVelocity<degrees_per_second_t>();
 

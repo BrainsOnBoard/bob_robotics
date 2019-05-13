@@ -35,7 +35,7 @@ main()
     bool warningGiven = false;
     do {
         plt::figure(1);
-        auto data = vicon.getObjectData(0);
+        auto data = vicon.getObjectData();
         Viz::plotAgent(data.getPose<>(), -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         if (data.timeSinceReceived() > 500ms) {
             if (!warningGiven) {

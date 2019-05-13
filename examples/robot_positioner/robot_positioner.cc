@@ -136,7 +136,7 @@ public:
                 m_PrintTimer.reset();
                 break;
             case Event::Update: {
-                const auto objectData = m_Vicon.getObjectData(0);
+                const auto objectData = m_Vicon.getObjectData();
                 const auto position = objectData.getPosition();
                 const auto attitude = objectData.getAttitude();
                 if (objectData.timeSinceReceived() > 10s) {

@@ -109,7 +109,7 @@ bob_main(int argc, char **argv)
 
         if (stopwatch.started()) { // If we're recording
             const millisecond_t time = stopwatch.elapsed();
-            const auto objectData = vicon.getObjectData(0);
+            const auto objectData = vicon.getObjectData();
             const auto attitude = objectData.getAttitude();
             const auto angvel = objectData.getAngularVelocity();
             dataFile << time() << ", " << attitude[0]() << ", " << attitude[1]() << ", " << attitude[2]() << ", "

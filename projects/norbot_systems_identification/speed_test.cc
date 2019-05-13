@@ -75,7 +75,7 @@ public:
             m_StopwatchSample.start();
 
             // Get coordinates from Vicon
-            const auto position = m_Vicon.getObjectData(0).getPosition<meter_t>();
+            const auto position = m_Vicon.getObjectData().getPosition<meter_t>();
 
             // Write to CSV file
             m_FileStream << position[0].value() << ", " << position[1].value()

@@ -137,7 +137,7 @@ main()
         // Poll for joystick events
         joystick.update();
 
-        collisionDetector.setRobotPose(vicon.getObjectData(0).getPose());
+        collisionDetector.setRobotPose(vicon.getObjectData().getPose());
         if (collisionDetector.collisionOccurred()) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();

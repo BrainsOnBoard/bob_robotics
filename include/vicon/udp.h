@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace BoBRobotics
@@ -70,7 +71,6 @@ public:
     }
 
     const std::string &getName() const;
-
     Stopwatch::Duration timeSinceReceived() const;
 
 private:
@@ -182,11 +182,9 @@ class ObjectReference
 
 public:
     ObjectReference(UDPClient<ObjectDataType> &client,
-                    const size_t id,
                     const std::string &objectName,
                     const Stopwatch::Duration timeoutDuration)
       : m_Client(client)
-      , m_Id(id)
       , m_Name(objectName)
       , m_TimeoutDuration(timeoutDuration)
     {}
@@ -211,7 +209,7 @@ public:
                                             data.template getAttitude<AngleUnit>());
     }
 
-    const auto &getName() const { return m_Name; }
+    const std::string &getName() const { return m_Name; }
 
     auto timeSinceReceived() const
     {
@@ -220,7 +218,7 @@ public:
 
     ObjectDataType getData() const
     {
-        const auto objectData = m_Client.getObjectData(m_Id);
+        const auto objectData = m_Client.getObjectData(m_Name);
         if (objectData.timeSinceReceived() > m_TimeoutDuration) {
             throw TimedOutError();
         }
@@ -229,8 +227,7 @@ public:
 
 private:
     UDPClient<ObjectDataType> &m_Client;
-    const size_t m_Id;
-    const std::string &m_Name;
+    const std::string m_Name;
     const Stopwatch::Duration m_TimeoutDuration;
 };
 
@@ -325,45 +322,40 @@ public:
         return m_ObjectData.size();
     }
 
-    size_t findObjectID(const std::string &name)
-    {
-        waitUntilConnected();
-
-        // Search for object with name
-        std::lock_guard<std::mutex> guard(m_ObjectMutex);
-        const auto objIter = std::find(m_ObjectNames.cbegin(), m_ObjectNames.cend(), name);
-
-        // If object wasn't found, raise error
-        if(objIter == m_ObjectNames.cend()) {
-            throw std::out_of_range("Cannot find object '" + name + "'");
-        }
-        // Otherwise, return its index i.e. object ID
-        else {
-            return static_cast<size_t>(std::distance(m_ObjectNames.cbegin(), objIter));
-        }
-    }
-
     //! Get current pose information for specified object
-    ObjectDataType getObjectData(size_t id)
+    ObjectDataType getObjectData(const std::string &name)
     {
         waitUntilConnected();
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
-        return m_ObjectData.at(id);
+        return m_ObjectData.at(name);
     }
+
+     //! Get current pose information for first object
+     ObjectDataType getObjectData()
+     {
+         waitUntilConnected();
+         std::lock_guard<std::mutex> guard(m_ObjectMutex);
+         return m_ObjectData.begin()->second;
+     }
+
+     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
+     {
+         waitUntilConnected();
+         std::lock_guard<std::mutex> guard(m_ObjectMutex);
+         return ObjectReference<ObjectDataType>(*this,
+                                                m_ObjectData.begin()->first,
+                                                m_ObjectData.begin()->second,
+                                                timeoutDuration);
+     }
 
     //! Returns an object whose pose is updated by the Vicon system over time
-    auto getObjectReference(size_t id,
-                            Stopwatch::Duration timeoutDuration = 10s)
-    {
-        waitUntilConnected();
-        return ObjectReference<ObjectDataType>(*this, id, m_ObjectNames[id], timeoutDuration);
-    }
-
     auto getObjectReference(const std::string& name,
-                            Stopwatch::Duration timeoutDuration = 10s)
+                            Stopwatch::Duration timeoutDuration = 10s) const
     {
-        const auto id = findObjectID(name);
-        return ObjectReference<ObjectDataType>(*this, id, m_ObjectNames[id], timeoutDuration);
+        return ObjectReference<ObjectDataType>(*this,
+                                               name,
+                                               m_ObjectData[name],
+                                               timeoutDuration);
     }
 
     bool connected() const { return m_IsConnected; }
@@ -375,19 +367,13 @@ private:
     void updateObjectData(uint32_t frameNumber, const RawObjectData &data)
     {
         // Check if we already have a data structure for this object...
-        const auto pos = std::find_if(m_ObjectNames.cbegin(), m_ObjectNames.cend(), [&data](const auto &name) {
-            return strcmp(data.objectName, name.c_str()) == 0;
-        });
+        const std::string objectName = data.objectName;
+        const auto pos = m_ObjectData.find(objectName);
 
         // ...and, if not, create one
-        size_t id;
-        if (pos == m_ObjectNames.cend()) {
-            LOGI << "Vicon: Found new object: " << data.objectName;
-            id = m_ObjectData.size();
-            m_ObjectNames.emplace_back(data.objectName);
-            m_ObjectData.emplace_back(m_ObjectNames.back());
-        } else {
-            id = static_cast<size_t>(std::distance(m_ObjectNames.cbegin(), pos));
+        if (pos == m_ObjectData.cend()) {
+            LOGI << "Vicon: Found new object: " << objectName;
+            m_ObjectData.emplace(objectName, ObjectDataType{ objectName });
         }
 
         /*
@@ -399,13 +385,13 @@ private:
          */
         using namespace units::length;
         using namespace units::angle;
-        m_ObjectData[id].update(frameNumber,
-                                { { millimeter_t(data.position[0]),
-                                    millimeter_t(data.position[1]),
-                                    millimeter_t(data.position[2])},
-                                  { radian_t(data.attitude[2]),
-                                    radian_t(data.attitude[0]),
-                                    radian_t(data.attitude[1]) } });
+        m_ObjectData.at(objectName).update(frameNumber,
+                                           { { millimeter_t(data.position[0]),
+                                               millimeter_t(data.position[1]),
+                                               millimeter_t(data.position[2]) },
+                                           { radian_t(data.attitude[2]),
+                                               radian_t(data.attitude[0]),
+                                               radian_t(data.attitude[1]) } });
     }
 
     void readThread(int socket)
@@ -445,7 +431,6 @@ private:
 
                 const auto objectData = reinterpret_cast<RawObjectData *>(&buffer[5]);
                 std::for_each(objectData, &objectData[itemsInBlock], [&frameNumber, this](auto &data) {
-                    data.objectName[23] = '\0';
                     BOB_ASSERT(data.itemDataSize == 72);
                     updateObjectData(frameNumber, data);
                 });
@@ -477,8 +462,7 @@ private:
     // Members
     //----------------------------------------------------------------------------
     std::mutex m_ObjectMutex;
-    std::vector<ObjectDataType> m_ObjectData;
-    std::vector<std::string> m_ObjectNames;
+    std::unordered_map<std::string, ObjectDataType> m_ObjectData;
     std::atomic<bool> m_ShouldQuit;
     std::timed_mutex m_ConnectionMutex;
     bool m_IsConnected = false;
