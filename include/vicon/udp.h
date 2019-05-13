@@ -363,7 +363,7 @@ public:
         waitUntilConnected();
 
         // Convert to fixed-size char array
-        BOB_ASSERT(name.size() <= 24);
+        BOB_ASSERT(name.size() < 24);
         char bytes[24];
         strcpy(bytes, name.c_str());
 
