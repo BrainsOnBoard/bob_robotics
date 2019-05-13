@@ -363,8 +363,9 @@ public:
         waitUntilConnected();
 
         // Convert to fixed-size char array
+        BOB_ASSERT(name.size() <= 24);
         char bytes[24];
-        std::copy(name.cbegin(), name.cend(), bytes);
+        strcpy(bytes, name.c_str());
 
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.at(bytes);
