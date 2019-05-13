@@ -366,12 +366,12 @@ private:
     {
         // Check if we already have a data structure for this object...
         const std::string objectName = data.objectName;
-        const auto pos = m_ObjectData.find(objectName);
+        auto pos = m_ObjectData.find(objectName);
 
         // ...and, if not, create one
         if (pos == m_ObjectData.cend()) {
             LOGI << "Vicon: Found new object: " << objectName;
-            m_ObjectData.emplace(objectName, ObjectDataType{ objectName });
+            pos = m_ObjectData.emplace(objectName, ObjectDataType{ objectName }).first;
         }
 
         /*
@@ -383,13 +383,13 @@ private:
          */
         using namespace units::length;
         using namespace units::angle;
-        m_ObjectData.at(objectName).update(frameNumber,
-                                           { { millimeter_t(data.position[0]),
-                                               millimeter_t(data.position[1]),
-                                               millimeter_t(data.position[2]) },
-                                           { radian_t(data.attitude[2]),
-                                               radian_t(data.attitude[0]),
-                                               radian_t(data.attitude[1]) } });
+        pos->second.update(frameNumber,
+                           { { millimeter_t(data.position[0]),
+                               millimeter_t(data.position[1]),
+                               millimeter_t(data.position[2]) },
+                           { radian_t(data.attitude[2]),
+                               radian_t(data.attitude[0]),
+                               radian_t(data.attitude[1]) } });
     }
 
     void readThread(int socket)
