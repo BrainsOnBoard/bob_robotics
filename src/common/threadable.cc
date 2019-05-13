@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/thread.h"
+#include "common/threadable.h"
 
 // Standard C++ includes
 #include <stdexcept>
@@ -36,6 +36,9 @@ void
 Threadable::stop()
 {
     m_DoRun = false;
+    if (m_Thread.joinable()) {
+        m_Thread.join();
+    }
 }
 
 Threadable::Threadable(Threadable &&old)

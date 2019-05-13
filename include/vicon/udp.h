@@ -6,7 +6,6 @@
 #include "common/logging.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "common/thread.h"
 #include "os/net.h"
 
 // Standard C includes
@@ -276,8 +275,13 @@ public:
 
     virtual ~UDPClient()
     {
-        // Set quit flag
-        m_ShouldQuit = true;
+        if (m_ReadThread.joinable()) {
+            // Set quit flag
+            m_ShouldQuit = true;
+
+            // Wait for thread to finish
+            m_ReadThread.join();
+        }
     }
 
     //----------------------------------------------------------------------------
@@ -321,7 +325,7 @@ public:
 
         // Clear atomic stop flag and start thread
         m_ShouldQuit = false;
-        m_ReadThread = Thread<>(&UDPClient::readThread, this, socket);
+        m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
     }
 
     size_t getNumObjects()
@@ -488,7 +492,7 @@ private:
     std::atomic<bool> m_ShouldQuit;
     std::timed_mutex m_ConnectionMutex;
     bool m_IsConnected = false;
-    Thread<> m_ReadThread;
+    std::thread m_ReadThread;
 };
 } // Vicon
 } // BoBRobotics

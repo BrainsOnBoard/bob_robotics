@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/thread.h"
+#include "common/threadable.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "input.h"
 

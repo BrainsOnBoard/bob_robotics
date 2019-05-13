@@ -5,40 +5,6 @@
 #include <thread>
 
 namespace BoBRobotics {
-//! A simple RAII wrapper for std::thread
-template<bool JoinOnDestroy=true>
-class Thread {
-public:
-    template<class... Args>
-    Thread(Args&&... args)
-      : m_Thread(std::forward<Args>(args)...)
-    {}
-
-    Thread(Thread<JoinOnDestroy> &&thread)
-    {
-        m_Thread = std::move(thread.m_Thread);
-    }
-
-    ~Thread()
-    {
-        if (m_Thread.joinable()) {
-            if (JoinOnDestroy) {
-                m_Thread.join();
-            } else {
-                m_Thread.detach();
-            }
-        }
-    }
-
-    void operator=(Thread<JoinOnDestroy> &&thread)
-    {
-        m_Thread = std::move(thread.m_Thread);
-    }
-
-private:
-    std::thread m_Thread;
-}; // Thread
-
 //----------------------------------------------------------------------------
 // BoBRobotics::Threadable
 //----------------------------------------------------------------------------
@@ -74,12 +40,12 @@ public:
     Threadable &operator=(Threadable &&old) = default;
 
 private:
-    Thread<> m_Thread;
+    std::thread m_Thread;
     std::atomic<bool> m_DoRun;
 
     void runCatchExceptions();
 
 protected:
     virtual void runInternal() = 0;
-}; // Threadable
-} // BoBRobotics
+};
+}

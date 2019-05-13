@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/thread.h"
+#include "common/threadable.h"
 
 // Standard C includes
 #include <cmath>
