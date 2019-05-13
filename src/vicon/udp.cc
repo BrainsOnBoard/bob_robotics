@@ -28,7 +28,7 @@ ObjectData::getFrameNumber() const
     return m_FrameNumber;
 }
 
-const std::string &
+const char *
 ObjectData::getName() const
 {
     return m_Name;
