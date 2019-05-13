@@ -474,6 +474,21 @@ function(BoB_third_party)
                 BoB_add_include_directories(${SHELL_OUTPUT})
             endif()
         else()
+            # Extra actions
+            if(${module} STREQUAL ev3dev-lang-cpp)
+                # Default to BrickPi3
+                if(NOT EV3DEV_PLATFORM)
+                    set(EV3DEV_PLATFORM "BRICKPI3" CACHE STRING "Target ev3dev platform (EV3/BRICKPI/BRICKPI3/PISTORMS)")
+                endif()
+                set_property(CACHE EV3DEV_PLATFORM PROPERTY STRINGS "EV3" "BRICKPI" "BRICKPI3" "PISTORMS")
+                add_definitions(-DEV3DEV_PLATFORM_${EV3DEV_PLATFORM})
+                message("EV3 platform: ${EV3DEV_PLATFORM}")
+
+                BoB_add_link_libraries(ev3dev)
+            elseif(${module} STREQUAL imgui)
+                BoB_add_link_libraries(imgui)
+            endif()
+
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
@@ -491,13 +506,6 @@ function(BoB_third_party)
 
             # Link against extra libs, if needed
             BoB_add_link_libraries(${${module}_LIBRARIES})
-
-            # Extra actions
-            if(${module} STREQUAL ev3dev-lang-cpp)
-                BoB_add_link_libraries(ev3dev)
-            elseif(${module} STREQUAL imgui)
-                BoB_add_link_libraries(imgui)
-            endif()
         endif()
     endforeach()
 endfunction()
