@@ -1,9 +1,9 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/macros.h"
 #include "common/circstat.h"
 #include "common/logging.h"
+#include "common/macros.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "os/net.h"
@@ -248,23 +248,13 @@ private:
      * isn't terribly helpful. So instead we distinguish objects based on their
      * names.
      */
-#ifdef _MSVC
-#pragma pack(push, 1)
-    struct RawObjectData {
+    BOB_PACKED(struct RawObjectData {
         uint8_t unused;
         uint16_t itemDataSize;
         char objectName[24];
-        double position[3], attitude[3];
-    };
-    #pragma pack(pop)
-#else
-    struct __attribute__((__packed__)) RawObjectData {
-        uint8_t unused;
-        uint16_t itemDataSize;
-        char objectName[24];
-        double position[3], attitude[3];
-    };
-#endif
+        double position[3];
+        double attitude[3];
+    });
 
 public:
     UDPClient() = default;

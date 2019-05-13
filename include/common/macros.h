@@ -37,3 +37,14 @@ public:
     if (!(EXPRESSION)) {                                                              \
         throw BoBRobotics::AssertionFailedException(#EXPRESSION, __FILE__, __LINE__); \
     }
+
+/**!
+ * \brief Defines a packed struct in MSVC or GNU-type compilers.
+ *
+ * NB: Don't define your struct with commas in or it'll break the macro.
+ */
+#ifdef __GNUC__
+#define BOB_PACKED(class_to_pack) class_to_pack __attribute__((__packed__))
+#else
+#define BOB_PACKED(class_to_pack) __pragma(pack(push, 1)) class_to_pack __pragma(pack(pop))
+#endif
