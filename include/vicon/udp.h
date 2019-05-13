@@ -344,7 +344,6 @@ public:
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
          return ObjectReference<ObjectDataType>(*this,
                                                 m_ObjectData.begin()->first,
-                                                m_ObjectData.begin()->second,
                                                 timeoutDuration);
      }
 
@@ -354,7 +353,6 @@ public:
     {
         return ObjectReference<ObjectDataType>(*this,
                                                name,
-                                               m_ObjectData[name],
                                                timeoutDuration);
     }
 
