@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><SpineCreatorProject><Network><File name="model.xml"/></Network><Components><File name="LIN.xml"/></Components><Layouts><File name="none.xml"/></Layouts><Experiments><File name="experiment0.xml"/></Experiments></SpineCreatorProject>
