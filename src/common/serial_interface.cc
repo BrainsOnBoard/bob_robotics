@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/serial_interface.h"
 
 // Standard C++ includes
@@ -23,9 +24,7 @@ SerialInterface::SerialInterface()
 
 SerialInterface::SerialInterface(const char *path)
 {
-    if (!setup(path)) {
-        throw std::runtime_error("Cannot open serial interface");
-    }
+    setup(path);
 }
 
 SerialInterface::~SerialInterface()
@@ -39,35 +38,31 @@ SerialInterface::~SerialInterface()
 //---------------------------------------------------------------------
 // Public API
 //---------------------------------------------------------------------
-bool
+void
 SerialInterface::setup(const char *path)
 {
 
     m_Serial_fd = open(path, O_WRONLY | O_NOCTTY | O_SYNC);
     if (m_Serial_fd < 0) {
-        LOGE << "Error in setup:" << strerror(errno);
-        return false;
-        // set speed to 115,200 bps, 8n1 (no parity)
-    } else if (setAttributes(B9600)) {
-
-        // set no blocking
-        if (setBlocking(true)) {
-            LOGI << "Serial successfully initialized";
-            return true;
-        }
+        throw std::runtime_error("Could not open serial interface: " + std::string(strerror(errno)));
     }
-    return false;
+
+    // set speed to 115,200 bps, 8n1 (no parity)
+    setAttributes(B9600);
+
+    // set no blocking
+    setBlocking(true);
+
+    LOGI << "Serial successfully initialised";
 }
 
-bool
+void
 SerialInterface::setAttributes(int speed)
 {
-
     struct termios tty;
     memset(&tty, 0, sizeof tty);
     if (tcgetattr(m_Serial_fd, &tty) != 0) {
-        std::cerr << "Error in setup from tcgetattr:" << strerror(errno) << std::endl;
-        return false;
+        throw std::runtime_error("Error in setup from tcgetattr: " + std::string(strerror(errno)));
     }
 
     cfsetospeed(&tty, speed);
@@ -90,54 +85,41 @@ SerialInterface::setAttributes(int speed)
     tty.c_cc[VTIME] = 5;
 
     if (tcsetattr(m_Serial_fd, TCSANOW, &tty) != 0) {
-        std::cerr << "Error in setup from tcgetattr:" << strerror(errno) << std::endl;
-        return false;
+        throw std::runtime_error("Error in setup from tcgetattr:" + std::string(strerror(errno)));
     }
-    return true;
 }
 
-bool
+void
 SerialInterface::setBlocking(bool should_block)
 {
     struct termios tty;
     memset(&tty, 0, sizeof tty);
     if (tcgetattr(m_Serial_fd, &tty) != 0) {
-        std::cerr << "Error in setup from tcgetattr:" << strerror(errno) << std::endl;
-        return false;
+        throw std::runtime_error("Error in setup from tcgetattr:" + std::string(strerror(errno)));
     }
 
     tty.c_cc[VMIN] = should_block ? 1 : 0;
     tty.c_cc[VTIME] = 5; // 0.5 seconds read timeout
 
     if (tcsetattr(m_Serial_fd, TCSANOW, &tty) != 0) {
-        std::cerr << "Error in setup setting term attributes:" << strerror(errno) << std::endl;
-        return false;
+        throw std::runtime_error("Error in setup setting term attributes:" + std::string(strerror(errno)));
     }
-    return true;
 }
 
-bool
+void
 SerialInterface::readByte(uint8_t &byte)
 {
-    char data; // = i2c_smbus_read_byte(m_I2C);
-    ::read(m_Serial_fd, &data, 1);
-    if (data != 1) {
-        std::cerr << "Failed to read byte from Serial port" << std::endl;
-        return false;
-    } else {
-        byte = (uint8_t) data;
-        return true;
+    const ssize_t ret = ::read(m_Serial_fd, reinterpret_cast<char *>(&byte), 1);
+    if (ret < 0) {
+        throw std::runtime_error("Failed to read byte from serial port");
     }
 }
 
-bool
+void
 SerialInterface::writeByte(uint8_t byte)
 {
     if (::write(m_Serial_fd, &byte, 1) < 0) {
-        std::cerr << "Failed to write byte to Serial port" << std::endl;
-        return false;
-    } else {
-        return true;
+        throw std::runtime_error("Failed to write byte to serial port");
     }
 }
 } // BoBRobotics
