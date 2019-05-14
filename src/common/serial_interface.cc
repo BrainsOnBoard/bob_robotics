@@ -106,13 +106,21 @@ SerialInterface::setBlocking(bool should_block)
     }
 }
 
-void
+bool
 SerialInterface::readByte(uint8_t &byte)
 {
     const ssize_t ret = ::read(m_Serial_fd, reinterpret_cast<char *>(&byte), 1);
     if (ret < 0) {
+        // No data on non-blocking socket
+        if (errno == EAGAIN) {
+            return false;
+        }
+
+        // Otherwise it's a proper error
         throw std::runtime_error("Failed to read byte from serial port");
     }
+
+    return true;
 }
 
 void
