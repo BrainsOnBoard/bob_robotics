@@ -1,13 +1,35 @@
-# temporary files
+# CMake build dir
+**/build/*
+
+# OS-specific files
+.directory
+.DS_Store
+
+# Temporary files
 *~
 
+# Temporary Jupyter notebook files
+**/.ipynb_checkpoints/
+
+# QT creator project files
+bob_robotics.cflags
+bob_robotics.cxxflags
+bob_robotics.config
+bob_robotics.creator
+bob_robotics.files
+bob_robotics.includes
+
 # Visual Studio code user files
-/.vscode/
+/.vscode/*.json
+!/.vscode/c_cpp_properties.json
 *.code-workspace
 
 # Ignore object files
+**/*.a
 **/*.o
 **/*.obj
+**/*.lib
+**/*.dll
 
 # Ignore dependency files
 **/*.d
@@ -16,10 +38,10 @@
 **/*_CODE
 
 # Ignore generator executables
-**/generateALL_CPU_ONLY
-**/generateALL_CPU_ONLY.exe
-**/generateALL
-**/generateALL.exe
+**/generator_CPU_ONLY
+**/generator_CPU_ONLY.exe
+**/generator
+**/generator.exe
 
 # Ignore auto-generated Makefiles
 **/sm_version.mk
@@ -353,3 +375,18 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder
 .mfractor/
+
+# Whitelist bob_make tool
+!/bin/bob_make
+
+# Ignore CMake output files
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps

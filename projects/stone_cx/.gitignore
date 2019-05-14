@@ -1,0 +1,7 @@
+*.csv
+/simulator
+/simulator_wrapper
+/simulatorReplay
+/simulatorVicon
+/simulatorRobot
+/simulatorRobotDeadReckon

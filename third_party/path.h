@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cerrno>
 #include <cstring>
+#include <fstream>
 
 #if defined(_WIN32)
 # include <windows.h>
@@ -27,6 +28,10 @@
 #if defined(__linux)
 # include <linux/limits.h>
 #endif
+
+// Extra BoB robotics includes
+#include "common/macros.h"
+#include "tinydir.h"
 
 namespace filesystem
 {
@@ -232,7 +237,7 @@ public:
         return os;
     }
 
-    bool remove_file() {
+    bool remove_file() const {
 #if !defined(_WIN32)
         return std::remove(str().c_str()) == 0;
 #else
@@ -333,6 +338,64 @@ inline bool create_directory(const path& p) {
 #else
     return mkdir(p.str().c_str(), S_IRUSR | S_IWUSR | S_IXUSR) == 0;
 #endif
+}
+
+//! BoB's basic implementation for copying a file
+inline void copy_file(const filesystem::path &from, const filesystem::path &to)
+{
+    std::ifstream ifs(from.str());
+    BOB_ASSERT(ifs.good());
+    std::ofstream ofs(to.str());
+    BOB_ASSERT(ofs.good());
+    ofs << ifs.rdbuf();
+}
+
+//! Delete a file/folder and all its contents
+inline std::uintmax_t
+remove_all(const path &path)
+{
+    BOB_ASSERT(path.exists());
+    if (path.is_directory()) {
+        std::uintmax_t count = 0;
+
+        // For reading contents of directory
+        tinydir_dir dir;
+        tinydir_open(&dir, path.str().c_str());
+        for (; dir.has_next; tinydir_next(&dir)) {
+            tinydir_file file;
+            tinydir_readfile(&dir, &file);
+
+            const filesystem::path curPath = file.path;
+            if (curPath.filename() == "." || curPath.filename() == "..") {
+                continue;
+            }
+            if (file.is_dir) {
+                // Recurse
+                count += remove_all(curPath);
+            } else {
+                // Delete single file
+                BOB_ASSERT(curPath.remove_file());
+                count++;
+            }
+        }
+
+        // Close handle
+        tinydir_close(&dir);
+
+        // Remove directory
+#ifdef _WIN32
+        BOB_ASSERT(::RemoveDirectoryW(path.wstr().c_str()));
+#else
+        const int ret = ::rmdir(path.str().c_str());
+        if (ret == -1) {
+                throw std::runtime_error(std::string("Error: ") + strerror(errno));
+        }
+#endif
+        return ++count;
+    } else {
+        BOB_ASSERT(path.remove_file());
+        return 1;
+    }
 }
 
 }   // namespace filesystem
