@@ -17,7 +17,8 @@ namespace BoBRobotics {
 namespace Video {
 
 RPiCamera::RPiCamera(uint16_t port)
-  : m_Socket(INVALID_SOCKET)
+  : m_Frame(72, 152, CV_8UC3)
+  , m_Socket(INVALID_SOCKET)
 {
     m_Port = port;
 
@@ -41,33 +42,44 @@ RPiCamera::getOutputSize() const
 bool
 RPiCamera::readFrame(cv::Mat &outFrame)
 {
-    unsigned char buffer[72 * 19];
-
-    // Check we're connected
-    BOB_ASSERT(m_Socket != INVALID_SOCKET);
-
-    // Make sure output frame is the right size and type
-    outFrame.create(72, 152, CV_32FC1);
-
-    // get the most recent UDP frame (grayscale for now)
-    while (recv(m_Socket, buffer, 72 * 19, 0) > 0) {
-        // fill in the outFrame
-        //std::cout << (int) buffer[0] << std::endl;
-        int j = 0;
-        for (int i = 0; i < 72 * 19 - 1; ++i) {
-            outFrame.at<float>(i % 72, buffer[0] + floor(i / 72)) = float(buffer[j]) / 255.0f;
-            ++j;
-        }
+    if (!readGreyscaleFrame(m_Frame)) {
+        return false;
     }
 
-    // return true for now, but not right as we are not fetching a colour frame
+    // Make sure output frame is the right size and type
+    outFrame.create(72, 152, CV_8UC3);
+
+    // Convert to the correct cv::Mat type
+    m_Frame.convertTo(outFrame, CV_8UC3);
     return true;
 }
 
 bool
 RPiCamera::readGreyscaleFrame(cv::Mat &outFrame)
 {
-    return readFrame(outFrame);
+    unsigned char buffer[72 * 19];
+
+    // Check we're connected
+    BOB_ASSERT(m_Socket != INVALID_SOCKET);
+
+    // Make sure output frame is the right size and type
+    outFrame.create(72, 152, CV_8U);
+
+    // get the most recent UDP frame (grayscale for now)
+    while (recv(m_Socket, buffer, 72 * 19, 0) > 0) {
+        /*
+         * Fill in the outFrame.
+         *
+         * NB: We might be able to std::copy the memory from the buffer, but I
+         * won't do this just yet in case it inverts the rows and columns or
+         * something... -- AD
+         */
+        for (int i = 0; i < 72 * 19 - 1; ++i) {
+            outFrame.at<uchar>(i % 72, buffer[0] + floor(i / 72)) = buffer[i];
+        }
+    }
+
+    return true;
 }
 
 bool

@@ -4,6 +4,9 @@
 #include "input.h"
 #include "os/net.h"
 
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C includes
 #include <cstdlib>
 
@@ -26,6 +29,7 @@ public:
 private:
     void setupSockets();
 
+    cv::Mat m_Frame;
     socket_t m_Socket;
     uint16_t m_Port;
 }; // RPiCamera
