@@ -75,7 +75,7 @@ public:
             m_StopwatchSample.start();
 
             // Get coordinates from Vicon
-            const auto position = m_Vicon.getObjectData(0).getPosition<meter_t>();
+            const auto position = m_Vicon.getObjectData().getPosition<meter_t>();
 
             // Write to CSV file
             m_FileStream << position[0].value() << ", " << position[1].value()
@@ -152,13 +152,6 @@ bob_main(int, char **)
             return false;
         }
     });
-
-    // Wait for Vicon system
-    while (vicon.getNumObjects() == 0) {
-        std::cout << "Waiting for object" << std::endl;
-        std::this_thread::sleep_for(1s);
-    }
-    std::cout << "Connected to Vicon system" << std::endl;
 
     // Run client in background, checking for background errors thrown
     BackgroundExceptionCatcher catcher;

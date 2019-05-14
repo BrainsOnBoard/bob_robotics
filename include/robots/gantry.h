@@ -3,7 +3,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/pose.h"
 
 // Third-party includes

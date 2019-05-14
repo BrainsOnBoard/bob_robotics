@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "antworld/common.h"
 #include "antworld/world.h"
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/logging.h"
 
 // Third-party includes

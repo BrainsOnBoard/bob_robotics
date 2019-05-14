@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/logging.h"
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"

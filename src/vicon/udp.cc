@@ -9,14 +9,9 @@ namespace Vicon
 using namespace units::literals;
 
 void
-ObjectData::update(const char (&name)[24],
-                   uint32_t frameNumber,
+ObjectData::update(uint32_t frameNumber,
                    Pose3<millimeter_t, radian_t> pose)
 {
-    // Copy name
-    // **NOTE** this must already be NULL-terminated
-    memcpy(&m_Name[0], &name[0], 24);
-
     // Log the time when this packet was received
     m_ReceivedTimer.start();
 
@@ -45,9 +40,9 @@ ObjectData::timeSinceReceived() const
     return m_ReceivedTimer.elapsed();
 }
 
-void ObjectDataVelocity::update(const char(&name)[24],
-            uint32_t frameNumber,
-            Pose3<millimeter_t, radian_t> pose)
+void
+ObjectDataVelocity::update(uint32_t frameNumber,
+                           Pose3<millimeter_t, radian_t> pose)
 {
     constexpr second_t frameS = 10_ms;
     constexpr second_t smoothingS = 30_ms;
@@ -72,7 +67,7 @@ void ObjectDataVelocity::update(const char(&name)[24],
 
     // Superclass
     // **NOTE** this is at the bottom so OLD position can be accessed
-    ObjectData::update(name, frameNumber, pose);
+    ObjectData::update(frameNumber, pose);
 }
 
 TimedOutError::TimedOutError()

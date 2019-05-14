@@ -30,7 +30,7 @@
 #endif
 
 // Extra BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "tinydir.h"
 
 namespace filesystem

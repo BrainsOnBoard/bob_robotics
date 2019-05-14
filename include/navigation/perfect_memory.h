@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "differencers.h"
 #include "insilico_rotater.h"
 #include "perfect_memory_store_raw.h"

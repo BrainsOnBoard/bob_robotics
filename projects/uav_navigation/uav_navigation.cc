@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "hid/joystick.h"
 #include "navigation/perfect_memory.h"
 #include "os/keycodes.h"

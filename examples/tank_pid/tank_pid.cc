@@ -134,10 +134,6 @@ bob_main(int argc, char **argv)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     // Drive robot with joystick
     HID::Joystick joystick;
@@ -160,7 +156,7 @@ bob_main(int argc, char **argv)
                 goalsIter = goals.begin();
                 pid.start(*goalsIter);
 
-                printGoalStats(*goalsIter, vicon.getObjectData(0).getPosition());
+                printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
             } else {
                 robot.stopMoving();
                 std::cout << "Stopping positioner" << std::endl;
@@ -169,7 +165,7 @@ bob_main(int argc, char **argv)
         case HID::JButton::Start:
             std::cout << "Resetting to the first goal" << std::endl;
             goalsIter = goals.begin();
-            printGoalStats(*goalsIter, vicon.getObjectData(0).getPosition());
+            printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
             return true;
         default:
             return false;
@@ -211,7 +207,7 @@ bob_main(int argc, char **argv)
             joystick.update();
 
             // Get robot's position from Vicon system
-            const auto objectData = vicon.getObjectData(0);
+            const auto objectData = vicon.getObjectData();
 
             plt::figure(1);
             plt::clf();

@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "assert.h"
+#include "macros.h"
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
