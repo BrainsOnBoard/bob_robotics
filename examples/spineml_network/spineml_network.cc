@@ -7,7 +7,7 @@
 #include <csignal>
 
 int keep_running = 1;
-static void signal_handler(int signal)
+static void signal_handler(int)
 {
     keep_running = 0;
 }
@@ -19,8 +19,8 @@ int main()
     sig_action.sa_handler = signal_handler;
 
     // first register handler for system interrupts so we can go down gracefully on 'nix
-    int retty = sigaction(SIGINT, &sig_action, NULL);
-    retty = sigaction(SIGPIPE, &sig_action, NULL);
+    sigaction(SIGINT, &sig_action, NULL);
+    sigaction(SIGPIPE, &sig_action, NULL);
 
     // Create motor interface
     BoBRobotics::Robots::Mecanum robot;

@@ -90,15 +90,14 @@ public:
                 //std::cout << "here targ " << m_Input << std::endl;
 
                 //std::cout << "recv" << std::endl;
-                int n = 0;
                 switch (m_RobotType) {
                 case TANK: {
                     double data[2];
                     int loop = 0;
                     //while (loop < 100 || n < 1) {
-                    n = read(socket, data, sizeof(double) * 2);
+                    read(socket, data, sizeof(double) * 2);
                     int sendVal = RESP_RECVD;
-                    n = write(socket, &sendVal, 1);
+                    write(socket, &sendVal, 1);
                     //loop++;
                     //}
                     if (loop == 100) {
@@ -114,9 +113,9 @@ public:
                     double data[3];
                     int loop = 0;
                     //while (loop < 100 || n < 1) {
-                    n = read(socket, data, sizeof(double) * 3);
+                    read(socket, data, sizeof(double) * 3);
                     int sendVal = RESP_RECVD;
-                    n = write(socket, &sendVal, 1);
+                    write(socket, &sendVal, 1);
                     //loop++;
                     //}
                     if (loop == 100) {
@@ -146,7 +145,7 @@ public:
         if (newFrame) {
             int n = 0;
             // send data
-            int sent_bytes = 0;
+            size_t sent_bytes = 0;
             int loop = 0;
             // convert frame to DOUBLE
             frame.convertTo(frame, CV_64F);
@@ -240,7 +239,7 @@ public:
     {}
 
     SpineML_Network(int port)
-      : m_ListenSocket(NULL)
+      : m_ListenSocket(0)
       , m_NumConnections(0)
     {
 

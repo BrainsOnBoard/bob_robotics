@@ -54,17 +54,9 @@ private:
 
     void drive(float x, float y, float rot, float deadZone)
     {
-        const float pi = 3.141592653589793238462643383279502884f;
-        const float halfPi = pi / 2.0f;
-
         const bool deadX = (fabs(x) < deadZone);
         const bool deadY = (fabs(y) < deadZone);
         const bool deadRot = (fabs(rot) < deadZone);
-
-        // If length of joystick vector places it in deadZone, stop motors
-        //const float r = sqrt((x * x) + (y * y));
-        //const float theta = atan2(x, -y);
-        //const float twoTheta = 2.0f * theta;
 
         // Drive motor
         omni2D(x*!deadX, y*!deadY, rot*!deadRot);

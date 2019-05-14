@@ -29,14 +29,14 @@ public:
     SerialInterface()
     {
     }
-    
+
     SerialInterface(const char *path)
     {
         if(!setup(path)) {
             throw std::runtime_error("Cannot open Serial interface");
         }
     }
-    
+
     ~SerialInterface()
     {
         // Close Serial port
@@ -44,34 +44,34 @@ public:
             close(m_Serial_fd);
         }
     }
-    
+
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
-    bool setup(const char *path ) 
+    bool setup(const char *path )
     {
-    
+
 		m_Serial_fd = open (path, O_WRONLY | O_NOCTTY | O_SYNC);
 		if (m_Serial_fd < 0)
 		{
 		    std::cerr << "Error in setup:" << strerror(errno) << std::endl;
 		    return false;
 	    // set speed to 115,200 bps, 8n1 (no parity)
-		} else if (set_interface_attribs (m_Serial_fd, B9600, 0)) {
+		} else if (setAttributes (m_Serial_fd, B9600)) {
 
 			// set no blocking
-			if (set_blocking (m_Serial_fd, 1)) {
+			if (setBlocking (m_Serial_fd, 1)) {
 				std::cout << "Serial successfully initialized" << std::endl;
 				return true;
 			}
 		}
     	return false;
-    
+
     }
-    
-    bool set_interface_attribs (int m_Serial_fd, int speed, int parity)
+
+    bool setAttributes (int m_Serial_fd, int speed)
 	{
-	
+
 	    struct termios tty;
 	    memset (&tty, 0, sizeof tty);
 	    if (tcgetattr (m_Serial_fd, &tty) != 0)
@@ -107,7 +107,7 @@ public:
 	    return true;
 	}
 
-	bool set_blocking (int m_Serial_fd, int should_block)
+	bool setBlocking (int m_Serial_fd, int should_block)
 	{
         struct termios tty;
         memset (&tty, 0, sizeof tty);
@@ -126,7 +126,7 @@ public:
         }
         return true;
 	}
-       
+
     bool readByte(uint8_t &byte)
     {
         char data;// = i2c_smbus_read_byte(m_I2C);
@@ -140,7 +140,7 @@ public:
             return true;
         }
     }
-    
+
     template<typename T, size_t N>
     bool read(T (&data)[N])
     {
@@ -153,7 +153,7 @@ public:
             return true;
         }
     }
-    
+
     /*bool writeByteCommand(uint8_t address, uint8_t byte)
     {
         if(i2c_smbus_write_byte_data(m_I2C, address, byte) < 0) {
@@ -164,7 +164,7 @@ public:
             return true;
         }
     }*/
-    
+
     bool writeByte(uint8_t byte)
     {
         if(::write(m_Serial_fd, &byte, 1) < 0) {
@@ -175,11 +175,11 @@ public:
             return true;
         }
     }
-    
+
     // writes data
     template<typename T, size_t N>
-    bool write(const T (&data)[N]) 
-    {  
+    bool write(const T (&data)[N])
+    {
         const size_t size = sizeof(T) * N;
         if (::write(m_Serial_fd, &data[0], size) != size) {
             std::cerr << "Failed to write to Serial port" << std::endl;
