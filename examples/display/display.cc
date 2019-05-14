@@ -13,14 +13,14 @@
  * Quit by pressing escape.
  */
 
-// Windows headers
-#include "os/windows_include.h"
-
 // BoB robotics includes
 #include "common/logging.h"
+#include "video/display.h"
 #include "video/opencvinput.h"
 #include "video/rpi_cam.h"
-#include "video/display.h"
+
+// Standard C includes
+#include <cstring>
 
 using namespace BoBRobotics::Video;
 
@@ -41,16 +41,16 @@ main(int argc, char **argv)
             display.run();
         } catch (std::invalid_argument &) {
             // ...else it's a filename/URL/RPiCam
-			if (*argv[1] == 'r') {
-				// RPicam
-				RPiCamera cam(50091);
-		        Display display(cam);
-		        display.run();
-			} else {
-		        OpenCVInput cam(argv[1]);
-		        Display display(cam);
-		        display.run();
-			}
+            if (strcmp(argv[1], "r") == 0) {
+                // RPicam
+                RPiCamera cam(50091);
+                Display display(cam);
+                display.run();
+            } else {
+                OpenCVInput cam(argv[1]);
+                Display display(cam);
+                display.run();
+            }
         }
     }
 }
