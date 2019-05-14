@@ -6,6 +6,7 @@
 #include <cstring>
 
 // Standard C++ includes
+#include <algorithm>
 #include <stdexcept>
 
 // Extra POSIX includes
@@ -67,15 +68,14 @@ RPiCamera::readGreyscaleFrame(cv::Mat &outFrame)
 
     // get the most recent UDP frame (grayscale for now)
     while (recv(m_Socket, buffer, 72 * 19, 0) > 0) {
-        /*
-         * Fill in the outFrame.
-         *
-         * NB: We might be able to std::copy the memory from the buffer, but I
-         * won't do this just yet in case it inverts the rows and columns or
-         * something... -- AD
-         */
-        for (int i = 0; i < 72 * 19 - 1; ++i) {
-            outFrame.at<uchar>(i % 72, buffer[0] + floor(i / 72)) = buffer[i];
+        // Fill in the outFrame
+        // Loop through rows
+        for(int i = 0; i < 72; i++) {
+            // Get row pointer, with buffer offset
+            uint8_t *subRow = outFrame.ptr<uint8_t>(i) + buffer[0];
+
+            // Copy sub-row of data from buffer into image
+            std::copy_n(&buffer[i * 19], 19, subRow);
         }
     }
 
