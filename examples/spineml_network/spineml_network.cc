@@ -1,9 +1,10 @@
-#include "../video/rpi_cam.h"
-#include "../robots/mecanum.h"
-#include "../net/spineml_net.h"
+// BoB robotics includes
+#include "net/spineml_net.h"
+#include "robots/mecanum.h"
+#include "video/rpi_cam.h"
 
-// sig int
-#include <signal.h>
+// Standard C includes
+#include <csignal>
 
 int keep_running = 1;
 static void signal_handler(int signal)
@@ -16,7 +17,7 @@ int main()
 
     struct sigaction sig_action = {};
     sig_action.sa_handler = signal_handler;
-    
+
     // first register handler for system interrupts so we can go down gracefully on 'nix
     int retty = sigaction(SIGINT, &sig_action, NULL);
     retty = sigaction(SIGPIPE, &sig_action, NULL);
@@ -31,8 +32,8 @@ int main()
 	BoBRobotics::Net::SpineML_Network sml_net(50100);
 
 	// add robot and camera to network
-	sml_net.setInput(cam); 
-	sml_net.setRobot(robot); 
+	sml_net.setInput(cam);
+	sml_net.setRobot(robot);
 
 	// listen for connections
 	sml_net.runInBackground();
@@ -58,6 +59,6 @@ int main()
 	sml_net.stopConnections();
 
 	std::cout << "Closing..." << std::endl;
-    
+
     return 0;
 }

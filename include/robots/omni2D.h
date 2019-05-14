@@ -4,8 +4,8 @@
 #include <string>
 
 // BoB robotics includes
-#include "../hid/joystick.h"
-#include "../net/node.h"
+#include "hid/joystick.h"
+#include "net/connection.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -39,11 +39,11 @@ public:
         std::cout << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn << std::endl;
     }
 
-    void readFromNetwork(Net::Node &node)
+    void readFromNetwork(Net::Connection &connection)
     {
         // handle incoming TNK commands
-        node.addCommandHandler("OMN", [this](Net::Node &node, const Net::Command &command) {
-            onCommandReceived(node, command);
+        connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
+            onCommandReceived(connection, command);
         });
     }
 
@@ -60,7 +60,7 @@ private:
         const bool deadX = (fabs(x) < deadZone);
         const bool deadY = (fabs(y) < deadZone);
         const bool deadRot = (fabs(rot) < deadZone);
-        
+
         // If length of joystick vector places it in deadZone, stop motors
         //const float r = sqrt((x * x) + (y * y));
         //const float theta = atan2(x, -y);
@@ -68,14 +68,14 @@ private:
 
         // Drive motor
         omni2D(x*!deadX, y*!deadY, rot*!deadRot);
-        
+
     }
 
-    void onCommandReceived(Net::Node &, const Net::Command &command)
+    void onCommandReceived(Net::Connection &, const Net::Command &command)
     {
         // second space separates left and right parameters
         if (command.size() != 4) {
-            throw Net::bad_command_error();
+            throw Net::BadCommandError();
         }
 
         // parse strings to floats

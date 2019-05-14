@@ -20,12 +20,12 @@
 #include <opencv2/opencv.hpp>
 
 // BoBRobotics includes
-#include "../video/input.h"
-#include "../robots/omni2D.h"
-#include "../robots/tank.h"
+#include "video/input.h"
+#include "robots/omni2D.h"
+#include "robots/tank.h"
 // standardise sockets across platforms
-#include "../os/net.h"
-#include "../common/threadable.h"
+#include "os/net.h"
+#include "common/threadable.h"
 
 namespace BoBRobotics {
 namespace Net {
@@ -58,12 +58,12 @@ public:
 	std::string name;
 	int size;
 
-	SpineML_Connection() 
+	SpineML_Connection()
 	: socket(0)
 	{
 		m_Input = NULL;
 		m_OutputOmni2D = NULL;
-		m_OutputTank = NULL;	
+		m_OutputTank = NULL;
 	}
 
 	~SpineML_Connection()
@@ -71,22 +71,22 @@ public:
 		close(socket);
 	}
 
-    void run() override
+    void runInternal() override
     {
 
-		while (m_DoRun) {
-			//std::cout << "Here! " << socket << std::endl; 
+		while (isRunning()) {
+			//std::cout << "Here! " << socket << std::endl;
 
 			if (conn_type == AM_SOURCE) {
-			
+
 				//std::cout << "here src " << m_Input << std::endl;
-			
+
 			    // poll the camera until we get a new frame
 			    while (!update()) {
 			        std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			    }
 				//std::cout << "send" << std::endl;
-				
+
 			} else if (conn_type == AM_TARGET) {
 				//std::cout << "here targ " << m_Input << std::endl;
 
@@ -101,7 +101,7 @@ public:
 							n = read(socket, data,sizeof(double)*2);
 							int sendVal = RESP_RECVD;
 							n = write(socket, &sendVal,1);
-								//loop++;					
+								//loop++;
 							//}
 							if (loop == 100) {
 								// disconnect
@@ -118,10 +118,10 @@ public:
 							double data[3];
 							int loop = 0;
 							//while (loop < 100 || n < 1) {
-							n = read(socket, data,sizeof(double)*3);	
+							n = read(socket, data,sizeof(double)*3);
 							int sendVal = RESP_RECVD;
 							n = write(socket, &sendVal,1);
-								//loop++;					
+								//loop++;
 							//}
 							if (loop == 100) {
 								// disconnect
@@ -132,7 +132,7 @@ public:
 							// f/b, l/r, turn
 							std::cout << "Data! " << data[0] << " " << data[1] << " " << data[2] << std::endl;
 							m_OutputOmni2D->omni2D(data[0], data[1], data[2]);
-						}					
+						}
 						break;
 					case NO_ROBOT:
 						break;
@@ -140,7 +140,7 @@ public:
 			} else {
 
 			}
-		}	
+		}
     }
 
 	bool update()
@@ -158,7 +158,7 @@ public:
 			frame.convertTo(frame, CV_64F);
 			while (loop < 100 && sent_bytes < sizeof(double)*size) {
 				n = write(socket, frame.ptr<double>(0)+sent_bytes,sizeof(double)*size);
-				if (n > 0) sent_bytes += n; 
+				if (n > 0) sent_bytes += n;
 				++loop;
 			}
 			if (loop == 100) {
@@ -221,7 +221,7 @@ private:
         if (!m_Input->readFrame(m_Frame)) {
             return false;
         }
-        
+
         // unwrap frame if required
        /* if (m_Unwrapper && m_ShowUnwrapped) {
             m_Unwrapper->unwrap(m_Frame, m_Unwrapped);
@@ -242,7 +242,7 @@ public:
       : SpineML_Network(0)
     {}
 
-	SpineML_Network(int port) 
+	SpineML_Network(int port)
 	: m_ListenSocket(NULL),
 	m_NumConnections(0)
 	{
@@ -255,7 +255,7 @@ public:
 			return;
 		}
 	}
-	
+
     virtual ~SpineML_Network()
     {
 		close(m_ListenSocket);
@@ -264,13 +264,13 @@ public:
 /*
  * Keep accepting connections up to m_NumConnections
  */
-void run() override
+void runInternal() override
 {
     // Start listening
     if (listen(m_ListenSocket, 10)) {
         throw std::runtime_error("Error (" + std::to_string(errno) + "): Could not listen");
     }
-    
+
     // for incoming connection
     sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
@@ -280,7 +280,7 @@ void run() override
 	unsigned char sendVal;
 
     // loop until stopped
-    while (m_DoRun) {
+    while (isRunning()) {
 		if (m_Input.socket == 0 || m_Output.socket == 0) {
 		    // wait for incoming TCP connection
 		    std::cout << "Waiting for incoming connection..." << std::endl;
@@ -311,14 +311,14 @@ void run() override
 			// data type
 			n = read(new_socket, &returnVal,1);
 			if (n < 0 || returnVal != RESP_DATA_NUMS) {
-				throw std::runtime_error("Error getting datatype (must be Analog currently)");		
+				throw std::runtime_error("Error getting datatype (must be Analog currently)");
 			}
 			sendVal = RESP_RECVD;
 			n = write(new_socket, &sendVal,1);
 			if (n < 0) {
 				throw std::runtime_error("Error writing in datatype");
 			}
-			
+
 			// data size
 			if (conn_type == AM_TARGET) {
 				n = read(new_socket, (char *) &(m_Output.size),sizeof(int));
@@ -326,7 +326,7 @@ void run() override
 				n = read(new_socket, (char *) &(m_Input.size),sizeof(int));
 			}
 			if (n < 0) {
-				throw std::runtime_error("Error getting data size");		
+				throw std::runtime_error("Error getting data size");
 			}
 			sendVal = RESP_RECVD;
 			n = write(new_socket, &sendVal,1);
@@ -338,7 +338,7 @@ void run() override
 			int name_size = 0;
 			n = read(new_socket, (char *) &(name_size),sizeof(int));
 			if (n < 0) {
-				throw std::runtime_error("Error getting name size");		
+				throw std::runtime_error("Error getting name size");
 			}
 			if (conn_type == AM_TARGET) {
 				m_Input.name.resize(name_size);
@@ -348,7 +348,7 @@ void run() override
 				n = read(new_socket, (char *) &(m_Input.name[0]),name_size);
 			}
 			if (n < 0) {
-				throw std::runtime_error("Error getting name");		
+				throw std::runtime_error("Error getting name");
 			}
 			sendVal = RESP_RECVD;
 			n = write(new_socket, &sendVal,1);
@@ -417,9 +417,9 @@ private:
 		if (bind(m_ListenSocket, (const sockaddr *) &addr, (int) sizeof(addr))) {
 		    goto error;
 		}
-		
+
 		return true;
-		
+
 error:
 		std::cerr << "Error (" << errno << "): SpineML TCP " << m_Port
 		          << std::endl;
