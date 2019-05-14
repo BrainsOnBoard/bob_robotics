@@ -18,6 +18,11 @@
 #include <string>
 #include <vector>
 
+// POSIX includes
+#ifdef unix
+#include <fcntl.h>
+#endif
+
 namespace BoBRobotics {
 namespace Video {
 
