@@ -1,3 +1,5 @@
+#ifdef __linux__ // This code is Linux only
+
 // BoB robotics includes
 #include "common/logging.h"
 #include "common/serial_interface.h"
@@ -131,3 +133,4 @@ SerialInterface::writeByte(uint8_t byte)
     }
 }
 } // BoBRobotics
+#endif // __linux__
