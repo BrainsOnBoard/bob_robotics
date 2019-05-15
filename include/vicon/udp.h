@@ -267,7 +267,7 @@ private:
             return data;
         }
 
-        bool operator==(const CharArray<N> &other)
+        bool operator==(const CharArray<N> &other) const
         {
             return strcmp(data COMMA other) == 0;
         }
