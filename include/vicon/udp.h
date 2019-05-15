@@ -379,7 +379,7 @@ public:
          return m_ObjectData.begin()->second;
      }
 
-     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
+     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s)
      {
          waitUntilConnected();
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
@@ -390,8 +390,9 @@ public:
 
     //! Returns an object whose pose is updated by the Vicon system over time
     auto getObjectReference(const std::string& name,
-                            Stopwatch::Duration timeoutDuration = 10s) const
+                            Stopwatch::Duration timeoutDuration = 10s)
     {
+        waitUntilConnected();
         return ObjectReference<ObjectDataType>(*this,
                                                name.c_str(),
                                                timeoutDuration);
