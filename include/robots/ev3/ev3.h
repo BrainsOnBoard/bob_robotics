@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/stopwatch.h"
 #include "robots/tank.h"
 
 // EV3 library
@@ -40,6 +41,7 @@ public:
 
 private:
     MotorType m_MotorLeft, m_MotorRight;
+    Stopwatch m_MotorStatusTimer;
     const int m_MaxSpeedTachos, m_TachoCountPerRotation;
 
     meters_per_second_t tachoToSpeed(int tachos) const;
