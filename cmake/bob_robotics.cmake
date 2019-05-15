@@ -219,7 +219,9 @@ macro(BoB_build)
     endif()
 
     # Set DEBUG macro when compiling in debug mode
-    add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+        add_definitions(-DDEBUG)
+    endif()
 
     # Use C++14
     set(CMAKE_CXX_STANDARD 14)
