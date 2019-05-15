@@ -61,7 +61,7 @@ EV3::tank(float left, float right)
 
     // Every 3s check if the motors are overloaded
     using namespace std::literals;
-    if (m_MotorStatusTimer.elapsed() > 3s) {
+    if (!m_MotorStatusTimer.started() || m_MotorStatusTimer.elapsed() > 3s) {
         // Restart timer
         m_MotorStatusTimer.start();
 
