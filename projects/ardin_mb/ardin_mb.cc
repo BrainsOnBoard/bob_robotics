@@ -156,12 +156,14 @@ int main(int argc, char *argv[])
     std::string logFilename = "";
     float jitterSD = 0.0f;
     bool quitAfterTrain = false;
+    bool autoTest = false;
 
     CLI::App app{"Mushroom body navigation model"};
     app.add_option("--jitter", jitterSD, "Amount of jitter (cm) to apply when recapitulating routes", true);
     app.add_option("--world", worldFilename, "File to load world from", true);
     app.add_option("--log", logFilename, "File to log to", true);
     app.add_flag("--quit-after-train", quitAfterTrain, "Whether to quit once model is trained");
+    app.add_flag("--auto-test", autoTest, "Whether to test the model once it's trained");
     app.add_option("route", routeFilename, "Filename of route");
 
     /*cv::Size unwrapRes(std::atoi(argv[2]), std::atoi(argv[3]));
@@ -192,7 +194,7 @@ int main(int argc, char *argv[])
     CLI11_PARSE(app, argc, argv);
 
     // Create state machine and set it as window user pointer
-    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, memory, ui);
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest, memory, ui);
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback

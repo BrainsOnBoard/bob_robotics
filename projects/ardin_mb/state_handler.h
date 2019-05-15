@@ -74,7 +74,7 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain,
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
                  BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
@@ -177,6 +177,9 @@ private:
 
     //! Should we quit after training? (useful for automated parameter sweeping)
     const bool m_QuitAfterTrain;
+
+    //! Should we automatically test after training? (useful for automated benchmarking)
+    const bool m_AutoTest;
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;

@@ -21,14 +21,14 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 // StateHandler
 //----------------------------------------------------------------------------
-StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain,
+StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800),
     m_SnapshotProcessor(visualNavigation.getUnwrapResolution().width, visualNavigation.getUnwrapResolution().height),
     m_VectorField(20_cm), m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_QuitAfterTrain(quitAfterTrain), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
+    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
 
 {
     // Load world
@@ -141,6 +141,9 @@ bool StateHandler::handleEvent(State state, Event event)
                 if(m_QuitAfterTrain) {
                     return false;
                 }
+                else if(m_AutoTest) {
+                    m_StateMachine.transition(State::Testing);
+                }
                 else {
                     m_StateMachine.transition(State::FreeMovement);
                 }
@@ -218,7 +221,12 @@ bool StateHandler::handleEvent(State state, Event event)
 
                 // If new position means run is over - stop
                 if(!checkAntPosition()) {
-                    m_StateMachine.transition(State::FreeMovement);
+                    if(m_AutoTest) {
+                        return false;
+                    }
+                    else {
+                        m_StateMachine.transition(State::FreeMovement);
+                    }
                 }
                 // Otherwise, reset scan
                 else {
