@@ -34,7 +34,6 @@
 
 // Ardin MB includes
 #include "mb_memory_hog.h"
-#include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
 #include "visual_navigation_ui.h"

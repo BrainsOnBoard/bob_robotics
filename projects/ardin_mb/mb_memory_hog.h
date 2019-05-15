@@ -12,10 +12,11 @@
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
+#include "genn_utils/shared_library_model.h"
 #include "navigation/visual_navigation_base.h"
 
-// Antworld includes
-#include "mb_params.h"
+// Ardin MB includes
+#include "mb_params_hog.h"
 
 // Forward declarations
 namespace CLI
@@ -53,20 +54,20 @@ public:
     // Public API
     //------------------------------------------------------------------------
     // **NOTE** gross API but allows easy integration with UI
-    float *getGGNToKCWeight();
-    float *getKCToGGNWeight();
+    float *getGGNToKCWeight(){ return m_GGGNToKC; }
+    float *getKCToGGNWeight(){ return m_GKCToGGN; }
     float *getKCToENWeight(){ return &m_KCToENWeight; };
-    float *getPNToKC();
+    float *getPNToKC(){ return m_GPNToKC; }
 
-    float *getGGNToKCVMid();
-    float *getGGNToKCVslope();
-    float *getGGNToKCVthresh();
+    float *getGGNToKCVMid(){ return m_VMidGGNToKC; }
+    float *getGGNToKCVslope(){ return m_VSlopeGGNToKC; }
+    float *getGGNToKCVthresh(){ return m_VThreshGGNToKC; }
 
     int *getKCToENSynapse(){ return &m_KCToENSynape; }
     float *getKCToENDopamineStrength(){ return &m_KCToENDopamineStrength; }
 
-    float *getPNInputCurrentScale();
-    float *getPNVthresh();
+    float *getPNInputCurrentScale(){ return m_IExtScalePN; }
+    float *getPNVthresh(){ return m_VThreshPN; }
     float *getPNTauM(){ return &m_PNTauM; }
     float *getPNC(){ return &m_PNC; }
 
@@ -86,14 +87,14 @@ public:
     unsigned int getNumActivePN() const{ return m_NumActivePN; }
     unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
-    const std::vector<float> &getGGNVoltage() const{ return m_GGNVoltage; }
-    const std::vector<float> &getKCInhInSyn() const{ return m_KCInhInSyn; }
+    const std::vector<float> &getGGNVoltageHistory() const{ return m_GGNVoltageHistory; }
+    const std::vector<float> &getKCInhInSynHistory() const{ return m_KCInhInSynHistory; }
 
-    const std::vector<float> &getDKCToEN() const{ return m_DKCToEN; }
-    const std::vector<float> &getCKCToEN() const{ return m_CKCToEN; }
-    const std::vector<float> &getGKCToEN() const{ return m_GKCToEN; }
+    const std::vector<float> &getDKCToENHistory() const{ return m_DKCToENHistory; }
+    const std::vector<float> &getCKCToENHistory() const{ return m_CKCToENHistory; }
+    const std::vector<float> &getGKCToENHistory() const{ return m_GKCToENHistory; }
 
-    const std::vector<float> &getENVoltage() const{ return m_ENVoltage; }
+    const std::vector<float> &getENVoltageHistory() const{ return m_ENVoltageHistory; }
 
     float *getRewardTimeMs(){ return &m_RewardTimeMs; }
     float *getPresentDurationMs(){ return &m_PresentDurationMs; }
@@ -103,7 +104,7 @@ public:
 
     void addCLIArguments(CLI::App &app);
 
-    const std::array<cv::Vec2f, MBParams::hogNumOrientations> &getHOGDirections() const{ return m_HOGDirections; }
+    const std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> &getHOGDirections() const{ return m_HOGDirections; }
 
 private:
     //------------------------------------------------------------------------
@@ -150,17 +151,50 @@ private:
     mutable unsigned int m_NumActivePN;
     mutable unsigned int m_NumActiveKC;
 
-    mutable std::vector<float> m_GGNVoltage;
-    mutable std::vector<float> m_KCInhInSyn;
+    mutable std::vector<float> m_GGNVoltageHistory;
+    mutable std::vector<float> m_KCInhInSynHistory;
 
     int m_KCToENSynape;
-    mutable std::vector<float> m_DKCToEN;
-    mutable std::vector<float> m_CKCToEN;
-    mutable std::vector<float> m_GKCToEN;
+    mutable std::vector<float> m_DKCToENHistory;
+    mutable std::vector<float> m_CKCToENHistory;
+    mutable std::vector<float> m_GKCToENHistory;
 
-    mutable std::vector<float> m_ENVoltage;
+    mutable std::vector<float> m_ENVoltageHistory;
 
     mutable std::mt19937 m_RNG;
 
-    std::array<cv::Vec2f, MBParams::hogNumOrientations> m_HOGDirections;
+    std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> m_HOGDirections;
+
+    mutable BoBRobotics::GeNNUtils::SharedLibraryModelFloat m_SLM;
+
+    float *m_GGGNToKC;
+    float *m_GKCToGGN;
+    float *m_GPNToKC;
+    float *m_VMidGGNToKC;
+    float *m_VSlopeGGNToKC;
+    float *m_VThreshGGNToKC;
+    float *m_IExtScalePN;
+    float *m_VThreshPN;
+
+    float *m_ExpTCPN;
+    float *m_RmembranePN;
+    float *m_ExpDecaypnToKC;
+    float *m_InitPNToKC;
+    float *m_IExtPN;
+    float *m_TDKCToEN;
+    float *m_TCKCToEN;
+    float *m_DKCToEN;
+    bool *m_InjectDopamineKCToEN;
+    unsigned int *m_SpkCntEN;
+    unsigned int *m_SpkEN;
+    unsigned int *m_SpkCntKC;
+    unsigned int *m_SpkKC;
+    unsigned int *m_SpkCntPN;
+    unsigned int *m_SpkPN;
+    float *m_VGGN;
+    float *m_InSynGGNToKC;
+    float *m_CKCToEN;
+    float *m_GKCToEN;
+    float *m_VEN;
+
 };

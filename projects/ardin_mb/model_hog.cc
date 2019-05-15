@@ -6,7 +6,7 @@
 #include "../../genn_utils/connectors.h"
 
 // Model includes
-#include "mb_params.h"
+#include "mb_params_hog.h"
 
 using namespace BoBRobotics;
 
@@ -98,8 +98,8 @@ IMPLEMENT_MODEL(StaticPulseEGP);
 
 void modelDefinition(NNmodel &model)
 {
-    model.setDT(MBParams::timestepMs);
-    model.setName("ardin_mb");
+    model.setDT(MBParamsHOG::timestepMs);
+    model.setName("mb_memory_hog");
 
     //---------------------------------------------------------------------------
     // Neuron model parameters
@@ -168,11 +168,11 @@ void modelDefinition(NNmodel &model)
         15.0,                       // 0 - Potentiation time constant (ms)
         15.0,                       // 1 - Depression time constant (ms)
         40.0,                       // 2 - Synaptic tag time constant (ms)
-        MBParams::tauD,           // 3 - Dopamine time constant (ms)
+        MBParamsHOG::tauD,           // 3 - Dopamine time constant (ms)
         -1.0,                       // 4 - Rate of potentiation
         1.0,                        // 5 - Rate of depression
         0.0,                        // 6 - Minimum weight
-        MBParams::kcToENWeight);  // 7 - Maximum weight
+        MBParamsHOG::kcToENWeight);  // 7 - Maximum weight
 
     GeNNModels::STDPDopamine::VarValues kcToENWeightUpdateInitVars(
         uninitialisedVar(),         // Synaptic weight
@@ -180,9 +180,9 @@ void modelDefinition(NNmodel &model)
         0.0);                       // Time of last synaptic tag update
 
     // Create neuron populations
-    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, pnInit);
-    model.addNeuronPopulation<NeuronModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
-    model.addNeuronPopulation<NeuronModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParamsHOG::numPN, pnParams, pnInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("KC", MBParamsHOG::numKC, kcParams, lifInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("EN", MBParamsHOG::numEN, enParams, lifInit);
     model.addNeuronPopulation<NeuronModels::LIF>("GGN", 1, ggnParams, lifInit);
 
     auto pnToKC = model.addSynapsePopulation<StaticPulseEGP, ExpCurrEGP>(
@@ -210,8 +210,8 @@ void modelDefinition(NNmodel &model)
         ggnToKCPostsynapticParams, {});
 
     // Calculate max connections
-    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(MBParams::numPN, MBParams::numKC,
-                                                                                      MBParams::numPNSynapsesPerKC);
+    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(MBParamsHOG::numPN, MBParamsHOG::numKC,
+                                                                                      MBParamsHOG::numPNSynapsesPerKC);
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);

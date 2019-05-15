@@ -10,7 +10,6 @@
 #include "navigation/visual_navigation_base.h"
 
 // Ardin MB includes
-#include "mb_params.h"
 #include "sim_params.h"
 #include "visual_navigation_ui.h"
 

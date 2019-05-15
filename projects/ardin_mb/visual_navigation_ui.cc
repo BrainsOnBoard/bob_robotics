@@ -8,7 +8,7 @@
 
 // Antworld includes
 #include "mb_memory_hog.h"
-#include "mb_params.h"
+#include "mb_params_hog.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
@@ -21,8 +21,6 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
         return false;
     }
 
-    // **TODO** handle different dt
-    assert(MBParams::timestepMs == 1.0);
     const float width = spikes.back().first;
     const float height = (float)numNeurons * yScale;
     constexpr float leftBorder = 20.0f;
@@ -74,7 +72,7 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
     return true;
 }
 //----------------------------------------------------------------------------
-bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParams::hogNumOrientations> &directions, float drawScale)
+bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> &directions, float drawScale)
 {
     // Calculate number of cells
     const size_t numCellX = features.cols;
@@ -105,9 +103,9 @@ bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParams::hogN
                                                 IM_COL32(128, 128, 128, 255));
 
             // Get magnitude of features in cell
-            const auto cellFeatures = features.at<cv::Vec<float, MBParams::hogNumOrientations>>(y, x);
+            const auto cellFeatures = features.at<cv::Vec<float, MBParamsHOG::hogNumOrientations>>(y, x);
 
-            for(size_t b = 0; b < MBParams::hogNumOrientations; b++) {
+            for(size_t b = 0; b < MBParamsHOG::hogNumOrientations; b++) {
                 // Skip zero-strength gradients
                 if(cellFeatures[b] == 0.0f) {
                     continue;
@@ -183,16 +181,16 @@ void MBHogUI::handleUI()
     ImGui::End();
 
     if(ImGui::Begin("PN spikes")) {
-        if(rasterPlot(MBParams::numPN, m_Memory.getPNSpikes(), *m_Memory.getPresentDurationMs())){
-            ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParams::numPN);
+        if(rasterPlot(MBParamsHOG::numPN, m_Memory.getPNSpikes(), *m_Memory.getPresentDurationMs())){
+            ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParamsHOG::numPN);
             ImGui::Text("%u spikes", m_Memory.getNumPNSpikes());
         }
     }
     ImGui::End();
 
     if(ImGui::Begin("KC spikes")) {
-        if(rasterPlot(MBParams::numKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
-            ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParams::numKC);
+        if(rasterPlot(MBParamsHOG::numKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
+            ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParamsHOG::numKC);
             ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
         }
     }
@@ -206,23 +204,23 @@ void MBHogUI::handleUI()
     ImGui::End();
 
     if(ImGui::Begin("GGN activity")) {
-        ImGui::PlotLines("Membrane\nvoltage", m_Memory.getGGNVoltage().data(), m_Memory.getGGNVoltage().size(), 0, nullptr,
+        ImGui::PlotLines("Membrane\nvoltage", m_Memory.getGGNVoltageHistory().data(), m_Memory.getGGNVoltageHistory().size(), 0, nullptr,
                          -60.0f, -40.0f, ImVec2(0, 50));
-        ImGui::PlotLines("Inh out", m_Memory.getKCInhInSyn().data(), m_Memory.getKCInhInSyn().size(), 0, nullptr,
+        ImGui::PlotLines("Inh out", m_Memory.getKCInhInSynHistory().data(), m_Memory.getKCInhInSynHistory().size(), 0, nullptr,
                          -1.0f, 0.0f, ImVec2(0, 50));
     }
     ImGui::End();
 
     if(ImGui::Begin("Dopamine activity")) {
-        ImGui::SliderInt("Selected synapse", m_Memory.getKCToENSynapse(), 0, MBParams::numKC);
-        ImGui::PlotLines("Dopamine", m_Memory.getDKCToEN().data(), m_Memory.getDKCToEN().size(), 0, nullptr,
+        ImGui::SliderInt("Selected synapse", m_Memory.getKCToENSynapse(), 0, MBParamsHOG::numKC);
+        ImGui::PlotLines("Dopamine", m_Memory.getDKCToENHistory().data(), m_Memory.getDKCToENHistory().size(), 0, nullptr,
                          0.0f, 1.0f, ImVec2(0, 50));
 
-        ImGui::PlotLines("Tag", m_Memory.getCKCToEN().data(), m_Memory.getCKCToEN().size(), 0, nullptr,
+        ImGui::PlotLines("Tag", m_Memory.getCKCToENHistory().data(), m_Memory.getCKCToENHistory().size(), 0, nullptr,
                          -1.0f, 0.0f, ImVec2(0, 50));
-        ImGui::PlotLines("Weight", m_Memory.getGKCToEN().data(), m_Memory.getGKCToEN().size(), 0, nullptr,
+        ImGui::PlotLines("Weight", m_Memory.getGKCToENHistory().data(), m_Memory.getGKCToENHistory().size(), 0, nullptr,
                          0.0f, 0.5f, ImVec2(0, 50));
-        ImGui::PlotLines("EN Membrane\nvoltage", m_Memory.getENVoltage().data(), m_Memory.getENVoltage().size(), 0, nullptr,
+        ImGui::PlotLines("EN Membrane\nvoltage", m_Memory.getENVoltageHistory().data(), m_Memory.getENVoltageHistory().size(), 0, nullptr,
                          FLT_MAX, FLT_MAX, ImVec2(0, 50));
     }
     ImGui::End();
@@ -286,7 +284,7 @@ void MBHogUI::handleUITraining()
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
     m_NumENData.push_back((float)m_Memory.getNumENSpikes());
 
-    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
+    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltageHistory().begin(), m_Memory.getGGNVoltageHistory().end()));
 }
 //----------------------------------------------------------------------------
 void MBHogUI::handleUITesting()
@@ -296,7 +294,7 @@ void MBHogUI::handleUITesting()
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
     m_NumENData.push_back((float)m_Memory.getNumENSpikes());
 
-    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltage().begin(), m_Memory.getGGNVoltage().end()));
+    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltageHistory().begin(), m_Memory.getGGNVoltageHistory().end()));
 }
 //----------------------------------------------------------------------------
 void MBHogUI::saveLogs(const std::string &filename)
