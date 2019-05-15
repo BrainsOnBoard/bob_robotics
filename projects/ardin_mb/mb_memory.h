@@ -9,8 +9,6 @@
 // BoB robotics includes
 #include "navigation/visual_navigation_base.h"
 
-
-
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
@@ -32,9 +30,6 @@ public:
     virtual void clearMemory() override;
 
 private:
-    //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
     std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
 
     //------------------------------------------------------------------------
@@ -42,10 +37,5 @@ private:
     //------------------------------------------------------------------------
     const bool m_NormaliseInput;
 
-#ifdef CPU_ONLY
     mutable cv::Mat m_SnapshotFloat;
-#else
-    mutable cv::cuda::GpuMat m_SnapshotGPU;
-    mutable cv::cuda::GpuMat m_SnapshotFloatGPU;
-#endif
 };

@@ -3,26 +3,30 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// Libantworld includes
+#include "snapshot_processor.h"
+
 //----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::SnapshotProcessor
+// BoBRobotics::AntWorld::SnapshotProcessorSegmentSky
 //----------------------------------------------------------------------------
+//! OpenCV-based snapshot processor - uses OpenCV on CPU to bianrize image based on sky
 namespace BoBRobotics
 {
 namespace AntWorld
 {
-//! OpenCV-based snapshot processor - uses OpenCV on CPU to process snapshots
-class SnapshotProcessorSegmentSky
+class SnapshotProcessorSegmentSky : public SnapshotProcessor
 {
 public:
     SnapshotProcessorSegmentSky(int outputWidth, int outputHeight);
 
     //------------------------------------------------------------------------
-    // Public API
+    // SnapshotProcessor virtuals
     //------------------------------------------------------------------------
-    // Process input snapshot (probably at screen resolution)
-    void process(const cv::Mat &snapshot);
+    //! Process input snapshot (probably at screen resolution)
+    virtual void process(const cv::Mat &snapshot) override;
 
-    const cv::Mat &getFinalSnapshot() const{ return m_FinalSnapshot; }
+    //! Get processed snapshot - should be in a CV_8UC1 format image
+    virtual const cv::Mat &getFinalSnapshot() const override{ return m_FinalSnapshot; }
 
 private:
     //------------------------------------------------------------------------

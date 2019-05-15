@@ -32,6 +32,9 @@
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_hog.h"
 
+// Antworld includes
+#include "libantworld/snapshot_processor_segment_sky.h"
+
 // Ardin MB includes
 #include "mb_memory_hog.h"
 #include "sim_params.h"
@@ -189,11 +192,16 @@ int main(int argc, char *argv[])
     memory.addCLIArguments(app);
     MBHogUI ui(memory);
 
+    // Create suitable snapshot processor
+    AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
+                                                            memory.getUnwrapResolution().height);
+
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);
 
     // Create state machine and set it as window user pointer
-    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest, memory, ui);
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest,
+                              snapshotProcessor, memory, ui);
     glfwSetWindowUserPointer(window, &stateHandler);
 
     // Set key callback

@@ -33,12 +33,8 @@ unsigned int convertMsToTimesteps(double ms)
 // MBMemory
 //----------------------------------------------------------------------------
 MBMemory::MBMemory(bool normaliseInput)
-    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)), m_NormaliseInput(normaliseInput)
-#ifdef CPU_ONLY
-        , m_SnapshotFloat(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
-#else
-        , m_SnapshotGPU(MBParams::inputHeight, MBParams::inputWidth, CV_8UC1), m_SnapshotFloatGPU(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
-#endif  // CPU_ONLY
+    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)), m_NormaliseInput(normaliseInput),
+        m_SnapshotFloat(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
 {
 
     std::mt19937 gen;
@@ -56,14 +52,18 @@ MBMemory::MBMemory(bool normaliseInput)
     {
         Timer<> timer("Building connectivity:");
 
-        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC,
-                                                MBParams::numPNSynapsesPerKC, CpnToKC, &allocatepnToKC, gen);
+        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC, MBParams::numPNSynapsesPerKC,
+                                                rowLengthpnToKC, indpnToKC, maxRowLengthpnToKC, gen);
+
+        // Manually initialise weights
+        // **NOTE** this is a little bit of a hack as we're only doing this so repeated calls to initialise won't overwrite
+        std::fill_n(&gkcToEN[0], MBParams::numKC * MBParams::numEN, MBParams::kcToENWeight);
     }
 
     // Final setup
     {
         Timer<> timer("Sparse init:");
-        initardin_mb();
+        initializeSparse();
     }
 }
 //----------------------------------------------------------------------------
@@ -93,7 +93,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     BOB_ASSERT(image.rows == MBParams::inputHeight);
     BOB_ASSERT(image.type() == CV_8UC1);
 
-#ifdef CPU_ONLY
     // Convert to float
     image.convertTo(m_SnapshotFloat, CV_32FC1, 1.0 / 255.0);
 
@@ -102,40 +101,15 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
         cv::normalize(m_SnapshotFloat, m_SnapshotFloat);
     }
 
-    // Extract step and data pointer directly from CPU Mat
-    const unsigned int snapshotStep = m_SnapshotFloat.cols;
-    float *snapshotData = reinterpret_cast<float*>(m_SnapshotFloat.data);
-#else
-    // Upload (uint8) snapshot to GPU
-    m_SnapshotGPU.upload(image);
-
-    // Convert to float
-    m_SnapshotGPU.convertTo(m_SnapshotFloatGPU, CV_32FC1, 1.0 / 255.0);
-
-    // Normalise snapshot using L2 norm
-    // **YUCK** why doesn't the CUDA version have default parameters!?
-    if(m_NormaliseInput) {
-        cv::cuda::normalize(m_SnapshotFloatGPU, m_SnapshotFloatGPU, 1.0, 0.0, cv::NORM_L2, -1);
-    }
-
-    // Extract device pointers and step
-    auto snapshotPtrStep = (cv::cuda::PtrStep<float>)m_SnapshotFloatGPU;
-    const unsigned int snapshotStep = snapshotPtrStep.step / sizeof(float);
-    float *snapshotData = snapshotPtrStep.data;
-#endif
-
     // Convert simulation regime parameters to timesteps
-    const unsigned long long rewardTimestep = iT + convertMsToTimesteps(MBParams::rewardTimeMs);
-    const unsigned int presentDuration = convertMsToTimesteps(MBParams::presentDurationMs);
+    const unsigned long long rewardTimestep = convertMsToTimesteps(MBParams::rewardTimeMs);
+    const unsigned int endPresentTimestep = convertMsToTimesteps(MBParams::presentDurationMs);
     const unsigned int postStimuliDuration = convertMsToTimesteps(MBParams::postStimuliDurationMs);
 
-    const unsigned int duration = presentDuration + postStimuliDuration;
-    const unsigned long long endPresentTimestep = iT + presentDuration;
-    const unsigned long long endTimestep = iT + duration;
+    const unsigned long long duration = endPresentTimestep + postStimuliDuration;
 
     // Open CSV output files
 #ifdef RECORD_SPIKES
-    const float startTimeMs = t;
     GeNNUtils::SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
     GeNNUtils::SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
     GeNNUtils::SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
@@ -144,21 +118,29 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     std::bitset<MBParams::numKC> kcSpikeBitset;
 #endif  // RECORD_SPIKES
 
-    // Update input data step
-    IextStepPN = snapshotStep;
+    // Make sure KC state and GGN insyn are reset before simulation
+    initialize();
+
+    // Copy HOG features into external input current
+    BOB_ASSERT(m_SnapshotFloat.isContinuous());
+    std::copy_n(reinterpret_cast<float*>(m_SnapshotFloat.data), MBParams::numPN, IextPN);
+    pushIextPNToDevice();
+
+    // Reset model time
+    iT = 0;
+    t = 0.0f;
 
     // Loop through timesteps
     unsigned int numPNSpikes = 0;
     unsigned int numKCSpikes = 0;
     unsigned int numENSpikes = 0;
-    while(iT < endTimestep) {
-        // If we should be presenting an image
-        if(iT < endPresentTimestep) {
-            IextPN = snapshotData;
-        }
-        // Otherwise update offset to point to block of zeros
-        else {
-            IextPN = nullptr;
+    while(iT < duration) {
+        // If we should stop presenting image
+        if(iT == endPresentTimestep) {
+            std::fill_n(IextPN, MBParams::numPN, 0.0f);
+
+            // Copy external input current to device
+            pushIextPNToDevice();
         }
 
         // If we should reward in this timestep, inject dopamine
@@ -166,9 +148,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
             injectDopaminekcToEN = true;
         }
 
-#ifndef CPU_ONLY
-        // Simulate on GPU
-        stepTimeGPU();
+        // Simulat
+        stepTime();
 
         // Download spikes
 #ifdef RECORD_SPIKES
@@ -176,12 +157,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
         pullKCCurrentSpikesFromDevice();
         pullENCurrentSpikesFromDevice();
 #else
-        CHECK_CUDA_ERRORS(cudaMemcpy(glbSpkCntEN, d_glbSpkCntEN, sizeof(unsigned int), cudaMemcpyDeviceToHost));
+        pullENCurrentSpikesFromDevice();
 #endif
-#else
-        // Simulate on CPU
-        stepTimeCPU();
-#endif
+
         // If a dopamine spike has been injected this timestep
         if(injectDopaminekcToEN) {
             // Decay global dopamine traces
@@ -209,9 +187,9 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
             kcSpikeBitset.set(spike_KC[i]);
         }
         // Record spikes
-        pnSpikes.record(t - startTimeMs);
-        kcSpikes.record(t - startTimeMs);
-        enSpikes.record(t - startTimeMs);
+        pnSpikes.record(t);
+        kcSpikes.record(t);
+        enSpikes.record(t);
 #endif  // RECORD_SPIKES
     }
 
@@ -234,9 +212,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     if(train) {
         constexpr unsigned int numWeights = MBParams::numKC * MBParams::numEN;
 
-#ifndef CPU_ONLY
-        CHECK_CUDA_ERRORS(cudaMemcpy(gkcToEN, d_gkcToEN, numWeights * sizeof(scalar), cudaMemcpyDeviceToHost));
-#endif  // CPU_ONLY
+        // Download weights
+        pullgkcToENFromDevice();
 
         unsigned int numUsedWeights = std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
         std::cout << "\t" << numWeights - numUsedWeights << " unused weights" << std::endl;

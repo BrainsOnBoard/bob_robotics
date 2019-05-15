@@ -20,7 +20,6 @@
 #include "libantworld/render_target.h"
 #include "libantworld/render_target_input.h"
 #include "libantworld/route_ardin.h"
-#include "libantworld/snapshot_processor_segment_sky.h"
 
 // Ardin MB includes
 #include "opencv_texture.h"
@@ -32,6 +31,10 @@ namespace BoBRobotics
 namespace Navigation
 {
     class VisualNavigationBase;
+}
+namespace AntWorld
+{
+    class SnapshotProcessor;
 }
 }
 
@@ -75,7 +78,8 @@ public:
     };
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
-                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation, VisualNavigationUI &visualNavigationUI);
+                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
+                 VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
     // Public API
@@ -133,9 +137,6 @@ private:
     //! Route handler - implements the various bits of route-regularizing weirdness from original paper
     BoBRobotics::AntWorld::RouteArdin m_Route;
 
-    //! Snapshot processor - implements the strange resizing algorithm from original paper
-    BoBRobotics::AntWorld::SnapshotProcessorSegmentSky m_SnapshotProcessor;
-
     //! OpenCV texture wrapper used to render final snapshot
     OpenCVTexture m_FinalSnapshotTexture;
 
@@ -180,6 +181,9 @@ private:
 
     //! Should we automatically test after training? (useful for automated benchmarking)
     const bool m_AutoTest;
+
+    //! Snapshot processor - takes screen images and pre-processes
+    BoBRobotics::AntWorld::SnapshotProcessor &m_SnapshotProcessor;
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
