@@ -29,8 +29,8 @@ public:
     using MotorType = ev3dev::large_motor;
 #endif
 
-    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_A,
-        const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_D);
+    EV3(const ev3dev::address_type leftMotorPort = ev3dev::OUTPUT_D,
+        const ev3dev::address_type rightMotorPort = ev3dev::OUTPUT_A);
     virtual ~EV3() override;
 
     virtual void stopMoving() override;
