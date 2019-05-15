@@ -226,7 +226,7 @@ macro(BoB_build)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Flags for gcc and clang
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
         set(GNU_TYPE_COMPILER TRUE)
 
         # Default to building with -march=native
@@ -237,11 +237,8 @@ macro(BoB_build)
         # Enable warnings and set architecture
         add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
 
-        # Disable optimisation, enable debug symbols
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
-
-        # Enable optimisations at level O2
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+        # Disable optimisation for debug builds
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     endif()
 
     # Set include dirs and link libraries for this module/project
