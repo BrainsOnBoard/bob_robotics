@@ -9,12 +9,12 @@ config:
       cm: 1.
       tauM: 2.0152000427246094e+01
    ggnToKC:
-      weight: -3.0429999828338623e+00
-      vMid: -54.
+      weight: -4
+      vMid: -54.1
       vSlope: 1.
       vThresh: -60.
    kcToGGC:
-      weight: 5.4000001400709152e-03
+      weight: 0.015
    pnToKC:
       weight: 2.4300000071525574e-01
       tauSyn: 3.
