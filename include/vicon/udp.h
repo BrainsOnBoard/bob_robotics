@@ -519,7 +519,7 @@ private:
             const unsigned int r = 24;
 
             // String length
-            size_t len = N;
+            size_t len = strlen(str);
 
             // Initialize the hash to a 'random' value
             uint32_t h = 0xc70f6907 ^ (uint32_t)len;
