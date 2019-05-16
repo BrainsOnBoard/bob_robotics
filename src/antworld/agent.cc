@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "antworld/agent.h"
-#include "common/assert.h"
+#include "common/macros.h"
 
 // Standard C++ includes
 #include <mutex>

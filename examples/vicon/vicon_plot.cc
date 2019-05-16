@@ -27,10 +27,6 @@ main()
 {
     Vicon::UDPClient<> vicon(51001);
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
@@ -39,7 +35,7 @@ main()
     bool warningGiven = false;
     do {
         plt::figure(1);
-        auto data = vicon.getObjectData(0);
+        auto data = vicon.getObjectData();
         Viz::plotAgent(data.getPose<>(), -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         if (data.timeSinceReceived() > 500ms) {
             if (!warningGiven) {

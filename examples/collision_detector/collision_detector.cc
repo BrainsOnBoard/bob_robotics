@@ -66,10 +66,6 @@ main()
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     // Control robot with joystick over network
     HID::Joystick joystick;
@@ -109,7 +105,7 @@ main()
         // Poll for joystick events
         joystick.update();
 
-        collisionDetector.setRobotPose(vicon.getObjectData(0).getPose());
+        collisionDetector.setRobotPose(vicon.getObjectData().getPose());
         if (collisionDetector.collisionOccurred()) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();

@@ -310,33 +310,33 @@ convertUnitArray(const ArrayType &values)
              static_cast<OutputUnit>(values[1]),
              static_cast<OutputUnit>(values[2]) };
 }
-} // BoBRobotics
 
-template<typename OutputStreamType, typename LengthUnit>
-inline auto &operator<<(OutputStreamType &os, const BoBRobotics::Vector2<LengthUnit> &position)
+template<typename LengthUnit>
+inline auto &operator<<(std::ostream &os, const BoBRobotics::Vector2<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ")";
     return os;
 }
 
-template<typename OutputStreamType, typename LengthUnit>
-inline auto &operator<<(OutputStreamType &os, const BoBRobotics::Vector3<LengthUnit> &position)
+template<typename LengthUnit>
+inline auto &operator<<(std::ostream &os, const BoBRobotics::Vector3<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ", " << position.z() << ")";
     return os;
 }
 
-template<typename OutputStreamType, typename LengthUnit, typename AngleUnit>
-inline auto &operator<<(OutputStreamType &os, const BoBRobotics::Pose2<LengthUnit, AngleUnit> &pose)
+template<typename LengthUnit, typename AngleUnit>
+inline auto &operator<<(std::ostream &os, const BoBRobotics::Pose2<LengthUnit, AngleUnit> &pose)
 {
     os << pose.position() << " at " << pose.yaw();
     return os;
 }
 
-template<typename OutputStreamType, typename LengthUnit, typename AngleUnit>
-inline auto &operator<<(OutputStreamType &os, const BoBRobotics::Pose3<LengthUnit, AngleUnit> &pose)
+template<typename LengthUnit, typename AngleUnit>
+inline auto &operator<<(std::ostream &os, const BoBRobotics::Pose3<LengthUnit, AngleUnit> &pose)
 {
     os << pose.position()
        << " at (" << pose.yaw() << ", " << pose.pitch() << ", " << pose.roll() << ")";
     return os;
 }
+} // BoBRobotics

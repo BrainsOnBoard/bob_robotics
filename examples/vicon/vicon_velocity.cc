@@ -16,16 +16,12 @@ int main()
 {
     UDPClient<ObjectDataVelocity> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
     for (int i = 0; i < 120; i++) {
-        auto objectData = vicon.getObjectData(0);
+        auto objectData = vicon.getObjectData();
         const auto velocity = objectData.getVelocity();
         const auto angularVelocity = objectData.getAngularVelocity<degrees_per_second_t>();
 

@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     // Build connectivity
     //---------------------------------------------------------------------------
     buildConnectivity();
-    
+
     initstone_cx();
 
 #ifdef RECORD_ELECTROPHYS
@@ -66,19 +66,13 @@ int main(int argc, char *argv[])
     GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
     GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
 #endif  // RECORD_ELECTROPHYS
-    
-    // Wait for VICON system to track some objects
-    while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object..." << std::endl;
-    }
 
     // Start capture
     if(!viconCaptureControl.startRecording("test")) {
         return EXIT_FAILURE;
     }
 
-    std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
+    std::cout << "Start VICON frame:" << vicon.getObjectData().getFrameNumber() << std::endl;
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -88,20 +82,20 @@ int main(int argc, char *argv[])
     for(;; numTicks++) {
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
-        
+
         // Read from joystick
         joystick.update();
-        
+
         // Stop if 2nd button is pressed
         if(joystick.isDown(JButton::B)) {
             break;
         }
-        
+
         // Read data from VICON system
-        auto objectData = vicon.getObjectData(0);
+        auto objectData = vicon.getObjectData();
         const auto &velocity = objectData.getVelocity();
         const auto &attitude = objectData.getAttitude();
-        
+
         /*
          * Update TL input
          * **TODO**: We could update definitions.h etc. to use physical unit types,
@@ -137,7 +131,7 @@ int main(int argc, char *argv[])
         if(outbound) {
             // Use joystick to drive motor
             motor.drive(joystick, RobotParameters::joystickDeadzone);
-            
+
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {
                 std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
@@ -150,16 +144,16 @@ int main(int argc, char *argv[])
         else {
             driveMotorFromCPU1(motor, (numTicks % 100) == 0);
         }
-        
+
         // Record time at end of tick
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
-        
+
         // Calculate tick duration (in microseconds)
         const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
-        
+
         // Add to total
         totalMicroseconds += tickMicroseconds;
-        
+
         // If there is time left in tick, sleep for remainder
         if(tickMicroseconds < RobotParameters::targetTickMicroseconds) {
             std::this_thread::sleep_for(std::chrono::microseconds(RobotParameters::targetTickMicroseconds - tickMicroseconds));
@@ -169,13 +163,13 @@ int main(int argc, char *argv[])
             numOverflowTicks++;
         }
     }
-    
+
     // Show overflow stats
     std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS" << std::endl;
 
     // Stop motor
     motor.tank(0.0f, 0.0f);
-    
+
     // Stop capture
     if(!viconCaptureControl.stopRecording("test")) {
         return EXIT_FAILURE;

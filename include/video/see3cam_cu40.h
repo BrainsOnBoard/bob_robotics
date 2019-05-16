@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "input.h"
 #include "v4l_camera.h"
 

@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "navigation/read_objects.h"
-#include "common/assert.h"
+#include "common/macros.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp> // for YAML deserialisation

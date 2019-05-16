@@ -1,6 +1,6 @@
 #ifndef _WIN32
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/logging.h"
 #include "vicon/capture_control.h"
 

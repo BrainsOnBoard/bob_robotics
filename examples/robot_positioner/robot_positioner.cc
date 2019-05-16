@@ -79,12 +79,6 @@ public:
         std::cout << "Goal: " << Goal << std::endl;
         m_Positioner.moveTo(Goal);
 
-        // Wait for Vicon system to spot our robot
-        while (m_Vicon.getNumObjects() == 0) {
-            std::this_thread::sleep_for(1s);
-            std::cout << "Waiting for object" << std::endl;
-        }
-
         // Start controlling with joystick
         m_StateMachine.transition(ControlWithJoystick);
     }

@@ -219,14 +219,16 @@ macro(BoB_build)
     endif()
 
     # Set DEBUG macro when compiling in debug mode
-    add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>")
+    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+        add_definitions(-DDEBUG)
+    endif()
 
     # Use C++14
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Flags for gcc and clang
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
         set(GNU_TYPE_COMPILER TRUE)
 
         # Default to building with -march=native
@@ -237,11 +239,8 @@ macro(BoB_build)
         # Enable warnings and set architecture
         add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
 
-        # Disable optimisation, enable debug symbols
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
-
-        # Enable optimisations at level O2
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+        # Disable optimisation for debug builds
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     endif()
 
     # Set include dirs and link libraries for this module/project
@@ -252,6 +251,11 @@ macro(BoB_build)
 
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
+
+    # Clang needs to be linked against libm and libstdc++ explicitly
+    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        BoB_add_link_libraries(m stdc++)
+    endif()
 
     # The list of linked libraries can end up very long with lots of duplicate
     # entries and this can break ld, so remove them. We remove from the start,
@@ -474,6 +478,21 @@ function(BoB_third_party)
                 BoB_add_include_directories(${SHELL_OUTPUT})
             endif()
         else()
+            # Extra actions
+            if(${module} STREQUAL ev3dev-lang-cpp)
+                # Default to BrickPi3
+                if(NOT EV3DEV_PLATFORM)
+                    set(EV3DEV_PLATFORM "BRICKPI3" CACHE STRING "Target ev3dev platform (EV3/BRICKPI/BRICKPI3/PISTORMS)")
+                endif()
+                set_property(CACHE EV3DEV_PLATFORM PROPERTY STRINGS "EV3" "BRICKPI" "BRICKPI3" "PISTORMS")
+                add_definitions(-DEV3DEV_PLATFORM_${EV3DEV_PLATFORM})
+                message("EV3 platform: ${EV3DEV_PLATFORM}")
+
+                BoB_add_link_libraries(ev3dev)
+            elseif(${module} STREQUAL imgui)
+                BoB_add_link_libraries(imgui)
+            endif()
+
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
@@ -491,13 +510,6 @@ function(BoB_third_party)
 
             # Link against extra libs, if needed
             BoB_add_link_libraries(${${module}_LIBRARIES})
-
-            # Extra actions
-            if(${module} STREQUAL ev3dev-lang-cpp)
-                BoB_add_link_libraries(ev3dev)
-            elseif(${module} STREQUAL imgui)
-                BoB_add_link_libraries(imgui)
-            endif()
         endif()
     endforeach()
 endfunction()

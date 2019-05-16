@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "navigation/visual_navigation_base.h"
-#include "common/assert.h"
+#include "common/macros.h"
 
 namespace BoBRobotics {
 namespace Navigation {

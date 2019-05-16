@@ -22,8 +22,11 @@ bob_main(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
+#ifndef DEBUG
     try {
+#endif // !DEBUG
         return bob_main(argc, argv);
+#ifndef DEBUG
     } catch (std::exception &e) {
 #ifdef _WIN32
         // Windows doesn't print exception details by default
@@ -36,4 +39,5 @@ main(int argc, char **argv)
         // Rethrow exceptions not of type std::exception
         throw;
     }
+#endif // !DEBUG
 }

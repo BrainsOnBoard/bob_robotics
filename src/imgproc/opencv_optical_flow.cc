@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "imgproc/opencv_optical_flow.h"
-#include "common/assert.h"
+#include "common/macros.h"
 
 // Standard C includes
 #include <cmath>

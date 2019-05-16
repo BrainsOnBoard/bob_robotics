@@ -113,16 +113,12 @@ bob_main(int argc, char **argv)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     // Drive robot with joystick
     HID::Joystick joystick;
     robot.addJoystick(joystick);
 
-    auto viconObject = vicon.getObjectReference(0);
+    auto viconObject = vicon.getObjectReference();
     auto pid = Robots::createTankPID(robot, viconObject, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {

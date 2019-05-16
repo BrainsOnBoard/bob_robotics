@@ -1,8 +1,9 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
-// C++ includes
+// Standard C++ includes
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -17,27 +18,19 @@ int main(int argc, char **argv)
     UDPClient<> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
 
-    const std::string objectName = (argc > 1) ? argv[1] : "Norbot";
-
-    unsigned int norbotID;
-    while(true) {
-        try {
-            norbotID = vicon.findObjectID(objectName);
-            break;
-        }
-        catch(std::out_of_range &ex) {
-            std::this_thread::sleep_for(1s);
-            std::cout << "Waiting for object '" << objectName << "'" << std::endl;
-        }
-    }
-
-    std::cout << "'" << objectName << "' found with id:" << norbotID << std::endl;
+    /*
+     * If command-line argument is provided, search for an object with specified
+     * name, otherwise return first discovered object.
+     */
+    ObjectData objectData = (argc > 1) ? vicon.getObjectData(argv[1]) : vicon.getObjectData();
+    const std::string objectName = objectData.getName();
+    LOGI << "Found object: " << objectName;
 
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
-    for (int i = 0; i < 10000; i++) {
-        auto objectData = vicon.getObjectData(norbotID);
+    for (int i = 0; i < 1000; i++) {
+        auto objectData = vicon.getObjectData(objectName);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
         std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
