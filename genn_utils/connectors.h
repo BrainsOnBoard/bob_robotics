@@ -24,7 +24,7 @@ namespace GeNNUtils {
 //----------------------------------------------------------------------------
 // Evaluates continued fraction for incomplete beta function by modified Lentz's method
 // Adopted from numerical recipes in C p227
-double betacf(double a, double b, double x)
+inline double betacf(double a, double b, double x)
 {
     const int maxIterations = 200;
     const double epsilon = 3.0E-7;
@@ -86,7 +86,7 @@ double betacf(double a, double b, double x)
 //----------------------------------------------------------------------------
 // Returns the incomplete beta function Ix(a, b)
 // Adopted from numerical recipes in C p227
-double betai(double a, double b, double x)
+inline double betai(double a, double b, double x)
 {
     if (x < 0.0 || x > 1.0) {
         throw std::runtime_error("Bad x in routine betai");
@@ -132,7 +132,7 @@ inline unsigned int binomialInverseCDF(double cdf, unsigned int n, double p)
     throw std::runtime_error("Invalid CDF parameterse");
 }
 //----------------------------------------------------------------------------
-void sortRows(unsigned int numPre, unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength)
+inline void sortRows(unsigned int numPre, unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength)
 {
     // Loop through rows and sort indices
     for(unsigned int i = 0; i < numPre; i++) {
@@ -144,7 +144,7 @@ void sortRows(unsigned int numPre, unsigned int *rowLength, unsigned int *ind, u
 }
 //----------------------------------------------------------------------------
 template<typename T>
-void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
+inline void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         for(unsigned int j = 0; j < numPost; j++) {
@@ -154,7 +154,7 @@ void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
     }
 }
 //----------------------------------------------------------------------------
-void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const unsigned int *ind, unsigned int maxRowLength)
+inline void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const unsigned int *ind, unsigned int maxRowLength)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         std::cout << i << ":";
@@ -169,7 +169,7 @@ void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const
 }
 //----------------------------------------------------------------------------
 template <typename Generator>
-void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+inline void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
                                   unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength,
                                   Generator &gen)
 {
@@ -202,7 +202,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     sortRows(numPre, rowLength, ind, maxRowLength);
 }
 //----------------------------------------------------------------------------
-unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+inline unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
     const double quantile = pow(0.9999, 1.0 / (double)numPre);
