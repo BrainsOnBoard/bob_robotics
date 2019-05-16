@@ -18,7 +18,7 @@ namespace BoBRobotics {
 namespace Video {
 
 RPiCamera::RPiCamera(uint16_t port)
-  : m_Frame(72, 152, CV_8UC3)
+  : m_Frame(72, 152, CV_8UC1)
   , m_Socket(INVALID_SOCKET)
 {
     m_Port = port;
