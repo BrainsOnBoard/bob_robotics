@@ -2,7 +2,7 @@ WITH_LIBANTWORLD := 1
 WITH_IMGUI := 1
 include ../../make_common/bob_robotics.mk
 
-SOURCES			:=ardin_mb.cc state_handler.cc mb_memory_hog.cc vector_field.cc visual_navigation_ui.cc opencv_texture.cc
+SOURCES			:=ardin_mb.cc state_handler.cc mb_memory.cc mb_memory_hog.cc vector_field.cc visual_navigation_ui.cc opencv_texture.cc
 GENERATED_CODE_DIR	:=mb_memory_hog_CODE
 CXXFLAGS 		+=-I../.. `pkg-config --cflags eigen3` -DNO_HEADER_DEFINITIONS
 LINK_FLAGS		+=-ldl

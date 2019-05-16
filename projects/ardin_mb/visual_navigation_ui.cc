@@ -211,20 +211,6 @@ void MBHogUI::handleUI()
     }
     ImGui::End();
 
-    if(ImGui::Begin("Dopamine activity")) {
-        ImGui::SliderInt("Selected synapse", m_Memory.getKCToENSynapse(), 0, MBParamsHOG::numKC);
-        ImGui::PlotLines("Dopamine", m_Memory.getDKCToENHistory().data(), m_Memory.getDKCToENHistory().size(), 0, nullptr,
-                         0.0f, 1.0f, ImVec2(0, 50));
-
-        ImGui::PlotLines("Tag", m_Memory.getCKCToENHistory().data(), m_Memory.getCKCToENHistory().size(), 0, nullptr,
-                         -1.0f, 0.0f, ImVec2(0, 50));
-        ImGui::PlotLines("Weight", m_Memory.getGKCToENHistory().data(), m_Memory.getGKCToENHistory().size(), 0, nullptr,
-                         0.0f, 0.5f, ImVec2(0, 50));
-        ImGui::PlotLines("EN Membrane\nvoltage", m_Memory.getENVoltageHistory().data(), m_Memory.getENVoltageHistory().size(), 0, nullptr,
-                         FLT_MAX, FLT_MAX, ImVec2(0, 50));
-    }
-    ImGui::End();
-
     if(ImGui::Begin("MB parameters")) {
         if(ImGui::TreeNode("PN")) {
             ImGui::SliderFloat("InputCurrentScale", m_Memory.getPNInputCurrentScale(), 0.0f, 1.0f, "%.4f");
@@ -267,7 +253,9 @@ void MBHogUI::handleUI()
 
         if(ImGui::Button("Save")) {
             cv::FileStorage configFile("mb_memory_hog.yml", cv::FileStorage::WRITE);
+            configFile << "config" << "{";
             m_Memory.write(configFile);
+            configFile << "}";
         }
     }
     ImGui::End();
