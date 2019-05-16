@@ -1,41 +1,35 @@
 #pragma once
 
 // Standard C++ includes
-#include <tuple>
+#include <array>
+#include <vector>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#include "navigation/visual_navigation_base.h"
+// Ardin MB includes
+#include "mb_memory.h"
 
 //----------------------------------------------------------------------------
-// MBMemory
+// MBMemoryArdin
 //----------------------------------------------------------------------------
-class MBMemory : public BoBRobotics::Navigation::VisualNavigationBase
+class MBMemoryArdin : public MBMemory
 {
 public:
-    MBMemory(bool normaliseInput = true);
+    MBMemoryArdin();
 
+protected:
     //------------------------------------------------------------------------
-    // VisualNavigationBase virtuals
+    // MBMemory virtuals
     //------------------------------------------------------------------------
-    //! Train the algorithm with the specified image
-    virtual void train(const cv::Mat &image) override;
-
-    //! Test the algorithm with the specified image
-    virtual float test(const cv::Mat &image) const override;
-
-    //! Clear the memory
-    virtual void clearMemory() override;
+    virtual void initPresent(unsigned long long duration) const override;
+    virtual void beginPresent() const override;
+    virtual void endPresent() const override;
+    virtual void recordAdditional() const override;
 
 private:
-    std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
-
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const bool m_NormaliseInput;
-
-    mutable cv::Mat m_SnapshotFloat;
+    float *m_IExtPN;
 };

@@ -58,7 +58,6 @@ MBMemoryHOG::MBMemoryHOG()
     m_ExpDecaypnToKC = getSLM().getScalar<float>("expDecaypnToKC");
     m_InitPNToKC = getSLM().getScalar<float>("initpnToKC");
 
-
     // Get pointers to state variables
     m_IExtPN = getSLM().getArray<float>("IextPN");
     m_VGGN = getSLM().getArray<float>("VGGN");
@@ -77,10 +76,6 @@ MBMemoryHOG::MBMemoryHOG()
     *getGGNToKCVMid() = MBParamsHOG::ggnToKCVMid;
     *getGGNToKCVslope() = MBParamsHOG::ggnToKCVslope;
     *getGGNToKCVthresh() = MBParamsHOG::ggnToKCVthresh;
-}
-//----------------------------------------------------------------------------
-MBMemoryHOG::~MBMemoryHOG()
-{
 }
 //----------------------------------------------------------------------------
 void MBMemoryHOG::write(cv::FileStorage& fs) const

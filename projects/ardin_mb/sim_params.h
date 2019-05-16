@@ -32,8 +32,8 @@ namespace SimParams
     constexpr float worldColour[] = {0.0f, 1.0f, 0.0f};
 
     // From these calculate display size
-    constexpr unsigned int displayRenderWidth = 688;
-    constexpr unsigned int displayRenderHeight = 160;
+    constexpr unsigned int displayRenderWidth = 74 * 8;//688;
+    constexpr unsigned int displayRenderHeight = 19 * 8;//160;
 
     // Ant parameters
     // How fast does the ant move each timestep?

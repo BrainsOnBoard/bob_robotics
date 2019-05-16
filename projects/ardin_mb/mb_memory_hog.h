@@ -2,18 +2,10 @@
 
 // Standard C++ includes
 #include <array>
-#include <bitset>
-#include <list>
-#include <random>
-#include <tuple>
 #include <vector>
 
 // OpenCV includes
 #include <opencv2/opencv.hpp>
-
-// BoB robotics includes
-#include "genn_utils/shared_library_model.h"
-#include "navigation/visual_navigation_base.h"
 
 // Ardin MB includes
 #include "mb_memory.h"
@@ -26,7 +18,6 @@ class MBMemoryHOG : public MBMemory
 {
 public:
     MBMemoryHOG();
-    virtual ~MBMemoryHOG();
 
     //------------------------------------------------------------------------
     // MBMemory virtuals
@@ -66,17 +57,13 @@ public:
 protected:
     //------------------------------------------------------------------------
     // MBMemory virtuals
-    //---------------------------------------    float *getKCToENWeight(){ return &m_KCToENWeight; };---------------------------------
+    //------------------------------------------------------------------------
     virtual void initPresent(unsigned long long duration) const override;
     virtual void beginPresent() const override;
     virtual void endPresent() const override;
     virtual void recordAdditional() const override;
 
 private:
-    //------------------------------------------------------------------------
-    // Private API
-    //------------------------------------------------------------------------
-
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
@@ -95,7 +82,6 @@ private:
 
     mutable std::vector<float> m_GGNVoltageHistory;
     mutable std::vector<float> m_KCInhInSynHistory;
-
 
     std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> m_HOGDirections;
 
