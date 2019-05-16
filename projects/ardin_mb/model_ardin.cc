@@ -6,7 +6,7 @@
 #include "../../genn_utils/connectors.h"
 
 // Model includes
-#include "mb_params.h"
+#include "mb_params_ardin.h"
 
 using namespace BoBRobotics;
 
@@ -56,8 +56,8 @@ IMPLEMENT_MODEL(LIFExtCurrent);
 
 void modelDefinition(NNmodel &model)
 {
-    model.setDT(MBParams::timestepMs);
-    model.setName("mb_memory");
+    model.setDT(MBParamsArdin::timestepMs);
+    model.setName("mb_memory_ardin");
 
     //---------------------------------------------------------------------------
     // Neuron model parameters
@@ -112,17 +112,17 @@ void modelDefinition(NNmodel &model)
     //---------------------------------------------------------------------------
     // Weight update model parameters
     //---------------------------------------------------------------------------
-    WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(MBParams::pnToKCWeight);
+    WeightUpdateModels::StaticPulse::VarValues pnToKCWeightUpdateParams(MBParamsArdin::pnToKCWeight);
 
     GeNNModels::STDPDopamine::ParamValues kcToENWeightUpdateParams(
         15.0,                       // 0 - Potentiation time constant (ms)
         15.0,                       // 1 - Depression time constant (ms)
         40.0,                       // 2 - Synaptic tag time constant (ms)
-        MBParams::tauD,             // 3 - Dopamine time constant (ms)
+        MBParamsArdin::tauD,             // 3 - Dopamine time constant (ms)
         -1.0,                       // 4 - Rate of potentiation
         1.0,                        // 5 - Rate of depression
         0.0,                        // 6 - Minimum weight
-        MBParams::kcToENWeight);    // 7 - Maximum weight
+        MBParamsArdin::kcToENWeight);    // 7 - Maximum weight
 
     GeNNModels::STDPDopamine::VarValues kcToENWeightUpdateInitVars(
         uninitialisedVar(),         // Synaptic weight
@@ -130,9 +130,9 @@ void modelDefinition(NNmodel &model)
         0.0);                       // Time of last synaptic tag update
 
     // Create neuron populations
-    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParams::numPN, pnParams, pnInit);
-    model.addNeuronPopulation<NeuronModels::LIF>("KC", MBParams::numKC, kcParams, lifInit);
-    model.addNeuronPopulation<NeuronModels::LIF>("EN", MBParams::numEN, enParams, lifInit);
+    model.addNeuronPopulation<LIFExtCurrent>("PN", MBParamsArdin::numPN, pnParams, pnInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("KC", MBParamsArdin::numKC, kcParams, lifInit);
+    model.addNeuronPopulation<NeuronModels::LIF>("EN", MBParamsArdin::numEN, enParams, lifInit);
 
     auto pnToKC = model.addSynapsePopulation<WeightUpdateModels::StaticPulse, PostsynapticModels::ExpCurr>(
         "pnToKC", SynapseMatrixType::SPARSE_GLOBALG, NO_DELAY,
@@ -148,8 +148,8 @@ void modelDefinition(NNmodel &model)
 
 
     // Calculate max connections
-    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(MBParams::numPN, MBParams::numKC,
-                                                                                      MBParams::numPNSynapsesPerKC);
+    const unsigned int maxConn = GeNNUtils::calcFixedNumberPreConnectorMaxConnections(MBParamsArdin::numPN, MBParamsArdin::numKC,
+                                                                                      MBParamsArdin::numPNSynapsesPerKC);
 
     std::cout << "Max connections:" << maxConn << std::endl;
     pnToKC->setMaxConnections(maxConn);

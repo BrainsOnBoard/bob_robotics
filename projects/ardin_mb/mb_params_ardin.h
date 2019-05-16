@@ -1,9 +1,9 @@
 #pragma once
 
 //------------------------------------------------------------------------
-// MBParams
+// MBParamsArdin
 //------------------------------------------------------------------------
-namespace MBParams
+namespace MBParamsArdin
 {
     constexpr double timestepMs = 1.0;
 
