@@ -33,9 +33,11 @@
 #include "navigation/perfect_memory_store_hog.h"
 
 // Antworld includes
+#include "libantworld/snapshot_processor_ardin.h"
 #include "libantworld/snapshot_processor_segment_sky.h"
 
 // Ardin MB includes
+#include "mb_memory_ardin.h"
 #include "mb_memory_hog.h"
 #include "sim_params.h"
 #include "state_handler.h"
@@ -188,13 +190,22 @@ int main(int argc, char *argv[])
     //VisualNavigationUI ui;
 
     // Mushroom body with orientation features
-    MBMemoryHOG memory;
+    /*MBMemoryHOG memory;
     memory.addCLIArguments(app);
     MBHogUI ui(memory);
 
     // Create suitable snapshot processor
     AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
-                                                            memory.getUnwrapResolution().height);
+                                                            memory.getUnwrapResolution().height);*/
+
+
+    // Mushroom body
+    MBMemoryArdin memory;
+    memory.addCLIArguments(app);
+    MBArdinUI ui(memory);
+
+    AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
+                                                       memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);

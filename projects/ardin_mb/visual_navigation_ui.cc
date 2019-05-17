@@ -7,7 +7,9 @@
 #include "imgui.h"
 
 // Antworld includes
+#include "mb_memory_ardin.h"
 #include "mb_memory_hog.h"
+#include "mb_params_ardin.h"
 #include "mb_params_hog.h"
 
 //----------------------------------------------------------------------------
@@ -123,20 +125,21 @@ bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::h
 }
 }   // Anonymous namespace
 
+
 //----------------------------------------------------------------------------
-// MBHogUI
+// MBUI
 //----------------------------------------------------------------------------
-MBHogUI::MBHogUI(MBMemoryHOG &memory)
-    : m_Memory(memory)
+MBUI::MBUI(MBMemory &memory, const std::string &filename, unsigned int numPN, unsigned int numKC)
+    : m_Memory(memory), m_Filename(filename), m_NumPN(numPN), m_NumKC(numKC)
 {
     // Load memory config
-    cv::FileStorage configFile("mb_memory_hog.yml", cv::FileStorage::READ);
+    cv::FileStorage configFile(filename.c_str(), cv::FileStorage::READ);
     if(configFile.isOpened()) {
         m_Memory.read(configFile["config"]);
     }
 }
 //----------------------------------------------------------------------------
-void MBHogUI::handleUI()
+void MBUI::handleUI()
 {
     if(ImGui::Begin("Statistics")) {
         // Plot record of unused weights
@@ -169,28 +172,23 @@ void MBHogUI::handleUI()
             m_ActivePNData.clear();
             m_ActiveKCData.clear();
             m_NumENData.clear();
-            m_PeakGGNVoltage.clear();
-        }
-    }
-    ImGui::End();
 
-    if(ImGui::Begin("HOG features", nullptr, ImGuiWindowFlags_NoResize)) {
-        if(hogPlot(m_Memory.getHOGFeatures(), m_Memory.getHOGDirections(), 60.0f)) {
+            handleUIClear();
         }
     }
     ImGui::End();
 
     if(ImGui::Begin("PN spikes")) {
-        if(rasterPlot(MBParamsHOG::numPN, m_Memory.getPNSpikes(), *m_Memory.getPresentDurationMs())){
-            ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), MBParamsHOG::numPN);
+        if(rasterPlot(m_NumPN, m_Memory.getPNSpikes(), *m_Memory.getPresentDurationMs())){
+            ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), m_NumPN);
             ImGui::Text("%u spikes", m_Memory.getNumPNSpikes());
         }
     }
     ImGui::End();
 
     if(ImGui::Begin("KC spikes")) {
-        if(rasterPlot(MBParamsHOG::numKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
-            ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), MBParamsHOG::numKC);
+        if(rasterPlot(m_NumKC, m_Memory.getKCSpikes(), *m_Memory.getPresentDurationMs(), 0.025f)){
+            ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), m_NumKC);
             ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
         }
     }
@@ -203,42 +201,8 @@ void MBHogUI::handleUI()
     }
     ImGui::End();
 
-    if(ImGui::Begin("GGN activity")) {
-        ImGui::PlotLines("Membrane\nvoltage", m_Memory.getGGNVoltageHistory().data(), m_Memory.getGGNVoltageHistory().size(), 0, nullptr,
-                         -60.0f, -40.0f, ImVec2(0, 50));
-        ImGui::PlotLines("Inh out", m_Memory.getKCInhInSynHistory().data(), m_Memory.getKCInhInSynHistory().size(), 0, nullptr,
-                         -1.0f, 0.0f, ImVec2(0, 50));
-    }
-    ImGui::End();
-
     if(ImGui::Begin("MB parameters")) {
-        if(ImGui::TreeNode("PN")) {
-            ImGui::SliderFloat("InputCurrentScale", m_Memory.getPNInputCurrentScale(), 0.0f, 1.0f, "%.4f");
-            ImGui::SliderFloat("VThresh", m_Memory.getPNVthresh(), -60.0f, 0.0f);
-            ImGui::SliderFloat("TauM", m_Memory.getPNTauM(), 1.0f, 50.0f);
-            ImGui::SliderFloat("CM", m_Memory.getPNC(), 1.0f, 50.0f);
-            ImGui::TreePop();
-        }
-
-        if(ImGui::TreeNode("GGN->KC")) {
-            ImGui::SliderFloat("Weight", m_Memory.getGGNToKCWeight(), -10.0f, 0.0f);
-
-            ImGui::SliderFloat("VMid", m_Memory.getGGNToKCVMid(), -60.0f, -20.0f);
-            ImGui::SliderFloat("Vslope", m_Memory.getGGNToKCVslope(), 1.0f, 4.0f);
-            ImGui::SliderFloat("Vthresh", m_Memory.getGGNToKCVthresh(), -60.0f, -20.0f);
-            ImGui::TreePop();
-        }
-
-        if(ImGui::TreeNode("KC->GGN")) {
-            ImGui::SliderFloat("Weight", m_Memory.getKCToGGNWeight(), 0.0f, 0.04f, "%.4f");
-            ImGui::TreePop();
-        }
-
-        if(ImGui::TreeNode("PN->KC")) {
-            ImGui::SliderFloat("Weight", m_Memory.getPNToKC(), 0.0f, 0.5f);
-            ImGui::SliderFloat("TauSyn", m_Memory.getPNToKCTauSyn(), 1.0f, 20.0f);
-            ImGui::TreePop();
-        }
+        handleUIMBProperties();
 
         if(ImGui::TreeNode("KC->EN")) {
             ImGui::SliderFloat("Dopamine strength", m_Memory.getKCToENDopamineStrength(), 0.0f, 1.0f);
@@ -252,7 +216,7 @@ void MBHogUI::handleUI()
         }
 
         if(ImGui::Button("Save")) {
-            cv::FileStorage configFile("mb_memory_hog.yml", cv::FileStorage::WRITE);
+            cv::FileStorage configFile(m_Filename, cv::FileStorage::WRITE);
             configFile << "config" << "{";
             m_Memory.write(configFile);
             configFile << "}";
@@ -262,7 +226,7 @@ void MBHogUI::handleUI()
 
 }
 //----------------------------------------------------------------------------
-void MBHogUI::handleUITraining()
+void MBUI::handleUITraining()
 {
     // Add number of unused weights to vector
     m_UnusedWeightsData.push_back((float)m_Memory.getNumUnusedWeights());
@@ -271,21 +235,17 @@ void MBHogUI::handleUITraining()
     m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
     m_NumENData.push_back((float)m_Memory.getNumENSpikes());
-
-    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltageHistory().begin(), m_Memory.getGGNVoltageHistory().end()));
 }
 //----------------------------------------------------------------------------
-void MBHogUI::handleUITesting()
+void MBUI::handleUITesting()
 {
     // Add number of active cells to vector
     m_ActivePNData.push_back((float)m_Memory.getNumActivePN());
     m_ActiveKCData.push_back((float)m_Memory.getNumActiveKC());
     m_NumENData.push_back((float)m_Memory.getNumENSpikes());
-
-    m_PeakGGNVoltage.push_back(*std::max_element(m_Memory.getGGNVoltageHistory().begin(), m_Memory.getGGNVoltageHistory().end()));
 }
 //----------------------------------------------------------------------------
-void MBHogUI::saveLogs(const std::string &filename)
+void MBUI::saveLogs(const std::string &filename)
 {
     assert(m_ActiveKCData.size() == m_ActivePNData.size());
 
@@ -296,4 +256,98 @@ void MBHogUI::saveLogs(const std::string &filename)
     for(size_t i = 0; i < m_ActiveKCData.size(); i++) {
         log << m_ActivePNData[i] << ", " << m_ActiveKCData[i] << std::endl;
     }
+}
+
+//----------------------------------------------------------------------------
+// MBArdinUI
+//----------------------------------------------------------------------------
+MBArdinUI::MBArdinUI(MBMemoryArdin &memory)
+    : MBUI(memory, "mb_memory_ardin.yml", MBParamsArdin::numPN, MBParamsArdin::numKC)
+{
+}
+
+//----------------------------------------------------------------------------
+// MBHogUI
+//----------------------------------------------------------------------------
+MBHogUI::MBHogUI(MBMemoryHOG &memory)
+    : MBUI(memory, "mb_memory_hog.yml", MBParamsHOG::numPN, MBParamsHOG::numKC)
+{
+}
+//----------------------------------------------------------------------------
+void MBHogUI::handleUI()
+{
+    if(ImGui::Begin("HOG features", nullptr, ImGuiWindowFlags_NoResize)) {
+        if(hogPlot(getMemoryHOG().getHOGFeatures(), getMemoryHOG().getHOGDirections(), 60.0f)) {
+        }
+    }
+    ImGui::End();
+
+
+    if(ImGui::Begin("GGN activity")) {
+        ImGui::PlotLines("Membrane\nvoltage", getMemoryHOG().getGGNVoltageHistory().data(), getMemoryHOG().getGGNVoltageHistory().size(), 0, nullptr,
+                         -60.0f, -40.0f, ImVec2(0, 50));
+        ImGui::PlotLines("Inh out", getMemoryHOG().getKCInhInSynHistory().data(), getMemoryHOG().getKCInhInSynHistory().size(), 0, nullptr,
+                         -1.0f, 0.0f, ImVec2(0, 50));
+    }
+    ImGui::End();
+
+    // Superclass
+    MBUI::handleUI();
+}
+//----------------------------------------------------------------------------
+void MBHogUI::handleUIMBProperties()
+{
+    if(ImGui::TreeNode("PN")) {
+            ImGui::SliderFloat("InputCurrentScale", getMemoryHOG().getPNInputCurrentScale(), 0.0f, 1.0f, "%.4f");
+            ImGui::SliderFloat("VThresh", getMemoryHOG().getPNVthresh(), -60.0f, 0.0f);
+            ImGui::SliderFloat("TauM", getMemoryHOG().getPNTauM(), 1.0f, 50.0f);
+            ImGui::SliderFloat("CM", getMemoryHOG().getPNC(), 1.0f, 50.0f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("GGN->KC")) {
+            ImGui::SliderFloat("Weight", getMemoryHOG().getGGNToKCWeight(), -10.0f, 0.0f);
+
+            ImGui::SliderFloat("VMid", getMemoryHOG().getGGNToKCVMid(), -60.0f, -20.0f);
+            ImGui::SliderFloat("Vslope", getMemoryHOG().getGGNToKCVslope(), 1.0f, 4.0f);
+            ImGui::SliderFloat("Vthresh", getMemoryHOG().getGGNToKCVthresh(), -60.0f, -20.0f);
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("KC->GGN")) {
+            ImGui::SliderFloat("Weight", getMemoryHOG().getKCToGGNWeight(), 0.0f, 0.04f, "%.4f");
+            ImGui::TreePop();
+        }
+
+        if(ImGui::TreeNode("PN->KC")) {
+            ImGui::SliderFloat("Weight", getMemoryHOG().getPNToKC(), 0.0f, 0.5f);
+            ImGui::SliderFloat("TauSyn", getMemoryHOG().getPNToKCTauSyn(), 1.0f, 20.0f);
+            ImGui::TreePop();
+        }
+}
+//----------------------------------------------------------------------------
+void MBHogUI::handleUIClear()
+{
+    m_PeakGGNVoltage.clear();
+}
+//----------------------------------------------------------------------------
+void MBHogUI::handleUITraining()
+{
+    // Superclass
+    MBUI::handleUITraining();
+
+    m_PeakGGNVoltage.push_back(*std::max_element(getMemoryHOG().getGGNVoltageHistory().begin(), getMemoryHOG().getGGNVoltageHistory().end()));
+}
+//----------------------------------------------------------------------------
+void MBHogUI::handleUITesting()
+{
+    // Superclass
+    MBUI::handleUITesting();
+
+    m_PeakGGNVoltage.push_back(*std::max_element(getMemoryHOG().getGGNVoltageHistory().begin(), getMemoryHOG().getGGNVoltageHistory().end()));
+}
+//----------------------------------------------------------------------------
+MBMemoryHOG &MBHogUI::getMemoryHOG()
+{
+    return dynamic_cast<MBMemoryHOG&>(getMemory());
 }
