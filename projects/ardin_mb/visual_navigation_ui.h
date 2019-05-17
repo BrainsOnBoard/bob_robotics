@@ -59,8 +59,9 @@ private:
     MBMemory &m_Memory;
 
     const std::string m_Filename;
-    const unsigned int m_NumKC;
     const unsigned int m_NumPN;
+    const unsigned int m_NumKC;
+
     // Data for plotting
     std::vector<float> m_UnusedWeightsData;
     std::vector<float> m_ActivePNData;

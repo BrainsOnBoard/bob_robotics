@@ -87,7 +87,7 @@ protected:
     // Declared virtuals
     //------------------------------------------------------------------------
     virtual void initPresent(unsigned long long duration) const = 0;
-    virtual void beginPresent() const = 0;
+    virtual void beginPresent(const cv::Mat &snapshotFloat) const = 0;
     virtual void endPresent() const = 0;
     virtual void recordAdditional() const{}
 
@@ -97,11 +97,6 @@ protected:
     unsigned int convertMsToTimesteps(double ms) const
     {
         return (unsigned int)std::round(ms / m_TimestepMs);
-    }
-
-    const cv::Mat &getSnapshotFloat() const
-    {
-        return m_SnapshotFloat;
     }
 
     BoBRobotics::GeNNUtils::SharedLibraryModelFloat &getSLM() const

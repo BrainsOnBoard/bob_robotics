@@ -149,9 +149,25 @@ void MBMemoryHOG::addCLIArguments(CLI::App &app)
 //----------------------------------------------------------------------------
 void MBMemoryHOG::initPresent(unsigned long long duration) const
 {
-    // Apply Sobel operator to image
-    cv::Sobel(getSnapshotFloat(), m_SobelX, CV_32F, 1, 0, 1);
-    cv::Sobel(getSnapshotFloat(), m_SobelY, CV_32F, 0, 1, 1);
+    // Set 'derived' extra global params
+    *m_ExpTCPN = std::exp(-MBParamsHOG::timestepMs / m_PNTauM);
+    *m_RmembranePN = m_PNTauM / m_PNC;
+    *m_ExpDecaypnToKC = (float)std::exp(-MBParamsHOG::timestepMs / m_PNToKCTauSyn);
+    *m_InitPNToKC = (float)(m_PNToKCTauSyn * (1.0 - std::exp(-MBParamsHOG::timestepMs / m_PNToKCTauSyn))) * (1.0 / MBParamsHOG::timestepMs);
+
+    // Clear GGN voltage and reserve
+    m_GGNVoltageHistory.clear();
+    m_GGNVoltageHistory.reserve(duration);
+
+    m_KCInhInSynHistory.clear();
+    m_KCInhInSynHistory.reserve(duration);
+}
+//----------------------------------------------------------------------------
+void MBMemoryHOG::beginPresent(const cv::Mat &snapshotFloat) const
+{
+     // Apply Sobel operator to image
+    cv::Sobel(snapshotFloat, m_SobelX, CV_32F, 1, 0, 1);
+    cv::Sobel(snapshotFloat, m_SobelY, CV_32F, 0, 1, 1);
 
     // At each pixel, take dot product of vector formed from x and y sobel operator and each direction vector
     typedef cv::Vec<float, MBParamsHOG::hogNumOrientations> PixelFeatures;
@@ -192,22 +208,6 @@ void MBMemoryHOG::initPresent(unsigned long long duration) const
         }
     }
 
-    // Set 'derived' extra global params
-    *m_ExpTCPN = std::exp(-MBParamsHOG::timestepMs / m_PNTauM);
-    *m_RmembranePN = m_PNTauM / m_PNC;
-    *m_ExpDecaypnToKC = (float)std::exp(-MBParamsHOG::timestepMs / m_PNToKCTauSyn);
-    *m_InitPNToKC = (float)(m_PNToKCTauSyn * (1.0 - std::exp(-MBParamsHOG::timestepMs / m_PNToKCTauSyn))) * (1.0 / MBParamsHOG::timestepMs);
-
-    // Clear GGN voltage and reserve
-    m_GGNVoltageHistory.clear();
-    m_GGNVoltageHistory.reserve(duration);
-
-    m_KCInhInSynHistory.clear();
-    m_KCInhInSynHistory.reserve(duration);
-}
-//----------------------------------------------------------------------------
-void MBMemoryHOG::beginPresent() const
-{
     // Copy HOG features into external input current
     BOB_ASSERT(m_HOGFeatures.isContinuous());
     std::copy_n(reinterpret_cast<float*>(m_HOGFeatures.data), MBParamsHOG::hogFeatureSize, m_IExtPN);

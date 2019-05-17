@@ -59,7 +59,7 @@ protected:
     // MBMemory virtuals
     //------------------------------------------------------------------------
     virtual void initPresent(unsigned long long duration) const override;
-    virtual void beginPresent() const override;
+    virtual void beginPresent(const cv::Mat &snapshotFloat) const override;
     virtual void endPresent() const override;
     virtual void recordAdditional() const override;
 

@@ -167,7 +167,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     m_SLM.initialize();
 
     // Start presenting stimuli
-    beginPresent();
+    beginPresent(m_SnapshotFloat);
 
     // Reset model time
     m_SLM.setTimestep(0);
