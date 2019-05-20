@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/main.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
@@ -8,9 +9,6 @@
 
 // Third-party includes
 #include "third_party/units.h"
-
-// Standard C++ includes
-#include <iostream>
 
 using namespace BoBRobotics;
 using namespace std::literals;
@@ -42,10 +40,10 @@ bob_main(int, char **)
         case HID::JButton::Y: // Toggle PID control
             pidRunning = !pidRunning;
             if (pidRunning) {
-                std::cout << "PID control started" << std::endl;
+                LOGI << "PID control started";
                 pid.moveTo(goal);
             } else {
-                std::cout << "PID control stopped" << std::endl;
+                LOGI << "PID control stopped";
                 robot.stopMoving();
             }
             return true;
@@ -54,7 +52,7 @@ bob_main(int, char **)
         }
     });
 
-    std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
+    LOGI << "Drive the car using the two thumbsticks: each stick is for one motor";
 
     do {
 
