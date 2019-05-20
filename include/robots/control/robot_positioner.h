@@ -210,7 +210,7 @@ public:
 
         const auto k = -(part1 + part2) / m_DistanceToGoal; // in rad/mm
 
-        v = m_Tank.getMaximumSpeed() / scalar_t((1 + m_Beta * pow(std::abs(k.value()), m_Alpha)));
+        v = m_Tank.getMaximumSpeed() / scalar_t((1 + m_Beta * pow(std::fabs(k.value()), m_Alpha)));
         omega = k * v;
     }
 

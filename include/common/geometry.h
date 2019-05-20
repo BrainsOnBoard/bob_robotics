@@ -38,7 +38,7 @@ constexpr inline T inf()
 constexpr inline bool
 approxEq(double a, double b)
 {
-    return std::abs(a - b) < 1e-5;
+    return std::fabs(a - b) < 1e-5;
 }
 
 struct StraightLine
