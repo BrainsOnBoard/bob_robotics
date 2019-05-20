@@ -1,7 +1,7 @@
 #pragma once
 
-
 // Standard C++ includes
+#include <algorithm>
 #include <array>
 #include <bitset>
 #include <list>
@@ -14,6 +14,7 @@
 
 // BoB robotics includes
 #include "genn_utils/shared_library_model.h"
+#include "navigation/insilico_rotater.h"
 #include "navigation/visual_navigation_base.h"
 
 // Ardin MB includes
@@ -82,6 +83,42 @@ public:
     unsigned int getNumActivePN() const{ return m_NumActivePN; }
     unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
+    template<class... Ts>
+    const std::vector<float> &getImageDifferences(Ts &&... args) const
+    {
+        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(this->getUnwrapResolution(), this->getMaskImage(),
+                                                                        std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
+        return m_RotatedDifferences;
+    }
+
+    template<class... Ts>
+    auto getHeading(Ts &&... args) const
+    {
+        using namespace units::literals;
+        using radian_t = units::angle::radian_t;
+
+        const cv::Size unwrapRes = this->getUnwrapResolution();
+        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(unwrapRes, this->getMaskImage(),
+                                                                        std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
+
+        // Find index of lowest difference
+        const auto el = std::min_element(m_RotatedDifferences.cbegin(), m_RotatedDifferences.cend());
+        const size_t bestIndex = std::distance(m_RotatedDifferences.cbegin(), el);
+
+        // Convert this to an angle
+        radian_t heading = rotater.columnToHeading(bestIndex);
+        while (heading <= -180_deg) {
+            heading += 360_deg;
+        }
+        while (heading > 180_deg) {
+            heading -= 360_deg;
+        }
+
+        return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
+    }
+
 protected:
     //------------------------------------------------------------------------
     // Declared virtuals
@@ -109,6 +146,19 @@ private:
     // Private API
     //------------------------------------------------------------------------
     std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
+
+    template<typename R>
+    void calcImageDifferences(R &rotater) const
+    {
+        // Ensure there's enough space in rotated differe
+        m_RotatedDifferences.reserve(rotater.numRotations());
+        m_RotatedDifferences.clear();
+
+        // Populate rotated differences with results
+        rotater.rotate([this] (const cv::Mat &image, auto, auto) {
+            m_RotatedDifferences.push_back(this->test(image));
+        });
+    }
 
     //------------------------------------------------------------------------
     // Members
@@ -161,4 +211,6 @@ private:
     mutable unsigned int m_NumActiveKC;
 
     mutable BoBRobotics::GeNNUtils::SharedLibraryModelFloat m_SLM;
+
+    mutable std::vector<float> m_RotatedDifferences;
 };
