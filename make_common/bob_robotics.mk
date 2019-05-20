@@ -146,3 +146,9 @@ ifdef WITH_SFML_GRAPHICS
         CXXFLAGS += `pkg-config --cflags sfml-graphics`
         LINK_FLAGS += `pkg-config --libs sfml-graphics`
 endif
+
+# For Gazebo plugins
+ifdef WITH_GAZEBO
+	CXXFLAGS += `pkg-config --cflags gazebo`
+	LINK_FLAGS += `pkg-config --libs gazebo`
+endif
