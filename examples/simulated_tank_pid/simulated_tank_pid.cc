@@ -10,9 +10,7 @@
 #include "third_party/units.h"
 
 // Standard C++ includes
-#include <chrono>
 #include <iostream>
-#include <thread>
 
 using namespace BoBRobotics;
 using namespace std::literals;
@@ -72,9 +70,6 @@ bob_main(int, char **)
             // Stop PID if we're at goal
             pidRunning = false;
         }
-
-        // A small delay so we don't hog CPU
-        std::this_thread::sleep_for(5ms);
     } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;

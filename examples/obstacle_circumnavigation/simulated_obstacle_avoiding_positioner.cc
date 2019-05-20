@@ -8,10 +8,6 @@
 // Third-party includes
 #include "third_party/units.h"
 
-// Standard C++ includes
-#include <chrono>
-#include <thread>
-
 using namespace BoBRobotics;
 using namespace units::length;
 using namespace units::velocity;
@@ -19,7 +15,6 @@ using namespace units::angular_velocity;
 using namespace units::time;
 using namespace units::literals;
 using namespace units::angle;
-using namespace std::literals;
 
 int
 main()
@@ -114,8 +109,5 @@ main()
                 robot.stopMoving();
             }
         }
-
-        // A small delay, so we don't eat all the CPU
-        std::this_thread::sleep_for(2ms);
     }
 }
