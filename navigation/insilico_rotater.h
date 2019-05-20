@@ -80,7 +80,7 @@ struct InSilicoRotater
 
         units::angle::radian_t columnToHeading(size_t column) const
         {
-            return units::angle::turn_t{ (double) toIndex(column) / (double) m_ImageOriginal.cols };
+            return units::angle::turn_t{ (double) toIndex(m_BeginRoll + column) / (double) m_ImageOriginal.cols };
         }
 
         size_t numRotations() const
