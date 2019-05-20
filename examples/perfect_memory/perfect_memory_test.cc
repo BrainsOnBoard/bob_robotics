@@ -1,11 +1,13 @@
-// Standard C++ includes
-#include <iostream>
-
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_raw.h"
 #include "navigation/perfect_memory_store_hog.h"
+
+// Standard C++ includes
+#include <algorithm>
+#include <iostream>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
@@ -41,6 +43,29 @@ main()
         size_t snapshot;
         float difference;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
+        std::cout << "Heading: " << heading << std::endl;
+        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
+        std::cout << "Difference score: " << difference << std::endl;
+    }
+
+    {
+        std::cout << "Testing with best-matching snapshot method with partial rotation..." << std::endl;
+
+        // Default algorithm: find best-matching snapshot, use abs diff
+        PerfectMemoryRotater<> pm(imSize);
+        trainRoute(pm);
+
+        // Time testing phase
+        Timer<> t{ "Time taken for testing: " };
+
+        // Treat snapshot #10 as test data
+        const auto snap = pm.getSnapshot(10);
+        std::vector<size_t> rotations(snap.cols / 2);
+        std::iota(rotations.begin(), rotations.end(), snap.cols / 2);
+
+        size_t snapshot;
+        float difference;
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap, rotations.begin(), rotations.end());
         std::cout << "Heading: " << heading << std::endl;
         std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
         std::cout << "Difference score: " << difference << std::endl;

@@ -85,7 +85,9 @@ public:
             m_StateHandler->handleEvent(m_CurrentState, StateHandler::Event::Enter);
         }
     }
-    
+
+    S getCurrentState() const { return m_CurrentState; }
+
 private:
     //------------------------------------------------------------------------
     // Members

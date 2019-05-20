@@ -1,13 +1,14 @@
-// Standard C++ includes
-#include <iostream>
+// BoB robotics includes
+#include "common/logging.h"
+#include "common/timer.h"
+#include "imgproc/opencv_optical_flow.h"
+#include "video/panoramic.h"
 
 // Standard C includes
 #include <cmath>
 
-// Common includes
-#include "common/timer.h"
-#include "imgproc/opencv_optical_flow.h"
-#include "video/panoramic.h"
+// Standard C++ includes
+#include <iostream>
 
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;

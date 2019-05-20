@@ -1,8 +1,9 @@
 #include "route_continuous.h"
+#include "common.h"
 
 // BoB robotics includes
-#include "../common/assert.h"
-#include "common.h"
+#include "common/assert.h"
+#include "common/logging.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -128,7 +129,7 @@ void RouteContinuous::load(const std::string &filename)
     input.seekg(0, std::ios_base::end);
     const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
-    std::cout << "Route has " << numPoints << " points" << std::endl;
+    LOG_INFO << "Route has " << numPoints << " points";
 
     // Allocate path points
     m_Waypoints.resize(numPoints);
@@ -152,7 +153,7 @@ void RouteContinuous::load(const std::string &filename)
         }
     }
 
-    std::cout << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")" << std::endl;
+    LOG_INFO << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")";
     // Reserve headings
     const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);

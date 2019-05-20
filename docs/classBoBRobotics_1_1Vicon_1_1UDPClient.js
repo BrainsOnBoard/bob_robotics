@@ -7,5 +7,5 @@ var classBoBRobotics_1_1Vicon_1_1UDPClient =
     [ "findObjectID", "classBoBRobotics_1_1Vicon_1_1UDPClient.html#a97a5d5ecc59bede61746e7e6bde49224", null ],
     [ "getNumObjects", "classBoBRobotics_1_1Vicon_1_1UDPClient.html#a9668dba4ed68af9aa11a200425c44b06", null ],
     [ "getObjectData", "classBoBRobotics_1_1Vicon_1_1UDPClient.html#a76bd23598de724daa649fbcd301525c1", null ],
-    [ "getObjectReference", "classBoBRobotics_1_1Vicon_1_1UDPClient.html#ae7cd5f7bb271dfae61306d8e5dea553c", null ]
+    [ "getObjectReference", "classBoBRobotics_1_1Vicon_1_1UDPClient.html#a3cf55e2707f055f09c5ac563dbc00b2a", null ]
 ];

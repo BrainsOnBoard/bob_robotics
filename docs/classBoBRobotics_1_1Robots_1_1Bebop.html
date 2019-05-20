@@ -132,6 +132,18 @@ Public Types</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:a59412f323d3c7f591706a206fe8c6cb7"><td class="mdescLeft">&#160;</td><td class="mdescRight">The drone's current state. <br /></td></tr>
 <tr class="separator:a59412f323d3c7f591706a206fe8c6cb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeedd1722a4d7beb2417faebc3156ba0d"><td class="memItemLeft" align="right" valign="top"><a id="aeedd1722a4d7beb2417faebc3156ba0d"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>RelativeMoveState</b> { <br />
+&#160;&#160;<b>Initial</b> = -2, 
+<b>Moving</b> = -1, 
+<b>Success</b> = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_OK, 
+<b>ErrorUnknown</b> = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_UNKNOWN, 
+<br />
+&#160;&#160;<b>ErrorBusy</b> = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_BUSY, 
+<b>ErrorNotAvailable</b> = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_NOTAVAILABLE, 
+<b>ErrorInterrupted</b> = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_INTERRUPTED
+<br />
+ }</td></tr>
+<tr class="separator:aeedd1722a4d7beb2417faebc3156ba0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -190,6 +202,22 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop.html#a8852192556cb3cbde2f1409618ebfbcb">setYawSpeed</a> (float right) override</td></tr>
 <tr class="memdesc:a8852192556cb3cbde2f1409618ebfbcb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set drone's yaw speed. <br /></td></tr>
 <tr class="separator:a8852192556cb3cbde2f1409618ebfbcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7ac8ec8a3a5c985c125ac097900523a"><td class="memItemLeft" align="right" valign="top"><a id="ac7ac8ec8a3a5c985c125ac097900523a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop.html#ac7ac8ec8a3a5c985c125ac097900523a">relativeMove</a> (<a class="el" href="classunits_1_1unit__t.html">meter_t</a> x, <a class="el" href="classunits_1_1unit__t.html">meter_t</a> y, <a class="el" href="classunits_1_1unit__t.html">meter_t</a> z, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> yaw=0_rad)</td></tr>
+<tr class="memdesc:ac7ac8ec8a3a5c985c125ac097900523a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move to a new pose relative to the current one. <br /></td></tr>
+<tr class="separator:ac7ac8ec8a3a5c985c125ac097900523a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05c7c1ed6e95d5d22badc0b33ef7e9de"><td class="memItemLeft" align="right" valign="top"><a id="a05c7c1ed6e95d5d22badc0b33ef7e9de"></a>
+RelativeMoveState&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop.html#a05c7c1ed6e95d5d22badc0b33ef7e9de">getRelativeMoveState</a> () const</td></tr>
+<tr class="memdesc:a05c7c1ed6e95d5d22badc0b33ef7e9de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the status of a relative move operation. <br /></td></tr>
+<tr class="separator:a05c7c1ed6e95d5d22badc0b33ef7e9de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5965c7d52c905f34afbed8795088404d"><td class="memItemLeft" align="right" valign="top"><a id="a5965c7d52c905f34afbed8795088404d"></a>
+std::pair&lt; <a class="el" href="classBoBRobotics_1_1Vector3.html">Vector3</a>&lt; <a class="el" href="classunits_1_1unit__t.html">meter_t</a> &gt;, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop.html#a5965c7d52c905f34afbed8795088404d">getRelativeMovePoseDifference</a> () const</td></tr>
+<tr class="memdesc:a5965c7d52c905f34afbed8795088404d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the distance moved in the last relative move operation. <br /></td></tr>
+<tr class="separator:a5965c7d52c905f34afbed8795088404d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22e992eed948a4235e0ae4ff31bc5f26"><td class="memItemLeft" align="right" valign="top"><a id="a22e992eed948a4235e0ae4ff31bc5f26"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop.html#a22e992eed948a4235e0ae4ff31bc5f26">resetRelativeMoveState</a> ()</td></tr>
+<tr class="memdesc:a22e992eed948a4235e0ae4ff31bc5f26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset the relative move state, e.g. after reading. <br /></td></tr>
+<tr class="separator:a22e992eed948a4235e0ae4ff31bc5f26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab418997fde3cf3cff9aaa5dfcd15210c"><td class="memItemLeft" align="right" valign="top"><a id="ab418997fde3cf3cff9aaa5dfcd15210c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop.html#ab418997fde3cf3cff9aaa5dfcd15210c">doFlatTrimCalibration</a> ()</td></tr>
 <tr class="memdesc:ab418997fde3cf3cff9aaa5dfcd15210c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Carry out flat trim calibration. <br /></td></tr>

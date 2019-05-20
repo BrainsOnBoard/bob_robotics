@@ -5,8 +5,6 @@ var searchData=
   ['waittostopmoving',['waitToStopMoving',['../classBoBRobotics_1_1Robots_1_1Gantry.html#a3b2b2528c996771649ea9d25380f177d',1,'BoBRobotics::Robots::Gantry']]],
   ['weightsnapshotsdynamic',['WeightSnapshotsDynamic',['../structBoBRobotics_1_1Navigation_1_1WeightSnapshotsDynamic.html',1,'BoBRobotics::Navigation']]],
   ['wgs84',['WGS84',['../structBoBRobotics_1_1MapCoordinate_1_1WGS84.html',1,'BoBRobotics::MapCoordinate']]],
-  ['width',['width',['../structGLFWvidmode.html#a698dcb200562051a7249cb6ae154c71d',1,'GLFWvidmode::width()'],['../structGLFWimage.html#af6a71cc999fe6d3aea31dd7e9687d835',1,'GLFWimage::width()']]],
-  ['window_20reference',['Window reference',['../group__window.html',1,'']]],
   ['windowsnetworking',['WindowsNetworking',['../classBoBRobotics_1_1OS_1_1Net_1_1WindowsNetworking.html',1,'BoBRobotics::OS::Net']]],
   ['with_5fcolumn_5fcontent',['with_column_content',['../structio_1_1error_1_1with__column__content.html',1,'io::error']]],
   ['with_5fcolumn_5fname',['with_column_name',['../structio_1_1error_1_1with__column__name.html',1,'io::error']]],

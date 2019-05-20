@@ -1,5 +1,8 @@
 #pragma once
 
+// BoBRobotics includes
+#include "assert.h"
+
 // Standard C++ includes
 #include <chrono>
 
@@ -16,9 +19,22 @@ public:
         m_StartTime = now();
     }
 
+    //! Check if stopwatch has been started
+    bool started() const
+    {
+        return m_StartTime != TimePoint::min();
+    }
+
+    //! Reset stopwatch to zero
+    void reset()
+    {
+        m_StartTime = TimePoint::min();
+    }
+
     //! Returns elapsed time since start() was called
     Duration elapsed() const
     {
+        BOB_ASSERT(started());
         return now() - m_StartTime;
     }
 
@@ -38,6 +54,6 @@ public:
     }
 
 private:
-    TimePoint m_StartTime;
+    TimePoint m_StartTime = TimePoint::min();
 }; // Stopwatch
 } // BoBRobotics

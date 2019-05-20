@@ -89,6 +89,7 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Navigation_1_1AntW
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="classBoBRobotics_1_1Navigation_1_1AntWorldRotater-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">BoBRobotics::Navigation::AntWorldRotater Class Reference</div>  </div>
@@ -109,9 +110,19 @@ Public Member Functions</h2></td></tr>
 template&lt;class Func &gt; </td></tr>
 <tr class="memitem:a270a004a5fa0f42ffc1d51f00da12b03"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>rotate</b> (Func func)</td></tr>
 <tr class="separator:a270a004a5fa0f42ffc1d51f00da12b03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a438d1840d666d6c00e73ff8e9435967a"><td class="memItemLeft" align="right" valign="top"><a id="a438d1840d666d6c00e73ff8e9435967a"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>max</b> () const</td></tr>
-<tr class="separator:a438d1840d666d6c00e73ff8e9435967a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee66e91d8788286a989738463f188b5b"><td class="memItemLeft" align="right" valign="top"><a id="aee66e91d8788286a989738463f188b5b"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numRotations</b> () const</td></tr>
+<tr class="separator:aee66e91d8788286a989738463f188b5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab61c3ef03300da5685c0d489fc9d09ca"><td class="memItemLeft" align="right" valign="top"><a id="ab61c3ef03300da5685c0d489fc9d09ca"></a>
+<a class="el" href="classunits_1_1unit__t.html">units::angle::radian_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>columnToHeading</b> (size_t column) const</td></tr>
+<tr class="separator:ab61c3ef03300da5685c0d489fc9d09ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:aec8f99558d41e2e3cb26c768fc2a6d58"><td class="memTemplParams" colspan="2"><a id="aec8f99558d41e2e3cb26c768fc2a6d58"></a>
+template&lt;typename... Ts&gt; </td></tr>
+<tr class="memitem:aec8f99558d41e2e3cb26c768fc2a6d58"><td class="memTemplItemLeft" align="right" valign="top">static auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>create</b> (Ts &amp;&amp;... args)</td></tr>
+<tr class="separator:aec8f99558d41e2e3cb26c768fc2a6d58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A "rotater" for PerfectMemoryBase classes which uses OpenGL to rotate in <a class="el" href="namespaceBoBRobotics_1_1AntWorld.html" title="An OpenGL-based simulated environment.">AntWorld</a>. </p>

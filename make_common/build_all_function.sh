@@ -1,6 +1,9 @@
 #!/bin/bash
 
 build_all() {
+    # Make sure plog headers are available before we start building things
+    git submodule update --init $(dirname "$0")/../third_party/plog
+
     types=$1; shift
     goodcount=0
     projectcount=0
@@ -19,9 +22,14 @@ build_all() {
         if [ -f $project/MakefileTest ]; then
             makefile="-f MakefileTest"
         else
+            if [ ! -f $project/Makefile ]; then
+                # There's no makefile, so skip it
+                continue
+            fi
+
             makefile=
         fi
-        
+
         echo -e "\e[34m========== BUILDING $project ==========\e[39m"
         cd "$project"
         make clean $makefile

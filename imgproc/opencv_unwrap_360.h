@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 
 // Standard C++ includes
 #include <iostream>
@@ -88,7 +89,7 @@ public:
         }
 
         // read unwrap parameters from file
-        std::cout << "Loading unwrap parameters from " << filePath.str() << std::endl;
+        LOG_INFO << "Loading unwrap parameters from " << filePath.str();
         cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
         read(fs["unwrapper"]);
         fs.release();
@@ -184,7 +185,7 @@ public:
 
     /*
      * Deserialise from a cv::FileStorage object (e.g. read from file).
-     * 
+     *
      * **TODO**: Check that we are actually reading values from the file
      */
     void read(const cv::FileNode &node)

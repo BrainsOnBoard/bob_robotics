@@ -15,6 +15,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
+#include "common/logging.h"
 #include "video/opencvinput.h"
 #include "video/display.h"
 

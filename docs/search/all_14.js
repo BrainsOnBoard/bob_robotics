@@ -39,6 +39,7 @@ var searchData=
   ['torque',['torque',['../namespaceunits_1_1torque.html',1,'units']]],
   ['traits',['traits',['../namespaceunits_1_1traits.html',1,'units']]],
   ['uav',['UAV',['../classBoBRobotics_1_1Robots_1_1UAV.html',1,'BoBRobotics::Robots']]],
+  ['uavnavigation',['UAVNavigation',['../classUAVNavigation.html',1,'']]],
   ['udpclient',['UDPClient',['../classBoBRobotics_1_1Vicon_1_1UDPClient.html',1,'BoBRobotics::Vicon']]],
   ['underlying_5ftype',['underlying_type',['../classunits_1_1unit__t.html#af3f88305faf59e0c71e8e616a2877ceb',1,'units::unit_t']]],
   ['unit',['unit',['../structunits_1_1unit.html',1,'units']]],
@@ -72,8 +73,8 @@ var searchData=
   ['unit_20types',['Unit Types',['../group__UnitTypes.html',1,'']]],
   ['unwrap',['unwrap',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a1ad60e9b4bf0a688dae257fc4ed02d1c',1,'BoBRobotics::Navigation::ImageDatabase']]],
   ['update',['update',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a0e3142956e27f8aae54578a52f916518',1,'BoBRobotics::HID::JoystickBase::update()'],['../classBoBRobotics_1_1Video_1_1Display.html#aaff25f10a11d2ae6a20ad6709fae3302',1,'BoBRobotics::Video::Display::update()']]],
-  ['usynergycontext',['uSynergyContext',['../structuSynergyContext.html',1,'']]],
-  ['usynergycookie',['uSynergyCookie',['../structuSynergyCookie.html',1,'']]],
+  ['updatemotors',['updateMotors',['../classBoBRobotics_1_1Robots_1_1RobotPositioner.html#a276780275fbde526075b06c66e6cd1d1',1,'BoBRobotics::Robots::RobotPositioner']]],
+  ['updatevelocities',['updateVelocities',['../classBoBRobotics_1_1Robots_1_1RobotPositioner.html#abf9007ef55e89ad7637a29444cb35e5d',1,'BoBRobotics::Robots::RobotPositioner']]],
   ['velocity',['velocity',['../namespaceunits_1_1velocity.html',1,'units']]],
   ['voltage',['voltage',['../namespaceunits_1_1voltage.html',1,'units']]],
   ['volume',['volume',['../namespaceunits_1_1volume.html',1,'units']]]
