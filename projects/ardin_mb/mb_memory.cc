@@ -173,7 +173,6 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     m_SLM.setTimestep(0);
     m_SLM.setTime(0.0f);
 
-
     // Clear spike records
     m_PNSpikes.clear();
     m_KCSpikes.clear();

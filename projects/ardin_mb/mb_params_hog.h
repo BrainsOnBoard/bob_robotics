@@ -28,7 +28,7 @@ namespace MBParamsHOG
     // Regime parameters
     constexpr double rewardTimeMs = 40.0;
     constexpr double presentDurationMs = 40.0;
-    constexpr double postStimuliDurationMs = 200.0;
+    constexpr double postStimuliDurationMs = 40.0;
 
     // Scale applied to convert image data to input currents for PNs
     constexpr double inputCurrentScale = 30000.0;
