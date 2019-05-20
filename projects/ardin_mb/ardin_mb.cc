@@ -186,26 +186,29 @@ int main(int argc, char *argv[])
     //MBMemory memory;
 
 
-    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
-    //VisualNavigationUI ui;
-
+    /*Navigation::PerfectMemory<> memory(cv::Size(36, 10));
+    VisualNavigationUI ui;
+    //AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
+    //                                                   memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
+    AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
+                                                            memory.getUnwrapResolution().height);*/
     // Mushroom body with orientation features
-    /*MBMemoryHOG memory;
+    MBMemoryHOG memory;
     memory.addCLIArguments(app);
     MBHogUI ui(memory);
 
     // Create suitable snapshot processor
     AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
-                                                            memory.getUnwrapResolution().height);*/
+                                                            memory.getUnwrapResolution().height);
 
 
     // Mushroom body
-    MBMemoryArdin memory;
+    /*MBMemoryArdin memory;
     memory.addCLIArguments(app);
     MBArdinUI ui(memory);
 
     AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
-                                                       memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
+                                                       memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);*/
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);
