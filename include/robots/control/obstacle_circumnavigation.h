@@ -15,6 +15,7 @@
 
 // Eigen
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 // Standard C includes
 #include <cmath>
@@ -201,16 +202,19 @@ private:
         int whichLeaveLine = -1;
 
         const Eigen::Vector2d robotPosition = { robotPose.x().value(), robotPose.y().value() };
-        StraightLine robotLine;
-        if (std::isnan(robotGoal.x().value())) {
-            // No goal specified: assume robot wants to go in a straight line
-            robotLine.m = tan(robotPose.yaw()).value();
-            robotLine.c = robotPose.y().value() - robotLine.m * robotPose.x().value();
-        } else {
-            // Aim for robot's actual goal
-            const Eigen::Vector2d goal = { robotGoal.x().value(), robotGoal.y().value() };
-            robotLine = StraightLine::fromPoints(robotPosition, goal);
-        }
+        const Line2 robotLine = [&]() {
+            if (std::isnan(robotGoal.x().value())) {
+                // No goal specified: assume robot wants to go in a straight line
+                const Eigen::Vector2d origin{ robotPose.x().value(), robotPose.y().value() };
+                const Eigen::Vector2d direction{ 1.0, tan(robotPose.yaw()).value() };
+                Eigen::ParametrizedLine<double, 2> line{ origin, direction };
+                return Line2{ line };
+            } else {
+                // Aim for robot's actual goal
+                const Eigen::Vector2d goal{ robotGoal.x().value(), robotGoal.y().value() };
+                return Line2::Through(robotPosition, goal);
+            }
+        }();
 
         // Get perimeter around object, resize it for calculating route
         m_ObjectPerimeter = objectVerts;
