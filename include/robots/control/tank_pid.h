@@ -8,7 +8,6 @@
 #include "common/stopwatch.h"
 #include "vicon/udp.h"
 #include "robots/tank.h"
-#include "positioner.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -46,8 +45,7 @@ enum class TankPIDState
 
 template<class PoseGetterType>
 class TankPID
-        : public PositionerBase<TankPID<PoseGetterType>>
-        , FSM<TankPIDState>::StateHandler
+  : FSM<TankPIDState>::StateHandler
 {
     using meter_t = units::length::meter_t;
     using radian_t = units::angle::radian_t;

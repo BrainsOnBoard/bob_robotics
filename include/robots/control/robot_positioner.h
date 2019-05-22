@@ -5,7 +5,6 @@
 #include "common/circstat.h"
 #include "common/pose.h"
 #include "robots/tank.h"
-#include "positioner.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -38,7 +37,6 @@ auto createRobotPositioner(Robots::Tank &tank,
  */
 template<class PoseGetterType>
 class RobotPositioner
-  : public PositionerBase<RobotPositioner<PoseGetterType>>
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;

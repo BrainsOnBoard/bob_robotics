@@ -7,7 +7,6 @@
 #include "common/pose.h"
 #include "robots/control/collision_detector.h"
 #include "robots/control/tank_pid.h"
-#include "robots/control/positioner.h"
 #include "robots/tank.h"
 
 // Third-party includes
@@ -58,7 +57,6 @@ enum class ObstacleCircumnavigatorState {
 
 template<class PositionerType, class PoseGetterType>
 class ObstacleAvoidingPositioner
-  : public Robots::PositionerBase<ObstacleAvoidingPositioner<PositionerType, PoseGetterType>>
 {
 public:
     ObstacleAvoidingPositioner(PositionerType &positioner,

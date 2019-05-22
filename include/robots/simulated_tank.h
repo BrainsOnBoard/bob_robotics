@@ -63,13 +63,7 @@ public:
         m_Pose = pose;
     }
 
-    void moveTo(const Pose2<LengthUnit, AngleUnit> &pose)
-    {
-        setPose(pose);
-    }
-
-    template<class Func>
-    bool moveToSync(const Pose2<LengthUnit, AngleUnit> &pose, Func)
+    bool moveTo(const Pose2<LengthUnit, AngleUnit> &pose)
     {
         setPose(pose);
         return true;
