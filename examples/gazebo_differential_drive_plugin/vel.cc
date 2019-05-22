@@ -19,7 +19,7 @@ int main(int _argc, char **_argv)
 #else
   gazebo::client::setup(_argc, _argv);
 #endif
-
+    std::cout <<"Starting vel"<<std::endl;
   // Create our node for communication
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
   node->Init();
