@@ -39,7 +39,7 @@ bob_main(int, char **)
 
         // Poll for joystick events
         joystick.update();
-    } while (runner->update());
+    } while (runner->run());
 
     return EXIT_SUCCESS;
 }

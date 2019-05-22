@@ -69,7 +69,7 @@ public:
         m_ObjectShapes = Viz::ArenaObject::fromObjects(m_Display, objects, resizedObjects);
     }
 
-    bool update()
+    bool run()
     {
         // Run circumnavigator
         m_Circumnavigator->update();

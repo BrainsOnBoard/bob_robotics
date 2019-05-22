@@ -15,5 +15,5 @@ main()
     auto runner = createRunner(tank, tank);
 
     // Run program
-    while (runner->update());
+    while (runner->run());
 }
