@@ -15,11 +15,7 @@ bob_main(int, char **)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
-    auto viconObject = vicon.getObjectReference(0, 5s);
+    auto viconObject = vicon.getObjectReference(5s);
 
     // Make connection to robot on default port
     Net::Client client;
@@ -35,16 +31,15 @@ bob_main(int, char **)
     catcher.trapSignals(); // Catch Ctrl-C
     client.runInBackground();
 
-    runObstacleCircumnavigation(tank, viconObject,
-        // Extra functions to be called in main loop
-        [&]()
-        {
-            // Check for exceptions on background thread
-            catcher.check();
+    // Object to run object circumnavigator
+    auto runner = createRunner(tank, viconObject);
+    do {
+        // Check for exceptions on background thread
+        catcher.check();
 
-            // Poll for joystick events
-            joystick.update();
-        });
+        // Poll for joystick events
+        joystick.update();
+    } while (runner->run());
 
     return EXIT_SUCCESS;
 }
