@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "common/geometry.h"
+#include "common/logging.h"
 #include "common/macros.h"
 #include "common/pose.h"
 #include "robots/control/collision_detector.h"
@@ -20,7 +21,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 #include <list>
 #include <vector>
 
@@ -236,9 +236,9 @@ private:
         }
 
         if (whichLeaveLine == -1 || whichLeaveLine == whichLine) {
-            std::cerr << "Bad line number: " << whichLeaveLine << std::endl
-                      << "(This is normal e.g. if moving backwards)" << std::endl
-                      << "Aborting" << std::endl;
+            LOGW << "Bad line number: " << whichLeaveLine << std::endl
+                 << "(This is normal e.g. if moving backwards)" << std::endl
+                 << "Aborting";
             m_State = State::DoingNothing;
         } else {
             // Append the waypoints to avoidLine (for display) and goals (for homing)
@@ -284,7 +284,7 @@ private:
             m_PIDWaypoints.emplace_back(meter_t{ leavePoint.x() }, meter_t{ leavePoint.y() });
 
             // Start PID control of robot
-            std::cout << "Driving to " << m_PIDWaypoints.front() << std::endl;
+            LOGI << "Driving to " << m_PIDWaypoints.front();
             m_TankPID.moveTo(m_PIDWaypoints.front());
             m_State = State::StartingCircumnavigation;
         }
@@ -302,7 +302,7 @@ private:
             if (m_PIDWaypoints.empty()) {
                 m_State = State::DoingNothing;
             } else {
-                std::cout << "Driving to " << m_PIDWaypoints.front() << std::endl;
+                LOGI << "Driving to " << m_PIDWaypoints.front();
                 m_TankPID.moveTo(m_PIDWaypoints.front());
             }
         }
