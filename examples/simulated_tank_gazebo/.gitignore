@@ -1,1 +1,3 @@
 /simulated_tank_gazebo
+*.so
+*.d
