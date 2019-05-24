@@ -53,34 +53,26 @@ bob_main(int, char **)
     /************************************Gazebo setup end************/
 
     
-    Robots::GazeboTank<> robot(5_mps, 104_mm); // Tank agent
+    Robots::GazeboTank<> robot(5_mps); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
-    joystick.addHandler([&robot](HID::JButton button, bool pressed) {
-        if (pressed && button == HID::JButton::Start) {
-            robot.setPose({}); // Reset to origin
-            return true;
-        } else {
-            return false;
-        }
-    });
 
     std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
 
     do {
         // Refresh display
         // car.setPose(robot.getPose());
-        auto wheel_speeds = robot.getWheelSpeeds();
+        auto wheelSpeeds = robot.getWheelSpeeds();
           // Set the velocity in the x-component
         #if GAZEBO_MAJOR_VERSION < 6
-        gazebo::msgs::Set(&msg, gazebo::math::Vector3((float)wheel_speeds.first, (float)wheel_speeds.second, 0));
+        gazebo::msgs::Set(&msg, gazebo::math::Vector3((float)wheelSpeeds.first, (float)wheelSpeeds.second, 0));
         #else
-        gazebo::msgs::Set(&msg, ignition::math::Vector3d((float)wheel_speeds.first, (float)wheel_speeds.second, 0));
+        gazebo::msgs::Set(&msg, ignition::math::Vector3d((float)wheelSpeeds.first, (float)wheelSpeeds.second, 0));
         #endif
         // Send the message
         pub->Publish(msg);
-        // std::cout<< wheel_speeds.first << "," << wheel_speeds.second << std::endl;        
+        // std::cout<< wheelSpeeds.first << "," << wheelSpeeds.second << std::endl;        
 
         // Check for joystick events
         if (!joystick.update()) {

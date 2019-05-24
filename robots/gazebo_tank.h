@@ -21,54 +21,23 @@ class GazeboTank
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
-    GazeboTank(const meters_per_second_t maximumSpeed, const millimeter_t axisLength)
+    GazeboTank(const meters_per_second_t maximumSpeed)
       : m_MaximumSpeed(maximumSpeed)
-      , m_AxisLength(axisLength)
     {}
 
-    virtual millimeter_t getRobotWidth() const override
-    {
-        return m_AxisLength;
-    }
-
-    template<typename ReturnLengthUnit = LengthUnit>
-    Vector3<ReturnLengthUnit> getPosition()
-    {
-        updatePose();
-        return { m_Pose.x(), m_Pose.y(), 0_m };
-    }
-
-    template<typename ReturnAngleUnit = AngleUnit>
-    std::array<ReturnAngleUnit, 3> getAttitude()
-    {
-        updatePose();
-        return { m_Pose.yaw(), 0_rad, 0_rad };
-    }
-
-    const auto &getPose()
-    {
-        updatePose();
-        return m_Pose;
-    }
 
     const auto &getWheelSpeeds(){
-        updatePose();
-        return wheel_speeds;
+        updateSpeeds();
+        return m_WheelSpeeds;
     }
     virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
         return m_MaximumSpeed;
     }
 
-    void setPose(const Pose2<LengthUnit, AngleUnit> &pose)
-    {
-        m_MoveStopwatch.start();
-        m_Pose = pose;
-    }
-
     virtual void tank(float left, float right) override
     {
-        updatePose();
+        updateSpeeds();
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
         m_Left = left * m_MaximumSpeed;
@@ -76,37 +45,15 @@ public:
     }
 
 private:
-    Pose2<LengthUnit, AngleUnit> m_Pose;
-    Stopwatch m_MoveStopwatch;
+
     const meters_per_second_t m_MaximumSpeed;
-    const millimeter_t m_AxisLength;
     meters_per_second_t m_Right{}, m_Left{};
-    std::pair <meters_per_second_t, meters_per_second_t> wheel_speeds;
+    std::pair <meters_per_second_t, meters_per_second_t> m_WheelSpeeds;
 
-    void updatePose()
+    void updateSpeeds()
     {
-        // using namespace units::angle;
-        // using namespace units::length;
-        // using namespace units::math;
-        // using namespace units::time;
-
-        // const second_t elapsed = m_MoveStopwatch.lap();
-        // if (m_Left == m_Right) {
-        //     const LengthUnit dist = m_Left * elapsed;
-        //     m_Pose.x() += dist * cos(m_Pose.yaw());
-        //     m_Pose.y() += dist * sin(m_Pose.yaw());
-        // } else {
-        //     const meter_t width = getRobotWidth();
-        //     const meter_t turnRadius = (width * (m_Left + m_Right)) /
-        //                                (2 * (m_Left - m_Right));
-        //     const double deltaAngle = (m_Right - m_Left) * elapsed / width;
-        //     const radian_t newAngle = m_Pose.yaw() + radian_t{ deltaAngle };
-        //     m_Pose.x() -= turnRadius * (sin(newAngle) - sin(m_Pose.yaw()));
-        //     m_Pose.y() += turnRadius * (cos(newAngle) - cos(m_Pose.yaw()));
-        //     m_Pose.yaw() = newAngle;
-        // }
-        wheel_speeds.first = m_Left;
-        wheel_speeds.second = m_Right;
+        m_WheelSpeeds.first = m_Left;
+        m_WheelSpeeds.second = m_Right;
     }
 }; // GazeboTank
 } // Robots

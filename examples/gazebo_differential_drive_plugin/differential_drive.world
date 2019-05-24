@@ -13,7 +13,7 @@
     <!-- A testing model that includes the Velodyne sensor model -->
     <model name="my_simple_cart">
       <include>
-        <uri>model://simple_cart</uri>
+        <uri>simple_cart</uri>
       </include>
 
       <!-- Attach the plugin to this model -->
