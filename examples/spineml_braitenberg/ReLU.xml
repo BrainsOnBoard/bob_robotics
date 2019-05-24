@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<SpineML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.shef.ac.uk/SpineMLComponentLayer" xsi:schemaLocation="http://www.shef.ac.uk/SpineMLComponentLayer SpineMLComponentLayer.xsd">
+ <ComponentClass name="ReLU" type="neuron_body">
+  <Annotation>
+   <SpineCreator/>
+  </Annotation>
+  <Dynamics initial_regime="integration">
+   <Regime name="integration"/>
+   <Alias name="out" dimension="?">
+    <MathInline>(in >0) * in</MathInline>
+   </Alias>
+  </Dynamics>
+  <AnalogReducePort name="in" reduce_op="+" dimension="?"/>
+  <AnalogSendPort name="out"/>
+ </ComponentClass>
+</SpineML>
