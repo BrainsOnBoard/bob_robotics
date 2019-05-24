@@ -2,6 +2,7 @@
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
+#include <gazebo/common/common.hh>
 
 namespace gazebo
 {
@@ -22,7 +23,7 @@ namespace gazebo
       // Safety check
       if (_model->GetJointCount() == 0)
       {
-        std::cerr << "Invalid joint count, DifferentialDrivePlugin not loaded\n";
+        gzthrow("Invalid joint count, DifferentialDrivePlugin not loaded\n");
         return;
       }
 
