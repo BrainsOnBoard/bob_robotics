@@ -6,7 +6,6 @@
 // Standard C++ includes
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics::Vicon;
@@ -33,8 +32,8 @@ int main(int argc, char **argv)
         auto objectData = vicon.getObjectData(objectName);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
-        std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
-                  << attitude[0] << ", " << attitude[1] << ", " << attitude[2] << std::endl;
+        LOGI << position[0] << ", " << position[1] << ", " << position[2] << ", "
+                  << attitude[0] << ", " << attitude[1] << ", " << attitude[2];
     }
     if (!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;

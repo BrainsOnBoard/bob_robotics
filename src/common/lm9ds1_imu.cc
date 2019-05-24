@@ -6,7 +6,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 #include <stdexcept>
 
 float

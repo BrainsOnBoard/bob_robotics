@@ -7,9 +7,6 @@
 // Standard C includes
 #include <cmath>
 
-// Standard C++ includes
-#include <iostream>
-
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 
@@ -29,9 +26,9 @@ void buildFilter(cv::Mat &filter, float preferredAngle)
         // Write filter with sin of angle
         filter.at<float>(0, x) = sin(th - preferredAngle);
         sum += filter.at<float>(0, x);
-        std::cout << x << " = " << filter.at<float>(0, x) << std::endl;
+        LOGI << x << " = " << filter.at<float>(0, x);
     }
-    std::cout << "Sum = " << sum << std::endl;
+    LOGI << "Sum = " << sum;
 }
 }   // Anonymous namespace
 
@@ -112,7 +109,7 @@ int main()
         }
 
         const double msPerFrame = timer.get() / (double)frame;
-        std::cout << "FPS:" << 1000.0 / msPerFrame << std::endl;
+        LOGI << "FPS:" << 1000.0 / msPerFrame;
     }
 
     return EXIT_SUCCESS;

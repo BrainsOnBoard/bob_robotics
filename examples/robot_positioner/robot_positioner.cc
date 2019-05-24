@@ -2,6 +2,7 @@
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
@@ -18,7 +19,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -71,7 +71,7 @@ public:
       , m_StateMachine(this, InvalidState)
     {
         // Goal is currently hard-coded
-        std::cout << "Goal: " << Goal << std::endl;
+        LOGI << "Goal: " << Goal;
         m_Positioner.setGoalPose(Goal);
 
         // Start controlling with joystick
@@ -85,7 +85,7 @@ public:
         // Listen in background
         m_Client.runInBackground();
 
-        std::cout << "Press Y to start homing" << std::endl;
+        LOGI << "Press Y to start homing";
 
         while (!m_Joystick.isPressed(HID::JButton::B)) {
             m_StateMachine.update();
@@ -126,12 +126,12 @@ public:
         if (state == Homing) {
             switch (event) {
             case Event::Enter:
-                std::cout << "Starting homing" << std::endl;
+                LOGI << "Starting homing";
                 m_PrintTimer.start();
                 m_Tank.setMaximumSpeedProportion(PositionerMaxSpeed);
                 break;
             case Event::Exit:
-                std::cout << "Stopping homing" << std::endl;
+                LOGI << "Stopping homing";
                 m_Positioner.reset();
                 m_PrintTimer.reset();
                 break;
@@ -140,21 +140,21 @@ public:
                 const auto position = objectData.getPosition();
                 const auto attitude = objectData.getAttitude();
                 if (objectData.timeSinceReceived() > 10s) {
-                    std::cerr << "Error: Could not get position from Vicon system\n"
-                              << "Stopping trial" << std::endl;
+                    LOGW << "Error: Could not get position from Vicon system\n"
+                              << "Stopping trial";
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
                 }
 
                 if (m_Positioner.reachedGoal()) {
-                    std::cout << "Reached goal" << std::endl;
-                    std::cout << "Final position: " << position.x() << ", " << position.y() << std::endl;
-                    std::cout << "Goal: " << Goal << std::endl;
-                    std::cout << "Distance to goal: "
+                    LOGI << "Reached goal";
+                    LOGI << "Final position: " << position.x() << ", " << position.y();
+                    LOGI << "Goal: " << Goal;
+                    LOGI << "Distance to goal: "
                               << Goal.distance2D(position)
                               << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                              << std::endl;
+                             ;
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
@@ -172,10 +172,10 @@ public:
                 // Print status
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
-                    std::cout << "Distance to goal: "
+                    LOGI << "Distance to goal: "
                                 << distance
                                 << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                                << std::endl;
+                               ;
                 }
             }
             }

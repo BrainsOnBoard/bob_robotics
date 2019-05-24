@@ -1,11 +1,11 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/macros.h"
 #include "third_party/path.h"
 
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <map>
 #include <sstream>
 #include <vector>
@@ -58,7 +58,7 @@ void findBounds(std::istream &inputObjFile)
         std::numeric_limits<float>::min(),
         std::numeric_limits<float>::min() };
 
-    std::cout << "1/1 - Finding bounds:" << std::endl;
+    LOGI << "1/1 - Finding bounds:";
     std::string lineString;
     std::string commandString;
     for(size_t l = 0; std::getline(inputObjFile, lineString); l++) {
@@ -91,15 +91,15 @@ void findBounds(std::istream &inputObjFile)
         }
     }
 
-    std::cout << "\tMin: (" << minBound[0] << ", " << minBound[1] << ", " << minBound[2] << ")" << std::endl;
-    std::cout << "\tMax: (" << maxBound[0] << ", " << maxBound[1] << ", " << maxBound[2] << ")" << std::endl;
+    LOGI << "\tMin: (" << minBound[0] << ", " << minBound[1] << ", " << minBound[2] << ")";
+    LOGI << "\tMax: (" << maxBound[0] << ", " << maxBound[1] << ", " << maxBound[2] << ")";
 }
 
 void copyPositions(const float(&min)[3], const float(&max)[3],
                    std::istream &inputObjFile, std::ofstream &outputObjFile,
                    std::map<int, int> &positionIndices)
 {
-    std::cout << "1/3 - Copy positions:" << std::endl;
+    LOGI << "1/3 - Copy positions:";
     std::string lineString;
     std::string commandString;
     int originalPositionID = 1;
@@ -149,14 +149,14 @@ void copyPositions(const float(&min)[3], const float(&max)[3],
     }
 
 
-    std::cout << "\t" << remappedPositionID - 1 << "/" << originalPositionID - 1 << " vertices" << std::endl;
+    LOGI << "\t" << remappedPositionID - 1 << "/" << originalPositionID - 1 << " vertices";
 }
 
 void findFaces(std::istream &inputObjFile,
                const std::map<int, int> &positionIndices,
                std::map<int, int> &texCoordIndices, std::map<int, int> &normalIndices)
 {
-    std::cout << "2/3 - Reading faces to find tex coords and normals:" << std::endl;
+    LOGI << "2/3 - Reading faces to find tex coords and normals:";
     std::string lineString;
     std::string commandString;
     std::string faceIndexString;
@@ -222,16 +222,16 @@ void findFaces(std::istream &inputObjFile,
             totalFaces++;
         }
     }
-    std::cout << "\t" << facesInBounds << "/" << totalFaces << " faces" << std::endl;
-    std::cout << "\t" << texCoordIndices.size() << " tex coords" << std::endl;
-    std::cout << "\t" << normalIndices.size() << " normals" << std::endl;
+    LOGI << "\t" << facesInBounds << "/" << totalFaces << " faces";
+    LOGI << "\t" << texCoordIndices.size() << " tex coords";
+    LOGI << "\t" << normalIndices.size() << " normals";
 }
 
 void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
                   const std::map<int, int> &positionIndices,
                   std::map<int, int> &texCoordIndices, std::map<int, int> &normalIndices)
 {
-    std::cout << "3/3 - Copying remaining geometry:" << std::endl;
+    LOGI << "3/3 - Copying remaining geometry:";
     std::string lineString;
     std::string commandString;
     std::string faceIndexString;
@@ -395,7 +395,7 @@ int main(int argc, char **argv)
 {
 
     if(argc < 2) {
-        std::cerr << "At least one argument (object filename) required" << std::endl;
+        LOGF << "At least one argument (object filename) required";
         return EXIT_FAILURE;
     }
     else {
@@ -403,7 +403,7 @@ int main(int argc, char **argv)
         // Open file using POSIX API
         int fd = open(argv[1], O_RDONLY);
         if(fd == -1) {
-            std::cerr << "Cannot open obj file: " << argv[1] << std::endl;
+            LOGF << "Cannot open obj file: " << argv[1];
             return EXIT_FAILURE;
         }
 
@@ -420,7 +420,7 @@ int main(int argc, char **argv)
         std::ifstream inputObjFile(argv[1]);
 #endif
         if(!inputObjFile.good()) {
-            std::cerr << "Cannot open obj file: " << argv[1] << std::endl;
+            LOGF << "Cannot open obj file: " << argv[1];
             return EXIT_FAILURE;
         }
 
@@ -467,7 +467,7 @@ int main(int argc, char **argv)
             return EXIT_SUCCESS;
         }
         else {
-            std::cerr << "Object filename, minX, minY, minZ, maxX, maxY, maxZ arguments required" << std::endl;
+            LOGF << "Object filename, minX, minY, minZ, maxX, maxY, maxZ arguments required";
             return EXIT_FAILURE;
         }
     }

@@ -18,6 +18,7 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "net/server.h"
 #include "os/net.h"
@@ -36,7 +37,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace std::literals;
@@ -118,7 +118,7 @@ bob_main(int argc, char **argv)
         }
     } catch (Net::SocketClosedError &) {
         // The connection was closed on purpose: do nothing
-        std::cout << "Connection closed" << std::endl;
+        LOGI << "Connection closed";
     }
 
     return EXIT_SUCCESS;

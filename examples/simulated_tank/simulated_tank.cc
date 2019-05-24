@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
@@ -9,7 +10,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -35,7 +35,7 @@ bob_main(int, char **)
         }
     });
 
-    std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
+    LOGI << "Drive the car using the two thumbsticks: each stick is for one motor";
 
     do {
         // Refresh display

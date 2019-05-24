@@ -2,9 +2,6 @@
 #include "navigation/perfect_memory.h"
 #include "navigation/plot.h"
 
-// Standard C++ includes
-#include <iostream>
-
 using namespace BoBRobotics::Navigation;
 
 int

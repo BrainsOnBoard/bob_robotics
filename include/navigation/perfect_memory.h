@@ -19,7 +19,6 @@
 // Standard C++ includes
 #include <algorithm>
 #include <array>
-#include <iostream>
 #include <functional>
 #include <limits>
 #include <numeric>

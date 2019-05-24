@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "hid/joystick.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
@@ -15,7 +16,6 @@
 
 // Standard C++ includes
 #include <cstring>
-#include <iostream>
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -28,7 +28,7 @@ namespace
 {
 void handleGLFWError(int errorNumber, const char *message)
 {
-    std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
+    LOGE << "GLFW error number:" << errorNumber << ", message:" << message;
 }
 
 void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message,
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
     // Initialize the library
     if(!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+        LOGE << "Failed to initialize GLFW";
         return EXIT_FAILURE;
     }
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     if(!window)
     {
         glfwTerminate();
-        std::cerr << "Failed to create window" << std::endl;
+        LOGE << "Failed to create window";
         return EXIT_FAILURE;
     }
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
+        LOGE << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
 

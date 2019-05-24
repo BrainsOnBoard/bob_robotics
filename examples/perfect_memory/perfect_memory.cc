@@ -7,7 +7,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
@@ -18,7 +17,7 @@ trainRoute(T &pm)
 {
     // Load snapshots
     pm.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
-    std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
+    LOGI << "Loaded " << pm.getNumSnapshots() << " snapshots";
 }
 
 int
@@ -29,7 +28,7 @@ main()
     std::vector<std::vector<float>> allDifferences;
 
     {
-        std::cout << "Testing with best-matching snapshot method..." << std::endl;
+        LOGI << "Testing with best-matching snapshot method...";
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemoryRotater<> pm(imSize);
@@ -43,13 +42,13 @@ main()
         size_t snapshot;
         float difference;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
-        std::cout << "Heading: " << heading << std::endl;
-        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-        std::cout << "Difference score: " << difference << std::endl;
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
     }
 
     {
-        std::cout << "Testing with best-matching snapshot method with partial rotation..." << std::endl;
+        LOGI << "Testing with best-matching snapshot method with partial rotation...";
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemoryRotater<> pm(imSize);
@@ -66,13 +65,13 @@ main()
         size_t snapshot;
         float difference;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap, rotations.begin(), rotations.end());
-        std::cout << "Heading: " << heading << std::endl;
-        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-        std::cout << "Difference score: " << difference << std::endl;
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
     }
 
     {
-        std::cout << std::endl << "Testing with RMS image difference..." << std::endl;
+        LOGI << "Testing with RMS image difference...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>> pm(imSize);
         trainRoute(pm);
 
@@ -84,14 +83,14 @@ main()
         size_t snapshot;
         float difference;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
-        std::cout << "Heading: " << heading << std::endl;
-        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-        std::cout << "Difference score: " << difference << std::endl;
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
     }
 
     {
         constexpr size_t numComp = 3;
-        std::cout << std::endl <<  "Testing with " << numComp << " weighted snapshots..." << std::endl;
+        LOGI <<  "Testing with " << numComp << " weighted snapshots...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, WeightSnapshotsDynamic<numComp>> pm(imSize);
         trainRoute(pm);
 
@@ -102,15 +101,15 @@ main()
         std::array<size_t, numComp> snapshots;
         std::array<float, numComp> differences;
         std::tie(heading, snapshots, differences, allDifferences) = pm.getHeading(snap);
-        std::cout << "Heading: " << heading << std::endl;
+        LOGI << "Heading: " << heading;
         for (size_t i = 0; i < snapshots.size(); i++) {
-            std::cout << "Snapshot " << i + 1 << ": #" << snapshots[i]
-                      << " (" << differences[i] << ")" << std::endl;
+            LOGI << "Snapshot " << i + 1 << ": #" << snapshots[i]
+                      << " (" << differences[i] << ")";
         }
     }
 
     {
-        std::cout << std::endl << "Testing with HOG..." << std::endl;
+        LOGI << "Testing with HOG...";
 
         PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize, cv::Size(10, 10), 8);
         trainRoute(pm);
@@ -124,9 +123,9 @@ main()
         size_t snapshot;
         float difference;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
-        std::cout << "Heading: " << heading << std::endl;
-        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-        std::cout << "Difference score: " << difference << std::endl;
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
     }
 
     return EXIT_SUCCESS;

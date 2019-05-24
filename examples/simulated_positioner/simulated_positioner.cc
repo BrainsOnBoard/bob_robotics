@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/pose.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/simulated_tank.h"
@@ -82,7 +83,7 @@ main()
             // Check if the robot is within threshold distance and bearing of goal
             if (robp.reachedGoal()) {
                 if (!reachedGoalAnnounced) {
-                    std::cout << "Reached goal" << std::endl;
+                    LOGI << "Reached goal";
                     robot.stopMoving();
                     reachedGoalAnnounced = true;
                 }
