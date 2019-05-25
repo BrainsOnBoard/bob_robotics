@@ -72,7 +72,8 @@ bob_main(int, char **)
         #endif
         // Send the message
         pub->Publish(msg);
-        // std::cout<< wheelSpeeds.first << "," << wheelSpeeds.second << std::endl;        
+        // std::cout<< wheelSpeeds.first << "," << wheelSpeeds.second << std::endl; 
+        LOG_DEBUG << wheelSpeeds.first << "," << wheelSpeeds.second;       
 
         // Check for joystick events
         if (!joystick.update()) {

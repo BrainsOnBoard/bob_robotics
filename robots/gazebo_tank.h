@@ -27,7 +27,6 @@ public:
 
 
     const auto &getWheelSpeeds(){
-        updateSpeeds();
         return m_WheelSpeeds;
     }
     virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
@@ -37,24 +36,18 @@ public:
 
     virtual void tank(float left, float right) override
     {
-        updateSpeeds();
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
-        m_Left = left * m_MaximumSpeed;
-        m_Right = right * m_MaximumSpeed;
+        m_WheelSpeeds.first = left * m_MaximumSpeed;
+        m_WheelSpeeds.second = right * m_MaximumSpeed;
     }
 
 private:
 
     const meters_per_second_t m_MaximumSpeed;
-    meters_per_second_t m_Right{}, m_Left{};
+    // meters_per_second_t m_Right{}, m_Left{};
     std::pair <meters_per_second_t, meters_per_second_t> m_WheelSpeeds;
 
-    void updateSpeeds()
-    {
-        m_WheelSpeeds.first = m_Left;
-        m_WheelSpeeds.second = m_Right;
-    }
 }; // GazeboTank
 } // Robots
 } // BoBRobotics
