@@ -8,10 +8,11 @@
                 "${workspaceFolder}/third_party/plog/include",
                 "${GENN_PATH}/lib/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
-                "/usr/include/python3.7m",
-                "/usr/lib/python3.7/site-packages/numpy/core/include",
                 "/usr/include/eigen3",
-                "/usr/include/opencv4"
+                "/usr/include/opencv2",
+                "/usr/include/opencv4",
+                "/usr/include/gazebo-9",
+                "/usr/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
