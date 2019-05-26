@@ -18,7 +18,7 @@
 
       <!-- Attach the plugin to this model -->
       <plugin name="differential_drive_control" filename="libdifferential_drive_plugin.so">
-        <velocity>2</velocity>
+        <velocity>0</velocity>
       </plugin>
     </model>
 
