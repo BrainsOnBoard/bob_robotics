@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "pose.h"
+
 // Third-party includes
 #include "../third_party/units.h"
 
@@ -129,7 +132,7 @@ public:
         return m_RobotVertices;
     }
 
-    bool collisionOccurred() const
+    bool collisionOccurred(Vector2<meter_t> &firstCollisionPosition) const
     {
         // If there aren't obstacles, we can't have hit them
         if (m_ResizedObjects.size() == 0) {
@@ -146,6 +149,11 @@ public:
         // Check for collision
         for (int i = 0; i < m_RobotMap.size().area(); i++) {
             if (m_ObjectsMap.data[i] & m_RobotMap.data[i]) {
+                // Calculate collision point
+                const auto coordPixel = div(i, m_RobotMap.cols);
+                firstCollisionPosition.x() = m_XLower + (coordPixel.rem * m_GridSize);
+                firstCollisionPosition.y() = m_YLower + (coordPixel.quot * m_GridSize);
+
                 return true;
             }
         }
