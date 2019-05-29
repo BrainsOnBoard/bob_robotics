@@ -22,6 +22,7 @@ using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
+using namespace units::math;
 using namespace units::literals;
 
 
@@ -112,7 +113,7 @@ int bob_main(int, char **)
         collisionDetector.setRobotPose(robot.getPose());
 
         // Normalise yaw
-        // **YUCK** why is this necessary?
+        // **YUCK** why is this necessary? I would expect yaw to remain normalised
         const auto robotYaw = normaliseAngle180(robot.getPose().yaw());
 
         // If robot has hit right wall
@@ -122,42 +123,56 @@ int bob_main(int, char **)
         Vector2<meter_t> collisionPosition;
         if(robot.getPose().x() > 2.5_m) {
             if(robotYaw > 0.0_deg) {
-                hitRight = 1.0;
+                hitRight += 1.0;
             }
             else {
-                hitLeft = 1.0;
+                hitLeft += 1.0;
             }
         }
-        // Otherwise, if robot has hit left wall
-        else if(robot.getPose().x() < -2.5_m) {
+        // If robot has hit left wall
+        if(robot.getPose().x() < -2.5_m) {
             if(robotYaw > 180.0_deg) {
-                hitRight = 1.0;
+                hitRight += 1.0;
             }
             else {
-                hitLeft = 1.0;
+                hitLeft += 1.0;
             }
         }
-        // Otherwise, if robot has hit bottom wall
-        else if(robot.getPose().y() < -2.5_m) {
+        // If robot has hit bottom wall
+        if(robot.getPose().y() < -2.5_m) {
             if(robotYaw > -90.0_deg) {
-                hitRight = 1.0;
+                hitRight += 1.0;
             }
             else {
-                hitLeft = 1.0;
+                hitLeft += 1.0;
             }
         }
-        // Otherwise, if robot has hit top wall
-        else if(robot.getPose().y() > 2.5_m) {
+        // If robot has hit top wall
+        if(robot.getPose().y() > 2.5_m) {
             if(robotYaw > 90.0_deg) {
-                hitRight = 1.0;
+                hitRight += 1.0;
             }
             else {
-                hitLeft = 1.0;
+                hitLeft += 1.0;
             }
         }
-        // Otherwise, if there's been a collision
-        else if (collisionDetector.collisionOccurred(collisionPosition)) {
-            std::cout << "COLLISION at " << collisionPosition.x() << "," << collisionPosition.y() << std::endl;
+
+        // If there's been a collision
+        if (collisionDetector.collisionOccurred(collisionPosition)) {
+            // Get angle of collision relative to robot
+            const degree_t collisionAngle = atan2(collisionPosition.y() - robot.getPose().y(),
+                                                  collisionPosition.x() - robot.getPose().x());
+
+            // Get shortest angle between this and robot's heading
+            const degree_t relativeCollisionAngle = circularDistance(collisionAngle, robot.getPose().yaw());
+
+            // Based on this, determine which way to steer
+            if(relativeCollisionAngle > 0_deg) {
+                hitLeft += 1.0;
+            }
+            else {
+                hitRight += 1.0;
+            }
         }
 
         // Copy turn signals into sensor input buffers
