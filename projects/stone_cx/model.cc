@@ -91,6 +91,19 @@ public:
 IMPLEMENT_MODEL(CPU4Sigmoid);
 
 //----------------------------------------------------------------------------
+// PreferredAngle
+//----------------------------------------------------------------------------
+class PreferredAngle : public InitVarSnippet::Base
+{
+public:
+    DECLARE_SNIPPET(PreferredAngle, 0);
+
+    SET_CODE(
+        "$(value) = 0.785398163 * (scalar)($(id) % 8);");
+};
+IMPLEMENT_SNIPPET(PreferredAngle);
+
+//----------------------------------------------------------------------------
 // TBToTB
 //----------------------------------------------------------------------------
 class TBToTB : public InitVarSnippet::Base
@@ -241,8 +254,8 @@ void modelDefinition(NNmodel &model)
         3.0);   // Additive scale
 
     TLSigmoid::VarValues tlInit(
-        0.0,    // r
-        0.0);   // Preference angle (radians)
+        0.0,                        // r
+        initVar<PreferredAngle>()); // Preference angle (radians)
 
     // CL1
     GeNNModels::Sigmoid::ParamValues cl1Params(
