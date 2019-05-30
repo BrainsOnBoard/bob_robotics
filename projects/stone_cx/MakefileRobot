@@ -1,13 +1,11 @@
 WITH_I2C := 1
 include ../../make_common/bob_robotics.mk
 
-EXECUTABLE      := simulatorRobot
-SOURCES         := simulatorRobot.cc simulatorCommon.cc robotCommon.cc
-CPU_ONLY        = 1
+SOURCES			:=robot.cc robotCommon.cc
+GENERATED_CODE_DIR	:=stone_cx_CODE
 
-ifdef RECORD_ELECTROPHYS
-    CXXFLAGS += -DRECORD_ELECTROPHYS
-endif
+OBJECTS			:=$(SOURCES:.cc=.o)
+DEPS			:=$(SOURCES:.cc=.d)
 
 ifdef RECORD_SENSORS
     CXXFLAGS += -DRECORD_SENSORS
@@ -17,4 +15,22 @@ ifdef USE_SEE3_CAM
     CXXFLAGS += -DUSE_SEE3_CAM
 endif
 
-include $(GENN_PATH)/userproject/include/makefile_common_gnu.mk
+.PHONY: all clean generated_code
+
+all: robot
+
+robot: $(OBJECTS) generated_code
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o robot $(LINK_FLAGS) -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath $(GENERATED_CODE_DIR)
+
+-include $(DEPS)
+
+%.o: %.cc %.d
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.d: ;
+
+generated_code:
+	$(MAKE) -C $(GENERATED_CODE_DIR)
+
+clean:
+	@rm -f robot *.o *.d
