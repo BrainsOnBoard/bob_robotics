@@ -20,7 +20,6 @@
 
 // Model includes
 #include "parameters.h"
-#include "simulatorCommon.h"
 #include "spline.h"
 #include "visualizationCommon.h"
 
@@ -60,12 +59,7 @@ int main()
         preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
     }
 
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-
-    initstone_cx();
+    initializeSparse();
 
     cv::namedWindow("Path", cv::WINDOW_NORMAL);
     cv::resizeWindow("Path", pathImageSize, pathImageSize);
@@ -135,7 +129,7 @@ int main()
         headingAngleTL = theta;
 
         // Step network
-        stepTimeCPU();
+        stepTime();
 
 #ifdef RECORD_ELECTROPHYS
         tn2Recorder.record(i);
