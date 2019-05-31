@@ -183,8 +183,8 @@ int bob_main(int, char **)
         simulator.stepTime();
 
         // Read steering signals
-        const float left = 10.0f * *steerLeft->getModelPropertyHostStateVarBegin();
-        const float right = 10.0f * *steerRight->getModelPropertyHostStateVarBegin();
+        const float left = 10.0f * *steerLeft->getStateVarBegin();
+        const float right = 10.0f * *steerRight->getStateVarBegin();
 
         // Generate tank steering signals
         const float tankLeft = std::min(1.0f, std::max(-1.0f, 1.0f + right - left));
