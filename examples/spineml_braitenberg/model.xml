@@ -41,7 +41,7 @@
                 <LL:WeightUpdate name="LeftSensor to SteerRight Synapse 0 weight_update" url="passthroughWU.xml" input_src_port="out" input_dst_port="in"/>
                 <LL:PostSynapse name="LeftSensor to SteerRight Synapse 0 postsynapse" url="passthroughPS.xml" input_src_port="out" input_dst_port="in" output_src_port="out" output_dst_port="in">
                     <Property name="w" dimension="?">
-                        <FixedValue value="0.1"/>
+                        <FixedValue value="1"/>
                     </Property>
                 </LL:PostSynapse>
             </LL:Synapse>
@@ -88,7 +88,7 @@
                 <LL:WeightUpdate name="RightSensor to SteerLeft Synapse 0 weight_update" url="passthroughWU.xml" input_src_port="out" input_dst_port="in"/>
                 <LL:PostSynapse name="RightSensor to SteerLeft Synapse 0 postsynapse" url="passthroughPS.xml" input_src_port="out" input_dst_port="in" output_src_port="out" output_dst_port="in">
                     <Property name="w" dimension="?">
-                        <FixedValue value="0.1"/>
+                        <FixedValue value="1"/>
                     </Property>
                 </LL:PostSynapse>
             </LL:Synapse>
