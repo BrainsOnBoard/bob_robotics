@@ -70,6 +70,10 @@ public:
 
     void stopReadingFromNetwork();
 
+    float getLeft() const;
+
+    float getRight() const;
+
 private:
     Net::Connection *m_Connection = nullptr;
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
@@ -79,10 +83,6 @@ private:
     void onCommandReceived(Net::Connection &, const Net::Command &command);
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
-
-    float getLeft() const;
-
-    float getRight() const;
 
 protected:
     void setWheelSpeeds(float left, float right);
