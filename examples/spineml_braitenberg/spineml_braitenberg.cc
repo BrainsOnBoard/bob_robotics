@@ -112,17 +112,13 @@ int bob_main(int, char **)
         // Move robot
         collisionDetector.setRobotPose(robot.getPose());
 
-        // Normalise yaw
-        // **YUCK** why is this necessary? I would expect yaw to remain normalised
-        const auto robotYaw = normaliseAngle180(robot.getPose().yaw());
-
         // If robot has hit right wall
         // **TODO** do this more elegantly with err maths
         double hitLeft = 0.0;
         double hitRight = 0.0;
         Vector2<meter_t> collisionPosition;
         if(robot.getPose().x() > 2.5_m) {
-            if(robotYaw > 0.0_deg) {
+            if(robot.getPose().yaw() > 0.0_deg) {
                 hitRight += 1.0;
             }
             else {
@@ -131,7 +127,7 @@ int bob_main(int, char **)
         }
         // If robot has hit left wall
         if(robot.getPose().x() < -2.5_m) {
-            if(robotYaw > 180.0_deg) {
+            if(robot.getPose().yaw() > 180.0_deg) {
                 hitRight += 1.0;
             }
             else {
@@ -140,7 +136,7 @@ int bob_main(int, char **)
         }
         // If robot has hit bottom wall
         if(robot.getPose().y() < -2.5_m) {
-            if(robotYaw > -90.0_deg) {
+            if(robot.getPose().yaw() > -90.0_deg) {
                 hitRight += 1.0;
             }
             else {
@@ -149,7 +145,7 @@ int bob_main(int, char **)
         }
         // If robot has hit top wall
         if(robot.getPose().y() > 2.5_m) {
-            if(robotYaw > 90.0_deg) {
+            if(robot.getPose().yaw() > 90.0_deg) {
                 hitRight += 1.0;
             }
             else {
