@@ -12,6 +12,7 @@ endmacro()
 macro(BoB_project)
     BoB_init()
 
+    # Parse input args
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
@@ -52,6 +53,7 @@ macro(BoB_project)
         endforeach()
     endif()
 
+    # If this project includes a GeNN model...
     if(PARSED_ARGS_GENN_MODEL)
         get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
         set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
@@ -95,6 +97,23 @@ macro(BoB_project)
 
         # So code can access headers in the *_CODE folder
         BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+
+    # Allow users to choose the type of tank robot to use with TANK_TYPE env var
+    # or CMake param (defaults to Norbot)
+    if(NOT TANK_TYPE)
+        if(ENV{TANK_TYPE})
+            set(TANK_TYPE $ENV{TANK_TYPE})
+        else()
+            set(TANK_TYPE Norbot)
+        endif()
+    endif()
+    add_definitions(-DTANK_TYPE=${TANK_TYPE} -DTANK_TYPE_${TANK_TYPE})
+    message("Default tank robot type (if used): ${TANK_TYPE}")
+
+    # For EV3 (Lego) robots, we need an extra module
+    if(${TANK_TYPE} STREQUAL EV3)
+        list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
     endif()
 
     # Do linking etc.
