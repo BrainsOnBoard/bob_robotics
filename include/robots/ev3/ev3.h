@@ -5,7 +5,7 @@
 #include "robots/tank.h"
 
 // EV3 library
-#include "ev3dev.h"
+#include "../../third_party/ev3dev-lang-cpp/ev3dev.h"
 
 // Standard C++ includes
 #include <string>

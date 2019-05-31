@@ -9,7 +9,7 @@
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/server.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "video/netsink.h"
 
 // GeNN generated code includes
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
     
     // Create motor interface
-    Robots::Norbot motor;
+    Robots::TANK_TYPE motor;
     
     // Initialise GeNN
     allocateMem();

@@ -9,7 +9,7 @@
 #include "common/timer.h"
 #include "imgproc/opencv_optical_flow.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    Norbot motor;
+    TANK_TYPE motor;
 
     // Initialise GeNN
     allocateMem();
