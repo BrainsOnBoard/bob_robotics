@@ -1,14 +1,14 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
-#include "common/plot_agent.h"
-#include "common/read_objects.h"
+#include "navigation/read_objects.h"
 #include "hid/joystick.h"
+#include "robots/control/tank_pid.h"
 #include "vicon/udp.h"
+#include "viz/plot_agent.h"
 
 // This program can be run locally on the robot or remotely
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
 #include "net/client.h"
 #include "robots/tank_netsink.h"
 #else
@@ -46,7 +46,7 @@ void
 usage(const char *programName)
 {
     std::cout << programName;
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     std::cout << " [robot IP]";
 #endif
     std::cout << " [-p path_file.yaml]" << std::endl;
@@ -73,7 +73,7 @@ bob_main(int argc, char **argv)
 
     bool canPlaySound = false;
 
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     std::string robotIP;
     if (argc > 1 && strcmp(argv[1], "-p") != 0) {
         // Get robot IP from command-line argument
@@ -114,7 +114,7 @@ bob_main(int argc, char **argv)
             return EXIT_FAILURE;
         }
 
-        goals = std::move(readObjects(argv[2]).at(0));
+        goals = std::move(Navigation::readObjects(argv[2]).at(0));
         std::cout << "Path read from " << argv[2] << std::endl;
         break;
     case 1:
@@ -134,10 +134,6 @@ bob_main(int argc, char **argv)
 
     // Connect to Vicon system
     Vicon::UDPClient<> vicon(51001);
-    while (vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     // Drive robot with joystick
     HID::Joystick joystick;
@@ -160,7 +156,7 @@ bob_main(int argc, char **argv)
                 goalsIter = goals.begin();
                 pid.start(*goalsIter);
 
-                printGoalStats(*goalsIter, vicon.getObjectData(0).getPosition());
+                printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
             } else {
                 robot.stopMoving();
                 std::cout << "Stopping positioner" << std::endl;
@@ -169,7 +165,7 @@ bob_main(int argc, char **argv)
         case HID::JButton::Start:
             std::cout << "Resetting to the first goal" << std::endl;
             goalsIter = goals.begin();
-            printGoalStats(*goalsIter, vicon.getObjectData(0).getPosition());
+            printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
             return true;
         default:
             return false;
@@ -185,7 +181,7 @@ bob_main(int argc, char **argv)
         BackgroundExceptionCatcher catcher;
         catcher.trapSignals(); // Trap signals e.g. ctrl+c
 
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
         // Read on background thread
         client.runInBackground();
 #endif
@@ -211,7 +207,7 @@ bob_main(int argc, char **argv)
             joystick.update();
 
             // Get robot's position from Vicon system
-            const auto objectData = vicon.getObjectData(0);
+            const auto objectData = vicon.getObjectData();
 
             plt::figure(1);
             plt::clf();
@@ -227,7 +223,7 @@ bob_main(int argc, char **argv)
             }
 
             // Plot robot's pose with an arrow
-            plotAgent(objectData.getPose<>(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
+            Viz::plotAgent(objectData.getPose<>(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
             plt::pause(0.025);
 
             // Get motor commands from positioner, if it's running

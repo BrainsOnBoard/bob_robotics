@@ -12,7 +12,7 @@
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifndef NO_I2C_ROBOT
+#ifndef NO_I2C
 #include "robots/norbot.h"
 #endif
 
@@ -54,7 +54,7 @@ bob_main(int, char **)
     }
 
     // Try to connect to servos over I2C and if that fails, try to connect to EV3
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     tank = std::make_unique<Robots::Tank>();
 #else
     try {

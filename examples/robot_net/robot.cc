@@ -3,7 +3,7 @@
  *
  * If you don't want to build in I2C support (e.g. if running on desktop) then
  * make the program with:
- *     NO_I2C_ROBOT=1 make
+ *     NO_I2C=1 make
  *
  * Use the corresponding "computer" program to connect to the server.
  */
@@ -13,7 +13,7 @@
 
 // If we're compiling on Windows, we know we don't need I2C
 #ifdef _WIN32
-#define NO_I2C_ROBOT
+#define NO_I2C
 #endif
 
 // BoB robotics includes
@@ -27,7 +27,7 @@
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifndef NO_I2C_ROBOT
+#ifndef NO_I2C
 #include "robots/norbot.h"
 #endif
 
@@ -55,7 +55,7 @@ run(Video::Input &camera)
     // Stream camera synchronously over network
     Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
 
-#ifdef NO_I2C_ROBOT
+#ifdef NO_I2C
     // Output motor commands to terminal
     Robots::Tank tank;
 #else

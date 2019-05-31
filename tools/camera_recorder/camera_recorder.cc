@@ -55,12 +55,6 @@ int main()
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
                                               "c:\\users\\ad374\\Desktop");
 
-    // Wait for tracking
-    while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
-
     // Start capture
     if(!viconCaptureControl.startRecording("camera_recorder")) {
         return EXIT_FAILURE;
@@ -92,7 +86,7 @@ int main()
 
 #ifdef VICON_CAPTURE
             // Get tracking data
-            auto objectData = vicon.getObjectData(0);
+            auto objectData = vicon.getObjectData();
             const auto &position = objectData.getPosition<>();
             const auto &attitude = objectData.getAttitude<>();
 

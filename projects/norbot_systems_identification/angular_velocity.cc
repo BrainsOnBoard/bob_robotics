@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "common/stopwatch.h"
@@ -96,13 +96,6 @@ bob_main(int argc, char **argv)
         }
     });
 
-    // Wait for Vicon system
-    while (vicon.getNumObjects() == 0) {
-        std::cout << "Waiting for object" << std::endl;
-        std::this_thread::sleep_for(1s);
-    }
-    std::cout << "Connected to Vicon system" << std::endl;
-
     // Run client in background, checking for background errors thrown
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch ctrl-C
@@ -116,7 +109,7 @@ bob_main(int argc, char **argv)
 
         if (stopwatch.started()) { // If we're recording
             const millisecond_t time = stopwatch.elapsed();
-            const auto objectData = vicon.getObjectData(0);
+            const auto objectData = vicon.getObjectData();
             const auto attitude = objectData.getAttitude();
             const auto angvel = objectData.getAngularVelocity();
             dataFile << time() << ", " << attitude[0]() << ", " << attitude[1]() << ", " << attitude[2]() << ", "

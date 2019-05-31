@@ -1,3 +1,6 @@
+// This is the main file, so we do want header definitions for this object
+#undef NO_HEADER_DEFINITIONS
+
 // Standard C++ includes
 #include <bitset>
 #include <fstream>
@@ -18,6 +21,7 @@
 #include <GLFW/glfw3.h>
 
 // BoB Robotics includes
+#include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
@@ -147,7 +151,7 @@ int main(int argc, char *argv[])
     MBMemory memory;
 
     // Create state machine and set it as window user pointer
-    const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
+    const std::string worldFilename = std::string(bobRoboticsPath) + "/resources/antworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     StateHandler stateHandler(worldFilename, routeFilename, memory);
     glfwSetWindowUserPointer(window, &stateHandler);

@@ -3,8 +3,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/ev3dev-lang-cpp/ev3dev-lang-cpp",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}",
+                "${workspaceFolder}/third_party/ev3dev-lang-cpp",
                 "${workspaceFolder}/third_party/plog/include",
                 "${GENN_PATH}/lib/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
