@@ -148,9 +148,7 @@ ifdef WITH_SFML_GRAPHICS
 endif
 
 ifdef WITH_SPINEML_SIMULATION
-    ifndef GENN_PATH
-        $(error Environment variable GENN_PATH must be defined)
-    endif
+    GENN_PATH ?= $(shell $(CURRENT_DIR)/find_genn.sh)
     CXXFLAGS += -I$(GENN_PATH)/include/spineml/simulator
     LINK_FLAGS += -L$(GENN_PATH)/lib -lspineml_simulator -lspineml_common -ldl
 endif
