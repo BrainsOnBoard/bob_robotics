@@ -22,10 +22,10 @@
 using namespace BoBRobotics::Video;
 
 int
-main(int argc, char **argv)
+main()
 {
     //Initialize Gazebo camera display
-    GazeboCameraInput cam("/gazebo/default/my_simple_cart/camera/link/camera/image");
+    GazeboCameraInput cam("/gazebo/default/differential_drive_robot/camera/link/camera/image");
     Display display(cam);
     display.run();
 }

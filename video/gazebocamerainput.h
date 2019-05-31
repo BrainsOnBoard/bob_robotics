@@ -23,6 +23,7 @@
 
 // Standard C++ includes
 #include <stdexcept>
+#include <mutex>
 
 namespace BoBRobotics {
 namespace Video {
@@ -38,7 +39,7 @@ class GazeboCameraInput : public Input
 public:
     //! Create a new video stream
     GazeboCameraInput()
-      : GazeboCameraInput("/gazebo/default/my_simple_cart/camera/link/camera/image")
+      : GazeboCameraInput()
     {}
 
     /*!
@@ -49,7 +50,7 @@ public:
      * @param cameraName The short name to use for this camera (see getCameraName())
      */
     
-    GazeboCameraInput(const std::string &topic, const std::string &cameraName = GazeboCameraDeviceName)
+    GazeboCameraInput(const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = GazeboCameraDeviceName)
       : m_CameraTopic(topic), m_CameraName(cameraName)
     {
         // Load gazebo as a client
@@ -66,24 +67,9 @@ public:
         // m_OutSize.width = 320;
         // m_OutSize.height = 240;
 
-        std::cerr << "Subsribed to "<< m_CameraTopic <<"\n";
-
+        LOG_INFO << "Subsribed to "<< m_CameraTopic <<"\n";
     }
 
-    /*!
-     * \brief Create a video stream for a specific device and a specified resolution
-     *
-     * @param device Integer or string representation of device (passed to
-     *        cv::VideoCapture's constructor)
-     * @param outSize Output resolution of camera
-     * @param cameraName The short name to use for this camera (see getCameraName())
-     */
-    GazeboCameraInput(const std::string &topic, const cv::Size &outSize,
-                const std::string &cameraName = GazeboCameraDeviceName)
-      : GazeboCameraInput(topic, cameraName)
-    {
-        setOutputSize(outSize);
-    }
 
     //------------------------------------------------------------------------
     // Video::Input virtuals
@@ -106,10 +92,6 @@ public:
         return true;
     }
 
-    virtual void setOutputSize(const cv::Size &outSize) override
-    {
-        
-    }
 
 private:
     const std::string m_CameraTopic;

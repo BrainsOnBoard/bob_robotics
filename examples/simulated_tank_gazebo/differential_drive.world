@@ -11,9 +11,9 @@
     </include>
 
     <!-- A testing model that includes the Velodyne sensor model -->
-    <model name="my_simple_cart">
+    <model name="differential_drive_robot">
       <include>
-        <uri>simple_cart</uri>
+        <uri>differential_drive_robot</uri>
       </include>
 
       <!-- Attach the plugin to this model -->

@@ -44,8 +44,8 @@ bob_main(int, char **)
     gazebo::transport::NodePtr node(new gazebo::transport::Node());
     node->Init();
   
-    // Publish to the  simple_cart topic
-    gazebo::transport::PublisherPtr pub =node->Advertise<gazebo::msgs::Vector3d>("~/my_simple_cart/vel_cmd");
+    // Publish to the  differential_drive_robot topic
+    gazebo::transport::PublisherPtr pub =node->Advertise<gazebo::msgs::Vector3d>("~/differential_drive_robot/vel_cmd");
 
     // Wait for a subscriber to connect to this publisher
     pub->WaitForConnection();
@@ -54,7 +54,6 @@ bob_main(int, char **)
     gazebo::msgs::Vector3d msg;
     /************************************Gazebo setup end************/
 
-    
     Robots::GazeboTank<> robot(5_mps); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
