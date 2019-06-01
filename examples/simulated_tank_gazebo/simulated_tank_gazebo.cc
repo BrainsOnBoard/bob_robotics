@@ -3,7 +3,9 @@
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "robots/gazebo_tank.h"
-
+#include "common/logging.h"
+#include "video/gazebocamerainput.h"
+#include "video/display.h"
 // Third-party includes
 #include "third_party/units.h"
 
@@ -11,6 +13,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <string>
 // Gazebo includes
 #include <gazebo/gazebo_config.h>
 #include <gazebo/transport/transport.hh>
@@ -29,9 +32,10 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::literals;
+using namespace BoBRobotics::Video;
 
 int
-bob_main(int, char **)
+bob_main(int argc, char **argv)
 {
     /************************************Gazebo setup************/
     // Load gazebo as a client
@@ -53,11 +57,17 @@ bob_main(int, char **)
     // Create a a vector3 message
     gazebo::msgs::Vector3d msg;
     /************************************Gazebo setup end************/
-
+    //Initialize Gazebo camera display if -d arguement supplied
+    GazeboCameraInput cam(node, "/gazebo/default/differential_drive_robot/camera/link/camera/image");
+    Display display(cam);
+    if(argc==2 && std::string("-d").compare(argv[1])==0){
+        std::cout << "Display switch enabled.\n";
+        display.runInBackground();
+    }
+    
     Robots::GazeboTank<> robot(5_mps); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
-
 
     std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
 
@@ -88,5 +98,7 @@ bob_main(int, char **)
     #else
         gazebo::client::shutdown();
     #endif
+    std::cout <<"Shutting down...\n";
+
     return EXIT_SUCCESS;
 }

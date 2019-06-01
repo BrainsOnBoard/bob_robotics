@@ -28,30 +28,26 @@
 namespace BoBRobotics {
 namespace Video {
 
-constexpr const char *GazeboCameraDeviceName = "Gazebo Camera";
+constexpr const char *GazeboCameraDeviceName = "gazebo_camera";
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::GazeboCameraInput
 //----------------------------------------------------------------------------
-//! A thin wrapper for reading from any video source supported by OpenCV
+//! A thin wrapper for reading from any Gazebo camera feed
 class GazeboCameraInput : public Input
 {
 public:
-    //! Create a new video stream
-    GazeboCameraInput()
-      : GazeboCameraInput()
-    {}
-
     /*!
-     * \brief Create a video stream for a specific device
-     *
-     * @param device Integer or string representation of device (passed to
-     *        cv::VideoCapture's constructor)
-     * @param cameraName The short name to use for this camera (see getCameraName())
+     * \brief Create a video stream using a new transport node and default topic
      */
-    
-    GazeboCameraInput(const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = GazeboCameraDeviceName)
-      : m_CameraTopic(topic), m_CameraName(cameraName)
+    GazeboCameraInput()
+    : GazeboCameraInput("/gazebo/default/camera/link/camera/image")
+    {}
+    /*!
+     * \brief Create a video stream using a new transport node
+     */
+    GazeboCameraInput(const std::string &topic, const std::string &cameraName = GazeboCameraDeviceName)
+    : m_CameraTopic(topic), m_CameraName(cameraName)
     {
         // Load gazebo as a client
         #if GAZEBO_MAJOR_VERSION < 6
@@ -62,21 +58,32 @@ public:
         //Setup image subscription node
         m_ImageNode= gazebo::transport::NodePtr(new gazebo::transport::Node());
         m_ImageNode->Init();
-        // Subscribe to the topic, and register a callback
-        m_ImageSub = m_ImageNode->Subscribe(m_CameraTopic, &GazeboCameraInput::OnImageMsg, this);
-        // m_OutSize.width = 320;
-        // m_OutSize.height = 240;
-
-        LOG_INFO << "Subsribed to "<< m_CameraTopic <<"\n";
+        subscribeToGazeboCamera();
+    }
+    /*!
+     * \brief Create a video stream for a Gazebo topic using a user-provided tranport node
+     *
+     * @param node Gazebo transport node
+     * @param topic Gazebo transport topic on which to subscribe
+     */
+    
+    GazeboCameraInput(gazebo::transport::NodePtr node, const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = GazeboCameraDeviceName)
+      : m_CameraTopic(topic), m_CameraName(cameraName), m_ImageNode(node)
+    {
+        subscribeToGazeboCamera();
     }
 
-
+    void subscribeToGazeboCamera(){
+        // Subscribe to the topic, and register a callback
+        m_ImageSub = m_ImageNode->Subscribe(m_CameraTopic, &GazeboCameraInput::OnImageMsg, this);
+        LOG_INFO << "Subsribed to "<< m_CameraTopic <<"\n";
+    }
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
     virtual std::string getCameraName() const override
     {
-        return m_CameraName;
+        return "gazebo_camera";
     }
 
     virtual cv::Size getOutputSize() const override
@@ -86,8 +93,11 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
+        if(m_OutSize.width==0 || m_OutSize.height==0)
+            return false;
+        m_Mtx.lock();
         outFrame = m_ReceivedImage;
-
+        m_Mtx.unlock();
         // If there's no error, then we have updated frame and so return true
         return true;
     }
@@ -96,19 +106,19 @@ public:
 private:
     const std::string m_CameraTopic;
     std::string m_CameraName;
-    gazebo::transport::NodePtr m_ImageNode;
     gazebo::transport::SubscriberPtr m_ImageSub;
+    gazebo::transport::NodePtr m_ImageNode;
     cv::Size m_OutSize;
     char *m_Data;
     cv::Mat m_ReceivedImage;
-    
+    std::mutex m_Mtx;
     void OnImageMsg(ConstImageStampedPtr &msg)
     {
         // std::cout << msg->image().width() << std::endl;
         // std::cout << msg->image().height() << std::endl;
         // std::cout << msg->image().pixel_format() << std::endl;
         // std::cout << std::endl;
-        
+        m_Mtx.lock();
         m_OutSize.width = (int) msg->image().width();
         m_OutSize.height = (int) msg->image().height();
         m_Data = new char[msg->image().data().length() + 1];
@@ -120,6 +130,7 @@ private:
         // cv::waitKey(1);
         delete m_Data;  // DO NOT FORGET TO DELETE THIS, 
                     // ELSE GAZEBO WILL TAKE ALL YOUR MEMORY
+        m_Mtx.unlock();
     }
 }; // GazeboCameraInput
 } // Video
