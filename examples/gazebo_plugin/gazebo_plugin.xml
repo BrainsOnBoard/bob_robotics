@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<sdf version="1.4">
-  <world name="default">
-    <plugin name="gazebo_plugin" filename="libgazebo_plugin.so"/>
-  </world>
-</sdf>
