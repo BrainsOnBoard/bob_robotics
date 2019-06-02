@@ -76,7 +76,7 @@ public:
 
     void subscribeToGazeboCamera(){
         // Subscribe to the topic, and register a callback
-        m_HaveReceivedFrames = ATOMIC_VAR_INIT(false);
+        m_HaveReceivedFrames = false;
         m_ImageSub = m_ImageNode->Subscribe(m_CameraTopic, &GazeboCameraInput::OnImageMsg, this);
         LOG_INFO << "Subsribed to "<< m_CameraTopic <<"\n";
     }
@@ -98,7 +98,6 @@ public:
         if(!m_HaveReceivedFrames.load())
             return false;
         std::lock_guard<std::mutex> lck(m_Mtx);
-        m_ReceivedImage = cv::Mat(m_OutSize.height, m_OutSize.width, CV_8UC3, m_Data);
         outFrame = m_ReceivedImage;
         // If there's no error, then we have updated frame and so return true
         return true;
@@ -121,13 +120,13 @@ private:
         std::lock_guard<std::mutex> lck(m_Mtx);
 
         if(!m_HaveReceivedFrames.load()){
-            // Assuming image size remains constant at runtime, we can allocate memory for m_Data only once
+            // Assuming image size remains constant at runtime, we can set the OutSize only once
             m_OutSize.width = (int) msg->image().width();
             m_OutSize.height = (int) msg->image().height();
-            m_Data = new char[msg->image().data().length() + 1];
             m_HaveReceivedFrames.store(true);
         }    
-        memcpy(m_Data, msg->image().data().c_str(), msg->image().data().length());
+        m_ReceivedImage.create(msg->image().height(), msg->image().width(), CV_8UC3);
+        memcpy(m_ReceivedImage.data, msg->image().data().c_str(), msg->image().data().length());
     }
 }; // GazeboCameraInput
 } // Video

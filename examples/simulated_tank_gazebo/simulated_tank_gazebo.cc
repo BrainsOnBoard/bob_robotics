@@ -13,7 +13,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
-#include <string>
+#include <cstring>
 // Gazebo includes
 #include <gazebo/gazebo_config.h>
 #include <gazebo/transport/transport.hh>
@@ -60,7 +60,7 @@ bob_main(int argc, char **argv)
     //Initialize Gazebo camera display if -d arguement supplied
     GazeboCameraInput cam(node, "/gazebo/default/differential_drive_robot/camera/link/camera/image");
     Display display(cam);
-    if(argc==2 && std::string("-d").compare(argv[1])==0){
+    if(argc >= 2 && strcmp(argv[1], "-d") == 0) {
         std::cout << "Display switch enabled.\n";
         display.runInBackground();
     }
