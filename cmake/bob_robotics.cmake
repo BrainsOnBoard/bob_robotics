@@ -178,9 +178,6 @@ macro(always_included_packages)
     # with the include path and link flags and it seems that this target isn't
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
-    if(NOT TARGET Eigen3::Eigen)
-        find_package(Eigen3 QUIET)
-    endif()
     if(NOT TARGET OpenMP::OpenMP_CXX)
         find_package(OpenMP QUIET)
     endif()
@@ -188,10 +185,15 @@ macro(always_included_packages)
         find_package(GLEW QUIET)
     endif()
 
-    # On Unix we use pkg-config to find SDL2, because the CMake package may not
-    # be present
-    if(NOT UNIX AND NOT TARGET SDL2::SDL2)
-        find_package(SDL2)
+    # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake
+    # packages may not be present
+    if(NOT UNIX)
+        if(NOT TARGET SDL2::SDL2)
+            find_package(SDL2)
+        endif()
+        if(NOT TARGET Eigen3::Eigen)
+            find_package(Eigen3 QUIET)
+        endif()
     endif()
 endmacro()
 
@@ -394,10 +396,14 @@ function(BoB_external_libraries)
         elseif(${lib} STREQUAL opencv)
             BoB_find_package(OpenCV REQUIRED)
         elseif(${lib} STREQUAL eigen3)
-            if(NOT TARGET Eigen3::Eigen)
-                message(FATAL_ERROR "Eigen 3 not found")
+            if(UNIX)
+                BoB_add_pkg_config_libraries(eigen3)
+            else()
+                if(NOT TARGET Eigen3::Eigen)
+                    message(FATAL_ERROR "Eigen 3 not found")
+                endif()
+                BoB_add_link_libraries(Eigen3::Eigen)
             endif()
-            BoB_add_link_libraries(Eigen3::Eigen)
 
             # For CMake < 3.9, we need to make the target ourselves
             if(NOT OpenMP_CXX_FOUND)
