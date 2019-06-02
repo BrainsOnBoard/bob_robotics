@@ -24,6 +24,7 @@
 // Standard C++ includes
 #include <stdexcept>
 #include <mutex>
+#include <atomic>
 
 namespace BoBRobotics {
 namespace Video {
@@ -75,6 +76,7 @@ public:
 
     void subscribeToGazeboCamera(){
         // Subscribe to the topic, and register a callback
+        m_HaveReceivedFrames = ATOMIC_VAR_INIT(false);
         m_ImageSub = m_ImageNode->Subscribe(m_CameraTopic, &GazeboCameraInput::OnImageMsg, this);
         LOG_INFO << "Subsribed to "<< m_CameraTopic <<"\n";
     }
@@ -93,11 +95,11 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
-        if(m_OutSize.width==0 || m_OutSize.height==0)
+        if(!m_HaveReceivedFrames.load())
             return false;
-        m_Mtx.lock();
+        std::lock_guard<std::mutex> lck(m_Mtx);
+        m_ReceivedImage = cv::Mat(m_OutSize.height, m_OutSize.width, CV_8UC3, m_Data);
         outFrame = m_ReceivedImage;
-        m_Mtx.unlock();
         // If there's no error, then we have updated frame and so return true
         return true;
     }
@@ -112,25 +114,20 @@ private:
     char *m_Data;
     cv::Mat m_ReceivedImage;
     std::mutex m_Mtx;
+    std::atomic<bool> m_HaveReceivedFrames;
+
     void OnImageMsg(ConstImageStampedPtr &msg)
     {
-        // std::cout << msg->image().width() << std::endl;
-        // std::cout << msg->image().height() << std::endl;
-        // std::cout << msg->image().pixel_format() << std::endl;
-        // std::cout << std::endl;
-        m_Mtx.lock();
-        m_OutSize.width = (int) msg->image().width();
-        m_OutSize.height = (int) msg->image().height();
-        m_Data = new char[msg->image().data().length() + 1];
+        std::lock_guard<std::mutex> lck(m_Mtx);
 
+        if(!m_HaveReceivedFrames.load()){
+            // Assuming image size remains constant at runtime, we can allocate memory for m_Data only once
+            m_OutSize.width = (int) msg->image().width();
+            m_OutSize.height = (int) msg->image().height();
+            m_Data = new char[msg->image().data().length() + 1];
+            m_HaveReceivedFrames.store(true);
+        }    
         memcpy(m_Data, msg->image().data().c_str(), msg->image().data().length());
-        m_ReceivedImage = cv::Mat(m_OutSize.height, m_OutSize.width, CV_8UC3, m_Data);
-
-        // cv::imshow("camera", m_ReceivedImage);
-        // cv::waitKey(1);
-        delete m_Data;  // DO NOT FORGET TO DELETE THIS, 
-                    // ELSE GAZEBO WILL TAKE ALL YOUR MEMORY
-        m_Mtx.unlock();
     }
 }; // GazeboCameraInput
 } // Video
