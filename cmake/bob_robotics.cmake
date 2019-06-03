@@ -178,7 +178,7 @@ macro(always_included_packages)
     # with the include path and link flags and it seems that this target isn't
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
-    if(NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT TARGET OpenMP::OpenMP_CXX)
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
@@ -406,7 +406,9 @@ function(BoB_external_libraries)
             endif()
 
             # For CMake < 3.9, we need to make the target ourselves
-            if(NOT OpenMP_CXX_FOUND)
+            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+                add_compile_flags(-fopenmp)
+            elseif(NOT OpenMP_CXX_FOUND)
                 find_package(Threads REQUIRED)
                 add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
                 set_property(TARGET OpenMP::OpenMP_CXX
