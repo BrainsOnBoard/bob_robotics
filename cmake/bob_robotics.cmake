@@ -227,10 +227,6 @@ macro(BoB_build)
         add_definitions(-DDEBUG)
     endif()
 
-    # Use C++14
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
     # Flags for gcc and clang
     if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
         set(GNU_TYPE_COMPILER TRUE)
@@ -245,6 +241,14 @@ macro(BoB_build)
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+    endif()
+
+    # Use C++14
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_compile_flags(-std=c++14)
+    else()
+        set(CMAKE_CXX_STANDARD 14)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
     endif()
 
     # Set include dirs and link libraries for this module/project
