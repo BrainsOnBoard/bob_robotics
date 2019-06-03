@@ -71,7 +71,7 @@ int
 main(int argc, char **argv)
 {
     if (argc < 2) {
-        LOGW << "Error: must specify a route, e.g.:"
+        LOGE << "Must specify a route, e.g.:"
              << "\t" << argv[0] << " ../../tools/ant_world_db_creator/ant1_route1 [num training repititions]";
         return 1;
     }

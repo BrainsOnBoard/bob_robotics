@@ -57,7 +57,6 @@ class PositionerExample
 private:
     using Event = FSM<State>::StateHandler::Event;
 
-
 public:
     PositionerExample()
       : m_Tank(m_Client)
@@ -140,8 +139,8 @@ public:
                 const auto position = objectData.getPosition();
                 const auto attitude = objectData.getAttitude();
                 if (objectData.timeSinceReceived() > 10s) {
-                    LOGW << "Error: Could not get position from Vicon system\n"
-                              << "Stopping trial";
+                    LOGE << "Could not get position from Vicon system\n"
+                         << "Stopping trial";
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
@@ -152,9 +151,8 @@ public:
                     LOGI << "Final position: " << position.x() << ", " << position.y();
                     LOGI << "Goal: " << Goal;
                     LOGI << "Distance to goal: "
-                              << Goal.distance2D(position)
-                              << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                             ;
+                         << Goal.distance2D(position)
+                         << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")";
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
@@ -173,9 +171,8 @@ public:
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
                     LOGI << "Distance to goal: "
-                                << distance
-                                << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")"
-                               ;
+                         << distance
+                         << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")";
                 }
             }
             }

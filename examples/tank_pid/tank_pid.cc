@@ -57,8 +57,7 @@ printGoalStats(const Vector2<millimeter_t> &goal, const Vector3<millimeter_t> &r
 {
     LOGI << "Goal: " << goal;
     LOGI << "Distance to goal: "
-              << goal.distance2D(robotPosition)
-             ;
+         << goal.distance2D(robotPosition);
 }
 
 int
@@ -190,8 +189,7 @@ bob_main(int argc, char **argv)
         for (auto &goal : goals) {
             LOGI << "\t- " << goal;
         }
-        LOGI
-                  << "Press Y to start homing";
+        LOGI << "Press Y to start homing";
 
         // For plotting goal positions
         std::vector<double> goalX, goalY, currentGoalX(1), currentGoalY(1);
@@ -231,8 +229,8 @@ bob_main(int argc, char **argv)
                 if (objectData.timeSinceReceived() > 10s) {
                     robot.stopMoving();
                     runPositioner = false;
-                    LOGW << "Error: Could not get position from Vicon system\n"
-                              << "Stopping trial";
+                    LOGW << "Could not get position from Vicon system\n"
+                         << "Stopping trial";
                     continue;
                 }
 
@@ -247,8 +245,8 @@ bob_main(int argc, char **argv)
                     goalsIter++;
 
                     LOGI << "Reached goal "
-                              << std::distance(goals.begin(), goalsIter)
-                              << "/" << goals.size();
+                         << std::distance(goals.begin(), goalsIter)
+                         << "/" << goals.size();
                     LOGI << "Final position: " << position;
 
                     robot.stopMoving();
