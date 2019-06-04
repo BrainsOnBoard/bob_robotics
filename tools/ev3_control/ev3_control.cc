@@ -67,7 +67,7 @@ int bob_main(int, char **)
         catcher.check();
 
         // If there's a new frame, send it, else sleep
-        if (camera->readFrame(frame)) {
+        if (camera && camera->readFrame(frame)) {
             netSink->sendFrame(frame);
         } else {
             std::this_thread::sleep_for(25ms);
