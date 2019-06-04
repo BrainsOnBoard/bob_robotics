@@ -15,12 +15,12 @@ namespace Net {
 class IMUNetSource {
 public:
     IMUNetSource(Net::Connection &);
-    units::angle::radian_t getHeading();
+    units::angle::radian_t getYaw();
 
 private:
     Net::Connection &m_Connection;
     Semaphore m_Semaphore;
-    std::atomic<double> m_Heading;
+    std::atomic<double> m_Yaw; // in radians
 
 }; // IMUNetSource
 } // Net

@@ -12,17 +12,17 @@ IMUNetSource::IMUNetSource(Net::Connection &connection)
     connection.setCommandHandler("IMU_ANG",
         [this](Net::Connection &, const Net::Command &command)
         {
-            m_Heading = std::stod(command.at(1));
+            m_Yaw = std::stod(command.at(1));
             m_Semaphore.notify();
         });
 }
 
 units::angle::radian_t
-IMUNetSource::getHeading()
+IMUNetSource::getYaw()
 {
     m_Connection.getSocketWriter().send("IMU_REQ\n");
     m_Semaphore.wait();
-    return units::angle::radian_t{ m_Heading };
+    return units::angle::radian_t{ m_Yaw };
 }
 
 } // Net
