@@ -101,10 +101,10 @@ bool Connection::parseCommand(Command &command)
         if (handler) {
             handler(*this, command);
         }
-        return true;
     } catch (std::out_of_range &) {
-        throw BadCommandError();
+        LOGW << "Unknown command received (" << command[0] << "); ignoring";
     }
+    return true;
 }
 
 Command Connection::readCommand()
