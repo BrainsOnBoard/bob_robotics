@@ -76,7 +76,7 @@ float MBMemory::test(const cv::Mat &image) const
 {
     // Get number of EN spikes
     unsigned int numENSpikes = std::get<2>(present(image, false));
-    //std::cout << "\t" << numENSpikes << " EN spikes" << std::endl;
+    //LOGI << "\t" << numENSpikes << " EN spikes";
 
     // Largest difference would be expressed by EN firing every timestep
     return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
@@ -202,7 +202,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     for(unsigned int s = 0; s < MBParams::numKC * MBParams::numEN; s++) {
         terminalStream << gkcToEN[s] << "," << ckcToEN[s] * std::exp(-(t - tCkcToEN[s]) / 40.0) << std::endl;
     }
-    std::cout << "Final dopamine level:" << dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD) << std::endl;
+    LOGI << "Final dopamine level:" << dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD);
 #endif  // RECORD_TERMINAL_SYNAPSE_STATE
 
 #ifdef RECORD_SPIKES
@@ -216,7 +216,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
         pullgkcToENFromDevice();
 
         unsigned int numUsedWeights = std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
-        std::cout << "\t" << numWeights - numUsedWeights << " unused weights" << std::endl;
+        LOGI << "\t" << numWeights - numUsedWeights << " unused weights";
     }
 
     return std::make_tuple(numPNSpikes, numKCSpikes, numENSpikes);

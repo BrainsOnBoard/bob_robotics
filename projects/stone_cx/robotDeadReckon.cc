@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/main.h"
+#include "common/logging.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/server.h"
@@ -112,7 +113,7 @@ int bob_main(int argc, char *argv[])
 
     // If command line arguments are specified, run connection
     if(doVisualise) {
-        std::cout << "Streaming activity over network" << std::endl;
+        LOGI << "Streaming activity over network";
 
         // Create server and sink for sending activity image over network
         server = std::make_unique<Net::Server>();
@@ -184,7 +185,7 @@ int bob_main(int argc, char *argv[])
         pushspeedTN2ToDevice();
 
 #ifdef RECORD_SENSORS
-        data << imuHeading << ", " << speed << std::endl;
+        data << imuHeading << ", " << speed;
 #endif
         // Step network
         stepTime();
@@ -223,8 +224,8 @@ int bob_main(int argc, char *argv[])
 
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
-                std::cout << "Returning home!" << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
+                LOGI << "Returning home!";
                 outbound = false;
             }
 
@@ -261,8 +262,8 @@ int bob_main(int argc, char *argv[])
     imuThread.join();
 
     // Show stats
-    std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
-    std::cout << "IMU samples: " << numIMUSamples << ", ";
+    LOGI << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
+    LOGI << "IMU samples: " << numIMUSamples << ", ";
 
     // Exit
     return EXIT_SUCCESS;

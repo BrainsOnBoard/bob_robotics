@@ -2,16 +2,16 @@
 
 #include "robotCommon.h"
 
-// Standard C++ includes
-#include <algorithm>
-#include <iostream>
-#include <numeric>
-
-// Common includes
+// BoB robotics includes
+#include "common/logging.h"
 #include "robots/tank.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
+
+// Standard C++ includes
+#include <algorithm>
+#include <numeric>
 
 float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Tank &motor, bool display)
 {
@@ -22,7 +22,7 @@ float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Tank &motor,
     // Steer based on signal
     const float steering = leftMotor - rightMotor;
     if(display) {
-        std::cout << "Steer:" << steering << std::endl;
+        LOGI << "Steer:" << steering;
     }
 
     // Clamp motor input values to be between -1 and 1

@@ -12,7 +12,6 @@
 // Standard C++ includes
 #include <array>
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 
 namespace {

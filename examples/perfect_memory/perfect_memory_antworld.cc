@@ -10,9 +10,6 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// Standard C++ includes
-#include <iostream>
-
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 
@@ -22,7 +19,7 @@ trainRoute(T &pm, const filesystem::path &executablePath)
 {
     // Load snapshots
     pm.trainRoute(executablePath / ".." / ".." / "tools" / "ant_world_db_creator" / "ant1_route1", true);
-    std::cout << "Loaded " << pm.getNumSnapshots() << " snapshots" << std::endl;
+    LOGI << "Loaded " << pm.getNumSnapshots() << " snapshots";
 }
 
 int
@@ -51,7 +48,7 @@ main(int, char **argv)
     units::angle::degree_t heading;
 
     {
-        std::cout << "Using ant world rotater..." << std::endl;
+        LOGI << "Using ant world rotater...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, AntWorldRotater> pm(RenderSize);
         trainRoute(pm, execuablePath);
 
@@ -59,17 +56,17 @@ main(int, char **argv)
         float difference;
         std::vector<std::vector<float>> allDifferences;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(agent, 2_deg);
-        std::cout << "Heading: " << heading << std::endl;
-        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-        std::cout << "Difference score: " << difference << std::endl;
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
 
         // Plot RIDF
         plotRIDF(allDifferences[snapshot]);
-        std::cout << std::endl;
+        LOGI;
     }
 
     {
-        std::cout << "Using in silico rotater..." << std::endl;
+        LOGI << "Using in silico rotater...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, InSilicoRotater> pm(RenderSize);
         trainRoute(pm, execuablePath);
 
@@ -81,12 +78,12 @@ main(int, char **argv)
         float difference;
         std::vector<std::vector<float>> allDifferences;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(fr);
-        std::cout << "Heading: " << heading << std::endl;
-        std::cout << "Best-matching snapshot: #" << snapshot << std::endl;
-        std::cout << "Difference score: " << difference << std::endl;
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
 
         // Plot RIDF
         plotRIDF(allDifferences[snapshot]);
-        std::cout << std::endl;
+        LOGI;
     }
 }

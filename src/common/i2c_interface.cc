@@ -5,7 +5,6 @@
 #include "common/logging.h"
 
 // Standard C++ includes
-#include <iostream>
 #include <string>
 #include <vector>
 

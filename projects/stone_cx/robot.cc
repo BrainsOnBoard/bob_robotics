@@ -4,9 +4,10 @@
 #include <thread>
 
 // Common includes
-#include "hid/joystick.h"
 #include "common/lm9ds1_imu.h"
+#include "common/logging.h"
 #include "common/timer.h"
+#include "hid/joystick.h"
 #include "imgproc/opencv_optical_flow.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "robots/tank.h"
@@ -233,8 +234,8 @@ int main(int argc, char *argv[])
 
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
-                std::cout << "Returning home!" << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
+                LOGI << "Returning home!";
                 outbound = false;
             }
 
@@ -271,9 +272,9 @@ int main(int argc, char *argv[])
     opticalFlowThread.join();
 
     // Show stats
-    std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
-    std::cout << "IMU samples: " << numIMUSamples << ", ";
-    std::cout << "Camera frames: " << numCameraFrames << std::endl;
+    LOGI << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
+    LOGI << "IMU samples: " << numIMUSamples << ", ";
+    LOGI << "Camera frames: " << numCameraFrames;
 
     // Stop motor
     motor.tank(0.0f, 0.0f);

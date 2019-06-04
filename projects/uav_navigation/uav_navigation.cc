@@ -1,5 +1,7 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/macros.h"
+#include "common/main.h"
 #include "hid/joystick.h"
 #include "navigation/perfect_memory.h"
 #include "os/keycodes.h"
@@ -19,7 +21,6 @@
 #include <algorithm>
 #include <chrono>
 #include <exception>
-#include <iostream>
 #include <limits>
 #include <thread>
 #include <utility>
@@ -49,7 +50,7 @@ public:
         BOB_ASSERT(halfScanWidth > 0_deg);
         BOB_ASSERT(yawSpeed > 0_deg_per_s);
 
-        std::cout << "Connected to drone" << std::endl;
+        LOGI << "Connected to drone";
 
         m_Joystick.addHandler([this](HID::JButton button, bool pressed) {
             return onButtonEvent(button, pressed);
@@ -70,7 +71,7 @@ public:
         const nanosecond_t halfScanDurationUnits = m_HalfScanWidth / m_YawSpeed;
         const std::chrono::nanoseconds halfScanDuration((int64_t) halfScanDurationUnits.value());
 
-        std::cout << "Scanning for " << static_cast<millisecond_t>(halfScanDurationUnits) << std::endl;
+        LOGI << "Scanning for " << static_cast<millisecond_t>(halfScanDurationUnits);
 
         auto &camera = m_Drone.getVideoStream();
         DataVector data;
@@ -150,13 +151,13 @@ private:
                 if (!m_Frame.empty()) {
                     cv::cvtColor(m_Frame, m_FrameGreyscale, cv::COLOR_RGB2GRAY);
                     m_PerfectMemory.train(m_FrameGreyscale);
-                    std::cout << "Snapshot added (n=" << m_PerfectMemory.getNumSnapshots()
-                              << ")" << std::endl;
+                    LOGI << "Snapshot added (n=" << m_PerfectMemory.getNumSnapshots()
+                         << ")";
                 }
                 return true;
             case HID::JButton::Y:
                 m_PerfectMemory.clearMemory();
-                std::cout << "Memory cleared" << std::endl;
+                LOGI << "Memory cleared";
                 return true;
             case HID::JButton::Start:
                 startNavigating();
@@ -172,7 +173,7 @@ private:
     {
         m_Drone.stopMoving();
         m_NavigationState = NotNavigating;
-        std::cout << "Stopping navigation" << std::endl;
+        LOGI << "Stopping navigation";
     }
 
     void startNavigating()
@@ -180,7 +181,7 @@ private:
         m_StartTime = now();
         m_Drone.turnOnTheSpot(-m_ProportionYawSpeed);
         m_NavigationState = MovingAntiClockwiseOut;
-        std::cout << "Scanning anticlockwise" << std::endl;
+        LOGI << "Scanning anticlockwise";
     }
 
     void startReturnToCentre(TimeType currentTime)
@@ -188,7 +189,7 @@ private:
         m_StartTime = currentTime;
         m_NavigationState = ReturnToCentre;
         m_Drone.turnOnTheSpot(-m_ProportionYawSpeed);
-        std::cout << "Returning to centre" << std::endl;
+        LOGI << "Returning to centre";
     }
 
     void startScanning(TimeType currentTime)
@@ -196,19 +197,18 @@ private:
         m_StartTime = m_ScanStartTime = currentTime;
         m_NavigationState = Scanning;
         m_Drone.turnOnTheSpot(m_ProportionYawSpeed);
-        std::cout << "Scanning clockwise" << std::endl;
+        LOGI << "Scanning clockwise";
     }
 
     void plotNavigationResults(DataVector &data)
     {
         std::vector<float> headings;
         headings.reserve(data.size());
-        std::transform(data.cbegin(), data.cend(), std::back_inserter(headings),
-            [this](const auto &datum) {
-                const second_t timeUnits = datum.first - m_ScanStartTime;
-                const degree_t heading = m_YawSpeed * timeUnits - m_HalfScanWidth;
-                return heading.value();
-            });
+        std::transform(data.cbegin(), data.cend(), std::back_inserter(headings), [this](const auto &datum) {
+            const second_t timeUnits = datum.first - m_ScanStartTime;
+            const degree_t heading = m_YawSpeed * timeUnits - m_HalfScanWidth;
+            return heading.value();
+        });
 
         const auto normalise = [](const auto &datum) {
             return datum.second / 255.f;
@@ -219,8 +219,8 @@ private:
 
         const auto bestIter = std::min_element(scores.cbegin(), scores.cend());
         const size_t bestIndex = std::distance(scores.cbegin(), bestIter);
-        std::cout << "Best match was " << *bestIter
-                  << " at approx " << headings[bestIndex] << std::endl;
+        LOGI << "Best match was " << *bestIter
+             << " at approx " << headings[bestIndex];
 
         plt::plot(headings, scores);
 
@@ -233,13 +233,9 @@ private:
 };
 
 int
-main()
+bob_main(int, char **)
 {
-    try {
-        UAVNavigation nav(45_deg, 20_deg_per_s);
-        nav.mainLoop();
-    } catch (std::exception &e) {
-        std::cerr << "Uncaught exception: " << e.what() << std::endl;
-        return 1;
-    }
+    UAVNavigation nav(45_deg, 20_deg_per_s);
+    nav.mainLoop();
+    return EXIT_SUCCESS;
 }

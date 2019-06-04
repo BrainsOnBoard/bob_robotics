@@ -3,6 +3,7 @@
 #include <numeric>
 
 // Common includes
+#include "common/logging.h"
 #include "hid/joystick.h"
 #include "genn_utils/analogue_csv_recorder.h"
 #include "robots/tank.h"
@@ -57,7 +58,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    std::cout << "Start VICON frame:" << vicon.getObjectData().getFrameNumber() << std::endl;
+    LOGI << "Start VICON frame:" << vicon.getObjectData().getFrameNumber();
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -98,7 +99,7 @@ int main()
         }
 
         if(numTicks % 100 == 0) {
-            std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")" << std::endl;
+            LOGI <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")";
         }
 
         // Push inputs to device
@@ -131,9 +132,9 @@ int main()
 
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
-                std::cout << "Returning home!" << std::endl;
-                std::cout << "Turn around VICON frame:" << objectData.getFrameNumber() << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
+                LOGI << "Returning home!";
+                LOGI << "Turn around VICON frame:" << objectData.getFrameNumber();
                 outbound = false;
             }
         }
@@ -162,7 +163,7 @@ int main()
     }
 
     // Show overflow stats
-    std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS" << std::endl;
+    LOGI << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS";
 
     // Stop motor
     motor.tank(0.0f, 0.0f);

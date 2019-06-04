@@ -5,7 +5,6 @@
 
 // Standard C++ includes
 #include <fstream>
-#include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <tuple>

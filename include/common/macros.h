@@ -1,7 +1,11 @@
 #pragma once
 
+#ifdef _WIN32
+// BoB robotics includes
+#include "common/logging.h"
+#endif
+
 // Standard C++ includes
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -18,7 +22,7 @@ public:
       : std::runtime_error("Assertion failed: " + test + " (in " + file + " at line " + std::to_string(line) + ")")
     {
 #ifdef _WIN32
-        std::cout << what();
+        LOG_FATAL << what();
 #endif
     }
 }; // AssertionFailedException

@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/bebop/bebop.h"
@@ -6,7 +7,6 @@
 // Standard C++ includes
 #include <atomic>
 #include <chrono>
-#include <exception>
 #include <iostream>
 #include <thread>
 
@@ -57,14 +57,14 @@ bob_main(int, char **)
             }
             meter_t z(stod(str));
 
-            std::cout << "Enter yawChange: ";
+            std::cout << "Enter yaw change: ";
             std::getline(std::cin, str);
             if (str.empty()) {
                 return 0;
             }
             degree_t yawChange(stod(str));
 
-            std::cout << "Starting relative move..." << std::endl;
+            LOGI << "Starting relative move...";
             drone.relativeMove(x, y, z, yawChange);
             while (drone.getRelativeMoveState() == Bebop::RelativeMoveState::Moving && !stopFlag) {
                 std::this_thread::sleep_for(25ms);
@@ -78,16 +78,16 @@ bob_main(int, char **)
         drone.resetRelativeMoveState();
         switch (moveState) {
         case Bebop::RelativeMoveState::ErrorBusy:
-            std::cerr << "Error: drone device is busy" << std::endl;
+            LOGE << "Drone device is busy";
             continue;
         case Bebop::RelativeMoveState::ErrorInterrupted:
-            std::cerr << "Relative move operation was interrupted" << std::endl;
+            LOGE << "Relative move operation was interrupted";
             break;
         case Bebop::RelativeMoveState::ErrorUnknown:
-            std::cerr << "Unknown error occurred while doing relative move" << std::endl;
+            LOGE << "Unknown error occurred while doing relative move";
             continue;
         case Bebop::RelativeMoveState::ErrorNotAvailable:
-            std::cerr << "Error: Relative move is not available on this device" << std::endl;
+            LOGE << "Relative move is not available on this device";
             continue;
         default:
             break;
@@ -96,8 +96,7 @@ bob_main(int, char **)
         Vector3<meter_t> positionChange;
         degree_t yawChange;
         std::tie(positionChange, yawChange) = drone.getRelativeMovePoseDifference();
-        std::cout << "Drone moved by: (" << positionChange[0] << ", "
-                  << positionChange[1] << ", " << positionChange[2] << ") and " << yawChange << std::endl;
+        LOGI << "Drone moved by: (" << positionChange << ") and " << yawChange;
     }
 
     return EXIT_SUCCESS;

@@ -1,7 +1,6 @@
 // **TODO**: This currently doesn't compile. It needs converting to GeNN 4.
 // Standard C++ includes
 #include <fstream>
-#include <iostream>
 #include <numeric>
 #include <random>
 #include <sstream>
@@ -15,6 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
+#include "common/logging.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
 // GeNN generated code includes
@@ -155,7 +155,7 @@ int main()
             if(replayData.eof()) {
                 xVelocity = 0.0;
                 yVelocity = 0.0;
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
             }
         }
         // Otherwise we're path integrating home

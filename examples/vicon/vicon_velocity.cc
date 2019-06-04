@@ -1,12 +1,12 @@
-// C++ includes
-#include <chrono>
-#include <cstdlib>
-#include <iostream>
-#include <thread>
-
 // BoB robotics includes
+#include "common/logging.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
+
+// Standard C++ includes
+#include <chrono>
+#include <cstdlib>
+#include <thread>
 
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;
@@ -25,11 +25,11 @@ int main()
         const auto velocity = objectData.getVelocity();
         const auto angularVelocity = objectData.getAngularVelocity<degrees_per_second_t>();
 
-        std::cout << "("
-                  << velocity[0] << ", " << velocity[1] << ", " << velocity[2]
-                  << ") | ("
-                  << angularVelocity[0] << ", " << angularVelocity[1] << ", " << angularVelocity[2]
-                  << ")" << std::endl;
+        LOGI << "("
+             << velocity[0] << ", " << velocity[1] << ", " << velocity[2]
+             << ") | ("
+             << angularVelocity[0] << ", " << angularVelocity[1] << ", " << angularVelocity[2]
+             << ")";
 
         std::this_thread::sleep_for(1s);
     }

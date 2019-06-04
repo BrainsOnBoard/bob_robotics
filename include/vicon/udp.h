@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <iostream>
 #include <mutex>
 #include <stdexcept>
 #include <string>

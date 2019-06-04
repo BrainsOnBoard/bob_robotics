@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/macros.h"
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
@@ -25,7 +26,7 @@ bob_main(int argc, char **argv)
     if (argc > 1) {
         ipAddress = argv[1];
     } else {
-        std::cout << "IP address [10.0.0.4]: ";
+        LOGI << "IP address [10.0.0.4]: ";
         std::getline(std::cin, ipAddress);
         if (ipAddress.empty()) {
             ipAddress = "10.0.0.4";
@@ -33,9 +34,9 @@ bob_main(int argc, char **argv)
     }
 
     // Connect to robot
-    std::cout << "Connecting to robot" << std::endl;
+    LOGI << "Connecting to robot";
     Net::Client client(ipAddress);
-    std::cout << "Connected to " << ipAddress << std::endl;
+    LOGI << "Connected to " << ipAddress;
 
     // Send motor commands to robot
     Robots::TankNetSink robot(client);
@@ -43,7 +44,7 @@ bob_main(int argc, char **argv)
     // Open joystick
     HID::Joystick joystick;
     robot.addJoystick(joystick);
-    std::cout << "Opened joystick" << std::endl;
+    LOGI << "Opened joystick";
 
     Stopwatch stopwatch;
     std::ofstream dataFile;
@@ -52,7 +53,7 @@ bob_main(int argc, char **argv)
     // If we're recording, ignore axis movements
     joystick.addHandler([&stopwatch](HID::JAxis, float) {
         if (stopwatch.started()) {
-            std::cout << "Ignoring joystick command" << std::endl;
+            LOGI << "Ignoring joystick command";
             return true;
         } else {
             return false;
@@ -73,13 +74,13 @@ bob_main(int argc, char **argv)
                 BOB_ASSERT(dataFile.good());
                 dataFile << "Time [ms], Yaw [rad], Pitch [rad], Roll [rad], "
                          << "Yaw velocity [rad/s], Pitch velocity [rad/s], Roll velocity [rad/s]"
-                         << std::endl;
+                        ;
 
                 // Spin robot
                 stopwatch.start();
                 robot.tank(1.f, -1.f);
 
-                std::cout << "Started recording" << std::endl;
+                LOGI << "Started recording";
             }
             return true;
         } else if (button == HID::JButton::X) {
@@ -88,7 +89,7 @@ bob_main(int argc, char **argv)
                 robot.stopMoving();
                 stopwatch.reset();
                 dataFile.close();
-                std::cout << "Stopped recording" << std::endl;
+                LOGI << "Stopped recording";
             }
             return true;
         } else {

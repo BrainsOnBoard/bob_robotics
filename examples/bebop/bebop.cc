@@ -1,7 +1,8 @@
 // BoB robotics includes
-#include "robots/bebop/bebop.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "hid/joystick.h"
+#include "robots/bebop/bebop.h"
 #include "video/display.h"
 
 // Third-party includes
@@ -9,7 +10,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <stdexcept>
 #include <thread>
 #include <utility>
@@ -28,22 +28,22 @@ printSpeedLimits(Bebop &drone)
     using namespace units::angle;
     const degree_t maxTilt = drone.getMaximumTilt();
     const Limits<degree_t> tiltLimits = drone.getTiltLimits();
-    std::cout << "Max tilt: " << maxTilt << " (limits: " << tiltLimits.first << ", "
-              << tiltLimits.second << ")" << std::endl;
+    LOGI << "Max tilt: " << maxTilt << " (limits: " << tiltLimits.first << ", "
+              << tiltLimits.second << ")";
 
     // max yaw speed
     using namespace units::angular_velocity;
     const degrees_per_second_t maxYawSpeed = drone.getMaximumYawSpeed();
     const Limits<degrees_per_second_t> yawLimits = drone.getYawSpeedLimits();
-    std::cout << "Max yaw speed: " << maxYawSpeed << " (limits: " << yawLimits.first << ", "
-              << yawLimits.second << ")" << std::endl;
+    LOGI << "Max yaw speed: " << maxYawSpeed << " (limits: " << yawLimits.first << ", "
+              << yawLimits.second << ")";
 
     // max vertical speed
     using namespace units::velocity;
     const meters_per_second_t maxVertSpeed = drone.getMaximumVerticalSpeed();
     const Limits<meters_per_second_t> vertSpeedLimits = drone.getVerticalSpeedLimits();
-    std::cout << "Max vertical speed: " << maxVertSpeed << " (limits: " << vertSpeedLimits.first << ", "
-              << vertSpeedLimits.second << ")" << std::endl;
+    LOGI << "Max vertical speed: " << maxVertSpeed << " (limits: " << vertSpeedLimits.first << ", "
+              << vertSpeedLimits.second << ")";
 }
 
 int
@@ -61,7 +61,7 @@ bob_main(int, char **)
                 /*maxVerticalSpeed=*/Bebop::DefaultMaximumVerticalSpeed,
                 /*maxTilt=*/Bebop::DefaultMaximumTilt);
 
-    std::cout << "Battery is at: " << drone.getBatteryLevel() * 100.f << "%" << std::endl;
+    LOGI << "Battery is at: " << drone.getBatteryLevel() * 100.f << "%";
 
     // print maximum speed parameters
     printSpeedLimits(drone);

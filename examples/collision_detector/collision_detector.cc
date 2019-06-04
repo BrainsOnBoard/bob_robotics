@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
@@ -15,7 +16,6 @@
 // Standard C++ includes
 #include <array>
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -141,7 +141,7 @@ main()
         if (collisionDetector.collisionOccurred()) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();
-                std::cout << "COLLISION!!!" << std::endl;
+                LOGI << "COLLISION!!!";
                 printedCollisionMessage = true;
             }
         } else {
