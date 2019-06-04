@@ -1,10 +1,19 @@
 // BoB robotics includes
-#include "common/lm9ds1_imu.h"
+#include "common/main.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/server.h"
 #include "robots/tank.h"
+
+#ifdef USE_EV3
+#include "net/imu_netsource.h"
+#include "os/keycodes.h"
+
+#include <opencv2/opencv.hpp>
+#else
+#include "common/lm9ds1_imu.h"
 #include "video/netsink.h"
+#endif
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -22,6 +31,7 @@
 #include <atomic>
 #include <chrono>
 #include <fstream>
+#include <memory>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -33,59 +43,92 @@ using namespace BoBRobotics::HID;
 //---------------------------------------------------------------------------
 namespace
 {
-void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, unsigned int &numSamples)
+#ifdef USE_EV3
+float
+getIMUHeading(Net::IMUNetSource &imu)
 {
+    using namespace units::angle;
+    return static_cast<radian_t>(imu.getYaw()).value();
+}
+#else
+float
+getIMUHeading(LM9DS1 &imu)
+{
+    // Wait for magneto to become available
+    while (!imu.isMagnetoAvailable()) {
+    }
+
+    // Read magneto
+    float magnetoData[3];
+    imu.readMagneto(magnetoData);
+
+    // Calculate heading angle from magneto data and set atomic value
+    return atan2(magnetoData[0], magnetoData[2]);
+}
+#endif
+
+void imuThreadFunc(Net::Connection &connection,
+                   std::atomic<bool> &shouldQuit,
+                   std::atomic<float> &heading,
+                   unsigned int &numSamples)
+{
+#ifndef USE_EV3
+    (void) connection; // unused arg
+
     // Create IMU interface
     LM9DS1 imu;
 
     // Initialise IMU magnetometer
     LM9DS1::MagnetoSettings magSettings;
     imu.initMagneto(magSettings);
+#else
+    Net::IMUNetSource imu(connection);
+#endif
 
     // While quit signal isn't set
-    for(numSamples = 0; !shouldQuit; numSamples++) {
-        // Wait for magneto to become available
-        while(!imu.isMagnetoAvailable()){
-        }
-
-        // Read magneto
-        float magnetoData[3];
-        imu.readMagneto(magnetoData);
-
-        // Calculate heading angle from magneto data and set atomic value
-        heading = atan2(magnetoData[0], magnetoData[2]);
+    for (numSamples = 0; !shouldQuit; numSamples++) {
+        heading = getIMUHeading(imu);
     }
 }
 }   // Anonymous namespace
 
-
-int main(int argc, char *argv[])
+int bob_main(int argc, char *argv[])
 {
-    std::cout << "Use --stream argument to stream over network" << std::endl;
-
     // Simulation rendering parameters
-    const unsigned int activityImageWidth = 500;
-    const unsigned int activityImageHeight = 1000;
-    const float velocityScale = 1.0f / 10.0f;
+    constexpr unsigned int activityImageWidth = 500;
+    constexpr unsigned int activityImageHeight = 1000;
+    constexpr float velocityScale = 1.f / 10.f;
+    const bool doVisualise = (argc > 1) && strcmp(argv[1], "--visualise") == 0;
 
-    const bool streamActivity = (argc > 1) && strcmp(argv[1], "--stream");
+    // Create motor interface
+    Robots::TANK_TYPE motor;
 
-    // Create server and sink for sending activity image over network
-    Net::Server server;
-    auto connection = server.waitForConnection();
-    Video::NetSink netSink(connection, cv::Size(activityImageWidth, activityImageHeight), "activity");
+#ifdef USE_EV3
+    Net::Connection *connection = &motor.getConnection();
+#else
+    std::unique_ptr<Net::Server> server;
+    std::unique_ptr<Net::Connection> connection;
+    std::unique_ptr<Video::NetSink> netSink;
 
     // If command line arguments are specified, run connection
-    if(streamActivity) {
+    if(doVisualise) {
         std::cout << "Streaming activity over network" << std::endl;
-        connection.runInBackground();
+
+        // Create server and sink for sending activity image over network
+        server = std::make_unique<Net::Server>();
+        connection = std::make_unique<Net::Connection>(server->waitForConnection());
+        netSink = std::make_unique<Video::NetSink>(*connection,
+                                                   cv::Size(activityImageWidth, activityImageHeight),
+                                                   "activity");
+        connection->runInBackground();
+    }
+#endif
+    if (!doVisualise) {
+        std::cout << "Use --visualise argument to visualise network" << std::endl;
     }
 
     // Create joystick interface
     Joystick joystick;
-
-    // Create motor interface
-    Robots::TANK_TYPE motor;
 
     // Initialise GeNN
     allocateMem();
@@ -99,7 +142,10 @@ int main(int argc, char *argv[])
     unsigned int numIMUSamples = 0;
     std::atomic<float> imuHeading{0.0f};
     std::thread imuThread(&imuThreadFunc,
-                          std::ref(shouldQuit), std::ref(imuHeading), std::ref(numIMUSamples));
+                          std::ref(*connection),
+                          std::ref(shouldQuit),
+                          std::ref(imuHeading),
+                          std::ref(numIMUSamples));
 
     cv::Mat activityImage(activityImageHeight, activityImageWidth, CV_8UC3, cv::Scalar::all(0));
 
@@ -148,7 +194,7 @@ int main(int argc, char *argv[])
         pullrCPU1FromDevice();
 
         // If we should be streaming activity
-        if(streamActivity) {
+        if(doVisualise) {
             // Pull additional outputs from device
             pullrTLFromDevice();
             pullrTN2FromDevice();
@@ -159,8 +205,15 @@ int main(int argc, char *argv[])
             // Render network activity
             visualize(activityImage);
 
+#ifdef USE_EV3
+            cv::imshow("activity", activityImage);
+            if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
+                break;
+            }
+#else
             // Send activity image
-            netSink.sendFrame(activityImage);
+            netSink->sendFrame(activityImage);
+#endif
         }
 
         // If we are going outbound
@@ -179,6 +232,9 @@ int main(int argc, char *argv[])
         // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {
             driveMotorFromCPU1(motor, (numTicks % 100) == 0);
+            if(joystick.isDown(JButton::A)) {
+                outbound = true;
+            }
         }
 
         // Record time at end of tick
@@ -207,9 +263,6 @@ int main(int argc, char *argv[])
     // Show stats
     std::cout << numOverflowTicks << "/" << numTicks << " ticks overflowed, mean tick time: " << (double)totalMicroseconds / (double)numTicks << "uS, ";
     std::cout << "IMU samples: " << numIMUSamples << ", ";
-
-    // Stop motor
-    motor.tank(0.0f, 0.0f);
 
     // Exit
     return EXIT_SUCCESS;
