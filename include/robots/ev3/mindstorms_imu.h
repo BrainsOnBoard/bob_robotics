@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "net/connection.h"
+
 // Third-party includes
 #include "third_party/units.h"
 
@@ -19,6 +22,7 @@ public:
     degree_t getYaw();
     degrees_per_second_t getYawVelocity();
     std::pair<degree_t, degrees_per_second_t> getYawAndVelocity();
+    void streamOverNetwork(Net::Connection &);
 
 private:
     ev3dev::gyro_sensor m_IMU;

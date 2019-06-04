@@ -4,6 +4,7 @@
 #include "common/main.h"
 #include "net/server.h"
 #include "robots/ev3/ev3.h"
+#include "robots/ev3/mindstorms_imu.h"
 #include "video/netsink.h"
 #include "video/panoramic.h"
 
@@ -18,6 +19,7 @@ int bob_main(int, char **)
 {
     std::unique_ptr<Video::Input> camera;
     std::unique_ptr<Video::NetSink> netSink;
+    std::unique_ptr<MindstormsIMU> imu;
 
     // Listen for incoming connection on default port
     Net::Server server;
@@ -42,6 +44,16 @@ int bob_main(int, char **)
         // Run server on main thread
         connection.run();
         return EXIT_SUCCESS;
+    }
+
+    // If an IMU is present, stream over network
+    try {
+        imu = std::make_unique<MindstormsIMU>();
+    } catch (...) {
+        LOGW << "IMU not found";
+    }
+    if (imu) {
+        imu->streamOverNetwork(connection);
     }
 
     // Run server in background,, catching any exceptions for rethrowing

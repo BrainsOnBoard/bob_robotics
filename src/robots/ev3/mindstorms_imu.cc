@@ -2,6 +2,9 @@
 #include "common/circstat.h"
 #include "robots/ev3/mindstorms_imu.h"
 
+// Standard C++ includes
+#include <sstream>
+
 using namespace units::angle;
 using namespace units::angular_velocity;
 
@@ -30,6 +33,19 @@ MindstormsIMU::getYawAndVelocity()
     std::tie(angle, rate) = m_IMU.rate_and_angle();
     degree_t angleDeg{ static_cast<UNIT_LIB_DEFAULT_TYPE>(angle) };
     return std::pair<degree_t, degrees_per_second_t>{ normaliseAngle180(angleDeg), rate };
+}
+
+void
+MindstormsIMU::streamOverNetwork(Net::Connection &connection)
+{
+    connection.setCommandHandler("IMU_REQ",
+        [this](Net::Connection &connection, const Net::Command &)
+        {
+            const auto yaw = getYaw();
+            std::stringstream ss;
+            ss << "IMU_ANG " << static_cast<radian_t>(yaw).value() << "\n";
+            connection.getSocketWriter().send(ss.str());
+        });
 }
 
 } // BoBRobotics
