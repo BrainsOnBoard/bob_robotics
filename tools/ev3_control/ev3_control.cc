@@ -37,14 +37,6 @@ int bob_main(int, char **)
         // Camera not found
         LOGW << e.what();
     }
-    if (camera) {
-        // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
-    } else {
-        // Run server on main thread
-        connection.run();
-        return EXIT_SUCCESS;
-    }
 
     // If an IMU is present, stream over network
     try {
@@ -53,7 +45,17 @@ int bob_main(int, char **)
         LOGW << "IMU not found";
     }
     if (imu) {
+        LOGI << "Found Mindstorms IMU";
         imu->streamOverNetwork(connection);
+    }
+
+    if (camera) {
+        // Stream camera synchronously over network
+        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+    } else {
+        // Run server on main thread
+        connection.run();
+        return EXIT_SUCCESS;
     }
 
     // Run server in background,, catching any exceptions for rethrowing
@@ -67,7 +69,7 @@ int bob_main(int, char **)
         catcher.check();
 
         // If there's a new frame, send it, else sleep
-        if (camera && camera->readFrame(frame)) {
+        if (camera->readFrame(frame)) {
             netSink->sendFrame(frame);
         } else {
             std::this_thread::sleep_for(25ms);
