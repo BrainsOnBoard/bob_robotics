@@ -17,16 +17,13 @@ namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
 
-template<typename LengthUnit = units::length::millimeter_t,
-         typename AngleUnit = units::angle::degree_t>
+
 class GazeboTank
   : public Tank
 {
-    using millimeter_t = units::length::millimeter_t;
-    using meters_per_second_t = units::velocity::meters_per_second_t;
-
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 public:
-    GazeboTank(const meters_per_second_t maximumSpeed, gazebo::transport::NodePtr node)
+    GazeboTank(const radians_per_second_t maximumSpeed, gazebo::transport::NodePtr node)
       : m_MaximumSpeed(maximumSpeed)
     {
         // Publish to the  differential_drive_robot topic
@@ -35,12 +32,9 @@ public:
         pub->WaitForConnection();
     }
 
-    const auto &getWheelSpeeds(){
-        return m_WheelSpeeds;
-    }
     virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
-        return m_MaximumSpeed;
+        return 0.3* m_MaximumSpeed; //radius of the wheel is 0.3m. v = r × ω
     }
 
     virtual void tank(float left, float right) override
@@ -61,8 +55,8 @@ public:
 
 private:
 
-    const meters_per_second_t m_MaximumSpeed;
-    std::pair <meters_per_second_t, meters_per_second_t> m_WheelSpeeds;
+    const radians_per_second_t m_MaximumSpeed;
+    std::pair <radians_per_second_t, radians_per_second_t> m_WheelSpeeds;
     gazebo::msgs::Vector3d msg;
     gazebo::transport::PublisherPtr pub;
 }; // GazeboTank
