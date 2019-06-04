@@ -27,14 +27,5 @@ BoB_project(EXECUTABLE ${TARGET}
             BOB_MODULES ${BOB_MODULES}
             GENN_MODEL model.cc
             GENN_CPU_ONLY TRUE
-            EXTERNAL_LIBS opencv)
-
-if(RECORD_ELECTROPHYS)
-    add_definitions(-DRECORD_ELECTROPHYS)
-endif()
-if(RECORD_SENSORS)
-    add_definitions(-DRECORD_SENSORS)
-endif()
-if(USE_SEE3_CAM)
-    add_definitions(-DUSE_SEE3_CAM)
-endif()
+            EXTERNAL_LIBS opencv
+            OPTIONS RECORD_ELECTROPHYS RECORD_SENSORS USE_SEE3CAM)
