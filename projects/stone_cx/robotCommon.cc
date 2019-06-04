@@ -4,10 +4,10 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 
 // Common includes
+#include "common/logging.h"
 #include "robots/norbot.h"
 
 // GeNN generated code includes
@@ -22,7 +22,7 @@ float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Norbot &moto
     // Steer based on signal
     const float steering = leftMotor - rightMotor;
     if(display) {
-        std::cout << "Steer:" << steering << std::endl;
+        LOGI << "Steer:" << steering;
     }
 
     // Clamp motor input values to be between -1 and 1

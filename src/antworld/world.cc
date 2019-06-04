@@ -13,7 +13,6 @@
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <tuple>

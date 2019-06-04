@@ -20,7 +20,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 #include <random>
 #include <tuple>
 #include <utility>

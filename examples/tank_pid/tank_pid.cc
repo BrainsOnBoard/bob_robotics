@@ -1,8 +1,9 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
-#include "navigation/read_objects.h"
 #include "hid/joystick.h"
+#include "navigation/read_objects.h"
 #include "robots/control/tank_pid.h"
 #include "vicon/udp.h"
 #include "viz/plot_agent.h"
@@ -25,7 +26,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -45,20 +45,19 @@ namespace plt = matplotlibcpp;
 void
 usage(const char *programName)
 {
-    std::cout << programName;
+    LOGI << programName;
 #ifdef NO_I2C
-    std::cout << " [robot IP]";
+    LOGI << " [robot IP]";
 #endif
-    std::cout << " [-p path_file.yaml]" << std::endl;
+    LOGI << " [-p path_file.yaml]";
 }
 
 void
 printGoalStats(const Vector2<millimeter_t> &goal, const Vector3<millimeter_t> &robotPosition)
 {
-    std::cout << "Goal: " << goal << std::endl;
-    std::cout << "Distance to goal: "
-              << goal.distance2D(robotPosition)
-              << std::endl;
+    LOGI << "Goal: " << goal;
+    LOGI << "Distance to goal: "
+         << goal.distance2D(robotPosition);
 }
 
 int
@@ -84,7 +83,7 @@ bob_main(int argc, char **argv)
         argv++;
     } else {
         // Get robot IP from terminal
-        std::cout << "Robot IP [10.0.0.3]: ";
+        LOGI << "Robot IP [10.0.0.3]: ";
         std::getline(std::cin, robotIP);
         if (robotIP.empty()) {
             robotIP = "10.0.0.3";
@@ -98,7 +97,7 @@ bob_main(int argc, char **argv)
     if (filesystem::path(PLAY_PATH).exists()) {
         canPlaySound = true;
     } else {
-        std::cerr << PLAY_PATH << " not found. Install sox for sounds." << std::endl;
+        LOGW << PLAY_PATH << " not found. Install sox for sounds.";
     }
 #else
     // Connect to motors over I2C
@@ -115,7 +114,7 @@ bob_main(int argc, char **argv)
         }
 
         goals = std::move(Navigation::readObjects(argv[2]).at(0));
-        std::cout << "Path read from " << argv[2] << std::endl;
+        LOGI << "Path read from " << argv[2];
         break;
     case 1:
         break;
@@ -150,7 +149,7 @@ bob_main(int argc, char **argv)
         case HID::JButton::Y:
             runPositioner = !runPositioner;
             if (runPositioner) {
-                std::cout << "Starting positioner" << std::endl;
+                LOGI << "Starting positioner";
 
                 // Start by aiming for the first goal
                 goalsIter = goals.begin();
@@ -159,11 +158,11 @@ bob_main(int argc, char **argv)
                 printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
             } else {
                 robot.stopMoving();
-                std::cout << "Stopping positioner" << std::endl;
+                LOGI << "Stopping positioner";
             }
             return true;
         case HID::JButton::Start:
-            std::cout << "Resetting to the first goal" << std::endl;
+            LOGI << "Resetting to the first goal";
             goalsIter = goals.begin();
             printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
             return true;
@@ -186,12 +185,11 @@ bob_main(int argc, char **argv)
         client.runInBackground();
 #endif
 
-        std::cout << "Goals: " << std::endl;
+        LOGI << "Goals: ";
         for (auto &goal : goals) {
-            std::cout << "\t- " << goal << std::endl;
+            LOGI << "\t- " << goal;
         }
-        std::cout << std::endl
-                  << "Press Y to start homing" << std::endl;
+        LOGI << "Press Y to start homing";
 
         // For plotting goal positions
         std::vector<double> goalX, goalY, currentGoalX(1), currentGoalY(1);
@@ -231,8 +229,8 @@ bob_main(int argc, char **argv)
                 if (objectData.timeSinceReceived() > 10s) {
                     robot.stopMoving();
                     runPositioner = false;
-                    std::cerr << "Error: Could not get position from Vicon system\n"
-                              << "Stopping trial" << std::endl;
+                    LOGW << "Could not get position from Vicon system\n"
+                         << "Stopping trial";
                     continue;
                 }
 
@@ -246,15 +244,15 @@ bob_main(int argc, char **argv)
                     // Move on to next goal
                     goalsIter++;
 
-                    std::cout << "Reached goal "
-                              << std::distance(goals.begin(), goalsIter)
-                              << "/" << goals.size() << std::endl;
-                    std::cout << "Final position: " << position << std::endl;
+                    LOGI << "Reached goal "
+                         << std::distance(goals.begin(), goalsIter)
+                         << "/" << goals.size();
+                    LOGI << "Final position: " << position;
 
                     robot.stopMoving();
                     if (goalsIter == goals.cend()) {
                         runPositioner = false;
-                        std::cout << "Reached last goal" << std::endl;
+                        LOGI << "Reached last goal";
                     } else {
                         pid.start(*goalsIter);
                     }

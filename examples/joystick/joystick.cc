@@ -1,8 +1,8 @@
 // BoB robotics includes
 #include "hid/joystick.h"
+#include "common/logging.h"
 
 // Standard C++ includes
-#include <iostream>
 #include <string>
 
 using namespace BoBRobotics::HID;
@@ -11,8 +11,8 @@ bool
 onAxisEvent(JAxis axis, float value)
 {
     std::string name = Joystick::getName(axis);
-    std::cout << "Axis " << name << " (" << static_cast<int>(axis) << "): "
-              << value << std::endl;
+    LOGI << "Axis " << name << " (" << static_cast<int>(axis) << "): "
+         << value;
 
     // we handle all axis events
     return true;
@@ -22,8 +22,8 @@ bool
 onButtonEvent(JButton button, bool pressed)
 {
     std::string name = Joystick::getName(button);
-    std::cout << "Button " << name << " (" << static_cast<int>(button)
-              << (pressed ? ") pushed" : ") released") << std::endl;
+    LOGI << "Button " << name << " (" << static_cast<int>(button)
+         << (pressed ? ") pushed" : ") released");
 
     // we handle all button events
     return true;
@@ -32,23 +32,23 @@ onButtonEvent(JButton button, bool pressed)
 inline void
 initButton(Joystick &joystick, JButton button)
 {
-    std::cout << "[initial] ";
+    LOGI << "[initial] ";
     onButtonEvent(button, joystick.isDown(button));
 }
 
 int
 main()
 {
-    std::cout << "Joystick test program" << std::endl;
-    std::cout << "Press return to quit" << std::endl << std::endl;
+    LOGI << "Joystick test program";
+    LOGI << "Press return to quit";
 
     Joystick joystick;
-    std::cout << "Opened joystick" << std::endl;
+    LOGI << "Opened joystick";
 
     // get initial axis states
     for (int i = 0; i < static_cast<int>(JAxis::LENGTH); i++) {
         JAxis axis = static_cast<JAxis>(i);
-        std::cout << "[initial] ";
+        LOGI << "[initial] ";
         onAxisEvent(axis, joystick.getState(axis));
     }
 
