@@ -2,21 +2,11 @@
 
 // BoB robotics includes
 #include "common/assert.h"
+#include "common/gazebo_node.h"
 #include "input.h"
 
 // Gazebo includes
-#include <gazebo/gazebo_config.h>
 #include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/msgs.hh>
-#include <gazebo/common/common.hh>
-
-// Gazebo's API has changed between major releases. These changes are
-// accounted for with #if..#endif blocks in this file.
-#if GAZEBO_MAJOR_VERSION < 6
-#include <gazebo/gazebo.hh>
-#else
-#include <gazebo/gazebo_client.hh>
-#endif
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -50,15 +40,7 @@ public:
     GazeboCameraInput(const std::string &topic, const std::string &cameraName = GazeboCameraDeviceName)
     : m_CameraTopic(topic), m_CameraName(cameraName)
     {
-        // Load gazebo as a client
-        #if GAZEBO_MAJOR_VERSION < 6
-        gazebo::setupClient(0, 0);
-        #else
-        gazebo::client::setup(0, 0);
-        #endif
-        //Setup image subscription node
-        m_ImageNode= gazebo::transport::NodePtr(new gazebo::transport::Node());
-        m_ImageNode->Init();
+        m_ImageNode = getGazeboNode();
         subscribeToGazeboCamera();
     }
     /*!
