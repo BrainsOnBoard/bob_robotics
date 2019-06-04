@@ -1,12 +1,12 @@
 [Unit]
-Description=EV3 motor control server
+Description=Server for controlling tank robot remotely
 After=network.target
 
 [Service]
 Type=simple
 Restart=always
-User=robot
-ExecStart=/home/robot/ev3_control
+User=%i
+ExecStart=/home/%i/tank_control
 
 [Install]
 WantedBy=multi-user.target
