@@ -1,3 +1,4 @@
+// **TODO**: This currently doesn't compile. It needs converting to GeNN 4.
 // Standard C++ includes
 #include <fstream>
 #include <iostream>
@@ -43,13 +44,13 @@ int main()
     const unsigned int pathImageSize = 1000;
     const unsigned int activityImageWidth = 500;
     const unsigned int activityImageHeight = 1000;
-    
+
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
-    
+
     const double agentDrag = 0.15;
 
     const double agentM = 0.5;
-    
+
     allocateMem();
     initialize();
 
