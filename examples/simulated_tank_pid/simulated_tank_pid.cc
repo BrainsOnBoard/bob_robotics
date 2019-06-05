@@ -22,9 +22,9 @@ using namespace units::length;
 int
 bob_main(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    Viz::SFMLWorld display;                         // For displaying the agent
-    Robots::TankPID pid(robot, .1f, .1f, .1f);      // PID controller
+    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
+    Viz::SFMLWorld display;                                        // For displaying the agent
+    auto pid = Robots::createTankPID(robot, robot, .1f, .1f, .1f); // PID controller
     auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);
@@ -45,7 +45,7 @@ bob_main(int, char **)
             pidRunning = !pidRunning;
             if (pidRunning) {
                 LOGI << "PID control started";
-                pid.start(goal);
+                pid.moveTo(goal);
             } else {
                 LOGI << "PID control stopped";
                 robot.stopMoving();
@@ -59,23 +59,19 @@ bob_main(int, char **)
     LOGI << "Drive the car using the two thumbsticks: each stick is for one motor";
 
     do {
-        const auto robotPose = robot.getPose();
-
-        // Refresh display
-        car.setPose(robotPose);
-        display.update(car);
-
-        // Run PID controller
-        if (pidRunning && pid.driveRobot(robotPose)) {
-            // Stop PID if we're at goal
-            pidRunning = false;
-        }
 
         // Check for joystick events
         joystick.update();
 
-        // A small delay so we don't hog CPU
-        std::this_thread::sleep_for(5ms);
+        // Refresh display
+        car.setPose(robot.getPose());
+        display.update(car);
+
+        // Run PID controller
+        if (pidRunning && !pid.pollPositioner()) {
+            // Stop PID if we're at goal
+            pidRunning = false;
+        }
     } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;

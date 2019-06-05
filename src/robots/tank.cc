@@ -96,7 +96,7 @@ void Tank::tank(float left, float right)
 
 void Tank::tankMaxScaled(const float left, const float right, const float max)
 {
-    const float larger = std::max(std::abs(left), std::abs(right));
+    const float larger = std::max(std::fabs(left), std::fabs(right));
     if (larger <= max) {
         tank(left, right);
     } else {

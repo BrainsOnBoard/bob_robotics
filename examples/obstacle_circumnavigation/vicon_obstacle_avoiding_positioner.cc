@@ -1,13 +1,14 @@
 // BoB robotics includes
-#include "robots/control/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "common/logging.h"
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "navigation/read_objects.h"
 #include "net/client.h"
+#include "robots/control/obstacle_circumnavigation.h"
+#include "robots/control/robot_positioner.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
 
@@ -19,6 +20,7 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -29,27 +31,27 @@ using namespace units::angular_velocity;
 using namespace units::velocity;
 using namespace std::literals;
 
+// Positioner parameters
+static constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
+static constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
+static constexpr double K1 = 0.2;                      // curveness of the path to the goal
+static constexpr double K2 = 5;                        // speed of turning on the curves
+static constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
+static constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
+const Pose2<millimeter_t, degree_t> Goal{ 0_mm, 0_mm, 15_deg };
+
+// Speed parameters
+static constexpr float JoystickMaxSpeed = 1.f;
+static constexpr float PositionerMaxSpeed = 0.5f;
+static constexpr float PositionerMinSpeed = 0.2f;
+static constexpr meter_t StartSlowingDownAt = 40_cm;
+
 enum State
 {
     InvalidState,
     ControlWithJoystick,
     Homing
 };
-
-// Positioner parameters
-constexpr meter_t StoppingDistance = 10_cm;     // if the robot's distance from goal < stopping dist, robot stops
-constexpr radian_t AllowedHeadingError = 5_deg; // the amount of error allowed in the final heading
-constexpr double K1 = 0.2;                      // curveness of the path to the goal
-constexpr double K2 = 5;                        // speed of turning on the curves
-constexpr double Alpha = 1.03;                  // causes more sharply peaked curves
-constexpr double Beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
-constexpr Pose2<millimeter_t, degree_t> Goal{ 0_mm, 0_mm, 15_deg };
-
-// Speed parameters
-constexpr float JoystickMaxSpeed = 1.f;
-constexpr float PositionerMaxSpeed = 0.5f;
-constexpr float PositionerMinSpeed = 0.2f;
-constexpr meter_t StartSlowingDownAt = 40_cm;
 
 class PositionerExample
   : FSM<State>::StateHandler
@@ -73,11 +75,20 @@ public:
                      StartSlowingDownAt,
                      PositionerMinSpeed,
                      PositionerMaxSpeed)
+      , m_CollisionDetector{ getRobotDimensions(m_Tank), Navigation::readObjects("objects.yaml"), 30_cm, 1_cm }
+      , m_Circumnavigator{ m_Tank, m_ViconObject, m_CollisionDetector }
+      , m_AvoidingPositioner(m_Positioner, m_Circumnavigator)
       , m_StateMachine(this, InvalidState)
     {
         // Goal is currently hard-coded
-        LOGI << "Goal: " << Goal;
-        m_Positioner.moveTo(Goal);
+        std::cout << "Goal: " << Goal << std::endl;
+        m_AvoidingPositioner.moveTo(Goal);
+
+        // Wait for Vicon system to spot our robot
+        while (m_Vicon.getNumObjects() == 0) {
+            std::this_thread::sleep_for(1s);
+            std::cout << "Waiting for object" << std::endl;
+        }
 
         // Start controlling with joystick
         m_StateMachine.transition(ControlWithJoystick);
@@ -90,7 +101,7 @@ public:
         // Listen in background
         m_Client.runInBackground();
 
-        LOGI << "Press Y to start homing";
+        std::cout << "Press Y to start homing" << std::endl;
 
         while (!m_Joystick.isPressed(HID::JButton::B)) {
             m_StateMachine.update();
@@ -131,32 +142,33 @@ public:
         if (state == Homing) {
             switch (event) {
             case Event::Enter:
-                LOGI << "Starting homing";
+                std::cout << "Starting homing" << std::endl;
                 m_PrintTimer.start();
                 m_Tank.setMaximumSpeedProportion(PositionerMaxSpeed);
                 break;
             case Event::Exit:
-                LOGI << "Stopping homing";
-                m_Positioner.reset();
+                std::cout << "Stopping homing" << std::endl;
+                m_AvoidingPositioner.reset();
                 m_PrintTimer.reset();
                 break;
             case Event::Update: {
                 try {
-                    if (!m_Positioner.pollPositioner()) {
-                        const auto &finalPose = m_Positioner.getPose();
-                        LOGI << "Reached goal";
-                        LOGI << "Final position: " << finalPose.x() << ", " << finalPose.y();
-                        LOGI << "Goal: " << Goal;
-                        LOGI << "Distance to goal: "
-                             << Goal.distance2D(finalPose)
-                             << " (" << circularDistance(Goal.yaw(), finalPose.yaw()) << ")";
+                    if (!m_AvoidingPositioner.pollPositioner()) {
+                        const auto &finalPose = m_AvoidingPositioner.getPose();
+                        std::cout << "Reached goal" << std::endl;
+                        std::cout << "Final position: " << finalPose.x() << ", " << finalPose.y() << std::endl;
+                        std::cout << "Goal: " << Goal << std::endl;
+                        std::cout << "Distance to goal: "
+                                  << Goal.distance2D(finalPose)
+                                  << " (" << circularDistance(Goal.yaw(), finalPose.yaw()) << ")"
+                                  << std::endl;
 
                         m_StateMachine.transition(ControlWithJoystick);
                         return true;
                     }
                 } catch (Vicon::TimedOutError &) {
-                    LOGE << "Could not get position from Vicon system\n"
-                         << "Stopping trial";
+                    std::cerr << "Error: Could not get position from Vicon system\n"
+                              << "Stopping trial" << std::endl;
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
@@ -166,10 +178,11 @@ public:
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
 
-                    const auto &pose = m_Positioner.getPose();
-                    LOGI << "Distance to goal: "
-                         << Goal.distance2D(pose)
-                         << " (" << circularDistance(Goal.yaw(), pose.yaw()) << ")";
+                    const auto &pose = m_AvoidingPositioner.getPose();
+                    std::cout << "Distance to goal: "
+                              << Goal.distance2D(pose)
+                              << " (" << circularDistance(Goal.yaw(), pose.yaw()) << ")"
+                              << std::endl;
                 }
             }
             }
@@ -187,14 +200,34 @@ private:
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
     Robots::RobotPositioner<Vicon::ObjectReference<>> m_Positioner;
+    Robots::CollisionDetector m_CollisionDetector;
+    Robots::ObstacleCircumnavigator<Vicon::ObjectReference<>> m_Circumnavigator;
+    Robots::ObstacleAvoidingPositioner<Robots::RobotPositioner<Vicon::ObjectReference<>>, Vicon::ObjectReference<>> m_AvoidingPositioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
+
+    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank &tank)
+    {
+        using V = Vector2<meter_t>;
+        const auto halfWidth = tank.getRobotWidth() / 2;
+
+        // The x and y dimensions of the robot
+        const std::array<V, 4> robotDimensions = {
+            V{ -halfWidth, halfWidth },
+            V{ halfWidth, halfWidth },
+            V{ halfWidth, -halfWidth },
+            V{ -halfWidth, -halfWidth }
+        };
+        return robotDimensions;
+    }
 };
 
 int
 bob_main(int, char **)
 {
+
+
     PositionerExample example;
     example.run();
 

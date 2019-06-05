@@ -1,3 +1,5 @@
+#include "common.h"
+
 // BoB robotics includes
 #include "common/circstat.h"
 
