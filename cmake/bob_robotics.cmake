@@ -243,13 +243,19 @@ macro(BoB_build)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     endif()
 
-    # Use C++14
+    # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
+    # work, so add the compiler flag manually.
+    #
+    # Conversely, setting the compiler flag explicitly means that the surveyor
+    # example mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux
+    # machine.
+    #       - AD
+    message("C++ version: ${CXX_STANDARD}")
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         add_compile_flags(-std=c++14)
-    else()
-        set(CMAKE_CXX_STANDARD 14)
-        set(CMAKE_CXX_STANDARD_REQUIRED ON)
     endif()
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Set include dirs and link libraries for this module/project
     always_included_packages()
