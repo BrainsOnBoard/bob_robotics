@@ -26,6 +26,7 @@ bob_robotics.includes
 
 # Ignore object files
 **/*.a
+**/*.so
 **/*.o
 **/*.obj
 **/*.lib
