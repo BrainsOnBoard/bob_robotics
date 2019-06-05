@@ -6,7 +6,7 @@
 #include "common/logging.h"
 #include "hid/joystick.h"
 #include "genn_utils/analogue_csv_recorder.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
@@ -23,7 +23,7 @@ using namespace BoBRobotics::StoneCX;
 using namespace BoBRobotics::HID;
 using namespace std::literals;
 
-int main(int argc, char *argv[])
+int main()
 {
     const float speedScale = 5.0f;
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    Robots::Norbot motor;
+    Robots::TANK_TYPE motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
 
         // Calculate tick duration (in microseconds)
-        const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
+        const int64_t tickMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(tickEndTime - tickStartTime).count();
 
         // Add to total
         totalMicroseconds += tickMicroseconds;

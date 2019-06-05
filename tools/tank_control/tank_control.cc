@@ -13,8 +13,8 @@
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifndef NO_I2C
-#include "robots/norbot.h"
+#ifdef TANK_TYPE_EV3
+#include "robots/ev3/mindstorms_imu.h"
 #endif
 
 // Standard C includes
@@ -34,8 +34,6 @@ bob_main(int, char **)
     std::unique_ptr<Video::Input> camera;
     std::unique_ptr<HID::Joystick> joystick;
     std::unique_ptr<Video::NetSink> netSink;
-    std::unique_ptr<Net::Client> client;
-    std::unique_ptr<Robots::Tank> tank;
 
     // Listen for incoming connection on default port
     Net::Server server;
@@ -48,43 +46,52 @@ bob_main(int, char **)
         // Camera not found
         LOGW << e.what();
     }
-    if (camera) {
-        // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
-    }
 
-    // Try to connect to servos over I2C and if that fails, try to connect to EV3
-#ifdef NO_I2C
-    tank = std::make_unique<Robots::Tank>();
-#else
-    try {
-        tank = std::make_unique<Robots::Norbot>();
-    } catch (std::runtime_error &) {
-        LOGI << "Trying to connect to EV3...";
-        client = std::make_unique<Net::Client>("10.42.0.130");
-        tank = std::make_unique<Robots::TankNetSink>(*client);
-    }
-#endif
+    // Construct tank of desired type
+    Robots::TANK_TYPE tank;
 
     // Read motor commands from network
-    tank->readFromNetwork(connection);
+    tank.readFromNetwork(connection);
 
     // Try to get joystick
     try {
         joystick = std::make_unique<HID::Joystick>();
-        tank->addJoystick(*joystick);
+        tank.addJoystick(*joystick);
     } catch (std::runtime_error &e) {
         // Joystick not found
         LOGW << e.what();
+    }
+
+#ifdef TANK_TYPE_EV3
+    tank.setMaximumSpeedProportion(0.7f); // Sensible default
+
+    // If an IMU is present, stream over network
+    std::unique_ptr<MindstormsIMU> imu;
+    try {
+        imu = std::make_unique<MindstormsIMU>();
+    } catch (...) {
+        LOGW << "IMU not found";
+    }
+    if (imu) {
+        LOGI << "Found Mindstorms IMU";
+        imu->streamOverNetwork(connection);
+    }
+#endif
+
+    if (!joystick && !camera) {
+        // Run on main thread
+        connection.run();
+        return EXIT_SUCCESS;
+    }
+    if (camera) {
+        // Stream camera synchronously over network
+        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
     }
 
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
     connection.runInBackground();
-    if (client) {
-        client->runInBackground();
-    }
 
     cv::Mat frame;
     while (connection.isOpen()) {

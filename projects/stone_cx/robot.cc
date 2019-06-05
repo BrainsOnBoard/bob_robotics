@@ -10,7 +10,7 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_optical_flow.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -73,7 +73,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     const float tau = 10.0f;
     const cv::Size unwrapRes(90, 30);
 
-#ifdef USE_SEE3_CAM
+#ifdef USE_SEE3CAM
     const std::string deviceString = "/dev/video" + std::to_string(cameraDevice);
     See3CAM_CU40 cam(deviceString, See3CAM_CU40::Resolution::_672x380);
 
@@ -97,7 +97,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     OpenCVOpticalFlow opticalFlow(unwrapRes);
 
        // Create images
-#ifdef USE_SEE3_CAM
+#ifdef USE_SEE3CAM
     cv::Mat greyscaleInput(camRes, CV_8UC1);
 #else
     cv::Mat rgbInput(camRes, CV_8UC3);
@@ -118,7 +118,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     // While quit signal isn't set
     float prevSpeed = 0.0f;
     for(numFrames = 0; !shouldQuit; numFrames++) {
-#ifdef USE_SEE3_CAM
+#ifdef USE_SEE3CAM
         // Read directly into greyscale
         if(!cam.captureSuperPixelGreyscale(greyscaleInput)) {
             return;
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    Norbot motor;
+    TANK_TYPE motor;
 
     // Initialise GeNN
     allocateMem();

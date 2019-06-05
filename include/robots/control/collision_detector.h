@@ -114,42 +114,6 @@ public:
         m_RobotVertices.col(1).array() += static_cast<meter_t>(pose.y()).value();
     }
 
-<<<<<<< HEAD
-    const auto &getRobotVertices() const
-    {
-        return m_RobotVertices;
-    }
-
-    bool collisionOccurred(Vector2<meter_t> &firstCollisionPosition) const
-    {
-        // If there aren't obstacles, we can't have hit them
-        if (m_ResizedObjects.size() == 0) {
-            return false;
-        }
-
-        // Fill map with zeroes
-        m_RobotMap = cv::Scalar{ 0 };
-
-        // Draw agent onto map
-        eigenToPoints(m_RobotVerticesPoints, m_RobotVertices);
-        fillConvexPoly(m_RobotMap, m_RobotVerticesPoints, cv::Scalar{ 0xff });
-
-        // Check for collision
-        for (int i = 0; i < m_RobotMap.size().area(); i++) {
-            if (m_ObjectsMap.data[i] & m_RobotMap.data[i]) {
-                // Calculate collision point
-                const auto coordPixel = div(i, m_RobotMap.cols);
-                firstCollisionPosition.x() = m_XLower + (coordPixel.rem * m_GridSize);
-                firstCollisionPosition.y() = m_YLower + (coordPixel.quot * m_GridSize);
-
-                return true;
-            }
-        }
-
-        // No collision
-        return false;
-    }
-=======
     template<class PoseType>
     bool wouldCollide(const PoseType &pose)
     {
@@ -162,7 +126,6 @@ public:
     bool collisionOccurred();
 
     size_t getCollidedObjectId() const;
->>>>>>> more_robot_control
 
 private:
     const meter_t m_GridSize;

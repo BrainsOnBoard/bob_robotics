@@ -12,15 +12,17 @@ endmacro()
 macro(BoB_project)
     BoB_init()
 
+    # Parse input args
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
                           "EXECUTABLE;GENN_MODEL"
-                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
+    BoB_set_options()
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
@@ -52,6 +54,7 @@ macro(BoB_project)
         endforeach()
     endif()
 
+    # If this project includes a GeNN model...
     if(PARSED_ARGS_GENN_MODEL)
         get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
         set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
@@ -97,6 +100,23 @@ macro(BoB_project)
         BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
+    # Allow users to choose the type of tank robot to use with TANK_TYPE env var
+    # or CMake param (defaults to Norbot)
+    if(NOT TANK_TYPE)
+        if(ENV{TANK_TYPE})
+            set(TANK_TYPE $ENV{TANK_TYPE})
+        else()
+            set(TANK_TYPE Norbot)
+        endif()
+    endif()
+    add_definitions(-DTANK_TYPE=${TANK_TYPE} -DTANK_TYPE_${TANK_TYPE})
+    message("Default tank robot type (if used): ${TANK_TYPE}")
+
+    # For EV3 (Lego) robots, we need an extra module
+    if(${TANK_TYPE} STREQUAL EV3)
+        list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
+    endif()
+
     # Do linking etc.
     BoB_build()
 
@@ -117,6 +137,21 @@ macro(BoB_project)
     endif()
 endmacro()
 
+macro(BoB_set_options)
+    # Extra compile-type options
+    if(PARSED_ARGS_OPTIONS)
+        foreach(option IN LISTS PARSED_ARGS_OPTIONS)
+            if(${option})
+                message("Option: ${option}=on")
+                set(OPTION_${option} TRUE)
+                add_definitions(-D${option})
+            else()
+                message("Option: ${option}=off")
+            endif()
+        endforeach()
+    endif()
+endmacro()
+
 # Build a module with extra libraries etc. Currently used by robots/bebop
 # module because the stock BoB_module() isn't flexible enough.
 macro(BoB_module_custom)
@@ -126,11 +161,12 @@ macro(BoB_module_custom)
     cmake_parse_arguments(PARSED_ARGS
                           ""
                           ""
-                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS"
+                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB module")
     endif()
+    BoB_set_options()
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})

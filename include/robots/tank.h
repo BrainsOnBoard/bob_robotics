@@ -70,6 +70,10 @@ public:
 
     void stopReadingFromNetwork();
 
+    float getLeft() const;
+
+    float getRight() const;
+
 private:
     Net::Connection *m_Connection = nullptr;
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
@@ -80,13 +84,20 @@ private:
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 
-    float getLeft() const;
-
-    float getRight() const;
-
 protected:
     void setWheelSpeeds(float left, float right);
 
 }; // Tank
 } // Robots
 } // BoBRobotics
+
+// Include appropriate header, depending on what kind of tank robot the user wants
+#if defined(TANK_TYPE_Norbot)
+#include "norbot.h"
+#elif defined(TANK_TYPE_EV3)
+#include "ev3/ev3.h"
+#elif defined(TANK_TYPE_Surveyor)
+#include "surveyor.h"
+#elif defined(TANK_TYPE_BundledTankNetSink)
+#include "tank_netsink.h"
+#endif
