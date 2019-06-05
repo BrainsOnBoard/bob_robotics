@@ -142,10 +142,12 @@ main()
         joystick.update();
 
         collisionDetector.setRobotPose(vicon.getObjectData(0).getPose());
-        if (collisionDetector.collisionOccurred()) {
+
+        Vector2<meter_t> collisionPosition;
+        if (collisionDetector.collisionOccurred(collisionPosition)) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();
-                std::cout << "COLLISION!!!" << std::endl;
+                std::cout << "COLLISION occured at " << collisionPosition.x() << ", " << collisionPosition.y() << "!!!" << std::endl;
                 printedCollisionMessage = true;
             }
         } else {
