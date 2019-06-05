@@ -147,6 +147,12 @@ ifdef WITH_SFML_GRAPHICS
         LINK_FLAGS += `pkg-config --libs sfml-graphics`
 endif
 
+# For Gazebo plugins
+ifdef WITH_GAZEBO
+	CXXFLAGS += `pkg-config --cflags gazebo`
+	LINK_FLAGS += `pkg-config --libs gazebo`
+endif
+
 ifdef WITH_SPINEML_SIMULATION
     GENN_PATH ?= $(shell $(CURRENT_DIR)/find_genn.sh)
     CXXFLAGS += -I$(GENN_PATH)/include/spineml/simulator
