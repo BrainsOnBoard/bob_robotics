@@ -279,6 +279,10 @@ macro(BoB_build)
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+
+        # If we don't do this, I get linker errors on the BrickPi for the net
+        # module
+        set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
     # Set include dirs and link libraries for this module/project
