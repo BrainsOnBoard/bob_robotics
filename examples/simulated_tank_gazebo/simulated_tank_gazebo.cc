@@ -39,7 +39,7 @@ bob_main(int argc, char **argv)
         display.runInBackground();
     }
     
-    Robots::GazeboTank robot(5_mps, node); // Tank agent
+    Robots::GazeboTank robot(5_rad_per_s, node); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 

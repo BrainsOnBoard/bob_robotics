@@ -21,6 +21,7 @@ using namespace units::literals;
 class GazeboTank
   : public Tank
 {
+    using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 public:
     GazeboTank(const radians_per_second_t maximumSpeed, gazebo::transport::NodePtr node)
@@ -34,29 +35,21 @@ public:
 
     virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
     {
-        return 0.3* m_MaximumSpeed; //radius of the wheel is 0.3m. v = r × ω
+        return meters_per_second_t{ 0.3 * m_MaximumSpeed.value() }; //radius of the wheel is 0.3m. v = r × ω
     }
 
     virtual void tank(float left, float right) override
     {
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
-        m_WheelSpeeds.first = left * m_MaximumSpeed;
-        m_WheelSpeeds.second = right * m_MaximumSpeed;
-
           // Set the velocity in the x-component
-        gazebo::msgs::Set(&msg, ignition::math::Vector3d((float)m_WheelSpeeds.first, (float)m_WheelSpeeds.second, 0));
+        gazebo::msgs::Set(&msg, ignition::math::Vector3d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value(), 0));
         // Send the message
         pub->Publish(msg);
-        // std::cout<< wheelSpeeds.first << "," << wheelSpeeds.second << std::endl; 
-        LOG_DEBUG << m_WheelSpeeds.first << "," << m_WheelSpeeds.second;       
-
     }
 
 private:
-
     const radians_per_second_t m_MaximumSpeed;
-    std::pair <radians_per_second_t, radians_per_second_t> m_WheelSpeeds;
     gazebo::msgs::Vector3d msg;
     gazebo::transport::PublisherPtr pub;
 }; // GazeboTank
