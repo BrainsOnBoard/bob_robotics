@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "net/client.h"
 #include "net/imu_netsource.h"
@@ -7,7 +8,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -29,7 +29,7 @@ int bob_main(int, char **)
 
     while (true) {
         catcher.check();
-        std::cout << "Robot heading: " << imu.getYaw() << std::endl;
+        LOGI << "Robot heading: " << imu.getYaw();
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
