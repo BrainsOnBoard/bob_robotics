@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "viz/plot_agent.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
@@ -8,7 +9,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -39,7 +39,7 @@ main()
         Viz::plotAgent(data.getPose<>(), -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         if (data.timeSinceReceived() > 500ms) {
             if (!warningGiven) {
-                std::cerr << "Warning: Object is out of range" << std::endl;
+                LOGW << "Object is out of range";
                 warningGiven = true;
             }
         } else {

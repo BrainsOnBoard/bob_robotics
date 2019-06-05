@@ -1,9 +1,9 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "hid/joystick.h"
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics::HID;
@@ -17,13 +17,13 @@ main()
         js.update();
 
         if (js.isDown(JButton::A)) {
-            std::cout << i << " | A is down" << std::endl;
+            LOGI << i << " | A is down";
         }
         if (js.isPressed(JButton::A)) {
-            std::cout << i << " | A has been pressed" << std::endl;
+            LOGI << i << " | A has been pressed";
         }
         if (js.isReleased(JButton::A)) {
-            std::cout << i << " | A has been released" << std::endl;
+            LOGI << i << " | A has been released";
         }
 
         // wait

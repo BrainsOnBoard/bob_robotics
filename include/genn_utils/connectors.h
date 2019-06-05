@@ -5,7 +5,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 #include <numeric>
 #include <random>
 #include <stdexcept>
@@ -105,7 +104,7 @@ double betai(double a, double b, double x)
     if (x < ((a + 1.0) / (a + b + 2.0))) {
         return bt * betacf(a, b, x) / a;
     }
-    // Otherwise, use continued fraction after making the 
+    // Otherwise, use continued fraction after making the
     // symmetry transformation.
     else {
         return 1.0 - (bt * betacf(b, a, 1.0 - x) / b);
@@ -149,9 +148,9 @@ void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         for(unsigned int j = 0; j < numPost; j++) {
-            std::cout << *(weights++) << ",";
+            LOGI << *(weights++) << ",";
         }
-        std::cout << std::endl;
+        LOGI << std::endl;
     }
 }
 //----------------------------------------------------------------------------
@@ -159,14 +158,14 @@ template<typename IndexType>
 void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const IndexType *ind, unsigned int maxRowLength)
 {
     for(unsigned int i = 0; i < numPre; i++) {
-        std::cout << i << ":";
+        LOGI << i << ":";
 
         const IndexType *rowInd = &ind[i * maxRowLength];
         for(unsigned int j = 0; j < rowLength[i]; j++) {
-            std::cout << rowInd[j] << ",";
+            LOGI << rowInd[j] << ",";
         }
 
-        std::cout << std::endl;
+        LOGI << std::endl;
     }
 }
 //----------------------------------------------------------------------------
@@ -181,7 +180,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     // Generate array of presynaptic indices
     std::vector<unsigned int> preIndices(numPre);
     std::iota(preIndices.begin(), preIndices.end(), 0);
-    
+
     // Loop through postsynaptic neurons
     for(unsigned int j = 0; j < numPost; j++) {
         // Loop through connections to make

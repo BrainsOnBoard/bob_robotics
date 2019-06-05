@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <iostream>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -472,7 +471,7 @@ private:
                 objectData->objectName[23] = '\0'; // Make sure string is null-terminated
                 std::for_each(objectData, &objectData[itemsInBlock], [&frameNumber, this](auto &data) {
                     BOB_ASSERT(data.itemDataSize == 72);
-                    updateObjectData(frameNumber, data);
+                    this->updateObjectData(frameNumber, data);
                 });
 
                 // If this is the first packet we've received, signal that we're connected

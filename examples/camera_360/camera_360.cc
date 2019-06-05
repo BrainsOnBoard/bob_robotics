@@ -4,12 +4,6 @@
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
 
-// Standard C++ includes
-#include <iostream>
-
-// Standard C includes
-#include <cmath>
-
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
@@ -59,7 +53,7 @@ int main()
         }
 
         const double msPerFrame = timer.get() / (double)frame;
-        std::cout << "FPS:" << 1000.0 / msPerFrame << std::endl;
+        LOGI << "FPS:" << 1000.0 / msPerFrame;
     }
 
     return EXIT_SUCCESS;

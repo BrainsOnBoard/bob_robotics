@@ -1,22 +1,7 @@
 #include "read_data.h"
 
-// Standard C includes
-#include <cmath>
-#include <cstdint>
-
-// Standard C++ includes
-#include <algorithm>
-#include <iostream>
-#include <string>
-#include <tuple>
-
-// Eigen
-#include <Eigen/Core>
-
-// OpenCV
-#include "opencv2/opencv.hpp"
-
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/timer.h"
 #include "navigation/image_database.h"
 #include "navigation/infomax.h"
@@ -25,6 +10,21 @@
 #include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
+
+// Eigen
+#include <Eigen/Core>
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C includes
+#include <cmath>
+#include <cstdint>
+
+// Standard C++ includes
+#include <algorithm>
+#include <string>
+#include <tuple>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
@@ -42,7 +42,7 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
     std::vector<double> x, y, u, v;
     {
         // Test network
-        std::cout << "Testing network..." << std::endl;
+        LOGI << "Testing network...";
         Timer<> t{ "Network testing took: " };
         for (size_t i = 0; i < images.size(); i++) {
             x.push_back(allx[i]);
@@ -71,13 +71,12 @@ int
 main(int argc, char **argv)
 {
     if (argc < 2) {
-        std::cerr << "Error: must specify a route, e.g.:" << std::endl
-                  << "\t" << argv[0] << " ../../tools/ant_world_db_creator/ant1_route1 [num training repititions]" << std::endl;
+        LOGE << "Must specify a route, e.g.:"
+             << "\t" << argv[0] << " ../../tools/ant_world_db_creator/ant1_route1 [num training repititions]";
         return 1;
     }
 
-    std::cout << "Eigen is using " << Eigen::nbThreads() << " threads." << std::endl
-              << std::endl;
+    LOGI << "Eigen is using " << Eigen::nbThreads() << " threads.";
 
     // Where we are loading images from
     const filesystem::path routePath(argv[1]);
@@ -89,7 +88,7 @@ main(int argc, char **argv)
     std::vector<cv::Mat> images;
     std::vector<double> x, y;
     {
-        std::cout << "Loading images from " << routePath << "..." << std::endl;
+        LOGI << "Loading images from " << routePath << "...";
         Timer<> loadingTimer{ "Images loaded in: " };
         const ImageDatabase routeImages(routePath);
         assert(routeImages.size() > 0);
@@ -113,7 +112,7 @@ main(int argc, char **argv)
 
     // If we already have a network for these params, load from disk
     if (netPath.exists()) {
-        std::cout << "Loading weights from " << netPath << std::endl;
+        LOGI << "Loading weights from " << netPath;
         const auto weights = readData<FloatType>(netPath);
 
         InfoMaxType infomax(imSize, weights);
@@ -124,7 +123,7 @@ main(int argc, char **argv)
 
         // Train network
         {
-            std::cout << "Training InfoMax network..." << std::endl;
+            LOGI << "Training InfoMax network...";
             Timer<> trainingTimer{ "Network trained in: " };
 
             // We train the network with each image n times
@@ -135,7 +134,7 @@ main(int argc, char **argv)
             }
 
             // Write weights to disk
-            std::cout << "Writing weights to " << netPath << std::endl;
+            LOGI << "Writing weights to " << netPath;
             const auto weights = infomax.getWeights();
             std::ofstream netFile(netPath.str(), std::ios::binary);
             const int size[2] { (int) weights.rows(), (int) weights.cols() };

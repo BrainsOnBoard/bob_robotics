@@ -20,7 +20,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iostream>
 #include <random>
 #include <tuple>
 #include <utility>
@@ -34,7 +33,6 @@ namespace Navigation {
 template<typename FloatType = float>
 class InfoMax : public VisualNavigationBase
 {
-    using radian_t = units::angle::radian_t;
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
@@ -196,24 +194,32 @@ public:
     template<class... Ts>
     const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
     {
-        calcImageDifferences(std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
 
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        calcImageDifferences(std::forward<Ts>(args)...);
+        using radian_t = units::angle::radian_t;
 
-        const auto el = std::min_element(m_RotatedDifferences.cbegin(), m_RotatedDifferences.cend());
-        int bestIndex = std::distance(m_RotatedDifferences.cbegin(), el);
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        if (bestIndex > (unwrapRes.width / 2)) {
-            bestIndex -= unwrapRes.width;
-        }
+        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
 
-        using namespace units::angle;
-        const radian_t heading = turn_t((double)bestIndex / (double)unwrapRes.width);
+        // Find index of lowest difference
+        const auto el = std::min_element(m_RotatedDifferences.cbegin(), m_RotatedDifferences.cend());
+        const size_t bestIndex = std::distance(m_RotatedDifferences.cbegin(), el);
+
+        // Convert this to an angle
+        radian_t heading = rotater.columnToHeading(bestIndex);
+        while (heading <= -180_deg) {
+            heading += 360_deg;
+        }
+        while (heading > 180_deg) {
+            heading -= 360_deg;
+        }
 
         return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
     }
@@ -222,13 +228,9 @@ private:
     //------------------------------------------------------------------------
     // Private API
     //------------------------------------------------------------------------
-    template<class... Ts>
-    void calcImageDifferences(Ts &&... args) const
+    template<typename R>
+    void calcImageDifferences(R &rotater) const
     {
-        // Object for rotating over images
-        const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
-
         // Ensure there's enough space in rotated differe
         m_RotatedDifferences.reserve(rotater.numRotations());
         m_RotatedDifferences.clear();

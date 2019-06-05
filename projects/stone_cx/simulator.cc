@@ -1,5 +1,4 @@
 // Standard C++ includes
-#include <iostream>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -12,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
+#include "common/logging.h"
 #include "common/von_mises_distribution.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
@@ -33,9 +33,9 @@ int main()
     const unsigned int pathImageSize = 1000;
     const unsigned int activityImageWidth = 500;
     const unsigned int activityImageHeight = 1000;
-    
+
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
-    
+
     // Outbound path generation parameters
     const unsigned int numOutwardTimesteps = 1500;
 
@@ -48,7 +48,7 @@ int main()
     const double agentMinAcceleration = 0.0;
     const double agentMaxAcceleration = 0.15;
     const double agentM = 0.5;
-    
+
     allocateMem();
     initialize();
 
@@ -127,7 +127,7 @@ int main()
     for(unsigned int i = 0;; i++) {
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
-            speedTN2[j] = (sin(theta + preferredAngleTN2[j]) * xVelocity) + 
+            speedTN2[j] = (sin(theta + preferredAngleTN2[j]) * xVelocity) +
                 (cos(theta + preferredAngleTN2[j]) * yVelocity);
         }
 
@@ -159,7 +159,7 @@ int main()
             a = accelerationSpline((double)i);
 
             if(i == (numOutwardTimesteps - 1)) {
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
             }
         }
         // Otherwise we're path integrating home

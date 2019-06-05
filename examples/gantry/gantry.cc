@@ -18,9 +18,6 @@
 // Third-party includes
 #include "third_party/units.h"
 
-// Standard C++ includes
-#include <iostream>
-
 using namespace BoBRobotics;
 using namespace units::literals;
 
@@ -32,9 +29,9 @@ main()
         Robots::Gantry gantry;
 
         // Return gantry to its home position
-        std::cout << "Homing gantry...\n";
+        LOGI << "Homing gantry...\n";
         gantry.raiseAndHome();
-        std::cout << "Gantry homed.\n";
+        LOGI << "Gantry homed.\n";
 
         // Show gantry camera stream
         Video::OpenCVInput cam(0, "gantry");
@@ -42,19 +39,19 @@ main()
         Video::Display display(cam, { 576, 720 });
 
         // Move the gantry to the specified coordinates
-        std::cout << "Moving gantry...\n";
+        LOGI << "Moving gantry...\n";
         gantry.setPosition(500_mm, 500_mm, 0_mm);
         do {
             display.update();
         } while (gantry.isMoving());
-        std::cout << "Gantry moved.\n";
+        LOGI << "Gantry moved.\n";
 
         // Print the gantry's current position
         const auto pos = gantry.getPosition<>();
-        std::cout << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
+        LOGI << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
                   << pos[2] << "\n";
     } catch (std::exception &e) {
-        std::cerr << "Uncaught exception: " << e.what() << std::endl;
+        LOGW << "Uncaught exception: " << e.what();
 		return 1;
     }
 }

@@ -8,7 +8,6 @@
 // Standard C++ includes
 #include <chrono>
 #include <exception>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;

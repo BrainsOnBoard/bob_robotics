@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "net/client.h"
@@ -21,7 +22,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <memory>
 #include <thread>
 
@@ -46,7 +46,7 @@ bob_main(int, char **)
         camera = Video::getPanoramicCamera();
     } catch (std::runtime_error &e) {
         // Camera not found
-        std::cerr << e.what() << std::endl;
+        LOGW << e.what();
     }
     if (camera) {
         // Stream camera synchronously over network
@@ -60,7 +60,7 @@ bob_main(int, char **)
     try {
         tank = std::make_unique<Robots::Norbot>();
     } catch (std::runtime_error &) {
-        std::cout << "Trying to connect to EV3..." << std::endl;
+        LOGI << "Trying to connect to EV3...";
         client = std::make_unique<Net::Client>("10.42.0.130");
         tank = std::make_unique<Robots::TankNetSink>(*client);
     }
@@ -75,7 +75,7 @@ bob_main(int, char **)
         tank->addJoystick(*joystick);
     } catch (std::runtime_error &e) {
         // Joystick not found
-        std::cerr << e.what() << std::endl;
+        LOGW << e.what();
     }
 
     // Run server in background,, catching any exceptions for rethrowing

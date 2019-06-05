@@ -1,12 +1,13 @@
 // BoB robotics includes
+#include "robots/control/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/control/robot_positioner.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
 
@@ -18,7 +19,6 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -76,7 +76,7 @@ public:
       , m_StateMachine(this, InvalidState)
     {
         // Goal is currently hard-coded
-        std::cout << "Goal: " << Goal << std::endl;
+        LOGI << "Goal: " << Goal;
         m_Positioner.moveTo(Goal);
 
         // Start controlling with joystick
@@ -90,7 +90,7 @@ public:
         // Listen in background
         m_Client.runInBackground();
 
-        std::cout << "Press Y to start homing" << std::endl;
+        LOGI << "Press Y to start homing";
 
         while (!m_Joystick.isPressed(HID::JButton::B)) {
             m_StateMachine.update();
@@ -131,12 +131,12 @@ public:
         if (state == Homing) {
             switch (event) {
             case Event::Enter:
-                std::cout << "Starting homing" << std::endl;
+                LOGI << "Starting homing";
                 m_PrintTimer.start();
                 m_Tank.setMaximumSpeedProportion(PositionerMaxSpeed);
                 break;
             case Event::Exit:
-                std::cout << "Stopping homing" << std::endl;
+                LOGI << "Stopping homing";
                 m_Positioner.reset();
                 m_PrintTimer.reset();
                 break;
@@ -144,20 +144,19 @@ public:
                 try {
                     if (!m_Positioner.pollPositioner()) {
                         const auto &finalPose = m_Positioner.getPose();
-                        std::cout << "Reached goal" << std::endl;
-                        std::cout << "Final position: " << finalPose.x() << ", " << finalPose.y() << std::endl;
-                        std::cout << "Goal: " << Goal << std::endl;
-                        std::cout << "Distance to goal: "
-                                  << Goal.distance2D(finalPose)
-                                  << " (" << circularDistance(Goal.yaw(), finalPose.yaw()) << ")"
-                                  << std::endl;
+                        LOGI << "Reached goal";
+                        LOGI << "Final position: " << finalPose.x() << ", " << finalPose.y();
+                        LOGI << "Goal: " << Goal;
+                        LOGI << "Distance to goal: "
+                             << Goal.distance2D(finalPose)
+                             << " (" << circularDistance(Goal.yaw(), finalPose.yaw()) << ")";
 
                         m_StateMachine.transition(ControlWithJoystick);
                         return true;
                     }
                 } catch (Vicon::TimedOutError &) {
-                    std::cerr << "Error: Could not get position from Vicon system\n"
-                              << "Stopping trial" << std::endl;
+                    LOGE << "Could not get position from Vicon system\n"
+                         << "Stopping trial";
 
                     m_StateMachine.transition(ControlWithJoystick);
                     return true;
@@ -168,10 +167,9 @@ public:
                     m_PrintTimer.start();
 
                     const auto &pose = m_Positioner.getPose();
-                    std::cout << "Distance to goal: "
-                              << Goal.distance2D(pose)
-                              << " (" << circularDistance(Goal.yaw(), pose.yaw()) << ")"
-                              << std::endl;
+                    LOGI << "Distance to goal: "
+                         << Goal.distance2D(pose)
+                         << " (" << circularDistance(Goal.yaw(), pose.yaw()) << ")";
                 }
             }
             }

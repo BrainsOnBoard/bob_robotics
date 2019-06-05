@@ -1,25 +1,6 @@
 // This is the main file, so we do want header definitions for this object
 #undef NO_HEADER_DEFINITIONS
 
-// Standard C++ includes
-#include <bitset>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <random>
-#include <string>
-#include <tuple>
-#include <vector>
-
-// Standard C includes
-#include <cmath>
-
-// OpenGL includes
-#include <GL/glew.h>
-
-// GLFW
-#include <GLFW/glfw3.h>
-
 // BoB Robotics includes
 #include "common/logging.h"
 #include "navigation/infomax.h"
@@ -30,6 +11,24 @@
 #include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
+
+// OpenGL includes
+#include <GL/glew.h>
+
+// GLFW
+#include <GLFW/glfw3.h>
+
+// Standard C++ includes
+#include <bitset>
+#include <fstream>
+#include <limits>
+#include <random>
+#include <string>
+#include <tuple>
+#include <vector>
+
+// Standard C includes
+#include <cmath>
 
 using namespace BoBRobotics;
 
@@ -97,7 +96,7 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int)
 //----------------------------------------------------------------------------
 void handleGLFWError(int errorNumber, const char *message)
 {
-    std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
+    LOGE << "GLFW error number: " << errorNumber << ", message:" << message;
 }
 }   // anonymous namespace
 
