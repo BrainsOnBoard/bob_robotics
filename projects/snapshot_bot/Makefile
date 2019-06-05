@@ -11,7 +11,7 @@ OFFLINE_TRAIN_DEPS	:= $(OFFLINE_TRAIN_SOURCES:.cc=.d)
 
 .PHONY: all clean
 
-all: snapshot_bot computer offline_train
+all: snapshot_bot offline_train
 
 snapshot_bot: $(SNAPSHOT_BOT_OBJECTS)
 	$(CXX) -o $@ $(SNAPSHOT_BOT_OBJECTS) $(CXXFLAGS) $(LINK_FLAGS)
@@ -19,12 +19,8 @@ snapshot_bot: $(SNAPSHOT_BOT_OBJECTS)
 offline_train: $(OFFLINE_TRAIN_OBJECTS)
 	$(CXX) -o $@ $(OFFLINE_TRAIN_OBJECTS) $(CXXFLAGS) $(LINK_FLAGS)
 
-computer: computer.cc computer.d
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LINK_FLAGS)
-	
 -include $(SNAPSHOT_BOT_DEPS)
 -include $(OFFLINE_TRAIN_DEPS)
--include computer.d
 
 %.o: %.cc %.d
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
@@ -32,4 +28,4 @@ computer: computer.cc computer.d
 %.d: ;
 
 clean:
-	rm -f offline_train computer snapshot_bot *.d *.o
+	rm -f offline_train snapshot_bot *.d *.o
