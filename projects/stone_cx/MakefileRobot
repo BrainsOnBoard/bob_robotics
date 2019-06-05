@@ -1,0 +1,36 @@
+WITH_I2C := 1
+include ../../make_common/bob_robotics.mk
+
+SOURCES			:=robot.cc robotCommon.cc
+GENERATED_CODE_DIR	:=stone_cx_CODE
+
+OBJECTS			:=$(SOURCES:.cc=.o)
+DEPS			:=$(SOURCES:.cc=.d)
+
+ifdef RECORD_SENSORS
+    CXXFLAGS += -DRECORD_SENSORS
+endif
+
+ifdef USE_SEE3_CAM
+    CXXFLAGS += -DUSE_SEE3_CAM
+endif
+
+.PHONY: all clean generated_code
+
+all: robot
+
+robot: $(OBJECTS) generated_code
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o robot $(LINK_FLAGS) -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath $(GENERATED_CODE_DIR)
+
+-include $(DEPS)
+
+%.o: %.cc %.d
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.d: ;
+
+generated_code:
+	$(MAKE) -C $(GENERATED_CODE_DIR)
+
+clean:
+	@rm -f robot *.o *.d
