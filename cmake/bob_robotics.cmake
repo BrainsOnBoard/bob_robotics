@@ -103,7 +103,7 @@ macro(BoB_project)
     # Allow users to choose the type of tank robot to use with TANK_TYPE env var
     # or CMake param (defaults to Norbot)
     if(NOT TANK_TYPE)
-        if(NOT ENV{TANK_TYPE} STREQUAL "")
+        if(NOT "$ENV{TANK_TYPE}" STREQUAL "")
             set(TANK_TYPE $ENV{TANK_TYPE})
         else()
             set(TANK_TYPE Norbot)
