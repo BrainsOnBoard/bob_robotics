@@ -178,20 +178,22 @@ macro(always_included_packages)
     # with the include path and link flags and it seems that this target isn't
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
-    if(NOT TARGET Eigen3::Eigen)
-        find_package(Eigen3 QUIET)
-    endif()
-    if(NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT TARGET OpenMP::OpenMP_CXX)
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
     endif()
 
-    # On Unix we use pkg-config to find SDL2, because the CMake package may not
-    # be present
-    if(NOT UNIX AND NOT TARGET SDL2::SDL2)
-        find_package(SDL2)
+    # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake
+    # packages may not be present
+    if(NOT UNIX)
+        if(NOT TARGET SDL2::SDL2)
+            find_package(SDL2)
+        endif()
+        if(NOT TARGET Eigen3::Eigen)
+            find_package(Eigen3 QUIET)
+        endif()
     endif()
 endmacro()
 
@@ -225,10 +227,6 @@ macro(BoB_build)
         add_definitions(-DDEBUG)
     endif()
 
-    # Use C++14
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
     # Flags for gcc and clang
     if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
         set(GNU_TYPE_COMPILER TRUE)
@@ -244,6 +242,19 @@ macro(BoB_build)
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     endif()
+
+    # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
+    # work, so add the compiler flag manually.
+    #
+    # Conversely, only setting the compiler flag means that the surveyor example
+    # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
+    #       - AD
+    message("C++ version: ${CXX_STANDARD}")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_compile_flags(-std=c++14)
+    endif()
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Set include dirs and link libraries for this module/project
     always_included_packages()
@@ -394,13 +405,19 @@ function(BoB_external_libraries)
         elseif(${lib} STREQUAL opencv)
             BoB_find_package(OpenCV REQUIRED)
         elseif(${lib} STREQUAL eigen3)
-            if(NOT TARGET Eigen3::Eigen)
-                message(FATAL_ERROR "Eigen 3 not found")
+            if(UNIX)
+                BoB_add_pkg_config_libraries(eigen3)
+            else()
+                if(NOT TARGET Eigen3::Eigen)
+                    message(FATAL_ERROR "Eigen 3 not found")
+                endif()
+                BoB_add_link_libraries(Eigen3::Eigen)
             endif()
-            BoB_add_link_libraries(Eigen3::Eigen)
 
             # For CMake < 3.9, we need to make the target ourselves
-            if(NOT OpenMP_CXX_FOUND)
+            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+                add_compile_flags(-fopenmp)
+            elseif(NOT OpenMP_CXX_FOUND)
                 find_package(Threads REQUIRED)
                 add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
                 set_property(TARGET OpenMP::OpenMP_CXX
