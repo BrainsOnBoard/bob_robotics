@@ -1,17 +1,19 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/pose.h"
-#include "../common/stopwatch.h"
+#include "common/pose.h"
+#include "common/stopwatch.h"
 #include "tank.h"
 
 // Third-party includes
 #include "../third_party/units.h"
-#include <utility> 
 
 // Gazebo includes
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
+
+// Standard c++ includes
+#include <utility>
 
 namespace BoBRobotics {
 namespace Robots {

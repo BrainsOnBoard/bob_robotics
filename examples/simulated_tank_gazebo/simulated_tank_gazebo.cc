@@ -1,12 +1,12 @@
 // BoB robotics includes
 #include "common/main.h"
+#include "common/gazebo_node.h"
+#include "common/logging.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "robots/gazebo_tank.h"
-#include "common/logging.h"
 #include "video/gazebocamerainput.h"
 #include "video/display.h"
-#include "common/gazebo_node.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -28,7 +28,7 @@ bob_main(int argc, char **argv)
     /************************************Gazebo setup************/
 
     // Create our node for publishing joystick values
-    gazebo::transport::NodePtr node = getGazeboNode();  
+    gazebo::transport::NodePtr node = getGazeboNode();
 
     /************************************Gazebo setup end************/
     //Initialize Gazebo camera display if -d arguement supplied
@@ -38,7 +38,7 @@ bob_main(int argc, char **argv)
         std::cout << "Display switch enabled.\n";
         display.runInBackground();
     }
-    
+
     Robots::GazeboTank robot(5_rad_per_s, node); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);

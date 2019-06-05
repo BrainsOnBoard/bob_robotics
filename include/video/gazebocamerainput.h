@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "common/gazebo_node.h"
 #include "input.h"
 
@@ -49,7 +49,7 @@ public:
      * @param node Gazebo transport node
      * @param topic Gazebo transport topic on which to subscribe
      */
-    
+
     GazeboCameraInput(gazebo::transport::NodePtr node, const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = GazeboCameraDeviceName)
       : m_CameraName(cameraName), m_ImageNode(node)
     {
@@ -99,7 +99,7 @@ private:
 
         if(!m_HaveReceivedFrames.load()){
             m_HaveReceivedFrames.store(true);
-        }    
+        }
         m_ReceivedImage.create(msg->image().height(), msg->image().width(), CV_8UC3);
         memcpy(m_ReceivedImage.data, msg->image().data().c_str(), msg->image().data().length());
     }
