@@ -249,7 +249,6 @@ macro(BoB_build)
     # Conversely, only setting the compiler flag means that the surveyor example
     # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
     #       - AD
-    message("C++ version: ${CXX_STANDARD}")
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         add_compile_flags(-std=c++14)
     endif()
