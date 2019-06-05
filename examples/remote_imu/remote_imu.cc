@@ -29,7 +29,7 @@ int bob_main(int, char **)
 
     while (true) {
         catcher.check();
-        std::cout << "Robot heading: " << imu.getHeading() << std::endl;
+        std::cout << "Robot heading: " << imu.getYaw() << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
