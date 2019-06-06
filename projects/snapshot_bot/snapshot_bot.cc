@@ -96,16 +96,11 @@ public:
         // If we should use Vicon capture control
         if(m_Config.shouldUseViconCaptureControl()) {
             // Connect to capture host system specified in config
-            if(!m_ViconCaptureControl.connect(m_Config.getViconCaptureControlHost(), m_Config.getViconCaptureControlPort(),
-                m_Config.getViconCaptureControlPath())) 
-            {
-                throw std::runtime_error("Cannot connect to Vicon capture control");
-            }
+            m_ViconCaptureControl.connect(m_Config.getViconCaptureControlHost(), m_Config.getViconCaptureControlPort(),
+                                          m_Config.getViconCaptureControlPath());
 
             // Start capture
-            if(!m_ViconCaptureControl.startRecording(m_Config.getViconCaptureControlName())) {
-                throw std::runtime_error("Cannot start capture");
-            }
+            m_ViconCaptureControl.startRecording(m_Config.getViconCaptureControlName());
         }
 
         // If we should train
@@ -181,9 +176,7 @@ private:
                  // If we should use Vicon capture control
                 if(m_Config.shouldUseViconCaptureControl()) {
                     // Stop capture
-                    if(!m_ViconCaptureControl.stopRecording(m_Config.getViconCaptureControlName())) {
-                        throw std::runtime_error("Cannot stop capture");
-                    }
+                    m_ViconCaptureControl.stopRecording(m_Config.getViconCaptureControlName());
                 }
                 return false;
             }
@@ -223,6 +216,7 @@ private:
                 }
 
                 m_LogFile.open((m_Config.getOutputPath() / "training.csv").str());
+                BOB_ASSERT(m_LogFile.good());
 
                 // Write header
                 m_LogFile << "Time [s], Filename";
@@ -310,6 +304,7 @@ private:
 
                 // Open log file
                 m_LogFile.open((m_Config.getOutputPath() / ("testing" + m_Config.getTestingSuffix() + ".csv")).str());
+                BOB_ASSERT(m_LogFile.good());
 
                 // Write heading for time column
                 m_LogFile << "Time [s], ";

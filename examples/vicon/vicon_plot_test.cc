@@ -32,9 +32,7 @@ main()
         std::cout << "Waiting for object" << std::endl;
     }
 
-    if (!viconCaptureControl.startRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test1");
 
     bool warningGiven = false;
     do {
@@ -52,9 +50,7 @@ main()
         plt::pause(0.025);
     } while (plt::fignum_exists(1));
 
-    if (!viconCaptureControl.stopRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test1");
 
     return EXIT_SUCCESS;
 }
