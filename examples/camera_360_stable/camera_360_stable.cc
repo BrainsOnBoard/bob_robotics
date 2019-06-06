@@ -26,7 +26,7 @@ int main()
 
     // The cirlce we're unwrapping within represents a 
     // half sphere, therefore it's radius is the arc length
-    const double quarterArcLength = unwrapper.m_OuterPixel - unwrapper.m_InnerPixel;
+    const float quarterArcLength = (float)unwrapper.m_OuterPixel - (float)unwrapper.m_InnerPixel;
     
     // Cache original centre pixel
     const auto originalCentrePixel = unwrapper.m_CentrePixel;
@@ -64,8 +64,8 @@ int main()
                 imu.readAccel(accelData);
                 
                 // Calculate roll and pitch angles (in radians)
-                const double roll = atan2(accelData[0], sqrt((accelData[2] * accelData[2]) + (accelData[1] * accelData[1])));
-                const double pitch = atan2(accelData[2], sqrt((accelData[1] * accelData[1]) + (accelData[1] * accelData[1])));
+                const float roll = atan2(accelData[0], sqrt((accelData[2] * accelData[2]) + (accelData[1] * accelData[1])));
+                const float pitch = atan2(accelData[2], sqrt((accelData[1] * accelData[1]) + (accelData[1] * accelData[1])));
         
                 // Convert roll and pitch angles to pixels along surface of half sphere and calculate new centre
                 unwrapper.m_CentrePixel.x = originalCentrePixel.x - (int)std::round(roll * quarterArcLength);
