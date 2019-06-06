@@ -34,7 +34,7 @@ void MemoryBase::writeCSVHeader(std::ostream &os)
 //------------------------------------------------------------------------
 void MemoryBase::writeCSVLine(std::ostream &os)
 {
-    os << getBestHeading() << ", " << getLowestDifference();
+    os << getBestHeading().value() << ", " << getLowestDifference();
 }
 
 //------------------------------------------------------------------------
