@@ -214,7 +214,7 @@ private:
                 LOGI << "Starting training";
 
                 // Open settings file and write unwrapper settings to it
-                cv::FileStorage settingsFile((m_Config.getOutputPath() / "training_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
+                cv::FileStorage settingsFile((m_Config.getOutputPath() / "training_settings.yaml").str(), cv::FileStorage::WRITE);
                 settingsFile << "unwrapper" << m_Unwrapper;
 
                 // Close log file if it's already open
