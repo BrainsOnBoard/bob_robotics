@@ -1,10 +1,6 @@
 #pragma once
 // Gazebo includes
-#include <gazebo/gazebo_config.h>
 #include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/msgs.hh>
-#include <gazebo/common/common.hh>
-
 #include <gazebo/gazebo_client.hh>
 
 using namespace gazebo::transport;
