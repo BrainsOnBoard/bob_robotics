@@ -221,7 +221,7 @@ macro(BoB_init)
     endif()
 
         # Set DEBUG macro when compiling in debug mode
-    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+    if("${CMAKE_BUILD_TYPE}" STREQUAL Debug)
         add_definitions(-DDEBUG)
     endif()
 
