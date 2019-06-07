@@ -61,6 +61,14 @@ macro(BoB_project)
 
         set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+        # I'm sometimes getting linker errors when ld is linking against the
+        # static libs for BoB modules (because Gazebo plugins, as shared libs,
+        # are PIC, but the static libs seem not to be). So let's just compile
+        # everything as PIC.
+        if(GNU_TYPE_COMPILER)
+            add_definitions(-fPIC)
+        endif()
+
         # Gazebo plugins are shared libraries
         add_library(${target} SHARED ${PARSED_ARGS_GAZEBO_PLUGIN})
         list(APPEND BOB_TARGETS ${target})
@@ -211,6 +219,27 @@ macro(BoB_init)
     else()
         string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
     endif()
+
+        # Set DEBUG macro when compiling in debug mode
+    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+        add_definitions(-DDEBUG)
+    endif()
+
+    # Flags for gcc and clang
+    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
+        set(GNU_TYPE_COMPILER TRUE)
+
+        # Default to building with -march=native
+        if(NOT DEFINED ENV{ARCH})
+            set(ENV{ARCH} native)
+        endif()
+
+        # Enable warnings and set architecture
+        add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
+
+        # Disable optimisation for debug builds
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+    endif()
 endmacro()
 
 macro(add_compile_flags EXTRA_ARGS)
@@ -271,27 +300,6 @@ macro(BoB_build)
         else()
             message(WARNING "ccache not found. Install for faster repeat builds.")
         endif()
-    endif()
-
-    # Set DEBUG macro when compiling in debug mode
-    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
-        add_definitions(-DDEBUG)
-    endif()
-
-    # Flags for gcc and clang
-    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-        set(GNU_TYPE_COMPILER TRUE)
-
-        # Default to building with -march=native
-        if(NOT DEFINED ENV{ARCH})
-            set(ENV{ARCH} native)
-        endif()
-
-        # Enable warnings and set architecture
-        add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
-
-        # Disable optimisation for debug builds
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
     endif()
 
     # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
