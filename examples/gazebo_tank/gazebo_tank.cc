@@ -31,10 +31,14 @@ bob_main(int argc, char **argv)
     gazebo::transport::NodePtr node = getGazeboNode();
 
     /************************************Gazebo setup end************/
-    //Initialize Gazebo camera display if -d arguement supplied
-    GazeboCameraInput cam(node, "/gazebo/default/differential_drive_robot/camera/link/camera/image");
+    char* camera_url="";
+    if(argc >= 3) {
+        camera_url = argv[2];
+    }    
+    GazeboCameraInput cam(node, camera_url);
     Display display(cam);
-    if(argc >= 2 && strcmp(argv[1], "-d") == 0) {
+    //Initialize Gazebo camera display if -d arguement supplied
+    if(argc >= 3 && strcmp(argv[1], "-d") == 0) {
         std::cout << "Display switch enabled.\n";
         display.runInBackground();
     }
