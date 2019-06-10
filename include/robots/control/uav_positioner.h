@@ -3,7 +3,9 @@
 // BoB robotics includes
 #include "common/pose.h"
 #include "robots/uav.h"
-#include "vicon/udp.h"
+
+// Third-party includes
+#include "third_party/units.h"
 
 // Standard C++ includes
 #include <array>
@@ -11,7 +13,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
-using namespace std::literals;
+using namespace units::literals;
 
 // limits of the room - default to a (hopefully) safe 1m^3
 struct Bounds
@@ -28,16 +30,15 @@ class UAVPositioner
 
 public:
     UAVPositioner(Robots::UAV &drone,
-                  Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon,
                   const Bounds::Range &xRange = { -0.5_m, 0.5_m },
                   const Bounds::Range &yRange = { -0.5_m, 0.5_m },
                   const Bounds::Range &zRange = { 0_m, 1_m });
 
-    void update();
+    void update(const Pose3<meter_t, degree_t> &pose,
+                const std::array<meters_per_second_t, 3> &velocity);
     void setYaw(degree_t yaw);
     void setWaypoint(const Vector3<meter_t> &waypoint);
 
-    Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
     Robots::UAV &m_Drone;
     Bounds m_RoomBounds;
     Vector3<meter_t> m_Waypoint;

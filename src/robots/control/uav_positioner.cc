@@ -2,16 +2,16 @@
 #include "common/macros.h"
 #include "robots/control/uav_positioner.h"
 
+using namespace std::literals;
+
 namespace BoBRobotics {
 namespace Robots {
 
 UAVPositioner::UAVPositioner(Robots::UAV &drone,
-                             Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon,
                              const Bounds::Range &xRange,
                              const Bounds::Range &yRange,
                              const Bounds::Range &zRange)
-  : m_Vicon(vicon)
-  , m_Drone(drone)
+  : m_Drone(drone)
 {
     // Check input values are sane
     BOB_ASSERT(xRange.first < xRange.second);
@@ -20,13 +20,12 @@ UAVPositioner::UAVPositioner(Robots::UAV &drone,
 }
 
 void
-UAVPositioner::update()
+UAVPositioner::update(const Pose3<meter_t, degree_t> &pose,
+                      const std::array<meters_per_second_t, 3> &velocity)
 {
     // update control
-    auto objectData = m_Vicon.getObjectData(0);
-    const auto position = objectData.getPosition<>();
-    const auto attitude = objectData.getAttitude<degree_t>();
-    const auto &velocity = objectData.getVelocity();
+    const auto &position = pose.position();
+    const auto &attitude = pose.attitude();
 
     // calc distance to m_Waypoint
     std::array<float, 3> p_diff;

@@ -35,7 +35,7 @@ bob_main(int, char **)
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon{ 51001 };
 
     // for moving drone to a location
-    UAVPositioner positioner{ drone, vicon };
+    UAVPositioner positioner{ drone };
 
     // control drone with joystick
     HID::Joystick joystick;
@@ -77,7 +77,8 @@ bob_main(int, char **)
             LOGI << "Starting move...";
             stopwatch.start();
             while (stopwatch.elapsed() < 30s && !stopFlag) {
-                positioner.update();
+                const auto objectData = vicon.getObjectData(0);
+                positioner.update(objectData.getPose(), objectData.getVelocity());
                 std::this_thread::sleep_for(25ms);
             }
         }
