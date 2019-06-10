@@ -13,6 +13,97 @@
 
 namespace BoBRobotics {
 
+template<typename UnitType>
+class UnitArray2;
+
+template<typename UnitType>
+class UnitArray3;
+
+template<typename UnitType, size_t ArraySize, typename Derived>
+class UnitArrayBase
+{
+    static_assert(units::traits::is_unit_t<UnitType>::value,
+                  "UnitType is not a unit type");
+
+public:
+    constexpr UnitArrayBase() = default;
+
+    template<typename... Ts>
+    constexpr UnitArrayBase(Ts &&... args)
+      : m_Array({ std::forward<Ts>(args)... })
+    {}
+
+    UnitType &operator[](size_t i) { return m_Array[i]; }
+    const UnitType &operator[](size_t i) const { return m_Array[i]; }
+    static constexpr size_t size() { return ArraySize; }
+
+    operator const std::array<UnitType, ArraySize> &() const
+    {
+        return m_Array;
+    }
+
+    template<typename UnitType2>
+    operator UnitArray2<UnitType2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return UnitArray2<UnitType2>(derived->x(), derived->y());
+    }
+
+    template<typename UnitType2>
+    operator UnitArray3<UnitType2>() const
+    {
+        const auto derived = static_cast<const Derived *>(this);
+        return UnitArray3<UnitType2>(derived->x(), derived->y(), derived->z());
+    }
+
+    auto begin() { return m_Array.begin(); }
+    auto begin() const { return m_Array.begin(); }
+    auto end() { return m_Array.end(); }
+    auto end() const { return m_Array.end(); }
+    auto cbegin() const { return m_Array.cbegin(); }
+    auto cend() const { return m_Array.end(); }
+
+private:
+    std::array<UnitType, ArraySize> m_Array{};
+};
+
+template<typename UnitType>
+class UnitArray2
+  : public UnitArrayBase<UnitType, 2, UnitArray2<UnitType>>
+{
+    constexpr UnitArray2() = default;
+
+    template<typename... Ts>
+    constexpr UnitArray2(Ts &&... args)
+      : UnitArrayBase<UnitType, 2, UnitArray2<UnitType>>({ std::forward<Ts>(args)... })
+    {}
+
+    UnitType &x() { return (*this)[0]; }
+    const UnitType &x() const { return (*this)[0]; }
+    UnitType &y() { return (*this)[1]; }
+    const UnitType &y() const { return (*this)[1]; }
+    static constexpr UnitType z() { return UnitType(0); }
+};
+
+template<typename UnitType>
+class UnitArray3
+  : public UnitArrayBase<UnitType, 3, UnitArray3<UnitType>>
+{
+    constexpr UnitArray3() = default;
+
+    template<typename... Ts>
+    constexpr UnitArray3(Ts &&... args)
+      : UnitArrayBase<UnitType, 3, UnitArray3<UnitType>>({ std::forward<Ts>(args)... })
+    {}
+
+    UnitType &x() { return (*this)[0]; }
+    const UnitType &x() const { return (*this)[0]; }
+    UnitType &y() { return (*this)[1]; }
+    const UnitType &y() const { return (*this)[1]; }
+    UnitType &z() { return (*this)[2]; }
+    const UnitType &z() const { return (*this)[2]; }
+};
+
 template<typename LengthUnit>
 class Length3;
 
@@ -93,6 +184,7 @@ public:
 template<typename LengthUnit, size_t N, typename Derived>
 class LengthBase
   : public PoseBase<Derived>
+  , public UnitArrayBase<LengthUnit, N, LengthBase<LengthUnit, N, Derived>>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
                   "LengthUnit is not a unit of length");
@@ -104,13 +196,8 @@ public:
     template<typename... Ts>
     constexpr LengthBase(Ts &&... args)
       : PoseBase<Derived>()
-      , m_Array({ std::forward<Ts>(args)... })
+      , UnitArrayBase<LengthUnit, N, LengthBase<LengthUnit, N, Derived>>({ std::forward<Ts>(args)... })
     {}
-
-    operator const std::array<LengthUnit, N> &() const
-    {
-        return m_Array;
-    }
 
     template<typename PositionType>
     LengthUnit distance3D(const PositionType &point) const
@@ -130,19 +217,8 @@ public:
         return hypot(derived->x() - point.x(), derived->y() - point.y());
     }
 
-    LengthUnit &operator[](size_t i) { return m_Array[i]; }
-    const LengthUnit &operator[](size_t i) const { return m_Array[i]; }
-    static constexpr size_t size() { return N; }
-
     const auto &position() const { return static_cast<const Derived &>(*this); }
     auto &position() { return static_cast<Derived &>(*this); }
-
-    auto begin() { return m_Array.begin(); }
-    auto begin() const { return m_Array.begin(); }
-    auto end() { return m_Array.end(); }
-    auto end() const { return m_Array.end(); }
-    auto cbegin() const { return m_Array.cbegin(); }
-    auto cend() const { return m_Array.end(); }
 
     bool isnan() const
     {
@@ -153,9 +229,6 @@ public:
     static constexpr radian_t yaw() { return radian_t(0); }
     static constexpr radian_t pitch() { return radian_t(0); }
     static constexpr radian_t roll() { return radian_t(0); }
-
-private:
-    std::array<LengthUnit, N> m_Array{};
 };
 
 //! 2D length unit vector
