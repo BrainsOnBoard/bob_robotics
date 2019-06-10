@@ -14,10 +14,10 @@
 namespace BoBRobotics {
 
 template<typename LengthUnit>
-class Vector3;
+class Length3;
 
 template<typename LengthUnit>
-class Vector2;
+class Length2;
 
 template<typename LengthUnit, typename AngleUnit>
 class Pose3;
@@ -46,17 +46,17 @@ public:
     }
 
     template<typename LengthUnit2>
-    operator Vector2<LengthUnit2>() const
+    operator Length2<LengthUnit2>() const
     {
         const auto derived = static_cast<const Derived *>(this);
-        return Vector2<LengthUnit2>(derived->x(), derived->y());
+        return Length2<LengthUnit2>(derived->x(), derived->y());
     }
 
     template<typename LengthUnit2>
-    operator Vector3<LengthUnit2>() const
+    operator Length3<LengthUnit2>() const
     {
         const auto derived = static_cast<const Derived *>(this);
-        return Vector3<LengthUnit2>(derived->x(), derived->y(), derived->z());
+        return Length3<LengthUnit2>(derived->x(), derived->y(), derived->z());
     }
 
     template<typename LengthUnit2, typename AngleUnit2>
@@ -91,7 +91,7 @@ public:
 
 //! Base class for vectors of length units
 template<typename LengthUnit, size_t N, typename Derived>
-class VectorBase
+class LengthBase
   : public PoseBase<Derived>
 {
     static_assert(units::traits::is_length_unit<LengthUnit>::value,
@@ -99,10 +99,10 @@ class VectorBase
     using radian_t = units::angle::radian_t;
 
 public:
-    constexpr VectorBase() = default;
+    constexpr LengthBase() = default;
 
     template<typename... Ts>
-    constexpr VectorBase(Ts &&... args)
+    constexpr LengthBase(Ts &&... args)
       : PoseBase<Derived>()
       , m_Array({ std::forward<Ts>(args)... })
     {}
@@ -160,18 +160,18 @@ private:
 
 //! 2D length unit vector
 template<typename LengthUnit>
-class Vector2
-  : public VectorBase<LengthUnit, 2, Vector2<LengthUnit>>
+class Length2
+  : public LengthBase<LengthUnit, 2, Length2<LengthUnit>>
 {
 public:
-    constexpr Vector2() = default;
+    constexpr Length2() = default;
 
-    constexpr Vector2(LengthUnit x, LengthUnit y)
-      : VectorBase<LengthUnit, 2, Vector2<LengthUnit>>(x, y)
+    constexpr Length2(LengthUnit x, LengthUnit y)
+      : LengthBase<LengthUnit, 2, Length2<LengthUnit>>(x, y)
     {}
 
-    constexpr Vector2(const std::array<LengthUnit, 2> &array)
-      : Vector2(array[0], array[1])
+    constexpr Length2(const std::array<LengthUnit, 2> &array)
+      : Length2(array[0], array[1])
     {}
 
     LengthUnit &x() { return (*this)[0]; }
@@ -183,27 +183,27 @@ public:
     static constexpr auto nan()
     {
         constexpr auto nan = LengthUnit{ std::numeric_limits<double>::quiet_NaN() };
-        return Vector2<LengthUnit>(nan, nan);
+        return Length2<LengthUnit>(nan, nan);
     }
 };
 
 //! 3D length unit vector
 template<typename LengthUnit>
-class Vector3
-  : public VectorBase<LengthUnit, 3, Vector3<LengthUnit>>
+class Length3
+  : public LengthBase<LengthUnit, 3, Length3<LengthUnit>>
 {
 public:
-    constexpr Vector3() = default;
+    constexpr Length3() = default;
 
-    constexpr Vector3(LengthUnit x, LengthUnit y, LengthUnit z)
-      : VectorBase<LengthUnit, 3, Vector3<LengthUnit>>(x, y, z)
+    constexpr Length3(LengthUnit x, LengthUnit y, LengthUnit z)
+      : LengthBase<LengthUnit, 3, Length3<LengthUnit>>(x, y, z)
     {}
 
-    constexpr Vector3(const std::array<LengthUnit, 3> &array)
-      : Vector3(array[0], array[1], array[2])
+    constexpr Length3(const std::array<LengthUnit, 3> &array)
+      : Length3(array[0], array[1], array[2])
     {}
 
-    operator Vector2<LengthUnit>() const { return Vector2<LengthUnit>(x(), y()); }
+    operator Length2<LengthUnit>() const { return Length2<LengthUnit>(x(), y()); }
 
     LengthUnit &x() { return (*this)[0]; }
     const LengthUnit &x() const { return (*this)[0]; }
@@ -215,7 +215,7 @@ public:
     static constexpr auto nan()
     {
         constexpr auto nan = LengthUnit{ std::numeric_limits<double>::quiet_NaN() };
-        return Vector3<LengthUnit>(nan, nan, nan);
+        return Length3<LengthUnit>(nan, nan, nan);
     }
 };
 
@@ -241,8 +241,8 @@ public:
       , m_Angle(angle)
     {}
 
-    Vector2<LengthUnit> &position() { return m_Position; }
-    const Vector2<LengthUnit> &position() const { return m_Position; }
+    Length2<LengthUnit> &position() { return m_Position; }
+    const Length2<LengthUnit> &position() const { return m_Position; }
     LengthUnit &x() { return m_Position[0]; }
     const LengthUnit &x() const { return m_Position[0]; }
     LengthUnit &y() { return m_Position[1]; }
@@ -256,7 +256,7 @@ public:
     static constexpr AngleUnit roll() { return AngleUnit(0); }
 
 private:
-    Vector2<LengthUnit> m_Position;
+    Length2<LengthUnit> m_Position;
     AngleUnit m_Angle{};
 };
 
@@ -273,13 +273,13 @@ class Pose3
 public:
     constexpr Pose3() = default;
 
-    constexpr Pose3(const Vector3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
+    constexpr Pose3(const Length3<LengthUnit> &position, const std::array<AngleUnit, 3> &attitude)
       : m_Position(position)
       , m_Attitude(attitude)
     {}
 
-    Vector3<LengthUnit> &position() { return m_Position; }
-    const Vector3<LengthUnit> &position() const { return m_Position; }
+    Length3<LengthUnit> &position() { return m_Position; }
+    const Length3<LengthUnit> &position() const { return m_Position; }
     LengthUnit &x() { return m_Position[0]; }
     const LengthUnit &x() const { return m_Position[0]; }
     LengthUnit &y() { return m_Position[1]; }
@@ -297,7 +297,7 @@ public:
     const AngleUnit &roll() const { return m_Attitude[2]; }
 
 private:
-    Vector3<LengthUnit> m_Position;
+    Length3<LengthUnit> m_Position;
     std::array<AngleUnit, 3> m_Attitude{};
 };
 
@@ -312,14 +312,14 @@ convertUnitArray(const ArrayType &values)
 }
 
 template<typename LengthUnit>
-inline auto &operator<<(std::ostream &os, const BoBRobotics::Vector2<LengthUnit> &position)
+inline auto &operator<<(std::ostream &os, const BoBRobotics::Length2<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ")";
     return os;
 }
 
 template<typename LengthUnit>
-inline auto &operator<<(std::ostream &os, const BoBRobotics::Vector3<LengthUnit> &position)
+inline auto &operator<<(std::ostream &os, const BoBRobotics::Length3<LengthUnit> &position)
 {
     os << "(" << position.x() << ", " << position.y() << ", " << position.z() << ")";
     return os;

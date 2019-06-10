@@ -37,11 +37,11 @@ public:
     void update(const Pose3<meter_t, degree_t> &pose,
                 const std::array<meters_per_second_t, 3> &velocity);
     void setYaw(degree_t yaw);
-    void setWaypoint(const Vector3<meter_t> &waypoint);
+    void setWaypoint(const Length3<meter_t> &waypoint);
 
     Robots::UAV &m_Drone;
     Bounds m_RoomBounds;
-    Vector3<meter_t> m_Waypoint;
+    Length3<meter_t> m_Waypoint;
     degree_t m_Yaw = 0.0_deg;
     std::array<float, 3> m_VSetPoint = { { 0, 0, 0 } };
     std::array<meters_per_second_t, 3> m_OldVelocity = { { 0_mps, 0_mps, 0_mps } };

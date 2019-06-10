@@ -30,7 +30,7 @@ bob_main(int, char **)
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
-    const Vector2<millimeter_t> goal{}; // Goal is origin
+    const Length2<millimeter_t> goal{}; // Goal is origin
     bool pidRunning = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (!pressed) {

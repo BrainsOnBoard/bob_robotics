@@ -49,12 +49,12 @@ public:
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(meter_t x, meter_t y, bool error);
 
-    const Vector2<meter_t> &getMinBound()
+    const Length2<meter_t> &getMinBound()
     {
         return m_MinBound;
     }
 
-    const Vector2<meter_t> &getMaxBound()
+    const Length2<meter_t> &getMaxBound()
     {
         return m_MaxBound;
     }
@@ -87,8 +87,8 @@ private:
     GLuint m_OverlayPositionVBO;
     GLuint m_OverlayColoursVBO;
 
-    Vector2<meter_t> m_MinBound;
-    Vector2<meter_t> m_MaxBound;
+    Length2<meter_t> m_MinBound;
+    Length2<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

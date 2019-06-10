@@ -93,7 +93,7 @@ bob_main(int, char **)
             break;
         }
 
-        Vector3<meter_t> positionChange;
+        Length3<meter_t> positionChange;
         degree_t yawChange;
         std::tie(positionChange, yawChange) = drone.getRelativeMovePoseDifference();
         LOGI << "Drone moved by: (" << positionChange << ") and " << yawChange;

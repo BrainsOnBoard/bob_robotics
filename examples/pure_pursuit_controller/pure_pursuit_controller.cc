@@ -65,7 +65,7 @@ int bob_main(int, char **)
     //-------------------------------------------------------------------
     millimeter_t xMM, yMM;
     display.pixelToMM(currentX, currentY,  xMM,  yMM);
-    std::vector<Vector2<millimeter_t>> wpCoordinates;
+    std::vector<Length2<millimeter_t>> wpCoordinates;
     wpCoordinates.emplace_back(xMM, yMM);
     //-------------------------------------------------------------------
 
@@ -122,7 +122,7 @@ int bob_main(int, char **)
         }
 
         // draw lookahead point and a line to it from the robot
-        Vector2<millimeter_t> lookPoint;
+        Length2<millimeter_t> lookPoint;
         const bool didGetPoint = controller.getLookAheadPoint(car.getPose().x(), car.getPose().y(),lookaheadDistance,lookPoint);
         int pxx, pxy;
         const auto robx = car.getPose().x();

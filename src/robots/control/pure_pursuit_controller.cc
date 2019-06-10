@@ -24,12 +24,12 @@ PurePursuitController::PurePursuitController(millimeter_t lookahead,
 }
 
 //! set waypoints which forms a path to be followed
-void PurePursuitController::setWayPoints(const std::vector<Vector2<millimeter_t>> &wp) {
+void PurePursuitController::setWayPoints(const std::vector<Length2<millimeter_t>> &wp) {
     m_wayPoints = wp;
 }
 
 //! adds to the list of waypoints
-void PurePursuitController::addToWayPoint(const Vector2<millimeter_t> wayPoint) {
+void PurePursuitController::addToWayPoint(const Length2<millimeter_t> wayPoint) {
     m_wayPoints.push_back(wayPoint);
 }
 
@@ -53,7 +53,7 @@ void PurePursuitController::setStoppingDistance(const millimeter_t distance) {
 bool PurePursuitController::getTurningAngle(const millimeter_t x, const millimeter_t y, const radian_t heading, degree_t &turningAngle) {
 
     using namespace units::math;
-    Vector2<millimeter_t> lookPoint;                                           // lookahead point
+    Length2<millimeter_t> lookPoint;                                           // lookahead point
     bool didGetPoint = getLookAheadPoint(x,y, m_lookAheadDistance, lookPoint); // did we get a valid lookahead point (and also calculate the point)
     const millimeter_t wx = m_wayPoints.back().x();                            // last wp x
     const millimeter_t wy = m_wayPoints.back().y();                            // last wp y
@@ -87,7 +87,7 @@ bool PurePursuitController::getTurningAngle(const millimeter_t x, const millimet
 }
 
 //! calculates the look-ahead point the robot follows. returns true if there is a valid point
-bool PurePursuitController::getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r, Vector2<millimeter_t> &lookaheadPoint) {
+bool PurePursuitController::getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r, Length2<millimeter_t> &lookaheadPoint) {
     using namespace units::math;
 
     if (m_wayPoints.size() > 1) {
@@ -95,8 +95,8 @@ bool PurePursuitController::getLookAheadPoint(const millimeter_t x, const millim
         for (unsigned int i = 0; i < m_wayPoints.size()-1; i++) {
 
             // path points
-            const Vector2<millimeter_t> segmentStart = m_wayPoints.at(i);
-            const Vector2<millimeter_t> segmentEnd = m_wayPoints.at(i+1);
+            const Length2<millimeter_t> segmentStart = m_wayPoints.at(i);
+            const Length2<millimeter_t> segmentEnd = m_wayPoints.at(i+1);
 
             const auto p1x = segmentStart.x() - x;
             const auto p1y = segmentStart.y() - y;

@@ -116,7 +116,7 @@ ImageDatabase::Recorder::Recorder(ImageDatabase &imageDatabase,
 void
 ImageDatabase::Recorder::addEntry(const std::string &filename,
                                   const cv::Mat &image,
-                                  const Vector3<millimeter_t> &position,
+                                  const Length3<millimeter_t> &position,
                                   const degree_t heading,
                                   const std::array<size_t, 3> &gridPosition)
 {
@@ -154,11 +154,11 @@ ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
 }
 
 //! Get the physical position represented by grid coordinates
-Vector3<millimeter_t>
+Length3<millimeter_t>
 ImageDatabase::GridRecorder::getPosition(const std::array<size_t, 3> &gridPosition) const
 {
     BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
-    Vector3<millimeter_t> position;
+    Length3<millimeter_t> position;
     for (size_t i = 0; i < position.size(); i++) {
         position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
     }
@@ -166,10 +166,10 @@ ImageDatabase::GridRecorder::getPosition(const std::array<size_t, 3> &gridPositi
 }
 
 //! Get a vector of all possible positions for this grid
-std::vector<Vector3<millimeter_t>>
+std::vector<Length3<millimeter_t>>
 ImageDatabase::GridRecorder::getPositions()
 {
-    std::vector<Vector3<millimeter_t>> positions;
+    std::vector<Length3<millimeter_t>> positions;
     positions.reserve(maximumSize());
 
     for (size_t x = 0; x < sizeX(); x++) {
@@ -236,7 +236,7 @@ ImageDatabase::RouteRecorder::RouteRecorder(ImageDatabase &imageDatabase,
 }
 
 void
-ImageDatabase::RouteRecorder::record(const Vector3<millimeter_t> &position,
+ImageDatabase::RouteRecorder::record(const Length3<millimeter_t> &position,
                                      degree_t heading,
                                      const cv::Mat &image)
 {
@@ -512,7 +512,7 @@ ImageDatabase::getFilename(const size_t routeIndex,
 
 //! Get a filename for a grid-type database
 std::string
-ImageDatabase::getFilename(const Vector3<millimeter_t> &position,
+ImageDatabase::getFilename(const Length3<millimeter_t> &position,
                            const std::string &imageFormat)
 {
     // Convert to integers

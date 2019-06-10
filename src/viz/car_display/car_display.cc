@@ -85,9 +85,9 @@ std::pair<SDL_Keycode, bool> CarDisplay::runGUI(const Pose2<millimeter_t, degree
     return key;
 }
 
-Vector2<millimeter_t> CarDisplay::getMouseClickPosition() const
+Length2<millimeter_t> CarDisplay::getMouseClickPosition() const
 {
-    Vector2<millimeter_t> out;
+    Length2<millimeter_t> out;
     pixelToMM(m_MouseClickPosition[0], m_MouseClickPosition[1], out[0], out[1]);
     return out;
 }

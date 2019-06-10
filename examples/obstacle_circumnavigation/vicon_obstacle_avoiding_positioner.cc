@@ -207,9 +207,9 @@ private:
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
 
-    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank &tank)
+    static std::array<Length2<meter_t>, 4> getRobotDimensions(Robots::Tank &tank)
     {
-        using V = Vector2<meter_t>;
+        using V = Length2<meter_t>;
         const auto halfWidth = tank.getRobotWidth() / 2;
 
         // The x and y dimensions of the robot

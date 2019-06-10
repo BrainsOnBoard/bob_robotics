@@ -58,7 +58,7 @@ public:
 
     private:
         const SFMLWorld &m_Display;
-        Vector2<meter_t> m_Size;
+        Length2<meter_t> m_Size;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
     };
@@ -93,10 +93,10 @@ public:
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    SFMLWorld(const Vector2<meter_t> &arenaSize = { 3.2_m, 3.2_m });
+    SFMLWorld(const Length2<meter_t> &arenaSize = { 3.2_m, 3.2_m });
 
     template<typename MaxBoundsType>
-    SFMLWorld(const Vector2<meter_t> &minBounds,
+    SFMLWorld(const Length2<meter_t> &minBounds,
               const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
@@ -223,11 +223,11 @@ public:
     }
 
     bool mouseClicked() const;
-    Vector2<meter_t> mouseClickPosition() const;
+    Length2<meter_t> mouseClickPosition() const;
     bool isOpen() const;
     void close();
     float lengthToPixel(const meter_t value) const;
-    Vector2<meter_t> pixelToVector(int x, int y);
+    Length2<meter_t> pixelToVector(int x, int y);
 
     template<class VectorType>
     sf::Vector2f vectorToPixel(const VectorType &point) const
@@ -241,9 +241,9 @@ public:
 private:
     sf::RenderWindow m_Window;
     std::unique_ptr<CrossShape> m_OriginCross;
-    const Vector2<meter_t> m_MinBounds;
+    const Length2<meter_t> m_MinBounds;
     meter_t m_UnitPerPixel;
-    Vector2<meter_t> m_MouseClickPosition = Vector2<meter_t>::nan();
+    Length2<meter_t> m_MouseClickPosition = Length2<meter_t>::nan();
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 

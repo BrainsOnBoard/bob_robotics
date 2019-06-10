@@ -66,7 +66,7 @@ public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
-        Vector3<millimeter_t> position;
+        Length3<millimeter_t> position;
         degree_t heading;
         filesystem::path path;
         std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
@@ -110,7 +110,7 @@ public:
 
         void addEntry(const std::string &filename,
                       const cv::Mat &image,
-                      const Vector3<millimeter_t> &position,
+                      const Length3<millimeter_t> &position,
                       const degree_t heading,
                       const std::array<size_t, 3> &gridPosition = { 0, 0, 0 });
     };
@@ -123,10 +123,10 @@ public:
                      const std::string &imageFormat = "png");
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const;
+        Length3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const;
 
         //! Get a vector of all possible positions for this grid
-        std::vector<Vector3<millimeter_t>> getPositions();
+        std::vector<Length3<millimeter_t>> getPositions();
 
         //! Save a new image into the database
         void record(const cv::Mat &image);
@@ -142,7 +142,7 @@ public:
 
     private:
         const degree_t m_Heading;
-        const Vector3<millimeter_t> m_Begin, m_Separation;
+        const Length3<millimeter_t> m_Begin, m_Separation;
         const std::array<size_t, 3> m_Size;
         std::array<size_t, 3> m_Current;
     };
@@ -153,7 +153,7 @@ public:
         RouteRecorder(ImageDatabase &imageDatabase, const std::string &imageFormat = "png");
 
         //! Save a new image taken at the specified pose
-        void record(const Vector3<millimeter_t> &position, degree_t heading, const cv::Mat &image);
+        void record(const Length3<millimeter_t> &position, degree_t heading, const cv::Mat &image);
     };
 
     ImageDatabase(const char *databasePath, bool overwrite = false);
@@ -221,7 +221,7 @@ public:
                                    const std::string &imageFormat = "png");
 
     //! Get a filename for a grid-type database
-    static std::string getFilename(const Vector3<millimeter_t> &position,
+    static std::string getFilename(const Length3<millimeter_t> &position,
                                    const std::string &imageFormat = "png");
 
 private:

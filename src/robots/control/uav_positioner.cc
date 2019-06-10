@@ -105,7 +105,7 @@ UAVPositioner::setYaw(degree_t yaw)
 }
 
 void
-UAVPositioner::setWaypoint(const Vector3<meter_t> &waypoint)
+UAVPositioner::setWaypoint(const Length3<meter_t> &waypoint)
 {
     // Check that the user is not trying to move out of our room bounds
     BOB_ASSERT(waypoint.x() >= m_RoomBounds.x.first && waypoint.x() <= m_RoomBounds.x.second);

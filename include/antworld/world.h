@@ -49,12 +49,12 @@ public:
     void load(const filesystem::path &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
     void loadObj(const filesystem::path &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
 
-    const Vector3<meter_t> &getMinBound()
+    const Length3<meter_t> &getMinBound()
     {
         return m_MinBound;
     }
 
-    const Vector3<meter_t> &getMaxBound()
+    const Length3<meter_t> &getMaxBound()
     {
         return m_MaxBound;
     }
@@ -136,8 +136,8 @@ private:
     std::vector<std::unique_ptr<Texture>> m_Textures;
 
     // World bounds
-    Vector3<meter_t> m_MinBound;
-    Vector3<meter_t> m_MaxBound;
+    Length3<meter_t> m_MinBound;
+    Length3<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

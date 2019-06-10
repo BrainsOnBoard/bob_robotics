@@ -73,7 +73,7 @@ public:
 
     void reset() {}
 
-    void moveTo(const Vector2<meter_t> &goal)
+    void moveTo(const Length2<meter_t> &goal)
     {
         m_Goal = goal;
 
@@ -107,7 +107,7 @@ private:
     Tank &m_Robot;
     PoseGetterType &m_PoseGetter;
     Pose2<meter_t, radian_t> m_RobotPose;
-    Vector2<meter_t> m_Goal;
+    Length2<meter_t> m_Goal;
     const meter_t m_DistanceTolerance;
     const radian_t m_AngleTolerance, m_StartTurningThreshold;
     radian_t m_HeadingOffset;

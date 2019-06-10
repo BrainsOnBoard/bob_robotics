@@ -33,10 +33,10 @@ public:
                           millimeter_t stopping_dist);
 
     //! set waypoints which forms a path to be followed
-    void setWayPoints(const std::vector<Vector2<millimeter_t>> &wp);
+    void setWayPoints(const std::vector<Length2<millimeter_t>> &wp);
 
     //! adds to the list of waypoints
-    void addToWayPoint(const Vector2<millimeter_t> wayPoint);
+    void addToWayPoint(const Length2<millimeter_t> wayPoint);
 
     //! sets the lookahead distance. Large values causes the car to cut corners,
     //! where small values makes the car follow the path more closely
@@ -52,14 +52,14 @@ public:
     bool getTurningAngle(const millimeter_t x, const millimeter_t y, const radian_t heading, degree_t &turningAngle);
 
     //! calculates the look-ahead point the robot follows. returns true if there is a valid point
-    bool getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r, Vector2<millimeter_t> &lookaheadPoint);
+    bool getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r, Length2<millimeter_t> &lookaheadPoint);
 
 private:
 
     millimeter_t m_lookAheadDistance;                 // the distance to look ahead
     millimeter_t m_wheelBase;                         // length between wheel bases
     millimeter_t m_stoppingDistance;                  // stopping distance.
-    std::vector<Vector2<millimeter_t>> m_wayPoints;   // list of waypoint coordinates
+    std::vector<Length2<millimeter_t>> m_wayPoints;   // list of waypoint coordinates
 
     // computes the turning angle using the lookahead point
     degree_t computeTurningAngle(const millimeter_t xrobot,

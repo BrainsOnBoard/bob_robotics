@@ -206,7 +206,7 @@ public:
     virtual void setYawSpeed(float right) override;
     void relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw = 0_rad);
     RelativeMoveState getRelativeMoveState() const;
-    std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
+    std::pair<Length3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
     void resetRelativeMoveState();
 
     // calibration
@@ -301,7 +301,7 @@ private:
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<unsigned char> m_BatteryLevel;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
-    Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
+    Length3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
 
     inline void connect();

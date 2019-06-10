@@ -121,8 +121,8 @@ public:
         , m_CollisionDetector(collisionDetector)
     {}
 
-    template<class VectorType = Vector2<meter_t>>
-    void update(const VectorType &robotGoal = Vector2<meter_t>::nan())
+    template<class VectorType = Length2<meter_t>>
+    void update(const VectorType &robotGoal = Length2<meter_t>::nan())
     {
         if (m_PIDWaypoints.empty()) {
             const auto pose = m_PoseGetter.getPose();
@@ -149,13 +149,13 @@ private:
     Robots::TankPID<PoseGetterType> m_TankPID;
     PoseGetterType &m_PoseGetter;
     EigenSTDVector<Eigen::Matrix2d> m_ObjectLines;
-    std::list<Vector2<meter_t>> m_PIDWaypoints;
+    std::list<Length2<meter_t>> m_PIDWaypoints;
     Eigen::MatrixX2d m_ObjectPerimeter;
     State m_State = State::DoingNothing;
     Robots::CollisionDetector &m_CollisionDetector;
 
     void startCircumnavigating(const Pose2<meter_t, radian_t> &robotPose,
-                               const Vector2<meter_t> &robotGoal)
+                               const Length2<meter_t> &robotGoal)
     {
         using namespace units::math;
 

@@ -47,7 +47,7 @@ public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
 
     template<typename LengthUnit = meter_t>
-    Vector3<LengthUnit> getPosition() const
+    Length3<LengthUnit> getPosition() const
     {
         return convertUnitArray<LengthUnit>(m_Pose.position());
     }

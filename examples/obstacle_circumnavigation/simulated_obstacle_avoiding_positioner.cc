@@ -51,7 +51,7 @@ main()
     // The x and y dimensions of the robot
     const auto halfWidth = car.getSize().x() / 2;
     const auto halfLength = car.getSize().y() / 2;
-    using V = Vector2<meter_t>;
+    using V = Length2<meter_t>;
     const std::array<V, 4> robotDimensions = {
         V{ -halfWidth, halfLength },
         V{ halfWidth, halfLength },
@@ -71,7 +71,7 @@ main()
     sf::RectangleShape objectShape({ size, size });
     const auto offset = display.lengthToPixel(5_cm);
     objectShape.setOrigin(offset, offset);
-    objectShape.setPosition(display.vectorToPixel(Vector2<meter_t>{ -35_cm, -35_cm }));
+    objectShape.setPosition(display.vectorToPixel(Length2<meter_t>{ -35_cm, -35_cm }));
     objectShape.setFillColor(sf::Color::Black);
 
     // Objects for controlling circumnavigation

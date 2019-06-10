@@ -31,7 +31,7 @@ using namespace std::literals;
 template<class PoseGetterType>
 class ObstacleCircumnavigationRunner
 {
-    using V = Vector2<meter_t>;
+    using V = Length2<meter_t>;
 
 public:
     ObstacleCircumnavigationRunner(Robots::Tank &tank,

@@ -61,9 +61,9 @@ SFMLWorld::CarAgent::draw(sf::RenderTarget &target, sf::RenderStates states) con
     target.draw(m_Sprite, states);
 }
 
-SFMLWorld::SFMLWorld(const Vector2<meter_t> &arenaSize)
-    : SFMLWorld(Vector2<meter_t>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
-                    Vector2<meter_t>{ arenaSize[0] / 2, arenaSize[1] / 2 })
+SFMLWorld::SFMLWorld(const Length2<meter_t> &arenaSize)
+    : SFMLWorld(Length2<meter_t>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
+                    Length2<meter_t>{ arenaSize[0] / 2, arenaSize[1] / 2 })
 {}
 
 SFMLWorld::CarAgent SFMLWorld::createCarAgent(meter_t carWidth)
@@ -76,7 +76,7 @@ bool SFMLWorld::mouseClicked() const
     return !m_MouseClickPosition.isnan();
 }
 
-Vector2<meter_t> SFMLWorld::mouseClickPosition() const
+Length2<meter_t> SFMLWorld::mouseClickPosition() const
 {
     return m_MouseClickPosition;
 }
@@ -96,9 +96,9 @@ float SFMLWorld::lengthToPixel(const meter_t value) const
     return static_cast<float>((value / m_UnitPerPixel).value());
 }
 
-Vector2<meter_t> SFMLWorld::pixelToVector(int x, int y)
+Length2<meter_t> SFMLWorld::pixelToVector(int x, int y)
 {
-    return Vector2<meter_t>(m_MinBounds[0] + m_UnitPerPixel * x,
+    return Length2<meter_t>(m_MinBounds[0] + m_UnitPerPixel * x,
                                 m_MinBounds[1] + m_UnitPerPixel * (WindowHeight - y));
 }
 
@@ -110,7 +110,7 @@ sf::Vector2f SFMLWorld::vectorToPixel(double x, double y) const
 
 bool SFMLWorld::handleEvents(sf::Event &event)
 {
-    m_MouseClickPosition = Vector2<meter_t>::nan();
+    m_MouseClickPosition = Length2<meter_t>::nan();
 
     if (event.type == sf::Event::Closed ||
             (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Q)) {

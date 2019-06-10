@@ -252,7 +252,7 @@ Bebop::getRelativeMoveState() const
 }
 
 //! Get the distance moved in the last relative move operation
-std::pair<Vector3<meter_t>, radian_t>
+std::pair<Length3<meter_t>, radian_t>
 Bebop::getRelativeMovePoseDifference() const
 {
     return std::make_pair(m_RelativeMovePositionDistance, m_RelativeMoveAngleDistance);

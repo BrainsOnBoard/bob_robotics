@@ -50,7 +50,7 @@ usage(const char *programName)
 }
 
 void
-printGoalStats(const Vector2<millimeter_t> &goal, const Pose3<millimeter_t, radian_t> &robotPosition)
+printGoalStats(const Length2<millimeter_t> &goal, const Pose3<millimeter_t, radian_t> &robotPosition)
 {
     LOGI << "Goal: " << goal;
     LOGI << "Distance to goal: "
@@ -85,7 +85,7 @@ bob_main(int argc, char **argv)
 #endif
 
     // Load path from file, if one is given
-    std::vector<Vector2<millimeter_t>> goals;
+    std::vector<Length2<millimeter_t>> goals;
     switch (argc) {
     case 3:
         if (strcmp(argv[1], "-p") != 0) {

@@ -37,7 +37,7 @@ public:
 
     std::pair<SDL_Keycode, bool> runGUI(const Pose2<millimeter_t, degree_t> &agentPose);
 
-    Vector2<millimeter_t> getMouseClickPosition() const;
+    Length2<millimeter_t> getMouseClickPosition() const;
 
     std::vector<float> getMouseClickPixelPosition() const;
 

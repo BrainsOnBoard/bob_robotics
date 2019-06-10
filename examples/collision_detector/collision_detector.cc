@@ -56,7 +56,7 @@ int
 main()
 {
     // The x and y dimensions of the robot
-    using V = Vector2<meter_t>;
+    using V = Length2<meter_t>;
     constexpr std::array<V, 4> robotDimensions = {
         V{ -75_mm, 70_mm},
         V{ 75_mm, 70_mm },

@@ -53,7 +53,7 @@ public:
     uint32_t getFrameNumber() const;
 
     template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
+    Length3<LengthUnit> getPosition() const
     {
         return m_Pose.position();
     }
@@ -191,7 +191,7 @@ public:
     }
 
     template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
+    Length3<LengthUnit> getPosition() const
     {
         return getData().template getPosition<LengthUnit>();
     }
