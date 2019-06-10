@@ -46,13 +46,13 @@ public:
 
     float *getPNToKCTauSyn(){ return &m_PNToKCTauSyn; }
 
-    const cv::Mat &getHOGFeatures() const{ return m_HOGFeatures; }
+    const cv::Mat &getFeatures() const{ return m_Features; }
 
     const std::vector<float> &getGGNVoltageHistory() const{ return m_GGNVoltageHistory; }
     const std::vector<float> &getKCInhInSynHistory() const{ return m_KCInhInSynHistory; }
 
 
-    const std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> &getHOGDirections() const{ return m_HOGDirections; }
+    const std::array<cv::Vec2f, MBParamsHOG::numOrientations> &getDirections() const{ return m_Directions; }
 
 protected:
     //------------------------------------------------------------------------
@@ -74,7 +74,8 @@ private:
     // Image containing pixel orientations - one channel per orientation
     mutable cv::Mat m_PixelOrientations;
 
-    mutable cv::Mat m_HOGFeatures;
+    // Final feature vector to pass to MB
+    mutable cv::Mat m_Features;
 
     float m_PNToKCTauSyn;
     float m_PNTauM;
@@ -83,7 +84,8 @@ private:
     mutable std::vector<float> m_GGNVoltageHistory;
     mutable std::vector<float> m_KCInhInSynHistory;
 
-    std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> m_HOGDirections;
+    // Vectors used to calculate orientation features from Sobel features
+    std::array<cv::Vec2f, MBParamsHOG::numOrientations> m_Directions;
 
     float *m_GGGNToKC;
     float *m_GKCToGGN;

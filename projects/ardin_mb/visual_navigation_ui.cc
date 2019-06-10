@@ -74,7 +74,7 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
     return true;
 }
 //----------------------------------------------------------------------------
-bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::hogNumOrientations> &directions, float drawScale)
+bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::numOrientations> &directions, float drawScale)
 {
     // Calculate number of cells
     const size_t numCellX = features.cols;
@@ -105,9 +105,11 @@ bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::h
                                                 IM_COL32(128, 128, 128, 255));
 
             // Get magnitude of features in cell
-            const auto cellFeatures = features.at<cv::Vec<float, MBParamsHOG::hogNumOrientations>>(y, x);
+            const auto cellFeatures = features.at<cv::Vec<float, MBParamsHOG::numFeatures>>(y, x);
 
-            for(size_t b = 0; b < MBParamsHOG::hogNumOrientations; b++) {
+
+            // Draw orientation features
+            for(size_t b = 0; b < MBParamsHOG::numOrientations; b++) {
                 // Skip zero-strength gradients
                 if(cellFeatures[b] == 0.0f) {
                     continue;
@@ -118,6 +120,10 @@ bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::h
                                                     ImVec2(drawX + (directions[b][0] * lineLength), drawY + directions[b][1] * lineLength),
                                                     IM_COL32(255, 255, 255, 255));
             }
+
+            ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - halfDrawScale + 2, drawY + halfDrawScale - 1),
+                                                ImVec2(drawX - halfDrawScale + 2, drawY + halfDrawScale - 1 - (cellFeatures[MBParamsHOG::numOrientations] * halfDrawScale)),
+                                                IM_COL32(0, 255, 0, 255));
         }
     }
 
@@ -276,8 +282,8 @@ MBHogUI::MBHogUI(MBMemoryHOG &memory)
 //----------------------------------------------------------------------------
 void MBHogUI::handleUI()
 {
-    if(ImGui::Begin("HOG features", nullptr, ImGuiWindowFlags_NoResize)) {
-        if(hogPlot(getMemoryHOG().getHOGFeatures(), getMemoryHOG().getHOGDirections(), 60.0f)) {
+    if(ImGui::Begin("Features", nullptr, ImGuiWindowFlags_NoResize)) {
+        if(hogPlot(getMemoryHOG().getFeatures(), getMemoryHOG().getDirections(), 60.0f)) {
         }
     }
     ImGui::End();
