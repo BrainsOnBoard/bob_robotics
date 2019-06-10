@@ -22,7 +22,6 @@
 
 // Model includes
 #include "parameters.h"
-#include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
 using namespace BoBRobotics;
