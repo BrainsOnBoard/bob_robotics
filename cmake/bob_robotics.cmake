@@ -311,9 +311,9 @@ macro(BoB_build)
 
     # Set include dirs and link libraries for this module/project
     always_included_packages()
-    BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+    BoB_modules(${PARSED_ARGS_BOB_MODULES})
 
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
