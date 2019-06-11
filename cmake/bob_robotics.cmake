@@ -150,6 +150,22 @@ macro(BoB_set_options)
             endif()
         endforeach()
     endif()
+
+    # For the various USE_* C macros we want defined
+    set_use_macros()
+endmacro()
+
+# Set all the USE_* macros before we do anything else
+macro(set_use_macros)
+    foreach(lib IN LISTS PARSED_ARGS_EXTERNAL_LIBS)
+        add_use_macro(${lib})
+    endforeach()
+    foreach(lib IN LISTS PARSED_ARGS_THIRD_PARTY)
+        add_use_macro(${lib})
+    endforeach()
+    foreach(module IN LISTS PARSED_ARGS_BOB_MODULES)
+        add_use_macro(BOB_${module})
+    endforeach()
 endmacro()
 
 # Build a module with extra libraries etc. Currently used by robots/bebop
@@ -395,7 +411,6 @@ function(BoB_modules)
 
         # Some (sub)modules have a slash in the name; replace with underscore
         string(REPLACE / _ module_name ${module})
-        add_use_macro(BOB_${module_name})
 
         # All of our targets depend on this module
         foreach(target IN LISTS BOB_TARGETS)
@@ -430,7 +445,6 @@ endfunction()
 
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
-        add_use_macro(${lib})
         if(${lib} STREQUAL i2c)
             if(NOT WIN32 AND NOT NO_I2C)
                 # If it's a new version of i2c-tools then we need to link
@@ -522,7 +536,6 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        add_use_macro(${module})
         if("${module}" STREQUAL matplotlibcpp)
             find_package(PythonLibs REQUIRED)
             BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
