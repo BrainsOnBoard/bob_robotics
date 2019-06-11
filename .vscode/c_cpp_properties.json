@@ -15,7 +15,18 @@
             ],
             "defines": [
                 "TANK_TYPE_Tank",
-                "TANK_TYPE=Tank"
+                "TANK_TYPE=Tank",
+                "USE_OPENCV",
+                "USE_EIGEN3",
+                "USE_BOB_COMMON",
+                "USE_BOB_ANTWORLD",
+                "USE_BOB_HID",
+                "USE_BOB_IMGPROC",
+                "USE_BOB_NAVIGATION",
+                "USE_BOB_NET",
+                "USE_BOB_OS",
+                "USE_BOB_ROBOTS",
+                "USE_BOB_ROBOTS_BEBOP"
             ],
             "cppStandard": "c++14",
             "intelliSenseMode": "clang-x64"

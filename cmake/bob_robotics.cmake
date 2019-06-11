@@ -198,13 +198,20 @@ macro(BoB_init)
     endif()
 endmacro()
 
-macro(add_compile_flags EXTRA_ARGS)
+function(add_compile_flags EXTRA_ARGS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
-endmacro()
+endfunction()
 
-macro(add_linker_flags EXTRA_ARGS)
+function(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
-endmacro()
+endfunction()
+
+# Sets a C++ macro, so you can have compile-time options in your header (e.g.
+# some functions that will only work if your project uses OpenCV)
+function(add_use_macro libname)
+    string(TOUPPER "${libname}" libnameupper)
+    add_definitions(-DUSE_${libnameupper})
+endfunction()
 
 macro(always_included_packages)
     # Assume we always want threading
@@ -387,6 +394,7 @@ function(BoB_modules)
 
         # Some (sub)modules have a slash in the name; replace with underscore
         string(REPLACE / _ module_name ${module})
+        add_use_macro(BOB_${module_name})
 
         # All of our targets depend on this module
         foreach(target IN LISTS BOB_TARGETS)
@@ -421,6 +429,7 @@ endfunction()
 
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
+        add_use_macro(${lib})
         if(${lib} STREQUAL i2c)
             if(NOT WIN32 AND NOT NO_I2C)
                 # If it's a new version of i2c-tools then we need to link
@@ -512,6 +521,7 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
+        add_use_macro(${module})
         if("${module}" STREQUAL matplotlibcpp)
             find_package(PythonLibs REQUIRED)
             BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
