@@ -2,19 +2,28 @@
 
 // BoB robotics includes
 #include "input.h"
+#include "common/macros.h"
+#include "common/stopwatch.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// Standard C includes
+#include <cmath>
+
 // Standard C++ includes
 #include <algorithm>
+#include <limits>
 #include <random>
 
 namespace BoBRobotics {
 namespace Video {
 //! A Video::Input which generates white noise, for testing purposes
 template<typename GeneratorType = std::mt19937>
-class RandomInput : public Input {
+class RandomInput
+  : public Input {
+    using hertz_t = units::frequency::hertz_t;
+
 public:
     RandomInput(const cv::Size &size, const std::string &cameraName = "random",
                 const typename GeneratorType::result_type seed = getRandomSeed())
@@ -24,8 +33,26 @@ public:
 	  , m_Distribution(0, 0xff)
     {}
 
+    void setFrameRate(hertz_t fps)
+    {
+        BOB_ASSERT(fps > hertz_t{ 0 });
+        m_FrameRate = fps;
+        m_FrameDelay = 1.0 / fps;
+        m_FrameRateTimer.start();
+    }
+
+    virtual hertz_t getFrameRate() const override
+    {
+        return m_FrameRate;
+    }
+
     virtual bool readFrame(cv::Mat &outFrame) override
     {
+        // The user can lower the framerate
+        if (!isNewFrameReady()) {
+            return false;
+        }
+
         outFrame.create(m_Size, CV_8UC3);
         fillRandom(outFrame.data, outFrame.data + m_Size.area() * 3);
         return true;
@@ -33,6 +60,11 @@ public:
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
     {
+        // The user can lower the framerate
+        if (!isNewFrameReady()) {
+            return false;
+        }
+
         outFrame.create(m_Size, CV_8UC1);
         fillRandom(outFrame.data, outFrame.data + m_Size.area());
         return true;
@@ -67,10 +99,29 @@ private:
     std::string m_CameraName;
     GeneratorType m_Generator;
     std::uniform_int_distribution<int> m_Distribution;
+    Stopwatch m_FrameRateTimer;
+    hertz_t m_FrameRate{ std::numeric_limits<double>::infinity() };
+    Stopwatch::Duration m_FrameDelay;
 
     void fillRandom(uchar *start, uchar *end)
     {
-        std::generate(start, end, [this](){ return static_cast<uchar>(m_Distribution(m_Generator)); });
+        std::generate(start, end, [this]()
+            {
+                return static_cast<uchar>(m_Distribution(m_Generator));
+            });
+    }
+
+    bool isNewFrameReady()
+    {
+        if (isinf(m_FrameRate.value())) {
+            return true;
+        }
+
+        if (m_FrameRateTimer.elapsed() > m_FrameDelay) {
+            m_FrameRateTimer.start();
+            return true;
+        }
+        return false;
     }
 
     static auto getRandomSeed()
