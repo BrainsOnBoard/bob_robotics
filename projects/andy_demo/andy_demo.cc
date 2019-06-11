@@ -144,7 +144,7 @@ bob_main(int, char **argv)
     std::thread videoWriterThread{ &writeVideo,
                                    std::ref(logMutex),
                                    std::ref(stopFlag),
-                                   std::cref(programPath),
+                                   std::cref(videoFilepath),
                                    std::ref(camera2) };
 
     // Log data to YAML file
