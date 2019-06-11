@@ -210,6 +210,7 @@ endfunction()
 # some functions that will only work if your project uses OpenCV)
 function(add_use_macro libname)
     string(TOUPPER "${libname}" libnameupper)
+    string(REPLACE - _ libnameupper ${libnameupper})
     add_definitions(-DUSE_${libnameupper})
 endfunction()
 
