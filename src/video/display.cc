@@ -23,6 +23,7 @@ Display::Display(Input &videoInput, const bool fullScreen)
     }
 }
 
+#ifdef USE_BOB_IMGPROC
 Display::Display(Input &videoInput, const cv::Size &unwrapRes, const bool fullScreen)
   : Display(videoInput, fullScreen)
 {
@@ -32,6 +33,7 @@ Display::Display(Input &videoInput, const cv::Size &unwrapRes, const bool fullSc
         m_Unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(std::move(unwrapper));
     }
 }
+#endif
 
 Display::~Display()
 {
