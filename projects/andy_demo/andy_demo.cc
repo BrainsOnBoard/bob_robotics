@@ -148,8 +148,10 @@ bob_main(int, char **argv)
                                    std::ref(camera2) };
 
     // Log data to YAML file
-    cv::FileStorage fs{ dataFilepath.str(), cv::FileStorage::READ };
-    fs << "{" << "video_filepath" << videoFilepath.str();
+    LOGI << "Saving data to " << dataFilepath;
+    cv::FileStorage fs{ dataFilepath.str(), cv::FileStorage::WRITE };
+    BOB_ASSERT(fs.isOpened());
+    fs << "data" << "{" << "video_filepath" << videoFilepath.str();
 
     // For now, just kill it after 10 secs
     Stopwatch stopwatch;
@@ -163,6 +165,7 @@ bob_main(int, char **argv)
         fs << getGPSCoordinates();
     }
     fs << "]" << "}";
+    fs.release();
 
     // Stop writing video
     stopFlag = true;
