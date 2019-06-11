@@ -33,6 +33,11 @@ bool CollisionDetector::collisionOccurred() const
     // Check for collision
     for (int i = 0; i < m_RobotMap.size().area(); i++) {
         if (m_ObjectsMap.data[i] & m_RobotMap.data[i]) {
+            // Calculate collision point
+            const auto coordPixel = div(i, m_RobotMap.cols);
+            firstCollisionPosition.x() = m_XLower + (coordPixel.rem * m_GridSize);
+            firstCollisionPosition.y() = m_YLower + (coordPixel.quot * m_GridSize);
+
             return true;
         }
     }

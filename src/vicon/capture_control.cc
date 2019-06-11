@@ -1,8 +1,8 @@
 #ifndef _WIN32
 // BoB robotics includes
-#include "common/macros.h"
-#include "common/logging.h"
 #include "vicon/capture_control.h"
+#include "common/logging.h"
+#include "common/macros.h"
 
 // Standard C++ includes
 #include <sstream>
@@ -20,40 +20,42 @@
 namespace BoBRobotics {
 namespace Vicon {
 
-CaptureControl::CaptureControl() : m_Socket(-1){}
+CaptureControl::CaptureControl()
+  : m_Socket(-1)
+{}
 
-CaptureControl::CaptureControl(const std::string &hostname, uint16_t port,
-                const std::string &capturePath)
+CaptureControl::CaptureControl(const std::string &hostname,
+                               uint16_t port,
+                               const std::string &capturePath)
 {
-    if(!connect(hostname, port, capturePath)) {
-        throw std::runtime_error("Cannot connect to to Vicon Tracker");
-    }
+    connect(hostname, port, capturePath);
 }
 
 CaptureControl::~CaptureControl()
 {
-        if(m_Socket >= 0) {
-            close(m_Socket);
-        }
+    if (m_Socket >= 0) {
+        close(m_Socket);
+    }
 }
 
 //----------------------------------------------------------------------------
 // Public API
 //----------------------------------------------------------------------------
-bool CaptureControl::connect(const std::string &hostname, uint16_t port,
-                const std::string &capturePath)
+void
+CaptureControl::connect(const std::string &hostname,
+                        uint16_t port,
+                        const std::string &capturePath)
 {
     // Stash capture path
     m_CapturePath = capturePath;
 
     // Create socket
     m_Socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if(m_Socket < 0) {
-        LOG_ERROR << "Cannot open socket: " << strerror(errno);
-        return false;
+    if (m_Socket < 0) {
+        throw OS::Net::NetworkError("Cannot open socket");
     }
 
-        // Create socket address structure
+    // Create socket address structure
     memset(&m_RemoteAddress, 0, sizeof(sockaddr_in));
     m_RemoteAddress.sin_family = AF_INET,
     m_RemoteAddress.sin_port = htons(port),
@@ -62,11 +64,11 @@ bool CaptureControl::connect(const std::string &hostname, uint16_t port,
     // Get initial capture packet id from time
     // **NOTE** we intentionally cast this to 32-bit as (supposedly)
     // Vicon Tracker struggles with large values...
-    m_CapturePacketID = (uint32_t)time(nullptr);
-    return true;
+    m_CapturePacketID = (uint32_t) time(nullptr);
 }
 
-bool CaptureControl::startRecording(const std::string &recordingName)
+void
+CaptureControl::startRecording(const std::string &recordingName)
 {
     // Create message
     std::stringstream message;
@@ -79,18 +81,14 @@ bool CaptureControl::startRecording(const std::string &recordingName)
 
     // Send message  to tracker
     std::string messageString = message.str();
-    if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
-                reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
-    {
-        LOG_ERROR << "Cannot send start message:" << strerror(errno);
-        return false;
-    }
-    else {
-        return true;
+    if (::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
+                 reinterpret_cast<sockaddr *>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0) {
+        throw OS::Net::NetworkError("Cannot send start message");
     }
 }
 
-bool CaptureControl::stopRecording(const std::string &recordingName)
+void
+CaptureControl::stopRecording(const std::string &recordingName)
 {
     // Create message
     std::stringstream message;
@@ -103,14 +101,9 @@ bool CaptureControl::stopRecording(const std::string &recordingName)
 
     // Send message  to tracker
     std::string messageString = message.str();
-    if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
-                reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
-    {
-        LOG_WARNING << "Cannot send stop message:" << strerror(errno);
-        return false;
-    }
-    else {
-        return true;
+    if (::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
+                 reinterpret_cast<sockaddr *>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0) {
+        throw OS::Net::NetworkError("Cannot send start message");
     }
 }
 

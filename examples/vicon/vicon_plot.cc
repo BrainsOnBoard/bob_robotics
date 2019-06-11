@@ -28,9 +28,7 @@ main()
     Vicon::UDPClient<> vicon(51001);
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
 
-    if (!viconCaptureControl.startRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test1");
 
     bool warningGiven = false;
     do {
@@ -48,9 +46,7 @@ main()
         plt::pause(0.025);
     } while (plt::fignum_exists(1));
 
-    if (!viconCaptureControl.stopRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test1");
 
     return EXIT_SUCCESS;
 }

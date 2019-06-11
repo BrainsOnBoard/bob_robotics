@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "pose.h"
+
 // Third-party includes
 #include "third_party/units.h"
 

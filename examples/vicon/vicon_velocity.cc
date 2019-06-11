@@ -17,9 +17,8 @@ int main()
     UDPClient<ObjectDataVelocity> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
 
-    if (!viconCaptureControl.startRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test1");
+
     for (int i = 0; i < 120; i++) {
         auto objectData = vicon.getObjectData();
         const auto velocity = objectData.getVelocity();
@@ -33,9 +32,8 @@ int main()
 
         std::this_thread::sleep_for(1s);
     }
-    if (!viconCaptureControl.stopRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+
+    viconCaptureControl.stopRecording("test1");
 
     return EXIT_SUCCESS;
 }

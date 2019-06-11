@@ -1,0 +1,7 @@
+/computer
+/offline_train
+/snapshot_bot
+
+*.png
+!segmentation.png
+!mask.png

@@ -141,7 +141,7 @@ main()
         if (collisionDetector.collisionOccurred()) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();
-                LOGI << "COLLISION!!!";
+                LOGI << "COLLISION occured at " << collisionPosition.x() << ", " << collisionPosition.y() << "!!!";
                 printedCollisionMessage = true;
             }
         } else {
