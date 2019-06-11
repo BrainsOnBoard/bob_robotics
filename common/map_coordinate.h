@@ -84,6 +84,9 @@ struct LatLon
     const units::angle::degree_t lon;
 };
 
+//! A standard GPS coordinate
+using GPSCoordinate = LatLon<WGS84>;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Cartesian
 //----------------------------------------------------------------------------
