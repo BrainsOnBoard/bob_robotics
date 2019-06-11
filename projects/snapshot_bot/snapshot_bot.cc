@@ -83,7 +83,7 @@ public:
             // Wait for tracking data stream to begin
             while(true) {
                 try {
-                    m_ViconTrackingObjectID = m_ViconTracking.findObjectID(m_Config.getViconTrackingObjectName());
+                    m_ViconTrackingObjectName = m_Config.getViconTrackingObjectName();
                     break;
                 }
                 catch(std::out_of_range &ex) {
@@ -469,7 +469,7 @@ private:
 
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
-    unsigned int m_ViconTrackingObjectID;
+    std::string m_ViconTrackingObjectName;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
