@@ -88,8 +88,7 @@ struct LatLon
 {
     typedef D Datum;
 
-    const units::angle::degree_t lat;
-    const units::angle::degree_t lon;
+    units::angle::degree_t lat, lon;
 };
 
 //! A standard GPS coordinate
