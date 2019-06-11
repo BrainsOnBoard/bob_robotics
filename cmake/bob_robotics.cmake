@@ -210,6 +210,7 @@ macro(BoB_build)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
     endif()
+    message("Build type: ${CMAKE_BUILD_TYPE}")
 
     if(NOT WIN32)
         # Use ccache if present to speed up repeat builds
