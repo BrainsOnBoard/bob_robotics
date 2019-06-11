@@ -154,6 +154,7 @@ float Tank::getMaximumSpeedProportion() const
     return m_MaximumSpeedProportion;
 }
 
+#ifdef USE_BOB_NET
 //! Controls the robot with a network stream
 void Tank::readFromNetwork(Net::Connection &connection)
 {
@@ -207,6 +208,27 @@ void Tank::stopReadingFromNetwork()
     }
 }
 
+void Tank::onCommandReceived(Net::Connection &, const Net::Command &command)
+{
+    // second space separates left and right parameters
+    if (command.size() != 3) {
+        throw Net::BadCommandError();
+    }
+
+    // parse strings to floats
+    const float left = stof(command[1]);
+    const float right = stof(command[2]);
+
+    // send motor command
+    tank(left, right);
+}
+#else
+void Tank::stopReadingFromNetwork()
+{
+    // No op
+}
+#endif // USE_BOB_NET
+
 void Tank::drive(float x, float y, float deadZone)
 {
     const float halfPi = pi<float>() / 2.0f;
@@ -241,21 +263,6 @@ void Tank::drive(float x, float y, float deadZone)
             tank(-r, -r * cos(twoTheta));
         }
     }
-}
-
-void Tank::onCommandReceived(Net::Connection &, const Net::Command &command)
-{
-    // second space separates left and right parameters
-    if (command.size() != 3) {
-        throw Net::BadCommandError();
-    }
-
-    // parse strings to floats
-    const float left = stof(command[1]);
-    const float right = stof(command[2]);
-
-    // send motor command
-    tank(left, right);
 }
 
 bool Tank::onJoystickEvent(HID::JAxis axis, float value, float deadZone)

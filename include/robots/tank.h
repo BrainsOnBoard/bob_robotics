@@ -2,7 +2,9 @@
 
 // BoB robotics includes
 #include "hid/joystick.h"
+#ifdef USE_BOB_NET
 #include "net/connection.h"
+#endif
 #include "robot.h"
 
 // Third-party includes
@@ -65,8 +67,10 @@ public:
 
     virtual float getMaximumSpeedProportion() const;
 
+#ifdef USE_BOB_NET
     //! Controls the robot with a network stream
     void readFromNetwork(Net::Connection &connection);
+#endif
 
     void stopReadingFromNetwork();
 
@@ -75,12 +79,15 @@ public:
     float getRight() const;
 
 private:
+#ifdef USE_BOB_NET
     Net::Connection *m_Connection = nullptr;
+
+    void onCommandReceived(Net::Connection &, const Net::Command &command);
+#endif
+
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
 
     void drive(float x, float y, float deadZone);
-
-    void onCommandReceived(Net::Connection &, const Net::Command &command);
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 

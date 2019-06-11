@@ -1,3 +1,4 @@
+#ifdef USE_BOB_NET
 // BoB robotics includes
 #include "video/netsource.h"
 
@@ -81,3 +82,4 @@ NetSource::onCommandReceived(Net::Connection &connection, const Net::Command &co
 
 } // Video
 } // BoBRobotics
+#endif // USE_BOB_NET

@@ -1,3 +1,4 @@
+#ifdef USE_BOB_NET
 // BoB robotics includes
 #include "robots/tank_netsink.h"
 #include "common/logging.h"
@@ -111,3 +112,4 @@ TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
 
 } // Robots
 } // BoBRobotics
+#endif // USE_BOB_NET

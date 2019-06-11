@@ -1,3 +1,4 @@
+#ifdef USE_BOB_NET
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/logging.h"
@@ -122,3 +123,4 @@ void NetSink::runAsync()
 
 } // Video
 } // BoBRobotics
+#endif // USE_BOB_NET
