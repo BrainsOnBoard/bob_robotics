@@ -21,12 +21,14 @@ class Input
 public:
     virtual ~Input();
 
+#ifdef USE_BOB_IMGPROC
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream
      *
      * @param unwrapRes The resolution of the unwrapped image
      */
     ImgProc::OpenCVUnwrap360 createUnwrapper(const cv::Size &unwrapRes) const;
+#endif
 
     /*!
      * \brief Get the name of this type of camera as a (short) string
