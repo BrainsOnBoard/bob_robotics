@@ -62,6 +62,12 @@ Input::setOutputSize(const cv::Size &)
     throw std::runtime_error("This camera's resolution cannot be changed at runtime");
 }
 
+units::frequency::hertz_t
+Input::getFrameRate() const
+{
+    throw std::runtime_error("The frame rate for this camera is unknown");
+}
+
 void
 Input::readFrameSync(cv::Mat &outFrame)
 {

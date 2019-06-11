@@ -4,11 +4,13 @@
 // Standard C++ includes
 #include <stdexcept>
 
+using namespace units::frequency;
+
 namespace BoBRobotics {
 namespace Video {
 
 OpenCVInput::OpenCVInput()
-    : OpenCVInput(0)
+  : OpenCVInput(0)
 {}
 
 //------------------------------------------------------------------------
@@ -42,6 +44,11 @@ void OpenCVInput::setOutputSize(const cv::Size &outSize)
 {
     m_Device.set(cv::CAP_PROP_FRAME_WIDTH, outSize.width);
     m_Device.set(cv::CAP_PROP_FRAME_HEIGHT, outSize.height);
+}
+
+hertz_t OpenCVInput::getFrameRate() const
+{
+    return hertz_t{ m_Device.get(cv::CAP_PROP_FPS) };
 }
 
 } // Video

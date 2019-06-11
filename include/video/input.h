@@ -3,6 +3,9 @@
 // BoB robotics includes
 #include "imgproc/opencv_unwrap_360.h"
 
+// Third-party includes
+#include "third_party/units.h"
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -50,6 +53,9 @@ public:
 
     //! Set the output resolution of this video stream
     virtual void setOutputSize(const cv::Size &);
+
+    //! Get the framerate of the camera (if known)
+    virtual units::frequency::hertz_t getFrameRate() const;
 
     //! Get the current output resolution of this video stream
     virtual cv::Size getOutputSize() const = 0;
