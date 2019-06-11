@@ -24,8 +24,8 @@ read(const cv::FileNode &node,
     if (node.empty()) {
         gps = defaultValue;
     } else {
-        gps.lat = units::angle::degree_t{ (double) node["lat"]}
-        gps.lon = units::angle::degree_t{ (double) node["lon"]}
+        gps.lat = units::angle::degree_t{ (double) node["lat"]};
+        gps.lon = units::angle::degree_t{ (double) node["lon"]};
     }
 }
 #endif // USE_OPENCV
