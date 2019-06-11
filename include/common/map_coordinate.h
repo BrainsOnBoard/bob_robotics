@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef USE_OPENCV
+// OpenCV
+#include <opencv2/opencv.hpp>
+#endif
+
 // Third-party includes
 #include "third_party/units.h"
 
@@ -86,6 +91,22 @@ struct LatLon
     const units::angle::degree_t lat;
     const units::angle::degree_t lon;
 };
+
+//! A standard GPS coordinate
+using GPSCoordinate = LatLon<WGS84>;
+
+// OpenCV serialisation/deserialisation
+#ifdef USE_OPENCV
+void
+write(cv::FileStorage &fs,
+      const std::string &,
+      const GPSCoordinate &gps);
+
+void
+read(const cv::FileNode &node,
+     GPSCoordinate &gps,
+     GPSCoordinate defaultValue = GPSCoordinate{});
+#endif // USE_OPENCV
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Cartesian
@@ -236,7 +257,7 @@ inline OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 }
 
 //! Helper function to use above functionality to convert from latitude longitute in WGS84 i.e. GPS coordinates to OS map coordinates
-inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon) 
+inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon)
 {
     const auto wgs84Cartesian = latLonToCartesian(wgs84LatLon);
 
