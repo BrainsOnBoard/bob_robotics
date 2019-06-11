@@ -6,7 +6,7 @@
 
 namespace BoBRobotics {
 PID::PID(float kp, float ki, float kd, float outMin, float outMax)
-  : m_Intergral(0.0f)
+  : m_Integral(0.0f)
   , m_KP(kp)
   , m_KI(ki)
   , m_KD(kd)
@@ -23,8 +23,8 @@ void
 PID::initialise(float input, float output)
 {
     m_LastInput = input;
-    m_Intergral = output;
-    m_Intergral = std::min(m_OutMax, std::max(m_OutMin, m_Intergral));
+    m_Integral = output;
+    m_Integral = std::min(m_OutMax, std::max(m_OutMin, m_Integral));
 }
 
 // Get output based on setpoint
@@ -34,14 +34,14 @@ PID::update(float setpoint, float input)
     const float error = setpoint - input;
 
     // Update integral term and clamp
-    m_Intergral += (m_KI * error);
-    m_Intergral = std::min(m_OutMax, std::max(m_OutMin, m_Intergral));
+    m_Integral += (m_KI * error);
+    m_Integral = std::min(m_OutMax, std::max(m_OutMin, m_Integral));
 
     // Calculate derivative term
     const float derivative = input - m_LastInput;
 
     // Calculate output and clamp
-    float output = (m_KP * error) + m_Intergral - (m_KD * derivative);
+    float output = (m_KP * error) + m_Integral - (m_KD * derivative);
     output = std::min(m_OutMax, std::max(m_OutMin, output));
 
     // Update last input
