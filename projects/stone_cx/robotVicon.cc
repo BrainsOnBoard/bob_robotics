@@ -59,9 +59,7 @@ int main(int argc, char *argv[])
     }
 
     // Start capture
-    if(!viconCaptureControl.startRecording("test")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test");
 
     std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
 
@@ -174,9 +172,7 @@ int main(int argc, char *argv[])
     motor.tank(0.0f, 0.0f);
     
     // Stop capture
-    if(!viconCaptureControl.stopRecording("test")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test");
 
     // Exit
     return EXIT_SUCCESS;
