@@ -26,61 +26,54 @@ type 1 or 9 update, null field when DGPS is not used
 */
 
 //things to fix: 
-// use getLine()
-//use namespace
+// use getLine() - done
+// use namespace
 // use exceptions
 // use map_coordinate
-// char instead of string (wasteful)
-// rename class to NMEAParser     x
-// rename file to nmea_parser.h   
-// Use words[0] instead of .at()  x
-//gps quality indicator use enum  
+// char instead of string (wasteful) - done 
+// rename class to NMEAParser     - done
+// rename file to nmea_parser.h   - done
+// Use words[0] instead of .at()  - done
+// gps quality indicator use enum - done
+
 
 
 
 #pragma once
 #include<string>
 #include<vector>
+#include <sstream>
 #include "../third_party/units.h"
 
 class NMEAParser {
+    
     
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
-    using knot_t = units::velocity::knot_t;
-    
+    using knot_t = units::velocity::knot_t;                             // NMEA returns the velocity in knots
 
     private:
 
     static std::vector<std::string> parseNMEAstring(const std::string &textToParse, const std::string &NMEA_sentence_id) {
+
         using namespace std;
-        const string delimiter = "$";      // sentences separated by [$]
-        const string w_delimiter = ",";    // elements separated by  [,]
-        string s = textToParse;
+        const char delimiter = '$';      // sentences separated by [$]
+        const char w_delimiter = ',';    // elements separated by  [,]
+    
 
-        size_t pos = 0;
-        string token;
-        vector<string> tokens,words;
+        vector<string> sentences,words;
+        istringstream split(textToParse);
 
-        // separating the lines 
-        while ((pos = s.find(delimiter)) != string::npos) {
-            token = s.substr(0, pos);
-            tokens.push_back(token);
-            s.erase(0, pos + delimiter.length());
-        }
+        // separating the text to sentences
+        for (string each; getline(split, each, delimiter); sentences.push_back(each));
 
-        // separating the words
-        for (auto &f : tokens) {         
-            string word;
-            pos = 0;   
-            while ((pos = f.find(w_delimiter)) != string::npos) {
-                word = f.substr(0,pos);
-                words.push_back(word);
-                f.erase(0, pos + w_delimiter.length());         
-            }
-
+        // separating the sentences to words
+        for (auto &f : sentences) {         
+            istringstream splitWord(f);
+            for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
+           
             // if we find the one, we stop 
             if (!words.empty() && words[0] == NMEA_sentence_id) {          
                 break;
@@ -97,10 +90,10 @@ class NMEAParser {
     static bool parseTextGPS(const std::string   &toParse,            // text to parse
                              degree_t            &latitude,           // latitude
                              arcminute_t         &latitudeMinutes,    // minute part of latitude
-                             std::string         &latDirection,       // latitude direction North or South (N | S)
+                             char                &latDirection,       // latitude direction North or South (N | S)
                              degree_t            &longitude,          // longitude
                              arcminute_t         &longitudeMinutes,   // minute part of longitude
-                             std::string         &longDirection,      // longitude direction East or West (E | W)
+                             char                &longDirection,      // longitude direction East or West (E | W)
                              meter_t             &altitude,           // altitude in meters
                              meters_per_second_t &velocity
                              ) {
@@ -110,10 +103,10 @@ class NMEAParser {
             vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
             latitude = degree_t(std::stod(elements[2].substr(0,2)));
             latitudeMinutes = arcminute_t(std::stod(elements[2].substr(2,8)));     
-            latDirection = elements[3];
+            latDirection = elements[3][0];
             longitude = degree_t(std::stod(elements[4].substr(0,3)));
             longitudeMinutes = arcminute_t(std::stod(elements[4].substr(3,9)));
-            longDirection = elements[5];
+            longDirection = elements[5][0];
             altitude = meter_t(stod(elements[9]));
 
             // prse GNRMC for velocity

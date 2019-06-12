@@ -1,7 +1,7 @@
 //GPS
 
 
-#include "NMEA_parser.h"
+#include "nmea_parser.h"
 #include "serial_reader.h"
 #include "../third_party/units.h"
 #include "map_coordinate.h"
@@ -10,12 +10,13 @@
 
 
 class Gps {
+
     using degree_t = units::angle::degree_t;
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
     private:
     
-    char *m_device_path;
+    const char *m_device_path;
     int m_currentNumberOfSats;
     int m_gpsQuality;
     double m_horizontalDilution;
@@ -32,8 +33,8 @@ class Gps {
         arcminute_t longmin;
         degree_t lat;
         degree_t longitude;
-        std::string latDir;
-        std::string longDir;
+        char latDir;
+        char longDir;
 
         // reading and parsing serial data
         std::string serialString = Serial_reader::readSerialUSB(m_device_path);
@@ -43,14 +44,14 @@ class Gps {
         m_longitude = longitude + longmin;
 
         // West and South has negative angles
-        if (longDir == "W") m_longitude = - m_longitude;
-        if (latDir == "S")  m_latitude  = - m_latitude;
+        if (longDir == 'W') m_longitude = - m_longitude;
+        if (latDir == 'S')  m_latitude  = - m_latitude;
 
         return didParse;
 
     }
 
-    bool getGpsDescription() {
+    bool getGpsDescription()  {
         std::string serialString =  Serial_reader::readSerialUSB(m_device_path);
         int quality, numsat;
         double horizontalDilution;
@@ -60,13 +61,22 @@ class Gps {
         m_horizontalDilution = horizontalDilution;
 
         return didParse;
-
     }
 
 
     public:
 
-    Gps(char *device_path) : m_device_path(device_path)  { }
+    enum GPSQuality
+    {
+        INVALID,  
+        GPSFIX,  
+        DGPSFIX,
+        PPSFIX,
+        RTK,
+        FRTK,
+    };
+
+    Gps(const char *device_path) : m_device_path(device_path)  { }
 
     bool getPosition(degree_t &lat, degree_t &lon, meter_t &altitude) {
         bool didGetGps = getGPSPosition(); 
@@ -78,17 +88,26 @@ class Gps {
         
     }
 
-    int getNumberOfSatelites() const {
+    int getNumberOfSatelites() {
         getGpsDescription();
         return m_currentNumberOfSats;
     }
 
-    int getGpsQuality() const  {
+    GPSQuality getGpsQuality() {
         getGpsDescription();
-        return m_gpsQuality;
+        GPSQuality quality;    
+        switch(m_gpsQuality) {
+            case 0 : quality = INVALID; break;
+            case 1 : quality = GPSFIX; break;
+            case 2 : quality = DGPSFIX; break;
+            case 3 : quality = PPSFIX; break;
+            case 4 : quality = RTK; break;
+            case 5 : quality = FRTK; break;
+        }
+        return quality;
     }
 
-    double getHorizontalDilution() const {
+    double getHorizontalDilution() {
         getGpsDescription();
         return m_horizontalDilution;
     }

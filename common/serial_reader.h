@@ -18,12 +18,12 @@
 class Serial_reader {
     private:
 
-    static std::string getSerialData(char* serial_device_path) {
+    static std::string getSerialData(const char* serial_device_path) {
         //  /dev/cu.usbserial
         // http://bradsmc.blogspot.com/2013/11/c-code-to-read-gps-data-via-serial-on.html
 
         struct termios oldtio, newtio;
-        int fd, c, res;
+        int fd, res;
         char buf[255];
         // Load the pin configuration
         
@@ -32,7 +32,7 @@ class Serial_reader {
         fd = open(serial_device_path, O_RDWR | O_NOCTTY );
         if (fd < 0) { perror(serial_device_path); exit(-1); }
 
-        bzero(&newtio, sizeof(newtio)); /* clear struct for new port settings */
+        //bzero(&newtio, sizeof(newtio)); /* clear struct for new port settings */
 
         /* BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
         CRTSCTS : output hardware flow control (only used if the cable has
@@ -71,7 +71,7 @@ class Serial_reader {
             ii++;
             serialString += buf;
         }
-        std::cout << serialString << std::endl;
+
         tcsetattr(fd, TCSANOW, &oldtio);
         close(fd);
         return serialString;
@@ -81,7 +81,7 @@ class Serial_reader {
 
     public:
     //! reads the serial port (USB) and returns the string from it
-    static std::string readSerialUSB(char *device_path) {
+    static std::string readSerialUSB(const char *device_path) {
         return getSerialData(device_path);
     }
 
