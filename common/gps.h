@@ -37,14 +37,14 @@ class Gps {
 
         // reading and parsing serial data
         std::string serialString = Serial_reader::readSerialUSB(m_device_path);
-        bool didParse = NMEA_parser::parseTextGPS(serialString, lat, latmin, latDir, longitude, longmin, longDir, m_altitude, m_velocity);
+        bool didParse = NMEAParser::parseTextGPS(serialString, lat, latmin, latDir, longitude, longmin, longDir, m_altitude, m_velocity);
 
         m_latitude = lat + latmin;
         m_longitude = longitude + longmin;
 
         // West and South has negative angles
-        if (longDir == "W") m_longitude = 0_deg - m_longitude;
-        if (latDir == "S")  m_latitude  = 0_deg - m_latitude;
+        if (longDir == "W") m_longitude = - m_longitude;
+        if (latDir == "S")  m_latitude  = - m_latitude;
 
         return didParse;
 
@@ -54,7 +54,7 @@ class Gps {
         std::string serialString =  Serial_reader::readSerialUSB(m_device_path);
         int quality, numsat;
         double horizontalDilution;
-        bool didParse = NMEA_parser::parseTextForMiscData(serialString, quality, numsat, horizontalDilution);
+        bool didParse = NMEAParser::parseTextForMiscData(serialString, quality, numsat, horizontalDilution);
         m_gpsQuality = quality;
         m_currentNumberOfSats = numsat;
         m_horizontalDilution = horizontalDilution;
@@ -78,17 +78,17 @@ class Gps {
         
     }
 
-    int getNumberOfSatelites() {
+    int getNumberOfSatelites() const {
         getGpsDescription();
         return m_currentNumberOfSats;
     }
 
-    int getGpsQuality() {
+    int getGpsQuality() const  {
         getGpsDescription();
         return m_gpsQuality;
     }
 
-    double getHorizontalDilution() {
+    double getHorizontalDilution() const {
         getGpsDescription();
         return m_horizontalDilution;
     }

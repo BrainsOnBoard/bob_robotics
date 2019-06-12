@@ -24,12 +24,26 @@ type 1 or 9 update, null field when DGPS is not used
 14) Differential reference station ID, 0000-1023
 15) Checksum
 */
+
+//things to fix: 
+// use getLine()
+//use namespace
+// use exceptions
+// use map_coordinate
+// char instead of string (wasteful)
+// rename class to NMEAParser     x
+// rename file to nmea_parser.h   
+// Use words[0] instead of .at()  x
+//gps quality indicator use enum  
+
+
+
 #pragma once
 #include<string>
 #include<vector>
 #include "../third_party/units.h"
 
-class NMEA_parser {
+class NMEAParser {
     
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
@@ -40,7 +54,7 @@ class NMEA_parser {
 
     private:
 
-    static std::vector<std::string> parseNMEAstring(const std::string textToParse, const std::string NMEA_sentence_id) {
+    static std::vector<std::string> parseNMEAstring(const std::string &textToParse, const std::string &NMEA_sentence_id) {
         using namespace std;
         const string delimiter = "$";      // sentences separated by [$]
         const string w_delimiter = ",";    // elements separated by  [,]
@@ -68,7 +82,7 @@ class NMEA_parser {
             }
 
             // if we find the one, we stop 
-            if (!words.empty() && words.at(0) == NMEA_sentence_id) {          
+            if (!words.empty() && words[0] == NMEA_sentence_id) {          
                 break;
             } else {
                 words.clear();
