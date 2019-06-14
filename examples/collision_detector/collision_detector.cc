@@ -138,7 +138,8 @@ main()
         joystick.update();
 
         collisionDetector.setRobotPose(vicon.getObjectData().getPose());
-        if (collisionDetector.collisionOccurred()) {
+        Vector2<meter_t> collisionPosition;
+        if (collisionDetector.collisionOccurred(collisionPosition)) {
             if (!printedCollisionMessage) {
                 tank.stopMoving();
                 LOGI << "COLLISION occured at " << collisionPosition.x() << ", " << collisionPosition.y() << "!!!";

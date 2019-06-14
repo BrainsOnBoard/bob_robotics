@@ -125,7 +125,7 @@ public:
 
     const std::vector<Eigen::MatrixX2d> &getResizedObjects() const;
     const Eigen::MatrixX2d &getRobotVertices() const;
-    bool collisionOccurred() const;
+    bool collisionOccurred(Vector2<meter_t> &firstCollisionPosition) const;
 
 private:
     const meter_t m_GridSize;

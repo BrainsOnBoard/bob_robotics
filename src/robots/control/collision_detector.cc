@@ -16,7 +16,7 @@ CollisionDetector::getRobotVertices() const
     return m_RobotVertices;
 }
 
-bool CollisionDetector::collisionOccurred() const
+bool CollisionDetector::collisionOccurred(Vector2<meter_t> &firstCollisionPosition) const
 {
     // If there aren't obstacles, we can't have hit them
     if (m_ResizedObjects.size() == 0) {
