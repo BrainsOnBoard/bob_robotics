@@ -29,6 +29,12 @@ Camera::getWindow() const
 }
 
 void
+Camera::setPose(const Pose3<meter_t, degree_t> &pose)
+{
+    m_Pose = pose;
+}
+
+void
 Camera::setPosition(meter_t x, meter_t y, meter_t z)
 {
     m_Pose.position() = { x, y, z };

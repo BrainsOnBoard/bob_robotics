@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/pose.h"
 #include "video/opengl/opengl.h"
 #include "renderer.h"
 
@@ -30,6 +31,7 @@ public:
 
     GLFWwindow *getWindow() const;
     bool isOpen() const;
+    void setPose(const Pose3<meter_t, degree_t> &pose);
     void setPosition(meter_t x, meter_t y, meter_t z);
     void setAttitude(degree_t yaw, degree_t pitch, degree_t roll);
     bool update();
