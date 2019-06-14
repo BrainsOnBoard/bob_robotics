@@ -1,9 +1,12 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/macros.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
-
+#ifdef USE_BOB_HID
+#include "hid/joystick.h"
+#endif
 
 // Third-party includes
 #include "third_party/units.h"
@@ -22,10 +25,34 @@ class SimulatedAckermannCar
     using second_t = units::time::second_t;
 
 public:
-    SimulatedAckermannCar(const meters_per_second_t maximumSpeed, const millimeter_t axis_dist)
+    SimulatedAckermannCar(const meters_per_second_t maximumSpeed,
+                          const LengthUnit axisDist,
+                          const LengthUnit carHeight = meters_per_second_t{ 0 },
+                          const AngleUnit maxTurn = degree_t{ 45 })
       : m_MaximumSpeed(maximumSpeed)
-      , m_distanceBetweenAxis(axis_dist)
-    {}
+      , m_MaximumTurn(maxTurn)
+      , m_distanceBetweenAxis(axisDist)
+    {
+        m_Pose.z() = carHeight;
+    }
+
+#ifdef USE_BOB_HID
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
+    {
+        joystick.addHandler([this](HID::JAxis axis, float value)
+            {
+                if (axis == HID::JAxis::LeftStickVertical) {
+                    moveForward(value);
+                    return true;
+                } else if (axis == HID::JAxis::LeftStickHorizontal) {
+                    steer(value);
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+    }
+#endif
 
     millimeter_t getDistanceBetweenAxis() const
     {
@@ -36,7 +63,7 @@ public:
     Vector3<ReturnLengthUnit> getPosition()
     {
         updatePose();
-        return { m_Pose.x(), m_Pose.y(), 0_m };
+        return { m_Pose.x(), m_Pose.y(), m_Pose.z() };
     }
 
     template<typename ReturnAngleUnit = AngleUnit>
@@ -63,23 +90,49 @@ public:
         m_Pose = pose;
     }
 
-    //! sets the robot velocity and steering to move
-    void move(meters_per_second_t velocity, degree_t steeringAngle)
+    void moveForward(float speed)
     {
+        // Check value is in range
+        BOB_ASSERT(speed >= -1.f && speed <= 1.f);
+
+        updatePose();
+        m_currentVelocity = speed * m_MaximumSpeed;
+    }
+
+    void steer(float value)
+    {
+        // Check value is in range
+        BOB_ASSERT(value >= -1.f && value <= 1.f);
+
+        updatePose();
+        m_steeringWheelAngle = value * m_MaximumTurn;
+    }
+
+    void stopMoving() noexcept
+    {
+        move(meters_per_second_t{ 0 }, AngleUnit{ 0 });
+    }
+
+    //! sets the robot velocity and steering to move
+    void move(meters_per_second_t velocity, AngleUnit steeringAngle)
+    {
+        // Check values are in range
+        using namespace units::math;
+        BOB_ASSERT(abs(velocity) <= m_MaximumSpeed);
+        BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
+
         updatePose();
         m_currentVelocity = velocity;
         m_steeringWheelAngle = steeringAngle;
     }
 
-
-
-
 private:
     Pose2<LengthUnit, AngleUnit> m_Pose;
     Stopwatch m_MoveStopwatch;
     const meters_per_second_t m_MaximumSpeed;
-    const millimeter_t m_distanceBetweenAxis;  // distance between front and rear axis
-    degree_t m_steeringWheelAngle{};           // steering wheel angle
+    const AngleUnit m_MaximumTurn;
+    const LengthUnit m_distanceBetweenAxis; // distance between front and rear axis
+    AngleUnit m_steeringWheelAngle{};       // steering wheel angle
     meters_per_second_t m_currentVelocity{};
 
     void updatePose()
