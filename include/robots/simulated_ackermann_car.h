@@ -27,7 +27,7 @@ public:
       , m_distanceBetweenAxis(axis_dist)
     {}
 
-    millimeter_t getDistanceBetweenAxis()
+    millimeter_t getDistanceBetweenAxis() const
     {
         return m_distanceBetweenAxis;
     }
@@ -52,7 +52,7 @@ public:
         return m_Pose;
     }
 
-    meters_per_second_t getAbsoluteMaximumSpeed() 
+    meters_per_second_t getAbsoluteMaximumSpeed() const
     {
         return m_MaximumSpeed;
     }
@@ -64,13 +64,14 @@ public:
     }
 
     //! sets the robot velocity and steering to move
-    void move(meters_per_second_t velocity, degree_t steeringAngle) {
+    void move(meters_per_second_t velocity, degree_t steeringAngle)
+    {
         updatePose();
         m_currentVelocity = velocity;
         m_steeringWheelAngle = steeringAngle;
     }
 
-    
+
 
 
 private:
@@ -89,10 +90,10 @@ private:
         using namespace units::time;
 
         const second_t elapsed = m_MoveStopwatch.lap();
-        
+
         m_Pose.x() += m_currentVelocity * cos(m_Pose.yaw()) * elapsed;
         m_Pose.y() += m_currentVelocity * sin(m_Pose.yaw()) * elapsed;
-        
+
         double delta_angle = m_currentVelocity * elapsed / m_distanceBetweenAxis * tan(m_steeringWheelAngle);
         m_Pose.yaw() += radian_t(delta_angle);
 

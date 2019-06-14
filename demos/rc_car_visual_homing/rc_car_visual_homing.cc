@@ -6,6 +6,7 @@
 #include "common/map_coordinate.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "robots/simulated_ackermann_car.h"
 #include "video/randominput.h"
 
 // Third-party includes
