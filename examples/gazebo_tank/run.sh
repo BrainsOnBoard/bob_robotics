@@ -10,9 +10,10 @@ print_usage() {
 
 while getopts 'dp' flag; do
   case "${flag}" in
-    d) display_flag='-d' ;;
-    p) world_file=differential_drive_panoramic.world 
-        camera_url='/gazebo/default/differential_drive_robot/panoramic_camera/link/camera/image';;
+    d) display_flag='-s' ;;
+    p)  world_file=differential_drive_panoramic.world 
+        camera_url='/gazebo/default/differential_drive_robot/panoramic_camera/link/camera/image'
+        display_flag='-p' ;;
     *) print_usage
        exit 1 ;;
   esac

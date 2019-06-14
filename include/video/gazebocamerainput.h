@@ -15,11 +15,11 @@
 #include <stdexcept>
 #include <mutex>
 #include <atomic>
+#include <semaphore.h>
 
 namespace BoBRobotics {
 namespace Video {
 
-constexpr const char *GazeboCameraDeviceName = "gazebo_camera";
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::GazeboCameraInput
@@ -37,7 +37,7 @@ public:
     /*!
      * \brief Create a video stream using a new transport node
      */
-    GazeboCameraInput(const std::string &topic, const std::string &cameraName = GazeboCameraDeviceName)
+    GazeboCameraInput(const std::string &topic, const std::string &cameraName = DefaultCameraName)
     : m_CameraName(cameraName)
     {
         m_ImageNode = getGazeboNode();
@@ -50,7 +50,7 @@ public:
      * @param topic Gazebo transport topic on which to subscribe
      */
 
-    GazeboCameraInput(gazebo::transport::NodePtr node, const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = GazeboCameraDeviceName)
+    GazeboCameraInput(gazebo::transport::NodePtr node, const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = DefaultCameraName)
       : m_CameraName(cameraName), m_ImageNode(node)
     {
         subscribeToGazeboCamera(topic);
@@ -60,13 +60,15 @@ public:
         // Subscribe to the topic, and register a callback
         m_ImageSub = m_ImageNode->Subscribe(topic, &GazeboCameraInput::OnImageMsg, this);
         LOG_INFO << "Subsribed to "<< topic <<"\n";
+        sem_init(&semaphore, 0 , 0 );
+        sem_wait(&semaphore);
     }
     //------------------------------------------------------------------------
     // Video::Input virtuals
     //------------------------------------------------------------------------
     virtual std::string getCameraName() const override
     {
-        return GazeboCameraDeviceName;
+        return m_CameraName;
     }
 
     virtual cv::Size getOutputSize() const override
@@ -92,6 +94,7 @@ private:
     cv::Mat m_ReceivedImage;
     std::mutex m_Mtx;
     std::atomic<bool> m_HaveReceivedFrames{ false };
+    sem_t semaphore;
 
     void OnImageMsg(ConstImageStampedPtr &msg)
     {
@@ -99,6 +102,7 @@ private:
 
         if(!m_HaveReceivedFrames.load()){
             m_HaveReceivedFrames.store(true);
+            sem_post(&semaphore);
         }
         m_ReceivedImage.create(msg->image().height(), msg->image().width(), CV_8UC3);
         memcpy(m_ReceivedImage.data, msg->image().data().c_str(), msg->image().data().length());

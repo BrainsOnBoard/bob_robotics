@@ -1,10 +1,19 @@
 <?xml version='1.0'?>
 <sdf version='1.6'>
   <model name="panoramic_camera">
-     <pose frame=''>-1.07303 0 0.28895 0 0 3.14159</pose>
+     <pose frame=''>-1.07303 0 0.4 0 -1.5707 0</pose>
     <link name="link">
       <inertial>
         <mass>0.1</mass>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0001</iyy>
+          <iyz>0</iyz>
+          <izz>0.0001</izz>
+        </inertia>
       </inertial>
       <collision name="collision">
         <geometry>
@@ -25,7 +34,8 @@
           <horizontal_fov>6.2831</horizontal_fov>
           <image>
             <width>640</width>
-            <height>480</height>
+            <height>640</height>
+            <format>B8G8R8</format>
           </image>
           <clip>
             <near>0.1</near>
@@ -33,13 +43,13 @@
           </clip>
           <lens>
             <type>custom</type>
-            <scale_to_hfov>true</scale_to_hfov>
-            <cutoff_angle>3.1415</cutoff_angle>
+            <scale_to_hfov>false</scale_to_hfov>
+            <cutoff_angle>6.2831</cutoff_angle>
             <env_texture_size>512</env_texture_size>
             <custom_function>
             <c1>1.05</c1>
             <c2>4</c2>
-            <f>1.0</f>
+            <f>2</f>
             <fun>tan</fun>
           </custom_function>
           </lens>

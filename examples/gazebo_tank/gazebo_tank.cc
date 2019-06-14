@@ -31,16 +31,23 @@ bob_main(int argc, char **argv)
     gazebo::transport::NodePtr node = getGazeboNode();
 
     /************************************Gazebo setup end************/
-    char* camera_url="";
+    Display* display;
+    GazeboCameraInput* cam;
     if(argc >= 3) {
-        camera_url = argv[2];
-    }    
-    GazeboCameraInput cam(node, camera_url);
-    Display display(cam);
-    //Initialize Gazebo camera display if -d arguement supplied
-    if(argc >= 3 && strcmp(argv[1], "-d") == 0) {
         std::cout << "Display switch enabled.\n";
-        display.runInBackground();
+        if(strcmp(argv[1], "-p") == 0) {
+            std::cout << "Using panoramic camera.\n";
+            cam = new GazeboCameraInput(node, argv[2], "gazebo_panoramic_camera");
+            display = new Display(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
+            display->runInBackground();
+        }
+        else if(strcmp(argv[1], "-s") == 0){
+            std::cout << "Using simple camera.\n";
+            cam = new GazeboCameraInput(node, argv[2]);
+            display = new Display(*cam); //unwrap resolution needs to be supplied
+            display->runInBackground();
+        }
+        //Initialize Gazebo camera display if -d arguement supplied
     }
 
     Robots::GazeboTank robot(5_rad_per_s, node); // Tank agent
@@ -57,6 +64,8 @@ bob_main(int argc, char **argv)
         }
     } while (!joystick.isPressed(HID::JButton::B));
     // Make sure to shut everything down.
+    delete display;
+    delete cam;
     shutdownGazeboNode();
     std::cout <<"Shutting down...\n";
 
