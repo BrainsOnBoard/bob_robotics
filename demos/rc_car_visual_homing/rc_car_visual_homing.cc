@@ -97,18 +97,6 @@ writeVideo(std::mutex &logMutex,
     }
 }
 
-void
-driveRobotWithCamera(Video::Input &)
-{
-    /*
-     * **TODO**: Actually do something here :-)
-     *
-     * I'll stick in the snapshot bot code somewhere like here once
-     * I've written a variant for Ackermann robots.
-     *          -- AD
-     */
-}
-
 auto getGPSCoordinates()
 {
     static std::mt19937 rng(std::random_device{}());
@@ -138,7 +126,10 @@ bob_main(int, char **argv)
 
     // Use fake cameras for now
     Video::RandomInput<> camera1({100, 100}), camera2({100, 100});
-    camera2.setFrameRate(25_Hz); // So we don't get flooded with frames
+
+    // So we don't get flooded with frames
+    camera1.setFrameRate(25_Hz);
+    camera2.setFrameRate(25_Hz);
 
     // Write video in background
     std::thread videoWriterThread{ &writeVideo,
@@ -157,9 +148,10 @@ bob_main(int, char **argv)
     Stopwatch stopwatch;
     stopwatch.start();
     fs << "coords" << "["; // YAML array
+    cv::Mat fr;
     while (stopwatch.elapsed() < 10s) {
         // Pretend to do something with camera
-        driveRobotWithCamera(camera1);
+        camera1.readFrameSync(fr);
 
         // Log fake GPS coords
         fs << getGPSCoordinates();
