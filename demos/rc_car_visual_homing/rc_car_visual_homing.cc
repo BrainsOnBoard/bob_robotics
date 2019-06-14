@@ -1,9 +1,11 @@
 // BoB robotics includes
+#include "antworld/camera.h"
 #include "common/logging.h"
 #include "common/macros.h"
 #include "common/main.h"
 #include "common/map_coordinate.h"
 #include "common/stopwatch.h"
+#include "hid/joystick.h"
 #include "video/randominput.h"
 
 // Third-party includes
@@ -18,7 +20,6 @@
 // Standard C++ includes
 #include <atomic>
 #include <chrono>
-#include <mutex>
 #include <random>
 #include <sstream>
 #include <thread>
@@ -27,6 +28,7 @@ using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::literals;
 using namespace units::angle;
+using namespace units::length;
 
 void
 makeDirectory(const filesystem::path &path)
@@ -71,16 +73,10 @@ getNewFilepath(const filesystem::path folderPath, const std::string &fileExtensi
 }
 
 void
-writeVideo(std::mutex &logMutex,
-           std::atomic_bool &stopFlag,
+writeVideo(std::atomic_bool &stopFlag,
            const filesystem::path &filepath,
            Video::Input &camera)
 {
-    {
-        std::lock_guard<std::mutex> lock{ logMutex };
-        LOGI << "Writing video to: " << filepath;
-    }
-
     auto fps = camera.getFrameRate().value();
     auto size = camera.getOutputSize();
     cv::VideoWriter writer(filepath.str(),
@@ -121,22 +117,39 @@ bob_main(int, char **argv)
     const auto dataFilepath = getNewFilepath(programPath / "data", ".yaml");
     std::atomic_bool stopFlag{ false };
 
-    // So we don't get race conditions when logging on multiple threads
-    std::mutex logMutex;
+    const cv::Size RenderSize{ 720, 150 };
+    const meter_t AntHeight = 1_cm;
 
-    // Use fake cameras for now
-    Video::RandomInput<> camera1({100, 100}), camera2({100, 100});
+    HID::Joystick joystick;
+
+    // We need to do this before we create the Renderer
+    auto window = AntWorld::Camera::initialiseWindow(RenderSize);
+
+    // Create renderer
+    AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
+    auto &world = renderer.getWorld();
+    world.load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+               { 0.0f, 1.0f, 0.0f },
+               { 0.898f, 0.718f, 0.353f });
+    const auto minBound = world.getMinBound();
+    const auto maxBound = world.getMaxBound();
+
+    // Create agent and put in the centre of the world
+    AntWorld::Camera antCamera(window.get(), renderer, RenderSize);
+    antCamera.setPosition((maxBound[0] - minBound[0]) / 2, (maxBound[1] - minBound[1]) / 2, AntHeight);
+
+    // Use fake camera for now
+    Video::RandomInput<> randomCamera({100, 100});
 
     // So we don't get flooded with frames
-    camera1.setFrameRate(25_Hz);
-    camera2.setFrameRate(25_Hz);
+    randomCamera.setFrameRate(25_Hz);
 
     // Write video in background
+    LOGI << "Writing video to: " << videoFilepath;
     std::thread videoWriterThread{ &writeVideo,
-                                   std::ref(logMutex),
                                    std::ref(stopFlag),
                                    std::cref(videoFilepath),
-                                   std::ref(camera2) };
+                                   std::ref(randomCamera) };
 
     // Log data to YAML file
     LOGI << "Saving data to " << dataFilepath;
@@ -151,7 +164,7 @@ bob_main(int, char **argv)
     cv::Mat fr;
     while (stopwatch.elapsed() < 10s) {
         // Pretend to do something with camera
-        camera1.readFrameSync(fr);
+        antCamera.readFrameSync(fr);
 
         // Log fake GPS coords
         fs << getGPSCoordinates();
