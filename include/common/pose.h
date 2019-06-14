@@ -311,7 +311,6 @@ convertUnitArray(const ArrayType &values)
              static_cast<OutputUnit>(values[2]) };
 }
 
-#ifdef USE_OPENCV
 template<typename LengthUnit>
 inline auto &operator<<(std::ostream &os, const BoBRobotics::Vector2<LengthUnit> &position)
 {
@@ -340,5 +339,4 @@ inline auto &operator<<(std::ostream &os, const BoBRobotics::Pose3<LengthUnit, A
        << " at (" << pose.yaw() << ", " << pose.pitch() << ", " << pose.roll() << ")";
     return os;
 }
-#endif
 } // BoBRobotics
