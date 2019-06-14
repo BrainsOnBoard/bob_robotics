@@ -2,14 +2,15 @@
 
 // BoB robotics includes
 #include "common/threadable.h"
-#include "imgproc/opencv_unwrap_360.h"
 #include "input.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
+#ifdef USE_BOB_IMGPROC
 #include <memory>
+#endif
 
 namespace BoBRobotics {
 namespace Video {
@@ -76,10 +77,15 @@ protected:
 
 private:
     Input &m_VideoInput;
-    cv::Mat m_Frame, m_Unwrapped;
+    cv::Mat m_Frame;
+#ifdef USE_BOB_IMGPROC
+    cv::Mat m_Unwrapped;
     std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
+    bool m_ShowUnwrapped = false;
+#endif
+    bool m_IsOpen = true;
+
     static constexpr const char *WindowName = "BoB robotics display";
-    bool m_ShowUnwrapped = false, m_IsOpen = true;
 }; // Display
 } // Video
 } // BoBRobotics

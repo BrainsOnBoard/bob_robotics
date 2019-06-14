@@ -1,7 +1,9 @@
 #pragma once
 
+#ifdef USE_BOB_IMGPROC
 // BoB robotics includes
 #include "imgproc/opencv_unwrap_360.h"
+#endif
 
 // Third-party includes
 #include "third_party/units.h"

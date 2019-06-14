@@ -61,9 +61,11 @@ bool Display::update()
 
     // get keyboard input
     switch (cv::waitKeyEx(1) & OS::KeyMask) {
+#ifdef USE_BOB_IMGPROC
     case 'u': // toggle unwrapping
         m_ShowUnwrapped = !m_ShowUnwrapped;
         break;
+#endif
     case OS::KeyCodes::Escape:
         close();
     }
@@ -86,6 +88,7 @@ bool Display::readFrame(cv::Mat &frame)
         return false;
     }
 
+#ifdef USE_BOB_IMGPROC
     // unwrap frame if required
     if (m_Unwrapper && m_ShowUnwrapped) {
         m_Unwrapper->unwrap(m_Frame, m_Unwrapped);
@@ -93,6 +96,7 @@ bool Display::readFrame(cv::Mat &frame)
     } else {
         frame = m_Frame;
     }
+#endif
     return true;
 }
 
