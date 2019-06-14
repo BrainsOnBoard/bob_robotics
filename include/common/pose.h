@@ -3,6 +3,15 @@
 // Third-party includes
 #include "third_party/units.h"
 
+// OpenCV
+#ifdef USE_OPENCV
+#include <opencv2/opencv.hpp>
+
+// Needed for OpenCV (de)serialisation
+#include <algorithm>
+#include <vector>
+#endif
+
 // Standard C includes
 #include <cmath>
 
@@ -339,4 +348,83 @@ inline auto &operator<<(std::ostream &os, const BoBRobotics::Pose3<LengthUnit, A
        << " at (" << pose.yaw() << ", " << pose.pitch() << ", " << pose.roll() << ")";
     return os;
 }
+
+#ifdef USE_OPENCV
+inline void
+write(cv::FileStorage &fs,
+      const std::string &,
+      const Pose2<units::length::meter_t, units::angle::degree_t> &pose)
+{
+    fs << "{";
+    fs << "position" << "[" << pose.x().value() << pose.y().value() << "]";
+    fs << "yaw" << pose.yaw().value();
+    fs << "}";
+}
+
+inline void
+write(cv::FileStorage &fs,
+      const std::string &,
+      const Pose3<units::length::meter_t, units::angle::degree_t> &pose)
+{
+    fs << "{";
+    fs << "position"
+       << "["
+       << pose.x().value() << pose.y().value() << pose.z().value()
+       << "]";
+    fs << "attitude"
+       << "[" << pose.yaw().value() << pose.pitch().value() << pose.roll().value();
+    fs << "}";
+}
+
+template<typename LengthUnit, typename AngleUnit>
+inline void
+read(const cv::FileNode &node,
+     Pose2<LengthUnit, AngleUnit> &pose,
+     Pose2<LengthUnit, AngleUnit> defaultValue = Pose2<LengthUnit, AngleUnit>::nan())
+{
+    if (node.empty()) {
+        pose = defaultValue;
+    } else {
+        std::vector<double> position(2);
+        node["position"] >> position;
+
+        double yaw;
+        node["yaw"] >> yaw;
+
+        std::transform(position.cbegin(), position.cend(), pose.position().begin(),
+            [](double val) {
+                return units::length::meter_t{ val };
+            });
+        pose.yaw() = units::angle::degree_t{ yaw };
+    }
+}
+
+template<typename LengthUnit, typename AngleUnit>
+inline void
+read(const cv::FileNode &node,
+     Pose3<LengthUnit, AngleUnit> &pose,
+     Pose3<LengthUnit, AngleUnit> defaultValue = Pose3<LengthUnit, AngleUnit>::nan())
+{
+    if (node.empty()) {
+        pose = defaultValue;
+    } else {
+        std::vector<double> position(3);
+        node["position"] >> position;
+
+        std::vector<double> attitude(3);
+        node["attitude"] >> attitude;
+
+        std::transform(position.cbegin(), position.cend(), pose.position().begin(),
+            [](double val)
+            {
+                return units::length::meter_t{ val };
+            });
+        std::transform(attitude.cbegin(), attitude.cend(), pose.attitude().begin(),
+            [](double val)
+            {
+                return units::angle::degree_t{ val };
+            });
+    }
+}
+#endif // USE_OPENCV
 } // BoBRobotics
