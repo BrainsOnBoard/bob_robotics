@@ -180,9 +180,9 @@ void
 OpenCVUnwrap360::read(const cv::FileNode &node)
 {
     /*
-         * We need to already know the camera resolution otherwise we won't be
-         * able to convert the parameters from relative to absolute values.
-         */
+     * We need to already know the camera resolution otherwise we won't be
+     * able to convert the parameters from relative to absolute values.
+     */
     BOB_ASSERT(m_CameraResolution.width != 0 && m_CameraResolution.height != 0);
     BOB_ASSERT(m_UnwrappedResolution.width != 0 && m_UnwrappedResolution.height != 0);
 
