@@ -164,6 +164,8 @@ macro(set_use_macros)
         add_use_macro(${lib})
     endforeach()
     foreach(module IN LISTS PARSED_ARGS_BOB_MODULES)
+        # Some BoB modules have slashes in the name; replace with underscore
+        string(REPLACE / _ module ${module})
         add_use_macro(BOB_${module})
     endforeach()
 endmacro()
