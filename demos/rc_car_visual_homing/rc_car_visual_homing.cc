@@ -4,7 +4,6 @@
 #include "common/macros.h"
 #include "common/main.h"
 #include "common/map_coordinate.h"
-#include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "robots/simulated_ackermann_car.h"
 #include "video/randominput.h"
@@ -30,6 +29,7 @@ using namespace std::literals;
 using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
+using namespace units::velocity;
 
 void
 makeDirectory(const filesystem::path &path)
@@ -152,25 +152,30 @@ bob_main(int, char **argv)
                                    std::cref(videoFilepath),
                                    std::ref(randomCamera) };
 
+    Robots::SimulatedAckermannCar<meter_t> car{ 1_mph, 10_cm, 100_cm };
+    car.addJoystick(joystick);
+
     // Log data to YAML file
     LOGI << "Saving data to " << dataFilepath;
     cv::FileStorage fs{ dataFilepath.str(), cv::FileStorage::WRITE };
     BOB_ASSERT(fs.isOpened());
     fs << "data" << "{" << "video_filepath" << videoFilepath.str();
 
-    // For now, just kill it after 10 secs
-    Stopwatch stopwatch;
-    stopwatch.start();
-    fs << "coords" << "["; // YAML array
     cv::Mat fr;
-    while (stopwatch.elapsed() < 10s) {
+    fs << "coords" << "["; // YAML array
+    do {
+        joystick.update();
+
         // Pretend to do something with camera
-        antCamera.readFrameSync(fr);
+        antCamera.setPose(car.getPose());
+        antCamera.update();
+        // antCamera.readFrameSync(fr);
 
         // Log fake GPS coords
         fs << getGPSCoordinates();
-    }
-    fs << "]" << "}";
+    } while (!joystick.isPressed(HID::JButton::B) && antCamera.isOpen());
+    fs << "]"
+       << "}";
     fs.release();
 
     // Stop writing video
