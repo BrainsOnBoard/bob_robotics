@@ -4,6 +4,7 @@
 #include "common/macros.h"
 #include "common/main.h"
 #include "common/map_coordinate.h"
+#include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "robots/simulated_ackermann_car.h"
 #include "video/randominput.h"
@@ -20,7 +21,6 @@
 // Standard C++ includes
 #include <atomic>
 #include <chrono>
-#include <random>
 #include <sstream>
 #include <thread>
 
@@ -94,22 +94,6 @@ writeVideo(std::atomic_bool &stopFlag,
     }
 }
 
-auto getGPSCoordinates()
-{
-    static std::mt19937 rng(std::random_device{}());
-    static std::uniform_int_distribution<std::mt19937::result_type> dist;
-    const auto randDeg = [&](degree_t min, degree_t max)
-    {
-        const auto val = ((double) dist(rng)) / ((double) dist.max());
-        return val * (max - min) + min;
-    };
-    MapCoordinate::GPSCoordinate coords {
-            randDeg(-180_deg, 180_deg),
-            randDeg(-90_deg, 90_deg)
-    };
-    return coords;
-}
-
 int
 bob_main(int, char **argv)
 {
@@ -162,17 +146,26 @@ bob_main(int, char **argv)
     fs << "data" << "{" << "video_filepath" << videoFilepath.str();
 
     cv::Mat fr;
-    fs << "coords" << "["; // YAML array
+    Stopwatch stopwatch;
+    stopwatch.start();
+    fs << "coords"
+       << "["; // YAML array
+    std::chrono::duration<double, std::milli> time;
     do {
         joystick.update();
 
         // Pretend to do something with camera
-        antCamera.setPose(car.getPose());
+        const auto pose = car.getPose();
+        antCamera.setPose(pose);
         antCamera.update();
         // antCamera.readFrameSync(fr);
 
         // Log fake GPS coords
-        fs << getGPSCoordinates();
+        time = stopwatch.elapsed();
+        fs << "{"
+           << "time" << time.count()
+           << "pose" << pose
+           << "}";
     } while (!joystick.isPressed(HID::JButton::B) && antCamera.isOpen());
     fs << "]"
        << "}";
