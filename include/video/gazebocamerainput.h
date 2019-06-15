@@ -4,6 +4,7 @@
 #include "common/macros.h"
 #include "common/gazebo_node.h"
 #include "input.h"
+#include "common/semaphore.h"
 
 // Gazebo includes
 #include <gazebo/transport/transport.hh>
@@ -60,8 +61,7 @@ public:
         // Subscribe to the topic, and register a callback
         m_ImageSub = m_ImageNode->Subscribe(topic, &GazeboCameraInput::OnImageMsg, this);
         LOG_INFO << "Subsribed to "<< topic <<"\n";
-        sem_init(&semaphore, 0 , 0 );
-        sem_wait(&semaphore);
+        m_HaveReceivedFrameSemaphore.wait();
     }
     //------------------------------------------------------------------------
     // Video::Input virtuals
@@ -94,7 +94,7 @@ private:
     cv::Mat m_ReceivedImage;
     std::mutex m_Mtx;
     std::atomic<bool> m_HaveReceivedFrames{ false };
-    sem_t semaphore;
+    Semaphore m_HaveReceivedFrameSemaphore;
 
     void OnImageMsg(ConstImageStampedPtr &msg)
     {
@@ -102,7 +102,7 @@ private:
 
         if(!m_HaveReceivedFrames.load()){
             m_HaveReceivedFrames.store(true);
-            sem_post(&semaphore);
+            m_HaveReceivedFrameSemaphore.notify();
         }
         m_ReceivedImage.create(msg->image().height(), msg->image().width(), CV_8UC3);
         memcpy(m_ReceivedImage.data, msg->image().data().c_str(), msg->image().data().length());
