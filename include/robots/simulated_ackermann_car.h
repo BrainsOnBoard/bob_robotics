@@ -113,6 +113,14 @@ public:
         m_steeringWheelAngle = -value * m_MaximumTurn;
     }
 
+    void steer(AngleUnit steeringAngle)
+    {
+        using namespace units::math;
+        BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
+        updatePose();
+        m_steeringWheelAngle = -steeringAngle;
+    }
+
     void stopMoving() noexcept
     {
         move(meters_per_second_t{ 0 }, AngleUnit{ 0 });
