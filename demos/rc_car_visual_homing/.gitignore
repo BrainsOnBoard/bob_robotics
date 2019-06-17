@@ -1,3 +1,5 @@
 *.avi
 *.yaml
+*.csv
+*.png
 /rc_car_visual_homing
