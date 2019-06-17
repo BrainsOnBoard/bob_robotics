@@ -17,7 +17,7 @@
 
 // BoB robotics includes
 #include "common/main.h"
-#include "robots/simulated_ackermann_car.h"
+#include "robots/simulated_ackermann.h"
 #include "robots/control/pure_pursuit_controller.h"
 #include "viz/car_display/car_display.h"
 
@@ -55,10 +55,10 @@ void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *render
 int bob_main(int, char **)
 {
 
-    Robots::SimulatedAckermannCar<> car(1.4_mps, 500_mm);   // simulated car
-    Viz::CarDisplay display(10.2_m,160_mm);             // For displaying the agent
-    std::vector<SDL_Rect> rekt_list;                       // list of waypoints
-    float currentX = 0, currentY = 0;                      // current mouse coordinate click
+    Robots::SimulatedAckermann car(1.4_mps, 500_mm); // simulated car
+    Viz::CarDisplay display(10.2_m, 160_mm);         // For displaying the agent
+    std::vector<SDL_Rect> rekt_list;                 // list of waypoints
+    float currentX = 0, currentY = 0;                // current mouse coordinate click
     bool isControllerOn = true;
 
     // adding the first coordinate
