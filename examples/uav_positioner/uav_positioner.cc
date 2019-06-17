@@ -77,7 +77,7 @@ bob_main(int, char **)
             LOGI << "Starting move...";
             stopwatch.start();
             while (stopwatch.elapsed() < 30s && !stopFlag) {
-                const auto objectData = vicon.getObjectData(0);
+                const auto objectData = vicon.getObjectData();
                 positioner.update(objectData.getPose(), objectData.getVelocity());
                 std::this_thread::sleep_for(25ms);
             }
