@@ -15,9 +15,16 @@
 
 float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Tank &motor, bool display)
 {
-    // Sum left and right motor activity
-    const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[4], 0.0f);
-    const float rightMotor = std::accumulate(&rCPU1[4], &rCPU1[8], 0.0f);
+    /*
+     * Sum left and right motor activity.
+     *
+     * **NOTE**: This only worked for me on a Mindstorms robot when I only used
+     * neurons 0-7. Let's leave as is for now though, as the demo was only half
+     * working before anyway.
+     *          -- AD
+     */
+    const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
+    const float rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
 
     // Steer based on signal
     const float steering = leftMotor - rightMotor;
