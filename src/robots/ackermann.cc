@@ -12,7 +12,7 @@ Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
             moveForward(-value);
             return true;
         } else if (axis == HID::JAxis::RightStickHorizontal) {
-            steer(value);
+            steer(-value);
             return true;
         } else {
             return false;
