@@ -372,7 +372,8 @@ write(cv::FileStorage &fs,
        << pose.x().value() << pose.y().value() << pose.z().value()
        << "]";
     fs << "attitude"
-       << "[" << pose.yaw().value() << pose.pitch().value() << pose.roll().value();
+       << "[" << pose.yaw().value() << pose.pitch().value() << pose.roll().value()
+       << "]";
     fs << "}";
 }
 
