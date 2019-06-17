@@ -8,7 +8,7 @@
 #include "hid/joystick.h"
 #include "navigation/image_database.h"
 #include "navigation/perfect_memory.h"
-#include "robots/simulated_ackermann_car.h"
+#include "robots/simulated_ackermann.h"
 #include "video/randominput.h"
 #include "viz/sfml_world/arena_object.h"
 #include "viz/sfml_world/sfml_world.h"
@@ -142,7 +142,7 @@ bob_main(int, char **argv)
     antCamera.setPosition((maxBound[0] - minBound[0]) / 2, (maxBound[1] - minBound[1]) / 2, AntHeight);
 
     // Simulated robot
-    Robots::SimulatedAckermannCar<meter_t> robot{ 1_mph, 20_cm, 10_cm };
+    Robots::SimulatedAckermann robot{ 1_mph, 20_cm, 10_cm };
     robot.addJoystick(joystick);
 
     // Visualisation of robot position
