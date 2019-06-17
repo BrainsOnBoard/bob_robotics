@@ -44,7 +44,7 @@ public:
                 if (axis == HID::JAxis::LeftStickVertical) {
                     moveForward(value);
                     return true;
-                } else if (axis == HID::JAxis::LeftStickHorizontal) {
+                } else if (axis == HID::JAxis::RightStickHorizontal) {
                     steer(value);
                     return true;
                 } else {
