@@ -84,7 +84,12 @@ public:
         return m_MaximumSpeed;
     }
 
-    void setPose(const Pose2<LengthUnit, AngleUnit> &pose)
+    auto getMaximumTurn() const
+    {
+        return m_MaximumTurn;
+    }
+
+    void setPose(const Pose3<LengthUnit, AngleUnit> &pose)
     {
         m_MoveStopwatch.start();
         m_Pose = pose;
