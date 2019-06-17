@@ -126,7 +126,7 @@ macro(BoB_project)
     # Allow users to choose the type of tank robot to use with TANK_TYPE env var
     # or CMake param (defaults to Norbot)
     if(NOT TANK_TYPE)
-        if(ENV{TANK_TYPE})
+        if(NOT "$ENV{TANK_TYPE}" STREQUAL "")
             set(TANK_TYPE $ENV{TANK_TYPE})
         else()
             set(TANK_TYPE Norbot)
@@ -219,27 +219,6 @@ macro(BoB_init)
     else()
         string(REPLACE "-DNDEBUG" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
     endif()
-
-        # Set DEBUG macro when compiling in debug mode
-    if("${CMAKE_BUILD_TYPE}" STREQUAL Debug)
-        add_definitions(-DDEBUG)
-    endif()
-
-    # Flags for gcc and clang
-    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-        set(GNU_TYPE_COMPILER TRUE)
-
-        # Default to building with -march=native
-        if(NOT DEFINED ENV{ARCH})
-            set(ENV{ARCH} native)
-        endif()
-
-        # Enable warnings and set architecture
-        add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
-
-        # Disable optimisation for debug builds
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-    endif()
 endmacro()
 
 macro(add_compile_flags EXTRA_ARGS)
@@ -290,6 +269,7 @@ macro(BoB_build)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
     endif()
+    message("Build type: ${CMAKE_BUILD_TYPE}")
 
     if(NOT WIN32)
         # Use ccache if present to speed up repeat builds
@@ -300,6 +280,31 @@ macro(BoB_build)
         else()
             message(WARNING "ccache not found. Install for faster repeat builds.")
         endif()
+    endif()
+
+    # Set DEBUG macro when compiling in debug mode
+    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+        add_definitions(-DDEBUG)
+    endif()
+
+    # Flags for gcc and clang
+    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
+        set(GNU_TYPE_COMPILER TRUE)
+
+        # Default to building with -march=native
+        if(NOT DEFINED ENV{ARCH})
+            set(ENV{ARCH} native)
+        endif()
+
+        # Enable warnings and set architecture
+        add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
+
+        # Disable optimisation for debug builds
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+
+        # If we don't do this, I get linker errors on the BrickPi for the net
+        # module
+        set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
     # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
@@ -316,9 +321,9 @@ macro(BoB_build)
 
     # Set include dirs and link libraries for this module/project
     always_included_packages()
-    BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+    BoB_modules(${PARSED_ARGS_BOB_MODULES})
 
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})

@@ -26,7 +26,7 @@ private:
     float m_LastInput;
 
     // Integral
-    float m_Intergral;
+    float m_Integral;
 
     // PID constants
     float m_KP;
