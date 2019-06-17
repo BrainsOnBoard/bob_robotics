@@ -45,9 +45,9 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void render() const;
-    void load(const filesystem::path &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
+    std::vector<GLfloat> load(const filesystem::path &filename, const GLfloat (&worldColour)[3], const GLfloat (&groundColour)[3]);
     void loadObj(const filesystem::path &objFilename, float scale = 1.0f, int maxTextureSize = -1, GLint textureFormat = GL_RGB);
+    void render() const;
 
     const Vector3<meter_t> &getMinBound()
     {
