@@ -96,7 +96,7 @@ public:
         BOB_ASSERT(speed >= -1.f && speed <= 1.f);
 
         updatePose();
-        m_currentVelocity = speed * m_MaximumSpeed;
+        m_currentVelocity = -speed * m_MaximumSpeed;
     }
 
     void steer(float value)
@@ -105,7 +105,7 @@ public:
         BOB_ASSERT(value >= -1.f && value <= 1.f);
 
         updatePose();
-        m_steeringWheelAngle = value * m_MaximumTurn;
+        m_steeringWheelAngle = -value * m_MaximumTurn;
     }
 
     void stopMoving() noexcept
@@ -122,8 +122,8 @@ public:
         BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
 
         updatePose();
-        m_currentVelocity = velocity;
-        m_steeringWheelAngle = steeringAngle;
+        m_currentVelocity = -velocity;
+        m_steeringWheelAngle = -steeringAngle;
     }
 
 private:
