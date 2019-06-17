@@ -138,7 +138,6 @@ bob_main(int, char **argv)
 
     // Stop writing video
     stopFlag = true;
-    videoWriterThread.join();
 
     return EXIT_SUCCESS;
 }
