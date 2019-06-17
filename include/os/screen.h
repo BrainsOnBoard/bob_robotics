@@ -9,13 +9,13 @@
 #pragma comment(lib, "user32.lib")
 #endif
 
-// OpenCV
-#include <opencv2/opencv.hpp>
+// Standard C++ includes
+#include <utility>
 
 namespace BoBRobotics {
 namespace OS {
 namespace Screen {
-cv::Size
+std::pair<int, int>
 getResolution();
 } // Screen
 } // OS

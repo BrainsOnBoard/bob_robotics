@@ -6,7 +6,7 @@
 #include "common/logging.h"
 #include "hid/joystick.h"
 #include "genn_utils/analogue_csv_recorder.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
@@ -17,14 +17,13 @@
 #include "parameters.h"
 #include "robotCommon.h"
 #include "robotParameters.h"
-#include "simulatorCommon.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
 using namespace BoBRobotics::HID;
 using namespace std::literals;
 
-int main(int argc, char *argv[])
+int main()
 {
     const float speedScale = 5.0f;
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
@@ -33,7 +32,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    Robots::Norbot motor;
+    Robots::TANK_TYPE motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);
@@ -44,21 +43,7 @@ int main(int argc, char *argv[])
     // Initialise GeNN
     allocateMem();
     initialize();
-
-    //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-
-    initstone_cx();
+    initializeSparse();
 
 #ifdef RECORD_ELECTROPHYS
     GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
@@ -117,10 +102,22 @@ int main(int argc, char *argv[])
             LOGI <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")";
         }
 
+        // Push inputs to device
+        pushspeedTN2ToDevice();
+
         // Step network
-        stepTimeCPU();
+        stepTime();
+
+        // Pull outputs from device
+        pullrCPU4FromDevice();
+        pullrCPU1FromDevice();
 
 #ifdef RECORD_ELECTROPHYS
+        pullrTLFromDevice();
+        pullrTN2FromDevice();
+        pullrCL1FromDevice();
+        pullrTB1FromDevice();
+
         tn2Recorder.record(numTicks);
         cl1Recorder.record(numTicks);
         tb1Recorder.record(numTicks);
@@ -150,7 +147,7 @@ int main(int argc, char *argv[])
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
 
         // Calculate tick duration (in microseconds)
-        const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
+        const int64_t tickMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(tickEndTime - tickStartTime).count();
 
         // Add to total
         totalMicroseconds += tickMicroseconds;

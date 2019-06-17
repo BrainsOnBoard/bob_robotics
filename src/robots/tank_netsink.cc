@@ -1,38 +1,21 @@
 // BoB robotics includes
-#include "common/macros.h"
-#include "common/logging.h"
-#include "common/stopwatch.h"
 #include "robots/tank_netsink.h"
+#include "common/logging.h"
+#include "common/macros.h"
+#include "common/stopwatch.h"
 
 namespace BoBRobotics {
 namespace Robots {
 
-TankNetSink::TankNetSink(Net::Connection &connection)
-    : m_Connection(connection)
+BundledTankNetSink::BundledTankNetSink()
+  : TankNetSinkBase<Net::Client>()
 {
-    connection.setCommandHandler("TNK_PARAMS", [this](Net::Connection &, const Net::Command &command) {
-        if (command.size() != 5) {
-            throw Net::BadCommandError();
-        }
-
-        m_TurnSpeed = radians_per_second_t(stod(command[1]));
-        m_ForwardSpeed = meters_per_second_t(stod(command[2]));
-        m_AxisLength = millimeter_t(stod(command[3]));
-        Tank::setMaximumSpeedProportion(stof(command[4]));
-    });
-
-    /*
-        * If we start running the connection on a separate thread before this,
-        * there's a chance the TNK_PARAMS command won't be caught.
-        */
-    BOB_ASSERT(!connection.isRunning());
-
-    // Wait for command
-    while (connection.readNextCommand() != "TNK_PARAMS")
-        ;
+    // Run client on background thread
+    getConnection().runInBackground();
 }
 
-TankNetSink::~TankNetSink()
+template<class ConnectionType>
+TankNetSinkBase<ConnectionType>::~TankNetSinkBase()
 {
     try {
         stopMoving();
@@ -49,7 +32,9 @@ TankNetSink::~TankNetSink()
     stopReadingFromNetwork();
 }
 
-void TankNetSink::setMaximumSpeedProportion(float value)
+template<class ConnectionType>
+void
+TankNetSinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
 {
     if (value != getMaximumSpeedProportion()) {
         Tank::setMaximumSpeedProportion(value);
@@ -59,7 +44,9 @@ void TankNetSink::setMaximumSpeedProportion(float value)
 }
 
 //! Motor command: send TNK command over TCP
-void TankNetSink::tank(float left, float right)
+template<class ConnectionType>
+void
+TankNetSinkBase<ConnectionType>::tank(float left, float right)
 {
     BOB_ASSERT(left >= -1.f && left <= 1.f);
     BOB_ASSERT(right >= -1.f && right <= 1.f);
@@ -81,15 +68,17 @@ void TankNetSink::tank(float left, float right)
     using namespace std::literals;
     const auto duration = netTimer.elapsed();
     LOG_WARNING_IF(duration > 100ms) << "Network is slow ("
-                                        << static_cast<units::time::millisecond_t>(duration)
-                                        << " to send motor command)";
+                                     << static_cast<units::time::millisecond_t>(duration)
+                                     << " to send motor command)";
 
     // store current left/right values to compare next time
     m_OldLeft = left;
     m_OldRight = right;
 }
 
-units::length::millimeter_t TankNetSink::getRobotWidth() const
+template<class ConnectionType>
+units::length::millimeter_t
+TankNetSinkBase<ConnectionType>::getRobotWidth() const
 {
     if (std::isnan(m_AxisLength.value())) {
         return Tank::getRobotWidth();
@@ -98,7 +87,9 @@ units::length::millimeter_t TankNetSink::getRobotWidth() const
     }
 }
 
-units::velocity::meters_per_second_t TankNetSink::getAbsoluteMaximumSpeed() const
+template<class ConnectionType>
+units::velocity::meters_per_second_t
+TankNetSinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
 {
     if (std::isnan(m_ForwardSpeed.value())) {
         return Tank::getAbsoluteMaximumSpeed();
@@ -107,7 +98,9 @@ units::velocity::meters_per_second_t TankNetSink::getAbsoluteMaximumSpeed() cons
     }
 }
 
-units::angular_velocity::radians_per_second_t TankNetSink::getAbsoluteMaximumTurnSpeed() const
+template<class ConnectionType>
+units::angular_velocity::radians_per_second_t
+TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
 {
     if (std::isnan(m_TurnSpeed.value())) {
         return Tank::getAbsoluteMaximumTurnSpeed();

@@ -1,3 +1,4 @@
+// **TODO**: This currently doesn't compile. It needs converting to GeNN 4.
 // Standard C++ includes
 #include <fstream>
 #include <numeric>
@@ -21,7 +22,6 @@
 
 // Model includes
 #include "parameters.h"
-#include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
 using namespace BoBRobotics;

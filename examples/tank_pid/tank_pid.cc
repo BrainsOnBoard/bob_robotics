@@ -13,7 +13,7 @@
 #include "net/client.h"
 #include "robots/tank_netsink.h"
 #else
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #endif
 
 // Third-party includes
@@ -80,8 +80,7 @@ bob_main(int argc, char **argv)
         LOGW << PLAY_PATH << " not found. Install sox for sounds.";
     }
 #else
-    // Connect to motors over I2C
-    Robots::Norbot robot;
+    Robots::TANK_TYPE robot;
 #endif
 
     // Load path from file, if one is given

@@ -10,7 +10,7 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_optical_flow.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -20,7 +20,6 @@
 #include "parameters.h"
 #include "robotCommon.h"
 #include "robotParameters.h"
-#include "simulatorCommon.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
@@ -36,7 +35,7 @@ namespace
 {
 void buildOpticalFlowFilter(cv::Mat &filter, float preferredAngle) {
     // Loop through columns
-    for(unsigned int x = 0; x < filter.cols; x++) {
+    for(int x = 0; x < filter.cols; x++) {
         // Convert column to angle
         const float th = (((float)x / (float)filter.cols) * 2.0f * Parameters::pi) - Parameters::pi;
 
@@ -74,7 +73,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     const float tau = 10.0f;
     const cv::Size unwrapRes(90, 30);
 
-#ifdef USE_SEE3_CAM
+#ifdef USE_SEE3CAM
     const std::string deviceString = "/dev/video" + std::to_string(cameraDevice);
     See3CAM_CU40 cam(deviceString, See3CAM_CU40::Resolution::_672x380);
 
@@ -98,7 +97,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     OpenCVOpticalFlow opticalFlow(unwrapRes);
 
        // Create images
-#ifdef USE_SEE3_CAM
+#ifdef USE_SEE3CAM
     cv::Mat greyscaleInput(camRes, CV_8UC1);
 #else
     cv::Mat rgbInput(camRes, CV_8UC3);
@@ -119,7 +118,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
     // While quit signal isn't set
     float prevSpeed = 0.0f;
     for(numFrames = 0; !shouldQuit; numFrames++) {
-#ifdef USE_SEE3_CAM
+#ifdef USE_SEE3CAM
         // Read directly into greyscale
         if(!cam.captureSuperPixelGreyscale(greyscaleInput)) {
             return;
@@ -164,26 +163,12 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    Norbot motor;
+    TANK_TYPE motor;
 
     // Initialise GeNN
     allocateMem();
     initialize();
-
-    //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-
-    initstone_cx();
+    initializeSparse();
 
     // Atomic flag for quitting child threads
     std::atomic<bool> shouldQuit{false};
@@ -229,12 +214,18 @@ int main(int argc, char *argv[])
         const float flow =  ignoreFlow ? 0.0f : (opticalFlowSpeed * velocityScale);
         speedTN2[Parameters::HemisphereLeft] = speedTN2[Parameters::HemisphereRight] = flow;
 
-#ifdef RECORD_SENSORS
+        // Push inputs to device
+        pushspeedTN2ToDevice();
 
+#ifdef RECORD_SENSORS
         data << imuHeading << ", " << flow << std::endl;
 #endif
         // Step network
-        stepTimeCPU();
+        stepTime();
+
+        // Pull outputs from device
+        pullrCPU4FromDevice();
+        pullrCPU1FromDevice();
 
         // If we are going outbound
         if(outbound) {
@@ -260,7 +251,7 @@ int main(int argc, char *argv[])
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
 
         // Calculate tick duration (in microseconds)
-        const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
+        const int64_t tickMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(tickEndTime - tickStartTime).count();
 
         // Add to total
         totalMicroseconds += tickMicroseconds;

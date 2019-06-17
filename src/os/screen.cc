@@ -3,6 +3,11 @@
 // BoB robotics includes
 #include "os/screen.h"
 
+#ifndef _WIN32
+// Standard C++ includes
+#include <stdexcept>
+#endif
+
 namespace BoBRobotics {
 namespace OS {
 namespace Screen {
@@ -15,24 +20,25 @@ extern "C"
 }
 #endif
 
-cv::Size
+std::pair<int, int>
 getResolution()
 {
 #ifdef _WIN32
-    return cv::Size(GetSystemMetrics(SM_CXSCREEN),
-                    GetSystemMetrics(SM_CYSCREEN));
+    return std::pair<int, int>{ GetSystemMetrics(SM_CXSCREEN),
+                                GetSystemMetrics(SM_CYSCREEN) };
 #else
     Display *display = XOpenDisplay(nullptr);
     if (!display) {
-        return cv::Size();
+        throw std::runtime_error("Could not open display");
     }
+
     XScreen *screen = DefaultScreenOfDisplay(display);
     XCloseDisplay(display);
     if (!screen) {
-        return cv::Size();
+        throw std::runtime_error("Could not get display's default screen");
     }
 
-    return cv::Size(screen->width, screen->height);
+    return std::pair<int, int>{ screen->width, screen->height };
 #endif
 }
 } // Screen
