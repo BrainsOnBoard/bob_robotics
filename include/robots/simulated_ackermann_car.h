@@ -127,7 +127,7 @@ public:
     }
 
 private:
-    Pose2<LengthUnit, AngleUnit> m_Pose;
+    Pose3<LengthUnit, AngleUnit> m_Pose;
     Stopwatch m_MoveStopwatch;
     const meters_per_second_t m_MaximumSpeed;
     const AngleUnit m_MaximumTurn;
