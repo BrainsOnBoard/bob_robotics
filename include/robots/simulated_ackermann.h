@@ -3,9 +3,7 @@
 // BoB robotics includes
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#ifdef USE_BOB_HID
-#include "hid/joystick.h"
-#endif
+#include "robots/ackermann.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -15,6 +13,7 @@ namespace Robots {
 using namespace units::literals;
 
 class SimulatedAckermann
+  : public Ackermann
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -26,10 +25,6 @@ public:
                        const meter_t axisDist,
                        const meter_t carHeight = 0_m,
                        const degree_t maxTurn = 45_deg);
-
-#ifdef USE_BOB_HID
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
-#endif
 
     meter_t getDistanceBetweenAxis() const;
 
@@ -51,13 +46,15 @@ public:
     meters_per_second_t getAbsoluteMaximumSpeed() const;
     degree_t getMaximumTurn() const;
     void setPose(const Pose3<meter_t, degree_t> &pose);
-    void moveForward(float speed);
-    void steer(float value);
-    void steer(degree_t steeringAngle);
-    void stopMoving() noexcept;
+
+    // Public virtual methods
+    virtual void moveForward(float speed) override;
+    virtual void steer(float value) override;
+    virtual void steer(degree_t steeringAngle) override;
+    virtual void stopMoving() override;
 
     //! sets the robot velocity and steering to move
-    void move(meters_per_second_t velocity, degree_t steeringAngle);
+    virtual void move(meters_per_second_t velocity, degree_t steeringAngle) override;
 
 private:
     Pose3<meter_t, degree_t> m_Pose;

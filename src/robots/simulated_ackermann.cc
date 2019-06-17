@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "robots/simulated_ackermann.h"
 #include "common/macros.h"
+#include "robots/simulated_ackermann.h"
 
 using namespace units::angle;
 using namespace units::length;
@@ -21,24 +21,6 @@ SimulatedAckermann::SimulatedAckermann(const meters_per_second_t maximumSpeed,
 {
     m_Pose.z() = carHeight;
 }
-
-#ifdef USE_BOB_HID
-void
-SimulatedAckermann::addJoystick(HID::Joystick &joystick, float deadZone)
-{
-    joystick.addHandler([this](HID::JAxis axis, float value) {
-        if (axis == HID::JAxis::LeftStickVertical) {
-            moveForward(-value);
-            return true;
-        } else if (axis == HID::JAxis::RightStickHorizontal) {
-            steer(value);
-            return true;
-        } else {
-            return false;
-        }
-    });
-}
-#endif
 
 meter_t
 SimulatedAckermann::getDistanceBetweenAxis() const
@@ -101,7 +83,7 @@ SimulatedAckermann::steer(degree_t steeringAngle)
 }
 
 void
-SimulatedAckermann::stopMoving() noexcept
+SimulatedAckermann::stopMoving()
 {
     move(0_mps, 0_deg);
 }
