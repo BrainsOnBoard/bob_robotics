@@ -6,6 +6,8 @@
 #include "common/map_coordinate.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "navigation/image_database.h"
+#include "navigation/perfect_memory.h"
 #include "robots/simulated_ackermann_car.h"
 #include "video/randominput.h"
 #include "viz/sfml_world/arena_object.h"
@@ -14,17 +16,13 @@
 // Third-party includes
 #include "third_party/path.h"
 
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // Standard C includes
 #include <ctime>
 
 // Standard C++ includes
-#include <atomic>
 #include <chrono>
+#include <memory>
 #include <sstream>
-#include <thread>
 
 using namespace BoBRobotics;
 using namespace std::literals;
@@ -42,9 +40,9 @@ makeDirectory(const filesystem::path &path)
 }
 
 filesystem::path
-getNewFilepath(const filesystem::path folderPath, const std::string &fileExtension)
+getNewPath(const filesystem::path parentPath, const std::string &extension = "")
 {
-    makeDirectory(folderPath);
+    makeDirectory(parentPath);
 
     // Put a timestamp in the filename
     std::stringstream ss;
@@ -59,13 +57,13 @@ getNewFilepath(const filesystem::path folderPath, const std::string &fileExtensi
        << std::setw(2) << currentTime->tm_min
        << std::setw(2) << currentTime->tm_sec
        << "_";
-    const auto basename = (folderPath / ss.str()).str();
+    const auto basename = (parentPath / ss.str()).str();
 
     // Append a number in case we get name collisions
     ss.str(std::string{}); // clear stringstream
     filesystem::path path;
     for (int i = 1; ; i++) {
-        ss << i << fileExtension;
+        ss << i << extension;
         path = basename + ss.str();
         if (!path.exists()) {
             break;
@@ -75,18 +73,33 @@ getNewFilepath(const filesystem::path folderPath, const std::string &fileExtensi
     return path;
 }
 
+enum class ExperimentState
+{
+    None,
+    Training,
+    TrainingFinished,
+    Testing,
+    TestingFinished
+};
+
 int
 bob_main(int, char **argv)
 {
     const auto programPath = filesystem::path{ argv[0] }.parent_path();
-    const auto videoFilepath = getNewFilepath(programPath / "videos", ".avi");
-    const auto dataFilepath = getNewFilepath(programPath / "data", ".yaml");
-    std::atomic_bool stopFlag{ false };
+    const auto dataFilepath = getNewPath(programPath / "data", ".yaml");
+    constexpr float testingThrottle = 0.5f;
+    ExperimentState state = ExperimentState::None;
+    std::unique_ptr<Navigation::ImageDatabase> trainingImages;
+    std::unique_ptr<Navigation::ImageDatabase::RouteRecorder> recorder;
+    Stopwatch snapshotTimer;
 
-    const cv::Size RenderSize{ 720, 150 };
+    const cv::Size RenderSize{ 180, 35 };
     const meter_t AntHeight = 1_cm;
 
     HID::Joystick joystick;
+
+    // Navigation algorithm
+    Navigation::PerfectMemoryRotater<> pm{ RenderSize };
 
     // We need to do this before we create the Renderer
     auto window = AntWorld::Camera::initialiseWindow(RenderSize);
@@ -102,6 +115,10 @@ bob_main(int, char **argv)
 
     // SFML visualisation
     Viz::SFMLWorld display{ minBound, maxBound };
+
+    // Lines for outward/return path
+    auto lineTraining = display.createLineStrip(sf::Color::Blue);
+    auto lineTesting = display.createLineStrip(sf::Color::Red);
 
     // Get objects
     std::vector<sf::ConvexShape> objects;
@@ -131,43 +148,124 @@ bob_main(int, char **argv)
     // Visualisation of robot position
     auto carAgent = display.createCarAgent(robot.getDistanceBetweenAxis());
 
-    // Log data to YAML file
-    LOGI << "Saving data to " << dataFilepath;
+    // Log position to YAML file
+    LOGI << "Saving coordinates to " << dataFilepath;
     cv::FileStorage fs{ dataFilepath.str(), cv::FileStorage::WRITE };
     BOB_ASSERT(fs.isOpened());
-    fs << "data" << "{" << "video_filepath" << videoFilepath.str();
+
+    // **HACK**
+    auto stopTraining = [&]() {
+        // Save metadata
+        recorder.reset();
+
+        // Train algorithm with images
+        pm.trainRoute(*trainingImages, /*resizeImages=*/false);
+
+        LOGI << "Training finished (" << trainingImages->size() << " images saved)";
+    };
 
     cv::Mat fr;
     Stopwatch stopwatch;
-    stopwatch.start();
-    fs << "coords"
-       << "["; // YAML array
     do {
         joystick.update();
+        if (joystick.isPressed(HID::JButton::Y)) { // Toggle training
+            switch (state) {
+            case ExperimentState::None:
+            case ExperimentState::TestingFinished: {
+                // Clear lines on screen
+                lineTraining.clear();
+                lineTesting.clear();
+
+                // Start recording image database
+                const auto dbPath = getNewPath(programPath / "snapshots");
+                LOGI << "Saving training images to " << dbPath;
+                trainingImages = std::make_unique<Navigation::ImageDatabase>(dbPath);
+                recorder = trainingImages->getRouteRecorder();
+                snapshotTimer.start();
+
+                state = ExperimentState::Training;
+            } break;
+            case ExperimentState::Training:
+                stopTraining();
+                if (trainingImages->empty()) {
+                    // ... then we didn't actually do any training
+                    state = ExperimentState::None;
+                } else {
+                    state = ExperimentState::TrainingFinished;
+                }
+                break;
+            default:
+                break;
+            }
+        } else if (joystick.isPressed(HID::JButton::X)) { // Toggle testing
+            switch (state) {
+            case ExperimentState::None:
+                LOGE << "No training data!";
+                break;
+            case ExperimentState::Training:
+                stopTraining();
+                // fall through
+            case ExperimentState::TestingFinished:
+            case ExperimentState::TrainingFinished:
+                lineTesting.clear();
+                robot.moveForward(testingThrottle);
+                state = ExperimentState::Testing;
+                LOGI << "Starting testing";
+                break;
+            case ExperimentState::Testing:
+                robot.stopMoving();
+                state = ExperimentState::TestingFinished;
+                break;
+            }
+        }
+
         const auto pose = robot.getPose();
 
         // Render in visualisation
         carAgent.setPose(pose);
-        display.update(objects, carAgent);
+        display.update(objects, lineTraining, lineTesting, carAgent);
+        if (display.mouseClicked()) {
+            Vector3<meter_t> pos = display.mouseClickPosition();
+            pos.z() = robot.getPosition().z();
+            robot.setPose(pos);
+        }
 
-        // Pretend to do something with camera
+        // Rerender view of ant world
         antCamera.setPose(pose);
         antCamera.update();
 
-        // Log position of robot
-        const std::chrono::duration<double, std::milli>
-                time = stopwatch.elapsed();
-        fs << "{"
-           << "time" << time.count()
-           << "pose" << pose
-           << "}";
-    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
-    fs << "]"
-       << "}";
-    fs.release();
+        switch (state) {
+        case ExperimentState::Training:
+            if (snapshotTimer.elapsed() > 100ms) {
+                snapshotTimer.start(); // reset
 
-    // Stop writing video
-    stopFlag = true;
+                // Save snapshot
+                antCamera.readGreyscaleFrame(fr);
+                recorder->record(pose, pose.yaw(), fr);
+
+                // Draw path on screen
+                lineTraining.append(pose);
+            }
+            break;
+        case ExperimentState::Testing:
+            // Read frame
+            antCamera.readGreyscaleFrame(fr);
+
+            // Get best-matching heading
+            degree_t heading;
+            size_t bestSnapshot;
+            std::tie(heading, bestSnapshot, std::ignore, std::ignore) = pm.getHeading(fr);
+            LOGI << "Heading: " << heading << "; best snapshot: " << bestSnapshot;
+
+            using namespace units::math;
+            const auto maxHeading = robot.getMaximumTurn();
+            heading = max(-maxHeading, min(maxHeading, heading));
+            robot.steer(-heading);
+
+            // Draw path on screen
+            lineTesting.append(pose);
+        }
+    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;
 }
