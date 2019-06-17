@@ -42,7 +42,7 @@ public:
         joystick.addHandler([this](HID::JAxis axis, float value)
             {
                 if (axis == HID::JAxis::LeftStickVertical) {
-                    moveForward(value);
+                    moveForward(-value);
                     return true;
                 } else if (axis == HID::JAxis::RightStickHorizontal) {
                     steer(value);
@@ -96,7 +96,7 @@ public:
         BOB_ASSERT(speed >= -1.f && speed <= 1.f);
 
         updatePose();
-        m_currentVelocity = -speed * m_MaximumSpeed;
+        m_currentVelocity = speed * m_MaximumSpeed;
     }
 
     void steer(float value)
@@ -122,7 +122,7 @@ public:
         BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
 
         updatePose();
-        m_currentVelocity = -velocity;
+        m_currentVelocity = velocity;
         m_steeringWheelAngle = -steeringAngle;
     }
 
