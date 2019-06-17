@@ -73,27 +73,6 @@ getNewFilepath(const filesystem::path folderPath, const std::string &fileExtensi
     return path;
 }
 
-void
-writeVideo(std::atomic_bool &stopFlag,
-           const filesystem::path &filepath,
-           Video::Input &camera)
-{
-    auto fps = camera.getFrameRate().value();
-    auto size = camera.getOutputSize();
-    cv::VideoWriter writer(filepath.str(),
-                           cv::VideoWriter::fourcc('P','I','M','1'),
-                           fps,
-                           size);
-    BOB_ASSERT(writer.isOpened());
-
-    // Output video to file as long until stopFlag is set
-    cv::Mat fr;
-    while (!stopFlag) {
-        camera.readFrameSync(fr);
-        writer.write(fr);
-    }
-}
-
 int
 bob_main(int, char **argv)
 {
@@ -123,19 +102,6 @@ bob_main(int, char **argv)
     AntWorld::Camera antCamera(window.get(), renderer, RenderSize);
     antCamera.setPosition((maxBound[0] - minBound[0]) / 2, (maxBound[1] - minBound[1]) / 2, AntHeight);
 
-    // Use fake camera for now
-    Video::RandomInput<> randomCamera({100, 100});
-
-    // So we don't get flooded with frames
-    randomCamera.setFrameRate(25_Hz);
-
-    // Write video in background
-    LOGI << "Writing video to: " << videoFilepath;
-    std::thread videoWriterThread{ &writeVideo,
-                                   std::ref(stopFlag),
-                                   std::cref(videoFilepath),
-                                   std::ref(randomCamera) };
-
     Robots::SimulatedAckermannCar<meter_t> car{ 1_mph, 10_cm, 100_cm };
     car.addJoystick(joystick);
 
@@ -150,7 +116,6 @@ bob_main(int, char **argv)
     stopwatch.start();
     fs << "coords"
        << "["; // YAML array
-    std::chrono::duration<double, std::milli> time;
     do {
         joystick.update();
 
@@ -160,8 +125,8 @@ bob_main(int, char **argv)
         antCamera.update();
         // antCamera.readFrameSync(fr);
 
-        // Log fake GPS coords
-        time = stopwatch.elapsed();
+        // Log position of robot
+        const std::chrono::duration<double, std::milli> time = stopwatch.elapsed();
         fs << "{"
            << "time" << time.count()
            << "pose" << pose
