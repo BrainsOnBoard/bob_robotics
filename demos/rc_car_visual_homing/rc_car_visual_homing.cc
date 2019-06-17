@@ -8,6 +8,8 @@
 #include "hid/joystick.h"
 #include "robots/simulated_ackermann_car.h"
 #include "video/randominput.h"
+#include "viz/sfml_world/arena_object.h"
+#include "viz/sfml_world/sfml_world.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -92,18 +94,42 @@ bob_main(int, char **argv)
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
-    world.load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+    const auto objectsGL = world.load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
                { 0.0f, 1.0f, 0.0f },
                { 0.898f, 0.718f, 0.353f });
     const auto minBound = world.getMinBound();
     const auto maxBound = world.getMaxBound();
 
+    // SFML visualisation
+    Viz::SFMLWorld display{ minBound, maxBound };
+
+    // Get objects
+    std::vector<sf::ConvexShape> objects;
+    objects.reserve(objectsGL.size() / (3 * 3)); // Number of triangles
+    for (auto it = objectsGL.begin() + 18; it < objectsGL.end(); it += 3 * 3) {
+        // Create shape object
+        objects.emplace_back(3);
+        auto &triangle = objects.back();
+        triangle.setFillColor(sf::Color{ 0x008800FF });
+
+        for (size_t i = 0; i < 3; i++) {
+            // Set position of vertices
+            Vector2<meter_t> vector{ meter_t{ *(it + (3 * i)) },
+                                     meter_t{ *(it + (3 * i) + 1) }};
+            triangle.setPoint(i, display.vectorToPixel(vector));
+        }
+    }
+
     // Create agent and put in the centre of the world
     AntWorld::Camera antCamera(window.get(), renderer, RenderSize);
     antCamera.setPosition((maxBound[0] - minBound[0]) / 2, (maxBound[1] - minBound[1]) / 2, AntHeight);
 
-    Robots::SimulatedAckermannCar<meter_t> car{ 1_mph, 10_cm, 100_cm };
-    car.addJoystick(joystick);
+    // Simulated robot
+    Robots::SimulatedAckermannCar<meter_t> robot{ 1_mph, 20_cm, 10_cm };
+    robot.addJoystick(joystick);
+
+    // Visualisation of robot position
+    auto carAgent = display.createCarAgent(robot.getDistanceBetweenAxis());
 
     // Log data to YAML file
     LOGI << "Saving data to " << dataFilepath;
@@ -118,20 +144,24 @@ bob_main(int, char **argv)
        << "["; // YAML array
     do {
         joystick.update();
+        const auto pose = robot.getPose();
+
+        // Render in visualisation
+        carAgent.setPose(pose);
+        display.update(objects, carAgent);
 
         // Pretend to do something with camera
-        const auto pose = car.getPose();
         antCamera.setPose(pose);
         antCamera.update();
-        // antCamera.readFrameSync(fr);
 
         // Log position of robot
-        const std::chrono::duration<double, std::milli> time = stopwatch.elapsed();
+        const std::chrono::duration<double, std::milli>
+                time = stopwatch.elapsed();
         fs << "{"
            << "time" << time.count()
            << "pose" << pose
            << "}";
-    } while (!joystick.isPressed(HID::JButton::B) && antCamera.isOpen());
+    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
     fs << "]"
        << "}";
     fs.release();
