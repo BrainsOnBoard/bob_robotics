@@ -8,12 +8,16 @@ volatile bool updateMotors; // ture if we got commands from i2c
 int remoteControlSpeed;     // signal from remote control (speed)
 int remoteControlSteering;  // signal from remote control (steering)
 
-const int neutralValue = 1500;
-const int MINCONTROL = 1050;
-const int MAXCONTROL = 1900;
+const int PWMCONNECTED = 965;  // the minimum value of PWM when connected
+const int NEUTRALVALUE = 1500; // neutral PWM value of speed (at this PWM the car is neutral)
+const int MINCONTROL = 1050;   // minimum value of speed control
+const int MAXCONTROL = 1900;   // maximum value of speed control
+const int SPEEDERROR = 20;     // error limit when checking if controller active
+const int TURNINGERROR = 5;    // error limit when checking if remote controller active
+
+// arduino I/O pins
 const byte STEERING = 3;
 const byte THROTTLE = 5;
-
 const byte STEERING_CONTROL = 10;
 const byte THROTTLE_CONTROL = 11;
 
@@ -22,11 +26,13 @@ Servo esc, steering;
  
 void setup() {
 
+    // data from remote controller to arduino
     pinMode(STEERING, INPUT);
     pinMode(THROTTLE, INPUT);
 
-    esc.attach(THROTTLE_CONTROL);      //attach esc to pin 9
-    steering.attach(STEERING_CONTROL); //attach steering to pin 6
+    // setup servos
+    esc.attach(THROTTLE_CONTROL);      //attach esc to pin 
+    steering.attach(STEERING_CONTROL); //attach steering to pin 
 
     // if Master sends data -> call receiveEvent()
     Wire.onReceive(receiveEvent);
@@ -62,15 +68,15 @@ bool checkRemote() {
     remoteControlSteering = pulseIn(STEERING, HIGH);
 
     // the receiver gives a PWM signal of around 950, when remote controller is not connected
-    if (remoteControlSpeed < 965) {
+    if (remoteControlSpeed < PWMCONNECTED) {
         return false; 
     }
   
     // if value is not the neutral value (+- some error), return true
-    if (remoteControlSpeed <= neutralValue -20 || // allow some error
-        remoteControlSpeed >= neutralValue + 20|| // allow some error
-        remoteControlSteering <= 90+5 || 
-        remoteControlSteering >= 90-5 ) 
+    if (remoteControlSpeed <= NEUTRALVALUE -SPEEDERROR || // allow some error
+        remoteControlSpeed >= NEUTRALVALUE +SPEEDERROR|| // allow some error
+        remoteControlSteering <= 90+TURNINGERROR || 
+        remoteControlSteering >= 90-TURNINGERROR ) 
     {     
         return true;
     } 
