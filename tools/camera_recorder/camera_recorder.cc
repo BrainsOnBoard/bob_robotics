@@ -62,9 +62,7 @@ int main()
     }
 
     // Start capture
-    if(!viconCaptureControl.startRecording("camera_recorder")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("camera_recorder");
 
     // Open file to log capture data and write header
     std::ofstream data("vicon.csv");
@@ -107,9 +105,7 @@ int main()
 
 #ifdef VICON_CAPTURE
     // Stop capture
-    if(!viconCaptureControl.stopRecording("camera_recorder")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("camera_recorder");
 #endif  // VICON_CAPTURE
 
     return EXIT_SUCCESS;

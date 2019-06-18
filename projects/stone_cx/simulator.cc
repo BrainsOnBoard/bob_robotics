@@ -20,7 +20,6 @@
 
 // Model includes
 #include "parameters.h"
-#include "simulatorCommon.h"
 #include "spline.h"
 #include "visualizationCommon.h"
 
@@ -51,21 +50,7 @@ int main()
     
     allocateMem();
     initialize();
-
-    //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-
-    initstone_cx();
+    initializeSparse();
 
     cv::namedWindow("Path", cv::WINDOW_NORMAL);
     cv::resizeWindow("Path", pathImageSize, pathImageSize);
@@ -110,11 +95,11 @@ int main()
     }
 
 #ifdef RECORD_ELECTROPHYS
-    AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
 #endif  // RECORD_ELECTROPHYS
 
     // Simulate
@@ -131,11 +116,23 @@ int main()
                 (cos(theta + preferredAngleTN2[j]) * yVelocity);
         }
 
+        // Push inputs to device
+        pushspeedTN2ToDevice();
+
         // Update TL input
         headingAngleTL = theta;
 
         // Step network
-        stepTimeCPU();
+        stepTime();
+
+        // Pull outputs from device
+        pullrTLFromDevice();
+        pullrTN2FromDevice();
+        pullrCL1FromDevice();
+        pullrTB1FromDevice();
+        pullrCPU4FromDevice();
+        pullrCPU1FromDevice();
+        pullrPontineFromDevice();
 
 #ifdef RECORD_ELECTROPHYS
         tn2Recorder.record(i);

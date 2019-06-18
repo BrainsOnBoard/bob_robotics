@@ -15,12 +15,17 @@ ifdef USE_SEE3_CAM
     CXXFLAGS += -DUSE_SEE3_CAM
 endif
 
+
+ifdef RECORD_ELECTROPHYS
+    CXXFLAGS += -DRECORD_ELECTROPHYS
+endif
+
 .PHONY: all clean generated_code
 
-all: robot
+all: robotVicon
 
-robot: $(OBJECTS) generated_code
-	$(CXX) $(CXXFLAGS) $(OBJECTS) -o robot $(LINK_FLAGS) -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath $(GENERATED_CODE_DIR)
+robotVicon: $(OBJECTS) generated_code
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o robotVicon $(LINK_FLAGS) -L$(GENERATED_CODE_DIR) -lrunner -Wl,-rpath $(GENERATED_CODE_DIR)
 
 -include $(DEPS)
 
@@ -33,4 +38,4 @@ generated_code:
 	$(MAKE) -C $(GENERATED_CODE_DIR)
 
 clean:
-	@rm -f robot *.o *.d
+	@rm -f robotVicon *.o *.d

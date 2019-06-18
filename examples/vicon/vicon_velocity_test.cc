@@ -21,9 +21,8 @@ int main()
         std::cout << "Waiting for object" << std::endl;
     }
 
-    if (!viconCaptureControl.startRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test1");
+
     for (int i = 0; i < 120; i++) {
         auto objectData = vicon.getObjectData(0);
         const auto velocity = objectData.getVelocity();
@@ -37,9 +36,8 @@ int main()
 
         std::this_thread::sleep_for(1s);
     }
-    if (!viconCaptureControl.stopRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+
+    viconCaptureControl.stopRecording("test1");
 
     return EXIT_SUCCESS;
 }
