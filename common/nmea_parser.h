@@ -174,8 +174,8 @@ class NMEAParser {
             qualityOfGps = static_cast<GPSQuality>(gpsQualityIndicator); 
 
             // adding up the latitude and longitude parts
-            latitude = latitude + latitudeMinutes;
-            longitude = longitude + longitudeMinutes;
+            latitude += latitudeMinutes;
+            longitude += longitudeMinutes;
 
             // West and South has negative angles
             if (longDirection == 'W') longitude = - longitude;
