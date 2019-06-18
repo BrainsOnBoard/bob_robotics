@@ -60,8 +60,8 @@ struct TimeStamp
 
 struct GPSData {
     BoBRobotics::MapCoordinate::GPSCoordinate coordinate;  // Latitude and longitude coordinate
-    units::length::meter_t altitude;                                      // Altitude above ellipsoid
-    units::velocity::meters_per_second_t velocity;                          // velocity
+    units::length::meter_t altitude;                       // Altitude above ellipsoid
+    units::velocity::meters_per_second_t velocity;         // velocity
     int numberOfSatelites;                                 // Currently observed number of satelites
     double horizontalDilution;                             // horizontal dilution - lower value is better
     GPSQuality gpsQuality;                                 // GPS quality indicator
