@@ -99,34 +99,31 @@ class NMEAParser {
 
     private:
 
-    static std::vector<std::string> parseNMEAstring(const std::string &textToParse, const std::string &NMEA_sentence_id) {
+    static std::vector<std::string> parseNMEAstring(const std::string &textToParse,
+                                                    const std::string &NMEA_sentence_id) {
+
+        if (textToParse.empty()) throw GPSError("Empty string to parse");
 
         using namespace std;
         const char delimiter = '$';      // sentences separated by [$]
         const char w_delimiter = ',';    // elements separated by  [,]
 
-        vector<string> sentences,words;
+        bool found = false;
+        string sentence;
         istringstream split(textToParse);
-        // separating the text to sentences
-
-        if (textToParse.empty()) throw GPSError("Empty string to parse");
-
-        for (string each; getline(split, each, delimiter); sentences.push_back(each));
-        // find the sentence with the id we want
-        int sentenceNumber= -1;
-        for (vector<int>::size_type i = 0; i < sentences.size(); i++) {
-            size_t found = sentences[i].find(NMEA_sentence_id);
-            if (found!= string::npos) {
-                sentenceNumber = i;
+        while (getline(split, sentence, delimiter)) {
+            if (sentence.find(NMEA_sentence_id) != string::npos) {
+                found = true;
                 break;
             }
         }
-        if (sentenceNumber < 0) {
+        if (!found) {
             throw GPSError("cannot find NMEA id");
         }
-        auto f = sentences[sentenceNumber];
+
         // separating the sentence to words
-        istringstream splitWord(f);
+        istringstream splitWord{ sentence };
+        vector<string> words;
         for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
 
         return words;
