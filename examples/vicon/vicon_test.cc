@@ -33,9 +33,8 @@ int main(int argc, char **argv)
 
     std::cout << "'" << objectName << "' found with id:" << norbotID << std::endl;
 
-    if (!viconCaptureControl.startRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test1");
+
     for (int i = 0; i < 10000; i++) {
         auto objectData = vicon.getObjectData(norbotID);
         const auto position = objectData.getPosition<>();
@@ -43,9 +42,7 @@ int main(int argc, char **argv)
         std::cout << position[0] << ", " << position[1] << ", " << position[2] << ", "
                   << attitude[0] << ", " << attitude[1] << ", " << attitude[2] << std::endl;
     }
-    if (!viconCaptureControl.stopRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test1");
 
     return EXIT_SUCCESS;
 }

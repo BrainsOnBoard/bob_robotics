@@ -16,7 +16,6 @@
 #include "parameters.h"
 #include "robotCommon.h"
 #include "robotParameters.h"
-#include "simulatorCommon.h"
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
@@ -43,21 +42,7 @@ int main(int argc, char *argv[])
     // Initialise GeNN
     allocateMem();
     initialize();
-
-    //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-    
-    initstone_cx();
+    initializeSparse();
 
 #ifdef RECORD_ELECTROPHYS
     GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
@@ -74,9 +59,7 @@ int main(int argc, char *argv[])
     }
 
     // Start capture
-    if(!viconCaptureControl.startRecording("test")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test");
 
     std::cout << "Start VICON frame:" << vicon.getObjectData(0).getFrameNumber() << std::endl;
 
@@ -122,10 +105,22 @@ int main(int argc, char *argv[])
             std::cout <<  "Ticks:" << numTicks << ", Heading: " << headingAngleTL << ", Speed: (" << speedTN2[0] << ", " << speedTN2[1] << ")" << std::endl;
         }
 
+        // Push inputs to device
+        pushspeedTN2ToDevice();
+
         // Step network
-        stepTimeCPU();
+        stepTime();
+
+        // Pull outputs from device
+        pullrCPU4FromDevice();
+        pullrCPU1FromDevice();
 
 #ifdef RECORD_ELECTROPHYS
+        pullrTLFromDevice();
+        pullrTN2FromDevice();
+        pullrCL1FromDevice();
+        pullrTB1FromDevice();
+
         tn2Recorder.record(numTicks);
         cl1Recorder.record(numTicks);
         tb1Recorder.record(numTicks);
@@ -177,9 +172,7 @@ int main(int argc, char *argv[])
     motor.tank(0.0f, 0.0f);
     
     // Stop capture
-    if(!viconCaptureControl.stopRecording("test")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test");
 
     // Exit
     return EXIT_SUCCESS;

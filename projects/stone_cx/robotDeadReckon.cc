@@ -12,7 +12,6 @@
 #include "robots/norbot.h"
 #include "video/netsink.h"
 
-
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
 
@@ -20,7 +19,6 @@
 #include "parameters.h"
 #include "robotCommon.h"
 #include "robotParameters.h"
-#include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
 using namespace BoBRobotics;
@@ -86,21 +84,7 @@ int main(int argc, char *argv[])
     // Initialise GeNN
     allocateMem();
     initialize();
-
-    //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-    
-    initstone_cx();
+    initializeSparse();
     
     // Atomic flag for quitting child threads
     std::atomic<bool> shouldQuit{false};
@@ -143,14 +127,28 @@ int main(int argc, char *argv[])
         const float speed =  (motor.getLeft() + motor.getRight()) * velocityScale;
         speedTN2[Parameters::HemisphereLeft] = speedTN2[Parameters::HemisphereRight] = speed;
 
+        // Push inputs to device
+        pushspeedTN2ToDevice();
+
 #ifdef RECORD_SENSORS
         data << imuHeading << ", " << speed << std::endl;
 #endif
         // Step network
-        stepTimeCPU();
+        stepTime();
+
+        // Pull outputs from device
+        pullrCPU4FromDevice();
+        pullrCPU1FromDevice();
         
         // If we should be streaming activity
         if(streamActivity) {
+            // Pull additional outputs from device
+            pullrTLFromDevice();
+            pullrTN2FromDevice();
+            pullrCL1FromDevice();
+            pullrTB1FromDevice();
+            pullrPontineFromDevice();
+
             // Render network activity
             visualize(activityImage);
 
@@ -180,7 +178,7 @@ int main(int argc, char *argv[])
         const auto tickEndTime = std::chrono::high_resolution_clock::now();
         
         // Calculate tick duration (in microseconds)
-        const int64_t tickMicroseconds = std::chrono::duration_cast<chrono::microseconds>(tickEndTime - tickStartTime).count();
+        const int64_t tickMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(tickEndTime - tickStartTime).count();
         
         // Add to total
         totalMicroseconds += tickMicroseconds;
