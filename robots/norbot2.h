@@ -39,6 +39,8 @@ public:
         stopMoving();
     }
 
+    // TO DO: turning angle range : -35 to 35 in degree_t
+    //        speed in range [-1,1]
     void move(uint8_t speed, uint8_t turningAngle)
     {
       
@@ -62,12 +64,6 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    template<typename T, size_t N>
-    void read(T (&data)[N])
-    {
-        m_I2C.read(data);
-    }
-
     template<typename T, size_t N>
     void write(const T (&data)[N])
     {
