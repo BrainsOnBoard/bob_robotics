@@ -37,20 +37,20 @@ type 1 or 9 update, null field when DGPS is not used
 
 namespace BoBRobotics
 {
-namespace GPS 
+namespace GPS
 {
 
 class GPSError
   : public std::runtime_error
 {
-public:  
+public:
     GPSError(const std::string &msg) : std::runtime_error(msg) { }
 };
 
 enum class GPSQuality
 {
-    INVALID = 0,  
-    GPSFIX  = 1,  
+    INVALID = 0,
+    GPSFIX  = 1,
     DGPSFIX = 2,
     PPSFIX  = 3,
     RTK     = 4,
@@ -59,13 +59,7 @@ enum class GPSQuality
 
 struct TimeStamp
 {
-    units::time::hour_t hour;
-    units::time::minute_t minute;
-    units::time::second_t second;
-    units::time::millisecond_t millisecond;
-    TimeStamp(){}
-    TimeStamp (const int &h, const int &m, const int &s, const int &ms)
-    : hour(h), minute(m), second(s), millisecond(ms) {}
+    int hour{}, minute{}, second{}, millisecond{};
 };
 
 struct GPSData {
@@ -100,10 +94,10 @@ class NMEAParser {
         vector<string> sentences,words;
         istringstream split(textToParse);
         // separating the text to sentences
-        
+
         if (textToParse.empty()) throw GPSError("Empty string to parse");
 
-        for (string each; getline(split, each, delimiter); sentences.push_back(each));    
+        for (string each; getline(split, each, delimiter); sentences.push_back(each));
         // find the sentence with the id we want
         int sentenceNumber= -1;
         for (vector<int>::size_type i = 0; i < sentences.size(); i++) {
@@ -117,7 +111,7 @@ class NMEAParser {
             throw GPSError("cannot find NMEA id");
         }
         auto f = sentences[sentenceNumber];
-        // separating the sentence to words 
+        // separating the sentence to words
         istringstream splitWord(f);
         for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
 
@@ -126,52 +120,52 @@ class NMEAParser {
 
     // parsing the string time to numbers
     static TimeStamp parseStringTime(std::string timeString) {
-        
+
         if (timeString.empty()) throw GPSError("Empty string when reading time");
         if (timeString.length() < 8) throw GPSError("Time information parse error");
         int hour = stoi(timeString.substr(0,2));
         int min  = stoi(timeString.substr(2,2));
         int sec  = stoi(timeString.substr(4,2));
         int msc  = stoi(timeString.substr(7,2));
-        TimeStamp time(hour, min, sec, msc);    
+        const TimeStamp time{ hour, min, sec, msc };
         return time;
     }
- 
+
     public:
 
     static GPSData parseNMEA(const std::string  &toParse) {
         using namespace std;
 
         degree_t            latitude, longitude;
-        arcminute_t         latitudeMinutes, longitudeMinutes; 
-        char                latDirection, longDirection;    
-        meter_t             altitude;         
+        arcminute_t         latitudeMinutes, longitudeMinutes;
+        char                latDirection, longDirection;
+        meter_t             altitude;
         meters_per_second_t velocity;
         double              horizontalDilution;
         int                 numberOfSatelites;
         int                 gpsQualityIndicator;
         GPSQuality          qualityOfGps;
         GPSData             data;
-        
+
         try {
             if (toParse.empty()) throw GPSError("Emtpy serial output");
-            vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
+            vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string
             if (elements.size() < 10) throw GPSError("Wrong number of elements when parsing the string");
             string timeString = elements[1];
             TimeStamp time = parseStringTime(timeString);
             latitude = degree_t(stod(elements[2].substr(0,2)));
-            latitudeMinutes = arcminute_t(stod(elements[2].substr(2,8)));     
+            latitudeMinutes = arcminute_t(stod(elements[2].substr(2,8)));
             latDirection = elements[3][0];
             longitude = degree_t(stod(elements[4].substr(0,3)));
             longitudeMinutes = arcminute_t(stod(elements[4].substr(3,9)));
             longDirection = elements[5][0];
-            gpsQualityIndicator = stoi(elements[6]); 
-            numberOfSatelites = stoi(elements[7]); 
-            horizontalDilution = stod(elements[8]);  
+            gpsQualityIndicator = stoi(elements[6]);
+            numberOfSatelites = stoi(elements[7]);
+            horizontalDilution = stod(elements[8]);
             altitude = meter_t(stod(elements[9]));
             vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse GNRMC for velocity
             velocity = units::velocity::knot_t(stod(elementsRMC[7])); // we change unit from knot to meters_per_second
-            qualityOfGps = static_cast<GPSQuality>(gpsQualityIndicator); 
+            qualityOfGps = static_cast<GPSQuality>(gpsQualityIndicator);
 
             // adding up the latitude and longitude parts
             latitude += latitudeMinutes;
@@ -179,8 +173,8 @@ class NMEAParser {
 
             // West and South has negative angles
             if (longDirection == 'W') longitude = - longitude;
-            if (latDirection == 'S')  latitude  = - latitude;    
-            
+            if (latDirection == 'S')  latitude  = - latitude;
+
             BoBRobotics::MapCoordinate::GPSCoordinate coordinate;
             coordinate.lat = latitude;
             coordinate.lon = longitude;
@@ -199,7 +193,7 @@ class NMEAParser {
             throw GPSError(e.what());
         }
         return data;
-    } 
+    }
 };
 } // GPS
 } // BoBRobotics
