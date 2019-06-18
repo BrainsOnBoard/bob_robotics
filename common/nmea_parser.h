@@ -26,9 +26,12 @@ type 1 or 9 update, null field when DGPS is not used
 */
 
 #pragma once
+// standard includes
 #include<string>
 #include<vector>
 #include <sstream>
+
+// BoB includes
 #include "../third_party/units.h"
 #include "map_coordinate.h"
 
@@ -37,14 +40,21 @@ namespace BoBRobotics
 namespace GPS 
 {
 
+class GPSError
+  : public std::runtime_error
+{
+public:  
+    GPSError(const std::string &msg) : std::runtime_error(msg) { }
+};
+
 enum class GPSQuality
 {
-    INVALID,  
-    GPSFIX,  
-    DGPSFIX,
-    PPSFIX,
-    RTK,
-    FRTK,
+    INVALID = 0,  
+    GPSFIX  = 1,  
+    DGPSFIX = 2,
+    PPSFIX  = 3,
+    RTK     = 4,
+    FRTK    = 5
 };
 
 struct TimeStamp
@@ -90,62 +100,40 @@ class NMEAParser {
         vector<string> sentences,words;
         istringstream split(textToParse);
         // separating the text to sentences
-        try {
-            if (textToParse == "") throw "Empty string to parse";
+        
+        if (textToParse.empty()) throw GPSError("Empty string to parse");
 
-            for (string each; getline(split, each, delimiter); sentences.push_back(each));    
-            // find the sentence with the id we want
-            int sentenceNumber= -1;
-            for (vector<int>::size_type i = 0; i < sentences.size(); i++) {
-                size_t found = sentences[i].find(NMEA_sentence_id);
-                if (found!= string::npos) {
-                    sentenceNumber = i;
-                    break;
-                }
+        for (string each; getline(split, each, delimiter); sentences.push_back(each));    
+        // find the sentence with the id we want
+        int sentenceNumber= -1;
+        for (vector<int>::size_type i = 0; i < sentences.size(); i++) {
+            size_t found = sentences[i].find(NMEA_sentence_id);
+            if (found!= string::npos) {
+                sentenceNumber = i;
+                break;
             }
-            if (sentenceNumber < 0) {
-                throw "[NMEAParser:parseNMEAstring()] : cannot find NMEA id";
-            }
-            auto f = sentences[sentenceNumber];
-            // separating the sentence to words 
-            istringstream splitWord(f);
-            for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
-
-        } catch(const char *error) {
-            throw error;
-        } catch(...) {}
+        }
+        if (sentenceNumber < 0) {
+            throw GPSError("cannot find NMEA id");
+        }
+        auto f = sentences[sentenceNumber];
+        // separating the sentence to words 
+        istringstream splitWord(f);
+        for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
 
         return words;
     }
 
-    static GPSQuality getGpsQuality(const int &qualityId) {     
-        GPSQuality quality;  
-        switch(qualityId) {
-            case 0 : quality = GPSQuality::INVALID; break;
-            case 1 : quality = GPSQuality::GPSFIX; break;
-            case 2 : quality = GPSQuality::DGPSFIX; break;
-            case 3 : quality = GPSQuality::PPSFIX; break;
-            case 4 : quality = GPSQuality::RTK; break;
-            case 5 : quality = GPSQuality::FRTK; break;
-        }
-        return quality;
-    }
-
     // parsing the string time to numbers
     static TimeStamp parseStringTime(std::string timeString) {
-        try {
-            if (timeString== "") throw "Empty string when reading time";
-            int hour = stoi(timeString.substr(0,2));
-            int min  = stoi(timeString.substr(2,2));
-            int sec  = stoi(timeString.substr(4,2));
-            int msc  = stoi(timeString.substr(7,2));
-            TimeStamp time(hour, min, sec, msc);    
-            return time;
-        } catch(const char *s) {
-            throw s;
-        }  catch(...) { }
         
-        TimeStamp time(0,0,0,0);
+        if (timeString.empty()) throw GPSError("Empty string when reading time");
+        if (timeString.length() < 8) throw GPSError("Time information parse error");
+        int hour = stoi(timeString.substr(0,2));
+        int min  = stoi(timeString.substr(2,2));
+        int sec  = stoi(timeString.substr(4,2));
+        int msc  = stoi(timeString.substr(7,2));
+        TimeStamp time(hour, min, sec, msc);    
         return time;
     }
  
@@ -166,8 +154,9 @@ class NMEAParser {
         GPSData             data;
         
         try {
-            if (toParse == "") throw "Emtpy serial output";
+            if (toParse.empty()) throw GPSError("Emtpy serial output");
             vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
+            if (elements.size() < 10) throw GPSError("Wrong number of elements when parsing the string");
             string timeString = elements[1];
             TimeStamp time = parseStringTime(timeString);
             latitude = degree_t(stod(elements[2].substr(0,2)));
@@ -182,7 +171,7 @@ class NMEAParser {
             altitude = meter_t(stod(elements[9]));
             vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse GNRMC for velocity
             velocity = units::velocity::knot_t(stod(elementsRMC[7])); // we change unit from knot to meters_per_second
-            qualityOfGps = getGpsQuality(gpsQualityIndicator);
+            qualityOfGps = static_cast<GPSQuality>(gpsQualityIndicator); 
 
             // adding up the latitude and longitude parts
             latitude = latitude + latitudeMinutes;
@@ -191,7 +180,6 @@ class NMEAParser {
             // West and South has negative angles
             if (longDirection == 'W') longitude = - longitude;
             if (latDirection == 'S')  latitude  = - latitude;    
-
             
             BoBRobotics::MapCoordinate::GPSCoordinate coordinate;
             coordinate.lat = latitude;
@@ -203,9 +191,13 @@ class NMEAParser {
             data.horizontalDilution = horizontalDilution;
             data.gpsQuality = qualityOfGps;
             data.time = time; // UTC time
-        } catch(const char *error) {
-            throw error;
-        } catch(...) { }
+        } catch(GPSError &e) {
+            throw e;
+        } catch(std::invalid_argument &e) {
+            throw GPSError(e.what());
+        } catch(std::out_of_range &e) {
+            throw GPSError(e.what());
+        }
         return data;
     } 
 };

@@ -14,9 +14,6 @@
 #include <thread>
 #include <errno.h>
 
-#include <libserialport.h> // cross platform serial port lib
-
-
 #define BAUDRATE B9600
  
 
@@ -29,7 +26,7 @@ class SerialReader {
 
 
     public:
-    SerialReader() {}
+    SerialReader() : fileDescriptor(-1) {}
     ~SerialReader() { close(fileDescriptor); }
 
     //! reads the serial port (USB) and returns the string from it
@@ -98,7 +95,7 @@ class SerialReader {
         }
     }
 
-    bool isConnected() { return connected; }
+    bool isConnected() const { return connected; }
 
 
 };
