@@ -37,12 +37,12 @@ bob_main(int argc, char **argv)
         std::cout << "Display switch enabled.\n";
         if(strcmp(argv[1], "-p") == 0) { 
             std::cout << "Using panoramic camera.\n";
-            cam = std::make_unique<GazeboCameraInput>(node, argv[2], "gazebo_panoramic_camera");
+            cam = std::make_unique<GazeboCameraInput>(node, argv[2], true);
             display = std::make_unique<Display>(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
         }
         else if(strcmp(argv[1], "-s") == 0){
             std::cout << "Using simple camera.\n";
-            cam = std::make_unique<GazeboCameraInput>(node, argv[2]);
+            cam = std::make_unique<GazeboCameraInput>(node, argv[2], false);
             display = std::make_unique<Display>(*cam); //unwrap resolution needs to be supplied
         }
         display->runInBackground();
@@ -62,6 +62,7 @@ bob_main(int argc, char **argv)
         }
     } while (!joystick.isPressed(HID::JButton::B));
     // Make sure to shut everything down.
+    display->close();
     shutdownGazeboNode();
     std::cout <<"Shutting down...\n";
 
