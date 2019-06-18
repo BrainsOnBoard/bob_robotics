@@ -185,8 +185,6 @@ class NMEAParser {
             data.horizontalDilution = horizontalDilution;
             data.gpsQuality = qualityOfGps;
             data.time = time; // UTC time
-        } catch(GPSError &e) {
-            throw e;
         } catch(std::invalid_argument &e) {
             throw GPSError(e.what());
         } catch(std::out_of_range &e) {
