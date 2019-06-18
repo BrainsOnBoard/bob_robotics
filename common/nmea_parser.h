@@ -60,6 +60,20 @@ enum class GPSQuality
 struct TimeStamp
 {
     int hour{}, minute{}, second{}, millisecond{};
+
+    TimeStamp() = default;
+
+    TimeStamp(const std::string &timeString)
+    {
+        if (timeString.empty())
+            throw GPSError("Empty string when reading time");
+        if (timeString.length() < 9)
+            throw GPSError("Time information parse error");
+        hour = stoi(timeString.substr(0, 2));
+        minute = stoi(timeString.substr(2, 2));
+        second = stoi(timeString.substr(4, 2));
+        millisecond = stoi(timeString.substr(7, 2));
+    }
 };
 
 struct GPSData {
@@ -118,19 +132,6 @@ class NMEAParser {
         return words;
     }
 
-    // parsing the string time to numbers
-    static TimeStamp parseStringTime(std::string timeString) {
-
-        if (timeString.empty()) throw GPSError("Empty string when reading time");
-        if (timeString.length() < 8) throw GPSError("Time information parse error");
-        int hour = stoi(timeString.substr(0,2));
-        int min  = stoi(timeString.substr(2,2));
-        int sec  = stoi(timeString.substr(4,2));
-        int msc  = stoi(timeString.substr(7,2));
-        const TimeStamp time{ hour, min, sec, msc };
-        return time;
-    }
-
     public:
 
     static GPSData parseNMEA(const std::string  &toParse) {
@@ -152,8 +153,8 @@ class NMEAParser {
             vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string
             if (elements.size() < 10) throw GPSError("Wrong number of elements when parsing the string");
             string timeString = elements[1];
-            TimeStamp time = parseStringTime(timeString);
-            latitude = degree_t(stod(elements[2].substr(0,2)));
+            TimeStamp time{ timeString };
+            latitude = degree_t(stod(elements[2].substr(0, 2)));
             latitudeMinutes = arcminute_t(stod(elements[2].substr(2,8)));
             latDirection = elements[3][0];
             longitude = degree_t(stod(elements[4].substr(0,3)));
