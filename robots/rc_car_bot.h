@@ -1,9 +1,6 @@
-
 #pragma once
-
 // BoB robotics includes
 #include "../common/i2c_interface.h"
-
 
 // Standard C includes
 #include <cmath>
@@ -16,79 +13,75 @@
 #include "../third_party/units.h"
 
 
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
-class Norbot2 
+class RCCarBot 
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using millimeter_t = units::length::millimeter_t;
+    using degree_t = units::angle::degree_t;
+    using namespace units::literals;
     
-
 public:
-    Norbot2(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
+    RCCarBot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29)
       : m_I2C(path, slaveAddress)
-      , m_forwardVelocity(0.0f)
-      , m_turningAngle(0.0f)
+      , m_speed(0.0f)
+      , m_turningAngle(0_deg)
     {}
 
-    // destructor		
-    ~Norbot2() 
+    ~RCCarBot() 
     {
         stopMoving();
     }
-
-    // TO DO: turning angle range : -35 to 35 in degree_t
-    //        speed in range [-1,1]
-    void move(uint8_t speed, uint8_t turningAngle)
-    {
-      
-        // Cache left and right
-        m_forwardVelocity = speed;      // 0-127 backward, 128-255 forward
-        m_turningAngle = turningAngle;  // 55 left, 90 center, 125 right
-
-        // Convert standard (-1,1) values to bytes in order to send to I2C slave
-        uint8_t buffer[2] = { speed, turningAngle };
-
-        // Send buffer
-        write(buffer);
-    }
  
-    // stops the car 
-    void stopMoving() {
-        move(127, 90);
+    //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
+    void move(float speed, degree_t turningAngle) 
+    {
+        BOB_ASSERT(speed >= -1.f && speed <= 1.f);
+        BOB_ASSERT(turningAngle >= -35_deg && turningAngle <= 35_deg);
+
+        m_speed = speed;
+        m_turningAngle = m_turningAngle;
+
+        // mapping to the range 
+        uint8_t uspeed = (speed * 255) + sign(-speed)*127        // mapping to : 0-127 backward, 127-255 forward
+        uint8_t uturn  = (uint8_t)(90.0 + turningAngle.value()); // mapping to : 65 full left 90 center 125 full right
+        uint8_t buffer[2] = {uspeed,uturn};
+        m_I2C.write(buffer);   // send to arduino on i2c
+        
     }
    
+    // stops the car 
+    void stopMoving() 
+    {
+        move(0, 0);
+    }
 
-    //----------------------------------------------------------------------------
-    // Public API
-    //----------------------------------------------------------------------------
+    float getSpeed() const
+    {
+        return m_speed;
+    }
+
+    degree_t getTurningAngle() const
+    {
+        return m_turningAngle;
+    }
+
+private:
+    BoBRobotics::I2CInterface m_I2C; // i2c interface
+    float m_speed;                   // current control speed of the robot
+    degree_t m_turningAngle;         // current turning angle of the robot
+
+    // sign function
+    template <typename T> int sgn(T val) {
+        return (T(0) < val) - (val < T(0));
+    }
+
     template<typename T, size_t N>
     void write(const T (&data)[N])
     {
         m_I2C.write(data);
     }
 
-    float getForwardVelocity() const
-    {
-        return m_forwardVelocity;
-    }
-
-    float getTurningAngle() const
-    {
-        return m_turningAngle;
-    }
-
-private:
-    
-    //----------------------------------------------------------------------------
-    // Private members
-    //----------------------------------------------------------------------------
-
-    BoBRobotics::I2CInterface m_I2C;
-    uint8_t m_forwardVelocity;
-    uint8_t m_turningAngle;
 
 }; // Norbot2
 
