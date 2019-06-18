@@ -12,77 +12,93 @@
 #include <sys/ioctl.h>
 #include <chrono>
 #include <thread>
+#include <errno.h>
 
-#define BAUDRATE B9600  // Change as needed, keep B
+#include <libserialport.h> // cross platform serial port lib
 
-class Serial_reader {
+
+#define BAUDRATE B9600
+ 
+
+class SerialReader {
     private:
-
-    static std::string getSerialData(const char* serial_device_path) {
-        //  /dev/cu.usbserial
-        // http://bradsmc.blogspot.com/2013/11/c-code-to-read-gps-data-via-serial-on.html
-
-        struct termios oldtio, newtio;
-        int fd, res;
-        char buf[255];
-        // Load the pin configuration
-        
-        /* Open modem device for reading and writing and not as controlling tty
-        because we don't want to get killed if linenoise sends CTRL-C. */
-        fd = open(serial_device_path, O_RDWR | O_NOCTTY );
-        if (fd < 0) { perror(serial_device_path); exit(-1); }
-
-        //bzero(&newtio, sizeof(newtio)); /* clear struct for new port settings */
-
-        /* BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
-        CRTSCTS : output hardware flow control (only used if the cable has
-                    all necessary lines. 
-        CS8     : 8n1 (8bit,no parity,1 stopbit)
-        CLOCAL  : local connection, no modem contol
-        CREAD   : enable receiving characters */
-        newtio.c_cflag = BAUDRATE | CRTSCTS | CS8 | CLOCAL | CREAD;
-
-        /* IGNPAR  : ignore bytes with parity errors
-        otherwise make device raw (no other input processing) */
-        newtio.c_iflag = IGNPAR;
-
-        /*  Raw output  */
-        newtio.c_oflag = 0;
-
-        /* ICANON  : enable canonical input
-        disable all echo functionality, and don't send signals to calling program */
-        newtio.c_lflag = ICANON;
-        /* now clean the modem line and activate the settings for the port */
-        tcflush(fd, TCIFLUSH);
-        tcsetattr(fd,TCSANOW,&newtio);
-
-        
-        int ii = 0;
-        std::string serialString;
-        while (ii <22) {    
-            /*  read blocks program execution until a line terminating character is
-                input, even if more than 255 chars are input. If the number
-                of characters read is smaller than the number of chars available,
-                subsequent reads will return the remaining chars. res will be set
-                to the actual number of characters actually read */
-            res = read(fd, buf, 255);
-            buf[res] = 0;             /* set end of string, so we can printf */
-            //printf("%s", buf, res);
-            ii++;
-            serialString += buf;
-        }
-
-        tcsetattr(fd, TCSANOW, &oldtio);
-        close(fd);
-        return serialString;
-                
-    }
+    int fileDescriptor;
+    bool connected = false;
+   
+    struct termios settings;
 
 
     public:
+    SerialReader() {}
+    ~SerialReader() { close(fileDescriptor); }
+
     //! reads the serial port (USB) and returns the string from it
-    static std::string readSerialUSB(const char *device_path) {
-        return getSerialData(device_path);
+    std::string readData() {
+        try {
+            if (fileDescriptor < 0) {
+                throw "You are not connected to the device";
+            }
+        
+            std::string serialString;
+            int res=0;
+            size_t received = 0;
+            const size_t size = 1024;
+            char buf[size];
+
+            int bytesInBuffer = 0;
+            // Get the number of bytes waiting in the serial buffer
+            ioctl(fileDescriptor, FIONREAD, &bytesInBuffer);
+            
+            while (bytesInBuffer > 0) { 
+                res = read(fileDescriptor, buf, size);   
+                ioctl(fileDescriptor, FIONREAD, &bytesInBuffer);       
+                buf[res] = 0; /* set end of string */      
+                serialString += buf;
+                received += res;  
+            }
+            tcflush(fileDescriptor, TCIFLUSH);
+            return serialString;
+        }
+        catch(const char *error) {
+            std::cout << "[SerialReader:readData()] : " << error << std::endl;
+        }
+        return "";
+
     }
+
+
+    void connect(const char *serial_device_path) {
+    
+        try {        
+            fileDescriptor= open(serial_device_path, O_RDWR | O_NOCTTY);
+            if (fileDescriptor < 0) {
+                throw "device not found";
+            }    
+            connected = true;
+
+            /* 
+            BAUDRATE: Set bps rate.
+            CS8     : 8n1 (8bit,no parity,1 stopbit)
+            CLOCAL  : local connection, no modem contol
+            CREAD   : enable receiving characters */
+            settings.c_cflag = BAUDRATE | CRTSCTS | CS8 | CLOCAL | CREAD;
+            //IGNPAR  : ignore bytes with parity errors
+            settings.c_iflag = IGNPAR;
+            /*  Raw output  */
+            settings.c_oflag = (OPOST | ONLCR);
+            //ICANON  : enable canonical input
+            settings.c_lflag = ICANON;
+
+            /* now clean the modem line and activate the settings for the port */
+            tcflush(fileDescriptor, TCIFLUSH);
+            tcsetattr(fileDescriptor,TCSANOW,&settings);
+        }
+        catch(const char *s) {
+            std::cout << "[SerialReader:connect()]: " << s <<  std::endl;
+        }
+    }
+
+    bool isConnected() { return connected; }
+
 
 };

@@ -25,34 +25,59 @@ type 1 or 9 update, null field when DGPS is not used
 15) Checksum
 */
 
-//things to fix: 
-// use getLine() - done
-// use namespace
-// use exceptions
-// use map_coordinate
-// char instead of string (wasteful) - done 
-// rename class to NMEAParser     - done
-// rename file to nmea_parser.h   - done
-// Use words[0] instead of .at()  - done
-// gps quality indicator use enum - done
-
-
-
-
 #pragma once
 #include<string>
 #include<vector>
 #include <sstream>
 #include "../third_party/units.h"
+#include "map_coordinate.h"
+
+namespace BoBRobotics
+{
+namespace GPS 
+{
+
+enum class GPSQuality
+{
+    INVALID,  
+    GPSFIX,  
+    DGPSFIX,
+    PPSFIX,
+    RTK,
+    FRTK,
+};
+
+struct TimeStamp
+{
+    units::time::hour_t hour;
+    units::time::minute_t minute;
+    units::time::second_t second;
+    units::time::millisecond_t millisecond;
+    TimeStamp(){}
+    TimeStamp (const int &h, const int &m, const int &s, const int &ms)
+    : hour(h), minute(m), second(s), millisecond(ms) {}
+};
+
+struct GPSData {
+    BoBRobotics::MapCoordinate::GPSCoordinate coordinate;  // Latitude and longitude coordinate
+    units::length::meter_t altitude;                                      // Altitude above ellipsoid
+    units::velocity::meters_per_second_t velocity;                          // velocity
+    int numberOfSatelites;                                 // Currently observed number of satelites
+    double horizontalDilution;                             // horizontal dilution - lower value is better
+    GPSQuality gpsQuality;                                 // GPS quality indicator
+    TimeStamp time;                                        // time of measurement
+};
 
 class NMEAParser {
-    
-    
+
+    using second_t = units::time::second_t;
+    using minute_t = units::time::minute_t;
+    using hour_t = units::time::hour_t;
+    using millisecond_t = units::time::millisecond_t;
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
-    using knot_t = units::velocity::knot_t;                             // NMEA returns the velocity in knots
 
     private:
 
@@ -61,78 +86,128 @@ class NMEAParser {
         using namespace std;
         const char delimiter = '$';      // sentences separated by [$]
         const char w_delimiter = ',';    // elements separated by  [,]
-    
 
         vector<string> sentences,words;
         istringstream split(textToParse);
-
         // separating the text to sentences
-        for (string each; getline(split, each, delimiter); sentences.push_back(each));
+        try {
+            if (textToParse == "") throw "Empty string to parse";
 
-        // separating the sentences to words
-        for (auto &f : sentences) {         
+            for (string each; getline(split, each, delimiter); sentences.push_back(each));    
+            // find the sentence with the id we want
+            int sentenceNumber= -1;
+            for (vector<int>::size_type i = 0; i < sentences.size(); i++) {
+                size_t found = sentences[i].find(NMEA_sentence_id);
+                if (found!= string::npos) {
+                    sentenceNumber = i;
+                    break;
+                }
+            }
+            if (sentenceNumber < 0) {
+                throw "[NMEAParser:parseNMEAstring()] : cannot find NMEA id";
+            }
+            auto f = sentences[sentenceNumber];
+            // separating the sentence to words 
             istringstream splitWord(f);
             for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
-           
-            // if we find the one, we stop 
-            if (!words.empty() && words[0] == NMEA_sentence_id) {          
-                break;
-            } else {
-                words.clear();
-            }       
-        }
+
+        } catch(const char *error) {
+            throw error;
+        } catch(...) {}
+
         return words;
     }
 
-    
+    static GPSQuality getGpsQuality(const int &qualityId) {     
+        GPSQuality quality;  
+        switch(qualityId) {
+            case 0 : quality = GPSQuality::INVALID; break;
+            case 1 : quality = GPSQuality::GPSFIX; break;
+            case 2 : quality = GPSQuality::DGPSFIX; break;
+            case 3 : quality = GPSQuality::PPSFIX; break;
+            case 4 : quality = GPSQuality::RTK; break;
+            case 5 : quality = GPSQuality::FRTK; break;
+        }
+        return quality;
+    }
+
+    // parsing the string time to numbers
+    static TimeStamp parseStringTime(std::string timeString) {
+        try {
+            if (timeString== "") throw "Empty string when reading time";
+            int hour = stoi(timeString.substr(0,2));
+            int min  = stoi(timeString.substr(2,2));
+            int sec  = stoi(timeString.substr(4,2));
+            int msc  = stoi(timeString.substr(7,2));
+            TimeStamp time(hour, min, sec, msc);    
+            return time;
+        } catch(const char *s) {
+            throw s;
+        }  catch(...) { }
+        
+        TimeStamp time(0,0,0,0);
+        return time;
+    }
+ 
     public:
 
-    static bool parseTextGPS(const std::string   &toParse,            // text to parse
-                             degree_t            &latitude,           // latitude
-                             arcminute_t         &latitudeMinutes,    // minute part of latitude
-                             char                &latDirection,       // latitude direction North or South (N | S)
-                             degree_t            &longitude,          // longitude
-                             arcminute_t         &longitudeMinutes,   // minute part of longitude
-                             char                &longDirection,      // longitude direction East or West (E | W)
-                             meter_t             &altitude,           // altitude in meters
-                             meters_per_second_t &velocity
-                             ) {
-
+    static GPSData parseNMEA(const std::string  &toParse) {
         using namespace std;
+
+        degree_t            latitude, longitude;
+        arcminute_t         latitudeMinutes, longitudeMinutes; 
+        char                latDirection, longDirection;    
+        meter_t             altitude;         
+        meters_per_second_t velocity;
+        double              horizontalDilution;
+        int                 numberOfSatelites;
+        int                 gpsQualityIndicator;
+        GPSQuality          qualityOfGps;
+        GPSData             data;
+        
         try {
+            if (toParse == "") throw "Emtpy serial output";
             vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
-            latitude = degree_t(std::stod(elements[2].substr(0,2)));
-            latitudeMinutes = arcminute_t(std::stod(elements[2].substr(2,8)));     
+            string timeString = elements[1];
+            TimeStamp time = parseStringTime(timeString);
+            latitude = degree_t(stod(elements[2].substr(0,2)));
+            latitudeMinutes = arcminute_t(stod(elements[2].substr(2,8)));     
             latDirection = elements[3][0];
-            longitude = degree_t(std::stod(elements[4].substr(0,3)));
-            longitudeMinutes = arcminute_t(std::stod(elements[4].substr(3,9)));
+            longitude = degree_t(stod(elements[4].substr(0,3)));
+            longitudeMinutes = arcminute_t(stod(elements[4].substr(3,9)));
             longDirection = elements[5][0];
+            gpsQualityIndicator = stoi(elements[6]); 
+            numberOfSatelites = stoi(elements[7]); 
+            horizontalDilution = stod(elements[8]);  
             altitude = meter_t(stod(elements[9]));
+            vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse GNRMC for velocity
+            velocity = units::velocity::knot_t(stod(elementsRMC[7])); // we change unit from knot to meters_per_second
+            qualityOfGps = getGpsQuality(gpsQualityIndicator);
 
-            // prse GNRMC for velocity
-            vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse string 
-            velocity = knot_t(stod(elementsRMC[7])); 
-        } catch(...) {
-            return false;
-        }   
-        return true;
-    }
+            // adding up the latitude and longitude parts
+            latitude = latitude + latitudeMinutes;
+            longitude = longitude + longitudeMinutes;
 
-    static bool parseTextForMiscData(const   std::string &toParse,    // text to parse     
-                                     int     &gpsQualityIndicator,    // 0 = Invalid, 1 = Valid SPS, 2 = Valid DGPS, 3 = Valid PPS, 4 = rtk gps
-                                     int     &numberOfSatelites,      // number of satelites
-                                     double  &horizontalDilution      // horizontal dilution, lower is better
-                              ) {
+            // West and South has negative angles
+            if (longDirection == 'W') longitude = - longitude;
+            if (latDirection == 'S')  latitude  = - latitude;    
 
-        using namespace std;
-        try {
-            vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string 
-            gpsQualityIndicator = stoi(elements[6]);
-            numberOfSatelites = stoi(elements[7]);
-            horizontalDilution = stod(elements[8]); 
-        } catch(...) {
-            return false;
-        }
-        return true;
-    }
+            
+            BoBRobotics::MapCoordinate::GPSCoordinate coordinate;
+            coordinate.lat = latitude;
+            coordinate.lon = longitude;
+            data.coordinate = coordinate;
+            data.numberOfSatelites = numberOfSatelites;
+            data.altitude = altitude;
+            data.velocity = velocity;
+            data.horizontalDilution = horizontalDilution;
+            data.gpsQuality = qualityOfGps;
+            data.time = time; // UTC time
+        } catch(const char *error) {
+            throw error;
+        } catch(...) { }
+        return data;
+    } 
 };
+} // GPS
+} // BoBRobotics
