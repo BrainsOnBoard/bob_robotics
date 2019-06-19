@@ -31,8 +31,8 @@ bob_main(int argc, char **argv)
     gazebo::transport::NodePtr node = getGazeboNode();
 
     /************************************Gazebo setup end************/
-    std::unique_ptr<GazeboCameraInput> cam;
     std::unique_ptr<Display> display;
+    std::unique_ptr<GazeboCameraInput> cam;
     if(argc >= 3) { // Initialize gazebo camera if more than 2 arguements are provided (display switch and camera url)
         std::cout << "Display switch enabled.\n";
         if(strcmp(argv[1], "-p") == 0) { 
