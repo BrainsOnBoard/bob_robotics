@@ -4,7 +4,8 @@
 #include "common/macros.h"
 #include "common/gazebo_node.h"
 #include "input.h"
-
+#include "common/semaphore.h"
+#include "common/logging.h"
 // Gazebo includes
 #include <gazebo/transport/transport.hh>
 
@@ -15,11 +16,11 @@
 #include <stdexcept>
 #include <mutex>
 #include <atomic>
+#include <semaphore.h>
 
 namespace BoBRobotics {
 namespace Video {
 
-constexpr const char *GazeboCameraDeviceName = "gazebo_camera";
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Video::GazeboCameraInput
@@ -37,9 +38,8 @@ public:
     /*!
      * \brief Create a video stream using a new transport node
      */
-    GazeboCameraInput(const std::string &topic, const std::string &cameraName = GazeboCameraDeviceName)
-    : m_CameraName(cameraName)
-    {
+    GazeboCameraInput(const std::string &topic, const bool isPanoramic = false)
+    : m_IsPanoramic(isPanoramic){
         m_ImageNode = getGazeboNode();
         subscribeToGazeboCamera(topic);
     }
@@ -50,8 +50,8 @@ public:
      * @param topic Gazebo transport topic on which to subscribe
      */
 
-    GazeboCameraInput(gazebo::transport::NodePtr node, const std::string &topic="/gazebo/default/camera/link/camera/image", const std::string &cameraName = GazeboCameraDeviceName)
-      : m_CameraName(cameraName), m_ImageNode(node)
+    GazeboCameraInput(gazebo::transport::NodePtr node, const std::string &topic="/gazebo/default/camera/link/camera/image", const bool isPanoramic=false)
+      : m_ImageNode(node), m_IsPanoramic(isPanoramic)
     {
         subscribeToGazeboCamera(topic);
     }
@@ -66,11 +66,12 @@ public:
     //------------------------------------------------------------------------
     virtual std::string getCameraName() const override
     {
-        return GazeboCameraDeviceName;
+        return m_IsPanoramic ? "gazebo_panoramic_camera" : "gazebo_camera";
     }
 
     virtual cv::Size getOutputSize() const override
     {
+        m_HaveReceivedFrameSemaphore.waitOnce();
         return m_ReceivedImage.size();
     }
 
@@ -79,29 +80,34 @@ public:
         if(!m_HaveReceivedFrames.load())
             return false;
         std::lock_guard<std::mutex> lck(m_Mtx);
-        outFrame = m_ReceivedImage;
+        m_ReceivedImage.copyTo(outFrame);
         // If there's no error, then we have updated frame and so return true
         return true;
     }
 
+    virtual bool needsUnwrapping() const override{
+        return m_IsPanoramic;
+    }
+
 
 private:
-    std::string m_CameraName;
     gazebo::transport::SubscriberPtr m_ImageSub;
     gazebo::transport::NodePtr m_ImageNode;
     cv::Mat m_ReceivedImage;
     std::mutex m_Mtx;
     std::atomic<bool> m_HaveReceivedFrames{ false };
+    mutable Semaphore m_HaveReceivedFrameSemaphore;
+    bool m_IsPanoramic;
 
     void OnImageMsg(ConstImageStampedPtr &msg)
     {
         std::lock_guard<std::mutex> lck(m_Mtx);
-
-        if(!m_HaveReceivedFrames.load()){
-            m_HaveReceivedFrames.store(true);
-        }
         m_ReceivedImage.create(msg->image().height(), msg->image().width(), CV_8UC3);
         memcpy(m_ReceivedImage.data, msg->image().data().c_str(), msg->image().data().length());
+        if(!m_HaveReceivedFrames.load()){
+            m_HaveReceivedFrames.store(true);
+            m_HaveReceivedFrameSemaphore.notify();
+        }
     }
 }; // GazeboCameraInput
 } // Video

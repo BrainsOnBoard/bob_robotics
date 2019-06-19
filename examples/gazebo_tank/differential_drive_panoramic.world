@@ -17,7 +17,7 @@
       </include>
       
       <include >
-        <uri>simple_camera</uri>
+        <uri>panoramic_camera</uri>
       </include>
       <!-- Attach the plugin to this model -->
       <plugin name="differential_drive_control" filename="libdifferential_drive_plugin.so">
