@@ -31,6 +31,8 @@ getDataFolder(const filesystem::path &dataBaseFolder)
         ss << root << "_" << std::setw(3) << std::setfill('0') << i++;
         dataFolder = ss.str();
     } while (dataFolder.exists());
+
+    BOB_ASSERT(filesystem::create_directory(dataFolder));
     return dataFolder;
 }
 
