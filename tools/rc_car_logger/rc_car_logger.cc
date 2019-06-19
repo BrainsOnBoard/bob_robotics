@@ -24,10 +24,9 @@ getDataFolder(const filesystem::path &dataBaseFolder)
 {
     const std::string root = (dataBaseFolder / "data").str();
     int i = 1;
-    std::stringstream ss;
     filesystem::path dataFolder;
     do {
-        ss.clear();
+        std::stringstream ss;
         ss << root << "_" << std::setw(3) << std::setfill('0') << i++;
         dataFolder = ss.str();
     } while (dataFolder.exists());
