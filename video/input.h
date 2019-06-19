@@ -65,7 +65,7 @@ public:
             }
 
             // Convert intermediate frame to greyscale
-            cv::cvtColor(m_IntermediateFrame, outFrame, CV_BGR2GRAY);
+            cv::cvtColor(m_IntermediateFrame, outFrame, cv::COLOR_BGR2GRAY);
             return true;
         }
         else {

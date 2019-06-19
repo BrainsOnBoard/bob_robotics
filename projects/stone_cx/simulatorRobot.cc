@@ -128,7 +128,7 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
         if(!capture.read(rgbInput)) {
             return;
         }
-        cv::cvtColor(rgbInput, greyscaleInput, CV_BGR2GRAY);
+        cv::cvtColor(rgbInput, greyscaleInput, cv::COLOR_BGR2GRAY);
 #endif
   
         // Unwrap
@@ -137,13 +137,13 @@ void opticalFlowThreadFunc(int cameraDevice, std::atomic<bool> &shouldQuit, std:
         // Calculate optical flow
         if(opticalFlow.calculate(outputImage)) {
             // Reduce horizontal flow - summing along columns
-            cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, CV_REDUCE_SUM);
+            cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, cv::REDUCE_SUM);
 
             // Multiply summed flow by filters
             cv::multiply(flowXSum, velocityFilter, flowXSum);
 
             // Reduce filtered flow - summing along rows
-            cv::reduce(flowXSum, flowSum, 1, CV_REDUCE_SUM);
+            cv::reduce(flowXSum, flowSum, 1, cv::REDUCE_SUM);
 
             // Filter speed and set atomic
             prevSpeed = (alpha * flowSum.at<float>(0, 0)) + ((1.0f - alpha) * prevSpeed);

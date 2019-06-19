@@ -53,11 +53,11 @@ int main()
     cv::Mat outputImage(unwrapRes, CV_8UC3);
 
     // Create windows
-    cv::namedWindow("Unwrapped", CV_WINDOW_NORMAL);
+    cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
     cv::resizeWindow("Unwrapped", unwrapRes.width * outputScale, unwrapRes.height * outputScale);
-    cv::namedWindow("Original", CV_WINDOW_NORMAL);
+    cv::namedWindow("Original", cv::WINDOW_NORMAL);
     cv::resizeWindow("Original", camRes.width, camRes.height);
-    cv::namedWindow("Optical flow", CV_WINDOW_NORMAL);
+    cv::namedWindow("Optical flow", cv::WINDOW_NORMAL);
     cv::resizeWindow("Optical flow", unwrapRes.width * outputScale, unwrapRes.height * outputScale);
 
     // Build a velocity filter whose preferred angle is going straight ahead
@@ -90,13 +90,13 @@ int main()
                 opticalFlow.render(flowImage, outputScale);
 
                 // Reduce horizontal flow - summing along columns
-                cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, CV_REDUCE_SUM);
+                cv::reduce(opticalFlow.getFlowX(), flowXSum, 0, cv::REDUCE_SUM);
 
                 // Multiply summed flow by filters
                 cv::multiply(flowXSum, velocityFilter, flowXSum);
 
                 // Reduce filtered flow - summing along rows
-                cv::reduce(flowXSum, flowSum, 1, CV_REDUCE_SUM);
+                cv::reduce(flowXSum, flowSum, 1, cv::REDUCE_SUM);
 
                 char textBuffer[256];
                 sprintf(textBuffer, "%f", flowSum.at<float>(0, 0));

@@ -91,12 +91,16 @@ public:
     //! Run the display on the current thread
     void run() override
     {
+<<<<<<< HEAD
         while (m_DoRun) {
             // poll the camera until we get a new frame
             while (!update()) {
                 std::this_thread::sleep_for(25ms);
             }
         }
+=======
+        return cv::getWindowProperty(WindowName, cv::WND_PROP_VISIBLE);
+>>>>>>> 1690a61b... Tweak code to make it compatible with OpenCV 4
     }
 
     /*!

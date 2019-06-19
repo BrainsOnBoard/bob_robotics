@@ -72,6 +72,7 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
     // Finally resample down to final size
     cv::resize(m_IntermediateSnapshotGreyscale, m_FinalSnapshot,
                 cv::Size(m_OutputWidth, m_OutputHeight),
+<<<<<<< HEAD
                 0.0, 0.0, CV_INTER_CUBIC);
     m_FinalSnapshot.convertTo(m_FinalSnapshotFloat, CV_32FC1, 1.0 / 255.0);
 
@@ -79,6 +80,9 @@ void SnapshotProcessorArdin::process(const cv::Mat &snapshot)
     if(m_Normalise) {
         cv::normalize(m_FinalSnapshotFloat, m_FinalSnapshotFloat);
     }
+=======
+                0.0, 0.0, cv::INTER_CUBIC);
+>>>>>>> 1690a61b... Tweak code to make it compatible with OpenCV 4
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

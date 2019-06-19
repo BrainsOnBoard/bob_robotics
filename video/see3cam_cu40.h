@@ -469,14 +469,14 @@ public:
                    cv::Point(centreXPixel, centreYPixel),
                    outerPixel,
                    cv::Scalar::all(255),
-                   CV_FILLED);
+                   cv::FILLED);
 
         // Draw inner black circle
         cv::circle(mask,
                    cv::Point(centreXPixel, centreYPixel),
                    innerPixel,
                    cv::Scalar::all(0),
-                   CV_FILLED);
+                   cv::FILLED);
 
         return mask;
     }
