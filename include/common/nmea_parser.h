@@ -80,7 +80,7 @@ struct GPSData {
     BoBRobotics::MapCoordinate::GPSCoordinate coordinate;  // Latitude and longitude coordinate
     units::length::meter_t altitude;                       // Altitude above ellipsoid
     units::velocity::meters_per_second_t velocity;         // velocity
-    int numberOfSatelites;                                 // Currently observed number of satelites
+    int numberOfSatellites;                                 // Currently observed number of satelites
     double horizontalDilution;                             // horizontal dilution - lower value is better
     GPSQuality gpsQuality;                                 // GPS quality indicator
     TimeStamp time;                                        // time of measurement
@@ -140,7 +140,7 @@ class NMEAParser {
         meter_t             altitude;
         meters_per_second_t velocity;
         double              horizontalDilution;
-        int                 numberOfSatelites;
+        int                 numberOfSatellites;
         int                 gpsQualityIndicator;
         GPSQuality          qualityOfGps;
         GPSData             data;
@@ -158,7 +158,7 @@ class NMEAParser {
             longitudeMinutes = arcminute_t(stod(elements[4].substr(3,9)));
             longDirection = elements[5][0];
             gpsQualityIndicator = stoi(elements[6]);
-            numberOfSatelites = stoi(elements[7]);
+            numberOfSatellites = stoi(elements[7]);
             horizontalDilution = stod(elements[8]);
             altitude = meter_t(stod(elements[9]));
             vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse GNRMC for velocity
@@ -177,7 +177,7 @@ class NMEAParser {
             coordinate.lat = latitude;
             coordinate.lon = longitude;
             data.coordinate = coordinate;
-            data.numberOfSatelites = numberOfSatelites;
+            data.numberOfSatellites = numberOfSatellites;
             data.altitude = altitude;
             data.velocity = velocity;
             data.horizontalDilution = horizontalDilution;
