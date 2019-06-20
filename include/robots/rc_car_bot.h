@@ -2,6 +2,7 @@
 // BoB robotics includes
 #include "common/i2c_interface.h"
 #include "common/macros.h"
+#include "robots/ackermann.h"
 
 // Standard C includes
 #include <cmath>
@@ -22,22 +23,28 @@ namespace Robots {
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
 class RCCarBot
+  : public Ackermann
 {
     using degree_t = units::angle::degree_t;
 
 public:
     RCCarBot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29);
-    ~RCCarBot();
+    virtual ~RCCarBot();
 
-    //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
-    void move(float speed, degree_t turningAngle);
-
-    //! Stop the car
-    void stopMoving();
     float getSpeed() const;
     degree_t getTurningAngle() const;
-    degree_t getMaximumTurn() const;
 
+    // Public virtuals
+    virtual void moveForward(float speed) override;
+    virtual void steer(float left) override;
+    virtual void steer(units::angle::degree_t left) override;
+    virtual degree_t getMaximumTurn() const override;
+
+    //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
+    virtual void move(float speed, degree_t turningAngle) override;
+
+    //! Stop the car
+    virtual void stopMoving() override;
 private:
     BoBRobotics::I2CInterface m_I2C; // i2c interface
     float m_speed;                   // current control speed of the robot

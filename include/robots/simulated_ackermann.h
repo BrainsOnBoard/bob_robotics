@@ -53,6 +53,8 @@ public:
     virtual void steer(degree_t steeringAngle) override;
     virtual void stopMoving() override;
 
+    virtual void move(float velocity, degree_t steeringAngle) override;
+
     //! sets the robot velocity and steering to move
     virtual void move(meters_per_second_t velocity, degree_t steeringAngle) override;
 
