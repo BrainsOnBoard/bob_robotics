@@ -46,7 +46,7 @@ public:
         BOB_ASSERT(turningAngle >= -35_deg && turningAngle <= 35_deg);
 
         m_speed = speed;
-        m_turningAngle = m_turningAngle;
+        m_turningAngle = turningAngle;
 
         // mapping to the range
         uint8_t uspeed = (speed * 255) + sgn(-speed) * 127;     // mapping to : 0-127 backward, 127-255 forward
