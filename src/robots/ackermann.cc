@@ -1,8 +1,12 @@
 // BoB robotics includes
+#include "common/macros.h"
 #include "robots/ackermann.h"
 
 namespace BoBRobotics {
 namespace Robots {
+Ackermann::~Ackermann()
+{}
+
 #ifdef USE_BOB_HID
 void
 Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
@@ -20,5 +24,11 @@ Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
     });
 }
 #endif
-}
-}
+
+BOB_NOT_IMPLEMENTED(
+    void
+    Ackermann::move(units::velocity::meters_per_second_t velocity,
+                    units::angle::degree_t steeringAngle)
+)
+} // Robots
+} // BoBRobotics

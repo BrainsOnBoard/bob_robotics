@@ -89,6 +89,18 @@ SimulatedAckermann::stopMoving()
 }
 
 void
+SimulatedAckermann::move(float velocity, degree_t steeringAngle)
+{
+    // Check values are in range
+    BOB_ASSERT(velocity >= -1.f && velocity <= 1.f);
+    BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
+
+    updatePose();
+    m_currentVelocity = velocity * m_MaximumSpeed;
+    m_steeringWheelAngle = steeringAngle;
+}
+
+void
 SimulatedAckermann::move(meters_per_second_t velocity, degree_t steeringAngle)
 {
     // Check values are in range
