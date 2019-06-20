@@ -26,14 +26,15 @@ type 1 or 9 update, null field when DGPS is not used
 */
 
 #pragma once
-// standard includes
-#include<string>
-#include<vector>
-#include <sstream>
-
-// BoB includes
-#include "../third_party/units.h"
+// BoB robotics includes
+#include "third_party/units.h"
 #include "map_coordinate.h"
+
+// Standard C++ includes
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace BoBRobotics
 {
@@ -73,6 +74,18 @@ struct TimeStamp
         minute = stoi(timeString.substr(2, 2));
         second = stoi(timeString.substr(4, 2));
         millisecond = stoi(timeString.substr(7, 2));
+    }
+
+    std::string str() const
+    {
+        std::stringstream ss;
+        ss << std::setw(2) << std::setfill('0') << hour << ":"
+           << std::setw(2) << std::setfill('0') << minute << ":";
+        if (second < 10) {
+            ss << '0';
+        }
+        ss << static_cast<float>(second) + static_cast<float>(millisecond) / 1000.f;
+        return ss.str();
     }
 };
 
