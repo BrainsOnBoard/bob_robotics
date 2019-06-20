@@ -44,10 +44,10 @@ public:
 
     const Pose3<meter_t, degree_t> &getPose();
     meters_per_second_t getAbsoluteMaximumSpeed() const;
-    degree_t getMaximumTurn() const;
     void setPose(const Pose3<meter_t, degree_t> &pose);
 
     // Public virtual methods
+    virtual degree_t getMaximumTurn() const override;
     virtual void moveForward(float speed) override;
     virtual void steer(float value) override;
     virtual void steer(degree_t steeringAngle) override;
