@@ -71,6 +71,11 @@ public:
         return m_turningAngle;
     }
 
+    degree_t getMaximumTurn() const
+    {
+        return 35_deg;
+    }
+
 private:
     BoBRobotics::I2CInterface m_I2C; // i2c interface
     float m_speed;                   // current control speed of the robot
