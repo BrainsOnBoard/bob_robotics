@@ -1,7 +1,7 @@
 #pragma once
 // BoB robotics includes
-#include "../common/assert.h"
-#include "../common/i2c_interface.h"
+#include "common/i2c_interface.h"
+#include "common/macros.h"
 
 // Standard C includes
 #include <cmath>
@@ -11,7 +11,7 @@
 #include <vector>
 
 // third party includes
-#include "../third_party/units.h"
+#include "third_party/units.h"
 
 using namespace units::literals;
 
