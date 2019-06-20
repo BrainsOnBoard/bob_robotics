@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "antworld/camera.h"
+#include "common/get_new_path.h"
 #include "common/logging.h"
 #include "common/macros.h"
 #include "common/main.h"
@@ -39,40 +40,6 @@ makeDirectory(const filesystem::path &path)
     }
 }
 
-filesystem::path
-getNewPath(const filesystem::path parentPath, const std::string &extension = "")
-{
-    makeDirectory(parentPath);
-
-    // Put a timestamp in the filename
-    std::stringstream ss;
-    const auto timer = time(nullptr);
-    const auto currentTime = localtime(&timer);
-    ss << std::setfill('0')
-       << std::setw(2) << currentTime->tm_mday
-       << std::setw(2) << currentTime->tm_mon
-       << std::setw(2) << currentTime->tm_year - 100
-       << "_"
-       << std::setw(2) << currentTime->tm_hour
-       << std::setw(2) << currentTime->tm_min
-       << std::setw(2) << currentTime->tm_sec
-       << "_";
-    const auto basename = (parentPath / ss.str()).str();
-
-    // Append a number in case we get name collisions
-    ss.str(std::string{}); // clear stringstream
-    filesystem::path path;
-    for (int i = 1; ; i++) {
-        ss << i << extension;
-        path = basename + ss.str();
-        if (!path.exists()) {
-            break;
-        }
-        ss.str(std::string{}); // clear stringstream
-    }
-    return path;
-}
-
 enum class ExperimentState
 {
     None,
@@ -86,7 +53,7 @@ int
 bob_main(int, char **argv)
 {
     const auto programPath = filesystem::path{ argv[0] }.parent_path();
-    const auto dataFilepath = getNewPath(programPath / "data", ".yaml");
+
     constexpr float testingThrottle = 0.5f;
     ExperimentState state = ExperimentState::None;
     std::unique_ptr<Navigation::ImageDatabase> trainingImages;
@@ -149,6 +116,11 @@ bob_main(int, char **argv)
     auto carAgent = display.createCarAgent(robot.getDistanceBetweenAxis());
 
     // Log position to YAML file
+    const auto dataDir = programPath / "data";
+    if (!dataDir.is_directory()) {
+        BOB_ASSERT(filesystem::create_directory(dataDir));
+    }
+    const auto dataFilepath = getNewPath(dataDir / "data", ".yaml");
     LOGI << "Saving coordinates to " << dataFilepath;
     cv::FileStorage fs{ dataFilepath.str(), cv::FileStorage::WRITE };
     BOB_ASSERT(fs.isOpened());
