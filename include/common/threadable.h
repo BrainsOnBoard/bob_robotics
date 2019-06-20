@@ -36,8 +36,8 @@ public:
 
     Threadable(const Threadable &old) = delete;
     void operator=(const Threadable &old) = delete;
-    Threadable(Threadable &&old);
-    Threadable &operator=(Threadable &&old) = default;
+    Threadable(Threadable &&old) = delete;
+    Threadable &operator=(Threadable &&old) = delete;
 
 private:
     std::thread m_Thread;

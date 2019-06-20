@@ -40,22 +40,22 @@ run(Video::Input &camera)
     auto connection = server.waitForConnection();
 
     // Stream camera synchronously over network
-    Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
+    Video::NetSink netSink(*connection, camera.getOutputSize(), camera.getCameraName());
 
     // Initialise robot
     Robots::TANK_TYPE tank;
 
     // Read motor commands from network
-    tank.readFromNetwork(connection);
+    tank.readFromNetwork(*connection);
 
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
-    connection.runInBackground();
+    connection->runInBackground();
 
     // Send frames over network
     cv::Mat frame;
-    while (connection.isOpen()) {
+    while (connection->isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 

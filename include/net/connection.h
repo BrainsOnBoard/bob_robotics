@@ -7,7 +7,6 @@
 // Standard C++ includes
 #include <functional>
 #include <map>
-#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -62,8 +61,6 @@ public:
     Connection(Ts&&... args)
       : m_Buffer(DefaultBufferSize)
       , m_Socket(std::forward<Ts>(args)...)
-      , m_SendMutex(std::make_unique<std::mutex>())
-      , m_CommandHandlersMutex(std::make_unique<std::mutex>())
     {}
 
     virtual ~Connection() override;
@@ -100,7 +97,7 @@ private:
     std::map<std::string, CommandHandler> m_CommandHandlers;
     std::vector<char> m_Buffer;
     Socket m_Socket;
-    std::unique_ptr<std::mutex> m_SendMutex, m_CommandHandlersMutex;
+    std::mutex m_SendMutex, m_CommandHandlersMutex;
     size_t m_BufferStart = 0, m_BufferBytes = 0;
 
     bool parseCommand(Command &command);

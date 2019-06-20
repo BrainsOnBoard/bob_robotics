@@ -34,7 +34,7 @@ Server::Server(uint16_t port)
     }
 }
 
-Connection
+std::unique_ptr<Connection>
 Server::waitForConnection() const
 {
     // For address of incoming connection
@@ -51,7 +51,7 @@ Server::waitForConnection() const
     inet_ntop(AF_INET, (void *) &addr.sin_addr, saddr, addrlen);
     LOG_INFO << "Incoming connection from " << saddr;
 
-    return Connection(std::move(socket));
+    return std::make_unique<Connection>(std::move(socket));
 }
 
 } // Net
