@@ -1,6 +1,7 @@
 #pragma once
 
-// BoBRobotics includes
+// BoB robotics includes
+#include "../common/logging.h"
 #include "../imgproc/opencv_unwrap_360.h"
 
 // OpenCV
@@ -26,7 +27,9 @@ class Input
 {
 public:
     virtual ~Input()
-    {}
+    {
+        LOG_DEBUG << "Camera closed";
+    }
 
     /*!
      * \brief Create an ImgProc::OpenCVUnwrap360 object for this video stream

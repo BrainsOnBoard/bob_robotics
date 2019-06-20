@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "../common/logging.h"
+
 // Standard C++ includes
 #include <functional>
 #include <iostream>
@@ -57,15 +60,15 @@ public:
             // Stop video streaming
             int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             if (ioctl(m_Camera, VIDIOC_STREAMOFF, &type) < 0) {
-                std::cerr << "Warning: Could not stop streaming (" << strerror(errno)
-                          << ")" << std::endl;
+                LOG_WARNING << "Could not stop streaming (" << strerror(errno)
+                            << ")";
             }
 
             // munmap buffers
             if ((m_Buffer[0] && munmap(m_Buffer[0], m_BufferInfo[0].length) == -1) ||
                 (m_Buffer[1] && munmap(m_Buffer[1], m_BufferInfo[1].length) == -1)) {
-                std::cerr << "Warning: Could not free buffers ("
-                          << strerror(errno) << ")" << std::endl;
+                LOG_WARNING << "Could not free buffers ("
+                            << strerror(errno) << ")";
             }
 
             // Close camera
@@ -92,7 +95,7 @@ public:
             throw Error("Could not query capabilities");
         }
 
-        std::cout << "Opened device: " << cap.card << std::endl;
+        LOG_INFO << "Opened device: " << cap.card;
 
         // Check required capabilities
         if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
@@ -139,8 +142,7 @@ public:
                 throw Error("Cannot query buffer");
             }
 
-            std::cout << "Queried " << m_BufferInfo[i].length << " byte buffer"
-                      << std::endl;
+            LOG_DEBUG << "Queried " << m_BufferInfo[i].length << " byte buffer";
 
             // Map memory
             m_Buffer[i] = mmap(

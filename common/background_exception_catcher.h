@@ -55,7 +55,7 @@ public:
     }
 
     //! Checks if the global exception is set and rethrows it if so
-    void check()
+    void check() const
     {
         if (ExceptionPtr) {
             std::rethrow_exception(ExceptionPtr);

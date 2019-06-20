@@ -18,15 +18,6 @@ namespace BoBRobotics {
 namespace HID {
 using namespace std::literals;
 
-// helper macros
-#define toIndex(value) static_cast<size_t>(value)
-#define toAxis(value) static_cast<JAxis>(value)
-#define toButton(value) static_cast<JButton>(value)
-
-// maximum values
-#define int16_maxf static_cast<float>(std::numeric_limits<int16_t>::max())
-#define int16_absminf -static_cast<float>(std::numeric_limits<int16_t>::min())
-
 //! The current state of a joystick button
 enum ButtonState
 {
@@ -64,6 +55,19 @@ class JoystickBase : public Threadable
      * @return True if the function has handled the event, false otherwise
      */
     using AxisHandler = std::function<bool(JAxis axis, float value)>;
+
+protected:
+    template<class T>
+    static constexpr size_t toIndex(T value) { return static_cast<size_t>(value); }
+
+    template<class T>
+    static constexpr JAxis toAxis(T value) { return static_cast<JAxis>(value); }
+
+    template<class T>
+    static constexpr JButton toButton(T value) { return static_cast<JButton>(value); }
+
+    static constexpr float int16_maxf() { return static_cast<float>(std::numeric_limits<int16_t>::max()); }
+    static constexpr float int16_absminf() { return -static_cast<float>(std::numeric_limits<int16_t>::min()); }
 
 public:
     //------------------------------------------------------------------------

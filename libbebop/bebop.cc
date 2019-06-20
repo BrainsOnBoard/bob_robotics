@@ -1,20 +1,22 @@
 #include "bebop.h"
 
-using degree_t = units::angle::degree_t;
-using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
-using meters_per_second_t = units::velocity::meters_per_second_t;
-
 // BoB robotics includes
-#include "../common/assert.h"
+#include "common/assert.h"
+#include "common/logging.h"
+
+using namespace units::angle;
+using namespace units::length;
+using namespace units::velocity;
+using namespace units::angular_velocity;
 
 /*
  * Little macros to make using the ARSDK's C API less verbose.
  */
-#define DRONE_COMMAND(COMMAND, ARG) \
-    checkError(m_Device->aRDrone3->COMMAND(m_Device->aRDrone3, ARG));
+#define DRONE_COMMAND(COMMAND, ...) \
+    checkError(m_Device->aRDrone3->COMMAND(m_Device->aRDrone3, __VA_ARGS__))
 
 #define DRONE_COMMAND_NO_ARG(COMMAND) \
-    checkError(m_Device->aRDrone3->COMMAND(m_Device->aRDrone3));
+    checkError(m_Device->aRDrone3->COMMAND(m_Device->aRDrone3))
 
 /*
  * For when a maximum speed parameter has changed
@@ -94,7 +96,7 @@ Bebop::~Bebop()
 void
 Bebop::takeOff()
 {
-    std::cout << "Taking off..." << std::endl;
+    LOG_INFO << "Taking off...";
     DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
 
     if (m_FlightEventHandler) {
@@ -108,7 +110,7 @@ Bebop::takeOff()
 void
 Bebop::land()
 {
-    std::cout << "Landing..." << std::endl;
+    LOG_INFO << "Landing...";
     DRONE_COMMAND_NO_ARG(sendPilotingLanding);
 
     if (m_FlightEventHandler) {
@@ -235,6 +237,36 @@ Bebop::doFlatTrimCalibration()
     m_FlatTrimSemaphore.wait();
 }
 
+//! Move to a new pose relative to the current one
+void
+Bebop::relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw)
+{
+    m_RelativeMoveState = Bebop::RelativeMoveState::Moving;
+    DRONE_COMMAND(sendPilotingMoveBy, (float) x.value(), (float) y.value(), (float) z.value(), (float) yaw.value());
+}
+
+//! Get the status of a relative move operation
+Bebop::RelativeMoveState
+Bebop::getRelativeMoveState() const
+{
+    return m_RelativeMoveState;
+}
+
+//! Get the distance moved in the last relative move operation
+std::pair<Vector3<meter_t>, radian_t>
+Bebop::getRelativeMovePoseDifference() const
+{
+    return std::make_pair(m_RelativeMovePositionDistance, m_RelativeMoveAngleDistance);
+}
+
+//! Reset the relative move state, e.g. after reading
+void
+Bebop::resetRelativeMoveState()
+{
+    BOB_ASSERT(m_RelativeMoveState != RelativeMoveState::Moving);
+    m_RelativeMoveState = RelativeMoveState::Initial;
+}
+
 /*!
  * \brief Tell the drone to take a photo and store it.
  */
@@ -297,9 +329,7 @@ Bebop::disconnect()
             state = getStateUpdate();
         } while (state == Bebop::State::Stopping);
 
-        if (state != Bebop::State::Stopped) {
-            std::cerr << "Warning: Could not disconnect from drone" << std::endl;
-        }
+        LOG_WARNING_IF(state != Bebop::State::Stopped) << "Could not disconnect from drone";
     }
 }
 
@@ -467,22 +497,22 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
 
     switch (newstate) {
     case ARCONTROLLER_DEVICE_STATE_STOPPED:
-        std::cout << "Drone stopped" << std::endl;
+        LOG_INFO << "Drone stopped";
         break;
     case ARCONTROLLER_DEVICE_STATE_STARTING:
-        std::cout << "Drone starting..." << std::endl;
+        LOG_INFO << "Drone starting...";
         break;
     case ARCONTROLLER_DEVICE_STATE_RUNNING:
-        std::cout << "Drone started" << std::endl;
+        LOG_INFO << "Drone started";
         break;
     case ARCONTROLLER_DEVICE_STATE_PAUSED:
-        std::cout << "Drone is paused" << std::endl;
+        LOG_INFO << "Drone is paused";
         break;
     case ARCONTROLLER_DEVICE_STATE_STOPPING:
-        std::cout << "Drone stopping..." << std::endl;
+        LOG_INFO << "Drone stopping...";
         break;
     default:
-        std::cerr << "Unknown state!" << std::endl;
+        LOG_WARNING << "Unknown drone state!";
     }
 }
 
@@ -505,6 +535,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED:
         alertStateChanged(dict);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND:
+        bebop->relativeMoveEnded(dict);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
         MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
@@ -538,8 +571,40 @@ Bebop::magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *d
         ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED, arg);
         if (arg && arg->value.U8) {
-            std::cout << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!" << std::endl;
+            LOG_WARNING << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!";
         }
+    }
+}
+
+void Bebop::relativeMoveEnded(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (!elem) {
+        return;
+    }
+
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DX, arg);
+    if (arg) {
+        m_RelativeMovePositionDistance[0] = meter_t(arg->value.Float);
+    }
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DY, arg);
+    if (arg) {
+        m_RelativeMovePositionDistance[1] = meter_t(arg->value.Float);
+    }
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DZ, arg);
+    if (arg) {
+        m_RelativeMovePositionDistance[2] = meter_t(arg->value.Float);
+    }
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DPSI, arg);
+    if (arg) {
+        m_RelativeMoveAngleDistance = radian_t(arg->value.Float);
+    }
+
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR, arg);
+    if (arg) {
+        m_RelativeMoveState = static_cast<Bebop::RelativeMoveState>(arg->value.I32);
     }
 }
 
@@ -550,28 +615,28 @@ Bebop::alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
     HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
     if (elem) {
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
-        if (arg) {
-            switch (arg->value.I32) {
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
-                std::cout << "Alert! User emergency alert" << std::endl;
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
-                std::cout << "Alert! Drone has cut out" << std::endl;
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
-                std::cout << "Alert! Battery level is critical" << std::endl;
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
-                std::cout << "Alert! Battery level is low" << std::endl;
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
-                std::cout << "Alert! The angle of the drone is too high" << std::endl;
-                break;
-            default:
-                break;
-            }
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
+    if (arg) {
+        switch (arg->value.I32) {
+        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
+            LOG_ERROR << "Alert! User emergency alert";
+            break;
+        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
+            LOG_ERROR << "Alert! Drone has cut out";
+            break;
+        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+            LOG_WARNING << "Alert! Battery level is critical";
+            break;
+        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+            LOG_WARNING << "Alert! Battery level is low";
+            break;
+        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
+            LOG_WARNING << "Alert! The angle of the drone is too high";
+            break;
+        default:
+            break;
         }
+    }
     }
 }
 
@@ -583,13 +648,9 @@ Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
     if (elem) {
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
-        if (arg) {
-            std::cout << "Bebop software version: " << arg->value.String << std::endl;
-        }
+        LOG_VERBOSE_IF(arg) << "Bebop software version: " << arg->value.String;
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
-        if (arg) {
-            std::cout << "Bebop hardware version: " << arg->value.String << std::endl;
-        }
+        LOG_VERBOSE_IF(arg) << "Bebop hardware version: " << arg->value.String;
     }
 }
 } // Robots

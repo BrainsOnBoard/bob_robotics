@@ -1,10 +1,16 @@
 var searchData=
 [
   ['i2cinterface',['I2CInterface',['../classBoBRobotics_1_1I2CInterface.html',1,'BoBRobotics']]],
+  ['ignore_5foverflow',['ignore_overflow',['../structio_1_1ignore__overflow.html',1,'io']]],
   ['imagedatabase',['ImageDatabase',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html',1,'BoBRobotics::Navigation']]],
   ['infomax',['InfoMax',['../classBoBRobotics_1_1Navigation_1_1InfoMax.html',1,'BoBRobotics::Navigation']]],
+  ['infomaxrotater',['InfoMaxRotater',['../classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html',1,'BoBRobotics::Navigation']]],
   ['input',['Input',['../classBoBRobotics_1_1Video_1_1Input.html',1,'BoBRobotics::Video']]],
-  ['insilicorotater',['InSilicoRotater',['../classBoBRobotics_1_1Navigation_1_1InSilicoRotater.html',1,'BoBRobotics::Navigation']]],
+  ['insilicorotater',['InSilicoRotater',['../structBoBRobotics_1_1Navigation_1_1InSilicoRotater.html',1,'BoBRobotics::Navigation']]],
+  ['integer_5fmust_5fbe_5fpositive',['integer_must_be_positive',['../structio_1_1error_1_1integer__must__be__positive.html',1,'io::error']]],
+  ['integer_5foverflow',['integer_overflow',['../structio_1_1error_1_1integer__overflow.html',1,'io::error']]],
+  ['integer_5funderflow',['integer_underflow',['../structio_1_1error_1_1integer__underflow.html',1,'io::error']]],
+  ['invalid_5fsingle_5fcharacter',['invalid_single_character',['../structio_1_1error_1_1invalid__single__character.html',1,'io::error']]],
   ['is_5facceleration_5funit',['is_acceleration_unit',['../structunits_1_1traits_1_1is__acceleration__unit.html',1,'units::traits']]],
   ['is_5fangle_5funit',['is_angle_unit',['../structunits_1_1traits_1_1is__angle__unit.html',1,'units::traits']]],
   ['is_5fangular_5fvelocity_5funit',['is_angular_velocity_unit',['../structunits_1_1traits_1_1is__angular__velocity__unit.html',1,'units::traits']]],

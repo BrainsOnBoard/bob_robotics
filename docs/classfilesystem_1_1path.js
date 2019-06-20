@@ -26,7 +26,7 @@ var classfilesystem_1_1path =
     [ "operator=", "classfilesystem_1_1path.html#af5f1d1cf06d131cec59a7d0e01853ef2", null ],
     [ "operator==", "classfilesystem_1_1path.html#a77a6300750eadb29fc0204ca4e368c7c", null ],
     [ "parent_path", "classfilesystem_1_1path.html#a9564a7fc0e33bcc606510c5de5a38627", null ],
-    [ "remove_file", "classfilesystem_1_1path.html#a96b9940c2ebc542b91df1e2f41c3a9dd", null ],
+    [ "remove_file", "classfilesystem_1_1path.html#ab6a7b0697dfb95c3dffc3827039105c7", null ],
     [ "resize_file", "classfilesystem_1_1path.html#ab3bbeae3ed5b1b87807c8a84ac994c65", null ],
     [ "set", "classfilesystem_1_1path.html#af8ca669009bf3541b886df8f5bfb8329", null ],
     [ "str", "classfilesystem_1_1path.html#aed9ebaa6243bfd7f17454d8d1edee0e7", null ],
