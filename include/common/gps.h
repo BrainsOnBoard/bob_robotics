@@ -1,25 +1,29 @@
-// Standard includes
-#include <stdexcept>
+#pragma once
+
 // BoB includes
 #include "nmea_parser.h"
 #include "serial_reader.h"
-#include "../third_party/units.h"
 #include "map_coordinate.h"
 
+// Third-party includes
+#include "third_party/units.h"
 
-namespace BoBRobotics 
+// Standard includes
+#include <stdexcept>
+
+namespace BoBRobotics
 {
-namespace GPS 
+namespace GPS
 {
 
 class Gps {
 
     private:
-    
+
     SerialReader sreader;
     const char *m_device_path;
     bool isConnected;
-    
+
     public:
 
     Gps() {}
@@ -28,18 +32,18 @@ class Gps {
         connect(device_path);
     }
 
-    void connect(const char *device_path) {     
+    void connect(const char *device_path) {
         sreader.connect(device_path);
         if (!sreader.isConnected()) throw GPSError("device not found");
         m_device_path = device_path;
         isConnected = true;
-       
+
     }
 
     GPSData getGPSData() {
         GPSData data;
         if (!isConnected) throw GPSError("Not connected to the device");
-        data = NMEAParser::parseNMEA(sreader.readData()); 
+        data = NMEAParser::parseNMEA(sreader.readData());
         return data;
     }
 };
