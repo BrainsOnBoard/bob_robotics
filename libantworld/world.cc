@@ -37,12 +37,14 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
 //----------------------------------------------------------------------------
 void readFace(std::istringstream &lineStream,
               const std::vector<GLfloat> &rawPositions,
+              const std::vector<GLfloat> &rawColours,
               const std::vector<GLfloat> &rawTexCoords,
-              std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>> &currentObjSurface)
+              std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>, std::vector<GLfloat>> &currentObjSurface)
 {
     // Get references to current material's positions and texture coordinates
     auto &surfacePositions = std::get<1>(currentObjSurface);
-    auto &surfaceTexCoords = std::get<2>(currentObjSurface);
+    auto &surfaceColours = std::get<2>(currentObjSurface);
+    auto &surfaceTexCoords = std::get<3>(currentObjSurface);
 
     // Loop through face vertex
     std::string faceIndexString;
@@ -54,16 +56,27 @@ void readFace(std::istringstream &lineStream,
         // Convert into stream for processing
         std::istringstream faceIndexStream(faceIndexString);
 
-        // Extract index of raw position and texture coordinate
-        // **NOTE** obj indices start from 1
+        // Extract index of raw position
         std::getline(faceIndexStream, indexString, '/');
         const int position = stoi(indexString) - 1;
-        std::getline(faceIndexStream, indexString, '/');
-        const int texCoord = stoi(indexString) - 1;
 
-        // Copy raw positions and texture coordinates into material
+        // Copy raw position into material
         std::copy_n(&rawPositions[3 * position], 3, std::back_inserter(surfacePositions));
-        std::copy_n(&rawTexCoords[2 * texCoord], 2, std::back_inserter(surfaceTexCoords));
+
+        // If there are any colours, copy them into material
+        if(!rawColours.empty()) {
+            std::copy_n(&rawColours[3 * position], 3, std::back_inserter(surfaceColours));
+        }
+
+        // If there is more data to read
+        if(!faceIndexStream.eof()) {
+            // Extract index of raw texture coordinate
+            std::getline(faceIndexStream, indexString, '/');
+            const int texCoord = stoi(indexString) - 1;
+
+            // Copy raw texture coordinates into material
+            std::copy_n(&rawTexCoords[2 * texCoord], 2, std::back_inserter(surfaceTexCoords));
+        }
     }
 
     // Check this is the end of the linestream i.e. there aren't extra components
@@ -208,15 +221,17 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
     LOG_DEBUG << "Max texture size: " << maxTextureSize;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
-    std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
+    std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
 
     // Map of material names to texture indices
     std::map<std::string, Texture*> textureNames;
 
     // Parser
     {
-        // Vectors to hold 'raw' positions and texture coordinates read from obj
+        // Vectors to hold 'raw' positions, colours and texture coordinates read from obj
+        // **TODO** 8-bit colours
         std::vector<GLfloat> rawPositions;
+        std::vector<GLfloat> rawColours;
         std::vector<GLfloat> rawTexCoords;
 
         // Open obj file
@@ -261,6 +276,11 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             else if(commandString == "v") {
                 // Read vertex
                 readVector<3>(lineStream, rawPositions, scale);
+
+                // If line has more data, read it into raw colours
+                if(!lineStream.eof()) {
+                    readVector<3>(lineStream, rawColours, 1.0);
+                }
             }
             else if(commandString == "vt") {
                 // Read texture coordinate and check there's no unhandled components following it
@@ -273,17 +293,22 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
             else if(commandString == "usemtl") {
                 lineStream >> parameterString;
                 LOG_INFO << "\tReading surface: " << parameterString;
-                objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
+                objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(),
+                                         std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
             }
             else if(commandString == "s") {
                 // ignore smoothing
             }
             else if(commandString == "f") {
-                // Check that a surface has been begun
-                BOB_ASSERT(!objSurfaces.empty());
+                // If there are no textures, surfaces aren't always created (at least be MeshLab), so create a default one
+                if(objSurfaces.empty()) {
+                    LOG_WARNING << "Encountered faces before any surfaces are defined - adding default surface";
+                    objSurfaces.emplace_back("default", std::initializer_list<GLfloat>(),
+                                             std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
+                }
 
                 // Read face
-                readFace(lineStream, rawPositions, rawTexCoords, objSurfaces.back());
+                readFace(lineStream, rawPositions, rawColours, rawTexCoords, objSurfaces.back());
             }
             else {
                 LOG_WARNING << "Unhandled obj tag '" << commandString << "'";
@@ -292,7 +317,12 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         }
 
         LOG_INFO << "\t" << rawPositions.size() / 3 << " raw positions, " << rawTexCoords.size() / 2 << " raw texture coordinates, ";
-        LOG_INFO << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures";
+        LOG_INFO << rawColours.size() / 3 << " raw colours, " << objSurfaces.size() << " surfaces, " << m_Textures.size() << " textures";
+
+        // If there are ANY raw colours, assert that there are the same number as there are positions
+        if(!rawColours.empty()) {
+            BOB_ASSERT(rawColours.size() == rawPositions.size());
+        }
 
         // Initialise bounds to limits of underlying data types
         std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
@@ -322,14 +352,24 @@ void World::loadObj(const std::string &filename, float scale, int maxTextureSize
         // Bind material
         surface.bind();
 
-        // Upload positions and texture coordinates from obj file
+        // Upload positions from obj file
         surface.uploadPositions(std::get<1>(objSurface));
-        surface.uploadTexCoords(std::get<2>(objSurface));
 
-        // Find texture corresponding to this surface
-        const auto tex = textureNames.find(std::get<0>(objSurface));
-        if(tex != textureNames.end()) {
-            surface.setTexture(tex->second);
+        // If there are any vertex colours, upload them from obj file
+        if(!std::get<2>(objSurface).empty()) {
+            surface.uploadColours(std::get<2>(objSurface));
+        }
+
+        // If there are any texture coordinates
+        if(!std::get<3>(objSurface).empty()) {
+            // Upload texture coordinates from obj file
+            surface.uploadTexCoords(std::get<3>(objSurface));
+
+            // Find texture corresponding to this surface
+            const auto tex = textureNames.find(std::get<0>(objSurface));
+            if(tex != textureNames.end()) {
+                surface.setTexture(tex->second);
+            }
         }
 
         // Unbind surface
