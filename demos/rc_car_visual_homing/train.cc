@@ -38,6 +38,7 @@ struct GPSStruct {
 void
 runGPSThread(GPSStruct &gps)
 {
+    // Read GPS on background thread: this probably needs a delay somewhere
     while (!gps.stopFlag) {
         std::lock_guard<std::mutex> lock{ gps.dataMutex };
         gps.data = gps.gps.getGPSData();

@@ -21,6 +21,7 @@ constexpr const char *imageFolderPrefix = "training_images";
 
 using namespace BoBRobotics;
 
+// Image filenames are in the format of image001.png etc.
 std::string
 getImageFilename(int num)
 {
@@ -29,6 +30,7 @@ getImageFilename(int num)
     return ss.str();
 }
 
+// Write a GPS reading to file
 void
 writeGPSData(std::ofstream &logWriter, GPS::GPSData &data)
 {

@@ -55,6 +55,7 @@ private:
 protected:
     virtual void runInternal() override
     {
+        // Constantly write GPS data to log file in background
         while (isRunning()) {
             auto data = m_GPS.getGPSData();
             writeGPSData(m_LogWriter, data);

@@ -52,6 +52,8 @@ enum class ExperimentState
 int
 bob_main(int, char **argv)
 {
+    LOGI << "Joystick controls:\n- Move with joysticks\n- Y: Toggle training mode\n- X: Toggle testing mode\n- B: Quit";
+
     const auto programPath = filesystem::path{ argv[0] }.parent_path();
 
     constexpr float testingThrottle = 0.5f;
