@@ -1,4 +1,3 @@
-#pragma once
 // BoB robotics includes
 #include "robots/rc_car_bot.h"
 #include "common/macros.h"
