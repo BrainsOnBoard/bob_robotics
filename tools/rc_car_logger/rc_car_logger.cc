@@ -1,7 +1,7 @@
 // BoB robotics includes
-#include "common/assert.h"
 #include "common/gps.h"
 #include "common/logging.h"
+#include "common/macros.h"
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "video/panoramic.h"
