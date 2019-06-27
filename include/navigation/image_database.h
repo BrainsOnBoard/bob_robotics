@@ -95,6 +95,12 @@ public:
         //! Get the format in which images will be saved
         std::string getImageFormat() const;
 
+        // Recorders are moveable, but not copyable
+        Recorder(const Recorder &) = delete;
+        void operator=(const Recorder &) = delete;
+        Recorder(Recorder &&) = delete;
+        Recorder &operator=(Recorder &&recorder) = delete;
+
     private:
         ImageDatabase &m_ImageDatabase;
         const std::string m_ImageFormat;
@@ -197,12 +203,13 @@ public:
     std::string getName() const;
 
     //! Start recording a grid of images
-    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
-                                 const Range &zrange = Range(0_mm),
-                                 degree_t heading = 0_deg,
-                                 const std::string &imageFormat = "png");
+    std::unique_ptr<GridRecorder> getGridRecorder(const Range &xrange, const Range &yrange,
+                                                  const Range &zrange = Range(0_mm),
+                                                  degree_t heading = 0_deg,
+                                                  const std::string &imageFormat = "png");
+
     //! Start recording a route
-    RouteRecorder getRouteRecorder(const std::string &imageFormat = "png");
+    std::unique_ptr<RouteRecorder> getRouteRecorder(const std::string &imageFormat = "png");
 
     //! Get the resolution of saved images
     cv::Size getResolution() const;

@@ -110,10 +110,10 @@ public:
         Range xrange({worldMinBound[0], worldMaxBound[0]}, gridSpacing);
         Range yrange({worldMinBound[1], worldMaxBound[1]}, gridSpacing);
         auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, AgentHeight);
-        addMetadata(gridRecorder);
+        addMetadata(*gridRecorder);
 
         // Record image database
-        run(gridRecorder.getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder.record(image); });
+        run(gridRecorder->getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder->record(image); });
     }
 };
 
@@ -139,11 +139,11 @@ public:
 
         // Record image database
         auto routeRecorder = m_Database.getRouteRecorder();
-        addMetadata(routeRecorder);
+        addMetadata(*routeRecorder);
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
             const auto pos = m_Agent.getPosition();
-            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
+            routeRecorder->record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
         });
     }
 

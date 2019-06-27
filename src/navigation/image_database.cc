@@ -407,21 +407,21 @@ ImageDatabase::getName() const
 }
 
 //! Start recording a grid of images
-ImageDatabase::GridRecorder
+std::unique_ptr<ImageDatabase::GridRecorder>
 ImageDatabase::getGridRecorder(const Range &xrange,
                                const Range &yrange,
                                const Range &zrange,
                                degree_t heading,
                                const std::string &imageFormat)
 {
-    return GridRecorder(*this, xrange, yrange, zrange, heading, imageFormat);
+    return std::make_unique<GridRecorder>(*this, xrange, yrange, zrange, heading, imageFormat);
 }
 
 //! Start recording a route
-ImageDatabase::RouteRecorder
+std::unique_ptr<ImageDatabase::RouteRecorder>
 ImageDatabase::getRouteRecorder(const std::string &imageFormat)
 {
-    return RouteRecorder(*this, imageFormat);
+    return std::make_unique<RouteRecorder>(*this, imageFormat);
 }
 
 //! Get the resolution of saved images

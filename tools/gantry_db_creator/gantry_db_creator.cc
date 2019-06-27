@@ -28,7 +28,7 @@ bob_main(int, char **)
     // Save images into a folder called gantry
     Navigation::ImageDatabase database("gantry_images", /*overwrite=*/true);
     auto gridRecorder = database.getGridRecorder(xrange, yrange, z);
-    auto &metadata = gridRecorder.getMetadataWriter();
+    auto &metadata = gridRecorder->getMetadataWriter();
     metadata << "camera" << cam
              << "needsUnwrapping" << true
              << "isGreyscale" << false;
@@ -40,9 +40,9 @@ bob_main(int, char **)
     LOGI << "Gantry homed.";
 
     cv::Mat frame(imSize, CV_8UC3);
-    for (size_t x = 0, y = 0; x < gridRecorder.sizeX();) {
+    for (size_t x = 0, y = 0; x < gridRecorder->sizeX();) {
         // Move gantry to next position
-        const auto pos = gridRecorder.getPosition({ x, y, 0 });
+        const auto pos = gridRecorder->getPosition({ x, y, 0 });
         gantry.setPosition(pos[0], pos[1], pos[2]);
 
         // While gantry is moving, poll for user keypress
@@ -57,11 +57,11 @@ bob_main(int, char **)
         cv::imshow("Gantry camera", frame);
 
         // Save image
-        gridRecorder.record({ x, y, 0 }, frame);
+        gridRecorder->record({ x, y, 0 }, frame);
 
         // If we haven't finished moving along y, move along one more
         if ((x % 2) == 0) {
-            if (y < gridRecorder.sizeY() - 1) {
+            if (y < gridRecorder->sizeY() - 1) {
                 y++;
                 continue;
             }
