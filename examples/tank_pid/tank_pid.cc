@@ -1,15 +1,15 @@
 // BoB robotics includes
+#include "robots/control/tank_pid.h"
 #include "common/background_exception_catcher.h"
 #include "common/logging.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
-#include "robots/control/tank_pid.h"
 #include "vicon/udp.h"
 #include "viz/plot_agent.h"
 
 // This program can be run locally on the robot or remotely
-#ifdef NO_I2C
+#ifdef NO_I2C_ROBOT
 #include "net/client.h"
 #include "robots/tank_netsink.h"
 #else
@@ -26,6 +26,7 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -45,15 +46,11 @@ namespace plt = matplotlibcpp;
 void
 usage(const char *programName)
 {
-    LOGI << programName;
-#ifdef NO_I2C
-    LOGI << " [robot IP]";
-#endif
-    LOGI << " [-p path_file.yaml]";
+    std::cout << programName << " [-p path_file.yaml]" << std::endl;
 }
 
 void
-printGoalStats(const Vector2<millimeter_t> &goal, const Vector3<millimeter_t> &robotPosition)
+printGoalStats(const Vector2<millimeter_t> &goal, const Pose3<millimeter_t, radian_t> &robotPosition)
 {
     LOGI << "Goal: " << goal;
     LOGI << "Distance to goal: "
@@ -72,26 +69,9 @@ bob_main(int argc, char **argv)
 
     bool canPlaySound = false;
 
-#ifdef NO_I2C
-    std::string robotIP;
-    if (argc > 1 && strcmp(argv[1], "-p") != 0) {
-        // Get robot IP from command-line argument
-        robotIP = argv[1];
-
-        // In case there's another argument
-        argc--;
-        argv++;
-    } else {
-        // Get robot IP from terminal
-        LOGI << "Robot IP [10.0.0.3]: ";
-        std::getline(std::cin, robotIP);
-        if (robotIP.empty()) {
-            robotIP = "10.0.0.3";
-        }
-    }
-
+#ifdef NO_I2C_ROBOT
     // Make connection to robot on default port
-    Net::Client client(robotIP);
+    Net::Client client;
     Robots::TankNetSink robot(client);
 
     if (filesystem::path(PLAY_PATH).exists()) {
@@ -137,7 +117,8 @@ bob_main(int argc, char **argv)
     HID::Joystick joystick;
     robot.addJoystick(joystick);
 
-    Robots::TankPID pid(robot, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
+    auto viconObject = vicon.getObjectReference();
+    auto pid = Robots::createTankPID(robot, viconObject, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
     joystick.addHandler([&](HID::JButton button, bool pressed) {
         if (!pressed) {
@@ -152,9 +133,9 @@ bob_main(int argc, char **argv)
 
                 // Start by aiming for the first goal
                 goalsIter = goals.begin();
-                pid.start(*goalsIter);
+                pid.moveTo(*goalsIter);
 
-                printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
+                printGoalStats(*goalsIter, viconObject.getPosition());
             } else {
                 robot.stopMoving();
                 LOGI << "Stopping positioner";
@@ -163,7 +144,7 @@ bob_main(int argc, char **argv)
         case HID::JButton::Start:
             LOGI << "Resetting to the first goal";
             goalsIter = goals.begin();
-            printGoalStats(*goalsIter, vicon.getObjectData().getPosition());
+            printGoalStats(*goalsIter, viconObject.getPosition());
             return true;
         default:
             return false;
@@ -179,7 +160,7 @@ bob_main(int argc, char **argv)
         BackgroundExceptionCatcher catcher;
         catcher.trapSignals(); // Trap signals e.g. ctrl+c
 
-#ifdef NO_I2C
+#ifdef NO_I2C_ROBOT
         // Read on background thread
         client.runInBackground();
 #endif
@@ -203,9 +184,6 @@ bob_main(int argc, char **argv)
             // Poll for joystick events
             joystick.update();
 
-            // Get robot's position from Vicon system
-            const auto objectData = vicon.getObjectData();
-
             plt::figure(1);
             plt::clf();
 
@@ -220,45 +198,33 @@ bob_main(int argc, char **argv)
             }
 
             // Plot robot's pose with an arrow
-            Viz::plotAgent(objectData.getPose<>(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
+            Viz::plotAgent(viconObject.getPose(), -2000_mm, 2000_mm, -2000_mm, 2000_mm);
             plt::pause(0.025);
 
             // Get motor commands from positioner, if it's running
-            if (runPositioner) {
-                if (objectData.timeSinceReceived() > 10s) {
-                    robot.stopMoving();
+            if (runPositioner && !pid.pollPositioner()) {
+                // Then we've reached the goal...
+                const auto &pose = pid.getPose();
+                printGoalStats(*goalsIter, pose);
+
+                // Move on to next goal
+                goalsIter++;
+
+                LOGI << "Reached goal "
+                     << std::distance(goals.begin(), goalsIter)
+                     << "/" << goals.size();
+                LOGI << "Final position: " << pose;
+
+                robot.stopMoving();
+                if (goalsIter == goals.cend()) {
                     runPositioner = false;
-                    LOGW << "Could not get position from Vicon system\n"
-                         << "Stopping trial";
-                    continue;
+                    LOGI << "Reached last goal";
+                } else {
+                    pid.moveTo(*goalsIter);
                 }
 
-                const auto position = objectData.getPosition();
-
-                // We throttle the number of commands sent
-                if (runPositioner && pid.driveRobot(objectData.getPose())) {
-                    // Then we've reached the goal...
-                    printGoalStats(*goalsIter, position);
-
-                    // Move on to next goal
-                    goalsIter++;
-
-                    LOGI << "Reached goal "
-                         << std::distance(goals.begin(), goalsIter)
-                         << "/" << goals.size();
-                    LOGI << "Final position: " << position;
-
-                    robot.stopMoving();
-                    if (goalsIter == goals.cend()) {
-                        runPositioner = false;
-                        LOGI << "Reached last goal";
-                    } else {
-                        pid.start(*goalsIter);
-                    }
-
-                    if (canPlaySound) {
-                        system(PLAY_PATH " -q " SOUND_FILE_PATH);
-                    }
+                if (canPlaySound) {
+                    system(PLAY_PATH " -q " SOUND_FILE_PATH);
                 }
             }
         } while (!joystick.isPressed(HID::JButton::B) && plt::fignum_exists(1));

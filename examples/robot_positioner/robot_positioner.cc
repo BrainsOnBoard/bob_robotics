@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "robots/control/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
@@ -7,7 +8,6 @@
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/control/robot_positioner.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
 
@@ -61,17 +61,23 @@ public:
     PositionerExample()
       : m_Tank(m_Client)
       , m_Vicon(51001)
-      , m_Positioner(StoppingDistance,
+      , m_ViconObject(m_Vicon.getObjectReference(0))
+      , m_Positioner(m_Tank,
+                     m_ViconObject,
+                     StoppingDistance,
                      AllowedHeadingError,
                      K1,
                      K2,
                      Alpha,
-                     Beta)
+                     Beta,
+                     StartSlowingDownAt,
+                     PositionerMinSpeed,
+                     PositionerMaxSpeed)
       , m_StateMachine(this, InvalidState)
     {
         // Goal is currently hard-coded
         LOGI << "Goal: " << Goal;
-        m_Positioner.setGoalPose(Goal);
+        m_Positioner.moveTo(Goal);
 
         // Start controlling with joystick
         m_StateMachine.transition(ControlWithJoystick);
@@ -135,10 +141,20 @@ public:
                 m_PrintTimer.reset();
                 break;
             case Event::Update: {
-                const auto objectData = m_Vicon.getObjectData();
-                const auto position = objectData.getPosition();
-                const auto attitude = objectData.getAttitude();
-                if (objectData.timeSinceReceived() > 10s) {
+                try {
+                    if (!m_Positioner.pollPositioner()) {
+                        const auto &finalPose = m_Positioner.getPose();
+                        LOGI << "Reached goal";
+                        LOGI << "Final position: " << finalPose.x() << ", " << finalPose.y();
+                        LOGI << "Goal: " << Goal;
+                        LOGI << "Distance to goal: "
+                             << Goal.distance2D(finalPose)
+                             << " (" << circularDistance(Goal.yaw(), finalPose.yaw()) << ")";
+
+                        m_StateMachine.transition(ControlWithJoystick);
+                        return true;
+                    }
+                } catch (Vicon::TimedOutError &) {
                     LOGE << "Could not get position from Vicon system\n"
                          << "Stopping trial";
 
@@ -146,33 +162,14 @@ public:
                     return true;
                 }
 
-                if (m_Positioner.reachedGoal()) {
-                    LOGI << "Reached goal";
-                    LOGI << "Final position: " << position.x() << ", " << position.y();
-                    LOGI << "Goal: " << Goal;
-                    LOGI << "Distance to goal: "
-                         << Goal.distance2D(position)
-                         << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")";
-
-                    m_StateMachine.transition(ControlWithJoystick);
-                    return true;
-                }
-
-                const auto distance = Goal.distance2D(position);
-                if (distance < StartSlowingDownAt) {
-                    const auto speedRange = PositionerMaxSpeed - PositionerMinSpeed;
-                    const auto speedProp = speedRange * distance / StartSlowingDownAt;
-                    m_Tank.setMaximumSpeedProportion(PositionerMinSpeed + speedProp);
-                }
-
-                m_Positioner.updateMotors(m_Tank, objectData.getPose());
-
                 // Print status
                 if (m_PrintTimer.elapsed() > 500ms) {
                     m_PrintTimer.start();
+
+                    const auto &pose = m_Positioner.getPose();
                     LOGI << "Distance to goal: "
-                         << distance
-                         << " (" << circularDistance(Goal.yaw(), attitude[0]) << ")";
+                         << Goal.distance2D(pose)
+                         << " (" << circularDistance(Goal.yaw(), pose.yaw()) << ")";
                 }
             }
             }
@@ -187,8 +184,9 @@ private:
     Net::Client m_Client;
     Robots::TankNetSink m_Tank;
     Vicon::UDPClient<> m_Vicon;
+    Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
-    Robots::RobotPositioner m_Positioner;
+    Robots::RobotPositioner<Vicon::ObjectReference<>> m_Positioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;

@@ -1,3 +1,5 @@
+#include "common.h"
+
 // BoB robotics includes
 #include "imgproc/opencv_unwrap_360.h"
 

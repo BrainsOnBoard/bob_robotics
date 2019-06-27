@@ -42,7 +42,9 @@ main()
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
     // construct the positioner
-    Robots::RobotPositioner robp(
+    auto positioner = Robots::createRobotPositioner(
+            robot,
+            robot,
             stoppingDistance,
             allowedHeadingError,
             k1,
@@ -51,14 +53,10 @@ main()
             beta);
 
     bool runPositioner = false;
-    bool reachedGoalAnnounced = false;
     while (display.isOpen()) {
-        // Get the robot's current pose
-        const auto &pose = robot.getPose();
-
         // Run GUI events
-        car.setPose(pose);
-        sf::Event event = display.updateAndDrive(robot, goalCircle, car);
+        car.setPose(robot.getPose());
+        const sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
         // Spacebar toggles whether positioner is running
         if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
@@ -72,23 +70,16 @@ main()
                 const auto mousePosition = display.mouseClickPosition();
 
                 // Set the goal to this position
-                robp.setGoalPose({ mousePosition.x(), mousePosition.y(), 15_deg });
+                positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
 
                 goalCircle.setPosition(display.vectorToPixel(mousePosition));
             }
 
-            // Update course and drive robot
-            robp.updateMotors(robot, pose);
-
             // Check if the robot is within threshold distance and bearing of goal
-            if (robp.reachedGoal()) {
-                if (!reachedGoalAnnounced) {
-                    LOGI << "Reached goal";
-                    robot.stopMoving();
-                    reachedGoalAnnounced = true;
-                }
-            } else {
-                reachedGoalAnnounced = false;
+            if (!positioner.pollPositioner()) {
+                runPositioner = false;
+                LOGI << "Reached goal";
+                robot.stopMoving();
             }
         }
 

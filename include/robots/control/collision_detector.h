@@ -2,6 +2,8 @@
 
 // BoB robotics includes
 #include "common/pose.h"
+#include "common/macros.h"
+#include "common/geometry.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -33,6 +35,7 @@ public:
                       meter_t gridSize = 1_cm)
         : m_GridSize(gridSize)
         , m_RobotDimensions(vectorToEigen(robotDimensions))
+        , m_RobotVertices(m_RobotDimensions)
         , m_RobotVerticesPoints(robotDimensions.size())
         , m_XLower(inf())
         , m_YLower(inf())
@@ -42,28 +45,16 @@ public:
             return;
         }
 
+        // Maximum number of supported objects
+        BOB_ASSERT(objects.size() <= 254);
+
         // Calculate vertices of objects after resizing to take into account buffer
         m_ResizedObjects.reserve(objects.size());
         for (auto &object : objects) {
             auto matrix = vectorToEigen(object);
 
-            // Centre the object on the origin
-            const Eigen::Vector2d centre = matrix.colwise().mean();
-            Eigen::Matrix<double, 2, 2> translation;
-            matrix.col(0).array() -= centre[0];
-            matrix.col(1).array() -= centre[1];
-
-            // Scale the object so we figure out the buffer zone around it
-            const double width = matrix.col(0).maxCoeff() - matrix.col(0).minCoeff();
-            const double scale = 1.0 + (bufferSize.value() / width);
-            Eigen::Matrix<double, 2, 2> scaleMatrix;
-            scaleMatrix << scale, 0,
-                           0, scale;
-            matrix *= scale;
-
-            // Translate the object back to its origin location
-            matrix.col(0).array() += centre[0];
-            matrix.col(1).array() += centre[1];
+            // Scale the object to include a "buffer" around it
+            resizePolygonBy(matrix, bufferSize);
 
             // Store for later
             m_ResizedObjects.emplace_back(std::move(matrix));
@@ -100,10 +91,10 @@ public:
 
         // Draw each of the objects as a filled polygon on m_ObjectsMap
         std::vector<cv::Point2i> points;
-        for (auto &object : m_ResizedObjects) {
-            points.resize(object.rows());
-            eigenToPoints(points, object);
-            fillConvexPoly(m_ObjectsMap, points, cv::Scalar{ 0xff });
+        for (size_t i = 0; i < m_ResizedObjects.size(); i++) {
+            points.resize(m_ResizedObjects[i].rows());
+            eigenToPoints(points, m_ResizedObjects[i]);
+            fillConvexPoly(m_ObjectsMap, points, cv::Scalar{ static_cast<double>(i + 1) });
         }
     }
 
@@ -113,7 +104,7 @@ public:
         // Rotate coords
         using namespace units::math;
         const double sinth = sin(pose.yaw()), costh = cos(pose.yaw());
-        Eigen::Matrix<double, 2, 2> rotationMatrix;
+        Eigen::Matrix2d rotationMatrix;
         rotationMatrix << costh, -sinth,
                           sinth, costh;
         m_RobotVertices = m_RobotDimensions * rotationMatrix;
@@ -123,19 +114,28 @@ public:
         m_RobotVertices.col(1).array() += static_cast<meter_t>(pose.y()).value();
     }
 
-    const std::vector<Eigen::MatrixX2d> &getResizedObjects() const;
+    const EigenSTDVector<Eigen::MatrixX2d> &getResizedObjects() const;
     const Eigen::MatrixX2d &getRobotVertices() const;
-    bool collisionOccurred(Vector2<meter_t> &firstCollisionPosition) const;
+    bool collisionOccurred(Vector2<meter_t> &firstCollisionPosition);
+    template<class PoseType>
+    bool wouldCollide(const PoseType &pose)
+    {
+        setRobotPose(pose);
+        return collisionOccurred(pose);
+    }
+
+    size_t getCollidedObjectId() const;
 
 private:
     const meter_t m_GridSize;
     const Eigen::MatrixX2d m_RobotDimensions;
     Eigen::MatrixX2d m_RobotVertices;
-    mutable std::vector<cv::Point2i> m_RobotVerticesPoints;
+    std::vector<cv::Point2i> m_RobotVerticesPoints;
     meter_t m_XLower, m_YLower;
     cv::Mat m_ObjectsMap;
-    mutable cv::Mat m_RobotMap;
-    std::vector<Eigen::MatrixX2d> m_ResizedObjects;
+    cv::Mat m_RobotMap;
+    EigenSTDVector<Eigen::MatrixX2d> m_ResizedObjects;
+    size_t m_CollidedObjectId = std::numeric_limits<size_t>::max();
 
     //! Convert Eigen Matrix to OpenCV pionts
     template<class MatrixType, class PointsArray>

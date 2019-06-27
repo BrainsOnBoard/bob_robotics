@@ -72,6 +72,8 @@ public:
 
     void setAttitude(degree_t yaw, degree_t pitch, degree_t roll);
 
+    void moveTo(const Pose3<meter_t, degree_t> &pose);
+
     bool update();
 
     bool isOpen() const;

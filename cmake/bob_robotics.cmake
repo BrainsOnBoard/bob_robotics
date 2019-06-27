@@ -16,13 +16,14 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL"
+                          "EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
-    if(NOT PARSED_ARGS_SOURCES)
+    BoB_set_options()
+
+    if(NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_GAZEBO_PLUGIN)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
-    BoB_set_options()
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
@@ -52,6 +53,28 @@ macro(BoB_project)
             add_executable(${target} "${file}" "${H_FILES}")
             list(APPEND BOB_TARGETS ${target})
         endforeach()
+    endif()
+
+    if(PARSED_ARGS_GAZEBO_PLUGIN)
+        get_filename_component(shortname ${PARSED_ARGS_GAZEBO_PLUGIN} NAME)
+        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+        # I'm sometimes getting linker errors when ld is linking against the
+        # static libs for BoB modules (because Gazebo plugins, as shared libs,
+        # are PIC, but the static libs seem not to be). So let's just compile
+        # everything as PIC.
+        if(GNU_TYPE_COMPILER)
+            add_definitions(-fPIC)
+        endif()
+
+        # Gazebo plugins are shared libraries
+        add_library(${target} SHARED ${PARSED_ARGS_GAZEBO_PLUGIN})
+        list(APPEND BOB_TARGETS ${target})
+
+        # We need to link against Gazebo libs
+        BoB_external_libraries(gazebo)
     endif()
 
     # If this project includes a GeNN model...
@@ -240,20 +263,22 @@ macro(always_included_packages)
     # with the include path and link flags and it seems that this target isn't
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
-    if(NOT TARGET Eigen3::Eigen)
-        find_package(Eigen3 QUIET)
-    endif()
-    if(NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT TARGET OpenMP::OpenMP_CXX)
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
     endif()
 
-    # On Unix we use pkg-config to find SDL2, because the CMake package may not
-    # be present
-    if(NOT UNIX AND NOT TARGET SDL2::SDL2)
-        find_package(SDL2)
+    # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake
+    # packages may not be present
+    if(NOT UNIX)
+        if(NOT TARGET SDL2::SDL2)
+            find_package(SDL2)
+        endif()
+        if(NOT TARGET Eigen3::Eigen)
+            find_package(Eigen3 QUIET)
+        endif()
     endif()
 endmacro()
 
@@ -270,6 +295,7 @@ macro(BoB_build)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
     endif()
+    message("Build type: ${CMAKE_BUILD_TYPE}")
 
     if(NOT WIN32)
         # Use ccache if present to speed up repeat builds
@@ -286,10 +312,6 @@ macro(BoB_build)
     if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
         add_definitions(-DDEBUG)
     endif()
-
-    # Use C++14
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Flags for gcc and clang
     if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
@@ -311,11 +333,23 @@ macro(BoB_build)
         set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
+    # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
+    # work, so add the compiler flag manually.
+    #
+    # Conversely, only setting the compiler flag means that the surveyor example
+    # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
+    #       - AD
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        add_compile_flags(-std=c++14)
+    endif()
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
     # Set include dirs and link libraries for this module/project
     always_included_packages()
-    BoB_modules(${PARSED_ARGS_BOB_MODULES})
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
     BoB_third_party(${PARSED_ARGS_THIRD_PARTY})
+    BoB_modules(${PARSED_ARGS_BOB_MODULES})
 
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
@@ -460,13 +494,19 @@ function(BoB_external_libraries)
         elseif(${lib} STREQUAL opencv)
             BoB_find_package(OpenCV REQUIRED)
         elseif(${lib} STREQUAL eigen3)
-            if(NOT TARGET Eigen3::Eigen)
-                message(FATAL_ERROR "Eigen 3 not found")
+            if(UNIX)
+                BoB_add_pkg_config_libraries(eigen3)
+            else()
+                if(NOT TARGET Eigen3::Eigen)
+                    message(FATAL_ERROR "Eigen 3 not found")
+                endif()
+                BoB_add_link_libraries(Eigen3::Eigen)
             endif()
-            BoB_add_link_libraries(Eigen3::Eigen)
 
             # For CMake < 3.9, we need to make the target ourselves
-            if(NOT OpenMP_CXX_FOUND)
+            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+                add_compile_flags(-fopenmp)
+            elseif(NOT OpenMP_CXX_FOUND)
                 find_package(Threads REQUIRED)
                 add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
                 set_property(TARGET OpenMP::OpenMP_CXX
@@ -523,6 +563,17 @@ function(BoB_external_libraries)
             BoB_add_include_directories("${SHELL_OUTPUT}/include/spineml/simulator")
             BoB_add_link_libraries(spineml_simulator spineml_common dl)
             link_directories("${SHELL_OUTPUT}")
+        elseif(${lib} STREQUAL gazebo)
+            # If Gazebo is added as a dependency multiple times (e.g. from
+            # multiple CMakeLists.txt files) then I'm getting an error from the
+            # target FreeImage::FreeImage being created multiple times - AD
+            if(NOT TARGET FreeImage::FreeImage)
+                find_package(gazebo REQUIRED)
+                BoB_add_include_directories(${GAZEBO_INCLUDE_DIRS})
+                BoB_add_link_libraries(${GAZEBO_LIBRARIES})
+                link_directories(${GAZEBO_LIBRARY_DIRS})
+                add_compile_flags(${GAZEBO_CXX_FLAGS})
+            endif()
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()

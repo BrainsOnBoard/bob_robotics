@@ -4,7 +4,7 @@
 namespace BoBRobotics {
 namespace Robots {
 
-const std::vector<Eigen::MatrixX2d> &
+const EigenSTDVector<Eigen::MatrixX2d> &
 CollisionDetector::getResizedObjects() const
 {
     return m_ResizedObjects;
@@ -16,8 +16,11 @@ CollisionDetector::getRobotVertices() const
     return m_RobotVertices;
 }
 
-bool CollisionDetector::collisionOccurred(Vector2<meter_t> &firstCollisionPosition) const
+bool CollisionDetector::collisionOccurred(Vector2<meter_t> &firstCollisionPosition)
 {
+    // Clear this value
+    m_CollidedObjectId = std::numeric_limits<size_t>::max();
+
     // If there aren't obstacles, we can't have hit them
     if (m_ResizedObjects.size() == 0) {
         return false;
@@ -44,6 +47,11 @@ bool CollisionDetector::collisionOccurred(Vector2<meter_t> &firstCollisionPositi
 
     // No collision
     return false;
+}
+
+size_t CollisionDetector::getCollidedObjectId() const
+{
+    return m_CollidedObjectId;
 }
 
 } // Robots

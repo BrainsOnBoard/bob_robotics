@@ -93,6 +93,13 @@ AntAgent::setAttitude(degree_t yaw, degree_t pitch, degree_t roll)
     m_Pose.attitude() = { yaw, pitch, roll };
 }
 
+void
+AntAgent::moveTo(const Pose3<meter_t, degree_t> &pose)
+{
+    BOB_ASSERT(m_MoveMode == MoveMode::NotMoving);
+    m_Pose = pose;
+}
+
 bool
 AntAgent::update()
 {
