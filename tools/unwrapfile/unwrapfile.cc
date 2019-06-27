@@ -181,7 +181,7 @@ int main(int argc, char** argv)
         // Get extension and convert to lower case
         std::string ext = inputFile.extension();
         std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-        if (ext == "mp4") {
+        if (ext == "mp4" || ext == "avi") {
             anyvideo = true;
             ftype[i - 1] = FileType::video;
         } else if (ext == "jpg" || ext == "jpeg" || ext == "jpe")
