@@ -4,8 +4,13 @@
 #include "hid/joystick.h"
 #ifdef USE_BOB_NET
 #include "net/connection.h"
-#endif
+#endif // USE_BOB_NET
 #include "robot.h"
+
+// For getCamera() method
+#ifdef USE_BOB_VIDEO
+#include "video/input.h"
+#endif // USE_BOB_VIDEO
 
 // Third-party includes
 #include "third_party/units.h"
@@ -66,6 +71,11 @@ public:
     virtual void setMaximumSpeedProportion(float value);
 
     virtual float getMaximumSpeedProportion() const;
+
+#ifdef USE_BOB_VIDEO
+    //! Get the default camera for this robot type
+    virtual std::unique_ptr<Video::Input> getCamera();
+#endif // USE_BOB_VIDEO
 
 #ifdef USE_BOB_NET
     //! Controls the robot with a network stream

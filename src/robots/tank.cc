@@ -3,6 +3,9 @@
 #include "common/circstat.h"
 #include "common/logging.h"
 #include "robots/tank.h"
+#ifdef USE_BOB_VIDEO
+#include "video/panoramic.h"
+#endif // USE_BOB_VIDEO
 
 // Standard C includes
 #include <cmath>
@@ -19,6 +22,14 @@ using namespace units::velocity;
 
 namespace BoBRobotics {
 namespace Robots {
+
+#ifdef USE_BOB_VIDEO
+std::unique_ptr<Video::Input>
+Tank::getCamera()
+{
+    return Video::getPanoramicCamera();
+}
+#endif // USE_BOB_VIDEO
 
 void Tank::moveForward(float speed)
 {

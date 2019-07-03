@@ -31,7 +31,8 @@
                 "USE_BOB_NET",
                 "USE_BOB_OS",
                 "USE_BOB_ROBOTS",
-                "USE_BOB_ROBOTS_BEBOP"
+                "USE_BOB_ROBOTS_BEBOP",
+                "USE_BOB_VIDEO"
             ],
             "cppStandard": "c++14",
             "intelliSenseMode": "clang-x64"
