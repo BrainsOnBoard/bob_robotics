@@ -1,9 +1,12 @@
 #ifdef USE_BOB_NET
 // BoB robotics includes
-#include "robots/tank_netsink.h"
 #include "common/logging.h"
 #include "common/macros.h"
 #include "common/stopwatch.h"
+#include "robots/tank_netsink.h"
+#ifdef USE_BOB_VIDEO
+#include "video/netsource.h"
+#endif // USE_BOB_VIDEO
 
 namespace BoBRobotics {
 namespace Robots {
@@ -109,6 +112,15 @@ TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
         return m_TurnSpeed;
     }
 }
+
+#ifdef USE_BOB_VIDEO
+template<class ConnectionType>
+std::unique_ptr<Video::Input>
+TankNetSinkBase<ConnectionType>::getCamera()
+{
+    return std::make_unique<Video::NetSource>(m_Connection);
+}
+#endif // USE_BOB_VIDEO
 
 } // Robots
 } // BoBRobotics

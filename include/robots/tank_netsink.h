@@ -72,6 +72,10 @@ public:
 
     virtual radians_per_second_t getAbsoluteMaximumTurnSpeed() const override;
 
+#ifdef USE_BOB_VIDEO
+    virtual std::unique_ptr<Video::Input> getCamera() override;
+#endif // USE_BOB_VIDEO
+
     Net::Connection &getConnection()
     {
         return m_Connection;
