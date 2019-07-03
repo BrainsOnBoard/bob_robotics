@@ -14,10 +14,10 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "net/server.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "vicon/capture_control.h"
-#include "video/netsink.h"
 #include "vicon/udp.h"
+#include "video/netsink.h"
 #include "video/panoramic.h"
 
 // BoB robotics third-party includes
@@ -56,13 +56,13 @@ class RobotFSM : FSM<State>::StateHandler
     using TimePoint = std::chrono::high_resolution_clock::time_point;
     using Seconds = std::chrono::duration<double, std::ratio<1>>;
     using Milliseconds = std::chrono::duration<double, std::milli>;
-    
+
 public:
     RobotFSM(const Config &config)
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(Video::getPanoramicCamera()),
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
         m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
-        m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())), 
+        m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
         m_TestDuration(450.0),/*
         m_Server(config.getServerListenPort()), m_NetSink(m_Server, config.getUnwrapRes(), "unwrapped"),*/
         m_NumSnapshots(0)
@@ -141,7 +141,7 @@ public:
         }
     }
 
-    ~RobotFSM() 
+    ~RobotFSM()
     {
         // Stop motors
         m_Motor.tank(0.0f, 0.0f);
@@ -154,7 +154,7 @@ public:
     {
         return m_StateMachine.update();
     }
-    
+
 private:
     filesystem::path getSnapshotPath(size_t index) const
     {
@@ -191,7 +191,7 @@ private:
 
             cv::waitKey(1);
         }
-	
+
         if(state == State::WaitToTrain) {
             if(event == Event::Enter) {
                 LOGI << "Press B to start training" ;
@@ -453,7 +453,7 @@ private:
     std::unique_ptr<MemoryBase> m_Memory;
 
     // Motor driver
-    Robots::Norbot m_Motor;
+    Robots::TANK_TYPE m_Motor;
 
     // Last time at which a motor command was issued or a snapshot was trained
     TimePoint m_LastMotorCommandTime;
