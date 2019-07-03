@@ -51,7 +51,7 @@ bob_main(int, char **)
     Robots::TANK_TYPE tank;
 
     // Read motor commands from network
-    tank.readFromNetwork(connection);
+    tank.readFromNetwork(*connection);
 
     // Try to get joystick
     try {
@@ -74,27 +74,27 @@ bob_main(int, char **)
     }
     if (imu) {
         LOGI << "Found Mindstorms IMU";
-        imu->streamOverNetwork(connection);
+        imu->streamOverNetwork(*connection);
     }
 #endif
 
     if (!joystick && !camera) {
         // Run on main thread
-        connection.run();
+        connection->run();
         return EXIT_SUCCESS;
     }
     if (camera) {
         // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+        netSink = std::make_unique<Video::NetSink>(*connection, camera->getOutputSize(), camera->getCameraName());
     }
 
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
-    connection.runInBackground();
+    connection->runInBackground();
 
     cv::Mat frame;
-    while (connection.isOpen()) {
+    while (connection->isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 
