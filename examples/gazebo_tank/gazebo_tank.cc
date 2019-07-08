@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/main.h"
-#include "common/gazebo_node.h"
 #include "common/logging.h"
+#include "gazebo/node.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "robots/gazebo_tank.h"
@@ -28,7 +28,7 @@ bob_main(int argc, char **argv)
     /************************************Gazebo setup************/
 
     // Create our node for publishing joystick values
-    gazebo::transport::NodePtr node = getGazeboNode();
+    gazebo::transport::NodePtr node = Gazebo::getNode();
 
     /************************************Gazebo setup end************/
     std::unique_ptr<Display> display;
@@ -64,7 +64,7 @@ bob_main(int argc, char **argv)
 
     // Make sure to shut everything down.
     display->close();
-    shutdownGazeboNode();
+    Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
 
     return EXIT_SUCCESS;
