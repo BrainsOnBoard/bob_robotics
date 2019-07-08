@@ -34,7 +34,12 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 
 {
     // Load world
-    m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
+    if(worldFilename.substr(worldFilename.length() - 3) == "obj") {
+        m_Renderer.getWorld().loadObj(worldFilename);
+    }
+    else {
+        m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
+    }
 
     // If route is specified
     if(!routeFilename.empty()) {
@@ -56,7 +61,7 @@ bool StateHandler::handleEvent(State state, Event event)
     // If this event is an update
     if(event == Event::Update) {
         // Render panoramic view to target
-        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), 0.01_m,
+        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), 1.6_m,
                                        m_Pose.yaw(), 0.0_deg, 0.0_deg,
                                        m_RenderTargetPanoramic);
 

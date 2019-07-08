@@ -230,19 +230,21 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
     // Get world bounds
-    const auto &minBound = getWorld().getMinBound();
-    const auto &maxBound = getWorld().getMaxBound();
+    const auto &minBound = Vector3<meter_t>{0_m, 0_m, 0_m};//getWorld().getMinBound();
+    const auto &maxBound = Vector3<meter_t>{10_m, 10_m, 2.83_m};//getWorld().getMaxBound();
 
     // Configure top-down orthographic projection matrix
     // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluOrtho2D(minBound[0].value(), maxBound[0].value(),
-               minBound[1].value(), maxBound[1].value());
+    glOrtho(minBound[0].value(), maxBound[0].value(),
+            minBound[1].value(), maxBound[1].value(),
+            -1.0, maxBound[2].value() - minBound[2].value());
 
     // Build modelview matrix to centre world
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    glScalef(1.0f, 1.0f, -1.0f);
 
     // Render geometry
     renderTopDownGeometry();
