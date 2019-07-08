@@ -47,7 +47,7 @@ public:
         BOB_ASSERT(right >= -1.f && right <= 1.f);
         
 	// Set the velocity in the x-component
-        gazebo::msgs::Set(&msg, ignition::math::Vector3d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value(), 0));
+        gazebo::msgs::Set(&msg, ignition::math::Vector3d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value()));
         
 	// Send the message
         pub->Publish(msg);
@@ -55,7 +55,7 @@ public:
 
 private:
     const radians_per_second_t m_MaximumSpeed;
-    gazebo::msgs::Vector3d msg;
+    gazebo::msgs::Vector2d msg;
     gazebo::transport::PublisherPtr pub;
 }; // GazeboTank
 } // Robots
