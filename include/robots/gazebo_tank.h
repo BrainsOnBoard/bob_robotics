@@ -9,8 +9,8 @@
 #include "../third_party/units.h"
 
 // Gazebo includes
-#include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
+#include <gazebo/transport/transport.hh>
 
 // Standard c++ includes
 #include <utility>
@@ -19,19 +19,20 @@ namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
 
-
 class GazeboTank
   : public Tank
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
+
 public:
     GazeboTank(const radians_per_second_t maximumSpeed, gazebo::transport::NodePtr node)
       : m_MaximumSpeed(maximumSpeed)
     {
         // Publish to the  differential_drive_robot topic
-        pub =node->Advertise<gazebo::msgs::Vector3d>("~/differential_drive_robot/vel_cmd");;
-        // Wait for a subscriber to connect to this publisher
+        pub = node->Advertise<gazebo::msgs::Vector3d>("~/differential_drive_robot/vel_cmd");
+        
+	// Wait for a subscriber to connect to this publisher
         pub->WaitForConnection();
     }
 
@@ -44,9 +45,11 @@ public:
     {
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
-          // Set the velocity in the x-component
+        
+	// Set the velocity in the x-component
         gazebo::msgs::Set(&msg, ignition::math::Vector3d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value(), 0));
-        // Send the message
+        
+	// Send the message
         pub->Publish(msg);
     }
 

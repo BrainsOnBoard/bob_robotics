@@ -61,6 +61,7 @@ bob_main(int argc, char **argv)
             std::this_thread::sleep_for(5ms);
         }
     } while (!joystick.isPressed(HID::JButton::B));
+
     // Make sure to shut everything down.
     display->close();
     shutdownGazeboNode();
