@@ -20,7 +20,7 @@ SnapshotProcessorSegmentSky::SnapshotProcessorSegmentSky(int outputWidth, int ou
 void SnapshotProcessorSegmentSky::process(const cv::Mat &snapshot)
 {
     // Resize snapshot
-    cv::resize(snapshot, m_IntermediateSnapshotColour, m_OutputSize);
+    cv::resize(snapshot, m_IntermediateSnapshotColour, m_OutputSize, 0.0, 0.0, cv::INTER_AREA);
 
     assert(m_IntermediateSnapshotColour.size() == m_FinalSnapshot.size());
     auto colourBegin = m_IntermediateSnapshotColour.begin<cv::Vec3b>();
