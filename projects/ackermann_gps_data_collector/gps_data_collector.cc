@@ -5,23 +5,28 @@
 #include <atomic>
 #include <mutex>
 #include <ctime>
-
+#include <iostream>
+#include <queue>
+#include <condition_variable>
 
 // BoB includes
 #include "../../common/gps.h"
 #include "../../common/logging.h"
 #include "../../common/map_coordinate.h"
-
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
-
-// Standard C++ includes
-#include <iostream>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 
+
+
+#define WITH_360 false 
+#define WINDOW_WIDTH_360 90
+#define WINDOW_HEIGHT_360 25
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
 struct GpsThreadObject {
     BoBRobotics::GPS::Gps gps{ "/dev/ttyACM0" };
@@ -29,6 +34,73 @@ struct GpsThreadObject {
     std::atomic<bool> stopFlag{ false };
     BoBRobotics::GPS::GPSData data;
 };
+
+struct ImageObj {
+    std::string fileName;
+    cv::Mat image;
+};
+
+// thread safe queue 
+template <typename T>
+class Queue
+{
+    public:
+    
+    T pop()
+    {
+        std::unique_lock<std::mutex> mlock(mutex_);
+        while (queue_.empty())
+        {
+            cond_.wait(mlock);
+        }
+        auto item = queue_.front();
+        queue_.pop();
+        return item;
+    }
+    
+    void pop(T& item)
+    {
+        std::unique_lock<std::mutex> mlock(mutex_);
+        while (queue_.empty())
+        {
+            cond_.wait(mlock);
+        }
+        item = queue_.front();
+        queue_.pop();
+    }
+    
+    void push(const T& item)
+    {
+        std::unique_lock<std::mutex> mlock(mutex_);
+        queue_.push(item);
+        mlock.unlock();
+        cond_.notify_one();
+    }
+    
+    void push(T&& item)
+    {
+        std::unique_lock<std::mutex> mlock(mutex_);
+        queue_.push(std::move(item));
+        mlock.unlock();
+        cond_.notify_one();
+    }
+    
+    private:
+    std::queue<T> queue_;
+    std::mutex mutex_;
+    std::condition_variable cond_;
+        
+};
+
+
+void runSaveImageThread(Queue<ImageObj>& imageQueue, std::atomic<bool> &quitSignal ) {
+    while(!quitSignal) {
+        auto item = imageQueue.pop();
+        auto fname = item.fileName;
+        auto im = item.image;
+        cv::imwrite(fname, im);
+    }
+}
 
 void runGPSThread(GpsThreadObject &gpsObj) {
    
@@ -108,14 +180,27 @@ void setupGPS(BoBRobotics::GPS::Gps &gps) {
 }
 
 int main() {
+    
+    std::atomic<bool> quitSignal{ false};
+    Queue<ImageObj> saveImageQueue;
 
     std::cout.precision(9);
-    const int width = 450;
-    const int height = 150;
+    
+    
+    int width,height;
+    if (WITH_360) {
+        width = WINDOW_WIDTH_360;
+        height = WINDOW_HEIGHT_360;
+    } else {
+        width = WINDOW_WIDTH;
+        height = WINDOW_HEIGHT;
+    }
+    
+   
     // setting up the camera ----------------------------
     const cv::Size unwrapRes(width, height);
     // Create panoramic camera and suitable unwrapper
-    See3CAM_CU40 cam("/dev/video0", See3CAM_CU40::Resolution::_1280x720);
+    See3CAM_CU40 cam("/dev/video0", See3CAM_CU40::Resolution::_672x380);
     //auto cam = getPanoramicCamera();
     auto unwrapper = cam.createUnwrapper(unwrapRes);
     const auto cameraRes = cam.getOutputSize();
@@ -131,6 +216,8 @@ int main() {
     cv::Mat outputImage(unwrapRes, CV_8UC3);
     //---------------------------------------------------
 
+    std::thread saveImageThread(runSaveImageThread, std::ref(saveImageQueue), std::ref(quitSignal));
+    
 
     std::thread gpsThread;
     GpsThreadObject *gpsObj = new GpsThreadObject;
@@ -142,6 +229,8 @@ int main() {
    
     bool running = true;
     int frameNumber = 0;
+    std::string fileName;
+    std::vector<ImageObj> imageCache;
     while (running ) {
        
         // Read from camera----------------------
@@ -160,17 +249,30 @@ int main() {
         if (sec < 10) { secs << 0 << sec; } else { secs << sec;}
         if (min < 10) { mins << 0 << min; } else { mins << min;}
         if (hour < 10) { hours << 0 << hour; } else { hours << hour;}   
+        
         // Unwrap
-        unwrapper.unwrap(originalImage, outputImage);
-        std::ostringstream fileString;
-        fileString << "image" << std::to_string(frameNumber)  << "_" << hours.str() << mins.str() << secs.str() << ".png";
-        cv::imwrite(fileString.str(), outputImage);
-        //-------------------------------------------
-
-
         cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
-        cv::resizeWindow("Unwrapped", width,height);
+        if (WITH_360) {
+            unwrapper.unwrap(originalImage, outputImage);
+            cv::resizeWindow("Unwrapped", width*10,height*10);
+        } else {
+            outputImage = originalImage;
+            cv::resizeWindow("Unwrapped", width,height);
+        }
         cv::imshow("Unwrapped", outputImage);
+        
+	// ------------ save image----------------------------------------------------------------------------------
+        std::ostringstream fileString; 
+        fileString <<"../../../../../../media/nvidia/imageBank/"<< "image" << std::to_string(frameNumber)  << "_" << hours.str() << mins.str() << secs.str() << ".png";
+        fileName = fileString.str();
+        
+        ImageObj imObj;
+        imObj.fileName = fileName;
+        imObj.image = outputImage;
+        saveImageQueue.push(imObj);
+        //---------------------------------------------------------------------------------------------------------
+
+        
 
         frameNumber++;
         const int key = cv::waitKey(1);
@@ -182,7 +284,7 @@ int main() {
             std::lock_guard<std::mutex> lock{ gpsObj->dataMutex };
             BoBRobotics::GPS::GPSData data = gpsObj->data;
             BoBRobotics::MapCoordinate::GPSCoordinate coord = data.coordinate;
-             BoBRobotics::GPS::GPSQuality quality = data.gpsQuality;
+            BoBRobotics::GPS::GPSQuality quality = data.gpsQuality;
             std::cout <<std::fixed<< "latitude: " << coord.lat.value()<< " longitude: " <<   coord.lon.value() << std::endl; 
             gpsQualityPrinter(quality);
         }
@@ -221,11 +323,14 @@ int main() {
 
         
     }
-    
+    quitSignal = true;
     gpsObj->stopFlag = true;
+    saveImageThread.join();
     gpsThread.join();
 
     return 0;
 
 }
+
+
 
