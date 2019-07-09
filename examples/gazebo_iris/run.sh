@@ -19,4 +19,4 @@ world_file=iris_arducopter_demo.world
 #   esac
 # done
 
-GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH$(dirname "$0") gazebo --verbose $world_file
+GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH$(dirname "$0") gazebo --verbose $world_file & ./bob_iris

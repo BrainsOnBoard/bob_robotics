@@ -513,7 +513,7 @@
       <upward>0 0 1</upward>
       <link_name>iris::rotor_3</link_name>
     </plugin>
-    <plugin name="arducopter_plugin" filename="libiris_control.so">
+    <plugin name="arducopter_plugin" filename="libgazebo_iris_plugin.so">
       <imuName>iris_demo::iris::iris/imu_link::imu_sensor</imuName>
       <connectionTimeoutMaxCount>5</connectionTimeoutMaxCount>
       <rotor id="0">
