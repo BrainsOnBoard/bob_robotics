@@ -31,7 +31,7 @@ public:
     {
         // Publish to the  differential_drive_robot topic
         pub = node->Advertise<gazebo::msgs::Vector3d>("~/differential_drive_robot/vel_cmd");
-        
+
 	// Wait for a subscriber to connect to this publisher
         pub->WaitForConnection();
     }
@@ -45,10 +45,10 @@ public:
     {
         BOB_ASSERT(left >= -1.f && left <= 1.f);
         BOB_ASSERT(right >= -1.f && right <= 1.f);
-        
+
 	// Set the velocity in the x-component
-        gazebo::msgs::Set(&msg, ignition::math::Vector3d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value()));
-        
+        gazebo::msgs::Set(&msg, ignition::math::Vector2d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value()));
+
 	// Send the message
         pub->Publish(msg);
     }
