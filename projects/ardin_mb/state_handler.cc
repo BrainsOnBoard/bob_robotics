@@ -62,7 +62,7 @@ bool StateHandler::handleEvent(State state, Event event)
     if(event == Event::Update) {
         // Render panoramic view to target
         m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), 1.6_m,
-                                       m_Pose.yaw(), 0.0_deg, 0.0_deg,
+                                       m_Pose.yaw(), m_Pose.pitch(), 0.0_deg,
                                        m_RenderTargetPanoramic);
 
         // Bind top-down render target
@@ -325,10 +325,16 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_Pose.yaw() += SimParams::antTurnStep;
             }
             if(m_KeyBits.test(KeyUp)) {
+                m_Pose.pitch() -= SimParams::antPitchStep;
+            }
+            if(m_KeyBits.test(KeyDown)) {
+                m_Pose.pitch() += SimParams::antPitchStep;
+            }
+            if(m_KeyBits.test(KeyForward)) {
                 m_Pose.x() += SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
                 m_Pose.y() += SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
             }
-            if(m_KeyBits.test(KeyDown)) {
+            if(m_KeyBits.test(KeyBackward)) {
                 m_Pose.x() -= SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
                 m_Pose.y() -= SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
             }
@@ -399,6 +405,7 @@ void StateHandler::resetAntPosition()
         m_Pose.x() = 5.0_m;
         m_Pose.y() = 5.0_m;
         m_Pose.yaw() = 270.0_deg;
+        m_Pose.pitch() = 0.0_deg;
     }
 }
 //----------------------------------------------------------------------------

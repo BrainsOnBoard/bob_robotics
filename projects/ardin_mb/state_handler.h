@@ -71,6 +71,8 @@ public:
     {
         KeyLeft,
         KeyRight,
+        KeyForward,
+        KeyBackward,
         KeyUp,
         KeyDown,
         KeyReset,
@@ -144,7 +146,7 @@ private:
     VectorField m_VectorField;
 
     //! Ant's current pose
-    BoBRobotics::Pose2<meter_t, degree_t> m_Pose;
+    BoBRobotics::Pose3<meter_t, degree_t> m_Pose;
 
     //! When training, index of current snapshot
     size_t m_TrainPoint;

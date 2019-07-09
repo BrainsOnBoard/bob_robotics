@@ -74,10 +74,18 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int)
             break;
 
         case GLFW_KEY_UP:
-            stateHandler->setKeyState(StateHandler::KeyUp, newKeyState);
+            stateHandler->setKeyState(StateHandler::KeyForward, newKeyState);
             break;
 
         case GLFW_KEY_DOWN:
+            stateHandler->setKeyState(StateHandler::KeyBackward, newKeyState);
+            break;
+
+        case GLFW_KEY_PAGE_UP:
+            stateHandler->setKeyState(StateHandler::KeyUp, newKeyState);
+            break;
+
+        case GLFW_KEY_PAGE_DOWN:
             stateHandler->setKeyState(StateHandler::KeyDown, newKeyState);
             break;
 
