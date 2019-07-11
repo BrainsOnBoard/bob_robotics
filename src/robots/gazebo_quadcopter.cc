@@ -41,7 +41,7 @@ void GazeboQuadCopter::motorMixing()
     m_br = m_Thrust - m_Yaw - m_Pitch + m_Roll;
     m_bl = m_Thrust + m_Yaw - m_Pitch - m_Roll;
     // std::cout << m_fr<< m_fl<< m_br<< m_bl << std::endl;
-    gazebo::msgs::Set(&msg, ignition::math::Quaterniond(m_fr, m_fl, m_br, m_bl));
+    gazebo::msgs::Set(&msg, ignition::math::Quaterniond(m_fr, m_bl, m_fl, m_br));
     // Send the message
     pub->Publish(msg);
 }

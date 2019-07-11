@@ -188,7 +188,6 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
             this->dataPtr->rotors.push_back(rotor);
             rotorSDF = rotorSDF->GetNextElement("rotor");
-            rotor.cmd = rotor.maxRpm * 1000;
         }
     }
     // Get sensors
@@ -241,17 +240,11 @@ GazeboQuadCopterPlugin::OnMsg(ConstQuaternionPtr &_msg)
     // gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
 
     // std::cerr<<"receiving command"<<std::endl;
-    for (unsigned i = 0; i < this->dataPtr->rotors.size(); ++i) {
  
-        this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * _msg->w();
-        this->dataPtr->rotors[1].cmd = this->dataPtr->rotors[1].maxRpm * _msg->x();
-        this->dataPtr->rotors[2].cmd = this->dataPtr->rotors[2].maxRpm * _msg->y();
-        this->dataPtr->rotors[3].cmd = this->dataPtr->rotors[3].maxRpm * _msg->z();
-       
-    }
-    // this->ApplyMotorForces((curTime - this->dataPtr->lastControllerUpdateTime).Double());
-
-    // this->dataPtr->lastControllerUpdateTime = curTime;
+    this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * _msg->w();
+    this->dataPtr->rotors[1].cmd = this->dataPtr->rotors[1].maxRpm * _msg->x();
+    this->dataPtr->rotors[2].cmd = this->dataPtr->rotors[2].maxRpm * _msg->y();
+    this->dataPtr->rotors[3].cmd = this->dataPtr->rotors[3].maxRpm * _msg->z();
 }
 /////////////////////////////////////////////////
 void GazeboQuadCopterPlugin::OnUpdate()
@@ -287,20 +280,8 @@ GazeboQuadCopterPlugin::ApplyMotorForces(const double _dt)
         double error = vel - velTarget;
         double force = this->dataPtr->rotors[i].pid.Update(error, _dt);
         this->dataPtr->rotors[i].joint->SetForce(0, force);
+        // std::cout<<force<<",";
     }
+    // std::cout<<std::endl;
 }
 
-void
-GazeboQuadCopterPlugin::ReceiveMotorCommand()
-{
-    for (unsigned i = 0; i < this->dataPtr->rotors.size(); ++i) {
-        if (i < MAX_MOTORS) {
-            // std::cout << i << ": " << pkt.motorSpeed[i] << "\n";
-            this->dataPtr->rotors[i].cmd = this->dataPtr->rotors[i].maxRpm * 0.5;
-            //   pkt.motorSpeed[i];
-        } else {
-            gzerr << "too many motors, skipping [" << i
-                  << " > " << MAX_MOTORS << "].\n";
-        }
-    }
-}
