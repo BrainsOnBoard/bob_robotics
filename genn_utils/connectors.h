@@ -1,8 +1,5 @@
 #pragma once
 
-// BoB robotics includes
-#include "../common/assert.h"
-
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>
