@@ -19,7 +19,7 @@
 #include "libantworld/renderer.h"
 #include "libantworld/render_target.h"
 #include "libantworld/render_target_input.h"
-#include "libantworld/route_ardin.h"
+#include "libantworld/route_continuous.h"
 
 // Ardin MB includes
 #include "opencv_texture.h"
@@ -136,8 +136,8 @@ private:
     //! OpenGL video input used for reading image from framebuffer
     BoBRobotics::AntWorld::RenderTargetInput m_Input;
 
-    //! Route handler - implements the various bits of route-regularizing weirdness from original paper
-    BoBRobotics::AntWorld::RouteArdin m_Route;
+    //! Route handler
+    BoBRobotics::AntWorld::RouteContinuous m_Route;
 
     //! OpenCV texture wrapper used to render final snapshot
     OpenCVTexture m_FinalSnapshotTexture;
@@ -149,10 +149,10 @@ private:
     BoBRobotics::Pose3<meter_t, degree_t> m_Pose;
 
     //! When training, index of current snapshot
-    size_t m_TrainPoint;
+    meter_t m_TrainDistance;
 
     //! The furthest point ant has reached along route
-    size_t m_MaxTestPoint;
+    meter_t m_MaxTestDistance;
 
     //! Index of orientation when scanning world
     unsigned int m_TestingScan;
@@ -161,7 +161,7 @@ private:
     float m_LowestTestDifference;
 
     //! Angle where lowest novelty was encountered
-    units::angle::degree_t m_BestTestHeading;
+    degree_t m_BestTestHeading;
 
     //! Counters for number of errors made when testing (or random walking)
     unsigned int m_NumTestErrors;

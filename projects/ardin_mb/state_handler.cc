@@ -106,7 +106,7 @@ bool StateHandler::handleEvent(State state, Event event)
     if(state == State::Training) {
         if(event == Event::Enter) {
             std::cout << "Starting training" << std::endl;
-            m_TrainPoint = 0;
+            m_TrainDistance = 0_m;
 
             resetAntPosition();
         }
@@ -125,7 +125,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // Show training progress
             if(ImGui::BeginPopupModal("Training...", nullptr, ImGuiWindowFlags_NoResize)) {
-                ImGui::ProgressBar((float)m_TrainPoint / (float)m_Route.size(), ImVec2(100, 20));
+                ImGui::ProgressBar(m_TrainDistance / m_Route.getLength(), ImVec2(100, 20));
                 if(ImGui::Button("Stop")) {
                     m_StateMachine.transition(State::FreeMovement);
                 }
@@ -133,15 +133,15 @@ bool StateHandler::handleEvent(State state, Event event)
             }
 
             // Mark results from previous training snapshot on route
-            m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
+            //m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
 
             // If GeNN isn't training and we have more route points to train
-            if(m_TrainPoint < m_Route.size()) {
-                // Snap ant to next snapshot point
-                m_Pose = m_Route[m_TrainPoint];
+            if(m_TrainDistance < m_Route.getLength()) {
+                // Move along route
+                m_TrainDistance += SimParams::trainStep;
 
-                // Go onto next training point
-                m_TrainPoint++;
+                // Get pose
+                m_Pose = m_Route.getPose(m_TrainDistance);
             }
             // Otherwise, if we've reached end of route
             else {
@@ -168,7 +168,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
             m_TestingScan = 0;
 
-            m_MaxTestPoint = 0;
+            m_MaxTestDistance = 0_m;
             m_NumTestErrors = 0;
             m_NumTestSteps = 0;
 
@@ -288,7 +288,7 @@ bool StateHandler::handleEvent(State state, Event event)
             // Reset error and step counters
             m_NumTestErrors = 0;
             m_NumTestSteps = 0;
-            m_MaxTestPoint = 0;
+            m_MaxTestDistance = 0_m;
 
             resetAntPosition();
         }
@@ -399,7 +399,7 @@ bool StateHandler::handleEvent(State state, Event event)
 void StateHandler::resetAntPosition()
 {
     if(m_Route.size() > 0) {
-        m_Pose = m_Route[0];
+        m_Pose = m_Route.getPose(0_m);
     }
     else {
         m_Pose.x() = 5.0_m;
@@ -432,22 +432,22 @@ bool StateHandler::checkAntPosition()
     else {
         // Calculate distance to route
         meter_t distanceToRoute;
-        size_t nearestRouteWaypoint;
-        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose.x(), m_Pose.y());
+        meter_t nearestRoutePosition;
+        std::tie(distanceToRoute, nearestRoutePosition) = m_Route.getDistanceToRoute(m_Pose.x(), m_Pose.y());
         std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
 
         // If we are further away than error threshold
         if(distanceToRoute > SimParams::errorDistance) {
             // If we have previously reached further down route than nearest point
             // the furthest point reached is our 'best' waypoint otherwise it's the nearest waypoint
-            const size_t bestWaypoint = (nearestRouteWaypoint < m_MaxTestPoint) ? m_MaxTestPoint : nearestRouteWaypoint;
+            const meter_t bestDistance = (nearestRoutePosition < m_MaxTestDistance) ? m_MaxTestDistance : nearestRoutePosition;
 
-            // Snap ant to the waypoint after this (clamping to size of route)
-            const size_t snapWaypoint = std::min(bestWaypoint + 1, m_Route.size() - 1);
-            m_Pose = m_Route[snapWaypoint];
+            // Snap ant to the waypoint after this (clamping to length of route)
+            const meter_t snapDistance = std::min(bestDistance + SimParams::snapshotDistance, m_Route.getLength());
+            m_Pose = m_Route.getPose(snapDistance);
 
             // Update maximum test point reached
-            m_MaxTestPoint = std::max(m_MaxTestPoint, snapWaypoint);
+            m_MaxTestDistance = std::max(m_MaxTestDistance, snapDistance);
 
             // Add error point to route
             m_Route.addPoint(m_Pose.x(), m_Pose.y(), true);
@@ -457,7 +457,7 @@ bool StateHandler::checkAntPosition()
         }
         // Otherwise, update maximum test point reached and add 'correct' point to route
         else {
-            m_MaxTestPoint = std::max(m_MaxTestPoint, nearestRouteWaypoint);
+            m_MaxTestDistance = std::max(m_MaxTestDistance, nearestRoutePosition);
             m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
         }
 

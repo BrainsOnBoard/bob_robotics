@@ -12,11 +12,14 @@ namespace SimParams
     using namespace units::length;
     using namespace units::literals;
 
+    // Training parameters
+    constexpr meter_t trainStep = 5_cm;
+
     // Testing parameters
     constexpr degree_t scanAngle = 120.0_deg;
     constexpr degree_t scanStep = 2.0_deg;
     constexpr degree_t spinStep = 0.5_deg;
-    constexpr meter_t snapshotDistance = 10.0_cm;
+    constexpr meter_t snapshotDistance = 5.0_cm;
     constexpr meter_t errorDistance = 20.0_cm;
     constexpr unsigned int testStepLimit = 1000;
 
