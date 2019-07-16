@@ -30,7 +30,7 @@ public:
       : m_MaximumSpeed(maximumSpeed)
     {
         // Publish to the  differential_drive_robot topic
-        pub = node->Advertise<gazebo::msgs::Vector3d>("~/differential_drive_robot/vel_cmd");
+        pub = node->Advertise<gazebo::msgs::Vector2d>("~/differential_drive_robot/vel_cmd");
 
         // Wait for a subscriber to connect to this publisher
         pub->WaitForConnection();
