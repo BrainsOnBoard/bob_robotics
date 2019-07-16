@@ -4,7 +4,7 @@
 #include "gazebo/node.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
-#include "robots/gazebo_tank.h"
+#include "robots/gazebo/tank.h"
 #include "video/gazebocamerainput.h"
 #include "video/display.h"
 
@@ -48,7 +48,7 @@ bob_main(int argc, char **argv)
         display->runInBackground();
     }
 
-    Robots::GazeboTank robot(5_rad_per_s, node); // Tank agent
+    Robots::Gazebo::Tank robot(5_rad_per_s, node); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
