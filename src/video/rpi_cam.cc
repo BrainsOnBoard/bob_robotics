@@ -51,16 +51,16 @@ RPiCamera::readFrame(cv::Mat &outFrame)
     // get the most recent UDP frame (grayscale for now)
     while (recv(m_Socket, buffer, 72 * 6 * 3, 0) > 0) {
         // Get offset into each row data in this packet should be copied into
-        const int x = buffer[0] * 6;
+        const int xOffset = buffer[0] * 6;
 
         // Copy 6 RGB pixels into each row aside from in last packet
-        const int width = (x == 150) ? 2 : 6;
+        const int width = (xOffset == 150) ? 2 : 6;
 
         // Get pointer to first (column-wise) pixel in buffer
         const cv::Vec3b *bufferPixels = reinterpret_cast<const cv::Vec3b*>(buffer);
 
         // Loop through pixels column wise and copy into outframe
-        for(int x = 0; x < width; x++) {
+        for(int x = xOffset; x < (xOffset + width); x++) {
             for(int y = 0; y < 72; y++) {
                 outFrame.at<cv::Vec3b>(y, x) = *bufferPixels++;
             }
