@@ -9,6 +9,27 @@ namespace BoBRobotics {
 namespace Robots {
 
 void
+Omni2D::omni2D(float forward, float sideways, float turn)
+{
+    LOGI << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn;
+}
+
+void Omni2D::moveForward(float speed)
+{
+    omni2D(speed, 0.0f, 0.0f);
+}
+
+void Omni2D::turnOnTheSpot(float clockwiseSpeed)
+{
+    omni2D(0.0f, 0.0f, clockwiseSpeed);
+}
+
+void Omni2D::stopMoving()
+{
+    omni2D(0.0f, 0.0f, 0.0f);
+}
+
+void
 Omni2D::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
@@ -26,11 +47,6 @@ Omni2D::drive(const HID::Joystick &joystick, float deadZone)
           deadZone);
 }
 
-void
-Omni2D::omni2D(float forward, float sideways, float turn)
-{
-    LOGI << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn;
-}
 
 void
 Omni2D::readFromNetwork(Net::Connection &connection)
