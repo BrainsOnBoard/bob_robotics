@@ -26,14 +26,14 @@ Omni2D::getAbsoluteMaximumSpeed() const
 }
 
 void
-Omni2D::drive(float left, float right, float back)
+Omni2D::omni2D(float forward, float sideways, float turn)
 {
-    BOB_ASSERT(left >= -1.f && left <= 1.f);
-    BOB_ASSERT(right >= -1.f && right <= 1.f);
-    BOB_ASSERT(back >= -1.f && back <= 1.f);
+    BOB_ASSERT(forward >= -1.f && forward <= 1.f);
+    BOB_ASSERT(sideways >= -1.f && sideways <= 1.f);
+    BOB_ASSERT(turn >= -1.f && turn <= 1.f);
 
     const double max = m_MaximumSpeed.value();
-    gazebo::msgs::Set(&m_Message, ignition::math::Vector3d(left * max, right * max, back * max));
+    gazebo::msgs::Set(&m_Message, ignition::math::Vector3d(forward * max, sideways * max, turn * max));
 
     // Send the message
     m_Publisher->Publish(m_Message);

@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "robots/omni2d.h"
+
 // Third-party includes
 #include "third_party/units.h"
 
@@ -12,7 +15,10 @@ namespace Robots {
 namespace Gazebo {
 using namespace units::literals;
 
-class Omni2D
+//------------------------------------------------------------------------
+// Omni2D
+//------------------------------------------------------------------------
+class Omni2D : public Robots::Omni2D
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
@@ -25,9 +31,16 @@ public:
            const meters_per_second_t maximumSpeed);
 
     meters_per_second_t getAbsoluteMaximumSpeed() const;
-    void drive(float left, float right, float back);
+
+    //------------------------------------------------------------------------
+    // Omni2D virtuals
+    //------------------------------------------------------------------------
+    virtual void omni2D(float forward, float sideways, float turn) override;
 
 private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
     gazebo::transport::PublisherPtr m_Publisher;
     const radians_per_second_t m_MaximumSpeed;
     gazebo::msgs::Vector3d m_Message;
