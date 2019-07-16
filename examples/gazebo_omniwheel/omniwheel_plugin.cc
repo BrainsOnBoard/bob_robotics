@@ -1,6 +1,5 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/logging.h"
 #include "common/macros.h"
 #include "robots/gazebo/omni2d.h"
 
@@ -49,7 +48,7 @@ public:
         m_Sub = m_Node->Subscribe(Robots::Gazebo::Omni2D::TopicName,
                                   &OmniWheelPlugin::OnMsg,
                                   this);
-        LOGI << "Subscribed to " << Robots::Gazebo::Omni2D::TopicName;
+        std::cout << "Subscribed to " << Robots::Gazebo::Omni2D::TopicName << std::endl;
     }
 
     /// \brief Set the velocity of the wheels in radians per second.
