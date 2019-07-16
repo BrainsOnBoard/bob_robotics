@@ -1,14 +1,15 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/collision.h"
 #include "common/main.h"
-#include "common/read_objects.h"
-#include "common/sfml_world.h"
 #include "hid/joystick.h"
+#include "navigation/read_objects.h"
+#include "robots/control/collision_detector.h"
 #include "robots/simulated_tank.h"
+#include "viz/sfml_world/arena_object.h"
+#include "viz/sfml_world/sfml_world.h"
 
 // SpineML simulator includes
-#include "simulator.h"
+#include "spineml/simulator/simulator.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -24,39 +25,6 @@ using namespace units::angle;
 using namespace units::length;
 using namespace units::math;
 using namespace units::literals;
-
-
-class ArenaObject : public sf::Drawable
-{
-public:
-    template<class VectorArrayType, class MatrixType>
-    ArenaObject(const SFMLWorld<> &renderer, const VectorArrayType &original, const MatrixType &resized)
-      : m_GreenShape(original.size()) , m_RedShape(original.size())
-    {
-        // Dark green
-        m_GreenShape.setFillColor(sf::Color{ 0x00, 0x88, 0x00 });
-
-        // Add each vertex to the shape
-        for (size_t i = 0; i < original.size(); i++) {
-            m_GreenShape.setPoint(i, renderer.vectorToPixel(original[i]));
-        }
-
-        m_RedShape.setFillColor(sf::Color::Red);
-        for (size_t i = 0; i < original.size(); i++) {
-            m_RedShape.setPoint(i, renderer.vectorToPixel(resized(i, 0), resized(i, 1)));
-        }
-    }
-
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
-    {
-        target.draw(m_RedShape, states);
-        target.draw(m_GreenShape, states);
-    }
-
-private:
-    sf::ConvexShape m_GreenShape, m_RedShape;
-};
-
 
 int bob_main(int, char **)
 {
@@ -74,18 +42,18 @@ int bob_main(int, char **)
     Robots::SimulatedTank<> robot(1.0_mps, 104_mm);
 
     // For displaying the agent
-    SFMLWorld<> display({5_m, 5_m});
+    Viz::SFMLWorld display({5_m, 5_m});
     auto car = display.createCarAgent();
 
     // Read objects from file
-    const auto objects = readObjects("objects.yaml");
-    CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
+    const auto objects = Navigation::readObjects("objects.yaml");
+    Robots::CollisionDetector collisionDetector{ robotDimensions, objects, 30_cm, 1_cm };
 
     // Object size + buffer around
     const auto &resizedObjects = collisionDetector.getResizedObjects();
 
     // Create drawable objects
-    std::vector<ArenaObject> objectShapes;
+    std::vector<Viz::ArenaObject> objectShapes;
     objectShapes.reserve(objects.size());
     for (size_t i = 0; i < objects.size(); i++) {
         objectShapes.emplace_back(display, objects[i], resizedObjects[i]);
