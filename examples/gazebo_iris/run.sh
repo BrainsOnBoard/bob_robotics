@@ -1,22 +1,20 @@
 #!/bin/sh
-# trap 'kill %1' SIGINT
+trap 'kill %1' SIGINT
 world_file=iris_arducopter_demo.world
 # display_flag=''
-# camera_url='/gazebo/default/differential_drive_robot/simple_camera/link/camera/image'
+camera_url='/gazebo/default/iris_demo/iris_demo/panoramic_camera/link/camera/image'
 
-# print_usage() {
-#   printf "Usage: ./run.sh <-d> <-p>\n"
-# }
+print_usage() {
+  printf "Usage: ./run.sh <-d>\n"
+}
 
-# while getopts 'dp' flag; do
-#   case "${flag}" in
-#     d) display_flag='-s' ;;
-#     p)  world_file=differential_drive_panoramic.world 
-#         camera_url='/gazebo/default/differential_drive_robot/panoramic_camera/link/camera/image'
-#         display_flag='-p' ;;
-#     *) print_usage
-#        exit 1 ;;
-#   esac
-# done
+while getopts 'd' flag; do
+  case "${flag}" in
+    d) display_flag='-s' ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
 
-GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH$(dirname "$0") gazebo --verbose $world_file & ./bob_iris
+GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:$(dirname "$0") gazebo --verbose $world_file & ./bob_iris $display_flag $camera_url
+
