@@ -118,14 +118,16 @@ public:
     bool wouldCollide(const PoseType &pose)
     {
         setRobotPose(pose);
-        return collisionOccurred();
+
+        Vector2<meter_t> &firstCollisionPosition;
+        return collisionOccurred(firstCollisionPosition);
     }
 
     const EigenSTDVector<Eigen::MatrixX2d> &getResizedObjects() const;
     const Eigen::MatrixX2d &getRobotVertices() const;
-    bool collisionOccurred();
 
     size_t getCollidedObjectId() const;
+    bool collisionOccurred(Vector2<meter_t> &firstCollisionPosition);
 
 private:
     const meter_t m_GridSize;
