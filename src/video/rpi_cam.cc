@@ -59,10 +59,14 @@ RPiCamera::readFrame(cv::Mat &outFrame)
         // Get pointer to first (column-wise) pixel in buffer
         const cv::Vec3b *bufferPixels = reinterpret_cast<const cv::Vec3b*>(buffer);
 
-        // Loop through pixels column wise and copy into outframe
+        // Loop through pixels column wise
         for(int x = xOffset; x < (xOffset + width); x++) {
             for(int y = 0; y < 72; y++) {
-                outFrame.at<cv::Vec3b>(y, x) = *bufferPixels++;
+                // Read BGR pixel
+                const cv::Vec3b bgr = *bufferPixels++;
+
+                // Convert to RGB and write back to outFrame
+                outFrame.at<cv::Vec3b>(y, x) = cv::Vec3b(bgr[2], bgr[1], bgr[0]);
             }
         }
     }
