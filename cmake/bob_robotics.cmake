@@ -550,8 +550,9 @@ function(BoB_external_libraries)
             message("GENN_PATH: ${GENN_PATH}")
 
             BoB_add_include_directories("${GENN_PATH}/include")
-            link_directories("${GENN_PATH}/lib")
-            BoB_add_link_libraries(spineml_simulator spineml_common dl)
+            BoB_add_link_libraries("${GENN_PATH}/lib/libspineml_simulator.a"
+                                   "${GENN_PATH}/lib/libspineml_common.a"
+                                   dl)
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
