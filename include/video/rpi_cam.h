@@ -22,14 +22,12 @@ public:
     virtual std::string getCameraName() const override;
     virtual cv::Size getOutputSize() const override;
     virtual bool readFrame(cv::Mat &outFrame) override;
-    virtual bool readGreyscaleFrame(cv::Mat &outFrame);
     virtual bool needsUnwrapping() const;
     virtual void setOutputSize(const cv::Size &);
 
 private:
     void setupSockets();
 
-    cv::Mat m_Frame;
     socket_t m_Socket;
     uint16_t m_Port;
 }; // RPiCamera

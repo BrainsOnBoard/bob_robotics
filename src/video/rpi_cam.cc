@@ -18,11 +18,8 @@ namespace BoBRobotics {
 namespace Video {
 
 RPiCamera::RPiCamera(uint16_t port)
-  : m_Frame(72, 152, CV_8UC1)
-  , m_Socket(INVALID_SOCKET)
+  : m_Socket(INVALID_SOCKET), m_Port(port)
 {
-    m_Port = port;
-
     // set up the networking code needed to receive images
     setupSockets();
 }
@@ -43,39 +40,30 @@ RPiCamera::getOutputSize() const
 bool
 RPiCamera::readFrame(cv::Mat &outFrame)
 {
-    if (!readGreyscaleFrame(m_Frame)) {
-        return false;
-    }
-
-    // Make sure output frame is the right size and type
-    outFrame.create(72, 152, CV_8UC3);
-
-    // Convert to the correct cv::Mat type
-    m_Frame.convertTo(outFrame, CV_8UC3);
-    return true;
-}
-
-bool
-RPiCamera::readGreyscaleFrame(cv::Mat &outFrame)
-{
-    unsigned char buffer[72 * 19];
+    uint8_t buffer[72 * 6 * 3];
 
     // Check we're connected
     BOB_ASSERT(m_Socket != INVALID_SOCKET);
 
     // Make sure output frame is the right size and type
-    outFrame.create(72, 152, CV_8U);
+    outFrame.create(72, 152, CV_8UC3);
 
     // get the most recent UDP frame (grayscale for now)
-    while (recv(m_Socket, buffer, 72 * 19, 0) > 0) {
+    while (recv(m_Socket, buffer, 72 * 6 * 3, 0) > 0) {
+        // Get offset into each row data in this packet should be copied into
+        const size_t offset = buffer[0] * 6 * 3;
+
+        // Copy 6 RGB pixels into each row aside from in last packet
+        const size_t count = (offset == 450) ? 2 * 3 : 6 * 3;
+
         // Fill in the outFrame
         // Loop through rows
         for(int i = 0; i < 72; i++) {
             // Get row pointer, with buffer offset
-            uint8_t *subRow = outFrame.ptr<uint8_t>(i) + buffer[0];
+            uint8_t *subRow = outFrame.ptr<uint8_t>(i) + offset;
 
             // Copy sub-row of data from buffer into image
-            std::copy_n(&buffer[i * 19], 19, subRow);
+            std::copy_n(&buffer[i * 6 * 3], count, subRow);
         }
     }
 
