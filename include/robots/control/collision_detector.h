@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/pose.h"
 #include "common/macros.h"
 #include "common/geometry.h"
 
