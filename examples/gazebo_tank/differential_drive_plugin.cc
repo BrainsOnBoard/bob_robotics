@@ -54,7 +54,7 @@ public:
         // Create the m_Node
         m_Node = transport::NodePtr(new transport::Node());
 #if GAZEBO_MAJOR_VERSION < 8
-        m_Node->Init(model->GetWorld()->GetName());
+        m_Node->Init(m_Model->GetWorld()->GetName());
 #else
         m_Node->Init(m_Model->GetWorld()->Name());
 #endif
