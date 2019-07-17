@@ -45,6 +45,7 @@ Mecanum::omni2D(float forwards, float sideways, float turn)
     cap(m3);
     cap(m4);
 
+    // **NOTE** 254s are because 255 is line end character
     uint8_t buffer[9] = { m1 > 0, m2 > 0, m3 > 0, m4 > 0, (uint8_t)(fabs(m1) * 254.0f), (uint8_t)(fabs(m2) * 254.0f), (uint8_t)(fabs(m3) * 254.0f), (uint8_t)(fabs(m4) * 254.0f), 255 };
 
     // Send buffer
