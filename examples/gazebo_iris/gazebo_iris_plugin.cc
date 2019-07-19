@@ -28,6 +28,9 @@ typedef SSIZE_T ssize_t;
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/transport/transport.hh>
+#include <gazebo/physics/Entity.hh>
+#include <gazebo/physics/Model.hh>
+#include <ignition/math/Vector3.hh>
 #include <ignition/math/Filter.hh>
 #include <mutex>
 #include <sdf/sdf.hh>
@@ -212,7 +215,7 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     // Listen to the update event. This event is broadcast every simulation
     // iteration.
     // this->dataPtr->updateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
-    // Create the m_Node
+    // Create the Node
     m_Node = transport::NodePtr(new transport::Node());
 #if GAZEBO_MAJOR_VERSION < 8
     m_Node->Init(model->GetWorld()->GetName());
@@ -229,6 +232,34 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     // Listen to the update event. This event is broadcast every simulation iteration.
     this->dataPtr->updateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
     std::cout << "GazeboQuadCopter ready to fly. The force will be with you" << std::endl;
+
+    // Altitude hold PID Controller
+    sdf::ElementPtr altholdSDF = _sdf->GetElement("althold");
+    double param;
+    getSdfParam<double>(altholdSDF, "p_gain", param, 0);
+    this->altitudePID.SetPGain(param);
+
+    getSdfParam<double>(altholdSDF, "i_gain", param, 0);
+    this->altitudePID.SetIGain(param);
+
+    getSdfParam<double>(altholdSDF, "d_gain", param, 0);
+    this->altitudePID.SetDGain(param);
+
+    getSdfParam<double>(altholdSDF, "i_max", param, 0);
+    this->altitudePID.SetIMax(param);
+
+    getSdfParam<double>(altholdSDF, "i_min", param, 0);
+    this->altitudePID.SetIMin(param);
+
+    getSdfParam<double>(altholdSDF, "cmd_max", param, 0);
+    this->altitudePID.SetCmdMax(param);
+
+    getSdfParam<double>(altholdSDF, "cmd_min", param, 0);
+    this->altitudePID.SetCmdMin(param);
+
+    // set pid initial command
+    this->altitudePID.SetCmd(0);
+    this->altitudeReference = 3.0; 
 }
 
 /////////////////////////////////////////////////
@@ -238,13 +269,37 @@ GazeboQuadCopterPlugin::OnMsg(ConstQuaternionPtr &_msg)
     std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
 
     // gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
-
+    this->dataPtr->m_Thrust = _msg->w();
+    this->dataPtr->m_Roll = _msg->x();
+    this->dataPtr->m_Pitch = _msg->y();
+    this->dataPtr->m_Yaw = _msg->z();
     // std::cerr<<"receiving command"<<std::endl;
- 
-    this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * _msg->w();
-    this->dataPtr->rotors[1].cmd = this->dataPtr->rotors[1].maxRpm * _msg->x();
-    this->dataPtr->rotors[2].cmd = this->dataPtr->rotors[2].maxRpm * _msg->y();
-    this->dataPtr->rotors[3].cmd = this->dataPtr->rotors[3].maxRpm * _msg->z();
+}
+void 
+GazeboQuadCopterPlugin::MotorMixing(const double _dt)
+{
+    float fr, fl, br, bl;
+    double z;
+    ignition::math::Vector3<double> v;
+    v = this->dataPtr->model->WorldPose().Pos();
+    // x = v.X(); // x coordinate
+    // y = v.Y(); // y coordinate
+    z = v.Z(); // z coordinate
+    
+    this->dataPtr->m_Thrust = this->altitudePID.Update(z - this->altitudeReference, _dt);
+    fr = this->dataPtr->m_Thrust + this->dataPtr->m_Yaw - this->dataPtr->m_Pitch - this->dataPtr->m_Roll;
+    fl = this->dataPtr->m_Thrust - this->dataPtr->m_Yaw - this->dataPtr->m_Pitch + this->dataPtr->m_Roll;
+    br = this->dataPtr->m_Thrust - this->dataPtr->m_Yaw + this->dataPtr->m_Pitch - this->dataPtr->m_Roll;
+    bl = this->dataPtr->m_Thrust + this->dataPtr->m_Yaw + this->dataPtr->m_Pitch + this->dataPtr->m_Roll;
+
+    // std::cout<< z<<std::endl;
+    this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * fr;
+    this->dataPtr->rotors[1].cmd = this->dataPtr->rotors[1].maxRpm * bl;
+    this->dataPtr->rotors[2].cmd = this->dataPtr->rotors[2].maxRpm * fl;
+    this->dataPtr->rotors[3].cmd = this->dataPtr->rotors[3].maxRpm * br;
+
+    // std::cout << fl << "\t\t"<< fr << std::endl << "\tX\n" <<  bl<< "\t\t" << br << std::endl;
+
 }
 /////////////////////////////////////////////////
 void GazeboQuadCopterPlugin::OnUpdate()
@@ -271,6 +326,7 @@ GazeboQuadCopterPlugin::ResetPIDs()
 void
 GazeboQuadCopterPlugin::ApplyMotorForces(const double _dt)
 {
+    MotorMixing(_dt);
     // update velocity PID for rotors and apply force to joint
     for (size_t i = 0; i < this->dataPtr->rotors.size(); ++i) {
         double velTarget = this->dataPtr->rotors[i].multiplier *
@@ -284,4 +340,6 @@ GazeboQuadCopterPlugin::ApplyMotorForces(const double _dt)
     }
     // std::cout<<std::endl;
 }
+
+
 

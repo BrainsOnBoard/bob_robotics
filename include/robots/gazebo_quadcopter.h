@@ -26,7 +26,7 @@ public:
     virtual void setRoll(float right) override;
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
-    virtual void motorMixing();
+    virtual void sendCommand();
 
 private:
     gazebo::msgs::Quaternion msg;

@@ -106,6 +106,8 @@ public:
     /// \brief number of times GazeboQuadCotper skips update
     /// before marking GazeboQuadCopter offline
     int connectionTimeoutMaxCount;
+
+    double m_Thrust; double m_Roll; double m_Pitch; double m_Yaw;
 };
 
 class GAZEBO_VISIBLE GazeboQuadCopterPlugin : public ModelPlugin
@@ -126,6 +128,8 @@ private:
     void OnMsg(ConstQuaternionPtr &_msg);
 
     void OnUpdate();
+    
+    void MotorMixing(const double _dt);
 
     /// \brief Update PID Joint controllers.
     /// \param[in] _dt time step size since last update.
@@ -148,6 +152,11 @@ private:
 
     /// \brief A subscriber to a named topic.
     transport::SubscriberPtr m_Sub;
+
+
+    common::PID altitudePID;
+
+    double altitudeReference;
 };
 }
 #endif
