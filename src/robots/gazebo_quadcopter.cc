@@ -6,7 +6,7 @@ namespace Robots {
 
 void GazeboQuadCopter::takeOff()
 {
-    m_Thrust = 0.6;
+    m_Thrust = 1;
     sendCommand();
 }
 
@@ -27,7 +27,7 @@ void GazeboQuadCopter::setRoll(float right)
 }
 void GazeboQuadCopter::setVerticalSpeed(float up)
 {
-    m_Thrust = up*0.5 + 0.6;
+    m_Thrust = up*0.5 + 0.5;
     sendCommand();
 }
 void GazeboQuadCopter::setYawSpeed(float right)

@@ -154,9 +154,13 @@ private:
     transport::SubscriberPtr m_Sub;
 
 
-    common::PID altitudePID;
+    common::PID thrustPID;
+    common::PID rollPID;
+    common::PID pitchPID;
+    common::PID yawPID;
 
     double altitudeReference;
+    ignition::math::v4::Pose3d loiterReference;
 };
 }
 #endif

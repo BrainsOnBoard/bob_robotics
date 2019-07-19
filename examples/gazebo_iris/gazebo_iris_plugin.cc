@@ -237,29 +237,70 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     sdf::ElementPtr altholdSDF = _sdf->GetElement("althold");
     double param;
     getSdfParam<double>(altholdSDF, "p_gain", param, 0);
-    this->altitudePID.SetPGain(param);
+    this->thrustPID.SetPGain(param);
 
     getSdfParam<double>(altholdSDF, "i_gain", param, 0);
-    this->altitudePID.SetIGain(param);
+    this->thrustPID.SetIGain(param);
 
     getSdfParam<double>(altholdSDF, "d_gain", param, 0);
-    this->altitudePID.SetDGain(param);
+    this->thrustPID.SetDGain(param);
 
     getSdfParam<double>(altholdSDF, "i_max", param, 0);
-    this->altitudePID.SetIMax(param);
+    this->thrustPID.SetIMax(param);
 
     getSdfParam<double>(altholdSDF, "i_min", param, 0);
-    this->altitudePID.SetIMin(param);
+    this->thrustPID.SetIMin(param);
 
     getSdfParam<double>(altholdSDF, "cmd_max", param, 0);
-    this->altitudePID.SetCmdMax(param);
+    this->thrustPID.SetCmdMax(param);
 
     getSdfParam<double>(altholdSDF, "cmd_min", param, 0);
-    this->altitudePID.SetCmdMin(param);
+    this->thrustPID.SetCmdMin(param);
 
     // set pid initial command
-    this->altitudePID.SetCmd(0);
-    this->altitudeReference = 3.0; 
+    this->thrustPID.SetCmd(0);
+    // this->altitudeReference = 3.0; 
+
+    sdf::ElementPtr loiterSDF = _sdf->GetElement("loiter");
+    getSdfParam<double>(loiterSDF, "p_gain", param, 0);
+    this->rollPID.SetPGain(param);
+    this->pitchPID.SetPGain(param);
+    this->yawPID.SetPGain(param);
+
+    getSdfParam<double>(loiterSDF, "i_gain", param, 0);
+    this->rollPID.SetIGain(param);
+    this->pitchPID.SetIGain(param);
+    this->yawPID.SetIGain(param);
+
+    getSdfParam<double>(loiterSDF, "d_gain", param, 0);
+    this->rollPID.SetDGain(param);
+    this->pitchPID.SetDGain(param);
+    this->yawPID.SetDGain(param);
+
+    getSdfParam<double>(loiterSDF, "i_max", param, 0);
+    this->rollPID.SetIMax(param);
+    this->pitchPID.SetIMax(param);
+    this->yawPID.SetIMax(param);
+
+    getSdfParam<double>(loiterSDF, "i_min", param, 0);
+    this->rollPID.SetIMin(param);
+    this->pitchPID.SetIMin(param);
+    this->yawPID.SetIMin(param);
+
+    getSdfParam<double>(loiterSDF, "cmd_max", param, 0);
+    this->rollPID.SetCmdMax(param);
+    this->pitchPID.SetCmdMax(param);
+    this->yawPID.SetCmdMax(param);
+
+    getSdfParam<double>(loiterSDF, "cmd_min", param, 0);
+    this->rollPID.SetCmdMin(param);
+    this->pitchPID.SetCmdMin(param);
+    this->yawPID.SetCmdMin(param);
+
+    this->rollPID.SetCmd(0);
+    this->pitchPID.SetCmd(0);
+    this->yawPID.SetCmd(0);
+
 }
 
 /////////////////////////////////////////////////
@@ -278,19 +319,45 @@ GazeboQuadCopterPlugin::OnMsg(ConstQuaternionPtr &_msg)
 void 
 GazeboQuadCopterPlugin::MotorMixing(const double _dt)
 {
+    float thrust, roll, pitch, yaw;
     float fr, fl, br, bl;
-    double z;
-    ignition::math::Vector3<double> v;
-    v = this->dataPtr->model->WorldPose().Pos();
-    // x = v.X(); // x coordinate
-    // y = v.Y(); // y coordinate
-    z = v.Z(); // z coordinate
+    double x, y, z;
+    ignition::math::Vector3<double> actualPose, referencePose;
+    actualPose = this->dataPtr->model->WorldPose().Pos();
+    referencePose = this->loiterReference.Pos();
+    x = actualPose.X(); // x coordinate
+    y = actualPose.Y(); // y coordinate
+    z = actualPose.Z(); // z coordinate
     
-    this->dataPtr->m_Thrust = this->altitudePID.Update(z - this->altitudeReference, _dt);
-    fr = this->dataPtr->m_Thrust + this->dataPtr->m_Yaw - this->dataPtr->m_Pitch - this->dataPtr->m_Roll;
-    fl = this->dataPtr->m_Thrust - this->dataPtr->m_Yaw - this->dataPtr->m_Pitch + this->dataPtr->m_Roll;
-    br = this->dataPtr->m_Thrust - this->dataPtr->m_Yaw + this->dataPtr->m_Pitch - this->dataPtr->m_Roll;
-    bl = this->dataPtr->m_Thrust + this->dataPtr->m_Yaw + this->dataPtr->m_Pitch + this->dataPtr->m_Roll;
+    if(0.49 < this->dataPtr->m_Thrust && this->dataPtr->m_Thrust < 0.51 ){
+        thrust = this->thrustPID.Update(z - referencePose.Z(), _dt);
+    }
+    else{
+        thrust = this->dataPtr->m_Thrust;
+        this->loiterReference.Set(referencePose.X(), referencePose.Y(), z, 0, 0, 0);
+    }
+    if(-0.0001 < this->dataPtr->m_Roll && this->dataPtr->m_Roll < 0.0001){
+        roll = -this->rollPID.Update(y - referencePose.Y(), _dt);
+    }
+    else{
+        roll = this->dataPtr->m_Roll;
+        this->loiterReference.Set(referencePose.X(), y, referencePose.Z(), 0, 0, 0);
+    }
+    if(-0.0001 < this->dataPtr->m_Pitch && this->dataPtr->m_Pitch < 0.0001){
+        pitch = this->pitchPID.Update(x - referencePose.X(), _dt);
+        // std::cout<<"pitch PID in play " <<x << ","<<referencePose.X() <<std::endl;
+    }
+    else{
+        pitch = this->dataPtr->m_Pitch;
+        this->loiterReference.Set(x, referencePose.Y(), referencePose.Z(), 0, 0, 0);
+    }
+
+    yaw = this->dataPtr->m_Yaw;
+
+    fr = thrust + yaw - pitch - roll;
+    fl = thrust - yaw - pitch + roll;
+    br = thrust - yaw + pitch - roll;
+    bl = thrust + yaw + pitch + roll;
 
     // std::cout<< z<<std::endl;
     this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * fr;
