@@ -1,0 +1,8 @@
+%YAML:1.0
+---
+unwrapper:
+    centre: [0.5, 0.5]
+    inner: 0
+    outer: 0.5
+    offsetDegrees: 0
+    flip: 0

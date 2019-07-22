@@ -16,13 +16,14 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL"
+                          "EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
-    if(NOT PARSED_ARGS_SOURCES)
+    BoB_set_options()
+
+    if(NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_GAZEBO_PLUGIN)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
-    BoB_set_options()
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
@@ -52,6 +53,28 @@ macro(BoB_project)
             add_executable(${target} "${file}" "${H_FILES}")
             list(APPEND BOB_TARGETS ${target})
         endforeach()
+    endif()
+
+    if(PARSED_ARGS_GAZEBO_PLUGIN)
+        get_filename_component(shortname ${PARSED_ARGS_GAZEBO_PLUGIN} NAME)
+        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+        # I'm sometimes getting linker errors when ld is linking against the
+        # static libs for BoB modules (because Gazebo plugins, as shared libs,
+        # are PIC, but the static libs seem not to be). So let's just compile
+        # everything as PIC.
+        if(GNU_TYPE_COMPILER)
+            add_definitions(-fPIC)
+        endif()
+
+        # Gazebo plugins are shared libraries
+        add_library(${target} SHARED ${PARSED_ARGS_GAZEBO_PLUGIN})
+        list(APPEND BOB_TARGETS ${target})
+
+        # We need to link against Gazebo libs
+        BoB_external_libraries(gazebo)
     endif()
 
     # If this project includes a GeNN model...
@@ -509,6 +532,17 @@ function(BoB_external_libraries)
             find_package(GTest REQUIRED)
             BoB_add_include_directories(${GTEST_INCLUDE_DIRS})
             BoB_add_link_libraries(${GTEST_LIBRARIES})
+        elseif(${lib} STREQUAL gazebo)
+            # If Gazebo is added as a dependency multiple times (e.g. from
+            # multiple CMakeLists.txt files) then I'm getting an error from the
+            # target FreeImage::FreeImage being created multiple times - AD
+            if(NOT TARGET FreeImage::FreeImage)
+                find_package(gazebo REQUIRED)
+                BoB_add_include_directories(${GAZEBO_INCLUDE_DIRS})
+                BoB_add_link_libraries(${GAZEBO_LIBRARIES})
+                link_directories(${GAZEBO_LIBRARY_DIRS})
+                add_compile_flags(${GAZEBO_CXX_FLAGS})
+            endif()
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
