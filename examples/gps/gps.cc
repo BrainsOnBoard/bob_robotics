@@ -1,13 +1,12 @@
-// standard includes
-#include<string>
-#include<vector>
+// BoB robotics includes
+#include "common/gps.h"
+#include "common/logging.h"
+#include "common/map_coordinate.h"
+
+// Standard C++ includes
+#include <string>
+#include <vector>
 #include <thread>
-
-// BoB includes
-#include "../../common/gps.h"
-#include "../../common/logging.h"
-#include "../../common/map_coordinate.h"
-
 
 int main()
 {
