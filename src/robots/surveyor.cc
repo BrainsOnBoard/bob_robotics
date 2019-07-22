@@ -1,4 +1,4 @@
-#ifdef unix
+#if defined(unix) || defined(__unix__) || defined(__unix)
 // BoB robotics includes
 #include "robots/surveyor.h"
 
