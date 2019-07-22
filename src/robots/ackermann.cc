@@ -27,8 +27,8 @@ Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
 
 BOB_NOT_IMPLEMENTED(
     void
-    Ackermann::move(units::velocity::meters_per_second_t velocity,
-                    units::angle::degree_t steeringAngle)
+    Ackermann::move(units::velocity::meters_per_second_t,
+                    units::angle::degree_t)
 )
 } // Robots
 } // BoBRobotics
