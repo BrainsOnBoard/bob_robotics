@@ -577,8 +577,16 @@ function(BoB_third_party)
             if(WIN32)
                 add_definitions(-DWITHOUT_NUMPY)
             else()
-                exec_or_fail("python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py")
-                BoB_add_include_directories(${SHELL_OUTPUT})
+                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
+                                RESULT_VARIABLE rv
+                                OUTPUT_VARIABLE numpy_include_path)
+
+                # If we have numpy then use it, otherwise matplotlibcpp will work without it
+                if(${rv} EQUAL 0)
+                    BoB_add_include_directories(${numpy_include_path})
+                else()
+                    add_definitions(-DWITHOUT_NUMPY)
+                endif()
             endif()
         else()
             # Extra actions
