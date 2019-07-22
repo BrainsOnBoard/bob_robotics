@@ -2,13 +2,19 @@
 #include "common/background_exception_catcher.h"
 #include "common/main.h"
 #include "hid/joystick.h"
+#include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
+#include "robots/tank_netsink.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
+
+#ifndef NO_I2C_ROBOT
+#include "robots/norbot.h"
+#endif
 
 // Standard C includes
 #include <cstring>
@@ -28,6 +34,8 @@ bob_main(int, char **)
     std::unique_ptr<Video::Input> camera;
     std::unique_ptr<HID::Joystick> joystick;
     std::unique_ptr<Video::NetSink> netSink;
+    std::unique_ptr<Net::Client> client;
+    std::unique_ptr<Robots::Tank> tank;
 
     // Listen for incoming connection on default port
     Net::Server server;
@@ -45,14 +53,26 @@ bob_main(int, char **)
         netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
     }
 
+    // Try to connect to servos over I2C and if that fails, try to connect to EV3
+#ifdef NO_I2C_ROBOT
+    tank = std::make_unique<Robots::Tank>();
+#else
+    try {
+        tank = std::make_unique<Robots::Norbot>();
+    } catch (std::runtime_error &) {
+        std::cout << "Trying to connect to EV3..." << std::endl;
+        client = std::make_unique<Net::Client>("10.42.0.130");
+        tank = std::make_unique<Robots::TankNetSink>(*client);
+    }
+#endif
+
     // Read motor commands from network
-    Robots::Norbot tank;
-    tank.readFromNetwork(connection);
+    tank->readFromNetwork(connection);
 
     // Try to get joystick
     try {
         joystick = std::make_unique<HID::Joystick>();
-        tank.addJoystick(*joystick);
+        tank->addJoystick(*joystick);
     } catch (std::runtime_error &e) {
         // Joystick not found
         std::cerr << e.what() << std::endl;
@@ -62,6 +82,9 @@ bob_main(int, char **)
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
     connection.runInBackground();
+    if (client) {
+        client->runInBackground();
+    }
 
     cv::Mat frame;
     while (connection.isOpen()) {

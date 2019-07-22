@@ -162,12 +162,12 @@ private:
         switch (axis) {
         case JAxis::LeftStickHorizontal:
         case JAxis::RightStickHorizontal:
-            return value < 0 ? static_cast<float>(value) / int16_absminf
-                             : static_cast<float>(value) / int16_maxf;
+            return value < 0 ? static_cast<float>(value) / int16_absminf()
+                             : static_cast<float>(value) / int16_maxf();
         case JAxis::LeftStickVertical:
         case JAxis::RightStickVertical:
-            return value < 0 ? static_cast<float>(-value) / int16_absminf
-                             : static_cast<float>(-value) / int16_maxf;
+            return value < 0 ? static_cast<float>(-value) / int16_absminf()
+                             : static_cast<float>(-value) / int16_maxf();
         case JAxis::LeftTrigger:
         case JAxis::RightTrigger:
             return static_cast<float>(value) / 255.0f;

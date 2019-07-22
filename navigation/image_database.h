@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 #include "../common/pose.h"
 #include "../imgproc/opencv_unwrap_360.h"
 
@@ -123,7 +124,7 @@ public:
                 m_YAML << "}";
 
                 const auto path = (m_ImageDatabase.m_Path / MetadataFilename).str();
-                std::cout << "Writing metadata to " << path << "..." << std::endl;
+                LOG_INFO << "Writing metadata to " << path << "...";
                 std::ofstream os(path);
                 os << m_YAML.releaseAndGetString();
             }
@@ -295,7 +296,7 @@ public:
       : m_Path(databasePath)
     {
         if (overwrite && databasePath.exists()) {
-            std::cerr << "Warning: Database already exists; overwriting" << std::endl;
+            LOG_WARNING << "Database already exists; overwriting";
             filesystem::remove_all(databasePath);
 		}
 
@@ -487,7 +488,7 @@ public:
         for (auto &entry : m_Entries) {
             unwrapper.unwrap(entry.load(), unwrapped);
             outPath = (destination / entry.path.filename()).str();
-            std::cout << "Writing to " << outPath << std::endl;
+            LOG_INFO << "Writing to " << outPath;
             BOB_ASSERT(cv::imwrite(outPath, unwrapped));
         }
     }
@@ -534,7 +535,7 @@ private:
         const auto metadataPath = m_Path / MetadataFilename;
         const bool metadataPresent = metadataPath.exists();
         if (!metadataPresent) {
-            std::cerr << "Warning, no " << MetadataFilename << " file found" << std::endl;
+            LOG_WARNING << "No " << MetadataFilename << " file found";
             m_IsRoute = true;
             m_MetadataYAML.reset();
         } else {
@@ -574,12 +575,12 @@ private:
     void addNewEntries(std::vector<Entry> &newEntries)
     {
         if (newEntries.empty()) {
-            std::cerr << "Warning: no new entries added, nothing will be written" << std::endl;
+            LOG_WARNING << "No new entries added, nothing will be written";
             return;
         }
 
         const std::string path = (m_Path / EntriesFilename).str();
-        std::cout << "Writing entries to " << path << "..." << std::endl;
+        LOG_INFO << "Writing entries to " << path << "...";
 
         // Move new entries into this object's vector
         m_Entries.reserve(m_Entries.size() + newEntries.size());

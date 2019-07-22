@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "../common/assert.h"
+#include "../common/logging.h"
 
 // Standard C++ includes
 #include <string>
@@ -57,7 +58,7 @@ public:
         // Create socket
         m_Socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if(m_Socket < 0) {
-            std::cerr << "Cannot open socket: " << strerror(errno) << std::endl;
+            LOG_ERROR << "Cannot open socket: " << strerror(errno);
             return false;
         }
 
@@ -90,7 +91,7 @@ public:
         if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
                     reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
         {
-            std::cerr << "Cannot send start message:" << strerror(errno) << std::endl;
+            LOG_ERROR << "Cannot send start message:" << strerror(errno);
             return false;
         }
         else {
@@ -114,7 +115,7 @@ public:
         if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
                     reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
         {
-            std::cerr << "Cannot send stop message:" << strerror(errno) << std::endl;
+            LOG_WARNING << "Cannot send stop message:" << strerror(errno);
             return false;
         }
         else {

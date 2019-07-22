@@ -1,20 +1,19 @@
 #pragma once
 
-// Eigen
-#include <Eigen/Core>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // BoB robotics includes
 #include "../common/assert.h"
-
-// Local includes
+#include "../common/logging.h"
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
 // Third-party includes
 #include "../third_party/units.h"
+
+// Eigen
+#include <Eigen/Core>
+
+// OpenCV
+#include <opencv2/opencv.hpp>
 
 // Standard C includes
 #include <cmath>
@@ -35,7 +34,6 @@ namespace Navigation {
 template<typename FloatType = float>
 class InfoMax : public VisualNavigationBase
 {
-    using radian_t = units::angle::radian_t;
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
@@ -122,7 +120,7 @@ public:
         // Note that we transpose this matrix after normalisation
         MatrixType weights(numInputs, numHidden);
 
-        std::cout << "Seed for weights is: " << seed << std::endl;
+        LOG_INFO << "Seed for weights is: " << seed;
 
         std::default_random_engine generator(seed);
         std::normal_distribution<FloatType> distribution;
@@ -132,32 +130,23 @@ public:
             }
         }
 
-        // std::cout << "Initial weights" << std::endl
-        //           << weights << std::endl;
+        LOG_VERBOSE << "Initial weights" << std::endl << weights;
 
         // Normalise mean and SD for row so mean == 0 and SD == 1
         const auto means = weights.rowwise().mean();
-        // std::cout << "Means" << std::endl
-        //           << means << std::endl;
+        LOG_VERBOSE << "Means" << std::endl << means;
 
         weights.colwise() -= means;
-        // std::cout << "Weights after subtracting means" << std::endl << weights << std::endl;
+        LOG_VERBOSE << "Weights after subtracting means" << std::endl << weights;
 
-        // const auto newmeans = weights.rowwise().mean();
-        // std::cout << "New means" << std::endl
-        //           << newmeans << std::endl;
+        LOG_VERBOSE << "New means" << std::endl << weights.rowwise().mean();
 
         const auto sd = matrixSD(weights);
-        // std::cout << "SD" << std::endl
-        //           << sd << std::endl;
+        LOG_VERBOSE << "SD" << std::endl << sd;
 
         weights = weights.array().colwise() / sd;
-        // std::cout << "Weights after dividing by SD" << std::endl
-        //           << weights << std::endl;
-
-        // const auto newsd = matrixSD(weights);
-        // std::cout << "New SD" << std::endl
-        //           << newsd << std::endl;
+        LOG_VERBOSE << "Weights after dividing by SD" << std::endl << weights;
+        LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
 
         return weights.transpose();
     }
@@ -204,25 +193,59 @@ public:
     // Public API
     //------------------------------------------------------------------------
     template<class... Ts>
+    const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
+    {
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
+        return m_RotatedDifferences;
+    }
+
+    template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        Rotater rotater(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        std::vector<FloatType> outputs;
-        outputs.reserve(rotater.max());
-        rotater.rotate([this, &outputs] (const cv::Mat &image, auto, auto) {
-            outputs.push_back(this->test(image));
-        });
+        using radian_t = units::angle::radian_t;
 
-        const auto el = std::min_element(outputs.begin(), outputs.end());
-        size_t bestIndex = std::distance(outputs.begin(), el);
-        if (bestIndex > outputs.size() / 2) {
-            bestIndex -= outputs.size();
+        const cv::Size unwrapRes = this->getUnwrapResolution();
+        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(rotater);
+
+        // Find index of lowest difference
+        const auto el = std::min_element(m_RotatedDifferences.cbegin(), m_RotatedDifferences.cend());
+        const size_t bestIndex = std::distance(m_RotatedDifferences.cbegin(), el);
+
+        // Convert this to an angle
+        radian_t heading = rotater.columnToHeading(bestIndex);
+        while (heading <= -180_deg) {
+            heading += 360_deg;
         }
-        using namespace units::angle;
-        const radian_t heading = turn_t((double) bestIndex / (double) outputs.size());
+        while (heading > 180_deg) {
+            heading -= 360_deg;
+        }
 
-        return std::make_tuple(heading, *el, std::move(outputs));
+        return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
     }
+
+private:
+    //------------------------------------------------------------------------
+    // Private API
+    //------------------------------------------------------------------------
+    template<typename R>
+    void calcImageDifferences(R &rotater) const
+    {
+        // Ensure there's enough space in rotated differe
+        m_RotatedDifferences.reserve(rotater.numRotations());
+        m_RotatedDifferences.clear();
+
+        // Populate rotated differences with results
+        rotater.rotate([this] (const cv::Mat &image, auto, auto) {
+            m_RotatedDifferences.push_back(this->test(image));
+        });
+    }
+
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    mutable std::vector<FloatType> m_RotatedDifferences;
 };
 } // Navigation
 } // BoBRobotics

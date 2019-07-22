@@ -18,16 +18,18 @@ CURRENT_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BOB_ROBOTICS_ROOT := $(CURRENT_DIR)/..
 CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)
 
+# For building with Google Test
+ifdef WITH_GTEST
+	DEBUG := 1
+	CXXFLAGS += `pkg-config --cflags gtest`
+	LINK_FLAGS += `pkg-config --libs gtest`
+endif
+
 # Debug mode: includes debug symbols, disables optimisation and sets DEBUG macro
 ifdef DEBUG
 	CXXFLAGS += -g -O0 -DDEBUG
 else
 	CXXFLAGS += -O2
-endif
-
-# For printing network messages (see net/ folder)
-ifdef TRACE_NET
-	CXXFLAGS += -DTRACE_NET
 endif
 
 # Improves build time
@@ -44,27 +46,31 @@ CXXFLAGS += -DDISABLE_PREDEFINED_UNITS \
 # Linking flags (-lm and -lstdc++ needed for clang)
 LINK_FLAGS += -lm -lstdc++ -pthread
 
+# Always build using our logging library
+EXTRA_DEPS += plog
+CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)/third_party/plog/include
+
 # Add support for libantworld
 ifdef WITH_LIBANTWORLD
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libantworld -lantworld -lglfw -lGL -lGLU -lGLEW
+	EXTRA_DEPS += libantworld
 endif
 
 ifdef WITH_IMGUI
+	CXXFLAGS += -I$(BOB_ROBOTICS_ROOT)/third_party/imgui/imgui
 	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/third_party/imgui -limgui -lglfw -lGL -lGLU -lGLEW
+	EXTRA_DEPS += imgui
 endif
 
-# Build with OpenCV
-ifndef NO_OPENCV
-ifndef OPENCV_PKG_NAME
-	OPENCV_PKG_NAME := opencv
-endif
-	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
-	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
+ifdef WITH_SDL2
+	CXXFLAGS += `pkg-config --cflags sdl2`
+	LINK_FLAGS += `pkg-config --libs sdl2`
 endif
 
 ifdef WITH_LIBBEBOP
 	# libbebop
-	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop
+	LINK_FLAGS += -L$(BOB_ROBOTICS_ROOT)/libbebop -lbebop \
+					-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
 
 	# ARSDK
 	# We set the rpath so that compiled programs can find the folder with the ARSDK
@@ -75,8 +81,7 @@ $(error Environment variable ARSDK_ROOT must be defined)
 	endif
 	AR_STAGING_PATH=$(ARSDK_ROOT)/out/arsdk-native/staging
 	AR_LIB_PATH=$(AR_STAGING_PATH)/usr/lib
-	CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include \
-		-Wl,-rpath,$(AR_LIB_PATH),--disable-new-dtags
+	CXXFLAGS+=-I$(AR_STAGING_PATH)/usr/include
 	LINK_FLAGS+=$(AR_LIB_PATH)/libarsal.so $(AR_LIB_PATH)/libardiscovery.so \
 		$(AR_LIB_PATH)/libarcontroller.so $(AR_LIB_PATH)/libarnetworkal.so \
 		$(AR_LIB_PATH)/libarcommands.so $(AR_LIB_PATH)/libmux.so \
@@ -91,6 +96,18 @@ $(error Environment variable ARSDK_ROOT must be defined)
 
 	# Fixes compiler warnings for code deep inside ARSDK
 	CXXFLAGS += -Wno-implicit-fallthrough
+
+	# For default.mk
+	EXTRA_DEPS += libbebop
+endif
+
+# Build with OpenCV
+ifndef NO_OPENCV
+ifndef OPENCV_PKG_NAME
+	OPENCV_PKG_NAME := opencv
+endif
+	CXXFLAGS += `pkg-config --cflags $(OPENCV_PKG_NAME)`
+	LINK_FLAGS += `pkg-config --libs $(OPENCV_PKG_NAME)`
 endif
 
 ifdef WITH_MATPLOTLIBCPP
@@ -106,6 +123,14 @@ ifdef WITH_MATPLOTLIBCPP
 	LINK_FLAGS += $(shell $(PYTHON_CONFIG) --libs)
 endif
 
+ifdef WITH_I2C_ROBOT
+ifdef NO_I2C_ROBOT
+	CXXFLAGS += -DNO_I2C_ROBOT
+else
+	WITH_I2C := 1
+endif
+endif
+
 ifdef WITH_I2C
 	ifeq (0,$(shell $(CURRENT_DIR)/is_i2c_tools_new.sh; echo $$?))
 	LINK_FLAGS += -li2c
@@ -113,6 +138,11 @@ ifdef WITH_I2C
 endif
 
 ifdef WITH_EIGEN
-	CXXFLAGS += `pkg-config --cflags eigen3`
+	CXXFLAGS += `pkg-config --cflags eigen3` -fopenmp
 	LINK_FLAGS += -fopenmp
+endif
+
+ifdef WITH_SFML_GRAPHICS
+        CXXFLAGS += `pkg-config --cflags sfml-graphics`
+        LINK_FLAGS += `pkg-config --libs sfml-graphics`
 endif

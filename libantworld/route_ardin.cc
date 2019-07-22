@@ -1,7 +1,8 @@
+#include "common.h"
 #include "route_ardin.h"
 
 // BoB robotics includes
-#include "common.h"
+#include "common/logging.h"
 
 // Standard C++ includes
 #include <fstream>
@@ -132,7 +133,7 @@ void RouteArdin::load(const std::string &filename, bool realign)
     input.seekg(0, std::ios_base::end);
     const auto numPoints = static_cast<size_t>(input.tellg()) / (sizeof(double) * 3);
     input.seekg(0);
-    std::cout << "Route has " << numPoints << " points" << std::endl;
+    LOG_INFO << "Route has " << numPoints << " points";
 
     {
         // Loop through components(X and Y, ignoring heading)
@@ -206,8 +207,8 @@ void RouteArdin::load(const std::string &filename, bool realign)
         }
     }
 
-    std::cout << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")" << std::endl;
-    std::cout << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")" << std::endl;
+    LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")";
+    LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
 
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_WaypointsVAO);

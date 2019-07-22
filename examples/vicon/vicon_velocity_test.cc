@@ -10,6 +10,7 @@
 
 using namespace BoBRobotics::Vicon;
 using namespace std::literals;
+using namespace units::angular_velocity;
 
 int main()
 {
@@ -23,11 +24,18 @@ int main()
     if (!viconCaptureControl.startRecording("test1")) {
         return EXIT_FAILURE;
     }
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < 120; i++) {
         auto objectData = vicon.getObjectData(0);
-        const auto &velocity = objectData.getVelocity();
+        const auto velocity = objectData.getVelocity();
+        const auto angularVelocity = objectData.getAngularVelocity<degrees_per_second_t>();
 
-        std::cout << velocity[0] << ", " << velocity[1] << ", " << velocity[2] << std::endl;
+        std::cout << "("
+                  << velocity[0] << ", " << velocity[1] << ", " << velocity[2]
+                  << ") | ("
+                  << angularVelocity[0] << ", " << angularVelocity[1] << ", " << angularVelocity[2]
+                  << ")" << std::endl;
+
+        std::this_thread::sleep_for(1s);
     }
     if (!viconCaptureControl.stopRecording("test1")) {
         return EXIT_FAILURE;

@@ -1,7 +1,7 @@
 #include "Servo.h"
 #include "Wire.h"
 
-#define SLAVE_ADDRESS 0x29 
+#define SLAVE_ADDRESS 0x29
 
 volatile int movement[2];   // holds data about speed and turning
 volatile bool updateMotors; // ture if we got commands from i2c
@@ -23,7 +23,7 @@ const byte THROTTLE_CONTROL = 11;
 
 
 Servo esc, steering;
- 
+
 void setup() {
 
     // data from remote controller to arduino
@@ -31,13 +31,13 @@ void setup() {
     pinMode(THROTTLE, INPUT);
 
     // setup servos
-    esc.attach(THROTTLE_CONTROL);      //attach esc to pin 
-    steering.attach(STEERING_CONTROL); //attach steering to pin 
+    esc.attach(THROTTLE_CONTROL);      //attach esc to pin
+    steering.attach(STEERING_CONTROL); //attach steering to pin
 
     // if Master sends data -> call receiveEvent()
     Wire.onReceive(receiveEvent);
 }
- 
+
 void loop() {
     // if there is incoming command from the remote controller, we block other controls
     if (checkRemote()) {
@@ -45,14 +45,14 @@ void loop() {
     }
 
     if (updateMotors) {  // if we have incoming input from i2c (and no remote control command)
-        int mappedESC = map(movement[0], 0, 255, MINCONTROL, MAXCONTROL); 
+        int mappedESC = map(movement[0], 0, 255, MINCONTROL, MAXCONTROL);
         esc.writeMicroseconds(mappedESC);
         steering.write(movement[1]);
         updateMotors = false;
         // if remote control is active, we block commands from i2c and listen to the remote controller
     } else {
-        esc.writeMicroseconds(remoteControlSpeed); 
-        if (remoteControlSteering != 0) { 
+        esc.writeMicroseconds(remoteControlSpeed);
+        if (remoteControlSteering != 0) {
             steering.write(remoteControlSteering);
         }
     }
@@ -69,26 +69,26 @@ bool checkRemote() {
 
     // the receiver gives a PWM signal of around 950, when remote controller is not connected
     if (remoteControlSpeed < PWMCONNECTED) {
-        return false; 
+        return false;
     }
-  
+
     // if value is not the neutral value (+- some error), return true
     if (remoteControlSpeed <= NEUTRALVALUE -SPEEDERROR || // allow some error
         remoteControlSpeed >= NEUTRALVALUE +SPEEDERROR|| // allow some error
-        remoteControlSteering <= 90+TURNINGERROR || 
-        remoteControlSteering >= 90-TURNINGERROR ) 
-    {     
+        remoteControlSteering <= 90+TURNINGERROR ||
+        remoteControlSteering >= 90-TURNINGERROR )
+    {
         return true;
-    } 
+    }
     return false;
-  
+
 }
 
 // called when data is sent through i2c to arduino
 // to update the motor values
 void receiveEvent() {
     // check incoming bytes from master
-    uint8_t read_array[2];  
+    uint8_t read_array[2];
     while(Wire.available()) {
         read_array[i] = Wire.read();
     }

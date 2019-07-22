@@ -4,6 +4,8 @@
  * Quit by pressing escape.
  */
 
+// BoB robotics includes
+#include "common/logging.h"
 #include "video/panoramic.h"
 #include "video/display.h"
 

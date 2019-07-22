@@ -1,5 +1,6 @@
 
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/pose.h"
 #include "libantworld/agent.h"
 #include "libantworld/common.h"

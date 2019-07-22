@@ -1,13 +1,17 @@
 var searchData=
 [
   ['antworld',['AntWorld',['../namespaceBoBRobotics_1_1AntWorld.html',1,'BoBRobotics']]],
+  ['backgroundexceptioncatcher',['BackgroundExceptionCatcher',['../classBoBRobotics_1_1BackgroundExceptionCatcher.html',1,'BoBRobotics']]],
   ['badcommanderror',['BadCommandError',['../classBoBRobotics_1_1Net_1_1BadCommandError.html',1,'BoBRobotics::Net']]],
+  ['base',['base',['../structio_1_1error_1_1base.html',1,'io::error']]],
   ['base_5funit',['base_unit',['../structunits_1_1base__unit.html',1,'units']]],
   ['base_5funit_5fof',['base_unit_of',['../namespaceunits_1_1traits.html#ae7756e0f6e8322f5c6150be2b871e544',1,'units::traits']]],
   ['bebop',['Bebop',['../classBoBRobotics_1_1Robots_1_1Bebop.html',1,'BoBRobotics::Robots::Bebop'],['../classBoBRobotics_1_1Robots_1_1Bebop.html#a90cc82bc65ac45f0afff72835dcd9c2c',1,'BoBRobotics::Robots::Bebop::Bebop()']]],
+  ['begin',['begin',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a14ea37742fd1e5cb5ebbcb05deacc58f',1,'BoBRobotics::Navigation::ImageDatabase']]],
   ['bestmatchingsnapshot',['BestMatchingSnapshot',['../structBoBRobotics_1_1Navigation_1_1BestMatchingSnapshot.html',1,'BoBRobotics::Navigation']]],
   ['bobrobotics',['BoBRobotics',['../namespaceBoBRobotics.html',1,'']]],
   ['buttonstate',['ButtonState',['../namespaceBoBRobotics_1_1HID.html#a71b9d0f7acdc0b32f717ada7451fed1d',1,'BoBRobotics::HID']]],
+  ['bytesourcebase',['ByteSourceBase',['../classio_1_1ByteSourceBase.html',1,'io']]],
   ['gennmodels',['GeNNModels',['../namespaceBoBRobotics_1_1GeNNModels.html',1,'BoBRobotics']]],
   ['gennutils',['GeNNUtils',['../namespaceBoBRobotics_1_1GeNNUtils.html',1,'BoBRobotics']]],
   ['hid',['HID',['../namespaceBoBRobotics_1_1HID.html',1,'BoBRobotics']]],
