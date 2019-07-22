@@ -258,7 +258,7 @@ endmacro()
 
 macro(BoB_build)
     # Don't build i2c code if NO_I2C environment variable is set
-    if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (DEFINED ENV{NO_I2C} AND NOT ENV{NO_I2C} EQUAL 0)))
+    if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (NOT "$ENV{NO_I2C}" STREQUAL 0 AND NOT "$ENV{NO_I2C}" STREQUAL "")))
         set(I2C_MESSAGE_DISPLAYED TRUE)
         message("NO_I2C is set: not building i2c code")
         set(NO_I2C TRUE)
