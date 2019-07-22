@@ -1,14 +1,12 @@
 #pragma once
 
-// Standard C++ includes
-#include <fstream>
-
 // BoB robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
-
-// BoB robotics third-party includes
 #include "third_party/units.h"
+
+// Standard C++ includes
+#include <fstream>
 
 // Forward declarations
 class Config;
@@ -35,14 +33,14 @@ public:
     //------------------------------------------------------------------------
     units::angle::degree_t getBestHeading() const{ return m_BestHeading; }
     float getLowestDifference() const{ return m_LowestDifference; }
-    
+
 protected:
     //------------------------------------------------------------------------
     // Protected API
     //------------------------------------------------------------------------
     void setBestHeading(units::angle::degree_t bestHeading){ m_BestHeading = bestHeading; }
     void setLowestDifference(float lowestDifference){ m_LowestDifference = lowestDifference; }
-   
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -64,7 +62,7 @@ public:
     //------------------------------------------------------------------------
     virtual void test(const cv::Mat &snapshot) override;
     virtual void train(const cv::Mat &snapshot) override;
-    
+
     virtual void writeCSVHeader(std::ostream &os);
     virtual void writeCSVLine(std::ostream &os);
 
@@ -73,7 +71,7 @@ public:
     //------------------------------------------------------------------------
     size_t getBestSnapshotIndex() const{ return m_BestSnapshotIndex; }
     const cv::Mat &getBestSnapshot() const{ return getPM().getSnapshot(getBestSnapshotIndex()); }
-    
+
 protected:
     //------------------------------------------------------------------------
     // Protected API
@@ -122,9 +120,9 @@ public:
 
     virtual void test(const cv::Mat &snapshot) override;
     virtual void train(const cv::Mat &snapshot) override;
-    
+
     void saveWeights(const std::string &filename) const;
-    
+
 protected:
     //------------------------------------------------------------------------
     // Protected API
@@ -134,7 +132,7 @@ protected:
 
 private:
     static InfoMaxType createInfoMax(const Config &config, const cv::Size &inputSize);
-    
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
