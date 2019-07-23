@@ -54,9 +54,7 @@ int main()
 #endif  // RECORD_ELECTROPHYS
 
     // Start capture
-    if(!viconCaptureControl.startRecording("test")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("test");
 
     LOGI << "Start VICON frame:" << vicon.getObjectData().getFrameNumber();
 
@@ -169,9 +167,7 @@ int main()
     motor.tank(0.0f, 0.0f);
 
     // Stop capture
-    if(!viconCaptureControl.stopRecording("test")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test");
 
     // Exit
     return EXIT_SUCCESS;

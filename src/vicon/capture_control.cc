@@ -1,7 +1,6 @@
 #ifndef _WIN32
 // BoB robotics includes
-#include "common/macros.h"
-#include "common/logging.h"
+#include "os/net.h"
 #include "vicon/capture_control.h"
 
 // Standard C++ includes
@@ -25,22 +24,20 @@ CaptureControl::CaptureControl() : m_Socket(-1){}
 CaptureControl::CaptureControl(const std::string &hostname, uint16_t port,
                 const std::string &capturePath)
 {
-    if(!connect(hostname, port, capturePath)) {
-        throw std::runtime_error("Cannot connect to to Vicon Tracker");
-    }
+    connect(hostname, port, capturePath);
 }
 
 CaptureControl::~CaptureControl()
 {
-        if(m_Socket >= 0) {
-            close(m_Socket);
-        }
+    if(m_Socket >= 0) {
+        close(m_Socket);
+    }
 }
 
 //----------------------------------------------------------------------------
 // Public API
 //----------------------------------------------------------------------------
-bool CaptureControl::connect(const std::string &hostname, uint16_t port,
+void CaptureControl::connect(const std::string &hostname, uint16_t port,
                 const std::string &capturePath)
 {
     // Stash capture path
@@ -49,8 +46,7 @@ bool CaptureControl::connect(const std::string &hostname, uint16_t port,
     // Create socket
     m_Socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(m_Socket < 0) {
-        LOG_ERROR << "Cannot open socket: " << strerror(errno);
-        return false;
+        throw OS::Net::NetworkError("Cannot open socket");
     }
 
         // Create socket address structure
@@ -63,10 +59,9 @@ bool CaptureControl::connect(const std::string &hostname, uint16_t port,
     // **NOTE** we intentionally cast this to 32-bit as (supposedly)
     // Vicon Tracker struggles with large values...
     m_CapturePacketID = (uint32_t)time(nullptr);
-    return true;
 }
 
-bool CaptureControl::startRecording(const std::string &recordingName)
+void CaptureControl::startRecording(const std::string &recordingName)
 {
     // Create message
     std::stringstream message;
@@ -82,15 +77,11 @@ bool CaptureControl::startRecording(const std::string &recordingName)
     if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
                 reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
     {
-        LOG_ERROR << "Cannot send start message:" << strerror(errno);
-        return false;
-    }
-    else {
-        return true;
+        throw OS::Net::NetworkError("Cannot send start message");
     }
 }
 
-bool CaptureControl::stopRecording(const std::string &recordingName)
+void CaptureControl::stopRecording(const std::string &recordingName)
 {
     // Create message
     std::stringstream message;
@@ -106,14 +97,9 @@ bool CaptureControl::stopRecording(const std::string &recordingName)
     if(::sendto(m_Socket, messageString.c_str(), messageString.length(), 0,
                 reinterpret_cast<sockaddr*>(&m_RemoteAddress), sizeof(sockaddr_in)) < 0)
     {
-        LOG_WARNING << "Cannot send stop message:" << strerror(errno);
-        return false;
-    }
-    else {
-        return true;
+        throw OS::Net::NetworkError("Cannot send start message");
     }
 }
-
 } // Vicon
 } // BoBRobotics
 #endif

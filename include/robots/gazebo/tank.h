@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "tank.h"
+#include "robots/tank.h"
 
 // Third-party includes
 #include "../third_party/units.h"
@@ -17,20 +17,20 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Gazebo {
 using namespace units::literals;
 
-class GazeboTank
-  : public Tank
+class Tank : public Robots::Tank
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
-    GazeboTank(const radians_per_second_t maximumSpeed, gazebo::transport::NodePtr node)
+    Tank(const radians_per_second_t maximumSpeed, gazebo::transport::NodePtr node)
       : m_MaximumSpeed(maximumSpeed)
     {
         // Publish to the  differential_drive_robot topic
-        pub = node->Advertise<gazebo::msgs::Vector3d>("~/differential_drive_robot/vel_cmd");
+        pub = node->Advertise<gazebo::msgs::Vector2d>("~/differential_drive_robot/vel_cmd");
 
         // Wait for a subscriber to connect to this publisher
         pub->WaitForConnection();
@@ -57,6 +57,7 @@ private:
     const radians_per_second_t m_MaximumSpeed;
     gazebo::msgs::Vector2d msg;
     gazebo::transport::PublisherPtr pub;
-}; // GazeboTank
+};// GazeboTank
+} // Gazebo
 } // Robots
 } // BoBRobotics

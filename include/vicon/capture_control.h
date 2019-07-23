@@ -1,8 +1,5 @@
 #pragma once
 
-// BoB robotics includes
-#include "os/net.h"
-
 // Standard C++ includes
 #include <string>
 
@@ -31,13 +28,13 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    bool connect(const std::string &hostname,
+    void connect(const std::string &hostname,
                  uint16_t port,
                  const std::string &capturePath);
 
-    bool startRecording(const std::string &recordingName);
+    void startRecording(const std::string &recordingName);
 
-    bool stopRecording(const std::string &recordingName);
+    void stopRecording(const std::string &recordingName);
 
 private:
     //----------------------------------------------------------------------------

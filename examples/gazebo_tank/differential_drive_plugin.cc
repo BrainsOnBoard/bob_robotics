@@ -54,7 +54,7 @@ public:
         // Create the m_Node
         m_Node = transport::NodePtr(new transport::Node());
 #if GAZEBO_MAJOR_VERSION < 8
-        m_Node->Init(model->GetWorld()->GetName());
+        m_Node->Init(m_Model->GetWorld()->GetName());
 #else
         m_Node->Init(m_Model->GetWorld()->Name());
 #endif
@@ -81,7 +81,7 @@ private:
     /// \brief Handle incoming message
     /// \param[in] _msg Repurpose a vector3 message. This function will
     /// only use the x component.
-    void OnMsg(ConstVector3dPtr &_msg)
+    void OnMsg(ConstVector2dPtr &_msg)
     {
         SetVelocity(_msg->x(), _msg->y());
     }

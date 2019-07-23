@@ -258,7 +258,7 @@ endmacro()
 
 macro(BoB_build)
     # Don't build i2c code if NO_I2C environment variable is set
-    if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (DEFINED ENV{NO_I2C} AND NOT ENV{NO_I2C} EQUAL 0)))
+    if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (NOT "$ENV{NO_I2C}" STREQUAL 0 AND NOT "$ENV{NO_I2C}" STREQUAL "")))
         set(I2C_MESSAGE_DISPLAYED TRUE)
         message("NO_I2C is set: not building i2c code")
         set(NO_I2C TRUE)
@@ -543,6 +543,16 @@ function(BoB_external_libraries)
                 link_directories(${GAZEBO_LIBRARY_DIRS})
                 add_compile_flags(${GAZEBO_CXX_FLAGS})
             endif()
+        elseif(${lib} STREQUAL spineml_simulation)
+            # Find where user has installed GeNN
+            exec_or_fail("${BOB_ROBOTICS_PATH}/cmake/find_genn.sh")
+            string(STRIP "${SHELL_OUTPUT}" GENN_PATH) # Strip newline
+            message("GENN_PATH: ${GENN_PATH}")
+
+            BoB_add_include_directories("${GENN_PATH}/include")
+            BoB_add_link_libraries("${GENN_PATH}/lib/libspineml_simulator.a"
+                                   "${GENN_PATH}/lib/libspineml_common.a"
+                                   dl)
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
@@ -567,8 +577,16 @@ function(BoB_third_party)
             if(WIN32)
                 add_definitions(-DWITHOUT_NUMPY)
             else()
-                exec_or_fail("python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py")
-                BoB_add_include_directories(${SHELL_OUTPUT})
+                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
+                                RESULT_VARIABLE rv
+                                OUTPUT_VARIABLE numpy_include_path)
+
+                # If we have numpy then use it, otherwise matplotlibcpp will work without it
+                if(${rv} EQUAL 0)
+                    BoB_add_include_directories(${numpy_include_path})
+                else()
+                    add_definitions(-DWITHOUT_NUMPY)
+                endif()
             endif()
         else()
             # Extra actions

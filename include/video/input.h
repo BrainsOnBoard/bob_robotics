@@ -36,13 +36,6 @@ public:
      */
     virtual std::string getCameraName() const;
 
-    /*!
-     * \brief Try to read a frame in greyscale from this video source
-     *
-     * @return Whether a new frame was read
-     */
-    virtual bool readGreyscaleFrame(cv::Mat &outFrame);
-
     //! Whether this video source needs unwrapping with an ImgProc::OpenCVUnwrap360
     virtual bool needsUnwrapping() const;
 
@@ -55,9 +48,20 @@ public:
     /*!
      * \brief Try to read a frame in colour from this video source
      *
+     * The output frame should have type CV_8UC3.
+     *
      * @return Whether a new frame was read
      */
     virtual bool readFrame(cv::Mat &outFrame) = 0;
+
+    /*!
+     * \brief Try to read a frame in greyscale from this video source
+     *
+     * The output frame should have type CV_8UC.
+     *
+     * @return Whether a new frame was read
+     */
+    virtual bool readGreyscaleFrame(cv::Mat &outFrame);
 
     //! Read a frame synchronously, blocking until a new frame is received
     void readFrameSync(cv::Mat &outFrame);
