@@ -32,8 +32,8 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void bind() const;
-    void unbind() const;
+    void bind(bool bindTexture = true) const;
+    void unbind(bool unbindTexture = true) const;
     void render(GLenum primitive = GL_TRIANGLES) const;
 
     void uploadPositions(const std::vector<GLfloat> &positions);

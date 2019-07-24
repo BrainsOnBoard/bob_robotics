@@ -78,7 +78,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     World m_World;
-    RenderMesh m_RenderMesh;
+    RenderMeshCylinder m_RenderMesh;
 
     GLuint m_CubemapTexture;
     GLuint m_FBO;

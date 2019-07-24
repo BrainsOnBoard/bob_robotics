@@ -1,5 +1,6 @@
 #include "surface.h"
 
+#include <cassert>
 // Libantworld includes
 #include "common.h"
 #include "texture.h"
@@ -40,32 +41,30 @@ Surface::~Surface()
     glDeleteVertexArrays(1, &m_VAO);
 }
 //----------------------------------------------------------------------------
-void Surface::bind() const
+void Surface::bind(bool bindTexture) const
 {
     // Bind world VAO
     glBindVertexArray(m_VAO);
 
     // If surface has a texture, bind it
-    if(m_Texture != nullptr) {
-        glEnable(GL_TEXTURE_2D);
-        m_Texture->bind();
-    }
-    // Otherwise make sure no textures are bound
-    else {
-        glBindTexture(GL_TEXTURE_2D, 0);
+    if(bindTexture) {
+        if(m_Texture != nullptr) {
+            glEnable(GL_TEXTURE_2D);
+            m_Texture->bind();
+        }
+        // Otherwise make sure no textures are bound
+        else {
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
     }
 }
 //----------------------------------------------------------------------------
-void Surface::unbind() const
+void Surface::unbind(bool unbindTexture) const
 {
     // If surface has a texture, bind it
-    if(m_Texture != nullptr) {
+    if(unbindTexture && m_Texture != nullptr) {
         glDisable(GL_TEXTURE_2D);
         m_Texture->unbind();
-    }
-    
-    if(m_IBO != 0) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     // Unbind vertex array
@@ -164,10 +163,10 @@ void Surface::uploadIndices(const std::vector<GLuint> &indices)
     
     // Bind and upload index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);// Unbind buffer
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
     
     // Unbind buffer
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
