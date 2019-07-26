@@ -2,6 +2,9 @@
 #include "common/macros.h"
 #include "robots/ackermann.h"
 
+// Standard C includes
+#include <cmath>
+
 namespace BoBRobotics {
 namespace Robots {
 Ackermann::~Ackermann()
@@ -10,7 +13,10 @@ Ackermann::~Ackermann()
 void
 Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
 {
-    joystick.addHandler([this](HID::JAxis axis, float value) {
+    joystick.addHandler([this, deadZone](HID::JAxis axis, float value) {
+        if (fabs(value) <= deadZone) {
+            value = 0.f;
+        }
         if (axis == HID::JAxis::LeftStickVertical) {
             moveForward(-value);
             return true;
