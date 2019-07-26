@@ -22,7 +22,9 @@ class Render;
 class RenderMesh
 {
 public:
-    virtual ~RenderMesh();
+    virtual ~RenderMesh()
+    {
+    }
 
     //------------------------------------------------------------------------
     // Public API
@@ -30,7 +32,7 @@ public:
     void render() const;
 
 protected:
-    RenderMesh() : m_NumIndices(0), m_IBO(0)
+    RenderMesh()
     {
     }
 
