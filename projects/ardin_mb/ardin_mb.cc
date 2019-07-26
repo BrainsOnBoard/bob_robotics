@@ -1,23 +1,8 @@
-// Standard C++ includes
-#include <bitset>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <random>
-#include <string>
-#include <tuple>
-#include <vector>
-
-// Standard C includes
-#include <cmath>
-
-// OpenGL includes
-#include <GL/glew.h>
-
-// GLFW
-#include <GLFW/glfw3.h>
+// This is the main file, so we do want header definitions for this object
+#undef NO_HEADER_DEFINITIONS
 
 // BoB Robotics includes
+#include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
@@ -26,6 +11,24 @@
 #include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
+
+// OpenGL includes
+#include <GL/glew.h>
+
+// GLFW
+#include <GLFW/glfw3.h>
+
+// Standard C++ includes
+#include <bitset>
+#include <fstream>
+#include <limits>
+#include <random>
+#include <string>
+#include <tuple>
+#include <vector>
+
+// Standard C includes
+#include <cmath>
 
 using namespace BoBRobotics;
 
@@ -93,7 +96,7 @@ void keyCallback(GLFWwindow *window, int key, int, int action, int)
 //----------------------------------------------------------------------------
 void handleGLFWError(int errorNumber, const char *message)
 {
-    std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
+    LOGE << "GLFW error number: " << errorNumber << ", message:" << message;
 }
 }   // anonymous namespace
 
@@ -147,7 +150,7 @@ int main(int argc, char *argv[])
     MBMemory memory;
 
     // Create state machine and set it as window user pointer
-    const std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
+    const std::string worldFilename = std::string(bobRoboticsPath) + "/resources/antworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     StateHandler stateHandler(worldFilename, routeFilename, memory);
     glfwSetWindowUserPointer(window, &stateHandler);

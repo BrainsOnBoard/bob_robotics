@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/assert.h"
+#include "common/macros.h"
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
 

@@ -2,7 +2,7 @@
 #include "common/logging.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
@@ -42,7 +42,7 @@ int main()
     auto unwrapper = cam.createUnwrapper(unwrapSize);
 
     // Create motor interface
-    Norbot motor;
+    TANK_TYPE motor;
 
     cv::Mat output;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
@@ -54,12 +54,6 @@ int main()
     // Create Vicon capture control interface
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
                                               "c:\\users\\ad374\\Desktop");
-
-    // Wait for tracking
-    while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
 
     // Start capture
     viconCaptureControl.startRecording("camera_recorder");
@@ -90,7 +84,7 @@ int main()
 
 #ifdef VICON_CAPTURE
             // Get tracking data
-            auto objectData = vicon.getObjectData(0);
+            auto objectData = vicon.getObjectData();
             const auto &position = objectData.getPosition<>();
             const auto &attitude = objectData.getAttitude<>();
 

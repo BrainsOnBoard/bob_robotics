@@ -1,0 +1,12 @@
+[Unit]
+Description=Server for controlling tank robot remotely
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+User=%i
+ExecStart=/home/%i/tank_control
+
+[Install]
+WantedBy=multi-user.target

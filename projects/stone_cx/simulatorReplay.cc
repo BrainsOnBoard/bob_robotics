@@ -1,6 +1,6 @@
+// **TODO**: This currently doesn't compile. It needs converting to GeNN 4.
 // Standard C++ includes
 #include <fstream>
-#include <iostream>
 #include <numeric>
 #include <random>
 #include <sstream>
@@ -14,6 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
+#include "common/logging.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
 // GeNN generated code includes
@@ -21,7 +22,6 @@
 
 // Model includes
 #include "parameters.h"
-#include "simulatorCommon.h"
 #include "visualizationCommon.h"
 
 using namespace BoBRobotics;
@@ -43,13 +43,13 @@ int main()
     const unsigned int pathImageSize = 1000;
     const unsigned int activityImageWidth = 500;
     const unsigned int activityImageHeight = 1000;
-    
+
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
-    
+
     const double agentDrag = 0.15;
 
     const double agentM = 0.5;
-    
+
     allocateMem();
     initialize();
 
@@ -154,7 +154,7 @@ int main()
             if(replayData.eof()) {
                 xVelocity = 0.0;
                 yVelocity = 0.0;
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
             }
         }
         // Otherwise we're path integrating home

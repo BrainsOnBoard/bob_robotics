@@ -37,10 +37,5 @@ private:
     //------------------------------------------------------------------------
     const bool m_NormaliseInput;
 
-#ifdef CPU_ONLY
     mutable cv::Mat m_SnapshotFloat;
-#else
-    mutable cv::cuda::GpuMat m_SnapshotGPU;
-    mutable cv::cuda::GpuMat m_SnapshotFloatGPU;
-#endif
 };

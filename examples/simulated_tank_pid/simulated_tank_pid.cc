@@ -1,17 +1,17 @@
 // BoB robotics includes
-#include "robots/tank_pid.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "common/pose.h"
-#include "common/sfml_world.h"
 #include "hid/joystick.h"
+#include "robots/control/tank_pid.h"
 #include "robots/simulated_tank.h"
+#include "viz/sfml_world/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -22,9 +22,9 @@ using namespace units::length;
 int
 bob_main(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    SFMLWorld<> display;                            // For displaying the agent
-    Robots::TankPID pid(robot, .1f, .1f, .1f);      // PID controller
+    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
+    Viz::SFMLWorld display;                                        // For displaying the agent
+    auto pid = Robots::createTankPID(robot, robot, .1f, .1f, .1f); // PID controller
     auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);
@@ -44,10 +44,10 @@ bob_main(int, char **)
         case HID::JButton::Y: // Toggle PID control
             pidRunning = !pidRunning;
             if (pidRunning) {
-                std::cout << "PID control started" << std::endl;
-                pid.start(goal);
+                LOGI << "PID control started";
+                pid.moveTo(goal);
             } else {
-                std::cout << "PID control stopped" << std::endl;
+                LOGI << "PID control stopped";
                 robot.stopMoving();
             }
             return true;
@@ -56,26 +56,22 @@ bob_main(int, char **)
         }
     });
 
-    std::cout << "Drive the car using the two thumbsticks: each stick is for one motor" << std::endl;
+    LOGI << "Drive the car using the two thumbsticks: each stick is for one motor";
 
     do {
-        const auto robotPose = robot.getPose();
-
-        // Refresh display
-        car.setPose(robotPose);
-        display.update(car);
-
-        // Run PID controller
-        if (pidRunning && pid.driveRobot(robotPose)) {
-            // Stop PID if we're at goal
-            pidRunning = false;
-        }
 
         // Check for joystick events
         joystick.update();
 
-        // A small delay so we don't hog CPU
-        std::this_thread::sleep_for(5ms);
+        // Refresh display
+        car.setPose(robot.getPose());
+        display.update(car);
+
+        // Run PID controller
+        if (pidRunning && !pid.pollPositioner()) {
+            // Stop PID if we're at goal
+            pidRunning = false;
+        }
     } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;

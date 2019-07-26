@@ -4,6 +4,7 @@
 #include <cmath>
 
 // BoBRobotics includes
+#include "common/logging.h"
 #include "navigation/visual_navigation_base.h"
 
 // Ardin MB includes
@@ -87,7 +88,7 @@ bool StateHandler::handleEvent(State state, Event event)
     // If we're in training state
     if(state == State::Training) {
         if(event == Event::Enter) {
-            std::cout << "Starting training" << std::endl;
+            LOGI << "Starting training";
             m_TrainPoint = 0;
 
             resetAntPosition();
@@ -113,7 +114,7 @@ bool StateHandler::handleEvent(State state, Event event)
             }
             // Otherwise, if we've reached end of route
             else {
-                std::cout << "Training complete (" << m_Route.size() << " snapshots)" << std::endl;
+                LOGI << "Training complete (" << m_Route.size() << " snapshots)";
 
 
                 m_StateMachine.transition(State::Testing);
@@ -147,7 +148,7 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_BestTestHeading = m_Pose.yaw();
                 m_LowestTestDifference = difference;
 
-                //std::cout << "\tUpdated result: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
+                //LOGI << "\tUpdated result: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference";
             }
 
             // Go onto next scan
@@ -159,7 +160,7 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_Pose.yaw() += SimParams::scanStep;
             }
             else {
-                std::cout << "Scan complete: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
+                LOGI << "Scan complete: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference";
 
                 // Snap ant to it's best heading
                 m_Pose.yaw() = m_BestTestHeading;
@@ -238,7 +239,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
             }
             if(m_KeyBits.test(KeyTestSnapshot)) {
-                std::cout << "Difference: " << m_VisualNavigation.test(m_Snapshot) << std::endl;
+                LOGI << "Difference: " << m_VisualNavigation.test(m_Snapshot);
             }
             if(m_KeyBits.test(KeySaveSnapshot)) {
                 cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());
@@ -302,7 +303,7 @@ bool StateHandler::checkAntPosition()
 {
     // If we've reached destination
     if(m_Route.atDestination(m_Pose.x(), m_Pose.y(), SimParams::errorDistance)) {
-        std::cerr << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors" << std::endl;
+        LOGW << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors";
 
         // Add final point to route
         m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
@@ -312,7 +313,7 @@ bool StateHandler::checkAntPosition()
     }
     // Otherwise, if we've
     else if(m_NumTestSteps >= SimParams::testStepLimit) {
-        std::cerr << "Failed to find destination after " << m_NumTestSteps << " steps and " << m_NumTestErrors << " errors" << std::endl;
+        LOGW << "Failed to find destination after " << m_NumTestSteps << " steps and " << m_NumTestErrors << " errors";
 
         // Stop
         return false;
@@ -323,7 +324,7 @@ bool StateHandler::checkAntPosition()
         meter_t distanceToRoute;
         size_t nearestRouteWaypoint;
         std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose.x(), m_Pose.y());
-        std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
+        LOGI << "\tDistance to route: " << distanceToRoute * 100.0f << "cm";
 
         // If we are further away than error threshold
         if(distanceToRoute > SimParams::errorDistance) {

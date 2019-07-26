@@ -1,15 +1,12 @@
 #include "read_data.h"
 
-// Standard C includes
-#include <cstdint>
+// BoB robotics includes
+#include "common/logging.h"
+#define EXPOSE_INFOMAX_INTERNALS
+#include "navigation/infomax.h"
 
-// Standard C++ includes
-#include <array>
-#include <fstream>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <utility>
+// Third-party includes
+#include "third_party/path.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -17,12 +14,15 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// BoB robotics includes
-#define EXPOSE_INFOMAX_INTERNALS
-#include "navigation/infomax.h"
+// Standard C includes
+#include <cstdint>
 
-// Third-party includes
-#include "third_party/path.h"
+// Standard C++ includes
+#include <array>
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 using namespace std::literals;
 using namespace Eigen;
@@ -34,7 +34,7 @@ runTest(const filesystem::path &dataPath, int num)
     const int manyRuns = 100;
 
     const auto snum = std::to_string(num);
-    std::cout << "==== Running test " << snum << " ====" << std::endl;
+    LOGI << "==== Running test " << snum << " ====";
 
     // Load matrices of weights
     const auto pref = "test"s + snum + "_"s;
@@ -58,31 +58,31 @@ runTest(const filesystem::path &dataPath, int num)
     std::tie(u, y) = infomax.getUY();
     infomax.trainUY();
 
-    std::cout << "Weights before training: " << std::endl
-              << initWeights << std::endl
-              << std::endl;
+    LOGI << "Weights before training: "
+              << initWeights
+             ;
 
-    std::cout << "Image: " << std::endl
-              << imageMatrix.cast<int>() << std::endl
-              << std::endl;
+    LOGI << "Image: "
+              << imageMatrix.cast<int>()
+             ;
 
-    std::cout << "U: " << u << std::endl << std::endl;
-    std::cout << "Y: " << y << std::endl << std::endl;
+    LOGI << "U: " << u;
+    LOGI << "Y: " << y;
 
     const auto &weights = infomax.getWeights();
-    std::cout << "Weights after training: " << std::endl
-              << weights << std::endl
-              << std::endl;
+    LOGI << "Weights after training: "
+              << weights
+             ;
 
-    std::cout << "Diff U: " << std::endl << matlabU - u << std::endl << std::endl;
-    std::cout << "Diff Y: " << std::endl << matlabY - y << std::endl << std::endl;
-    std::cout << "Diff weights: " << matlabOutputWeights - weights << std::endl << std::endl;
+    LOGI << "Diff U: " << matlabU - u;
+    LOGI << "Diff Y: " << matlabY - y;
+    LOGI << "Diff weights: " << matlabOutputWeights - weights;
 
     for (int i = 1; i < manyRuns; i++) {
         infomax.train(image);
     }
-    std::cout << "Diff weights (" << manyRuns << " runs): "
-              << matlabOutputWeightsMany - infomax.getWeights() << std::endl << std::endl;
+    LOGI << "Diff weights (" << manyRuns << " runs): "
+              << matlabOutputWeightsMany - infomax.getWeights();
 }
 
 int
