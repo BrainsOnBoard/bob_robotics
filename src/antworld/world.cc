@@ -97,9 +97,8 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-std::vector<GLfloat> World::load(const filesystem::path &filename,
-                                 const GLfloat (&worldColour)[3],
-                                 const GLfloat (&groundColour)[3])
+void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[3],
+                 const GLfloat (&groundColour)[3])
 {
     // Create single surface
     m_Surfaces.clear();
@@ -121,9 +120,10 @@ std::vector<GLfloat> World::load(const filesystem::path &filename,
     // Bind surface vertex array
     surface.bind();
 
-    // Reserve 3 XYZ positions for each triangle and 6 for the ground
-    std::vector<GLfloat> positions((6 + (numTriangles * 3)) * 3);
     {
+        // Reserve 3 XYZ positions for each triangle and 6 for the ground
+        std::vector<GLfloat> positions((6 + (numTriangles * 3)) * 3);
+
         // Initialise bounds to limits of underlying data types
         std::fill_n(&m_MinBound[0], 3, std::numeric_limits<meter_t>::max());
         std::fill_n(&m_MaxBound[0], 3, std::numeric_limits<meter_t>::min());
@@ -165,6 +165,7 @@ std::vector<GLfloat> World::load(const filesystem::path &filename,
         LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ", " << m_MinBound[2] << ")";
         LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ", " << m_MaxBound[2] << ")";
     }
+
     {
         // Reserve 3 RGB colours for each triangle and for the ground
         std::vector<GLfloat> colours((6 + (numTriangles * 3)) * 3);
@@ -198,8 +199,6 @@ std::vector<GLfloat> World::load(const filesystem::path &filename,
 
     // Unbind surface
     surface.unbind();
-
-    return positions;
 }
 //----------------------------------------------------------------------------
 void World::loadObj(const filesystem::path &filename, float scale, int maxTextureSize, GLint textureFormat)
