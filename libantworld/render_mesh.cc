@@ -16,12 +16,6 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-RenderMesh::~RenderMesh()
-{
-    // Delete render mesh objects
-    glDeleteBuffers(1, &m_IBO);
-}
-//----------------------------------------------------------------------------
 void RenderMesh::render() const
 {
     // Bind surface, leaving texture binding alone
@@ -102,7 +96,7 @@ RenderMeshCylinder::RenderMeshCylinder(degree_t horizontalFOV, degree_t vertical
     {
         // Reserce indices for quads required to draw mesh
         std::vector<GLuint> indices;
-        indices.reserve(m_NumIndices);
+        indices.reserve(numHorizontalSegments * numVerticalSegments * 4);
 
         // Loop through quads
         for(unsigned int y = 0; y < numVerticalSegments; y++) {
