@@ -37,34 +37,41 @@ Surface::~Surface()
     glDeleteVertexArrays(1, &m_VAO);
 }
 //----------------------------------------------------------------------------
-void Surface::bind(bool bindTexture) const
+void Surface::bind() const
 {
     // Bind world VAO
     glBindVertexArray(m_VAO);
+}
+//----------------------------------------------------------------------------
+void Surface::unbind() const
+{
+    // Unbind vertex array
+    glBindVertexArray(0);
+}
+//----------------------------------------------------------------------------
+void Surface::bindTextured() const
+{
+    bind();
 
-    // If surface has a texture, bind it
-    if(bindTexture) {
-        if(m_Texture != nullptr) {
-            glEnable(GL_TEXTURE_2D);
-            m_Texture->bind();
-        }
-        // Otherwise make sure no textures are bound
-        else {
-            glBindTexture(GL_TEXTURE_2D, 0);
-        }
+    if(m_Texture != nullptr) {
+        glEnable(GL_TEXTURE_2D);
+        m_Texture->bind();
+    }
+    // Otherwise make sure no textures are bound
+    else {
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
 //----------------------------------------------------------------------------
-void Surface::unbind(bool unbindTexture) const
+void Surface::unbindTextured() const
 {
-    // If surface has a texture, bind it
-    if(unbindTexture && m_Texture != nullptr) {
+    unbind();
+
+    // If surface has a texture, unbind it
+    if(m_Texture != nullptr) {
         glDisable(GL_TEXTURE_2D);
         m_Texture->unbind();
     }
-
-    // Unbind vertex array
-    glBindVertexArray(0);
 }
 //----------------------------------------------------------------------------
 void Surface::unbindIndices() const

@@ -36,8 +36,12 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void bind(bool bindTexture = true) const;
-    void unbind(bool unbindTexture = true) const;
+    void bind() const;
+    void unbind() const;
+
+    void bindTextured() const;
+    void unbindTextured() const;
+
     void unbindIndices() const;
     void render(GLenum primitive = GL_TRIANGLES, GLenum indexType = GL_UNSIGNED_INT) const;
 

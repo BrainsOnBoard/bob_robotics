@@ -379,9 +379,9 @@ void World::render() const
 {
     // Bind and render each material
     for(auto &surf : m_Surfaces) {
-        surf.bind();
+        surf.bindTextured();
         surf.render();
-        surf.unbind();
+        surf.unbindTextured();
     }
 }
 //----------------------------------------------------------------------------

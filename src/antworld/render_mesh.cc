@@ -17,14 +17,14 @@ namespace AntWorld
 {
 void RenderMesh::render() const
 {
-    // Bind surface, leaving texture binding alone
-    m_Surface.bind(false);
+    // Bind surface
+    m_Surface.bind();
 
     // Render surface
     m_Surface.render(GL_QUADS);
 
-    // Unbind surface, leaving texture binding alone
-    m_Surface.unbind(false);
+    // Unbind surface
+    m_Surface.unbind();
 }
 
 //----------------------------------------------------------------------------
