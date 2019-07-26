@@ -299,6 +299,16 @@ macro(BoB_build)
         # Enable warnings and set architecture
         add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
 
+        # I'm getting warnings based for code in the Eigen headers, so let's
+        # just disable it. I tried setting this flag only when we're actually
+        # using Eigen, but that didn't seem to work, and it seems pretty
+        # harmless, so it's probably fine to just disable it globally.
+        #          - AD
+        #
+        # Eigen version: 3.3.7
+        # gcc version:   9.1.0
+        add_compile_flags(-Wno-deprecated-copy)
+
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
