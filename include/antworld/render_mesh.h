@@ -18,7 +18,7 @@ class Render;
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMesh
 //----------------------------------------------------------------------------
-//! Class for generating piece of curved geometry used for rendering cubemap to screen
+//! Class for generating geometry on which to render cubemap to screen
 class RenderMesh
 {
 public:
@@ -46,14 +46,15 @@ private:
 };
 
 //----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RenderMeshCylinder
+// BoBRobotics::AntWorld::RenderMeshSpherical
 //----------------------------------------------------------------------------
-//! Class for generating piece of curved geometry used for rendering cubemap to screen
-class RenderMeshCylinder : public RenderMesh
+//! Class for sampling cubemap across a range of spherical coordiates defined by horizontal and vertical FOV,
+//! converting these to cartesian coordinates and rendering them to grid with desired number of horizontal and vertical segments
+class RenderMeshSpherical : public RenderMesh
 {
 public:
-    RenderMeshCylinder(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
-                       unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
+    RenderMeshSpherical(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
+                        unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

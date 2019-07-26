@@ -28,10 +28,10 @@ void RenderMesh::render() const
 }
 
 //----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RenderMeshCylinder
+// BoBRobotics::AntWorld::RenderMeshSpherical
 //----------------------------------------------------------------------------
-RenderMeshCylinder::RenderMeshCylinder(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
-                                       unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
+RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
+                                         unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
 {
     // We need a vertical for each segment and one extra
     const unsigned int numHorizontalVerts = numHorizontalSegments + 1;
