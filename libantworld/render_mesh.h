@@ -22,9 +22,7 @@ class Render;
 class RenderMesh
 {
 public:
-    virtual ~RenderMesh()
-    {
-    }
+    virtual ~RenderMesh();
 
     //------------------------------------------------------------------------
     // Public API
@@ -32,12 +30,12 @@ public:
     void render() const;
 
 protected:
-    RenderMesh()
+    RenderMesh() : m_NumIndices(0), m_IBO(0)
     {
     }
 
     Surface &getSurface(){ return m_Surface; }
-    
+
 private:
     //-----------------------------------------------------------------------
     // Members
@@ -56,4 +54,4 @@ public:
                        unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
 };
 }   // namespace AntWorld
-}   // namespace oBRobotics
+}   // namespace BoBRobotics

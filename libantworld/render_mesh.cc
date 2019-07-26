@@ -16,14 +16,20 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+RenderMesh::~RenderMesh()
+{
+    // Delete render mesh objects
+    glDeleteBuffers(1, &m_IBO);
+}
+//----------------------------------------------------------------------------
 void RenderMesh::render() const
 {
     // Bind surface, leaving texture binding alone
     m_Surface.bind(false);
-    
+
     // Render surface
     m_Surface.render(GL_QUADS);
-    
+
     // Unbind surface, leaving texture binding alone
     m_Surface.unbind(false);
 }
@@ -49,7 +55,7 @@ RenderMeshCylinder::RenderMeshCylinder(degree_t horizontalFOV, degree_t vertical
         std::vector<GLfloat> positions;
         std::vector<GLfloat> textureCoords;
         positions.reserve(numVertices * 2);
-        textureCoords.reserve(numVertices * 2);
+        textureCoords.reserve(numVertices * 3);
 
         const float segmentWidth = 1.0f / (float)numHorizontalSegments;
         const degree_t startLatitude = -horizontalFOV / 2.0;
@@ -89,14 +95,14 @@ RenderMeshCylinder::RenderMeshCylinder(degree_t horizontalFOV, degree_t vertical
         }
 
         // Upload positions and texture coordinates
-        getSurface().uploadPositions(positions);
-        getSurface().uploadTexCoords(textureCoords);
+        getSurface().uploadPositions(positions, 2);
+        getSurface().uploadTexCoords(textureCoords, 3);
     }
 
     {
         // Reserce indices for quads required to draw mesh
         std::vector<GLuint> indices;
-        indices.reserve(numHorizontalSegments * numVerticalSegments * 4);
+        indices.reserve(m_NumIndices);
 
         // Loop through quads
         for(unsigned int y = 0; y < numVerticalSegments; y++) {
@@ -108,12 +114,16 @@ RenderMeshCylinder::RenderMeshCylinder(degree_t horizontalFOV, degree_t vertical
             }
         }
 
-        // Upload indices
+        // Upload indices to surface
         getSurface().uploadIndices(indices);
     }
 
     // Unbind surface
     getSurface().unbind();
+
+    // Unbind indices
+    getSurface().unbindIndices();
 }
+
 }   // namespace AntWorld
 }   // namespace BoBRobotics
