@@ -7,7 +7,6 @@ namespace Robots {
 Ackermann::~Ackermann()
 {}
 
-#ifdef USE_BOB_HID
 void
 Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
 {
@@ -23,7 +22,6 @@ Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
         }
     });
 }
-#endif
 
 BOB_NOT_IMPLEMENTED(
     void
