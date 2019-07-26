@@ -8,7 +8,7 @@
 #include "third_party/units.h"
 
 // Lib antworld includes
-#include "surface.h"
+#include "antworld/surface.h"
 
 namespace BoBRobotics
 {

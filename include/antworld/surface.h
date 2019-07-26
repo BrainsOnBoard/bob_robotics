@@ -7,8 +7,8 @@
 #include <GL/glew.h>
 
 // Libantworld includes
-#include "common.h"
-#include "opengl_type_traits.h"
+#include "antworld/common.h"
+#include "antworld/opengl_type_traits.h"
 
 // Forward declarations
 namespace BoBRobotics

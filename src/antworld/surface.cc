@@ -1,7 +1,5 @@
-#include "surface.h"
-
-// Libantworld includes
-#include "texture.h"
+#include "antworld/surface.h"
+#include "antworld/texture.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorlds::Surfaces
