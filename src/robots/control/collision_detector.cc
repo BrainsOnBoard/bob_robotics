@@ -17,6 +17,14 @@ CollisionDetector::getRobotVertices() const
 }
 
 bool
+CollisionDetector::collisionOccurred()
+{
+    // We don't care about the position, so don't do anything with it
+    Vector2<meter_t> pos;
+    return collisionOccurred(pos);
+}
+
+bool
 CollisionDetector::collisionOccurred(Vector2<meter_t> &firstCollisionPosition)
 {
     // Clear this value
