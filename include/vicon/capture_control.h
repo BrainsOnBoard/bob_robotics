@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "os/net.h"
+
 // Standard C++ includes
 #include <string>
 

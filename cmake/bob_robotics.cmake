@@ -299,6 +299,16 @@ macro(BoB_build)
         # Enable warnings and set architecture
         add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
 
+        # Gcc has an annoying feature where you can mark functions with
+        # __attribute__((warn_unused_result)) and then the calling code *has*
+        # to do something with the result and can't ignore it; hacks such as
+        # (void) annoyingFunction() don't work either. We're mostly
+        # seeing this warning for calls to std::system() (in our code and third-
+        # party code), but in those cases we generally really don't care about
+        # the return value. So let's just disable it globally to save faffing
+        # around.
+        add_compile_flags(-Wno-used-result)
+
         # I'm getting warnings based for code in the Eigen headers, so let's
         # just disable it. I tried setting this flag only when we're actually
         # using Eigen, but that didn't seem to work, and it seems pretty
