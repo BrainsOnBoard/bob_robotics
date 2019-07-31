@@ -259,7 +259,6 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     // set pid initial command
     this->thrustPID.SetCmd(0);
-    // this->altitudeReference = 3.0; 
 
     sdf::ElementPtr loiterSDF = _sdf->GetElement("loiter");
     getSdfParam<double>(loiterSDF, "p_gain", param, 0);
@@ -300,7 +299,11 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     this->rollPID.SetCmd(0);
     this->pitchPID.SetCmd(0);
     this->yawPID.SetCmd(0);
-
+    
+    char* logfile_location=std::getenv("LOG_FILE");
+    if(logfile_location!=NULL){
+        this->logfile.open(logfile_location, std::ios_base::app);
+    }
 }
 
 /////////////////////////////////////////////////
@@ -308,63 +311,50 @@ void
 GazeboQuadCopterPlugin::OnMsg(ConstQuaternionPtr &_msg)
 {
     std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
-
-    // gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
     this->dataPtr->m_Thrust = _msg->w();
     this->dataPtr->m_Roll = _msg->x();
     this->dataPtr->m_Pitch = _msg->y();
     this->dataPtr->m_Yaw = _msg->z();
-    // std::cerr<<"receiving command"<<std::endl;
 }
 void 
 GazeboQuadCopterPlugin::MotorMixing(const double _dt)
 {
-    float thrust, roll, pitch, yaw;
-    float fr, fl, br, bl;
-    double x, y, z;
-    ignition::math::Vector3<double> actualPose, referencePose;
-    actualPose = this->dataPtr->model->WorldPose().Pos();
-    referencePose = this->loiterReference.Pos();
-    x = actualPose.X(); // x coordinate
-    y = actualPose.Y(); // y coordinate
-    z = actualPose.Z(); // z coordinate
-    
+    float thrust=0, roll=0, pitch=0, yaw=0;
+    float fr=0, fl=0, br=0, bl=0;
+    double z, r, p;
+    // ignition::math::Vector3<double> actualPose, referencePose;
+    ignition::math::Pose3d actualPose, referencePose;
+    actualPose = this->dataPtr->model->WorldPose();
+    referencePose = this->loiterReference;
+    z = actualPose.Pos().Z();
+    r = actualPose.Rot().Roll();
+    p = actualPose.Rot().Pitch();
+    //thrust
     if(0.49 < this->dataPtr->m_Thrust && this->dataPtr->m_Thrust < 0.51 ){
-        thrust = this->thrustPID.Update(z - referencePose.Z(), _dt);
+        thrust = this->thrustPID.Update(z - referencePose.Pos().Z(), _dt);
     }
     else{
         thrust = this->dataPtr->m_Thrust;
-        this->loiterReference.Set(referencePose.X(), referencePose.Y(), z, 0, 0, 0);
+        this->loiterReference.Set(referencePose.Pos().X(), referencePose.Pos().Y(), z, referencePose.Rot().Roll(), referencePose.Rot().Pitch(), referencePose.Rot().Yaw());
     }
-    if(-0.0001 < this->dataPtr->m_Roll && this->dataPtr->m_Roll < 0.0001){
-        roll = -this->rollPID.Update(y - referencePose.Y(), _dt);
-    }
-    else{
-        roll = this->dataPtr->m_Roll;
-        this->loiterReference.Set(referencePose.X(), y, referencePose.Z(), 0, 0, 0);
-    }
-    if(-0.0001 < this->dataPtr->m_Pitch && this->dataPtr->m_Pitch < 0.0001){
-        pitch = this->pitchPID.Update(x - referencePose.X(), _dt);
-        // std::cout<<"pitch PID in play " <<x << ","<<referencePose.X() <<std::endl;
-    }
-    else{
-        pitch = this->dataPtr->m_Pitch;
-        this->loiterReference.Set(x, referencePose.Y(), referencePose.Z(), 0, 0, 0);
-    }
+    //roll
+    roll = this->rollPID.Update(r - this->dataPtr->m_Roll, _dt); //angular displacement PID
+    pitch = this->pitchPID.Update(p - this->dataPtr->m_Pitch, _dt); // angular displacement PID
+    yaw = this->dataPtr->m_Yaw*0.1; //angular velocity PID
 
-    yaw = this->dataPtr->m_Yaw;
-
+    if(this->logfile.is_open()){
+        this->logfile << "thrust: " << thrust <<"\troll: " <<roll << "\tpitch: " <<pitch << "\tyaw: " <<yaw<< "\t"; 
+        this->logfile << "\tpos: " << actualPose.Pos() <<" \trot: " <<actualPose.Rot() << std::endl; 
+    }
     fr = thrust + yaw - pitch - roll;
     fl = thrust - yaw - pitch + roll;
     br = thrust - yaw + pitch - roll;
     bl = thrust + yaw + pitch + roll;
 
-    // std::cout<< z<<std::endl;
     this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * fr;
     this->dataPtr->rotors[1].cmd = this->dataPtr->rotors[1].maxRpm * bl;
     this->dataPtr->rotors[2].cmd = this->dataPtr->rotors[2].maxRpm * fl;
     this->dataPtr->rotors[3].cmd = this->dataPtr->rotors[3].maxRpm * br;
-
     // std::cout << fl << "\t\t"<< fr << std::endl << "\tX\n" <<  bl<< "\t\t" << br << std::endl;
 
 }

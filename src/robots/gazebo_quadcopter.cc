@@ -17,12 +17,12 @@ void GazeboQuadCopter::land()
 }
 void GazeboQuadCopter::setPitch(float pitch)
 {
-    m_Pitch = pitch*0.01;
+    m_Pitch = pitch;
     sendCommand();
 }
 void GazeboQuadCopter::setRoll(float right)
 {
-    m_Roll = right*0.01;
+    m_Roll = right;
     sendCommand();
 }
 void GazeboQuadCopter::setVerticalSpeed(float up)
@@ -32,7 +32,7 @@ void GazeboQuadCopter::setVerticalSpeed(float up)
 }
 void GazeboQuadCopter::setYawSpeed(float right)
 {
-    m_Yaw = right*0.01;
+    m_Yaw = right;
     sendCommand();
 }
 void GazeboQuadCopter::sendCommand()

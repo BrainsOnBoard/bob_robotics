@@ -20,6 +20,7 @@
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
 #include <sdf/sdf.hh>
+#include <fstream>
 
 using namespace gazebo;
 /// \brief Rotor class
@@ -158,8 +159,8 @@ private:
     common::PID rollPID;
     common::PID pitchPID;
     common::PID yawPID;
+    std::ofstream logfile;
 
-    double altitudeReference;
     ignition::math::v4::Pose3d loiterReference;
 };
 }
