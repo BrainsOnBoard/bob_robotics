@@ -28,6 +28,8 @@ namespace Robots
 
   public:
 
+    FILE * f;
+
     betaflight_vicon(std::string device, int baud) :
       m_MyDrone(device, baud),
       m_Vicon(51001)
@@ -39,6 +41,8 @@ namespace Robots
         m_MyDrone.subscribe();
 
         std::this_thread::sleep_for(0.1s);
+
+        f = fopen("/mnt/c/linux_git/log1.csv","w");
 
     }
 
@@ -158,7 +162,8 @@ namespace Robots
         float p_roll = -150.0 * (-sin(float(attitude[0]/180.0*M_PI))*(m_VSetPoint[0] - float(velocity[0])) + cos(float(attitude[0]/180.0*M_PI))*(m_VSetPoint[1] - float(velocity[1])));
         float d_roll = 20.0 * (-sin(float(attitude[0]/180.0*M_PI))*float(acceleration[0]) + cos(float(attitude[0]/180.0*M_PI))*float(acceleration[1]));
         float i_roll = -0.1 * (-sin(float(attitude[0]/180.0*M_PI))*m_IntegralTerm[0] + cos(float(attitude[0]/180.0*M_PI))*m_IntegralTerm[1]);
-        roll_control = (p_roll + d_roll + i_roll)/150.0;
+        roll_control = atan(((p_roll + d_roll + i_roll)/150.0)*1.5f)*2.0f/M_PI;
+        //roll_control = (p_roll + d_roll + i_roll)/150.0;
 
         //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << roll_control << ",";
         m_MyDrone.setRoll(roll_control);
@@ -167,7 +172,8 @@ namespace Robots
         float p_pitch = -150.0 * (cos(float(attitude[0]/180.0*M_PI))*(m_VSetPoint[0] - float(velocity[0])) + sin(float(attitude[0]/180.0*M_PI))*(m_VSetPoint[1] - float(velocity[1])));
         float d_pitch = 20.0 * (cos(float(attitude[0]/180.0*M_PI))*float(acceleration[0]) + sin(float(attitude[0]/180.0*M_PI))*float(acceleration[1]));
         float i_pitch = -0.1 * (cos(float(attitude[0]/180.0*M_PI))*m_IntegralTerm[0] + sin(float(attitude[0]/180.0*M_PI))*m_IntegralTerm[1]);
-        pitch_control = (p_pitch + d_pitch + i_pitch)/150.0;
+        pitch_control = atan(((p_pitch + d_pitch + i_pitch)/150.0)*1.5f)*2.0f/M_PI;
+        //pitch_control = (p_pitch + d_pitch + i_pitch)/150.0;
 
         //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << pitch_control << ",";
         m_MyDrone.setPitch(pitch_control);
@@ -180,6 +186,12 @@ namespace Robots
         float yaw_control = -(dist)/90.0; // was 20.75
         //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << yaw_control << ",";
         m_MyDrone.setYawSpeed(yaw_control);
+
+        float px = float(position[0]);
+        float py = float(position[1]);
+        float pz = float(position[2]);
+        // logging
+        fprintf(f, "%f,%f,%f,%f,%f,%f,%f\n", yaw_control, pitch_control, roll_control, z_control, px,py,pz);
 
         //std::cout << std::endl;
 

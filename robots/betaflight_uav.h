@@ -155,7 +155,7 @@ class betaflight_uav : public UAV {
         {
             right = std::min(1.0f, std::max(-1.0f, right));
             M_RC_values[3] = 1500 + right*M_YawScale;
-            std::cout << M_RC_values[3] << std::endl;
+            //std::cout << M_RC_values[3] << std::endl;
         }
 
         std::string getArmStateAsString() {
@@ -207,7 +207,7 @@ class betaflight_uav : public UAV {
 		uint16_t M_RC_values[8] = {1500,1500,1040,1500,2000,1000,1500,1500};
 		float M_ControlScale = 180.0f;
     float M_ThrottleScale = 100.0f;
-    float M_YawScale = 250.0f;
+    float M_YawScale = 350.0f;
 
 
 

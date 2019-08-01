@@ -61,7 +61,9 @@ int main(int argc, char *argv[]) {
   // limits for the VICON lab in Sheffield
   //my_drone.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
   // extra safe
-  my_drone.setRoomBounds(-1.8, 2.2, -2.0, 2.0, 0.0, 1.5);
+  //my_drone.setRoomBounds(-1.8, 2.2, -2.0, 2.0, 0.0, 1.5);
+  // super, mega safe
+  my_drone.setRoomBounds(-1.5, 1.5, -1.5, 1.5, 0.0, 1.5);
 
 	m_Port = 50091;
   m_Send_Port = 50101;
@@ -80,13 +82,21 @@ int main(int argc, char *argv[]) {
 
   std::vector < std::array<double,4> > wps;
 
-  wps.push_back({-1.0,1.0,0.5,-180});
+  /*wps.push_back({-1.0,1.0,0.5,-180});
   wps.push_back({-1.0,-1.0,0.5,-90});
   wps.push_back({1.0,-1.0,0.5,0});
   wps.push_back({1.0,1.0,0.5,90});
-  //wps.push_back({1.2,0.6,0.5,45});
-  //wps.push_back({0.8,1.0,0.5,45});
-  //wps.push_back({1.2,0.6,0.5,45});
+  wps.push_back({1.2,0.8,0.5,45});
+  wps.push_back({0.8,1.2,0.5,45});
+  wps.push_back({1.2,0.8,0.5,45});*/
+
+  wps.push_back({-1.0,1.0,0.5,0});
+  wps.push_back({-1.0,-1.0,0.5,0});
+  wps.push_back({1.0,-1.0,0.5,0});
+  wps.push_back({1.0,1.0,0.5,0});
+
+
+
 
   int wp_ind = 0;
   bool pathOn = false;
@@ -133,16 +143,19 @@ int main(int argc, char *argv[]) {
         }
         if (line == "h") {
           my_drone.setWaypoint(0,0,1.0,CONST_YAW);
+          my_drone.setNextWaypoint(0,0,1.0,CONST_YAW);
           controlOn = true;
           pathOn = false;
         }
         if (line == "l") {
           my_drone.setWaypoint(0,0,0,-90);
+          my_drone.setNextWaypoint(0,0,0,-90);
           controlOn = true;
           pathOn = false;
         }
         if (line == "w") {
           my_drone.setWaypoint(1.5,1.5,1.3,-90);
+          my_drone.setNextWaypoint(1.5,1.5,1.3,-90);
           controlOn = true;
           pathOn = false;
         }
