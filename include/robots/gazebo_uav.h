@@ -16,9 +16,9 @@ public:
     GazeboQuadCopter(gazebo::transport::NodePtr node)
     {
         // Publish to the  gazebo_quadcopter topic
-        pub =node->Advertise<gazebo::msgs::Quaternion>("~/gazebo_quadcopter/motors_cmd");;
+        m_Pub =node->Advertise<gazebo::msgs::Quaternion>("~/gazebo_quadcopter/motors_cmd");;
         // Wait for a subscriber to connect to this publisher
-        pub->WaitForConnection();
+        m_Pub->WaitForConnection();
     }
     virtual void takeOff() override;
     virtual void land() override;
@@ -29,9 +29,9 @@ public:
     virtual void sendCommand();
 
 private:
-    gazebo::msgs::Quaternion msg;
-    gazebo::transport::PublisherPtr pub;
+    gazebo::transport::PublisherPtr m_Pub;
     float m_Thrust, m_Roll, m_Pitch, m_Yaw;
+    bool m_Armed=false;
 };
 } // Robots
 } // BoBRobotics

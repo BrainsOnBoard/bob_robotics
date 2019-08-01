@@ -1,6 +1,6 @@
 #!/bin/sh
 trap 'kill %1' SIGINT
-world_file=iris_arducopter_demo.world
+world_file=iris_demo.world
 # display_flag=''
 camera_url='/gazebo/default/iris_demo/iris_demo/panoramic_camera/link/camera/image'
 

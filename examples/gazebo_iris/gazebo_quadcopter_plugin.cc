@@ -22,7 +22,7 @@
 typedef SSIZE_T ssize_t;
 #endif
 
-#include "GazeboQuadCopterPlugin.hh"
+#include "gazebo_quadcopter_plugin.hh"
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/msgs/msgs.hh>

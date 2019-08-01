@@ -3,7 +3,7 @@
 #include "common/gazebo_node.h"
 #include "common/logging.h"
 #include "hid/joystick.h"
-#include "robots/gazebo_quadcopter.h"
+#include "robots/gazebo_uav.h"
 // #include "robots/gazebo_tank.h"
 #include "video/gazebocamerainput.h"
 #include "video/display.h"
@@ -51,7 +51,7 @@ bob_main(int argc, char **argv)
     HID::Joystick joystick(0.25f);
     iris.addJoystick(joystick);
 
-    std::cout << "Sky is the limit!" << std::endl;
+    std::cout << "Iris connected and ready for liftoff!" << std::endl;
 
     do {
         // Check for joystick events
