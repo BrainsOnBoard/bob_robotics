@@ -23,6 +23,7 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #include "gazebo_quadcopter_plugin.hh"
+// Gazebo includes
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/msgs/msgs.hh>
@@ -30,8 +31,10 @@ typedef SSIZE_T ssize_t;
 #include <gazebo/transport/transport.hh>
 #include <gazebo/physics/Entity.hh>
 #include <gazebo/physics/Model.hh>
+// Third-party includes
 #include <ignition/math/Vector3.hh>
 #include <ignition/math/Filter.hh>
+// Standard C++ includes
 #include <mutex>
 #include <sdf/sdf.hh>
 #include <string>
@@ -223,7 +226,6 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     std::cerr << "Subsribed to " << topicName << "\n";
     // Listen to the update event. This event is broadcast every simulation iteration.
     this->m_UpdateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
-    // std::bind(&GazeboQuadCopterPlugin::OnUpdate, this);
     std::cout << "GazeboQuadCopter ready to fly. The force will be with you" << std::endl;
 
     // Altitude hold PID Controller

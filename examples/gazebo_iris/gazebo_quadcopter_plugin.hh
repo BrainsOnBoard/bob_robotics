@@ -79,8 +79,8 @@ namespace gazebo {
 
 class GAZEBO_VISIBLE GazeboQuadCopterPlugin : public ModelPlugin
 {
-    /// \brief Constructor.
 public:
+    /// \brief Constructor.
     GazeboQuadCopterPlugin();
 
     /// \brief Destructor.
@@ -107,13 +107,18 @@ public:
     /// \brief Pointer to an IMU sensor
     sensors::ImuSensorPtr m_ImuSensor;
 
-    double m_Thrust; double m_Roll; double m_Pitch; double m_Yaw;
+    /// \brief Flight control commands received
+    double m_Thrust, m_Roll, m_Pitch, m_Yaw;
 
 private:
+    /// \brief Receive flight control commands
     void OnMsg(ConstQuaternionPtr &_msg);
 
+    /// \brief  Calculate and apply forces at every tick
     void OnUpdate();
     
+    /// \brief Calculate motor actuation values
+    /// \param[in] _dt time step size since last update.
     void MotorMixing(const double _dt);
 
     /// \brief Update PID Joint controllers.
@@ -135,13 +140,13 @@ private:
     /// \brief A subscriber to a named topic.
     transport::SubscriberPtr m_Sub;
 
+    /// \brief PID controllers for thrust, roll, pitch and yaw
+    common::PID m_ThrustPID, m_RollPID, m_PitchPID, m_YawPID;
 
-    common::PID m_ThrustPID;
-    common::PID m_RollPID;
-    common::PID m_PitchPID;
-    common::PID m_YawPID;
+    /// \brief Flight log file
     std::ofstream m_Logfile;
 
+    /// \brief PID target values
     ignition::math::v4::Pose3d m_LoiterReference;
 };
 }
