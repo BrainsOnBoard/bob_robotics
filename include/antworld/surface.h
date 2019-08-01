@@ -91,13 +91,16 @@ public:
     }
 
     template<typename T>
-    void uploadIndices(const std::vector<T> &indices, GLenum usage = GL_STATIC_DRAW)
+    void uploadIndices(const std::vector<T> &indices, GLenum primitiveType = GL_TRIANGLES, GLenum usage = GL_STATIC_DRAW)
     {
         // Upload indices
         uploadBuffer(indices, m_IBO, GL_ELEMENT_ARRAY_BUFFER, usage);
 
         // Cache number of indices
         m_NumIndices = indices.size();
+
+        // Cache primitive type
+        m_PrimitiveType = primitiveType;
 
         // Determine index type using traits
         m_IndexType = OpenGLTypeTraits<T>::type;
@@ -108,8 +111,6 @@ public:
     }
     
     void setTexture(const Texture *texture){ m_Texture = texture; }
-
-    void setPrimitiveType(GLenum primitiveType) { m_PrimitiveType = primitiveType; }
 
 private:
     //------------------------------------------------------------------------

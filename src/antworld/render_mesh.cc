@@ -111,7 +111,7 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
         }
 
         // Upload indices to surface
-        getSurface().uploadIndices(indices);
+        getSurface().uploadIndices(indices, GL_QUADS);
     }
 
     // Unbind surface
@@ -119,9 +119,6 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
 
     // Unbind indices
     getSurface().unbindIndices();
-
-    // Set surface to render quads
-    getSurface().setPrimitiveType(GL_QUADS);
 }
 
 //----------------------------------------------------------------------------
@@ -142,7 +139,6 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     const float horizontalSideLength = 1.0f / ((float)numHorizontalSegments * 2.0f * cos30);
     const float verticalSideLength = 1.0f / ((float)numVerticalSegments * (1.0f + sin30));
 
-    std::cout << "Horizontal side length:" << horizontalSideLength << ", verticalSideLength:" << verticalSideLength << std::endl;
     // Pick smallest
     const float sideLength = std::min(horizontalSideLength, verticalSideLength);
 
@@ -172,18 +168,18 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     const int numVerticalRadiusSegments = numVerticalSegments / 2;
     for(int i = -numVerticalRadiusSegments; i < numVerticalRadiusSegments; i++) {
         for(int j = -numHorizontalRadiusSegments; j < numHorizontalRadiusSegments; j++) {
-            // Calculate cartesian coordinates of centre of hexagon
-            // **TODO** link to ole amit's hex site
+            // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
+            // https://www.redblobgames.com/grids/hexagons/
             float hexX = j * (2.0f * hexDistance);
             float hexY = i * (hexHeight + sideLength);
 
             // If row is odd, add additional distance
-            if((i % 2) != 0) {
+            if((i & 1) != 0) {
                 hexX += hexDistance;
             }
 
             // Cache index of first hex in
-            const size_t firstFillVertexIndex = positions.size() / 2;
+            const size_t hexStartVertexIndex = positions.size() / 2;
 
             // Loop through vertices
             for(unsigned int v = 0; v < 6; v++) {
@@ -204,22 +200,24 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
 
                 const float a = sin(radian_t(arcLength)) / arcLength;
                 const float vertexS = vertexX * a;
-                const float vertexR = vertexY * a;
+                const float vertexR = -vertexY * a;
 
                 // Add texture coordinates
                 textureCoords.push_back(vertexS);
                 textureCoords.push_back(vertexR);
                 textureCoords.push_back(vertexT);
-
-                // Add a triangle for all but 1st and last vertex
-                // **TODO** use quads
-                if(v > 0 && v < 5)
-                {
-                    indices.push_back(firstFillVertexIndex);
-                    indices.push_back(firstFillVertexIndex + v + 1);
-                    indices.push_back(firstFillVertexIndex + v);
-                }
             }
+
+            // Add two quads to render hexagon
+            indices.push_back(hexStartVertexIndex);
+            indices.push_back(hexStartVertexIndex + 1);
+            indices.push_back(hexStartVertexIndex + 2);
+            indices.push_back(hexStartVertexIndex + 3);
+
+            indices.push_back(hexStartVertexIndex);
+            indices.push_back(hexStartVertexIndex + 3);
+            indices.push_back(hexStartVertexIndex + 4);
+            indices.push_back(hexStartVertexIndex + 5);
         }
     }
 
@@ -229,7 +227,7 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     // Upload positions, texture coordinates and indices
     getSurface().uploadPositions(positions, 2);
     getSurface().uploadTexCoords(textureCoords, 3);
-    getSurface().uploadIndices(indices);
+    getSurface().uploadIndices(indices, GL_QUADS);
 
     // Unbind surface
     getSurface().unbind();
