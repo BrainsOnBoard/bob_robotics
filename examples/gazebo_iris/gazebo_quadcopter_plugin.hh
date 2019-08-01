@@ -31,85 +31,51 @@ public:
     Rotor()
     {
         // most of these coefficients are not used yet.
-        this->rotorVelocitySlowdownSim = this->kDefaultRotorVelocitySlowdownSim;
-        this->frequencyCutoff = this->kDefaultFrequencyCutoff;
-        this->samplingRate = this->kDefaultSamplingRate;
+        this->m_RotorVelocitySlowdownSim = this->m_KDefaultRotorVelocitySlowdownSim;
+        this->m_FrequencyCutoff = this->m_KDefaultFrequencyCutoff;
+        this->m_SamplingRate = this->m_KDefaultSamplingRate;
 
-        this->pid.Init(0.1, 0, 0, 0, 0, 1.0, -1.0);
+        this->m_Pid.Init(0.1, 0, 0, 0, 0, 1.0, -1.0);
     }
 
     /// \brief rotor id
-    int id = 0;
+    int m_Id = 0;
 
     /// \brief Max rotor propeller RPM.
-    double maxRpm = 838.0;
+    double m_MaxRpm = 838.0;
 
     /// \brief Next command to be applied to the propeller
-    double cmd = 0;
+    double m_Cmd = 0;
 
     /// \brief Velocity PID for motor control
-    common::PID pid;
+    common::PID m_Pid;
 
     /// \brief Control propeller joint.
-    std::string jointName;
+    std::string m_JointName;
 
     /// \brief Control propeller joint.
-    physics::JointPtr joint;
+    physics::JointPtr m_Joint;
 
     /// \brief direction multiplier for this rotor
-    double multiplier = 1;
+    double m_Multiplier = 1;
 
     /// \brief unused coefficients
-    double rotorVelocitySlowdownSim;
+    double m_RotorVelocitySlowdownSim;
 
-    double frequencyCutoff;
+    double m_FrequencyCutoff;
 
-    double samplingRate;
+    double m_SamplingRate;
 
-    ignition::math::OnePole<double> velocityFilter;
+    ignition::math::OnePole<double> m_VelocityFilter;
 
-    static double kDefaultRotorVelocitySlowdownSim;
+    static double m_KDefaultRotorVelocitySlowdownSim;
 
-    static double kDefaultFrequencyCutoff;
+    static double m_KDefaultFrequencyCutoff;
 
-    static double kDefaultSamplingRate;
+    static double m_KDefaultSamplingRate;
 };
 
 namespace gazebo {
-// Forward declare private data class
-class GazeboQuadCopterPluginPrivate
-{
-public:
-    /// \brief Pointer to the update event connection.
-    event::ConnectionPtr updateConnection;
-
-    /// \brief Pointer to the model;
-    physics::ModelPtr model;
-
-    /// \brief array of propellers
-    std::vector<Rotor> rotors;
-
-    /// \brief keep track of controller update sim-time.
-    gazebo::common::Time lastControllerUpdateTime;
-
-    /// \brief Controller update mutex.
-    std::mutex mutex;
-
-    /// \brief Socket handle
-    int handle;
-
-    /// \brief Pointer to an IMU sensor
-    sensors::ImuSensorPtr imuSensor;
-
-    /// \brief number of times GazeboQuadCotper skips update
-    int connectionTimeoutCount;
-
-    /// \brief number of times GazeboQuadCotper skips update
-    /// before marking GazeboQuadCopter offline
-    int connectionTimeoutMaxCount;
-
-    double m_Thrust; double m_Roll; double m_Pitch; double m_Yaw;
-};
 
 class GAZEBO_VISIBLE GazeboQuadCopterPlugin : public ModelPlugin
 {
@@ -123,8 +89,26 @@ public:
     // Documentation Inherited.
     virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
 
-    /// \brief Update the control surfaces controllers.
-    /// \param[in] _info Update information provided by the server.
+    /// \brief Pointer to the update event connection.
+    event::ConnectionPtr m_UpdateConnection;
+
+    /// \brief Pointer to the model;
+    physics::ModelPtr m_Model;
+
+    /// \brief array of propellers
+    std::vector<Rotor> m_Rotors;
+
+    /// \brief keep track of controller update sim-time.
+    gazebo::common::Time m_LastControllerUpdateTime;
+
+    /// \brief Controller update mutex.
+    std::mutex m_Mutex;
+
+    /// \brief Pointer to an IMU sensor
+    sensors::ImuSensorPtr m_ImuSensor;
+
+    double m_Thrust; double m_Roll; double m_Pitch; double m_Yaw;
+
 private:
     void OnMsg(ConstQuaternionPtr &_msg);
 
@@ -145,9 +129,6 @@ private:
     /// \brief Send state to GazeboQuadCopter
     void SendState() const;
 
-    /// \brief Private data pointer.
-    std::unique_ptr<GazeboQuadCopterPluginPrivate> dataPtr;
-
     /// \brief A node used for transport
     transport::NodePtr m_Node;
 
@@ -155,13 +136,13 @@ private:
     transport::SubscriberPtr m_Sub;
 
 
-    common::PID thrustPID;
-    common::PID rollPID;
-    common::PID pitchPID;
-    common::PID yawPID;
-    std::ofstream logfile;
+    common::PID m_ThrustPID;
+    common::PID m_RollPID;
+    common::PID m_PitchPID;
+    common::PID m_YawPID;
+    std::ofstream m_Logfile;
 
-    ignition::math::v4::Pose3d loiterReference;
+    ignition::math::v4::Pose3d m_LoiterReference;
 };
 }
 #endif

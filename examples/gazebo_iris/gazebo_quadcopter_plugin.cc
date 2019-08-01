@@ -69,15 +69,13 @@ getSdfParam(sdf::ElementPtr _sdf, const std::string &_name, T &_param, const T &
 
 
 
-double Rotor::kDefaultRotorVelocitySlowdownSim = 10.0;
-double Rotor::kDefaultFrequencyCutoff = 5.0;
-double Rotor::kDefaultSamplingRate = 0.2;
+double Rotor::m_KDefaultRotorVelocitySlowdownSim = 10.0;
+double Rotor::m_KDefaultFrequencyCutoff = 5.0;
+double Rotor::m_KDefaultSamplingRate = 0.2;
 
 ////////////////////////////////////////////////////////////////////////////////
 GazeboQuadCopterPlugin::GazeboQuadCopterPlugin()
-  : dataPtr(new GazeboQuadCopterPluginPrivate)
 {
-    this->dataPtr->connectionTimeoutCount = 0;
 }
 
 /////////////////////////////////////////////////
@@ -92,7 +90,7 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     GZ_ASSERT(_model, "GazeboQuadCopterPlugin _model pointer is null");
     GZ_ASSERT(_sdf, "GazeboQuadCopterPlugin _sdf pointer is null");
 
-    this->dataPtr->model = _model;
+    this->m_Model = _model;
 
     // per rotor
     if (_sdf->HasElement("rotor")) {
@@ -102,25 +100,25 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
             Rotor rotor;
 
             if (rotorSDF->HasAttribute("id")) {
-                rotor.id = rotorSDF->GetAttribute("id")->Get(rotor.id);
+                rotor.m_Id = rotorSDF->GetAttribute("id")->Get(rotor.m_Id);
             } else {
-                rotor.id = this->dataPtr->rotors.size();
+                rotor.m_Id = this->m_Rotors.size();
                 gzwarn << "id attribute not specified, use order parsed ["
-                       << rotor.id << "].\n";
+                       << rotor.m_Id << "].\n";
             }
 
             if (rotorSDF->HasElement("jointName")) {
-                rotor.jointName = rotorSDF->Get<std::string>("jointName");
+                rotor.m_JointName = rotorSDF->Get<std::string>("jointName");
             } else {
                 gzerr << "Please specify a jointName,"
                       << " where the rotor is attached.\n";
             }
 
             // Get the pointer to the joint.
-            rotor.joint = _model->GetJoint(rotor.jointName);
-            if (rotor.joint == nullptr) {
+            rotor.m_Joint = _model->GetJoint(rotor.m_JointName);
+            if (rotor.m_Joint == nullptr) {
                 gzerr << "Couldn't find specified joint ["
-                      << rotor.jointName << "]. This plugin will not run.\n";
+                      << rotor.m_JointName << "]. This plugin will not run.\n";
                 return;
             }
 
@@ -129,77 +127,77 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
                         "turningDirection");
                 // special cases mimic from rotors_gazebo_plugins
                 if (turningDirection == "cw")
-                    rotor.multiplier = -1;
+                    rotor.m_Multiplier = -1;
                 else if (turningDirection == "ccw")
-                    rotor.multiplier = 1;
+                    rotor.m_Multiplier = 1;
                 else {
                     gzdbg << "not string, check turningDirection as float\n";
-                    rotor.multiplier = rotorSDF->Get<double>("turningDirection");
+                    rotor.m_Multiplier = rotorSDF->Get<double>("turningDirection");
                 }
             } else {
-                rotor.multiplier = 1;
+                rotor.m_Multiplier = 1;
                 gzerr << "Please specify a turning"
                       << " direction multiplier ('cw' or 'ccw'). Default 'ccw'.\n";
             }
 
-            getSdfParam<double>(rotorSDF, "rotorVelocitySlowdownSim", rotor.rotorVelocitySlowdownSim, 1);
+            getSdfParam<double>(rotorSDF, "rotorVelocitySlowdownSim", rotor.m_RotorVelocitySlowdownSim, 1);
 
-            if (ignition::math::equal(rotor.rotorVelocitySlowdownSim, 0.0)) {
-                gzerr << "rotor for joint [" << rotor.jointName
+            if (ignition::math::equal(rotor.m_RotorVelocitySlowdownSim, 0.0)) {
+                gzerr << "rotor for joint [" << rotor.m_JointName
                       << "] rotorVelocitySlowdownSim is zero,"
                       << " aborting plugin.\n";
                 return;
             }
 
-            getSdfParam<double>(rotorSDF, "frequencyCutoff", rotor.frequencyCutoff, rotor.frequencyCutoff);
-            getSdfParam<double>(rotorSDF, "samplingRate", rotor.samplingRate, rotor.samplingRate);
+            getSdfParam<double>(rotorSDF, "frequencyCutoff", rotor.m_FrequencyCutoff, rotor.m_FrequencyCutoff);
+            getSdfParam<double>(rotorSDF, "samplingRate", rotor.m_SamplingRate, rotor.m_SamplingRate);
 
             // use ignition::math::Filter
-            rotor.velocityFilter.Fc(rotor.frequencyCutoff, rotor.samplingRate);
+            rotor.m_VelocityFilter.Fc(rotor.m_FrequencyCutoff, rotor.m_SamplingRate);
 
             // initialize filter to zero value
-            rotor.velocityFilter.Set(0.0);
+            rotor.m_VelocityFilter.Set(0.0);
 
             // note to use this
             // rotorVelocityFiltered = velocityFilter.Process(rotorVelocityRaw);
 
             // Overload the PID parameters if they are available.
             double param;
-            getSdfParam<double>(rotorSDF, "vel_p_gain", param, rotor.pid.GetPGain());
-            rotor.pid.SetPGain(param);
+            getSdfParam<double>(rotorSDF, "vel_p_gain", param, rotor.m_Pid.GetPGain());
+            rotor.m_Pid.SetPGain(param);
 
-            getSdfParam<double>(rotorSDF, "vel_i_gain", param, rotor.pid.GetIGain());
-            rotor.pid.SetIGain(param);
+            getSdfParam<double>(rotorSDF, "vel_i_gain", param, rotor.m_Pid.GetIGain());
+            rotor.m_Pid.SetIGain(param);
 
-            getSdfParam<double>(rotorSDF, "vel_d_gain", param, rotor.pid.GetDGain());
-            rotor.pid.SetDGain(param);
+            getSdfParam<double>(rotorSDF, "vel_d_gain", param, rotor.m_Pid.GetDGain());
+            rotor.m_Pid.SetDGain(param);
 
-            getSdfParam<double>(rotorSDF, "vel_i_max", param, rotor.pid.GetIMax());
-            rotor.pid.SetIMax(param);
+            getSdfParam<double>(rotorSDF, "vel_i_max", param, rotor.m_Pid.GetIMax());
+            rotor.m_Pid.SetIMax(param);
 
-            getSdfParam<double>(rotorSDF, "vel_i_min", param, rotor.pid.GetIMin());
-            rotor.pid.SetIMin(param);
+            getSdfParam<double>(rotorSDF, "vel_i_min", param, rotor.m_Pid.GetIMin());
+            rotor.m_Pid.SetIMin(param);
 
-            getSdfParam<double>(rotorSDF, "vel_cmd_max", param, rotor.pid.GetCmdMax());
-            rotor.pid.SetCmdMax(param);
+            getSdfParam<double>(rotorSDF, "vel_cmd_max", param, rotor.m_Pid.GetCmdMax());
+            rotor.m_Pid.SetCmdMax(param);
 
-            getSdfParam<double>(rotorSDF, "vel_cmd_min", param, rotor.pid.GetCmdMin());
-            rotor.pid.SetCmdMin(param);
+            getSdfParam<double>(rotorSDF, "vel_cmd_min", param, rotor.m_Pid.GetCmdMin());
+            rotor.m_Pid.SetCmdMin(param);
 
             // set pid initial command
-            rotor.pid.SetCmd(0);
+            rotor.m_Pid.SetCmd(0);
 
-            this->dataPtr->rotors.push_back(rotor);
+            this->m_Rotors.push_back(rotor);
             rotorSDF = rotorSDF->GetNextElement("rotor");
         }
     }
     // Get sensors
     std::string imuName;
     getSdfParam<std::string>(_sdf, "imuName", imuName, "imu_sensor");
-    std::string imuScopedName = this->dataPtr->model->GetWorld()->Name() + "::" + this->dataPtr->model->GetScopedName() + "::" + imuName;
-    this->dataPtr->imuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuScopedName));
+    std::string imuScopedName = this->m_Model->GetWorld()->Name() + "::" + this->m_Model->GetScopedName() + "::" + imuName;
+    this->m_ImuSensor = std::dynamic_pointer_cast<sensors::ImuSensor>(sensors::SensorManager::Instance()->GetSensor(imuScopedName));
 
-    if (!this->dataPtr->imuSensor) {
+    if (!this->m_ImuSensor) {
         gzerr << "imu_sensor [" << imuScopedName
               << "] not found, abort GazeboQuadCopter plugin.\n"
               << "\n";
@@ -207,14 +205,8 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     }
 
     // Controller time control.
-    this->dataPtr->lastControllerUpdateTime = 0;
+    this->m_LastControllerUpdateTime = 0;
 
-    // Missed update count before we declare GazeboQuadCopterOnline status false
-    getSdfParam<int>(_sdf, "connectionTimeoutMaxCount", this->dataPtr->connectionTimeoutMaxCount, 10);
-
-    // Listen to the update event. This event is broadcast every simulation
-    // iteration.
-    // this->dataPtr->updateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
     // Create the Node
     m_Node = transport::NodePtr(new transport::Node());
 #if GAZEBO_MAJOR_VERSION < 8
@@ -230,79 +222,80 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     m_Sub = m_Node->Subscribe(topicName, &GazeboQuadCopterPlugin::OnMsg, this);
     std::cerr << "Subsribed to " << topicName << "\n";
     // Listen to the update event. This event is broadcast every simulation iteration.
-    this->dataPtr->updateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
+    this->m_UpdateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
+    // std::bind(&GazeboQuadCopterPlugin::OnUpdate, this);
     std::cout << "GazeboQuadCopter ready to fly. The force will be with you" << std::endl;
 
     // Altitude hold PID Controller
     sdf::ElementPtr altholdSDF = _sdf->GetElement("althold");
     double param;
     getSdfParam<double>(altholdSDF, "p_gain", param, 0);
-    this->thrustPID.SetPGain(param);
+    this->m_ThrustPID.SetPGain(param);
 
     getSdfParam<double>(altholdSDF, "i_gain", param, 0);
-    this->thrustPID.SetIGain(param);
+    this->m_ThrustPID.SetIGain(param);
 
     getSdfParam<double>(altholdSDF, "d_gain", param, 0);
-    this->thrustPID.SetDGain(param);
+    this->m_ThrustPID.SetDGain(param);
 
     getSdfParam<double>(altholdSDF, "i_max", param, 0);
-    this->thrustPID.SetIMax(param);
+    this->m_ThrustPID.SetIMax(param);
 
     getSdfParam<double>(altholdSDF, "i_min", param, 0);
-    this->thrustPID.SetIMin(param);
+    this->m_ThrustPID.SetIMin(param);
 
     getSdfParam<double>(altholdSDF, "cmd_max", param, 0);
-    this->thrustPID.SetCmdMax(param);
+    this->m_ThrustPID.SetCmdMax(param);
 
     getSdfParam<double>(altholdSDF, "cmd_min", param, 0);
-    this->thrustPID.SetCmdMin(param);
+    this->m_ThrustPID.SetCmdMin(param);
 
     // set pid initial command
-    this->thrustPID.SetCmd(0);
+    this->m_ThrustPID.SetCmd(0);
 
     sdf::ElementPtr loiterSDF = _sdf->GetElement("loiter");
     getSdfParam<double>(loiterSDF, "p_gain", param, 0);
-    this->rollPID.SetPGain(param);
-    this->pitchPID.SetPGain(param);
-    this->yawPID.SetPGain(param);
+    this->m_RollPID.SetPGain(param);
+    this->m_PitchPID.SetPGain(param);
+    this->m_YawPID.SetPGain(param);
 
     getSdfParam<double>(loiterSDF, "i_gain", param, 0);
-    this->rollPID.SetIGain(param);
-    this->pitchPID.SetIGain(param);
-    this->yawPID.SetIGain(param);
+    this->m_RollPID.SetIGain(param);
+    this->m_PitchPID.SetIGain(param);
+    this->m_YawPID.SetIGain(param);
 
     getSdfParam<double>(loiterSDF, "d_gain", param, 0);
-    this->rollPID.SetDGain(param);
-    this->pitchPID.SetDGain(param);
-    this->yawPID.SetDGain(param);
+    this->m_RollPID.SetDGain(param);
+    this->m_PitchPID.SetDGain(param);
+    this->m_YawPID.SetDGain(param);
 
     getSdfParam<double>(loiterSDF, "i_max", param, 0);
-    this->rollPID.SetIMax(param);
-    this->pitchPID.SetIMax(param);
-    this->yawPID.SetIMax(param);
+    this->m_RollPID.SetIMax(param);
+    this->m_PitchPID.SetIMax(param);
+    this->m_YawPID.SetIMax(param);
 
     getSdfParam<double>(loiterSDF, "i_min", param, 0);
-    this->rollPID.SetIMin(param);
-    this->pitchPID.SetIMin(param);
-    this->yawPID.SetIMin(param);
+    this->m_RollPID.SetIMin(param);
+    this->m_PitchPID.SetIMin(param);
+    this->m_YawPID.SetIMin(param);
 
     getSdfParam<double>(loiterSDF, "cmd_max", param, 0);
-    this->rollPID.SetCmdMax(param);
-    this->pitchPID.SetCmdMax(param);
-    this->yawPID.SetCmdMax(param);
+    this->m_RollPID.SetCmdMax(param);
+    this->m_PitchPID.SetCmdMax(param);
+    this->m_YawPID.SetCmdMax(param);
 
     getSdfParam<double>(loiterSDF, "cmd_min", param, 0);
-    this->rollPID.SetCmdMin(param);
-    this->pitchPID.SetCmdMin(param);
-    this->yawPID.SetCmdMin(param);
+    this->m_RollPID.SetCmdMin(param);
+    this->m_PitchPID.SetCmdMin(param);
+    this->m_YawPID.SetCmdMin(param);
 
-    this->rollPID.SetCmd(0);
-    this->pitchPID.SetCmd(0);
-    this->yawPID.SetCmd(0);
+    this->m_RollPID.SetCmd(0);
+    this->m_PitchPID.SetCmd(0);
+    this->m_YawPID.SetCmd(0);
     
     char* logfile_location=std::getenv("LOG_FILE");
     if(logfile_location!=NULL){
-        this->logfile.open(logfile_location, std::ios_base::app);
+        this->m_Logfile.open(logfile_location, std::ios_base::app);
     }
 }
 
@@ -310,11 +303,11 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 void
 GazeboQuadCopterPlugin::OnMsg(ConstQuaternionPtr &_msg)
 {
-    std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
-    this->dataPtr->m_Thrust = _msg->w();
-    this->dataPtr->m_Roll = _msg->x();
-    this->dataPtr->m_Pitch = _msg->y();
-    this->dataPtr->m_Yaw = _msg->z();
+    std::lock_guard<std::mutex> lock(this->m_Mutex);
+    this->m_Thrust = _msg->w();
+    this->m_Roll = _msg->x();
+    this->m_Pitch = _msg->y();
+    this->m_Yaw = _msg->z();
 }
 void 
 GazeboQuadCopterPlugin::MotorMixing(const double _dt)
@@ -322,60 +315,56 @@ GazeboQuadCopterPlugin::MotorMixing(const double _dt)
     float thrust=0, roll=0, pitch=0, yaw=0;
     float fr=0, fl=0, br=0, bl=0;
     double z, r, p;
-    // ignition::math::Vector3<double> actualPose, referencePose;
     ignition::math::Pose3d actualPose, referencePose;
-    actualPose = this->dataPtr->model->WorldPose();
-    referencePose = this->loiterReference;
+    actualPose = this->m_Model->WorldPose();
+    referencePose = this->m_LoiterReference;
     z = actualPose.Pos().Z();
     r = actualPose.Rot().Roll();
     p = actualPose.Rot().Pitch();
-    //thrust
-    if(0.49 < this->dataPtr->m_Thrust && this->dataPtr->m_Thrust < 0.51 ){
-        thrust = this->thrustPID.Update(z - referencePose.Pos().Z(), _dt);
+
+    if(0.49 < this->m_Thrust && this->m_Thrust < 0.51 ){
+        thrust = this->m_ThrustPID.Update(z - referencePose.Pos().Z(), _dt);
     }
     else{
-        thrust = this->dataPtr->m_Thrust;
-        this->loiterReference.Set(referencePose.Pos().X(), referencePose.Pos().Y(), z, referencePose.Rot().Roll(), referencePose.Rot().Pitch(), referencePose.Rot().Yaw());
+        thrust = this->m_Thrust;
+        this->m_LoiterReference.Set(referencePose.Pos().X(), referencePose.Pos().Y(), z, referencePose.Rot().Roll(), referencePose.Rot().Pitch(), referencePose.Rot().Yaw());
     }
-    //roll
-    roll = this->rollPID.Update(r - this->dataPtr->m_Roll, _dt); //angular displacement PID
-    pitch = this->pitchPID.Update(p - this->dataPtr->m_Pitch, _dt); // angular displacement PID
-    yaw = this->dataPtr->m_Yaw*0.1; //angular velocity PID
 
-    if(this->logfile.is_open()){
-        this->logfile << "thrust: " << thrust <<"\troll: " <<roll << "\tpitch: " <<pitch << "\tyaw: " <<yaw<< "\t"; 
-        this->logfile << "\tpos: " << actualPose.Pos() <<" \trot: " <<actualPose.Rot() << std::endl; 
+    roll = this->m_RollPID.Update(r - this->m_Roll, _dt); //angular displacement PID
+    pitch = this->m_PitchPID.Update(p - this->m_Pitch, _dt); // angular displacement PID
+    yaw = this->m_Yaw*0.1; //angular velocity PID
+
+    if(this->m_Logfile.is_open()){
+        this->m_Logfile << "thrust: " << thrust <<"\troll: " <<roll << "\tpitch: " <<pitch << "\tyaw: " <<yaw<< "\t"; 
+        this->m_Logfile << "\tpos: " << actualPose.Pos() <<" \trot: " <<actualPose.Rot() << std::endl; 
     }
     fr = thrust + yaw - pitch - roll;
     fl = thrust - yaw - pitch + roll;
     br = thrust - yaw + pitch - roll;
     bl = thrust + yaw + pitch + roll;
 
-    this->dataPtr->rotors[0].cmd = this->dataPtr->rotors[0].maxRpm * fr;
-    this->dataPtr->rotors[1].cmd = this->dataPtr->rotors[1].maxRpm * bl;
-    this->dataPtr->rotors[2].cmd = this->dataPtr->rotors[2].maxRpm * fl;
-    this->dataPtr->rotors[3].cmd = this->dataPtr->rotors[3].maxRpm * br;
-    // std::cout << fl << "\t\t"<< fr << std::endl << "\tX\n" <<  bl<< "\t\t" << br << std::endl;
-
+    this->m_Rotors[0].m_Cmd = this->m_Rotors[0].m_MaxRpm * fr;
+    this->m_Rotors[1].m_Cmd = this->m_Rotors[1].m_MaxRpm * bl;
+    this->m_Rotors[2].m_Cmd = this->m_Rotors[2].m_MaxRpm * fl;
+    this->m_Rotors[3].m_Cmd = this->m_Rotors[3].m_MaxRpm * br;
 }
 /////////////////////////////////////////////////
 void GazeboQuadCopterPlugin::OnUpdate()
 {
-  std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
+  std::lock_guard<std::mutex> lock(this->m_Mutex);
 
-  gazebo::common::Time curTime = this->dataPtr->model->GetWorld()->SimTime();
+  gazebo::common::Time curTime = this->m_Model->GetWorld()->SimTime();
 
-    this->ApplyMotorForces((curTime -this->dataPtr->lastControllerUpdateTime).Double());  
-    this->dataPtr->lastControllerUpdateTime = curTime;
+    this->ApplyMotorForces((curTime -this->m_LastControllerUpdateTime).Double());  
+    this->m_LastControllerUpdateTime = curTime;
 }
 /////////////////////////////////////////////////
 void
 GazeboQuadCopterPlugin::ResetPIDs()
 {
     // Reset velocity PID for rotors
-    for (size_t i = 0; i < this->dataPtr->rotors.size(); ++i) {
-        this->dataPtr->rotors[i].cmd = 0;
-        // this->dataPtr->rotors[i].pid.Reset();
+    for (size_t i = 0; i < this->m_Rotors.size(); ++i) {
+        this->m_Rotors[i].m_Cmd = 0;
     }
 }
 
@@ -385,17 +374,15 @@ GazeboQuadCopterPlugin::ApplyMotorForces(const double _dt)
 {
     MotorMixing(_dt);
     // update velocity PID for rotors and apply force to joint
-    for (size_t i = 0; i < this->dataPtr->rotors.size(); ++i) {
-        double velTarget = this->dataPtr->rotors[i].multiplier *
-                           this->dataPtr->rotors[i].cmd /
-                           this->dataPtr->rotors[i].rotorVelocitySlowdownSim;
-        double vel = this->dataPtr->rotors[i].joint->GetVelocity(0);
+    for (size_t i = 0; i < this->m_Rotors.size(); ++i) {
+        double velTarget = this->m_Rotors[i].m_Multiplier *
+                           this->m_Rotors[i].m_Cmd /
+                           this->m_Rotors[i].m_RotorVelocitySlowdownSim;
+        double vel = this->m_Rotors[i].m_Joint->GetVelocity(0);
         double error = vel - velTarget;
-        double force = this->dataPtr->rotors[i].pid.Update(error, _dt);
-        this->dataPtr->rotors[i].joint->SetForce(0, force);
-        // std::cout<<force<<",";
+        double force = this->m_Rotors[i].m_Pid.Update(error, _dt);
+        this->m_Rotors[i].m_Joint->SetForce(0, force);
     }
-    // std::cout<<std::endl;
 }
 
 
