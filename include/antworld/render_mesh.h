@@ -56,5 +56,16 @@ public:
     RenderMeshSpherical(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
                         unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
 };
+
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RenderMeshHexagonal
+//----------------------------------------------------------------------------
+//! Class for sampling cubemap across a range of hexagonal coordinates
+class RenderMeshHexagonal : public RenderMesh
+{
+public:
+    RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
+                        unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
+};
 }   // namespace AntWorld
 }   // namespace BoBRobotics
