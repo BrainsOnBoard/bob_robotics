@@ -12,14 +12,9 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-// **NOTE** RenderMesh initialisation matches the matlab:
-// hfov = hfov/180/2*pi;
-// axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
-                   degree_t horizontalFOV, degree_t verticalFOV)
-:   m_RenderMesh(horizontalFOV, verticalFOV, 15_deg, 40, 10),
-    m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0),
-    m_CubemapSize(cubemapSize), m_NearClip(nearClip), m_FarClip(farClip)
+Renderer::Renderer(std::unique_ptr<RenderMesh> renderMesh, GLsizei cubemapSize, double nearClip, double farClip)
+:   m_RenderMesh(std::move(renderMesh)), m_CubemapTexture(0), m_FBO(0), m_DepthBuffer(0), m_CubemapSize(cubemapSize),
+    m_NearClip(nearClip), m_FarClip(farClip)
 {
     // Create FBO for rendering to cubemap and bind
     glGenFramebuffers(1, &m_FBO);
@@ -61,6 +56,16 @@ Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
 
     // Pre-generate lookat matrices to point at cubemap faces
     generateCubeFaceLookAtMatrices();
+}
+//----------------------------------------------------------------------------
+// **NOTE** RenderMesh initialisation matches the matlab:
+// hfov = hfov/180/2*pi;
+// axis([0 14 -hfov hfov -pi/12 pi/3]);
+Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
+                   degree_t horizontalFOV, degree_t verticalFOV)
+:   Renderer(std::make_unique<RenderMeshSpherical>(horizontalFOV, verticalFOV, 15_deg, 40, 10), cubemapSize, nearClip, farClip)
+{
+
 }
 //----------------------------------------------------------------------------
 Renderer::~Renderer()
@@ -135,7 +140,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glLoadIdentity();
 
     // Render render mesh
-    m_RenderMesh.render();
+    m_RenderMesh->render();
 
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
