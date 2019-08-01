@@ -46,10 +46,10 @@ public:
     void render() const;
 
     template<typename T>
-    void uploadPositions(const std::vector<T> &positions, GLint size = 3)
+    void uploadPositions(const std::vector<T> &positions, GLint size = 3, GLenum usage = GL_STATIC_DRAW)
     {
         // Upload positions to buffer
-        uploadBuffer(positions, m_PositionVBO, GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        uploadBuffer(positions, m_PositionVBO, GL_ARRAY_BUFFER, usage);
 
         // Set vertex pointer and enable client state in VAO
         glVertexPointer(size, OpenGLTypeTraits<T>::type, 0, BUFFER_OFFSET(0));
@@ -63,10 +63,10 @@ public:
     }
 
     template<typename T>
-    void uploadColours(const std::vector<T> &colours, GLint size = 3)
+    void uploadColours(const std::vector<T> &colours, GLint size = 3, GLenum usage = GL_STATIC_DRAW)
     {
         // Upload colours to buffer
-        uploadBuffer(colours, m_ColourVBO, GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        uploadBuffer(colours, m_ColourVBO, GL_ARRAY_BUFFER, usage);
 
         // Set colour pointer and enable client state in VAO
         glColorPointer(size, OpenGLTypeTraits<T>::type, 0, BUFFER_OFFSET(0));
@@ -77,10 +77,10 @@ public:
     }
 
     template<typename T>
-    void uploadTexCoords(const std::vector<T> &texCoords, GLint size = 2)
+    void uploadTexCoords(const std::vector<T> &texCoords, GLint size = 2, GLenum usage = GL_STATIC_DRAW)
     {
         // Upload texture coordinates to buffer
-        uploadBuffer(texCoords, m_TexCoordVBO, GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+        uploadBuffer(texCoords, m_TexCoordVBO, GL_ARRAY_BUFFER, usage);
 
         // Set colour pointer and enable client state in VAO
         glTexCoordPointer(size, OpenGLTypeTraits<T>::type, 0, BUFFER_OFFSET(0));
@@ -91,10 +91,10 @@ public:
     }
 
     template<typename T>
-    void uploadIndices(const std::vector<T> &indices)
+    void uploadIndices(const std::vector<T> &indices, GLenum usage = GL_STATIC_DRAW)
     {
         // Upload indices
-        uploadBuffer(indices, m_IBO, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
+        uploadBuffer(indices, m_IBO, GL_ELEMENT_ARRAY_BUFFER, usage);
 
         // Cache number of indices
         m_NumIndices = indices.size();
