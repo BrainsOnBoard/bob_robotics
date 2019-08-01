@@ -1,4 +1,7 @@
 // BoB robotics includes
+#include "common/macros.h"
+
+// BoB robotics includes
 #include "antworld/common.h"
 #include "antworld/render_mesh.h"
 
@@ -21,7 +24,7 @@ void RenderMesh::render() const
     m_Surface.bind();
 
     // Render surface
-    m_Surface.render(GL_QUADS);
+    m_Surface.render();
 
     // Unbind surface
     m_Surface.unbind();
@@ -116,6 +119,9 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
 
     // Unbind indices
     getSurface().unbindIndices();
+
+    // Set surface to render quads
+    getSurface().setPrimitiveType(GL_QUADS);
 }
 
 //----------------------------------------------------------------------------
@@ -128,7 +134,6 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     using namespace units::math;
     using namespace units::literals;
 
-
     // Pre-calculate cos30 and sin30
     const float cos30 = cos(30_deg);
     const float sin30 = sin(30_deg);
@@ -137,32 +142,30 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     const float horizontalSideLength = 1.0f / ((float)numHorizontalSegments * 2.0f * cos30);
     const float verticalSideLength = 1.0f / ((float)numVerticalSegments * (1.0f + sin30));
 
+    std::cout << "Horizontal side length:" << horizontalSideLength << ", verticalSideLength:" << verticalSideLength << std::endl;
     // Pick smallest
     const float sideLength = std::min(horizontalSideLength, verticalSideLength);
 
     // Calculate other hexagon dimensions
     const float hexDistance = cos30 * sideLength;
     const float hexHeight = sin30 * sideLength;
+    const float halfSideLength = 0.5f * sideLength;
+    const float halfHexHeight = halfSideLength + hexHeight;
 
     // Calculate hex position offsets to build each hex's vertices from
-    /*float halfSideLength = 0.5f * m_SideLength;
-    float halfHexHeight = halfSideLength + GetHexHeight();
-    return new Vector3[6]
-    {
-        new Vector3(0.0f, 0.0f, -halfHexHeight),
-        new Vector3(hexDistance, 0.0f, -halfSideLength),
-        new Vector3(hexDistance, 0.0f, halfSideLength),
-        new Vector3(0.0f, 0.0f, halfHexHeight),
-        new Vector3(-hexDistance, 0.0f, halfSideLength),
-        new Vector3(-hexDistance, 0.0f, -halfSideLength),
-    };*/
+    const float hexPositionOffsets[6][2] = {
+        {0.0f, -halfHexHeight},
+        {hexDistance, -halfSideLength},
+        {hexDistance, halfSideLength},
+        {0.0f, halfHexHeight},
+        {-hexDistance, halfSideLength},
+        {-hexDistance, -halfSideLength}
+    };
+
     // **TODO** reserve
     std::vector<GLfloat> positions;
     std::vector<GLfloat> textureCoords;
     std::vector<GLuint> indices;
-
-    size_t vertexIndex = 0;
-    size_t triangleIndex = 0;
 
     // Loop through grid of hexes
     const int numHorizontalRadiusSegments = numHorizontalSegments / 2;
@@ -175,49 +178,64 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
             float hexY = i * (hexHeight + sideLength);
 
             // If row is odd, add additional distance
-            if((row & 1) != 0) {
+            if((i % 2) != 0) {
                 hexX += hexDistance;
             }
 
-            // Calcualate distance to hex to origin - this is treated as the arc length (radius = 1)
-            const float arcLength = std::sqrt((hexX * hexX) + (hexY * hexY)));
-
-            // Calculate T coordinate
-            const float hexT = cos(radian_t(arcLength));
-            BOB_ASSERT(hexT >= 0.0f);
-
-            const float a = sin(radian_t(arcLength)) / arcLength;
-            const float hexS = hexX * a;
-            const float hexR = hexY * a;
-
-            // Calculate it's modelspace position
-            int firstFillVertexIndex = vertexIndex;
+            // Cache index of first hex in
+            const size_t firstFillVertexIndex = positions.size() / 2;
 
             // Loop through vertices
             for(unsigned int v = 0; v < 6; v++) {
-                // Assign components
-                positions[vertexIndex] = hexPosition + hexPositionOffsets[vertex];
-                uvs[vertexIndex] = hexUVs[vertex];
+                // Calculate position of vertex
+                const float vertexX = hexX + hexPositionOffsets[v][0];
+                const float vertexY = hexY + hexPositionOffsets[v][1];
 
-                // Next vertex
-                vertexIndex++;
-                // Add vertex to mesh
-                AddHexVertex(vertex, hexPosition,
-                    hexUVs, hexPositionOffsets,
-                    positions, colours, uvs,
-                    ref vertexIndex);
+                // Add positions, offsetting to centre of screen
+                positions.push_back(0.5f + vertexX);
+                positions.push_back(0.5f + vertexY);
+
+                // Calcualate distance to hex to origin - this is treated as the arc length (radius = 1)
+                const float arcLength = std::sqrt((vertexX * vertexX) + (vertexY * vertexY));
+
+                // Calculate T coordinate
+                const float vertexT = cos(radian_t(arcLength));
+                BOB_ASSERT(vertexT >= 0.0f);
+
+                const float a = sin(radian_t(arcLength)) / arcLength;
+                const float vertexS = vertexX * a;
+                const float vertexR = vertexY * a;
+
+                // Add texture coordinates
+                textureCoords.push_back(vertexS);
+                textureCoords.push_back(vertexR);
+                textureCoords.push_back(vertexT);
 
                 // Add a triangle for all but 1st and last vertex
-                if(vertex > 0 && vertex < 5)
+                // **TODO** use quads
+                if(v > 0 && v < 5)
                 {
-                    triangleIndices[triangleIndex++] = firstFillVertexIndex;
-                    triangleIndices[triangleIndex++] = firstFillVertexIndex + vertex + 1;
-                    triangleIndices[triangleIndex++] = firstFillVertexIndex + vertex;
+                    indices.push_back(firstFillVertexIndex);
+                    indices.push_back(firstFillVertexIndex + v + 1);
+                    indices.push_back(firstFillVertexIndex + v);
                 }
             }
         }
     }
-    // Start generating hexes
+
+    // Bind surface
+    getSurface().bind();
+
+    // Upload positions, texture coordinates and indices
+    getSurface().uploadPositions(positions, 2);
+    getSurface().uploadTexCoords(textureCoords, 3);
+    getSurface().uploadIndices(indices);
+
+    // Unbind surface
+    getSurface().unbind();
+
+    // Unbind indices
+    getSurface().unbindIndices();
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
