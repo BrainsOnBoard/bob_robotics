@@ -43,7 +43,7 @@ public:
     void unbindTextured() const;
 
     void unbindIndices() const;
-    void render(GLenum primitive = GL_TRIANGLES, GLenum indexType = GL_UNSIGNED_INT) const;
+    void render() const;
 
     template<typename T>
     void uploadPositions(const std::vector<T> &positions, GLint size = 3)
@@ -99,12 +99,17 @@ public:
         // Cache number of indices
         m_NumIndices = indices.size();
 
+        // Determine index type using traits
+        m_IndexType = OpenGLTypeTraits<T>::type;
+
         // **NOTE** GL_ELEMENT_ARRAY_BUFFER works subtly different from GL_ARRAY_BUFFER
         // as it has no client state/pointer tying it to the VAO. Therefore we need to
         // leave it bound until after we unbind the VAO - makes sense but ugly
     }
     
     void setTexture(const Texture *texture){ m_Texture = texture; }
+
+    void setPrimitiveType(GLenum primitiveType) { m_PrimitiveType = primitiveType; }
 
 private:
     //------------------------------------------------------------------------
@@ -135,6 +140,10 @@ private:
     GLuint m_TexCoordVBO;
     GLuint m_IBO;
     
+    GLenum m_PrimitiveType;
+
+    GLenum m_IndexType;
+
     unsigned int m_NumVertices;
     unsigned int m_NumIndices;
 

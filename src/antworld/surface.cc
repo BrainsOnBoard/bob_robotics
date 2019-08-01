@@ -10,6 +10,7 @@ namespace AntWorld
 {
 Surface::Surface() 
 :   m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_IBO(0), 
+    m_PrimitiveType(GL_TRIANGLES), m_IndexType(0),
     m_NumVertices(0), m_NumIndices(0), m_Texture(nullptr)
 {
     // Create a vertex array object to bind everything together
@@ -79,17 +80,17 @@ void Surface::unbindIndices() const
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
-void Surface::render(GLenum primitive, GLenum indexType) const
+void Surface::render() const
 {
     glEnable(GL_CULL_FACE);
 
     if(m_IBO == 0) {
         // Draw world
-        glDrawArrays(primitive, 0, m_NumVertices);
+        glDrawArrays(m_PrimitiveType, 0, m_NumVertices);
     }
     else {
         // Draw render mesh quads
-        glDrawElements(primitive, m_NumIndices, indexType, BUFFER_OFFSET(0));
+        glDrawElements(m_PrimitiveType, m_NumIndices, m_IndexType, BUFFER_OFFSET(0));
     }
 }
 
