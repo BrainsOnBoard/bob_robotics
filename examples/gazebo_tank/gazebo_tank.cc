@@ -1,10 +1,10 @@
 // BoB robotics includes
 #include "common/main.h"
-#include "common/gazebo_node.h"
 #include "common/logging.h"
+#include "gazebo/node.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
-#include "robots/gazebo_tank.h"
+#include "robots/gazebo/tank.h"
 #include "video/gazebocamerainput.h"
 #include "video/display.h"
 
@@ -28,7 +28,7 @@ bob_main(int argc, char **argv)
     /************************************Gazebo setup************/
 
     // Create our node for publishing joystick values
-    gazebo::transport::NodePtr node = getGazeboNode();
+    gazebo::transport::NodePtr node = Gazebo::getNode();
 
     /************************************Gazebo setup end************/
     std::unique_ptr<Display> display;
@@ -48,7 +48,7 @@ bob_main(int argc, char **argv)
         display->runInBackground();
     }
 
-    Robots::GazeboTank robot(5_rad_per_s, node); // Tank agent
+    Robots::Gazebo::Tank robot(5_rad_per_s, node); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
@@ -61,9 +61,10 @@ bob_main(int argc, char **argv)
             std::this_thread::sleep_for(5ms);
         }
     } while (!joystick.isPressed(HID::JButton::B));
+
     // Make sure to shut everything down.
     display->close();
-    shutdownGazeboNode();
+    Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
 
     return EXIT_SUCCESS;

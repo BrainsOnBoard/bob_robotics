@@ -5,19 +5,22 @@
  *    ./display_test 1          # read from camera
  * Or:
  *    ./display_test video.avi  # read from video file
+ * Or:
+ *    ./display_test r  		# stream from RPi camera
  *
  * If no arguments are given, the default camera device is used.
  *
  * Quit by pressing escape.
  */
 
-// Windows headers
-#include "os/windows_include.h"
-
 // BoB robotics includes
 #include "common/logging.h"
-#include "video/opencvinput.h"
 #include "video/display.h"
+#include "video/opencvinput.h"
+#include "video/rpi_cam.h"
+
+// Standard C includes
+#include <cstring>
 
 using namespace BoBRobotics::Video;
 
@@ -37,10 +40,17 @@ main(int argc, char **argv)
             Display display(cam);
             display.run();
         } catch (std::invalid_argument &) {
-            // ...else it's a filename/URL
-            OpenCVInput cam(argv[1]);
-            Display display(cam);
-            display.run();
+            // ...else it's a filename/URL/RPiCam
+            if (strcmp(argv[1], "r") == 0) {
+                // RPicam
+                RPiCamera cam(50091);
+                Display display(cam);
+                display.run();
+            } else {
+                OpenCVInput cam(argv[1]);
+                Display display(cam);
+                display.run();
+            }
         }
     }
 }

@@ -112,7 +112,7 @@ int main(int argc, char **argv)
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
-        renderer.getWorld().load(filesystem::path(argv[0]) / "../../resources/antworld/world5000_gray.bin",
+        renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
                                  { 0.0f, 1.0f, 0.0f },
                                  { 0.898f, 0.718f, 0.353f });
     }

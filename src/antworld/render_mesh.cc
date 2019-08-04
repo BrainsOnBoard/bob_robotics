@@ -15,22 +15,30 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-RenderMesh::RenderMesh() : m_VAO(0), m_PositionVBO(0), m_TextureCoordsVBO(0), m_IBO(0), m_NumIndices(0)
+void RenderMesh::render() const
 {
+    // Bind surface
+    m_Surface.bind();
+
+    // Render surface
+    m_Surface.render(GL_QUADS);
+
+    // Unbind surface
+    m_Surface.unbind();
 }
+
 //----------------------------------------------------------------------------
-RenderMesh::RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
-                       unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
+// BoBRobotics::AntWorld::RenderMeshSpherical
+//----------------------------------------------------------------------------
+RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
+                                         unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
 {
     // We need a vertical for each segment and one extra
     const unsigned int numHorizontalVerts = numHorizontalSegments + 1;
     const unsigned int numVerticalVerts = numVerticalSegments + 1;
 
-    // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_VAO);
-
-    // Bind vertex array
-    glBindVertexArray(m_VAO);
+    // Bind surface
+    getSurface().bind();
 
     {
         // Calculate number of vertices in mesh
@@ -40,7 +48,7 @@ RenderMesh::RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t st
         std::vector<GLfloat> positions;
         std::vector<GLfloat> textureCoords;
         positions.reserve(numVertices * 2);
-        textureCoords.reserve(numVertices * 2);
+        textureCoords.reserve(numVertices * 3);
 
         const float segmentWidth = 1.0f / (float)numHorizontalSegments;
         const degree_t startLatitude = -horizontalFOV / 2.0;
@@ -79,34 +87,15 @@ RenderMesh::RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t st
             }
         }
 
-        // Generate two vertex buffer objects, one for positions and one for texture coordinates
-        glGenBuffers(1, &m_PositionVBO);
-        glGenBuffers(1, &m_TextureCoordsVBO);
-
-        // Bind and upload positions buffer
-        glBindBuffer(GL_ARRAY_BUFFER, m_PositionVBO);
-        glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(GLfloat), positions.data(), GL_STATIC_DRAW);
-
-        // Set vertex pointer and enable client state in VAO
-        glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_VERTEX_ARRAY);
-
-        // Bind and upload texture coordinates buffer
-        glBindBuffer(GL_ARRAY_BUFFER, m_TextureCoordsVBO);
-        glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(GLfloat), textureCoords.data(), GL_STATIC_DRAW);
-
-        // Set texture coordinate pointer and enable client state in VAO
-        glTexCoordPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        // Upload positions and texture coordinates
+        getSurface().uploadPositions(positions, 2);
+        getSurface().uploadTexCoords(textureCoords, 3);
     }
 
     {
-        // Calculate number of quads required to draw mesh
-        m_NumIndices = numHorizontalSegments * numVerticalSegments * 4;
-
-        // Reserce indices
+        // Reserce indices for quads required to draw mesh
         std::vector<GLuint> indices;
-        indices.reserve(m_NumIndices);
+        indices.reserve(numHorizontalSegments * numVerticalSegments * 4);
 
         // Loop through quads
         for(unsigned int y = 0; y < numVerticalSegments; y++) {
@@ -118,39 +107,16 @@ RenderMesh::RenderMesh(degree_t horizontalFOV, degree_t verticalFOV, degree_t st
             }
         }
 
-        // Generate index buffer objects to hold primitive indices
-        glGenBuffers(1, &m_IBO);
-
-        // Bind and upload index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+        // Upload indices to surface
+        getSurface().uploadIndices(indices);
     }
 
-    // Unbind vertex array and array buffers
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-//----------------------------------------------------------------------------
-RenderMesh::~RenderMesh()
-{
-    // Delete render mesh objects
-    glDeleteBuffers(1, &m_PositionVBO);
-    glDeleteBuffers(1, &m_TextureCoordsVBO);
-    glDeleteBuffers(1, &m_IBO);
-    glDeleteVertexArrays(1, &m_VAO);
-}
-//----------------------------------------------------------------------------
-void RenderMesh::render() const
-{
-    // Bind render mesh VAO
-    glBindVertexArray(m_VAO);
+    // Unbind surface
+    getSurface().unbind();
 
-    // Draw render mesh quads
-    glDrawElements(GL_QUADS, m_NumIndices, GL_UNSIGNED_INT, BUFFER_OFFSET(0));
-
-    // Unbind VAO
-    glBindVertexArray(0);
+    // Unbind indices
+    getSurface().unbindIndices();
 }
+
 }   // namespace AntWorld
 }   // namespace BoBRobotics

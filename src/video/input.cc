@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "common/logging.h"
+#include "common/macros.h"
 #include "video/input.h"
 
 // Standard C++ includes
-#include <stdexcept>
 #include <chrono>
 #include <stdexcept>
 #include <thread>
@@ -54,11 +54,7 @@ Input::needsUnwrapping() const
     return getCameraName() != DefaultCameraName;
 }
 
-void
-Input::setOutputSize(const cv::Size &)
-{
-    throw std::runtime_error("This camera's resolution cannot be changed at runtime");
-}
+BOB_NOT_IMPLEMENTED(void Input::setOutputSize(const cv::Size &))
 
 void
 Input::readFrameSync(cv::Mat &outFrame)

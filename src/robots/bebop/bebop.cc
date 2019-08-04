@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "robots/bebop/bebop.h"
-#include "common/macros.h"
 #include "common/logging.h"
+#include "common/macros.h"
 
 using namespace units::angle;
 using namespace units::length;
@@ -339,7 +339,7 @@ inline void
 Bebop::createControllerDevice()
 {
     // create discovery device
-    static const auto deleter = [](ARDISCOVERY_Device_t *&discover) {
+    const auto deleter = [](ARDISCOVERY_Device_t *discover) {
         ARDISCOVERY_Device_Delete(&discover);
     };
     auto derr = ARDISCOVERY_OK;
@@ -356,7 +356,7 @@ Bebop::createControllerDevice()
     // create controller object
     auto err = ARCONTROLLER_OK;
     m_Device = ControllerPtr(ARCONTROLLER_Device_New(discover.get(), &err),
-                             [](ARCONTROLLER_Device_t *&dev) {
+                             [](ARCONTROLLER_Device_t *dev) {
                                  ARCONTROLLER_Device_Delete(&dev);
                              });
     checkError(err);

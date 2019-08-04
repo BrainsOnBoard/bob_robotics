@@ -105,7 +105,7 @@ checkError(eARCONTROLLER_ERROR err)
 class Bebop
   : public UAV
 {
-    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *&)>>;
+    using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
     using radian_t = units::angle::radian_t;
     using degree_t = units::angle::degree_t;

@@ -16,7 +16,8 @@
                 "/usr/include/gazebo-10",
                 "/usr/include/ignition/**",
                 "/usr/include/sdformat-6.0",
-                "/usr/include/sdformat-6.2"
+                "/usr/include/sdformat-6.2",
+                "${GENN_PATH}/include"
             ],
             "defines": [
                 "TANK_TYPE_Tank",
