@@ -14,8 +14,7 @@
  * limitations under the License.
  *
 */
-#ifndef GAZEBO_PLUGINS_GazeboQuadCopterPlugin_HH_
-#define GAZEBO_PLUGINS_GazeboQuadCopterPlugin_HH_
+#pragma once
 
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
@@ -80,11 +79,6 @@ namespace gazebo {
 class GAZEBO_VISIBLE GazeboQuadCopterPlugin : public ModelPlugin
 {
 public:
-    /// \brief Constructor.
-    GazeboQuadCopterPlugin();
-
-    /// \brief Destructor.
-    ~GazeboQuadCopterPlugin();
 
     // Documentation Inherited.
     virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
@@ -131,9 +125,6 @@ private:
     /// \brief Receive motor commands from GazeboQuadCopter
     void ReceiveMotorCommand();
 
-    /// \brief Send state to GazeboQuadCopter
-    void SendState() const;
-
     /// \brief A node used for transport
     transport::NodePtr m_Node;
 
@@ -150,4 +141,3 @@ private:
     ignition::math::v4::Pose3d m_LoiterReference;
 };
 }
-#endif

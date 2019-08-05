@@ -1,7 +1,6 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "common/gazebo_node.h"
-#include "common/logging.h"
 #include "hid/joystick.h"
 #include "robots/gazebo_uav.h"
 // #include "robots/gazebo_tank.h"
