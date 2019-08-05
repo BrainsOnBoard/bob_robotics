@@ -2,10 +2,11 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "common/gazebo_node.h"
-#include "input.h"
-#include "common/semaphore.h"
 #include "common/logging.h"
+#include "common/semaphore.h"
+#include "gazebo/node.h"
+#include "input.h"
+
 // Gazebo includes
 #include <gazebo/transport/transport.hh>
 
@@ -40,7 +41,7 @@ public:
      */
     GazeboCameraInput(const std::string &topic, const bool isPanoramic = false)
     : m_IsPanoramic(isPanoramic){
-        m_ImageNode = getGazeboNode();
+        m_ImageNode = Gazebo::getNode();
         subscribeToGazeboCamera(topic);
     }
     /*!

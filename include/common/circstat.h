@@ -13,6 +13,27 @@ pi()
     return T(3.1415926535897932385L);
 }
 
+constexpr auto
+getAngularVelocity(units::velocity::meters_per_second_t velocity,
+                   units::length::meter_t radius)
+{
+    return units::angular_velocity::radians_per_second_t{ velocity.value() / radius.value() };
+}
+
+constexpr auto
+getRadius(units::velocity::meters_per_second_t velocity,
+          units::angular_velocity::radians_per_second_t omega)
+{
+    return units::length::meter_t{ velocity.value() / omega.value() };
+}
+
+constexpr auto
+getVelocity(units::angular_velocity::radians_per_second_t omega,
+            units::length::meter_t radius)
+{
+    return units::velocity::meters_per_second_t{ omega.value() * radius.value() };
+}
+
 template<typename AngleType>
 constexpr auto
 normaliseAngle180(AngleType angle)

@@ -13,6 +13,10 @@
 // BoB robotics includes
 #include "common/pose.h"
 
+// Libantworld include
+#include "surface.h"
+#include "texture.h"
+
 // Forward declarations
 namespace cv
 {
@@ -60,65 +64,6 @@ public:
     }
 
 private:
-    //------------------------------------------------------------------------
-    // Texture
-    //------------------------------------------------------------------------
-    class Texture
-    {
-    public:
-        Texture();
-        ~Texture();
-
-        //------------------------------------------------------------------------
-        // Public API
-        //------------------------------------------------------------------------
-        void bind() const;
-        void unbind() const;
-        void upload(const cv::Mat &texture, GLint textureFormat);
-
-    private:
-        //------------------------------------------------------------------------
-        // Members
-        //------------------------------------------------------------------------
-        GLuint m_Texture;
-    };
-
-    //------------------------------------------------------------------------
-    // Surface
-    //------------------------------------------------------------------------
-    // Encapsulates a single 'surface' - geometry to be rendered in one draw call using one material
-    class Surface
-    {
-    public:
-        Surface();
-        ~Surface();
-
-        //------------------------------------------------------------------------
-        // Public API
-        //------------------------------------------------------------------------
-        void bind() const;
-        void unbind() const;
-        void render() const;
-
-        void uploadPositions(const std::vector<GLfloat> &positions);
-        void uploadColours(const std::vector<GLfloat> &positions);
-        void uploadTexCoords(const std::vector<GLfloat> &texCoords);
-
-        void setTexture(const Texture *texture){ m_Texture = texture; }
-
-    private:
-        //------------------------------------------------------------------------
-        // Members
-        //------------------------------------------------------------------------
-        GLuint m_VAO;
-        GLuint m_PositionVBO;
-        GLuint m_ColourVBO;
-        GLuint m_TexCoordVBO;
-        unsigned int m_NumVertices;
-
-        const Texture *m_Texture;
-    };
-
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------

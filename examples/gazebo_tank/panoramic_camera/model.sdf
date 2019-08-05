@@ -43,7 +43,7 @@
           </clip>
           <lens>
             <type>custom</type>
-            <scale_to_hfov>false</scale_to_hfov>
+            <scale_to_hfov>true</scale_to_hfov>
             <cutoff_angle>6.2831</cutoff_angle>
             <env_texture_size>512</env_texture_size>
             <custom_function>

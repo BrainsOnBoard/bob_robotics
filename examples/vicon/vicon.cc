@@ -25,19 +25,16 @@ int main(int argc, char **argv)
     const std::string objectName = objectData.getName();
     LOGI << "Found object: " << objectName;
 
-    if (!viconCaptureControl.startRecording("test1")) {
-        return EXIT_FAILURE;
-    }
-    for (int i = 0; i < 1000; i++) {
+    viconCaptureControl.startRecording("test1");
+
+    for (int i = 0; i < 10000; i++) {
         auto objectData = vicon.getObjectData(objectName);
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
         LOGI << position[0] << ", " << position[1] << ", " << position[2] << ", "
                   << attitude[0] << ", " << attitude[1] << ", " << attitude[2];
     }
-    if (!viconCaptureControl.stopRecording("test1")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("test1");
 
     return EXIT_SUCCESS;
 }
