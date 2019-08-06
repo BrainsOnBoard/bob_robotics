@@ -89,7 +89,8 @@ int main(int argc, char **argv)
     glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
-    glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+    //glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(4.0);
     glPointSize(4.0);
@@ -101,7 +102,9 @@ int main(int argc, char **argv)
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
-    AntWorld::Renderer renderer(512, 0.1);
+    AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 30, 26),
+                                1024, 0.1);
+    //AntWorld::Renderer renderer(512, 0.1);
     if (useRothamstedModel) {
         const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
         if (!modelPath) {
