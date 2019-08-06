@@ -65,7 +65,7 @@ class RenderMeshHexagonal : public RenderMesh
 {
 public:
     RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
-                        unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
+                        units::angle::degree_t interommatidiaAngle);
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

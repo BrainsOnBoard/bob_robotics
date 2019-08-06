@@ -125,22 +125,20 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
 // BoBRobotics::AntWorld::RenderMeshHexagonal
 //----------------------------------------------------------------------------
 RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
-                                         unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
+                                         units::angle::degree_t interommatidiaAngle)
 {
-    using namespace units::angle;
-    using namespace units::math;
     using namespace units::literals;
 
     // Pre-calculate cos30 and sin30
-    const float cos30 = cos(30_deg);
-    const float sin30 = sin(30_deg);
+    const float cos30 = units::math::cos(30_deg);
+    const float sin30 = units::math::sin(30_deg);
 
-    // Calculate side lengths that would be required to fit rendermesh into normalized coordinate space in each dimension
-    const float horizontalSideLength = 1.0f / ((float)numHorizontalSegments * 2.0f * cos30);
-    const float verticalSideLength = 1.0f / ((float)numVerticalSegments * (1.0f + sin30));
+    // Determine size of segments used for rendering
+    //const float segmentWidth = 1.0f / (float)numHorizontalSegments;
+    //const float segmentHeight = 1.0f / (float)numVerticalSegments;
 
-    // Pick smallest
-    const float sideLength = std::min(horizontalSideLength, verticalSideLength);
+    // Calculate side length from interommatidia angle
+    const float sideLength = interommatidiaAngle.value() / (2.0 * cos30);
 
     // Calculate other hexagon dimensions
     const float hexDistance = cos30 * sideLength;
@@ -170,12 +168,12 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
         for(int j = -numHorizontalRadiusSegments; j < numHorizontalRadiusSegments; j++) {
             // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
             // https://www.redblobgames.com/grids/hexagons/
-            float hexX = j * (2.0f * hexDistance);
-            float hexY = i * (hexHeight + sideLength);
+            float hexLongitude = j * (2.0f * hexDistance);
+            float hexLatitude = i * (hexHeight + sideLength);
 
             // If row is odd, add additional distance
             if((i & 1) != 0) {
-                hexX += hexDistance;
+                hexLongitude += hexDistance;
             }
 
             // Cache index of first hex in
@@ -184,28 +182,24 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
             // Loop through vertices
             for(unsigned int v = 0; v < 6; v++) {
                 // Calculate position of vertex
-                const float vertexX = hexX + hexPositionOffsets[v][0];
-                const float vertexY = hexY + hexPositionOffsets[v][1];
+                const float vertexLongitude = hexLongitude + hexPositionOffsets[v][0];
+                const float vertexLatitude = hexLatitude + hexPositionOffsets[v][1];
 
                 // Add positions, offsetting to centre of screen
                 positions.push_back(0.5f + vertexX);
                 positions.push_back(0.5f + vertexY);
 
-                // Calcualate distance to hex to origin - this is treated as the arc length (radius = 1)
-                const float arcLength = std::sqrt((vertexX * vertexX) + (vertexY * vertexY));
+                const GLfloat sinLatitude = sin(latitude);
+                const GLfloat cosLatitude = cos(latitude);
 
-                // Calculate T coordinate
-                const float vertexT = cos(radian_t(arcLength));
-                BOB_ASSERT(vertexT >= 0.0f);
+                // Add vertex position
+                positions.push_back(x);
+                positions.push_back(y);
 
-                const float a = sin(radian_t(arcLength)) / arcLength;
-                const float vertexS = vertexX * a;
-                const float vertexR = -vertexY * a;
-
-                // Add texture coordinates
-                textureCoords.push_back(vertexS);
-                textureCoords.push_back(vertexR);
-                textureCoords.push_back(vertexT);
+                // Add vertex texture coordinate
+                textureCoords.push_back(sinLatitude * cosLongitude);
+                textureCoords.push_back(sinLongitude);
+                textureCoords.push_back(cosLatitude * cosLongitude);
             }
 
             // Add two quads to render hexagon
