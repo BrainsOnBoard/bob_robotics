@@ -1,8 +1,9 @@
-#include "common/logging.h"
-
 #include "config.h"
 #include "image_input.h"
 #include "memory.h"
+
+// BoB robotics includes
+#include "common/logging.h"
 
 int main(int argc, char *argv[])
 {

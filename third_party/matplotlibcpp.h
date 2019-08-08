@@ -1,11 +1,11 @@
 #pragma once
 
+#include <array>
 #include <vector>
 #include <map>
 #include <numeric>
 #include <algorithm>
 #include <stdexcept>
-#include <iostream>
 #include <stdint.h> // <cstdint> requires c++11 support
 
 #if __cplusplus > 199711L || _MSC_VER > 1800
@@ -869,7 +869,7 @@ template<typename Numeric>
 bool plot(const std::vector<Numeric>& y, const std::string& format = "")
 {
     std::vector<Numeric> x(y.size());
-    for(size_t i=0; i<x.size(); ++i) x.at(i) = i;
+    for(size_t i=0; i<x.size(); ++i) x.at(i) = (Numeric) i;
     return plot(x,y,format);
 }
 

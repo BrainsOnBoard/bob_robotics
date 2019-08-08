@@ -1,4 +1,0 @@
-/simulated_tank_gazebo
-*.so
-*.d
-!model.sdf

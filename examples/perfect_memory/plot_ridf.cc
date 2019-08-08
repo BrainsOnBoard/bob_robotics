@@ -1,6 +1,3 @@
-// Standard C++ includes
-#include <iostream>
-
 // BoB robotics includes
 #include "navigation/perfect_memory.h"
 #include "navigation/plot.h"

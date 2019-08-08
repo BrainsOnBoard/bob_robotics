@@ -1,16 +1,21 @@
-// C++ includes
+// BoB robotics includes
+#include "imgproc/opencv_unwrap_360.h"
+
+// Third-party includes
+#include "third_party/path.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C includes
+#include <cassert>
+#include <cstdlib>
+
+// Standard C++ includes
 #include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
-
-// C includes
-#include <cassert>
-#include <cstdlib>
-
-// BoB robotics includes
-#include "imgproc/opencv_unwrap_360.h"
-#include "third_party/path.h"
 
 /*
  * ffmpeg is used for copying the audio stream from the original to the

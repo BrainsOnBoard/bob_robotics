@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnwrapConfig", "tools\unwrapconfig\UnwrapConfig.vcxproj", "{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GantryImageDatabaseCreator", "tools\gantry_db_creator\GantryImageDatabaseCreator.vcxproj", "{BB974225-9356-41EE-9E79-6ECE1F5990F0}"
 EndProject
 Global
@@ -15,14 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x64.ActiveCfg = Debug|x64
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x64.Build.0 = Debug|x64
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x86.ActiveCfg = Debug|Win32
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Debug|x86.Build.0 = Debug|Win32
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x64.ActiveCfg = Release|x64
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x64.Build.0 = Release|x64
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x86.ActiveCfg = Release|Win32
-		{CCC64D2E-D217-472B-BE6B-C52F7CFE376D}.Release|x86.Build.0 = Release|Win32
 		{BB974225-9356-41EE-9E79-6ECE1F5990F0}.Debug|x64.ActiveCfg = Debug|Win32
 		{BB974225-9356-41EE-9E79-6ECE1F5990F0}.Debug|x86.ActiveCfg = Debug|Win32
 		{BB974225-9356-41EE-9E79-6ECE1F5990F0}.Debug|x86.Build.0 = Debug|Win32

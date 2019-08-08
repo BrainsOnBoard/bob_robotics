@@ -27,7 +27,7 @@
 #ifndef TK_SPLINE_H
 #define TK_SPLINE_H
 
-#include "common/assert.h"
+#include "common/macros.h"
 
 #include <cstdio>
 #include <vector>

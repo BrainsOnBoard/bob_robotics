@@ -12,6 +12,7 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "hid/joystick.h"
 #include "net/client.h"
@@ -23,7 +24,6 @@
 // Standard C++ includes
 #include <chrono>
 #include <exception>
-#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -41,7 +41,7 @@ bob_main(int argc, char **argv)
         robotIP = argv[1];
     } else {
         // Get robot IP from terminal
-        std::cout << "Robot IP [127.0.0.1]: ";
+        LOGI << "Robot IP [127.0.0.1]: ";
         std::getline(std::cin, robotIP);
         if (robotIP.empty()) {
             robotIP = "127.0.0.1";

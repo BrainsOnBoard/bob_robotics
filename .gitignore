@@ -1,3 +1,6 @@
+# CMake build dir
+**/build/*
+
 # OS-specific files
 .directory
 .DS_Store
@@ -9,6 +12,8 @@
 **/.ipynb_checkpoints/
 
 # QT creator project files
+bob_robotics.cflags
+bob_robotics.cxxflags
 bob_robotics.config
 bob_robotics.creator
 bob_robotics.files
@@ -21,8 +26,11 @@ bob_robotics.includes
 
 # Ignore object files
 **/*.a
+**/*.so
 **/*.o
 **/*.obj
+**/*.lib
+**/*.dll
 
 # Ignore dependency files
 **/*.d
@@ -31,10 +39,10 @@ bob_robotics.includes
 **/*_CODE
 
 # Ignore generator executables
-**/generateALL_CPU_ONLY
-**/generateALL_CPU_ONLY.exe
-**/generateALL
-**/generateALL.exe
+**/generator_CPU_ONLY
+**/generator_CPU_ONLY.exe
+**/generator
+**/generator.exe
 
 # Ignore auto-generated Makefiles
 **/sm_version.mk
@@ -135,7 +143,6 @@ ipch/
 *.ncb
 *.opendb
 *.opensdf
-*.sdf
 *.cachefile
 *.VC.db
 *.VC.VC.opendb
@@ -368,3 +375,19 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder
 .mfractor/
+
+# Whitelist bob_make tool
+!/bin/bob_make
+
+# Ignore CMake output files
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps

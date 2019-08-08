@@ -56,13 +56,13 @@ class RobotFSM : FSM<State>::StateHandler
     using TimePoint = std::chrono::high_resolution_clock::time_point;
     using Seconds = std::chrono::duration<double, std::ratio<1>>;
     using Milliseconds = std::chrono::duration<double, std::milli>;
-    
+
 public:
     RobotFSM(const Config &config)
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(Video::getPanoramicCamera()),
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
         m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
-        m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())), 
+        m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
         m_TestDuration(450.0),/*
         m_Server(config.getServerListenPort()), m_NetSink(m_Server, config.getUnwrapRes(), "unwrapped"),*/
         m_NumSnapshots(0)
@@ -79,18 +79,6 @@ public:
         if(m_Config.shouldUseViconTracking()) {
             // Connect to port specified in config
             m_ViconTracking.connect(m_Config.getViconTrackingPort());
-
-            // Wait for tracking data stream to begin
-            while(true) {
-                try {
-                    m_ViconTrackingObjectID = m_ViconTracking.findObjectID(m_Config.getViconTrackingObjectName());
-                    break;
-                }
-                catch(std::out_of_range &ex) {
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                    LOGI << "Waiting for object '" << m_Config.getViconTrackingObjectName() << "'";
-                }
-            }
         }
 
         // If we should use Vicon capture control
@@ -141,7 +129,7 @@ public:
         }
     }
 
-    ~RobotFSM() 
+    ~RobotFSM()
     {
         // Stop motors
         m_Motor.tank(0.0f, 0.0f);
@@ -154,7 +142,7 @@ public:
     {
         return m_StateMachine.update();
     }
-    
+
 private:
     filesystem::path getSnapshotPath(size_t index) const
     {
@@ -191,7 +179,7 @@ private:
 
             cv::waitKey(1);
         }
-	
+
         if(state == State::WaitToTrain) {
             if(event == Event::Enter) {
                 LOGI << "Press B to start training" ;
@@ -264,7 +252,7 @@ private:
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
-                        auto objectData = m_ViconTracking.getObjectData(0);
+                        auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
                         const auto &position = objectData.getPosition<units::length::millimeter_t>();
                         const auto &attitude = objectData.getAttitude<units::angle::degree_t>();
 
@@ -469,7 +457,6 @@ private:
 
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
-    unsigned int m_ViconTrackingObjectID;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;

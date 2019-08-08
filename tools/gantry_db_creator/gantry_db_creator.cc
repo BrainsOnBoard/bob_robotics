@@ -1,15 +1,13 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/main.h"
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
-
-// Standard C++ includes
-#include <iostream>
 
 using namespace std::literals;
 using namespace units::literals;
@@ -37,9 +35,9 @@ bob_main(int, char **)
 
     // Open gantry and home it
     Robots::Gantry gantry;
-    std::cout << "Homing gantry." << std::endl;
+    LOGI << "Homing gantry.";
     gantry.raiseAndHome();
-    std::cout << "Gantry homed." << std::endl;
+    LOGI << "Gantry homed.";
 
     cv::Mat frame(imSize, CV_8UC3);
     for (size_t x = 0, y = 0; x < gridRecorder.sizeX();) {

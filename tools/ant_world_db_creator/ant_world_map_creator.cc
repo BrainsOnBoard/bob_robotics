@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "common/logging.h"
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_continuous.h"
-#include "video/opengl.h"
+#include "antworld/common.h"
+#include "antworld/renderer.h"
+#include "antworld/route_continuous.h"
+#include "video/opengl/opengl.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -14,9 +14,6 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
-// Standard C++ includes
-#include <iostream>
-
 using namespace BoBRobotics;
 
 // Anonymous namespace
@@ -24,7 +21,7 @@ namespace
 {
 void handleGLFWError(int errorNumber, const char *message)
 {
-    std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
+    LOGE << "GLFW error number: " << errorNumber << ", message:" << message;
 }
 
 void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
@@ -34,7 +31,7 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *messag
 
 }
 
-int main()
+int main(int, char **argv)
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
@@ -44,7 +41,7 @@ int main()
 
     // Initialize the library
     if(!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+        LOGW << "Failed to initialize GLFW";
         return EXIT_FAILURE;
     }
 
@@ -56,7 +53,7 @@ int main()
     if(!window)
     {
         glfwTerminate();
-        std::cerr << "Failed to create window" << std::endl;
+        LOGW << "Failed to create window";
         return EXIT_FAILURE;
     }
 
@@ -65,7 +62,7 @@ int main()
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
+        LOGW << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
 
@@ -90,7 +87,7 @@ int main()
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+    renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create input to read snapshots from screen
