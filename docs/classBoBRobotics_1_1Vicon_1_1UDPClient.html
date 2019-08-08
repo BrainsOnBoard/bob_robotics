@@ -88,6 +88,7 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Vicon_1_1UDPClient
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classBoBRobotics_1_1Vicon_1_1UDPClient-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -108,20 +109,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0f4b3d7f71941a31655012affbbff3eb"><td class="memItemLeft" align="right" valign="top"><a id="a0f4b3d7f71941a31655012affbbff3eb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (uint16_t port)</td></tr>
 <tr class="separator:a0f4b3d7f71941a31655012affbbff3eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9668dba4ed68af9aa11a200425c44b06"><td class="memItemLeft" align="right" valign="top"><a id="a9668dba4ed68af9aa11a200425c44b06"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>getNumObjects</b> ()</td></tr>
-<tr class="separator:a9668dba4ed68af9aa11a200425c44b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97a5d5ecc59bede61746e7e6bde49224"><td class="memItemLeft" align="right" valign="top"><a id="a97a5d5ecc59bede61746e7e6bde49224"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>findObjectID</b> (const std::string &amp;name)</td></tr>
-<tr class="separator:a97a5d5ecc59bede61746e7e6bde49224"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a76bd23598de724daa649fbcd301525c1"><td class="memItemLeft" align="right" valign="top"><a id="a76bd23598de724daa649fbcd301525c1"></a>
-ObjectDataType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Vicon_1_1UDPClient.html#a76bd23598de724daa649fbcd301525c1">getObjectData</a> (unsigned int id)</td></tr>
-<tr class="memdesc:a76bd23598de724daa649fbcd301525c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get current pose information for specified object. <br /></td></tr>
-<tr class="separator:a76bd23598de724daa649fbcd301525c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cf55e2707f055f09c5ac563dbc00b2a"><td class="memItemLeft" align="right" valign="top"><a id="a3cf55e2707f055f09c5ac563dbc00b2a"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Vicon_1_1UDPClient.html#a3cf55e2707f055f09c5ac563dbc00b2a">getObjectReference</a> (unsigned int id, Stopwatch::Duration timeoutDuration=Stopwatch::Duration::max())</td></tr>
-<tr class="memdesc:a3cf55e2707f055f09c5ac563dbc00b2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns an object whose pose is updated by the <a class="el" href="namespaceBoBRobotics_1_1Vicon.html" title="For interfacing with the Vicon motion-tracking system.">Vicon</a> system over time. <br /></td></tr>
-<tr class="separator:a3cf55e2707f055f09c5ac563dbc00b2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2749d6bc9262539df299a2651cf74fb"><td class="memItemLeft" align="right" valign="top"><a id="af2749d6bc9262539df299a2651cf74fb"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>getNumObjects</b> ()</td></tr>
+<tr class="separator:af2749d6bc9262539df299a2651cf74fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00f506172226e8829ba5ad52435e91a4"><td class="memItemLeft" align="right" valign="top"><a id="a00f506172226e8829ba5ad52435e91a4"></a>
+ObjectDataType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Vicon_1_1UDPClient.html#a00f506172226e8829ba5ad52435e91a4">getObjectData</a> (const std::string &amp;name)</td></tr>
+<tr class="memdesc:a00f506172226e8829ba5ad52435e91a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get current pose information for specified object. <br /></td></tr>
+<tr class="separator:a00f506172226e8829ba5ad52435e91a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2e075e8ad329a81e15c1b2f55a722f9"><td class="memItemLeft" align="right" valign="top"><a id="ae2e075e8ad329a81e15c1b2f55a722f9"></a>
+ObjectDataType&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Vicon_1_1UDPClient.html#ae2e075e8ad329a81e15c1b2f55a722f9">getObjectData</a> ()</td></tr>
+<tr class="memdesc:ae2e075e8ad329a81e15c1b2f55a722f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get current pose information for first object. <br /></td></tr>
+<tr class="separator:ae2e075e8ad329a81e15c1b2f55a722f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae67e2da388829328750a98eb0410487"><td class="memItemLeft" align="right" valign="top"><a id="aae67e2da388829328750a98eb0410487"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getObjectReference</b> (Stopwatch::Duration timeoutDuration=10s)</td></tr>
+<tr class="separator:aae67e2da388829328750a98eb0410487"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9739bd7f9db87a1d8d40ff12b467a892"><td class="memItemLeft" align="right" valign="top"><a id="a9739bd7f9db87a1d8d40ff12b467a892"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Vicon_1_1UDPClient.html#a9739bd7f9db87a1d8d40ff12b467a892">getObjectReference</a> (const std::string &amp;name, Stopwatch::Duration timeoutDuration=10s)</td></tr>
+<tr class="memdesc:a9739bd7f9db87a1d8d40ff12b467a892"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns an object whose pose is updated by the <a class="el" href="namespaceBoBRobotics_1_1Vicon.html" title="For interfacing with the Vicon motion-tracking system.">Vicon</a> system over time. <br /></td></tr>
+<tr class="separator:a9739bd7f9db87a1d8d40ff12b467a892"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f407513d628d87945cb37ff563fbb2f"><td class="memItemLeft" align="right" valign="top"><a id="a1f407513d628d87945cb37ff563fbb2f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>connected</b> () const</td></tr>
+<tr class="separator:a1f407513d628d87945cb37ff563fbb2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;typename ObjectDataType = ObjectData&gt;<br />
@@ -129,7 +137,7 @@ class BoBRobotics::Vicon::UDPClient&lt; ObjectDataType &gt;</h3>
 
 <p>Receiver for <a class="el" href="namespaceBoBRobotics_1_1Vicon.html" title="For interfacing with the Vicon motion-tracking system.">Vicon</a> UDP streams. </p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>vicon/udp.h</li>
+<li>include/vicon/udp.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

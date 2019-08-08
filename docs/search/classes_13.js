@@ -3,6 +3,8 @@ var searchData=
   ['uav',['UAV',['../classBoBRobotics_1_1Robots_1_1UAV.html',1,'BoBRobotics::Robots']]],
   ['uavnavigation',['UAVNavigation',['../classUAVNavigation.html',1,'']]],
   ['udpclient',['UDPClient',['../classBoBRobotics_1_1Vicon_1_1UDPClient.html',1,'BoBRobotics::Vicon']]],
+  ['udpclient_3c_20objectdata_20_3e',['UDPClient&lt; ObjectData &gt;',['../classBoBRobotics_1_1Vicon_1_1UDPClient.html',1,'BoBRobotics::Vicon']]],
+  ['ultrasonic_5fsensor',['ultrasonic_sensor',['../classev3dev_1_1ultrasonic__sensor.html',1,'ev3dev']]],
   ['unit',['unit',['../structunits_1_1unit.html',1,'units']]],
   ['unit_5ft',['unit_t',['../classunits_1_1unit__t.html',1,'units']]],
   ['unit_5fvalue_5fadd',['unit_value_add',['../structunits_1_1unit__value__add.html',1,'units']]],
@@ -11,5 +13,6 @@ var searchData=
   ['unit_5fvalue_5fpower',['unit_value_power',['../structunits_1_1unit__value__power.html',1,'units']]],
   ['unit_5fvalue_5fsqrt',['unit_value_sqrt',['../structunits_1_1unit__value__sqrt.html',1,'units']]],
   ['unit_5fvalue_5fsubtract',['unit_value_subtract',['../structunits_1_1unit__value__subtract.html',1,'units']]],
-  ['unit_5fvalue_5ft',['unit_value_t',['../structunits_1_1unit__value__t.html',1,'units']]]
+  ['unit_5fvalue_5ft',['unit_value_t',['../structunits_1_1unit__value__t.html',1,'units']]],
+  ['utf8converter',['UTF8Converter',['../classplog_1_1UTF8Converter.html',1,'plog']]]
 ];

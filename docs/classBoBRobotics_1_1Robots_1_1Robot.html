@@ -106,14 +106,17 @@ Inheritance diagram for BoBRobotics::Robots::Robot:</div>
   <img src="classBoBRobotics_1_1Robots_1_1Robot.png" usemap="#BoBRobotics::Robots::Robot_map" alt=""/>
   <map id="BoBRobotics::Robots::Robot_map" name="BoBRobotics::Robots::Robot_map">
 <area href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html" title="A simple agent with a position and a panoramic view of the current AntWorld." alt="BoBRobotics::AntWorld::AntAgent" shape="rect" coords="0,56,360,80"/>
+<area href="classBoBRobotics_1_1Robots_1_1Omni2D.html" alt="BoBRobotics::Robots::Omni2D" shape="rect" coords="370,56,730,80"/>
 <area href="classBoBRobotics_1_1Robots_1_1Tank.html" title="Interface for driving wheeled robots with tank steering." alt="BoBRobotics::Robots::Tank" shape="rect" coords="740,56,1100,80"/>
-<area href="classBoBRobotics_1_1Robots_1_1UAV.html" alt="BoBRobotics::Robots::UAV" shape="rect" coords="1850,56,2210,80"/>
-<area href="classBoBRobotics_1_1Robots_1_1EV3.html" title="Control for a Lego Mindstorms tank robot." alt="BoBRobotics::Robots::EV3" shape="rect" coords="0,112,360,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1Norbot.html" title="An interface for wheeled, Arduino-based robots developed at the University of Sussex." alt="BoBRobotics::Robots::Norbot" shape="rect" coords="370,112,730,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1SimulatedTank.html" alt="BoBRobotics::Robots::SimulatedTank&lt; LengthUnit, AngleUnit &gt;" shape="rect" coords="740,112,1100,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1Surveyor.html" title="An interface for Active Robots&#39; Surveyor line of robots." alt="BoBRobotics::Robots::Surveyor" shape="rect" coords="1110,112,1470,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1TankNetSink.html" title="An interface for transmitting tank steering commands over the network." alt="BoBRobotics::Robots::TankNetSink" shape="rect" coords="1480,112,1840,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1Bebop.html" title="An interface to Parrot Bebop 2 drones." alt="BoBRobotics::Robots::Bebop" shape="rect" coords="1850,112,2210,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1UAV.html" alt="BoBRobotics::Robots::UAV" shape="rect" coords="1480,56,1840,80"/>
+<area href="classBoBRobotics_1_1Robots_1_1Mecanum.html" alt="BoBRobotics::Robots::Mecanum" shape="rect" coords="370,112,730,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1EV3.html" title="Control for a Lego Mindstorms tank robot." alt="BoBRobotics::Robots::EV3" shape="rect" coords="1110,112,1470,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1Gazebo_1_1Tank.html" alt="BoBRobotics::Robots::Gazebo::Tank" shape="rect" coords="1110,168,1470,192"/>
+<area href="classBoBRobotics_1_1Robots_1_1SimulatedTank.html" alt="BoBRobotics::Robots::SimulatedTank&lt; LengthUnit, AngleUnit &gt;" shape="rect" coords="1110,224,1470,248"/>
+<area href="classBoBRobotics_1_1Robots_1_1Surveyor.html" title="An interface for Active Robots&#39; Surveyor line of robots." alt="BoBRobotics::Robots::Surveyor" shape="rect" coords="1110,280,1470,304"/>
+<area href="classBoBRobotics_1_1Robots_1_1TankNetSinkBase.html" title="An interface for transmitting tank steering commands over the network." alt="BoBRobotics::Robots::TankNetSinkBase&lt; ConnectionType &gt;" shape="rect" coords="1110,336,1470,360"/>
+<area href="classBoBRobotics_1_1Robots_1_1TankNetSinkBase.html" alt="BoBRobotics::Robots::TankNetSinkBase&lt; Net::Client &gt;" shape="rect" coords="1110,392,1470,416"/>
+<area href="classBoBRobotics_1_1Robots_1_1Bebop.html" title="An interface to Parrot Bebop 2 drones." alt="BoBRobotics::Robots::Bebop" shape="rect" coords="1480,112,1840,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -160,7 +163,7 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <p>Move forward at the specified relative speed. </p>
 <p>! Values must be between -1 and 1 inclusive. </p>
 
-<p>Implemented in <a class="el" href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html#a298b9cda5d6194b89bb0fdc4072c4bfc">BoBRobotics::AntWorld::AntAgent</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#af512f678e97c20e4b4be83cbd11f0f4d">BoBRobotics::Robots::Tank</a>, and <a class="el" href="classBoBRobotics_1_1Robots_1_1UAV.html#a4099ab988db48398ae76dba78adc3e85">BoBRobotics::Robots::UAV</a>.</p>
+<p>Implemented in <a class="el" href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html#ae1d09e90d989979b27f848ce04b27ad1">BoBRobotics::AntWorld::AntAgent</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#ac78891ab893cc8d6a51f634ffa90f957">BoBRobotics::Robots::Tank</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Omni2D.html#a0c8805fdf7e19b8a47c0575c7cd15342">BoBRobotics::Robots::Omni2D</a>, and <a class="el" href="classBoBRobotics_1_1Robots_1_1UAV.html#ac99b6ea666fb8bb83b2608d31ac8f8f6">BoBRobotics::Robots::UAV</a>.</p>
 
 </div>
 </div>
@@ -191,12 +194,12 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hr
 <p>Stop moving forward and start turning at the specified relative speed. </p>
 <p>! Values must be between -1 and 1 inclusive. </p>
 
-<p>Implemented in <a class="el" href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html#ad6b6148aafff3a1d40ac6c0147f7b4b4">BoBRobotics::AntWorld::AntAgent</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#ae38816fa5dfadb5c5ec7d584eae393ab">BoBRobotics::Robots::Tank</a>, and <a class="el" href="classBoBRobotics_1_1Robots_1_1UAV.html#add75e8955cec1374eb31c6338b572d82">BoBRobotics::Robots::UAV</a>.</p>
+<p>Implemented in <a class="el" href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html#a932a0766d92f67bbf190c199b6d82fcc">BoBRobotics::AntWorld::AntAgent</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Omni2D.html#a0790f1ad0d066a3d57761799d363e284">BoBRobotics::Robots::Omni2D</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#a4127163cf2eaab76e36305b5c2349646">BoBRobotics::Robots::Tank</a>, and <a class="el" href="classBoBRobotics_1_1Robots_1_1UAV.html#a519ffdd95e38fd42c359a9fd3f0b2588">BoBRobotics::Robots::UAV</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>robots/robot.h</li>
+<li>include/robots/robot.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

@@ -1,10 +1,11 @@
 var classBoBRobotics_1_1Robots_1_1EV3 =
 [
+    [ "MotorType", "classBoBRobotics_1_1Robots_1_1EV3.html#a50859f704cef3261d1c48f7c969dfb17", null ],
     [ "EV3", "classBoBRobotics_1_1Robots_1_1EV3.html#aa41be17b19ff8be27ac2427f7a22f90b", null ],
-    [ "~EV3", "classBoBRobotics_1_1Robots_1_1EV3.html#a9688d41e799e0437754dc2b559ee449f", null ],
-    [ "getAbsoluteMaximumSpeed", "classBoBRobotics_1_1Robots_1_1EV3.html#a358ee72cec671223f0ac1861e087857e", null ],
-    [ "getRobotWidth", "classBoBRobotics_1_1Robots_1_1EV3.html#adcc28e663e5ca4e5ea119597de05219b", null ],
-    [ "getWheelVelocities", "classBoBRobotics_1_1Robots_1_1EV3.html#a8ab4c067d0dadd170254ebb0b77dcd91", null ],
-    [ "stopMoving", "classBoBRobotics_1_1Robots_1_1EV3.html#a4ab4c31a735804330df08bb915ddd3a6", null ],
-    [ "tank", "classBoBRobotics_1_1Robots_1_1EV3.html#a12576c969b446f11b3dc7d9b77185d52", null ]
+    [ "~EV3", "classBoBRobotics_1_1Robots_1_1EV3.html#a2ce654310846ed452fa177ccac918b6b", null ],
+    [ "getAbsoluteMaximumSpeed", "classBoBRobotics_1_1Robots_1_1EV3.html#ac511b0b344ee0a32189ed6431725f6d8", null ],
+    [ "getRobotWidth", "classBoBRobotics_1_1Robots_1_1EV3.html#ae8e65f3a5d3cdafce5820cb464c3f6bc", null ],
+    [ "getWheelVelocities", "classBoBRobotics_1_1Robots_1_1EV3.html#a14c1950e513d64343bb0a7b39fa612e3", null ],
+    [ "stopMoving", "classBoBRobotics_1_1Robots_1_1EV3.html#a76bdde34e3a424d3b111cfc094bb6290", null ],
+    [ "tank", "classBoBRobotics_1_1Robots_1_1EV3.html#ae704bdb951fb858d611d3246f20eb44c", null ]
 ];

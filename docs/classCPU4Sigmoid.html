@@ -109,9 +109,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac6cb4caff31d621e435303efba9851ad"><td class="memItemLeft" align="right" valign="top"><a id="ac6cb4caff31d621e435303efba9851ad"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>DECLARE_MODEL</b> (<a class="el" href="classCPU4Sigmoid.html">CPU4Sigmoid</a>, 4, 2)</td></tr>
 <tr class="separator:ac6cb4caff31d621e435303efba9851ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0d5034c943c897f461b5cf8bd8d3a09"><td class="memItemLeft" align="right" valign="top"><a id="ab0d5034c943c897f461b5cf8bd8d3a09"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SET_SIM_CODE</b> (&quot;$(i) += $(h) * min(1.0, max($(Isyn), 0.0));\n&quot; &quot;$(i) -= $(h) * $(k);\n&quot; &quot;$(i) = min(1.0, max($(i), 0.0));\n&quot; &quot;$(r) = 1.0 / (1.0 + exp(-(($(a) * $(i)) - $(b))));\n&quot;)</td></tr>
-<tr class="separator:ab0d5034c943c897f461b5cf8bd8d3a09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e23e4f1da24dc077e245693f65b9472"><td class="memItemLeft" align="right" valign="top"><a id="a4e23e4f1da24dc077e245693f65b9472"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SET_SIM_CODE</b> (&quot;$(i) += $(h) * fmin(1.0, fmax($(Isyn), 0.0));\n&quot; &quot;$(i) -= $(h) * $(k);\n&quot; &quot;$(i) = fmin(1.0, fmax($(i), 0.0));\n&quot; &quot;$(r) = 1.0 / (1.0 + exp(-(($(a) * $(i)) - $(b))));\n&quot;)</td></tr>
+<tr class="separator:a4e23e4f1da24dc077e245693f65b9472"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5789586341a25654acf311ed58b260a7"><td class="memItemLeft" align="right" valign="top"><a id="a5789586341a25654acf311ed58b260a7"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SET_PARAM_NAMES</b> ({ &quot;a&quot;, &quot;b&quot;, &quot;h&quot;, &quot;k&quot;})</td></tr>
 <tr class="separator:a5789586341a25654acf311ed58b260a7"><td class="memSeparator" colspan="2">&#160;</td></tr>

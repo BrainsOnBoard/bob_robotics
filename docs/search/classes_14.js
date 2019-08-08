@@ -1,8 +1,8 @@
 var searchData=
 [
+  ['valuesgenerator',['ValuesGenerator',['../classCatch_1_1ValuesGenerator.html',1,'Catch']]],
   ['varslider',['VarSlider',['../classBoBRobotics_1_1GeNNUtils_1_1VarSlider.html',1,'BoBRobotics::GeNNUtils']]],
   ['vector2',['Vector2',['../classBoBRobotics_1_1Vector2.html',1,'BoBRobotics']]],
-  ['vector2_3c_20millimeter_5ft_20_3e',['Vector2&lt; millimeter_t &gt;',['../classBoBRobotics_1_1Vector2.html',1,'BoBRobotics']]],
   ['vector2_3c_20units_3a_3aunit_5ft_20_3e',['Vector2&lt; units::unit_t &gt;',['../classBoBRobotics_1_1Vector2.html',1,'BoBRobotics']]],
   ['vector3',['Vector3',['../classBoBRobotics_1_1Vector3.html',1,'BoBRobotics']]],
   ['vector3_3c_20millimeter_5ft_20_3e',['Vector3&lt; millimeter_t &gt;',['../classBoBRobotics_1_1Vector3.html',1,'BoBRobotics']]],
@@ -10,7 +10,6 @@ var searchData=
   ['vectorbase',['VectorBase',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],
   ['vectorbase_3c_20lengthunit_2c_202_2c_20vector2_3c_20lengthunit_20_3e_20_3e',['VectorBase&lt; LengthUnit, 2, Vector2&lt; LengthUnit &gt; &gt;',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],
   ['vectorbase_3c_20lengthunit_2c_203_2c_20vector3_3c_20lengthunit_20_3e_20_3e',['VectorBase&lt; LengthUnit, 3, Vector3&lt; LengthUnit &gt; &gt;',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],
-  ['vectorbase_3c_20millimeter_5ft_2c_202_2c_20vector2_3c_20millimeter_5ft_20_3e_20_3e',['VectorBase&lt; millimeter_t, 2, Vector2&lt; millimeter_t &gt; &gt;',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],
   ['vectorbase_3c_20millimeter_5ft_2c_203_2c_20vector3_3c_20millimeter_5ft_20_3e_20_3e',['VectorBase&lt; millimeter_t, 3, Vector3&lt; millimeter_t &gt; &gt;',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],
   ['vectorbase_3c_20units_3a_3aunit_5ft_2c_202_2c_20vector2_3c_20units_3a_3aunit_5ft_20_3e_20_3e',['VectorBase&lt; units::unit_t, 2, Vector2&lt; units::unit_t &gt; &gt;',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],
   ['vectorbase_3c_20units_3a_3aunit_5ft_2c_203_2c_20vector3_3c_20units_3a_3aunit_5ft_20_3e_20_3e',['VectorBase&lt; units::unit_t, 3, Vector3&lt; units::unit_t &gt; &gt;',['../classBoBRobotics_1_1VectorBase.html',1,'BoBRobotics']]],

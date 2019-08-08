@@ -104,6 +104,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html">Display</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classBoBRobotics_1_1Video_1_1Display.html" title="Display a video source on screen.">Display</a> a video source on screen.  <a href="classBoBRobotics_1_1Video_1_1Display.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1GazeboCameraInput.html">GazeboCameraInput</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A thin wrapper for reading from any Gazebo camera feed.  <a href="classBoBRobotics_1_1Video_1_1GazeboCameraInput.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">An abstract class representing a video input stream.  <a href="classBoBRobotics_1_1Video_1_1Input.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -122,6 +125,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1RandomInput.html">RandomInput</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html" title="An abstract class representing a video input stream.">Video::Input</a> which generates white noise, for testing purposes.  <a href="classBoBRobotics_1_1Video_1_1RandomInput.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1RPiCamera.html">RPiCamera</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html">See3CAM_CU40</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read video from a <a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html" title="Read video from a See3CAM_CU40.">See3CAM_CU40</a>.  <a href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,10 +140,10 @@ Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceBoBRobotics_1_1Video.html#a787176f175254bb6bd8d063a34a1a8e8">write</a> (cv::FileStorage &amp;fs, const std::string &amp;, const <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &amp;camera)</td></tr>
 <tr class="memdesc:a787176f175254bb6bd8d063a34a1a8e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">More OpenCV boilerplate. <br /></td></tr>
 <tr class="separator:a787176f175254bb6bd8d063a34a1a8e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c9ee1ec1ef35dbfec49de67e67d0add"><td class="memItemLeft" align="right" valign="top"><a id="a9c9ee1ec1ef35dbfec49de67e67d0add"></a>
-std::unique_ptr&lt; <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceBoBRobotics_1_1Video.html#a9c9ee1ec1ef35dbfec49de67e67d0add">getPanoramicCamera</a> ()</td></tr>
-<tr class="memdesc:a9c9ee1ec1ef35dbfec49de67e67d0add"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to find a panoramic camera on the current machine and return it. <br /></td></tr>
-<tr class="separator:a9c9ee1ec1ef35dbfec49de67e67d0add"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7dad855d7fd5d11c41d2c5792f8257c4"><td class="memItemLeft" align="right" valign="top"><a id="a7dad855d7fd5d11c41d2c5792f8257c4"></a>
+std::unique_ptr&lt; <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html">Input</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceBoBRobotics_1_1Video.html#a7dad855d7fd5d11c41d2c5792f8257c4">getPanoramicCamera</a> ()</td></tr>
+<tr class="memdesc:a7dad855d7fd5d11c41d2c5792f8257c4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to find a panoramic camera on the current machine and return it. <br /></td></tr>
+<tr class="separator:a7dad855d7fd5d11c41d2c5792f8257c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>

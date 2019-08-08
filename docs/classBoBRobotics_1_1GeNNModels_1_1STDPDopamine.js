@@ -9,6 +9,6 @@ var classBoBRobotics_1_1GeNNModels_1_1STDPDopamine =
     [ "SET_NEEDS_POST_SPIKE_TIME", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html#a047ef0f44a2e4ee1874c81101a209266", null ],
     [ "SET_NEEDS_PRE_SPIKE_TIME", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html#a8ef4985506028e9c5f811df1d929cec8", null ],
     [ "SET_PARAM_NAMES", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html#a1812fd3458da21fe859448e21052d995", null ],
-    [ "SET_SIM_CODE", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html#a8fbc270be3f1f1f068690cc069fa44c4", null ],
+    [ "SET_SIM_CODE", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html#ae9278c87a0ee18e8c2b85600876c144f", null ],
     [ "SET_VARS", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html#aa029da136897b977642d9cb7b19a5f02", null ]
 ];

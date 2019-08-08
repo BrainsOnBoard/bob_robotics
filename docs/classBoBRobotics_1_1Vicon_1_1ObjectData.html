@@ -111,9 +111,12 @@ Inheritance diagram for BoBRobotics::Vicon::ObjectData:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a481ef52111ba12a14f855e4aeb21dd92"><td class="memItemLeft" align="right" valign="top"><a id="a481ef52111ba12a14f855e4aeb21dd92"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (const char(&amp;name)[24], uint32_t frameNumber, <a class="el" href="classBoBRobotics_1_1Pose3.html">Pose3</a>&lt; millimeter_t, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt; pose)</td></tr>
-<tr class="separator:a481ef52111ba12a14f855e4aeb21dd92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47a97c970b448442ef86b2b58f129c46"><td class="memItemLeft" align="right" valign="top"><a id="a47a97c970b448442ef86b2b58f129c46"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ObjectData</b> (const char *objectName)</td></tr>
+<tr class="separator:a47a97c970b448442ef86b2b58f129c46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabade9f8046b72061b7698a3a7724ab7"><td class="memItemLeft" align="right" valign="top"><a id="aabade9f8046b72061b7698a3a7724ab7"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (uint32_t frameNumber, <a class="el" href="classBoBRobotics_1_1Pose3.html">Pose3</a>&lt; millimeter_t, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt; pose)</td></tr>
+<tr class="separator:aabade9f8046b72061b7698a3a7724ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d762d883bd3dd6565a7e09c3859c530"><td class="memItemLeft" align="right" valign="top"><a id="a3d762d883bd3dd6565a7e09c3859c530"></a>
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>getFrameNumber</b> () const</td></tr>
 <tr class="separator:a3d762d883bd3dd6565a7e09c3859c530"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,17 +132,18 @@ template&lt;typename AngleUnit  = radian_t&gt; </td></tr>
 template&lt;typename LengthUnit  = millimeter_t, typename AngleUnit  = radian_t&gt; </td></tr>
 <tr class="memitem:ab60edcd98fdcc668927b1555321e7939"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classBoBRobotics_1_1Pose3.html">Pose3</a>&lt; LengthUnit, AngleUnit &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>getPose</b> () const</td></tr>
 <tr class="separator:ab60edcd98fdcc668927b1555321e7939"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35bb3c12b99396963fffb65a051badd1"><td class="memItemLeft" align="right" valign="top"><a id="a35bb3c12b99396963fffb65a051badd1"></a>
+<tr class="memitem:ada2bae71d778bffbdb2bc2e901581032"><td class="memItemLeft" align="right" valign="top"><a id="ada2bae71d778bffbdb2bc2e901581032"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>getName</b> () const</td></tr>
-<tr class="separator:a35bb3c12b99396963fffb65a051badd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86b87eb48d9349ae319c1a0f709bb30c"><td class="memItemLeft" align="right" valign="top"><a id="a86b87eb48d9349ae319c1a0f709bb30c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>timeSinceReceived</b> () const</td></tr>
-<tr class="separator:a86b87eb48d9349ae319c1a0f709bb30c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ada2bae71d778bffbdb2bc2e901581032"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a1412cd1f95eee8ce5e049aa5e27ff4"><td class="memItemLeft" align="right" valign="top"><a id="a4a1412cd1f95eee8ce5e049aa5e27ff4"></a>
+Stopwatch::Duration&#160;</td><td class="memItemRight" valign="bottom"><b>timeSinceReceived</b> () const</td></tr>
+<tr class="separator:a4a1412cd1f95eee8ce5e049aa5e27ff4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Simplest object data class - just tracks position and attitude. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>vicon/udp.h</li>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
+<li>include/vicon/udp.h</li>
+<li>src/vicon/udp.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

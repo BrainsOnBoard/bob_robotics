@@ -114,10 +114,10 @@ Inheritance diagram for BoBRobotics::Navigation::ImageDatabase::Recorder:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a73266a5abc4c40a9b2fd3c75756e87e1"><td class="memItemLeft" align="right" valign="top"><a id="a73266a5abc4c40a9b2fd3c75756e87e1"></a>
-cv::FileStorage &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a73266a5abc4c40a9b2fd3c75756e87e1">getMetadataWriter</a> ()</td></tr>
-<tr class="memdesc:a73266a5abc4c40a9b2fd3c75756e87e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get an object for writing additional metadata to. <br /></td></tr>
-<tr class="separator:a73266a5abc4c40a9b2fd3c75756e87e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbab0a2cd08284f0d8ba5292e12fc353"><td class="memItemLeft" align="right" valign="top"><a id="abbab0a2cd08284f0d8ba5292e12fc353"></a>
+cv::FileStorage &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#abbab0a2cd08284f0d8ba5292e12fc353">getMetadataWriter</a> ()</td></tr>
+<tr class="memdesc:abbab0a2cd08284f0d8ba5292e12fc353"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get an object for writing additional metadata to. <br /></td></tr>
+<tr class="separator:abbab0a2cd08284f0d8ba5292e12fc353"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afba94754fb7dac7ee11d63647c05dacf"><td class="memItemLeft" align="right" valign="top"><a id="afba94754fb7dac7ee11d63647c05dacf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#afba94754fb7dac7ee11d63647c05dacf">abortSave</a> ()</td></tr>
 <tr class="memdesc:afba94754fb7dac7ee11d63647c05dacf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Don't save new metadata when this class is destroyed. <br /></td></tr>
@@ -137,9 +137,9 @@ std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a91f1fba162fa281ed3964a80acbdf7d1"><td class="memItemLeft" align="right" valign="top"><a id="a91f1fba162fa281ed3964a80acbdf7d1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Recorder</b> (<a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase.html">ImageDatabase</a> &amp;imageDatabase, const bool <a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a6c522dd10fb04cf4a6ef6d48305c474a">isRoute</a>, const std::string imageFormat)</td></tr>
-<tr class="separator:a91f1fba162fa281ed3964a80acbdf7d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06abc3d4d0ae9c56eb38eddce52a3e3f"><td class="memItemLeft" align="right" valign="top"><a id="a06abc3d4d0ae9c56eb38eddce52a3e3f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Recorder</b> (<a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase.html">ImageDatabase</a> &amp;imageDatabase, const bool <a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a6c522dd10fb04cf4a6ef6d48305c474a">isRoute</a>, const std::string &amp;imageFormat)</td></tr>
+<tr class="separator:a06abc3d4d0ae9c56eb38eddce52a3e3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43be5fe6f968acb8c4f765f4438a4a40"><td class="memItemLeft" align="right" valign="top"><a id="a43be5fe6f968acb8c4f765f4438a4a40"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addEntry</b> (const std::string &amp;filename, const cv::Mat &amp;image, const <a class="el" href="classBoBRobotics_1_1Vector3.html">Vector3</a>&lt; millimeter_t &gt; &amp;position, const <a class="el" href="classunits_1_1unit__t.html">degree_t</a> heading, const std::array&lt; size_t, 3 &gt; &amp;gridPosition={ 0, 0, 0 })</td></tr>
 <tr class="separator:a43be5fe6f968acb8c4f765f4438a4a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,8 +152,9 @@ cv::FileStorage&#160;</td><td class="memItemRight" valign="bottom"><b>m_YAML</b>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for <a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1GridRecorder.html" title="For recording a grid of images at a fixed heading.">GridRecorder</a> and <a class="el" href="classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html" title="For saving images recorded along a route.">RouteRecorder</a>. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
-<li>navigation/image_database.h</li>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
+<li>include/navigation/image_database.h</li>
+<li>src/navigation/image_database.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

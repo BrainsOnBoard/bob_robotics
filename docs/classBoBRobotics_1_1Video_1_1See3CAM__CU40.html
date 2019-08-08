@@ -182,9 +182,6 @@ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>getWidth</b> 
 <tr class="memitem:a317885d4e3a50a118a46e2bf070e1505"><td class="memItemLeft" align="right" valign="top"><a id="a317885d4e3a50a118a46e2bf070e1505"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>getHeight</b> () const</td></tr>
 <tr class="separator:a317885d4e3a50a118a46e2bf070e1505"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3c2c3e350cc8d6ee30ed2be0e8d5ea8"><td class="memItemLeft" align="right" valign="top"><a id="af3c2c3e350cc8d6ee30ed2be0e8d5ea8"></a>
-cv::Size&#160;</td><td class="memItemRight" valign="bottom"><b>getSize</b> () const</td></tr>
-<tr class="separator:af3c2c3e350cc8d6ee30ed2be0e8d5ea8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fa0b5faf7620bbd7a09971e9e226001"><td class="memItemLeft" align="right" valign="top"><a id="a4fa0b5faf7620bbd7a09971e9e226001"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>getSuperPixelWidth</b> () const</td></tr>
 <tr class="separator:a4fa0b5faf7620bbd7a09971e9e226001"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -271,7 +268,7 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -279,7 +276,7 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
 <p>Get the name of this type of camera as a (short) string. </p>
 <p>Note that this is used to load the appropriate unwrapping parameters (we look for a file called [camera name].yaml). </p>
 
-<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#aac3971ac0d70604f3f4ce3174ca721ca">BoBRobotics::Video::Input</a>.</p>
+<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a2424faff1a0ff1b53601090c31c56b6a">BoBRobotics::Video::Input</a>.</p>
 
 </div>
 </div>
@@ -302,12 +299,13 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>Try to read a frame in colour from this video source. </p>
+<p>The output frame should have type CV_8UC3.</p>
 <dl class="section return"><dt>Returns</dt><dd>Whether a new frame was read </dd></dl>
 
 <p>Implements <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a4418eaac74351b81051d3d8aa0f38f42">BoBRobotics::Video::Input</a>.</p>
@@ -333,20 +331,21 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>Try to read a frame in greyscale from this video source. </p>
+<p>The output frame should have type CV_8UC.</p>
 <dl class="section return"><dt>Returns</dt><dd>Whether a new frame was read </dd></dl>
 
-<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#ab85f9980b5aae7724534508782b9d31b">BoBRobotics::Video::Input</a>.</p>
+<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a2e032c7159b4d1875b8bc91b65e19d35">BoBRobotics::Video::Input</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>video/see3cam_cu40.h</li>
+<li>include/video/see3cam_cu40.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
