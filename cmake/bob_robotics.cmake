@@ -307,7 +307,7 @@ macro(BoB_build)
         # party code), but in those cases we generally really don't care about
         # the return value. So let's just disable it globally to save faffing
         # around.
-        add_compile_flags(-Wno-used-result)
+        add_compile_flags(-Wno-unused-result)
 
         # I'm getting warnings based for code in the Eigen headers, so let's
         # just disable it. I tried setting this flag only when we're actually
