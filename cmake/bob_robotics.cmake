@@ -558,15 +558,22 @@ function(BoB_external_libraries)
             BoB_add_include_directories(${GTEST_INCLUDE_DIRS})
             BoB_add_link_libraries(${GTEST_LIBRARIES})
         elseif(${lib} STREQUAL gazebo)
-            # If Gazebo is added as a dependency multiple times (e.g. from
-            # multiple CMakeLists.txt files) then I'm getting an error from the
-            # target FreeImage::FreeImage being created multiple times - AD
-            if(NOT TARGET FreeImage::FreeImage)
-                find_package(gazebo REQUIRED)
-                BoB_add_include_directories(${GAZEBO_INCLUDE_DIRS})
-                BoB_add_link_libraries(${GAZEBO_LIBRARIES})
-                link_directories(${GAZEBO_LIBRARY_DIRS})
-                add_compile_flags(${GAZEBO_CXX_FLAGS})
+            if(UNIX)
+                # For some reason, when building with Jenkins, gcc can't find
+                # the Gazebo headers, so let's just use pkg-config instead of
+                # the native CMake package
+                BoB_add_pkg_config_libraries(gazebo)
+            else()
+                # If Gazebo is added as a dependency multiple times (e.g. from
+                # multiple CMakeLists.txt files) then I'm getting an error from the
+                # target FreeImage::FreeImage being created multiple times - AD
+                if(NOT TARGET FreeImage::FreeImage)
+                    find_package(gazebo REQUIRED)
+                    BoB_add_include_directories(${GAZEBO_INCLUDE_DIRS})
+                    BoB_add_link_libraries(${GAZEBO_LIBRARIES})
+                    link_directories(${GAZEBO_LIBRARY_DIRS})
+                    add_compile_flags(${GAZEBO_CXX_FLAGS})
+                endif()
             endif()
         elseif(${lib} STREQUAL spineml_simulation)
             # Find where user has installed GeNN
