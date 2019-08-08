@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/logging.h"
 #include "hid/joystick.h"
+#include "hid/joystick_glfw_keyboard.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
 
@@ -16,6 +17,7 @@
 
 // Standard C++ includes
 #include <cstring>
+#include <memory>
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -40,6 +42,18 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *messag
 inline second_t getCurrentTime()
 {
     return units::make_unit<second_t>(glfwGetTime());
+}
+
+std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(GLFWwindow *window)
+{
+    try
+    {
+        return std::make_unique<HID::Joystick>(0.25f);
+    }
+    catch(std::runtime_error &)
+    {
+        return std::make_unique<HID::JoystickGLFWKeyboard>(window);
+    }
 }
 }
 
@@ -126,7 +140,8 @@ int main(int argc, char **argv)
 
 
     // Create HID device for controlling movement
-    HID::Joystick joystick(0.25f);
+    //HID::Joystick joystick(0.25f);
+    auto joystick = createJoystick(window);
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();
@@ -141,7 +156,7 @@ int main(int argc, char **argv)
     second_t lastTime = getCurrentTime();
     while (!glfwWindowShouldClose(window)) {
         // Poll joystick
-        joystick.update();
+        joystick->update();
 
         // Calculate time
         const second_t currentTime = getCurrentTime();
@@ -153,16 +168,16 @@ int main(int argc, char **argv)
         glfwSetWindowTitle(window, buffer);
 
         // Control yaw and pitch with left stick
-        yaw += joystick.getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
-        pitch += joystick.getState(HID::JAxis::LeftStickVertical) * deltaTime * turnSpeed;
+        yaw += joystick->getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
+        pitch += joystick->getState(HID::JAxis::LeftStickVertical) * deltaTime * turnSpeed;
 
         // Switch between human and ant mode using X
-        if(joystick.isPressed(HID::JButton::X)) {
+        if(joystick->isPressed(HID::JButton::X)) {
             ant = !ant;
         }
 
         // Use right trigger to control forward movement speed
-        const meter_t forwardMove = moveSpeed * deltaTime * joystick.getState(HID::JAxis::RightTrigger);
+        const meter_t forwardMove = moveSpeed * deltaTime * joystick->getState(HID::JAxis::RightTrigger);
 
         // Calculate movement delta in 3D space
         auto cosPitch = cos(pitch);
