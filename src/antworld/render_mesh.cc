@@ -133,9 +133,9 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     const float cos30 = units::math::cos(30_deg);
     const float sin30 = units::math::sin(30_deg);
 
-    // Determine size of segments used for rendering
-    //const float segmentWidth = 1.0f / (float)numHorizontalSegments;
-    //const float segmentHeight = 1.0f / (float)numVerticalSegments;
+    // Calculate size of hex grid for rendering mesh
+    const int numHorizontalHexes = ceil(horizontalFOV / interommatidiaAngle);
+    const int numVerticalHexes = ceil(verticalFOV / interommatidiaAngle);
 
     // Calculate side length from interommatidia angle
     const float sideLength = interommatidiaAngle.value() / (2.0 * cos30);
@@ -155,6 +155,10 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
         {-hexDistance, halfSideLength},
         {-hexDistance, -halfSideLength}
     };
+
+    // Determine size of rectangles used for final output
+    const float rectangleWidth = 1.0f / (float)numHorizontalSegments;
+    const float rectangleHeight = 1.0f / (float)numVerticalSegments;
 
     // **TODO** reserve
     std::vector<GLfloat> positions;
