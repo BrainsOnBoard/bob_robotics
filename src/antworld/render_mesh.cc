@@ -130,35 +130,45 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     using namespace units::literals;
 
     // Pre-calculate cos30 and sin30
-    const float cos30 = units::math::cos(30_deg);
-    const float sin30 = units::math::sin(30_deg);
+    const double cos30 = units::math::cos(30_deg);
+    const double sin30 = units::math::sin(30_deg);
 
     // Calculate size of hex grid for rendering mesh
     const int numHorizontalHexes = ceil(horizontalFOV / interommatidiaAngle);
     const int numVerticalHexes = ceil(verticalFOV / interommatidiaAngle);
 
     // Calculate side length from interommatidia angle
-    const float sideLength = interommatidiaAngle.value() / (2.0 * cos30);
+    const units::angle::degree_t sideLength = interommatidiaAngle / (2.0 * cos30);
 
     // Calculate other hexagon dimensions
-    const float hexDistance = cos30 * sideLength;
-    const float hexHeight = sin30 * sideLength;
-    const float halfSideLength = 0.5f * sideLength;
-    const float halfHexHeight = halfSideLength + hexHeight;
+    const units::angle::degree_t hexDistance = cos30 * sideLength;
+    const units::angle::degree_t hexHeight = sin30 * sideLength;
+    const units::angle::degree_t halfSideLength = 0.5 * sideLength;
+    const units::angle::degree_t halfHexHeight = halfSideLength + hexHeight;
 
     // Calculate hex position offsets to build each hex's vertices from
-    const float hexPositionOffsets[6][2] = {
-        {0.0f, -halfHexHeight},
+    const units::angle::degree_t hexAngleOffsets[6][2] = {
+        {0_deg, -halfHexHeight},
         {hexDistance, -halfSideLength},
         {hexDistance, halfSideLength},
-        {0.0f, halfHexHeight},
+        {0_deg, halfHexHeight},
         {-hexDistance, halfSideLength},
         {-hexDistance, -halfSideLength}
     };
 
     // Determine size of rectangles used for final output
-    const float rectangleWidth = 1.0f / (float)numHorizontalSegments;
-    const float rectangleHeight = 1.0f / (float)numVerticalSegments;
+    const float rectangleWidth = 1.0f / (float)numHorizontalHexes;
+    const float rectangleHeight = 1.0f / (float)numVerticalHexes;
+    const float halfRectangleWidth = rectangleWidth * 0.5f;
+
+    const float hexRectangleOffsets[6][2] = {
+        {halfRectangleWidth, 0.0f},
+        {rectangleWidth, 0.0f},
+        {rectangleWidth, rectangleHeight},
+        {halfRectangleWidth, rectangleHeight},
+        {0.0f, rectangleHeight},
+        {0.0f, 0.0f}
+    };
 
     // **TODO** reserve
     std::vector<GLfloat> positions;
@@ -166,39 +176,41 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     std::vector<GLuint> indices;
 
     // Loop through grid of hexes
-    const int numHorizontalRadiusSegments = numHorizontalSegments / 2;
-    const int numVerticalRadiusSegments = numVerticalSegments / 2;
+    const int numHorizontalRadiusSegments = numHorizontalHexes / 2;
+    const int numVerticalRadiusSegments = numVerticalHexes / 2;
     for(int i = -numVerticalRadiusSegments; i < numVerticalRadiusSegments; i++) {
         for(int j = -numHorizontalRadiusSegments; j < numHorizontalRadiusSegments; j++) {
             // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
             // https://www.redblobgames.com/grids/hexagons/
-            float hexLongitude = j * (2.0f * hexDistance);
-            float hexLatitude = i * (hexHeight + sideLength);
+            units::angle::degree_t hexLongitude = j * (2.0 * hexDistance);
+            const units::angle::degree_t hexLatitude = i * (hexHeight + sideLength);
 
             // If row is odd, add additional distance
             if((i & 1) != 0) {
                 hexLongitude += hexDistance;
             }
 
+            // Calculate position of this hex in output rectangular grid
+            const float hexX = rectangleWidth * (float)j;
+            const float hexY = rectangleHeight * (float)i;
+
             // Cache index of first hex in
             const size_t hexStartVertexIndex = positions.size() / 2;
 
             // Loop through vertices
             for(unsigned int v = 0; v < 6; v++) {
-                // Calculate position of vertex
-                const float vertexLongitude = hexLongitude + hexPositionOffsets[v][0];
-                const float vertexLatitude = hexLatitude + hexPositionOffsets[v][1];
-
                 // Add positions, offsetting to centre of screen
-                positions.push_back(0.5f + vertexX);
-                positions.push_back(0.5f + vertexY);
+                positions.push_back(hexX + hexRectangleOffsets[v][0]);
+                positions.push_back(hexY + hexRectangleOffsets[v][1]);
 
-                const GLfloat sinLatitude = sin(latitude);
-                const GLfloat cosLatitude = cos(latitude);
+                // Calculate position of vertex
+                const units::angle::degree_t vertexLongitude = hexLongitude + hexAngleOffsets[v][0];
+                const units::angle::degree_t vertexLatitude = hexLatitude + hexAngleOffsets[v][1];
 
-                // Add vertex position
-                positions.push_back(x);
-                positions.push_back(y);
+                const GLfloat sinLatitude = sin(vertexLatitude);
+                const GLfloat cosLatitude = cos(vertexLatitude);
+                const GLfloat sinLongitude = sin(vertexLongitude);
+                const GLfloat cosLongitude = cos(vertexLongitude);
 
                 // Add vertex texture coordinate
                 textureCoords.push_back(sinLatitude * cosLongitude);
