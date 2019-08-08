@@ -126,16 +126,13 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
 //----------------------------------------------------------------------------
 RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
                                          units::angle::degree_t interommatidiaAngle)
+:   m_NumHorizontalHexes(ceil(horizontalFOV / interommatidiaAngle)), m_NumVerticalHexes(ceil(verticalFOV / interommatidiaAngle))
 {
     using namespace units::literals;
 
     // Pre-calculate cos30 and sin30
     const double cos30 = units::math::cos(30_deg);
     const double sin30 = units::math::sin(30_deg);
-
-    // Calculate size of hex grid for rendering mesh
-    const int numHorizontalHexes = ceil(horizontalFOV / interommatidiaAngle);
-    const int numVerticalHexes = ceil(verticalFOV / interommatidiaAngle);
 
     // Calculate side length from interommatidia angle
     const units::angle::degree_t sideLength = interommatidiaAngle / (2.0 * cos30);
@@ -157,8 +154,8 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     };
 
     // Determine size of rectangles used for final output
-    const float rectangleWidth = 1.0f / (float)numHorizontalHexes;
-    const float rectangleHeight = 1.0f / (float)numVerticalHexes;
+    const float rectangleWidth = 1.0f / (float)m_NumHorizontalHexes;
+    const float rectangleHeight = 1.0f / (float)m_NumVerticalHexes;
     const float halfRectangleWidth = rectangleWidth * 0.5f;
 
     const float hexRectangleOffsets[6][2] = {
@@ -176,8 +173,8 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     std::vector<GLuint> indices;
 
     // Loop through grid of hexes
-    const int numHorizontalRadiusSegments = numHorizontalHexes / 2;
-    const int numVerticalRadiusSegments = numVerticalHexes / 2;
+    const int numHorizontalRadiusSegments = m_NumHorizontalHexes / 2;
+    const int numVerticalRadiusSegments = m_NumVerticalHexes / 2;
     for(int i = -numVerticalRadiusSegments; i < numVerticalRadiusSegments; i++) {
         for(int j = -numHorizontalRadiusSegments; j < numHorizontalRadiusSegments; j++) {
             // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout

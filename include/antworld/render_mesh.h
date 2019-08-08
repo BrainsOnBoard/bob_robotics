@@ -39,7 +39,7 @@ protected:
     Surface &getSurface(){ return m_Surface; }
 
 private:
-    //-----------------------------------------------------------------------
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
     Surface m_Surface;
@@ -66,6 +66,19 @@ class RenderMeshHexagonal : public RenderMesh
 public:
     RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
                         units::angle::degree_t interommatidiaAngle);
+
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
+    unsigned int getNumHorizontalHexes() const{ return m_NumHorizontalHexes; }
+    unsigned int getNumVerticaltalHexes() const{ return m_NumVerticalHexes; }
+
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    const unsigned int m_NumHorizontalHexes;
+    const unsigned int m_NumVerticalHexes;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
