@@ -9,15 +9,15 @@ class GLFWwindow;
 namespace BoBRobotics {
 namespace HID {
 
+//------------------------------------------------------------------------
+// BoBRobotics::HID::JoystickGLFWKeyboard
+//------------------------------------------------------------------------
 /*!
- * \brief Class for reading from joysticks on Linux.
- *
- * *NOTE*: This class should not be used directly; see example in joystick_test.
+ * \brief Class for using keyboard (via GLFW) as a joystick
  */
 class JoystickGLFWKeyboard : public JoystickBase<JAxis, JButton>
 {
 public:
-    //! Open default joystick device with (optionally) specified dead zone
     JoystickGLFWKeyboard(GLFWwindow *window);
 
 protected:
@@ -33,6 +33,9 @@ private:
     void setAxisStateKeys(int negativeKey, int positiveKey, JAxis axis);
     void setButtonStateKey(int key, JButton button);
 
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
     GLFWwindow *m_Window;
 }; // JoystickLinux
 } // HID

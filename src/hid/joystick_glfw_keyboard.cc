@@ -6,7 +6,9 @@
 namespace BoBRobotics {
 namespace HID {
 
-//! Open default joystick device with (optionally) specified dead zone
+//------------------------------------------------------------------------
+// BoBRobotics::HID::JoystickGLFWKeyboard
+//------------------------------------------------------------------------
 JoystickGLFWKeyboard::JoystickGLFWKeyboard(GLFWwindow *window)
   : JoystickBase(0.0f), m_Window(window)
 {

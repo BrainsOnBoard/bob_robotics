@@ -50,8 +50,9 @@ std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(GLFW
     {
         return std::make_unique<HID::Joystick>(0.25f);
     }
-    catch(std::runtime_error &)
+    catch(std::runtime_error &ex)
     {
+        LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
         return std::make_unique<HID::JoystickGLFWKeyboard>(window);
     }
 }
