@@ -1,9 +1,8 @@
 // BoB robotics includes
 #include "common/main.h"
-#include "common/gazebo_node.h"
+#include "gazebo/node.h"
 #include "hid/joystick.h"
 #include "robots/gazebo_uav.h"
-// #include "robots/gazebo_tank.h"
 #include "video/gazebocamerainput.h"
 #include "video/display.h"
 
@@ -27,14 +26,14 @@ bob_main(int argc, char **argv)
     /************************************Gazebo setup************/
 
     // Create our node for publishing joystick values
-    gazebo::transport::NodePtr node = getGazeboNode();
+    gazebo::transport::NodePtr node = Gazebo::getNode();
 
     /************************************Gazebo setup end************/
     std::unique_ptr<Display> display;
     std::unique_ptr<GazeboCameraInput> cam;
     if(argc >= 3) { // Initialize gazebo camera if more than 2 arguements are provided (display switch and camera url)
         std::cout << "Display switch enabled.\n";
-        if(strcmp(argv[1], "-p") == 0) { 
+        if(strcmp(argv[1], "-p") == 0) {
             std::cout << "Using panoramic camera.\n";
             cam = std::make_unique<GazeboCameraInput>(node, argv[2], true);
             display = std::make_unique<Display>(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
@@ -61,7 +60,7 @@ bob_main(int argc, char **argv)
     } while (!joystick.isPressed(HID::JButton::X));
     // Make sure to shut everything down.
     display->close();
-    shutdownGazeboNode();
+    Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
 
     return EXIT_SUCCESS;
