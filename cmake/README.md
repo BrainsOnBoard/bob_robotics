@@ -25,7 +25,7 @@ BoB_project(SOURCES my_program.cc
             THIRD_PARTY third_party_modules
             EXTERNAL_LIBS sdl2)
 ```
-As a rule of thumb, if you ``#include`` a file from a given folder (i.e. if you
+As a rule of thumb, if you ``#include`` a file from a given folder, then the folder name is the module you should include (i.e. if you
 include [imgproc/opencv_unwrap_360.h](../include/imgproc/opencv_unwrap_360.h),
 you need to add ``imgproc`` to your ``BOB_MODULES``). Some modules depend on
 others and on external libraries, but these dependencies should be handled
@@ -74,11 +74,11 @@ To build a project with CMake, use the standard procedure:
 mkdir build
 cd build
 cmake ..
-make -j `nproc`
+make -j $(nproc)
 ```
 As typing this can become tedious, there is a script called ``bob_make`` in
 [bin/](../bin) which performs these steps. You can add this folder to your
-``PATH`` for convenience.
+``$PATH`` for convenience.
 
 ## Windows support
 For Windows, we use [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) for
