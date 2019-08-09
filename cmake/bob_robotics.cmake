@@ -477,6 +477,7 @@ function(BoB_add_pkg_config_libraries)
         message("${lib} library flags: ${${lib}_LIBRARIES}")
         BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
         BoB_add_link_libraries(${${lib}_LIBRARIES})
+        add_definitions(${${lib}_CFLAGS})
     endforeach()
 endfunction()
 
