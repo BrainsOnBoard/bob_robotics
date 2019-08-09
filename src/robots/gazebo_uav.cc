@@ -8,6 +8,7 @@ namespace Robots {
 
 void GazeboQuadCopter::takeOff()
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_Armed=true;
     m_Thrust = 1;
     sendCommand();
@@ -18,6 +19,7 @@ void GazeboQuadCopter::takeOff()
 
 void GazeboQuadCopter::land()
 {
+    std::lock_guard<std::mutex> lock(m_Mutex);
     m_Armed=false;
     m_Thrust = 0.4;
     sendCommand();

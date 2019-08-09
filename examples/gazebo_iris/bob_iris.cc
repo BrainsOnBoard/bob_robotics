@@ -31,19 +31,27 @@ bob_main(int argc, char **argv)
     /************************************Gazebo setup end************/
     std::unique_ptr<Display> display;
     std::unique_ptr<GazeboCameraInput> cam;
-    if(argc >= 3) { // Initialize gazebo camera if more than 2 arguements are provided (display switch and camera url)
-        std::cout << "Display switch enabled.\n";
-        if(strcmp(argv[1], "-p") == 0) {
-            std::cout << "Using panoramic camera.\n";
-            cam = std::make_unique<GazeboCameraInput>(node, argv[2], true);
-            display = std::make_unique<Display>(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
-        }
-        else if(strcmp(argv[1], "-s") == 0){
-            std::cout << "Using simple camera.\n";
-            cam = std::make_unique<GazeboCameraInput>(node, argv[2], false);
-            display = std::make_unique<Display>(*cam); //unwrap resolution needs to be supplied
-        }
-        display->runInBackground();
+    switch(argc){
+        case 1:
+            std::cout << "Camera disabled.\n";
+            break;
+        case 3: // Initialize gazebo camera if more than 2 arguments are provided (display switch and camera url)
+            std::cout << "Display switch enabled.\n";
+            if(strcmp(argv[1], "-p") == 0) {
+                std::cout << "Using panoramic camera.\n";
+                cam = std::make_unique<GazeboCameraInput>(node, argv[2], true);
+                display = std::make_unique<Display>(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
+            }
+            // else if(strcmp(argv[1], "-s") == 0){
+            //     std::cout << "Using simple camera.\n";
+            //     cam = std::make_unique<GazeboCameraInput>(node, argv[2], false);
+            //     display = std::make_unique<Display>(*cam); //unwrap resolution needs to be supplied
+            // }
+            display->runInBackground();
+            break;
+        default:
+            std::cout <<"Usage ./bob_iris [-s,-p] [camera_url]\n";
+
     }
     Robots::GazeboQuadCopter iris(node); // QuadCopter agent
     HID::Joystick joystick(0.25f);

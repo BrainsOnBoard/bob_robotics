@@ -31,7 +31,8 @@ public:
 private:
     gazebo::transport::PublisherPtr m_Pub;
     float m_Thrust, m_Roll, m_Pitch, m_Yaw;
-    bool m_Armed=false;
+    std::atomic_bool m_Armed;
+    std::mutex m_Mutex;
 };
 } // Robots
 } // BoBRobotics

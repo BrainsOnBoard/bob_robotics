@@ -39,7 +39,6 @@ typedef SSIZE_T ssize_t;
 #include <sdf/sdf.hh>
 #include <string>
 #include <vector>
-
 #define MAX_MOTORS 4
 
 using namespace gazebo;
@@ -270,8 +269,12 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     m_YawPID.SetCmd(0);
 
     const char *logfile_location = std::getenv("LOG_FILE");
-    if (logfile_location != NULL) {
+    if (logfile_location != nullptr) {
         m_Logfile.open(logfile_location, std::ios_base::app);
+        GZ_ASSERT(m_Logfile.good(), "Log file cannot be opened.\n");
+    }
+    else{
+        std::cout<< "LOG_FILE not set. Flight log is disabled.\n";
     }
 }
 

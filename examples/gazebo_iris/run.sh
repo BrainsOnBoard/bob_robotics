@@ -10,7 +10,7 @@ print_usage() {
 
 while getopts 'd' flag; do
   case "${flag}" in
-    d) display_flag='-s' ;;
+    d) display_flag='-p' ;;
     *) print_usage
        exit 1 ;;
   esac
