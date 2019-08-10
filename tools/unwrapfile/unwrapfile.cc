@@ -191,7 +191,7 @@ int main(int argc, char** argv)
     std::vector<FileType> ftype(argc - 1, FileType::skip);
     bool anyvideo = false;
     bool copysound = true;
-    bool extractFrames = true;
+    bool extractFrames = false;
     unsigned int frameInterval = 1;
     std::string cameraName = "pixpro_usb";
     cv::Size unwrappedResolution(1920, 590);
