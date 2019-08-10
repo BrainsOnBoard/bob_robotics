@@ -77,7 +77,7 @@ void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappe
     filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
 
     // temporary file name to which we write initially
-    filesystem::path tempfilename = copysound ? filepath.parent_path() / ".TEMP.AVI": outfilename;
+    filesystem::path tempfilename = copysound ? filepath.parent_path() / ".TEMP.MP4": outfilename;
 
     // start writing to file
     std::cout << "Saving video to " << outfilename << "..." << std::endl;
