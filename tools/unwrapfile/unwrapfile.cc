@@ -17,14 +17,6 @@
 #include <string>
 #include <vector>
 
-/*
- * ffmpeg is used for copying the audio stream from the original to the
- * unwrapped video
- */
-#ifndef FFMPEG_PATH
-#define FFMPEG_PATH "/usr/bin/ffmpeg"
-#endif
-
 // Anonymous namespace
 namespace
 {
