@@ -89,7 +89,10 @@ void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappe
 
     // start writing to file
     std::cout << "Saving video to " << outfilename << "..." << std::endl;
-    cv::VideoWriter writer(tempfilename.str(), cv::VideoWriter::fourcc('M', 'P', '4', 'V'), cap.get(cv::CAP_PROP_FPS), unwrappedResolution);
+    cv::VideoWriter writer(tempfilename.str(),
+                           cv::VideoWriter::fourcc('F', 'M', 'P', '4'),
+                           cap.get(cv::CAP_PROP_FPS),
+                           unwrappedResolution);
     if (!writer.isOpened()) {
         std::cerr << "Error: Could not open file for writing" << std::endl;
         return;
