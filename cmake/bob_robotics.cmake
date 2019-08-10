@@ -570,7 +570,7 @@ function(BoB_external_libraries)
             endif()
         elseif(${lib} STREQUAL spineml_simulation)
             # Find where user has installed GeNN
-            exec_or_fail("${BOB_ROBOTICS_PATH}/cmake/find_genn.sh")
+            exec_or_fail("${BOB_ROBOTICS_PATH}/bin/find_genn.sh")
             string(STRIP "${SHELL_OUTPUT}" GENN_PATH) # Strip newline
             message("GENN_PATH: ${GENN_PATH}")
 
@@ -602,7 +602,7 @@ function(BoB_third_party)
             if(WIN32)
                 add_definitions(-DWITHOUT_NUMPY)
             else()
-                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
+                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/bin/find_numpy.py"
                                 RESULT_VARIABLE rv
                                 OUTPUT_VARIABLE numpy_include_path)
 
