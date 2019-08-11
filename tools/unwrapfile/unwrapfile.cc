@@ -2,8 +2,8 @@
 #include "imgproc/opencv_unwrap_360.h"
 
 // Third-party includes
+#include "third_party/CLI11.hpp"
 #include "third_party/path.h"
-#include "third_party/simpleopt.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -33,10 +33,8 @@ void saveMaxQualityJPG(const std::string &filename, const cv::Mat &image)
 }
 
 /* unwrap a JPEG file */
-void unwrapJPEG(const char *filepathRaw, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapJPEG(const filesystem::path filepath, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
-    const filesystem::path filepath(filepathRaw);
-
     // read image into memory
     cv::Mat im = cv::imread(filepath.str(), cv::IMREAD_COLOR);
 
@@ -56,10 +54,8 @@ void unwrapJPEG(const char *filepathRaw, const cv::Size &unwrappedResolution, co
 }
 
 /* unwrap an MP4 video */
-void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4(const filesystem::path filepath, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
-    filesystem::path filepath(filepathRaw);
-
     // open video file
     cv::VideoCapture cap(filepath.str());
 
@@ -77,7 +73,8 @@ void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappe
     filesystem::path outfilename = filepath.parent_path() / ("unwrapped_" + filepath.filename());
 
     // temporary file name to which we write initially
-    filesystem::path tempfilename = copysound ? filepath.parent_path() / ".TEMP.MP4": outfilename;
+    filesystem::path tempfilename = copysound ? filepath.parent_path() / (".TMP." + filepath.filename())
+                                              : outfilename;
 
     // start writing to file
     std::cout << "Saving video to " << outfilename << "..." << std::endl;
@@ -129,10 +126,8 @@ void unwrapMP4(const char *filepathRaw, bool copysound, const cv::Size &unwrappe
 }
 
 /* unwrap an MP4 video, saving frames to JPG */
-void unwrapMP4Frames(const char *filepathRaw, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
-    const filesystem::path filepath(filepathRaw);
-
     // open video file
     cv::VideoCapture cap(filepath.str());
 
@@ -176,111 +171,70 @@ void unwrapMP4Frames(const char *filepathRaw, unsigned int frameInterval, const 
 }
 }   // Anonymous namespace
 
-void usage()
-{
-    std::cout << "usage: unwrapfile [--no-sound] [--extract-frames[=SKIP]] [--camera CAMERA_NAME] [--unwrapped-resolution WIDTHxHEIGHT] [file(s)]" << std::endl;
-}
-
 int main(int argc, char** argv)
 {
-    if (argc == 1) {
-        usage();
-        return EXIT_FAILURE;
-    }
-
-    enum Args
-    {
-        NO_SOUND,
-        EXTRACT_FRAMES,
-        CAMERA,
-        UNWRAPPED_RESOLUTION,
-        HELP
-    };
-
-    CSimpleOpt::SOption clOpts[] = {
-        { NO_SOUND, "--no-sound", SO_NONE },
-        { EXTRACT_FRAMES, "--extract-frames", SO_OPT },
-        { CAMERA, "--camera", SO_NONE },
-        { UNWRAPPED_RESOLUTION, "--unwrapped-resolution", SO_REQ_SEP },
-        { HELP, "-h", SO_NONE },
-        { HELP, "--help", SO_NONE },
-        SO_END_OF_OPTIONS
-    };
+    CLI::App app{ "A program to unwrap panoramic images and videos" };
 
     bool copysound = true;
     bool extractFrames = false;
     unsigned int frameInterval = 1;
     std::string cameraName = "pixpro_usb";
-    cv::Size unwrappedResolution(1920, 590);
+    std::vector<unsigned int> resolutionVec = { 1920, 590 };
+    std::vector<std::string> filePaths;
 
-    // Parse args
-    CSimpleOpt args{ argc, argv, clOpts };
-    try {
-        while (args.Next()) {
-            if (args.LastError() != SO_SUCCESS) {
-                throw std::invalid_argument{ "" };
-            }
+    // Command-line options
+    app.add_flag(
+            "--no-sound",
+            [&copysound](size_t count) {
+                copysound = !count;
+            },
+            "Don't copy audio track");
+    app.add_option("--extract-frames", frameInterval, "Output videos as a series of JPEGs");
+    app.add_option("--camera", cameraName, "Panoramic camera's name");
+    auto opt = app.add_option("--unwrapped-resolution",
+                              resolutionVec,
+                              "Resolution of unwrapped images/videos");
+    opt->expected(2); // Width and height
+    app.add_option("-i", filePaths, "List of video/image files to process")->required();
 
-            switch (args.OptionId()) {
-            case NO_SOUND:
-                copysound = false;
-                break;
-            case EXTRACT_FRAMES: {
-                extractFrames = true;
-                const char *arg = args.OptionArg();
-                if (arg) {
-                    frameInterval = std::stoi(arg);
-                }
-                break;
-            } case CAMERA:
-                cameraName = args.OptionArg();
-                break;
-            case UNWRAPPED_RESOLUTION: {
-                const std::string arg(args.OptionArg());
-                const size_t pos = arg.find('x');
-                if (pos == std::string::npos) {
-                    throw std::invalid_argument{ "" };
-                }
-                unwrappedResolution.width = std::stoi(arg.substr(0, pos));
-                unwrappedResolution.height = std::stoi(arg.substr(pos + 1));
-                break;
-            } case HELP:
-                usage();
-                return EXIT_SUCCESS;
-            }
-        }
-    } catch (std::invalid_argument &) {
-        std::cerr << "Error: Invalid argument\n";
-        usage();
-        return EXIT_FAILURE;
-    }
-
-    if (args.FileCount() == 0) {
-        std::cerr << "Error: No filenames given\n";
-        return EXIT_FAILURE;
-    }
+    CLI11_PARSE(app, argc, argv);
+    const cv::Size unwrappedResolution{ static_cast<int>(resolutionVec[0]),
+                                        static_cast<int>(resolutionVec[1]) };
 
     // Process filename arguments
     bool anyvideo = false;
-    std::vector<FileType> ftype(args.FileCount(), FileType::skip);
-    for (int i = 0; i < args.FileCount(); i++) {
-        filesystem::path inputFile(args.File(i));
-        if (!inputFile.exists()) {
-            std::cerr << "Error: File " << inputFile.str() << " does not exist" << std::endl;
+    struct File {
+        FileType type;
+        filesystem::path path;
+
+        File(const std::string &_path)
+          : path(_path)
+        {}
+    };
+    std::vector<File> files;
+    files.reserve(filePaths.size());
+    for (auto &filePath : filePaths) {
+        // Add entry to vector
+        files.emplace_back(filePath);
+        auto &file = files.back();
+
+        if (!file.path.exists()) {
+            std::cerr << "Error: File " << file.path.str() << " does not exist" << std::endl;
             return EXIT_FAILURE;
         }
 
         // Get extension and convert to lower case
-        std::string ext = inputFile.extension();
+        std::string ext = file.path.extension();
         std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
         if (ext == "mp4") {
             anyvideo = true;
-            ftype[i] = FileType::video;
+            file.type = FileType::video;
         } else if (ext == "jpg" || ext == "jpeg" || ext == "jpe")
-            ftype[i] = FileType::image;
+            file.type = FileType::image;
         else {
-            std::cerr << "Warning : Only JPEG files and MP4 videos are supported -- skipping " << argv[i] << std::endl;
-            ftype[i] = FileType::skip;
+            std::cerr << "Warning : Only JPEG files and MP4 videos are supported -- skipping "
+                      << filePath << std::endl;
+            file.type = FileType::skip;
         }
     }
 
@@ -293,16 +247,16 @@ int main(int argc, char** argv)
     std::cout << "Unwrapped resolution: " << unwrappedResolution << std::endl;
 
     // Process arguments
-    for (int i = 0; i < args.FileCount(); i++) {
-        if (ftype[i] == FileType::image) {
-            unwrapJPEG(args.File(i), unwrappedResolution, cameraName);
+    for (auto &file : files) {
+        if (file.type == FileType::image) {
+            unwrapJPEG(file.path, unwrappedResolution, cameraName);
         }
-        else if (ftype[i] == FileType::video) {
+        else if (file.type == FileType::video) {
             if(extractFrames) {
-                unwrapMP4Frames(args.File(i), frameInterval, unwrappedResolution, cameraName);
+                unwrapMP4Frames(file.path, frameInterval, unwrappedResolution, cameraName);
             }
             else {
-                unwrapMP4(args.File(i), copysound, unwrappedResolution, cameraName);
+                unwrapMP4(file.path, copysound, unwrappedResolution, cameraName);
             }
         }
     }
