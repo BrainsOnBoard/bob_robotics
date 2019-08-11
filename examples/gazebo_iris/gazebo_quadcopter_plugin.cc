@@ -68,10 +68,6 @@ getSdfParam(sdf::ElementPtr _sdf, const std::string &_name, T &_param, const T &
     }
 }
 
-double Rotor::m_KDefaultRotorVelocitySlowdownSim = 10.0;
-double Rotor::m_KDefaultFrequencyCutoff = 5.0;
-double Rotor::m_KDefaultSamplingRate = 0.2;
-
 /////////////////////////////////////////////////
 void
 GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
@@ -137,9 +133,6 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
                       << " aborting plugin.\n";
                 return;
             }
-
-            getSdfParam<double>(rotorSDF, "frequencyCutoff", rotor.m_FrequencyCutoff, rotor.m_FrequencyCutoff);
-            getSdfParam<double>(rotorSDF, "samplingRate", rotor.m_SamplingRate, rotor.m_SamplingRate);
 
             // Overload the PID parameters if they are available.
             double param;
@@ -274,7 +267,7 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
         GZ_ASSERT(m_Logfile.good(), "Log file cannot be opened.\n");
     }
     else{
-        std::cout<< "LOG_FILE not set. Flight log is disabled.\n";
+        std::cerr<< "LOG_FILE not set. Flight log is disabled.\n";
     }
 }
 

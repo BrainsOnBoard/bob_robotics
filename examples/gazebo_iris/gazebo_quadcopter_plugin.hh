@@ -29,12 +29,7 @@ class Rotor
 public:
     Rotor()
     {
-        // most of these coefficients are not used yet.
-        this->m_RotorVelocitySlowdownSim = this->m_KDefaultRotorVelocitySlowdownSim;
-        this->m_FrequencyCutoff = this->m_KDefaultFrequencyCutoff;
-        this->m_SamplingRate = this->m_KDefaultSamplingRate;
-
-        this->m_Pid.Init(0.1, 0, 0, 0, 0, 1.0, -1.0);
+        m_Pid.Init(0.1, 0, 0, 0, 0, 1.0, -1.0);
     }
 
     /// \brief rotor id
@@ -60,18 +55,6 @@ public:
 
     /// \brief unused coefficients
     double m_RotorVelocitySlowdownSim;
-
-    double m_FrequencyCutoff;
-
-    double m_SamplingRate;
-
-    ignition::math::OnePole<double> m_VelocityFilter;
-
-    static double m_KDefaultRotorVelocitySlowdownSim;
-
-    static double m_KDefaultFrequencyCutoff;
-
-    static double m_KDefaultSamplingRate;
 };
 
 namespace gazebo {
