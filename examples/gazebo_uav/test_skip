@@ -1,1 +1,0 @@
-Currently there is an issue with the CMake build system where the Gazebo headers are not properly included for subprojects, such as when we build-test all the examples with Jenkins. This example does build properly when built by itself, however. For now, we exclude it from the test so that CI checks pass.
