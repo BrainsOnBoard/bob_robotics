@@ -7,12 +7,14 @@
 // Standard C++ includes
 #include <stdexcept>
 
+#define BOB_TO_STRING_LITERAL(s) #s
+
 namespace BoBRobotics {
 filesystem::path
 getBoBRoboticsPath()
 {
 #ifdef BOB_ROBOTICS_SUBMODULE_PATH
-    return filesystem::path{ BOB_ROBOTICS_SUBMODULE_PATH };
+    return filesystem::path{ BOB_TO_STRING_LITERAL(BOB_ROBOTICS_SUBMODULE_PATH) };
 #else
     // Get from environment variable
     const char *path = std::getenv("BOB_ROBOTICS_PATH");
