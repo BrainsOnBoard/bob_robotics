@@ -1,9 +1,6 @@
 // BoB robotics includes
 #include "common/bob_robotics_path.h"
 
-// Third-party includes
-#include "third_party/path.h"
-
 // Standard C includes
 #include <cstdlib>
 
