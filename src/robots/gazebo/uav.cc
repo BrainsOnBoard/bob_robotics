@@ -1,12 +1,17 @@
 // BoB robotics includes
-#include "robots/gazebo_uav.h"
+#include "robots/gazebo/uav.h"
+
+// Third-party includes
 #include "third_party/units.h"
+
 using namespace std::literals;
 using namespace units::literals;
+
 namespace BoBRobotics {
 namespace Robots {
+namespace Gazebo {
 
-void GazeboQuadCopter::takeOff()
+void UAV::takeOff()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Armed=true;
@@ -17,14 +22,14 @@ void GazeboQuadCopter::takeOff()
     sendCommand();
 }
 
-void GazeboQuadCopter::land()
+void UAV::land()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
     m_Armed=false;
     m_Thrust = 0.4;
     sendCommand();
 }
-void GazeboQuadCopter::setPitch(float pitch)
+void UAV::setPitch(float pitch)
 {
     if(!m_Armed){
         return;
@@ -32,7 +37,7 @@ void GazeboQuadCopter::setPitch(float pitch)
     m_Pitch = pitch;
     sendCommand();
 }
-void GazeboQuadCopter::setRoll(float roll)
+void UAV::setRoll(float roll)
 {
     if(!m_Armed){
         return;
@@ -40,7 +45,7 @@ void GazeboQuadCopter::setRoll(float roll)
     m_Roll = roll;
     sendCommand();
 }
-void GazeboQuadCopter::setVerticalSpeed(float up)
+void UAV::setVerticalSpeed(float up)
 {
     if(!m_Armed){
         return;
@@ -48,7 +53,7 @@ void GazeboQuadCopter::setVerticalSpeed(float up)
     m_Thrust = up*0.5 + 0.5;
     sendCommand();
 }
-void GazeboQuadCopter::setYawSpeed(float yaw)
+void UAV::setYawSpeed(float yaw)
 {
     if(!m_Armed){
         return;
@@ -56,12 +61,13 @@ void GazeboQuadCopter::setYawSpeed(float yaw)
     m_Yaw = yaw;
     sendCommand();
 }
-void GazeboQuadCopter::sendCommand()
+void UAV::sendCommand()
 {
     gazebo::msgs::Quaternion msg;
     gazebo::msgs::Set(&msg, ignition::math::Quaterniond(m_Thrust, m_Roll, m_Pitch, m_Yaw));
     m_Pub->Publish(msg);
 }
 
+} // Gazebo
 } // Robots
 } // BoBRobotics

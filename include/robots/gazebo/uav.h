@@ -9,11 +9,12 @@
 
 namespace BoBRobotics {
 namespace Robots {
-class GazeboQuadCopter
-  : public UAV
+namespace Gazebo {
+class UAV
+  : public Robots::UAV
 {
 public:
-    GazeboQuadCopter(gazebo::transport::NodePtr node)
+    UAV(gazebo::transport::NodePtr node)
     {
         // Publish to the  gazebo_quadcopter topic
         m_Pub =node->Advertise<gazebo::msgs::Quaternion>("~/gazebo_quadcopter/motors_cmd");;
@@ -33,6 +34,7 @@ private:
     float m_Thrust, m_Roll, m_Pitch, m_Yaw;
     std::atomic_bool m_Armed;
     std::mutex m_Mutex;
-};
+}; // UAV
+} // Gazebo
 } // Robots
 } // BoBRobotics

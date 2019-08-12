@@ -2,7 +2,7 @@
 #include "common/main.h"
 #include "gazebo/node.h"
 #include "hid/joystick.h"
-#include "robots/gazebo_uav.h"
+#include "robots/gazebo/uav.h"
 #include "video/gazebocamerainput.h"
 #include "video/display.h"
 
@@ -51,7 +51,7 @@ bob_main(int argc, char **argv)
             std::cout <<"Usage ./bob_iris [-s,-p] [camera_url]\n";
 
     }
-    Robots::GazeboQuadCopter iris(node); // QuadCopter agent
+    Robots::Gazebo::UAV iris(node); // QuadCopter agent
     HID::Joystick joystick(0.25f);
     iris.addJoystick(joystick);
 
