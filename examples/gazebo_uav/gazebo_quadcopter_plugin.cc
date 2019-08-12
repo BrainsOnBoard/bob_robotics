@@ -20,7 +20,8 @@
 typedef SSIZE_T ssize_t;
 #endif
 
-#include "gazebo_quadcopter_plugin.hh"
+#include "gazebo_quadcopter_plugin.h"
+
 // Gazebo includes
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Plugin.hh>
