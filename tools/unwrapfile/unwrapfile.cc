@@ -180,7 +180,6 @@ int main(int argc, char** argv)
     unsigned int frameInterval = 1;
     std::string cameraName = "pixpro_usb";
     std::vector<unsigned int> resolutionVec = { 1920, 590 };
-    std::vector<std::string> filePaths;
 
     // Command-line options
     app.add_flag(
@@ -195,7 +194,7 @@ int main(int argc, char** argv)
                               resolutionVec,
                               "Resolution of unwrapped images/videos");
     opt->expected(2); // Width and height
-    app.add_option("-i", filePaths, "List of video/image files to process")->required();
+    app.allow_extras(); // Accept arguments after flags
 
     CLI11_PARSE(app, argc, argv);
     const cv::Size unwrappedResolution{ static_cast<int>(resolutionVec[0]),
@@ -212,8 +211,8 @@ int main(int argc, char** argv)
         {}
     };
     std::vector<File> files;
-    files.reserve(filePaths.size());
-    for (auto &filePath : filePaths) {
+    files.reserve(app.remaining_size());
+    for (auto &filePath : app.remaining()) {
         // Add entry to vector
         files.emplace_back(filePath);
         auto &file = files.back();
