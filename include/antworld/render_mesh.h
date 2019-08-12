@@ -71,7 +71,7 @@ public:
     // Public API
     //------------------------------------------------------------------------
     unsigned int getNumHorizontalHexes() const{ return m_NumHorizontalHexes; }
-    unsigned int getNumVerticaltalHexes() const{ return m_NumVerticalHexes; }
+    unsigned int getNumVerticalHexes() const{ return m_NumVerticalHexes; }
 
 private:
     //------------------------------------------------------------------------

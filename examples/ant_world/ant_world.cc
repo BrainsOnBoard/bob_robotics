@@ -4,6 +4,7 @@
 #include "hid/joystick_glfw_keyboard.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
+#include "antworld/render_target_hex_display.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -118,6 +119,10 @@ int main(int argc, char **argv)
     // and pushing back clipping plane to reduce Z fighting
     AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 5_deg),
                                 256, 0.1);
+
+    // Create a render target for displaying world re-mapped onto hexagonal mesh
+    AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer.getRenderMesh()));
+
     //AntWorld::Renderer renderer(512, 0.1);
     if (useRothamstedModel) {
         const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
@@ -152,7 +157,6 @@ int main(int argc, char **argv)
     degree_t yaw = 0_deg;
     degree_t pitch = 0_deg;
 
-    bool ant = true;
     second_t lastTime = getCurrentTime();
     while (!glfwWindowShouldClose(window)) {
         // Poll joystick
@@ -171,11 +175,6 @@ int main(int argc, char **argv)
         yaw += joystick->getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
         pitch += joystick->getState(HID::JAxis::LeftStickVertical) * deltaTime * turnSpeed;
 
-        // Switch between human and ant mode using X
-        if(joystick->isPressed(HID::JButton::X)) {
-            ant = !ant;
-        }
-
         // Use right trigger to control forward movement speed
         const meter_t forwardMove = moveSpeed * deltaTime * joystick->getState(HID::JAxis::RightTrigger);
 
@@ -185,18 +184,27 @@ int main(int argc, char **argv)
         y += forwardMove * cos(yaw) * cosPitch;
         z -= forwardMove * sin(pitch);
 
+        // Render panorama to render target
+        renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
+                                     renderTarget);
+
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render first person
-        if(ant) {
-            renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
-                                         0, 0, width, height);
-        }
-        else {
-            renderer.renderFirstPersonView(x, y, z, yaw, pitch, 0_deg,
-                                           0, 0, width, height);
-        }
+        // Set viewport to strip at stop of window
+        glViewport(0, 0,
+                   width, height);
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluOrtho2D(0.0, 1.0,
+                   0.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        // Render render mesh
+        renderTarget.render();
 
         // Swap front and back buffers
         glfwSwapBuffers(window);

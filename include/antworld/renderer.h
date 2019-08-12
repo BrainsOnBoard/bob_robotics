@@ -62,6 +62,9 @@ public:
     World &getWorld(){ return m_World; }
     const World &getWorld() const{ return m_World; }
 
+    RenderMesh *getRenderMesh(){ return m_RenderMesh.get(); }
+    const RenderMesh *getRenderMesh() const{ return m_RenderMesh.get(); }
+
 protected:
     //------------------------------------------------------------------------
     // Declared virtuals
