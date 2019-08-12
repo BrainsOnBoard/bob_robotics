@@ -1,27 +1,28 @@
 // BoB robotics includes
-#include "common/main.h"
-#include "gazebo/node.h"
 #include "hid/joystick.h"
+#include "robots/gazebo/camera.h"
+#include "robots/gazebo/node.h"
 #include "robots/gazebo/uav.h"
-#include "video/gazebocamerainput.h"
 #include "video/display.h"
 
 // Third-party includes
 #include "third_party/units.h"
 
+// Standard C includes
+#include <cstring>
+
 // Standard C++ includes
 #include <chrono>
 #include <iostream>
+#include <memory>
 #include <thread>
-#include <cstring>
 
 using namespace BoBRobotics;
+using namespace BoBRobotics::Robots;
 using namespace std::literals;
-using namespace units::literals;
-using namespace BoBRobotics::Video;
 
 int
-bob_main(int argc, char **argv)
+main(int argc, char **argv)
 {
     /************************************Gazebo setup************/
 
@@ -29,8 +30,8 @@ bob_main(int argc, char **argv)
     gazebo::transport::NodePtr node = Gazebo::getNode();
 
     /************************************Gazebo setup end************/
-    std::unique_ptr<Display> display;
-    std::unique_ptr<GazeboCameraInput> cam;
+    std::unique_ptr<Video::Display> display;
+    std::unique_ptr<Gazebo::Camera> cam;
     switch(argc){
         case 1:
             std::cout << "Camera disabled.\n";
@@ -39,8 +40,8 @@ bob_main(int argc, char **argv)
             std::cout << "Display switch enabled.\n";
             if(strcmp(argv[1], "-p") == 0) {
                 std::cout << "Using panoramic camera.\n";
-                cam = std::make_unique<GazeboCameraInput>(node, argv[2], true);
-                display = std::make_unique<Display>(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
+                cam = std::make_unique<Gazebo::Camera>(node, argv[2], true);
+                display = std::make_unique<Video::Display>(*cam, cv::Size(640,320)); //unwrap resolution needs to be supplied
             }
             else{
                 std::cerr << "Unsupported flag\n";
@@ -64,10 +65,9 @@ bob_main(int argc, char **argv)
             std::this_thread::sleep_for(5ms);
         }
     } while (!joystick.isPressed(HID::JButton::X));
+
     // Make sure to shut everything down.
     display->close();
     Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
-
-    return EXIT_SUCCESS;
 }
