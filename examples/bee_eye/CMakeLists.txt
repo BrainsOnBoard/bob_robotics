@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 include(../../cmake/bob_robotics.cmake)
 BoB_project(SOURCES bee_eye.cc
-            BOB_MODULES video)
+            BOB_MODULES imgproc video)
 
 # Default to 800x600 for input resolution
 if(NOT INPUT_WIDTH)
