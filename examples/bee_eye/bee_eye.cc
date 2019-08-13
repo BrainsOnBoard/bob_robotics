@@ -14,12 +14,10 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
-#include <chrono>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <thread>
 
 // Make the code a bit more readable
 #define makeUnwrapper std::make_unique<ImgProc::OpenCVUnwrap360>
@@ -101,26 +99,26 @@ main(int argc, char **argv)
                         BeeEye::EyeSize, BeeEye::ImageSize };
     cv::Mat outputImage, inputImageRaw, inputImageProcessed;
     while (true) {
+        bool newFrame;
         try {
             // Check for new frame
-            if (!video->readFrame(inputImageRaw)) {
-                std::this_thread::sleep_for(2ms);
-                continue;
-            }
+            newFrame = video->readFrame(inputImageRaw);
         } catch (std::runtime_error &) {
             std::cerr << "No more frames available: EOF reached or device unplugged.\n";
             break;
         }
 
-        // Unwrap if needed and get eye view
-        if (isPanoramic) {
-            unwrapper->unwrap(inputImageRaw, inputImageProcessed);
-            eyeMap.getEyeView(inputImageProcessed, outputImage);
-        } else if (resizeImages) {
-            cv::resize(inputImageRaw, inputImageProcessed, inputSize);
-            eyeMap.getEyeView(inputImageProcessed, outputImage);
-        } else {
-            eyeMap.getEyeView(inputImageRaw, outputImage);
+        if (newFrame) {
+            // Unwrap if needed and get eye view
+            if (isPanoramic) {
+                unwrapper->unwrap(inputImageRaw, inputImageProcessed);
+                eyeMap.getEyeView(inputImageProcessed, outputImage);
+            } else if (resizeImages) {
+                cv::resize(inputImageRaw, inputImageProcessed, inputSize);
+                eyeMap.getEyeView(inputImageProcessed, outputImage);
+            } else {
+                eyeMap.getEyeView(inputImageRaw, outputImage);
+            }
         }
 
         // Render to screen
