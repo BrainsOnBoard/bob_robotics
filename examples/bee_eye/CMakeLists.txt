@@ -15,9 +15,12 @@ message(STATUS "Input resolution for bee eye: [${INPUT_WIDTH} x ${INPUT_HEIGHT}]
 
 # Auto-generate header file
 add_custom_target(bee_eye_data.h
-                  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
                   COMMAND ${BOB_ROBOTICS_PATH}/bin/make_bee_eye_data_h.py
                           ${INPUT_WIDTH} ${INPUT_HEIGHT})
 foreach(target IN LISTS BOB_TARGETS)
     add_dependencies(${target} bee_eye_data.h)
 endforeach()
+
+# So that the program can find the header
+BoB_add_include_directories("${CMAKE_BINARY_DIR}")
