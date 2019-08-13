@@ -42,7 +42,7 @@ main(int, char **argv)
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object
-    AntWorld::AntAgent agent(window.get(), renderer, RenderSize);
+    AntWorld::AntAgent agent(*window, renderer, RenderSize);
     agent.setPosition(5.5_m, 4_m, 10_mm);
 
     units::angle::degree_t heading;
