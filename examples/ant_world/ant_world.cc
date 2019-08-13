@@ -191,20 +191,8 @@ int main(int argc, char **argv)
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Set viewport to strip at stop of window
-        glViewport(0, 0,
-                   width, height);
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluOrtho2D(0.0, 1.0,
-                   0.0, 1.0);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
         // Render render mesh
-        renderTarget.render();
+        renderTarget.render(0, 0, width, height);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);

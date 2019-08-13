@@ -122,8 +122,21 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
     m_Surface.unbindIndices();
 }
 //----------------------------------------------------------------------------
-void RenderTargetHexDisplay::render() const
+void RenderTargetHexDisplay::render(GLint viewportX, GLint viewportY,
+                                    GLsizei viewportWidth, GLsizei viewportHeight) const
 {
+    // Set viewport
+    glViewport(viewportX, viewportY,
+               viewportWidth, viewportHeight);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, 1.0,
+                0.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
     // Bind render target texture
     glBindTexture(GL_TEXTURE_2D, getTexture());
 

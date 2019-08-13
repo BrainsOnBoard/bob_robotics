@@ -1,5 +1,6 @@
 #pragma once
 
+// Ant world includes
 #include "antworld/render_target.h"
 #include "antworld/surface.h"
 
@@ -27,7 +28,8 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void render() const;
+    void render(GLint viewportX, GLint viewportY,
+                GLsizei viewportWidth, GLsizei viewportHeight) const;
 
 private:
     Surface m_Surface;
