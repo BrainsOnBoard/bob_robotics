@@ -10,8 +10,8 @@ namespace BoBRobotics {
 namespace ImgProc {
 namespace BeeEye {
 
-Map::Map(const float eyeData[][4], const int eyeDataLength,
-         const int eyeSize[2], const int imageSize[2], bool useMask)
+Map::Map(const float (*eyeData)[4], const int eyeDataLength,
+         const int (&eyeSize)[2], const int (&imageSize)[2], bool useMask)
 {
     cv::Size sz_out(eyeSize[0], eyeSize[1]);
     if (useMask) {

@@ -20,8 +20,8 @@ class Map
 {
 public:
     //! Create x and y pixel maps
-    Map(const float eyeData[][4], const int eyeDataLength,
-        const int eyeSize[2], const int imageSize[2], bool useMask = true);
+    Map(const float (*eyeData)[4], const int eyeDataLength,
+        const int (&eyeSize)[2], const int (&imageSize)[2], bool useMask = true);
 
     //! Takes an input image and transforms it with the Giger bee-eye transform
     void getEyeView(const cv::Mat &in, cv::Mat &out);
