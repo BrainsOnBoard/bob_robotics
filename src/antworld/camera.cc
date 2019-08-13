@@ -1,28 +1,16 @@
 // BoB robotics includes
 #include "antworld/camera.h"
 
-void
-handleGLFWError(int errorNumber, const char *message)
-{
-    throw std::runtime_error("GLFW error number: " + std::to_string(errorNumber) + ", message:" + message);
-}
-
-void
-handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
-{
-    throw std::runtime_error(message);
-}
-
 namespace BoBRobotics {
 namespace AntWorld {
 
-Camera::Camera(GLFWwindow *window, Renderer &renderer, const cv::Size &renderSize)
+Camera::Camera(sf::Window &window, Renderer &renderer, const cv::Size &renderSize)
   : Video::OpenGL(renderSize)
   , m_Window(window)
   , m_Renderer(renderer)
 {}
 
-GLFWwindow *
+sf::Window &
 Camera::getWindow() const
 {
     return m_Window;
@@ -59,7 +47,7 @@ bool
 Camera::update()
 {
     // Render to m_Window
-    glfwMakeContextCurrent(m_Window);
+    m_Window.setActive(true);
 
     // Clear colour and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -69,7 +57,7 @@ Camera::update()
     m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_Pose.z(), m_Pose.yaw(), m_Pose.pitch(), m_Pose.roll(), 0, 0, size.width, size.height);
 
     // Swap front and back buffers
-    glfwSwapBuffers(m_Window);
+    m_Window.display();
 
     return true;
 }
@@ -77,44 +65,29 @@ Camera::update()
 bool
 Camera::isOpen() const
 {
-    return !glfwWindowShouldClose(m_Window);
+    return m_Window.isOpen();
 }
 
-std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow *)>>
+std::unique_ptr<sf::Window>
 Camera::initialiseWindow(const cv::Size &size)
 {
-    // Set GLFW error callback
-    glfwSetErrorCallback(handleGLFWError);
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
 
-    // Initialize the library
-    if (!glfwInit()) {
-        throw std::runtime_error("Failed to initialize GLFW");
-    }
+    // Create SFML window
+    auto window = std::make_unique<sf::Window>(sf::VideoMode(size.width, size.height),
+                                               "Ant world",
+                                               sf::Style::Titlebar | sf::Style::Close,
+                                               settings);
 
-    // Prevent window being resized
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    GLFWwindow *ptr = glfwCreateWindow(size.width, size.height, "Ant world", nullptr, nullptr);
-    if (!ptr) {
-        glfwTerminate();
-        throw std::runtime_error("Failed to create window");
-    }
-
-    // Wrap in a unique_ptr so we can free it properly when we're done
-    std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow *)>> window(ptr, &glfwDestroyWindow);
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window.get());
+    // Enable VSync
+    window->setVerticalSyncEnabled(true);
+    window->setActive(true);
 
     // Initialize GLEW
     if (glewInit() != GLEW_OK) {
         throw std::runtime_error("Failed to initialize GLEW");
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
-
-    glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
