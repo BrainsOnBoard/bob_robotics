@@ -2,8 +2,8 @@
 #include "modelSpec.h"
 
 // BoB robotics includes
-#include "../../genn_models/stdp_dopamine.h"
-#include "../../genn_utils/connectors.h"
+#include "../../include/genn_models/stdp_dopamine.h"
+#include "../../include/genn_utils/connectors.h"
 
 // Model includes
 #include "mb_params_hog.h"

@@ -1,10 +1,8 @@
 #pragma once
 
-// BoB robotics includes
-#include "../common/macros.h"
-
 // Standard C++ includes
 #include <algorithm>
+#include <iostream>
 #include <numeric>
 #include <random>
 #include <stdexcept>
@@ -23,7 +21,7 @@ namespace GeNNUtils {
 //----------------------------------------------------------------------------
 // Evaluates continued fraction for incomplete beta function by modified Lentz's method
 // Adopted from numerical recipes in C p227
-double betacf(double a, double b, double x)
+inline double betacf(double a, double b, double x)
 {
     const int maxIterations = 200;
     const double epsilon = 3.0E-7;
@@ -85,7 +83,7 @@ double betacf(double a, double b, double x)
 //----------------------------------------------------------------------------
 // Returns the incomplete beta function Ix(a, b)
 // Adopted from numerical recipes in C p227
-double betai(double a, double b, double x)
+inline double betai(double a, double b, double x)
 {
     if (x < 0.0 || x > 1.0) {
         throw std::runtime_error("Bad x in routine betai");
@@ -104,7 +102,7 @@ double betai(double a, double b, double x)
     if (x < ((a + 1.0) / (a + b + 2.0))) {
         return bt * betacf(a, b, x) / a;
     }
-    // Otherwise, use continued fraction after making the
+    // Otherwise, use continued fraction after making the 
     // symmetry transformation.
     else {
         return 1.0 - (bt * betacf(b, a, 1.0 - x) / b);
@@ -131,47 +129,45 @@ inline unsigned int binomialInverseCDF(double cdf, unsigned int n, double p)
     throw std::runtime_error("Invalid CDF parameterse");
 }
 //----------------------------------------------------------------------------
-template<typename IndexType>
-void sortRows(unsigned int numPre, unsigned int *rowLength, IndexType *ind, unsigned int maxRowLength)
+inline void sortRows(unsigned int numPre, unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength)
 {
     // Loop through rows and sort indices
     for(unsigned int i = 0; i < numPre; i++) {
-        IndexType *indexStart = &ind[i * maxRowLength];
-        IndexType *indexEnd = indexStart + rowLength[i];
+        unsigned int *indexStart = &ind[i * maxRowLength];
+        unsigned int *indexEnd = indexStart + rowLength[i];
 
         std::sort(indexStart, indexEnd);
     }
 }
 //----------------------------------------------------------------------------
 template<typename T>
-void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
+inline void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         for(unsigned int j = 0; j < numPost; j++) {
-            LOGI << *(weights++) << ",";
+            std::cout << *(weights++) << ",";
         }
-        LOGI << std::endl;
+        std::cout << std::endl;
     }
 }
 //----------------------------------------------------------------------------
-template<typename IndexType>
-void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const IndexType *ind, unsigned int maxRowLength)
+inline void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const unsigned int *ind, unsigned int maxRowLength)
 {
     for(unsigned int i = 0; i < numPre; i++) {
-        LOGI << i << ":";
+        std::cout << i << ":";
 
-        const IndexType *rowInd = &ind[i * maxRowLength];
+        const unsigned int *rowInd = &ind[i * maxRowLength];
         for(unsigned int j = 0; j < rowLength[i]; j++) {
-            LOGI << rowInd[j] << ",";
+            std::cout << rowInd[j] << ",";
         }
 
-        LOGI << std::endl;
+        std::cout << std::endl;
     }
 }
 //----------------------------------------------------------------------------
-template <typename Generator, typename IndexType>
-void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
-                                  unsigned int *rowLength, IndexType *ind, unsigned int maxRowLength,
+template <typename Generator>
+inline void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+                                  unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength,
                                   Generator &gen)
 {
     // Zero row lengths
@@ -180,7 +176,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     // Generate array of presynaptic indices
     std::vector<unsigned int> preIndices(numPre);
     std::iota(preIndices.begin(), preIndices.end(), 0);
-
+    
     // Loop through postsynaptic neurons
     for(unsigned int j = 0; j < numPost; j++) {
         // Loop through connections to make
@@ -192,7 +188,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
             const unsigned int i = preIndices[dis(gen)];
 
             // Add synapse
-            ind[(i * maxRowLength) + rowLength[i]++] = (IndexType)j;
+            ind[(i * maxRowLength) + rowLength[i]++] = j;
 
             // Swap the last available preindex with the one we have now used
             std::swap(preIndices[i], preIndices[numPre - c]);
@@ -203,7 +199,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     sortRows(numPre, rowLength, ind, maxRowLength);
 }
 //----------------------------------------------------------------------------
-unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+inline unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
     const double quantile = pow(0.9999, 1.0 / (double)numPre);

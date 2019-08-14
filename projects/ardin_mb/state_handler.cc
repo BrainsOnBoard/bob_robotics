@@ -10,7 +10,7 @@
 #include "navigation/visual_navigation_base.h"
 
 // Antworld includes
-#include "libantworld/snapshot_processor.h"
+#include "antworld/snapshot_processor.h"
 
 // Ardin MB includes
 #include "sim_params.h"
@@ -536,7 +536,7 @@ bool StateHandler::handleUI()
                     if(ImGui::MenuItem(routeFilename)) {
                         const char *bobRoboticsPath = std::getenv("BOB_ROBOTICS_PATH");
                         assert(bobRoboticsPath != nullptr);
-                        std::string routePath = std::string(bobRoboticsPath) + "/libantworld/";
+                        std::string routePath = std::string(bobRoboticsPath) + "/resources/antworld/";
 
                         loadRoute(routePath + routeFilename);
                     }

@@ -1,5 +1,3 @@
-#undef NO_HEADER_DEFINITIONS
-
 // Standard C++ includes
 #include <bitset>
 #include <fstream>
@@ -33,8 +31,8 @@
 #include "navigation/perfect_memory_store_hog.h"
 
 // Antworld includes
-#include "libantworld/snapshot_processor_ardin.h"
-#include "libantworld/snapshot_processor_segment_sky.h"
+#include "antworld/snapshot_processor_ardin.h"
+#include "antworld/snapshot_processor_segment_sky.h"
 
 // Ardin MB includes
 #include "mb_memory_ardin.h"
@@ -163,7 +161,7 @@ int main(int argc, char *argv[])
     assert(bobRoboticsPath != nullptr);
 
     // Default parameters"
-    std::string worldFilename = std::string(bobRoboticsPath) + "/libantworld/world5000_gray.bin";
+    std::string worldFilename = std::string(bobRoboticsPath) + "/resources/antworld/world5000_gray.bin";
     std::string routeFilename = "";
     std::string logFilename = "";
     float jitterSD = 0.0f;

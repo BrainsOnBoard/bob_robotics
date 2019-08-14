@@ -1,4 +1,4 @@
-#include "route_ardin.h"
+#include "antworld/route_ardin.h"
 
 // Standard C++ includes
 #include <fstream>
@@ -7,10 +7,10 @@
 #include <tuple>
 
 // BoB robotics includes
-#include "../common/logging.h"
+#include "common/logging.h"
 
 // Libantworld includes
-#include "common.h"
+#include "antworld/common.h"
 
 using namespace units::angle;
 using namespace units::length;
