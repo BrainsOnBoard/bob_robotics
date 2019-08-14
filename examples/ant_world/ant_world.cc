@@ -27,7 +27,15 @@ using namespace units::literals;
 using namespace units::math;
 using namespace units::time;
 
-namespace  {
+// Anonymous namespace
+namespace
+{
+void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message,
+                   const void *)
+{
+    throw std::runtime_error(message);
+}
+
 std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::Window &window)
 {
     try
@@ -60,6 +68,9 @@ int main(int argc, char **argv)
     // Enable VSync
     window.setVerticalSyncEnabled(true);
     window.setActive(true);
+
+    // Set OpenGL error callback
+    glDebugMessageCallback(handleGLError, nullptr);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {

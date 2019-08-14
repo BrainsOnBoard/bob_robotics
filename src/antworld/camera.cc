@@ -1,6 +1,12 @@
 // BoB robotics includes
 #include "antworld/camera.h"
 
+void
+handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+{
+    throw std::runtime_error(message);
+}
+
 namespace BoBRobotics {
 namespace AntWorld {
 
@@ -84,6 +90,8 @@ Camera::initialiseWindow(const cv::Size &size)
     if (glewInit() != GLEW_OK) {
         throw std::runtime_error("Failed to initialize GLEW");
     }
+
+    glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);

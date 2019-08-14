@@ -16,6 +16,14 @@
 
 using namespace BoBRobotics;
 
+namespace {
+void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+{
+    throw std::runtime_error(message);
+}
+}
+
+
 int main(int, char **argv)
 {
     const unsigned int renderWidth = 1050;
@@ -29,6 +37,8 @@ int main(int, char **argv)
     // Enable VSync
     window.setVerticalSyncEnabled(true);
     window.setActive(true);
+
+    glDebugMessageCallback(handleGLError, nullptr);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
