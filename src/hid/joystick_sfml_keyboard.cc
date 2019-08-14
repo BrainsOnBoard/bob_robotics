@@ -2,7 +2,7 @@
 #include "hid/joystick_sfml_keyboard.h"
 
 template<class T, class Func>
-bool runIfFound(const std::map<sf::Keyboard::Key, T> m,
+bool runIfFound(const std::map<sf::Keyboard::Key, T> &m,
                 sf::Keyboard::Key key,
                 Func f)
 {
