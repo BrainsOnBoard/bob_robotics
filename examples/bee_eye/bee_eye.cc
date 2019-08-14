@@ -95,8 +95,7 @@ main(int argc, char **argv)
         }
     }
 
-    BeeEye::Map eyeMap{ BeeEye::EyeData, BeeEye::EyeDataLength,
-                        BeeEye::EyeSize, BeeEye::ImageSize };
+    BeeEye::Map eyeMap{ BeeEye::EyeData, BeeEye::EyeSize, BeeEye::ImageSize };
     cv::Mat outputImage, inputImageRaw, inputImageProcessed;
     while (true) {
         bool newFrame;
