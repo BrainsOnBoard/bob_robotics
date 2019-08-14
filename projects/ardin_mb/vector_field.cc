@@ -8,7 +8,7 @@
 #include <cstdlib>
 
 // Libantworld includes
-#include "libantworld/common.h"
+#include "antworld/common.h"
 
 using namespace units::literals;
 using namespace units::angle;

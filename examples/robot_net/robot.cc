@@ -1,23 +1,15 @@
 /*
  * Example program to be run on robot, or locally on a desktop as a server.
  *
- * If you don't want to build in I2C support (e.g. if running on desktop) then
- * make the program with:
- *     NO_I2C_ROBOT=1 make
- *
  * Use the corresponding "computer" program to connect to the server.
  */
 
 // Windows headers
 #include "os/windows_include.h"
 
-// If we're compiling on Windows, we know we don't need I2C
-#ifdef _WIN32
-#define NO_I2C_ROBOT
-#endif
-
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "net/server.h"
 #include "os/net.h"
@@ -27,16 +19,11 @@
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifndef NO_I2C_ROBOT
-#include "robots/norbot.h"
-#endif
-
 // Standard C includes
 #include <cstring>
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
 using namespace std::literals;
@@ -55,13 +42,8 @@ run(Video::Input &camera)
     // Stream camera synchronously over network
     Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
 
-#ifdef NO_I2C_ROBOT
-    // Output motor commands to terminal
-    Robots::Tank tank;
-#else
-    // Use Arduino robot
-    Robots::Norbot tank;
-#endif
+    // Initialise robot
+    Robots::TANK_TYPE tank;
 
     // Read motor commands from network
     tank.readFromNetwork(connection);
@@ -118,7 +100,7 @@ bob_main(int argc, char **argv)
         }
     } catch (Net::SocketClosedError &) {
         // The connection was closed on purpose: do nothing
-        std::cout << "Connection closed" << std::endl;
+        LOGI << "Connection closed";
     }
 
     return EXIT_SUCCESS;

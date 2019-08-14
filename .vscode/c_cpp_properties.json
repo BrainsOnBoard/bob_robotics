@@ -3,21 +3,26 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/third_party/ev3dev-lang-cpp/ev3dev-lang-cpp",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}",
+                "${workspaceFolder}/third_party/ev3dev-lang-cpp",
                 "${workspaceFolder}/third_party/plog/include",
-                "${GENN_PATH}/lib/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
-                "/usr/include/python3.7m",	
-                "/usr/lib/python3.7/site-packages/numpy/core/include",	
+                "/usr/include/python3.7m",
+                "/usr/lib/python3.7/site-packages/numpy/core/include",
                 "/usr/include/eigen3",
                 "/usr/include/opencv4",
                 "/usr/include/gazebo-9",
+                "/usr/include/gazebo-10",
                 "/usr/include/ignition/**",
-                "/usr/include/sdformat-6.2"
+                "/usr/include/sdformat-6.0",
+                "/usr/include/sdformat-6.2",
+                "${GENN_PATH}/include"
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "defines": [
+                "TANK_TYPE_Tank",
+                "TANK_TYPE=Tank"
+            ],
             "cppStandard": "c++14",
             "intelliSenseMode": "clang-x64"
         }

@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('md_examples_robot_net_README.html','')
 <div class="textblock"><p>This folder contains a basic example for connecting to an Arduino robot (Nor-bot :-)), controlling it with a joystick and viewing the camera stream. Whether the stream is unwrapped can be toggled by pressing U. Press escape to exit the program.</p>
 <h3>Building on Linux</h3>
 <p>The example programs can be built on Linux with a simple <code>make</code>. If you want to build the robot-side program without I2C (e.g. if you're testing it on a desktop machine), build with: </p><div class="fragment"><div class="line">NO_I2C_ROBOT=1 make</div></div><!-- fragment --><h3>Building on Windows</h3>
-<p>The programs are available in Visual Studio (2017) projects. Simply clone the <code><a class="el" href="namespaceBoBRobotics.html" title="Root namespace for the BoB robotics project.">BoBRobotics</a></code> repository, then open <code>BoBRobotics.sln</code> in Visual Studio.</p>
+<p>The programs are available in Visual Studio (2017) projects. Simply clone the <code><a class="el" href="namespaceBoBRobotics.html" title="Read a video stream from a libantworld RenderTarget.">BoBRobotics</a></code> repository, then open <code>BoBRobotics.sln</code> in Visual Studio.</p>
 <h3>Running</h3>
 <p>The program to be run on the robot is invoked like so: </p><div class="fragment"><div class="line">./robot</div></div><!-- fragment --><p>The program for the computer is run on Linux as: </p><div class="fragment"><div class="line">./computer $ROBOT_IP_ADDRESS</div></div><!-- fragment --><p> The commandline argument is optional.</p>
 <p>You can run the Windows version through Visual Studio. </p>

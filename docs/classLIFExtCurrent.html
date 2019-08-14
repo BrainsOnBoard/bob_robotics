@@ -103,30 +103,27 @@ Inheritance diagram for LIFExtCurrent:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a493f93409af06846d8dd4c6303138b45"><td class="memItemLeft" align="right" valign="top"><a id="a493f93409af06846d8dd4c6303138b45"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>DECLARE_MODEL</b> (<a class="el" href="classLIFExtCurrent.html">LIFExtCurrent</a>, 8, 2)</td></tr>
-<tr class="separator:a493f93409af06846d8dd4c6303138b45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fa220dea30e9434ef6bbd63998c922b"><td class="memItemLeft" align="right" valign="top"><a id="a8fa220dea30e9434ef6bbd63998c922b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SET_SIM_CODE</b> (&quot;if ($(RefracTime) &lt;= 0.0)\n&quot; &quot;{\n&quot; &quot;   scalar Iext = 0.0f;\n&quot; &quot;   if($(Iext) != NULL) {\n&quot; &quot;       unsigned int x = $(id) % (unsigned int)($(Width));\n&quot; &quot;       unsigned int y = $(id) / (unsigned int)($(Width));\n&quot; &quot;       const unsigned int index = (y * $(IextStep)) + x;\n&quot; &quot;       Iext = $(IextScale) * $(Iext)[index];\n&quot; &quot;   }\n&quot; &quot;   scalar alpha = (($(Isyn) + Iext) * $(Rmembrane)) + $(Vrest);\n&quot; &quot;   $(V) = alpha - ($(ExpTC) * (alpha - $(V)));\n&quot; &quot;}\n&quot; &quot;else\n&quot; &quot;{\n&quot; &quot;  $(RefracTime) -= DT;\n&quot; &quot;}\n&quot;)</td></tr>
-<tr class="separator:a8fa220dea30e9434ef6bbd63998c922b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad7a2e92f3d6990ed4a61f406682851d"><td class="memItemLeft" align="right" valign="top"><a id="aad7a2e92f3d6990ed4a61f406682851d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>DECLARE_MODEL</b> (<a class="el" href="classLIFExtCurrent.html">LIFExtCurrent</a>, 6, 3)</td></tr>
+<tr class="separator:aad7a2e92f3d6990ed4a61f406682851d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a491d62a6f3419664926aed57a68af4de"><td class="memItemLeft" align="right" valign="top"><a id="a491d62a6f3419664926aed57a68af4de"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SET_SIM_CODE</b> (&quot;if ($(RefracTime) &lt;= 0.0)\n&quot; &quot;{\n&quot; &quot;   const scalar alpha = (($(Isyn) + $(Iext)) * $(Rmembrane)) + $(Vrest);\n&quot; &quot;   $(V) = alpha - ($(ExpTC) * (alpha - $(V)));\n&quot; &quot;}\n&quot; &quot;else\n&quot; &quot;{\n&quot; &quot;  $(RefracTime) -= DT;\n&quot; &quot;}\n&quot;)</td></tr>
+<tr class="separator:a491d62a6f3419664926aed57a68af4de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6461ae3aee299678b4466007e9f2160a"><td class="memItemLeft" align="right" valign="top"><a id="a6461ae3aee299678b4466007e9f2160a"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SET_THRESHOLD_CONDITION_CODE</b> (&quot;$(RefracTime) &lt;= 0.0 &amp;&amp; $(V) &gt;= $(Vthresh)&quot;)</td></tr>
 <tr class="separator:a6461ae3aee299678b4466007e9f2160a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46793a37429244ee51717caf73307d8d"><td class="memItemLeft" align="right" valign="top"><a id="a46793a37429244ee51717caf73307d8d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SET_RESET_CODE</b> (&quot;$(V) = $(Vreset);\n&quot; &quot;$(RefracTime) = $(TauRefrac);\n&quot;)</td></tr>
 <tr class="separator:a46793a37429244ee51717caf73307d8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43c904c740a446abd43d94904cdbd5cc"><td class="memItemLeft" align="right" valign="top"><a id="a43c904c740a446abd43d94904cdbd5cc"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SET_PARAM_NAMES</b> ({ &quot;C&quot;, &quot;TauM&quot;, &quot;Vrest&quot;, &quot;Vreset&quot;, &quot;Vthresh&quot;, &quot;TauRefrac&quot;, &quot;IextScale&quot;, &quot;Width&quot;, })</td></tr>
-<tr class="separator:a43c904c740a446abd43d94904cdbd5cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7fb99f000dea80b328fe170b24e0d29c"><td class="memItemLeft" align="right" valign="top"><a id="a7fb99f000dea80b328fe170b24e0d29c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SET_DERIVED_PARAMS</b> ({ {&quot;ExpTC&quot;, [](const vector&lt; double &gt; &amp;pars, double dt){ return std::exp(-dt/pars[1]);}}, {&quot;Rmembrane&quot;, [](const vector&lt; double &gt; &amp;pars, double){ return pars[1]/pars[0];}}})</td></tr>
-<tr class="separator:a7fb99f000dea80b328fe170b24e0d29c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52001cba1fb4ee11516b0e242b673166"><td class="memItemLeft" align="right" valign="top"><a id="a52001cba1fb4ee11516b0e242b673166"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SET_VARS</b> ({{&quot;V&quot;, &quot;scalar&quot;}, {&quot;RefracTime&quot;, &quot;scalar&quot;}})</td></tr>
-<tr class="separator:a52001cba1fb4ee11516b0e242b673166"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad4302a87170bde303fb63852ff948d66"><td class="memItemLeft" align="right" valign="top"><a id="ad4302a87170bde303fb63852ff948d66"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SET_EXTRA_GLOBAL_PARAMS</b> ({{&quot;Iext&quot;, &quot;float*&quot;}, {&quot;IextStep&quot;, &quot;unsigned int&quot;}})</td></tr>
-<tr class="separator:ad4302a87170bde303fb63852ff948d66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33cfeb4de6bd28b2df17e480b29b2fdf"><td class="memItemLeft" align="right" valign="top"><a id="a33cfeb4de6bd28b2df17e480b29b2fdf"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SET_PARAM_NAMES</b> ({ &quot;C&quot;, &quot;TauM&quot;, &quot;Vrest&quot;, &quot;Vreset&quot;, &quot;Vthresh&quot;, &quot;TauRefrac&quot;})</td></tr>
+<tr class="separator:a33cfeb4de6bd28b2df17e480b29b2fdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae10b75cc6350138bc5ad665523fdeb34"><td class="memItemLeft" align="right" valign="top"><a id="ae10b75cc6350138bc5ad665523fdeb34"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SET_DERIVED_PARAMS</b> ({ {&quot;ExpTC&quot;, [](const std::vector&lt; double &gt; &amp;pars, double dt){ return std::exp(-dt/pars[1]);}}, {&quot;Rmembrane&quot;, [](const std::vector&lt; double &gt; &amp;pars, double){ return pars[1]/pars[0];}}})</td></tr>
+<tr class="separator:ae10b75cc6350138bc5ad665523fdeb34"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76b00e57bc19217756f604b2641ac9d0"><td class="memItemLeft" align="right" valign="top"><a id="a76b00e57bc19217756f604b2641ac9d0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SET_VARS</b> ({{&quot;V&quot;, &quot;scalar&quot;}, {&quot;RefracTime&quot;, &quot;scalar&quot;}, {&quot;Iext&quot;, &quot;scalar&quot;}})</td></tr>
+<tr class="separator:a76b00e57bc19217756f604b2641ac9d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>projects/ardin_mb/model.cc</li>

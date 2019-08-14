@@ -1,8 +1,9 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "common/pose.h"
-#include "common/sfml_world.h"
-#include "robots/robot_positioner.h"
+#include "robots/control/robot_positioner.h"
 #include "robots/simulated_tank.h"
+#include "viz/sfml_world/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -24,14 +25,14 @@ int
 main()
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
-    SFMLWorld<> display;
+    Viz::SFMLWorld display;
     auto car = display.createCarAgent();
 
     // A circle to show where the goal is
     sf::CircleShape goalCircle(10);
     goalCircle.setFillColor(sf::Color::Blue);
     goalCircle.setOrigin(10, 10);
-    goalCircle.setPosition(SFMLWorld<>::WindowWidth / 2, SFMLWorld<>::WindowHeight / 2);
+    goalCircle.setPosition(Viz::SFMLWorld::WindowWidth / 2, Viz::SFMLWorld::WindowHeight / 2);
 
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading
@@ -41,7 +42,9 @@ main()
     constexpr double beta = 0.02;                   // causes to drop velocity if 'k'(curveness) increases
 
     // construct the positioner
-    Robots::RobotPositioner robp(
+    auto positioner = Robots::createRobotPositioner(
+            robot,
+            robot,
             stoppingDistance,
             allowedHeadingError,
             k1,
@@ -50,14 +53,10 @@ main()
             beta);
 
     bool runPositioner = false;
-    bool reachedGoalAnnounced = false;
     while (display.isOpen()) {
-        // Get the robot's current pose
-        const auto &pose = robot.getPose();
-
         // Run GUI events
-        car.setPose(pose);
-        sf::Event event = display.updateAndDrive(robot, goalCircle, car);
+        car.setPose(robot.getPose());
+        const sf::Event event = display.updateAndDrive(robot, goalCircle, car);
 
         // Spacebar toggles whether positioner is running
         if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
@@ -71,23 +70,16 @@ main()
                 const auto mousePosition = display.mouseClickPosition();
 
                 // Set the goal to this position
-                robp.setGoalPose({ mousePosition.x(), mousePosition.y(), 15_deg });
+                positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
 
                 goalCircle.setPosition(display.vectorToPixel(mousePosition));
             }
 
-            // Update course and drive robot
-            robp.updateMotors(robot, pose);
-
             // Check if the robot is within threshold distance and bearing of goal
-            if (robp.reachedGoal()) {
-                if (!reachedGoalAnnounced) {
-                    std::cout << "Reached goal" << std::endl;
-                    robot.stopMoving();
-                    reachedGoalAnnounced = true;
-                }
-            } else {
-                reachedGoalAnnounced = false;
+            if (!positioner.pollPositioner()) {
+                runPositioner = false;
+                LOGI << "Reached goal";
+                robot.stopMoving();
             }
         }
 

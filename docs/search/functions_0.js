@@ -7,6 +7,7 @@ var searchData=
   ['acosh',['acosh',['../group__UnitMath.html#ga29860e26570c2decc2bb8710c1ae911c',1,'units::math']]],
   ['addhandler',['addHandler',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a5943d48ad182b67d2d9eb386c0ba420d',1,'BoBRobotics::HID::JoystickBase::addHandler(AxisHandler handler)'],['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a6736e009a54091f7c4df0182fe31bac4',1,'BoBRobotics::HID::JoystickBase::addHandler(ButtonHandler handler)']]],
   ['addjoystick',['addJoystick',['../classBoBRobotics_1_1Robots_1_1UAV.html#abbbbbee6cd6b6c22998ba19d4526f98c',1,'BoBRobotics::Robots::UAV']]],
+  ['addtowaypoint',['addToWayPoint',['../classBoBRobotics_1_1Robots_1_1PurePursuitController.html#a148bced2839e7e9b70a3b4aa1e8a9bfd',1,'BoBRobotics::Robots::PurePursuitController']]],
   ['asin',['asin',['../group__UnitMath.html#ga6070806b3322a08af3ee934731ddcc31',1,'units::math']]],
   ['asinh',['asinh',['../group__UnitMath.html#gaffaf53aeed1529243100d0922bdce834',1,'units::math']]],
   ['atan',['atan',['../group__UnitMath.html#gab8c42d9f521a8909fe92caeb674c30bb',1,'units::math']]],

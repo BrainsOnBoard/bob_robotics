@@ -89,7 +89,6 @@ $(document).ready(function(){initNavTree('namespaceBoBRobotics_1_1GeNNUtils.html
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">BoBRobotics::GeNNUtils Namespace Reference</div>  </div>
@@ -118,12 +117,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1GeNNUtils_1_1VarSlider.html">VarSlider</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:a090ece05d01eecc754d62063010c270c"><td class="memItemLeft" align="right" valign="top"><a id="a090ece05d01eecc754d62063010c270c"></a>
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>AllocateFn</b>) (unsigned int)</td></tr>
-<tr class="separator:a090ece05d01eecc754d62063010c270c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a76346769cafdb5b2c162a9439b4ffb8b"><td class="memItemLeft" align="right" valign="top"><a id="a76346769cafdb5b2c162a9439b4ffb8b"></a>
@@ -135,69 +128,25 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>betai</b> (double a
 <tr class="memitem:a0478a2c33b2124fd55b56fa6fb5f0603"><td class="memItemLeft" align="right" valign="top"><a id="a0478a2c33b2124fd55b56fa6fb5f0603"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>binomialInverseCDF</b> (double cdf, unsigned int n, double p)</td></tr>
 <tr class="separator:a0478a2c33b2124fd55b56fa6fb5f0603"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab14b8016285705cf22e2110a38ec3602"><td class="memItemLeft" align="right" valign="top"><a id="ab14b8016285705cf22e2110a38ec3602"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addSynapseToSparseProjection</b> (unsigned int i, unsigned int j, unsigned int numPre, SparseProjection &amp;sparseProjection)</td></tr>
-<tr class="separator:ab14b8016285705cf22e2110a38ec3602"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44837c760b70af2a8b6d160cbae5102c"><td class="memItemLeft" align="right" valign="top"><a id="a44837c760b70af2a8b6d160cbae5102c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>sortRows</b> (unsigned int numPre, SparseProjection &amp;sparseProjection)</td></tr>
-<tr class="separator:a44837c760b70af2a8b6d160cbae5102c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9612fdcb3d2db1526197ca9bed6dc4dc"><td class="memTemplParams" colspan="2"><a id="a9612fdcb3d2db1526197ca9bed6dc4dc"></a>
+<tr class="memitem:af942e216a0dfaa5e830d4faab25b11b7"><td class="memTemplParams" colspan="2"><a id="af942e216a0dfaa5e830d4faab25b11b7"></a>
 template&lt;typename IndexType &gt; </td></tr>
-<tr class="memitem:a9612fdcb3d2db1526197ca9bed6dc4dc"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>sortRows</b> (unsigned int numPre, RaggedProjection&lt; IndexType &gt; &amp;sparseProjection)</td></tr>
-<tr class="separator:a9612fdcb3d2db1526197ca9bed6dc4dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af942e216a0dfaa5e830d4faab25b11b7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>sortRows</b> (unsigned int numPre, unsigned int *rowLength, IndexType *ind, unsigned int maxRowLength)</td></tr>
+<tr class="separator:af942e216a0dfaa5e830d4faab25b11b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab069d17a2e6e91da8c5f110e8a5c438b"><td class="memTemplParams" colspan="2"><a id="ab069d17a2e6e91da8c5f110e8a5c438b"></a>
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ab069d17a2e6e91da8c5f110e8a5c438b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>printDenseMatrix</b> (unsigned int numPre, unsigned int numPost, T *weights)</td></tr>
 <tr class="separator:ab069d17a2e6e91da8c5f110e8a5c438b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a806beec04fe403902166c3a5ef396b12"><td class="memItemLeft" align="right" valign="top"><a id="a806beec04fe403902166c3a5ef396b12"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printSparseMatrix</b> (unsigned int numPre, const SparseProjection &amp;projection)</td></tr>
-<tr class="separator:a806beec04fe403902166c3a5ef396b12"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7de5dae32efc15ffa79abd0ecf126fd8"><td class="memItemLeft" align="right" valign="top"><a id="a7de5dae32efc15ffa79abd0ecf126fd8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>buildOneToOneConnector</b> (unsigned int numPre, unsigned int numPost, SparseProjection &amp;sparseProjection, AllocateFn allocateFn)</td></tr>
-<tr class="separator:a7de5dae32efc15ffa79abd0ecf126fd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06b5ea8b9e6ec1bf7a5b57a079b8f566"><td class="memTemplParams" colspan="2"><a id="a06b5ea8b9e6ec1bf7a5b57a079b8f566"></a>
-template&lt;typename Generator &gt; </td></tr>
-<tr class="memitem:a06b5ea8b9e6ec1bf7a5b57a079b8f566"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedProbabilityConnector</b> (unsigned int numPre, unsigned int numPost, float probability, SparseProjection &amp;projection, AllocateFn allocate, Generator &amp;gen)</td></tr>
-<tr class="separator:a06b5ea8b9e6ec1bf7a5b57a079b8f566"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b540a568f2d3e3c68f486e4677f0029"><td class="memTemplParams" colspan="2"><a id="a7b540a568f2d3e3c68f486e4677f0029"></a>
+<tr class="memitem:a8ebb61d44d83317bc912f0bc24ebdce1"><td class="memTemplParams" colspan="2"><a id="a8ebb61d44d83317bc912f0bc24ebdce1"></a>
+template&lt;typename IndexType &gt; </td></tr>
+<tr class="memitem:a8ebb61d44d83317bc912f0bc24ebdce1"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>printRaggedMatrix</b> (unsigned int numPre, const unsigned int *rowLength, const IndexType *ind, unsigned int maxRowLength)</td></tr>
+<tr class="separator:a8ebb61d44d83317bc912f0bc24ebdce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9db53571a98d56c1fcc2ef5b8e34ac89"><td class="memTemplParams" colspan="2"><a id="a9db53571a98d56c1fcc2ef5b8e34ac89"></a>
 template&lt;typename Generator , typename IndexType &gt; </td></tr>
-<tr class="memitem:a7b540a568f2d3e3c68f486e4677f0029"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedProbabilityConnector</b> (unsigned int numPre, unsigned int numPost, float probability, RaggedProjection&lt; IndexType &gt; &amp;projection, Generator &amp;gen)</td></tr>
-<tr class="separator:a7b540a568f2d3e3c68f486e4677f0029"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca591ace69ec11c8567368b632410cd8"><td class="memTemplParams" colspan="2"><a id="aca591ace69ec11c8567368b632410cd8"></a>
-template&lt;typename Generator &gt; </td></tr>
-<tr class="memitem:aca591ace69ec11c8567368b632410cd8"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedProbabilityConnector</b> (unsigned int numPre, unsigned int numPost, float probability, uint32_t *bitfield, Generator &amp;gen)</td></tr>
-<tr class="separator:aca591ace69ec11c8567368b632410cd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fdae02e3df3e209f9a88c081ecc2928"><td class="memItemLeft" align="right" valign="top"><a id="a3fdae02e3df3e209f9a88c081ecc2928"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>calcFixedProbabilityConnectorMaxConnections</b> (unsigned int numPre, unsigned int numPost, double probability)</td></tr>
-<tr class="separator:a3fdae02e3df3e209f9a88c081ecc2928"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9eac49224e93ea594824c6175f0092b6"><td class="memItemLeft" align="right" valign="top"><a id="a9eac49224e93ea594824c6175f0092b6"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>calcFixedProbabilityConnectorMaxSourceConnections</b> (unsigned int numPre, unsigned int numPost, double probability)</td></tr>
-<tr class="separator:a9eac49224e93ea594824c6175f0092b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4eedfcd4718f5296afce6f8d7a904f36"><td class="memTemplParams" colspan="2"><a id="a4eedfcd4718f5296afce6f8d7a904f36"></a>
-template&lt;typename Generator &gt; </td></tr>
-<tr class="memitem:a4eedfcd4718f5296afce6f8d7a904f36"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedNumberPreConnector</b> (unsigned int numPre, unsigned int numPost, unsigned int numConnections, SparseProjection &amp;projection, AllocateFn allocate, Generator &amp;gen)</td></tr>
-<tr class="separator:a4eedfcd4718f5296afce6f8d7a904f36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9db53571a98d56c1fcc2ef5b8e34ac89"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedNumberPreConnector</b> (unsigned int numPre, unsigned int numPost, unsigned int numConnections, unsigned int *rowLength, IndexType *ind, unsigned int maxRowLength, Generator &amp;gen)</td></tr>
+<tr class="separator:a9db53571a98d56c1fcc2ef5b8e34ac89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37c7ef59b8d9b01242d53ac94916d73b"><td class="memItemLeft" align="right" valign="top"><a id="a37c7ef59b8d9b01242d53ac94916d73b"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>calcFixedNumberPreConnectorMaxConnections</b> (unsigned int numPre, unsigned int numPost, unsigned int numConnections)</td></tr>
 <tr class="separator:a37c7ef59b8d9b01242d53ac94916d73b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81af25367d7f075e9c60495685646bcf"><td class="memTemplParams" colspan="2"><a id="a81af25367d7f075e9c60495685646bcf"></a>
-template&lt;typename Generator &gt; </td></tr>
-<tr class="memitem:a81af25367d7f075e9c60495685646bcf"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedNumberTotalWithReplacementConnector</b> (unsigned int numPre, unsigned int numPost, unsigned int numConnections, SparseProjection &amp;projection, AllocateFn allocate, Generator &amp;gen)</td></tr>
-<tr class="separator:a81af25367d7f075e9c60495685646bcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a026dc4757da85a32d52a9851be3ce93a"><td class="memTemplParams" colspan="2"><a id="a026dc4757da85a32d52a9851be3ce93a"></a>
-template&lt;typename Generator &gt; </td></tr>
-<tr class="memitem:a026dc4757da85a32d52a9851be3ce93a"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedNumberTotalWithReplacementConnector</b> (unsigned int numPre, unsigned int numPost, size_t numConnections, uint32_t *bitfield, Generator &amp;gen)</td></tr>
-<tr class="separator:a026dc4757da85a32d52a9851be3ce93a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac80db9ec7e519a68fcc586aba74b2b7"><td class="memTemplParams" colspan="2"><a id="aac80db9ec7e519a68fcc586aba74b2b7"></a>
-template&lt;typename Generator , typename IndexType &gt; </td></tr>
-<tr class="memitem:aac80db9ec7e519a68fcc586aba74b2b7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>buildFixedNumberTotalWithReplacementConnector</b> (unsigned int numPre, unsigned int numPost, size_t numConnections, RaggedProjection&lt; IndexType &gt; &amp;projection, Generator &amp;gen)</td></tr>
-<tr class="separator:aac80db9ec7e519a68fcc586aba74b2b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a938bb6fcd601c3758ddef348729169d2"><td class="memItemLeft" align="right" valign="top"><a id="a938bb6fcd601c3758ddef348729169d2"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>calcFixedNumberTotalWithReplacementConnectorMaxConnections</b> (unsigned int numPre, unsigned int numPost, unsigned int numConnections)</td></tr>
-<tr class="separator:a938bb6fcd601c3758ddef348729169d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ee3accaa12318fe62ea91c34f0191e5"><td class="memItemLeft" align="right" valign="top"><a id="a5ee3accaa12318fe62ea91c34f0191e5"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>calcFixedNumberTotalWithReplacementConnectorMaxSourceConnections</b> (unsigned int numPre, unsigned int numPost, unsigned int numConnections)</td></tr>
-<tr class="separator:a5ee3accaa12318fe62ea91c34f0191e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Tools for working with <a href="https://github.com/genn-team/genn">GeNN</a> models. </p>

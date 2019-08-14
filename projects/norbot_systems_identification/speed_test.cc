@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/logging.h"
 #include "common/main.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
@@ -58,13 +59,13 @@ public:
         m_Stopwatch.start();
         m_StopwatchSample.start();
 
-        std::cout << "Recording" << std::endl;
+        LOGI << "Recording";
     }
 
     ~DataFile()
     {
         m_Robot.stopMoving();
-        std::cout << "Data written to " << m_FilePath << std::endl;
+        LOGI << "Data written to " << m_FilePath;
     }
 
     bool update()
@@ -75,7 +76,7 @@ public:
             m_StopwatchSample.start();
 
             // Get coordinates from Vicon
-            const auto position = m_Vicon.getObjectData(0).getPosition<meter_t>();
+            const auto position = m_Vicon.getObjectData().getPosition<meter_t>();
 
             // Write to CSV file
             m_FileStream << position[0].value() << ", " << position[1].value()
@@ -104,9 +105,9 @@ int
 bob_main(int, char **)
 {
     // Connect to robot
-    std::cout << "Connecting to robot" << std::endl;
+    LOGI << "Connecting to robot";
     Net::Client client;
-    std::cout << "Connected to " << client.getIP() << std::endl;
+    LOGI << "Connected to " << client.getIP();
 
     // Send motor commands to robot
     Robots::TankNetSink robot(client);
@@ -114,7 +115,7 @@ bob_main(int, char **)
     // Open joystick
     HID::Joystick joystick;
     robot.addJoystick(joystick);
-    std::cout << "Opened joystick" << std::endl;
+    LOGI << "Opened joystick";
 
     std::unique_ptr<DataFile> dataFile; // CSV output file
     Vicon::UDPClient<> vicon(51001); // For getting robot's position
@@ -122,7 +123,7 @@ bob_main(int, char **)
     // If we're recording, ignore axis movements
     joystick.addHandler([&dataFile](HID::JAxis, float) {
         if (dataFile != nullptr) {
-            std::cout << "Ignoring joystick command" << std::endl;
+            LOGW << "Ignoring joystick command";
             return true;
         } else {
             return false;
@@ -152,13 +153,6 @@ bob_main(int, char **)
             return false;
         }
     });
-
-    // Wait for Vicon system
-    while (vicon.getNumObjects() == 0) {
-        std::cout << "Waiting for object" << std::endl;
-        std::this_thread::sleep_for(1s);
-    }
-    std::cout << "Connected to Vicon system" << std::endl;
 
     // Run client in background, checking for background errors thrown
     BackgroundExceptionCatcher catcher;

@@ -552,13 +552,13 @@ int tinydir_readfile(const tinydir_dir *dir, tinydir_file *file)
 	 * My version of GCC (8.2.1) gives a warning for this line, so temporarily
 	 * disable it. -- AD
 	 */
-#ifndef __clang__
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas" // in case compiler doesn't know about -Wrestrict
 #pragma GCC diagnostic ignored "-Wrestrict"
 #endif
 	_tinydir_strcat(file->path, file->name);
-#ifndef __clang__
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 

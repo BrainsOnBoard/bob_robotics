@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.15"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BoB robotics: BoBRobotics::Robots::RobotPositioner Class Reference</title>
+<title>BoB robotics: BoBRobotics::Robots::RobotPositioner&lt; PoseGetterType &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -91,7 +91,7 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Robots_1_1RobotPos
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classBoBRobotics_1_1Robots_1_1RobotPositioner-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">BoBRobotics::Robots::RobotPositioner Class Reference</div>  </div>
+<div class="title">BoBRobotics::Robots::RobotPositioner&lt; PoseGetterType &gt; Class Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -102,53 +102,61 @@ $(document).ready(function(){initNavTree('classBoBRobotics_1_1Robots_1_1RobotPos
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a83e657806058e3c6d2e9165357d475de"><td class="memItemLeft" align="right" valign="top"><a id="a83e657806058e3c6d2e9165357d475de"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>RobotPositioner</b> (<a class="el" href="classunits_1_1unit__t.html">meter_t</a> stoppingDistance, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> allowedHeadingError, double k1, double k2, double alpha, double beta)</td></tr>
-<tr class="separator:a83e657806058e3c6d2e9165357d475de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7687ce1d934d35a01e0a860d143c93c"><td class="memItemLeft" align="right" valign="top"><a id="aa7687ce1d934d35a01e0a860d143c93c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#aa7687ce1d934d35a01e0a860d143c93c">setGoalPose</a> (const <a class="el" href="classBoBRobotics_1_1Pose2.html">Pose2</a>&lt; <a class="el" href="classunits_1_1unit__t.html">meter_t</a>, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt; &amp;pose)</td></tr>
-<tr class="memdesc:aa7687ce1d934d35a01e0a860d143c93c"><td class="mdescLeft">&#160;</td><td class="mdescRight">sets the goal pose (x, y, angle) <br /></td></tr>
-<tr class="separator:aa7687ce1d934d35a01e0a860d143c93c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfd623e8447f266f501b0740177dc794"><td class="memItemLeft" align="right" valign="top"><a id="acfd623e8447f266f501b0740177dc794"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#acfd623e8447f266f501b0740177dc794">setPose</a> (const <a class="el" href="classBoBRobotics_1_1Pose2.html">Pose2</a>&lt; <a class="el" href="classunits_1_1unit__t.html">meter_t</a>, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt; &amp;pose)</td></tr>
-<tr class="memdesc:acfd623e8447f266f501b0740177dc794"><td class="mdescLeft">&#160;</td><td class="mdescRight">updates the agent's current pose <br /></td></tr>
-<tr class="separator:acfd623e8447f266f501b0740177dc794"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcffd07e0cacd256ff29173ef241e1bc"><td class="memItemLeft" align="right" valign="top"><a id="afcffd07e0cacd256ff29173ef241e1bc"></a>
+<tr class="memitem:a159195ef6718857a57304b87634aa712"><td class="memItemLeft" align="right" valign="top"><a id="a159195ef6718857a57304b87634aa712"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>RobotPositioner</b> (<a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html">Robots::Tank</a> &amp;tank, PoseGetterType &amp;poseGetter, <a class="el" href="classunits_1_1unit__t.html">meter_t</a> stoppingDistance, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> allowedHeadingError, double k1, double k2, double alpha, double beta, <a class="el" href="classunits_1_1unit__t.html">meter_t</a> startSlowingAt=0_m, float robotMinSpeed=0.2f, float robotMaxSpeed=1.f)</td></tr>
+<tr class="separator:a159195ef6718857a57304b87634aa712"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad468aa5ea108e6444e76bb57b25aad8a"><td class="memItemLeft" align="right" valign="top"><a id="ad468aa5ea108e6444e76bb57b25aad8a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>moveTo</b> (const <a class="el" href="classBoBRobotics_1_1Pose2.html">Pose2</a>&lt; <a class="el" href="classunits_1_1unit__t.html">meter_t</a>, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt; &amp;pose)</td></tr>
+<tr class="separator:ad468aa5ea108e6444e76bb57b25aad8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa27809180fc070e9db1e1ceb3c9d4938"><td class="memItemLeft" align="right" valign="top"><a id="aa27809180fc070e9db1e1ceb3c9d4938"></a>
+const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getRobot</b> () const</td></tr>
+<tr class="separator:aa27809180fc070e9db1e1ceb3c9d4938"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02502d0db5d165352baa487b685c4466"><td class="memItemLeft" align="right" valign="top"><a id="a02502d0db5d165352baa487b685c4466"></a>
+auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getRobot</b> ()</td></tr>
+<tr class="separator:a02502d0db5d165352baa487b685c4466"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed537d939ceca58e81df76ec8b9968a8"><td class="memItemLeft" align="right" valign="top"><a id="aed537d939ceca58e81df76ec8b9968a8"></a>
+const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getPose</b> () const</td></tr>
+<tr class="separator:aed537d939ceca58e81df76ec8b9968a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a502570c1d3b2ebe4d8dab5732839ecc0"><td class="memItemLeft" align="right" valign="top"><a id="a502570c1d3b2ebe4d8dab5732839ecc0"></a>
+const auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getGoalPose</b> () const</td></tr>
+<tr class="separator:a502570c1d3b2ebe4d8dab5732839ecc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acccfdf43b5e60c8bb40c25258b20f8b1"><td class="memItemLeft" align="right" valign="top"><a id="acccfdf43b5e60c8bb40c25258b20f8b1"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>distanceToGoal</b> () const</td></tr>
+<tr class="separator:acccfdf43b5e60c8bb40c25258b20f8b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9989b4fd762b0e7827a0655910649b6"><td class="memItemLeft" align="right" valign="top"><a id="af9989b4fd762b0e7827a0655910649b6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
-<tr class="separator:afcffd07e0cacd256ff29173ef241e1bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf9007ef55e89ad7637a29444cb35e5d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#abf9007ef55e89ad7637a29444cb35e5d">updateVelocities</a> (const <a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html">Tank</a> &amp;bot, <a class="el" href="classunits_1_1unit__t.html">meters_per_second_t</a> &amp;v, <a class="el" href="classunits_1_1unit__t.html">radians_per_second_t</a> &amp;omega)</td></tr>
-<tr class="separator:abf9007ef55e89ad7637a29444cb35e5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a276780275fbde526075b06c66e6cd1d1"><td class="memItemLeft" align="right" valign="top"><a id="a276780275fbde526075b06c66e6cd1d1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#a276780275fbde526075b06c66e6cd1d1">updateMotors</a> (<a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html">BoBRobotics::Robots::Tank</a> &amp;bot, const <a class="el" href="classBoBRobotics_1_1Pose2.html">Pose2</a>&lt; <a class="el" href="classunits_1_1unit__t.html">meter_t</a>, <a class="el" href="classunits_1_1unit__t.html">radian_t</a> &gt; &amp;pose)</td></tr>
-<tr class="memdesc:a276780275fbde526075b06c66e6cd1d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">This function will update the motors so it drives towards a previously set goal location. <br /></td></tr>
-<tr class="separator:a276780275fbde526075b06c66e6cd1d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12fe5e77fc6fe6cc1428e5c2b5044a90"><td class="memItemLeft" align="right" valign="top"><a id="a12fe5e77fc6fe6cc1428e5c2b5044a90"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#a12fe5e77fc6fe6cc1428e5c2b5044a90">reachedGoal</a> () const</td></tr>
-<tr class="memdesc:a12fe5e77fc6fe6cc1428e5c2b5044a90"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns true if the robot reached the goal position <br /></td></tr>
-<tr class="separator:a12fe5e77fc6fe6cc1428e5c2b5044a90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:af9989b4fd762b0e7827a0655910649b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a594a842202d725c06f8c8abf40d6463a"><td class="memItemLeft" align="right" valign="top"><a id="a594a842202d725c06f8c8abf40d6463a"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>pollPositioner</b> ()</td></tr>
+<tr class="separator:a594a842202d725c06f8c8abf40d6463a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a235c7ebb670c4cd80283ac4319a6c0af"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#a235c7ebb670c4cd80283ac4319a6c0af">updateVelocities</a> (<a class="el" href="classunits_1_1unit__t.html">meters_per_second_t</a> &amp;v, <a class="el" href="classunits_1_1unit__t.html">radians_per_second_t</a> &amp;omega)</td></tr>
+<tr class="separator:a235c7ebb670c4cd80283ac4319a6c0af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b866ffbfd52c18c386254a8cb84ee33"><td class="memItemLeft" align="right" valign="top"><a id="a1b866ffbfd52c18c386254a8cb84ee33"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html#a1b866ffbfd52c18c386254a8cb84ee33">reachedGoal</a> () const</td></tr>
+<tr class="memdesc:a1b866ffbfd52c18c386254a8cb84ee33"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns true if the robot reached the goal position <br /></td></tr>
+<tr class="separator:a1b866ffbfd52c18c386254a8cb84ee33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>A tool for moving a tank robot to a specified position in space. </p>
+<div class="textblock"><h3>template&lt;class PoseGetterType&gt;<br />
+class BoBRobotics::Robots::RobotPositioner&lt; PoseGetterType &gt;</h3>
+
+<p>A tool for moving a tank robot to a specified position in space. </p>
 <p>This class requires that we have a mechanism for obtaining the robot's pose, with, e.g. a <a class="el" href="namespaceBoBRobotics_1_1Vicon.html" title="For interfacing with the Vicon motion-tracking system.">Vicon</a> system (see <a class="el" href="classBoBRobotics_1_1Vicon_1_1UDPClient.html" title="Receiver for Vicon UDP streams.">Vicon::UDPClient</a>). The algorithm used is drawn from: <a href="https://web.eecs.umich.edu/~kuipers/papers/Park-icra-11.pdf">https://web.eecs.umich.edu/~kuipers/papers/Park-icra-11.pdf</a> </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="abf9007ef55e89ad7637a29444cb35e5d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf9007ef55e89ad7637a29444cb35e5d">&#9670;&nbsp;</a></span>updateVelocities()</h2>
+<a id="a235c7ebb670c4cd80283ac4319a6c0af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a235c7ebb670c4cd80283ac4319a6c0af">&#9670;&nbsp;</a></span>updateVelocities()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<div class="memtemplate">
+template&lt;class PoseGetterType&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void BoBRobotics::Robots::RobotPositioner::updateVelocities </td>
+          <td class="memname">void <a class="el" href="classBoBRobotics_1_1Robots_1_1RobotPositioner.html">BoBRobotics::Robots::RobotPositioner</a>&lt; PoseGetterType &gt;::updateVelocities </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html">Tank</a> &amp;&#160;</td>
-          <td class="paramname"><em>bot</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype"><a class="el" href="classunits_1_1unit__t.html">meters_per_second_t</a> &amp;&#160;</td>
           <td class="paramname"><em>v</em>, </td>
         </tr>
@@ -175,7 +183,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>robots/robot_positioner.h</li>
+<li>include/robots/control/robot_positioner.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
