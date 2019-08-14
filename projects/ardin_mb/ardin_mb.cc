@@ -2,7 +2,7 @@
 #undef NO_HEADER_DEFINITIONS
 
 // BoB Robotics includes
-#include "common/bob_robotics_path.h"
+#include "common/path.h"
 #include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     MBMemory memory;
 
     // Create state machine and set it as window user pointer
-    const auto worldFilename = getResourcesPath() / "antworld" / "world5000_gray.bin";
+    const auto worldFilename = Path::getResourcesPath() / "antworld" / "world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     StateHandler stateHandler(worldFilename.str(), routeFilename, memory);
     glfwSetWindowUserPointer(window, &stateHandler);

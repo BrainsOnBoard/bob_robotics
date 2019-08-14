@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "common/bob_robotics_path.h"
+#include "common/path.h"
 
 // OpenCV
 #include "opencv2/opencv.hpp"
@@ -30,7 +30,7 @@ public:
     {
         cv::Size sz_out(eyeSize[0], eyeSize[1]);
         if (useMask) {
-            const auto maskPath = getResourcesPath() / "bee_eye_mask.png";
+            const auto maskPath = Path::getResourcesPath() / "bee_eye_mask.png";
             m_Mask = cv::imread(maskPath.str(), cv::IMREAD_GRAYSCALE);
             BOB_ASSERT(m_Mask.type() == CV_8UC1);
             cv::resize(m_Mask, m_Mask, sz_out);

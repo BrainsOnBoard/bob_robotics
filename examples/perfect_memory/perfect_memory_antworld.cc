@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/bob_robotics_path.h"
+#include "common/path.h"
 #include "common/logging.h"
 #include "navigation/antworld_rotater.h"
 #include "navigation/perfect_memory.h"
@@ -33,13 +33,13 @@ main(int, char **)
      *      -- AD
      */
     const cv::Size RenderSize{ 180, 50 };
-    const auto routePath = getBoBRoboticsPath() / "tools" / "ant_world_db_creator" / "ant1_route1";
+    const auto routePath = Path::getRepoPath() / "tools" / "ant_world_db_creator" / "ant1_route1";
 
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
-    renderer.getWorld().load(getResourcesPath() / "antworld" / "world5000_gray.bin",
+    renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create agent object

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/bob_robotics_path.h"
+#include "common/path.h"
 #include "common/macros.h"
 #include "common/logging.h"
 #include "imgproc/opencv_unwrap_360.h"
@@ -57,7 +57,7 @@ OpenCVUnwrap360::OpenCVUnwrap360(const cv::Size &cameraResolution,
     // first check if file exists in working directory...
     if (!filePath.exists()) {
         // ...otherwise it'll (hopefully) be in the BoB robotics repo
-        filePath = getResourcesPath() / "panoramic_camera_parameters" / fileName;
+        filePath = Path::getResourcesPath() / "panoramic_camera_parameters" / fileName;
         if (!filePath.exists()) {
             throw std::runtime_error(
                     "Could not find unwrap parameters file for " +

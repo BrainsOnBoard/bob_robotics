@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/bob_robotics_path.h"
+#include "common/path.h"
 #include "viz/sfml_world/sfml_world.h"
 
 // SFML
@@ -37,7 +37,7 @@ constexpr float SFMLWorld::OriginLineThickness, SFMLWorld::OriginLineLength;
 SFMLWorld::CarAgent::CarAgent(const SFMLWorld &display, meter_t carWidth)
   : m_Display(display)
 {
-    const auto imageFilePath = getResourcesPath() / "car.bmp";
+    const auto imageFilePath = Path::getResourcesPath() / "car.bmp";
     if (!m_Texture.loadFromFile(imageFilePath.str())) {
         throw std::runtime_error("Could not load " + imageFilePath.str());
     }
