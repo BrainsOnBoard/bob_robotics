@@ -71,14 +71,10 @@ Camera::isOpen() const
 std::unique_ptr<sf::Window>
 Camera::initialiseWindow(const cv::Size &size)
 {
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-
     // Create SFML window
     auto window = std::make_unique<sf::Window>(sf::VideoMode(size.width, size.height),
                                                "Ant world",
-                                               sf::Style::Titlebar | sf::Style::Close,
-                                               settings);
+                                               sf::Style::Titlebar | sf::Style::Close);
 
     // Enable VSync
     window->setVerticalSyncEnabled(true);

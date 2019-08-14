@@ -52,14 +52,10 @@ int main(int argc, char **argv)
     // Whether to use the 3D reconstructed Rothamsted model
     const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
 
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-
     // Create SFML window
     sf::Window window(sf::VideoMode{ width, height },
                       "Ant world example",
-                      sf::Style::Titlebar | sf::Style::Close,
-                      settings);
+                      sf::Style::Titlebar | sf::Style::Close);
 
     // Enable VSync
     window.setVerticalSyncEnabled(true);

@@ -34,14 +34,10 @@ using namespace BoBRobotics;
 
 int main(int argc, char *argv[])
 {
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-
     // Create SFML window
     sf::Window window(sf::VideoMode(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10),
                       "Ant world",
-                      sf::Style::Titlebar | sf::Style::Close,
-                      settings);
+                      sf::Style::Titlebar | sf::Style::Close);
 
     // Enable VSync
     window.setVerticalSyncEnabled(true);

@@ -21,14 +21,10 @@ int main(int, char **argv)
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
 
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 8;
-
     // Create SFML window
     sf::Window window(sf::VideoMode(renderWidth, renderHeight),
                       "Ant world",
-                      sf::Style::Titlebar | sf::Style::Close,
-                      settings);
+                      sf::Style::Titlebar | sf::Style::Close);
 
     // Enable VSync
     window.setVerticalSyncEnabled(true);
