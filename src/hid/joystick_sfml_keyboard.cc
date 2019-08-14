@@ -1,39 +1,17 @@
 // BoB robotics includes
 #include "hid/joystick_sfml_keyboard.h"
 
-template<class T, class Func>
-bool runIfFound(const std::map<sf::Keyboard::Key, T> &m,
-                sf::Keyboard::Key key,
-                Func f)
-{
-    auto iter = m.find(key);
-    if (iter == m.end()) { // not present
-        return false;
-    }
-
-    // Run f with the value corresponding to key
-    f(iter->second);
-    return true;
-}
-
 namespace BoBRobotics {
 namespace HID {
 
-const std::map<sf::Keyboard::Key, JAxis> JoystickSFMLKeyboard::NegativeAxisKeys = {
-    { sf::Keyboard::Key::W, JAxis::LeftStickVertical },
-    { sf::Keyboard::Key::A, JAxis::LeftStickHorizontal },
-    { sf::Keyboard::Key::Up, JAxis::RightStickVertical },
-    { sf::Keyboard::Key::Left, JAxis::RightStickHorizontal },
-    { sf::Keyboard::Key::PageUp, JAxis::RightTrigger }
+const JoystickSFMLKeyboard::AxisKey JoystickSFMLKeyboard::AxisKeys[] = {
+    { sf::Keyboard::Key::S, sf::Keyboard::Key::W, JAxis::LeftStickVertical },
+    { sf::Keyboard::Key::D, sf::Keyboard::Key::A, JAxis::LeftStickHorizontal },
+    { sf::Keyboard::Key::Down, sf::Keyboard::Key::Up, JAxis::RightStickVertical },
+    { sf::Keyboard::Key::Right, sf::Keyboard::Key::Left, JAxis::RightStickHorizontal },
+    { sf::Keyboard::Key::PageDown, sf::Keyboard::Key::PageUp, JAxis::RightTrigger }
 };
-const std::map<sf::Keyboard::Key, JAxis> JoystickSFMLKeyboard::PositiveAxisKeys = {
-    { sf::Keyboard::Key::S, JAxis::LeftStickVertical },
-    { sf::Keyboard::Key::D, JAxis::LeftStickHorizontal },
-    { sf::Keyboard::Key::Down, JAxis::RightStickVertical },
-    { sf::Keyboard::Key::Right, JAxis::RightStickHorizontal },
-    { sf::Keyboard::Key::PageDown, JAxis::RightTrigger }
-};
-const std::map<sf::Keyboard::Key, JButton> JoystickSFMLKeyboard::ButtonKeys = {
+const JoystickSFMLKeyboard::ButtonKey JoystickSFMLKeyboard::ButtonKeys[] = {
     { sf::Keyboard::Key::Num1, JButton::A },
     { sf::Keyboard::Key::Num2, JButton::B },
     { sf::Keyboard::Key::Num3, JButton::X },
@@ -50,48 +28,42 @@ JoystickSFMLKeyboard::JoystickSFMLKeyboard(sf::Window &window)
 //------------------------------------------------------------------------
 bool JoystickSFMLKeyboard::updateState()
 {
-    sf::Event event;
-    if (!m_Window.pollEvent(event)) {
-        return false;
-    }
-    bool down = event.type == sf::Event::KeyPressed;
-    if (!down && event.type != sf::Event::KeyReleased) {
-        return false;
-    }
-    auto key = event.key.code;
+    bool changed = false;
 
-    // Check for negative axis keys
-    bool didRun = runIfFound(NegativeAxisKeys, key,
-        [&](JAxis axis)
-        {
-            this->setState(axis, down ? -1.f : 0.f, false);
-        });
-    if (didRun) {
-        return true;
-    }
+    // Check for keypresses related to axes
+    for (auto &axisKey : AxisKeys) {
+        float newVal;
+        bool posDown = sf::Keyboard::isKeyPressed(axisKey.positiveKey);
+        bool negDown = sf::Keyboard::isKeyPressed(axisKey.negativeKey);
+        if (!posDown && !negDown) {
+            newVal = 0.f;
+        } else if (posDown) {
+            newVal = 1.f;
+        } else {
+            newVal = -1.f;
+        }
 
-    // Check for positive axis keys
-    didRun = runIfFound(PositiveAxisKeys, key,
-        [&](JAxis axis)
-        {
-            this->setState(axis, down ? 1.f : 0.f, false);
-        });
-    if (didRun) {
-        return true;
+        // Check if the axis value will be changed
+        if (newVal != getState(axisKey.axis)) {
+            changed = true;
+            setState(axisKey.axis, newVal, false);
+        }
     }
 
-    // Check for button keys
-    didRun = runIfFound(ButtonKeys, key,
-        [&](JButton button)
-        {
+    // Check for keypresses related to buttons
+    for (auto &buttonKey : ButtonKeys) {
+        bool down = sf::Keyboard::isKeyPressed(buttonKey.key);
+        if (isDown(buttonKey.button) != down) {
+            changed = true;
             if (down) {
-                this->setPressed(button, false);
+                setPressed(buttonKey.button, false);
             } else {
-                this->setReleased(button, false);
+                setReleased(buttonKey.button, false);
             }
-        });
+        }
+    }
 
-    return didRun;
+    return changed;
 }
 } // HID
 } // BoBRobotics

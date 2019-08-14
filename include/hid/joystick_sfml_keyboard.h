@@ -6,9 +6,6 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
-// Standard C++ includes
-#include <map>
-
 namespace BoBRobotics {
 namespace HID {
 
@@ -30,12 +27,21 @@ protected:
     virtual bool updateState() override;
 
 private:
+    struct AxisKey {
+        sf::Keyboard::Key positiveKey, negativeKey;
+        JAxis axis;
+    };
+    struct ButtonKey {
+        sf::Keyboard::Key key;
+        JButton button;
+    };
+
     //------------------------------------------------------------------------
     // Private members
     //------------------------------------------------------------------------
     sf::Window &m_Window;
-    static const std::map<sf::Keyboard::Key, JAxis> NegativeAxisKeys, PositiveAxisKeys;
-    static const std::map<sf::Keyboard::Key, JButton> ButtonKeys;
+    static const AxisKey AxisKeys[];
+    static const ButtonKey ButtonKeys[];
 }; // JoystickLinux
 } // HID
 } // BoBRobotics
