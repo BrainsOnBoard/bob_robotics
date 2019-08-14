@@ -135,7 +135,8 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     const double sin30 = units::math::sin(30_deg);
 
     // Calculate side length from interommatidia angle
-    const units::angle::degree_t sideLength = interommatidiaAngle / (2.0 * cos30);
+    // sidelength is 'radius' i.e. distance from any vertex to centre and interommatidia angle is 'diameter'
+    const units::angle::degree_t sideLength = interommatidiaAngle / 2.0;
 
     // Calculate other hexagon dimensions
     const units::angle::degree_t hexDistance = cos30 * sideLength;
@@ -158,13 +159,15 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     const float rectangleHeight = 1.0f / (float)m_NumVerticalHexes;
     const float halfRectangleWidth = rectangleWidth * 0.5f;
 
+    // Positions used to map hexagons to rectangles
+    // **NOTE** quality of mapping is not SUPER-important as the resultant rectangle will be averaged
     const float hexRectangleOffsets[6][2] = {
-        {halfRectangleWidth, 0.0f},
-        {rectangleWidth, 0.0f},
-        {rectangleWidth, rectangleHeight},
         {halfRectangleWidth, rectangleHeight},
+        {rectangleWidth, rectangleHeight},
+        {rectangleWidth, 0.0f},
+        {halfRectangleWidth, 0.0f},
+        {0.0f, 0.0f},
         {0.0f, rectangleHeight},
-        {0.0f, 0.0f}
     };
 
     // **TODO** reserve
@@ -187,16 +190,16 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
                 hexLongitude += hexDistance;
             }
 
-            // Calculate position of this hex in output rectangular grid
-            const float hexX = rectangleWidth * (float)j;
-            const float hexY = rectangleHeight * (float)i;
+            // Calculate position of this hex in output rectangular grid, offsetting to centre of screen
+            const float hexX = 0.5f + (rectangleWidth * (float)j);
+            const float hexY = 0.5f - (rectangleHeight * (float)i);
 
             // Cache index of first hex in
             const size_t hexStartVertexIndex = positions.size() / 2;
 
             // Loop through vertices
             for(unsigned int v = 0; v < 6; v++) {
-                // Add positions, offsetting to centre of screen
+                // Add positions
                 positions.push_back(hexX + hexRectangleOffsets[v][0]);
                 positions.push_back(hexY + hexRectangleOffsets[v][1]);
 
@@ -210,21 +213,21 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
                 const GLfloat cosLongitude = cos(vertexLongitude);
 
                 // Add vertex texture coordinate
-                textureCoords.push_back(sinLatitude * cosLongitude);
-                textureCoords.push_back(sinLongitude);
-                textureCoords.push_back(cosLatitude * cosLongitude);
+                textureCoords.push_back(sinLongitude * cosLatitude);
+                textureCoords.push_back(sinLatitude);
+                textureCoords.push_back(cosLongitude * cosLatitude);
             }
 
             // Add two quads to render hexagon
             indices.push_back(hexStartVertexIndex);
-            indices.push_back(hexStartVertexIndex + 1);
-            indices.push_back(hexStartVertexIndex + 2);
             indices.push_back(hexStartVertexIndex + 3);
+            indices.push_back(hexStartVertexIndex + 2);
+            indices.push_back(hexStartVertexIndex + 1);
 
             indices.push_back(hexStartVertexIndex);
-            indices.push_back(hexStartVertexIndex + 3);
-            indices.push_back(hexStartVertexIndex + 4);
             indices.push_back(hexStartVertexIndex + 5);
+            indices.push_back(hexStartVertexIndex + 4);
+            indices.push_back(hexStartVertexIndex + 3);
         }
     }
 

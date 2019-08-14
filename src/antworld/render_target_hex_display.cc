@@ -35,12 +35,12 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
 
     // Calculate hex position offsets to build each hex's vertices from
     const float hexPositionOffsets[6][2] = {
-        {0.0f, -halfHexHeight},
-        {hexDistance, -halfSideLength},
-        {hexDistance, halfSideLength},
         {0.0f, halfHexHeight},
-        {-hexDistance, halfSideLength},
-        {-hexDistance, -halfSideLength}
+        {hexDistance, halfSideLength},
+        {hexDistance, -halfSideLength},
+        {0.0f, -halfHexHeight},
+        {-hexDistance, -halfSideLength},
+        {-hexDistance, halfSideLength}
     };
 
     // Determine size of rectangles used for final output
@@ -49,12 +49,12 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
     const float halfRectangleWidth = rectangleWidth * 0.5f;
 
     const float hexRectangleOffsets[6][2] = {
-        {halfRectangleWidth, 0.0f},
-        {rectangleWidth, 0.0f},
-        {rectangleWidth, rectangleHeight},
         {halfRectangleWidth, rectangleHeight},
+        {rectangleWidth, rectangleHeight},
+        {rectangleWidth, 0.0f},
+        {halfRectangleWidth, 0.0f},
+        {0.0f, 0.0f},
         {0.0f, rectangleHeight},
-        {0.0f, 0.0f}
     };
 
     // **TODO** reserve
@@ -96,14 +96,14 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
 
             // Add two quads to render hexagon
             indices.push_back(hexStartVertexIndex);
-            indices.push_back(hexStartVertexIndex + 1);
-            indices.push_back(hexStartVertexIndex + 2);
             indices.push_back(hexStartVertexIndex + 3);
+            indices.push_back(hexStartVertexIndex + 2);
+            indices.push_back(hexStartVertexIndex + 1);
 
             indices.push_back(hexStartVertexIndex);
-            indices.push_back(hexStartVertexIndex + 3);
-            indices.push_back(hexStartVertexIndex + 4);
             indices.push_back(hexStartVertexIndex + 5);
+            indices.push_back(hexStartVertexIndex + 4);
+            indices.push_back(hexStartVertexIndex + 3);
         }
     }
 

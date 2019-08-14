@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
-    AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 5_deg),
+    AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 3.7_deg),
                                 256, 0.1);
 
     // Create a render target for displaying world re-mapped onto hexagonal mesh
@@ -184,15 +184,20 @@ int main(int argc, char **argv)
         y += forwardMove * cos(yaw) * cosPitch;
         z -= forwardMove * sin(pitch);
 
-        // Render panorama to render target
+        // Clear colour and depth buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
+                                     0, 0, width, height);
+        // Render panorama to render target
+        /*renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
                                      renderTarget);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render render mesh
-        renderTarget.render(0, 0, width, height);
+        renderTarget.render(0, 0, width, height);*/
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
