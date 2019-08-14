@@ -38,13 +38,13 @@ int main(int, char **argv)
     window.setVerticalSyncEnabled(true);
     window.setActive(true);
 
-    glDebugMessageCallback(handleGLError, nullptr);
-
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
         LOGE << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
+
+    glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
