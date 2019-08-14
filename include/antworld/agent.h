@@ -7,9 +7,6 @@
 #include "renderer.h"
 #include "robots/robot.h"
 
-// GLFW
-#include <GLFW/glfw3.h>
-
 // Standard C++ includes
 #include <mutex>
 
@@ -33,7 +30,7 @@ public:
     static constexpr meters_per_second_t DefaultVelocity = 0.03_mps;
     static constexpr radians_per_second_t DefaultTurnSpeed = 200_deg_per_s;
 
-    AntAgent(GLFWwindow *window, Renderer &renderer,
+    AntAgent(sf::Window &window, Renderer &renderer,
              const cv::Size &renderSize,
              meters_per_second_t velocity = DefaultVelocity,
              radians_per_second_t turnSpeed = DefaultTurnSpeed);

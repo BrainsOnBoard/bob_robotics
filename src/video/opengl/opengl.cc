@@ -30,7 +30,7 @@ bool OpenGL::readFrame(cv::Mat &outFrame)
     // Read pixels from framebuffer into outFrame
     // **TODO** it should be theoretically possible to go directly from frame buffer to GpuMat
     glReadPixels(m_BottomLeft.x, m_BottomLeft.y, m_Size.width, m_Size.height,
-                    GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
+                 GL_BGR, GL_UNSIGNED_BYTE, outFrame.data);
 
     // Flip image vertically
     cv::flip(outFrame, outFrame, 0);

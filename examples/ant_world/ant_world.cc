@@ -1,7 +1,8 @@
 // BoB robotics includes
 #include "common/logging.h"
+#include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "hid/joystick_glfw_keyboard.h"
+#include "hid/joystick_sfml_keyboard.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
 
@@ -12,8 +13,8 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// GLFW
-#include <GLFW/glfw3.h>
+// SFML
+#include <SFML/Graphics.hpp>
 
 // Standard C++ includes
 #include <cstring>
@@ -22,29 +23,20 @@
 using namespace BoBRobotics;
 using namespace units::angle;
 using namespace units::length;
+using namespace units::literals;
 using namespace units::math;
 using namespace units::time;
 
 // Anonymous namespace
 namespace
 {
-void handleGLFWError(int errorNumber, const char *message)
-{
-    LOGE << "GLFW error number:" << errorNumber << ", message:" << message;
-}
-
 void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message,
                    const void *)
 {
     throw std::runtime_error(message);
 }
 
-inline second_t getCurrentTime()
-{
-    return units::make_unit<second_t>(glfwGetTime());
-}
-
-std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(GLFWwindow *window)
+std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::Window &window)
 {
     try
     {
@@ -53,7 +45,7 @@ std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(GLFW
     catch(std::runtime_error &ex)
     {
         LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
-        return std::make_unique<HID::JoystickGLFWKeyboard>(window);
+        return std::make_unique<HID::JoystickSFMLKeyboard>(window);
     }
 }
 }
@@ -68,40 +60,23 @@ int main(int argc, char **argv)
     // Whether to use the 3D reconstructed Rothamsted model
     const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
 
-    // Set GLFW error callback
-    glfwSetErrorCallback(handleGLFWError);
+    // Create SFML window
+    sf::Window window(sf::VideoMode{ width, height },
+                      "Ant world example",
+                      sf::Style::Titlebar | sf::Style::Close);
 
-    // Initialize the library
-    if(!glfwInit()) {
-        LOGE << "Failed to initialize GLFW";
-        return EXIT_FAILURE;
-    }
+    // Enable VSync
+    window.setVerticalSyncEnabled(true);
+    window.setActive(true);
 
-    // Prevent window being resized
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(width, height, "Ant world", nullptr, nullptr);
-    if(!window)
-    {
-        glfwTerminate();
-        LOGE << "Failed to create window";
-        return EXIT_FAILURE;
-    }
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window);
+    // Set OpenGL error callback
+    glDebugMessageCallback(handleGLError, nullptr);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
         LOGE << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
-
-    glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
@@ -132,13 +107,7 @@ int main(int argc, char **argv)
                                  { 0.898f, 0.718f, 0.353f });
     }
 
-    // Load world, keeping texture sizes below 4096 and compressing textures on upload
-    //renderer.getWorld().loadObj("object.obj",
-    //                            0.1f, 4096, GL_COMPRESSED_RGB);
-
-
     // Create HID device for controlling movement
-    //HID::Joystick joystick(0.25f);
     auto joystick = createJoystick(window);
 
     // Get world bounds and initially centre agent in world
@@ -151,19 +120,18 @@ int main(int argc, char **argv)
     degree_t pitch = 0_deg;
 
     bool ant = true;
-    second_t lastTime = getCurrentTime();
-    while (!glfwWindowShouldClose(window)) {
+    Stopwatch moveTimer;
+    moveTimer.start();
+    while (window.isOpen()) {
         // Poll joystick
         joystick->update();
 
-        // Calculate time
-        const second_t currentTime = getCurrentTime();
-        const second_t deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
+        // Calculate time since last iteration
+        const second_t deltaTime = moveTimer.lap();
 
         char buffer[100];
         sprintf(buffer, "%d FPS", (int)std::round(1.0 / deltaTime.value()));
-        glfwSetWindowTitle(window, buffer);
+        window.setTitle(buffer);
 
         // Control yaw and pitch with left stick
         yaw += joystick->getState(HID::JAxis::LeftStickHorizontal) * deltaTime * turnSpeed;
@@ -197,10 +165,7 @@ int main(int argc, char **argv)
         }
 
         // Swap front and back buffers
-        glfwSwapBuffers(window);
-
-        // Poll for and process events
-        glfwPollEvents();
+        window.display();
     }
     return EXIT_SUCCESS;
 }
