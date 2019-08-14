@@ -25,7 +25,8 @@
 
 // IMGUI
 #include "imgui.h"
-#include "examples/imgui_impl_glfw.h"
+//#include "examples/imgui_impl_sfml.h"
+#include "imgui_impl_sfml.h"
 #include "examples/imgui_impl_opengl2.h"
 
 // Standard C++ includes
@@ -55,7 +56,7 @@ namespace
 int main(int argc, char *argv[])
 {
     // Create SFML window
-    sf::Window window(sf::VideoMode(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10),
+    sf::Window window(sf::VideoMode(1440, 1024),
                       "Ant world",
                       sf::Style::Titlebar | sf::Style::Close);
 
@@ -68,9 +69,6 @@ int main(int argc, char *argv[])
         LOGE << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
 
     // Turn off padding so weird size textures render correctly in OGL
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
     ImGui::StyleColorsDark();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplSfml_Init(&window);
     ImGui_ImplOpenGL2_Init();
 
 
@@ -164,9 +162,22 @@ int main(int argc, char *argv[])
 
      // Loop until window should close
     for(unsigned int frame = 0; window.isOpen(); frame++) {
+        // Process events
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            // Close window: exit
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+            else {
+                ImGui_ImplSfml_ProcessEvent(event);
+            }
+        }
+
+
         // Start ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplSfml_NewFrame();
         ImGui::NewFrame();
 
         // Clear colour and depth buffer
@@ -181,58 +192,56 @@ int main(int argc, char *argv[])
         ImGui::Render();
 
         // Render UI
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        const auto displaySize = window.getSize();
+        glViewport(0, 0, displaySize.x, displaySize.y);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
         window.display();
 /*
-            // Apply new key state to bits of key bits
-            switch(event.key.code) {
-            case sf::Keyboard::Key::Left:
-                stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
-                break;
+        // Apply new key state to bits of key bits
+        switch(event.key.code) {
+        case sf::Keyboard::Key::Left:
+            stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
+            break;
 
-            case sf::Keyboard::Key::Right:
-                stateHandler.setKeyState(StateHandler::KeyRight, pressed);
-                break;
+        case sf::Keyboard::Key::Right:
+            stateHandler.setKeyState(StateHandler::KeyRight, pressed);
+            break;
 
-            case sf::Keyboard::Key::Up:
-                stateHandler.setKeyState(StateHandler::KeyUp, pressed);
-                break;
+        case sf::Keyboard::Key::Up:
+            stateHandler.setKeyState(StateHandler::KeyUp, pressed);
+            break;
 
-            case sf::Keyboard::Key::Down:
-                stateHandler.setKeyState(StateHandler::KeyDown, pressed);
-                break;
+        case sf::Keyboard::Key::Down:
+            stateHandler.setKeyState(StateHandler::KeyDown, pressed);
+            break;
 
-            case sf::Keyboard::Key::R:
-                stateHandler.setKeyState(StateHandler::KeyReset, pressed);
-                break;
+        case sf::Keyboard::Key::R:
+            stateHandler.setKeyState(StateHandler::KeyReset, pressed);
+            break;
 
-            case sf::Keyboard::Key::Space:
-                stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
-                break;
+        case sf::Keyboard::Key::Space:
+            stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
+            break;
 
-            case sf::Keyboard::Key::Enter:
-                stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
-                break;
+        case sf::Keyboard::Key::Enter:
+            stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
+            break;
 
-            case sf::Keyboard::Key::S:
-                stateHandler.setKeyState(StateHandler::KeySaveSnapshot, pressed);
-                break;
+        case sf::Keyboard::Key::S:
+            stateHandler.setKeyState(StateHandler::KeySaveSnapshot, pressed);
+            break;
 
-            case sf::Keyboard::Key::W:
-                stateHandler.setKeyState(StateHandler::KeyRandomWalk, pressed);
-                break;
+        case sf::Keyboard::Key::W:
+            stateHandler.setKeyState(StateHandler::KeyRandomWalk, pressed);
+            break;
 
-            case sf::Keyboard::Key::V:
-                stateHandler.setKeyState(StateHandler::KeyBuildVectorField, pressed);
-                break;
-            default:
-                break;
-            }*/
-        }
+        case sf::Keyboard::Key::V:
+            stateHandler.setKeyState(StateHandler::KeyBuildVectorField, pressed);
+            break;
+        default:
+            break;Sfml
+        }*/
     }
 
     // Save logs
@@ -241,7 +250,7 @@ int main(int argc, char *argv[])
 
      // Cleanup UI
     ImGui_ImplOpenGL2_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplSfml_Shutdown();
     ImGui::DestroyContext();
 
     return EXIT_SUCCESS;
