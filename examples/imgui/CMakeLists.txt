@@ -3,5 +3,4 @@ include(../../cmake/bob_robotics.cmake)
 BoB_project(EXECUTABLE imgui_example
             SOURCES imgui.cc
             BOB_MODULES common
-            THIRD_PARTY imgui
-            EXTERNAL_LIBS glew sfml-graphics)
+            THIRD_PARTY imgui)
