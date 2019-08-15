@@ -230,6 +230,11 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
     LOG_DEBUG << "Max texture size: " << maxTextureSize;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
+    // Each surface consists of:
+    // 0 - a name
+    // 1 - a vector of floating point vertex positions (x, y, z)
+    // 2 - a vector of 8-bit colours (r, g, b)
+    // 3 - a vector of floating point texture coordinates (U, V)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLbyte>, std::vector<GLfloat>>> objSurfaces;
 
     // Map of material names to texture indices
