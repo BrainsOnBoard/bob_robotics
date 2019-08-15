@@ -17,5 +17,10 @@ if(Freetype_FOUND)
     set(imgui_LIBRARIES ${FREETYPE_LIBRARIES} CACHE INTERNAL "imgui: Libraries" FORCE)
 endif()
 
+if(GNU_TYPE_COMPILER)
+    # Supress warnings from inside imgui
+    add_compile_flags(-Wno-class-memaccess)
+endif()
+
 # Build as static library
 add_library(imgui STATIC ${SOURCES})
