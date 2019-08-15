@@ -102,7 +102,7 @@ bool ImGui_ImplSfml_Init(sf::Window* window)
 #ifdef SFML_WINDOW_AND_CURSOR_PRESENT
     g_MouseCursors[ImGuiMouseCursor_Arrow].loadFromSystem(sf::Cursor::Arrow);
     g_MouseCursors[ImGuiMouseCursor_TextInput].loadFromSystem(sf::Cursor::Text);
-    g_MouseCursors[ImGuiMouseCursor_ResizeAll].loadFromSystem(sf::Cursor::SizeAll);.
+    g_MouseCursors[ImGuiMouseCursor_ResizeAll].loadFromSystem(sf::Cursor::SizeAll);
     g_MouseCursors[ImGuiMouseCursor_ResizeNS].loadFromSystem(sf::Cursor::SizeVertical);
     g_MouseCursors[ImGuiMouseCursor_ResizeEW].loadFromSystem(sf::Cursor::SizeHorizontal);
     g_MouseCursors[ImGuiMouseCursor_ResizeNESW].loadFromSystem(sf::Cursor::SizeBottomLeftTopRight);
