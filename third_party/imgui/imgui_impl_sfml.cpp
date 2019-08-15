@@ -19,12 +19,10 @@
 #include "imgui_impl_sfml.h"
 
 // SFML
-#include <SFML/Main.hpp>
-
-
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
+// Old versions of SFML don't have support for clipboard or cursor control and Backspace is capitalized differently
 #if (SFML_VERSION_MAJOR == 2) && (SFML_VERSION_MINOR >= 5)
     #define SFML_WINDOW_AND_CURSOR_PRESENT
 
@@ -35,12 +33,12 @@
 
 static sf::Window*          g_Window = NULL;
 static sf::Clock            g_Clock;
-//static bool                 g_MouseJustPressed[5] = { false, false, false, false, false };
+static bool                 g_MouseJustPressed[5] = { false, false, false, false, false };
 
 #ifdef SFML_WINDOW_AND_CURSOR_PRESENT
 static sf::Cursor           g_MouseCursors[ImGuiMouseCursor_COUNT];
-#endif
 static std::string          g_ClipboardContents;
+#endif
 
 static const char* ImGui_ImplSfml_GetClipboardText(void*)
 {
@@ -56,6 +54,8 @@ static void ImGui_ImplSfml_SetClipboardText(void*, const char* text)
 {
 #ifdef SFML_WINDOW_AND_CURSOR_PRESENT
     sf::Clipboard::setString(text);
+#else
+    (void)(text);
 #endif
 }
 
@@ -123,7 +123,8 @@ static void ImGui_ImplSfml_UpdateMousePosAndButtons()
     for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++)
     {
         // If a mouse press event came, always pass it as "mouse held this frame", so we don't miss click-release events that are shorter than 1 frame.
-        io.MouseDown[i] = sf::Mouse::isButtonPressed((sf::Mouse::Button)i);
+        io.MouseDown[i] = g_MouseJustPressed[i] || sf::Mouse::isButtonPressed((sf::Mouse::Button)i);
+        g_MouseJustPressed[i] = false;
     }
 
     // Update mouse position
@@ -236,6 +237,11 @@ void ImGui_ImplSfml_ProcessEvent(const sf::Event &event)
         }
         else if(event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
             io.MouseWheel += event.mouseWheelScroll.delta;
+        }
+    }
+    else if(event.type == sf::Event::MouseButtonPressed) {
+        if (event.mouseButton.button >= 0 && event.mouseButton.button < IM_ARRAYSIZE(g_MouseJustPressed)) {
+            g_MouseJustPressed[event.mouseButton.button] = true;
         }
     }
     else if(event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased) {
