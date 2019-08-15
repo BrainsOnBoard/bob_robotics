@@ -3,16 +3,12 @@
 // BoB robotics includes
 #include "common/pose.h"
 #include "video/opengl/opengl.h"
-#include "renderer.h"
+#include "antworld/renderer.h"
 
-// OpenGL includes
-#include <GL/glew.h>
-
-// GLFW
-#include <GLFW/glfw3.h>
+// SFML
+#include <SFML/Graphics.hpp>
 
 // Standard C++ includes
-#include <functional>
 #include <memory>
 
 namespace BoBRobotics {
@@ -25,11 +21,11 @@ protected:
     using degree_t = units::angle::degree_t;
 
 public:
-    Camera(GLFWwindow *window,
+    Camera(sf::Window &window,
            Renderer &renderer,
            const cv::Size &renderSize);
 
-    GLFWwindow *getWindow() const;
+    sf::Window &getWindow() const;
     bool isOpen() const;
     void setPose(const Pose3<meter_t, degree_t> &pose);
     void setPosition(meter_t x, meter_t y, meter_t z);
@@ -57,11 +53,11 @@ public:
     // Virtuals
     virtual bool readFrame(cv::Mat &outFrame) override;
 
-    static std::unique_ptr<GLFWwindow, std::function<void(GLFWwindow *)>> initialiseWindow(const cv::Size &size);
+    static std::unique_ptr<sf::Window> initialiseWindow(const cv::Size &size);
 
 private:
     Pose3<meter_t, degree_t> m_Pose;
-    GLFWwindow *m_Window;
+    sf::Window &m_Window;
     Renderer &m_Renderer;
 
 }; // Camera

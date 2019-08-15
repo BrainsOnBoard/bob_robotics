@@ -15,8 +15,8 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// GLFW
-#include <GLFW/glfw3.h>
+// SFML includes
+#include <SFML/Graphics.hpp>
 
 // Standard C++ includes
 #include <bitset>
@@ -32,108 +32,22 @@
 
 using namespace BoBRobotics;
 
-//----------------------------------------------------------------------------
-// Anonymous namespace
-//----------------------------------------------------------------------------
-namespace
-{
-void keyCallback(GLFWwindow *window, int key, int, int action, int)
-{
-    // If action isn't a press or a release, do nothing
-    if(action != GLFW_PRESS && action != GLFW_RELEASE) {
-        return;
-    }
-
-    // Determine what state key bit should be set to
-    const bool newKeyState = (action == GLFW_PRESS);
-
-    // Extract key bitset from window's user pointer
-    StateHandler *stateHandler = reinterpret_cast<StateHandler*>(glfwGetWindowUserPointer(window));
-
-    // Apply new key state to bits of key bits
-    switch(key) {
-        case GLFW_KEY_LEFT:
-            stateHandler->setKeyState(StateHandler::KeyLeft, newKeyState);
-            break;
-
-        case GLFW_KEY_RIGHT:
-            stateHandler->setKeyState(StateHandler::KeyRight, newKeyState);
-            break;
-
-        case GLFW_KEY_UP:
-            stateHandler->setKeyState(StateHandler::KeyUp, newKeyState);
-            break;
-
-        case GLFW_KEY_DOWN:
-            stateHandler->setKeyState(StateHandler::KeyDown, newKeyState);
-            break;
-
-        case GLFW_KEY_R:
-            stateHandler->setKeyState(StateHandler::KeyReset, newKeyState);
-            break;
-
-        case GLFW_KEY_SPACE:
-            stateHandler->setKeyState(StateHandler::KeyTrainSnapshot, newKeyState);
-            break;
-
-        case GLFW_KEY_ENTER:
-            stateHandler->setKeyState(StateHandler::KeyTestSnapshot, newKeyState);
-            break;
-
-        case GLFW_KEY_S:
-            stateHandler->setKeyState(StateHandler::KeySaveSnapshot, newKeyState);
-            break;
-
-        case GLFW_KEY_W:
-            stateHandler->setKeyState(StateHandler::KeyRandomWalk, newKeyState);
-            break;
-
-        case GLFW_KEY_V:
-            stateHandler->setKeyState(StateHandler::KeyBuildVectorField, newKeyState);
-            break;
-    }
-}
-//----------------------------------------------------------------------------
-void handleGLFWError(int errorNumber, const char *message)
-{
-    LOGE << "GLFW error number: " << errorNumber << ", message:" << message;
-}
-}   // anonymous namespace
-
-
-
 int main(int argc, char *argv[])
 {
-    // Set GLFW error callback
-    glfwSetErrorCallback(handleGLFWError);
+    // Create SFML window
+    sf::Window window(sf::VideoMode(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10),
+                      "Ant world",
+                      sf::Style::Titlebar | sf::Style::Close);
 
-    // Initialize the library
-    if(!glfwInit()) {
-        throw std::runtime_error("Failed to initialize GLFW");
-    }
-
-    // Prevent window being resized
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10,
-                                          "Ant World", nullptr, nullptr);
-    if(!window)
-    {
-        glfwTerminate();
-        throw std::runtime_error("Failed to create window");
-    }
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window);
+    // Enable VSync
+    window.setVerticalSyncEnabled(true);
+    window.setActive(true);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
-        throw std::runtime_error("Failed to initialize GLEW");
+        LOGE << "Failed to initialize GLEW";
+        return EXIT_FAILURE;
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
@@ -153,13 +67,10 @@ int main(int argc, char *argv[])
     const std::string worldFilename = std::string(bobRoboticsPath) + "/resources/antworld/world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     StateHandler stateHandler(worldFilename, routeFilename, memory);
-    glfwSetWindowUserPointer(window, &stateHandler);
 
-    // Set key callback
-    glfwSetKeyCallback(window, keyCallback);
-
-     // Loop until window should close
-    for(unsigned int frame = 0; !glfwWindowShouldClose(window); frame++) {
+    // Loop until window should close
+    sf::Event event;
+    for (unsigned int frame = 0; window.isOpen(); frame++) {
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -169,13 +80,58 @@ int main(int argc, char *argv[])
         }
 
         // Swap front and back buffers
-        glfwSwapBuffers(window);
+        window.display();
 
         // Poll for and process events
-        glfwPollEvents();
+        if (window.pollEvent(event) && (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)) {
+            const bool pressed = event.type == sf::Event::KeyPressed;
+
+            // Apply new key state to bits of key bits
+            switch(event.key.code) {
+            case sf::Keyboard::Key::Left:
+                stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
+                break;
+
+            case sf::Keyboard::Key::Right:
+                stateHandler.setKeyState(StateHandler::KeyRight, pressed);
+                break;
+
+            case sf::Keyboard::Key::Up:
+                stateHandler.setKeyState(StateHandler::KeyUp, pressed);
+                break;
+
+            case sf::Keyboard::Key::Down:
+                stateHandler.setKeyState(StateHandler::KeyDown, pressed);
+                break;
+
+            case sf::Keyboard::Key::R:
+                stateHandler.setKeyState(StateHandler::KeyReset, pressed);
+                break;
+
+            case sf::Keyboard::Key::Space:
+                stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
+                break;
+
+            case sf::Keyboard::Key::Enter:
+                stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
+                break;
+
+            case sf::Keyboard::Key::S:
+                stateHandler.setKeyState(StateHandler::KeySaveSnapshot, pressed);
+                break;
+
+            case sf::Keyboard::Key::W:
+                stateHandler.setKeyState(StateHandler::KeyRandomWalk, pressed);
+                break;
+
+            case sf::Keyboard::Key::V:
+                stateHandler.setKeyState(StateHandler::KeyBuildVectorField, pressed);
+                break;
+            default:
+                break;
+            }
+        }
     }
 
-
-    glfwTerminate();
     return 0;
 }
