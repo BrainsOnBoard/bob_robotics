@@ -64,6 +64,11 @@ main(int argc, char **argv)
 
         // Read frame
         agent.readFrame(im);
+
+        /*
+         * Call python function. Remember that npArray points to the same data
+         * as im.
+         */
         Python::call("ant_world_python.my_function", npArray);
     }
 }
