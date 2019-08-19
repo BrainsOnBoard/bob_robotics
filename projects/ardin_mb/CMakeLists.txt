@@ -8,4 +8,4 @@ BoB_project(EXECUTABLE ardin_mb
 # Kludge to stop Logger::logger being defined multiple times
 add_definitions(-DNO_HEADER_DEFINITIONS)
 
-BoB_add_link_libraries("dl")
+BoB_add_link_libraries(dl)
