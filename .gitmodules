@@ -7,3 +7,6 @@
 [submodule "third_party/plog"]
 	path = third_party/plog
 	url = ../../SergiusTheBest/plog.git
+[submodule "third_party/wrappy"]
+	path = third_party/wrappy
+	url = ../../alexdewar/wrappy.git
