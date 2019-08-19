@@ -29,7 +29,7 @@ void
 appendToPythonPath(const filesystem::path &path);
 
 //! Import a new python module
-void
+Object
 importModule(const std::string &moduleName);
 
 #if PY_MAJOR_VERSION >= 3

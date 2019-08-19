@@ -34,12 +34,15 @@ appendToPythonPath(const filesystem::path &path)
     PyRun_SimpleString(runStr.c_str());
 }
 
-void
+Object
 importModule(const std::string &moduleName)
 {
-    if (PyImport_Import(construct(moduleName).get()) == nullptr) {
+    Object module{ Object::owning{},
+                   PyImport_Import(construct(moduleName).get()) };
+    if (!module) {
         throw std::runtime_error("Could not import module " + moduleName);
     }
+    return module;
 }
 
 NPY_TYPES
