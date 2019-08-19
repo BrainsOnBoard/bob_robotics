@@ -590,6 +590,16 @@ function(BoB_external_libraries)
             BoB_add_link_libraries("${GENN_PATH}/lib/libspineml_simulator.a"
                                    "${GENN_PATH}/lib/libspineml_common.a"
                                    dl)
+        elseif(${lib} STREQUAL python)
+            find_package(PythonLibs REQUIRED)
+            BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
+            BoB_add_link_libraries(${PYTHON_LIBRARIES})
+        elseif(${lib} STREQUAL numpy)
+            try_find_numpy(rv numpy_include_path)
+            if(NOT ${rv} EQUAL 0)
+                message(FATAL_ERROR "Could not find numpy")
+            endif()
+            BoB_add_include_directories("${numpy_include_path}")
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
@@ -603,27 +613,26 @@ macro(exec_or_fail)
     endif()
 endmacro()
 
+macro(try_find_numpy rv_var numpy_include_path_var)
+    execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
+                    RESULT_VARIABLE ${rv_var}
+                    OUTPUT_VARIABLE ${numpy_include_path_var})
+endmacro()
+
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
         if("${module}" STREQUAL matplotlibcpp)
-            find_package(PythonLibs REQUIRED)
-            BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
-            BoB_add_link_libraries(${PYTHON_LIBRARIES})
+            # We need python libs
+            BoB_external_libraries(python)
 
-            # Also include numpy headers on *nix (gives better performance)
-            if(WIN32)
-                add_definitions(-DWITHOUT_NUMPY)
+            # If we have numpy then use it, otherwise matplotlibcpp will work without it
+            try_find_numpy(rv numpy_include_path)
+            if(${rv} EQUAL 0)
+                message(STATUS "Numpy found at: ${numpy_include_path}")
+                BoB_add_include_directories(${numpy_include_path})
             else()
-                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
-                                RESULT_VARIABLE rv
-                                OUTPUT_VARIABLE numpy_include_path)
-
-                # If we have numpy then use it, otherwise matplotlibcpp will work without it
-                if(${rv} EQUAL 0)
-                    BoB_add_include_directories(${numpy_include_path})
-                else()
-                    add_definitions(-DWITHOUT_NUMPY)
-                endif()
+                message(STATUS "Numpy not found")
+                add_definitions(-DWITHOUT_NUMPY)
             endif()
         else()
             # Extra actions
@@ -645,6 +654,14 @@ function(BoB_third_party)
 
                 # Suppress warning
                 add_compile_flags(-Wno-stringop-truncation)
+            elseif(${module} STREQUAL wrappy)
+                BoB_add_link_libraries(wrappy)
+
+                # Needs python libs
+                BoB_external_libraries(python)
+
+                # Build wrappy as a static lib
+                set(LIBRARY_TYPE STATIC)
             endif()
 
             # Checkout git submodules under this path
