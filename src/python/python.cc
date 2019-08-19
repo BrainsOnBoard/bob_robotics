@@ -86,7 +86,7 @@ getObject(cv::Mat &mat)
 }
 
 NumpyArray::NumpyArray(PyObject *obj)
-  : PythonObject{ PythonObject::owning{}, obj }
+  : Object{ Object::owning{}, obj }
 {
     if (!obj) {
         throw std::runtime_error("Could not create numpy array");

@@ -17,6 +17,9 @@
 
 namespace wrappy {
 
+//! An alias for wrappy::PythonObject, for brevity's sake
+using Object = PythonObject;
+
 //! Run the specified python script
 void
 runFile(const filesystem::path &filePath);
@@ -60,7 +63,7 @@ template <> struct NumpyType<uint64_t> { const static NPY_TYPES type = NPY_UINT6
 
 //! A C++ wrapper for creating numpy arrays
 class NumpyArray
-  : public PythonObject
+  : public Object
 {
 public:
     NumpyArray(PyObject *obj);
