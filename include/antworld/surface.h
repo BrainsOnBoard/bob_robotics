@@ -111,6 +111,7 @@ public:
     }
     
     void setTexture(const Texture *texture){ m_Texture = texture; }
+    void setPrimitiveType(GLenum primitiveType){ m_PrimitiveType = primitiveType; }
 
 private:
     //------------------------------------------------------------------------
