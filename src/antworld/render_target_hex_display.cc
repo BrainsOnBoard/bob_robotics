@@ -3,6 +3,9 @@
 // BoB robotics includes
 #include "antworld/render_mesh.h"
 
+// Third-party includes
+#include "plog/Log.h"
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderTargetHexDisplay
 //----------------------------------------------------------------------------
@@ -15,6 +18,8 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
 {
     using namespace units::math;
     using namespace units::literals;
+
+    LOGD << "Creating " << renderMesh.getNumHorizontalHexes() << "x" << renderMesh.getNumVerticalHexes() << " render target";
 
     // Pre-calculate cos30 and sin30
     const float cos30 = cos(30_deg);
@@ -60,13 +65,20 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
     // **TODO** reserve
     std::vector<GLfloat> positions;
     std::vector<GLfloat> textureCoords;
+    std::vector<GLbyte> colours;
     std::vector<GLuint> indices;
 
     // Loop through grid of hexes
-    const int numHorizontalRadiusSegments = renderMesh.getNumHorizontalHexes() / 2;
-    const int numVerticalRadiusSegments = renderMesh.getNumVerticalHexes() / 2;
-    for(int i = -numVerticalRadiusSegments; i < numVerticalRadiusSegments; i++) {
-        for(int j = -numHorizontalRadiusSegments; j < numHorizontalRadiusSegments; j++) {
+    const int colBegin = renderMesh.getNumHorizontalHexes() / 2;
+    const int rowBegin = renderMesh.getNumVerticalHexes() / 2;
+    const int colEnd = renderMesh.getNumHorizontalHexes() - colBegin;
+    const int rowEnd = renderMesh.getNumVerticalHexes() - rowBegin;
+
+    const float centreU = (float)colBegin * rectangleWidth;
+    const float centreV = (float)rowBegin * rectangleHeight;
+
+    for(int i = -rowBegin; i < rowEnd; i++) {
+        for(int j = -colBegin; j < colEnd; j++) {
             // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
             // https://www.redblobgames.com/grids/hexagons/
             float hexX = j * (2.0f * hexDistance);
@@ -77,8 +89,8 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
                 hexX += hexDistance;
             }
 
-            const float hexU = j * rectangleWidth;
-            const float hexV = i * rectangleHeight;
+            const float hexU = centreU + (j * rectangleWidth);
+            const float hexV = centreV + (i * rectangleHeight);
 
             // Cache index of first hex in
             const size_t hexStartVertexIndex = positions.size() / 2;
@@ -90,8 +102,8 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
                 positions.push_back(0.5f + hexY + hexPositionOffsets[v][1]);
 
                 // Add texture coordinates
-                textureCoords.push_back(0.5f + hexU + hexRectangleOffsets[v][0]);
-                textureCoords.push_back(0.5f + hexV + hexRectangleOffsets[v][1]);
+                textureCoords.push_back(hexU + hexRectangleOffsets[v][0]);
+                textureCoords.push_back(hexV + hexRectangleOffsets[v][1]);
             }
 
             // Add two quads to render hexagon
@@ -132,7 +144,7 @@ void RenderTargetHexDisplay::render(GLint viewportX, GLint viewportY,
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0.0, 1.0,
-                0.0, 1.0);
+               0.0, 1.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

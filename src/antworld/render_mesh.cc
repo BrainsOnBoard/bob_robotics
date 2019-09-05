@@ -176,10 +176,16 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
     std::vector<GLuint> indices;
 
     // Loop through grid of hexes
-    const int numHorizontalRadiusSegments = m_NumHorizontalHexes / 2;
-    const int numVerticalRadiusSegments = m_NumVerticalHexes / 2;
-    for(int i = -numVerticalRadiusSegments; i < numVerticalRadiusSegments; i++) {
-        for(int j = -numHorizontalRadiusSegments; j < numHorizontalRadiusSegments; j++) {
+    const int colBegin = m_NumHorizontalHexes / 2;
+    const int rowBegin = m_NumVerticalHexes / 2;
+    const int colEnd = m_NumHorizontalHexes - colBegin;
+    const int rowEnd = m_NumVerticalHexes - rowBegin;
+
+    const float centreX = (float)colBegin * rectangleWidth;
+    const float centreY = (float)rowBegin * rectangleHeight;
+
+    for(int i = -rowBegin; i < rowEnd; i++) {
+        for(int j = -colBegin; j < colEnd; j++) {
             // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
             // https://www.redblobgames.com/grids/hexagons/
             units::angle::degree_t hexLongitude = j * (2.0 * hexDistance);
@@ -191,8 +197,8 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
             }
 
             // Calculate position of this hex in output rectangular grid, offsetting to centre of screen
-            const float hexX = 0.5f + (rectangleWidth * (float)j);
-            const float hexY = 0.5f - (rectangleHeight * (float)i);
+            const float hexX = centreX + (rectangleWidth * (float)j);
+            const float hexY = centreY - (rectangleHeight * (float)i);
 
             // Cache index of first hex in
             const size_t hexStartVertexIndex = positions.size() / 2;
@@ -230,6 +236,8 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
             indices.push_back(hexStartVertexIndex + 3);
         }
     }
+
+    BOB_ASSERT(indices.size() == (8 * m_NumHorizontalHexes * m_NumVerticalHexes));
 
     // Bind surface
     getSurface().bind();
