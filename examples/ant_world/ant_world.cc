@@ -117,11 +117,12 @@ int main(int argc, char **argv)
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
-    AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 3.7_deg),
-                                256, 0.1);
+    //AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 3.7_deg),
+    //                            256, 0.1);
 
+    AntWorld::Renderer renderer(512, 0.1);
     // Create a render target for displaying world re-mapped onto hexagonal mesh
-    AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer.getRenderMesh()));
+    //AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer.getRenderMesh()));
 
     //AntWorld::Renderer renderer(512, 0.1);
     if (useRothamstedModel) {

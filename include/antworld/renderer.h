@@ -11,6 +11,7 @@
 
 // Antworld includes
 #include "render_mesh.h"
+#include "render_target.h"
 #include "world.h"
 
 // Third-party includes
@@ -20,7 +21,6 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
-class RenderTarget;
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ public:
     const World &getWorld() const{ return m_World; }
 
 protected:
-    RendererBase(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0);
+    RendererBase(GLdouble nearClip = 0.001, GLdouble farClip = 1000.0);
 
     //------------------------------------------------------------------------
     // Declared virtuals
@@ -69,13 +69,9 @@ protected:
     //------------------------------------------------------------------------
     void generateCubeFaceLookAtMatrices(GLdouble eyeX, GLdouble eyeY, GLdouble eyeZ,
                                         GLfloat (&cubeFaceLookAtMatrices)[6][16]);
-
-    void createCubemapRenderTarget(GLuint &fbo, GLuint &cubemapTexture, GLuint &depthBuffer);
-
     void applyFrame(meter_t x, meter_t y, meter_t z,
                     degree_t yaw, degree_t pitch, degree_t roll);
 
-    GLsizei getCubemapSize() const{ return m_CubemapSize; }
     GLdouble getNearClip() const{ return m_NearClip; }
     GLdouble getFarClip() const{ return m_FarClip; }
 
@@ -85,7 +81,6 @@ private:
     //------------------------------------------------------------------------
     World m_World;
 
-    const GLsizei m_CubemapSize;
     const GLdouble m_NearClip;
     const GLdouble m_FarClip;
 };
@@ -98,7 +93,9 @@ class Renderer : public RendererBase
 public:
     Renderer(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
              degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
-    virtual ~Renderer();
+    virtual ~Renderer()
+    {
+    }
 
     //------------------------------------------------------------------------
     // Public API
@@ -116,13 +113,10 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    GLuint m_CubemapTexture;
-    GLuint m_FBO;
-    GLuint m_DepthBuffer;
     GLfloat m_CubeFaceLookAtMatrices[6][16];
 
     RenderMeshSpherical m_RenderMesh;
-
+    RenderTargetCubemap m_RenderTargetCubemap;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
