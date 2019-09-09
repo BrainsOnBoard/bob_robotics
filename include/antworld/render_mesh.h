@@ -1,5 +1,9 @@
 #pragma once
 
+// Standard C++ includes
+#include <vector>
+#include <tuple>
+
 // OpenGL includes
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -64,8 +68,7 @@ public:
 class RenderMeshHexagonal : public RenderMesh
 {
 public:
-    RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
-                        units::angle::degree_t interommatidiaAngle);
+    RenderMeshHexagonal(const std::string &eyeBorderFilename, units::angle::degree_t interommatidiaAngle);
 
     //------------------------------------------------------------------------
     // Public API
@@ -75,10 +78,15 @@ public:
 
 private:
     //------------------------------------------------------------------------
+    // Private methods
+    //------------------------------------------------------------------------
+    std::vector<std::tuple<float, float>> loadEyeBorder(const std::string &eyeBorderFilename) const;
+
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const unsigned int m_NumHorizontalHexes;
-    const unsigned int m_NumVerticalHexes;
+    unsigned int m_NumHorizontalHexes;
+    unsigned int m_NumVerticalHexes;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

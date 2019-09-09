@@ -3,7 +3,7 @@
 #include "hid/joystick.h"
 #include "hid/joystick_glfw_keyboard.h"
 #include "antworld/common.h"
-#include "antworld/renderer.h"
+#include "antworld/renderer_data_driven.h"
 #include "antworld/render_target_hex_display.h"
 
 // Third-party includes
@@ -120,7 +120,9 @@ int main(int argc, char **argv)
     //AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 3.7_deg),
     //                            256, 0.1);
 
-    AntWorld::Renderer renderer(512, 0.1);
+    AntWorld::RendererDataDriven renderer("../../resources/antworld/eye_border_BT_77973.bin", 3.7_deg,
+                                          512, 0.1);
+
     // Create a render target for displaying world re-mapped onto hexagonal mesh
     //AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer.getRenderMesh()));
 

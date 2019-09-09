@@ -5,7 +5,12 @@
 #include "antworld/common.h"
 #include "antworld/render_mesh.h"
 
+// Third-party includes
+#include "plog/Log.h"
+
 // Standard C++ includes
+#include <algorithm>
+#include <fstream>
 #include <vector>
 
 using namespace units::angle;
@@ -124,11 +129,28 @@ RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t vertic
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMeshHexagonal
 //----------------------------------------------------------------------------
-RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV,
-                                         units::angle::degree_t interommatidiaAngle)
-:   m_NumHorizontalHexes(ceil(horizontalFOV / interommatidiaAngle)), m_NumVerticalHexes(ceil(verticalFOV / interommatidiaAngle))
+RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, units::angle::degree_t interommatidiaAngle)
 {
     using namespace units::literals;
+    using namespace units::angle;
+
+    // Load eye border file
+    const auto eyeBorder = loadEyeBorder(eyeBorderFilename);
+
+
+    const auto elevationRange = std::minmax_element(eyeBorder.cbegin(), eyeBorder.cend(),
+                                                    [](const std::tuple<float, float> &a, const std::tuple<float, float> &b)
+                                                    {
+                                                        return (std::get<0>(a) < std::get<0>(b));
+                                                    });
+    const auto azimuthRange = std::minmax_element(eyeBorder.cbegin(), eyeBorder.cend(),
+                                                  [](const std::tuple<float, float> &a, const std::tuple<float, float> &b)
+                                                  {
+                                                    return (std::get<1>(a) < std::get<1>(b));
+                                                  });
+    LOGI << "Eye border angles (" << elevationRange.first << ", " << *azimuthRange.first << ") - (" << elevationRange.second << ", " << azimuthRange.second << ")";
+
+    assert(false);
 
     // Pre-calculate cos30 and sin30
     const double cos30 = units::math::cos(30_deg);
@@ -252,6 +274,26 @@ RenderMeshHexagonal::RenderMeshHexagonal(units::angle::degree_t horizontalFOV, u
 
     // Unbind indices
     getSurface().unbindIndices();
+}
+//------------------------------------------------------------------------
+std::vector<std::tuple<float, float>> RenderMeshHexagonal::loadEyeBorder(const std::string &eyeBorderFilename) const
+{
+    std::ifstream is(eyeBorderFilename, std::ifstream::binary);
+    if(!is.good()) {
+        throw std::runtime_error("Unable to opne eye border file name " + eyeBorderFilename);
+    }
+
+    // Get length of eye border file, hence number of vertices
+    is.seekg (0, is.end);
+    const auto numEyeBorderBytes = is.tellg();
+    const auto numEyeBorderVertices = numEyeBorderBytes / (sizeof(float) * 2);
+    LOGI << "Read " << numEyeBorderVertices << " eye border vertices";
+    is.seekg (0, is.beg);
+
+    // Allocate vector, read in data from file and return
+    std::vector<std::tuple<float, float>> eyeBorder(numEyeBorderVertices);
+    is.read(reinterpret_cast<char*>(eyeBorder.data()), sizeof(float) * 2 * numEyeBorderVertices);
+    return eyeBorder;
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
