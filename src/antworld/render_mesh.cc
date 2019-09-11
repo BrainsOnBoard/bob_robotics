@@ -208,8 +208,6 @@ RenderMeshSpherical::RenderMeshSpherical(const Border &border, unsigned int numH
         }
     }
 
-    std::cout << positions.size() << "/" << (numVerticalSegments * numHorizontalSegments) * 8 << std::endl;
-
      // Bind surface
     getSurface().bind();
 
