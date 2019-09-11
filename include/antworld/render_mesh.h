@@ -19,6 +19,8 @@ namespace BoBRobotics
 namespace AntWorld
 {
 class Render;
+using namespace units::literals;
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMesh
 //----------------------------------------------------------------------------
@@ -42,6 +44,43 @@ protected:
 
     Surface &getSurface(){ return m_Surface; }
 
+    //------------------------------------------------------------------------
+    // RenderMesh::Border
+    //------------------------------------------------------------------------
+    //! Helper class for defining the bounds of render mesh FOV
+    class Border
+    {
+        using degree_t = units::angle::degree_t;
+    public:
+        Border(degree_t horizontalFOV, degree_t verticalFOV, degree_t centreAzimuth, degree_t centreElevation);
+        Border(const std::string &eyeBorderFilename, bool duplicateLeftRight);
+
+        //----------------------------------------------------------------------------
+        // Public API
+        //----------------------------------------------------------------------------
+        degree_t getMinAzimuth() const{ return m_MinAzimuth; }
+        degree_t getMaxAzimuth() const{ return m_MaxAzimuth; }
+
+        degree_t getMinElevation() const{ return m_MinElevation; }
+        degree_t getMaxElevation() const{ return m_MaxElevation; }
+
+        bool isInEye(degree_t azimuth, degree_t elevation) const;
+
+    private:
+        //----------------------------------------------------------------------------
+        // Members
+        //----------------------------------------------------------------------------
+        const bool m_DuplicateLeftRight;
+
+        degree_t m_MinAzimuth;
+        degree_t m_MaxAzimuth;
+
+        degree_t m_MinElevation;
+        degree_t m_MaxElevation;
+
+        std::vector<std::tuple<degree_t, degree_t>> m_EyeBorderVertices;
+    };
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -56,9 +95,16 @@ private:
 //! converting these to cartesian coordinates and rendering them to grid with desired number of horizontal and vertical segments
 class RenderMeshSpherical : public RenderMesh
 {
+    using degree_t = units::angle::degree_t;
 public:
-    RenderMeshSpherical(units::angle::degree_t horizontalFOV, units::angle::degree_t verticalFOV, units::angle::degree_t startLongitude,
-                        unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
+    RenderMeshSpherical(units::angle::degree_t horizontalFOV = 296_deg, units::angle::degree_t verticalFOV = 75_deg,
+                        units::angle::degree_t startElevation  = 15_deg,
+                        unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
+    RenderMeshSpherical(const std::string &eyeBorderFilename, bool duplicateLeftRight = true,
+                        unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
+
+protected:
+    RenderMeshSpherical(const Border &border, unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
 };
 
 //----------------------------------------------------------------------------
@@ -67,6 +113,7 @@ public:
 //! Class for sampling cubemap across a range of hexagonal coordinates
 class RenderMeshHexagonal : public RenderMesh
 {
+    using degree_t = units::angle::degree_t;
 public:
     RenderMeshHexagonal(const std::string &eyeBorderFilename, units::angle::degree_t interommatidiaAngle);
 
@@ -77,11 +124,6 @@ public:
     unsigned int getNumVerticalHexes() const{ return m_NumVerticalHexes; }
 
 private:
-    //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    std::vector<std::tuple<float, float>> loadEyeBorder(const std::string &eyeBorderFilename) const;
-
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------

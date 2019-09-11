@@ -8,6 +8,7 @@
 // Third-party includes
 #include "plog/Log.h"
 
+
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
@@ -35,95 +36,190 @@ void RenderMesh::render() const
     m_Surface.unbind();
 }
 
+//---------------------------------------------------------------------------
+// BoBRobotics::AntWorld::RenderMesh::Border
+//----------------------------------------------------------------------------
+RenderMesh::Border::Border(degree_t horizontalFOV, degree_t verticalFOV, degree_t centreAzimuth, degree_t centreElevation)
+:   m_DuplicateLeftRight(false), m_MinAzimuth(centreAzimuth - (horizontalFOV / 2.0)), m_MaxAzimuth(centreAzimuth + (horizontalFOV / 2.0)),
+    m_MinElevation(centreElevation - (verticalFOV / 2.0)), m_MaxElevation(centreElevation + (verticalFOV / 2.0))
+{
+}
+//----------------------------------------------------------------------------
+RenderMesh::Border::Border(const std::string &eyeBorderFilename, bool duplicateLeftRight)
+:   m_DuplicateLeftRight(duplicateLeftRight)
+{
+    std::ifstream is(eyeBorderFilename, std::ifstream::binary);
+    if(!is.good()) {
+        throw std::runtime_error("Unable to open eye border file name " + eyeBorderFilename);
+    }
+
+    // Get length of eye border file, hence number of vertices
+    is.seekg(0, is.end);
+    const auto numEyeBorderBytes = is.tellg();
+    const auto numEyeBorderVertices = numEyeBorderBytes / (sizeof(double) * 2);
+    LOGI << "Read " << numEyeBorderVertices << " eye border vertices";
+    is.seekg(0, is.beg);
+
+    // Allocate vector, read in data from file
+    m_EyeBorderVertices.resize(numEyeBorderVertices);
+    is.read(reinterpret_cast<char*>(m_EyeBorderVertices.data()), sizeof(double) * 2 * numEyeBorderVertices);
+
+    // Calculate bounds in terms of azimuth and elevation
+    m_MinAzimuth = degree_t(std::numeric_limits<double>::max());
+    m_MaxAzimuth = degree_t(std::numeric_limits<double>::lowest());
+    m_MinElevation = degree_t(std::numeric_limits<double>::max());
+    m_MaxElevation = degree_t(std::numeric_limits<double>::lowest());
+    for(const auto &v : m_EyeBorderVertices) {
+        m_MinAzimuth = min(m_MinAzimuth, std::get<1>(v));
+        m_MaxAzimuth = max(m_MaxAzimuth, std::get<1>(v));
+        m_MinElevation = min(m_MinElevation, std::get<0>(v));
+        m_MaxElevation = max(m_MaxElevation, std::get<0>(v));
+    }
+
+    // If we should duplicate border on both sides, expand azimuth bounds
+    if(m_DuplicateLeftRight) {
+        m_MinAzimuth = min(m_MinAzimuth, -m_MaxAzimuth);
+        m_MaxAzimuth = max(m_MaxAzimuth, -m_MinAzimuth);
+    }
+    LOGI << "Eye border azimuth: " << m_MinAzimuth.value() << "-" << m_MaxAzimuth.value() << ", elevation: " << m_MinElevation.value() << "-" << m_MaxElevation.value();
+
+}
+//----------------------------------------------------------------------------
+bool RenderMesh::Border::isInEye(degree_t azimuth, degree_t elevation) const
+{
+    // If elevation and azimuth are within bounding box
+    if(azimuth >= m_MinAzimuth && azimuth < m_MaxAzimuth &&
+        elevation >= m_MinElevation && elevation < m_MaxElevation)
+    {
+        // If there's no eye border vertices, return true
+        if(m_EyeBorderVertices.empty()) {
+            return true;
+        }
+        // Otherwise
+        else {
+            // If we are duplicating the border on both sides and azimuth is on far side, flip
+            if(m_DuplicateLeftRight && azimuth < 0.0_deg) {
+                azimuth = -azimuth;
+            }
+
+            // Loop over all edges in the polygon.
+            bool inside = false;
+            for(size_t i = 0; i < m_EyeBorderVertices.size(); i++) {
+                const auto &a = m_EyeBorderVertices[i];
+                const auto &b = m_EyeBorderVertices[(i + 1) % m_EyeBorderVertices.size()];
+
+                // If edge straddles ray in y, they might intersect
+                if((std::get<1>(a) >= azimuth) != (std::get<1>(b) >= azimuth)) {
+                    // If edge's X values both right of the point, must hit
+                    if((std::get<0>(a) >= elevation) && (std::get<0>(b) >= elevation)){
+                        inside = !inside;
+                    }
+                    // Otherwise, compute intersection with +X ray
+                    else if((std::get<0>(b) - (std::get<1>(b) - azimuth) * (std::get<0>(a) - std::get<0>(b)) / (std::get<1>(a) - std::get<1>(b))) >= elevation) {
+                        inside = !inside;
+                    }
+                }
+            }
+
+            return inside;
+        }
+    }
+    // Otherwise, if azimuth and elevation are out of bounds, return false
+    else {
+        return false;
+    }
+}
+
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMeshSpherical
 //----------------------------------------------------------------------------
-RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t verticalFOV, degree_t startLongitude,
+RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t verticalFOV, degree_t startElevation,
                                          unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
+:   RenderMeshSpherical(Border(horizontalFOV, verticalFOV, 0_deg, startElevation + (verticalFOV / 2.0)),
+                        numHorizontalSegments, numVerticalSegments)
 {
-    // We need a vertical for each segment and one extra
-    const unsigned int numHorizontalVerts = numHorizontalSegments + 1;
-    const unsigned int numVerticalVerts = numVerticalSegments + 1;
+}
+//----------------------------------------------------------------------------
+RenderMeshSpherical::RenderMeshSpherical(const std::string &eyeBorderFilename, bool duplicateLeftRight,
+                                         unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
+:   RenderMeshSpherical(Border(eyeBorderFilename, duplicateLeftRight), numHorizontalSegments, numVerticalSegments)
+{
+}
+//----------------------------------------------------------------------------
+RenderMeshSpherical::RenderMeshSpherical(const Border &border, unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
+{
+    // Vectors to temporarily hold 2 XY positions and 2 SRT texture coordinates for each vertex
+    std::vector<GLfloat> positions;
+    std::vector<GLfloat> textureCoords;
 
-    // Bind surface
+    const float segmentWidth = 1.0f / (float)numHorizontalSegments;
+    const degree_t azimuthStep = (border.getMaxAzimuth() - border.getMinAzimuth()) / numHorizontalSegments;
+
+    const float segmentHeight = 1.0f / (float)numVerticalSegments;
+    const degree_t elevationStep = (border.getMaxElevation() - border.getMinElevation()) / numVerticalSegments;
+
+    // Loop through vertices
+    for(unsigned int j = 0; j < numVerticalSegments; j++) {
+        // Calculate screenspace segment y position
+        const float y = segmentHeight * (float)j;
+
+        // Calculate angle of horizontal and calculate its sin and cos
+        const degree_t elevation = border.getMinElevation() + (elevationStep * j);
+
+        for(unsigned int i = 0; i < numHorizontalSegments; i++) {
+            // Calculate screenspace segment x position
+            const float x = segmentWidth * (float)i;
+
+            // Calculate angle of vertical and calculate it's sin and cos
+            const degree_t azimuth = border.getMinAzimuth() + (azimuthStep * i);
+
+            // Determine angles for each vertex in quad
+            std::array<std::tuple<degree_t, degree_t, float, float>, 4> vertices{
+                std::make_tuple(azimuth,               elevation,                  x,                  y),
+                std::make_tuple(azimuth + azimuthStep, elevation,                  x + segmentWidth,   y),
+                std::make_tuple(azimuth + azimuthStep, elevation + elevationStep,  x + segmentWidth,   y + segmentHeight),
+                std::make_tuple(azimuth,               elevation + elevationStep,  x,                  y + segmentHeight)};
+
+            // If any vertices are within eye region
+            if(std::any_of(vertices.cbegin(), vertices.cend(),
+                [&border](const auto &v)
+                {
+                    return border.isInEye(std::get<0>(v), std::get<1>(v));
+                }))
+            {
+                // Loop through vertices
+                for(const auto &v : vertices) {
+                    const GLfloat sinElevation = sin(std::get<1>(v));
+                    const GLfloat cosElevation = cos(std::get<1>(v));
+                    const GLfloat sinAzimuth = sin(std::get<0>(v));
+                    const GLfloat cosAzimuth = cos(std::get<0>(v));
+
+                    // Add vertex position
+                    positions.push_back(std::get<2>(v));
+                    positions.push_back(std::get<3>(v));
+
+                    // Add vertex texture coordinate
+                    textureCoords.push_back(sinAzimuth * cosElevation);
+                    textureCoords.push_back(sinElevation);
+                    textureCoords.push_back(cosAzimuth * cosElevation);
+                }
+            }
+
+        }
+    }
+
+    std::cout << positions.size() << "/" << (numVerticalSegments * numHorizontalSegments) * 8 << std::endl;
+
+     // Bind surface
     getSurface().bind();
 
-    {
-        // Calculate number of vertices in mesh
-        const unsigned int numVertices = numHorizontalVerts * numVerticalVerts;
-
-        // Reserve 2 XY positions and 2 SRT texture coordinates for each vertical
-        std::vector<GLfloat> positions;
-        std::vector<GLfloat> textureCoords;
-        positions.reserve(numVertices * 2);
-        textureCoords.reserve(numVertices * 3);
-
-        const float segmentWidth = 1.0f / (float)numHorizontalSegments;
-        const degree_t startLatitude = -horizontalFOV / 2.0;
-        const degree_t latitudeStep = horizontalFOV / numHorizontalSegments;
-
-        const float segmentHeight = 1.0f / (float)numVerticalSegments;
-        const degree_t longitudeStep = -verticalFOV / numVerticalSegments;
-
-        // Loop through vertices
-        for(unsigned int j = 0; j < numVerticalVerts; j++) {
-            // Calculate screenspace segment y position
-            const float y = segmentHeight * (float)j;
-
-            // Calculate angle of horizontal and calculate its sin and cos
-            const degree_t longitude = startLongitude + longitudeStep * j;
-            const GLfloat sinLongitude = sin(longitude);
-            const GLfloat cosLongitude = cos(longitude);
-
-            for(unsigned int i = 0; i < numHorizontalVerts; i++) {
-                // Calculate screenspace segment x position
-                const float x = segmentWidth * (float)i;
-
-                // Calculate angle of vertical and calculate it's sin and cos
-                const degree_t latitude = startLatitude + latitudeStep * i;
-                const GLfloat sinLatitude = sin(latitude);
-                const GLfloat cosLatitude = cos(latitude);
-
-                // Add vertex position
-                positions.push_back(x);
-                positions.push_back(y);
-
-                // Add vertex texture coordinate
-                textureCoords.push_back(sinLatitude * cosLongitude);
-                textureCoords.push_back(sinLongitude);
-                textureCoords.push_back(cosLatitude * cosLongitude);
-            }
-        }
-
-        // Upload positions and texture coordinates
-        getSurface().uploadPositions(positions, 2);
-        getSurface().uploadTexCoords(textureCoords, 3);
-    }
-
-    {
-        // Reserce indices for quads required to draw mesh
-        std::vector<GLuint> indices;
-        indices.reserve(numHorizontalSegments * numVerticalSegments * 4);
-
-        // Loop through quads
-        for(unsigned int y = 0; y < numVerticalSegments; y++) {
-            for(unsigned int x = 0; x < numHorizontalSegments; x++) {
-                indices.push_back((y * numHorizontalVerts) + x);
-                indices.push_back((y * numHorizontalVerts) + x + 1);
-                indices.push_back(((y + 1) * numHorizontalVerts) + x + 1);
-                indices.push_back(((y + 1) * numHorizontalVerts) + x);
-            }
-        }
-
-        // Upload indices to surface
-        getSurface().uploadIndices(indices, GL_QUADS);
-    }
+    // Upload positions and texture coordinates
+    getSurface().uploadPositions(positions, 2);
+    getSurface().uploadTexCoords(textureCoords, 3);
+    getSurface().setPrimitiveType(GL_QUADS);
 
     // Unbind surface
     getSurface().unbind();
-
-    // Unbind indices
-    getSurface().unbindIndices();
 }
 
 //----------------------------------------------------------------------------
@@ -135,7 +231,7 @@ RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, u
     using namespace units::angle;
 
     // Load eye border file
-    const auto eyeBorder = loadEyeBorder(eyeBorderFilename);
+    /*const auto eyeBorder = loadEyeBorder(eyeBorderFilename);
 
 
     const auto elevationRange = std::minmax_element(eyeBorder.cbegin(), eyeBorder.cend(),
@@ -148,7 +244,7 @@ RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, u
                                                   {
                                                     return (std::get<1>(a) < std::get<1>(b));
                                                   });
-    LOGI << "Eye border angles (" << elevationRange.first << ", " << *azimuthRange.first << ") - (" << elevationRange.second << ", " << azimuthRange.second << ")";
+    LOGI << "Eye border angles (" << elevationRange.first << ", " << *azimuthRange.first << ") - (" << elevationRange.second << ", " << azimuthRange.second << ")";*/
 
     assert(false);
 
@@ -274,26 +370,6 @@ RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, u
 
     // Unbind indices
     getSurface().unbindIndices();
-}
-//------------------------------------------------------------------------
-std::vector<std::tuple<float, float>> RenderMeshHexagonal::loadEyeBorder(const std::string &eyeBorderFilename) const
-{
-    std::ifstream is(eyeBorderFilename, std::ifstream::binary);
-    if(!is.good()) {
-        throw std::runtime_error("Unable to opne eye border file name " + eyeBorderFilename);
-    }
-
-    // Get length of eye border file, hence number of vertices
-    is.seekg (0, is.end);
-    const auto numEyeBorderBytes = is.tellg();
-    const auto numEyeBorderVertices = numEyeBorderBytes / (sizeof(float) * 2);
-    LOGI << "Read " << numEyeBorderVertices << " eye border vertices";
-    is.seekg (0, is.beg);
-
-    // Allocate vector, read in data from file and return
-    std::vector<std::tuple<float, float>> eyeBorder(numEyeBorderVertices);
-    is.read(reinterpret_cast<char*>(eyeBorder.data()), sizeof(float) * 2 * numEyeBorderVertices);
-    return eyeBorder;
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics
