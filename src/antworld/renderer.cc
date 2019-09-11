@@ -205,18 +205,6 @@ void RendererBase::applyFrame(meter_t x, meter_t y, meter_t z,
 //------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RendererBase
 //-----------------------------------------------------------------------
-// hfov = hfov/180/2*pi;
-// axis([0 14 -hfov hfov -pi/12 pi/3]);
-Renderer::Renderer(GLsizei cubemapSize, GLdouble nearClip, GLdouble farClip,
-                   degree_t horizontalFOV, degree_t verticalFOV)
-:   RendererBase(nearClip, farClip), m_RenderMesh(horizontalFOV, verticalFOV, 15_deg, 40, 10),
-    m_RenderTargetCubemap(cubemapSize)
-{
-    // Pre-generate lookat matrices to point at cubemap faces
-    generateCubeFaceLookAtMatrices(0.0, 0.0, 0.0,
-                                   m_CubeFaceLookAtMatrices);
-}
-//----------------------------------------------------------------------------
 void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                    degree_t yaw, degree_t pitch, degree_t roll,
                                    GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight,

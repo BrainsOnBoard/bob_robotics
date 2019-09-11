@@ -38,7 +38,6 @@ public:
     {
     }
 
-
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
@@ -91,10 +90,14 @@ private:
 class Renderer : public RendererBase
 {
 public:
-    Renderer(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
-             degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
-    virtual ~Renderer()
+    template<class... Ts>
+    Renderer(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0, Ts &&... args)
+    :   RendererBase(nearClip, farClip), m_RenderMesh(std::forward<Ts>(args)...),
+        m_RenderTargetCubemap(cubemapSize)
     {
+        // Pre-generate lookat matrices to point at cubemap faces
+        generateCubeFaceLookAtMatrices(0.0, 0.0, 0.0,
+                                       m_CubeFaceLookAtMatrices);
     }
 
     //------------------------------------------------------------------------
