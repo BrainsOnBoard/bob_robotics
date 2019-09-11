@@ -10,17 +10,17 @@ from urllib import request
 from mpl_toolkits.mplot3d import Axes3D
 
 # Functions
+from rdp import rdp
 from scipy.io import loadmat
 
-
 def cartesian_to_spherical(vertices):
-    hxy = np.hypot(vertices[:,1], vertices[:,2])
+    hxy = np.hypot(vertices[:,0], vertices[:,2])
 
-    azimuth = np.arctan2(vertices[:,2], vertices[:,1])
-    elevation = np.arctan2(vertices[:,0], hxy)
-    radius = np.hypot(hxy, vertices[:,0])
+    azimuth = (np.pi / 2.0) + np.arctan2(vertices[:,2], vertices[:,0])
+    elevation = np.arctan2(vertices[:,1], hxy)
+    radius = np.hypot(hxy, vertices[:,1])
 
-    return np.vstack((elevation, -azimuth, radius))
+    return np.vstack((azimuth, -elevation, radius))
 
 # Read bee ID from command line if present
 BEE_ID = 6 if len(sys.argv) == 1 else int(sys.argv[1])
@@ -64,12 +64,14 @@ eye_border_spherical = cartesian_to_spherical(eye_sphere_border)
 assert np.allclose(eye_border_spherical[2], 1.0)
 
 # **HACK** sort by angle from arbitrary point so they're going in a sane order
-eye_border_sort = np.arctan2(eye_border_spherical[1] - 2.5, eye_border_spherical[0] - 1.0)
+eye_border_sort = np.arctan2(eye_border_spherical[1] - 1.0, eye_border_spherical[0] - 1.0)
 eye_sort = np.argsort(eye_border_sort)
 eye_border_spherical = eye_border_spherical[:,eye_sort]
 
+eye_border_spherical = rdp(eye_border_spherical[:2].transpose(), epsilon=0.1)
+
 # Write eye border ro file
-eye_border_spherical[:2].astype(np.float32).tofile(path.join(antworld_resource_directory, "eye_border_%s.bin" % bee_name))
+np.degrees(eye_border_spherical).astype(np.float64).tofile(path.join(antworld_resource_directory, "eye_border_%s.bin" % bee_name))
 
 # Plot eye surface at interpolation points
 eye_fig = plt.figure()
@@ -92,7 +94,7 @@ sphere_axis.set_zlabel("Z")
 
 
 pelt_fig, pelt_axis = plt.subplots()
-pelt_axis.plot(eye_border_spherical[0], eye_border_spherical[1])
+pelt_axis.plot(eye_border_spherical[:,0], eye_border_spherical[:,1])
 pelt_axis.set_xlabel("Azimuth [radians]")
 pelt_axis.set_ylabel("Elevation [radians]")
 
