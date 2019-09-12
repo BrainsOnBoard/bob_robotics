@@ -92,7 +92,7 @@ class Renderer : public RendererBase
 public:
     template<class... Ts>
     Renderer(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0, Ts &&... args)
-    :   RendererBase(nearClip, farClip), m_RenderMesh(std::forward<Ts>(args)...),
+    :   RendererBase(nearClip, farClip), m_RenderMesh(false, std::forward<Ts>(args)...),
         m_RenderTargetCubemap(cubemapSize)
     {
         // Pre-generate lookat matrices to point at cubemap faces

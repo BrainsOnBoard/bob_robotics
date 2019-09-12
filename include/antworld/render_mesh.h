@@ -52,8 +52,10 @@ protected:
     {
         using degree_t = units::angle::degree_t;
     public:
-        Border(degree_t horizontalFOV, degree_t verticalFOV, degree_t centreAzimuth, degree_t centreElevation);
-        Border(const std::string &eyeBorderFilename, bool duplicateLeftRight);
+        Border(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV,
+               degree_t centreAzimuth, degree_t centreElevation);
+        Border(bool flipAzimuth, const std::string &eyeBorderFilename);
+
 
         //----------------------------------------------------------------------------
         // Public API
@@ -70,8 +72,6 @@ protected:
         //----------------------------------------------------------------------------
         // Members
         //----------------------------------------------------------------------------
-        const bool m_DuplicateLeftRight;
-
         degree_t m_MinAzimuth;
         degree_t m_MaxAzimuth;
 
@@ -97,10 +97,10 @@ class RenderMeshSpherical : public RenderMesh
 {
     using degree_t = units::angle::degree_t;
 public:
-    RenderMeshSpherical(units::angle::degree_t horizontalFOV = 296_deg, units::angle::degree_t verticalFOV = 75_deg,
+    RenderMeshSpherical(bool flipAzimuth, units::angle::degree_t horizontalFOV = 296_deg, units::angle::degree_t verticalFOV = 75_deg,
                         units::angle::degree_t startElevation  = 15_deg,
                         unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
-    RenderMeshSpherical(const std::string &eyeBorderFilename, bool duplicateLeftRight = true,
+    RenderMeshSpherical(bool flipAzimuth, const std::string &eyeBorderFilename,
                         unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
 
 protected:

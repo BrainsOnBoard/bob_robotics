@@ -3,8 +3,8 @@
 #include "hid/joystick.h"
 #include "hid/joystick_glfw_keyboard.h"
 #include "antworld/common.h"
-#include "antworld/renderer_data_driven.h"
-#include "antworld/render_target_hex_display.h"
+#include "antworld/renderer.h"
+#include "antworld/renderer_stereo.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -23,6 +23,7 @@
 using namespace BoBRobotics;
 using namespace units::angle;
 using namespace units::length;
+using namespace units::literals;
 using namespace units::math;
 using namespace units::time;
 
@@ -63,7 +64,7 @@ int main(int argc, char **argv)
     const auto turnSpeed = 200_deg_per_s;
     const auto moveSpeed = 3_mps;
     const unsigned int width = 1024;
-    const unsigned int height = 262;
+    const unsigned int height = 853;
 
     // Whether to use the 3D reconstructed Rothamsted model
     const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
@@ -117,11 +118,9 @@ int main(int argc, char **argv)
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
-    //AntWorld::Renderer renderer(std::make_unique<AntWorld::RenderMeshHexagonal>(150_deg, 75_deg, 3.7_deg),
-    //                            256, 0.1);
-
-    AntWorld::RendererDataDriven renderer("../../resources/antworld/eye_border_BT_77973.bin", 3.7_deg,
-                                          512, 0.1);
+    //AntWorld::Renderer renderer(512, 0.1, 1000.0, "../../resources/antworld/eye_border_BT_77973.bin", 256, 256);
+    AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.008, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
+    //                                      512, 0.1);
 
     // Create a render target for displaying world re-mapped onto hexagonal mesh
     //AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer.getRenderMesh()));

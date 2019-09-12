@@ -39,14 +39,20 @@ void RenderMesh::render() const
 //---------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMesh::Border
 //----------------------------------------------------------------------------
-RenderMesh::Border::Border(degree_t horizontalFOV, degree_t verticalFOV, degree_t centreAzimuth, degree_t centreElevation)
-:   m_DuplicateLeftRight(false), m_MinAzimuth(centreAzimuth - (horizontalFOV / 2.0)), m_MaxAzimuth(centreAzimuth + (horizontalFOV / 2.0)),
-    m_MinElevation(centreElevation - (verticalFOV / 2.0)), m_MaxElevation(centreElevation + (verticalFOV / 2.0))
+RenderMesh::Border::Border(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV, degree_t centreAzimuth, degree_t centreElevation)
+:   m_MinElevation(centreElevation - (verticalFOV / 2.0)), m_MaxElevation(centreElevation + (verticalFOV / 2.0))
 {
+    if(flipAzimuth) {
+        m_MinAzimuth = -centreAzimuth - (horizontalFOV / 2.0);
+        m_MaxAzimuth = -centreAzimuth + (horizontalFOV / 2.0);
+    }
+    else {
+        m_MinAzimuth = centreAzimuth - (horizontalFOV / 2.0);
+        m_MaxAzimuth = centreAzimuth + (horizontalFOV / 2.0);
+    }
 }
 //----------------------------------------------------------------------------
-RenderMesh::Border::Border(const std::string &eyeBorderFilename, bool duplicateLeftRight)
-:   m_DuplicateLeftRight(duplicateLeftRight)
+RenderMesh::Border::Border(bool flipAzimuth, const std::string &eyeBorderFilename)
 {
     std::ifstream is(eyeBorderFilename, std::ifstream::binary);
     if(!is.good()) {
@@ -64,6 +70,12 @@ RenderMesh::Border::Border(const std::string &eyeBorderFilename, bool duplicateL
     m_EyeBorderVertices.resize(numEyeBorderVertices);
     is.read(reinterpret_cast<char*>(m_EyeBorderVertices.data()), sizeof(double) * 2 * numEyeBorderVertices);
 
+    // Flip all vertices azimuth if specified
+    if(flipAzimuth) {
+        for(auto &v : m_EyeBorderVertices) {
+            std::get<1>(v) = -std::get<1>(v);
+        }
+    }
     // Calculate bounds in terms of azimuth and elevation
     m_MinAzimuth = degree_t(std::numeric_limits<double>::max());
     m_MaxAzimuth = degree_t(std::numeric_limits<double>::lowest());
@@ -76,11 +88,6 @@ RenderMesh::Border::Border(const std::string &eyeBorderFilename, bool duplicateL
         m_MaxElevation = max(m_MaxElevation, std::get<0>(v));
     }
 
-    // If we should duplicate border on both sides, expand azimuth bounds
-    if(m_DuplicateLeftRight) {
-        m_MinAzimuth = min(m_MinAzimuth, -m_MaxAzimuth);
-        m_MaxAzimuth = max(m_MaxAzimuth, -m_MinAzimuth);
-    }
     LOGI << "Eye border azimuth: " << m_MinAzimuth.value() << "-" << m_MaxAzimuth.value() << ", elevation: " << m_MinElevation.value() << "-" << m_MaxElevation.value();
 
 }
@@ -97,11 +104,6 @@ bool RenderMesh::Border::isInEye(degree_t azimuth, degree_t elevation) const
         }
         // Otherwise
         else {
-            // If we are duplicating the border on both sides and azimuth is on far side, flip
-            if(m_DuplicateLeftRight && azimuth < 0.0_deg) {
-                azimuth = -azimuth;
-            }
-
             // Loop over all edges in the polygon.
             bool inside = false;
             for(size_t i = 0; i < m_EyeBorderVertices.size(); i++) {
@@ -133,16 +135,16 @@ bool RenderMesh::Border::isInEye(degree_t azimuth, degree_t elevation) const
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMeshSpherical
 //----------------------------------------------------------------------------
-RenderMeshSpherical::RenderMeshSpherical(degree_t horizontalFOV, degree_t verticalFOV, degree_t startElevation,
+RenderMeshSpherical::RenderMeshSpherical(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV, degree_t startElevation,
                                          unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
-:   RenderMeshSpherical(Border(horizontalFOV, verticalFOV, 0_deg, startElevation + (verticalFOV / 2.0)),
+:   RenderMeshSpherical(Border(flipAzimuth, horizontalFOV, verticalFOV, 0_deg, startElevation + (verticalFOV / 2.0)),
                         numHorizontalSegments, numVerticalSegments)
 {
 }
 //----------------------------------------------------------------------------
-RenderMeshSpherical::RenderMeshSpherical(const std::string &eyeBorderFilename, bool duplicateLeftRight,
+RenderMeshSpherical::RenderMeshSpherical(bool flipAzimuth, const std::string &eyeBorderFilename,
                                          unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
-:   RenderMeshSpherical(Border(eyeBorderFilename, duplicateLeftRight), numHorizontalSegments, numVerticalSegments)
+:   RenderMeshSpherical(Border(flipAzimuth, eyeBorderFilename), numHorizontalSegments, numVerticalSegments)
 {
 }
 //----------------------------------------------------------------------------
