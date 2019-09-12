@@ -19,15 +19,15 @@ public:
     template<class... Ts>
     RendererStereo(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
                    GLdouble eyeSeperation = 0.001, Ts &&... args)
-    :   RendererBase(nearClip, farClip), m_RenderMeshLeft(false, std::forward<Ts>(args)...),
-        m_RenderMeshRight(true, std::forward<Ts>(args)...), m_RenderTargetCubemapLeft(cubemapSize),
+    :   RendererBase(nearClip, farClip), m_RenderMeshLeft(true, std::forward<Ts>(args)...),
+        m_RenderMeshRight(false, std::forward<Ts>(args)...), m_RenderTargetCubemapLeft(cubemapSize),
         m_RenderTargetCubemapRight(cubemapSize)
     {
         // Pre-generate lookat matrices to point at cubemap faces
-        generateCubeFaceLookAtMatrices(eyeSeperation / 2.0, 0.0, 0.0,
-                                       m_CubeFaceLookAtMatricesLeft);
         generateCubeFaceLookAtMatrices(eyeSeperation / -2.0, 0.0, 0.0,
                                        m_CubeFaceLookAtMatricesLeft);
+        generateCubeFaceLookAtMatrices(eyeSeperation / 2.0, 0.0, 0.0,
+                                       m_CubeFaceLookAtMatricesRight);
     }
 
     //------------------------------------------------------------------------

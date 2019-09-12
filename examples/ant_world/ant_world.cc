@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     //AntWorld::Renderer renderer(512, 0.1, 1000.0, "../../resources/antworld/eye_border_BT_77973.bin", 256, 256);
-    AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.008, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
+    AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.0016, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
     //                                      512, 0.1);
 
     // Create a render target for displaying world re-mapped onto hexagonal mesh
