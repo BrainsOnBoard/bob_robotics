@@ -71,7 +71,7 @@ eye_border_spherical = eye_border_spherical[:,eye_sort]
 eye_border_spherical = rdp(eye_border_spherical[:2].transpose(), epsilon=0.1)
 
 # Write eye border ro file
-np.degrees(eye_border_spherical).astype(np.float64).tofile(path.join(antworld_resource_directory, "eye_border_%s.bin" % bee_name))
+np.degrees(eye_border_spherical).astype(np.float64).tofile(path.join(antworld_resource_directory, "world_eye_border_%s.bin" % bee_name))
 
 # Plot eye surface at interpolation points
 eye_fig = plt.figure()
