@@ -63,12 +63,12 @@ std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(GLFW
 int main(int argc, char **argv)
 {
     const auto turnSpeed = 200_deg_per_s;
-    const auto moveSpeed = 3_mps;
+    const auto moveSpeed = 1_mps;
     const unsigned int width = 1024;
-    const unsigned int height = 262;//853;
+    const unsigned int height = 500;//853;
 
     // Whether to use the 3D reconstructed Rothamsted model
-    const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
+    const std::string overrideModel = (argc > 1) ? argv[1] : "";
 
     // Set GLFW error callback
     glfwSetErrorCallback(handleGLFWError);
@@ -106,8 +106,8 @@ int main(int argc, char **argv)
     glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
-    //glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
-    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
+    //glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(4.0);
     glPointSize(4.0);
@@ -120,22 +120,18 @@ int main(int argc, char **argv)
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     //auto renderer = AntWorld::Renderer::createSpherical(512, 0.001, 1000.0, 296_deg, 75_deg);
-    auto renderer = AntWorld::RendererStereo::createHexagonal(512, 0.001, 1000.0, 0.0016,
+    auto renderer = AntWorld::RendererStereo::createHexagonal(256, 0.001, 1000.0, 0.0016,
                                                               "../../resources/antworld/eye_border_BT_77973.bin", 3_deg);
     //AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.0016, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
     //                                      512, 0.1);
 
     // Create a render target for displaying world re-mapped onto hexagonal mesh
-    //AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMesh()));
+    AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMeshLeft()),
+                                                  *dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMeshRight()));
 
-    //AntWorld::Renderer renderer(512, 0.1);
-    if (useRothamstedModel) {
-        const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
-        if (!modelPath) {
-            throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
-        }
-        renderer->getWorld().loadObj((filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj").str(),
-                                    0.1f,
+    if (!overrideModel.empty()) {
+        renderer->getWorld().loadObj(overrideModel,
+                                    1.0f,
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
@@ -190,19 +186,19 @@ int main(int argc, char **argv)
         z -= forwardMove * sin(pitch);
 
         // Clear colour and depth buffer
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        /*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
-                                      0, 0, width, height);
+                                      0, 0, width, height);*/
         // Render panorama to render target
-        /*renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
+        renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
                                       renderTarget);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render render mesh
-        renderTarget.render(0, 0, width, height);*/
+        // Render hexagonal visualization of render target
+        renderTarget.render(0, 0, width, height);
 
         // Swap front and back buffers
         glfwSwapBuffers(window);
