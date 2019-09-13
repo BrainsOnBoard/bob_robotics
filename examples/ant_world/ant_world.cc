@@ -3,6 +3,7 @@
 #include "hid/joystick.h"
 #include "hid/joystick_glfw_keyboard.h"
 #include "antworld/common.h"
+#include "antworld/render_target_hex_display.h"
 #include "antworld/renderer.h"
 #include "antworld/renderer_stereo.h"
 
@@ -118,12 +119,14 @@ int main(int argc, char **argv)
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
-    auto renderer = AntWorld::Renderer::createSpherical(512, 0.001, 1000.0, 296_deg, 75_deg);
+    //auto renderer = AntWorld::Renderer::createSpherical(512, 0.001, 1000.0, 296_deg, 75_deg);
+    auto renderer = AntWorld::RendererStereo::createHexagonal(512, 0.001, 1000.0, 0.0016,
+                                                              "../../resources/antworld/eye_border_BT_77973.bin", 3_deg);
     //AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.0016, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
     //                                      512, 0.1);
 
     // Create a render target for displaying world re-mapped onto hexagonal mesh
-    //AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer.getRenderMesh()));
+    //AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMesh()));
 
     //AntWorld::Renderer renderer(512, 0.1);
     if (useRothamstedModel) {
@@ -192,8 +195,8 @@ int main(int argc, char **argv)
         renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
                                       0, 0, width, height);
         // Render panorama to render target
-        /*renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
-                                     renderTarget);
+        /*renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
+                                      renderTarget);
 
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

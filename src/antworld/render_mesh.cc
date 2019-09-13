@@ -260,31 +260,10 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
     const units::angle::degree_t halfSideLength = 0.5 * sideLength;
     const units::angle::degree_t halfHexHeight = halfSideLength + hexHeight;
 
-    // Calculate hex position offsets to build each hex's vertices from
-    const units::angle::degree_t hexAngleOffsets[6][2] = {
-        {0_deg, -halfHexHeight},
-        {hexDistance, -halfSideLength},
-        {hexDistance, halfSideLength},
-        {0_deg, halfHexHeight},
-        {-hexDistance, halfSideLength},
-        {-hexDistance, -halfSideLength}
-    };
-
     // Determine size of rectangles used for final output
     const float rectangleWidth = 1.0f / (float)m_NumHorizontalHexes;
     const float rectangleHeight = 1.0f / (float)m_NumVerticalHexes;
     const float halfRectangleWidth = rectangleWidth * 0.5f;
-
-    // Positions used to map hexagons to rectangles
-    // **NOTE** quality of mapping is not SUPER-important as the resultant rectangle will be averaged
-    const float hexRectangleOffsets[6][2] = {
-        {halfRectangleWidth, rectangleHeight},
-        {rectangleWidth, rectangleHeight},
-        {rectangleWidth, 0.0f},
-        {halfRectangleWidth, 0.0f},
-        {0.0f, 0.0f},
-        {0.0f, rectangleHeight},
-    };
 
     // **TODO** reserve
     std::vector<GLfloat> positions;
@@ -314,46 +293,59 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
 
             // Calculate position of this hex in output rectangular grid, offsetting to centre of screen
             const float hexX = centreX + (rectangleWidth * (float)j);
-            const float hexY = centreY - (rectangleHeight * (float)i);
+            const float hexY = centreY + (rectangleHeight * (float)i);
 
-            // Cache index of first hex in
-            const size_t hexStartVertexIndex = positions.size() / 2;
+            // Determine angles for each vertex in hexagon
+            std::array<std::tuple<degree_t, degree_t, float, float>, 6> vertices{
+                std::make_tuple(hexAzimuth,                 hexElevation - halfHexHeight,   hexX + halfRectangleWidth,  hexY + rectangleHeight),
+                std::make_tuple(hexAzimuth + hexDistance,   hexElevation - halfSideLength,  hexX + rectangleWidth,      hexY + rectangleHeight),
+                std::make_tuple(hexAzimuth + hexDistance,   hexElevation - halfSideLength,  hexX + rectangleWidth,      hexY),
+                std::make_tuple(hexAzimuth,                 hexElevation + halfHexHeight,   hexX + halfRectangleWidth,  hexY),
+                std::make_tuple(hexAzimuth - hexDistance,   hexElevation + halfSideLength,  hexX,                       hexY),
+                std::make_tuple(hexAzimuth - hexDistance,   hexElevation - halfSideLength,  hexX,                       hexY + rectangleHeight)
+            };
 
-            // Loop through vertices
-            for(unsigned int v = 0; v < 6; v++) {
-                // Add positions
-                positions.push_back(hexX + hexRectangleOffsets[v][0]);
-                positions.push_back(hexY + hexRectangleOffsets[v][1]);
 
-                // Calculate position of vertex
-                const units::angle::degree_t vertexAzimuth = hexAzimuth + hexAngleOffsets[v][0];
-                const units::angle::degree_t vertexElevation = hexElevation + hexAngleOffsets[v][1];
+             // If any vertices are within eye region
+            if(std::any_of(vertices.cbegin(), vertices.cend(),
+                [&border](const auto &v)
+                {
+                    return border.isInEye(std::get<0>(v), std::get<1>(v));
+                }))
+            {
+                // Cache index of first hex in
+                const size_t hexStartVertexIndex = positions.size() / 2;
 
-                const GLfloat sinElevation = sin(vertexElevation);
-                const GLfloat cosElevation = cos(vertexElevation);
-                const GLfloat sinAzimuth = sin(vertexAzimuth);
-                const GLfloat cosAzimuth = cos(vertexAzimuth);
+                // Loop through vertices
+                for(const auto &v : vertices) {
+                    const GLfloat sinElevation = sin(std::get<1>(v));
+                    const GLfloat cosElevation = cos(std::get<1>(v));
+                    const GLfloat sinAzimuth = sin(std::get<0>(v));
+                    const GLfloat cosAzimuth = cos(std::get<0>(v));
 
-                // Add vertex texture coordinate
-                textureCoords.push_back(sinAzimuth * cosElevation);
-                textureCoords.push_back(sinElevation);
-                textureCoords.push_back(cosAzimuth * cosElevation);
+                    // Add vertex position
+                    positions.push_back(std::get<2>(v));
+                    positions.push_back(std::get<3>(v));
+
+                    // Add vertex texture coordinate
+                    textureCoords.push_back(sinAzimuth * cosElevation);
+                    textureCoords.push_back(sinElevation);
+                    textureCoords.push_back(cosAzimuth * cosElevation);
+                }
+
+                // Add two quads to render hexagon
+                indices.push_back(hexStartVertexIndex);
+                indices.push_back(hexStartVertexIndex + 3);
+                indices.push_back(hexStartVertexIndex + 2);
+                indices.push_back(hexStartVertexIndex + 1);
+
+                indices.push_back(hexStartVertexIndex);
+                indices.push_back(hexStartVertexIndex + 5);
+                indices.push_back(hexStartVertexIndex + 4);
+                indices.push_back(hexStartVertexIndex + 3);
             }
-
-            // Add two quads to render hexagon
-            indices.push_back(hexStartVertexIndex);
-            indices.push_back(hexStartVertexIndex + 3);
-            indices.push_back(hexStartVertexIndex + 2);
-            indices.push_back(hexStartVertexIndex + 1);
-
-            indices.push_back(hexStartVertexIndex);
-            indices.push_back(hexStartVertexIndex + 5);
-            indices.push_back(hexStartVertexIndex + 4);
-            indices.push_back(hexStartVertexIndex + 3);
         }
     }
-
-    BOB_ASSERT(indices.size() == (8 * m_NumHorizontalHexes * m_NumVerticalHexes));
 
     // Bind surface
     getSurface().bind();
