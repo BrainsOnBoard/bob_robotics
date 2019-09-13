@@ -50,18 +50,6 @@ std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::
         return std::make_unique<HID::JoystickSFMLKeyboard>(window);
     }
 }
-
-std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(GLFWwindow *window)
-{
-    try
-    {
-        return std::make_unique<HID::Joystick>(0.25f);
-    }
-    catch(std::runtime_error &)
-    {
-        return std::make_unique<HID::JoystickGLFWKeyboard>(window);
-    }
-}
 }
 
 int main(int argc, char **argv)
