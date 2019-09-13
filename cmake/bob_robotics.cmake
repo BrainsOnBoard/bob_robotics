@@ -323,11 +323,11 @@ macro(BoB_build)
     # that output "isn't a terminal" - which seems to include whatever pipe-magick cmake includes.
     # https://medium.com/@alasher/colored-c-compiler-output-with-ninja-clang-gcc-10bfe7f2b949
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-       add_compile_options (-fdiagnostics-color=always)
+       add_compile_flags(-fdiagnostics-color=always)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       add_compile_options (-fcolor-diagnostics)
+       add_compile_flags(-fcolor-diagnostics)
     endif ()
-    
+
     # Set include dirs and link libraries for this module/project
     always_included_packages()
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
