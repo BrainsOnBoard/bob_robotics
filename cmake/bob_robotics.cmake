@@ -84,14 +84,19 @@ macro(BoB_project)
         set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
         set(genn_model_dest "${genn_model_dir}/runner.cc")
 
-        if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
-            set(GENN_CPU_ONLY TRUE)
-        else()
-            set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
-        endif()
+        if(NOT GENN_CPU_ONLY)
+            if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
+                set(GENN_CPU_ONLY TRUE)
+            else()
+                set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+            endif()
+        endif(NOT GENN_CPU_ONLY)
         if(GENN_CPU_ONLY)
+            message("Building GeNN model for CPU only")
             add_definitions(-DCPU_ONLY)
             set(CPU_FLAG -c)
+        else()
+            message("Building GeNN model with CUDA")
         endif()
 
         # Custom command to generate source code with GeNN
@@ -299,6 +304,26 @@ macro(BoB_build)
         # Enable warnings and set architecture
         add_compile_flags("-Wall -Wpedantic -Wextra -march=$ENV{ARCH}")
 
+        # Gcc has an annoying feature where you can mark functions with
+        # __attribute__((warn_unused_result)) and then the calling code *has*
+        # to do something with the result and can't ignore it; hacks such as
+        # (void) annoyingFunction() don't work either. We're mostly
+        # seeing this warning for calls to std::system() (in our code and third-
+        # party code), but in those cases we generally really don't care about
+        # the return value. So let's just disable it globally to save faffing
+        # around.
+        add_compile_flags(-Wno-unused-result)
+
+        # I'm getting warnings based for code in the Eigen headers, so let's
+        # just disable it. I tried setting this flag only when we're actually
+        # using Eigen, but that didn't seem to work, and it seems pretty
+        # harmless, so it's probably fine to just disable it globally.
+        #          - AD
+        #
+        # Eigen version: 3.3.7
+        # gcc version:   9.1.0
+        add_compile_flags(-Wno-deprecated-copy)
+
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
@@ -410,6 +435,10 @@ macro(BoB_add_link_libraries)
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 endmacro()
 
+function(BoB_deprecated WHAT ALTERNATIVE)
+    message(WARNING "!!!!! WARNING: Use of ${WHAT} in BoB robotics code is deprecated and will be removed in future. Use ${ALTERNATIVE} instead. !!!!!")
+endfunction()
+
 function(BoB_add_include_directories)
     # Sometimes we get newline characters in an *_INCLUDE_DIRS variable (e.g.
     # with the OpenCV package) and this breaks CMake
@@ -519,10 +548,18 @@ function(BoB_external_libraries)
                 message(FATAL_ERROR "Could not find SDL2")
                 BoB_add_link_libraries(SDL2::SDL2)
             endif()
+
+            # Sorry, Norbert ;-). I can try to help you install SFML if it helps!
+            #       -- Alex
+            BoB_deprecated(SDL2 SFML)
         elseif(${lib} STREQUAL glfw3)
             find_package(glfw3 REQUIRED)
             BoB_add_link_libraries(glfw)
             BoB_external_libraries(opengl)
+
+            # Most of the GLFW code has already been updated, but we still
+            # need GLFW temporarily for third_party/imgui
+            BoB_deprecated(GLFW SFML)
         elseif(${lib} STREQUAL glew)
             if(NOT TARGET GLEW::GLEW)
                 message(FATAL_ERROR "Could not find glew")
@@ -611,6 +648,12 @@ function(BoB_third_party)
                 BoB_add_link_libraries(ev3dev)
             elseif(${module} STREQUAL imgui)
                 BoB_add_link_libraries(imgui)
+
+                # Extra libs needed
+                BoB_external_libraries(glew sfml-graphics)
+
+                # Suppress warning
+                add_compile_flags(-Wno-stringop-truncation)
             endif()
 
             # Checkout git submodules under this path

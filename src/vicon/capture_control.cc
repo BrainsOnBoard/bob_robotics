@@ -1,6 +1,5 @@
 #ifndef _WIN32
 // BoB robotics includes
-#include "os/net.h"
 #include "vicon/capture_control.h"
 
 // Standard C++ includes
@@ -8,13 +7,6 @@
 
 // Standard C includes
 #include <cstring>
-
-// POSIX networking includes
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace BoBRobotics {
 namespace Vicon {

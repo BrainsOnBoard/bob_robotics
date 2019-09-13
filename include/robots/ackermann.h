@@ -1,9 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#ifdef USE_BOB_HID
 #include "hid/joystick.h"
-#endif
 
 // Third-party includes
 #include "third_party/units.h"
@@ -19,10 +17,7 @@ class Ackermann
 public:
     virtual ~Ackermann();
 
-#ifdef USE_BOB_HID
     virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
-#endif
-
     virtual units::angle::degree_t getMaximumTurn() const = 0;
     virtual void moveForward(float speed) = 0;
     virtual void steer(float left) = 0;

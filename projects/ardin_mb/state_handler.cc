@@ -105,10 +105,6 @@ bool StateHandler::handleEvent(State state, Event event)
                 // Snap ant to next snapshot point
                 m_Pose = m_Route[m_TrainPoint];
 
-                // Update window title
-                //std::string windowTitle = "Ant World - Training snaphot " + std::to_string(m_TrainPoint) + "/" + std::to_string(m_Route.size());
-                //glfwSetWindowTitle(window, windowTitle.c_str());
-
                 // Go onto next training point
                 m_TrainPoint++;
             }

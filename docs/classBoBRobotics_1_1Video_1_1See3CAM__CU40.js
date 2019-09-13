@@ -20,7 +20,6 @@ var classBoBRobotics_1_1Video_1_1See3CAM__CU40 =
     [ "getExposure", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a3abc9071d89ae189ad937bd4bbfa8497", null ],
     [ "getHeight", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a317885d4e3a50a118a46e2bf070e1505", null ],
     [ "getOutputSize", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a714fd9c967f88523d22e9b400ef5fcdc", null ],
-    [ "getSize", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#af3c2c3e350cc8d6ee30ed2be0e8d5ea8", null ],
     [ "getSuperPixelHeight", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#afef36847a9a7524437a48eec053b85dd", null ],
     [ "getSuperPixelSize", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a22efaf39c7eebe16cbb1bede9e79a1d1", null ],
     [ "getSuperPixelWidth", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a4fa0b5faf7620bbd7a09971e9e226001", null ],

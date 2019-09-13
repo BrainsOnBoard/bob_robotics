@@ -92,8 +92,8 @@ $(document).ready(function(){initNavTree('md_projects_stone_cx_README.html','');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Published model of Bee path integration, re-implemented using sigmoid units in GeNN. Not configured for GPU simulation so build using the following steps:</p><ul>
-<li><code>genn-buildmodel.sh -c model.cc</code> to build CPU-only model</li>
-<li><code>make -f Makefile</code> to build simulated version, <code>make -f MakefileVicon</code> to build robot version using Vicon tracking and <code>make -f MakefileRobot</code> to build robot version using optical flow for velocity and magnetic sensor for heading.</li>
+<li>Build using CMake. If you don't have an NVIDIA GPU, build with the following option: <code>cmake -DGENN_CPU_ONLY=on ..</code></li>
+<li>By default, the simulated version will be built. Set <code>-DTARGET=robotVicon</code> to build robot version using Vicon tracking and <code>-DTARGET=robotDeadReckon</code> to build robot version using optical flow for velocity and magnetic sensor for heading.</li>
 </ul>
 <p>Outward path for both robot models is controlled using joystick device. Pressing 1st button (A on Xbox360 controller) starts homing and 2nd button (B on Xbox360 controller) stops model.</p>
 <p>Stone, T., Webb, B., Adden, A., Weddig, N. B., Honkanen, A., Templin, R., … Heinze, S. (2017). An anatomically constrained model for path integration in the bee brain. Current Biology, (in press), 1–17. <a href="https://doi.org/10.1016/j.cub.2017.08.052">https://doi.org/10.1016/j.cub.2017.08.052</a> </p>

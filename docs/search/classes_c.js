@@ -1,6 +1,30 @@
 var searchData=
 [
-  ['magnetosettings',['MagnetoSettings',['../structBoBRobotics_1_1LM9DS1_1_1MagnetoSettings.html',1,'BoBRobotics::LM9DS1']]],
+  ['matcher',['Matcher',['../structCatch_1_1Matchers_1_1Impl_1_1Matcher.html',1,'Catch::Matchers::Impl']]],
+  ['matcher_3c_20std_3a_3astring_20_3e',['Matcher&lt; std::string &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1Matcher.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl',['MatcherImpl',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20allof_3c_20expressiont_20_3e_2c_20expressiont_20_3e',['MatcherImpl&lt; AllOf&lt; ExpressionT &gt;, ExpressionT &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20anyof_3c_20expressiont_20_3e_2c_20expressiont_20_3e',['MatcherImpl&lt; AnyOf&lt; ExpressionT &gt;, ExpressionT &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20contains_2c_20std_3a_3astring_20_3e',['MatcherImpl&lt; Contains, std::string &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20endswith_2c_20std_3a_3astring_20_3e',['MatcherImpl&lt; EndsWith, std::string &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20equals_2c_20std_3a_3astring_20_3e',['MatcherImpl&lt; Equals, std::string &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20not_3c_20expressiont_20_3e_2c_20expressiont_20_3e',['MatcherImpl&lt; Not&lt; ExpressionT &gt;, ExpressionT &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
+  ['matcherimpl_3c_20startswith_2c_20std_3a_3astring_20_3e',['MatcherImpl&lt; StartsWith, std::string &gt;',['../structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html',1,'Catch::Matchers::Impl']]],
   ['mbmemory',['MBMemory',['../classMBMemory.html',1,'']]],
-  ['missing_5fcolumn_5fin_5fheader',['missing_column_in_header',['../structio_1_1error_1_1missing__column__in__header.html',1,'io::error']]]
+  ['mecanum',['Mecanum',['../classBoBRobotics_1_1Robots_1_1Mecanum.html',1,'BoBRobotics::Robots']]],
+  ['medium_5fmotor',['medium_motor',['../classev3dev_1_1medium__motor.html',1,'ev3dev']]],
+  ['memorybase',['MemoryBase',['../classMemoryBase.html',1,'']]],
+  ['messagebuilder',['MessageBuilder',['../structCatch_1_1MessageBuilder.html',1,'Catch']]],
+  ['messageinfo',['MessageInfo',['../structCatch_1_1MessageInfo.html',1,'Catch']]],
+  ['messageonlyformatter',['MessageOnlyFormatter',['../classplog_1_1MessageOnlyFormatter.html',1,'plog']]],
+  ['methodtestcase',['MethodTestCase',['../classCatch_1_1MethodTestCase.html',1,'Catch']]],
+  ['mindstormsimu',['MindstormsIMU',['../classBoBRobotics_1_1MindstormsIMU.html',1,'BoBRobotics']]],
+  ['missing_5fcolumn_5fin_5fheader',['missing_column_in_header',['../structio_1_1error_1_1missing__column__in__header.html',1,'io::error']]],
+  ['motor',['motor',['../classev3dev_1_1motor.html',1,'ev3dev']]],
+  ['mutex',['Mutex',['../classplog_1_1util_1_1Mutex.html',1,'plog::util']]],
+  ['mutexlock',['MutexLock',['../classplog_1_1util_1_1MutexLock.html',1,'plog::util']]],
+  ['myappender',['MyAppender',['../classplog_1_1MyAppender.html',1,'plog']]],
+  ['myclass',['MyClass',['../classMyClass.html',1,'']]],
+  ['myconverter',['MyConverter',['../classplog_1_1MyConverter.html',1,'plog']]],
+  ['myformatter',['MyFormatter',['../classplog_1_1MyFormatter.html',1,'plog']]]
 ];

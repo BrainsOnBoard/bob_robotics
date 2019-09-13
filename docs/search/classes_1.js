@@ -1,15 +1,23 @@
 var searchData=
 [
   ['absdiff',['AbsDiff',['../classBoBRobotics_1_1Navigation_1_1AbsDiff.html',1,'BoBRobotics::Navigation']]],
-  ['accelsettings',['AccelSettings',['../structBoBRobotics_1_1LM9DS1_1_1AccelSettings.html',1,'BoBRobotics::LM9DS1']]],
+  ['ackermann',['Ackermann',['../classBoBRobotics_1_1Robots_1_1Ackermann.html',1,'BoBRobotics::Robots']]],
   ['adexp',['AdExp',['../classBoBRobotics_1_1GeNNModels_1_1AdExp.html',1,'BoBRobotics::GeNNModels']]],
   ['agent',['Agent',['../classAgent.html',1,'']]],
+  ['allof',['AllOf',['../classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AllOf.html',1,'Catch::Matchers::Impl::Generic']]],
   ['alphacurr',['AlphaCurr',['../classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html',1,'BoBRobotics::GeNNModels']]],
   ['analoguecsvrecorder',['AnalogueCSVRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html',1,'BoBRobotics::GeNNUtils']]],
+  ['androidappender',['AndroidAppender',['../classplog_1_1AndroidAppender.html',1,'plog']]],
   ['antagent',['AntAgent',['../classBoBRobotics_1_1AntWorld_1_1AntAgent.html',1,'BoBRobotics::AntWorld']]],
   ['antworlddatabasecreator',['AntWorldDatabaseCreator',['../classAntWorldDatabaseCreator.html',1,'']]],
   ['antworldrotater',['AntWorldRotater',['../classBoBRobotics_1_1Navigation_1_1AntWorldRotater.html',1,'BoBRobotics::Navigation']]],
-  ['arenaobject',['ArenaObject',['../classArenaObject.html',1,'']]],
+  ['anyof',['AnyOf',['../classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AnyOf.html',1,'Catch::Matchers::Impl::Generic']]],
+  ['approx',['Approx',['../classCatch_1_1Detail_1_1Approx.html',1,'Catch::Detail']]],
+  ['arenaobject',['ArenaObject',['../classBoBRobotics_1_1Viz_1_1ArenaObject.html',1,'BoBRobotics::Viz']]],
   ['assertionfailedexception',['AssertionFailedException',['../classBoBRobotics_1_1AssertionFailedException.html',1,'BoBRobotics']]],
-  ['asynchronousreader',['AsynchronousReader',['../classio_1_1detail_1_1AsynchronousReader.html',1,'io::detail']]]
+  ['assertioninfo',['AssertionInfo',['../structCatch_1_1AssertionInfo.html',1,'Catch']]],
+  ['assertionresult',['AssertionResult',['../classCatch_1_1AssertionResult.html',1,'Catch']]],
+  ['assertionresultdata',['AssertionResultData',['../structCatch_1_1AssertionResultData.html',1,'Catch']]],
+  ['asynchronousreader',['AsynchronousReader',['../classio_1_1detail_1_1AsynchronousReader.html',1,'io::detail']]],
+  ['autoreg',['AutoReg',['../structCatch_1_1AutoReg.html',1,'Catch']]]
 ];

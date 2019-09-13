@@ -92,12 +92,11 @@ $(document).ready(function(){initNavTree('md_projects_ardin_mb_README.html','');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Published model of navigation using a spiking model of the ant mushroom body:</p><ul>
-<li><code>genn-buildmodel.sh model.cc</code> to build network model (<code>genn-buildmodel.sh -c model.cc</code> if you don't have a NVIDIA GPU)</li>
-<li><code>make</code> to build simulator. Spikes can be recorded with <code>RECORD_SPIKES=1</code> option and synaptic weights with <code>RECORD_TERMINAL_SYNAPSE_STATE=1</code> option. If you don't have an NVIDIA GPU you should also specify the <code>CPU_ONLY=1</code> option.</li>
-<li><code>./ant_word ROUTE_FILE_NAME</code> to run the simulator.</li>
+<li>Build simulator with CMake. Spikes can be recorded with <code>-DRECORD_SPIKES=on</code> option (e.g. <code>cmake -DRECORD_SPIKES=on ..</code>) and synaptic weights with <code>-DRECORD_TERMINAL_SYNAPSE_STATE=on</code> option. If you don't have an NVIDIA GPU you should also specify the <code>-DGENN_CPU_ONLY=on</code> option.</li>
+<li><code>./ardin_mb ROUTE_FILE_NAME</code> to run the simulator.</li>
 <li>GLFW3 and GLEW are required - on Ubuntu can be installed with <code>sudo apt-get install libglew-dev libglfw3-dev</code></li>
 </ul>
-<p>If a route filename is passed to the simulator, the simulated ant will be trained on the route and then attempt to repeat it. Otherwise arrows keys allow manual ant exploration, snapshots can be trained with <em>space</em> and matched with <em>enter</em>. The visualisation in this example is a C++ port of the Matlab code publically avaiable at www.insectvision.org/walking-insects/antnavigationchallenge. Pressing <em>w</em> performs a random walk and pressing <em>v</em> after training calculates a vector field showing the best heading direction at each point in a grid surrounding the route.</p>
+<p>If a route filename is passed to the simulator, the simulated ant will be trained on the route and then attempt to repeat it. Otherwise arrows keys allow manual ant exploration, snapshots can be trained with <em>space</em> and matched with <em>enter</em>. The visualisation in this example is a C++ port of the Matlab code publically avaiable at <a href="http://www.insectvision.org/walking-insects/antnavigationchallenge">here</a>. Pressing <em>w</em> performs a random walk and pressing <em>v</em> after training calculates a vector field showing the best heading direction at each point in a grid surrounding the route.</p>
 <p>Ardin, P., Peng, F., Mangan, M., Lagogiannis, K., &amp; Webb, B. (2016). Using an Insect Mushroom Body Circuit to Encode Route Memory in Complex Natural Environments. PLoS Computational Biology, 12(2), 1–22. <a href="https://doi.org/10.1371/journal.pcbi.1004683">https://doi.org/10.1371/journal.pcbi.1004683</a> </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->

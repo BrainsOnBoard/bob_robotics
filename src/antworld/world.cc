@@ -22,8 +22,8 @@
 //----------------------------------------------------------------------------
 namespace
 {
-template<unsigned int N>
-void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float scale)
+template<unsigned int N, typename T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
+void readVector(std::istringstream &stream, std::vector<T> &vector, float scale)
 {
     // Read components and push back
     GLfloat x;
@@ -33,11 +33,22 @@ void readVector(std::istringstream &stream, std::vector<GLfloat> &vector, float 
     }
 }
 //----------------------------------------------------------------------------
+template<unsigned int N, typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
+void readVector(std::istringstream &stream, std::vector<T> &vector, float scale)
+{
+    // Read components and push back
+    GLfloat x;
+    for(unsigned int i = 0; i < N; i++) {
+        stream >> x;
+        vector.push_back((T)std::round(x * scale));
+    }
+}
+//----------------------------------------------------------------------------
 void readFace(std::istringstream &lineStream,
               const std::vector<GLfloat> &rawPositions,
-              const std::vector<GLfloat> &rawColours,
+              const std::vector<GLbyte> &rawColours,
               const std::vector<GLfloat> &rawTexCoords,
-              std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>, std::vector<GLfloat>> &currentObjSurface)
+              std::tuple<std::string, std::vector<GLfloat>, std::vector<GLbyte>, std::vector<GLfloat>> &currentObjSurface)
 {
     // Get references to current material's positions and texture coordinates
     auto &surfacePositions = std::get<1>(currentObjSurface);
@@ -219,7 +230,12 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
     LOG_DEBUG << "Max texture size: " << maxTextureSize;
 
     // Vector of geometry associated with each named surface (in unindexed triangle format)
-    std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLfloat>, std::vector<GLfloat>>> objSurfaces;
+    // Each surface consists of:
+    // 0 - a name
+    // 1 - a vector of floating point vertex positions (x, y, z)
+    // 2 - a vector of 8-bit colours (r, g, b)
+    // 3 - a vector of floating point texture coordinates (U, V)
+    std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLbyte>, std::vector<GLfloat>>> objSurfaces;
 
     // Map of material names to texture indices
     std::map<std::string, Texture*> textureNames;
@@ -227,9 +243,8 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
     // Parser
     {
         // Vectors to hold 'raw' positions, colours and texture coordinates read from obj
-        // **TODO** 8-bit colours
         std::vector<GLfloat> rawPositions;
-        std::vector<GLfloat> rawColours;
+        std::vector<GLbyte> rawColours;
         std::vector<GLfloat> rawTexCoords;
 
         // Open obj file
@@ -277,7 +292,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
 
                 // If line has more data, read it into raw colours
                 if(!lineStream.eof()) {
-                    readVector<3>(lineStream, rawColours, 1.0);
+                    readVector<3>(lineStream, rawColours, 255.0f);
                 }
             }
             else if(commandString == "vt") {
@@ -292,7 +307,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
                 lineStream >> parameterString;
                 LOG_INFO << "\tReading surface: " << parameterString;
                 objSurfaces.emplace_back(parameterString, std::initializer_list<GLfloat>(),
-                                         std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
+                                         std::initializer_list<GLbyte>(), std::initializer_list<GLfloat>());
             }
             else if(commandString == "s") {
                 // ignore smoothing
@@ -302,7 +317,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
                 if(objSurfaces.empty()) {
                     LOG_WARNING << "Encountered faces before any surfaces are defined - adding default surface";
                     objSurfaces.emplace_back("default", std::initializer_list<GLfloat>(),
-                                             std::initializer_list<GLfloat>(), std::initializer_list<GLfloat>());
+                                             std::initializer_list<GLbyte>(), std::initializer_list<GLfloat>());
                 }
 
                 // Read face

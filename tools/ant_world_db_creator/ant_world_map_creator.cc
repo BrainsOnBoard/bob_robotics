@@ -11,63 +11,38 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// GLFW
-#include <GLFW/glfw3.h>
+// SFML includes
+#include <SFML/Graphics.hpp>
 
 using namespace BoBRobotics;
 
-// Anonymous namespace
-namespace
-{
-void handleGLFWError(int errorNumber, const char *message)
-{
-    LOGE << "GLFW error number: " << errorNumber << ", message:" << message;
-}
-
+namespace {
 void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
 {
     throw std::runtime_error(message);
 }
-
 }
+
 
 int main(int, char **argv)
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
 
-    // Set GLFW error callback
-    glfwSetErrorCallback(handleGLFWError);
+    // Create SFML window
+    sf::Window window(sf::VideoMode(renderWidth, renderHeight),
+                      "Ant world",
+                      sf::Style::Titlebar | sf::Style::Close);
 
-    // Initialize the library
-    if(!glfwInit()) {
-        LOGW << "Failed to initialize GLFW";
-        return EXIT_FAILURE;
-    }
-
-    // Prevent window being resized
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(renderWidth, renderHeight, "Ant world", nullptr, nullptr);
-    if(!window)
-    {
-        glfwTerminate();
-        LOGW << "Failed to create window";
-        return EXIT_FAILURE;
-    }
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window);
+    // Enable VSync
+    window.setVerticalSyncEnabled(true);
+    window.setActive(true);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
-        LOGW << "Failed to initialize GLEW";
+        LOGE << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
 
     glDebugMessageCallback(handleGLError, nullptr);
 
@@ -103,8 +78,7 @@ int main(int, char **argv)
     // Render first person
     renderer.renderTopDownView(0, 0, renderWidth, renderHeight);
 
-    // Swap front and back buffers
-    glfwSwapBuffers(window);
+    window.display();
 
     // Read snapshot
     input.readFrame(map);

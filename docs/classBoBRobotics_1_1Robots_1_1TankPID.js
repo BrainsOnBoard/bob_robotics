@@ -1,7 +1,10 @@
 var classBoBRobotics_1_1Robots_1_1TankPID =
 [
-    [ "TankPID", "classBoBRobotics_1_1Robots_1_1TankPID.html#a8384e41140b85a62821bbec54bb97f9f", null ],
-    [ "driveRobot", "classBoBRobotics_1_1Robots_1_1TankPID.html#a569e6e6eaf7a148582c7177c614f9174", null ],
-    [ "handleEvent", "classBoBRobotics_1_1Robots_1_1TankPID.html#ae2554f704c5b58306d9fcf3eeb24366b", null ],
-    [ "start", "classBoBRobotics_1_1Robots_1_1TankPID.html#a8479625f16a151cb81b6aec1af371e3a", null ]
+    [ "TankPID", "classBoBRobotics_1_1Robots_1_1TankPID.html#a6c8c013470e5ff0465245af5cc88b50b", null ],
+    [ "getPose", "classBoBRobotics_1_1Robots_1_1TankPID.html#ac37aa64bacf8b4bc7173ac9e38a5d907", null ],
+    [ "getRobot", "classBoBRobotics_1_1Robots_1_1TankPID.html#a98f621d18a02a41a9104c369a4b7dbbd", null ],
+    [ "getRobot", "classBoBRobotics_1_1Robots_1_1TankPID.html#a8e30a39ecddd7c7276dc345b0367c461", null ],
+    [ "moveTo", "classBoBRobotics_1_1Robots_1_1TankPID.html#a87f3943e6d97d278bbc77a0351e12712", null ],
+    [ "pollPositioner", "classBoBRobotics_1_1Robots_1_1TankPID.html#a137136007d371ecaa6963bebaa4c1516", null ],
+    [ "reset", "classBoBRobotics_1_1Robots_1_1TankPID.html#ae7340fd2f6ec608206033f59641914e8", null ]
 ];

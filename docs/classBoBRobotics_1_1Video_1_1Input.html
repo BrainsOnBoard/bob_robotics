@@ -106,14 +106,15 @@ Inheritance diagram for BoBRobotics::Video::Input:</div>
  <div class="center">
   <img src="classBoBRobotics_1_1Video_1_1Input.png" usemap="#BoBRobotics::Video::Input_map" alt=""/>
   <map id="BoBRobotics::Video::Input_map" name="BoBRobotics::Video::Input_map">
-<area href="classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html" alt="BoBRobotics::AntWorld::RenderTargetInput" shape="rect" coords="0,56,309,80"/>
-<area href="classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html" title="Interface to the drone&#39;s built-in camera." alt="BoBRobotics::Robots::Bebop::VideoStream" shape="rect" coords="319,56,628,80"/>
-<area href="classBoBRobotics_1_1Video_1_1NetSource.html" title="Object for receiving video transmitted over the network by a NetSink." alt="BoBRobotics::Video::NetSource" shape="rect" coords="638,56,947,80"/>
-<area href="classBoBRobotics_1_1Video_1_1OpenCVInput.html" title="A thin wrapper for reading from any video source supported by OpenCV." alt="BoBRobotics::Video::OpenCVInput" shape="rect" coords="957,56,1266,80"/>
-<area href="classBoBRobotics_1_1Video_1_1OpenGL.html" title="Read a video stream from an OpenGL buffer." alt="BoBRobotics::Video::OpenGL" shape="rect" coords="1276,56,1585,80"/>
-<area href="classBoBRobotics_1_1Video_1_1RandomInput.html" title="A Video::Input which generates white noise, for testing purposes." alt="BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;" shape="rect" coords="1595,56,1904,80"/>
-<area href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html" title="Read video from a See3CAM_CU40." alt="BoBRobotics::Video::See3CAM_CU40" shape="rect" coords="1914,56,2223,80"/>
-<area href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html" title="A simple agent with a position and a panoramic view of the current AntWorld." alt="BoBRobotics::AntWorld::AntAgent" shape="rect" coords="1276,112,1585,136"/>
+<area href="classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html" alt="BoBRobotics::AntWorld::RenderTargetInput" shape="rect" coords="319,56,628,80"/>
+<area href="classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html" title="Interface to the drone&#39;s built-in camera." alt="BoBRobotics::Robots::Bebop::VideoStream" shape="rect" coords="319,112,628,136"/>
+<area href="classBoBRobotics_1_1Video_1_1GazeboCameraInput.html" title="A thin wrapper for reading from any Gazebo camera feed." alt="BoBRobotics::Video::GazeboCameraInput" shape="rect" coords="319,168,628,192"/>
+<area href="classBoBRobotics_1_1Video_1_1NetSource.html" title="Object for receiving video transmitted over the network by a NetSink." alt="BoBRobotics::Video::NetSource" shape="rect" coords="319,224,628,248"/>
+<area href="classBoBRobotics_1_1Video_1_1OpenCVInput.html" title="A thin wrapper for reading from any video source supported by OpenCV." alt="BoBRobotics::Video::OpenCVInput" shape="rect" coords="319,280,628,304"/>
+<area href="classBoBRobotics_1_1Video_1_1OpenGL.html" title="Read a video stream from an OpenGL buffer." alt="BoBRobotics::Video::OpenGL" shape="rect" coords="319,336,628,360"/>
+<area href="classBoBRobotics_1_1Video_1_1RandomInput.html" title="A Video::Input which generates white noise, for testing purposes." alt="BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;" shape="rect" coords="319,392,628,416"/>
+<area href="classBoBRobotics_1_1Video_1_1RPiCamera.html" alt="BoBRobotics::Video::RPiCamera" shape="rect" coords="319,448,628,472"/>
+<area href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html" title="Read video from a See3CAM_CU40." alt="BoBRobotics::Video::See3CAM_CU40" shape="rect" coords="319,504,628,528"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -122,16 +123,13 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4b6815ca214b513c2a48dca0b6da5933"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a4b6815ca214b513c2a48dca0b6da5933">createUnwrapper</a> (const cv::Size &amp;unwrapRes) const</td></tr>
 <tr class="memdesc:a4b6815ca214b513c2a48dca0b6da5933"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> object for this video stream.  <a href="#a4b6815ca214b513c2a48dca0b6da5933">More...</a><br /></td></tr>
 <tr class="separator:a4b6815ca214b513c2a48dca0b6da5933"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac3971ac0d70604f3f4ce3174ca721ca"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#aac3971ac0d70604f3f4ce3174ca721ca">getCameraName</a> () const</td></tr>
-<tr class="memdesc:aac3971ac0d70604f3f4ce3174ca721ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the name of this type of camera as a (short) string.  <a href="#aac3971ac0d70604f3f4ce3174ca721ca">More...</a><br /></td></tr>
-<tr class="separator:aac3971ac0d70604f3f4ce3174ca721ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab85f9980b5aae7724534508782b9d31b"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#ab85f9980b5aae7724534508782b9d31b">readGreyscaleFrame</a> (cv::Mat &amp;outFrame)</td></tr>
-<tr class="memdesc:ab85f9980b5aae7724534508782b9d31b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to read a frame in greyscale from this video source.  <a href="#ab85f9980b5aae7724534508782b9d31b">More...</a><br /></td></tr>
-<tr class="separator:ab85f9980b5aae7724534508782b9d31b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b00495b17ffe471dd23f89bff3384f2"><td class="memItemLeft" align="right" valign="top"><a id="a0b00495b17ffe471dd23f89bff3384f2"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a0b00495b17ffe471dd23f89bff3384f2">needsUnwrapping</a> () const</td></tr>
-<tr class="memdesc:a0b00495b17ffe471dd23f89bff3384f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether this video source needs unwrapping with an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a>. <br /></td></tr>
-<tr class="separator:a0b00495b17ffe471dd23f89bff3384f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2424faff1a0ff1b53601090c31c56b6a"><td class="memItemLeft" align="right" valign="top">virtual std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a2424faff1a0ff1b53601090c31c56b6a">getCameraName</a> () const</td></tr>
+<tr class="memdesc:a2424faff1a0ff1b53601090c31c56b6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the name of this type of camera as a (short) string.  <a href="#a2424faff1a0ff1b53601090c31c56b6a">More...</a><br /></td></tr>
+<tr class="separator:a2424faff1a0ff1b53601090c31c56b6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa54a883e73a59cf152e5363961d9aef0"><td class="memItemLeft" align="right" valign="top"><a id="aa54a883e73a59cf152e5363961d9aef0"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#aa54a883e73a59cf152e5363961d9aef0">needsUnwrapping</a> () const</td></tr>
+<tr class="memdesc:aa54a883e73a59cf152e5363961d9aef0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether this video source needs unwrapping with an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a>. <br /></td></tr>
+<tr class="separator:aa54a883e73a59cf152e5363961d9aef0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc9d9390fbe7760b885bac78eb7fa5b9"><td class="memItemLeft" align="right" valign="top"><a id="acc9d9390fbe7760b885bac78eb7fa5b9"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#acc9d9390fbe7760b885bac78eb7fa5b9">setOutputSize</a> (const cv::Size &amp;)</td></tr>
 <tr class="memdesc:acc9d9390fbe7760b885bac78eb7fa5b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the output resolution of this video stream. <br /></td></tr>
@@ -143,6 +141,9 @@ virtual cv::Size&#160;</td><td class="memItemRight" valign="bottom"><a class="el
 <tr class="memitem:a4418eaac74351b81051d3d8aa0f38f42"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a4418eaac74351b81051d3d8aa0f38f42">readFrame</a> (cv::Mat &amp;outFrame)=0</td></tr>
 <tr class="memdesc:a4418eaac74351b81051d3d8aa0f38f42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to read a frame in colour from this video source.  <a href="#a4418eaac74351b81051d3d8aa0f38f42">More...</a><br /></td></tr>
 <tr class="separator:a4418eaac74351b81051d3d8aa0f38f42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e032c7159b4d1875b8bc91b65e19d35"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a2e032c7159b4d1875b8bc91b65e19d35">readGreyscaleFrame</a> (cv::Mat &amp;outFrame)</td></tr>
+<tr class="memdesc:a2e032c7159b4d1875b8bc91b65e19d35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try to read a frame in greyscale from this video source.  <a href="#a2e032c7159b4d1875b8bc91b65e19d35">More...</a><br /></td></tr>
+<tr class="separator:a2e032c7159b4d1875b8bc91b65e19d35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a90b7197c48f9bcca8bc59f63e63094e3"><td class="memItemLeft" align="right" valign="top"><a id="a90b7197c48f9bcca8bc59f63e63094e3"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a90b7197c48f9bcca8bc59f63e63094e3">readFrameSync</a> (cv::Mat &amp;outFrame)</td></tr>
 <tr class="memdesc:a90b7197c48f9bcca8bc59f63e63094e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a frame synchronously, blocking until a new frame is received. <br /></td></tr>
@@ -166,9 +167,6 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> BoBRobotics::Video::Input::createUnwrapper </td>
@@ -178,11 +176,6 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
           <td> const</td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Create an <a class="el" href="classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html">ImgProc::OpenCVUnwrap360</a> object for this video stream. </p>
@@ -195,8 +188,8 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
 
 </div>
 </div>
-<a id="aac3971ac0d70604f3f4ce3174ca721ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aac3971ac0d70604f3f4ce3174ca721ca">&#9670;&nbsp;</a></span>getCameraName()</h2>
+<a id="a2424faff1a0ff1b53601090c31c56b6a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2424faff1a0ff1b53601090c31c56b6a">&#9670;&nbsp;</a></span>getCameraName()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -205,7 +198,7 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual std::string BoBRobotics::Video::Input::getCameraName </td>
+          <td class="memname">std::string BoBRobotics::Video::Input::getCameraName </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -213,7 +206,7 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -221,7 +214,7 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
 <p>Get the name of this type of camera as a (short) string. </p>
 <p>Note that this is used to load the appropriate unwrapping parameters (we look for a file called [camera name].yaml). </p>
 
-<p>Reimplemented in <a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html#a28b5b7bdc0e2855e0794857cbfac85ce">BoBRobotics::Robots::Bebop::VideoStream</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#afc1006d483f5249c997ad2e892cd12db">BoBRobotics::Video::See3CAM_CU40</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenCVInput.html#a86563d4a8d81cff9e4421f93727e06e3">BoBRobotics::Video::OpenCVInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1NetSource.html#ae3e5f9949960317e7d61ca7019851785">BoBRobotics::Video::NetSource</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1RandomInput.html#a4729534a90b0c3f8909af69978babc3b">BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;</a>, <a class="el" href="classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html#a0218694218079980e1f233e53fc2350c">BoBRobotics::AntWorld::RenderTargetInput</a>, and <a class="el" href="classBoBRobotics_1_1Video_1_1OpenGL.html#a76ceac432c2844d6b137683543475f77">BoBRobotics::Video::OpenGL</a>.</p>
+<p>Reimplemented in <a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html#a28b5b7bdc0e2855e0794857cbfac85ce">BoBRobotics::Robots::Bebop::VideoStream</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1GazeboCameraInput.html#af3f92b8761cfe2aa111b3af536233118">BoBRobotics::Video::GazeboCameraInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenCVInput.html#aff4ed5f523ffaa2c10048405bc17a25a">BoBRobotics::Video::OpenCVInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#afc1006d483f5249c997ad2e892cd12db">BoBRobotics::Video::See3CAM_CU40</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1RandomInput.html#a4729534a90b0c3f8909af69978babc3b">BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;</a>, <a class="el" href="classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html#a0218694218079980e1f233e53fc2350c">BoBRobotics::AntWorld::RenderTargetInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1NetSource.html#a2124fe870e05858c1b5125a4b9d85728">BoBRobotics::Video::NetSource</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenGL.html#a1489da53e832ac49cefd3e77b78afb5d">BoBRobotics::Video::OpenGL</a>, and <a class="el" href="classBoBRobotics_1_1Video_1_1RPiCamera.html#a3014112fc8adb4d738195397f1e65ba8">BoBRobotics::Video::RPiCamera</a>.</p>
 
 </div>
 </div>
@@ -250,14 +243,15 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
 </div><div class="memdoc">
 
 <p>Try to read a frame in colour from this video source. </p>
+<p>The output frame should have type CV_8UC3.</p>
 <dl class="section return"><dt>Returns</dt><dd>Whether a new frame was read </dd></dl>
 
-<p>Implemented in <a class="el" href="classBoBRobotics_1_1AntWorld_1_1AntAgent.html#a1328df639c0331df2e060625c36579d8">BoBRobotics::AntWorld::AntAgent</a>, <a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html#acfa5cd702cda05eeffa6c1a23121c270">BoBRobotics::Robots::Bebop::VideoStream</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a86e275fc580906904afd7b61b5f33514">BoBRobotics::Video::See3CAM_CU40</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenCVInput.html#acea7312d56dcf54feb7a53ce6ea4ab77">BoBRobotics::Video::OpenCVInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1NetSource.html#abe870654657d83aea83f52094b568de1">BoBRobotics::Video::NetSource</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenGL.html#a61b02d3195b420a8122bec459d6de5bb">BoBRobotics::Video::OpenGL</a>, <a class="el" href="classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html#acdac91e13680d142f4b4587a3b4301bd">BoBRobotics::AntWorld::RenderTargetInput</a>, and <a class="el" href="classBoBRobotics_1_1Video_1_1RandomInput.html#a182505eff559934a6f60aaecdd7541db">BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html#acfa5cd702cda05eeffa6c1a23121c270">BoBRobotics::Robots::Bebop::VideoStream</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1GazeboCameraInput.html#af569cedcada59716c37f9cbbd1224ea4">BoBRobotics::Video::GazeboCameraInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenCVInput.html#adf00df20f9cac0e899dd3817b3891eab">BoBRobotics::Video::OpenCVInput</a>, <a class="el" href="classBoBRobotics_1_1AntWorld_1_1Camera.html#aafe4619f4d4c142dbc7dc7fbf7f79b26">BoBRobotics::AntWorld::Camera</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a86e275fc580906904afd7b61b5f33514">BoBRobotics::Video::See3CAM_CU40</a>, <a class="el" href="classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html#acdac91e13680d142f4b4587a3b4301bd">BoBRobotics::AntWorld::RenderTargetInput</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1NetSource.html#ac26041de5ba10e51c500e82742c924c5">BoBRobotics::Video::NetSource</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1OpenGL.html#a013dd2ba922f2a7257df53f91d77dfd6">BoBRobotics::Video::OpenGL</a>, <a class="el" href="classBoBRobotics_1_1Video_1_1RandomInput.html#a182505eff559934a6f60aaecdd7541db">BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;</a>, and <a class="el" href="classBoBRobotics_1_1Video_1_1RPiCamera.html#a1fbcc894046051c5fc87fdd25e3b7dcf">BoBRobotics::Video::RPiCamera</a>.</p>
 
 </div>
 </div>
-<a id="ab85f9980b5aae7724534508782b9d31b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab85f9980b5aae7724534508782b9d31b">&#9670;&nbsp;</a></span>readGreyscaleFrame()</h2>
+<a id="a2e032c7159b4d1875b8bc91b65e19d35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e032c7159b4d1875b8bc91b65e19d35">&#9670;&nbsp;</a></span>readGreyscaleFrame()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -266,7 +260,7 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual bool BoBRobotics::Video::Input::readGreyscaleFrame </td>
+          <td class="memname">bool BoBRobotics::Video::Input::readGreyscaleFrame </td>
           <td>(</td>
           <td class="paramtype">cv::Mat &amp;&#160;</td>
           <td class="paramname"><em>outFrame</em></td><td>)</td>
@@ -275,20 +269,22 @@ static constexpr const char *&#160;</td><td class="memItemRight" valign="bottom"
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>Try to read a frame in greyscale from this video source. </p>
+<p>The output frame should have type CV_8UC.</p>
 <dl class="section return"><dt>Returns</dt><dd>Whether a new frame was read </dd></dl>
 
 <p>Reimplemented in <a class="el" href="classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#a33e76738ae9f1ab9f590f3917698fc17">BoBRobotics::Video::See3CAM_CU40</a>, and <a class="el" href="classBoBRobotics_1_1Video_1_1RandomInput.html#a8e7b815ae02f6efbe7c14c51e0b3f6d2">BoBRobotics::Video::RandomInput&lt; GeneratorType &gt;</a>.</p>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
-<li>video/input.h</li>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>include/video/input.h</li>
+<li>src/video/input.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

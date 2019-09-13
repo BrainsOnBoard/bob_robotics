@@ -1,4 +1,6 @@
+from __future__ import print_function
 from os import path
+
 try:
     from numpy import __file__ as numpyloc
 

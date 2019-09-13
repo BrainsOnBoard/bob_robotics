@@ -107,27 +107,29 @@ Inheritance diagram for BoBRobotics::Robots::Tank:</div>
  <div class="center">
   <img src="classBoBRobotics_1_1Robots_1_1Tank.png" usemap="#BoBRobotics::Robots::Tank_map" alt=""/>
   <map id="BoBRobotics::Robots::Tank_map" name="BoBRobotics::Robots::Tank_map">
-<area href="classBoBRobotics_1_1Robots_1_1Robot.html" title="A generic abstract class for robots and other moveable agents." alt="BoBRobotics::Robots::Robot" shape="rect" coords="740,0,1100,24"/>
+<area href="classBoBRobotics_1_1Robots_1_1Robot.html" title="A generic abstract class for robots and other moveable agents." alt="BoBRobotics::Robots::Robot" shape="rect" coords="925,0,1285,24"/>
 <area href="classBoBRobotics_1_1Robots_1_1EV3.html" title="Control for a Lego Mindstorms tank robot." alt="BoBRobotics::Robots::EV3" shape="rect" coords="0,112,360,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1Norbot.html" title="An interface for wheeled, Arduino-based robots developed at the University of Sussex." alt="BoBRobotics::Robots::Norbot" shape="rect" coords="370,112,730,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1Gazebo_1_1Tank.html" alt="BoBRobotics::Robots::Gazebo::Tank" shape="rect" coords="370,112,730,136"/>
 <area href="classBoBRobotics_1_1Robots_1_1SimulatedTank.html" alt="BoBRobotics::Robots::SimulatedTank&lt; LengthUnit, AngleUnit &gt;" shape="rect" coords="740,112,1100,136"/>
 <area href="classBoBRobotics_1_1Robots_1_1Surveyor.html" title="An interface for Active Robots&#39; Surveyor line of robots." alt="BoBRobotics::Robots::Surveyor" shape="rect" coords="1110,112,1470,136"/>
-<area href="classBoBRobotics_1_1Robots_1_1TankNetSink.html" title="An interface for transmitting tank steering commands over the network." alt="BoBRobotics::Robots::TankNetSink" shape="rect" coords="1480,112,1840,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1TankNetSinkBase.html" title="An interface for transmitting tank steering commands over the network." alt="BoBRobotics::Robots::TankNetSinkBase&lt; ConnectionType &gt;" shape="rect" coords="1480,112,1840,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1TankNetSinkBase.html" alt="BoBRobotics::Robots::TankNetSinkBase&lt; Net::Client &gt;" shape="rect" coords="1850,112,2210,136"/>
+<area href="classBoBRobotics_1_1Robots_1_1BundledTankNetSink.html" title="Control a robot over the network, initialising the connection in the constructor." alt="BoBRobotics::Robots::BundledTankNetSink" shape="rect" coords="1850,168,2210,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:af512f678e97c20e4b4be83cbd11f0f4d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#af512f678e97c20e4b4be83cbd11f0f4d">moveForward</a> (float speed) override</td></tr>
-<tr class="memdesc:af512f678e97c20e4b4be83cbd11f0f4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move forward at the specified relative speed.  <a href="#af512f678e97c20e4b4be83cbd11f0f4d">More...</a><br /></td></tr>
-<tr class="separator:af512f678e97c20e4b4be83cbd11f0f4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae38816fa5dfadb5c5ec7d584eae393ab"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#ae38816fa5dfadb5c5ec7d584eae393ab">turnOnTheSpot</a> (float clockwiseSpeed) override</td></tr>
-<tr class="memdesc:ae38816fa5dfadb5c5ec7d584eae393ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop moving forward and start turning at the specified relative speed.  <a href="#ae38816fa5dfadb5c5ec7d584eae393ab">More...</a><br /></td></tr>
-<tr class="separator:ae38816fa5dfadb5c5ec7d584eae393ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8555bfb9144b1814d04a007c28855808"><td class="memItemLeft" align="right" valign="top"><a id="a8555bfb9144b1814d04a007c28855808"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#a8555bfb9144b1814d04a007c28855808">stopMoving</a> () override</td></tr>
-<tr class="memdesc:a8555bfb9144b1814d04a007c28855808"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop the robot moving. <br /></td></tr>
-<tr class="separator:a8555bfb9144b1814d04a007c28855808"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac78891ab893cc8d6a51f634ffa90f957"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#ac78891ab893cc8d6a51f634ffa90f957">moveForward</a> (float speed) override</td></tr>
+<tr class="memdesc:ac78891ab893cc8d6a51f634ffa90f957"><td class="mdescLeft">&#160;</td><td class="mdescRight">Move forward at the specified relative speed.  <a href="#ac78891ab893cc8d6a51f634ffa90f957">More...</a><br /></td></tr>
+<tr class="separator:ac78891ab893cc8d6a51f634ffa90f957"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4127163cf2eaab76e36305b5c2349646"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#a4127163cf2eaab76e36305b5c2349646">turnOnTheSpot</a> (float clockwiseSpeed) override</td></tr>
+<tr class="memdesc:a4127163cf2eaab76e36305b5c2349646"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop moving forward and start turning at the specified relative speed.  <a href="#a4127163cf2eaab76e36305b5c2349646">More...</a><br /></td></tr>
+<tr class="separator:a4127163cf2eaab76e36305b5c2349646"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e3222fa1c0b06e4e5478c776e62377a"><td class="memItemLeft" align="right" valign="top"><a id="a4e3222fa1c0b06e4e5478c776e62377a"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#a4e3222fa1c0b06e4e5478c776e62377a">stopMoving</a> () override</td></tr>
+<tr class="memdesc:a4e3222fa1c0b06e4e5478c776e62377a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop the robot moving. <br /></td></tr>
+<tr class="separator:a4e3222fa1c0b06e4e5478c776e62377a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada4eaa92ad7818902263cf1008758231"><td class="memItemLeft" align="right" valign="top"><a id="ada4eaa92ad7818902263cf1008758231"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addJoystick</b> (<a class="el" href="namespaceBoBRobotics_1_1HID.html#acbec2b87006afeb66b5934d1770f55e9">HID::Joystick</a> &amp;joystick, float deadZone=0.25f)</td></tr>
 <tr class="separator:ada4eaa92ad7818902263cf1008758231"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,10 +142,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>drive</b> (const <a c
 <tr class="memitem:a24070a11956ab0a97abd832e7958727b"><td class="memItemLeft" align="right" valign="top"><a id="a24070a11956ab0a97abd832e7958727b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>move</b> (<a class="el" href="classunits_1_1unit__t.html">meters_per_second_t</a> v, <a class="el" href="classunits_1_1unit__t.html">radians_per_second_t</a> clockwiseSpeed, const bool maxScaled=false)</td></tr>
 <tr class="separator:a24070a11956ab0a97abd832e7958727b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5bd26611b70f0c28bf51eaa96c4fd8a"><td class="memItemLeft" align="right" valign="top"><a id="af5bd26611b70f0c28bf51eaa96c4fd8a"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#af5bd26611b70f0c28bf51eaa96c4fd8a">tank</a> (float left, float right)</td></tr>
-<tr class="memdesc:af5bd26611b70f0c28bf51eaa96c4fd8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the left and right motors to the specified speed. <br /></td></tr>
-<tr class="separator:af5bd26611b70f0c28bf51eaa96c4fd8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b0f4647755b30f5bf2e5dc1df7ea7c7"><td class="memItemLeft" align="right" valign="top"><a id="a9b0f4647755b30f5bf2e5dc1df7ea7c7"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#a9b0f4647755b30f5bf2e5dc1df7ea7c7">tank</a> (float left, float right)</td></tr>
+<tr class="memdesc:a9b0f4647755b30f5bf2e5dc1df7ea7c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the left and right motors to the specified speed. <br /></td></tr>
+<tr class="separator:a9b0f4647755b30f5bf2e5dc1df7ea7c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e3f3ad18b7257dea84d1835984b8393"><td class="memItemLeft" align="right" valign="top"><a id="a0e3f3ad18b7257dea84d1835984b8393"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>tankMaxScaled</b> (const float left, const float right, const float max=1.f)</td></tr>
 <tr class="separator:a0e3f3ad18b7257dea84d1835984b8393"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -153,24 +155,24 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>tank</b> (<a class="e
 <tr class="memitem:a3c3abb204bcbf46aa87e6e983cb905cd"><td class="memItemLeft" align="right" valign="top"><a id="a3c3abb204bcbf46aa87e6e983cb905cd"></a>
 virtual millimeter_t&#160;</td><td class="memItemRight" valign="bottom"><b>getRobotWidth</b> () const</td></tr>
 <tr class="separator:a3c3abb204bcbf46aa87e6e983cb905cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab6e8e5a247bab5568e537dc4bd750421"><td class="memItemLeft" align="right" valign="top"><a id="ab6e8e5a247bab5568e537dc4bd750421"></a>
+<tr class="memitem:ae70b9c5725d69f86c842c9af75369c1d"><td class="memItemLeft" align="right" valign="top"><a id="ae70b9c5725d69f86c842c9af75369c1d"></a>
 virtual <a class="el" href="classunits_1_1unit__t.html">meters_per_second_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getMaximumSpeed</b> () const</td></tr>
-<tr class="separator:ab6e8e5a247bab5568e537dc4bd750421"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ae70b9c5725d69f86c842c9af75369c1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abc18f445aac974c64f0f9d5c9b4f4801"><td class="memItemLeft" align="right" valign="top"><a id="abc18f445aac974c64f0f9d5c9b4f4801"></a>
 virtual <a class="el" href="classunits_1_1unit__t.html">meters_per_second_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getAbsoluteMaximumSpeed</b> () const</td></tr>
 <tr class="separator:abc18f445aac974c64f0f9d5c9b4f4801"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93ca59333e56ce79bc936e6bc9f0c1bf"><td class="memItemLeft" align="right" valign="top"><a id="a93ca59333e56ce79bc936e6bc9f0c1bf"></a>
+<tr class="memitem:ac0ddc57a7eaca5a0941190e6b9c4a257"><td class="memItemLeft" align="right" valign="top"><a id="ac0ddc57a7eaca5a0941190e6b9c4a257"></a>
 virtual <a class="el" href="classunits_1_1unit__t.html">radians_per_second_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getMaximumTurnSpeed</b> () const</td></tr>
-<tr class="separator:a93ca59333e56ce79bc936e6bc9f0c1bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79b35868b67c534851f99473af705d1d"><td class="memItemLeft" align="right" valign="top"><a id="a79b35868b67c534851f99473af705d1d"></a>
+<tr class="separator:ac0ddc57a7eaca5a0941190e6b9c4a257"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f7252371f137178fdd87309b9743255"><td class="memItemLeft" align="right" valign="top"><a id="a0f7252371f137178fdd87309b9743255"></a>
 virtual <a class="el" href="classunits_1_1unit__t.html">radians_per_second_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getAbsoluteMaximumTurnSpeed</b> () const</td></tr>
-<tr class="separator:a79b35868b67c534851f99473af705d1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8b3ca004039dafb086c2774d55fe07b"><td class="memItemLeft" align="right" valign="top"><a id="ab8b3ca004039dafb086c2774d55fe07b"></a>
+<tr class="separator:a0f7252371f137178fdd87309b9743255"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b7c2e5a1e8cc4c65232432afbbd6fa7"><td class="memItemLeft" align="right" valign="top"><a id="a7b7c2e5a1e8cc4c65232432afbbd6fa7"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setMaximumSpeedProportion</b> (float value)</td></tr>
-<tr class="separator:ab8b3ca004039dafb086c2774d55fe07b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1eef8e180ae299bd7656ce9eb1013e4"><td class="memItemLeft" align="right" valign="top"><a id="af1eef8e180ae299bd7656ce9eb1013e4"></a>
+<tr class="separator:a7b7c2e5a1e8cc4c65232432afbbd6fa7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a021a2d36f48188b6de9b9d4e258805ad"><td class="memItemLeft" align="right" valign="top"><a id="a021a2d36f48188b6de9b9d4e258805ad"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>getMaximumSpeedProportion</b> () const</td></tr>
-<tr class="separator:af1eef8e180ae299bd7656ce9eb1013e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a021a2d36f48188b6de9b9d4e258805ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93bb16916492c28883b23c952dcb7ae0"><td class="memItemLeft" align="right" valign="top"><a id="a93bb16916492c28883b23c952dcb7ae0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBoBRobotics_1_1Robots_1_1Tank.html#a93bb16916492c28883b23c952dcb7ae0">readFromNetwork</a> (<a class="el" href="classBoBRobotics_1_1Net_1_1Connection.html">Net::Connection</a> &amp;connection)</td></tr>
 <tr class="memdesc:a93bb16916492c28883b23c952dcb7ae0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Controls the robot with a network stream. <br /></td></tr>
@@ -178,6 +180,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:aa59b6c14261e4fc78a1f7e637672e630"><td class="memItemLeft" align="right" valign="top"><a id="aa59b6c14261e4fc78a1f7e637672e630"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>stopReadingFromNetwork</b> ()</td></tr>
 <tr class="separator:aa59b6c14261e4fc78a1f7e637672e630"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0d82c30f20cf2e1676bb8af4c3045c1"><td class="memItemLeft" align="right" valign="top"><a id="af0d82c30f20cf2e1676bb8af4c3045c1"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>getLeft</b> () const</td></tr>
+<tr class="separator:af0d82c30f20cf2e1676bb8af4c3045c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee2d130b9b94662856a3a61665c84441"><td class="memItemLeft" align="right" valign="top"><a id="aee2d130b9b94662856a3a61665c84441"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>getRight</b> () const</td></tr>
+<tr class="separator:aee2d130b9b94662856a3a61665c84441"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-types"></a>
 Protected Types</h2></td></tr>
@@ -203,8 +211,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interface for driving wheeled robots with tank steering. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="af512f678e97c20e4b4be83cbd11f0f4d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af512f678e97c20e4b4be83cbd11f0f4d">&#9670;&nbsp;</a></span>moveForward()</h2>
+<a id="ac78891ab893cc8d6a51f634ffa90f957"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac78891ab893cc8d6a51f634ffa90f957">&#9670;&nbsp;</a></span>moveForward()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -213,7 +221,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void BoBRobotics::Robots::Tank::moveForward </td>
+          <td class="memname">void BoBRobotics::Robots::Tank::moveForward </td>
           <td>(</td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>speed</em></td><td>)</td>
@@ -222,7 +230,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -234,8 +242,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
 
 </div>
 </div>
-<a id="ae38816fa5dfadb5c5ec7d584eae393ab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae38816fa5dfadb5c5ec7d584eae393ab">&#9670;&nbsp;</a></span>turnOnTheSpot()</h2>
+<a id="a4127163cf2eaab76e36305b5c2349646"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4127163cf2eaab76e36305b5c2349646">&#9670;&nbsp;</a></span>turnOnTheSpot()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -244,7 +252,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void BoBRobotics::Robots::Tank::turnOnTheSpot </td>
+          <td class="memname">void BoBRobotics::Robots::Tank::turnOnTheSpot </td>
           <td>(</td>
           <td class="paramtype">float&#160;</td>
           <td class="paramname"><em>clockwiseSpeed</em></td><td>)</td>
@@ -253,7 +261,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -265,8 +273,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setWheelSpeeds</b> (f
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
-<li>robots/tank.h</li>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>include/robots/tank.h</li>
+<li>src/robots/tank.cc</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

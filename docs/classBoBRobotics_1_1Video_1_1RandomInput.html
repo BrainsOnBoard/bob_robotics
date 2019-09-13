@@ -189,7 +189,7 @@ template&lt;typename GeneratorType  = std::mt19937&gt; </div>
 <p>Get the name of this type of camera as a (short) string. </p>
 <p>Note that this is used to load the appropriate unwrapping parameters (we look for a file called [camera name].yaml). </p>
 
-<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#aac3971ac0d70604f3f4ce3174ca721ca">BoBRobotics::Video::Input</a>.</p>
+<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a2424faff1a0ff1b53601090c31c56b6a">BoBRobotics::Video::Input</a>.</p>
 
 </div>
 </div>
@@ -220,6 +220,7 @@ template&lt;typename GeneratorType  = std::mt19937&gt; </div>
 </div><div class="memdoc">
 
 <p>Try to read a frame in colour from this video source. </p>
+<p>The output frame should have type CV_8UC3.</p>
 <dl class="section return"><dt>Returns</dt><dd>Whether a new frame was read </dd></dl>
 
 <p>Implements <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a4418eaac74351b81051d3d8aa0f38f42">BoBRobotics::Video::Input</a>.</p>
@@ -253,14 +254,15 @@ template&lt;typename GeneratorType  = std::mt19937&gt; </div>
 </div><div class="memdoc">
 
 <p>Try to read a frame in greyscale from this video source. </p>
+<p>The output frame should have type CV_8UC.</p>
 <dl class="section return"><dt>Returns</dt><dd>Whether a new frame was read </dd></dl>
 
-<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#ab85f9980b5aae7724534508782b9d31b">BoBRobotics::Video::Input</a>.</p>
+<p>Reimplemented from <a class="el" href="classBoBRobotics_1_1Video_1_1Input.html#a2e032c7159b4d1875b8bc91b65e19d35">BoBRobotics::Video::Input</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>video/randominput.h</li>
+<li>include/video/randominput.h</li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
