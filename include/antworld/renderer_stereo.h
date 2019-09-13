@@ -7,7 +7,7 @@
 //------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RendererStereo
 //------------------------------------------------------------------------
-//! Renderer which provides
+//! Stereo renderer: renders panoramic world views to left and right cubemaps and renders these using a pair of RenderMeshes
 namespace BoBRobotics
 {
 namespace AntWorld
@@ -28,6 +28,13 @@ public:
     void renderPanoramicView(meter_t x, meter_t y, meter_t z,
                              degree_t yaw, degree_t pitch, degree_t roll,
                              RenderTarget &renderTarget, bool bind = true, bool clear = true);
+
+    RenderMesh *getRenderMeshLeft(){ return m_RenderMeshLeft.get(); }
+    const RenderMesh *getRenderMesh() const{ return m_RenderMeshLeft.get(); }
+
+    RenderMesh *getRenderMeshRight(){ return m_RenderMeshRight.get(); }
+    const RenderMesh *getRenderMeshRight() const{ return m_RenderMeshRight.get(); }
+
 
     //------------------------------------------------------------------------
     // Static API

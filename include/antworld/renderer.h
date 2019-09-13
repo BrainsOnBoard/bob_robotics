@@ -87,6 +87,7 @@ private:
 //----------------------------------------------------------------------------
 // Renderer
 //----------------------------------------------------------------------------
+//! Standard renderer: renders panoramic world views to a single cubemap and renders these using a single RenderMesh
 class Renderer : public RendererBase
 {
 public:
