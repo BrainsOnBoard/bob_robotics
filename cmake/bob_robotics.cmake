@@ -648,7 +648,7 @@ function(BoB_third_party)
                 # Suppress warning
                 add_compile_flags(-Wno-stringop-truncation)
             elseif(${module} STREQUAL msp)
-                BoB_add_include_directories("${BOB_ROBOTICS_PATH}/third_party/msp/inc")
+                BoB_add_include_directories("${BOB_ROBOTICS_PATH}/third_party/msp/msp/inc")
 
                 # Suppress warnings from inside msp
                 add_compile_flags(-Wno-catch-value)
