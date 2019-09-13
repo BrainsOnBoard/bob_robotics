@@ -655,6 +655,9 @@ function(BoB_third_party)
 
                 # Uses asio
                 BoB_external_libraries(asio)
+
+                # Link against libs
+                BoB_add_link_libraries(msp mspclient msp_fcu)
             endif()
 
             # Checkout git submodules under this path
