@@ -103,8 +103,8 @@ class RenderMeshSpherical : public RenderMesh
 {
     using degree_t = units::angle::degree_t;
 public:
-    RenderMeshSpherical(bool flipAzimuth, units::angle::degree_t horizontalFOV = 296_deg, units::angle::degree_t verticalFOV = 75_deg,
-                        units::angle::degree_t startElevation  = 15_deg,
+    RenderMeshSpherical(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV,
+                        degree_t centreAzimuth = 0_deg, degree_t centreElevation = 0_deg,
                         unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
     RenderMeshSpherical(bool flipAzimuth, const std::string &eyeBorderFilename,
                         unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
@@ -122,11 +122,11 @@ class RenderMeshHexagonal : public RenderMesh
     using degree_t = units::angle::degree_t;
 public:
     RenderMeshHexagonal(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV,
-                        degree_t centreAzimuth, degree_t centreElevation,
-                        units::angle::degree_t interommatidiaAngle);
+                        degree_t centreAzimuth = 0_deg, degree_t centreElevation = 0_deg,
+                        units::angle::degree_t interommatidiaAngle = 5_deg);
 
     RenderMeshHexagonal(bool flipAzimuth, const std::string &eyeBorderFilename,
-                        units::angle::degree_t interommatidiaAngle);
+                        units::angle::degree_t interommatidiaAngle = 5_deg);
 
     //------------------------------------------------------------------------
     // Public API

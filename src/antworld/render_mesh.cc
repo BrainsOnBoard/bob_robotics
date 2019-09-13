@@ -135,9 +135,10 @@ bool RenderMesh::Border::isInEye(degree_t azimuth, degree_t elevation) const
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMeshSpherical
 //----------------------------------------------------------------------------
-RenderMeshSpherical::RenderMeshSpherical(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV, degree_t startElevation,
+RenderMeshSpherical::RenderMeshSpherical(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV,
+                                         degree_t centreAzimuth, degree_t centreElevation,
                                          unsigned int numHorizontalSegments, unsigned int numVerticalSegments)
-:   RenderMeshSpherical(Border(flipAzimuth, horizontalFOV, verticalFOV, 0_deg, startElevation + (verticalFOV / 2.0)),
+:   RenderMeshSpherical(Border(flipAzimuth, horizontalFOV, verticalFOV, centreAzimuth, centreElevation),
                         numHorizontalSegments, numVerticalSegments)
 {
 }

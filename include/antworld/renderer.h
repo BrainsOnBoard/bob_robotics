@@ -90,15 +90,12 @@ private:
 class Renderer : public RendererBase
 {
 public:
-    template<class... Ts>
-    Renderer(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0, Ts &&... args)
-    :   RendererBase(nearClip, farClip), m_RenderMesh(false, std::forward<Ts>(args)...),
-        m_RenderTargetCubemap(cubemapSize)
-    {
-        // Pre-generate lookat matrices to point at cubemap faces
-        generateCubeFaceLookAtMatrices(0.0, 0.0, 0.0,
-                                       m_CubeFaceLookAtMatrices);
-    }
+    Renderer(std::unique_ptr<RenderMesh> renderMesh, std::unique_ptr<RenderTargetCubemap> renderTargetCubemap,
+             GLdouble nearClip = 0.001, GLdouble farClip = 1000.0);
+
+    // Legacy constructor
+    Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
+             degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
 
     //------------------------------------------------------------------------
     // Public API
@@ -111,6 +108,27 @@ public:
                              degree_t yaw, degree_t pitch, degree_t roll,
                              RenderTarget &renderTarget, bool bind = true, bool clear = true);
 
+    RenderMesh *getRenderMesh(){ return m_RenderMesh.get(); }
+    const RenderMesh *getRenderMesh() const{ return m_RenderMesh.get(); }
+
+    //------------------------------------------------------------------------
+    // Static API
+    //------------------------------------------------------------------------
+    template<class... Ts>
+    static std::unique_ptr<Renderer> createSpherical(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
+                                                     Ts &&... renderMeshArgs)
+    {
+        return std::make_unique<Renderer>(std::make_unique<RenderMeshSpherical>(false, std::forward<Ts>(renderMeshArgs)...),
+                                          std::make_unique<RenderTargetCubemap>(cubemapSize), nearClip, farClip);
+    }
+
+    template<class... Ts>
+    static std::unique_ptr<Renderer> createHexagonal(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
+                                                     Ts &&... renderMeshArgs)
+    {
+        return std::make_unique<Renderer>(std::make_unique<RenderMeshHexagonal>(false, std::forward<Ts>(renderMeshArgs)...),
+                                          std::make_unique<RenderTargetCubemap>(cubemapSize), nearClip, farClip);
+    }
 
 private:
     //------------------------------------------------------------------------
@@ -118,8 +136,8 @@ private:
     //------------------------------------------------------------------------
     GLfloat m_CubeFaceLookAtMatrices[6][16];
 
-    RenderMeshSpherical m_RenderMesh;
-    RenderTargetCubemap m_RenderTargetCubemap;
+    std::unique_ptr<RenderMesh> m_RenderMesh;
+    std::unique_ptr<RenderTargetCubemap> m_RenderTargetCubemap;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

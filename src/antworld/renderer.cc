@@ -203,7 +203,24 @@ void RendererBase::applyFrame(meter_t x, meter_t y, meter_t z,
 }
 
 //------------------------------------------------------------------------
-// BoBRobotics::AntWorld::RendererBase
+// BoBRobotics::AntWorld::Renderer
+//-----------------------------------------------------------------------
+Renderer::Renderer(std::unique_ptr<RenderMesh> renderMesh, std::unique_ptr<RenderTargetCubemap> renderTargetCubemap,
+                   GLdouble nearClip, GLdouble farClip)
+:   RendererBase(nearClip, farClip), m_RenderMesh(std::move(renderMesh)),
+    m_RenderTargetCubemap(std::move(renderTargetCubemap))
+{
+    // Pre-generate lookat matrices to point at cubemap faces
+    generateCubeFaceLookAtMatrices(0.0, 0.0, 0.0,
+                                    m_CubeFaceLookAtMatrices);
+}
+//-----------------------------------------------------------------------
+Renderer::Renderer(GLsizei cubemapSize, double nearClip, double farClip,
+                   degree_t horizontalFOV, degree_t verticalFOV)
+:   Renderer(std::make_unique<RenderMeshSpherical>(false, horizontalFOV, verticalFOV, 0_deg, 15_deg + (verticalFOV / 2.0)),
+             std::make_unique<RenderTargetCubemap>(cubemapSize), nearClip, farClip)
+{
+}
 //-----------------------------------------------------------------------
 void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                    degree_t yaw, degree_t pitch, degree_t roll,
@@ -211,10 +228,10 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                    GLuint drawFBO)
 {
     // Configure viewport to cubemap-sized square
-    glViewport(0, 0, m_RenderTargetCubemap.getWidth(), m_RenderTargetCubemap.getHeight());
+    glViewport(0, 0, m_RenderTargetCubemap->getWidth(), m_RenderTargetCubemap->getHeight());
 
     // Bind the cubemap FBO for offscreen rendering
-    m_RenderTargetCubemap.bind();
+    m_RenderTargetCubemap->bind();
 
     // Configure perspective projection matrix
     // **TODO** re-implement in Eigen
@@ -235,7 +252,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     // Loop through each heading we need to render
     for(GLenum f = 0; f < 6; f++) {
         // Attach correct cube map face
-        m_RenderTargetCubemap.attachCubemapFace(f + GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        m_RenderTargetCubemap->attachCubemapFace(f + GL_TEXTURE_CUBE_MAP_POSITIVE_X);
 
         // Load look at matrix for this cube face
         glLoadMatrixf(m_CubeFaceLookAtMatrices[f]);
@@ -251,7 +268,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     }
 
     // Unbind cubemap render target and rebind drawFBO
-    m_RenderTargetCubemap.unbind(drawFBO);
+    m_RenderTargetCubemap->unbind(drawFBO);
 
     // Set viewport to strip at stop of window
     glViewport(viewportX, viewportY,
@@ -259,7 +276,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
 
     // Bind cubemap texture
     glEnable(GL_TEXTURE_CUBE_MAP);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_RenderTargetCubemap.getCubemapTexture());
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_RenderTargetCubemap->getCubemapTexture());
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -270,7 +287,7 @@ void Renderer::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glLoadIdentity();
 
     // Render render mesh
-    m_RenderMesh.render();
+    m_RenderMesh->render();
 
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);

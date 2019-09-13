@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     const auto turnSpeed = 200_deg_per_s;
     const auto moveSpeed = 3_mps;
     const unsigned int width = 1024;
-    const unsigned int height = 853;
+    const unsigned int height = 262;//853;
 
     // Whether to use the 3D reconstructed Rothamsted model
     const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
@@ -118,8 +118,8 @@ int main(int argc, char **argv)
 
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
-    //AntWorld::Renderer renderer(512, 0.1, 1000.0, "../../resources/antworld/eye_border_BT_77973.bin", 256, 256);
-    AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.0016, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
+    auto renderer = AntWorld::Renderer::createSpherical(512, 0.001, 1000.0, 296_deg, 75_deg);
+    //AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.0016, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
     //                                      512, 0.1);
 
     // Create a render target for displaying world re-mapped onto hexagonal mesh
@@ -131,12 +131,12 @@ int main(int argc, char **argv)
         if (!modelPath) {
             throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
         }
-        renderer.getWorld().loadObj((filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj").str(),
+        renderer->getWorld().loadObj((filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj").str(),
                                     0.1f,
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
-        renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+        renderer->getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
                                  { 0.0f, 1.0f, 0.0f },
                                  { 0.898f, 0.718f, 0.353f });
     }
@@ -151,8 +151,8 @@ int main(int argc, char **argv)
     auto joystick = createJoystick(window);
 
     // Get world bounds and initially centre agent in world
-    const auto &worldMin = renderer.getWorld().getMinBound();
-    const auto &worldMax = renderer.getWorld().getMaxBound();
+    const auto &worldMin = renderer->getWorld().getMinBound();
+    const auto &worldMax = renderer->getWorld().getMaxBound();
     meter_t x = worldMin[0] + (worldMax[0] - worldMin[0]) / 2.0;
     meter_t y = worldMin[1] + (worldMax[1] - worldMin[1]) / 2.0;
     meter_t z = worldMin[2] + (worldMax[2] - worldMin[2]) / 2.0;
@@ -189,8 +189,8 @@ int main(int argc, char **argv)
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
-                                     0, 0, width, height);
+        renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
+                                      0, 0, width, height);
         // Render panorama to render target
         /*renderer.renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
                                      renderTarget);
