@@ -650,6 +650,9 @@ function(BoB_third_party)
             elseif(${module} STREQUAL msp)
                 BoB_add_include_directories("${BOB_ROBOTICS_PATH}/third_party/msp/inc")
 
+                # Suppress warnings from inside msp
+                add_compile_flags(-Wno-catch-value)
+
                 # Uses asio
                 BoB_external_libraries(asio)
             endif()

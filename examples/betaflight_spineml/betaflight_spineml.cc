@@ -75,9 +75,6 @@ int main(int argc, char *argv[]) {
   bool controlOn = false;
   double data[9] = {0,0,0,0,0,0,0,0,0};
 
-  sockaddr * srcaddr;
-  socklen_t * srcaddr_len;
-
   my_drone.printStatus();
 
   float c_y = -0.3; //-1.3
@@ -105,7 +102,7 @@ int main(int argc, char *argv[]) {
   bool have = false;
 
 
-  int wp_ind = 0;
+  size_t wp_ind = 0;
   bool pathOn = false;
 
   while (run) {
@@ -114,7 +111,7 @@ int main(int argc, char *argv[]) {
 
     // set model outputs
 
-    while (recvfrom(sockIn, data, sizeof(data), 0, srcaddr, srcaddr_len) != -1) {
+    while (recvfrom(sockIn, data, sizeof(data), 0, nullptr, nullptr) != -1) {
         //my_drone.setWaypoint(data[0],data[1],0.5,data[2], false);
         /*std::cout << "########" << std::endl;
         std::cout << data[0] << std::endl;

@@ -239,8 +239,6 @@ namespace Robots
         //std::cout << std::setw(6) << std::fixed << std::setprecision(4) << yaw_control << ",";
         m_MyDrone.setYawSpeed(yaw_control);
 
-        float px = float(position[0]);
-        float py = float(position[1]);
         float pz = float(position[2]);
         float vx = float(velocity_crap[0]);
         float vy = float(velocity_crap[1]);
