@@ -14,20 +14,61 @@ namespace BoBRobotics
 namespace AntWorld
 {
 RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &renderMesh)
-:   RenderTarget(renderMesh.getNumHorizontalHexes(), renderMesh.getNumVerticalHexes())
+:   RenderTargetHexDisplay(renderMesh.getNumHorizontalHexes(), renderMesh.getNumVerticalHexes())
+{
+}
+//----------------------------------------------------------------------------
+RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &renderMeshLeft, const RenderMeshHexagonal &renderMeshRight)
+:   RenderTargetHexDisplay(renderMeshLeft.getNumHorizontalHexes() + renderMeshRight.getNumHorizontalHexes(), renderMeshLeft.getNumVerticalHexes())
+{
+}
+//----------------------------------------------------------------------------
+void RenderTargetHexDisplay::render(GLint viewportX, GLint viewportY,
+                                    GLsizei viewportWidth, GLsizei viewportHeight) const
+{
+    // Set viewport
+    glViewport(viewportX, viewportY,
+               viewportWidth, viewportHeight);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0.0, 1.0,
+               0.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // Bind render target texture
+    glBindTexture(GL_TEXTURE_2D, getTexture());
+
+     // Bind surface
+    m_Surface.bind();
+
+    // Render surface
+    m_Surface.render();
+
+    // Unbind surface
+    m_Surface.unbind();
+
+    // Unbind texture
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+//----------------------------------------------------------------------------
+RenderTargetHexDisplay::RenderTargetHexDisplay(unsigned int numHorizontalHexes, unsigned int numVerticalHexes)
+:   RenderTarget(numHorizontalHexes, numVerticalHexes)
 {
     using namespace units::math;
     using namespace units::literals;
 
-    LOGD << "Creating " << renderMesh.getNumHorizontalHexes() << "x" << renderMesh.getNumVerticalHexes() << " render target";
+    LOGD << "Creating " << numHorizontalHexes << "x" << numVerticalHexes << " render target";
 
     // Pre-calculate cos30 and sin30
     const float cos30 = cos(30_deg);
     const float sin30 = sin(30_deg);
 
     // Calculate side lengths that would be required to fit display grid into normalized coordinate space in each dimension
-    const float horizontalSideLength = 1.0f / ((float)renderMesh.getNumHorizontalHexes() * 2.0f * cos30);
-    const float verticalSideLength = 1.0f / ((float)renderMesh.getNumVerticalHexes() * (1.0f + sin30));
+    const float horizontalSideLength = 1.0f / ((float)numHorizontalHexes * 2.0f * cos30);
+    const float verticalSideLength = 1.0f / ((float)numVerticalHexes * (1.0f + sin30));
 
     // Pick smallest
     const float sideLength = std::min(horizontalSideLength, verticalSideLength);
@@ -49,8 +90,8 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
     };
 
     // Determine size of rectangles used for final output
-    const float rectangleWidth = 1.0f / (float)renderMesh.getNumHorizontalHexes();
-    const float rectangleHeight = 1.0f / (float)renderMesh.getNumVerticalHexes();
+    const float rectangleWidth = 1.0f / (float)numHorizontalHexes;
+    const float rectangleHeight = 1.0f / (float)numVerticalHexes;
     const float halfRectangleWidth = rectangleWidth * 0.5f;
 
     const float hexRectangleOffsets[6][2] = {
@@ -69,10 +110,10 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
     std::vector<GLuint> indices;
 
     // Loop through grid of hexes
-    const int colBegin = renderMesh.getNumHorizontalHexes() / 2;
-    const int rowBegin = renderMesh.getNumVerticalHexes() / 2;
-    const int colEnd = renderMesh.getNumHorizontalHexes() - colBegin;
-    const int rowEnd = renderMesh.getNumVerticalHexes() - rowBegin;
+    const int colBegin = numHorizontalHexes / 2;
+    const int rowBegin = numVerticalHexes / 2;
+    const int colEnd = numHorizontalHexes - colBegin;
+    const int rowEnd = numVerticalHexes - rowBegin;
 
     const float centreU = (float)colBegin * rectangleWidth;
     const float centreV = (float)rowBegin * rectangleHeight;
@@ -132,37 +173,6 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(const RenderMeshHexagonal &render
 
     // Unbind indices
     m_Surface.unbindIndices();
-}
-//----------------------------------------------------------------------------
-void RenderTargetHexDisplay::render(GLint viewportX, GLint viewportY,
-                                    GLsizei viewportWidth, GLsizei viewportHeight) const
-{
-    // Set viewport
-    glViewport(viewportX, viewportY,
-               viewportWidth, viewportHeight);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(0.0, 1.0,
-               0.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // Bind render target texture
-    glBindTexture(GL_TEXTURE_2D, getTexture());
-
-     // Bind surface
-    m_Surface.bind();
-
-    // Render surface
-    m_Surface.render();
-
-    // Unbind surface
-    m_Surface.unbind();
-
-    // Unbind texture
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 }   // namespace AntWorld
 }   // namespace BoBRobotics

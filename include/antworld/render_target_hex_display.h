@@ -24,6 +24,7 @@ class RenderTargetHexDisplay : public RenderTarget
 {
 public:
     RenderTargetHexDisplay(const RenderMeshHexagonal &renderMesh);
+    RenderTargetHexDisplay(const RenderMeshHexagonal &renderMeshLeft, const RenderMeshHexagonal &renderMeshRight);
 
     //----------------------------------------------------------------------------
     // Public API
@@ -32,6 +33,11 @@ public:
                 GLsizei viewportWidth, GLsizei viewportHeight) const;
 
 private:
+    RenderTargetHexDisplay(unsigned int numHorizontalHexes, unsigned int numVerticalHexes);
+
+    //----------------------------------------------------------------------------
+    // Members
+    //----------------------------------------------------------------------------
     Surface m_Surface;
 };
 }   // namespace AntWorld
