@@ -1,4 +1,4 @@
-#include <FlightController.hpp>
+#include <msp/FlightController.hpp>
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -56,7 +56,7 @@ namespace BetaFlight {
     }
 
     struct MyIdent : public msp::Request {
-        msp::ID id() const { return msp::ID::MSP_STATUS_EX; }
+        msp::ID id() const { return msp::ID::MSP_STATUS; }
 
         msp::ByteVector raw_data;
 
