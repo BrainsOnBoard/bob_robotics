@@ -11,6 +11,19 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+RendererStereo::RendererStereo(std::unique_ptr<RenderMesh> renderMeshLeft, std::unique_ptr<RenderMesh> renderMeshRight,
+                               GLsizei cubemapSize, GLdouble nearClip, GLdouble farClip, GLdouble eyeSeperation)
+:   RendererBase(nearClip, farClip), m_RenderMeshLeft(std::move(renderMeshLeft)),
+    m_RenderMeshRight(std::move(renderMeshRight)), m_RenderTargetCubemapLeft(cubemapSize),
+    m_RenderTargetCubemapRight(cubemapSize)
+{
+    // Pre-generate lookat matrices to point at cubemap faces
+    generateCubeFaceLookAtMatrices(eyeSeperation / -2.0, 0.0, 0.0,
+                                    m_CubeFaceLookAtMatricesLeft);
+    generateCubeFaceLookAtMatrices(eyeSeperation / 2.0, 0.0, 0.0,
+                                    m_CubeFaceLookAtMatricesRight);
+}
+//------------------------------------------------------------------------
 void RendererStereo::renderPanoramicView(meter_t x, meter_t y, meter_t z,
                                          degree_t yaw, degree_t pitch, degree_t roll,
                                          GLint viewportX, GLint viewportY, GLsizei viewportWidth, GLsizei viewportHeight,
@@ -53,20 +66,18 @@ void RendererStereo::renderPanoramicView(meter_t x, meter_t y, meter_t z,
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-
-
     // Set viewport to left half and render render mesh
     const GLsizei halfViewportWidth = viewportWidth / 2;
     glViewport(viewportX, viewportY,
                halfViewportWidth, viewportHeight);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_RenderTargetCubemapLeft.getCubemapTexture());
-    m_RenderMeshLeft.render();
+    m_RenderMeshLeft->render();
 
     // Set viewport to right half and render render mesh
     glViewport(viewportX + halfViewportWidth, viewportY,
                halfViewportWidth, viewportHeight);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_RenderTargetCubemapRight.getCubemapTexture());
-    m_RenderMeshRight.render();
+    m_RenderMeshRight->render();
 
     // Disable texture coordinate array, cube map texture and cube map texturing!
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);

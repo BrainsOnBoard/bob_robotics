@@ -4,7 +4,6 @@
 #include "renderer.h"
 #include "render_target.h"
 
-
 //------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RendererStereo
 //------------------------------------------------------------------------
@@ -16,19 +15,8 @@ namespace AntWorld
 class RendererStereo : public RendererBase
 {
 public:
-    template<class... Ts>
-    RendererStereo(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
-                   GLdouble eyeSeperation = 0.001, Ts &&... args)
-    :   RendererBase(nearClip, farClip), m_RenderMeshLeft(true, std::forward<Ts>(args)...),
-        m_RenderMeshRight(false, std::forward<Ts>(args)...), m_RenderTargetCubemapLeft(cubemapSize),
-        m_RenderTargetCubemapRight(cubemapSize)
-    {
-        // Pre-generate lookat matrices to point at cubemap faces
-        generateCubeFaceLookAtMatrices(eyeSeperation / -2.0, 0.0, 0.0,
-                                       m_CubeFaceLookAtMatricesLeft);
-        generateCubeFaceLookAtMatrices(eyeSeperation / 2.0, 0.0, 0.0,
-                                       m_CubeFaceLookAtMatricesRight);
-    }
+    RendererStereo(std::unique_ptr<RenderMesh> renderMeshLeft, std::unique_ptr<RenderMesh> renderMeshRight,
+                   GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0, GLdouble eyeSeperation = 0.001);
 
     //------------------------------------------------------------------------
     // Public API
@@ -40,6 +28,27 @@ public:
     void renderPanoramicView(meter_t x, meter_t y, meter_t z,
                              degree_t yaw, degree_t pitch, degree_t roll,
                              RenderTarget &renderTarget, bool bind = true, bool clear = true);
+
+    //------------------------------------------------------------------------
+    // Static API
+    //------------------------------------------------------------------------
+    template<class... Ts>
+    static std::unique_ptr<RendererStereo> createSpherical(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
+                                                           GLdouble eyeSeperation = 0.001, Ts &&... renderMeshArgs)
+    {
+        return std::make_unique<RendererStereo>(std::make_unique<RenderMeshSpherical>(true, std::forward<Ts>(renderMeshArgs)...),
+                                                std::make_unique<RenderMeshSpherical>(false, std::forward<Ts>(renderMeshArgs)...),
+                                                cubemapSize, nearClip, farClip, eyeSeperation);
+    }
+
+    template<class... Ts>
+    static std::unique_ptr<RendererStereo> createHexagonal(GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0,
+                                                           GLdouble eyeSeperation = 0.001, Ts &&... renderMeshArgs)
+    {
+        return std::make_unique<RendererStereo>(std::make_unique<RenderMeshHexagonal>(true, std::forward<Ts>(renderMeshArgs)...),
+                                                std::make_unique<RenderMeshHexagonal>(false, std::forward<Ts>(renderMeshArgs)...),
+                                                cubemapSize, nearClip, farClip, eyeSeperation);
+    }
 
 private:
     //------------------------------------------------------------------------
@@ -54,8 +63,8 @@ private:
     GLfloat m_CubeFaceLookAtMatricesLeft[6][16];
     GLfloat m_CubeFaceLookAtMatricesRight[6][16];
 
-    RenderMeshSpherical m_RenderMeshLeft;
-    RenderMeshSpherical m_RenderMeshRight;
+    std::unique_ptr<RenderMesh> m_RenderMeshLeft;
+    std::unique_ptr<RenderMesh> m_RenderMeshRight;
     RenderTargetCubemap m_RenderTargetCubemapLeft;
     RenderTargetCubemap m_RenderTargetCubemapRight;
 };
