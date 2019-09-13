@@ -590,6 +590,8 @@ function(BoB_external_libraries)
             BoB_add_link_libraries("${GENN_PATH}/lib/libspineml_simulator.a"
                                    "${GENN_PATH}/lib/libspineml_common.a"
                                    dl)
+        elseif(${lib} STREQUAL asio)
+            BoB_add_include_directories(/usr/include/asio)
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
@@ -645,6 +647,11 @@ function(BoB_third_party)
 
                 # Suppress warning
                 add_compile_flags(-Wno-stringop-truncation)
+            elseif(${module} STREQUAL msp)
+                BoB_add_include_directories("${BOB_ROBOTICS_PATH}/third_party/msp/inc")
+
+                # Uses asio
+                BoB_external_libraries(asio)
             endif()
 
             # Checkout git submodules under this path
@@ -735,4 +742,4 @@ add_definitions(
 )
 
 # Look for additional CMake packages in the current folder
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
+
