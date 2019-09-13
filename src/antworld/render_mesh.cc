@@ -225,28 +225,25 @@ RenderMeshSpherical::RenderMeshSpherical(const Border &border, unsigned int numH
 //----------------------------------------------------------------------------
 // BoBRobotics::AntWorld::RenderMeshHexagonal
 //----------------------------------------------------------------------------
-RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, units::angle::degree_t interommatidiaAngle)
+RenderMeshHexagonal::RenderMeshHexagonal(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV,
+                                         degree_t centreAzimuth, degree_t centreElevation,
+                                         units::angle::degree_t interommatidiaAngle)
+:   RenderMeshHexagonal(Border(flipAzimuth, horizontalFOV, verticalFOV, centreAzimuth, centreElevation), interommatidiaAngle)
+{
+}
+//----------------------------------------------------------------------------
+RenderMeshHexagonal::RenderMeshHexagonal(bool flipAzimuth, const std::string &eyeBorderFilename,
+                                         units::angle::degree_t interommatidiaAngle)
+:   RenderMeshHexagonal(Border(flipAzimuth, eyeBorderFilename), interommatidiaAngle)
+{
+}
+//----------------------------------------------------------------------------
+RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::degree_t interommatidiaAngle)
+:   m_NumHorizontalHexes(ceil(border.getHorizontalFOV() / interommatidiaAngle)),
+    m_NumVerticalHexes(ceil(border.getVerticalFOV() /  interommatidiaAngle))
 {
     using namespace units::literals;
     using namespace units::angle;
-
-    // Load eye border file
-    /*const auto eyeBorder = loadEyeBorder(eyeBorderFilename);
-
-
-    const auto elevationRange = std::minmax_element(eyeBorder.cbegin(), eyeBorder.cend(),
-                                                    [](const std::tuple<float, float> &a, const std::tuple<float, float> &b)
-                                                    {
-                                                        return (std::get<0>(a) < std::get<0>(b));
-                                                    });
-    const auto azimuthRange = std::minmax_element(eyeBorder.cbegin(), eyeBorder.cend(),
-                                                  [](const std::tuple<float, float> &a, const std::tuple<float, float> &b)
-                                                  {
-                                                    return (std::get<1>(a) < std::get<1>(b));
-                                                  });
-    LOGI << "Eye border angles (" << elevationRange.first << ", " << *azimuthRange.first << ") - (" << elevationRange.second << ", " << azimuthRange.second << ")";*/
-
-    assert(false);
 
     // Pre-calculate cos30 and sin30
     const double cos30 = units::math::cos(30_deg);
@@ -306,12 +303,12 @@ RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, u
         for(int j = -colBegin; j < colEnd; j++) {
             // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
             // https://www.redblobgames.com/grids/hexagons/
-            units::angle::degree_t hexLongitude = j * (2.0 * hexDistance);
-            const units::angle::degree_t hexLatitude = i * (hexHeight + sideLength);
+            units::angle::degree_t hexAzimuth = border.getCentreAzimuth() + (j * (2.0 * hexDistance));
+            const units::angle::degree_t hexElevation = border.getCentreElevation() + (i * (hexHeight + sideLength));
 
             // If row is odd, add additional distance
             if((i & 1) != 0) {
-                hexLongitude += hexDistance;
+                hexAzimuth += hexDistance;
             }
 
             // Calculate position of this hex in output rectangular grid, offsetting to centre of screen
@@ -328,18 +325,18 @@ RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, u
                 positions.push_back(hexY + hexRectangleOffsets[v][1]);
 
                 // Calculate position of vertex
-                const units::angle::degree_t vertexLongitude = hexLongitude + hexAngleOffsets[v][0];
-                const units::angle::degree_t vertexLatitude = hexLatitude + hexAngleOffsets[v][1];
+                const units::angle::degree_t vertexAzimuth = hexAzimuth + hexAngleOffsets[v][0];
+                const units::angle::degree_t vertexElevation = hexElevation + hexAngleOffsets[v][1];
 
-                const GLfloat sinLatitude = sin(vertexLatitude);
-                const GLfloat cosLatitude = cos(vertexLatitude);
-                const GLfloat sinLongitude = sin(vertexLongitude);
-                const GLfloat cosLongitude = cos(vertexLongitude);
+                const GLfloat sinElevation = sin(vertexElevation);
+                const GLfloat cosElevation = cos(vertexElevation);
+                const GLfloat sinAzimuth = sin(vertexAzimuth);
+                const GLfloat cosAzimuth = cos(vertexAzimuth);
 
                 // Add vertex texture coordinate
-                textureCoords.push_back(sinLongitude * cosLatitude);
-                textureCoords.push_back(sinLatitude);
-                textureCoords.push_back(cosLongitude * cosLatitude);
+                textureCoords.push_back(sinAzimuth * cosElevation);
+                textureCoords.push_back(sinElevation);
+                textureCoords.push_back(cosAzimuth * cosElevation);
             }
 
             // Add two quads to render hexagon
@@ -364,6 +361,7 @@ RenderMeshHexagonal::RenderMeshHexagonal(const std::string &eyeBorderFilename, u
     getSurface().uploadPositions(positions, 2);
     getSurface().uploadTexCoords(textureCoords, 3);
     getSurface().uploadIndices(indices, GL_QUADS);
+    getSurface().setPrimitiveType(GL_QUADS);
 
     // Unbind surface
     getSurface().unbind();

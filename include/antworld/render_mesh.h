@@ -66,6 +66,12 @@ protected:
         degree_t getMinElevation() const{ return m_MinElevation; }
         degree_t getMaxElevation() const{ return m_MaxElevation; }
 
+        degree_t getCentreAzimuth() const{ return m_MinAzimuth + ((m_MaxAzimuth - m_MinAzimuth) / 2.0); }
+        degree_t getCentreElevation() const{ return m_MinElevation + ((m_MaxElevation - m_MinElevation) / 2.0); }
+
+        degree_t getHorizontalFOV() const{ return m_MaxAzimuth - m_MinAzimuth; }
+        degree_t getVerticalFOV() const{ return m_MaxElevation - m_MinElevation; }
+
         bool isInEye(degree_t azimuth, degree_t elevation) const;
 
     private:
@@ -103,7 +109,7 @@ public:
     RenderMeshSpherical(bool flipAzimuth, const std::string &eyeBorderFilename,
                         unsigned int numHorizontalSegments = 40, unsigned int numVerticalSegments = 10);
 
-protected:
+private:
     RenderMeshSpherical(const Border &border, unsigned int numHorizontalSegments, unsigned int numVerticalSegments);
 };
 
@@ -115,7 +121,12 @@ class RenderMeshHexagonal : public RenderMesh
 {
     using degree_t = units::angle::degree_t;
 public:
-    RenderMeshHexagonal(const std::string &eyeBorderFilename, units::angle::degree_t interommatidiaAngle);
+    RenderMeshHexagonal(bool flipAzimuth, degree_t horizontalFOV, degree_t verticalFOV,
+                        degree_t centreAzimuth, degree_t centreElevation,
+                        units::angle::degree_t interommatidiaAngle);
+
+    RenderMeshHexagonal(bool flipAzimuth, const std::string &eyeBorderFilename,
+                        units::angle::degree_t interommatidiaAngle);
 
     //------------------------------------------------------------------------
     // Public API
@@ -124,11 +135,13 @@ public:
     unsigned int getNumVerticalHexes() const{ return m_NumVerticalHexes; }
 
 private:
+    RenderMeshHexagonal(const Border &border, units::angle::degree_t interommatidiaAngle);
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    unsigned int m_NumHorizontalHexes;
-    unsigned int m_NumVerticalHexes;
+    const unsigned int m_NumHorizontalHexes;
+    const unsigned int m_NumVerticalHexes;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
