@@ -90,8 +90,8 @@ private:
 class Renderer : public RendererBase
 {
 public:
-    Renderer(std::unique_ptr<RenderMesh> renderMesh, std::unique_ptr<RenderTargetCubemap> renderTargetCubemap,
-             GLdouble nearClip = 0.001, GLdouble farClip = 1000.0);
+    Renderer(std::unique_ptr<RenderMesh> renderMesh,
+             GLsizei cubemapSize = 256, GLdouble nearClip = 0.001, GLdouble farClip = 1000.0);
 
     // Legacy constructor
     Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
@@ -119,7 +119,7 @@ public:
                                                      Ts &&... renderMeshArgs)
     {
         return std::make_unique<Renderer>(std::make_unique<RenderMeshSpherical>(false, std::forward<Ts>(renderMeshArgs)...),
-                                          std::make_unique<RenderTargetCubemap>(cubemapSize), nearClip, farClip);
+                                          cubemapSize, nearClip, farClip);
     }
 
     template<class... Ts>
@@ -127,7 +127,7 @@ public:
                                                      Ts &&... renderMeshArgs)
     {
         return std::make_unique<Renderer>(std::make_unique<RenderMeshHexagonal>(false, std::forward<Ts>(renderMeshArgs)...),
-                                          std::make_unique<RenderTargetCubemap>(cubemapSize), nearClip, farClip);
+                                          cubemapSize, nearClip, farClip);
     }
 
 private:
@@ -137,7 +137,7 @@ private:
     GLfloat m_CubeFaceLookAtMatrices[6][16];
 
     std::unique_ptr<RenderMesh> m_RenderMesh;
-    std::unique_ptr<RenderTargetCubemap> m_RenderTargetCubemap;
+    RenderTargetCubemap m_RenderTargetCubemap;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
