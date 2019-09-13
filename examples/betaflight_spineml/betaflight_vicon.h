@@ -4,10 +4,11 @@ This file provides a vicon based control overlay for the BetaFlight
 drone.
 */
 
+#include <array>
 #include <iomanip>
 
-#include "../../vicon/capture_control.h"
-#include "../../vicon/udp.h"
+#include "vicon/capture_control.h"
+#include "vicon/udp.h"
 
 #define CONST_YAW -1001
 
@@ -87,7 +88,7 @@ namespace Robots
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
         const auto &velocity_crap = objectData.getVelocity();
-        Vector3 <float> velocity;
+        std::array<float,3> velocity;
         for (int i = 0; i < 3; ++i) {
           velocity[i] = float(velocity_crap[i]);
         }
@@ -98,13 +99,13 @@ namespace Robots
         }
 
         // calc distance to m_Waypoint
-        Vector3 <float> p_diff;
+        std::array<float,3> p_diff;
         for (int i = 0; i < 3; ++i) {
           p_diff[i] = m_Waypoint[i] - float(position[i])/1000.0;
         }
 
-        Vector3 < float > targetVSetpoint;
-        Vector3 < float > acceleration;
+        std::array<float,3> targetVSetpoint;
+        std::array<float,3> acceleration;
 
         for (int i = 0; i < 3; ++i) {
           // calculate acceleration
@@ -355,13 +356,13 @@ return;
     BoBRobotics::Robots::betaflight_uav m_MyDrone;
     UDPClient <ObjectDataVelocity> m_Vicon;
     RBounds m_RoomBounds;
-    Vector3 < float > m_Waypoint = {{0,0,0}};
-    Vector3 < float > m_NextWaypoint = {{0,0,0}};
+    std::array<float,3> m_Waypoint = {{0,0,0}};
+    std::array<float,3> m_NextWaypoint = {{0,0,0}};
     float m_Yawpoint = -90;
     float m_NextYawpoint = -90;
-    Vector3 < float > m_VSetPoint = {{0,0,0}};
-    Vector3 < float > m_OldVelocity = {{0,0,0}};
-    Vector3  < float > m_IntegralTerm = {{0,0,-900}};
+    std::array<float,3> m_VSetPoint = {{0,0,0}};
+    std::array<float,3> m_OldVelocity = {{0,0,0}};
+    std::array<float,3> m_IntegralTerm = {{0,0,-900}};
     bool m_ModelActive = false;
     bool m_QueuedWaypoint = false;
     double m_ModelData[9] = {0,0,0,0,0,0,0,0,0};
