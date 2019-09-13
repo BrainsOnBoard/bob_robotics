@@ -742,4 +742,4 @@ add_definitions(
 )
 
 # Look for additional CMake packages in the current folder
-
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
