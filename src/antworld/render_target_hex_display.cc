@@ -39,6 +39,7 @@ void RenderTargetHexDisplay::render(GLint viewportX, GLint viewportY,
     glLoadIdentity();
 
     // Bind render target texture
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, getTexture());
 
      // Bind surface
