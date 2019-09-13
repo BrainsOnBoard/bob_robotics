@@ -7,3 +7,6 @@
 [submodule "third_party/plog"]
 	path = third_party/plog
 	url = ../../SergiusTheBest/plog.git
+[submodule "third_party/msp"]
+	path = third_party/msp
+	url = https://github.com/BrainsOnBoard/msp
