@@ -502,52 +502,17 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        if("${module}" STREQUAL matplotlibcpp)
-            find_package(PythonLibs REQUIRED)
-            BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
-            BoB_add_link_libraries(${PYTHON_LIBRARIES})
+        # Extra actions for third-party modules
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
+        endif()
 
-            # Also include numpy headers on *nix (gives better performance)
-            if(WIN32)
-                add_definitions(-DWITHOUT_NUMPY)
-            else()
-                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
-                                RESULT_VARIABLE rv
-                                OUTPUT_VARIABLE numpy_include_path)
-
-                # If we have numpy then use it, otherwise matplotlibcpp will work without it
-                if(${rv} EQUAL 0)
-                    BoB_add_include_directories(${numpy_include_path})
-                else()
-                    add_definitions(-DWITHOUT_NUMPY)
-                endif()
-            endif()
-        else()
-            # Extra actions
-            if(${module} STREQUAL ev3dev-lang-cpp)
-                # Default to BrickPi3
-                if(NOT EV3DEV_PLATFORM)
-                    set(EV3DEV_PLATFORM "BRICKPI3" CACHE STRING "Target ev3dev platform (EV3/BRICKPI/BRICKPI3/PISTORMS)")
-                endif()
-                set_property(CACHE EV3DEV_PLATFORM PROPERTY STRINGS "EV3" "BRICKPI" "BRICKPI3" "PISTORMS")
-                add_definitions(-DEV3DEV_PLATFORM_${EV3DEV_PLATFORM})
-                message("EV3 platform: ${EV3DEV_PLATFORM}")
-
-                BoB_add_link_libraries(ev3dev)
-            elseif(${module} STREQUAL imgui)
-                BoB_add_link_libraries(imgui)
-
-                # Extra libs needed
-                BoB_external_libraries(glew sfml-graphics)
-
-                # Suppress warning
-                add_compile_flags(-Wno-stringop-truncation)
-            endif()
-
+        if(EXISTS "${BOB_ROBOTICS_PATH}/third_party/${module}")
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
-                         WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
+                            WORKING_DIRECTORY "${BOB_ROBOTICS_PATH}")
 
             # If this folder is a cmake project, then build it
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
