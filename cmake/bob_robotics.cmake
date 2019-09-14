@@ -543,14 +543,6 @@ function(BoB_external_libraries)
             # Sorry, Norbert ;-). I can try to help you install SFML if it helps!
             #       -- Alex
             BoB_deprecated(SDL2 SFML)
-        elseif(${lib} STREQUAL glfw3)
-            find_package(glfw3 REQUIRED)
-            BoB_add_link_libraries(glfw)
-            BoB_external_libraries(opengl)
-
-            # Most of the GLFW code has already been updated, but we still
-            # need GLFW temporarily for third_party/imgui
-            BoB_deprecated(GLFW SFML)
         elseif(${lib} STREQUAL glew)
             if(NOT TARGET GLEW::GLEW)
                 message(FATAL_ERROR "Could not find glew")
