@@ -16,6 +16,21 @@ namespace BetaFlight {
     float currentVoltage = 0.0;
     float currentAmpDraw = 0.0;
 
+    float x_lia_b = 0.00;
+    float y_lia_b = 0.00;
+    float z_lia_b = 0.00;
+
+    struct imu_data {
+	float roll = 0;
+	float pitch = 0;
+	float yaw = 0;
+	float x_lia = 0;
+	float y_lia = 0;
+	float z_lia = 0;
+    }; 
+
+    imu_data imuValues;
+
     struct arm_flag {
         int err_num;
         std::string msg;
@@ -103,6 +118,20 @@ namespace BetaFlight {
             //std::cout << "Current level: " << anog.amperage << " mA." << std::endl;
             currentAmpDraw = anog.amperage;
         }
+	void onImu(const msp::msg::ImuRaw& imu) {
+		msp::msg::ImuSI convimu(imu, 512.0, 1.0/4.096, 0.92f/10.0f, 9.80665f);
+		imuValues.x_lia = imuValues.x_lia*0.95 + ((convimu.acc[0]-9.8*sin(imuValues.pitch*0.00555555555555*M_PI)) - x_lia_b)*0.05;
+		imuValues.y_lia = imuValues.y_lia*0.95 + ((convimu.acc[1]-9.8*sin(imuValues.roll*0.00555555555555*M_PI)) - y_lia_b)*0.05;
+		imuValues.z_lia = imuValues.z_lia*0.95 + ((convimu.acc[2]-9.8*cos((imuValues.pitch+imuValues.roll)*0.00277777777777*M_PI)) - z_lia_b)*0.05;
+		x_lia_b = x_lia_b*0.999 + ((convimu.acc[0]-9.8*sin(imuValues.pitch*0.00555555555555*M_PI)))*0.001;
+		y_lia_b = y_lia_b*0.999 + ((convimu.acc[1]-9.8*sin(imuValues.roll*0.00555555555555*M_PI)))*0.001;
+		z_lia_b = z_lia_b*0.999 + ((convimu.acc[2]-9.8*cos((imuValues.pitch+imuValues.roll)*0.00277777777*M_PI)))*0.001;
+	}
+	void onAttitude(const msp::msg::Attitude& attitude) {
+		imuValues.roll = attitude.ang_x;
+		imuValues.pitch = -attitude.ang_y;
+		imuValues.yaw = attitude.heading;
+	}
     };
 }
 
@@ -119,6 +148,8 @@ public:
     void subscribe() {
         m_Fcu.subscribe(&BetaFlight::Callbacks::onIdent, &m_Cbs, 0.1);
         m_Fcu.subscribe(&BetaFlight::Callbacks::onAnalog, &m_Cbs, 0.5);
+        m_Fcu.subscribe(&BetaFlight::Callbacks::onImu, &m_Cbs, 0.05);
+        m_Fcu.subscribe(&BetaFlight::Callbacks::onAttitude, &m_Cbs, 0.01);
     }
 
 
@@ -155,6 +186,10 @@ public:
 
     float getAmpDraw() {
         return BetaFlight::currentAmpDraw;
+    }
+
+    BetaFlight::imu_data getImuData() {
+        return BetaFlight::imuValues;
     }
 
     // accessors for M_ControlScale

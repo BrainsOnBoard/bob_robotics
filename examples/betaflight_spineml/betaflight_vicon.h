@@ -59,9 +59,15 @@ namespace Robots
       }
       std::cout << "[V:" << std::setw(4) << m_MyDrone.getVoltage() << " ";
 
+      BetaFlight::imu_data imuVals = getImuData();
+
+      std::cout << std::setw(4) << imuVals.roll << " ";
+      std::cout << std::setw(4) << imuVals.pitch << " ";
+      std::cout << std::setw(4) << imuVals.yaw << " ";
+
       if (m_Vicon.getNumObjects() == 1) {
 
-        auto objectData = m_Vicon.getObjectData(0);
+        auto objectData = m_Vicon.getObjectData();
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
 
@@ -84,7 +90,7 @@ namespace Robots
 
       if (controlOn) {
         // update control
-        auto objectData = m_Vicon.getObjectData(0);
+        auto objectData = m_Vicon.getObjectData();
         const auto position = objectData.getPosition<>();
         const auto attitude = objectData.getAttitude<degree_t>();
         const auto &velocity_crap = objectData.getVelocity();
@@ -126,8 +132,8 @@ namespace Robots
         float a_y_r = m_ModelData[5]*0.056;
         float a_z_r = -m_ModelData[2]*0.056;
 
-        float pos_d_factor = 2000.0f;
-        float pos_p_factor = 150.0f;
+        float pos_d_factor = 1000.0f; // 2000
+        float pos_p_factor = 100.0f; // 150
 
         if (m_ModelActive) {
            // override z setpoint
@@ -195,7 +201,7 @@ namespace Robots
 
         float z_control;
         float p_thr = 30.0*(m_VSetPoint[2] - float(velocity[2]));
-        float d_thr = 500.0*float(acceleration[2]);
+        float d_thr = 200.0*float(acceleration[2]); // 500
         float i_thr = 0.2*m_IntegralTerm[2];
 
         float z_control_test =  (p_thr + d_thr + i_thr) / 100.0;
@@ -349,6 +355,10 @@ return;
           //this->setWaypoint(m_Waypoint[0], m_Waypoint[1], z, CONST_YAW, false);
           for (int i = 0; i < 9; ++i)  this->m_ModelData[i] = data[i];
         //}
+    }
+
+    BetaFlight::imu_data getImuData() {
+	return m_MyDrone.getImuData();
     }
 
     BoBRobotics::Robots::betaflight_uav m_MyDrone;
