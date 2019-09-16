@@ -50,13 +50,15 @@ void netInSetup() {
 }
 
 int main(int argc, char *argv[]) {
+//try {
+
   // can be set from the command line - default to LINUX standards
   const std::string device = (argc>1) ? std::string(argv[1]) : "/dev/ttyUSB0";
   const size_t baudrate = (argc>2) ? std::stoul(argv[2]) : 115200;
 
   netInSetup();
 
-	BoBRobotics::Robots::betaflight_vicon my_drone(device, baudrate);
+  BoBRobotics::Robots::betaflight_vicon my_drone(device, baudrate);
 
   // limits for the VICON lab in Sheffield
   //my_drone.setRoomBounds(-2.2, 2.6, -4.2, 3.4 , 0.0, 2.0);
@@ -65,7 +67,7 @@ int main(int argc, char *argv[]) {
   // super, mega safe
   my_drone.setRoomBounds(-1.5, 1.5, -1.5, 1.5, 0.0, 1.5);
 
-	m_Port = 50091;
+  m_Port = 50091;
   m_Send_Port = 50101;
 
   auto future = std::async(std::launch::async, GetLineFromCin);
@@ -75,7 +77,12 @@ int main(int argc, char *argv[]) {
   bool controlOn = false;
   double data[9] = {0,0,0,0,0,0,0,0,0};
 
-  my_drone.printStatus();
+  try {
+    my_drone.printStatus();
+  } catch (...) {
+    std::cout << "NO VICON]" << std::endl;
+  }
+  //std::cout << "Status print done" << std::endl;
 
   float c_y = -0.3; //-1.3
 
@@ -107,8 +114,11 @@ int main(int argc, char *argv[]) {
 
   while (run) {
 
-    if (!mute) my_drone.printStatus();
-
+    try {
+      if (!mute) my_drone.printStatus();
+    } catch (...) {
+      std::cout << "NO VICON]" << std::endl;
+    }
     // set model outputs
 
     while (recvfrom(sockIn, data, sizeof(data), 0, nullptr, nullptr) != -1) {
@@ -136,11 +146,14 @@ int main(int argc, char *argv[]) {
 
     }
 
+    //std::cout << ".";
+
 
     if (future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
         auto line = future.get();
 
         future = std::async(std::launch::async, GetLineFromCin);
+
 
         if (line == "m") {
           mute = !mute;
@@ -183,13 +196,24 @@ int main(int argc, char *argv[]) {
           run = false;
         }
     }
-
     my_drone.sendModelData(data, have);
-  	my_drone.sendCommands(controlOn);
+    try {
+      my_drone.sendCommands(controlOn);
+    } catch (...) {
+      std::cout << "Exception" << std::endl;
+    }
 
   }
 
+  std::cout << "here" << std::endl;
   my_drone.disarmDrone();
+
+  //exit(0);
+
+  //} 
+  //catch (...) {
+//	std::cout << "Exception " << std::endl;
+ // }
 
   // shut down threads
   exit(0);
