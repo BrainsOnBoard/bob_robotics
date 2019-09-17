@@ -259,12 +259,15 @@ macro(always_included_packages)
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
     endif()
+    if(NOT TARGET FreeImage::FreeImage)
+        find_package(gazebo QUIET)
+    endif()
 
     # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake
     # packages may not be present
     if(NOT UNIX)
         if(NOT TARGET SDL2::SDL2)
-            find_package(SDL2)
+            find_package(SDL2 QUIET)
         endif()
         if(NOT TARGET Eigen3::Eigen)
             find_package(Eigen3 QUIET)
