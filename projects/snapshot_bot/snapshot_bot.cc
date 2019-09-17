@@ -11,7 +11,7 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "net/server.h"
-#include "robots/norbot.h"
+#include "robots/tank.h"
 #include "vicon/capture_control.h"
 #include "video/netsink.h"
 #include "vicon/udp.h"
@@ -438,7 +438,7 @@ private:
     std::unique_ptr<MemoryBase> m_Memory;
 
     // Motor driver
-    Robots::Norbot m_Motor;
+    Robots::TANK_TYPE m_Motor;
 
     // Last time at which a motor command was issued or a snapshot was trained
     TimePoint m_LastMotorCommandTime;
