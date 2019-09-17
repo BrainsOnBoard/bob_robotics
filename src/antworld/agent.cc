@@ -3,12 +3,6 @@
 #include "common/circstat.h"
 #include "common/macros.h"
 
-// OpenGL includes
-#include <GL/glew.h>
-
-// Standard C++ includes
-#include <mutex>
-
 using namespace units::literals;
 using namespace units::velocity;
 using namespace units::angular_velocity;
@@ -20,7 +14,7 @@ namespace AntWorld {
 constexpr meters_per_second_t AntAgent::DefaultVelocity;
 constexpr radians_per_second_t AntAgent::DefaultTurnSpeed;
 
-AntAgent::AntAgent(GLFWwindow *window,
+AntAgent::AntAgent(sf::Window &window,
                    Renderer &renderer,
                    const cv::Size &renderSize,
                    meters_per_second_t velocity,

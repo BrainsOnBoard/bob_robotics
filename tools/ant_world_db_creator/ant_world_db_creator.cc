@@ -15,8 +15,8 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// GLFW
-#include <GLFW/glfw3.h>
+// SFML includes
+#include <SFML/Graphics.hpp>
 
 // Standard C++ includes
 #include <algorithm>
@@ -43,12 +43,12 @@ const cv::Size RenderSize{ 720, 150 };
 class AntWorldDatabaseCreator {
 protected:
     ImageDatabase m_Database;
-    GLFWwindow *m_Window;
+    sf::Window &m_Window;
     AntWorld::Renderer m_Renderer;
     AntWorld::AntAgent m_Agent;
 
     AntWorldDatabaseCreator(const std::string &databaseName,
-                            GLFWwindow *window, const filesystem::path &executablePath)
+                            sf::Window &window, const filesystem::path &executablePath)
       : m_Database(databaseName)
       , m_Window(window)
       , m_Renderer(256, 0.001, 1000.0, 360_deg)
@@ -67,7 +67,7 @@ protected:
         // Host OpenCV array to hold pixels read from screen
         cv::Mat frame(RenderSize, CV_8UC3);
 
-        for (auto it = poses.cbegin(); !glfwWindowShouldClose(m_Window) && it < poses.cend(); ++it) {
+        for (auto it = poses.cbegin(); m_Window.isOpen() && it < poses.cend(); ++it) {
             // Update agent's position
             m_Agent.setPosition(it->x(), it->y(), AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
@@ -94,7 +94,7 @@ protected:
 
 class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    GridDatabaseCreator(GLFWwindow *window, const filesystem::path &executablePath)
+    GridDatabaseCreator(sf::Window &window, const filesystem::path &executablePath)
       : AntWorldDatabaseCreator("world5000_grid", window, executablePath)
     {}
 
@@ -120,7 +120,7 @@ public:
 class RouteDatabaseCreator : AntWorldDatabaseCreator {
 public:
     RouteDatabaseCreator(const std::string &databaseName,
-                         GLFWwindow *window,
+                         sf::Window &window,
                          AntWorld::RouteContinuous &route,
                          const filesystem::path &executablePath)
       : AntWorldDatabaseCreator(databaseName, window, executablePath)
@@ -171,10 +171,10 @@ main(int argc, char **argv)
             databaseName = databaseName.substr(0, pos);
         }
 
-        RouteDatabaseCreator creator(databaseName, window.get(), route, executablePath);
+        RouteDatabaseCreator creator(databaseName, *window, route, executablePath);
         creator.runForRoute();
     } else {
-        GridDatabaseCreator creator(window.get(), executablePath);
+        GridDatabaseCreator creator(*window, executablePath);
         creator.runForGrid();
     }
 }

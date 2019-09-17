@@ -3,22 +3,22 @@
 // BoB robotics includes
 #include "joystick.h"
 
-// Forward declarations
-class GLFWwindow;
+// SFML
+#include <SFML/Graphics.hpp>
 
 namespace BoBRobotics {
 namespace HID {
 
 //------------------------------------------------------------------------
-// BoBRobotics::HID::JoystickGLFWKeyboard
+// BoBRobotics::HID::JoystickSFMLKeyboard
 //------------------------------------------------------------------------
 /*!
- * \brief Class for using keyboard (via GLFW) as a joystick
+ * \brief Class for using keyboard (via SFML) as a joystick
  */
-class JoystickGLFWKeyboard : public JoystickBase<JAxis, JButton>
+class JoystickSFMLKeyboard : public JoystickBase<JAxis, JButton>
 {
 public:
-    JoystickGLFWKeyboard(GLFWwindow *window);
+    JoystickSFMLKeyboard(sf::Window &window);
 
 protected:
     //------------------------------------------------------------------------
@@ -27,16 +27,21 @@ protected:
     virtual bool updateState() override;
 
 private:
-    //------------------------------------------------------------------------
-    // Private methods
-    //------------------------------------------------------------------------
-    void setAxisStateKeys(int negativeKey, int positiveKey, JAxis axis);
-    void setButtonStateKey(int key, JButton button);
+    struct AxisKey {
+        sf::Keyboard::Key positiveKey, negativeKey;
+        JAxis axis;
+    };
+    struct ButtonKey {
+        sf::Keyboard::Key key;
+        JButton button;
+    };
 
     //------------------------------------------------------------------------
-    // Members
+    // Private members
     //------------------------------------------------------------------------
-    GLFWwindow *m_Window;
+    sf::Window &m_Window;
+    static const AxisKey AxisKeys[];
+    static const ButtonKey ButtonKeys[];
 }; // JoystickLinux
 } // HID
 } // BoBRobotics

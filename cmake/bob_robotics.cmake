@@ -425,6 +425,10 @@ macro(BoB_add_link_libraries)
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 endmacro()
 
+function(BoB_deprecated WHAT ALTERNATIVE)
+    message(WARNING "!!!!! WARNING: Use of ${WHAT} in BoB robotics code is deprecated and will be removed in future. Use ${ALTERNATIVE} instead. !!!!!")
+endfunction()
+
 function(BoB_add_include_directories)
     # Sometimes we get newline characters in an *_INCLUDE_DIRS variable (e.g.
     # with the OpenCV package) and this breaks CMake
@@ -479,104 +483,9 @@ endfunction()
 
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
-        if(${lib} STREQUAL i2c)
-            if(NOT WIN32 AND NOT NO_I2C)
-                # If it's a new version of i2c-tools then we need to link
-                # against an additonal library
-                execute_process(COMMAND "${CMAKE_CURRENT_LIST_DIR}/is_i2c_tools_new.sh"
-                                RESULT_VARIABLE rv)
-                if(NOT ${rv} EQUAL 0)
-                    BoB_add_link_libraries("i2c")
-                endif()
-            endif()
-        elseif(${lib} STREQUAL opencv)
-            BoB_find_package(OpenCV REQUIRED)
-        elseif(${lib} STREQUAL eigen3)
-            if(UNIX)
-                BoB_add_pkg_config_libraries(eigen3)
-            else()
-                if(NOT TARGET Eigen3::Eigen)
-                    message(FATAL_ERROR "Eigen 3 not found")
-                endif()
-                BoB_add_link_libraries(Eigen3::Eigen)
-            endif()
-
-            # For CMake < 3.9, we need to make the target ourselves
-            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-                add_compile_flags(-fopenmp)
-            elseif(NOT OpenMP_CXX_FOUND)
-                find_package(Threads REQUIRED)
-                add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
-                set_property(TARGET OpenMP::OpenMP_CXX
-                             PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
-
-                # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
-                set_property(TARGET OpenMP::OpenMP_CXX
-                             PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
-
-                BoB_add_link_libraries(OpenMP::OpenMP_CXX)
-            endif()
-        elseif(${lib} STREQUAL sfml-graphics)
-            # It seems like only newer versions of SFML include a CMake package,
-            # so use pkg-config on Unix instead, in case we don't have it
-            if(UNIX)
-                BoB_add_pkg_config_libraries(sfml-graphics)
-            else()
-                find_package(SFML REQUIRED graphics)
-                BoB_add_link_libraries(sfml-graphics)
-            endif()
-        elseif(${lib} STREQUAL sdl2)
-            # On Unix we use pkg-config to find SDL2, because the CMake package may not
-            # be present
-            if(UNIX)
-                BoB_add_pkg_config_libraries(sdl2)
-            elseif(NOT SDL2_FOUND)
-                message(FATAL_ERROR "Could not find SDL2")
-                BoB_add_link_libraries(SDL2::SDL2)
-            endif()
-        elseif(${lib} STREQUAL glfw3)
-            find_package(glfw3 REQUIRED)
-            BoB_add_link_libraries(glfw)
-            BoB_external_libraries(opengl)
-        elseif(${lib} STREQUAL glew)
-            if(NOT TARGET GLEW::GLEW)
-                message(FATAL_ERROR "Could not find glew")
-            endif()
-
-            BoB_add_link_libraries(GLEW::GLEW)
-            BoB_external_libraries(opengl)
-        elseif(${lib} STREQUAL opengl)
-            # Newer versions of cmake give a deprecation warning
-            set(OpenGL_GL_PREFERENCE LEGACY)
-
-            find_package(OpenGL REQUIRED)
-            BoB_add_include_directories(${OPENGL_INCLUDE_DIR})
-            BoB_add_link_libraries(${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
-        elseif(${lib} STREQUAL gtest)
-            find_package(GTest REQUIRED)
-            BoB_add_include_directories(${GTEST_INCLUDE_DIRS})
-            BoB_add_link_libraries(${GTEST_LIBRARIES})
-        elseif(${lib} STREQUAL gazebo)
-            # If Gazebo is added as a dependency multiple times (e.g. from
-            # multiple CMakeLists.txt files) then I'm getting an error from the
-            # target FreeImage::FreeImage being created multiple times - AD
-            if(NOT TARGET FreeImage::FreeImage)
-                find_package(gazebo REQUIRED)
-                BoB_add_include_directories(${GAZEBO_INCLUDE_DIRS})
-                BoB_add_link_libraries(${GAZEBO_LIBRARIES})
-                link_directories(${GAZEBO_LIBRARY_DIRS})
-                add_compile_flags(${GAZEBO_CXX_FLAGS})
-            endif()
-        elseif(${lib} STREQUAL spineml_simulation)
-            # Find where user has installed GeNN
-            exec_or_fail("${BOB_ROBOTICS_PATH}/bin/find_genn.sh")
-            string(STRIP "${SHELL_OUTPUT}" GENN_PATH) # Strip newline
-            message("GENN_PATH: ${GENN_PATH}")
-
-            BoB_add_include_directories("${GENN_PATH}/include")
-            BoB_add_link_libraries("${GENN_PATH}/lib/libspineml_simulator.a"
-                                   "${GENN_PATH}/lib/libspineml_common.a"
-                                   dl)
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/external_libs/${lib}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
@@ -592,46 +501,17 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        if("${module}" STREQUAL matplotlibcpp)
-            find_package(PythonLibs REQUIRED)
-            BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
-            BoB_add_link_libraries(${PYTHON_LIBRARIES})
+        # Extra actions for third-party modules
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
+        endif()
 
-            # Also include numpy headers on *nix (gives better performance)
-            if(WIN32)
-                add_definitions(-DWITHOUT_NUMPY)
-            else()
-                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/bin/find_numpy.py"
-                                RESULT_VARIABLE rv
-                                OUTPUT_VARIABLE numpy_include_path)
-
-                # If we have numpy then use it, otherwise matplotlibcpp will work without it
-                if(${rv} EQUAL 0)
-                    BoB_add_include_directories(${numpy_include_path})
-                else()
-                    add_definitions(-DWITHOUT_NUMPY)
-                endif()
-            endif()
-        else()
-            # Extra actions
-            if(${module} STREQUAL ev3dev-lang-cpp)
-                # Default to BrickPi3
-                if(NOT EV3DEV_PLATFORM)
-                    set(EV3DEV_PLATFORM "BRICKPI3" CACHE STRING "Target ev3dev platform (EV3/BRICKPI/BRICKPI3/PISTORMS)")
-                endif()
-                set_property(CACHE EV3DEV_PLATFORM PROPERTY STRINGS "EV3" "BRICKPI" "BRICKPI3" "PISTORMS")
-                add_definitions(-DEV3DEV_PLATFORM_${EV3DEV_PLATFORM})
-                message("EV3 platform: ${EV3DEV_PLATFORM}")
-
-                BoB_add_link_libraries(ev3dev)
-            elseif(${module} STREQUAL imgui)
-                BoB_add_link_libraries(imgui)
-            endif()
-
+        if(EXISTS "${BOB_ROBOTICS_PATH}/third_party/${module}")
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
-                         WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
+                            WORKING_DIRECTORY "${BOB_ROBOTICS_PATH}")
 
             # If this folder is a cmake project, then build it
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})

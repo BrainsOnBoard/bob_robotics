@@ -59,7 +59,7 @@ SFMLWorld::CarAgent::draw(sf::RenderTarget &target, sf::RenderStates states) con
 
 SFMLWorld::SFMLWorld(const Vector2<meter_t> &arenaSize)
     : SFMLWorld(Vector2<meter_t>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
-                    Vector2<meter_t>{ arenaSize[0] / 2, arenaSize[1] / 2 })
+                Vector2<meter_t>{ arenaSize[0] / 2, arenaSize[1] / 2 })
 {}
 
 SFMLWorld::CarAgent SFMLWorld::createCarAgent(meter_t carWidth)
