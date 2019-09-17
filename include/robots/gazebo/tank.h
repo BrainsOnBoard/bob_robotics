@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "robots/tank.h"
+#include "robots/gazebo/node.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -14,13 +15,15 @@ namespace BoBRobotics {
 namespace Robots {
 namespace Gazebo {
 
+using namespace units::literals;
+
 class Tank : public Robots::Tank
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
-    Tank(const meters_per_second_t maximumSpeed,
-         gazebo::transport::NodePtr node);
+    Tank(const meters_per_second_t maximumSpeed = 1_mps,
+         gazebo::transport::NodePtr node = getNode());
 
     // Public virtual methods
     virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
