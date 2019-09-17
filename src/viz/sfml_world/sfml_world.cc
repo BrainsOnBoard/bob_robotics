@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/path.h"
 #include "viz/sfml_world/sfml_world.h"
 
 // SFML
@@ -36,14 +37,9 @@ constexpr float SFMLWorld::OriginLineThickness, SFMLWorld::OriginLineLength;
 SFMLWorld::CarAgent::CarAgent(const SFMLWorld &display, meter_t carWidth)
   : m_Display(display)
 {
-    const char *brPath = std::getenv("BOB_ROBOTICS_PATH");
-    if (!brPath) {
-        throw std::runtime_error("BOB_ROBOTICS_PATH environment variable is not set");
-    }
-
-    const std::string imageFilePath = std::string(brPath) + "/resources/car.bmp";
-    if (!m_Texture.loadFromFile(imageFilePath)) {
-        throw std::runtime_error("Could not load " + imageFilePath);
+    const auto imageFilePath = Path::getResourcesPath() / "car.bmp";
+    if (!m_Texture.loadFromFile(imageFilePath.str())) {
+        throw std::runtime_error("Could not load " + imageFilePath.str());
     }
 
     // Make car sprite: scale and set origin to centre of image

@@ -6,7 +6,7 @@ BoB_add_link_libraries(${PYTHON_LIBRARIES})
 if(WIN32)
     add_definitions(-DWITHOUT_NUMPY)
 else()
-    execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
+    execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/bin/find_numpy.py"
                     RESULT_VARIABLE rv
                     OUTPUT_VARIABLE numpy_include_path)
 
