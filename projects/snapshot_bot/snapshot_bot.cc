@@ -17,8 +17,8 @@
 #include "net/server.h"
 #include "robots/robot_type.h"
 #include "vicon/capture_control.h"
-#include "video/netsink.h"
 #include "vicon/udp.h"
+#include "video/netsink.h"
 #include "video/panoramic.h"
 
 // BoB robotics third-party includes
