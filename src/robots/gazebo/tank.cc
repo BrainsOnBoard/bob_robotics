@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/circstat.h"
 #include "common/macros.h"
+#include "robots/gazebo/camera.h"
 #include "robots/gazebo/tank.h"
 
 using namespace units::angular_velocity;
@@ -13,12 +14,11 @@ namespace Gazebo {
 Tank::Tank(const meters_per_second_t maximumSpeed,
            gazebo::transport::NodePtr node)
   : m_MaximumSpeed(getAngularVelocity(maximumSpeed, 0.3_m))
+  , m_Node(node)
+  , m_Pub(node->Advertise<gazebo::msgs::Vector2d>("~/differential_drive_robot/vel_cmd"))
 {
-    // Publish to the  differential_drive_robot topic
-    pub = node->Advertise<gazebo::msgs::Vector2d>("~/differential_drive_robot/vel_cmd");
-
     // Wait for a subscriber to connect to this publisher
-    pub->WaitForConnection();
+    m_Pub->WaitForConnection();
 }
 
 meters_per_second_t
@@ -34,10 +34,18 @@ Tank::tank(float left, float right)
     BOB_ASSERT(right >= -1.f && right <= 1.f);
 
     // Set the velocity in the x-component
-    gazebo::msgs::Set(&msg, ignition::math::Vector2d(left * m_MaximumSpeed.value(), right * m_MaximumSpeed.value()));
+    ignition::math::Vector2d vec{ left * m_MaximumSpeed.value(),
+                                  right * m_MaximumSpeed.value() };
+    gazebo::msgs::Set(&m_Msg, vec);
 
     // Send the message
-    pub->Publish(msg);
+    m_Pub->Publish(m_Msg);
+}
+
+std::unique_ptr<Video::Input>
+Tank::getCamera()
+{
+    return std::make_unique<Camera>(m_Node);
 }
 
 } // Gazebo

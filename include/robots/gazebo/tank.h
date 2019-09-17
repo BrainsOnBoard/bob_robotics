@@ -28,11 +28,13 @@ public:
     // Public virtual methods
     virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
     virtual void tank(float left, float right) override;
+    virtual std::unique_ptr<Video::Input> getCamera() override;
 
 private:
     const radians_per_second_t m_MaximumSpeed;
-    gazebo::msgs::Vector2d msg;
-    gazebo::transport::PublisherPtr pub;
+    gazebo::msgs::Vector2d m_Msg;
+    gazebo::transport::NodePtr m_Node;
+    gazebo::transport::PublisherPtr m_Pub;
 
 }; // Tank
 } // Gazebo
