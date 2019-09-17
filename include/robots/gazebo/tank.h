@@ -17,10 +17,9 @@ namespace Gazebo {
 class Tank : public Robots::Tank
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
-    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
-    Tank(const radians_per_second_t maximumSpeed,
+    Tank(const meters_per_second_t maximumSpeed,
          gazebo::transport::NodePtr node);
 
     // Public virtual methods
