@@ -49,7 +49,7 @@ main(int argc, char **argv)
         display->runInBackground();
     }
 
-    Gazebo::Tank robot(5_rad_per_s, node); // Tank agent
+    Gazebo::Tank robot(1_mps, node); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
