@@ -4,9 +4,6 @@
 #include <limits>
 #include <memory>
 
-// Standard C includes
-#include <cassert>
-
 // BoB robotics includes
 #include "common/fsm.h"
 #include "common/logging.h"
