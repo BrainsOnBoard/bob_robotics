@@ -94,12 +94,6 @@ protected:
 } // BoBRobotics
 
 // Include appropriate header, depending on what kind of tank robot the user wants
-#if defined(TANK_TYPE_Norbot)
-#include "norbot.h"
-#elif defined(TANK_TYPE_EV3)
-#include "ev3/ev3.h"
-#elif defined(TANK_TYPE_Surveyor)
-#include "surveyor.h"
-#elif defined(TANK_TYPE_BundledTankNetSink)
-#include "tank_netsink.h"
+#ifdef TANK_HEADER
+#include TANK_HEADER
 #endif

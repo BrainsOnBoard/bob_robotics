@@ -20,7 +20,6 @@
                 "${GENN_PATH}/include"
             ],
             "defines": [
-                "TANK_TYPE_Tank",
                 "TANK_TYPE=Tank"
             ],
             "cppStandard": "c++14",
