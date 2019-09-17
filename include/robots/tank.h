@@ -74,6 +74,8 @@ public:
 
     float getRight() const;
 
+    virtual std::unique_ptr<Video::Input> getCamera() override;
+
 private:
     Net::Connection *m_Connection = nullptr;
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;

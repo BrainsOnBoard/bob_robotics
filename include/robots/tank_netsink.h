@@ -4,6 +4,7 @@
 #include "common/macros.h"
 #include "net/client.h"
 #include "net/connection.h"
+#include "video/netsource.h"
 #include "tank.h"
 
 // Third-party includes
@@ -75,6 +76,11 @@ public:
     Net::Connection &getConnection()
     {
         return m_Connection;
+    }
+
+    virtual std::unique_ptr<Video::Input> getCamera() override
+    {
+        return std::make_unique<Video::NetSource>(getConnection());
     }
 
 }; // TankNetSinkBase

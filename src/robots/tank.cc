@@ -3,6 +3,7 @@
 #include "common/circstat.h"
 #include "common/logging.h"
 #include "robots/tank.h"
+#include "video/panoramic.h"
 
 // Standard C includes
 #include <cmath>
@@ -289,5 +290,9 @@ void Tank::setWheelSpeeds(float left, float right)
     m_Right = right;
 }
 
+std::unique_ptr<Video::Input> Tank::getCamera()
+{
+    return Video::getPanoramicCamera();
+}
 } // Robots
 } // BoBRobotics

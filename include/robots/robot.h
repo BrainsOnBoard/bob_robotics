@@ -1,5 +1,12 @@
 #pragma once
 
+// BoB robotics includes
+#include "common/macros.h"
+#include "video/input.h"
+
+// Standard C++ includes
+#include <memory>
+
 namespace BoBRobotics {
 namespace Robots {
 //! A generic abstract class for robots and other moveable agents
@@ -25,6 +32,9 @@ public:
 
     //! Stop the robot moving
     virtual void stopMoving() = 0;
+
+    //! Get the default camera associated with this robot
+    BOB_NOT_IMPLEMENTED(virtual std::unique_ptr<Video::Input> getCamera())
 }; // Robot
 } // Robots
 } // BoBRobotics
