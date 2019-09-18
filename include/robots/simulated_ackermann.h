@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/has_pose.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "robots/ackermann.h"
@@ -14,6 +15,7 @@ using namespace units::literals;
 
 class SimulatedAckermann
   : public Ackermann
+  , public HasPose<SimulatedAckermann>
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -28,23 +30,9 @@ public:
 
     meter_t getDistanceBetweenAxis() const;
 
-    template<typename LengthUnit = meter_t>
-    Vector3<LengthUnit> getPosition()
-    {
-        updatePose();
-        return { m_Pose.x(), m_Pose.y(), m_Pose.z() };
-    }
-
-    template<typename AngleUnit = degree_t>
-    std::array<AngleUnit, 3> getAttitude()
-    {
-        updatePose();
-        return { m_Pose.yaw(), 0_rad, 0_rad };
-    }
-
     const Pose3<meter_t, degree_t> &getPose();
     meters_per_second_t getAbsoluteMaximumSpeed() const;
-    degree_t getMaximumTurn() const;
+    degree_t getMaximumTurn() const override;
     void setPose(const Pose3<meter_t, degree_t> &pose);
 
     // Public virtual methods
