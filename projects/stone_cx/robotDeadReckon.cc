@@ -102,7 +102,7 @@ int bob_main(int argc, char *argv[])
     const bool doVisualise = (argc > 1) && strcmp(argv[1], "--visualise") == 0;
 
     // Create motor interface
-    Robots::TANK_TYPE motor;
+    TANK_TYPE motor;
 
 #ifdef USE_EV3
     Net::Connection *connection = &motor.getConnection();

@@ -43,7 +43,7 @@ run(Video::Input &camera)
     Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
 
     // Initialise robot
-    Robots::TANK_TYPE tank;
+    TANK_TYPE tank;
 
     // Read motor commands from network
     tank.readFromNetwork(connection);

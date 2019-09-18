@@ -440,7 +440,7 @@ private:
     std::unique_ptr<MemoryBase> m_Memory;
 
     // Motor driver
-    Robots::TANK_TYPE m_Motor;
+    TANK_TYPE m_Motor;
 
     // Last time at which a motor command was issued or a snapshot was trained
     TimePoint m_LastMotorCommandTime;

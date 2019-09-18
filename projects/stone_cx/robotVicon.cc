@@ -32,7 +32,7 @@ int main()
     Joystick joystick;
 
     // Create motor interface
-    Robots::TANK_TYPE motor;
+    TANK_TYPE motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);

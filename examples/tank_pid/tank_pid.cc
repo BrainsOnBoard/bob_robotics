@@ -80,7 +80,7 @@ bob_main(int argc, char **argv)
         LOGW << PLAY_PATH << " not found. Install sox for sounds.";
     }
 #else
-    Robots::TANK_TYPE robot;
+    TANK_TYPE robot;
 #endif
 
     // Load path from file, if one is given

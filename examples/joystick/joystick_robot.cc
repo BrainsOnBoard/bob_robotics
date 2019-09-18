@@ -12,7 +12,7 @@ int main()
     HID::Joystick joystick(joystickDeadzone);
 
     // Create motor interface
-    Robots::TANK_TYPE robot;
+    TANK_TYPE robot;
 
     do {
         // Read joystick
