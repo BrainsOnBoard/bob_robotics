@@ -249,9 +249,10 @@ private:
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
-                        auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const auto &position = objectData.getPosition<units::length::millimeter_t>();
-                        const auto &attitude = objectData.getAttitude<units::angle::degree_t>();
+                        const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
+                        const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
+                        const auto &position = pose.position();
+                        const auto &attitude = pose.attitude();
 
                         // Write to CSV
                         m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", " << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
@@ -332,9 +333,10 @@ private:
                     // If vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
-                        auto objectData = m_ViconTracking.getObjectData(0);
-                        const auto &position = objectData.getPosition<units::length::millimeter_t>();
-                        const auto &attitude = objectData.getAttitude<units::angle::degree_t>();
+                        const auto objectData = m_ViconTracking.getObjectData(0);
+                        const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
+                        const auto &position = pose.position();
+                        const auto &attitude = pose.attitude();
 
                         // Write extra logging data
                         m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0] << ", " << position[1] << ", " << position[2] << ", " << attitude[0] << ", " << attitude[1] << ", " << attitude[2];

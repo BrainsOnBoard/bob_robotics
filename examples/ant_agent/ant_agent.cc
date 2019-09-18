@@ -62,7 +62,7 @@ bob_main(int, char **argv)
         // Poll joystick
         joystick.update();
 
-        const auto pose = agent.getPose<meter_t, degree_t>();
+        const decltype(lastPose) pose = agent.getPose();
         if (pose == lastPose) {
             std::this_thread::sleep_for(5ms);
             continue;
