@@ -74,7 +74,8 @@ private:
     const millimeter_t m_AxisLength;
     meters_per_second_t m_Right{}, m_Left{};
 
-    void updatePose()
+protected:
+    void doUpdatePose()
     {
         using namespace units::angle;
         using namespace units::length;
@@ -96,6 +97,16 @@ private:
             m_Pose.y() += turnRadius * (cos(newAngle) - cos(m_Pose.yaw()));
             m_Pose.yaw() = newAngle;
         }
+    }
+
+    const auto &getPoseRaw() const
+    {
+        return m_Pose;
+    }
+
+    virtual void updatePose()
+    {
+        doUpdatePose();
     }
 }; // SimulatedTank
 } // Robots

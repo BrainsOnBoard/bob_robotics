@@ -36,7 +36,7 @@ void Tank::stopMoving()
     tank(0.f, 0.f);
 }
 
-void Tank::addJoystick(HID::Joystick &joystick, float deadZone)
+void Tank::addJoystick(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick, float deadZone)
 {
     joystick.addHandler(
             [this, deadZone](HID::JAxis axis, float value) {
@@ -44,7 +44,7 @@ void Tank::addJoystick(HID::Joystick &joystick, float deadZone)
             });
 }
 
-void Tank::controlWithThumbsticks(HID::Joystick &joystick)
+void Tank::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
 {
     joystick.addHandler(
             [this](HID::JAxis axis, float value) {
@@ -66,7 +66,7 @@ void Tank::controlWithThumbsticks(HID::Joystick &joystick)
             });
 }
 
-void Tank::drive(const HID::Joystick &joystick, float deadZone)
+void Tank::drive(const HID::JoystickBase<HID::JAxis, HID::JButton> &joystick, float deadZone)
 {
     drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
           joystick.getState(HID::JAxis::LeftStickVertical),

@@ -34,11 +34,12 @@ public:
 
     virtual void stopMoving() override;
 
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
+    void addJoystick(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick, float deadZone = 0.25f);
 
-    void controlWithThumbsticks(HID::Joystick &joystick);
+    void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick);
 
-    void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
+    void drive(const HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
+               float deadZone = 0.25f);
 
     void move(meters_per_second_t v,
               radians_per_second_t clockwiseSpeed,
