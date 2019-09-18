@@ -6,6 +6,9 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
+// Standard C++ includes
+#include <memory>
+
 namespace BoBRobotics {
 namespace HID {
 
@@ -19,6 +22,8 @@ class JoystickSFMLKeyboard : public JoystickBase<JAxis, JButton>
 {
 public:
     JoystickSFMLKeyboard(sf::Window &window);
+
+    static std::unique_ptr<JoystickBase<JAxis, JButton>> createJoystick(sf::Window &);
 
 protected:
     //------------------------------------------------------------------------
