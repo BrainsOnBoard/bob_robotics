@@ -139,7 +139,11 @@ macro(BoB_project)
     endif()
     string(TOUPPER ${TANK_TYPE} tank_type_upper)
     string(REPLACE :: _ tank_type_upper ${tank_type_upper})
-    add_definitions("-DTANK_HEADER=\"${TANK_HEADER}\"" -DTANK_TYPE_${tank_type_upper})
+
+    add_definitions(-DTANK_TYPE_${tank_type_upper})
+    if(NOT "${TANK_HEADER}" STREQUAL "")
+        add_definitions("-DTANK_HEADER=\"${TANK_HEADER}\"")
+    endif()
 
     # Do linking etc.
     BoB_build()
