@@ -8,6 +8,14 @@
 // Third-party includes
 #include "third_party/units.h"
 
+#if TEGRA_CHIP_ID == 33
+    #define USER_I2C_DEVICE "/dev/i2c-1"
+#elif TEGRA_CHIP_ID == 24
+    #define USER_I2C_DEVICE "/dev/i2c-0"
+#else
+    #error Unsupported tegra chip id
+#endif
+
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
@@ -20,7 +28,7 @@ class Norbot : public Tank
     using millimeter_t = units::length::millimeter_t;
 
 public:
-    Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29);
+    Norbot(const char *path = USER_I2C_DEVICE, int slaveAddress = 0x29);
 
     //----------------------------------------------------------------------------
     // Tank virtuals
