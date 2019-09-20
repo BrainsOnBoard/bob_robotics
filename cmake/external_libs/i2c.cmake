@@ -4,7 +4,7 @@ if(${lib} STREQUAL i2c)
         # against an additonal library
         execute_process(COMMAND "${CMAKE_CURRENT_LIST_DIR}/is_i2c_tools_new.sh"
                         RESULT_VARIABLE rv)
-        if(${rv} EQUAL "0")
+        if(${rv} EQUAL 0)
             BoB_add_link_libraries("i2c")
         endif()
     endif()
