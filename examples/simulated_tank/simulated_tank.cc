@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/logging.h"
 #include "common/main.h"
-#include "hid/joystick.h"
+#include "hid/joystick_sfml_keyboard.h"
 #include "robots/simulated_tank.h"
 #include "viz/sfml_world/sfml_world.h"
 
@@ -22,10 +22,10 @@ bob_main(int, char **)
     Viz::SFMLWorld display;                         // For displaying the agent
     auto car = display.createCarAgent();
 
-    HID::Joystick joystick(0.25f);
-    robot.controlWithThumbsticks(joystick);
+    auto joystick = HID::JoystickSFMLKeyboard::createJoystick(display.getWindow());
+    robot.controlWithThumbsticks(*joystick);
 
-    joystick.addHandler([&robot](HID::JButton button, bool pressed) {
+    joystick->addHandler([&robot](HID::JButton button, bool pressed) {
         if (pressed && button == HID::JButton::Start) {
             robot.setPose({}); // Reset to origin
             return true;
@@ -42,8 +42,8 @@ bob_main(int, char **)
         display.update(car);
 
         // Check for joystick events
-        joystick.update();
-    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
+        joystick->update();
+    } while (!joystick->isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;
 }
