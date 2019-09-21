@@ -228,6 +228,7 @@ public:
     void close();
     float lengthToPixel(const meter_t value) const;
     Vector2<meter_t> pixelToVector(int x, int y);
+    sf::Window &getWindow();
 
     template<class VectorType>
     sf::Vector2f vectorToPixel(const VectorType &point) const
