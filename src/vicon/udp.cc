@@ -74,5 +74,17 @@ TimedOutError::TimedOutError()
   : std::runtime_error("Timed out waiting for Vicon data")
 {}
 
+BundledVicon::BundledVicon(uint16_t port)
+    : m_Client(port)
+{
+    m_Client.waitUntilConnected();
+}
+
+const Pose3<units::length::millimeter_t, units::angle::radian_t> &
+BundledVicon::getPose() const
+{
+    return m_Client.getObjectData().getPose();
+}
+
 } // namespace Vicon
 } // BoBRobotics
