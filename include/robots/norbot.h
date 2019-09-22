@@ -8,12 +8,16 @@
 // Third-party includes
 #include "third_party/units.h"
 
+// If we're on Jetson TX1, I2C bus 1 is the one broken out
 #if TEGRA_CHIP_ID == 33
-    #define USER_I2C_DEVICE "/dev/i2c-1"
+    #define I2C_DEVICE_DEFAULT "/dev/i2c-1"
+// Whereas, on Jetson TX2, I2C bus 0 is the one broken out
 #elif TEGRA_CHIP_ID == 24
-    #define USER_I2C_DEVICE "/dev/i2c-0"
+    #define I2C_DEVICE_DEFAULT "/dev/i2c-0"
+// Otherwise, use /dev/null and give warning
 #else
-    #error Unsupported tegra chip id
+    //#warning Using Norbot on unknown device - I2C device should be manually set
+    #define I2C_DEVICE_DEFAULT "/dev/null"
 #endif
 
 namespace BoBRobotics {
@@ -28,7 +32,7 @@ class Norbot : public Tank
     using millimeter_t = units::length::millimeter_t;
 
 public:
-    Norbot(const char *path = USER_I2C_DEVICE, int slaveAddress = 0x29);
+    Norbot(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x29);
 
     //----------------------------------------------------------------------------
     // Tank virtuals
