@@ -14,9 +14,8 @@
 // Whereas, on Jetson TX2, I2C bus 0 is the one broken out
 #elif TEGRA_CHIP_ID == 24
     #define I2C_DEVICE_DEFAULT "/dev/i2c-0"
-// Otherwise, use /dev/null and give warning
+// Otherwise, use /dev/null
 #else
-    //#warning Using Norbot on unknown device - I2C device should be manually set
     #define I2C_DEVICE_DEFAULT "/dev/null"
 #endif
 
