@@ -559,7 +559,7 @@ private:
  * Then the Vicon system will be used as the default pose getter.
  */
 class BundledVicon
-  : HasPose<BundledVicon> {
+  : public HasPose<BundledVicon> {
 public:
     BundledVicon(uint16_t port = 51001);
     const Pose3<units::length::millimeter_t, units::angle::radian_t> &getPose() const;
