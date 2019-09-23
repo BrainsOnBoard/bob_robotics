@@ -47,7 +47,6 @@ public:
 
     const cv::Size &getUnwrapRes() const{ return m_UnwrapRes; }
 
-
     const std::string &getMaskImageFilename() const{ return m_MaskImageFilename; }
     const std::string &getWatershedMarkerImageFilename() const{ return m_WatershedMarkerImageFilename; }
 

@@ -1,7 +1,10 @@
 /computer
 /offline_train
 /snapshot_bot
+/snapshot_bot_visual
 
 *.png
+*.yaml
+*.csv
 !segmentation.png
 !mask.png
