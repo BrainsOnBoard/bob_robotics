@@ -25,8 +25,10 @@ public:
       : public Video::Input {
     public:
         Camera(Tank &tank);
+        virtual bool needsUnwrapping() const override;
         virtual bool readFrame(cv::Mat &outFrame) override;
         virtual cv::Size getOutputSize() const override;
+        virtual void setOutputSize(const cv::Size &) override;
 
     private:
         Tank &m_Tank;
@@ -39,6 +41,8 @@ public:
     sf::Window &getWindow();
     virtual std::unique_ptr<Video::Input> getCamera() override;
     void setPose(const Pose2<meter_t, degree_t> &pose);
+    const Vector3<meter_t> &getMinBound();
+    const Vector3<meter_t> &getMaxBound();
 
 private:
     std::unique_ptr<sf::Window> m_Window;

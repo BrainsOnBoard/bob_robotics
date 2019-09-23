@@ -55,6 +55,13 @@ Camera::readFrame(cv::Mat &frame)
     return Video::OpenGL::readFrame(frame);
 }
 
+void
+Camera::setOutputSize(const cv::Size &size)
+{
+    OpenGL::setOutputSize(size);
+    m_Window.setSize({(uint) size.width, (uint) size.height});
+}
+
 bool
 Camera::update()
 {
@@ -66,7 +73,9 @@ Camera::update()
 
     // Render first person
     const auto size = getOutputSize();
-    m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_Pose.z(), m_Pose.yaw(), m_Pose.pitch(), m_Pose.roll(), 0, 0, size.width, size.height);
+    m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_Pose.z(),
+                                   m_Pose.yaw(), m_Pose.pitch(), m_Pose.roll(),
+                                   0, 0, size.width, size.height);
 
     // Swap front and back buffers
     m_Window.display();

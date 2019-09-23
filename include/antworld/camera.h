@@ -37,6 +37,7 @@ public:
 
     // Virtuals
     virtual bool readFrame(cv::Mat &outFrame) override;
+    virtual void setOutputSize(const cv::Size &) override;
 
     static std::unique_ptr<sf::Window> initialiseWindow(const cv::Size &size);
 
