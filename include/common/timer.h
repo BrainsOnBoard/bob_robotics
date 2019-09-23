@@ -1,10 +1,8 @@
 #pragma once
 
-// BoB robotics includes
-#include "logging.h"
-
 // Standard C++ includes
 #include <chrono>
+#include <iostream>
 #include <string>
 
 namespace BoBRobotics {
@@ -23,7 +21,7 @@ public:
     //! Stop the timer and print current elapsed time to terminal
     ~Timer()
     {
-        LOG_INFO << m_Title << get();
+        std::cout << m_Title << get();
     }
 
     //------------------------------------------------------------------------
