@@ -31,7 +31,6 @@ bob_main(int, char **argv)
 
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
-
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
@@ -42,7 +41,7 @@ bob_main(int, char **argv)
     const auto maxBound = world.getMaxBound();
 
     // Create agent and put in the centre of the world
-    AntWorld::AntAgent agent(window.get(), renderer, RenderSize);
+    AntWorld::AntAgent agent(*window, renderer, RenderSize);
     agent.setPosition((maxBound[0] - minBound[0]) / 2, (maxBound[1] - minBound[1]) / 2, AntHeight);
 
     // Control the agent with a joystick

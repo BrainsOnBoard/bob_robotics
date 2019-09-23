@@ -426,6 +426,10 @@ macro(BoB_add_link_libraries)
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 endmacro()
 
+function(BoB_deprecated WHAT ALTERNATIVE)
+    message(WARNING "!!!!! WARNING: Use of ${WHAT} in BoB robotics code is deprecated and will be removed in future. Use ${ALTERNATIVE} instead. !!!!!")
+endfunction()
+
 function(BoB_add_include_directories)
     # Sometimes we get newline characters in an *_INCLUDE_DIRS variable (e.g.
     # with the OpenCV package) and this breaks CMake
@@ -535,10 +539,18 @@ function(BoB_external_libraries)
                 message(FATAL_ERROR "Could not find SDL2")
                 BoB_add_link_libraries(SDL2::SDL2)
             endif()
+
+            # Sorry, Norbert ;-). I can try to help you install SFML if it helps!
+            #       -- Alex
+            BoB_deprecated(SDL2 SFML)
         elseif(${lib} STREQUAL glfw3)
             find_package(glfw3 REQUIRED)
             BoB_add_link_libraries(glfw)
             BoB_external_libraries(opengl)
+
+            # Most of the GLFW code has already been updated, but we still
+            # need GLFW temporarily for third_party/imgui
+            BoB_deprecated(GLFW SFML)
         elseif(${lib} STREQUAL glew)
             if(NOT TARGET GLEW::GLEW)
                 message(FATAL_ERROR "Could not find glew")

@@ -1,3 +1,34 @@
+// Ardin MB includes
+#include "mb_memory_ardin.h"
+#include "mb_memory_hog.h"
+#include "sim_params.h"
+#include "state_handler.h"
+#include "visual_navigation_ui.h"
+
+// Antworld includes
+#include "antworld/snapshot_processor_ardin.h"
+#include "antworld/snapshot_processor_segment_sky.h"
+
+// BoB Robotics includes
+#include "navigation/infomax.h"
+#include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_store_hog.h"
+
+// OpenGL includes
+#include <GL/glew.h>
+
+// SFML includes
+#include <SFML/Graphics.hpp>
+
+// CLI11 includes
+#include "third_party/CLI11.hpp"
+
+// IMGUI
+#include "imgui.h"
+//#include "examples/imgui_impl_sfml.h"
+#include "imgui_impl_sfml.h"
+#include "examples/imgui_impl_opengl2.h"
+
 // Standard C++ includes
 #include <bitset>
 #include <fstream>
@@ -11,36 +42,6 @@
 // Standard C includes
 #include <cmath>
 
-// OpenGL includes
-#include <GL/glew.h>
-
-// GLFW
-#include <GLFW/glfw3.h>
-
-// CLI11 includes
-#include "third_party/CLI11.hpp"
-
-// IMGUI
-#include "imgui.h"
-#include "examples/imgui_impl_glfw.h"
-#include "examples/imgui_impl_opengl2.h"
-
-// BoB Robotics includes
-#include "navigation/infomax.h"
-#include "navigation/perfect_memory.h"
-#include "navigation/perfect_memory_store_hog.h"
-
-// Antworld includes
-#include "antworld/snapshot_processor_ardin.h"
-#include "antworld/snapshot_processor_segment_sky.h"
-
-// Ardin MB includes
-#include "mb_memory_ardin.h"
-#include "mb_memory_hog.h"
-#include "sim_params.h"
-#include "state_handler.h"
-#include "visual_navigation_ui.h"
-
 using namespace BoBRobotics;
 
 //----------------------------------------------------------------------------
@@ -48,91 +49,26 @@ using namespace BoBRobotics;
 //----------------------------------------------------------------------------
 namespace
 {
-void keyCallback(GLFWwindow *window, int key, int, int action, int)
-{
-    // If action isn't a press or a release, do nothing
-    if(action != GLFW_PRESS && action != GLFW_RELEASE) {
-        return;
-    }
-
-    // Determine what state key bit should be set to
-    const bool newKeyState = (action == GLFW_PRESS);
-
-    // Extract key bitset from window's user pointer
-    StateHandler *stateHandler = reinterpret_cast<StateHandler*>(glfwGetWindowUserPointer(window));
-
-    // Apply new key state to bits of key bits
-    switch(key) {
-        case GLFW_KEY_LEFT:
-            stateHandler->setKeyState(StateHandler::KeyLeft, newKeyState);
-            break;
-
-        case GLFW_KEY_RIGHT:
-            stateHandler->setKeyState(StateHandler::KeyRight, newKeyState);
-            break;
-
-        case GLFW_KEY_UP:
-            stateHandler->setKeyState(StateHandler::KeyForward, newKeyState);
-            break;
-
-        case GLFW_KEY_DOWN:
-            stateHandler->setKeyState(StateHandler::KeyBackward, newKeyState);
-            break;
-
-        case GLFW_KEY_PAGE_UP:
-            stateHandler->setKeyState(StateHandler::KeyUp, newKeyState);
-            break;
-
-        case GLFW_KEY_PAGE_DOWN:
-            stateHandler->setKeyState(StateHandler::KeyDown, newKeyState);
-            break;
-
-        case GLFW_KEY_R:
-            stateHandler->setKeyState(StateHandler::KeyReset, newKeyState);
-            break;
-
-    }
-}
-//----------------------------------------------------------------------------
-void handleGLFWError(int errorNumber, const char *message)
-{
-    std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
-}
 }   // anonymous namespace
+
 
 
 int main(int argc, char *argv[])
 {
-    // Set GLFW error callback
-    glfwSetErrorCallback(handleGLFWError);
+    // Create SFML window
+    sf::Window window(sf::VideoMode(1440, 1024),
+                      "Ant world",
+                      sf::Style::Titlebar | sf::Style::Close);
 
-    // Initialize the library
-    if(!glfwInit()) {
-        throw std::runtime_error("Failed to initialize GLFW");
-    }
-
-    // Prevent window being resized
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(1440, 1024,
-                                          "Ant World", nullptr, nullptr);
-    if(!window)
-    {
-        glfwTerminate();
-        throw std::runtime_error("Failed to create window");
-    }
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window);
+    // Enable VSync
+    window.setVerticalSyncEnabled(true);
+    window.setActive(true);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
-        throw std::runtime_error("Failed to initialize GLEW");
+        LOGE << "Failed to initialize GLEW";
+        return EXIT_FAILURE;
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
 
     // Turn off padding so weird size textures render correctly in OGL
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -148,8 +84,9 @@ int main(int argc, char *argv[])
     ImGui::StyleColorsDark();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplSfml_Init(&window);
     ImGui_ImplOpenGL2_Init();
+
 
     // Set clear colour to match matlab and enable depth test
     glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
@@ -222,19 +159,25 @@ int main(int argc, char *argv[])
     // Create state machine and set it as window user pointer
     StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest,
                               snapshotProcessor, memory, ui);
-    glfwSetWindowUserPointer(window, &stateHandler);
-
-    // Set key callback
-    glfwSetKeyCallback(window, keyCallback);
 
      // Loop until window should close
-    for(unsigned int frame = 0; !glfwWindowShouldClose(window); frame++) {
-        // Poll for and process events
-        glfwPollEvents();
+    for(unsigned int frame = 0; window.isOpen(); frame++) {
+        // Process events
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            // Close window: exit
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+            else {
+                ImGui_ImplSfml_ProcessEvent(event);
+            }
+        }
+
 
         // Start ImGui frame
         ImGui_ImplOpenGL2_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplSfml_NewFrame();
         ImGui::NewFrame();
 
         // Clear colour and depth buffer
@@ -249,13 +192,56 @@ int main(int argc, char *argv[])
         ImGui::Render();
 
         // Render UI
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        const auto displaySize = window.getSize();
+        glViewport(0, 0, displaySize.x, displaySize.y);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
-        // Swap front and back buffers
-        glfwSwapBuffers(window);
+        window.display();
+/*
+        // Apply new key state to bits of key bits
+        switch(event.key.code) {
+        case sf::Keyboard::Key::Left:
+            stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
+            break;
+
+        case sf::Keyboard::Key::Right:
+            stateHandler.setKeyState(StateHandler::KeyRight, pressed);
+            break;
+
+        case sf::Keyboard::Key::Up:
+            stateHandler.setKeyState(StateHandler::KeyUp, pressed);
+            break;
+
+        case sf::Keyboard::Key::Down:
+            stateHandler.setKeyState(StateHandler::KeyDown, pressed);
+            break;
+
+        case sf::Keyboard::Key::R:
+            stateHandler.setKeyState(StateHandler::KeyReset, pressed);
+            break;
+
+        case sf::Keyboard::Key::Space:
+            stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
+            break;
+
+        case sf::Keyboard::Key::Enter:
+            stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
+            break;
+
+        case sf::Keyboard::Key::S:
+            stateHandler.setKeyState(StateHandler::KeySaveSnapshot, pressed);
+            break;
+
+        case sf::Keyboard::Key::W:
+            stateHandler.setKeyState(StateHandler::KeyRandomWalk, pressed);
+            break;
+
+        case sf::Keyboard::Key::V:
+            stateHandler.setKeyState(StateHandler::KeyBuildVectorField, pressed);
+            break;
+        default:
+            break;Sfml
+        }*/
     }
 
     // Save logs
@@ -264,9 +250,8 @@ int main(int argc, char *argv[])
 
      // Cleanup UI
     ImGui_ImplOpenGL2_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplSfml_Shutdown();
     ImGui::DestroyContext();
 
-    glfwTerminate();
-    return 0;
+    return EXIT_SUCCESS;
 }

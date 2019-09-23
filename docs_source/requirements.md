@@ -28,11 +28,11 @@ sudo apt install libopencv-dev
 Installation instructions for NVIDIA Jetson TX1 can be found [here](https://devtalk.nvidia.com/default/topic/965134/opencv-3-1-compilation-on-tx1-lets-collect-the-quot-definitive-quot-cmake-settings-).
 
 ## OpenGL
-[Libantworld](../libantworld) and the [ant\_world\_test](../examples/ant_world_test) example require OpenGL, GLEW and GLFW.
+[Libantworld](../libantworld) and the [ant\_world\_test](../examples/ant_world_test) example require OpenGL, GLEW and SFML.
 
 These can be installed on Ubuntu with:
 ```sh
-sudo apt install libglew-dev libglfw-dev
+sudo apt install libglew-dev libsfml-dev
 ```
 
 ## Linux headers
