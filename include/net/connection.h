@@ -56,7 +56,7 @@ public:
     };
 
     static constexpr size_t DefaultBufferSize = 1024 * 8; //! Default buffer size, in bytes
-    static constexpr int DefaultListenPort = 2000;        //! Default listening port
+    static constexpr uint16_t DefaultListenPort = 2000;   //! Default listening port
 
     template<typename... Ts>
     Connection(Ts&&... args)

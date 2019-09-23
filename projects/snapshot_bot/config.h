@@ -70,7 +70,7 @@ public:
     int getViconCaptureControlPort() const { return m_ViconCaptureControlPort; }
     const std::string &getViconCaptureControlPath() const{ return m_ViconCaptureControlPath; }
 
-    int getServerListenPort() const{ return m_ServerListenPort; }
+    uint16_t getServerListenPort() const{ return m_ServerListenPort; }
 
     float getMoveSpeed() const{ return m_MoveSpeed; }
 
@@ -282,7 +282,7 @@ private:
     Milliseconds m_MotorCommandInterval;
 
     // Listen port used for streaming etc
-    int m_ServerListenPort;
+    uint16_t m_ServerListenPort;
 
     // How fast robot should move when heading to snapshot
     float m_MoveSpeed;

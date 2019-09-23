@@ -56,21 +56,27 @@ class RobotFSM : FSM<State>::StateHandler
 
 public:
     RobotFSM(const Config &config)
-    :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(Video::getPanoramicCamera()),
-        m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
-        m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
-        m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
-        m_TestDuration(450.0),/*
-        m_Server(config.getServerListenPort()), m_NetSink(m_Server, config.getUnwrapRes(), "unwrapped"),*/
-        m_NumSnapshots(0)
+      : m_Config(config)
+      , m_StateMachine(this, State::Invalid)
+      , m_Camera(Video::getPanoramicCamera())
+      , m_Output(m_Camera->getOutputSize(), CV_8UC3)
+      , m_Unwrapped(config.getUnwrapRes(), CV_8UC3)
+      , m_DifferenceImage(config.getUnwrapRes(), CV_8UC1)
+      , m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes()))
+      , m_ImageInput(createImageInput(config))
+      , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
+      , m_TestDuration(450.0)
+      , m_Connection(Net::Server{ m_Config.getServerListenPort() }.waitForConnection())
+      , m_NetSink(m_Connection, config.getUnwrapRes(), "unwrapped")
+      , m_NumSnapshots(0)
     {
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
         // If we should stream output, run server thread
-        /*if(m_Config.shouldStreamOutput()) {
-            m_Server.runInBackground();
-        }*/
+        if(m_Config.shouldStreamOutput()) {
+            m_Connection.runInBackground();
+        }
 
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
@@ -223,9 +229,9 @@ private:
                 const auto currentTime = std::chrono::high_resolution_clock::now();
 
                 // While testing, if we should stream output, send unwrapped frame
-                /*if(m_Config.shouldStreamOutput()) {
+                if(m_Config.shouldStreamOutput()) {
                     m_NetSink.sendFrame(m_Unwrapped);
-                }*/
+                }
 
                 // Drive motors using joystick
                 m_Motor.drive(m_Joystick, m_Config.getJoystickDeadzone());
@@ -354,7 +360,7 @@ private:
                     m_LogFile << std::endl;
 
                     // If we should stream output
-                    /*if(m_Config.shouldStreamOutput()) {
+                    if(m_Config.shouldStreamOutput()) {
                         // Attempt to dynamic cast memory to a perfect memory
                         PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
                         if(perfectMemory != nullptr) {
@@ -370,12 +376,12 @@ private:
                                         cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
 
                             // Send annotated difference image
-                            //m_NetSink.sendFrame(m_DifferenceImage);
+                            m_NetSink.sendFrame(m_DifferenceImage);
                         }
                         else {
                             LOGW << "WARNING: Can only stream output from a perfect memory";
                         }
-                    }*/
+                    }
                     // Get time after testing and thus calculate how long it took
                     const auto motorTime = std::chrono::high_resolution_clock::now();
                     m_TestDuration = motorTime - currentTime;
@@ -467,10 +473,10 @@ private:
     size_t m_NumSnapshots;
 
     // Server for streaming etc
-    //Net::Server m_Server;
+    Net::Connection m_Connection;
 
     // Sink for video to send over server
-    //Video::NetSink m_NetSink;
+    Video::NetSink m_NetSink;
 };
 }   // Anonymous namespace
 
