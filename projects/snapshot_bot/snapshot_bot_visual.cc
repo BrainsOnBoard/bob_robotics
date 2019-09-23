@@ -199,9 +199,7 @@ private:
             }
 
             // Capture frame
-            if(!m_Camera->readFrame(m_Output)) {
-                return false;
-            }
+            m_Camera->readFrameSync(m_Output);
 
             // Unwrap frame
             if (m_Unwrapper) {
