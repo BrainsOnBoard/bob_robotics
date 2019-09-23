@@ -4,6 +4,9 @@
 #include "antworld/camera.h"
 #include "robots/simulated_tank.h"
 
+// Standard C++ includes
+#include <utility>
+
 namespace BoBRobotics {
 namespace AntWorld {
 using namespace units::literals;
@@ -15,6 +18,8 @@ class Tank
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
+    using Bounds = std::pair<meter_t, meter_t>;
+
     /**!
      * \brief Wrapper around AntWorld::Camera so we can return a pointer to
      * 		  a Video::Input from get camera
@@ -25,6 +30,7 @@ public:
       : public Video::Input {
     public:
         Camera(Tank &tank);
+        virtual bool needsUnwrapping() const override;
         virtual bool readFrame(cv::Mat &outFrame) override;
         virtual cv::Size getOutputSize() const override;
 
@@ -39,6 +45,8 @@ public:
     sf::Window &getWindow();
     virtual std::unique_ptr<Video::Input> getCamera() override;
     void setPose(const Pose2<meter_t, degree_t> &pose);
+    const Vector3<meter_t> &getMinBound();
+    const Vector3<meter_t> &getMaxBound();
 
 private:
     std::unique_ptr<sf::Window> m_Window;

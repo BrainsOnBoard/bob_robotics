@@ -7,6 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
+#include <iostream>
 #include <string>
 
 namespace BoBRobotics {
@@ -40,10 +41,14 @@ public:
     virtual bool needsUnwrapping() const;
 
     //! Set the output resolution of this video stream
-    virtual void setOutputSize(const cv::Size &);
+    virtual void setOutputSize(const cv::Size &)
+    {
+        std::cerr << "CALLING BASE CLASS :@" << std::endl;
+    }
 
     //! Get the current output resolution of this video stream
     virtual cv::Size getOutputSize() const = 0;
+    virtual void test() { std::cout << "BASE"; }
 
     /*!
      * \brief Try to read a frame in colour from this video source

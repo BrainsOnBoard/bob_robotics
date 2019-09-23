@@ -30,9 +30,10 @@ public:
     virtual cv::Size getOutputSize() const override;
     virtual bool readFrame(cv::Mat &outFrame) override;
     virtual bool needsUnwrapping() const override;
+    virtual void setOutputSize(const cv::Size &) override;
 
 private:
-    const cv::Size m_Size;
+    cv::Size m_Size;
     const cv::Point m_BottomLeft;
 };
 }   // namespace Video

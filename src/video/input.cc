@@ -54,7 +54,7 @@ Input::needsUnwrapping() const
     return getCameraName() != DefaultCameraName;
 }
 
-BOB_NOT_IMPLEMENTED(void Input::setOutputSize(const cv::Size &))
+//BOB_NOT_IMPLEMENTED(void Input::setOutputSize(const cv::Size &))
 
 void
 Input::readFrameSync(cv::Mat &outFrame)

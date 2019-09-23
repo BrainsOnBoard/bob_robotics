@@ -10,8 +10,16 @@ if(${TARGET} STREQUAL snapshot_bot)
     BoB_project(EXECUTABLE snapshot_bot
                 SOURCES snapshot_bot.cc memory.cc image_input.cc
                 BOB_MODULES common hid imgproc navigation robots vicon video)
-else()
+elseif(${TARGET} STREQUAL snapshot_bot_visual)
+    BoB_project(EXECUTABLE snapshot_bot_visual
+                SOURCES snapshot_bot_visual.cc memory.cc image_input.cc
+                BOB_MODULES common hid imgproc navigation robots video
+                            viz/sfml_world
+                THIRD_PARTY folly)
+elseif(${TARGET} STREQUAL offline_train)
     BoB_project(EXECUTABLE offline_train
                 SOURCES offline_train.cc memory.cc image_input.cc
                 BOB_MODULES common imgproc navigation video)
+else()
+    message(FATAL_ERROR "Unrecognised target ${TARGET}")
 endif()

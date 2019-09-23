@@ -22,6 +22,11 @@ cv::Size OpenGL::getOutputSize() const
     return m_Size;
 }
 
+void OpenGL::setOutputSize(const cv::Size &size)
+{
+    m_Size = size;
+}
+
 bool OpenGL::readFrame(cv::Mat &outFrame)
 {
     // Make sure frame is of right size and type

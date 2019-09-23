@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/logging.h"
 // BoB robotics includes
 #include "common/macros.h"
 
@@ -44,6 +45,8 @@ struct InSilicoRotater
           , m_Image(unwrapRes.height, unwrapRes.width, CV_8UC1)
           , m_MaskImage(maskImage.rows, maskImage.cols, maskImage.type())
         {
+            LOGI << "cols: " << image.cols;
+            LOGI << "UNWRAP: " << unwrapRes.width;
             BOB_ASSERT(image.cols == unwrapRes.width);
             BOB_ASSERT(image.rows == unwrapRes.height);
             BOB_ASSERT(image.type() == CV_8UC1);

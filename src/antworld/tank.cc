@@ -67,10 +67,30 @@ Tank::setPose(const Pose2<meter_t, degree_t> &pose)
 {
     SimulatedTank<meter_t, degree_t>::setPose(pose);
 }
+
 cv::Size
 Tank::Camera::getOutputSize() const
 {
     return m_Tank.m_Camera.getOutputSize();
 }
+
+bool
+Tank::Camera::needsUnwrapping() const
+{
+    return false;
+}
+
+const Vector3<meter_t> &
+Tank::getMinBound()
+{
+    return m_Renderer.getWorld().getMinBound();
+}
+
+const Vector3<meter_t> &
+Tank::getMaxBound()
+{
+    return m_Renderer.getWorld().getMaxBound();
+}
+
 } // AntWorld
 } // BoBRobotics

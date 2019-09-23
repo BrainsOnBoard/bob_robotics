@@ -1,6 +1,8 @@
 /computer
 /offline_train
 /snapshot_bot
+/snapshot_bot_visual
+/config.yaml
 
 *.png
 !segmentation.png
