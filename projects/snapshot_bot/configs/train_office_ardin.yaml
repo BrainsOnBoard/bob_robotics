@@ -1,0 +1,37 @@
+%YAML:1.0
+---
+config:
+   shouldUseHOG: 0
+   shouldUseBinaryImage: 0
+   shouldUseTrueBinaryImage: 0
+   shouldUseHorizonVector: 0
+   shouldUseThresholdImage: 0
+   shouldTrain: 1
+   shouldUseInfoMax: 0
+   shouldUseMBArdin: 1
+   shouldUseMBHOG: 0
+   shouldSaveTestingDiagnostic: 0
+   shouldStreamOutput: 0
+   outputPath: office
+   testingSuffix: _ardin
+   maxSnapshotRotateDegrees: 90.
+   unwrapRes: [ 74, 19 ]
+   maskImageFilename: ""
+   watershedMarkerImageFilename: ""
+   threshold: 200.
+   numHOGOrientations: 8
+   numHOGPixelsPerCell: 10
+   joystickDeadzone: 2.5000000000000000e-01
+   autoTrain: 1
+   trainInterval: 100.
+   motorCommandInterval: 1000.
+   motorTurnCommandInterval: 400.
+   serverListenPort: 2000
+   moveSpeed: 5.0000000000000000e-01
+   turnThresholds:
+      -
+         - 5.
+         - 1.5000000596046448e-01
+      -
+         - 20.
+         - 2.0000001788139343e-01
