@@ -1,3 +1,4 @@
+#ifdef __linux__
 // BoB robotics includes
 #include "robots/rc_car_bot.h"
 #include "common/macros.h"
@@ -105,3 +106,4 @@ RCCarBot::getMaximumTurn() const
 
 } // Robots
 } // BoBRobotics
+#endif	// __linux__
