@@ -10,6 +10,7 @@ main()
 {
     Net::Client client;
     Video::NetSource video{ client };
+    client.runInBackground();
     Video::Display display{ video };
     display.run();
 }
