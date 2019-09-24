@@ -66,8 +66,6 @@ public:
       , m_ImageInput(createImageInput(config))
       , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
       , m_TestDuration(450.0)
-      , m_Connection(Net::Server{ m_Config.getServerListenPort() }.waitForConnection())
-      , m_NetSink(m_Connection, config.getUnwrapRes(), "unwrapped")
       , m_NumSnapshots(0)
     {
         // Create output directory (if necessary)
@@ -75,7 +73,10 @@ public:
 
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
-            m_Connection.runInBackground();
+            Net::Server server;
+            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
+            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection, config.getUnwrapRes(), "unwrapped");
+            m_Connection->runInBackground();
         }
 
         // If we should use Vicon tracking
@@ -230,7 +231,7 @@ private:
 
                 // While testing, if we should stream output, send unwrapped frame
                 if(m_Config.shouldStreamOutput()) {
-                    m_NetSink.sendFrame(m_Unwrapped);
+                    m_NetSink->sendFrame(m_Unwrapped);
                 }
 
                 // Drive motors using joystick
@@ -376,7 +377,7 @@ private:
                                         cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
 
                             // Send annotated difference image
-                            m_NetSink.sendFrame(m_DifferenceImage);
+                            m_NetSink->sendFrame(m_DifferenceImage);
                         }
                         else {
                             LOGW << "WARNING: Can only stream output from a perfect memory";
@@ -469,14 +470,14 @@ private:
     // CSV file containing logging
     std::ofstream m_LogFile;
 
-    // How many snapshots has memory been trained on
-    size_t m_NumSnapshots;
-
     // Server for streaming etc
-    Net::Connection m_Connection;
+    std::unique_ptr<Net::Connection> m_Connection;
 
     // Sink for video to send over server
-    Video::NetSink m_NetSink;
+    std::unique_ptr<Video::NetSink> m_NetSink;
+
+    // How many snapshots has memory been trained on
+    size_t m_NumSnapshots;
 };
 }   // Anonymous namespace
 
