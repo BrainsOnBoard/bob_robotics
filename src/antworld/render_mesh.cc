@@ -8,9 +8,9 @@
 // Third-party includes
 #include "plog/Log.h"
 
-
 // Standard C++ includes
 #include <algorithm>
+#include <array>
 #include <fstream>
 #include <vector>
 
