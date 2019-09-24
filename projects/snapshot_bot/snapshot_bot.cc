@@ -173,6 +173,11 @@ private:
                 return false;
             }
 
+            if(state != State::Testing) {
+                 // Drive motors using joystick
+                m_Motor.drive(m_Joystick, m_Config.getJoystickDeadzone());
+            }
+
             // Capture frame
             if(!m_Camera->readFrame(m_Output)) {
                 return false;
@@ -233,9 +238,6 @@ private:
                 if(m_Config.shouldStreamOutput()) {
                     m_NetSink->sendFrame(m_Unwrapped);
                 }
-
-                // Drive motors using joystick
-                m_Motor.drive(m_Joystick, m_Config.getJoystickDeadzone());
 
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && (currentTime - m_LastTrainTime) > m_Config.getTrainInterval())) {
