@@ -1,3 +1,4 @@
+#ifdef __linux__
 // BoB robotics includes
 #include "robots/mecanum.h"
 
@@ -71,3 +72,4 @@ Mecanum::getTurn() const
 }
 } // Robots
 } // BoBRobotics
+#endif	// __linux__
