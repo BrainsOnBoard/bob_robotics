@@ -1,3 +1,4 @@
+#ifdef __linux__
 #pragma once
 
 // BoB robotics includes
@@ -56,3 +57,4 @@ private:
 }; // Mecanum
 } // Robots
 } // BoBRobotics
+#endif	// __linux__
