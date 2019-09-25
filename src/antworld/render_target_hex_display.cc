@@ -82,26 +82,26 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(unsigned int numHorizontalHexes, 
 
     // Calculate hex position offsets to build each hex's vertices from
     const float hexPositionOffsets[6][2] = {
-        {0.0f, halfHexHeight},
-        {hexDistance, halfSideLength},
-        {hexDistance, -halfSideLength},
-        {0.0f, -halfHexHeight},
-        {-hexDistance, -halfSideLength},
-        {-hexDistance, halfSideLength}
+        {-halfHexHeight, 0.0f},
+        {-halfSideLength, hexDistance},
+        {halfSideLength, hexDistance},
+        {halfHexHeight, 0.0f},
+        {halfSideLength, -hexDistance},
+        {-halfSideLength, -hexDistance}
     };
 
     // Determine size of rectangles used for final output
     const float rectangleWidth = 1.0f / (float)numHorizontalHexes;
     const float rectangleHeight = 1.0f / (float)numVerticalHexes;
-    const float halfRectangleWidth = rectangleWidth * 0.5f;
+    const float halfRectangleHeight = rectangleHeight * 0.5f;
 
     const float hexRectangleOffsets[6][2] = {
-        {halfRectangleWidth, rectangleHeight},
-        {rectangleWidth, rectangleHeight},
+        {rectangleWidth, halfRectangleHeight},
         {rectangleWidth, 0.0f},
-        {halfRectangleWidth, 0.0f},
         {0.0f, 0.0f},
+        {0.0f, halfRectangleHeight},
         {0.0f, rectangleHeight},
+        {rectangleWidth, rectangleHeight},
     };
 
     // **TODO** reserve
@@ -121,14 +121,14 @@ RenderTargetHexDisplay::RenderTargetHexDisplay(unsigned int numHorizontalHexes, 
 
     for(int i = -rowBegin; i < rowEnd; i++) {
         for(int j = -colBegin; j < colEnd; j++) {
-            // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
+            // Calculate cartesian coordinates of centre of hexagon in "odd-q" vertical layout
             // https://www.redblobgames.com/grids/hexagons/
-            float hexX = j * (2.0f * hexDistance);
-            float hexY = i * (hexHeight + sideLength);
+            float hexX = j * (hexHeight + sideLength);
+            float hexY = i * (2.0f * hexDistance);
 
-            // If row is odd, add additional distance
-            if((i & 1) != 0) {
-                hexX += hexDistance;
+            // If col is odd, add additional distance
+            if((j & 1) != 0) {
+                hexY += hexDistance;
             }
 
             const float hexU = centreU + (j * rectangleWidth);

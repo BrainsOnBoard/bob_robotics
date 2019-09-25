@@ -263,7 +263,7 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
     // Determine size of rectangles used for final output
     const float rectangleWidth = 1.0f / (float)m_NumHorizontalHexes;
     const float rectangleHeight = 1.0f / (float)m_NumVerticalHexes;
-    const float halfRectangleWidth = rectangleWidth * 0.5f;
+    const float halfRectangleHeight = rectangleHeight * 0.5f;
 
     // **TODO** reserve
     std::vector<GLfloat> positions;
@@ -281,14 +281,14 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
 
     for(int i = -rowBegin; i < rowEnd; i++) {
         for(int j = -colBegin; j < colEnd; j++) {
-            // Calculate cartesian coordinates of centre of hexagon in "odd-r" horizontal layout
+            // Calculate cartesian coordinates of centre of hexagon in "odd-q" vertical layout
             // https://www.redblobgames.com/grids/hexagons/
-            units::angle::degree_t hexAzimuth = border.getCentreAzimuth() + (j * (2.0 * hexDistance));
-            const units::angle::degree_t hexElevation = border.getCentreElevation() + (i * (hexHeight + sideLength));
+            const units::angle::degree_t hexAzimuth = border.getCentreAzimuth() + (j * (hexHeight + sideLength));
+            units::angle::degree_t hexElevation = border.getCentreElevation() + ((double)i * 2.0 * hexDistance);
 
-            // If row is odd, add additional distance
-            if((i & 1) != 0) {
-                hexAzimuth += hexDistance;
+            // If col is odd, add additional distance
+            if((j & 1) != 0) {
+                hexElevation += hexDistance;
             }
 
             // Calculate position of this hex in output rectangular grid, offsetting to centre of screen
@@ -297,12 +297,12 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
 
             // Determine angles for each vertex in hexagon
             std::array<std::tuple<degree_t, degree_t, float, float>, 6> vertices{
-                std::make_tuple(hexAzimuth,                 hexElevation - halfHexHeight,   hexX + halfRectangleWidth,  hexY + rectangleHeight),
-                std::make_tuple(hexAzimuth + hexDistance,   hexElevation - halfSideLength,  hexX + rectangleWidth,      hexY + rectangleHeight),
-                std::make_tuple(hexAzimuth + hexDistance,   hexElevation - halfSideLength,  hexX + rectangleWidth,      hexY),
-                std::make_tuple(hexAzimuth,                 hexElevation + halfHexHeight,   hexX + halfRectangleWidth,  hexY),
-                std::make_tuple(hexAzimuth - hexDistance,   hexElevation + halfSideLength,  hexX,                       hexY),
-                std::make_tuple(hexAzimuth - hexDistance,   hexElevation - halfSideLength,  hexX,                       hexY + rectangleHeight)
+                std::make_tuple(hexAzimuth + halfHexHeight,     hexElevation,               hexX + rectangleWidth,  hexY + halfRectangleHeight),
+                std::make_tuple(hexAzimuth + halfSideLength,    hexElevation - hexDistance, hexX + rectangleWidth,  hexY),
+                std::make_tuple(hexAzimuth - halfSideLength,    hexElevation - hexDistance, hexX,                   hexY),
+                std::make_tuple(hexAzimuth - halfHexHeight,     hexElevation,               hexX,                   hexY + halfRectangleHeight),
+                std::make_tuple(hexAzimuth - halfSideLength,    hexElevation + hexDistance, hexX,                   hexY + rectangleHeight),
+                std::make_tuple(hexAzimuth + halfSideLength,    hexElevation - hexDistance, hexX + rectangleWidth,  hexY + rectangleHeight)
             };
 
 
