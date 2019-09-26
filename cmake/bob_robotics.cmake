@@ -322,7 +322,9 @@ macro(BoB_build)
         #
         # Eigen version: 3.3.7
         # gcc version:   9.1.0
-        add_compile_flags(-Wno-deprecated-copy)
+        if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+            add_compile_flags(-Wno-deprecated-copy)
+        endif()
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
