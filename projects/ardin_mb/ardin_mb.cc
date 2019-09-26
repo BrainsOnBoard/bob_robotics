@@ -2,6 +2,7 @@
 #undef NO_HEADER_DEFINITIONS
 
 // BoB Robotics includes
+#include "common/path.h"
 #include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
@@ -55,16 +56,13 @@ int main(int argc, char *argv[])
     glLineWidth(4.0);
     glPointSize(4.0);
 
-    const char *bobRoboticsPath = std::getenv("BOB_ROBOTICS_PATH");
-    assert(bobRoboticsPath != nullptr);
-
     // Create memory
     //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
     MBMemory memory;
 
     // Create state machine and set it as window user pointer
-    const std::string worldFilename = std::string(bobRoboticsPath) + "/resources/antworld/world5000_gray.bin";
+    const auto worldFilename = Path::getResourcesPath() / "antworld" / "world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
     StateHandler stateHandler(worldFilename, routeFilename, memory);
 

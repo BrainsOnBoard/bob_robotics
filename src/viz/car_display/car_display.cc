@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/path.h"
 #include "common/macros.h"
 #include "viz/car_display/car_display.h"
 
@@ -32,8 +33,8 @@ CarDisplay::CarDisplay(const millimeter_t screenHeight, const millimeter_t carWi
 
     m_Renderer = SDL_CreateRenderer(m_Window, -1, 0);
 
-    const std::string imagePath = std::string(std::getenv("BOB_ROBOTICS_PATH")) + "/resources/car.bmp";
-    SDL_Surface *image = SDL_LoadBMP(imagePath.c_str());
+    const auto imagePath = Path::getResourcesPath() / "car.bmp";
+    SDL_Surface *image = SDL_LoadBMP(imagePath.str().c_str());
     BOB_ASSERT(image != nullptr); // Check file exists
 
     // Turn bitmap into texture
