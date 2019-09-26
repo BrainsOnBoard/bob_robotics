@@ -32,7 +32,7 @@ antworld_resource_directory = path.join(bin_directory, "..", "resources", "antwo
 # If data isn't present, download from Dryad
 if not path.exists(path.join(antworld_resource_directory, "DataForPlots.mat")):
     print("Downloading data from Dryad")
-    request.urlretrieve("https://datadryad.org/bitstream/handle/10255/dryad.204563/DataForPlots.mat",
+    request.urlretrieve("https://datadryad.org/stash/downloads/file_stream/18013",
                         path.join(antworld_resource_directory, "DataForPlots.mat"))
 
 # Load data file
