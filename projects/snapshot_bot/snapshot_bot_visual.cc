@@ -99,11 +99,19 @@ public:
         m_TestDuration(450.0),
         m_NumSnapshots(0)
     {
+        LOGI << "Min bounds: " << getMinBounds(m_PoseGetter);
+        LOGI << "Max bounds: " << getMaxBounds(m_PoseGetter);
+
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
-        LOGI << "Min bounds: " << getMinBounds(m_PoseGetter);
-        LOGI << "Max bounds: " << getMaxBounds(m_PoseGetter);
+        // If we should stream output, run server thread
+        if(m_Config.shouldStreamOutput()) {
+            Net::Server server;
+            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
+            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection, config.getUnwrapRes(), "unwrapped");
+            m_Connection->runInBackground();
+        }
 
         // Create unwrapper if needed
         if (m_Camera->needsUnwrapping()) {
@@ -353,6 +361,30 @@ private:
 
                     m_LogFile << std::endl;
 
+                    // If we should stream output
+                    if(m_Config.shouldStreamOutput()) {
+                        // Attempt to dynamic cast memory to a perfect memory
+                        PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
+                        if(perfectMemory != nullptr) {
+                            // Get matched snapshot
+                            const cv::Mat &matchedSnapshot = perfectMemory->getBestSnapshot();
+
+                            // Calculate difference image
+                            cv::absdiff(matchedSnapshot, m_Unwrapped, m_DifferenceImage);
+
+                            char status[255];
+                            sprintf(status, "Angle:%f deg, Min difference:%f", degree_t(perfectMemory->getBestHeading()).value(), perfectMemory->getLowestDifference());
+                            cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getUnwrapRes().height -20),
+                                        cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
+
+                            // Send annotated difference image
+                            m_NetSink->sendFrame(m_DifferenceImage);
+                        }
+                        else {
+                            LOGW << "WARNING: Can only stream output from a perfect memory";
+                        }
+                    }
+
                     // Get time after testing and thus calculate how long it took
                     const auto motorTime = std::chrono::high_resolution_clock::now();
                     m_TestDuration = motorTime - currentTime;
@@ -447,10 +479,10 @@ private:
     size_t m_NumSnapshots;
 
     // Server for streaming etc
-    //Net::Server m_Server;
+    std::unique_ptr<Net::Connection> m_Connection;
 
     // Sink for video to send over server
-    //Video::NetSink m_NetSink;
+    std::unique_ptr<Video::NetSink> m_NetSink;
 };
 }   // Anonymous namespace
 
