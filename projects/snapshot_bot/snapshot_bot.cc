@@ -1,29 +1,35 @@
-// Standard C++ includes
-#include <chrono>
-#include <fstream>
-#include <limits>
-#include <memory>
-
 // BoB robotics includes
 #include "common/fsm.h"
 #include "common/logging.h"
+#include "common/pose_getter.h"
 #include "common/timer.h"
-#include "hid/joystick.h"
+#include "hid/joystick_sfml_keyboard.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "net/server.h"
 #include "robots/tank.h"
 #include "vicon/capture_control.h"
-#include "vicon/udp.h"
 #include "video/netsink.h"
-#include "video/panoramic.h"
+#include "viz/sfml_world/sfml_world.h"
 
-// BoB robotics third-party includes
+#ifdef LOCAL_DISPLAY
+#include "os/keycodes.h"
+#else
+#include "net/server.h"
+#endif
+
+// Third-party includes
 #include "third_party/path.h"
 
 // Snapshot bot includes
 #include "config.h"
 #include "image_input.h"
 #include "memory.h"
+
+// Standard C++ includes
+#include <chrono>
+#include <fstream>
+#include <limits>
+#include <memory>
+#include <utility>
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -45,7 +51,34 @@ enum class State
     Testing,
 };
 
-//------------------------------------------------------------------------
+using Bounds = std::pair<Vector3<meter_t>, Vector3<meter_t>>;
+
+#if POSE_GETTER_TYPE_ANTWORLD_TANK
+auto getMinBounds(POSE_GETTER_TYPE &poseGetter)
+{
+    return poseGetter->getMinBound();
+}
+
+auto getMaxBounds(POSE_GETTER_TYPE &poseGetter)
+{
+    return poseGetter->getMaxBound();
+}
+#else
+auto getMinBounds(POSE_GETTER_TYPE &)
+{
+    // Roughly the dimensions of Sussex's Vicon arena
+    constexpr auto limit = -3.2_m;
+    return Vector3<meter_t>{limit, limit, limit};
+}
+
+auto getMaxBounds(POSE_GETTER_TYPE &)
+{
+    constexpr auto limit = 3.2_m;
+    return Vector3<meter_t>{limit, limit, limit};
+}
+#endif
+
+//----------------------------------- Tank-------------------------------------
 // RobotFSM
 //------------------------------------------------------------------------
 class RobotFSM : FSM<State>::StateHandler
@@ -56,21 +89,29 @@ class RobotFSM : FSM<State>::StateHandler
 
 public:
     RobotFSM(const Config &config)
-      : m_Config(config)
-      , m_StateMachine(this, State::Invalid)
-      , m_Camera(Video::getPanoramicCamera())
-      , m_Output(m_Camera->getOutputSize(), CV_8UC3)
-      , m_Unwrapped(config.getUnwrapRes(), CV_8UC3)
-      , m_DifferenceImage(config.getUnwrapRes(), CV_8UC1)
-      , m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes()))
-      , m_ImageInput(createImageInput(config))
-      , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
-      , m_TestDuration(450.0)
-      , m_NumSnapshots(0)
+    :   m_Config(config),
+        m_StateMachine(this, State::Invalid),
+        m_Motor{},
+        m_PoseGetter(createPoseGetter(m_Motor)),
+        m_Camera(m_Motor.getCamera()),
+        m_Display(getMinBounds(m_PoseGetter), getMaxBounds(m_PoseGetter)),
+        m_CarSprite(m_Display, 104_mm),
+        m_TrainPath(m_Display.createLineStrip(sf::Color::Green)),
+        m_TestPath(m_Display.createLineStrip(sf::Color::Blue)),
+        m_Joystick(HID::JoystickSFMLKeyboard::createJoystick(m_Display.getWindow())),
+        m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
+        m_ImageInput(createImageInput(config)),
+        m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
+        m_TestDuration(450.0),
+        m_NumSnapshots(0)
     {
+        LOGI << "Min bounds: " << getMinBounds(m_PoseGetter);
+        LOGI << "Max bounds: " << getMaxBounds(m_PoseGetter);
+
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
+#ifndef LOCAL_DISPLAY
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             Net::Server server;
@@ -78,12 +119,16 @@ public:
             m_NetSink = std::make_unique<Video::NetSink>(*m_Connection, config.getUnwrapRes(), "unwrapped");
             m_Connection->runInBackground();
         }
+#endif
 
-        // If we should use Vicon tracking
-        if(m_Config.shouldUseViconTracking()) {
-            // Connect to port specified in config
-            m_ViconTracking.connect(m_Config.getViconTrackingPort());
+        // Create unwrapper if needed
+        if (m_Camera->needsUnwrapping()) {
+            m_Unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(m_Camera->createUnwrapper(config.getUnwrapRes()));
+        } else {
+            m_Camera->setOutputSize(config.getUnwrapRes());
         }
+        m_Output.create(m_Camera->getOutputSize(), CV_8UC3);
+        m_DifferenceImage.create(m_Camera->getOutputSize(), CV_8UC1);
 
         // If we should use Vicon capture control
         if(m_Config.shouldUseViconCaptureControl()) {
@@ -111,7 +156,6 @@ public:
                     if(filename.exists()) {
                         std::cout << "." << std::flush;
                         const auto &processedSnapshot = m_ImageInput->processSnapshot(cv::imread(filename.str()));
-                        //cv::imwrite((m_Config.getOutputPath() / ("processed_" + std::to_string(m_NumSnapshots) + ".png")).str(), processedSnapshot);
                         m_Memory->train(processedSnapshot);
                     }
                     // Otherwise, stop searching
@@ -161,10 +205,10 @@ private:
         // If this event is an update
         if(event == Event::Update) {
             // Read joystick
-            m_Joystick.update();
+            m_Joystick->update();
 
             // Exit if X is pressed
-            if(m_Joystick.isPressed(HID::JButton::X)) {
+            if(m_Joystick->isPressed(HID::JButton::X)) {
                  // If we should use Vicon capture control
                 if(m_Config.shouldUseViconCaptureControl()) {
                     // Stop capture
@@ -174,18 +218,26 @@ private:
             }
 
             if(state != State::Testing) {
-                 // Drive motors using joystick
-                m_Motor.drive(m_Joystick, m_Config.getJoystickDeadzone());
+                // Drive motors using joystick
+                m_Motor.drive(*m_Joystick, m_Config.getJoystickDeadzone());
             }
 
-            // Capture frame
-            if(!m_Camera->readFrame(m_Output)) {
+            // Update display
+            m_CarSprite.setPose(m_PoseGetter->getPose());
+            m_Display.update(m_TrainPath, m_TestPath, m_CarSprite);
+            if(!m_Display.isOpen()) {
                 return false;
             }
 
-            // Unwrap frame
-            m_Unwrapper.unwrap(m_Output, m_Unwrapped);
+            // Capture frame
+            m_Camera->readFrameSync(m_Output);
 
+            // Unwrap frame
+            if (m_Unwrapper) {
+                m_Unwrapper->unwrap(m_Output, m_Unwrapped);
+            } else {
+                m_Unwrapped = m_Output;
+            }
             cv::waitKey(1);
         }
 
@@ -194,7 +246,7 @@ private:
                 LOGI << "Press B to start training" ;
             }
             else if(event == Event::Update) {
-                if(m_Joystick.isPressed(HID::JButton::B)) {
+                if(m_Joystick->isPressed(HID::JButton::B)) {
                     m_StateMachine.transition(State::Training);
                 }
             }
@@ -203,9 +255,14 @@ private:
             if(event == Event::Enter) {
                 LOGI << "Starting training";
 
+                // Clear linestrip
+                m_TrainPath.clear();
+
                 // Open settings file and write unwrapper settings to it
                 cv::FileStorage settingsFile((m_Config.getOutputPath() / "training_settings.yaml").str(), cv::FileStorage::WRITE);
-                settingsFile << "unwrapper" << m_Unwrapper;
+                if (m_Unwrapper) {
+                    settingsFile << "unwrapper" << *m_Unwrapper;
+                }
 
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
@@ -219,8 +276,8 @@ private:
                 m_LogFile << "Time [s], Filename";
 
                 // If Vicon tracking is available, write additional header
-                if(m_Config.shouldUseViconTracking()) {
-                    m_LogFile << ", Frame, X, Y, Z, Rx, Ry, Rz";
+                if(m_Config.shouldLogPose()) {
+                    m_LogFile << ", X, Y, Z, Rx, Ry, Rz";
                 }
                 m_LogFile << std::endl;
 
@@ -234,13 +291,8 @@ private:
             else if(event == Event::Update) {
                 const auto currentTime = std::chrono::high_resolution_clock::now();
 
-                // While testing, if we should stream output, send unwrapped frame
-                if(m_Config.shouldStreamOutput()) {
-                    m_NetSink->sendFrame(m_Unwrapped);
-                }
-
                 // If A is pressed
-                if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && (currentTime - m_LastTrainTime) > m_Config.getTrainInterval())) {
+                if(m_Joystick->isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && (currentTime - m_LastTrainTime) > m_Config.getTrainInterval())) {
                     // Update last train time
                     m_LastTrainTime = currentTime;
 
@@ -254,43 +306,35 @@ private:
 
                     // Write time
                     m_LogFile << ((Seconds)(currentTime - m_RecordingStartTime)).count() << ", " << filename;
-
-                    // If Vicon tracking is available
-                    if(m_Config.shouldUseViconTracking()) {
-                        // Get tracking data
-                        const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
-                        const auto &position = pose.position();
-                        const auto &attitude = pose.attitude();
-
-                        // Write to CSV
-                        m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", " << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
-                    }
-                    m_LogFile << std::endl;
+                    logPose();
                 }
                 // Otherwise, if B is pressed, go to testing
-                else if(m_Joystick.isPressed(HID::JButton::B)) {
+                else if(m_Joystick->isPressed(HID::JButton::B)) {
                     m_StateMachine.transition(State::WaitToTest);
                 }
             }
+            m_TrainPath.append(m_PoseGetter->getPosition());
         }
         else if(state == State::WaitToTest) {
             if(event == Event::Enter) {
                 LOGI << "Press B to start testing" ;
             }
             else if(event == Event::Update) {
-                if(m_Joystick.isPressed(HID::JButton::B)) {
+                if(m_Joystick->isPressed(HID::JButton::B)) {
                     m_StateMachine.transition(State::Testing);
                 }
             }
         }
         else if(state == State::Testing) {
             if(event == Event::Enter) {
-                LOGI << "Testing: finding snapshot" ;
+                LOGI << "Testing: finding snapshot";
+                m_TestPath.clear();
 
                 // Open settings file and write unwrapper settings to it
                 cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
-                settingsFile << "unwrapper" << m_Unwrapper;
+                if (m_Unwrapper) {
+                    settingsFile << "unwrapper" << *m_Unwrapper;
+                }
 
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
@@ -308,8 +352,8 @@ private:
                 m_Memory->writeCSVHeader(m_LogFile);
 
                 // If Vicon tracking is available, write additional header fields
-                if(m_Config.shouldUseViconTracking()) {
-                    m_LogFile << ", Frame number, X, Y, Z, Rx, Ry, Rz";
+                if(m_Config.shouldLogPose()) {
+                    m_LogFile << ", X, Y, Z, Rx, Ry, Rz";
                 }
 
                 if(m_Config.shouldSaveTestingDiagnostic()) {
@@ -339,17 +383,7 @@ private:
                     // Write memory-specific CSV logging
                     m_Memory->writeCSVLine(m_LogFile);
 
-                    // If vicon tracking is available
-                    if(m_Config.shouldUseViconTracking()) {
-                        // Get tracking data
-                        const auto objectData = m_ViconTracking.getObjectData(0);
-                        const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
-                        const auto &position = pose.position();
-                        const auto &attitude = pose.attitude();
-
-                        // Write extra logging data
-                        m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0] << ", " << position[1] << ", " << position[2] << ", " << attitude[0] << ", " << attitude[1] << ", " << attitude[2];
-                    }
+                    logPose();
 
                     // If we should save diagnostics when testing
                     if(m_Config.shouldSaveTestingDiagnostic()) {
@@ -378,13 +412,21 @@ private:
                             cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getUnwrapRes().height -20),
                                         cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
 
-                            // Send annotated difference image
+                            // Annotated difference image
+#ifdef LOCAL_DISPLAY
+                            cv::imshow("Image difference", m_DifferenceImage);
+                            if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
+                                return false;
+                            }
+#else
                             m_NetSink->sendFrame(m_DifferenceImage);
+#endif
                         }
                         else {
                             LOGW << "WARNING: Can only stream output from a perfect memory";
                         }
                     }
+
                     // Get time after testing and thus calculate how long it took
                     const auto motorTime = std::chrono::high_resolution_clock::now();
                     m_TestDuration = motorTime - currentTime;
@@ -411,12 +453,33 @@ private:
                     }
                 }
             }
+            m_TestPath.append(m_PoseGetter->getPosition());
         }
         else {
             LOGE << "Invalid state";
             return false;
         }
         return true;
+    }
+
+    void logPose()
+    {
+        // If logging pose
+        if(m_Config.shouldLogPose()) {
+            // Get tracking data
+            const Pose3<millimeter_t, degree_t> pose = m_PoseGetter->getPose();
+            const auto &position = pose.position();
+            const auto &attitude = pose.attitude();
+
+            // Write to CSV
+            m_LogFile << ", " << position[0].value()
+                      << ", " << position[1].value()
+                      << ", " << position[2].value()
+                      << ", " << attitude[0].value()
+                      << ", " << attitude[1].value()
+                      << ", " << attitude[2].value();
+        }
+        m_LogFile << std::endl;
     }
 
     //------------------------------------------------------------------------
@@ -428,11 +491,22 @@ private:
     // State machine
     FSM<State> m_StateMachine;
 
+    // Motor driver
+    TANK_TYPE m_Motor;
+
+    // For getting agent's position
+    POSE_GETTER_TYPE m_PoseGetter;
+
     // Camera interface
     std::unique_ptr<Video::Input> m_Camera;
 
+    // Display
+    Viz::SFMLWorld m_Display;
+    Viz::SFMLWorld::CarAgent m_CarSprite;
+    Viz::SFMLWorld::LineStrip m_TrainPath, m_TestPath;
+
     // Joystick interface
-    HID::Joystick m_Joystick;
+    std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> m_Joystick;
 
     // OpenCV images used to store raw camera frame and unwrapped panorama
     cv::Mat m_Output;
@@ -440,16 +514,13 @@ private:
     cv::Mat m_DifferenceImage;
 
     // OpenCV-based panorama unwrapper
-    ImgProc::OpenCVUnwrap360 m_Unwrapper;
+    std::unique_ptr<ImgProc::OpenCVUnwrap360> m_Unwrapper;
 
     // Image processor
     std::unique_ptr<ImageInput> m_ImageInput;
 
     // Perfect memory
     std::unique_ptr<MemoryBase> m_Memory;
-
-    // Motor driver
-    TANK_TYPE m_Motor;
 
     // Last time at which a motor command was issued or a snapshot was trained
     TimePoint m_LastMotorCommandTime;
@@ -463,23 +534,22 @@ private:
     // Index of test image to write
     size_t m_TestImageIndex;
 
-    // Vicon tracking interface
-    Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
-
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 
     // CSV file containing logging
     std::ofstream m_LogFile;
 
+    // How many snapshots has memory been trained on
+    size_t m_NumSnapshots;
+
+#ifndef LOCAL_DISPLAY
     // Server for streaming etc
     std::unique_ptr<Net::Connection> m_Connection;
 
     // Sink for video to send over server
     std::unique_ptr<Video::NetSink> m_NetSink;
-
-    // How many snapshots has memory been trained on
-    size_t m_NumSnapshots;
+#endif
 };
 }   // Anonymous namespace
 

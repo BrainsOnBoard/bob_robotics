@@ -21,11 +21,29 @@ class Config
     using Milliseconds = std::chrono::duration<double, std::milli>;
 
 public:
-    Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
-        m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
-        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_MoveSpeed(0.25),
-        m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
-        m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
+    Config()
+      : m_UseHOG(false)
+      , m_UseBinaryImage(false)
+      , m_UseHorizonVector(false)
+      , m_Train(true)
+      , m_UseInfoMax(false)
+      , m_SaveTestingDiagnostic(false)
+      , m_StreamOutput(false)
+      , m_MaxSnapshotRotateDegrees(180.0)
+      , m_UnwrapRes(180, 50)
+      , m_WatershedMarkerImageFilename("segmentation.png")
+      , m_NumHOGOrientations(8)
+      , m_NumHOGPixelsPerCell(10)
+      , m_JoystickDeadzone(0.25f)
+      , m_AutoTrain(false)
+      , m_TrainInterval(100.0)
+      , m_MotorCommandInterval(500.0)
+      , m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort)
+      , m_MoveSpeed(0.25)
+      , m_TurnThresholds{ { units::angle::degree_t(5.0), 0.5f }, { units::angle::degree_t(10.0), 1.0f } }
+      , m_LogPose(false)
+      , m_UseViconCaptureControl(false)
+      , m_ViconCaptureControlPort(0)
     {
     }
 
@@ -60,9 +78,7 @@ public:
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
     Milliseconds getMotorCommandInterval() const{ return m_MotorCommandInterval; }
 
-    bool shouldUseViconTracking() const{ return m_UseViconTracking; }
-    int getViconTrackingPort() const{ return m_ViconTrackingPort; }
-    const std::string &getViconTrackingObjectName() const{ return m_ViconTrackingObjectName; }
+    bool shouldLogPose() const{ return m_LogPose; }
 
     bool shouldUseViconCaptureControl() const{ return m_UseViconCaptureControl; }
     const std::string &getViconCaptureControlName() const{ return m_ViconCaptureControlName; }
@@ -101,6 +117,7 @@ public:
         fs << "shouldUseInfoMax" << shouldUseInfoMax();
         fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();
         fs << "shouldStreamOutput" << shouldStreamOutput();
+        fs << "shouldLogPose" << shouldLogPose();
         fs << "outputPath" << getOutputPath().str();
         fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
@@ -120,13 +137,6 @@ public:
             fs << "[" << t.first.value() << t.second << "]";
         }
         fs << "]";
-
-        if(shouldUseViconTracking()) {
-            fs << "viconTracking" << "{";
-            fs << "port" << getViconTrackingPort();
-            fs << "objectName" << getViconTrackingObjectName();
-            fs << "}";
-        }
 
         if(shouldUseViconCaptureControl()) {
             fs << "viconCaptureControl" << "{";
@@ -148,6 +158,7 @@ public:
         cv::read(node["shouldUseHorizonVector"], m_UseHorizonVector, m_UseHorizonVector);
         cv::read(node["shouldTrain"], m_Train, m_Train);
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
+        cv::read(node["shouldLogPose"], m_LogPose, m_LogPose);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
 
@@ -195,16 +206,6 @@ public:
                 assert(t.isSeq() && t.size() == 2);
                 m_TurnThresholds.emplace(units::angle::degree_t((double)t[0]), (float)t[1]);
             }
-        }
-
-        const auto &viconTracking = node["viconTracking"];
-        if(viconTracking.isMap()) {
-            m_UseViconTracking = true;
-            viconTracking["port"] >> m_ViconTrackingPort;
-
-            cv::String viconTrackingObjectName;
-            viconTracking["objectName"] >> viconTrackingObjectName;
-            m_ViconTrackingObjectName = (std::string)viconTrackingObjectName;
         }
 
         const auto &viconCaptureControl = node["viconCaptureControl"];
@@ -290,10 +291,8 @@ private:
     // RDF angle difference thresholds that trigger different turning speeds
     std::map<units::angle::degree_t, float> m_TurnThresholds;
 
-    // Vicon tracking settings
-    bool m_UseViconTracking;
-    int m_ViconTrackingPort;
-    std::string m_ViconTrackingObjectName;
+    // Tracking settings
+    bool m_LogPose;
 
     // Vicon capture control settings
     bool m_UseViconCaptureControl;
