@@ -11,6 +11,7 @@ if(${TARGET} STREQUAL snapshot_bot)
                 SOURCES snapshot_bot.cc memory.cc image_input.cc
                 BOB_MODULES common hid imgproc navigation robots video
                             vicon viz/sfml_world
+                THIRD_PARTY matplotlibcpp
                 OPTIONS LOCAL_DISPLAY) # Run display locally
 elseif(${TARGET} STREQUAL offline_train)
     BoB_project(EXECUTABLE offline_train

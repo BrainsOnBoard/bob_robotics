@@ -29,6 +29,7 @@ public:
       , m_UseInfoMax(false)
       , m_SaveTestingDiagnostic(false)
       , m_StreamOutput(false)
+      , m_PlotRIDF(false)
       , m_MaxSnapshotRotateDegrees(180.0)
       , m_UnwrapRes(180, 50)
       , m_WatershedMarkerImageFilename("segmentation.png")
@@ -57,6 +58,7 @@ public:
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
+    bool plotRIDF() const{ return m_PlotRIDF; }
 
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
 
@@ -118,6 +120,7 @@ public:
         fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();
         fs << "shouldStreamOutput" << shouldStreamOutput();
         fs << "shouldLogPose" << shouldLogPose();
+        fs << "plotRIDF" << plotRIDF();
         fs << "outputPath" << getOutputPath().str();
         fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
@@ -159,6 +162,7 @@ public:
         cv::read(node["shouldTrain"], m_Train, m_Train);
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldLogPose"], m_LogPose, m_LogPose);
+        cv::read(node["plotRIDF"], m_PlotRIDF, m_PlotRIDF);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
 
@@ -249,6 +253,9 @@ private:
 
     // Should we transmit visual output
     bool m_StreamOutput;
+
+    // Plot RIDF with matplotlibcpp
+    bool m_PlotRIDF;
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;

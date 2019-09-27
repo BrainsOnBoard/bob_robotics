@@ -10,6 +10,9 @@
 #include "video/netsink.h"
 #include "viz/sfml_world/sfml_world.h"
 
+// Third-party includes
+#include "third_party/matplotlibcpp.h"
+
 #ifdef LOCAL_DISPLAY
 #include "os/keycodes.h"
 #else
@@ -25,6 +28,7 @@
 #include "memory.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <limits>
@@ -36,6 +40,7 @@ using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
 using namespace units::math;
+namespace plt = matplotlibcpp;
 
 //------------------------------------------------------------------------
 // Anonymous namespace
@@ -129,6 +134,22 @@ public:
         }
         m_Output.create(m_Camera->getOutputSize(), CV_8UC3);
         m_DifferenceImage.create(m_Camera->getOutputSize(), CV_8UC1);
+
+        // For plotting RIDFs
+        if (m_Config.plotRIDF()) {
+            const auto width = m_Output.cols;
+            const float sep = 360.f / (float)(width + 1);
+            m_Angles.reserve(width + 1);
+            for (int i = 0; i < width; i++) {
+                m_Angles.push_back(-180.f + sep);
+            }
+            m_Angles.push_back(180.f);
+
+            m_XTicks = { -180, -90, 0, 90, 180 };
+
+            // Pre-allocate
+            m_Differences.resize(width + 1);
+        }
 
         // If we should use Vicon capture control
         if(m_Config.shouldUseViconCaptureControl()) {
@@ -452,6 +473,31 @@ private:
                     else {
                         m_Motor.tank(m_Config.getMoveSpeed(), m_Config.getMoveSpeed());
                     }
+
+                    if (m_Config.plotRIDF()) {
+                        // We need to rotate the RIDF so it's centred on 0 deg
+                        const auto &diffs = m_Memory->getRIDF();
+                        std::copy(diffs.cbegin(), diffs.cbegin() + diffs.size() / 2,
+                                  m_Differences.begin() + diffs.size() / 2);
+                        std::copy(diffs.cbegin() + diffs.size() / 2, diffs.cend(),
+                                  m_Differences.begin());
+                        m_Differences.back() = m_Differences[0];
+
+                        // Normalise values
+                        const auto normalise = [](float val) {
+                            return val / 255.f;
+                        };
+                        std::transform(m_Differences.begin(), m_Differences.end(),
+                                       m_Differences.begin(), normalise);
+
+                        // Plot
+                        plt::clf();
+                        plt::plot(m_Angles, m_Differences, "b");
+                        plt::title("RIDF");
+                        plt::ylim(0.f, 0.25f);
+                        plt::xticks(m_XTicks);
+                        plt::pause(0.001);
+                    }
                 }
             }
             m_TestPath.append(m_PoseGetter->getPosition());
@@ -497,6 +543,10 @@ private:
 
     // For getting agent's position
     POSE_GETTER_TYPE m_PoseGetter;
+
+    // For plotting RIDF
+    std::vector<float> m_Angles, m_Differences;
+    std::vector<int> m_XTicks;
 
     // Camera interface
     std::unique_ptr<Video::Input> m_Camera;

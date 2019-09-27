@@ -33,6 +33,7 @@ public:
     //------------------------------------------------------------------------
     units::angle::degree_t getBestHeading() const{ return m_BestHeading; }
     float getLowestDifference() const{ return m_LowestDifference; }
+    const std::vector<float> &getRIDF() const{ return *m_Differences; }
 
 protected:
     //------------------------------------------------------------------------
@@ -40,11 +41,13 @@ protected:
     //------------------------------------------------------------------------
     void setBestHeading(units::angle::degree_t bestHeading){ m_BestHeading = bestHeading; }
     void setLowestDifference(float lowestDifference){ m_LowestDifference = lowestDifference; }
+    void setDifferences(const std::vector<float> &diffs){ m_Differences = &diffs; }
 
 private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
+    const std::vector<float> *m_Differences;
     units::angle::degree_t m_BestHeading;
     float m_LowestDifference;
 };

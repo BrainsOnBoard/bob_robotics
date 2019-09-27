@@ -52,13 +52,13 @@ PerfectMemory::PerfectMemory(const Config &config, const cv::Size &inputSize)
 void PerfectMemory::test(const cv::Mat &snapshot)
 {
     // Get heading directly from Perfect Memory
-    degree_t bestHeading;
-    float lowestDifference;
-    std::tie(bestHeading, m_BestSnapshotIndex, lowestDifference, std::ignore) = getPM().getHeading(snapshot);
+    const auto ret = getPM().getHeading(snapshot);
+    m_BestSnapshotIndex = std::get<1>(ret);
 
     // Set best heading and vector length
-    setBestHeading(bestHeading);
-    setLowestDifference(lowestDifference);
+    setBestHeading(std::get<0>(ret));
+    setLowestDifference(std::get<2>(ret));
+    setDifferences(std::get<3>(ret)[m_BestSnapshotIndex]);
 }
 //------------------------------------------------------------------------
 void PerfectMemory::train(const cv::Mat &snapshot)
