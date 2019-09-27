@@ -5,10 +5,15 @@
 #include "common/timer.h"
 #include "hid/joystick_sfml_keyboard.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "net/server.h"
 #include "robots/tank.h"
 #include "video/netsink.h"
 #include "viz/sfml_world/sfml_world.h"
+
+#ifdef LOCAL_DISPLAY
+#include "os/keycodes.h"
+#else
+#include "net/server.h"
+#endif
 
 // Third-party includes
 #include "third_party/path.h"
@@ -105,6 +110,7 @@ public:
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
+#ifndef LOCAL_DISPLAY
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             Net::Server server;
@@ -112,6 +118,7 @@ public:
             m_NetSink = std::make_unique<Video::NetSink>(*m_Connection, config.getUnwrapRes(), "unwrapped");
             m_Connection->runInBackground();
         }
+#endif
 
         // Create unwrapper if needed
         if (m_Camera->needsUnwrapping()) {
@@ -377,8 +384,15 @@ private:
                             cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getUnwrapRes().height -20),
                                         cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
 
-                            // Send annotated difference image
+                            // Annotated difference image
+#ifdef LOCAL_DISPLAY
+                            cv::imshow("Image difference", m_DifferenceImage);
+                            if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
+                                return false;
+                            }
+#else
                             m_NetSink->sendFrame(m_DifferenceImage);
+#endif
                         }
                         else {
                             LOGW << "WARNING: Can only stream output from a perfect memory";
@@ -478,11 +492,13 @@ private:
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
+#ifndef LOCAL_DISPLAY
     // Server for streaming etc
     std::unique_ptr<Net::Connection> m_Connection;
 
     // Sink for video to send over server
     std::unique_ptr<Video::NetSink> m_NetSink;
+#endif
 };
 }   // Anonymous namespace
 

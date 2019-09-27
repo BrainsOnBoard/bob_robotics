@@ -20,7 +20,8 @@
                 "${GENN_PATH}/include"
             ],
             "defines": [
-                "TANK_TYPE=Tank"
+                "TANK_TYPE=Tank",
+                "LOCAL_DISPLAY"
             ],
             "cppStandard": "c++14",
             "intelliSenseMode": "clang-x64"
