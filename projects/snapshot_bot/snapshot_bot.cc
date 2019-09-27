@@ -405,6 +405,7 @@ private:
                             const cv::Mat &matchedSnapshot = perfectMemory->getBestSnapshot();
 
                             // Calculate difference image
+                            cv::cvtColor(m_Unwrapped, m_Unwrapped, cv::COLOR_BGR2GRAY);
                             cv::absdiff(matchedSnapshot, m_Unwrapped, m_DifferenceImage);
 
                             char status[255];
