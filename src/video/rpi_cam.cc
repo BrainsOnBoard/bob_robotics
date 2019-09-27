@@ -34,41 +34,42 @@ cv::Size
 RPiCamera::getOutputSize() const
 {
     // this is fixed
-    return cv::Size(152, 72);
+    return cv::Size(128, 64);
 }
 
 bool
 RPiCamera::readFrame(cv::Mat &outFrame)
 {
-    uint8_t buffer[72 * 6 * 3];
+    uint8_t buffer[128 * 8];
 
     // Check we're connected
     BOB_ASSERT(m_Socket != INVALID_SOCKET);
 
     // Make sure output frame is the right size and type
-    outFrame.create(72, 152, CV_8UC3);
+    outFrame.create(64, 128, CV_8UC1);
 
     // get the most recent UDP frame (grayscale for now)
-    while (recv(m_Socket, buffer, 72 * 6 * 3, 0) > 0) {
+    while (recv(m_Socket, buffer, 128 * 8, 0) > 0) {
         // Get offset into each row data in this packet should be copied into
-        const int xOffset = buffer[0] * 6;
+        const int xOffset = buffer[0] * 8;
 
         // Copy 6 RGB pixels into each row aside from in last packet
-        const int width = (xOffset == 150) ? 2 : 6;
+        const int width = 8;
 
         // Get pointer to first (column-wise) pixel in buffer
-        const cv::Vec3b *bufferPixels = reinterpret_cast<const cv::Vec3b*>(buffer);
+        const uint8_t *bufferPixels = reinterpret_cast<const uint8_t*>(buffer);
 
         // Loop through pixels column wise
         for(int x = xOffset; x < (xOffset + width); x++) {
-            for(int y = 0; y < 72; y++) {
-                // Read BGR pixel
-                const cv::Vec3b bgr = *bufferPixels++;
+            for(int y = 0; y < 128; y++) {
+                // Read pixel
+                const uint8_t value = *bufferPixels++;
 
                 // Convert to RGB and write back to outFrame
-                outFrame.at<cv::Vec3b>(y, x) = cv::Vec3b(bgr[2], bgr[1], bgr[0]);
+                outFrame.at<uint8_t>(x, y) = value;
             }
         }
+std::cout << "got data" << std::endl;
     }
 
     return true;
