@@ -99,7 +99,7 @@ print("Eye centre found at (%f, %f, %f)" % (eye_centre[0], eye_centre[1], eye_ce
 eye_interpolation_spherical = cartesian_to_spherical(eye_interpolation_points.transpose() - eye_centre)
 
 # Calculate alpha shape around eye
-eye_alpha_shape = alphashape(eye_interpolation_spherical[:2].transpose(), 0.05)
+eye_alpha_shape = alphashape(eye_interpolation_spherical[:2].transpose(), ALPHA)
 
 # Write out to file
 np.asarray(eye_alpha_shape.exterior.coords, dtype=np.float64).tofile(path.join(antworld_resource_directory, "eye_border_%s.bin" % bee_name))
