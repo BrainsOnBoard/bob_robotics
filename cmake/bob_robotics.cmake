@@ -253,7 +253,7 @@ macro(always_included_packages)
     # packages may not be present
     if(NOT UNIX)
         if(NOT TARGET SDL2::SDL2)
-            find_package(SDL2)
+            find_package(SDL2 QUIET)
         endif()
         if(NOT TARGET Eigen3::Eigen)
             find_package(Eigen3 QUIET)
