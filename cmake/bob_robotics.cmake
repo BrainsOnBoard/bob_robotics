@@ -16,7 +16,7 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
+                          "WIN_EXE;EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -28,8 +28,13 @@ macro(BoB_project)
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
 
+    if(PARSED_ARGS_WIN_EXE AND PARSED_ARGS_EXECUTABLE)
+        message(FATAL_ERROR "WIN_EXE and EXECUTABLE options can't both be specified")
+    endif()
     if(PARSED_ARGS_EXECUTABLE)
         set(NAME ${PARSED_ARGS_EXECUTABLE})
+    elseif(PARSED_ARGS_WIN_EXE)
+        set(NAME ${PARSED_ARGS_WIN_EXE})
     else()
         # Use current folder as project name
         get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
@@ -44,6 +49,12 @@ macro(BoB_project)
     if(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
+        set(BOB_TARGETS ${NAME})
+    elseif(PARSED_ARGS_WIN_EXE)
+        # Build a single executable from these source files, specifying the
+        # WIN32 option which makes a Windows executable (i.e. with WinMain()
+        # as the entry point)
+        add_executable(${NAME} WIN32 "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set(BOB_TARGETS ${NAME})
     else()
         # Build each *.cc file as a separate executable
