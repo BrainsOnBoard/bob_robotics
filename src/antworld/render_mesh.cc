@@ -246,6 +246,12 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
     using namespace units::literals;
     using namespace units::angle;
 
+    // Resize hex mask, initializing all entries to false
+    m_HexMask.resize(m_NumVerticalHexes);
+    for(auto &p : m_HexMask) {
+        p.resize(m_NumHorizontalHexes, false);
+    }
+
     // Pre-calculate cos30 and sin30
     const double cos30 = units::math::cos(30_deg);
     const double sin30 = units::math::sin(30_deg);
@@ -313,6 +319,9 @@ RenderMeshHexagonal::RenderMeshHexagonal(const Border &border, units::angle::deg
                     return border.isInEye(std::get<0>(v), std::get<1>(v));
                 }))
             {
+                // Set hex mask
+                m_HexMask.at(i + rowBegin).at(j + colBegin) = true;
+
                 // Cache index of first hex in
                 const size_t hexStartVertexIndex = positions.size() / 2;
 

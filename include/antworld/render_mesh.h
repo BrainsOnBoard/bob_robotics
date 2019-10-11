@@ -134,6 +134,8 @@ public:
     unsigned int getNumHorizontalHexes() const{ return m_NumHorizontalHexes; }
     unsigned int getNumVerticalHexes() const{ return m_NumVerticalHexes; }
 
+    const std::vector<std::vector<bool>> &getHexMask() const{ return m_HexMask; }
+
 private:
     RenderMeshHexagonal(const Border &border, units::angle::degree_t interommatidiaAngle);
 
@@ -142,6 +144,9 @@ private:
     //------------------------------------------------------------------------
     const unsigned int m_NumHorizontalHexes;
     const unsigned int m_NumVerticalHexes;
+
+    // Mask specifying which hexes are actually present in image
+    std::vector<std::vector<bool>> m_HexMask;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics
