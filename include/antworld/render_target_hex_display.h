@@ -31,6 +31,7 @@ public:
     //----------------------------------------------------------------------------
     void render(GLint viewportX, GLint viewportY,
                 GLsizei viewportWidth, GLsizei viewportHeight) const;
+    void render(RenderTarget &renderTarget, bool bind = true, bool clear = true) const;
 
 private:
     RenderTargetHexDisplay(unsigned int numHorizontalHexes, unsigned int numVerticalHexes);

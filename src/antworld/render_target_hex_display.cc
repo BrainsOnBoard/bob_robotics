@@ -55,6 +55,27 @@ void RenderTargetHexDisplay::render(GLint viewportX, GLint viewportY,
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 //----------------------------------------------------------------------------
+void RenderTargetHexDisplay::render(RenderTarget &renderTarget, bool bind, bool clear) const
+{
+     // If we should do so, bind
+    if(bind) {
+        renderTarget.bind();
+    }
+
+    // If we should do so, clear
+    if(clear) {
+        renderTarget.clear();
+    }
+
+    // Render to target
+    render(0, 0, renderTarget.getWidth(), renderTarget.getHeight());
+
+    // If we should do so, unbind
+    if(bind) {
+        renderTarget.unbind();
+    }
+}
+//----------------------------------------------------------------------------
 RenderTargetHexDisplay::RenderTargetHexDisplay(unsigned int numHorizontalHexes, unsigned int numVerticalHexes)
 :   RenderTarget(numHorizontalHexes, numVerticalHexes)
 {
