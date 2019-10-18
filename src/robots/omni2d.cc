@@ -55,7 +55,18 @@ Omni2D::readFromNetwork(Net::Connection &connection)
     connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
         onCommandReceived(connection, command);
     });
+    
+    m_Connection = &connection;
 }
+
+void Omni2D::stopReadingFromNetwork()
+{
+    if (m_Connection) {
+        // Ignore incoming TNK commands
+        m_Connection->setCommandHandler("TNK", nullptr);
+    }
+}
+
 
 void
 Omni2D::drive(float x, float y, float rot, float deadZone)

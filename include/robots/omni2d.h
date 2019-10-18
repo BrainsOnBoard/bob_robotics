@@ -27,29 +27,28 @@ public:
      *
      * Values must be between -1 and 1 inclusive.
      */
-    virtual void moveForward(float speed);
+    virtual void moveForward(float speed) override;
 
     /**!
      * \brief Stop moving forward and start turning at the specified relative speed
      *
      * Values must be between -1 and 1 inclusive.
      */
-    virtual void turnOnTheSpot(float clockwiseSpeed);
+    virtual void turnOnTheSpot(float clockwiseSpeed) override;
 
     //! Stop the robot moving
-    virtual void stopMoving();
+    virtual void stopMoving() override;
 
-    //------------------------------------------------------------------------
-    // Public API
-    //------------------------------------------------------------------------
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
-    void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
-    void readFromNetwork(Net::Connection &connection);
-
+    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
+    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
+    virtual void readFromNetwork(Net::Connection &connection) override;
+    virtual void stopReadingFromNetwork() override;
+    
 private:
     float m_X = 0;
     float m_Y = 0;
     float m_R = 0;
+    Net::Connection *m_Connection = nullptr;
 
     void drive(float x, float y, float rot, float deadZone);
     void onCommandReceived(Net::Connection &, const Net::Command &command);
