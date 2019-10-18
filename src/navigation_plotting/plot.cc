@@ -8,7 +8,7 @@
 #include "third_party/matplotlibcpp.h"
 
 namespace BoBRobotics {
-namespace Navigation {
+namespace NavigationPlotting {
 
 namespace plt = matplotlibcpp;
 
@@ -49,5 +49,5 @@ plotRIDF(const std::vector<float> &differences)
     plt::ylim(0.0, plt::ylim()[1]);
     plt::show();
 }
-} // Navigation
+} // NavigationPlotting
 } // BoBRobotics
