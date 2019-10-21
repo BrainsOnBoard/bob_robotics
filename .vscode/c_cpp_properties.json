@@ -21,7 +21,8 @@
             ],
             "defines": [
                 "TANK_TYPE_Tank",
-                "TANK_TYPE=Tank"
+                "TANK_TYPE=Tank",
+                "BOB_ROBOTICS_PATH=\"/some/path\""
             ],
             "cppStandard": "c++14",
             "intelliSenseMode": "clang-x64"

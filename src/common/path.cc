@@ -9,14 +9,12 @@
 #include <sstream>
 #include <stdexcept>
 
-#define BOB_TO_STRING_LITERAL(s) #s
-
 namespace BoBRobotics {
 namespace Path {
 filesystem::path
 getRepoPath()
 {
-    return filesystem::path{ BOB_TO_STRING_LITERAL(BOB_ROBOTICS_PATH) };
+    return filesystem::path{ BOB_ROBOTICS_PATH };
 }
 
 filesystem::path
