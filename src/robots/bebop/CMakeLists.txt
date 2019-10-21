@@ -4,10 +4,6 @@ BoB_module_custom(SOURCES bebop.cc video.cc
                   BOB_MODULES robots hid video common
                   PLATFORMS unix)
 
-# CMake doesn't pass this flag automatically and without it the ARSDK libs
-# aren't found at runtime
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--disable-new-tags")
-
 # We need to know where ARSDK is installed
 if(NOT DEFINED ENV{ARSDK_ROOT})
     message(FATAL_ERROR "The ARSDK_ROOT environment variable is not set")
