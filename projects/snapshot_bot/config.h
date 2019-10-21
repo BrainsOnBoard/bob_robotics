@@ -156,7 +156,7 @@ public:
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
         cv::read(node["shouldUseNorbot"], m_UseNorbot, m_UseNorbot);
-        cv::read(node["shouldUseMecanum]"], m_UseMecanum, m_UseMecanum);
+        cv::read(node["shouldUseMecanum"], m_UseMecanum, m_UseMecanum);
         
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);

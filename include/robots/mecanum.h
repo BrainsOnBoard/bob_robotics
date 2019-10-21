@@ -25,7 +25,7 @@ public:
     //----------------------------------------------------------------------------
     // Omni2D virtuals
     //----------------------------------------------------------------------------
-    virtual void omni2D(float forwards, float sideways, float turn) override;
+    virtual void omni2D(float forward, float sideways, float turn) override;
 
     //----------------------------------------------------------------------------
     // Public API

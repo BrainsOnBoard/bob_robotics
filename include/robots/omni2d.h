@@ -45,12 +45,12 @@ public:
     virtual void stopReadingFromNetwork() override;
     
 private:
-    float m_X = 0;
-    float m_Y = 0;
-    float m_R = 0;
+    float m_Forward = 0;
+    float m_Sideways = 0;
+    float m_Turn = 0;
     Net::Connection *m_Connection = nullptr;
 
-    void drive(float x, float y, float rot, float deadZone);
+    void drive(float forward, float sideways, float turn, float deadZone);
     void onCommandReceived(Net::Connection &, const Net::Command &command);
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 }; // Omni2D
