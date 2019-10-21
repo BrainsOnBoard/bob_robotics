@@ -14,6 +14,7 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "net/server.h"
+#include "robots/mecanum.h"
 #include "robots/norbot.h"
 #include "vicon/capture_control.h"
 #include "video/netsink.h"
@@ -74,6 +75,17 @@ public:
         /*if(m_Config.shouldStreamOutput()) {
             m_Server.runInBackground();
         }*/
+        
+        // Create correct robot interface
+        if(m_Config.shouldUseNorbot()) {
+            m_Robot = std::make_unique<Robots::Norbot>();
+        }
+        else if(m_Config.shouldUseMecanum()) {
+            m_Robot = std::make_unique<Robots::Mecanum>();
+        }
+        else {
+            throw std::runtime_error("No robot type selected in config");
+        }
 
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
@@ -132,7 +144,7 @@ public:
     ~RobotFSM()
     {
         // Stop motors
-        m_Motor.tank(0.0f, 0.0f);
+        m_Robot->stopMoving();
     }
 
     //------------------------------------------------------------------------
@@ -231,7 +243,7 @@ private:
                 }*/
 
                 // Drive motors using joystick
-                m_Motor.drive(m_Joystick, m_Config.getJoystickDeadzone());
+                m_Robot->drive(m_Joystick, m_Config.getJoystickDeadzone());
 
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && (currentTime - m_LastTrainTime) > m_Config.getTrainInterval())) {
@@ -395,11 +407,11 @@ private:
                     // If we should turn, do so
                     if(turnSpeed > 0.0f) {
                         const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
-                        m_Motor.tank(motorTurn, -motorTurn);
+                        m_Robot->turnOnTheSpot(motorTurn);
                     }
                     // Otherwise drive forwards
                     else {
-                        m_Motor.tank(m_Config.getMoveSpeed(), m_Config.getMoveSpeed());
+                        m_Robot->moveForward(m_Config.getMoveSpeed());
                     }
                 }
             }
@@ -441,7 +453,7 @@ private:
     std::unique_ptr<MemoryBase> m_Memory;
 
     // Motor driver
-    Robots::Norbot m_Motor;
+    std::unique_ptr<Robots::Robot> m_Robot;
 
     // Last time at which a motor command was issued or a snapshot was trained
     TimePoint m_LastMotorCommandTime;

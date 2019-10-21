@@ -21,7 +21,7 @@ class Config
     using Milliseconds = std::chrono::duration<double, std::milli>;
 
 public:
-    Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
+    Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false), m_UseNorbot(true), m_UseMecanum(false),
         m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
         m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_MoveSpeed(0.25),
         m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
@@ -39,7 +39,9 @@ public:
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
-
+    bool shouldUseNorbot() const{ return m_UseNorbot; }
+    bool shouldUseMecanum() const{ return m_UseMecanum; }
+    
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
@@ -102,6 +104,8 @@ public:
         fs << "shouldUseInfoMax" << shouldUseInfoMax();
         fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();
         fs << "shouldStreamOutput" << shouldStreamOutput();
+        fs << "shouldUseNorbot" << shouldUseNorbot();
+        fs << "shouldUseMecanum" << shouldUseMecanum();
         fs << "outputPath" << getOutputPath().str();
         fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
@@ -151,7 +155,9 @@ public:
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
-
+        cv::read(node["shouldUseNorbot"], m_UseNorbot, m_UseNorbot);
+        cv::read(node["shouldUseMecanum]"], m_UseMecanum, m_UseMecanum);
+        
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
 
@@ -249,6 +255,12 @@ private:
 
     // Should we transmit visual output
     bool m_StreamOutput;
+    
+    // Should we use 'Norbot' robot
+    bool m_UseNorbot;
+    
+    // Should we use mecanum-wheeled robot
+    bool m_UseMecanum;
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;

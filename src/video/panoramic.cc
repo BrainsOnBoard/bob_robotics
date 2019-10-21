@@ -80,7 +80,7 @@ std::unique_ptr<Input> getPanoramicCamera()
     }
     // PixPro
     else if(prefCamNum == 1) {
-        return std::make_unique<OpenCVInput>(deviceNum, cv::Size(1440, 1440), "pixpro_usb");
+        return std::make_unique<OpenCVInput>(deviceNum + cv::CAP_V4L, cv::Size(1440, 1440), "pixpro_usb");
     }
     // Default
     else {
