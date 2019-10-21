@@ -269,8 +269,8 @@ macro(BoB_init)
     endif()
 endmacro()
 
-macro(add_compile_flags EXTRA_ARGS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_ARGS}")
+macro(add_compile_flags)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARG0}")
 endmacro()
 
 macro(add_linker_flags EXTRA_ARGS)
@@ -398,15 +398,15 @@ macro(BoB_build)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
        add_compile_flags(-fcolor-diagnostics)
     endif ()
-    
-    # Different Jetson devices have different user-facing I2C interfaces 
+
+    # Different Jetson devices have different user-facing I2C interfaces
     # so read the chip ID and add preprocessor macro
     if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
         file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
         add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
         message("Tegra chip id: ${TEGRA_CHIP_ID}")
     endif()
-    
+
     # Set include dirs and link libraries for this module/project
     always_included_packages()
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
