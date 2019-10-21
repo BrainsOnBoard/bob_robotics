@@ -148,6 +148,13 @@ macro(BoB_project)
     # Do linking etc.
     BoB_build()
 
+    # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
+    # Ubuntu (and presumably when linking against other libs in non-standard
+    # locations too). This linker flag fixes the problem.
+    if(UNIX)
+        set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
+    endif()
+
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
