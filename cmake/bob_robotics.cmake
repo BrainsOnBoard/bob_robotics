@@ -270,6 +270,10 @@ macro(BoB_build)
         add_definitions(-DNO_I2C)
     endif()
 
+    # Add macro so that programs know where the root folder is for e.g. loading
+    # resources
+    add_definitions(-DBOB_ROBOTICS_PATH "${BOB_ROBOTICS_PATH}")
+
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
