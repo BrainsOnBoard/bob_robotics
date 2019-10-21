@@ -135,7 +135,7 @@ void serialEvent(){
 
 void loop() {
 
-  if (has_serial == 0) {
+  /*(if (has_serial == 0) {
     cnt++;
     if (cnt > 10) {
       rearRightMotor->setSpeed(0);
@@ -155,7 +155,7 @@ void loop() {
   } else {
     cnt = 0;
   }
-  has_serial = 0;
+  has_serial = 0;*/
 
   //Serial.println("loop...");
   delay(3);
