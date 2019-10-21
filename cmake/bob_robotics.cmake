@@ -148,6 +148,13 @@ macro(BoB_project)
     # Do linking etc.
     BoB_build()
 
+    # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
+    # Ubuntu (and presumably when linking against other libs in non-standard
+    # locations too). This linker flag fixes the problem.
+    if(UNIX)
+        set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
+    endif()
+
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
@@ -354,15 +361,15 @@ macro(BoB_build)
     elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
        add_compile_flags(-fcolor-diagnostics)
     endif ()
-    
-    # Different Jetson devices have different user-facing I2C interfaces 
+
+    # Different Jetson devices have different user-facing I2C interfaces
     # so read the chip ID and add preprocessor macro
     if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
         file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
         add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
         message("Tegra chip id: ${TEGRA_CHIP_ID}")
     endif()
-    
+
     # Set include dirs and link libraries for this module/project
     always_included_packages()
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
