@@ -11,7 +11,7 @@ var classBoBRobotics_1_1Robots_1_1SimulatedAckermann =
     [ "move", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#a0d75db876a15f84de17409661631be96", null ],
     [ "moveForward", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#a0668cbdce0d091e78e7c1394dc817345", null ],
     [ "setPose", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#a9f64897de4d0c632f604c0fa42f52015", null ],
-    [ "steer", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#aafe2bbfd7d966458e9409d6c8caaf9de", null ],
     [ "steer", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#abf5ebc5cbce129e1e36506c6dc770eed", null ],
+    [ "steer", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#aafe2bbfd7d966458e9409d6c8caaf9de", null ],
     [ "stopMoving", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html#a7939284690568fc46be77a1587173ff1", null ]
 ];

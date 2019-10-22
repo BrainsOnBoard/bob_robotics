@@ -11,6 +11,6 @@ var classBoBRobotics_1_1Net_1_1Socket =
     [ "operator=", "classBoBRobotics_1_1Net_1_1Socket.html#a585c5d70166e4a8454170cdf8059c19d", null ],
     [ "operator=", "classBoBRobotics_1_1Net_1_1Socket.html#aaec74b313ff4218225586baf18c44394", null ],
     [ "read", "classBoBRobotics_1_1Net_1_1Socket.html#a99440fb6e8831f8ffa8f4590a6653f63", null ],
-    [ "send", "classBoBRobotics_1_1Net_1_1Socket.html#a5b19117469fef26a462c20bf0d506184", null ],
-    [ "send", "classBoBRobotics_1_1Net_1_1Socket.html#a7c9dbf9b18dacbe53d3160eb8c443c01", null ]
+    [ "send", "classBoBRobotics_1_1Net_1_1Socket.html#a7c9dbf9b18dacbe53d3160eb8c443c01", null ],
+    [ "send", "classBoBRobotics_1_1Net_1_1Socket.html#a5b19117469fef26a462c20bf0d506184", null ]
 ];

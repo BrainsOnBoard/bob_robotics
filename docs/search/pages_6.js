@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['joystick_20test',['Joystick test',['../md_examples_joystick_README.html',1,'']]]
+  ['how_20to_20fly_1514',['How to fly',['../md_examples_gazebo_uav_README.html',1,'']]]
 ];
