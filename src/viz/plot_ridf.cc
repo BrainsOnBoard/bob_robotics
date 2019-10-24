@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "navigation/plot.h"
+#include "viz/plot_ridf.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -8,7 +8,7 @@
 #include "third_party/matplotlibcpp.h"
 
 namespace BoBRobotics {
-namespace NavigationPlotting {
+namespace Viz {
 
 namespace plt = matplotlibcpp;
 
@@ -50,4 +50,4 @@ plotRIDF(const std::vector<float> &differences)
     plt::show();
 }
 } // NavigationPlotting
-} // BoBRobotics
+} // Viz
