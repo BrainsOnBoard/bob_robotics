@@ -3,7 +3,7 @@
 #include "common/logging.h"
 #include "navigation/antworld_rotater.h"
 #include "navigation/perfect_memory.h"
-#include "navigation_plotting/plot.h"
+#include "viz/plot_ridf.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -13,7 +13,7 @@
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
-using namespace BoBRobotics::NavigationPlotting;
+using namespace BoBRobotics::Viz;
 
 template<typename T>
 void

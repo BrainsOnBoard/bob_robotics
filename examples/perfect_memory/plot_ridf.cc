@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "navigation/perfect_memory.h"
-#include "navigation_plotting/plot.h"
+#include "viz/plot_ridf.h"
 
 using namespace BoBRobotics::Navigation;
-using namespace BoBRobotics::NavigationPlotting;
+using namespace BoBRobotics::Viz;
 
 int
 main()
