@@ -135,6 +135,7 @@ void serialEvent(){
 
 void loop() {
 
+  // **NOTE** this code turns off motors unless input is received constantly - not required for our applications
   /*(if (has_serial == 0) {
     cnt++;
     if (cnt > 10) {
