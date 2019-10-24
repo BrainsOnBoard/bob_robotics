@@ -65,17 +65,18 @@ public:
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
         m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
-        /*m_Server(config.getServerListenPort()), m_NetSink(m_Server, config.getUnwrapRes(), "unwrapped"),*/
         m_NumSnapshots(0)
     {
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
         // If we should stream output, run server thread
-        /*if(m_Config.shouldStreamOutput()) {
-            m_Server.runInBackground();
-        }*/
-        
+        if(m_Config.shouldStreamOutput()) {
+            Net::Server server(config.getServerListenPort());
+            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
+            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getUnwrapRes(), "unwrapped");
+        }
+
         // Create correct robot interface
         if(m_Config.shouldUseNorbot()) {
             m_Robot = std::make_unique<Robots::Norbot>();
@@ -237,9 +238,9 @@ private:
             }
             else if(event == Event::Update) {
                 // While testing, if we should stream output, send unwrapped frame
-                /*if(m_Config.shouldStreamOutput()) {
-                    m_NetSink.sendFrame(m_Unwrapped);
-                }*/
+                if(m_Config.shouldStreamOutput()) {
+                    m_NetSink->sendFrame(m_Unwrapped);
+                }
 
                 // Drive motors using joystick
                 m_Robot->drive(m_Joystick, m_Config.getJoystickDeadzone());
@@ -366,7 +367,7 @@ private:
                 m_LogFile << std::endl;
 
                 // If we should stream output
-                /*if(m_Config.shouldStreamOutput()) {
+                if(m_Config.shouldStreamOutput()) {
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
                     if(perfectMemory != nullptr) {
@@ -382,12 +383,12 @@ private:
                                     cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
 
                         // Send annotated difference image
-                        //m_NetSink.sendFrame(m_DifferenceImage);
+                        m_NetSink->sendFrame(m_DifferenceImage);
                     }
                     else {
                         LOGW << "WARNING: Can only stream output from a perfect memory";
                     }
-                }*/
+                }
  
                 // Determine how fast we should turn based on the absolute angle
                 auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
@@ -484,11 +485,11 @@ private:
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
-    // Server for streaming etc
-    //Net::Server m_Server;
+    // Connection for streaming etc
+    std::unique_ptr<Net::Connection> m_Connection;
 
     // Sink for video to send over server
-    //Video::NetSink m_NetSink;
+    std::unique_ptr<Video::NetSink> m_NetSink;
 };
 }   // Anonymous namespace
 
