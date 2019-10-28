@@ -25,7 +25,7 @@ void UAV::stopMoving()
     setYawSpeed(0.f);
 }
 
-void UAV::addJoystick(HID::Joystick &joystick)
+void UAV::addJoystick(HID::Joystick &joystick, float)
 {
     joystick.addHandler([this](HID::JAxis axis, float value) {
         return onAxisEvent(axis, value);
@@ -33,6 +33,25 @@ void UAV::addJoystick(HID::Joystick &joystick)
     joystick.addHandler([this](HID::JButton button, bool pressed) {
         return onButtonEvent(button, pressed);
     });
+}
+
+void UAV::drive(const HID::Joystick &joystick, float)
+{
+    setRoll(joystick.getState(HID::JAxis::RightStickHorizontal));
+    setPitch(-joystick.getState(HID::JAxis::RightStickVertical));
+    setVerticalSpeed(-joystick.getState(HID::JAxis::LeftStickVertical));
+    setYawSpeed(-joystick.getState(HID::JAxis::LeftTrigger));
+    setYawSpeed(joystick.getState(HID::JAxis::RightTrigger));
+}
+
+void UAV::readFromNetwork(Net::Connection &)
+{
+    throw std::runtime_error("Network control of UAV not implemented");
+}
+
+void UAV::stopReadingFromNetwork()
+{
+    throw std::runtime_error("Network control of UAV not implemented");
 }
 
 bool UAV::onAxisEvent(HID::JAxis axis, float value)

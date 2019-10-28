@@ -4,11 +4,11 @@
 #include <vector>
 
 namespace BoBRobotics {
-namespace Navigation {
+namespace Viz {
 
 //! Plot a line graph of a single RIDF
 void
 plotRIDF(const std::vector<float> &differences);
 
-} // Navigation
+} // Viz
 } // BoBRobotics

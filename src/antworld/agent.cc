@@ -25,6 +25,34 @@ AntAgent::AntAgent(sf::Window &window,
 {}
 
 void
+AntAgent::moveForward(float speed)
+{
+    BOB_ASSERT(speed >= -1.f && speed <= 1.f);
+    const auto attitude = getAttitude();
+    BOB_ASSERT(attitude[1] == 0_deg && attitude[2] == 0_deg);
+
+    m_MoveMode = MoveMode::MovingForward;
+    m_SpeedProportion = speed;
+}
+
+void
+AntAgent::turnOnTheSpot(float clockwiseSpeed)
+{
+    BOB_ASSERT(clockwiseSpeed >= -1.f && clockwiseSpeed <= 1.f);
+    const auto attitude = getAttitude();
+    BOB_ASSERT(attitude[1] == 0_deg && attitude[2] == 0_deg);
+
+    m_MoveMode = MoveMode::Turning;
+    m_SpeedProportion = clockwiseSpeed;
+}
+
+void
+AntAgent::stopMoving()
+{
+    m_MoveMode = MoveMode::NotMoving;
+}
+
+void
 AntAgent::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
@@ -51,6 +79,30 @@ AntAgent::addJoystick(HID::Joystick &joystick, float deadZone)
             });
 }
 
+void AntAgent::drive(const HID::Joystick &joystick, float deadZone)
+{
+    m_JoystickX = joystick.getState(HID::JAxis::LeftStickHorizontal);
+    m_JoystickY = joystick.getState(HID::JAxis::LeftStickVertical);
+
+    if (fabs(m_JoystickY) > deadZone) {
+        moveForward(-m_JoystickY);
+    } else if (fabs(m_JoystickX) > deadZone) {
+        turnOnTheSpot(m_JoystickX);
+    } else {
+        stopMoving();
+    }
+}
+
+void AntAgent::readFromNetwork(Net::Connection &)
+{
+    throw std::runtime_error("Network control of AntAgent not implemented");
+}
+
+void AntAgent::stopReadingFromNetwork()
+{
+    throw std::runtime_error("Network control of AntAgent not implemented");
+}
+
 radians_per_second_t
 AntAgent::getMaximumTurnSpeed() const
 {
@@ -71,33 +123,6 @@ AntAgent::setAttitude(degree_t yaw, degree_t pitch, degree_t roll)
     Camera::setAttitude(yaw, pitch, roll);
 }
 
-void
-AntAgent::stopMoving()
-{
-    m_MoveMode = MoveMode::NotMoving;
-}
-
-void
-AntAgent::moveForward(float speed)
-{
-    BOB_ASSERT(speed >= -1.f && speed <= 1.f);
-    const auto attitude = getAttitude();
-    BOB_ASSERT(attitude[1] == 0_deg && attitude[2] == 0_deg);
-
-    m_MoveMode = MoveMode::MovingForward;
-    m_SpeedProportion = speed;
-}
-
-void
-AntAgent::turnOnTheSpot(float clockwiseSpeed)
-{
-    BOB_ASSERT(clockwiseSpeed >= -1.f && clockwiseSpeed <= 1.f);
-    const auto attitude = getAttitude();
-    BOB_ASSERT(attitude[1] == 0_deg && attitude[2] == 0_deg);
-
-    m_MoveMode = MoveMode::Turning;
-    m_SpeedProportion = clockwiseSpeed;
-}
 
 void
 AntAgent::updatePose(const units::time::second_t elapsedTime)
