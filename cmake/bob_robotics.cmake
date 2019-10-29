@@ -128,20 +128,20 @@ macro(BoB_project)
         BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
-    # Allow users to choose the type of tank robot to use with TANK_TYPE env var
+    # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
     # or CMake param (defaults to Norbot)
-    if(NOT TANK_TYPE)
-        if(NOT "$ENV{TANK_TYPE}" STREQUAL "")
-            set(TANK_TYPE $ENV{TANK_TYPE})
+    if(NOT ROBOT_TYPE)
+        if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
+            set(ROBOT_TYPE $ENV{ROBOT_TYPE})
         else()
-            set(TANK_TYPE Norbot)
+            set(ROBOT_TYPE Norbot)
         endif()
     endif()
-    add_definitions(-DTANK_TYPE=${TANK_TYPE} -DTANK_TYPE_${TANK_TYPE})
-    message("Default tank robot type (if used): ${TANK_TYPE}")
+    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE} -DROBOT_TYPE_${ROBOT_TYPE})
+    message("Default robot type (if used): ${ROBOT_TYPE}")
 
     # For EV3 (Lego) robots, we need an extra module
-    if(${TANK_TYPE} STREQUAL EV3)
+    if(${ROBOT_TYPE} STREQUAL EV3)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
     endif()
 

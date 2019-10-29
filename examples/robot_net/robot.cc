@@ -13,7 +13,7 @@
 #include "common/main.h"
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
@@ -43,7 +43,7 @@ run(Video::Input &camera)
     Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
 
     // Initialise robot
-    Robots::TANK_TYPE tank;
+    Robots::ROBOT_TYPE tank;
 
     // Read motor commands from network
     tank.readFromNetwork(connection);

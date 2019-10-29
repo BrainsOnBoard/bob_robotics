@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 
 using namespace BoBRobotics;
 
@@ -12,7 +12,7 @@ int main()
     HID::Joystick joystick(joystickDeadzone);
 
     // Create motor interface
-    Robots::TANK_TYPE robot;
+    Robots::ROBOT_TYPE robot;
 
     do {
         // Read joystick

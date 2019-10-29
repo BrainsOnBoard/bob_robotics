@@ -6,14 +6,14 @@
 #include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "robots/tank_netsink.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifdef TANK_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3
 #include "robots/ev3/mindstorms_imu.h"
 #endif
 
@@ -48,7 +48,7 @@ bob_main(int, char **)
     }
 
     // Construct tank of desired type
-    Robots::TANK_TYPE tank;
+    Robots::ROBOT_TYPE tank;
 
     // Read motor commands from network
     tank.readFromNetwork(connection);
@@ -62,7 +62,7 @@ bob_main(int, char **)
         LOGW << e.what();
     }
 
-#ifdef TANK_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3
     tank.setMaximumSpeedProportion(0.7f); // Sensible default
 
     // If an IMU is present, stream over network

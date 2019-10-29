@@ -6,7 +6,7 @@
 #include "common/logging.h"
 #include "hid/joystick.h"
 #include "genn_utils/analogue_csv_recorder.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
@@ -32,7 +32,7 @@ int main()
     Joystick joystick;
 
     // Create motor interface
-    Robots::TANK_TYPE motor;
+    Robots::ROBOT_TYPE motor;
 
     // Create VICON UDP interface
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001);

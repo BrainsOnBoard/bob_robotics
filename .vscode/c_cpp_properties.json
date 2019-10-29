@@ -20,8 +20,8 @@
                 "${GENN_PATH}/include"
             ],
             "defines": [
-                "TANK_TYPE_Tank",
-                "TANK_TYPE=Tank",
+                "ROBOT_TYPE_Tank",
+                "ROBOT_TYPE=Tank",
                 "BOB_ROBOTICS_PATH=\"/some/path\""
             ],
             "cppStandard": "c++14",
