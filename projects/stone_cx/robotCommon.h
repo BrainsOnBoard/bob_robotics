@@ -4,7 +4,7 @@ namespace BoBRobotics {
 namespace Robots {
 // Forward declarations
 class Tank;
-class TANK_TYPE;
+class ROBOT_TYPE;
 }
 
 namespace StoneCX {

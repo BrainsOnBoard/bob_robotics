@@ -15,8 +15,7 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "net/server.h"
-#include "robots/mecanum.h"
-#include "robots/norbot.h"
+#include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "video/netsink.h"
 #include "vicon/udp.h"
@@ -65,7 +64,7 @@ public:
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
         m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
-        m_NumSnapshots(0)
+        m_Robot(), m_NumSnapshots(0)
     {
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
@@ -75,17 +74,6 @@ public:
             Net::Server server(config.getServerListenPort());
             m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
             m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getUnwrapRes(), "unwrapped");
-        }
-
-        // Create correct robot interface
-        if(m_Config.shouldUseNorbot()) {
-            m_Robot = std::make_unique<Robots::Norbot>();
-        }
-        else if(m_Config.shouldUseMecanum()) {
-            m_Robot = std::make_unique<Robots::Mecanum>();
-        }
-        else {
-            throw std::runtime_error("No robot type selected in config");
         }
 
         // If we should use Vicon tracking
@@ -140,12 +128,6 @@ public:
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
         }
-    }
-
-    ~RobotFSM()
-    {
-        // Stop motors
-        m_Robot->stopMoving();
     }
 
     //------------------------------------------------------------------------
@@ -243,7 +225,7 @@ private:
                 }
 
                 // Drive motors using joystick
-                m_Robot->drive(m_Joystick, m_Config.getJoystickDeadzone());
+                m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
 
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && m_TrainingStopwatch.elapsed() > m_Config.getTrainInterval())) {
@@ -280,7 +262,7 @@ private:
                 }
             }
             else if(event == Event::Exit) {
-                m_Robot->stopMoving();
+                m_Robot.stopMoving();
             }
         }
         else if(state == State::WaitToTest) {
@@ -396,12 +378,12 @@ private:
                 // If we should turn, do so
                 if(turnSpeed > 0.0f) {
                     const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
-                    m_Robot->turnOnTheSpot(motorTurn);
+                    m_Robot.turnOnTheSpot(motorTurn);
                     m_DriveTime = m_Config.getMotorTurnCommandInterval();
                 }
                 // Otherwise drive forwards
                 else {
-                    m_Robot->moveForward(m_Config.getMoveSpeed());
+                    m_Robot.moveForward(m_Config.getMoveSpeed());
                     m_DriveTime = m_Config.getMotorCommandInterval();
                 }
 
@@ -419,7 +401,7 @@ private:
                 }
             }
             else if(event == Event::Exit) {
-                m_Robot->stopMoving();
+                m_Robot.stopMoving();
             }
         }
         else {
@@ -459,7 +441,7 @@ private:
     std::unique_ptr<MemoryBase> m_Memory;
 
     // Motor driver
-    std::unique_ptr<Robots::Robot> m_Robot;
+    Robots::ROBOT_TYPE m_Robot;
 
     // Last time at which a motor command was issued or a snapshot was trained
     Stopwatch m_MoveStopwatch;

@@ -1,5 +1,8 @@
 #pragma once
 
+// BoB robotics includes
+#include "hid/joystick.h"
+
 // Forward declarations
 namespace BoBRobotics
 {

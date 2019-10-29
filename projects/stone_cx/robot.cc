@@ -10,7 +10,7 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_optical_flow.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "video/see3cam_cu40.h"
 
 // GeNN generated code includes
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     Joystick joystick;
 
     // Create motor interface
-    TANK_TYPE motor;
+    ROBOT_TYPE motor;
 
     // Initialise GeNN
     allocateMem();

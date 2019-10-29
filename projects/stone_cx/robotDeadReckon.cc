@@ -4,7 +4,7 @@
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/server.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 
 #ifdef USE_EV3
 #include "net/imu_netsource.h"
@@ -102,7 +102,7 @@ int bob_main(int argc, char *argv[])
     const bool doVisualise = (argc > 1) && strcmp(argv[1], "--visualise") == 0;
 
     // Create motor interface
-    Robots::TANK_TYPE motor;
+    Robots::ROBOT_TYPE motor;
 
 #ifdef USE_EV3
     Net::Connection *connection = &motor.getConnection();

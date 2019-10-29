@@ -7,7 +7,7 @@ endif()
 
 # Use EV3 robot over the network
 if(USE_EV3)
-    set(TANK_TYPE BundledTankNetSink)
+    set(ROBOT_TYPE BundledTankNetSink)
 endif()
 
 if(${TARGET} STREQUAL simulator)

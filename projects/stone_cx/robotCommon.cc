@@ -4,7 +4,7 @@
 
 // BoB robotics includes
 #include "common/logging.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
