@@ -137,7 +137,8 @@ macro(BoB_project)
             set(ROBOT_TYPE Norbot)
         endif()
     endif()
-    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE} -DROBOT_TYPE_${ROBOT_TYPE})
+    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE} -DROBOT_TYPE_${ROBOT_TYPE_UPPER})
     message("Default robot type (if used): ${ROBOT_TYPE}")
 
     # For EV3 (Lego) robots, we need an extra module
