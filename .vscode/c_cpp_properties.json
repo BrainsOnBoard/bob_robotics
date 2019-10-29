@@ -20,7 +20,7 @@
                 "${GENN_PATH}/include"
             ],
             "defines": [
-                "ROBOT_TYPE_Tank",
+                "ROBOT_TYPE_TANK",
                 "ROBOT_TYPE=Tank",
                 "BOB_ROBOTICS_PATH=\"/some/path\""
             ],
