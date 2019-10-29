@@ -1,12 +1,18 @@
 // BoB robotics includes
-#include "robots/omni2d.h"
 #include "common/logging.h"
+#include "robots/omni2d.h"
 
 // Standard C++ includes
 #include <string>
 
 namespace BoBRobotics {
 namespace Robots {
+
+Omni2D::~Omni2D()
+{
+    stopReadingFromNetwork();
+    stopMoving();
+}
 
 void
 Omni2D::omni2D(float forward, float sideways, float turn)
