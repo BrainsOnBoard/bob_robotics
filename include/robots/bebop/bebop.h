@@ -208,6 +208,9 @@ public:
     RelativeMoveState getRelativeMoveState() const;
     std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
     void resetRelativeMoveState();
+    void startRecordingVideo();
+    void stopRecordingVideo();
+    bool isVideoRecording() const;
 
     // calibration
     void doFlatTrimCalibration();
@@ -293,7 +296,7 @@ private:
     };
 
     ControllerPtr m_Device;
-    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore;
+    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore, m_VideoRecordingSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
@@ -301,6 +304,8 @@ private:
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<unsigned char> m_BatteryLevel;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
+    bool m_IsVideoRecording = false;
+    eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
 
@@ -310,6 +315,7 @@ private:
     void stopStreaming();
     inline void addEventHandlers();
     inline void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     inline void createControllerDevice();
     inline State getStateUpdate();
 

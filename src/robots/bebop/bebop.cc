@@ -266,6 +266,56 @@ Bebop::resetRelativeMoveState()
     m_RelativeMoveState = RelativeMoveState::Initial;
 }
 
+std::string
+getVideoRecordingErrorMessage(eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR err)
+{
+    std::string error;
+    switch (err) {
+    case ARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR_CAMERA_KO:
+        error = "Video camera out of order";
+        break;
+    case ARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR_MEMORYFULL:
+        error = "Memory is full";
+        break;
+    case ARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR_LOWBATTERY:
+        error = "Battery is too low";
+        break;
+    case ARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR_UNKNOWN:
+    default:
+        error = "Unknown error occurred";
+        break;
+    }
+    return error;
+}
+
+void
+Bebop::startRecordingVideo()
+{
+    DRONE_COMMAND(sendMediaRecordVideoV2, ARCOMMANDS_ARDRONE3_MEDIARECORD_VIDEOV2_RECORD_START);
+    m_VideoRecordingSemaphore.wait();
+    if (m_VideoRecordingError != ARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR_OK) {
+        throw std::runtime_error("Error starting video recording: " + getVideoRecordingErrorMessage(m_VideoRecordingError));
+    }
+    m_IsVideoRecording = true;
+}
+
+void
+Bebop::stopRecordingVideo()
+{
+    DRONE_COMMAND(sendMediaRecordVideoV2, ARCOMMANDS_ARDRONE3_MEDIARECORD_VIDEOV2_RECORD_STOP);
+    m_VideoRecordingSemaphore.wait();
+    if (m_VideoRecordingError != ARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR_OK) {
+        throw std::runtime_error("Error starting video recording: " + getVideoRecordingErrorMessage(m_VideoRecordingError));
+    }
+    m_IsVideoRecording = false;
+}
+
+bool
+Bebop::isVideoRecording() const
+{
+    return m_IsVideoRecording;
+}
+
 /*!
  * \brief Tell the drone to take a photo and store it.
  */
@@ -515,6 +565,22 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
     }
 }
 
+void
+Bebop::onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (!elem) {
+        return;
+    }
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR, arg);
+    if (arg) {
+        m_VideoRecordingError = (eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR)arg->value.I32;
+        m_VideoRecordingSemaphore.notify();
+    }
+}
+
 /*
  * Invoked when a command is received from drone.
  */
@@ -556,6 +622,8 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLATTRIMCHANGED:
         bebop->m_FlatTrimSemaphore.notify();
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2:
+        bebop->onVideoRecordingStateChanged(dict);
     default:
         break;
     }

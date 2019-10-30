@@ -74,6 +74,16 @@ bob_main(int, char **)
     Video::Display display(drone.getVideoStream(), true);
     do {
         bool joyUpdated = joystick.update();
+        if (joyUpdated && joystick.isPressed(HID::JButton::X)) {
+            if (!drone.isVideoRecording()) {
+                LOGI << "Starting video recording";
+                drone.startRecordingVideo();
+            } else {
+                LOGI << "Stopping video recording";
+                drone.stopRecordingVideo();
+            }
+        }
+
         bool dispUpdated = display.update();
         if (!joyUpdated && !dispUpdated) {
             std::this_thread::sleep_for(25ms);
