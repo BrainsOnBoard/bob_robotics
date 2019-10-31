@@ -35,7 +35,6 @@ main(int argc, char **argv)
                 vid.readFrame(fr);
             }
             cv::resize(fr, fr, {}, mult, mult);
-            cv::transpose(fr, fr);
             cv::imshow("frame", fr);
             cv::waitKey(1);
             frames.emplace_back(std::move(fr));
