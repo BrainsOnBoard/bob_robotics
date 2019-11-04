@@ -1,20 +1,5 @@
 #pragma once
 
-// Standard C includes
-#include <cstdint>
-
-// Standard C++ includes
-#include <atomic>
-#include <functional>
-#include <memory>
-#include <mutex>
-#include <string>
-#include <tuple>
-#include <utility>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 // BoB robotics includes
 #include "common/pose.h"
 #include "common/semaphore.h"
@@ -25,8 +10,24 @@
 // Third-party includes
 #include "third_party/units.h"
 
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // POSIX includes
 #include <signal.h>
+
+// Standard C includes
+#include <cstdint>
+
+// Standard C++ includes
+#include <atomic>
+#include <functional>
+#include <limits>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <tuple>
+#include <utility>
 
 extern "C"
 {
@@ -111,6 +112,7 @@ class Bebop
     using degree_t = units::angle::degree_t;
     using meter_t = units::length::meter_t;
     using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    using radians_per_second_t = units::angular_velocity::radians_per_second_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
 public:
@@ -163,6 +165,21 @@ public:
         static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
+    //! The state of an animation maneuvre
+    enum class AnimationState
+    {
+        Idle = ARCOMMANDS_ANIMATION_STATE_IDLE,
+        Running = ARCOMMANDS_ANIMATION_STATE_RUNNING,
+        Cancelling = ARCOMMANDS_ANIMATION_STATE_CANCELING
+    };
+
+    struct HorizontalAnimationInfo
+    {
+        AnimationState state = AnimationState::Idle;
+        radian_t rotationAngle;
+        radians_per_second_t rotationSpeed;
+    };
+
     //! The drone's current state
     enum class State
     {
@@ -210,6 +227,9 @@ public:
     void resetRelativeMoveState();
     void startRecordingVideo();
     void stopRecordingVideo();
+    HorizontalAnimationInfo startHorizontalPanoramaAnimation(radian_t rotationAngle = radian_t{ std::numeric_limits<double>::quiet_NaN() },
+                                                             radians_per_second_t rotationSpeed = radians_per_second_t{ std::numeric_limits<double>::quiet_NaN() });
+    void cancelCurrentAnimation();
     bool isVideoRecording() const;
 
     // calibration
@@ -296,18 +316,21 @@ private:
     };
 
     ControllerPtr m_Device;
-    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore, m_VideoRecordingSemaphore;
+    Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore,
+            m_VideoRecordingSemaphore, m_HorizontalAnimationInfoSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
+    HorizontalAnimationInfo m_HorizontalAnimationInfo;
     std::atomic<unsigned char> m_BatteryLevel;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
     bool m_IsVideoRecording = false;
     eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
+    std::mutex m_HorizontalAnimationInfoMutex;
 
     void connect();
     void disconnect();
@@ -316,6 +339,7 @@ private:
     void addEventHandlers();
     void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     void onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     void createControllerDevice();
     State getStateUpdate();
 

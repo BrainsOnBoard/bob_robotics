@@ -72,15 +72,31 @@ bob_main(int, char **)
 
     // display the drone's video stream on screen
     Video::Display display(drone.getVideoStream(), true);
+    bool animationRunning = false;
     do {
         bool joyUpdated = joystick.update();
-        if (joyUpdated && joystick.isPressed(HID::JButton::X)) {
-            if (!drone.isVideoRecording()) {
-                LOGI << "Starting video recording";
-                drone.startRecordingVideo();
-            } else {
-                LOGI << "Stopping video recording";
-                drone.stopRecordingVideo();
+        if (joyUpdated) {
+            if (joystick.isPressed(HID::JButton::X)) {
+                if (!drone.isVideoRecording()) {
+                    LOGI << "Starting video recording";
+                    drone.startRecordingVideo();
+                } else {
+                    LOGI << "Stopping video recording";
+                    drone.stopRecordingVideo();
+                }
+            }
+            if (joystick.isPressed(HID::JButton::RB)) {
+                if (animationRunning) {
+                    drone.cancelCurrentAnimation();
+                } else {
+                    const auto info = drone.startHorizontalPanoramaAnimation();
+                    if (info.state != Bebop::AnimationState::Running) {
+                        LOGW << "Animation failed to start";
+                    } else {
+                        LOGI << "Running animation: \n- Rotation: " << info.rotationAngle << "\n- Speed: " << info.rotationSpeed;
+                    }
+                }
+                animationRunning = !animationRunning;
             }
         }
 

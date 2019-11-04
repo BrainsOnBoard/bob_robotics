@@ -310,6 +310,41 @@ Bebop::stopRecordingVideo()
     m_IsVideoRecording = false;
 }
 
+Bebop::HorizontalAnimationInfo
+Bebop::startHorizontalPanoramaAnimation(radian_t rotationAngle,
+                                        radians_per_second_t rotationSpeed)
+{
+    // This argument is a bitfield, signalling which params we're providing
+    uint8_t providedParams = 0;
+    if (!isnan(rotationAngle.value())) {
+        providedParams |= 1;
+    }
+    if (!isnan(rotationSpeed.value())) {
+        providedParams |= 2;
+    }
+
+    // Send command
+    m_Device->animation->sendStartHorizontalPanorama(m_Device->animation,
+                                                     providedParams,
+                                                     (float) rotationAngle.value(),
+                                                     (float) rotationSpeed);
+
+    // Wait for response from drone
+    HorizontalAnimationInfo ret;
+    m_HorizontalAnimationInfoSemaphore.wait();
+    {
+        std::lock_guard<std::mutex> guard(m_HorizontalAnimationInfoMutex);
+        ret = m_HorizontalAnimationInfo;
+    }
+    return ret;
+}
+
+void
+Bebop::cancelCurrentAnimation()
+{
+    m_Device->animation->sendCancel(m_Device->animation);
+}
+
 bool
 Bebop::isVideoRecording() const
 {
@@ -581,6 +616,39 @@ Bebop::onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     }
 }
 
+void
+Bebop::onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (!elem) {
+        return;
+    }
+
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+    {
+        std::lock_guard<std::mutex> guard(m_HorizontalAnimationInfoMutex);
+
+        // Get state
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_STATE, arg);
+        if (!arg) {
+            return;
+        }
+        m_HorizontalAnimationInfo.state = static_cast<AnimationState>(arg->value.I32);
+
+        // Get rotation angle
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_ANGLE, arg);
+        m_HorizontalAnimationInfo.rotationAngle = radian_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
+
+        // Get rotation speed
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_SPEED, arg);
+        m_HorizontalAnimationInfo.rotationSpeed = radians_per_second_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
+    }
+
+    // Signal for startHorizontalPanoramaAnimation()
+    m_HorizontalAnimationInfoSemaphore.notify();
+}
+
 /*
  * Invoked when a command is received from drone.
  */
@@ -624,6 +692,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2:
         bebop->onVideoRecordingStateChanged(dict);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE:
+        bebop->onHorizontalPanoramaStateChanged(dict);
     default:
         break;
     }
@@ -682,28 +753,28 @@ Bebop::alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
     HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
     if (elem) {
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
-    if (arg) {
-        switch (arg->value.I32) {
-        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
-            LOG_ERROR << "Alert! User emergency alert";
-            break;
-        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
-            LOG_ERROR << "Alert! Drone has cut out";
-            break;
-        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
-            LOG_WARNING << "Alert! Battery level is critical";
-            break;
-        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
-            LOG_WARNING << "Alert! Battery level is low";
-            break;
-        case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
-            LOG_WARNING << "Alert! The angle of the drone is too high";
-            break;
-        default:
-            break;
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
+        if (arg) {
+            switch (arg->value.I32) {
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
+                LOG_ERROR << "Alert! User emergency alert";
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
+                LOG_ERROR << "Alert! Drone has cut out";
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+                LOG_WARNING << "Alert! Battery level is critical";
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+                LOG_WARNING << "Alert! Battery level is low";
+                break;
+            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
+                LOG_WARNING << "Alert! The angle of the drone is too high";
+                break;
+            default:
+                break;
+            }
         }
-    }
     }
 }
 
