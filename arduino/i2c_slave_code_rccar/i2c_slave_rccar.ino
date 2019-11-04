@@ -33,6 +33,9 @@ void setup() {
     // setup servos
     esc.attach(THROTTLE_CONTROL);      //attach esc to pin
     steering.attach(STEERING_CONTROL); //attach steering to pin
+    
+    // starts i2c connection
+    Wire.begin(SLAVE_ADDRESS);
 
     // if Master sends data -> call receiveEvent()
     Wire.onReceive(receiveEvent);
