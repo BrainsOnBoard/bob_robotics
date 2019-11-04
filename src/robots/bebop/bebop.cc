@@ -32,7 +32,7 @@ using namespace units::angular_velocity;
 /*
  * Throw a runtime_error if discovery device fails.
  */
-inline void
+void
 checkError(eARDISCOVERY_ERROR err)
 {
     if (err != ARDISCOVERY_OK) {
@@ -385,7 +385,7 @@ Bebop::disconnect()
 /*
  * Create the struct used by the ARSDK to interface with the drone.
  */
-inline void
+void
 Bebop::createControllerDevice()
 {
     // create discovery device
@@ -416,7 +416,7 @@ Bebop::createControllerDevice()
  * Add callbacks for when connection state changes or a command is received
  * from the drone.
  */
-inline void
+void
 Bebop::addEventHandlers()
 {
     checkError(ARCONTROLLER_Device_AddStateChangedCallback(
@@ -425,19 +425,19 @@ Bebop::addEventHandlers()
             m_Device.get(), commandReceived, this));
 }
 
-inline void
+void
 Bebop::setMaximumTilt(degree_t newValue)
 {
     DRONE_COMMAND(sendPilotingSettingsMaxTilt, newValue.value());
 }
 
-inline void
+void
 Bebop::setMaximumVerticalSpeed(meters_per_second_t newValue)
 {
     DRONE_COMMAND(sendSpeedSettingsMaxVerticalSpeed, newValue.value());
 }
 
-inline void
+void
 Bebop::setMaximumYawSpeed(degrees_per_second_t newValue)
 {
     DRONE_COMMAND(sendSpeedSettingsMaxRotationSpeed, newValue.value());
@@ -465,7 +465,7 @@ Bebop::stopStreaming()
  * Wait for the drone to send a state-update command and return the new
  * state.
  */
-inline Bebop::State
+Bebop::State
 Bebop::getStateUpdate()
 {
     m_StateSemaphore.wait();
@@ -497,7 +497,7 @@ Bebop::getBatteryLevel()
  *
  * Prints the battery state whenever it changes.
  */
-inline void
+void
 Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 {
     // which command was received?

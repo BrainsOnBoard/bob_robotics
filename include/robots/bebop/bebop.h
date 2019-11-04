@@ -19,8 +19,8 @@
 #include "common/pose.h"
 #include "common/semaphore.h"
 #include "hid/joystick.h"
-#include "video/input.h"
 #include "robots/uav.h"
+#include "video/input.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -150,11 +150,11 @@ public:
                            uint8_t *pps_buffer_ptr,
                            uint32_t pps_buffer_size);
         bool decode(const ARCONTROLLER_Frame_t *framePtr);
-        inline int getFrameWidth() const
+        int getFrameWidth() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->width : 0;
         }
-        inline int getFrameHeight() const
+        int getFrameHeight() const
         {
             return m_CodecInitialised ? m_CodecContextPtr->height : 0;
         }
@@ -238,10 +238,10 @@ private:
     public:
         UnitType m_UserMaximum;
 
-        inline void onChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
-                              const char *currentKey,
-                              const char *minKey,
-                              const char *maxKey)
+        void onChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+                       const char *currentKey,
+                       const char *minKey,
+                       const char *maxKey)
         {
             ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
             HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
@@ -277,13 +277,13 @@ private:
             }
         }
 
-        inline UnitType getCurrent() const
+        UnitType getCurrent() const
         {
             m_Semaphore.waitOnce();
             return m_Current;
         }
 
-        inline std::pair<UnitType, UnitType> &getLimits()
+        std::pair<UnitType, UnitType> &getLimits()
         {
             m_Semaphore.waitOnce();
             return m_Limits;
@@ -309,20 +309,20 @@ private:
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
 
-    inline void connect();
-    inline void disconnect();
+    void connect();
+    void disconnect();
     void startStreaming();
     void stopStreaming();
-    inline void addEventHandlers();
-    inline void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void addEventHandlers();
+    void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     void onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    inline void createControllerDevice();
-    inline State getStateUpdate();
+    void createControllerDevice();
+    State getStateUpdate();
 
     // speed limits
-    inline void setMaximumTilt(degree_t newValue);
-    inline void setMaximumVerticalSpeed(meters_per_second_t newValue);
-    inline void setMaximumYawSpeed(degrees_per_second_t newValue);
+    void setMaximumTilt(degree_t newValue);
+    void setMaximumVerticalSpeed(meters_per_second_t newValue);
+    void setMaximumYawSpeed(degrees_per_second_t newValue);
 
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
