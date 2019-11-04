@@ -75,6 +75,19 @@ struct OSCoordinate
 };
 
 //----------------------------------------------------------------------------
+// BoBRobotics::MapCoordinate::UTMCoordinate
+//----------------------------------------------------------------------------
+//! An UTM coordinate consisting of an 'easting' ,'northing', 'zone', 'height'
+struct UTMCoordinate
+{
+    const units::length::meter easting;
+    const units::length::meter northing;
+    const units::length::meter height;
+    const char zone[4];
+};
+
+
+//----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Ellipsoid
 //----------------------------------------------------------------------------
 //! A latitude and longitude relative to a particular datum
@@ -83,7 +96,9 @@ struct LatLon
 {
     typedef D Datum;
 
-    units::angle::degree_t lat, lon;
+    units::angle::degree_t lat;
+    units::angle::degree_t lon;
+    units::length::meter height;
 };
 
 //! A standard GPS coordinate
@@ -101,6 +116,23 @@ struct Cartesian
     const units::length::meter_t x;
     const units::length::meter_t y;
     const units::length::meter_t z;
+
+    auto operator+(const Cartesian<D> &coords)
+    {
+        Cartesian<D> out;
+        out.x = x + coords.x;
+        out.y = y + coords.y;
+        out.z = z + coords.z;
+        return out;
+    };
+
+    void operator += (const Cartesian<D> &coords)
+    {
+        x = x + coords.x;
+        y = y + coords.y;
+        z = z + coords.z;
+        
+    };
 };
 
 
@@ -113,7 +145,7 @@ inline Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
     using namespace units::length;
     using namespace units::literals;
 
-    const meter_t h = 0.0_m; // height above ellipsoid - not currently used
+    const meter_t h = latLon.height; // height above ellipsoid - not currently used
     const double sinPhi = sin(latLon.lat);
     const double cosPhi = cos(latLon.lat);
     const double sinLambda = sin(latLon.lon);
