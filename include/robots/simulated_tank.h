@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "common/circstat.h"
+#include "common/has_pose.h"
 #include "common/macros.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
@@ -18,6 +19,7 @@ template<typename LengthUnit = units::length::millimeter_t,
          typename AngleUnit = units::angle::degree_t>
 class SimulatedTank
   : public Tank
+  , public HasPose<SimulatedTank<LengthUnit, AngleUnit>>
 {
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -31,20 +33,6 @@ public:
     virtual millimeter_t getRobotWidth() const override
     {
         return m_AxisLength;
-    }
-
-    template<typename ReturnLengthUnit = LengthUnit>
-    Vector3<ReturnLengthUnit> getPosition()
-    {
-        updatePose();
-        return { m_Pose.x(), m_Pose.y(), 0_m };
-    }
-
-    template<typename ReturnAngleUnit = AngleUnit>
-    std::array<ReturnAngleUnit, 3> getAttitude()
-    {
-        updatePose();
-        return { m_Pose.yaw(), 0_rad, 0_rad };
     }
 
     const auto &getPose()

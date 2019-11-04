@@ -22,7 +22,7 @@ int main()
     for (int i = 0; i < 120; i++) {
         auto objectData = vicon.getObjectData();
         const auto velocity = objectData.getVelocity();
-        const auto angularVelocity = objectData.getAngularVelocity<degrees_per_second_t>();
+        const auto angularVelocity = objectData.getAngularVelocity();
 
         LOGI << "("
              << velocity[0] << ", " << velocity[1] << ", " << velocity[2]

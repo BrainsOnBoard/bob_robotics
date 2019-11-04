@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "common/circstat.h"
+#include "common/has_pose.h"
 #include "common/logging.h"
 #include "common/macros.h"
 #include "common/pose.h"
@@ -34,6 +35,7 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
+  : public HasPose<ObjectData>
 {
     using radian_t = units::angle::radian_t;
     using millimeter_t = units::length::millimeter_t;
@@ -52,21 +54,7 @@ public:
 
     uint32_t getFrameNumber() const;
 
-    template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
-    {
-        return m_Pose.position();
-    }
-
-    template<typename AngleUnit = radian_t>
-    std::array<AngleUnit, 3> getAttitude() const
-    {
-        return convertUnitArray<AngleUnit>(m_Pose.attitude());
-    }
-
-    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
-    Pose3<LengthUnit, AngleUnit> getPose() const
-    {
+    const auto &getPose() const {
         return m_Pose;
     }
 
@@ -110,16 +98,14 @@ public:
     void update(uint32_t frameNumber,
                 Pose3<millimeter_t, radian_t> pose);
 
-    template<typename VelocityUnit = meters_per_second_t>
-    std::array<VelocityUnit, 3> getVelocity() const
+    const auto &getVelocity() const
     {
-        return convertUnitArray<VelocityUnit>(m_Velocity);
+        return m_Velocity;
     }
 
-    template<typename AngularVelocityUnit = radians_per_second_t>
-    std::array<AngularVelocityUnit, 3> getAngularVelocity() const
+    const auto &getAngularVelocity() const
     {
-        return convertUnitArray<AngularVelocityUnit>(m_AngularVelocity);
+        return m_AngularVelocity;
     }
 
 private:
@@ -176,6 +162,7 @@ public:
  */
 template<typename ObjectDataType = ObjectData>
 class ObjectReference
+  : public HasPose<ObjectReference<ObjectDataType>>
 {
     using millimeter_t = units::length::millimeter_t;
     using radian_t = units::angle::radian_t;
@@ -190,24 +177,9 @@ public:
         std::strcpy(m_Name, objectName);
     }
 
-    template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
-    {
-        return getData().template getPosition<LengthUnit>();
-    }
-
-    template<typename AngleUnit = radian_t>
-    std::array<AngleUnit, 3> getAttitude() const
-    {
-        return getData().template getAttitude<AngleUnit>();
-    }
-
-    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
     auto getPose() const
     {
-        const auto data = getData();
-        return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
-                                            data.template getAttitude<AngleUnit>());
+        return getData().getPose();
     }
 
     const std::string &getName() const { return m_Name; }

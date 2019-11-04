@@ -85,8 +85,8 @@ int main()
 #ifdef VICON_CAPTURE
             // Get tracking data
             auto objectData = vicon.getObjectData();
-            const auto &position = objectData.getPosition<>();
-            const auto &attitude = objectData.getAttitude<>();
+            const auto &position = objectData.getPosition();
+            const auto &attitude = objectData.getAttitude();
 
             // Write to CSV
             data << filename << ", " << objectData.getFrameNumber() << ", "
