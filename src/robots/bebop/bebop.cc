@@ -310,6 +310,13 @@ Bebop::stopRecordingVideo()
     m_IsVideoRecording = false;
 }
 
+std::pair<radians_per_second_t, radian_t>
+Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
+                                        AnimationCompletedHandler handler)
+{
+    return startHorizontalPanoramaAnimation(rotationSpeed, 360_deg, handler);
+}
+
 /*
  * \brief Starts the horizontal panorama animation.
  *
@@ -320,7 +327,8 @@ Bebop::stopRecordingVideo()
  */
 std::pair<radians_per_second_t, radian_t>
 Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
-                                        radian_t rotationAngle)
+                                        radian_t rotationAngle,
+                                        AnimationCompletedHandler handler)
 {
     /*
      * This argument is a bitfield, signalling which params we're providing. We
@@ -345,9 +353,12 @@ Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
         if (m_AnimationState == AnimationState::Cancelling) {
             throw std::runtime_error("Could not start animation");
         } else {
+            // Callback function
+            m_AnimationCompletedCallback = handler;
             return std::make_pair(m_HorizontalAnimationSpeed, m_HorizontalAnimationAngle);
         }
     }
+
 }
 
 Bebop::AnimationState
@@ -664,6 +675,14 @@ Bebop::onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 
     // Signal for startHorizontalPanoramaAnimation()
     m_HorizontalAnimationInfoSemaphore.notify();
+
+    // If animation is already running, run optional callback
+    if (m_AnimationCompletedCallback) {
+        m_AnimationCompletedCallback(m_AnimationState == AnimationState::Idle);
+
+        // Only use the handler once
+        m_AnimationCompletedCallback = nullptr;
+    }
 }
 
 /*

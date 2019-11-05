@@ -80,6 +80,9 @@ using namespace units::literals;
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
+//! Handler for when an animation finishes
+using AnimationCompletedHandler = std::function<void(bool success)>;
+
 /*
  * Simply throws a runtime_error with appropriate message if
  * err != ARCONTROLLER_OK.
@@ -221,8 +224,11 @@ public:
     void resetRelativeMoveState();
     void startRecordingVideo();
     void stopRecordingVideo();
+    std::pair<radians_per_second_t, radian_t> startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
+                                                                               AnimationCompletedHandler handler);
     std::pair<radians_per_second_t, radian_t> startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed = radians_per_second_t{ std::numeric_limits<double>::quiet_NaN() },
-                                                                               radian_t rotationAngle = degree_t{ 360 });
+                                                                               radian_t rotationAngle = degree_t{ 360 },
+                                                                               AnimationCompletedHandler handler = nullptr);
     AnimationState getAnimationState() const;
     void cancelCurrentAnimation();
     bool isVideoRecording() const;
@@ -315,6 +321,7 @@ private:
             m_VideoRecordingSemaphore, m_HorizontalAnimationInfoSemaphore;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
+    AnimationCompletedHandler m_AnimationCompletedCallback = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
