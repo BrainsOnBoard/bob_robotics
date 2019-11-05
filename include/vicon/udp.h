@@ -343,7 +343,7 @@ public:
     }
 
      //! Get current pose information for first object
-     const ObjectDataType &getObjectData() const
+     ObjectDataType getObjectData() const
      {
          waitUntilConnected();
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
