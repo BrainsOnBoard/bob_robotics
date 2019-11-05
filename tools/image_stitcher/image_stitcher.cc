@@ -16,8 +16,8 @@ using namespace BoBRobotics;
 int
 main(int argc, char **argv)
 {
-    if (argc < 2 || argc > 4) {
-        std::cout << filesystem::path{ argv[0] } << " [video file] [size mult] [frame skip]" << std::endl;
+    if (argc < 2 || argc > 5) {
+        std::cout << filesystem::path{ argv[0] } << " [video file] [size mult] [frame skip] [proportion of frame to use]" << std::endl;
         return EXIT_FAILURE;
     }
     BOB_ASSERT(filesystem::path{ argv[1] }.is_file());
@@ -25,8 +25,12 @@ main(int argc, char **argv)
     BOB_ASSERT(mult > 0.0);
     const int frameSkip = (argc < 4) ? 1 : std::stoi(argv[3]) + 1;
     BOB_ASSERT(frameSkip > 0);
+    const double prop = (argc < 5) ? 1.0 : std::stod(argv[4]);
+    BOB_ASSERT(prop > 0.0 && prop <= 1.0);
 
     Video::OpenCVInput vid{ argv[1] };
+    const auto size = vid.getOutputSize();
+    const cv::Rect subRect{ 0, 0, size.width, (int) (size.height * prop) };
     std::vector<cv::Mat> frames;
     try {
         while (true) {
@@ -34,6 +38,8 @@ main(int argc, char **argv)
             for (int i = 0; i < frameSkip; i++) {
                 vid.readFrame(fr);
             }
+            cv::Mat sub = fr(subRect);
+            sub.copyTo(fr);
             cv::resize(fr, fr, {}, mult, mult);
             cv::imshow("frame", fr);
             cv::waitKey(1);
