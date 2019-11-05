@@ -310,15 +310,24 @@ Bebop::stopRecordingVideo()
     m_IsVideoRecording = false;
 }
 
-Bebop::HorizontalAnimationInfo
-Bebop::startHorizontalPanoramaAnimation(radian_t rotationAngle,
-                                        radians_per_second_t rotationSpeed)
+/*
+ * \brief Starts the horizontal panorama animation.
+ *
+ * On success, returns the angular velocity and rotation angle parameters used
+ * for the animation and on failure an exception is thrown. Note that this
+ * animation does not appear to work indoors (I'm guessing it maybe uses the
+ * GPS).
+ */
+std::pair<radians_per_second_t, radian_t>
+Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
+                                        radian_t rotationAngle)
 {
-    // This argument is a bitfield, signalling which params we're providing
+    /*
+     * This argument is a bitfield, signalling which params we're providing. We
+     * always provide the angle, but might sometimes want to just use the
+     * default speed.
+     */
     uint8_t providedParams = 0;
-    if (!isnan(rotationAngle.value())) {
-        providedParams |= 1;
-    }
     if (!isnan(rotationSpeed.value())) {
         providedParams |= 2;
     }
@@ -330,13 +339,21 @@ Bebop::startHorizontalPanoramaAnimation(radian_t rotationAngle,
                                                      (float) rotationSpeed);
 
     // Wait for response from drone
-    HorizontalAnimationInfo ret;
     m_HorizontalAnimationInfoSemaphore.wait();
     {
-        std::lock_guard<std::mutex> guard(m_HorizontalAnimationInfoMutex);
-        ret = m_HorizontalAnimationInfo;
+        std::lock_guard<std::mutex> guard(m_AnimationMutex);
+        if (m_AnimationState == AnimationState::Cancelling) {
+            throw std::runtime_error("Could not start animation");
+        } else {
+            return std::make_pair(m_HorizontalAnimationSpeed, m_HorizontalAnimationAngle);
+        }
     }
-    return ret;
+}
+
+Bebop::AnimationState
+Bebop::getAnimationState() const
+{
+    return m_AnimationState;
 }
 
 void
@@ -627,22 +644,22 @@ Bebop::onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 
     ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
     {
-        std::lock_guard<std::mutex> guard(m_HorizontalAnimationInfoMutex);
+        std::lock_guard<std::mutex> guard(m_AnimationMutex);
 
         // Get state
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_STATE, arg);
         if (!arg) {
             return;
         }
-        m_HorizontalAnimationInfo.state = static_cast<AnimationState>(arg->value.I32);
+        m_AnimationState = static_cast<AnimationState>(arg->value.I32);
 
         // Get rotation angle
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_ANGLE, arg);
-        m_HorizontalAnimationInfo.rotationAngle = radian_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
+        m_HorizontalAnimationAngle = radian_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
 
         // Get rotation speed
         HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_SPEED, arg);
-        m_HorizontalAnimationInfo.rotationSpeed = radians_per_second_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
+        m_HorizontalAnimationSpeed = radians_per_second_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
     }
 
     // Signal for startHorizontalPanoramaAnimation()

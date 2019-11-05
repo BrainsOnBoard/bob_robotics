@@ -17,6 +17,8 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
+using namespace units::angle;
+using namespace units::angular_velocity;
 
 template<typename T>
 using Limits = std::pair<T, T>;
@@ -88,15 +90,19 @@ bob_main(int, char **)
             if (joystick.isPressed(HID::JButton::RB)) {
                 if (animationRunning) {
                     drone.cancelCurrentAnimation();
+                    animationRunning = false;
                 } else {
-                    const auto info = drone.startHorizontalPanoramaAnimation();
-                    if (info.state != Bebop::AnimationState::Running) {
+                    try {
+                        degrees_per_second_t speed;
+                        degree_t angle;
+                        std::tie(speed, angle) = drone.startHorizontalPanoramaAnimation(20_deg_per_s);
+                        LOGI << "Running animation: \n- Rotation: " << angle
+                             << "\n- Speed: " << speed;
+                        animationRunning = true;
+                    } catch (std::runtime_error &) {
                         LOGW << "Animation failed to start";
-                    } else {
-                        LOGI << "Running animation: \n- Rotation: " << info.rotationAngle << "\n- Speed: " << info.rotationSpeed;
                     }
                 }
-                animationRunning = !animationRunning;
             }
         }
 

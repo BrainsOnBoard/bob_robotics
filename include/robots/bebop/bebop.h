@@ -173,13 +173,6 @@ public:
         Cancelling = ARCOMMANDS_ANIMATION_STATE_CANCELING
     };
 
-    struct HorizontalAnimationInfo
-    {
-        AnimationState state = AnimationState::Idle;
-        radian_t rotationAngle;
-        radians_per_second_t rotationSpeed;
-    };
-
     //! The drone's current state
     enum class State
     {
@@ -190,6 +183,7 @@ public:
         Stopping = ARCONTROLLER_DEVICE_STATE_STOPPING
     };
 
+    //! State of call to relativeMove()
     enum class RelativeMoveState
     {
         Initial = -2,
@@ -227,8 +221,9 @@ public:
     void resetRelativeMoveState();
     void startRecordingVideo();
     void stopRecordingVideo();
-    HorizontalAnimationInfo startHorizontalPanoramaAnimation(radian_t rotationAngle = radian_t{ std::numeric_limits<double>::quiet_NaN() },
-                                                             radians_per_second_t rotationSpeed = radians_per_second_t{ std::numeric_limits<double>::quiet_NaN() });
+    std::pair<radians_per_second_t, radian_t> startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed = radians_per_second_t{ std::numeric_limits<double>::quiet_NaN() },
+                                                                               radian_t rotationAngle = degree_t{ 360 });
+    AnimationState getAnimationState() const;
     void cancelCurrentAnimation();
     bool isVideoRecording() const;
 
@@ -323,14 +318,16 @@ private:
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
-    HorizontalAnimationInfo m_HorizontalAnimationInfo;
     std::atomic<unsigned char> m_BatteryLevel;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
     bool m_IsVideoRecording = false;
     eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
-    std::mutex m_HorizontalAnimationInfoMutex;
+    radian_t m_HorizontalAnimationAngle;
+    radians_per_second_t m_HorizontalAnimationSpeed;
+    std::mutex m_AnimationMutex;
+    AnimationState m_AnimationState = AnimationState::Idle;
 
     void connect();
     void disconnect();
