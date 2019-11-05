@@ -11,6 +11,10 @@
 # Temporary files
 *~
 
+# Video files
+*.avi
+*.mp4
+
 # Temporary Jupyter notebook files
 **/.ipynb_checkpoints/
 
