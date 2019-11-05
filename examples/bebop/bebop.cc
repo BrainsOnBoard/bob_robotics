@@ -17,8 +17,6 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
-using namespace units::angle;
-using namespace units::angular_velocity;
 
 template<typename T>
 using Limits = std::pair<T, T>;
@@ -74,38 +72,8 @@ bob_main(int, char **)
 
     // display the drone's video stream on screen
     Video::Display display(drone.getVideoStream(), true);
-    bool animationRunning = false;
     do {
         bool joyUpdated = joystick.update();
-        if (joyUpdated) {
-            if (joystick.isPressed(HID::JButton::X)) {
-                if (!drone.isVideoRecording()) {
-                    LOGI << "Starting video recording";
-                    drone.startRecordingVideo();
-                } else {
-                    LOGI << "Stopping video recording";
-                    drone.stopRecordingVideo();
-                }
-            }
-            if (joystick.isPressed(HID::JButton::RB)) {
-                if (animationRunning) {
-                    drone.cancelCurrentAnimation();
-                    animationRunning = false;
-                } else {
-                    try {
-                        degrees_per_second_t speed;
-                        degree_t angle;
-                        std::tie(speed, angle) = drone.startHorizontalPanoramaAnimation(20_deg_per_s);
-                        LOGI << "Running animation: \n- Rotation: " << angle
-                             << "\n- Speed: " << speed;
-                        animationRunning = true;
-                    } catch (std::runtime_error &) {
-                        LOGW << "Animation failed to start";
-                    }
-                }
-            }
-        }
-
         bool dispUpdated = display.update();
         if (!joyUpdated && !dispUpdated) {
             std::this_thread::sleep_for(25ms);
