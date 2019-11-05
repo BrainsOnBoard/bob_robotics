@@ -80,10 +80,11 @@ struct OSCoordinate
 //! An UTM coordinate consisting of an 'easting' ,'northing', 'zone', 'height'
 struct UTMCoordinate
 {
-    const units::length::meter easting;
-    const units::length::meter northing;
-    const units::length::meter height;
-    const char zone[4];
+    units::length::meter_t easting;
+    units::length::meter_t northing;
+    units::length::meter_t height;
+    char zone[4];
+
 };
 
 
