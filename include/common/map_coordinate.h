@@ -98,7 +98,7 @@ struct LatLon
 
     units::angle::degree_t lat;
     units::angle::degree_t lon;
-    units::length::meter height;
+    units::length::meter_t height;
 };
 
 //! A standard GPS coordinate
