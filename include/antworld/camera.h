@@ -1,7 +1,6 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/has_pose.h"
 #include "common/pose.h"
 #include "video/opengl/opengl.h"
 #include "antworld/renderer.h"
@@ -15,8 +14,7 @@
 namespace BoBRobotics {
 namespace AntWorld {
 class Camera
-  : public HasPose<Camera>
-  , public Video::OpenGL
+  : public Video::OpenGL
 {
 protected:
     using meter_t = units::length::meter_t;

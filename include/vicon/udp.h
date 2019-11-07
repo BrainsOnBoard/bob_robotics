@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/has_pose.h"
 #include "common/logging.h"
 #include "common/macros.h"
 #include "common/pose.h"
@@ -35,7 +34,6 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! Simplest object data class - just tracks position and attitude
 class ObjectData
-  : public HasPose<ObjectData>
 {
     using radian_t = units::angle::radian_t;
     using millimeter_t = units::length::millimeter_t;
@@ -162,7 +160,6 @@ public:
  */
 template<typename ObjectDataType = ObjectData>
 class ObjectReference
-  : public HasPose<ObjectReference<ObjectDataType>>
 {
     using millimeter_t = units::length::millimeter_t;
     using radian_t = units::angle::radian_t;
@@ -561,7 +558,7 @@ private:
  * Then the Vicon system will be used as the default pose getter.
  */
 class BundledVicon
-  : public HasPose<BundledVicon> {
+{
 public:
     BundledVicon(uint16_t port = 51001);
     const Pose3<units::length::millimeter_t, units::angle::radian_t> &getPose() const;

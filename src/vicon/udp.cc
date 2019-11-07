@@ -55,11 +55,11 @@ ObjectDataVelocity::update(uint32_t frameNumber,
     const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
     // Calculate velocities (m/s)
-    const auto oldPosition = getPosition();
+    const auto oldPosition = getPose().position();
     calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<millimeter_t>());
 
     // Calculate angular velocities (rad/s)
-    const auto oldAttitude = getAttitude();
+    const auto oldAttitude = getPose().attitude();
     const auto circDist = [](auto angle1, auto angle2) {
         return circularDistance(angle1, angle2);
     };

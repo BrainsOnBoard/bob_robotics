@@ -1,7 +1,6 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/has_pose.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "robots/ackermann.h"
@@ -15,7 +14,6 @@ using namespace units::literals;
 
 class SimulatedAckermann
   : public Ackermann
-  , public HasPose<SimulatedAckermann>
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;

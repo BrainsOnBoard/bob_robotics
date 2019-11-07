@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/has_pose.h"
 #include "common/macros.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
@@ -19,7 +18,6 @@ template<typename LengthUnit = units::length::millimeter_t,
          typename AngleUnit = units::angle::degree_t>
 class SimulatedTank
   : public Tank
-  , public HasPose<SimulatedTank<LengthUnit, AngleUnit>>
 {
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
