@@ -114,9 +114,9 @@ struct Cartesian
 {
     typedef D Datum;
 
-    const units::length::meter_t x;
-    const units::length::meter_t y;
-    const units::length::meter_t z;
+    units::length::meter_t x;
+    units::length::meter_t y;
+    units::length::meter_t z;
 
     auto operator+(const Cartesian<D> &coords)
     {
