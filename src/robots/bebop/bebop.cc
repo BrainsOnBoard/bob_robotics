@@ -351,7 +351,7 @@ Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
     {
         std::lock_guard<std::mutex> guard(m_AnimationMutex);
         if (m_AnimationState == AnimationState::Cancelling) {
-            throw std::runtime_error("Could not start animation");
+            throw AnimationError();
         } else {
             // Callback function
             m_AnimationCompletedCallback = handler;

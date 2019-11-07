@@ -45,7 +45,7 @@ int bob_main(int, char **)
 
                     LOGI << "Starting panorama:\n-Angle: " << angle
                          << "\nSpeed: " << speed;
-                } catch (std::runtime_error &) {
+                } catch (Robots::Bebop::AnimationError &) {
                     LOGE << "Could not start panorama animation; aborting";
                 }
             }

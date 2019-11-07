@@ -168,9 +168,15 @@ public:
         static eARCONTROLLER_ERROR frameCallback(ARCONTROLLER_Frame_t *frame, void *data);
     }; // VideoStream
 
+    class AnimationError
+      : public std::runtime_error {
+    public:
+        AnimationError()
+          : std::runtime_error("The animation failed to start");
+    };
+
     //! The state of an animation maneuvre
-    enum class AnimationState
-    {
+    enum class AnimationState {
         Idle = ARCOMMANDS_ANIMATION_STATE_IDLE,
         Running = ARCOMMANDS_ANIMATION_STATE_RUNNING,
         Cancelling = ARCOMMANDS_ANIMATION_STATE_CANCELING
