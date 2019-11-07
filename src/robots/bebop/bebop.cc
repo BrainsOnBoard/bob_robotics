@@ -46,6 +46,25 @@ namespace Robots {
 
 /** BEGIN PUBLIC MEMBERS **/
 
+//! Assumes dict is non-null
+Bebop::ARDict::ARDict(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+  : m_Element(dict)
+{}
+
+#define DEFINE_GETTER(type, artype)                                               \
+    template<>                                                                    \
+    type Bebop::ARDict::getInternal(const ARCONTROLLER_DICTIONARY_VALUE_t &value) \
+    {                                                                             \
+        return value.artype;                                                      \
+    }
+
+DEFINE_GETTER(int8_t, I8)
+DEFINE_GETTER(uint8_t, U8)
+DEFINE_GETTER(int32_t, I32)
+DEFINE_GETTER(float, Float)
+DEFINE_GETTER(double, Double)
+DEFINE_GETTER(const char *, String)
+
 // We also have to give declarations for these variables, because c++ is weird
 constexpr degree_t Bebop::DefaultMaximumTilt;
 constexpr degrees_per_second_t Bebop::DefaultMaximumYawSpeed;
@@ -574,24 +593,11 @@ Bebop::getGPSData(GPSData &gps)
  * Prints the battery state whenever it changes.
  */
 void
-Bebop::onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onBatteryChanged(const ARDict &dict)
 {
-    // which command was received?
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (!elem) {
-        return;
-    }
-
-    // get associated value
-    ARCONTROLLER_DICTIONARY_ARG_t *val = nullptr;
-    HASH_FIND_STR(
-            elem->arguments,
-            ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED_PERCENT,
-            val);
-
-    if (val) {
-        m_BatteryLevel = val->value.U8;
+    uint8_t val;
+    if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED_PERCENT)) {
+        m_BatteryLevel = val;
         m_BatteryLevelSemaphore.notify();
     }
 }
@@ -642,48 +648,36 @@ Bebop::stateChanged(eARCONTROLLER_DEVICE_STATE newstate,
 }
 
 void
-Bebop::onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onVideoRecordingStateChanged(const ARDict &dict)
 {
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (!elem) {
-        return;
-    }
-    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR, arg);
-    if (arg) {
-        m_VideoRecordingError = (eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR)arg->value.I32;
+    int val;
+    if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR)) {
+        m_VideoRecordingError = (eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR) val;
         m_VideoRecordingSemaphore.notify();
     }
 }
 
 void
-Bebop::onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onHorizontalPanoramaStateChanged(const ARDict &dict)
 {
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (!elem) {
-        return;
-    }
-
-    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
     {
+        int ival;
         std::lock_guard<std::mutex> guard(m_AnimationMutex);
 
         // Get state
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_STATE, arg);
-        if (!arg) {
-            return;
+        if (dict.get(ival, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_STATE)) {
+            m_AnimationState = static_cast<AnimationState>(ival);
         }
-        m_AnimationState = static_cast<AnimationState>(arg->value.I32);
 
         // Get rotation angle
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_ANGLE, arg);
-        m_HorizontalAnimationAngle = radian_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
+        m_HorizontalAnimationAngle = radian_t{
+            dict.getDefault(unan<float>(), ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_ANGLE)
+        };
 
         // Get rotation speed
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_SPEED, arg);
-        m_HorizontalAnimationSpeed = radians_per_second_t{ arg ? arg->value.Float : std::numeric_limits<float>::quiet_NaN() };
+        m_HorizontalAnimationSpeed = radians_per_second_t{
+            dict.getDefault(unan<float>(), ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE_ROTATION_SPEED)
+        };
     }
 
     // Signal for startHorizontalPanoramaAnimation()
@@ -698,35 +692,31 @@ Bebop::onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
     }
 }
 
-#define GPS_VAL(var, type, outtype, sentinel, key)     \
-    {                                             \
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_##key, arg); \
-        var = (arg && arg->value.type != sentinel) ? outtype{ (double) arg->value.type } : unan<outtype>(); \
-    }
+#define GPS_VAL(type, outtype, sentinel, key)                                                                              \
+    [&dict]() {                                                                                                            \
+        type val;                                                                                                          \
+        if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_##key) && val != sentinel) \
+            return outtype{ (double) val };                                                                                  \
+        else                                                                                                               \
+            return unan<outtype>();                                                                                        \
+    }();
 
 void
-Bebop::onGPSLocationChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::onGPSLocationChanged(const ARDict &dict)
 {
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (!elem) {
-        return;
-    }
-
     std::lock_guard<std::mutex> guard(m_GPSDataMutex);
-    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
 
     // If value is not present or not valid, these variables are set to NaN
-    GPS_VAL(m_GPSData.coordinate.lat, Double, degree_t, 500.0, LATITUDE);
-    GPS_VAL(m_GPSData.coordinate.lon, Double, degree_t, 500.0, LONGITUDE);
-    GPS_VAL(m_GPSData.latError, I8, meter_t, -1, LATITUDE_ACCURACY);
-    GPS_VAL(m_GPSData.lonError, I8, meter_t, -1, LONGITUDE_ACCURACY);
-    GPS_VAL(m_GPSData.heightError, I8, meter_t, -1, ALTITUDE_ACCURACY);
+    m_GPSData.coordinate.lat = GPS_VAL(double, degree_t, 500.0, LATITUDE);
+    m_GPSData.coordinate.lon = GPS_VAL(double, degree_t, 500.0, LONGITUDE);
+    m_GPSData.latError = GPS_VAL(int8_t, meter_t, -1, LATITUDE_ACCURACY);
+    m_GPSData.lonError = GPS_VAL(int8_t, meter_t, -1, LONGITUDE_ACCURACY);
+    m_GPSData.heightError = GPS_VAL(int8_t, meter_t, -1, ALTITUDE_ACCURACY);
 
     // Altitude seemingly doesn't have a sentinel value
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_ALTITUDE, arg);
-    if (arg) {
-        m_GPSData.coordinate.height = meter_t{ arg->value.Double };
+    int8_t height;
+    if (dict.get(height, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_ALTITUDE)) {
+        m_GPSData.coordinate.height = meter_t{ height };
     } else {
         m_GPSData.coordinate.height = unan<meter_t>();
     }
@@ -740,20 +730,26 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                        ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                        void *data)
 {
+    // Check if it's a valid dictionary
     if (!dict) {
+        return;
+    }
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (!elem) {
         return;
     }
 
     Bebop *bebop = reinterpret_cast<Bebop *>(data);
     switch (key) {
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_COMMONSTATE_BATTERYSTATECHANGED:
-        bebop->onBatteryChanged(dict);
+        bebop->onBatteryChanged(elem);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED:
-        alertStateChanged(dict);
+        alertStateChanged(elem);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND:
-        bebop->relativeMoveEnded(dict);
+        bebop->relativeMoveEnded(elem);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSETTINGSSTATE_MAXTILTCHANGED:
         MAX_SPEED_CHANGED(Tilt, PILOTINGSETTINGSSTATE_MAXTILT);
@@ -765,113 +761,94 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         MAX_SPEED_CHANGED(VerticalSpeed, SPEEDSETTINGSSTATE_MAXVERTICALSPEED);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED:
-        productVersionReceived(dict);
+        productVersionReceived(elem);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE:
-        magnetometerCalibrationStateReceived(dict);
+        magnetometerCalibrationStateReceived(elem);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLATTRIMCHANGED:
         bebop->m_FlatTrimSemaphore.notify();
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2:
-        bebop->onVideoRecordingStateChanged(dict);
+        bebop->onVideoRecordingStateChanged(elem);
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE:
-        bebop->onHorizontalPanoramaStateChanged(dict);
+        bebop->onHorizontalPanoramaStateChanged(elem);
     default:
         break;
     }
 }
 
 void
-Bebop::magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::magnetometerCalibrationStateReceived(const ARDict &dict)
 {
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (elem) {
-        ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED, arg);
-        if (arg && arg->value.U8) {
-            LOG_WARNING << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!";
-        }
+    uint8_t val;
+    if (dict.get<uint8_t>(val, ARCONTROLLER_DICTIONARY_KEY_COMMON_CALIBRATIONSTATE_MAGNETOCALIBRATIONREQUIREDSTATE_REQUIRED)
+        && val) {
+        LOG_WARNING << "!!! WARNING: BEBOP'S MAGNETOMETERS REQUIRE CALIBRATION !!!";
     }
 }
 
-void Bebop::relativeMoveEnded(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+void Bebop::relativeMoveEnded(const ARDict &dict)
 {
-    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (!elem) {
+    float fval;
+    int ival;
+
+    if (dict.get(fval, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DX)) {
+        m_RelativeMovePositionDistance[0] = meter_t{ fval };
+    }
+    if (dict.get(fval, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DY)) {
+        m_RelativeMovePositionDistance[1] = meter_t{ fval };
+    }
+    if (dict.get(fval, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DZ)) {
+        m_RelativeMovePositionDistance[2] = meter_t{ fval };
+    }
+    if (dict.get(fval, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DPSI)) {
+        m_RelativeMoveAngleDistance = radian_t{ fval };
+    }
+    if (dict.get(ival, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR)) {
+        m_RelativeMoveState = static_cast<Bebop::RelativeMoveState>(ival);
+    }
+}
+
+void
+Bebop::alertStateChanged(const ARDict &dict)
+{
+    int state;
+    if (!dict.get(state, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE)) {
         return;
     }
 
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DX, arg);
-    if (arg) {
-        m_RelativeMovePositionDistance[0] = meter_t(arg->value.Float);
-    }
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DY, arg);
-    if (arg) {
-        m_RelativeMovePositionDistance[1] = meter_t(arg->value.Float);
-    }
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DZ, arg);
-    if (arg) {
-        m_RelativeMovePositionDistance[2] = meter_t(arg->value.Float);
-    }
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_DPSI, arg);
-    if (arg) {
-        m_RelativeMoveAngleDistance = radian_t(arg->value.Float);
-    }
-
-    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR, arg);
-    if (arg) {
-        m_RelativeMoveState = static_cast<Bebop::RelativeMoveState>(arg->value.I32);
+    switch (state) {
+    case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
+        LOG_ERROR << "Alert! User emergency alert";
+        break;
+    case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
+        LOG_ERROR << "Alert! Drone has cut out";
+        break;
+    case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
+        LOG_WARNING << "Alert! Battery level is critical";
+        break;
+    case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
+        LOG_WARNING << "Alert! Battery level is low";
+        break;
+    case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
+        LOG_WARNING << "Alert! The angle of the drone is too high";
+        break;
+    default:
+        break;
     }
 }
 
 void
-Bebop::alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+Bebop::productVersionReceived(const ARDict &dict)
 {
-    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (elem) {
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE, arg);
-        if (arg) {
-            switch (arg->value.I32) {
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_USER:
-                LOG_ERROR << "Alert! User emergency alert";
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CUT_OUT:
-                LOG_ERROR << "Alert! Drone has cut out";
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_CRITICAL_BATTERY:
-                LOG_WARNING << "Alert! Battery level is critical";
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_LOW_BATTERY:
-                LOG_WARNING << "Alert! Battery level is low";
-                break;
-            case ARCOMMANDS_ARDRONE3_PILOTINGSTATE_ALERTSTATECHANGED_STATE_TOO_MUCH_ANGLE:
-                LOG_WARNING << "Alert! The angle of the drone is too high";
-                break;
-            default:
-                break;
-            }
-        }
+    const char *str;
+    if (dict.get(str, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE)) {
+        LOGV << "Bebop software version: " << str;
     }
-}
-
-void
-Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
-{
-    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
-    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-    if (elem) {
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_SOFTWARE, arg);
-        LOG_VERBOSE_IF(arg) << "Bebop software version: " << arg->value.String;
-        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE, arg);
-        LOG_VERBOSE_IF(arg) << "Bebop hardware version: " << arg->value.String;
+    if (dict.get(str, ARCONTROLLER_DICTIONARY_KEY_COMMON_SETTINGSSTATE_PRODUCTVERSIONCHANGED_HARDWARE)) {
+        LOGV << "Bebop hardware version: " << str;
     }
 }
 } // Robots

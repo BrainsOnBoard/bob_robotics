@@ -286,48 +286,74 @@ public:
     static constexpr auto DefaultMaximumVerticalSpeed = 1_mps;
 
 private:
+    //! A wrapper object for ARSDK dictionaries, to make it cleaner + safer
+    class ARDict
+    {
+    public:
+        ARDict(const ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+
+        template<class T>
+        bool get(T &out, const char *key) const
+        {
+            ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+            HASH_FIND_STR(m_Element->arguments, key, arg);
+            if (!arg) {
+                return false;
+            } else {
+                out = getInternal<T>(arg->value);
+                return true;
+            }
+        }
+
+        template<class T>
+        T getDefault(T defVal, const char *key) const
+        {
+            T out;
+            return get(out, key) ? out : defVal;
+        }
+
+    private:
+        const ARCONTROLLER_DICTIONARY_ELEMENT_t * const m_Element;
+
+        template<class T>
+        static T getInternal(const ARCONTROLLER_DICTIONARY_VALUE_t &value);
+    };
+
     template<class UnitType>
     class LimitValues
     {
     public:
         UnitType m_UserMaximum;
 
-        void onChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
+        void onChanged(const Bebop::ARDict &dict,
                        const char *currentKey,
                        const char *minKey,
                        const char *maxKey)
         {
-            ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
-            HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
-            if (elem) {
-                ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+            float val;
 
-                // get current value
-                HASH_FIND_STR(elem->arguments, currentKey, arg);
-                if (arg) {
-                    m_Current = units::make_unit<UnitType>(arg->value.Float);
-                }
+            // get current value
+            if (dict.get(val, currentKey)) {
+                m_Current = units::make_unit<UnitType>(val);
+            }
 
-                // get min value
-                HASH_FIND_STR(elem->arguments, minKey, arg);
-                if (arg) {
-                    std::get<0>(m_Limits) = units::make_unit<UnitType>(arg->value.Float);
-                }
+            // get min value
+            if (dict.get(val, minKey)) {
+                m_Limits.first = units::make_unit<UnitType>(val);
+            }
 
-                // get max value
-                HASH_FIND_STR(elem->arguments, maxKey, arg);
-                if (arg) {
-                    std::get<1>(m_Limits) = units::make_unit<UnitType>(arg->value.Float);
-                }
+            // get max value
+            if (dict.get(val, maxKey)) {
+                m_Limits.second = units::make_unit<UnitType>(val);
+            }
 
-                /*
-                 * Notify waiting threads. The if statement is necessary so that
-                 * we don't report the current maximum before we've had a chance
-                 * to set it to the user-preferred value.
-                 */
-                if (m_Current == m_UserMaximum) {
-                    m_Semaphore.notify();
-                }
+            /*
+             * Notify waiting threads. The if statement is necessary so that
+             * we don't report the current maximum before we've had a chance
+             * to set it to the user-preferred value.
+             */
+            if (m_Current == m_UserMaximum) {
+                m_Semaphore.notify();
             }
         }
 
@@ -348,6 +374,7 @@ private:
         std::pair<UnitType, UnitType> m_Limits;
         mutable Semaphore m_Semaphore;
     };
+
 
     GPSData m_GPSData;
     Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore,
@@ -375,10 +402,10 @@ private:
     void startStreaming();
     void stopStreaming();
     void addEventHandlers();
-    void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    void onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    void onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    void onGPSLocationChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void onBatteryChanged(const ARDict &dict);
+    void onVideoRecordingStateChanged(const ARDict &dict);
+    void onHorizontalPanoramaStateChanged(const ARDict &dict);
+    void onGPSLocationChanged(const ARDict &dict);
     void createControllerDevice();
     State getStateUpdate();
 
@@ -390,10 +417,10 @@ private:
     static void commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
                                 ARCONTROLLER_DICTIONARY_ELEMENT_t *dict,
                                 void *data);
-    void relativeMoveEnded(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    static void alertStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    static void productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
-    static void magnetometerCalibrationStateReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void relativeMoveEnded(const ARDict &dict);
+    static void alertStateChanged(const ARDict &dict);
+    static void productVersionReceived(const ARDict &dict);
+    static void magnetometerCalibrationStateReceived(const ARDict &dict);
     static int printCallback(eARSAL_PRINT_LEVEL level,
                              const char *tag,
                              const char *format,
