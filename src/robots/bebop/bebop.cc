@@ -555,6 +555,19 @@ Bebop::getBatteryLevel()
     return static_cast<float>(m_BatteryLevel) / 100.f;
 }
 
+bool
+Bebop::getGPSData(GPSData &gps)
+{
+    std::lock_guard<std::mutex> guard(m_GPSDataMutex);
+    if (!m_GPSDataUpdated) {
+        return false;
+    } else {
+        gps = m_GPSData;
+        m_GPSDataUpdated = false; // reset flag
+        return true;
+    }
+}
+
 /*
  * Invoked by commandReceived().
  *
@@ -682,6 +695,40 @@ Bebop::onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
 
         // Only use the handler once
         m_AnimationCompletedCallback = nullptr;
+    }
+}
+
+#define GPS_VAL(var, type, outtype, sentinel, key)     \
+    {                                             \
+        HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_##key, arg); \
+        var = (arg && arg->value.type != sentinel) ? outtype{ (double) arg->value.type } : unan<outtype>(); \
+    }
+
+void
+Bebop::onGPSLocationChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
+{
+    ARCONTROLLER_DICTIONARY_ELEMENT_t *elem = nullptr;
+    HASH_FIND_STR(dict, ARCONTROLLER_DICTIONARY_SINGLE_KEY, elem);
+    if (!elem) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> guard(m_GPSDataMutex);
+    ARCONTROLLER_DICTIONARY_ARG_t *arg = nullptr;
+
+    // If value is not present or not valid, these variables are set to NaN
+    GPS_VAL(m_GPSData.coordinate.lat, Double, degree_t, 500.0, LATITUDE);
+    GPS_VAL(m_GPSData.coordinate.lon, Double, degree_t, 500.0, LONGITUDE);
+    GPS_VAL(m_GPSData.latError, I8, meter_t, -1, LATITUDE_ACCURACY);
+    GPS_VAL(m_GPSData.lonError, I8, meter_t, -1, LONGITUDE_ACCURACY);
+    GPS_VAL(m_GPSData.heightError, I8, meter_t, -1, ALTITUDE_ACCURACY);
+
+    // Altitude seemingly doesn't have a sentinel value
+    HASH_FIND_STR(elem->arguments, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_ALTITUDE, arg);
+    if (arg) {
+        m_GPSData.coordinate.height = meter_t{ arg->value.Double };
+    } else {
+        m_GPSData.coordinate.height = unan<meter_t>();
     }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/map_coordinate.h"
 #include "common/pose.h"
 #include "common/semaphore.h"
 #include "hid/joystick.h"
@@ -76,6 +77,12 @@ extern "C"
 namespace BoBRobotics {
 namespace Robots {
 using namespace units::literals;
+
+template<class T>
+T unan()
+{
+    return T{ std::numeric_limits<double>::quiet_NaN() };
+}
 
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
@@ -172,7 +179,20 @@ public:
       : public std::runtime_error {
     public:
         AnimationError()
-          : std::runtime_error("The animation failed to start");
+          : std::runtime_error("The animation failed to start")
+        {}
+    };
+
+    /**!
+     * \brief GPS info returned by drone
+     *
+     * The error values are standard deviations.
+     */
+    struct GPSData
+    {
+        MapCoordinate::GPSCoordinate coordinate{ unan<degree_t>(), unan<degree_t>(), unan<meter_t>() };
+        meter_t latError{ unan<meter_t>() }, lonError{ unan<meter_t>() }, heightError{ unan<meter_t>() };
+        int numberOfSatellites = 0;
     };
 
     //! The state of an animation maneuvre
@@ -208,6 +228,13 @@ public:
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
     virtual ~Bebop() override;
+
+    /**!
+     * \brief Get current GPS position and info
+     *
+     * Returns true if new data is available, false otherwise.
+     */
+    bool getGPSData(GPSData &gps);
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -322,25 +349,26 @@ private:
         mutable Semaphore m_Semaphore;
     };
 
-    ControllerPtr m_Device;
+    GPSData m_GPSData;
     Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore,
             m_VideoRecordingSemaphore, m_HorizontalAnimationInfoSemaphore;
-    std::unique_ptr<VideoStream> m_VideoStream;
-    FlightEventHandler m_FlightEventHandler = nullptr;
-    AnimationCompletedHandler m_AnimationCompletedCallback = nullptr;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
-    std::atomic<unsigned char> m_BatteryLevel;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
-    bool m_IsVideoRecording = false;
     eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
     radian_t m_HorizontalAnimationAngle;
     radians_per_second_t m_HorizontalAnimationSpeed;
-    std::mutex m_AnimationMutex;
+    ControllerPtr m_Device;
+    std::unique_ptr<VideoStream> m_VideoStream;
+    FlightEventHandler m_FlightEventHandler = nullptr;
+    AnimationCompletedHandler m_AnimationCompletedCallback = nullptr;
+    std::mutex m_AnimationMutex, m_GPSDataMutex;
     AnimationState m_AnimationState = AnimationState::Idle;
+    bool m_IsVideoRecording = false, m_GPSDataUpdated = false;
+    std::atomic<unsigned char> m_BatteryLevel;
 
     void connect();
     void disconnect();
@@ -350,6 +378,7 @@ private:
     void onBatteryChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     void onVideoRecordingStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     void onHorizontalPanoramaStateChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
+    void onGPSLocationChanged(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict);
     void createControllerDevice();
     State getStateUpdate();
 
