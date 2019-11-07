@@ -329,8 +329,9 @@ public:
     }
 
     //! Get current pose information for specified object
-    const ObjectDataType &getObjectData(const std::string &name) const
+    ObjectDataType getObjectData(const std::string &name) const
     {
+        // Note: We return by value because m_ObjectData is protected by mutex
         waitUntilConnected();
 
         // Convert to fixed-size char array
@@ -345,6 +346,7 @@ public:
      //! Get current pose information for first object
      ObjectDataType getObjectData() const
      {
+         // Note: We return by value because m_ObjectData is protected by mutex
          waitUntilConnected();
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
          return m_ObjectData.begin()->second;
