@@ -260,7 +260,34 @@ void
 Bebop::relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw)
 {
     m_RelativeMoveState = Bebop::RelativeMoveState::Moving;
-    DRONE_COMMAND(sendPilotingMoveBy, (float) x.value(), (float) y.value(), (float) z.value(), (float) yaw.value());
+    DRONE_COMMAND(sendPilotingMoveBy, (float) x.value(), (float) y.value(),
+                  (float) z.value(), (float) yaw.value());
+}
+
+//! Move to given GPS coordinates
+void
+Bebop::moveTo(const MapCoordinate::GPSCoordinate &coords, degree_t heading,
+              ActionCompletedHandler callback)
+{
+    DRONE_COMMAND(sendPilotingMoveTo, coords.lat.value(), coords.lon.value(),
+                  coords.height.value(),
+                  isnan(heading.value()) ?
+                        ARCOMMANDS_ARDRONE3_PILOTING_MOVETO_ORIENTATION_MODE_NONE :
+                        ARCOMMANDS_ARDRONE3_PILOTING_MOVETO_ORIENTATION_MODE_HEADING_DURING,
+                  heading.value());
+
+    m_MoveToSemaphore.wait();
+    if (m_MoveToState != ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_RUNNING) {
+        throw std::runtime_error("Could not initiate move");
+    }
+    m_MoveToCompletedCallback = callback;
+}
+
+//! Cancel current moveTo operation
+void
+Bebop::cancelMoveTo() const
+{
+    DRONE_COMMAND_NO_ARG(sendPilotingCancelMoveTo);
 }
 
 //! Get the status of a relative move operation
@@ -331,7 +358,7 @@ Bebop::stopRecordingVideo()
 
 std::pair<radians_per_second_t, radian_t>
 Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
-                                        AnimationCompletedHandler handler)
+                                        ActionCompletedHandler handler)
 {
     return startHorizontalPanoramaAnimation(rotationSpeed, 360_deg, handler);
 }
@@ -347,7 +374,7 @@ Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
 std::pair<radians_per_second_t, radian_t>
 Bebop::startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
                                         radian_t rotationAngle,
-                                        AnimationCompletedHandler handler)
+                                        ActionCompletedHandler handler)
 {
     /*
      * This argument is a bitfield, signalling which params we're providing. We
@@ -692,6 +719,20 @@ Bebop::onHorizontalPanoramaStateChanged(const ARDict &dict)
     }
 }
 
+void
+Bebop::onMoveToStateChanged(const ARDict &dict)
+{
+    int val;
+    if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS)) {
+        m_MoveToState = (eARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS) val;
+        m_MoveToSemaphore.notify();
+
+        if (m_MoveToCompletedCallback) {
+            m_MoveToCompletedCallback(val != ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_RUNNING);
+        }
+    }
+}
+
 #define GPS_VAL(type, outtype, sentinel, key)                                                                              \
     [&dict]() {                                                                                                            \
         type val;                                                                                                          \
@@ -774,6 +815,9 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ANIMATION_HORIZONTALPANORAMASTATE:
         bebop->onHorizontalPanoramaStateChanged(elem);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED:
+        bebop->onMoveToStateChanged(elem);
     default:
         break;
     }

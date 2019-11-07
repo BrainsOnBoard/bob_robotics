@@ -87,8 +87,8 @@ T unan()
 //! Handlers which are called when the drone takes off or lands
 using FlightEventHandler = std::function<void(bool takeoff)>;
 
-//! Handler for when an animation finishes
-using AnimationCompletedHandler = std::function<void(bool success)>;
+//! Handler for when an action finishes
+using ActionCompletedHandler = std::function<void(bool success)>;
 
 /*
  * Simply throws a runtime_error with appropriate message if
@@ -252,16 +252,19 @@ public:
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
     void relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw = 0_rad);
+    void moveTo(const MapCoordinate::GPSCoordinate &coords, degree_t heading = unan<degree_t>(),
+                ActionCompletedHandler callback = nullptr);
+    void cancelMoveTo() const;
     RelativeMoveState getRelativeMoveState() const;
     std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
     void resetRelativeMoveState();
     void startRecordingVideo();
     void stopRecordingVideo();
     std::pair<radians_per_second_t, radian_t> startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed,
-                                                                               AnimationCompletedHandler handler);
+                                                                               ActionCompletedHandler handler);
     std::pair<radians_per_second_t, radian_t> startHorizontalPanoramaAnimation(radians_per_second_t rotationSpeed = radians_per_second_t{ std::numeric_limits<double>::quiet_NaN() },
                                                                                radian_t rotationAngle = degree_t{ 360 },
-                                                                               AnimationCompletedHandler handler = nullptr);
+                                                                               ActionCompletedHandler handler = nullptr);
     AnimationState getAnimationState() const;
     void cancelCurrentAnimation();
     bool isVideoRecording() const;
@@ -378,11 +381,13 @@ private:
 
     GPSData m_GPSData;
     Semaphore m_StateSemaphore, m_FlatTrimSemaphore, m_BatteryLevelSemaphore,
-            m_VideoRecordingSemaphore, m_HorizontalAnimationInfoSemaphore;
+            m_VideoRecordingSemaphore, m_HorizontalAnimationInfoSemaphore,
+            m_MoveToSemaphore;
     LimitValues<degree_t> m_TiltLimits;
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
+    std::atomic<int> m_MoveToState;
     eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
@@ -391,7 +396,8 @@ private:
     ControllerPtr m_Device;
     std::unique_ptr<VideoStream> m_VideoStream;
     FlightEventHandler m_FlightEventHandler = nullptr;
-    AnimationCompletedHandler m_AnimationCompletedCallback = nullptr;
+    ActionCompletedHandler m_AnimationCompletedCallback = nullptr;
+    ActionCompletedHandler m_MoveToCompletedCallback = nullptr;
     std::mutex m_AnimationMutex, m_GPSDataMutex;
     AnimationState m_AnimationState = AnimationState::Idle;
     bool m_IsVideoRecording = false, m_GPSDataUpdated = false;
@@ -406,6 +412,7 @@ private:
     void onVideoRecordingStateChanged(const ARDict &dict);
     void onHorizontalPanoramaStateChanged(const ARDict &dict);
     void onGPSLocationChanged(const ARDict &dict);
+    void onMoveToStateChanged(const ARDict &dict);
     void createControllerDevice();
     State getStateUpdate();
 
