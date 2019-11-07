@@ -75,19 +75,6 @@ struct OSCoordinate
 };
 
 //----------------------------------------------------------------------------
-// BoBRobotics::MapCoordinate::UTMCoordinate
-//----------------------------------------------------------------------------
-//! An UTM coordinate consisting of an 'easting' ,'northing', 'zone', 'height'
-struct UTMCoordinate
-{
-    const units::length::meter easting;
-    const units::length::meter northing;
-    const units::length::meter height;
-    const char zone[4];
-};
-
-
-//----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Ellipsoid
 //----------------------------------------------------------------------------
 //! A latitude and longitude relative to a particular datum
@@ -98,7 +85,7 @@ struct LatLon
 
     units::angle::degree_t lat;
     units::angle::degree_t lon;
-    units::length::meter height;
+    units::length::meter_t height;
 };
 
 //! A standard GPS coordinate
@@ -131,7 +118,7 @@ struct Cartesian
         x = x + coords.x;
         y = y + coords.y;
         z = z + coords.z;
-        
+
     };
 };
 
@@ -208,7 +195,7 @@ inline LatLon<Datum> cartesianToLatLon(const Cartesian<Datum> &c)
     const meter_t nu = std::get<0>(ellipsoid) / std::sqrt(1.0 - eSq * sinPhi * sinPhi); // length of the normal terminated by the minor axis
     var h = p*cosφ + cartesian[2]*sinφ - (osgb36EllipseA*osgb36EllipseA/ν);*/
 
-    return LatLon<Datum>{phi, lambda};
+    return LatLon<Datum>{phi, lambda, c.z};
 }
 
 //! Convert latitude and longitude in the OSGB36 space to OS grid coordinates
@@ -270,7 +257,7 @@ inline OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 }
 
 //! Helper function to use above functionality to convert from latitude longitute in WGS84 i.e. GPS coordinates to OS map coordinates
-inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon) 
+inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon)
 {
     const auto wgs84Cartesian = latLonToCartesian(wgs84LatLon);
 
