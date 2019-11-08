@@ -181,7 +181,8 @@ namespace UTM
      *
      * Written by Chuck Gantz- chuck.gantz@globalstar.com
      */
-    static inline void UTMtoLL(const double UTMNorthing, const double UTMEasting,
+    template<typename T>
+    static inline void UTMtoLL(const T UTMNorthing, const T UTMEasting,
                                const char* UTMZone, double& Lat,  double& Long )
     {
         double k0 = UTM_K0;
