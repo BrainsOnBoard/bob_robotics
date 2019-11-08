@@ -3,6 +3,9 @@
 // Third-party includes
 #include "third_party/units.h"
 
+// Standard C++ includes
+#include <ostream>
+
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Transform
 //----------------------------------------------------------------------------
@@ -87,6 +90,13 @@ struct LatLon
     units::angle::degree_t lon;
     units::length::meter_t height{ 0 }; // Set default value, because we don't always want to use height
 };
+
+template<class Datum>
+inline std::ostream &operator<<(std::ostream &os, const LatLon<Datum> &latLon)
+{
+    os << latLon.lat.value() << "° " << latLon.lon.value() << "° at " << latLon.height;
+    return os;
+}
 
 //! A standard GPS coordinate
 using GPSCoordinate = LatLon<WGS84>;
