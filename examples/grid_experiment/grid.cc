@@ -28,7 +28,7 @@ LatLon<T> updateGoalLocationLATLON(LatLon<T> origin, Cartesian<T> moveVector)
     CARCoordiante temp = latLonToCartesian(origin) + moveVector;
     target = cartesianToLatLon(temp);
     return target;
-};
+}
 template <typename T>
 UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVector) 
 {
