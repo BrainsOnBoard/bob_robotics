@@ -153,7 +153,7 @@ namespace UTM
         N = a/sqrt(1-eccSquared*sin(LatRad)*sin(LatRad));
         T = (double)(tan(LatRad)*tan(LatRad));
         C = eccPrimeSquared*cos(LatRad)*cos(LatRad);
-        A = cos(LatRad)*(LongRad-LongOriginRad);
+        A = cos(LatRad)*(LongRad-LongOriginRad).value();
 
         M = a*((1 - eccSquared/4 - 3*eccSquared*eccSquared/64
                 - 5*eccSquared*eccSquared*eccSquared/256)
@@ -165,15 +165,15 @@ namespace UTM
                   + 45*eccSquared*eccSquared*eccSquared/1024)*sin(4*LatRad)
                - (35*eccSquared*eccSquared*eccSquared/3072)*sin(6*LatRad));
 
-        UTMEasting = (meter_t)
-        (k0*N*((double)A+(1-T+C)*(double)A*(double)A*(double)A/6
-               + (5-18*T+T*T+72*C-58*eccPrimeSquared)*(double)A*(double)A*(double)A*(double)A*(double)A/120)
+        UTMEasting = 
+        (k0*N*(A+(1-T+C)*A*A*A/6
+               + (5-18*T+T*T+72*C-58*eccPrimeSquared)*A*A*A*A*A/120)
          + (meter_t)500000.0);
 
-        UTMNorthing = (meter_t)
+        UTMNorthing = 
         (k0*(M+N*tan(LatRad)
-             *((double)A*(double)A/2+(5-T+9*C+4*C*C)*(double)A*(double)A*(double)A*(double)A/24
-               + (61-58*T+T*T+600*C-330*eccPrimeSquared)*(double)A*(double)A*(double)A*(double)A*(double)A*(double)A/720)));
+             *(A*A/2+(5-T+9*C+4*C*C)*A*A*A*A/24
+               + (61-58*T+T*T+600*C-330*eccPrimeSquared)*A*A*A*A*A*A/720)));
 
         if(Lat < degree_t(0))
         {
