@@ -55,9 +55,6 @@ UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVecto
     double northing;
     double easting;
 
-    units::angle::radian_t val = degree_t(3);
-    
-
     LLtoUTM(G.lat.value(),G.lon.value(),northing,easting,origin.zone);
 
     target.northing = meter_t(northing);
