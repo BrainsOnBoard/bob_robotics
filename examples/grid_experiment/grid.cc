@@ -52,14 +52,8 @@ UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVecto
     // Calculate new position in terms of lat long
     GPSCoordinate G = updateGoalLocationLATLON(GPSRep,moveVector);
     // Convert back to UTM
-    double northing;
-    double easting;
-
-    LLtoUTM(G.lat.value(),G.lon.value(),northing,easting,origin.zone);
-
-    target.northing = meter_t(northing);
-    target.easting = meter_t(easting);
     
+    LLtoUTM(G.lat,G.lon,target.northing,target.easting,origin.zone);
 
     return target;
 
@@ -91,7 +85,7 @@ int main()
     GPSCoordinate target =  updateGoalLocationLATLON(home,moveVector);
     
     rLat = target.lat;
-    rLon = target.lat;
+    rLon = target.lon;
 
     std::cout << "Target Lat: " << rLat << "\n";
     std::cout << "Target Long: " << rLon << "\n";
