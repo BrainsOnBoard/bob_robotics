@@ -18,99 +18,107 @@ using BoBRobotics::MapCoordinate::cartesianToLatLon;
 
 using UTM::LLtoUTM;
 using UTM::UTMtoLL;
-
 using CARCoordiante = Cartesian<WGS84>;
 using GPSCoordinate = LatLon<WGS84>;
 
 template <typename T>
-LatLon<T> updateGoalLocation(LatLon<T> origin, Cartesian<T> moveVector)
+LatLon<T> updateGoalLocationLATLON(LatLon<T> origin, Cartesian<T> moveVector)
 {
     GPSCoordinate target;
     CARCoordiante temp = latLonToCartesian(origin) + moveVector;
     target = cartesianToLatLon(temp);
     return target;
 };
-
-//template <typename T>
-//UTMCoordinate updateGoalLocation(UTMCoordinate origin, Cartesian<T> moveVector)
-//{
-
-    // Get a UTMCoordinate origin
-
-    // Transform it to LL
-
-    // Transform to CAR
-
-    // Do shift
-
-    // Retransform To LL
-
-    // Retransform to UTM
-
-    // return
+template <typename T>
+UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVector) 
+{
 
 
-    // LLtoUTM (Lat, Long, &Norhing, &Easting, Zone)
-    // UTMtoLL (Northing, Easting, Zone, type &Lat , type&Long)
-    // GPSCoordinate target =  UTMtoLL(origin);
-    // CARCoordiante temp = latLonToCartesian(origin) + moveVector;
-    // UTMCoordinate target = LLtoUTM(cartesianToLatLon(temp).lat,);
-    // return target;
-//};
+    // Setup return value
+    UTMCoordinate target;
+    target.height = origin.height;
 
+    // Convert UTM to lat long 
+    double lat;
+    double lon;
+    UTMtoLL(origin.northing.value(),origin.easting.value(),
+            origin.zone,lat,lon);
+
+    GPSCoordinate GPSRep;
+    GPSRep.lat = degree_t(lat);
+    GPSRep.lon = degree_t(lon);
+    GPSRep.height = origin.height;
+
+    // Calculate new position in terms of lat long
+    GPSCoordinate G = updateGoalLocationLATLON(GPSRep,moveVector);
+    // Convert back to UTM
+    double northing;
+    double easting;
+
+    units::angle::radian_t val = degree_t(3);
+    
+
+    LLtoUTM(G.lat.value(),G.lon.value(),northing,easting,origin.zone);
+
+    target.northing = meter_t(northing);
+    target.easting = meter_t(easting);
+    
+
+    return target;
+
+}
 
 int main()
 {
-        
-    // Create myself a LatLon based coordinate
-    
+    // test for GPS Coordinate by moving it 10 meters in x direction
+    double SHIFT = 10;
+
     GPSCoordinate home;
     home.lat = degree_t(50.87002350275288);
     home.lon = degree_t(0.0018240860639551215);
     home.height = meter_t(0);
+    
+    units::angle::radian_t rLat = home.lat;
+    units::angle::radian_t rLon = home.lon;
+
+
     std::cout.precision(17);
-    std::cout << "Original Lat: " << std::setw(10)<<home.lat*RAD_TO_DEG << "\n";
-    std::cout << "Original Long: " << std::setw(10) << home.lon*RAD_TO_DEG << "\n";
+    std::cout << "Original Lat: " << std::setw(10)<< home.lat << "\n";
+    std::cout << "Original Long: " << std::setw(10) << home.lon << "\n";
 
     CARCoordiante moveVector;
-    moveVector.x = meter_t(10);
+    moveVector.x = meter_t(SHIFT);
     moveVector.y = meter_t(0);
     moveVector.z = meter_t(0);
 
-    GPSCoordinate target =  updateGoalLocation(home,moveVector);
+    GPSCoordinate target =  updateGoalLocationLATLON(home,moveVector);
     
-    std::cout << "New Lat: " << target.lat*RAD_TO_DEG << "\n";
-    std::cout << "New Long: " << target.lon*RAD_TO_DEG << "\n";
+    rLat = target.lat;
+    rLon = target.lat;
+
+    std::cout << "Target Lat: " << rLat << "\n";
+    std::cout << "Target Long: " << rLon << "\n";
     
-    // Create myself a cartesian coordinate
-
-    // UTM -> Cart
-    // Cart = Cart + x
-    // Cart -> UTM
-
-   UTMCoordinate test;
-   test.northing = meter_t(7042000);
-   test.easting = meter_t(510000);
+    // test for UTM coordiante
+   UTMCoordinate InCoord;
+   UTMCoordinate OutCoord;
+   InCoord.northing = meter_t(7042000);
+   InCoord.easting = meter_t(510000);
+   InCoord.height = meter_t(0);
    
-    test.zone[0] = '3';
-    test.zone[1] = '2';
-    test.zone[2] = 'Z';
-    test.zone[3] = '\0';
+    InCoord.zone[0] = '3';
+    InCoord.zone[1] = '2';
+    InCoord.zone[2] = 'Z';
+    InCoord.zone[3] = '\0';
 
-    GPSCoordinate result;
-    result.lat = degree_t(0);
-    result.lon = degree_t(1);
+    std::cout << "Origin Northing = " << InCoord.northing.value() << "\n";
+    std::cout << "Origin Easting = " << InCoord.easting.value() << "\n";
+    
+    OutCoord = updateGoalLocationUTM(InCoord,moveVector);
 
-    double lat = 63.506144;
-    double lon = 9.20091;
-
+    std::cout << "Target Northing: " << OutCoord.northing << "\n";
+    std::cout << "Target Easting: " << OutCoord.easting << "\n";
     
 
-    UTMtoLL(test.northing.value(),test.easting.value(),
-            test.zone,lat,lon);
-
-    std::cout << "Lat = " << lat << "\n";
-    std::cout << "Lon = " << lon << "\n";
-    //std::cout << "New\n";
     return 0;
 }

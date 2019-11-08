@@ -24,6 +24,7 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
+#include "units.h"
 
 
 
@@ -100,7 +101,8 @@ namespace UTM
      *
      * Written by Chuck Gantz- chuck.gantz@globalstar.com
      */
-    static inline void LLtoUTM(const double Lat, const double Long,
+    template<typename K>
+    static inline void LLtoUTM(const K Lat, const K Long,
                                double &UTMNorthing, double &UTMEasting,
                                char* UTMZone)
     {
