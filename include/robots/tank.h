@@ -69,7 +69,7 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void controlWithThumbsticks(HID::Joystick &joystick);
+    void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick);
     
     void move(meters_per_second_t v,
               radians_per_second_t clockwiseSpeed,
