@@ -165,7 +165,7 @@ class ObjectReference
     using radian_t = units::angle::radian_t;
 
 public:
-    ObjectReference(UDPClient<ObjectDataType> &client,
+    ObjectReference(const UDPClient<ObjectDataType> &client,
                     const char *objectName,
                     const Stopwatch::Duration timeoutDuration)
       : m_Client(client)
@@ -196,7 +196,7 @@ public:
     }
 
 private:
-    UDPClient<ObjectDataType> &m_Client;
+    const UDPClient<ObjectDataType> &m_Client;
     char m_Name[24];
     const Stopwatch::Duration m_TimeoutDuration;
 };
