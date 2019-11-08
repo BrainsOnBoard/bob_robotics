@@ -99,7 +99,7 @@ struct LatLon
 
     units::angle::degree_t lat;
     units::angle::degree_t lon;
-    units::length::meter_t height;
+    units::length::meter_t height{ 0 }; // Set default value, because we don't always want to use height
 };
 
 //! A standard GPS coordinate
@@ -116,7 +116,7 @@ struct Cartesian
 
     units::length::meter_t x;
     units::length::meter_t y;
-    units::length::meter_t z;
+    units::length::meter_t z{ 0 };
 
     auto operator+(const Cartesian<D> &coords)
     {
@@ -127,7 +127,7 @@ struct Cartesian
         return out;
     };
 
-    void operator += (const Cartesian<D> &coords)
+    void operator+=(const Cartesian<D> &coords)
     {
         x = x + coords.x;
         y = y + coords.y;
