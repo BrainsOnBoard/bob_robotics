@@ -10,6 +10,7 @@
 
 # Temporary files
 *~
+*.autosave
 
 # Temporary Jupyter notebook files
 **/.ipynb_checkpoints/

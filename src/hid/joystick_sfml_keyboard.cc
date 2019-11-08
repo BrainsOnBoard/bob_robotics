@@ -1,5 +1,9 @@
 // BoB robotics includes
+#include "common/logging.h"
 #include "hid/joystick_sfml_keyboard.h"
+
+// Standard C++ includes
+#include <stdexcept>
 
 namespace BoBRobotics {
 namespace HID {
@@ -64,6 +68,20 @@ bool JoystickSFMLKeyboard::updateState()
     }
 
     return changed;
+}
+
+std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>>
+JoystickSFMLKeyboard::createJoystick(sf::Window &window)
+{
+    try
+    {
+        return std::make_unique<HID::Joystick>(0.25f);
+    }
+    catch(std::runtime_error &ex)
+    {
+        LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
+        return std::make_unique<HID::JoystickSFMLKeyboard>(window);
+    }
 }
 } // HID
 } // BoBRobotics

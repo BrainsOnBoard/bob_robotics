@@ -128,5 +128,11 @@ sf::ContextSettings SFMLWorld::getContextSettings()
     return settings;
 }
 
+sf::Window &
+SFMLWorld::getWindow()
+{
+    return m_Window;
+}
+
 } // Viz
 } // BobRobotics
