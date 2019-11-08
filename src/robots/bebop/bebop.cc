@@ -264,7 +264,19 @@ Bebop::relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw)
                   (float) z.value(), (float) yaw.value());
 }
 
-//! Move to given GPS coordinates
+//! Move to given GPS coordinates without changing heading
+void
+Bebop::moveTo(const MapCoordinate::GPSCoordinate &coords,
+              ActionCompletedHandler callback)
+{
+    moveTo(coords, unan<degree_t>(), callback);
+}
+
+/**!
+ * \brief Move to given GPS coordinates and set heading
+ *
+ * If heading is not given, the drone will maintain its current heading.
+ */
 void
 Bebop::moveTo(const MapCoordinate::GPSCoordinate &coords, degree_t heading,
               ActionCompletedHandler callback)
@@ -277,7 +289,7 @@ Bebop::moveTo(const MapCoordinate::GPSCoordinate &coords, degree_t heading,
                   heading.value());
 
     m_MoveToSemaphore.wait();
-    if (m_MoveToState != ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_RUNNING) {
+    if (m_MoveToState != MoveToState::Running) {
         throw std::runtime_error("Could not initiate move");
     }
     m_MoveToCompletedCallback = callback;
@@ -614,11 +626,12 @@ Bebop::getGPSData(GPSData &gps)
     }
 }
 
-/*
- * Invoked by commandReceived().
- *
- * Prints the battery state whenever it changes.
- */
+Bebop::MoveToState
+Bebop::getMoveToState() const
+{
+    return m_MoveToState;
+}
+
 void
 Bebop::onBatteryChanged(const ARDict &dict)
 {
@@ -724,11 +737,11 @@ Bebop::onMoveToStateChanged(const ARDict &dict)
 {
     int val;
     if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS)) {
-        m_MoveToState = (eARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS) val;
+        m_MoveToState = static_cast<MoveToState>(val);
         m_MoveToSemaphore.notify();
 
-        if (m_MoveToCompletedCallback) {
-            m_MoveToCompletedCallback(val != ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_RUNNING);
+        if (m_MoveToCompletedCallback && m_MoveToState != MoveToState::Running) {
+            m_MoveToCompletedCallback(m_MoveToState != MoveToState::Done);
         }
     }
 }
@@ -737,7 +750,7 @@ Bebop::onMoveToStateChanged(const ARDict &dict)
     [&dict]() {                                                                                                            \
         type val;                                                                                                          \
         if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_##key) && val != sentinel) \
-            return outtype{ (double) val };                                                                                  \
+            return outtype{ (double) val };                                                                                \
         else                                                                                                               \
             return unan<outtype>();                                                                                        \
     }();
@@ -757,7 +770,7 @@ Bebop::onGPSLocationChanged(const ARDict &dict)
     // Altitude seemingly doesn't have a sentinel value
     int8_t height;
     if (dict.get(height, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED_ALTITUDE)) {
-        m_GPSData.coordinate.height = meter_t{ height };
+        m_GPSData.coordinate.height = meter_t{ (double) height };
     } else {
         m_GPSData.coordinate.height = unan<meter_t>();
     }

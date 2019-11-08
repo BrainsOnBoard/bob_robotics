@@ -224,6 +224,13 @@ public:
         ErrorInterrupted = ARCOMMANDS_ARDRONE3_PILOTINGEVENT_MOVEBYEND_ERROR_INTERRUPTED
     };
 
+    enum class MoveToState {
+        Running = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_RUNNING,
+        Done = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_DONE,
+        Cancelled = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_CANCELED,
+        Error = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_ERROR
+    };
+
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
@@ -235,6 +242,9 @@ public:
      * Returns true if new data is available, false otherwise.
      */
     bool getGPSData(GPSData &gps);
+
+    //! Get current state of moveTo() operation
+    MoveToState getMoveToState() const;
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -252,9 +262,12 @@ public:
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
     void relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw = 0_rad);
+    void moveTo(const MapCoordinate::GPSCoordinate &coords,
+                ActionCompletedHandler callback);
     void moveTo(const MapCoordinate::GPSCoordinate &coords, degree_t heading = unan<degree_t>(),
                 ActionCompletedHandler callback = nullptr);
     void cancelMoveTo() const;
+
     RelativeMoveState getRelativeMoveState() const;
     std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;
     void resetRelativeMoveState();
@@ -387,7 +400,7 @@ private:
     LimitValues<meters_per_second_t> m_VerticalSpeedLimits;
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
-    std::atomic<int> m_MoveToState;
+    std::atomic<MoveToState> m_MoveToState{ MoveToState::Done };
     eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
