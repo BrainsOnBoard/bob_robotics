@@ -116,8 +116,8 @@ namespace UTM
         degree_t LongOrigin;
         double eccPrimeSquared;
         meter_t N,M;
-        double C, T;
-        radian_t A;
+        double C, T, A;
+        
         //Make sure the longitude is between -180.00 .. 179.9
         degree_t LongTemp = (Long+degree_t(180))-degree_t(int((Long+degree_t(180))/degree_t(360))*degree_t(360)-degree_t(180));
 
