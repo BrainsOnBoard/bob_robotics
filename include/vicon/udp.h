@@ -561,7 +561,7 @@ class BundledVicon
 {
 public:
     BundledVicon(uint16_t port = 51001);
-    const Pose3<units::length::millimeter_t, units::angle::radian_t> &getPose() const;
+    Pose3<units::length::millimeter_t, units::angle::radian_t> getPose() const;
 private:
     UDPClient<> m_Client;
 }; // BundledVicon
