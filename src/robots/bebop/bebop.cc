@@ -831,6 +831,10 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED:
         bebop->onMoveToStateChanged(elem);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED:
+        bebop->onGPSLocationChanged(elem);
+        break;
     default:
         break;
     }
