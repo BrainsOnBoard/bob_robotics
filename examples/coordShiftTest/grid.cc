@@ -23,6 +23,44 @@ using UTM::UTMtoLL;
 using CARCoordiante = Cartesian<WGS84>;
 using GPSCoordinate = LatLon<WGS84>;
 
+// template <typename T>
+// LatLon<T> updateGoalLocationLATLON(LatLon<T> origin, Cartesian<T> moveVector)
+// {
+//     GPSCoordinate target;
+//     CARCoordiante temp = latLonToCartesian(origin) + moveVector;
+//     target = cartesianToLatLon(temp);
+//     return target;
+// }
+// template <typename T>
+// UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVector) 
+// {
+
+
+//     // Setup return value
+//     UTMCoordinate target;
+//     target.height = origin.height;
+
+//     // Convert UTM to lat long 
+//     double lat;
+//     double lon;
+//     UTMtoLL(origin.northing.value(),origin.easting.value(),
+//             origin.zone,lat,lon);
+
+//     GPSCoordinate GPSRep;
+//     GPSRep.lat = degree_t(lat);
+//     GPSRep.lon = degree_t(lon);
+//     GPSRep.height = origin.height;
+
+//     // Calculate new position in terms of lat long
+//     GPSCoordinate G = updateGoalLocationLATLON(GPSRep,moveVector);
+//     // Convert back to UTM
+    
+//     LLtoUTM(G.lat,G.lon,target.northing,target.easting,origin.zone);
+
+//     return target;
+
+// }
+
 int main()
 {
     // test for GPS Coordinate by moving it 10 meters in x direction
