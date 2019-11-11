@@ -15,64 +15,62 @@ using BoBRobotics::MapCoordinate::Ellipsoid;
 using BoBRobotics::MapCoordinate::Cartesian;
 using BoBRobotics::MapCoordinate::latLonToCartesian;
 using BoBRobotics::MapCoordinate::cartesianToLatLon;
+using BoBRobotics::MapCoordinate::shiftLatLon;
+using BoBRobotics::MapCoordinate::shiftUTM;
 
 using UTM::LLtoUTM;
 using UTM::UTMtoLL;
 using CARCoordiante = Cartesian<WGS84>;
 using GPSCoordinate = LatLon<WGS84>;
 
-template <typename T>
-LatLon<T> updateGoalLocationLATLON(LatLon<T> origin, Cartesian<T> moveVector)
-{
-    GPSCoordinate target;
-    CARCoordiante temp = latLonToCartesian(origin) + moveVector;
-    target = cartesianToLatLon(temp);
-    return target;
-}
-template <typename T>
-UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVector) 
-{
+// template <typename T>
+// LatLon<T> updateGoalLocationLATLON(LatLon<T> origin, Cartesian<T> moveVector)
+// {
+//     GPSCoordinate target;
+//     CARCoordiante temp = latLonToCartesian(origin) + moveVector;
+//     target = cartesianToLatLon(temp);
+//     return target;
+// }
+// template <typename T>
+// UTMCoordinate updateGoalLocationUTM(UTMCoordinate origin, Cartesian<T> moveVector) 
+// {
 
 
-    // Setup return value
-    UTMCoordinate target;
-    target.height = origin.height;
+//     // Setup return value
+//     UTMCoordinate target;
+//     target.height = origin.height;
 
-    // Convert UTM to lat long 
-    double lat;
-    double lon;
-    UTMtoLL(origin.northing.value(),origin.easting.value(),
-            origin.zone,lat,lon);
+//     // Convert UTM to lat long 
+//     double lat;
+//     double lon;
+//     UTMtoLL(origin.northing.value(),origin.easting.value(),
+//             origin.zone,lat,lon);
 
-    GPSCoordinate GPSRep;
-    GPSRep.lat = degree_t(lat);
-    GPSRep.lon = degree_t(lon);
-    GPSRep.height = origin.height;
+//     GPSCoordinate GPSRep;
+//     GPSRep.lat = degree_t(lat);
+//     GPSRep.lon = degree_t(lon);
+//     GPSRep.height = origin.height;
 
-    // Calculate new position in terms of lat long
-    GPSCoordinate G = updateGoalLocationLATLON(GPSRep,moveVector);
-    // Convert back to UTM
+//     // Calculate new position in terms of lat long
+//     GPSCoordinate G = updateGoalLocationLATLON(GPSRep,moveVector);
+//     // Convert back to UTM
     
-    LLtoUTM(G.lat,G.lon,target.northing,target.easting,origin.zone);
+//     LLtoUTM(G.lat,G.lon,target.northing,target.easting,origin.zone);
 
-    return target;
+//     return target;
 
-}
+// }
 
 int main()
 {
     // test for GPS Coordinate by moving it 10 meters in x direction
-    double SHIFT = 10;
+    double SHIFT = 30;
 
     GPSCoordinate home;
     home.lat = degree_t(50.87002350275288);
     home.lon = degree_t(0.0018240860639551215);
     home.height = meter_t(0);
     
-    units::angle::radian_t rLat = home.lat;
-    units::angle::radian_t rLon = home.lon;
-
-
     std::cout.precision(17);
     std::cout << "Original Lat: " << std::setw(10)<< home.lat << "\n";
     std::cout << "Original Long: " << std::setw(10) << home.lon << "\n";
@@ -82,20 +80,18 @@ int main()
     moveVector.y = meter_t(0);
     moveVector.z = meter_t(0);
 
-    GPSCoordinate target =  updateGoalLocationLATLON(home,moveVector);
+    GPSCoordinate target =  shiftLatLon(home,moveVector);
     
-    rLat = target.lat;
-    rLon = target.lon;
-
-    std::cout << "Target Lat: " << rLat << "\n";
-    std::cout << "Target Long: " << rLon << "\n";
+    std::cout << "Target Lat: " << target.lat << "\n";
+    std::cout << "Target Long: " << target.lon << "\n";
     
+    //----------------------------------------------------------------------//
     // test for UTM coordiante
-   UTMCoordinate InCoord;
-   UTMCoordinate OutCoord;
-   InCoord.northing = meter_t(7042000);
-   InCoord.easting = meter_t(510000);
-   InCoord.height = meter_t(0);
+    UTMCoordinate InCoord;
+    UTMCoordinate OutCoord;
+    InCoord.northing = meter_t(7042000);
+    InCoord.easting = meter_t(510000);
+    InCoord.height = meter_t(0);
    
     InCoord.zone[0] = '3';
     InCoord.zone[1] = '2';
@@ -105,7 +101,7 @@ int main()
     std::cout << "Origin Northing = " << InCoord.northing.value() << "\n";
     std::cout << "Origin Easting = " << InCoord.easting.value() << "\n";
     
-    OutCoord = updateGoalLocationUTM(InCoord,moveVector);
+    OutCoord = shiftUTM(InCoord,moveVector);
 
     std::cout << "Target Northing: " << OutCoord.northing << "\n";
     std::cout << "Target Easting: " << OutCoord.easting << "\n";
