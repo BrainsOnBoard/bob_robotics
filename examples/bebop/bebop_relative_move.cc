@@ -22,8 +22,8 @@ bob_main(int, char **)
     // drone object
     Bebop drone;
     std::atomic<bool> stopFlag{ false };
-    drone.setFlightEventHandler([&stopFlag](bool takeoff) {
-        if (!takeoff) {
+    drone.setFlyingStateChangedHandler([&stopFlag](Bebop::FlyingState state) {
+        if (state == Bebop::FlyingState::Landing) {
             stopFlag = true;
         }
     });

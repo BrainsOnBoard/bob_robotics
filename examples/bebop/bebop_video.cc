@@ -62,8 +62,8 @@ bob_main(int, char **)
     // control drone with joystick
     HID::Joystick joystick(/*deadZone=*/0.25);
     drone.addJoystick(joystick);
-    drone.setFlightEventHandler([&](bool takeoff) {
-        if (!takeoff) {
+    drone.setFlyingStateChangedHandler([&](Bebop::FlyingState state) {
+        if (state == Bebop::FlyingState::Landing) {
             joystick.stop();
         }
     });

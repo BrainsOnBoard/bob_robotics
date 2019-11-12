@@ -84,12 +84,6 @@ T unan()
     return T{ std::numeric_limits<double>::quiet_NaN() };
 }
 
-//! Handlers which are called when the drone takes off or lands
-using FlightEventHandler = std::function<void(bool takeoff)>;
-
-//! Handler for when an action finishes
-using ActionCompletedHandler = std::function<void(bool success)>;
-
 /*
  * Simply throws a runtime_error with appropriate message if
  * err != ARCONTROLLER_OK.
@@ -244,6 +238,12 @@ public:
         EmergencyLanding = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_EMERGENCY_LANDING
     };
 
+    //! Handlers which are called when the drone takes off or lands
+    using FlyingStateChangedHandler = std::function<void(Bebop::FlyingState newState)>;
+
+    //! Handler for when an action finishes
+    using ActionCompletedHandler = std::function<void(bool success)>;
+
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
@@ -306,7 +306,7 @@ public:
     State getState();
     VideoStream &getVideoStream();
     void takePhoto();
-    void setFlightEventHandler(FlightEventHandler);
+    void setFlyingStateChangedHandler(FlyingStateChangedHandler);
 
     //! Default maximum tilt for pitch and roll.
     static constexpr auto DefaultMaximumTilt = 8_deg;
@@ -425,7 +425,7 @@ private:
     radians_per_second_t m_HorizontalAnimationSpeed;
     ControllerPtr m_Device;
     std::unique_ptr<VideoStream> m_VideoStream;
-    FlightEventHandler m_FlightEventHandler = nullptr;
+    FlyingStateChangedHandler m_FlyingStateChangedHandler = nullptr;
     ActionCompletedHandler m_AnimationCompletedCallback = nullptr;
     ActionCompletedHandler m_MoveToCompletedCallback = nullptr;
     std::mutex m_AnimationMutex, m_GPSDataMutex;

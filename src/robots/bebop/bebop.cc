@@ -123,10 +123,6 @@ Bebop::takeOff()
     } else {
         LOG_INFO << "Taking off...";
         DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
-
-        if (m_FlightEventHandler) {
-            m_FlightEventHandler(true);
-        }
     }
 }
 
@@ -142,10 +138,6 @@ Bebop::land()
     } else {
         LOG_INFO << "Landing...";
         DRONE_COMMAND_NO_ARG(sendPilotingLanding);
-
-        if (m_FlightEventHandler) {
-            m_FlightEventHandler(false);
-        }
     }
 }
 
@@ -463,9 +455,9 @@ Bebop::takePhoto()
  * \brief Add an event handler for when the drone is taking off or landing.
  */
 void
-Bebop::setFlightEventHandler(FlightEventHandler handler)
+Bebop::setFlyingStateChangedHandler(FlyingStateChangedHandler handler)
 {
-    m_FlightEventHandler = handler;
+    m_FlyingStateChangedHandler = handler;
 }
 
 /** END PUBLIC MEMBERS **/
@@ -772,6 +764,19 @@ Bebop::onMoveToStateChanged(const ARDict &dict)
 }
 
 void
+Bebop::onFlyingStateChanged(const ARDict &dict)
+{
+    int val;
+    if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE)) {
+        m_FlyingState = static_cast<FlyingState>(val);
+
+        if (m_FlyingStateChangedHandler) {
+            m_FlyingStateChangedHandler(static_cast<FlyingState>(val));
+        }
+    }
+}
+
+void
 Bebop::onMotionStateChanged(const ARDict &dict)
 {
     int val;
@@ -877,6 +882,10 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
         break;
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOTIONSTATE:
         bebop->onMotionStateChanged(elem);
+        break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED:
+        bebop->onFlyingStateChanged(elem);
+        break;
     default:
         break;
     }

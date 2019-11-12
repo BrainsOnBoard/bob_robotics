@@ -59,9 +59,9 @@ int bob_main(int, char **)
      * When drone starts landing, stop joystick running on main thread to
      * terminate program.
      */
-    drone.setFlightEventHandler(
-            [&joystick](bool takeOff) {
-                if (!takeOff) {
+    drone.setFlyingStateChangedHandler(
+            [&joystick](auto state) {
+                if (state == Robots::Bebop::FlyingState::Landing) {
                     joystick.stop();
                 }
             });

@@ -18,17 +18,23 @@ bob_main(int, char **)
 
     // Store GPS position on take-off so we can home to it, quit when landing
     MapCoordinate::GPSCoordinate takeOffCoords{ unan<degree_t>(), unan<degree_t>() };
-    drone.setFlightEventHandler([&](bool takeoff) {
-        if (takeoff) {
-            Bebop::GPSData data;
+    drone.setFlyingStateChangedHandler([&](Bebop::FlyingState state) {
+        Bebop::GPSData data;
+        switch (state) {
+        case Bebop::FlyingState::Flying:
             if (drone.getGPSData(data)) {
                 takeOffCoords = data.coordinate;
                 LOGI << "Home GPS position: " << takeOffCoords.lat << " " << takeOffCoords.lon;
             } else {
                 LOGW << "Could not get GPS position; will not home :-(";
             }
-        } else {
+            break;
+        case Bebop::FlyingState::Landed:
+        case Bebop::FlyingState::Emergency:
+            // Terminate program
             joystick.stop();
+        default:
+            break;
         }
     });
 
