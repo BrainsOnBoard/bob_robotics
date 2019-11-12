@@ -231,6 +231,19 @@ public:
         Error = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_MOVETOCHANGED_STATUS_ERROR
     };
 
+    enum class FlyingState
+    {
+        Landed = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_LANDED,
+        TakingOff = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_TAKINGOFF,
+        Hovering = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_HOVERING,
+        Flying = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_FLYING,
+        Landing = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_LANDING,
+        Emergency = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_EMERGENCY,
+        HandTakeOff = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_USERTAKEOFF,
+        MotorRamping = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_MOTOR_RAMPING,
+        EmergencyLanding = ARCOMMANDS_ARDRONE3_PILOTINGSTATE_FLYINGSTATECHANGED_STATE_EMERGENCY_LANDING
+    };
+
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
@@ -245,6 +258,9 @@ public:
 
     //! Get current state of moveTo() operation
     MoveToState getMoveToState() const;
+
+    FlyingState getFlyingState() const;
+    bool isReadyForHandTakeOff() const;
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -401,6 +417,7 @@ private:
     LimitValues<degrees_per_second_t> m_YawSpeedLimits;
     std::atomic<RelativeMoveState> m_RelativeMoveState{ RelativeMoveState::Initial };
     std::atomic<MoveToState> m_MoveToState{ MoveToState::Done };
+    std::atomic<FlyingState> m_FlyingState{ FlyingState::Landed };
     eARCOMMANDS_ARDRONE3_MEDIARECORDSTATE_VIDEOSTATECHANGEDV2_ERROR m_VideoRecordingError;
     Vector3<meter_t> m_RelativeMovePositionDistance{ 0_m, 0_m, 0_m };
     radian_t m_RelativeMoveAngleDistance{ 0_rad };
@@ -413,6 +430,7 @@ private:
     ActionCompletedHandler m_MoveToCompletedCallback = nullptr;
     std::mutex m_AnimationMutex, m_GPSDataMutex;
     AnimationState m_AnimationState = AnimationState::Idle;
+    std::atomic<bool> m_ReadyForHandTakeOff{ false };
     bool m_IsVideoRecording = false, m_GPSDataUpdated = false;
     std::atomic<unsigned char> m_BatteryLevel;
 
@@ -426,6 +444,9 @@ private:
     void onHorizontalPanoramaStateChanged(const ARDict &dict);
     void onGPSLocationChanged(const ARDict &dict);
     void onMoveToStateChanged(const ARDict &dict);
+    void onMotionDetectionChanged(const ARDict &dict);
+    void onMotionStateChanged(const ARDict &dict);
+    void onFlyingStateChanged(const ARDict &dict);
     void createControllerDevice();
     State getStateUpdate();
 

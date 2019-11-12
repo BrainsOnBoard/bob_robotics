@@ -96,6 +96,9 @@ Bebop::Bebop(degrees_per_second_t maxYawSpeed,
 
     // connect to drone
     connect();
+
+    // enable motion detection, which is required for hand take-off
+    DRONE_COMMAND(sendPilotingSettingsSetMotionDetectionMode, 1);
 }
 
 /*!
@@ -114,11 +117,16 @@ Bebop::~Bebop()
 void
 Bebop::takeOff()
 {
-    LOG_INFO << "Taking off...";
-    DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
+    if (isReadyForHandTakeOff()) {
+        LOG_INFO << "Starting hand take-off";
+        DRONE_COMMAND(sendPilotingUserTakeOff, 1);
+    } else {
+        LOG_INFO << "Taking off...";
+        DRONE_COMMAND_NO_ARG(sendPilotingTakeOff);
 
-    if (m_FlightEventHandler) {
-        m_FlightEventHandler(true);
+        if (m_FlightEventHandler) {
+            m_FlightEventHandler(true);
+        }
     }
 }
 
@@ -128,11 +136,16 @@ Bebop::takeOff()
 void
 Bebop::land()
 {
-    LOG_INFO << "Landing...";
-    DRONE_COMMAND_NO_ARG(sendPilotingLanding);
+    if (m_FlyingState == FlyingState::HandTakeOff) {
+        LOG_INFO << "Stopping hand take-off";
+        DRONE_COMMAND(sendPilotingUserTakeOff, 0);
+    } else {
+        LOG_INFO << "Landing...";
+        DRONE_COMMAND_NO_ARG(sendPilotingLanding);
 
-    if (m_FlightEventHandler) {
-        m_FlightEventHandler(false);
+        if (m_FlightEventHandler) {
+            m_FlightEventHandler(false);
+        }
     }
 }
 
@@ -626,6 +639,18 @@ Bebop::getGPSData(GPSData &gps)
     }
 }
 
+Bebop::FlyingState
+Bebop::getFlyingState() const
+{
+    return m_FlyingState;
+}
+
+bool
+Bebop::isReadyForHandTakeOff() const
+{
+    return m_FlyingState == FlyingState::Landed && m_ReadyForHandTakeOff;
+}
+
 Bebop::MoveToState
 Bebop::getMoveToState() const
 {
@@ -746,6 +771,21 @@ Bebop::onMoveToStateChanged(const ARDict &dict)
     }
 }
 
+void
+Bebop::onMotionStateChanged(const ARDict &dict)
+{
+    int val;
+    if (dict.get(val, ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOTIONSTATE_STATE)) {
+        m_ReadyForHandTakeOff = (bool) val;
+
+        if (val) {
+            LOGI << "Ready for hand take-off";
+        } else {
+            LOGI << "Ready for ground take-off";
+        }
+    }
+}
+
 #define GPS_VAL(type, outtype, sentinel, key)                                                                              \
     [&dict]() {                                                                                                            \
         type val;                                                                                                          \
@@ -835,6 +875,8 @@ Bebop::commandReceived(eARCONTROLLER_DICTIONARY_KEY key,
     case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_GPSLOCATIONCHANGED:
         bebop->onGPSLocationChanged(elem);
         break;
+    case ARCONTROLLER_DICTIONARY_KEY_ARDRONE3_PILOTINGSTATE_MOTIONSTATE:
+        bebop->onMotionStateChanged(elem);
     default:
         break;
     }
