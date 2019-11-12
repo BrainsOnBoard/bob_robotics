@@ -112,9 +112,9 @@ struct Cartesian
 
     void operator+=(const Cartesian<D> &coords)
     {
-        x = x + coords.x;
-        y = y + coords.y;
-        z = z + coords.z;
+        x += coords.x;
+        y += coords.y;
+        z += coords.z;
         
     };
 };
@@ -140,7 +140,7 @@ using GPSCoordinate = LatLon<WGS84>;
 //! Adds shift to a LatLon<Datum> by converting to Cartesian and adding
 //! a Cartesian v to it. 
 template<typename Datum>
-inline LatLon<Datum> shiftLatLon (LatLon<Datum> &latLon, Cartesian<Datum> &v)
+inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<Datum> &v)
 {
     LatLon<Datum> target = cartesianToLatLon(latLonToCartesian(latLon) + v);
     return target;
@@ -159,8 +159,7 @@ inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
     // Convert UTM to lat long 
     double lat;
     double lon;
-    using UTM::UTMtoLL;
-    UTMtoLL(utm.northing.value(),utm.easting.value(),
+    UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
             utm.zone,lat,lon);
     
     // Convert LL members to unit library classes
@@ -173,8 +172,7 @@ inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
     G = shiftLatLon(G,v);
     
     // Convert back to UTM
-    using UTM::LLtoUTM;
-    LLtoUTM(G.lat,G.lon,target.northing,target.easting,utm.zone);
+    UTM::LLtoUTM(G.lat,G.lon,target.northing,target.easting,utm.zone);
 
     return target;
 }
@@ -267,8 +265,8 @@ inline OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 
     const meter_t a = 6377563.396_m, b = 6356256.909_m;                 // Airy 1830 major & minor semi-axes
     constexpr double f0 = 0.9996012717;                                 // NatGrid scale factor on central meridian;
-    const radian_t phi0 = 49.0_deg, lambda0 = -2.0_deg;                 // NatGrid true utm is 49°N,2°W
-    const meter_t n0 = -100000.0_m, e0 = 400000.0_m;                    // northing & easting of true utm, metres
+    const radian_t phi0 = 49.0_deg, lambda0 = -2.0_deg;                 // NatGrid true origin is 49°N,2°W
+    const meter_t n0 = -100000.0_m, e0 = 400000.0_m;                    // northing & easting of true origin, metres
     const double eSq = 1.0 - (b * b) / (a * a);                         // eccentricity squared
     const double n = (a - b) / (a + b), n2 = n * n, n3 = n * n * n;     // n, n², n³
 

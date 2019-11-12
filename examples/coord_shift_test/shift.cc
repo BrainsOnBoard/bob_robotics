@@ -25,22 +25,27 @@ using GPSCoordinate = LatLon<WGS84>;
 
 int main()
 {
+    using namespace units::literals;
+    {
+        
+    } // namespace units::literals;
+    
     // test for GPS Coordinate by moving it 10 meters in x direction
-    double SHIFT = 30;
+    meter_t SHIFT = 30_m;
 
     GPSCoordinate home;
-    home.lat = degree_t(50.87002350275288);
-    home.lon = degree_t(0.0018240860639551215);
-    home.height = meter_t(0);
+    home.lat = 50.87002350275288_deg;
+    home.lon = 0.0018240860639551215_deg;
+    home.height = 0_m;
     
     std::cout.precision(17);
     std::cout << "Original Lat: " << std::setw(10)<< home.lat << "\n";
     std::cout << "Original Long: " << std::setw(10) << home.lon << "\n";
 
     CARCoordiante moveVector;
-    moveVector.x = meter_t(SHIFT);
-    moveVector.y = meter_t(0);
-    moveVector.z = meter_t(0);
+    moveVector.x = SHIFT;
+    moveVector.y = 0_m;
+    moveVector.z = 0_m;
 
     GPSCoordinate target =  shiftLatLon(home,moveVector);
     
@@ -51,9 +56,9 @@ int main()
     // test for UTM coordiante
     UTMCoordinate InCoord;
     UTMCoordinate OutCoord;
-    InCoord.northing = meter_t(7042000);
-    InCoord.easting = meter_t(510000);
-    InCoord.height = meter_t(0);
+    InCoord.northing = 7042000_m;
+    InCoord.easting = 510000_m;
+    InCoord.height = 0_m;
    
     InCoord.zone[0] = '3';
     InCoord.zone[1] = '2';
