@@ -26,9 +26,6 @@ using GPSCoordinate = LatLon<WGS84>;
 int main()
 {
     using namespace units::literals;
-    {
-        
-    } // namespace units::literals;
     
     // test for GPS Coordinate by moving it 10 meters in x direction
     meter_t SHIFT = 30_m;

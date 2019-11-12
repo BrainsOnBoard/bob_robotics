@@ -137,8 +137,11 @@ struct LatLon
 //! A standard GPS coordinate
 using GPSCoordinate = LatLon<WGS84>;
 
-//! Adds shift to a LatLon<Datum> by converting to Cartesian and adding
-//! a Cartesian v to it. 
+/**! 
+ * Adds shift to a LatLon<Datum> 
+ * Adds shift to a LatLon<Datum> by converting to Cartesian and adding
+ * a Cartesian v to it.
+*/  
 template<typename Datum>
 inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<Datum> &v)
 {
@@ -146,9 +149,12 @@ inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<D
     return target;
 }
 
-//! Adds shift to a UTM Coordinate by converting to LatLon<Datum> and then
-//! to Cartesian. Than add a Cartesian v to it and transfer back.
-//! a Cartesian v to it. 
+/**! 
+ * Adds shift to a UTM Coordinate. 
+ * Adds shift to a UTM Coordinate by converting to LatLon<Datum> and then
+ * to Cartesian. Than add a Cartesian v to it and transfer back.
+ * a Cartesian v to it.
+ */ 
 template<typename Datum>
 inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
 {
@@ -188,7 +194,7 @@ inline Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
     using namespace units::length;
     using namespace units::literals;
 
-    const meter_t h = latLon.height; // height above ellipsoid - not currently used
+    const meter_t h = latLon.height; // height above ellipsoid
     const double sinPhi = sin(latLon.lat);
     const double cosPhi = cos(latLon.lat);
     const double sinLambda = sin(latLon.lon);
