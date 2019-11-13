@@ -145,7 +145,18 @@ using GPSCoordinate = LatLon<WGS84>;
 template<typename Datum>
 inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<Datum> &v)
 {
-    LatLon<Datum> target = cartesianToLatLon(latLonToCartesian(latLon) + v);
+    // Setup return value
+    LatLon<Datum> target;
+
+    // Convert to Cartesian
+    Cartesian C = latLonToCartesian(latLon);
+    
+    // Calculate new position
+    C += v;
+
+    // Convert back to LatLon
+    target = cartesianToLatLon(C)
+
     return target;
 }
 
@@ -162,28 +173,61 @@ inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
     UTMCoordinate target;
     target.height = utm.height;
 
-    // Convert UTM to lat long 
+    // Convert LL members to unit library classes
+    Cartesian<Datum> C = utmToCartesian(target):
+
+    // Calculate new position
+    C += v;
+
+    // Convert Cartesian back to UTM
+    target = cartesianToUTM(C);
+
+    return target;
+}
+
+/**! 
+ * Converts UTM to Cartesian
+ */ 
+inline Cartesian utmToCartesian(const UTMCoordinate &utm, type Datum)
+{
+    // Setup return value
+    Cartesian<Datum> C;
     double lat;
     double lon;
+
+    // convert to lat,lon doubles
     UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
             utm.zone,lat,lon);
-    
-    // Convert LL members to unit library classes
+
+    // create LatLon instance with unit library values from lat lon doubles
     LatLon<Datum> G;
     G.lat = degree_t(lat);
     G.lon = degree_t(lon);
     G.height = utm.height;
 
-    // Calculate new position in terms of lat long
-    G = shiftLatLon(G,v);
-    
-    // Convert back to UTM
-    UTM::LLtoUTM(G.lat,G.lon,target.northing,target.easting,utm.zone);
-
-    return target;
+    // convert LatLon to Cartesian
+    C = latLonToCartesian(G):
+    return C;
 }
 
+/**! 
+ * Converts UTM to Cartesian
+ */ 
+template <typename Datum>
+inline UTM cartesianToUTM(const Cartesian<Datum> &cart)
+{
+    // Setup return value
+    UTMCoordinate utm;
 
+    // Convert cartesian to LatLon
+    LatLon<Datum> gps = latLonToCartesian(cart):
+
+    // Convert LatLon to UTM
+    UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
+            utm.zone,gps.lat,gps.lon);
+
+    return utm;
+}
 
 //! Convert latitude and longitude to cartesian
 /*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
