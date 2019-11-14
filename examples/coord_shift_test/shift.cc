@@ -30,11 +30,14 @@ int main()
     // test for GPS Coordinate by moving it 10 meters in x direction
     meter_t SHIFT = 10_m;
 
+    // Needed stuff
     GPSCoordinate home;
     home.lat = 50.87002350275288_deg;
     home.lon = 0.0018240860639551215_deg;
     home.height = 0_m;
     
+    
+
     std::cout.precision(17);
     std::cout << "Original Lat: " << std::setw(10)<< home.lat << "\n";
     std::cout << "Original Long: " << std::setw(10) << home.lon << "\n";
@@ -49,8 +52,10 @@ int main()
     std::cout << "Target Lat: " << target.lat << "\n";
     std::cout << "Target Long: " << target.lon << "\n";
     
+
     //----------------------------------------------------------------------//
-    // test for UTM coordiante
+    // test for UTM coordiante moving 10 meters
+    
     UTMCoordinate InCoord;
     UTMCoordinate OutCoord;
     InCoord.northing = 7042000_m;
@@ -62,6 +67,7 @@ int main()
     InCoord.zone[2] = 'Z';
     InCoord.zone[3] = '\0';
 
+
     std::cout << "Origin Northing = " << InCoord.northing.value() << "\n";
     std::cout << "Origin Easting = " << InCoord.easting.value() << "\n";
     
@@ -70,6 +76,5 @@ int main()
     std::cout << "Target Northing: " << OutCoord.northing << "\n";
     std::cout << "Target Easting: " << OutCoord.easting << "\n";
     
-
     return 0;
 }

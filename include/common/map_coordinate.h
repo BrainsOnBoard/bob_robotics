@@ -149,13 +149,13 @@ inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<D
     LatLon<Datum> target;
 
     // Convert to Cartesian
-    Cartesian C = latLonToCartesian(latLon);
+    Cartesian<Datum> C = latLonToCartesian(latLon);
     
     // Calculate new position
     C += v;
 
     // Convert back to LatLon
-    target = cartesianToLatLon(C)
+    target = cartesianToLatLon(C);
 
     return target;
 }
@@ -174,59 +174,72 @@ inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
     target.height = utm.height;
 
     // Convert LL members to unit library classes
-    Cartesian<Datum> C = utmToCartesian(target):
-
+    Cartesian<Datum> C;
+    utmToCartesian(utm,C);
+    
     // Calculate new position
     C += v;
-
+    
     // Convert Cartesian back to UTM
-    target = cartesianToUTM(C);
+    cartesianToUTM(C, target);
 
     return target;
 }
 
 /**! 
  * Converts UTM to Cartesian
+ * To maintain original UTM.h signature, conversion functions accept a UTM reference 
+ * which they will write results into
  */ 
-inline Cartesian utmToCartesian(const UTMCoordinate &utm, type Datum)
+template <typename Datum>
+inline void utmToCartesian(const UTMCoordinate &utm, Cartesian<Datum> &cart)
 {
-    // Setup return value
-    Cartesian<Datum> C;
     double lat;
     double lon;
 
     // convert to lat,lon doubles
     UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
             utm.zone,lat,lon);
-
+    
     // create LatLon instance with unit library values from lat lon doubles
     LatLon<Datum> G;
-    G.lat = degree_t(lat);
-    G.lon = degree_t(lon);
+    G.lat = units::angle::degree_t(lat);
+    G.lon = units::angle::degree_t(lon);
     G.height = utm.height;
 
     // convert LatLon to Cartesian
-    C = latLonToCartesian(G):
-    return C;
+    cart = latLonToCartesian(G);
+    
 }
 
 /**! 
- * Converts UTM to Cartesian
+ * Converts UTM to Cartesian.
+ * To maintain original UTM.h signature, conversion functions accept a UTM reference 
+ * which they will write results into
  */ 
 template <typename Datum>
-inline UTM cartesianToUTM(const Cartesian<Datum> &cart)
+inline void cartesianToUTM(const Cartesian<Datum> &cart, UTMCoordinate &utm)
 {
-    // Setup return value
-    UTMCoordinate utm;
-
     // Convert cartesian to LatLon
-    LatLon<Datum> gps = latLonToCartesian(cart):
-
+    LatLon<Datum> gps = cartesianToLatLon(cart);
+    
     // Convert LatLon to UTM
-    UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
-            utm.zone,gps.lat,gps.lon);
 
-    return utm;
+    double northing;
+    double easting;
+    char zone[4];
+
+    UTM::LLtoUTM(gps.lat.value(),gps.lon.value(),
+                northing,easting,zone);
+    
+    utm.northing = units::length::meter_t(northing);
+    utm.easting = units::length::meter_t(easting);
+    utm.height = cart.z;
+    utm.zone[0] = zone[0];
+    utm.zone[1] = zone[1];
+    utm.zone[2] = zone[2];
+    utm.zone[3] = zone[3];
+    
 }
 
 //! Convert latitude and longitude to cartesian
