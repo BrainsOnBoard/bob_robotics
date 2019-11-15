@@ -36,18 +36,6 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *messag
     throw std::runtime_error(message);
 }
 
-std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::Window &window)
-{
-    try
-    {
-        return std::make_unique<HID::Joystick>(0.25f);
-    }
-    catch(std::runtime_error &ex)
-    {
-        LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
-        return std::make_unique<HID::JoystickSFMLKeyboard>(window);
-    }
-}
 }
 
 int main(int argc, char **argv)
@@ -108,7 +96,7 @@ int main(int argc, char **argv)
     }
 
     // Create HID device for controlling movement
-    auto joystick = createJoystick(window);
+    auto joystick = HID::JoystickSFMLKeyboard::createJoystick(window);
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();

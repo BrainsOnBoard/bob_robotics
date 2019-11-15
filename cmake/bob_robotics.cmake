@@ -361,11 +361,17 @@ macro(BoB_build)
     # Irritatingly, neither GCC nor Clang produce nice ANSI-coloured output if they detect
     # that output "isn't a terminal" - which seems to include whatever pipe-magick cmake includes.
     # https://medium.com/@alasher/colored-c-compiler-output-with-ninja-clang-gcc-10bfe7f2b949
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-       add_compile_flags(-fdiagnostics-color=always)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       add_compile_flags(-fcolor-diagnostics)
-    endif ()
+    #
+    # When compiling via Jenkins though, we don't want colourised output because
+    # a) the Jenkins logs don't support colours anyway and b) the colour escape
+    # sequences seem to break Jenkins' auto-parsing of error messages.
+    if(NOT "$ENV{USER}" STREQUAL jenkins)
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            add_compile_flags(-fdiagnostics-color=always)
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            add_compile_flags(-fcolor-diagnostics)
+        endif ()
+    endif()
 
     # Different Jetson devices have different user-facing I2C interfaces
     # so read the chip ID and add preprocessor macro

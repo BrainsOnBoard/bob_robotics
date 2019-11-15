@@ -55,11 +55,11 @@ ObjectDataVelocity::update(uint32_t frameNumber,
     const double alpha = 1.0 - units::math::exp(-deltaS / smoothingS);
 
     // Calculate velocities (m/s)
-    const auto oldPosition = getPosition<>();
+    const auto oldPosition = getPose().position();
     calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<millimeter_t>());
 
     // Calculate angular velocities (rad/s)
-    const auto oldAttitude = getAttitude<>();
+    const auto oldAttitude = getPose().attitude();
     const auto circDist = [](auto angle1, auto angle2) {
         return circularDistance(angle1, angle2);
     };
@@ -73,6 +73,18 @@ ObjectDataVelocity::update(uint32_t frameNumber,
 TimedOutError::TimedOutError()
   : std::runtime_error("Timed out waiting for Vicon data")
 {}
+
+BundledVicon::BundledVicon(uint16_t port)
+    : m_Client(port)
+{
+    m_Client.waitUntilConnected();
+}
+
+Pose3<units::length::millimeter_t, units::angle::radian_t>
+BundledVicon::getPose() const
+{
+    return m_Client.getObjectData().getPose();
+}
 
 } // namespace Vicon
 } // BoBRobotics

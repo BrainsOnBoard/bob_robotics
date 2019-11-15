@@ -28,7 +28,7 @@ void
 AntAgent::moveForward(float speed)
 {
     BOB_ASSERT(speed >= -1.f && speed <= 1.f);
-    const auto attitude = getAttitude();
+    const auto attitude = getPose().attitude();
     BOB_ASSERT(attitude[1] == 0_deg && attitude[2] == 0_deg);
 
     m_MoveMode = MoveMode::MovingForward;
@@ -39,7 +39,7 @@ void
 AntAgent::turnOnTheSpot(float clockwiseSpeed)
 {
     BOB_ASSERT(clockwiseSpeed >= -1.f && clockwiseSpeed <= 1.f);
-    const auto attitude = getAttitude();
+    const auto attitude = getPose().attitude();
     BOB_ASSERT(attitude[1] == 0_deg && attitude[2] == 0_deg);
 
     m_MoveMode = MoveMode::Turning;

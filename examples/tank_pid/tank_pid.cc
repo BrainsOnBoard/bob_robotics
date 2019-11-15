@@ -135,7 +135,7 @@ bob_main(int argc, char **argv)
                 goalsIter = goals.begin();
                 pid.moveTo(*goalsIter);
 
-                printGoalStats(*goalsIter, viconObject.getPosition());
+                printGoalStats(*goalsIter, viconObject.getPose().position());
             } else {
                 robot.stopMoving();
                 LOGI << "Stopping positioner";
@@ -144,7 +144,7 @@ bob_main(int argc, char **argv)
         case HID::JButton::Start:
             LOGI << "Resetting to the first goal";
             goalsIter = goals.begin();
-            printGoalStats(*goalsIter, viconObject.getPosition());
+            printGoalStats(*goalsIter, viconObject.getPose().position());
             return true;
         default:
             return false;
