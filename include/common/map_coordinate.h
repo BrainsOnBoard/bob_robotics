@@ -86,7 +86,6 @@ struct UTMCoordinate
     units::length::meter_t northing;
     units::length::meter_t height;
     char zone[4];
-    int a = snprintf(zone,4,"%s",zone);
 };
 
 //----------------------------------------------------------------------------
@@ -116,7 +115,7 @@ struct Cartesian
         x += coords.x;
         y += coords.y;
         z += coords.z;
-        
+
     };
 };
 
@@ -138,11 +137,11 @@ struct LatLon
 //! A standard GPS coordinate
 using GPSCoordinate = LatLon<WGS84>;
 
-/**! 
- * Adds shift to a LatLon<Datum> 
+/**!
+ * Adds shift to a LatLon<Datum>
  * Adds shift to a LatLon<Datum> by converting to Cartesian and adding
  * a Cartesian v to it.
-*/  
+*/
 template<typename Datum>
 inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<Datum> &v)
 {
@@ -151,7 +150,7 @@ inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<D
 
     // Convert to Cartesian
     Cartesian<Datum> C = latLonToCartesian(latLon);
-    
+
     // Calculate new position
     C += v;
 
@@ -161,12 +160,12 @@ inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<D
     return target;
 }
 
-/**! 
- * Adds shift to a UTM Coordinate. 
+/**!
+ * Adds shift to a UTM Coordinate.
  * Adds shift to a UTM Coordinate by converting to LatLon<Datum> and then
  * to Cartesian. Than add a Cartesian v to it and transfer back.
  * a Cartesian v to it.
- */ 
+ */
 template<typename Datum>
 inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
 {
@@ -177,21 +176,21 @@ inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
     // Convert LL members to unit library classes
     Cartesian<Datum> C;
     utmToCartesian(utm,C);
-    
+
     // Calculate new position
     C += v;
-    
+
     // Convert Cartesian back to UTM
     cartesianToUTM(C, target);
 
     return target;
 }
 
-/**! 
+/**!
  * Converts UTM to Cartesian
- * To maintain original UTM.h signature, conversion functions accept a UTM reference 
+ * To maintain original UTM.h signature, conversion functions accept a UTM reference
  * which they will write results into
- */ 
+ */
 template <typename Datum>
 inline void utmToCartesian(const UTMCoordinate &utm, Cartesian<Datum> &cart)
 {
@@ -201,7 +200,7 @@ inline void utmToCartesian(const UTMCoordinate &utm, Cartesian<Datum> &cart)
     // convert to lat,lon doubles
     UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
             utm.zone,lat,lon);
-    
+
     // create LatLon instance with unit library values from lat lon doubles
     LatLon<Datum> G;
     G.lat = units::angle::degree_t(lat);
@@ -210,20 +209,20 @@ inline void utmToCartesian(const UTMCoordinate &utm, Cartesian<Datum> &cart)
 
     // convert LatLon to Cartesian
     cart = latLonToCartesian(G);
-    
+
 }
 
-/**! 
+/**!
  * Converts UTM to Cartesian.
- * To maintain original UTM.h signature, conversion functions accept a UTM reference 
+ * To maintain original UTM.h signature, conversion functions accept a UTM reference
  * which they will write results into
- */ 
+ */
 template <typename Datum>
 inline void cartesianToUTM(const Cartesian<Datum> &cart, UTMCoordinate &utm)
 {
     // Convert cartesian to LatLon
     LatLon<Datum> gps = cartesianToLatLon(cart);
-    
+
     // Convert LatLon to UTM
 
     double northing;
@@ -232,7 +231,7 @@ inline void cartesianToUTM(const Cartesian<Datum> &cart, UTMCoordinate &utm)
 
     UTM::LLtoUTM(gps.lat.value(),gps.lon.value(),
                 northing,easting,zone);
-    
+
     utm.northing = units::length::meter_t(northing);
     utm.easting = units::length::meter_t(easting);
     utm.height = cart.z;
@@ -240,7 +239,7 @@ inline void cartesianToUTM(const Cartesian<Datum> &cart, UTMCoordinate &utm)
     utm.zone[1] = zone[1];
     utm.zone[2] = zone[2];
     utm.zone[3] = zone[3];
-    
+
 }
 
 //! Convert latitude and longitude to cartesian
@@ -377,7 +376,7 @@ inline OSCoordinate latLonToOS(const LatLon<OSGB36> &latLon)
 }
 
 //! Helper function to use above functionality to convert from latitude longitute in WGS84 i.e. GPS coordinates to OS map coordinates
-inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon) 
+inline OSCoordinate wgs84ToOSCoordinate(const LatLon<WGS84> &wgs84LatLon)
 {
     const auto wgs84Cartesian = latLonToCartesian(wgs84LatLon);
 
