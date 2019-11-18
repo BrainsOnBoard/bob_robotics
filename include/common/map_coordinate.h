@@ -3,6 +3,7 @@
 // Third-party includes
 #include "third_party/units.h"
 #include "third_party/UTM.h"
+#include <stdio.h>
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Transform
@@ -85,7 +86,7 @@ struct UTMCoordinate
     units::length::meter_t northing;
     units::length::meter_t height;
     char zone[4];
-
+    int a = snprintf(zone,4,"%s",zone);
 };
 
 //----------------------------------------------------------------------------

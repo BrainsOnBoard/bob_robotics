@@ -28,7 +28,7 @@ int main()
     using namespace units::literals;
     
     // test for GPS Coordinate by moving it 10 meters in x direction
-    meter_t SHIFT = 10_m;
+    meter_t SHIFT = 100_m;
 
     // Needed stuff
     GPSCoordinate home;
