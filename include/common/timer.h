@@ -21,7 +21,7 @@ public:
     //! Stop the timer and print current elapsed time to terminal
     ~Timer()
     {
-        std::cout << m_Title << get();
+        std::cout << m_Title << get() << std::endl;
     }
 
     //------------------------------------------------------------------------

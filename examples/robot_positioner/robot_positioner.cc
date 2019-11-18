@@ -7,8 +7,7 @@
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/robot_type.h"
 #include "vicon/udp.h"
 
 // Third-party includes
@@ -59,9 +58,8 @@ private:
 
 public:
     PositionerExample()
-      : m_Tank(m_Client)
-      , m_Vicon(51001)
-      , m_ViconObject(m_Vicon.getObjectReference(0))
+      : m_Vicon(51001)
+      , m_ViconObject(m_Vicon.getObjectReference())
       , m_Positioner(m_Tank,
                      m_ViconObject,
                      StoppingDistance,
@@ -86,9 +84,6 @@ public:
     void run()
     {
         m_Catcher.trapSignals(); // Catch ctrl+c etc.
-
-        // Listen in background
-        m_Client.runInBackground();
 
         LOGI << "Press Y to start homing";
 
@@ -181,8 +176,7 @@ public:
     }
 
 private:
-    Net::Client m_Client;
-    Robots::TankNetSink m_Tank;
+    Robots::ROBOT_TYPE m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;

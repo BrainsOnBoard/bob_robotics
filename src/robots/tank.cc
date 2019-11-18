@@ -104,7 +104,7 @@ void Tank::stopReadingFromNetwork()
     }
 }
 
-void Tank::controlWithThumbsticks(HID::Joystick &joystick)
+void Tank::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
 {
     joystick.addHandler(
             [this](HID::JAxis axis, float value) {

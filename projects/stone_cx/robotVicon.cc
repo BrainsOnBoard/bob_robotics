@@ -78,7 +78,7 @@ int main()
         // Read data from VICON system
         auto objectData = vicon.getObjectData();
         const auto &velocity = objectData.getVelocity();
-        const auto &attitude = objectData.getAttitude();
+        const auto &attitude = objectData.getPose().attitude();
 
         /*
          * Update TL input
