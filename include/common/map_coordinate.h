@@ -2,6 +2,8 @@
 
 // Third-party includes
 #include "third_party/units.h"
+#include "third_party/UTM.h"
+#include <stdio.h>
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Transform
@@ -75,19 +77,17 @@ struct OSCoordinate
 };
 
 //----------------------------------------------------------------------------
-// BoBRobotics::MapCoordinate::Ellipsoid
+// BoBRobotics::MapCoordinate::UTMCoordinate
 //----------------------------------------------------------------------------
-//! A latitude and longitude relative to a particular datum
-template<typename D>
-struct LatLon
+//! An UTM coordinate consisting of an 'easting' ,'northing', 'zone', 'height'
+struct UTMCoordinate
 {
-    typedef D Datum;
-
-    units::angle::degree_t lat, lon;
+    units::length::meter_t easting;
+    units::length::meter_t northing;
+    units::length::meter_t height;
+    char zone[4];
+    int a = snprintf(zone,4,"%s",zone);
 };
-
-//! A standard GPS coordinate
-using GPSCoordinate = LatLon<WGS84>;
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Cartesian
@@ -98,11 +98,150 @@ struct Cartesian
 {
     typedef D Datum;
 
-    const units::length::meter_t x;
-    const units::length::meter_t y;
-    const units::length::meter_t z;
+    units::length::meter_t x;
+    units::length::meter_t y;
+    units::length::meter_t z{ 0 };
+
+    auto operator+(const Cartesian<D> &coords)
+    {
+        Cartesian<D> out;
+        out.x = x + coords.x;
+        out.y = y + coords.y;
+        out.z = z + coords.z;
+        return out;
+    };
+
+    void operator+=(const Cartesian<D> &coords)
+    {
+        x += coords.x;
+        y += coords.y;
+        z += coords.z;
+        
+    };
 };
 
+//----------------------------------------------------------------------------
+// BoBRobotics::MapCoordinate::Ellipsoid
+//----------------------------------------------------------------------------
+//! A latitude and longitude relative to a particular datum
+template<typename D>
+struct LatLon
+{
+    typedef D Datum;
+
+    units::angle::degree_t lat;
+    units::angle::degree_t lon;
+    units::length::meter_t height{ 0 }; // Set default value, because we don't always want to use height
+
+};
+
+//! A standard GPS coordinate
+using GPSCoordinate = LatLon<WGS84>;
+
+/**! 
+ * Adds shift to a LatLon<Datum> 
+ * Adds shift to a LatLon<Datum> by converting to Cartesian and adding
+ * a Cartesian v to it.
+*/  
+template<typename Datum>
+inline LatLon<Datum> shiftLatLon (const LatLon<Datum> &latLon, const Cartesian<Datum> &v)
+{
+    // Setup return value
+    LatLon<Datum> target;
+
+    // Convert to Cartesian
+    Cartesian<Datum> C = latLonToCartesian(latLon);
+    
+    // Calculate new position
+    C += v;
+
+    // Convert back to LatLon
+    target = cartesianToLatLon(C);
+
+    return target;
+}
+
+/**! 
+ * Adds shift to a UTM Coordinate. 
+ * Adds shift to a UTM Coordinate by converting to LatLon<Datum> and then
+ * to Cartesian. Than add a Cartesian v to it and transfer back.
+ * a Cartesian v to it.
+ */ 
+template<typename Datum>
+inline UTMCoordinate shiftUTM (UTMCoordinate &utm, Cartesian<Datum> &v)
+{
+    // Setup return value
+    UTMCoordinate target;
+    target.height = utm.height;
+
+    // Convert LL members to unit library classes
+    Cartesian<Datum> C;
+    utmToCartesian(utm,C);
+    
+    // Calculate new position
+    C += v;
+    
+    // Convert Cartesian back to UTM
+    cartesianToUTM(C, target);
+
+    return target;
+}
+
+/**! 
+ * Converts UTM to Cartesian
+ * To maintain original UTM.h signature, conversion functions accept a UTM reference 
+ * which they will write results into
+ */ 
+template <typename Datum>
+inline void utmToCartesian(const UTMCoordinate &utm, Cartesian<Datum> &cart)
+{
+    double lat;
+    double lon;
+
+    // convert to lat,lon doubles
+    UTM::UTMtoLL(utm.northing.value(),utm.easting.value(),
+            utm.zone,lat,lon);
+    
+    // create LatLon instance with unit library values from lat lon doubles
+    LatLon<Datum> G;
+    G.lat = units::angle::degree_t(lat);
+    G.lon = units::angle::degree_t(lon);
+    G.height = utm.height;
+
+    // convert LatLon to Cartesian
+    cart = latLonToCartesian(G);
+    
+}
+
+/**! 
+ * Converts UTM to Cartesian.
+ * To maintain original UTM.h signature, conversion functions accept a UTM reference 
+ * which they will write results into
+ */ 
+template <typename Datum>
+inline void cartesianToUTM(const Cartesian<Datum> &cart, UTMCoordinate &utm)
+{
+    // Convert cartesian to LatLon
+    LatLon<Datum> gps = cartesianToLatLon(cart);
+    
+    // Convert LatLon to UTM
+
+    double northing;
+    double easting;
+    char zone[4];
+
+    UTM::LLtoUTM(gps.lat.value(),gps.lon.value(),
+                northing,easting,zone);
+    
+    utm.northing = units::length::meter_t(northing);
+    utm.easting = units::length::meter_t(easting);
+    utm.height = cart.z;
+    utm.zone[0] = zone[0];
+    utm.zone[1] = zone[1];
+    utm.zone[2] = zone[2];
+    utm.zone[3] = zone[3];
+    
+}
 
 //! Convert latitude and longitude to cartesian
 /*! Ported from Javascript Ordnance Survey Grid Reference functions (c) Chris Veness 2005-2017 (MIT Licence) */
@@ -113,7 +252,7 @@ inline Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
     using namespace units::length;
     using namespace units::literals;
 
-    const meter_t h = 0.0_m; // height above ellipsoid - not currently used
+    const meter_t h = latLon.height; // height above ellipsoid
     const double sinPhi = sin(latLon.lat);
     const double cosPhi = cos(latLon.lat);
     const double sinLambda = sin(latLon.lon);
