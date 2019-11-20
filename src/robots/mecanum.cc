@@ -17,6 +17,11 @@ Mecanum::Mecanum(const char *path, bool alternativeWiring)
   : m_Serial(path), m_Forward(0.0f), m_Sideways(0.0f), m_Turn(0.0f), m_AlternativeWiring(alternativeWiring)
 {}
 
+Mecanum::~Mecanum()
+{
+    stopReadingFromNetwork();
+    stopMoving();
+}
 //----------------------------------------------------------------------------
 // Omni2D virtuals
 //----------------------------------------------------------------------------

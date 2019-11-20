@@ -21,7 +21,8 @@ class Mecanum : public Omni2D
 {
 public:
     Mecanum(const char *path = "/dev/ttyACM0", bool alternativeWiring = true);
-
+    virtual ~Mecanum();
+    
     //----------------------------------------------------------------------------
     // Omni2D virtuals
     //----------------------------------------------------------------------------
