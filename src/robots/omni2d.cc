@@ -8,12 +8,6 @@
 namespace BoBRobotics {
 namespace Robots {
 
-Omni2D::~Omni2D()
-{
-    stopReadingFromNetwork();
-    stopMoving();
-}
-
 void
 Omni2D::omni2D(float forward, float sideways, float turn)
 {

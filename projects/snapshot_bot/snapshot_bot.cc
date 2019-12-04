@@ -163,7 +163,7 @@ private:
 
             if(state != State::Testing) {
                  // Drive motors using joystick
-                m_Motor.drive(m_Joystick, m_Config.getJoystickDeadzone());
+                m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
             }
 
             // Capture frame
