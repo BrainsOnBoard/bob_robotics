@@ -11,7 +11,7 @@ while getopts 'dr' flag; do
   case "${flag}" in
     d)camera_url='/gazebo/default/iris_demo/iris_demo/panoramic_camera/link/camera/image'
       display_flag='-p' ;;
-    r)world_file=iris_demo_rothamsted.world
+    r)world_file=rothamsted.world
       export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH$ROTHAMSTED_3D_MODEL_PATH/gazebo_models: ;;
     *) print_usage
        exit 1 ;;
