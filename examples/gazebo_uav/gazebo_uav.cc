@@ -48,7 +48,7 @@ main(int argc, char **argv)
             }
             break;
         default:
-            std::cout <<"Usage ./bob_iris [-s,-p] [camera_url]\n";
+            std::cout <<"Usage " << argv[0] << " [-s,-p] [camera_url]\n";
 
     }
     Robots::Gazebo::UAV iris(node); // QuadCopter agent
