@@ -116,12 +116,15 @@ macro(BoB_project)
         endif()
     endif()
     string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+    string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
     add_definitions(-DROBOT_TYPE=${ROBOT_TYPE} -DROBOT_TYPE_${ROBOT_TYPE_UPPER})
     message("Default robot type (if used): ${ROBOT_TYPE}")
 
-    # For EV3 (Lego) robots, we need an extra module
+    # Extra modules needed for some robot types
     if(${ROBOT_TYPE} STREQUAL EV3)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
+    elseif(${ROBOT_TYPE} STREQUAL Gazebo::Tank)
+        list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
 
     # Do linking etc.
