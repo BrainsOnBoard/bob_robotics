@@ -7,7 +7,6 @@
 
 // BoB robotics include
 #include "common/logging.h"
-#include "common/stopwatch.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::BN055
@@ -42,12 +41,8 @@ void BN055::init(OperationMode mode, const char *path, int slaveAddress)
     
     // Reset
     writeRegister(Register::SYS_TRIGGER_ADDR, 0x20);
-    /*Stopwatch test;
-    test.start();
-    while(test.elapsed() < 1000ms) {*/
-        std::this_thread::sleep_for(1000ms);
-    //}
-    
+    std::this_thread::sleep_for(1000ms);
+
     LOGI << "Waiting";
     // Wait until chip comes back up
     while(readRegister(Register::CHIP_ID_ADDR) != imuID) {
