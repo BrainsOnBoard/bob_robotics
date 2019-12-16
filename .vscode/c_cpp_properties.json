@@ -11,6 +11,8 @@
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
                 "/usr/include/python3.7m",
                 "/usr/lib/python3.7/site-packages/numpy/core/include",
+                "/usr/include/python3.8",
+                "/usr/lib/python3.8/site-packages/numpy/core/include",
                 "/usr/include/eigen3",
                 "/usr/include/opencv4",
                 "/usr/include/gazebo-9",
