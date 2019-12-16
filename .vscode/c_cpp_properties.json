@@ -7,6 +7,7 @@
                 "${workspaceFolder}",
                 "${workspaceFolder}/third_party/ev3dev-lang-cpp",
                 "${workspaceFolder}/third_party/plog/include",
+                "${workspaceFolder}/third_party/vicon_data_stream_sdk/Vicon/CrossMarket/DataStream/ViconDataStreamSDK_CPP",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
                 "/usr/include/python3.7m",
                 "/usr/lib/python3.7/site-packages/numpy/core/include",
