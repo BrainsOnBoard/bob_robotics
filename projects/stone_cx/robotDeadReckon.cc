@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
 #include "common/lm9ds1_imu.h"
 #include "common/logging.h"
@@ -74,7 +75,7 @@ public:
         LM9DS1::MagnetoSettings magSettings;
         m_IMU.initMagneto(magSettings);
     }
-    
+
     virtual radian_t getHeading() override
     {
         // Wait for magneto to become available
@@ -88,7 +89,7 @@ public:
         // Calculate heading angle from magneto data and set atomic value
         return radian_t(std::atan2(magnetoData[0], magnetoData[2]));
     }
-    
+ 
 private:
     //------------------------------------------------------------------------
     // Members
@@ -105,11 +106,11 @@ public:
     virtual radian_t getHeading() override
     {
         using namespace units::angle;
-        
+
         const degree_t headingDegrees{m_IMU.getVector()[0]};
-        return static_cast<radian_t>(headingDegrees);
+        return headingDegrees;
     }
-    
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -127,13 +128,13 @@ public:
     :   m_NetSource(connection)
     {
     }
-    
+
     virtual radian_t getHeading() override
     {
         using namespace units::angle;
         return static_cast<radian_t>(m_NetSource.getYaw());
     }
-    
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -151,7 +152,7 @@ public:
     :   m_Vicon(vicon)
     {
     }
-    
+
     //------------------------------------------------------------------------
     // IMU virtuals
     //------------------------------------------------------------------------
@@ -160,10 +161,10 @@ public:
         // Read data from VICON system
         auto objectData = m_Vicon.getObjectData();
         const auto &attitude = objectData.getPose().attitude();
-        
+
         return -attitude[2];
     }
-    
+
 private:
     const Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
 };
@@ -187,7 +188,7 @@ public:
         const float speed =  (m_Tank.getLeft() + m_Tank.getRight()) * m_VelocityScale;
         return {speed, speed};
     }
-    
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -204,7 +205,7 @@ class SpeedSourceMecanumDeadReckon : public SpeedSource
 public:
     SpeedSourceMecanumDeadReckon(const Robots::Mecanum &mecanum, 
                                  const std::array<radian_t, 2> &preferredAngleTN2 = {45_deg, -45_deg},
-                                 float velocityScale = 1.0f / 10.0f)
+                                 float velocityScale = 1.0f)
     :   m_Mecanum(mecanum), m_PreferredAngleTN2(preferredAngleTN2), m_VelocityScale(velocityScale)
     {
     }
@@ -218,7 +219,7 @@ public:
         const float speed =  m_Mecanum.getForwards() * m_VelocityScale;
         return {speed, speed};
     }
-    
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -240,7 +241,7 @@ public:
     :   m_Vicon(vicon), m_PreferredAngleTN2(preferredAngleTN2), m_SpeedScale(speedScale)
     {
     }
-    
+
     //------------------------------------------------------------------------
     // SpeedSource virtuals
     //------------------------------------------------------------------------
@@ -250,17 +251,17 @@ public:
         auto objectData = m_Vicon.getObjectData();
         const auto &velocity = objectData.getVelocity();
         const auto &attitude = objectData.getPose().attitude();
-        
+
         const radian_t heading = -attitude[2];
-        
+
         std::array<float, 2> speedTN2;
-        for(size_t j = 0; j < Parameters::numTN2; j++) {        
+        for(size_t j = 0; j < Parameters::numTN2; j++) {
             speedTN2[j] = (sin(heading + m_PreferredAngleTN2[j]) * m_SpeedScale * velocity[0].value()) +
                           (cos(heading + m_PreferredAngleTN2[j]) * m_SpeedScale * velocity[1].value());
         }
         return speedTN2;
     }
-    
+
 private:
     const Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
     const std::array<radian_t, 2> m_PreferredAngleTN2;
@@ -291,7 +292,7 @@ int bob_main(int argc, char *argv[])
     Robots::ROBOT_TYPE motor;
 
     std::unique_ptr<SpeedSource> speedSource = std::make_unique<SpeedSourceMecanumDeadReckon>(motor);
-    
+
 #ifdef USE_EV3
     std::unique_ptr<IMU> imu = std::make_unique<IMUEV3>(motor.getConnection());
 #else
@@ -340,6 +341,10 @@ int bob_main(int argc, char *argv[])
     std::ofstream data("data.csv");
 #endif
 
+    // Run server in background,, catching any exceptions for rethrowing
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Catch Ctrl-C
+
     // Loop until second joystick button is pressed
     bool outbound = true;
     unsigned int numTicks = 0;
@@ -348,6 +353,9 @@ int bob_main(int argc, char *argv[])
     for(;; numTicks++) {
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
+
+        // Retrow any exceptions caught on background thread
+        catcher.check();
 
         // Read from joystick
         joystick.update();
@@ -429,20 +437,27 @@ int bob_main(int argc, char *argv[])
             const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
             const float rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
 
+            const float length = (leftMotor * leftMotor) + (rightMotor * rightMotor);
+
             // Steer based on signal
-            const float steering = leftMotor - rightMotor;
+            const float steering = (leftMotor - rightMotor) / length;
             if((numTicks % 100) == 0) {
                 LOGI << "Steer:" << steering;
             }
 
+            // Clamp absolute steering value to [0,1] and subtract from 1
+            // So no forward  speed if we're turning fast
+            const float forward = 1.0f - std::min(1.0f, std::fabs(steering));
+
+            motor.omni2D(forward * 0.5f, 0.0f, steering * 8.0f);
             // Clamp motor input values to be between -1 and 1
             /*const float left = 1.0f + steering;
             const float right = 1.0f - steering;
             motor.tank(std::max(-1.f, std::min(1.f, left)), std::max(-1.f, std::min(1.f, right)));*/
-            
-            if(joystick.isDown(JButton::A)) {
-                outbound = true;
-            }
+
+            //if(joystick.isDown(JButton::A)) {
+            //    outbound = true;
+            //}
         }
 
         // Record time at end of tick
