@@ -46,7 +46,6 @@ main(int argc, char **argv)
             cam = std::make_unique<Gazebo::Camera>(node, argv[2], false);
             display = std::make_unique<Video::Display>(*cam); //unwrap resolution needs to be supplied
         }
-        display->runInBackground();
     }
 
     Gazebo::Tank robot(5_rad_per_s, node); // Tank agent
@@ -57,7 +56,7 @@ main(int argc, char **argv)
 
     do {
         // Check for joystick events
-        if (!joystick.update()) {
+        if (!joystick.update() && (!display || !display->update())) {
             // A small delay so we don't hog CPU
             std::this_thread::sleep_for(5ms);
         }
