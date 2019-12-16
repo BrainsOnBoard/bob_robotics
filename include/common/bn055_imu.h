@@ -1,11 +1,14 @@
 #pragma once
 #ifdef __linux__
 
-// BoB robotics includes
-#include "i2c_interface.h"
-
 // Standard C includes
 #include <cstdint>
+
+// Eigen
+#include <Eigen/Core>
+
+// BoB robotics includes
+#include "i2c_interface.h"
 
 // If we're on Jetson TX1, I2C bus 1 is the one broken out
 #if TEGRA_CHIP_ID == 33
@@ -24,7 +27,10 @@
 namespace BoBRobotics {
 class BN055
 {
-public:
+private:
+    //----------------------------------------------------------------------------
+    // Enumerations
+    //----------------------------------------------------------------------------
     // Registers
     enum class Register : uint8_t
     {
@@ -184,24 +190,6 @@ public:
         SUSPEND = 0X02
     };
 
-    // Operation mode settings
-    enum class OperationMode : uint8_t
-    {
-        CONFIG = 0X00,
-        ACCONLY = 0X01,
-        MAGONLY = 0X02,
-        GYRONLY = 0X03,
-        ACCMAG = 0X04,
-        ACCGYRO = 0X05,
-        MAGGYRO = 0X06,
-        AMG = 0X07,
-        IMUPLUS = 0X08,
-        COMPASS = 0X09,
-        M4G = 0X0A,
-        NDOF_FMC_OFF = 0X0B,
-        NDOF = 0X0C
-    };
-
     // Remap settings
     enum class RemapConfig : uint8_t
     {
@@ -227,34 +215,77 @@ public:
         REMAP_SIGN_P6 = 0x07,
         REMAP_SIGN_P7 = 0x05
     };
-
-    // A structure to represent revisions 
-    /*struct {
-        uint8_t accel_rev; // acceleration rev
-        uint8_t mag_rev;   // magnetometer rev
-        uint8_t gyro_rev;  // gyroscrope rev 
-        uint16_t sw_rev;   // SW rev 
-        uint8_t bl_rev;   // bootloader rev
-    } adafruit_bno055_rev_info_t; */
     
-    BN055(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x29);
+public:
+    //----------------------------------------------------------------------------
+    // Enumerations
+    //----------------------------------------------------------------------------
+    // Operation mode settings
+    enum class OperationMode : uint8_t
+    {
+        CONFIG = 0X00,
+        ACCONLY = 0X01,
+        MAGONLY = 0X02,
+        GYRONLY = 0X03,
+        ACCMAG = 0X04,
+        ACCGYRO = 0X05,
+        MAGGYRO = 0X06,
+        AMG = 0X07,
+        IMUPLUS = 0X08,
+        COMPASS = 0X09,
+        M4G = 0X0A,
+        NDOF_FMC_OFF = 0X0B,
+        NDOF = 0X0C
+    };
+    
+    enum class VectorType : uint8_t
+    {
+        ACCELEROMETER = Register::ACCEL_DATA_X_LSB_ADDR,
+        MAGNETOMETER = Register::MAG_DATA_X_LSB_ADDR,
+        GYROSCOPE = Register::GYRO_DATA_X_LSB_ADDR,
+        EULER = Register::EULER_H_LSB_ADDR,
+        LINEARACCEL = Register::LINEAR_ACCEL_DATA_X_LSB_ADDR,
+        GRAVITY = Register::GRAVITY_DATA_X_LSB_ADDR
+    };
+    
+    BN055(OperationMode mode = OperationMode::NDOF, const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x28);
     
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void init(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x29);
+    void init(OperationMode mode = OperationMode::NDOF, const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x28);
+    
+    Eigen::Vector3f getVector(VectorType vectorType = VectorType::EULER);
     
 private:
+    //----------------------------------------------------------------------------
+    // Constants
+    //----------------------------------------------------------------------------
+    static constexpr uint8_t imuID = 0xA0;
+
     //----------------------------------------------------------------------------
     // Private methods
     //----------------------------------------------------------------------------
     uint8_t readByte(uint8_t address);
-    uint8_t readByte(Register reg);
+    void writeByte(uint8_t address, uint8_t data);
+    
+    template<typename T, size_t N>
+    void readData(uint8_t address, T (&data)[N])
+    {
+        m_IMU.writeByte(address);
+        m_IMU.read(data);
+    }
+    
+    uint8_t readRegister(Register reg);
+    void writeRegister(Register reg, uint8_t data);
+    
+    OperationMode setMode(OperationMode mode);
     
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
     I2CInterface m_IMU;
+    OperationMode m_Mode;
 };
 }   // namespace BoBRobotics
 
