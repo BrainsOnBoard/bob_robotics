@@ -13,28 +13,58 @@
 #include <algorithm>
 #include <numeric>
 
-float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Tank &motor, bool display)
+//---------------------------------------------------------------------------
+// StoneCX::IMULM9DS1
+//---------------------------------------------------------------------------
+BoBRobotics::IMULM9DS1::IMULM9DS1()
 {
-    /*
-     * Sum left and right motor activity.
-     *
-     * **NOTE**: This only worked for me on a Mindstorms robot when I only used
-     * neurons 0-7. Let's leave as is for now though, as the demo was only half
-     * working before anyway.
-     *          -- AD
-     */
-    const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
-    const float rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
+    // Initialise IMU magnetometer was default settings
+    LM9DS1::MagnetoSettings magSettings;
+    m_IMU.initMagneto(magSettings);
+}
 
-    // Steer based on signal
-    const float steering = leftMotor - rightMotor;
-    if(display) {
-        LOGI << "Steer:" << steering;
+float BoBRobotics::IMULM9DS1::getHeading()
+{
+    // Wait for magneto to become available
+    while(!m_IMU.isMagnetoAvailable()){
     }
 
-    // Clamp motor input values to be between -1 and 1
-    const float left = 1.0f + steering;
-    const float right = 1.0f - steering;
-    motor.tank(std::max(-1.f, std::min(1.f, left)), std::max(-1.f, std::min(1.f, right)));
-    return steering;
+    // Read magneto
+    float magnetoData[3];
+    m_IMU.readMagneto(magnetoData);
+
+    // Calculate heading angle from magneto data and set atomic value
+    return atan2(magnetoData[0], magnetoData[2]);
+}
+
+//---------------------------------------------------------------------------
+// StoneCX::IMUBN055
+//---------------------------------------------------------------------------
+float BoBRobotics::IMUBN055::getHeading()
+{
+    using namespace units::angle;
+    
+    const degree_t headingDegrees{m_IMU.getVector()[0]};
+    return static_cast<radian_t>(headingDegrees);
+}
+
+//---------------------------------------------------------------------------
+// StoneCX::IMUEV3
+//---------------------------------------------------------------------------
+BoBRobotics::IMUEV3::IMUEV3(Net::Connection &connection)
+:   m_NetSource(connection)
+{
+}
+
+float BoBRobotics::IMUEV3::getHeading()
+{
+    using namespace units::angle;
+    return static_cast<radian_t>(m_NetSource.getYaw()).value();
+}
+
+
+
+float BoBRobotics::StoneCX::driveMotorFromCPU1(BoBRobotics::Robots::Tank &motor, bool display)
+{
+    
 }

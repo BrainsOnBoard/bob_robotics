@@ -58,8 +58,8 @@ class RobotFSM : FSM<State>::StateHandler
 public:
     RobotFSM(const Config &config)
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(Video::getPanoramicCamera(cv::CAP_V4L)),
-        m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
-        m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
+        m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3), m_Cropped(config.getCroppedRect().size(), CV_8UC3),
+        m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
         m_Robot(), m_NumSnapshots(0)
     {
@@ -70,7 +70,7 @@ public:
         if(m_Config.shouldStreamOutput()) {
             Net::Server server(config.getServerListenPort());
             m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
-            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getUnwrapRes(), "unwrapped");
+            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getCroppedRect().size(), "unwrapped");
         }
 
         // If we should use Vicon tracking
@@ -174,6 +174,8 @@ private:
             // Unwrap frame
             m_Unwrapper.unwrap(m_Output, m_Unwrapped);
 
+            // Crop frame
+            m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
             cv::waitKey(1);
         }
 
@@ -223,7 +225,7 @@ private:
             else if(event == Event::Update) {
                 // While testing, if we should stream output, send unwrapped frame
                 if(m_Config.shouldStreamOutput()) {
-                    m_NetSink->sendFrame(m_Unwrapped);
+                    m_NetSink->sendFrame(m_Cropped);
                 }
 
                 // If A is pressed
@@ -233,11 +235,11 @@ private:
 
                     // Train memory
                     LOGI << "\tTrained snapshot" ;
-                    m_Memory->train(m_ImageInput->processSnapshot(m_Unwrapped));
+                    m_Memory->train(m_ImageInput->processSnapshot(m_Cropped));
 
                     // Write raw snapshot to disk
                     const std::string filename = getSnapshotPath(m_NumSnapshots++).str();
-                    cv::imwrite(filename, m_Unwrapped);
+                    cv::imwrite(filename, m_Cropped);
 
                     // Write time
                     m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", " << filename;
@@ -318,7 +320,7 @@ private:
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
-                m_Memory->test(m_ImageInput->processSnapshot(m_Unwrapped));
+                m_Memory->test(m_ImageInput->processSnapshot(m_Cropped));
 
                 // Write time
                 m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
@@ -344,7 +346,7 @@ private:
                     m_LogFile << ", " << filename;
                     // Build path to test image and save
                     const auto testImagePath = m_Config.getOutputPath() / filename;
-                    cv::imwrite(testImagePath.str(), m_Unwrapped);
+                    cv::imwrite(testImagePath.str(), m_Cropped);
                 }
 
                 m_LogFile << std::endl;
@@ -358,11 +360,11 @@ private:
                         const cv::Mat &matchedSnapshot = perfectMemory->getBestSnapshot();
 
                         // Calculate difference image
-                        cv::absdiff(matchedSnapshot, m_Unwrapped, m_DifferenceImage);
+                        cv::absdiff(matchedSnapshot, m_Cropped, m_DifferenceImage);
 
                         char status[255];
                         sprintf(status, "Angle:%f deg, Min difference:%f", degree_t(perfectMemory->getBestHeading()).value(), perfectMemory->getLowestDifference());
-                        cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getUnwrapRes().height -20),
+                        cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getCroppedRect().size().height -20),
                                     cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
 
                         // Send annotated difference image
@@ -430,6 +432,7 @@ private:
     // OpenCV images used to store raw camera frame and unwrapped panorama
     cv::Mat m_Output;
     cv::Mat m_Unwrapped;
+    cv::Mat m_Cropped;
     cv::Mat m_DifferenceImage;
 
     // OpenCV-based panorama unwrapper

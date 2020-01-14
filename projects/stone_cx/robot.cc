@@ -44,7 +44,7 @@ void buildOpticalFlowFilter(cv::Mat &filter, float preferredAngle) {
     }
 }
 
-void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, unsigned int &numSamples)
+void lm9ds1ThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, unsigned int &numSamples)
 {
     // Create IMU interface
     LM9DS1 imu;
@@ -53,6 +53,26 @@ void imuThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, u
     LM9DS1::MagnetoSettings magSettings;
     imu.initMagneto(magSettings);
 
+    // While quit signal isn't set
+    for(numSamples = 0; !shouldQuit; numSamples++) {
+        // Wait for magneto to become available
+        while(!imu.isMagnetoAvailable()){
+        }
+
+        // Read magneto
+        float magnetoData[3];
+        imu.readMagneto(magnetoData);
+
+        // Calculate heading angle from magneto data and set atomic value
+        heading = atan2(magnetoData[0], magnetoData[2]);
+    }
+}
+
+void bn055ThreadFunc(std::atomic<bool> &shouldQuit, std::atomic<float> &heading, unsigned int &numSamples)
+{
+    // Create IMU interface
+    BN055 imu;
+    
     // While quit signal isn't set
     for(numSamples = 0; !shouldQuit; numSamples++) {
         // Wait for magneto to become available
@@ -176,7 +196,7 @@ int main(int argc, char *argv[])
     // Create thread to read from IMU
     unsigned int numIMUSamples = 0;
     std::atomic<float> imuHeading{0.0f};
-    std::thread imuThread(&imuThreadFunc,
+    std::thread imuThread(&lm9ds1ThreadFunc,
                           std::ref(shouldQuit), std::ref(imuHeading), std::ref(numIMUSamples));
 
     // Create thread to calculate optical flow from camera device
