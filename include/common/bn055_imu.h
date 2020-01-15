@@ -229,12 +229,12 @@ public:
 
     enum class VectorType : uint8_t
     {
-        ACCELEROMETER = Register::ACCEL_DATA_X_LSB_ADDR,
-        MAGNETOMETER = Register::MAG_DATA_X_LSB_ADDR,
-        GYROSCOPE = Register::GYRO_DATA_X_LSB_ADDR,
-        EULER = Register::EULER_H_LSB_ADDR,
-        LINEARACCEL = Register::LINEAR_ACCEL_DATA_X_LSB_ADDR,
-        GRAVITY = Register::GRAVITY_DATA_X_LSB_ADDR
+        ACCELEROMETER   = static_cast<uint8_t>(Register::ACCEL_DATA_X_LSB_ADDR),
+        MAGNETOMETER    = static_cast<uint8_t>(Register::MAG_DATA_X_LSB_ADDR),
+        GYROSCOPE       = static_cast<uint8_t>(Register::GYRO_DATA_X_LSB_ADDR),
+        EULER           = static_cast<uint8_t>(Register::EULER_H_LSB_ADDR),
+        LINEARACCEL     = static_cast<uint8_t>(Register::LINEAR_ACCEL_DATA_X_LSB_ADDR),
+        GRAVITY         = static_cast<uint8_t>(Register::GRAVITY_DATA_X_LSB_ADDR)
     };
 
     BN055(OperationMode mode = OperationMode::NDOF, const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x28);
