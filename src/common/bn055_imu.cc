@@ -23,37 +23,38 @@ BN055::BN055(OperationMode mode, const char *path, int slaveAddress)
 void BN055::init(OperationMode mode, const char *path, int slaveAddress)
 {
     using namespace std::chrono_literals;
-    
+
     // Setup I2C device
     m_IMU.setup(path, slaveAddress);
-    
+
     // Read chip ID and check it matches
     const uint8_t chipID = readRegister(Register::CHIP_ID_ADDR);
     if(chipID != imuID) {
         throw std::runtime_error("Incorrect chip id at slave address:" + std::to_string(slaveAddress));
     }
-    
-    LOGI << "Switching mode";
+
+    LOGD << "Switching mode";
     // Switch to config mode (just in case since this is the default)
     setMode(OperationMode::CONFIG);
-  
-    LOGI << "Resetting";
-    
+    LOGD << "Resetting";
+
     // Reset
+    // **HACK** https://forums.adafruit.com/viewtopic.php?f=19&t=92153&start=15#p508849 suggests that
+    // an extra delay is required here but, for some reason, this code doesn't work without really massive delay
     writeRegister(Register::SYS_TRIGGER_ADDR, 0x20);
     std::this_thread::sleep_for(1000ms);
 
-    LOGI << "Waiting";
+    LOGD << "Waiting";
     // Wait until chip comes back up
     while(readRegister(Register::CHIP_ID_ADDR) != imuID) {
         std::this_thread::sleep_for(10ms);
     }
-    
-    LOGI << "Setting power mode";
+
+    LOGD << "Setting power mode";
     // Set to normal power mode
     writeRegister(Register::PWR_MODE_ADDR, static_cast<uint8_t>(PowerMode::NORMAL));
-    
-    LOGI << "Setting mode";
+
+    LOGD << "Setting mode";
     writeRegister(Register::PAGE_ID_ADDR, 0);
     writeRegister(Register::SYS_TRIGGER_ADDR, 0);
     setMode(mode);
@@ -64,7 +65,7 @@ Eigen::Vector3f BN055::getVector(VectorType vectorType)
     // Read vector from register
     int16_t raw[3];
     readData(static_cast<uint8_t>(vectorType), raw);
-    
+
     if(vectorType == VectorType::MAGNETOMETER
         || vectorType == VectorType::GYROSCOPE
         || vectorType == VectorType::EULER)
@@ -102,11 +103,11 @@ BN055::OperationMode BN055::setMode(OperationMode mode)
 {
     // Stash old mode
     const OperationMode oldMode = m_Mode;
-    
+
     // Store new mode and write register
     m_Mode = mode;
     writeRegister(Register::OPR_MODE_ADDR, static_cast<uint8_t>(mode));
-    
+
     return oldMode;
 }
 }   // namespace BoBRobotics
