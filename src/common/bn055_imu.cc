@@ -55,6 +55,18 @@ BN055::BN055(OperationMode mode, const char *path, int slaveAddress)
     setMode(mode);
 }
 //----------------------------------------------------------------------------
+Eigen::Quaternionf BN055::getQuaternion()
+{
+    // Read quaternion (w, x, y, z)
+    int16_t raw[4];
+    readData(static_cast<uint8_t>(Register::QUATERNION_DATA_W_LSB_ADDR), raw);
+    
+    // Scale and return Eigen quaternion
+    constexpr float scale = (1.0f / (1 << 14));
+    return Eigen::Quaternionf((float)raw[0] * scale, (float)raw[1] * scale, 
+                              (float)raw[2] * scale, (float)raw[3] * scale);
+}
+//----------------------------------------------------------------------------
 Eigen::Vector3f BN055::getVector(VectorType vectorType)
 {
     // Read vector from register

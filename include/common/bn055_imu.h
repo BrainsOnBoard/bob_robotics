@@ -9,6 +9,7 @@
 
 // Eigen
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 
 // BoB robotics third party includes
 #include "third_party/units.h"
@@ -262,6 +263,8 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
+    Eigen::Quaternionf getQuaternion();
+    
     Eigen::Vector3f getVector(VectorType vectorType = VectorType::EULER);
     
     std::array<degree_t, 3> getEulerAngles()
