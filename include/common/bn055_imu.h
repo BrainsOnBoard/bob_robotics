@@ -1,11 +1,17 @@
 #pragma once
 #ifdef __linux__
 
+// Standard C++ includes
+#include <array>
+
 // Standard C includes
 #include <cstdint>
 
 // Eigen
 #include <Eigen/Core>
+
+// BoB robotics third party includes
+#include "third_party/units.h"
 
 // BoB robotics includes
 #include "i2c_interface.h"
@@ -17,6 +23,20 @@ namespace BoBRobotics {
 class BN055
 {
 private:
+    //----------------------------------------------------------------------------
+    // Units
+    //----------------------------------------------------------------------------
+    using degree_t = units::angle::degree_t;
+    using degrees_per_second_t = units::angular_velocity::degrees_per_second_t;
+    
+#if !defined(DISABLE_PREDEFINED_UNITS) || defined(ENABLE_PREDEFINED_ACCELERATION_UNITS)
+    using meters_per_second_squared_t = units::acceleration::meters_per_second_squared_t;
+#endif
+
+#if !defined(DISABLE_PREDEFINED_UNITS) || defined(ENABLE_PREDEFINED_MAGNETIC_FIELD_STRENGTH_UNITS)
+    using microtesla_t = units::magnetic_field_strength::microtesla_t;
+#endif
+    
     //----------------------------------------------------------------------------
     // Enumerations
     //----------------------------------------------------------------------------
@@ -242,9 +262,41 @@ public:
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
-    void init(OperationMode mode = OperationMode::NDOF, const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x28);
-
     Eigen::Vector3f getVector(VectorType vectorType = VectorType::EULER);
+    
+    std::array<degree_t, 3> getEulerAngles()
+    {
+        return getUnitVector<units::angle::degree_t>(VectorType::EULER);
+    }
+    
+    std::array<degrees_per_second_t, 3> getGyroscope()
+    {
+        return getUnitVector<degrees_per_second_t>(VectorType::GYROSCOPE);
+    }
+    
+#if !defined(DISABLE_PREDEFINED_UNITS) || defined(ENABLE_PREDEFINED_ACCELERATION_UNITS)
+    std::array<meters_per_second_squared_t, 3> getAccelerometer()
+    {
+        return getUnitVector<meters_per_second_squared_t>(VectorType::ACCELEROMETER);
+    }
+    
+    std::array<meters_per_second_squared_t, 3> getLinearAccel()
+    {
+        return getUnitVector<meters_per_second_squared_t>(VectorType::LINEARACCEL);
+    }
+    
+    std::array<meters_per_second_squared_t, 3> getGravity()
+    {
+        return getUnitVector<meters_per_second_squared_t>(VectorType::GRAVITY);
+    }
+#endif
+    
+#if !defined(DISABLE_PREDEFINED_UNITS) || defined(ENABLE_PREDEFINED_MAGNETIC_FIELD_STRENGTH_UNITS)
+    std::array<microtesla_t, 3> getMagnetometer()
+    {
+        return getUnitVector<microtesla_t>(VectorType::MAGNETOMETER);
+    }
+#endif
 
 private:
     //----------------------------------------------------------------------------
@@ -255,6 +307,13 @@ private:
     //----------------------------------------------------------------------------
     // Private methods
     //----------------------------------------------------------------------------
+    template<typename T>
+    std::array<T, 3> getUnitVector(VectorType vectorType)
+    {
+        const Eigen::Vector3f vector = getVector(vectorType);
+        return {T{vector[0]}, T{vector[1]}, T{vector[2]}};
+    }
+    
     uint8_t readByte(uint8_t address);
     void writeByte(uint8_t address, uint8_t data);
 

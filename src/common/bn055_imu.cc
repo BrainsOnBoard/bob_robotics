@@ -17,11 +17,6 @@ constexpr uint8_t BN055::imuID;
 //----------------------------------------------------------------------------
 BN055::BN055(OperationMode mode, const char *path, int slaveAddress)
 {
-    init(mode, path, slaveAddress);
-}
-//----------------------------------------------------------------------------
-void BN055::init(OperationMode mode, const char *path, int slaveAddress)
-{
     using namespace std::chrono_literals;
 
     // Setup I2C device
@@ -66,6 +61,7 @@ Eigen::Vector3f BN055::getVector(VectorType vectorType)
     int16_t raw[3];
     readData(static_cast<uint8_t>(vectorType), raw);
 
+    // Return vector, scaling correctly based on vector type
     if(vectorType == VectorType::MAGNETOMETER
         || vectorType == VectorType::GYROSCOPE
         || vectorType == VectorType::EULER)
