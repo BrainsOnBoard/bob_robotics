@@ -10,17 +10,6 @@
 // BoB robotics includes
 #include "i2c_interface.h"
 
-// If we're on Jetson TX1, I2C bus 1 is the one broken out
-#if TEGRA_CHIP_ID == 33
-    #define I2C_DEVICE_DEFAULT "/dev/i2c-1"
-// Whereas, on Jetson TX2, I2C bus 0 is the one broken out
-#elif TEGRA_CHIP_ID == 24
-    #define I2C_DEVICE_DEFAULT "/dev/i2c-0"
-// Otherwise, use /dev/null
-#else
-    #define I2C_DEVICE_DEFAULT "/dev/null"
-#endif
-
 //----------------------------------------------------------------------------
 // BoBRobotics::BN055
 //----------------------------------------------------------------------------
@@ -215,7 +204,7 @@ private:
         REMAP_SIGN_P6 = 0x07,
         REMAP_SIGN_P7 = 0x05
     };
-    
+
 public:
     //----------------------------------------------------------------------------
     // Enumerations
@@ -237,26 +226,26 @@ public:
         NDOF_FMC_OFF = 0X0B,
         NDOF = 0X0C
     };
-    
+
     enum class VectorType : uint8_t
     {
-        ACCELEROMETER = Register::ACCEL_DATA_X_LSB_ADDR,
-        MAGNETOMETER = Register::MAG_DATA_X_LSB_ADDR,
-        GYROSCOPE = Register::GYRO_DATA_X_LSB_ADDR,
-        EULER = Register::EULER_H_LSB_ADDR,
-        LINEARACCEL = Register::LINEAR_ACCEL_DATA_X_LSB_ADDR,
-        GRAVITY = Register::GRAVITY_DATA_X_LSB_ADDR
+        ACCELEROMETER   = static_cast<uint8_t>(Register::ACCEL_DATA_X_LSB_ADDR),
+        MAGNETOMETER    = static_cast<uint8_t>(Register::MAG_DATA_X_LSB_ADDR),
+        GYROSCOPE       = static_cast<uint8_t>(Register::GYRO_DATA_X_LSB_ADDR),
+        EULER           = static_cast<uint8_t>(Register::EULER_H_LSB_ADDR),
+        LINEARACCEL     = static_cast<uint8_t>(Register::LINEAR_ACCEL_DATA_X_LSB_ADDR),
+        GRAVITY         = static_cast<uint8_t>(Register::GRAVITY_DATA_X_LSB_ADDR)
     };
-    
+
     BN055(OperationMode mode = OperationMode::NDOF, const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x28);
-    
+
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
     void init(OperationMode mode = OperationMode::NDOF, const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x28);
-    
+
     Eigen::Vector3f getVector(VectorType vectorType = VectorType::EULER);
-    
+
 private:
     //----------------------------------------------------------------------------
     // Constants
@@ -268,19 +257,19 @@ private:
     //----------------------------------------------------------------------------
     uint8_t readByte(uint8_t address);
     void writeByte(uint8_t address, uint8_t data);
-    
+
     template<typename T, size_t N>
     void readData(uint8_t address, T (&data)[N])
     {
         m_IMU.writeByte(address);
         m_IMU.read(data);
     }
-    
+
     uint8_t readRegister(Register reg);
     void writeRegister(Register reg, uint8_t data);
-    
+
     OperationMode setMode(OperationMode mode);
-    
+
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
