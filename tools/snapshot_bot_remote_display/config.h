@@ -93,7 +93,7 @@ public:
             training["liveRect"] >> m_TrainingLiveRect;
             if(training["snapshotRects"].isSeq()) {
                 m_TrainingSnapshotRects.clear();
-                for(const auto &t : node["snapshotRects"]) {
+                for(const auto &t : training["snapshotRects"]) {
                     m_TrainingSnapshotRects.emplace_back();
                     t >> m_TrainingSnapshotRects.back();
                 }
