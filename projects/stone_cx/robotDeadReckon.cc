@@ -1,27 +1,29 @@
 // BoB robotics includes
-#include "common/main.h"
+#include "common/background_exception_catcher.h"
+#include "common/bn055_imu.h"
+#include "common/lm9ds1_imu.h"
 #include "common/logging.h"
+#include "common/main.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
-#include "net/server.h"
-#include "robots/robot_type.h"
-
-#ifdef USE_EV3
 #include "net/imu_netsource.h"
+#include "net/server.h"
+#include "robots/mecanum.h"
+#include "robots/tank.h"
+#include "third_party/units.h"
+#include "vicon/capture_control.h"
+#include "vicon/udp.h"
+#include "video/netsink.h"
+
 #include "os/keycodes.h"
 
 #include <opencv2/opencv.hpp>
-#else
-#include "common/lm9ds1_imu.h"
-#include "video/netsink.h"
-#endif
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
 
 // Model includes
 #include "parameters.h"
-#include "robotCommon.h"
 #include "robotParameters.h"
 #include "visualizationCommon.h"
 
@@ -35,6 +37,10 @@
 #include <memory>
 #include <thread>
 
+using namespace units::literals;
+using namespace units::math;
+using namespace units::angle;
+
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
 using namespace BoBRobotics::HID;
@@ -44,51 +50,232 @@ using namespace BoBRobotics::HID;
 //---------------------------------------------------------------------------
 namespace
 {
-#ifdef USE_EV3
-float
-getIMUHeading(Net::IMUNetSource &imu)
+
+class IMU
 {
-    using namespace units::angle;
-    return static_cast<radian_t>(imu.getYaw()).value();
-}
-#else
-float
-getIMUHeading(LM9DS1 &imu)
+public:
+    virtual radian_t getHeading() = 0;
+};
+
+class SpeedSource
 {
-    // Wait for magneto to become available
-    while (!imu.isMagnetoAvailable()) {
+public:
+    virtual std::array<float, 2> getSpeed() = 0; 
+};
+
+//---------------------------------------------------------------------------
+// IMULM9DS1
+//---------------------------------------------------------------------------
+class IMULM9DS1 : public IMU
+{
+public:
+    IMULM9DS1()
+    {
+        // Initialise IMU magnetometer was default settings
+        LM9DS1::MagnetoSettings magSettings;
+        m_IMU.initMagneto(magSettings);
     }
 
-    // Read magneto
-    float magnetoData[3];
-    imu.readMagneto(magnetoData);
+    virtual radian_t getHeading() override
+    {
+        // Wait for magneto to become available
+        while(!m_IMU.isMagnetoAvailable()){
+        }
 
-    // Calculate heading angle from magneto data and set atomic value
-    return atan2(magnetoData[0], magnetoData[2]);
-}
-#endif
+        // Read magneto
+        float magnetoData[3];
+        m_IMU.readMagneto(magnetoData);
 
-void imuThreadFunc(Net::Connection &connection,
+        // Calculate heading angle from magneto data and set atomic value
+        return radian_t(std::atan2(magnetoData[0], magnetoData[2]));
+    }
+ 
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    LM9DS1 m_IMU;
+};
+
+//---------------------------------------------------------------------------
+// IMUBN055
+//---------------------------------------------------------------------------
+class IMUBN055 : public IMU
+{
+public:
+    virtual radian_t getHeading() override
+    {
+        using namespace units::angle;
+
+        const degree_t headingDegrees{m_IMU.getVector()[0]};
+        return headingDegrees;
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    BN055 m_IMU;
+};
+
+//---------------------------------------------------------------------------
+// IMUEV3
+//---------------------------------------------------------------------------
+class IMUEV3 : public IMU
+{
+public:
+    IMUEV3(Net::Connection &connection)
+    :   m_NetSource(connection)
+    {
+    }
+
+    virtual radian_t getHeading() override
+    {
+        using namespace units::angle;
+        return static_cast<radian_t>(m_NetSource.getYaw());
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    Net::IMUNetSource m_NetSource;
+};
+
+//---------------------------------------------------------------------------
+// IMUVicon
+//---------------------------------------------------------------------------
+class IMUVicon : public IMU
+{
+public:
+    IMUVicon(const Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon)
+    :   m_Vicon(vicon)
+    {
+    }
+
+    //------------------------------------------------------------------------
+    // IMU virtuals
+    //------------------------------------------------------------------------
+    virtual radian_t getHeading() override
+    {
+        // Read data from VICON system
+        auto objectData = m_Vicon.getObjectData();
+        const auto &attitude = objectData.getPose().attitude();
+
+        return -attitude[2];
+    }
+
+private:
+    const Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
+};
+
+//---------------------------------------------------------------------------
+// SpeedSourceDeadReckon
+//---------------------------------------------------------------------------
+class SpeedSourceTankDeadReckon : public SpeedSource
+{
+public:
+    SpeedSourceTankDeadReckon(const Robots::Tank &tank, float velocityScale = 1.0f / 10.0f)
+    :   m_Tank(tank), m_VelocityScale(velocityScale)
+    {
+    }
+
+    //------------------------------------------------------------------------
+    // SpeedSource virtuals
+    //------------------------------------------------------------------------
+    virtual std::array<float, 2> getSpeed() override
+    {
+        const float speed =  (m_Tank.getLeft() + m_Tank.getRight()) * m_VelocityScale;
+        return {speed, speed};
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    const Robots::Tank &m_Tank;
+    const float m_VelocityScale;
+};
+
+//---------------------------------------------------------------------------
+// SpeedSourceMecanumDeadReckon
+//---------------------------------------------------------------------------
+class SpeedSourceMecanumDeadReckon : public SpeedSource
+{
+public:
+    SpeedSourceMecanumDeadReckon(const Robots::Mecanum &mecanum, 
+                                 const std::array<radian_t, 2> &preferredAngleTN2 = {45_deg, -45_deg},
+                                 float velocityScale = 1.0f)
+    :   m_Mecanum(mecanum), m_PreferredAngleTN2(preferredAngleTN2), m_VelocityScale(velocityScale)
+    {
+    }
+
+    //------------------------------------------------------------------------
+    // SpeedSource virtuals
+    //------------------------------------------------------------------------
+    virtual std::array<float, 2> getSpeed() override
+    {
+        // **TODO** sideways awesome
+        const float speed =  m_Mecanum.getForwards() * m_VelocityScale;
+        return {speed, speed};
+    }
+
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    const Robots::Mecanum &m_Mecanum;
+    const std::array<radian_t, 2> m_PreferredAngleTN2;
+    const float m_VelocityScale;
+};
+
+//---------------------------------------------------------------------------
+// SpeedSourceVicon
+//---------------------------------------------------------------------------
+class SpeedSourceVicon : public SpeedSource
+{
+public:
+    SpeedSourceVicon(const Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon,
+                     const std::array<radian_t, 2> &preferredAngleTN2 = {45_deg, -45_deg},
+                     float speedScale = 5.0f)
+    :   m_Vicon(vicon), m_PreferredAngleTN2(preferredAngleTN2), m_SpeedScale(speedScale)
+    {
+    }
+
+    //------------------------------------------------------------------------
+    // SpeedSource virtuals
+    //------------------------------------------------------------------------
+    virtual std::array<float, 2> getSpeed() override
+    {
+        // Read data from VICON system
+        auto objectData = m_Vicon.getObjectData();
+        const auto &velocity = objectData.getVelocity();
+        const auto &attitude = objectData.getPose().attitude();
+
+        const radian_t heading = -attitude[2];
+
+        std::array<float, 2> speedTN2;
+        for(size_t j = 0; j < Parameters::numTN2; j++) {
+            speedTN2[j] = (sin(heading + m_PreferredAngleTN2[j]) * m_SpeedScale * velocity[0].value()) +
+                          (cos(heading + m_PreferredAngleTN2[j]) * m_SpeedScale * velocity[1].value());
+        }
+        return speedTN2;
+    }
+
+private:
+    const Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
+    const std::array<radian_t, 2> m_PreferredAngleTN2;
+    const float m_SpeedScale;
+};
+
+void imuThreadFunc(IMU *imu,
                    std::atomic<bool> &shouldQuit,
                    std::atomic<float> &heading,
                    unsigned int &numSamples)
 {
-#ifndef USE_EV3
-    (void) connection; // unused arg
-
-    // Create IMU interface
-    LM9DS1 imu;
-
-    // Initialise IMU magnetometer
-    LM9DS1::MagnetoSettings magSettings;
-    imu.initMagneto(magSettings);
-#else
-    Net::IMUNetSource imu(connection);
-#endif
-
     // While quit signal isn't set
     for (numSamples = 0; !shouldQuit; numSamples++) {
-        heading = getIMUHeading(imu);
+        heading = imu->getHeading().value();
     }
 }
 }   // Anonymous namespace
@@ -104,12 +291,15 @@ int bob_main(int argc, char *argv[])
     // Create motor interface
     Robots::ROBOT_TYPE motor;
 
+    std::unique_ptr<SpeedSource> speedSource = std::make_unique<SpeedSourceMecanumDeadReckon>(motor);
+
 #ifdef USE_EV3
-    Net::Connection *connection = &motor.getConnection();
+    std::unique_ptr<IMU> imu = std::make_unique<IMUEV3>(motor.getConnection());
 #else
     std::unique_ptr<Net::Server> server;
     std::unique_ptr<Net::Connection> connection;
     std::unique_ptr<Video::NetSink> netSink;
+    std::unique_ptr<IMU> imu = std::make_unique<IMUBN055>();
 
     // If command line arguments are specified, run connection
     if(doVisualise) {
@@ -141,18 +331,19 @@ int bob_main(int argc, char *argv[])
 
     // Create thread to read from IMU
     unsigned int numIMUSamples = 0;
-    std::atomic<float> imuHeading{0.0f};
-    std::thread imuThread(&imuThreadFunc,
-                          std::ref(*connection),
-                          std::ref(shouldQuit),
-                          std::ref(imuHeading),
-                          std::ref(numIMUSamples));
+    std::atomic<float> imuHeading{0};
+    std::thread imuThread(&imuThreadFunc, imu.get(), std::ref(shouldQuit),
+                          std::ref(imuHeading), std::ref(numIMUSamples));
 
     cv::Mat activityImage(activityImageHeight, activityImageWidth, CV_8UC3, cv::Scalar::all(0));
 
 #ifdef RECORD_SENSORS
     std::ofstream data("data.csv");
 #endif
+
+    // Run server in background,, catching any exceptions for rethrowing
+    BackgroundExceptionCatcher catcher;
+    catcher.trapSignals(); // Catch Ctrl-C
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -162,6 +353,9 @@ int bob_main(int argc, char *argv[])
     for(;; numTicks++) {
         // Record time at start of tick
         const auto tickStartTime = std::chrono::high_resolution_clock::now();
+
+        // Retrow any exceptions caught on background thread
+        catcher.check();
 
         // Read from joystick
         joystick.update();
@@ -178,8 +372,9 @@ int bob_main(int argc, char *argv[])
         }
 
         // Calculate dead reckoning speed from motor
-        const float speed =  (motor.getLeft() + motor.getRight()) * velocityScale;
-        speedTN2[Parameters::HemisphereLeft] = speedTN2[Parameters::HemisphereRight] = speed;
+        const auto speed = speedSource->getSpeed();
+        speedTN2[Parameters::HemisphereLeft] = speed[0];
+        speedTN2[Parameters::HemisphereRight] = speed[1];
 
         // Push inputs to device
         pushspeedTN2ToDevice();
@@ -232,10 +427,37 @@ int bob_main(int argc, char *argv[])
         }
         // Otherwise we're returning home so use CPU1 neurons to drive motor
         else {
-            driveMotorFromCPU1(motor, (numTicks % 100) == 0);
-            if(joystick.isDown(JButton::A)) {
-                outbound = true;
+            /* Sum left and right motor activity.
+            *
+            * **NOTE**: This only worked for me on a Mindstorms robot when I only used
+            * neurons 0-7. Let's leave as is for now though, as the demo was only half
+            * working before anyway.
+            *          -- AD
+            */
+            const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
+            const float rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
+
+            const float length = (leftMotor * leftMotor) + (rightMotor * rightMotor);
+
+            // Steer based on signal
+            const float steering = (leftMotor - rightMotor) / length;
+            if((numTicks % 100) == 0) {
+                LOGI << "Steer:" << steering;
             }
+
+            // Clamp absolute steering value to [0,1] and subtract from 1
+            // So no forward  speed if we're turning fast
+            const float forward = 1.0f - std::min(1.0f, std::fabs(steering));
+
+            motor.omni2D(forward * 0.5f, 0.0f, steering * 8.0f);
+            // Clamp motor input values to be between -1 and 1
+            /*const float left = 1.0f + steering;
+            const float right = 1.0f - steering;
+            motor.tank(std::max(-1.f, std::min(1.f, left)), std::max(-1.f, std::min(1.f, right)));*/
+
+            //if(joystick.isDown(JButton::A)) {
+            //    outbound = true;
+            //}
         }
 
         // Record time at end of tick

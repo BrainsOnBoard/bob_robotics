@@ -8,17 +8,6 @@
 // Third-party includes
 #include "third_party/units.h"
 
-// If we're on Jetson TX1, I2C bus 1 is the one broken out
-#if TEGRA_CHIP_ID == 33
-    #define I2C_DEVICE_DEFAULT "/dev/i2c-1"
-// Whereas, on Jetson TX2, I2C bus 0 is the one broken out
-#elif TEGRA_CHIP_ID == 24
-    #define I2C_DEVICE_DEFAULT "/dev/i2c-0"
-// Otherwise, use /dev/null
-#else
-    #define I2C_DEVICE_DEFAULT "/dev/null"
-#endif
-
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
