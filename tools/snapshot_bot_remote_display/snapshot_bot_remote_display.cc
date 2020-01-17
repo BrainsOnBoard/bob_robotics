@@ -56,7 +56,7 @@ private:
         if(state == State::Training) {
             if(event == Event::Enter) {
                 // **TODO** load background
-                m_OutputImage.setTo(CV_RGB(255, 255, 255));
+                m_OutputImage.setTo(cv::Scalar(255, 255, 255));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
@@ -84,7 +84,7 @@ private:
         else if(state == State::Testing) {
             if(event == Event::Enter) {
                 // **TODO** load background
-                m_OutputImage.setTo(CV_RGB(255, 255, 255));
+                m_OutputImage.setTo(cv::Scalar(255, 255, 255));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
