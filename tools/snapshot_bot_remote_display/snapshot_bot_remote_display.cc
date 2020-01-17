@@ -33,12 +33,14 @@ class DisplayFSM : public FSM<State>::StateHandler
 public:
     DisplayFSM(const char *robotHost, const Config &config)
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_LiveClient(robotHost, config.getLiveImagePort()),
-        m_SnapshotClient(robotHost, config.getSnapshotPort()), m_LiveNetSource(m_LiveClient), m_SnapshotNetSource(m_SnapshotClient),
+        m_SnapshotClient(robotHost, config.getSnapshotPort()), m_BestSnapshotClient(robotHost, config.getTestingBestSnapshotPort()),
+        m_LiveNetSource(m_LiveClient), m_SnapshotNetSource(m_SnapshotClient), m_BestSnapshotNetSource(m_BestSnapshotClient),
         m_OutputImage(config.getResolution(), CV_8UC3)
     {
         // Start background threads to read network data
         m_LiveClient.runInBackground();
         m_SnapshotClient.runInBackground();
+        m_BestSnapshotClient.runInBackground();
 
         // Start in training state
         m_StateMachine.transition(State::Training);
@@ -62,16 +64,25 @@ private:
             if(event == Event::Enter) {
                 // **TODO** load background
                 m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+
+                cv::putText(m_OutputImage, "TRAINING", cv::Point(0, 20),
+                            cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
                 if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
+
                     resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
                 }
 
                 // Update live snapshot
                 if(m_SnapshotNetSource.readFrame(m_ReceiveBuffer)) {
-                    m_TrainingSnapshots.push_back(m_ReceiveBuffer);
+                    processReceivedImage();
+
+                    // Add image to receive buffer
+                    m_TrainingSnapshots.emplace_back();
+                    m_ReceiveBuffer.copyTo(m_TrainingSnapshots.back());
 
                     const int numTrainingSnapshots = m_TrainingSnapshots.size();
                     const int numRectangles = m_Config.getTrainingSnapshotRects().size();
@@ -82,7 +93,7 @@ private:
                     // Loop through available rectangles
                     for(int i = 0; i < numSnapshotsToDisplay; i++) {
                         resizeImageIntoOutputROI(m_Config.getTrainingSnapshotRects()[i],
-                                                    m_TrainingSnapshots[startDisplaySnapshot + i]);
+                                                 m_TrainingSnapshots[startDisplaySnapshot + i]);
                     }
                 }
 
@@ -103,11 +114,20 @@ private:
             if(event == Event::Enter) {
                 // **TODO** load background
                 m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+
+                cv::putText(m_OutputImage, "TESTING", cv::Point(0, 20),
+                            cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
                 if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
                     resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
+                }
+
+                if(m_BestSnapshotNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
+                    resizeImageIntoOutputROI(m_Config.getTestingBestRect(), m_ReceiveBuffer);
                 }
 
                 // Show output image
@@ -134,6 +154,16 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
+    void processReceivedImage()
+    {
+        if(m_ReceiveBuffer.type() == CV_8UC1) {
+            cv::cvtColor(m_ReceiveBuffer, m_ReceiveBuffer, cv::COLOR_GRAY2BGR);
+        }
+        else if(m_ReceiveBuffer.type() != CV_8UC3) {
+            LOGE << "Unsupported image type received";
+        }
+    }
+
     void resizeImageIntoOutputROI(const cv::Rect &roi, const cv::Mat &mat)
     {
         cv::Mat roiMat(m_OutputImage, roi);
@@ -152,10 +182,12 @@ private:
     // Network clients for maintaining connections to servers running on robot
     Net::Client m_LiveClient;
     Net::Client m_SnapshotClient;
+    Net::Client m_BestSnapshotClient;
 
     // Net sources for reading video from server
     Video::NetSource m_LiveNetSource;
     Video::NetSource m_SnapshotNetSource;
+    Video::NetSource m_BestSnapshotNetSource;
 
     // Image used for compositing output
     cv::Mat m_OutputImage;
