@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/main.h"
 #include "common/logging.h"
 #include "common/bn055_imu.h"
 
@@ -7,12 +8,12 @@
 
 using namespace BoBRobotics;
 
-int main()
+int bob_main(int, char **)
 {
     BN055 imu;
 
     while(true) {
-        const auto euler = imu.getVector();
+        const auto euler = imu.getEulerAngles();
         LOG_INFO << euler[0];
     }
     return EXIT_SUCCESS;
