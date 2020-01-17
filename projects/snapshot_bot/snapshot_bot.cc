@@ -1,6 +1,7 @@
 // Standard C++ includes
 #include <chrono>
 #include <fstream>
+#include <future>
 #include <limits>
 #include <memory>
 
@@ -68,9 +69,32 @@ public:
 
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
-            Net::Server server(config.getServerListenPort());
-            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
-            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getCroppedRect().size(), "unwrapped");
+            // Spawn async tasks to wait for connections
+            auto liveAsync = std::async(std::launch::async,
+                                        [this]()
+                                        {
+                                            Net::Server server(m_Config.getServerListenPort());
+                                            m_LiveConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                        });
+            
+            auto snapshotAsync = std::async(std::launch::async,
+                                            [this]()
+                                            {
+                                                Net::Server server(m_Config.getSnapshotServerListenPort());
+                                                m_SnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                            });
+            
+            // Wait for both connections to be made
+            liveAsync.wait();
+            snapshotAsync.wait();
+            
+            // Create netsinks
+            m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection.get(), config.getCroppedRect().size(), "live");
+            m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection.get(), config.getCroppedRect().size(), "snapshot");
+            
+            // Start background threads for transmitting images
+            m_LiveConnection->runInBackground();
+            m_SnapshotConnection->runInBackground();
         }
 
         // If we should use Vicon tracking
@@ -176,6 +200,12 @@ private:
 
             // Crop frame
             m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
+            
+            // If we should stream output, send unwrapped frame
+            if(m_Config.shouldStreamOutput()) {
+                m_LiveNetSink->sendFrame(m_Cropped);
+            }
+            
             cv::waitKey(1);
         }
 
@@ -223,11 +253,6 @@ private:
                 system(("rm -f " + snapshotWildcard).c_str());
             }
             else if(event == Event::Update) {
-                // While testing, if we should stream output, send unwrapped frame
-                if(m_Config.shouldStreamOutput()) {
-                    m_NetSink->sendFrame(m_Cropped);
-                }
-
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && m_TrainingStopwatch.elapsed() > m_Config.getTrainInterval())) {
                     // Update last train time
@@ -244,6 +269,11 @@ private:
                     // Write time
                     m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", " << filename;
 
+                    // If we should stream output, send snapshot
+                    if(m_Config.shouldStreamOutput()) {
+                        m_SnapshotNetSink->sendFrame(m_Cropped);
+                    }
+                    
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
@@ -352,7 +382,7 @@ private:
                 m_LogFile << std::endl;
 
                 // If we should stream output
-                if(m_Config.shouldStreamOutput()) {
+                /*if(m_Config.shouldStreamOutput()) {
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
                     if(perfectMemory != nullptr) {
@@ -373,7 +403,7 @@ private:
                     else {
                         LOGW << "WARNING: Can only stream output from a perfect memory";
                     }
-                }
+                }*/
 
                 // Determine how fast we should turn based on the absolute angle
                 auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
@@ -471,11 +501,13 @@ private:
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
-    // Connection for streaming etc
-    std::unique_ptr<Net::Connection> m_Connection;
+    // Connections for streaming live images
+    std::unique_ptr<Net::Connection> m_LiveConnection;
+    std::unique_ptr<Net::Connection> m_SnapshotConnection;
 
-    // Sink for video to send over server
-    std::unique_ptr<Video::NetSink> m_NetSink;
+    // Sinks for video to send over server
+    std::unique_ptr<Video::NetSink> m_LiveNetSink;
+    std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
 };
 }   // Anonymous namespace
 

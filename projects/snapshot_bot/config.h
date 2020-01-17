@@ -23,7 +23,8 @@ class Config
 public:
     Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
         m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
-        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_MoveSpeed(0.25),
+        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), 
+        m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1), m_BestSnapshotServerListPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25),
         m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
         m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
     {
@@ -73,7 +74,9 @@ public:
     const std::string &getViconCaptureControlPath() const{ return m_ViconCaptureControlPath; }
 
     int getServerListenPort() const{ return m_ServerListenPort; }
-
+    int getSnapshotServerListenPort() const{ return m_SnapshotServerListenPort; }
+    int getBestSnapshotServerListPort() const{ return m_BestSnapshotServerListPort; }
+    
     float getMoveSpeed() const{ return m_MoveSpeed; }
 
     float getTurnSpeed(units::angle::degree_t angleDifference) const
@@ -118,6 +121,8 @@ public:
         fs << "motorCommandInterval" << getMotorCommandInterval().count();
         fs << "motorTurnCommandInterval" << getMotorTurnCommandInterval().count();
         fs << "serverListenPort" << getServerListenPort();
+        fs << "snapshotServerListenPort" << getSnapshotServerListenPort();
+        fs << "bestSnapshotServerListPort" << getBestSnapshotServerListPort();
         fs << "moveSpeed" << getMoveSpeed();
         fs << "turnThresholds" << "[";
         for(const auto &t : m_TurnThresholds) {
@@ -183,6 +188,8 @@ public:
         cv::read(node["numHOGPixelsPerCell"], m_NumHOGPixelsPerCell, m_NumHOGPixelsPerCell);
         cv::read(node["joystickDeadzone"], m_JoystickDeadzone, m_JoystickDeadzone);
         cv::read(node["serverListenPort"], m_ServerListenPort, m_ServerListenPort);
+        cv::read(node["snapshotServerListenPort"], m_SnapshotServerListenPort, m_SnapshotServerListenPort);
+        cv::read(node["bestSnapshotServerListPort"], m_BestSnapshotServerListPort, m_BestSnapshotServerListPort);
         cv::read(node["autoTrain"], m_AutoTrain, m_AutoTrain);
         cv::read(node["moveSpeed"], m_MoveSpeed, m_MoveSpeed);
 
@@ -294,6 +301,8 @@ private:
 
     // Listen port used for streaming etc
     int m_ServerListenPort;
+    int m_SnapshotServerListenPort;
+    int m_BestSnapshotServerListPort;
 
     // How fast robot should move when heading to snapshot
     float m_MoveSpeed;
