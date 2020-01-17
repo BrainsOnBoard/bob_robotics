@@ -34,6 +34,7 @@ public:
         // **TEMP** load a snapshot
         m_TestSnapshot = cv::imread("snapshot_197.png");
 
+        m_LiveSnapshot = m_TestSnapshot;
         // Start in training state
         m_StateMachine.transition(State::Training);
     }
@@ -54,9 +55,14 @@ private:
     {
         if(state == State::Training) {
             if(event == Event::Enter) {
-                m_OutputImage.setTo(CV_RGB(255, 0, 0));
+                // **TODO** load background
+                m_OutputImage.setTo(CV_RGB(255, 255, 255));
             }
             else if(event == Event::Update) {
+                // Update live snapshot
+                //if(m_LiveSnapshotNetsink.readFrame(m_LiveSnapshot)) {
+                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_LiveSnapshot);
+                //}
 
                 // Show output image
                 cv::imshow("Output", m_OutputImage);
@@ -66,6 +72,10 @@ private:
                 if(key == 27) {
                     return false;
                 }
+                else if(key == 's') {
+                    m_TrainingSnapshots.push_back(m_TestSnapshot);
+                    updateTrainingSnapshotDisplay();
+                }
                 else if(key == 't') {
                     m_StateMachine.transition(State::Testing);
                 }
@@ -73,9 +83,15 @@ private:
         }
         else if(state == State::Testing) {
             if(event == Event::Enter) {
-                m_OutputImage.setTo(CV_RGB(0, 255, 0));
+                // **TODO** load background
+                m_OutputImage.setTo(CV_RGB(255, 255, 255));
             }
             else if(event == Event::Update) {
+                // Update live snapshot
+                //if(m_LiveSnapshotNetsink.readFrame(m_LiveSnapshot)) {
+                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_LiveSnapshot);
+                //}
+
                 // Show output image
                 cv::imshow("Output", m_OutputImage);
 
@@ -98,6 +114,30 @@ private:
     }
 
     //------------------------------------------------------------------------
+    // Private methods
+    //------------------------------------------------------------------------
+    void resizeImageIntoOutputROI(const cv::Rect &roi, const cv::Mat &mat)
+    {
+        cv::Mat roiMat(m_OutputImage, roi);
+        cv::resize(mat, roiMat, roiMat.size(), 0.0, 0.0, m_Config.getSnapshotInterpolationMethod());
+
+    }
+    void updateTrainingSnapshotDisplay()
+    {
+        const int numTrainingSnapshots = m_TrainingSnapshots.size();
+        const int numRectangles = m_Config.getTrainingSnapshotRects().size();
+
+        const int numSnapshotsToDisplay = std::min(numTrainingSnapshots, numRectangles);
+        const int startDisplaySnapshot = std::max(0, numTrainingSnapshots - numRectangles);
+
+        // Loop through available rectangles
+        for(int i = 0; i < numSnapshotsToDisplay; i++) {
+            resizeImageIntoOutputROI(m_Config.getTrainingSnapshotRects()[i],
+                                        m_TrainingSnapshots[startDisplaySnapshot + i]);
+        }
+    }
+
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
     // Configuration
@@ -106,9 +146,13 @@ private:
     // State machine
     FSM<State> m_StateMachine;
 
+    // Image used for compositing output
     cv::Mat m_OutputImage;
 
     cv::Mat m_TestSnapshot;
+
+    cv::Mat m_LiveSnapshot;
+    std::vector<cv::Mat> m_TrainingSnapshots;
 };
 }   // Anonymous namespace
 
@@ -131,9 +175,9 @@ int main(int argc, char *argv[])
         configFile << "config" << config;
     }
 
-    cv::namedWindow("Output", cv::WINDOW_NORMAL);
+    cv::namedWindow("Output", cv::WINDOW_FULLSCREEN);
     cv::resizeWindow("Output", config.getResolution().width, config.getResolution().height);
-
+    cv::setWindowProperty("Output", cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
     // Create state machine
     DisplayFSM fsm(config);
 
