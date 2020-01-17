@@ -14,7 +14,7 @@
 namespace BoBRobotics {
 namespace Robots {
 Mecanum::Mecanum(const char *path, bool alternativeWiring)
-  : m_Serial(path), m_Forward(0.0f), m_Sideways(0.0f), m_Turn(0.0f), m_AlternativeWiring(alternativeWiring)
+  : m_Serial(path), m_AlternativeWiring(alternativeWiring)
 {}
 
 Mecanum::~Mecanum()
@@ -29,15 +29,13 @@ void
 Mecanum::omni2D(float forward, float sideways, float turn)
 {
     // Cache left and right
-    m_Forward = forward;
-    m_Sideways = sideways;
-    m_Turn = turn;
-
+    setWheelSpeed(forward, sideways, turn);
+    
     // resolve to motor speeds
-    float m1 = m_AlternativeWiring ? (-m_Sideways + m_Forward - m_Turn) : (+m_Sideways - m_Forward - m_Turn);
-    float m2 = m_AlternativeWiring ? (+m_Sideways + m_Forward + m_Turn) : (+m_Sideways + m_Forward + m_Turn);
-    float m3 = m_AlternativeWiring ? (+m_Sideways + m_Forward - m_Turn) : (-m_Sideways + m_Forward - m_Turn);
-    float m4 = m_AlternativeWiring ? (-m_Sideways + m_Forward + m_Turn) : (-m_Sideways - m_Forward + m_Turn);
+    float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
+    float m2 = m_AlternativeWiring ? (+sideways + forward + turn) : (+sideways + forward + turn);
+    float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
+    float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
 
     // clamp values to be between -1 and 1 after resolving
     const auto cap = [](float &val) {
@@ -53,24 +51,6 @@ Mecanum::omni2D(float forward, float sideways, float turn)
 
     // Send buffer
     write(buffer);
-}
-
-float
-Mecanum::getForwards() const
-{
-    return m_Forward;
-}
-
-float
-Mecanum::getSideways() const
-{
-    return m_Sideways;
-}
-
-float
-Mecanum::getTurn() const
-{
-    return m_Turn;
 }
 } // Robots
 } // BoBRobotics

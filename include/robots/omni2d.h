@@ -44,6 +44,16 @@ public:
     virtual void readFromNetwork(Net::Connection &connection) override;
     virtual void stopReadingFromNetwork() override;
     
+    //------------------------------------------------------------------------
+    // Public API
+    //------------------------------------------------------------------------
+    float getForwards() const;
+    float getSideways() const;
+    float getTurn() const;
+    
+protected:
+    void setWheelSpeed(float forward, float sideways, float turn);
+    
 private:
     float m_Forward = 0;
     float m_Sideways = 0;
