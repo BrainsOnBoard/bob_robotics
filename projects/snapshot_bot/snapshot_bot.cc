@@ -84,17 +84,27 @@ public:
                                                 m_SnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
                                             });
             
-            // Wait for both connections to be made
+            auto bestSnapshotAsync = std::async(std::launch::async,
+                                                [this]()
+                                                {
+                                                    Net::Server server(m_Config.getBestSnapshotServerListenPort());
+                                                    m_BestSnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                                });
+            
+            // Wait for all connections to be established
             liveAsync.wait();
             snapshotAsync.wait();
+            bestSnapshotAsync.wait();
             
             // Create netsinks
             m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection.get(), config.getCroppedRect().size(), "live");
             m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection.get(), config.getCroppedRect().size(), "snapshot");
+            m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection.get(), config.getCroppedRect().size(), "best_snapshot");
             
             // Start background threads for transmitting images
             m_LiveConnection->runInBackground();
             m_SnapshotConnection->runInBackground();
+            m_BestSnapshotConnection->runInBackground();
         }
 
         // If we should use Vicon tracking
@@ -259,8 +269,9 @@ private:
                     m_TrainingStopwatch.start();
 
                     // Train memory
-                    LOGI << "\tTrained snapshot" ;
-                    m_Memory->train(m_ImageInput->processSnapshot(m_Cropped));
+                    LOGI << "\tTrained snapshot";
+                    const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
+                    m_Memory->train(processedSnapshot);
 
                     // Write raw snapshot to disk
                     const std::string filename = getSnapshotPath(m_NumSnapshots++).str();
@@ -271,7 +282,7 @@ private:
 
                     // If we should stream output, send snapshot
                     if(m_Config.shouldStreamOutput()) {
-                        m_SnapshotNetSink->sendFrame(m_Cropped);
+                        m_SnapshotNetSink->sendFrame(processedSnapshot);
                     }
                     
                     // If Vicon tracking is available
@@ -350,7 +361,8 @@ private:
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
-                m_Memory->test(m_ImageInput->processSnapshot(m_Cropped));
+                const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped); 
+                m_Memory->test(processedSnapshot);
 
                 // Write time
                 m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
@@ -382,28 +394,20 @@ private:
                 m_LogFile << std::endl;
 
                 // If we should stream output
-                /*if(m_Config.shouldStreamOutput()) {
+                if(m_Config.shouldStreamOutput()) {
+                    // Send out snapshot
+                    m_SnapshotNetSink->sendFrame(processedSnapshot);
+                    
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
                     if(perfectMemory != nullptr) {
-                        // Get matched snapshot
-                        const cv::Mat &matchedSnapshot = perfectMemory->getBestSnapshot();
-
-                        // Calculate difference image
-                        cv::absdiff(matchedSnapshot, m_Cropped, m_DifferenceImage);
-
-                        char status[255];
-                        sprintf(status, "Angle:%f deg, Min difference:%f", degree_t(perfectMemory->getBestHeading()).value(), perfectMemory->getLowestDifference());
-                        cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getCroppedRect().size().height -20),
-                                    cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
-
-                        // Send annotated difference image
-                        m_NetSink->sendFrame(m_DifferenceImage);
+                        // Send best snapshot
+                        m_BestSnapshotNetSink->sendFrame(perfectMemory->getBestSnapshot());
                     }
                     else {
                         LOGW << "WARNING: Can only stream output from a perfect memory";
                     }
-                }*/
+                }
 
                 // Determine how fast we should turn based on the absolute angle
                 auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
@@ -504,10 +508,12 @@ private:
     // Connections for streaming live images
     std::unique_ptr<Net::Connection> m_LiveConnection;
     std::unique_ptr<Net::Connection> m_SnapshotConnection;
+    std::unique_ptr<Net::Connection> m_BestSnapshotConnection;
 
     // Sinks for video to send over server
     std::unique_ptr<Video::NetSink> m_LiveNetSink;
     std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
+    std::unique_ptr<Video::NetSink> m_BestSnapshotNetSink;
 };
 }   // Anonymous namespace
 
