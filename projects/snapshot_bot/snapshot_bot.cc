@@ -237,6 +237,11 @@ private:
                 cv::FileStorage settingsFile((m_Config.getOutputPath() / "training_settings.yaml").str(), cv::FileStorage::WRITE);
                 settingsFile << "unwrapper" << m_Unwrapper;
 
+                // If we should stream, send state update
+                if(m_Config.shouldStreamOutput()) {
+                    m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TRAINING\n");
+                }
+                
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
                     m_LogFile.close();
@@ -326,6 +331,11 @@ private:
                 cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
                 settingsFile << "unwrapper" << m_Unwrapper;
 
+                // If we should stream, send state update
+                if(m_Config.shouldStreamOutput()) {
+                    m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TESTING\n");
+                }
+                
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
                     m_LogFile.close();
