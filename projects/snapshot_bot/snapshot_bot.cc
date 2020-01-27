@@ -6,6 +6,7 @@
 #include <memory>
 
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "common/fsm.h"
 #include "common/logging.h"
 #include "common/stopwatch.h"
@@ -195,7 +196,7 @@ private:
                 return false;
             }
 
-            if(state != State::Testing) {
+            if(state != State::Testing && state != State::Driving) {
                  // Drive motors using joystick
                 m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
             }
@@ -545,7 +546,7 @@ int main(int argc, char *argv[])
         cv::FileStorage configFile(configFilename, cv::FileStorage::WRITE);
         configFile << "config" << config;
     }
-
+    BackgroundExceptionCatcher backgroundEx;
     RobotFSM robot(config);
 
     {
@@ -554,6 +555,9 @@ int main(int argc, char *argv[])
         unsigned int frame = 0;
         for(frame = 0; robot.update(); frame++) {
         }
+
+        // Check for background exceptions and re-throw
+        backgroundEx.check();
 
         const double msPerFrame = timer.get() / (double)frame;
         LOGI << "FPS:" << 1000.0 / msPerFrame;
