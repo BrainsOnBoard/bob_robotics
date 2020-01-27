@@ -54,6 +54,18 @@ public:
                                            handleSnapshotBotState(connection, command);
                                        });
 
+        // Load backgrounds
+        if(!m_Config.getTrainingBackgroundFilename().empty()) {
+            m_TrainingBackground = cv::imread(m_Config.getTrainingBackgroundFilename());
+            BOB_ASSERT(m_TrainingBackground.size() == m_Config.getResolution());
+            BOB_ASSERT(m_TrainingBackground.type() == CV_8UC3);
+        }
+        if(!m_Config.getTestingBackgroundFilename().empty()) {
+            m_TestingBackground = cv::imread(m_Config.getTestingBackgroundFilename());
+            BOB_ASSERT(m_TestingBackground.size() == m_Config.getResolution());
+            BOB_ASSERT(m_TestingBackground.type() == CV_8UC3);
+        }
+
         // Start in training state
         m_StateMachine.transition(State::Training);
     }
@@ -80,8 +92,13 @@ private:
 
         if(state == State::Training) {
             if(event == Event::Enter) {
-                // **TODO** load background
-                m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+                // Copy training background over output image
+                if(m_TrainingBackground.empty()) {
+                    m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+                }
+                else {
+                    m_TrainingBackground.copyTo(m_OutputImage);
+                }
 
                 cv::putText(m_OutputImage, "TRAINING", cv::Point(0, 20),
                             cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
@@ -130,8 +147,13 @@ private:
                 m_BestSnapshotReceived = false;
                 m_SnapshotReceived = false;
 
-                // **TODO** load background
-                m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+                // Copy testing background over output image
+                if(m_TestingBackground.empty()) {
+                    m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+                }
+                else {
+                    m_TestingBackground.copyTo(m_OutputImage);
+                }
 
                 cv::putText(m_OutputImage, "TESTING", cv::Point(0, 20),
                             cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
@@ -343,6 +365,10 @@ private:
     Video::NetSource m_LiveNetSource;
     Video::NetSource m_SnapshotNetSource;
     Video::NetSource m_BestSnapshotNetSource;
+
+    // Background images
+    cv::Mat m_TrainingBackground;
+    cv::Mat m_TestingBackground;
 
     // Image used for compositing output
     cv::Mat m_OutputImage;
