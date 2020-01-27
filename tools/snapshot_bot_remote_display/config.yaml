@@ -7,25 +7,24 @@ config:
    snapshotInterpolationMethod: 1
    maxSnapshotRotateDegrees: 90.
    training:
-      backgroundFilename: ""
-      liveRect: [ 420, 125, 1080, 150 ]
+      backgroundFilename: "background_training.png"
+      liveRect: [ 420, 75, 1080, 150 ]
       snapshotRects:
-         - [ 100, 400, 720, 100 ]
-         - [ 1100, 400, 720, 100 ]
-         - [ 100, 550, 720, 100 ]
-         - [ 1100, 550, 720, 100 ]
-         - [ 100, 700, 720, 100 ]
-         - [ 1100, 700, 720, 100 ]
-         - [ 100, 850, 720, 100 ]
-         - [ 1100, 850, 720, 100 ]
+         - [ 210, 360, 720, 100 ]
+         - [ 980, 360, 720, 100 ]
+         - [ 210, 510, 720, 100 ]
+         - [ 980, 510, 720, 100 ]
+         - [ 210, 660, 720, 100 ]
+         - [ 980, 660, 720, 100 ]
+         - [ 210, 810, 720, 100 ]
+         - [ 980, 810, 720, 100 ]
    testing:
-      backgroundFilename: ""
+      backgroundFilename: "background_testing.png"
       bestSnapshotPort: 2002
-      liveRect: [ 420, 125, 1080, 150 ]
-      bestRect: [ 420, 400, 1080, 150 ]
-      differenceRect: [ 420, 600, 1080, 150 ]
-      ridfRect: [ 420, 800, 1080, 150 ]
-      ridfAxisRect: [ 420, 800, 1080, 150 ]
+      liveRect: [ 420, 75, 1080, 150 ]
+      bestRect: [ 420, 305, 1080, 150 ]
+      differenceRect: [ 420, 550, 1080, 150 ]
+      ridfAxisRect: [ 420, 790, 1080, 150 ]
       ridfBackgroundColour: [ 255, 255, 255 ]
       ridfLineColour: [ 0, 0, 0 ]
       ridfLineThickness: 2

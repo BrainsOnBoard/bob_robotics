@@ -22,7 +22,7 @@ public:
         m_TrainingSnapshotRects{{100, 500, 720, 100}, {1100, 500, 720, 100}, {100, 650, 720, 100}, {1100, 650, 720, 100},
                                 {100, 800, 720, 100}, {1100, 800, 720, 100}, {100, 950, 720, 100}, {1100, 950, 720, 100}},
         m_TestingBestSnapshotPort(2002), m_TestingLiveRect(420, 150, 1080, 150), m_TestingBestRect(420, 400, 1080, 150),
-        m_TestingDifferenceRect(420, 650, 1080, 150), m_TestingRIDFRect(420, 900, 1080, 150), m_TestingRIDFAxisRect(445, 925, 1030, 100),
+        m_TestingDifferenceRect(420, 650, 1080, 150), m_TestingRIDFAxisRect(445, 925, 1030, 100),
         m_TestingRIDFBackgroundColour(255, 255, 255), m_TestingRIDFLineColour(0, 0, 0), m_TestingRIDFLineThickness(4)
     {
     }
@@ -45,7 +45,6 @@ public:
     const cv::Rect &getTestingLiveRect() const{ return m_TestingLiveRect; }
     const cv::Rect &getTestingBestRect() const{ return m_TestingBestRect; }
     const cv::Rect &getTestingDifferenceRect() const{ return m_TestingDifferenceRect; }
-    const cv::Rect &getTestingRIDFRect() const{ return m_TestingRIDFRect; }
     const cv::Rect &getTestingRIDFAxisRect() const{ return m_TestingRIDFAxisRect; }
     const cv::Vec3b &getTestingRIDFBackgroundColour() const{ return m_TestingRIDFBackgroundColour; }
     const cv::Vec3b &getTestingRIDFLineColour() const{ return m_TestingRIDFLineColour; }
@@ -79,7 +78,6 @@ public:
             fs << "liveRect" << getTestingLiveRect();
             fs << "bestRect" << getTestingBestRect();
             fs << "differenceRect" << getTestingDifferenceRect();
-            fs << "ridfRect" << getTestingRIDFRect();
             fs << "ridfAxisRect" << getTestingRIDFAxisRect();
             fs << "ridfBackgroundColour" << getTestingRIDFBackgroundColour();
             fs << "ridfLineColour" << getTestingRIDFLineColour();
@@ -119,8 +117,7 @@ public:
             cv::read(testing["liveRect"], m_TestingLiveRect, m_TestingLiveRect);
             cv::read(testing["bestRect"], m_TestingBestRect, m_TestingBestRect);
             cv::read(testing["differenceRect"], m_TestingDifferenceRect, m_TestingDifferenceRect);
-            cv::read(testing["ridfRect"], m_TestingRIDFRect, m_TestingRIDFRect);
-            cv::read(testing["ridfRect"], m_TestingRIDFAxisRect, m_TestingRIDFAxisRect);
+            cv::read(testing["ridfAxisRect"], m_TestingRIDFAxisRect, m_TestingRIDFAxisRect);
             cv::read(testing["ridfBackgroundColour"], m_TestingRIDFBackgroundColour, m_TestingRIDFBackgroundColour);
             cv::read(testing["ridfLineColour"], m_TestingRIDFLineColour, m_TestingRIDFLineColour);
             cv::read(testing["ridfLineThickness"], m_TestingRIDFLineThickness, m_TestingRIDFLineThickness);
@@ -170,9 +167,6 @@ private:
 
     // Rectangle within which to display difference image when testing
     cv::Rect m_TestingDifferenceRect;
-
-    // Rectangle within which to display RIDF
-    cv::Rect m_TestingRIDFRect;
 
     // Rectangle within the RIDF rect to display axis
     cv::Rect m_TestingRIDFAxisRect;

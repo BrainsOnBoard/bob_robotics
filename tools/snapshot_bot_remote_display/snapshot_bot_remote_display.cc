@@ -99,14 +99,11 @@ private:
                 else {
                     m_TrainingBackground.copyTo(m_OutputImage);
                 }
-
-                cv::putText(m_OutputImage, "TRAINING", cv::Point(0, 20),
-                            cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
                 if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
-                    resizeAndProcessImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
+                    resizeAndProcessImageIntoOutputROI(m_Config.getTrainingLiveRect(), m_ReceiveBuffer);
                 }
 
                 // Update live snapshot
@@ -154,9 +151,6 @@ private:
                 else {
                     m_TestingBackground.copyTo(m_OutputImage);
                 }
-
-                cv::putText(m_OutputImage, "TESTING", cv::Point(0, 20),
-                            cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
