@@ -4,6 +4,9 @@
 // BoB robotics includes
 #include "common/fsm.h"
 #include "common/logging.h"
+#include "net/client.h"
+#include "video/netsource.h"
+
 
 // Snapshot bot display includes
 #include "config.h"
@@ -28,13 +31,17 @@ enum class State
 class DisplayFSM : public FSM<State>::StateHandler
 {
 public:
-    DisplayFSM(const Config &config)
-    :   m_Config(config), m_StateMachine(this, State::Invalid), m_OutputImage(config.getResolution(), CV_8UC3)
+    DisplayFSM(const char *robotHost, const Config &config)
+    :   m_Config(config), m_StateMachine(this, State::Invalid), m_LiveClient(robotHost, config.getLiveImagePort()),
+        m_SnapshotClient(robotHost, config.getSnapshotPort()), m_BestSnapshotClient(robotHost, config.getTestingBestSnapshotPort()),
+        m_LiveNetSource(m_LiveClient), m_SnapshotNetSource(m_SnapshotClient), m_BestSnapshotNetSource(m_BestSnapshotClient),
+        m_OutputImage(config.getResolution(), CV_8UC3)
     {
-        // **TEMP** load a snapshot
-        m_TestSnapshot = cv::imread("snapshot_197.png");
+        // Start background threads to read network data
+        m_LiveClient.runInBackground();
+        m_SnapshotClient.runInBackground();
+        m_BestSnapshotClient.runInBackground();
 
-        m_LiveSnapshot = m_TestSnapshot;
         // Start in training state
         m_StateMachine.transition(State::Training);
     }
@@ -56,13 +63,39 @@ private:
         if(state == State::Training) {
             if(event == Event::Enter) {
                 // **TODO** load background
-                m_OutputImage.setTo(CV_RGB(255, 255, 255));
+                m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+
+                cv::putText(m_OutputImage, "TRAINING", cv::Point(0, 20),
+                            cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
-                //if(m_LiveSnapshotNetsink.readFrame(m_LiveSnapshot)) {
-                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_LiveSnapshot);
-                //}
+                if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
+
+                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
+                }
+
+                // Update live snapshot
+                if(m_SnapshotNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
+
+                    // Add image to receive buffer
+                    m_TrainingSnapshots.emplace_back();
+                    m_ReceiveBuffer.copyTo(m_TrainingSnapshots.back());
+
+                    const int numTrainingSnapshots = m_TrainingSnapshots.size();
+                    const int numRectangles = m_Config.getTrainingSnapshotRects().size();
+
+                    const int numSnapshotsToDisplay = std::min(numTrainingSnapshots, numRectangles);
+                    const int startDisplaySnapshot = std::max(0, numTrainingSnapshots - numRectangles);
+
+                    // Loop through available rectangles
+                    for(int i = 0; i < numSnapshotsToDisplay; i++) {
+                        resizeImageIntoOutputROI(m_Config.getTrainingSnapshotRects()[i],
+                                                 m_TrainingSnapshots[startDisplaySnapshot + i]);
+                    }
+                }
 
                 // Show output image
                 cv::imshow("Output", m_OutputImage);
@@ -72,10 +105,6 @@ private:
                 if(key == 27) {
                     return false;
                 }
-                else if(key == 's') {
-                    m_TrainingSnapshots.push_back(m_TestSnapshot);
-                    updateTrainingSnapshotDisplay();
-                }
                 else if(key == 't') {
                     m_StateMachine.transition(State::Testing);
                 }
@@ -84,13 +113,22 @@ private:
         else if(state == State::Testing) {
             if(event == Event::Enter) {
                 // **TODO** load background
-                m_OutputImage.setTo(CV_RGB(255, 255, 255));
+                m_OutputImage.setTo(cv::Scalar(255, 255, 255));
+
+                cv::putText(m_OutputImage, "TESTING", cv::Point(0, 20),
+                            cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, CV_RGB(0, 0, 0));
             }
             else if(event == Event::Update) {
                 // Update live snapshot
-                //if(m_LiveSnapshotNetsink.readFrame(m_LiveSnapshot)) {
-                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_LiveSnapshot);
-                //}
+                if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
+                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
+                }
+
+                if(m_BestSnapshotNetSource.readFrame(m_ReceiveBuffer)) {
+                    processReceivedImage();
+                    resizeImageIntoOutputROI(m_Config.getTestingBestRect(), m_ReceiveBuffer);
+                }
 
                 // Show output image
                 cv::imshow("Output", m_OutputImage);
@@ -116,25 +154,20 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
+    void processReceivedImage()
+    {
+        if(m_ReceiveBuffer.type() == CV_8UC1) {
+            cv::cvtColor(m_ReceiveBuffer, m_ReceiveBuffer, cv::COLOR_GRAY2BGR);
+        }
+        else if(m_ReceiveBuffer.type() != CV_8UC3) {
+            LOGE << "Unsupported image type received";
+        }
+    }
+
     void resizeImageIntoOutputROI(const cv::Rect &roi, const cv::Mat &mat)
     {
         cv::Mat roiMat(m_OutputImage, roi);
         cv::resize(mat, roiMat, roiMat.size(), 0.0, 0.0, m_Config.getSnapshotInterpolationMethod());
-
-    }
-    void updateTrainingSnapshotDisplay()
-    {
-        const int numTrainingSnapshots = m_TrainingSnapshots.size();
-        const int numRectangles = m_Config.getTrainingSnapshotRects().size();
-
-        const int numSnapshotsToDisplay = std::min(numTrainingSnapshots, numRectangles);
-        const int startDisplaySnapshot = std::max(0, numTrainingSnapshots - numRectangles);
-
-        // Loop through available rectangles
-        for(int i = 0; i < numSnapshotsToDisplay; i++) {
-            resizeImageIntoOutputROI(m_Config.getTrainingSnapshotRects()[i],
-                                        m_TrainingSnapshots[startDisplaySnapshot + i]);
-        }
     }
 
     //------------------------------------------------------------------------
@@ -146,19 +179,32 @@ private:
     // State machine
     FSM<State> m_StateMachine;
 
+    // Network clients for maintaining connections to servers running on robot
+    Net::Client m_LiveClient;
+    Net::Client m_SnapshotClient;
+    Net::Client m_BestSnapshotClient;
+
+    // Net sources for reading video from server
+    Video::NetSource m_LiveNetSource;
+    Video::NetSource m_SnapshotNetSource;
+    Video::NetSource m_BestSnapshotNetSource;
+
     // Image used for compositing output
     cv::Mat m_OutputImage;
 
-    cv::Mat m_TestSnapshot;
+    // Temporary image used for receiving image data
+    cv::Mat m_ReceiveBuffer;
 
-    cv::Mat m_LiveSnapshot;
+    // Array of training snapshots
     std::vector<cv::Mat> m_TrainingSnapshots;
 };
 }   // Anonymous namespace
 
 int main(int argc, char *argv[])
 {
-    const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
+    assert(argc > 1);
+    const char *robotHost = argv[1];
+    const char *configFilename = (argc > 2) ? argv[2] : "config.yaml";
 
     // Read config values from file
     Config config;
@@ -179,7 +225,7 @@ int main(int argc, char *argv[])
     cv::resizeWindow("Output", config.getResolution().width, config.getResolution().height);
     cv::setWindowProperty("Output", cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
     // Create state machine
-    DisplayFSM fsm(config);
+    DisplayFSM fsm(robotHost, config);
 
     // Main loop
     while(true) {

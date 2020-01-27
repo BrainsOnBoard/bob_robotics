@@ -32,7 +32,7 @@ public:
     uint16_t getLiveImagePort() const{ return m_LiveImagePort; }
     uint16_t getSnapshotPort() const{ return m_SnapshotPort; }
     const cv::Size &getResolution() const{ return m_Resolution; }
-    cv::InterpolationFlags getSnapshotInterpolationMethod() const{ return m_SnapshotInterpolationMethod; }
+    cv::InterpolationFlags getSnapshotInterpolationMethod() const{ return (cv::InterpolationFlags)m_SnapshotInterpolationMethod; }
 
     const std::string &getTrainingBackgroundFilename() const{ return m_TrainingBackgroundFilename; }
     const cv::Rect &getTrainingLiveRect() const{ return m_TrainingLiveRect; }
@@ -126,7 +126,7 @@ private:
     cv::Size m_Resolution;
 
     // Which interpolation method should we use for upscaling snapshots
-    cv::InterpolationFlags m_SnapshotInterpolationMethod;
+    int m_SnapshotInterpolationMethod;
 
     // Filename for training background image
     std::string m_TrainingBackgroundFilename;
