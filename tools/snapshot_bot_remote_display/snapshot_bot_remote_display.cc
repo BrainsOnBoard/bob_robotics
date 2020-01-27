@@ -89,14 +89,13 @@ private:
             else if(event == Event::Update) {
                 // Update live snapshot
                 if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
-                    processReceivedImage();
-
-                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
+                    resizeAndProcessImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
                 }
 
                 // Update live snapshot
                 if(m_SnapshotNetSource.readFrame(m_ReceiveBuffer)) {
-                    processReceivedImage();
+                    // Convert received image into suitable format for displaying
+                    processImage(m_ReceiveBuffer);
 
                     // Add image to receive buffer
                     m_TrainingSnapshots.emplace_back();
@@ -140,8 +139,7 @@ private:
             else if(event == Event::Update) {
                 // Update live snapshot
                 if(m_LiveNetSource.readFrame(m_ReceiveBuffer)) {
-                    processReceivedImage();
-                    resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
+                    resizeAndProcessImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
                 }
 
                 // Update best snapshot
@@ -176,7 +174,6 @@ private:
                 if(m_BestSnapshotReceived && m_SnapshotReceived) {
                     BOB_ASSERT(m_Snapshot.type() == CV_8UC1);
 
-                    LOGI << "Snapshot and best snapshot received";
                     const int imageSize = m_Snapshot.size().width * m_Snapshot.size().height;
                     const int imageWidth = m_Snapshot.size().width;
                     const int numScanColumns = (int)std::round(units::angle::turn_t(m_Config.getMaxSnapshotRotateAngle()).value() * (double)imageWidth);
@@ -184,15 +181,11 @@ private:
                     // Ensure there is enough space in RIDF
                     m_RIDF.resize(numScanColumns * 2);
 
-                    // Ensure rotated snapshot size and type matches original
-                    m_RotatedSnapshot.create(m_Snapshot.size(), m_Snapshot.type());
-
                     // Create functor to calculate difference between images
                     Navigation::AbsDiff differencer(imageWidth);
 
-                    cv::Mat mask;
-
                     // Scan across columns on left of image
+                    cv::Mat mask;
                     auto rotatorLeft = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
                                                                            1, 0, numScanColumns);
                     rotatorLeft.rotate(
@@ -223,7 +216,7 @@ private:
 
                                 // Store mean difference in RIDF
                                 m_RIDF[(2 * numScanColumns) - 1 - i] = Navigation::AbsDiff::mean(sumDifference, imageSize);
-                            });
+                             });
 
                     // Get RIDF axis rect and calculate scale factors
                     const auto &ridfAxisRect = m_Config.getTestingRIDFAxisRect();
@@ -242,22 +235,34 @@ private:
                         cv::line(m_OutputImage, lastPoint, point, m_Config.getTestingRIDFLineColour(), m_Config.getTestingRIDFLineThickness(), cv::LINE_AA);
                         lastPoint = point;
                     }
+
+                    // Get index of min RIDF element and hence calculate pixels to roll snapshot
+                    // **YUCK** this information was clearly present deep within Navigation::InSilicoRotater
+                    const int minRIDF = (int)std::distance(m_RIDF.cbegin(), std::min_element(m_RIDF.cbegin(), m_RIDF.cend()));
+                    const int rollPixels = (minRIDF < numScanColumns) ? (numScanColumns - 1 - minRIDF) : (imageWidth + numScanColumns - 1 - minRIDF);
+                    BOB_ASSERT(rollPixels >= 0);
+                    BOB_ASSERT(rollPixels < imageWidth);
+
+                    // Ensure rotated snapshot size and type matches original
+                    m_RotatedSnapshot.create(m_Snapshot.size(), m_Snapshot.type());
+
                     // Loop through rows
-                    /*for (int y = 0; y < m_Snapshot.rows; y++) {
+                    for (int y = 0; y < m_Snapshot.rows; y++) {
                         // Get pointer to start of row
                         const uint8_t *rowPtr = m_Snapshot.ptr(y);
                         uint8_t *rowPtrOut = m_RotatedSnapshot.ptr(y);
 
                         // Rotate row to left by pixels
                         std::rotate_copy(rowPtr, rowPtr + rollPixels, rowPtr + m_Snapshot.cols, rowPtrOut);
-                    }*/
+                    }
 
-                    // Calculate RIDF
                     // Calculate difference image
-                    //cv::absdiff(m_BestSnapshot, m_RotatedSnapshot, m_RotatedSnapshot);
+                    cv::absdiff(m_BestSnapshot, m_RotatedSnapshot, m_RotatedSnapshot);
+                    cv::applyColorMap(m_RotatedSnapshot, m_RotatedSnapshot, cv::COLORMAP_JET);
+                    resizeAndProcessImageIntoOutputROI(m_Config.getTestingDifferenceRect(), m_RotatedSnapshot);
 
                     // Show best snapshot
-                    resizeImageIntoOutputROI(m_Config.getTestingBestRect(), m_BestSnapshot);
+                    resizeAndProcessImageIntoOutputROI(m_Config.getTestingBestRect(), m_BestSnapshot);
 
                     // Clear flags for next match
                     m_BestSnapshotReceived = false;
@@ -298,14 +303,20 @@ private:
         }
     }
 
-    void processReceivedImage()
+    void processImage(cv::Mat &image)
     {
-        if(m_ReceiveBuffer.type() == CV_8UC1) {
-            cv::cvtColor(m_ReceiveBuffer, m_ReceiveBuffer, cv::COLOR_GRAY2BGR);
+        if(image.type() == CV_8UC1) {
+            cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
         }
-        else if(m_ReceiveBuffer.type() != CV_8UC3) {
+        else if(image.type() != CV_8UC3) {
             LOGE << "Unsupported image type received";
         }
+    }
+
+    void resizeAndProcessImageIntoOutputROI(const cv::Rect &roi, cv::Mat &mat)
+    {
+        processImage(mat);
+        resizeImageIntoOutputROI(roi, mat);
     }
 
     void resizeImageIntoOutputROI(const cv::Rect &roi, const cv::Mat &mat)
@@ -339,10 +350,15 @@ private:
     // Temporary image used for receiving image data
     cv::Mat m_ReceiveBuffer;
 
+    // Flags indicating whether image data required for RIDF calculation have arrived
     bool m_BestSnapshotReceived;
     bool m_SnapshotReceived;
+
+    // Copy of snapshots for RIDF calculation
     cv::Mat m_BestSnapshot;
     cv::Mat m_Snapshot;
+
+    // Scratch images for RIDF calculation
     cv::Mat m_SnapshotDifferenceScratch;
     cv::Mat m_RotatedSnapshot;
 
@@ -352,6 +368,7 @@ private:
     // State transition requests received from snapshot bot
     std::atomic<State> m_SnapshotBotState;
 
+    // RIDF calculated from images
     std::vector<float> m_RIDF;
 };
 }   // Anonymous namespace
