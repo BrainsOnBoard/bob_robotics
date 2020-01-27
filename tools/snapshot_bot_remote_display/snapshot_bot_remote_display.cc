@@ -1,9 +1,14 @@
+// Standard C++ includes
+#include <numeric>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // BoB robotics includes
 #include "common/fsm.h"
 #include "common/logging.h"
+#include "navigation/differencers.h"
+#include "navigation/insilico_rotater.h"
 #include "net/client.h"
 #include "video/netsource.h"
 
@@ -35,12 +40,19 @@ public:
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_LiveClient(robotHost, config.getLiveImagePort()),
         m_SnapshotClient(robotHost, config.getSnapshotPort()), m_BestSnapshotClient(robotHost, config.getTestingBestSnapshotPort()),
         m_LiveNetSource(m_LiveClient), m_SnapshotNetSource(m_SnapshotClient), m_BestSnapshotNetSource(m_BestSnapshotClient),
-        m_OutputImage(config.getResolution(), CV_8UC3)
+        m_OutputImage(config.getResolution(), CV_8UC3), m_SnapshotBotState(State::Invalid)
     {
         // Start background threads to read network data
         m_LiveClient.runInBackground();
         m_SnapshotClient.runInBackground();
         m_BestSnapshotClient.runInBackground();
+
+        // Also attach command handlers to live client connection
+        m_LiveClient.setCommandHandler("SNAPSHOT_BOT_STATE",
+                                       [this](Net::Connection &connection, const Net::Command &command)
+                                       {
+                                           handleSnapshotBotState(connection, command);
+                                       });
 
         // Start in training state
         m_StateMachine.transition(State::Training);
@@ -60,6 +72,12 @@ private:
     //------------------------------------------------------------------------
     virtual bool handleEvent(State state, Event event) override
     {
+        // If there is a state transition to apply, do so
+        const State snapshotBotState = m_SnapshotBotState.exchange(State::Invalid);
+        if(snapshotBotState != State::Invalid && state != snapshotBotState) {
+            m_StateMachine.transition(snapshotBotState);
+        }
+
         if(state == State::Training) {
             if(event == Event::Enter) {
                 // **TODO** load background
@@ -101,17 +119,18 @@ private:
                 cv::imshow("Output", m_OutputImage);
 
                 // Read input and update
-                const int key = cv::waitKey(1);
+                const int key = cv::waitKey(20);
                 if(key == 27) {
                     return false;
-                }
-                else if(key == 't') {
-                    m_StateMachine.transition(State::Testing);
                 }
             }
         }
         else if(state == State::Testing) {
             if(event == Event::Enter) {
+                // Clear flags
+                m_BestSnapshotReceived = false;
+                m_SnapshotReceived = false;
+
                 // **TODO** load background
                 m_OutputImage.setTo(cv::Scalar(255, 255, 255));
 
@@ -125,9 +144,124 @@ private:
                     resizeImageIntoOutputROI(m_Config.getTestingLiveRect(), m_ReceiveBuffer);
                 }
 
+                // Update best snapshot
                 if(m_BestSnapshotNetSource.readFrame(m_ReceiveBuffer)) {
-                    processReceivedImage();
-                    resizeImageIntoOutputROI(m_Config.getTestingBestRect(), m_ReceiveBuffer);
+                    if(m_BestSnapshotReceived) {
+                        LOGW << "Best snapshot receiving out of sync";
+                    }
+                    else {
+                        // Make a copy of received image
+                        m_ReceiveBuffer.copyTo(m_BestSnapshot);
+
+                        // Set flag
+                        m_BestSnapshotReceived = true;
+                    }
+                }
+
+                // Update snapshot that robot matched with best snapshot
+                if(m_SnapshotNetSource.readFrame(m_ReceiveBuffer)) {
+                    if(m_SnapshotReceived) {
+                        LOGW << "Snapshot receiving out of sync";
+                    }
+                    else {
+                        // Make a copy of received image
+                        m_ReceiveBuffer.copyTo(m_Snapshot);
+
+                        // Set flag
+                        m_SnapshotReceived = true;
+                    }
+                }
+
+                // If both images have been received
+                if(m_BestSnapshotReceived && m_SnapshotReceived) {
+                    BOB_ASSERT(m_Snapshot.type() == CV_8UC1);
+
+                    LOGI << "Snapshot and best snapshot received";
+                    const int imageSize = m_Snapshot.size().width * m_Snapshot.size().height;
+                    const int imageWidth = m_Snapshot.size().width;
+                    const int numScanColumns = (int)std::round(units::angle::turn_t(m_Config.getMaxSnapshotRotateAngle()).value() * (double)imageWidth);
+
+                    // Ensure there is enough space in RIDF
+                    m_RIDF.resize(numScanColumns * 2);
+
+                    // Ensure rotated snapshot size and type matches original
+                    m_RotatedSnapshot.create(m_Snapshot.size(), m_Snapshot.type());
+
+                    // Create functor to calculate difference between images
+                    Navigation::AbsDiff differencer(imageWidth);
+
+                    cv::Mat mask;
+
+                    // Scan across columns on left of image
+                    auto rotatorLeft = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
+                                                                           1, 0, numScanColumns);
+                    rotatorLeft.rotate(
+                            [imageSize, numScanColumns, &differencer, this]
+                            (const cv::Mat &fr, const cv::Mat &, size_t i)
+                            {
+                                // Calculate image difference
+                                auto diffIter = differencer(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
+
+                                float sumDifference = std::accumulate(diffIter, diffIter + imageSize, 0.0f);
+
+                                // Store mean difference in RIDF
+                                m_RIDF[numScanColumns - 1 - i] = Navigation::AbsDiff::mean(sumDifference, imageSize);
+                            });
+
+
+                    // Scan across columns on right of image
+                    auto rotatorRight = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
+                                                                            1, imageWidth - numScanColumns, imageWidth);
+                    rotatorRight.rotate(
+                            [imageSize, numScanColumns, &differencer, this]
+                            (const cv::Mat &fr, const cv::Mat &, size_t i)
+                            {
+                                // Calculate image difference
+                                auto diffIter = differencer(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
+
+                                float sumDifference = std::accumulate(diffIter, diffIter + imageSize, 0.0f);
+
+                                // Store mean difference in RIDF
+                                m_RIDF[(2 * numScanColumns) - 1 - i] = Navigation::AbsDiff::mean(sumDifference, imageSize);
+                            });
+
+                    // Get RIDF axis rect and calculate scale factors
+                    const auto &ridfAxisRect = m_Config.getTestingRIDFAxisRect();
+                    const int ridfBottom = ridfAxisRect.y + ridfAxisRect.height;
+                    const float ridfXScale = (float)ridfAxisRect.width / (float)(numScanColumns * 2);
+                    const float ridfYScale = (float)ridfAxisRect.height / 255.0;
+
+                    // Clear axis rectangle
+                    cv::rectangle(m_OutputImage, ridfAxisRect, m_Config.getTestingRIDFBackgroundColour(), cv::FILLED);
+
+                    // Draw RIDF line graph
+                    cv::Point lastPoint(ridfAxisRect.x, ridfBottom - (int)std::round(m_RIDF[0] * (float)ridfYScale));
+                    for(int i = 1; i < (2 * numScanColumns); i++) {
+                        const cv::Point point(ridfAxisRect.x + (int)std::round(i * ridfXScale),
+                                              ridfBottom - (int)std::round(m_RIDF[i] * (float)ridfYScale));
+                        cv::line(m_OutputImage, lastPoint, point, m_Config.getTestingRIDFLineColour(), m_Config.getTestingRIDFLineThickness(), cv::LINE_AA);
+                        lastPoint = point;
+                    }
+                    // Loop through rows
+                    /*for (int y = 0; y < m_Snapshot.rows; y++) {
+                        // Get pointer to start of row
+                        const uint8_t *rowPtr = m_Snapshot.ptr(y);
+                        uint8_t *rowPtrOut = m_RotatedSnapshot.ptr(y);
+
+                        // Rotate row to left by pixels
+                        std::rotate_copy(rowPtr, rowPtr + rollPixels, rowPtr + m_Snapshot.cols, rowPtrOut);
+                    }*/
+
+                    // Calculate RIDF
+                    // Calculate difference image
+                    //cv::absdiff(m_BestSnapshot, m_RotatedSnapshot, m_RotatedSnapshot);
+
+                    // Show best snapshot
+                    resizeImageIntoOutputROI(m_Config.getTestingBestRect(), m_BestSnapshot);
+
+                    // Clear flags for next match
+                    m_BestSnapshotReceived = false;
+                    m_SnapshotReceived = false;
                 }
 
                 // Show output image
@@ -137,9 +271,6 @@ private:
                 const int key = cv::waitKey(1);
                 if(key == 27) {
                     return false;
-                }
-                else if(key == 't') {
-                    m_StateMachine.transition(State::Training);
                 }
             }
         }
@@ -154,6 +285,19 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
+    void handleSnapshotBotState(Net::Connection &, const Net::Command &command)
+    {
+        if(command[1] == "TRAINING") {
+            m_SnapshotBotState = State::Training;
+        }
+        else if(command[1] == "TESTING") {
+            m_SnapshotBotState = State::Testing;
+        }
+        else {
+            LOGE << "Unknown snapshot bot state '" << command[1] << "'";
+        }
+    }
+
     void processReceivedImage()
     {
         if(m_ReceiveBuffer.type() == CV_8UC1) {
@@ -195,8 +339,20 @@ private:
     // Temporary image used for receiving image data
     cv::Mat m_ReceiveBuffer;
 
+    bool m_BestSnapshotReceived;
+    bool m_SnapshotReceived;
+    cv::Mat m_BestSnapshot;
+    cv::Mat m_Snapshot;
+    cv::Mat m_SnapshotDifferenceScratch;
+    cv::Mat m_RotatedSnapshot;
+
     // Array of training snapshots
     std::vector<cv::Mat> m_TrainingSnapshots;
+
+    // State transition requests received from snapshot bot
+    std::atomic<State> m_SnapshotBotState;
+
+    std::vector<float> m_RIDF;
 };
 }   // Anonymous namespace
 

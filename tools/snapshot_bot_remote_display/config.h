@@ -18,11 +18,12 @@ class Config
 {
 public:
     Config() : m_LiveImagePort(2000), m_SnapshotPort(2001), m_Resolution(1920, 1080),
-    m_SnapshotInterpolationMethod(cv::INTER_LINEAR), m_TrainingLiveRect(420, 150, 1080, 150),
-    m_TrainingSnapshotRects{{100, 500, 720, 100}, {1100, 500, 720, 100}, {100, 650, 720, 100}, {1100, 650, 720, 100},
-                            {100, 800, 720, 100}, {1100, 800, 720, 100}, {100, 950, 720, 100}, {1100, 950, 720, 100}},
-    m_TestingBestSnapshotPort(2002), m_TestingLiveRect(420, 150, 1080, 150), m_TestingBestRect(420, 400, 1080, 150),
-    m_TestingDifferenceRect(420, 650, 1080, 150), m_TestingRIDFRect(420, 900, 1080, 150)
+        m_SnapshotInterpolationMethod(cv::INTER_LINEAR), m_MaxSnapshotRotateDegrees(90.0), m_TrainingLiveRect(420, 150, 1080, 150),
+        m_TrainingSnapshotRects{{100, 500, 720, 100}, {1100, 500, 720, 100}, {100, 650, 720, 100}, {1100, 650, 720, 100},
+                                {100, 800, 720, 100}, {1100, 800, 720, 100}, {100, 950, 720, 100}, {1100, 950, 720, 100}},
+        m_TestingBestSnapshotPort(2002), m_TestingLiveRect(420, 150, 1080, 150), m_TestingBestRect(420, 400, 1080, 150),
+        m_TestingDifferenceRect(420, 650, 1080, 150), m_TestingRIDFRect(420, 900, 1080, 150), m_TestingRIDFAxisRect(445, 925, 1030, 100),
+        m_TestingRIDFBackgroundColour(255, 255, 255), m_TestingRIDFLineColour(0, 0, 0), m_TestingRIDFLineThickness(4)
     {
     }
 
@@ -33,6 +34,7 @@ public:
     uint16_t getSnapshotPort() const{ return m_SnapshotPort; }
     const cv::Size &getResolution() const{ return m_Resolution; }
     cv::InterpolationFlags getSnapshotInterpolationMethod() const{ return (cv::InterpolationFlags)m_SnapshotInterpolationMethod; }
+    units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
 
     const std::string &getTrainingBackgroundFilename() const{ return m_TrainingBackgroundFilename; }
     const cv::Rect &getTrainingLiveRect() const{ return m_TrainingLiveRect; }
@@ -44,6 +46,10 @@ public:
     const cv::Rect &getTestingBestRect() const{ return m_TestingBestRect; }
     const cv::Rect &getTestingDifferenceRect() const{ return m_TestingDifferenceRect; }
     const cv::Rect &getTestingRIDFRect() const{ return m_TestingRIDFRect; }
+    const cv::Rect &getTestingRIDFAxisRect() const{ return m_TestingRIDFAxisRect; }
+    const cv::Vec3b &getTestingRIDFBackgroundColour() const{ return m_TestingRIDFBackgroundColour; }
+    const cv::Vec3b &getTestingRIDFLineColour() const{ return m_TestingRIDFLineColour; }
+    int getTestingRIDFLineThickness() const{ return m_TestingRIDFLineThickness; }
 
     void write(cv::FileStorage& fs) const
     {
@@ -52,6 +58,7 @@ public:
         fs << "snapshotPort" << getSnapshotPort();
         fs << "resolution" << getResolution();
         fs << "snapshotInterpolationMethod" << getSnapshotInterpolationMethod();
+        fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
 
         fs << "training" << "{";
         {
@@ -73,6 +80,10 @@ public:
             fs << "bestRect" << getTestingBestRect();
             fs << "differenceRect" << getTestingDifferenceRect();
             fs << "ridfRect" << getTestingRIDFRect();
+            fs << "ridfAxisRect" << getTestingRIDFAxisRect();
+            fs << "ridfBackgroundColour" << getTestingRIDFBackgroundColour();
+            fs << "ridfLineColour" << getTestingRIDFLineColour();
+            fs << "ridfLineThickness" << getTestingRIDFLineThickness();
         }
         fs << "}";
         fs << "}";
@@ -86,11 +97,12 @@ public:
         cv::read(node["snapshotPort"], m_SnapshotPort, m_SnapshotPort);
         cv::read(node["resolution"], m_Resolution, m_Resolution);
         cv::read(node["snapshotInterpolationMethod"], m_SnapshotInterpolationMethod, m_SnapshotInterpolationMethod);
+        cv::read(node["maxSnapshotRotateDegrees"], m_MaxSnapshotRotateDegrees, m_MaxSnapshotRotateDegrees);
 
         const auto &training = node["training"];
         if(training.isMap()) {
-            training["backgroundFilename"] >> m_TrainingBackgroundFilename;
-            training["liveRect"] >> m_TrainingLiveRect;
+            cv::read(training["backgroundFilename"], m_TrainingBackgroundFilename, m_TrainingBackgroundFilename);
+            cv::read(training["liveRect"], m_TrainingLiveRect, m_TrainingLiveRect);
             if(training["snapshotRects"].isSeq()) {
                 m_TrainingSnapshotRects.clear();
                 for(const auto &t : training["snapshotRects"]) {
@@ -102,12 +114,16 @@ public:
 
         const auto &testing = node["testing"];
         if(testing.isMap()) {
-            testing["backgroundFilename"] >> m_TestingBackgroundFilename;
-            testing["bestSnapshotPort"] >> m_TestingBestSnapshotPort;
-            testing["liveRect"] >> m_TestingLiveRect;
-            testing["bestRect"] >> m_TestingBestRect;
-            testing["differenceRect"] >> m_TestingDifferenceRect;
-            testing["ridfRect"] >> m_TestingRIDFRect;
+            cv::read(testing["backgroundFilename"], m_TestingBackgroundFilename, m_TestingBackgroundFilename);
+            cv::read(testing["bestSnapshotPort"], m_TestingBestSnapshotPort, m_TestingBestSnapshotPort);
+            cv::read(testing["liveRect"], m_TestingLiveRect, m_TestingLiveRect);
+            cv::read(testing["bestRect"], m_TestingBestRect, m_TestingBestRect);
+            cv::read(testing["differenceRect"], m_TestingDifferenceRect, m_TestingDifferenceRect);
+            cv::read(testing["ridfRect"], m_TestingRIDFRect, m_TestingRIDFRect);
+            cv::read(testing["ridfRect"], m_TestingRIDFAxisRect, m_TestingRIDFAxisRect);
+            cv::read(testing["ridfBackgroundColour"], m_TestingRIDFBackgroundColour, m_TestingRIDFBackgroundColour);
+            cv::read(testing["ridfLineColour"], m_TestingRIDFLineColour, m_TestingRIDFLineColour);
+            cv::read(testing["ridfLineThickness"], m_TestingRIDFLineThickness, m_TestingRIDFLineThickness);
         }
 
     }
@@ -127,6 +143,9 @@ private:
 
     // Which interpolation method should we use for upscaling snapshots
     int m_SnapshotInterpolationMethod;
+
+    // Maximum (absolute) angle snapshots will be rotated by
+    double m_MaxSnapshotRotateDegrees;
 
     // Filename for training background image
     std::string m_TrainingBackgroundFilename;
@@ -154,6 +173,15 @@ private:
 
     // Rectangle within which to display RIDF
     cv::Rect m_TestingRIDFRect;
+
+    // Rectangle within the RIDF rect to display axis
+    cv::Rect m_TestingRIDFAxisRect;
+
+    cv::Vec3b m_TestingRIDFBackgroundColour;
+
+    cv::Vec3b m_TestingRIDFLineColour;
+
+    int m_TestingRIDFLineThickness;
 };
 
 static inline void write(cv::FileStorage &fs, const std::string&, const Config &config)
