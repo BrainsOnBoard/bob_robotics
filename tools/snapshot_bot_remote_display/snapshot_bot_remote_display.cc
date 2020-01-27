@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
         configFile << "config" << config;
     }
 
-    cv::namedWindow("Output", cv::WINDOW_FULLSCREEN);
+    cv::namedWindow("Output", cv::WINDOW_NORMAL);
     cv::resizeWindow("Output", config.getResolution().width, config.getResolution().height);
     cv::setWindowProperty("Output", cv::WND_PROP_FULLSCREEN, cv::WINDOW_FULLSCREEN);
     // Create state machine
