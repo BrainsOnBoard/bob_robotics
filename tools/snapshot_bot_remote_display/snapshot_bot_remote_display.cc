@@ -238,7 +238,7 @@ private:
                     const auto &ridfAxisRect = m_Config.getTestingRIDFAxisRect();
                     const int ridfBottom = ridfAxisRect.y + ridfAxisRect.height;
                     const float ridfXScale = (float)ridfAxisRect.width / (float)(numScanColumns * 2);
-                    const float ridfYScale = (float)ridfAxisRect.height / 255.0;
+                    const float ridfYScale = (float)ridfAxisRect.height / (0.5f * 255.0f);
 
                     // Clear axis rectangle
                     cv::rectangle(m_OutputImage, ridfAxisRect, m_Config.getTestingRIDFBackgroundColour(), cv::FILLED);
