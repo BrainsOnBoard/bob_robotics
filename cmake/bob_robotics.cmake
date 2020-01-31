@@ -16,12 +16,12 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
+                          "EXECUTABLE;GENN_MODEL"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
 
-    if(NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_GAZEBO_PLUGIN)
+    if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
 
@@ -53,28 +53,6 @@ macro(BoB_project)
             add_executable(${target} "${file}" "${H_FILES}")
             list(APPEND BOB_TARGETS ${target})
         endforeach()
-    endif()
-
-    if(PARSED_ARGS_GAZEBO_PLUGIN)
-        get_filename_component(shortname ${PARSED_ARGS_GAZEBO_PLUGIN} NAME)
-        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
-
-        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-        # I'm sometimes getting linker errors when ld is linking against the
-        # static libs for BoB modules (because Gazebo plugins, as shared libs,
-        # are PIC, but the static libs seem not to be). So let's just compile
-        # everything as PIC.
-        if(GNU_TYPE_COMPILER)
-            add_definitions(-fPIC)
-        endif()
-
-        # Gazebo plugins are shared libraries
-        add_library(${target} SHARED ${PARSED_ARGS_GAZEBO_PLUGIN})
-        list(APPEND BOB_TARGETS ${target})
-
-        # We need to link against Gazebo libs
-        BoB_external_libraries(gazebo)
     endif()
 
     # If this project includes a GeNN model...
@@ -137,13 +115,22 @@ macro(BoB_project)
             set(ROBOT_TYPE Norbot)
         endif()
     endif()
-    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
-    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE} -DROBOT_TYPE_${ROBOT_TYPE_UPPER})
     message("Default robot type (if used): ${ROBOT_TYPE}")
 
-    # For EV3 (Lego) robots, we need an extra module
+    # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
+    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
+
+    # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
+    # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
+    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+    string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
+    add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
+
+    # Extra modules needed for some robot types
     if(${ROBOT_TYPE} STREQUAL EV3)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
+    elseif(${ROBOT_TYPE} STREQUAL Gazebo::Tank)
+        list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
 
     # Do linking etc.
@@ -197,7 +184,7 @@ macro(BoB_module_custom)
     cmake_parse_arguments(PARSED_ARGS
                           ""
                           ""
-                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
+                          "SOURCES;GAZEBO_PLUGINS;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB module")
@@ -206,6 +193,32 @@ macro(BoB_module_custom)
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
+
+    if(PARSED_ARGS_GAZEBO_PLUGINS)
+        # I'm sometimes getting linker errors when ld is linking against the
+        # static libs for BoB modules (because Gazebo plugins, as shared libs,
+        # are PIC, but the static libs seem not to be). So let's just compile
+        # everything as PIC.
+        if(GNU_TYPE_COMPILER)
+            add_definitions(-fPIC)
+        endif()
+
+        # We need to link against Gazebo libs
+        BoB_external_libraries(gazebo)
+
+        # Dump plugins into source dir
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+        foreach(plugin IN LISTS PARSED_ARGS_GAZEBO_PLUGINS)
+            # Use the plugin's filename, minus the extension as target name
+            get_filename_component(shortname ${plugin} NAME)
+            string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+
+            # Gazebo plugins are shared libraries
+            add_library(${target} SHARED ${plugin})
+            list(APPEND BOB_TARGETS ${target})
+        endforeach()
+    endif()
 
     # Module name is based on path relative to src/
     file(RELATIVE_PATH NAME "${BOB_ROBOTICS_PATH}/src" "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -255,6 +268,12 @@ macro(always_included_packages)
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
+    endif()
+
+    # Gazebo creates this target unconditionally, so make sure we don't try to
+    # create it twice
+    if(NOT TARGET FreeImage::FreeImage)
+        find_package(gazebo QUIET)
     endif()
 
     # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake

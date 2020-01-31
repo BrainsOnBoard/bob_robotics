@@ -46,10 +46,9 @@ main(int argc, char **argv)
             else{
                 std::cerr << "Unsupported flag\n";
             }
-            display->runInBackground();
             break;
         default:
-            std::cout <<"Usage ./bob_iris [-s,-p] [camera_url]\n";
+            std::cout <<"Usage " << argv[0] << " [-s,-p] [camera_url]\n";
 
     }
     Robots::Gazebo::UAV iris(node); // QuadCopter agent
@@ -60,7 +59,7 @@ main(int argc, char **argv)
 
     do {
         // Check for joystick events
-        if (!joystick.update()) {
+        if (!joystick.update() && (!display || !display->update())) {
             // A small delay so we don't hog CPU
             std::this_thread::sleep_for(5ms);
         }
