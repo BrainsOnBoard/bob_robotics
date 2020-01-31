@@ -183,7 +183,7 @@ public:
         MagnetoOperatingMode operatingMode = MagnetoOperatingMode::ContinuousConversion;
     };
 
-    LM9DS1(const char *path = "/dev/i2c-1", int accelGyroSlaveAddress = 0x6B, int magnetoSlaveAddress = 0x1E);
+    LM9DS1(const char *path = I2C_DEVICE_DEFAULT, int accelGyroSlaveAddress = 0x6B, int magnetoSlaveAddress = 0x1E);
 
     //----------------------------------------------------------------------------
     // Public API

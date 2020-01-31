@@ -22,6 +22,7 @@
  */
 
 #include <cmath>
+#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -47,7 +48,7 @@ namespace UTM
 #define UTM_E6		(UTM_E4*UTM_E2)		///< e^6
 #define UTM_EP2		(UTM_E2/(1-UTM_E2))	///< e'^2
 
-#define DEG_TO_RAD  M_PI/180    // (modified) constant 
+#define DEG_TO_RAD  M_PI/180    // (modified) constant
 #define RAD_TO_DEG  180/M_PI    // (modified) constant
 
     /**
@@ -134,7 +135,9 @@ namespace UTM
         LongOriginRad = LongOrigin * DEG_TO_RAD;
 
         //compute the UTM Zone from the latitude and longitude
-        snprintf(UTMZone,4, "%d%c", ZoneNumber, UTMLetterDesignator(Lat));
+        if (snprintf(UTMZone, 4, "%d%c", ZoneNumber, UTMLetterDesignator(Lat)) < 0) {
+            throw std::runtime_error("UTM: Bad input to snprintf");
+        }
 
         eccPrimeSquared = (eccSquared)/(1-eccSquared);
 
@@ -205,35 +208,35 @@ namespace UTM
         //+3 puts origin in middle of zone
         LongOrigin = (ZoneNumber - 1)*6 - 180 + 3;
         eccPrimeSquared = (eccSquared)/(1-eccSquared);
-        
+
         M = y / k0;
         mu = M/(a*(1-eccSquared/4-3*eccSquared*eccSquared/64
                    -5*eccSquared*eccSquared*eccSquared/256));
-        
-        phi1Rad = mu + ((3*e1/2-27*e1*e1*e1/32)*sin(2*mu) 
+
+        phi1Rad = mu + ((3*e1/2-27*e1*e1*e1/32)*sin(2*mu)
                         + (21*e1*e1/16-55*e1*e1*e1*e1/32)*sin(4*mu)
                         + (151*e1*e1*e1/96)*sin(6*mu));
-        
+
         N1 = a/sqrt(1-eccSquared*sin(phi1Rad)*sin(phi1Rad));
         T1 = tan(phi1Rad)*tan(phi1Rad);
         C1 = eccPrimeSquared*cos(phi1Rad)*cos(phi1Rad);
         R1 = a*(1-eccSquared)/pow(1-eccSquared*sin(phi1Rad)*sin(phi1Rad), 1.5);
         D = x/(N1*k0);
-        
+
         Lat = phi1Rad - ((N1*tan(phi1Rad)/R1)
                          *(D*D/2
                            -(5+3*T1+10*C1-4*C1*C1-9*eccPrimeSquared)*D*D*D*D/24
                            +(61+90*T1+298*C1+45*T1*T1-252*eccPrimeSquared
                              -3*C1*C1)*D*D*D*D*D*D/720));
-        
+
         Lat = Lat * RAD_TO_DEG;
-        
+
         Long = ((D-(1+2*T1+C1)*D*D*D/6
                  +(5-2*C1+28*T1-3*C1*C1+8*eccPrimeSquared+24*T1*T1)
                  *D*D*D*D*D/120)
                 / cos(phi1Rad));
         Long = LongOrigin + Long * RAD_TO_DEG;
-        
+
     }
 } // end namespace UTM
 
