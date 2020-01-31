@@ -115,10 +115,16 @@ macro(BoB_project)
             set(ROBOT_TYPE Norbot)
         endif()
     endif()
+    message("Default robot type (if used): ${ROBOT_TYPE}")
+    
+    # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
+    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
+    
+    # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
+    # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
     string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
     string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
-    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE} -DROBOT_TYPE_${ROBOT_TYPE_UPPER})
-    message("Default robot type (if used): ${ROBOT_TYPE}")
+    add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
 
     # Extra modules needed for some robot types
     if(${ROBOT_TYPE} STREQUAL EV3)
