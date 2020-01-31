@@ -5,11 +5,6 @@ if(NOT TARGET)
     set(TARGET simulator)
 endif()
 
-# Use EV3 robot over the network
-if(USE_EV3)
-    set(ROBOT_TYPE BundledTankNetSink)
-endif()
-
 if(${TARGET} STREQUAL simulator)
     set(SOURCES simulator.cc visualizationCommon.cc)
     set(BOB_MODULES common)

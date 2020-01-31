@@ -379,7 +379,7 @@ int bob_main(int argc, char *argv[])
     std::unique_ptr<SpeedSource> speedSource = std::make_unique<SpeedSourceOmni2DDeadReckon>(motor);
     std::unique_ptr<MotorController> motorController = createMotorController(motor);
     
-#ifdef USE_EV3
+#ifdef ROBOT_TYPE_EV3
     std::unique_ptr<HeadingSource> headingSource = std::make_unique<HeadingSourceEV3IMU>(motor.getConnection());
 #else
     std::unique_ptr<Net::Server> server;
@@ -488,7 +488,7 @@ int bob_main(int argc, char *argv[])
             // Render network activity
             visualize(activityImage);
 
-#ifdef USE_EV3
+#ifdef ROBOT_TYPE_EV3
             cv::imshow("activity", activityImage);
             if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
                 break;
