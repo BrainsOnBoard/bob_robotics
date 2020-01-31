@@ -116,10 +116,10 @@ macro(BoB_project)
         endif()
     endif()
     message("Default robot type (if used): ${ROBOT_TYPE}")
-    
+
     # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
     add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
-    
+
     # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
     # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
     string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
@@ -210,6 +210,7 @@ macro(BoB_module_custom)
         set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
         foreach(plugin IN LISTS PARSED_ARGS_GAZEBO_PLUGINS)
+            # Use the plugin's filename, minus the extension as target name
             get_filename_component(shortname ${plugin} NAME)
             string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
 
@@ -268,6 +269,9 @@ macro(always_included_packages)
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
     endif()
+
+    # Gazebo creates this target unconditionally, so make sure we don't try to
+    # create it twice
     if(NOT TARGET FreeImage::FreeImage)
         find_package(gazebo QUIET)
     endif()
