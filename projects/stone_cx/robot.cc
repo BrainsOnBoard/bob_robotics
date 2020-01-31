@@ -9,6 +9,7 @@
 #include "net/imu_netsource.h"
 #include "net/server.h"
 #include "robots/mecanum.h"
+#include "robots/norbot.h"
 #include "robots/tank.h"
 #include "third_party/units.h"
 #include "vicon/capture_control.h"
@@ -35,6 +36,7 @@
 #include <chrono>
 #include <fstream>
 #include <memory>
+#include <numeric>
 #include <thread>
 
 using namespace units::literals;
@@ -293,7 +295,7 @@ public:
     :   m_Tank(tank)
     {
     }
-    
+
     virtual void drive(float left, float right, bool log) override
     {
         // Calculate differential steering signal
@@ -301,7 +303,7 @@ public:
         if(log) {
             LOGI << "Steer:" << steering;
         }
-        
+
         // Clamp motor input values to be between -1 and 1
         const float leftMotor = 1.0f + steering;
         const float rightMotor = 1.0f - steering;
@@ -354,6 +356,16 @@ std::unique_ptr<MotorController> createMotorController(Robots::Omni2D &omni)
     return std::make_unique<MotorControllerOmni2D>(omni);
 }
 
+std::unique_ptr<SpeedSource> createSpeedSource(Robots::Tank &tank)
+{
+    return std::make_unique<SpeedSourceTankDeadReckon>(tank);
+}
+
+std::unique_ptr<SpeedSource> createSpeedSource(Robots::Omni2D &omni)
+{
+    return std::make_unique<SpeedSourceOmni2DDeadReckon>(omni);
+}
+
 void readHeadingThreadFunc(HeadingSource *headingSource,
                            std::atomic<bool> &shouldQuit,
                            std::atomic<float> &heading,
@@ -376,7 +388,7 @@ int bob_main(int argc, char *argv[])
     // Create motor interface
     Robots::ROBOT_TYPE motor;
 
-    std::unique_ptr<SpeedSource> speedSource = std::make_unique<SpeedSourceOmni2DDeadReckon>(motor);
+    std::unique_ptr<SpeedSource> speedSource = createSpeedSource(motor);
     std::unique_ptr<MotorController> motorController = createMotorController(motor);
     
 #ifdef ROBOT_TYPE_EV3
