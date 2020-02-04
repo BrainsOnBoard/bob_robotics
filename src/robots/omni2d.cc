@@ -67,6 +67,30 @@ void Omni2D::stopReadingFromNetwork()
     }
 }
 
+float
+Omni2D::getForwards() const
+{
+    return m_Forward;
+}
+
+float
+Omni2D::getSideways() const
+{
+    return m_Sideways;
+}
+
+float
+Omni2D::getTurn() const
+{
+    return m_Turn;
+}
+
+void Omni2D::setWheelSpeed(float forward, float sideways, float turn)
+{
+    m_Forward = forward;
+    m_Sideways = sideways;
+    m_Turn = turn;
+}
 
 void
 Omni2D::drive(float forward, float sideways, float turn, float deadZone)
