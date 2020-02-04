@@ -234,28 +234,34 @@ private:
                                 m_RIDF[(2 * numScanColumns) - 1 - i] = Navigation::AbsDiff::mean(sumDifference, imageSize);
                              });
 
+                    // Get range of
+                    const float minRIDF = *std::min_element(m_RIDF.cbegin(), m_RIDF.cend());
+                    const float maxRIDF = *std::max_element(m_RIDF.cbegin(), m_RIDF.cend());
+
                     // Get RIDF axis rect and calculate scale factors
                     const auto &ridfAxisRect = m_Config.getTestingRIDFAxisRect();
-                    const int ridfBottom = ridfAxisRect.y + ridfAxisRect.height;
                     const float ridfXScale = (float)ridfAxisRect.width / (float)(numScanColumns * 2);
-                    const float ridfYScale = (float)ridfAxisRect.height / (0.5f * 255.0f);
+                    const float ridfYScale = (float)(ridfAxisRect.height - m_Config.getTestingRIDFLineThickness()) / (maxRIDF - minRIDF);
 
-                    // Clear axis rectangle
-                    cv::rectangle(m_OutputImage, ridfAxisRect, m_Config.getTestingRIDFBackgroundColour(), cv::FILLED);
+                    // Get axis ROI
+                    cv::Mat roiRIDF(m_OutputImage, ridfAxisRect);
+
+                    // Clear axis
+                    roiRIDF.setTo(m_Config.getTestingRIDFBackgroundColour());
 
                     // Draw RIDF line graph
-                    cv::Point lastPoint(ridfAxisRect.x, ridfBottom - (int)std::round(m_RIDF[0] * (float)ridfYScale));
+                    cv::Point lastPoint(0, ridfAxisRect.height - (int)std::round((m_RIDF[0] - minRIDF) * ridfYScale));
                     for(int i = 1; i < (2 * numScanColumns); i++) {
-                        const cv::Point point(ridfAxisRect.x + (int)std::round(i * ridfXScale),
-                                              ridfBottom - (int)std::round(m_RIDF[i] * (float)ridfYScale));
-                        cv::line(m_OutputImage, lastPoint, point, m_Config.getTestingRIDFLineColour(), m_Config.getTestingRIDFLineThickness(), cv::LINE_AA);
+                        const cv::Point point(std::round(i * ridfXScale),
+                                              ridfAxisRect.height - (int)std::round((m_RIDF[i] - minRIDF) * ridfYScale));
+                        cv::line(roiRIDF, lastPoint, point, m_Config.getTestingRIDFLineColour(), m_Config.getTestingRIDFLineThickness(), cv::LINE_AA);
                         lastPoint = point;
                     }
 
                     // Get index of min RIDF element and hence calculate pixels to roll snapshot
                     // **YUCK** this information was clearly present deep within Navigation::InSilicoRotater
-                    const int minRIDF = (int)std::distance(m_RIDF.cbegin(), std::min_element(m_RIDF.cbegin(), m_RIDF.cend()));
-                    const int rollPixels = (minRIDF < numScanColumns) ? (numScanColumns - 1 - minRIDF) : (imageWidth + numScanColumns - 1 - minRIDF);
+                    const int minRIDFIdx = (int)std::distance(m_RIDF.cbegin(), std::min_element(m_RIDF.cbegin(), m_RIDF.cend()));
+                    const int rollPixels = (minRIDFIdx < numScanColumns) ? (numScanColumns - 1 - minRIDFIdx) : (imageWidth + numScanColumns - 1 - minRIDFIdx);
                     BOB_ASSERT(rollPixels >= 0);
                     BOB_ASSERT(rollPixels < imageWidth);
 
