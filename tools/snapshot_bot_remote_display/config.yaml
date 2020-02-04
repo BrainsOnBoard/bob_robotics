@@ -24,11 +24,7 @@ config:
       liveRect: [ 420, 75, 1080, 150 ]
       bestRect: [ 420, 305, 1080, 150 ]
       differenceRect: [ 420, 550, 1080, 150 ]
-      ridfAxisRect: [ 486, 795, 995, 92 ]
-      ridfBackgroundColour: [ 40, 160, 237 ]
-      ridfLineColour: [ 0, 0, 0 ]
-      ridfLineThickness: 2
-      ridfPalette:
+      differencePalette:
         - [103, 0, 31]
         - [106, 1, 31]
         - [109, 2, 32]
@@ -284,5 +280,9 @@ config:
         - [8, 54, 106]
         - [7, 52, 103]
         - [6, 50, 100]
-        [5, 48, 97]]
-
+        - [5, 48, 97]
+      ridfAxisRect: [ 486, 795, 995, 92 ]
+      ridfBackgroundColour: [ 40, 160, 237 ]
+      ridfLineColour: [ 0, 0, 0 ]
+      ridfLineThickness: 2
+      
