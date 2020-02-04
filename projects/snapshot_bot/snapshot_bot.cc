@@ -46,7 +46,10 @@ enum class State
     Training,
     WaitToTest,
     Testing,
-    Driving,
+    DrivingForward,
+    Turning,
+    PausedDrivingForward,
+    PausedTurning,
 };
 
 //------------------------------------------------------------------------
@@ -196,8 +199,8 @@ private:
                 return false;
             }
 
-            if(state != State::Testing && state != State::Driving) {
-                 // Drive motors using joystick
+            // If we're in a suitable state, drive motors using joystick
+            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {                 
                 m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
             }
 
@@ -420,36 +423,60 @@ private:
                     }
                 }
 
-                // Determine how fast we should turn based on the absolute angle
-                auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
-
-                // If we should turn, do so
-                if(turnSpeed > 0.0f) {
-                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
-                    m_Robot.turnOnTheSpot(motorTurn);
+                // If we should turn, set timer and transition to turning state
+                if(m_Config.getTurnSpeed(m_Memory->getBestHeading()) > 0.0f) {
                     m_DriveTime = m_Config.getMotorTurnCommandInterval();
+                    m_StateMachine.transition(State::Turning);
                 }
-                // Otherwise drive forwards
+                // Otherwise, set timer and transition to driving forward state
                 else {
-                    m_Robot.moveForward(m_Config.getMoveSpeed());
                     m_DriveTime = m_Config.getMotorCommandInterval();
+                    m_StateMachine.transition(State::DrivingForward);
                 }
 
-                // Transition to driving state
-                m_StateMachine.transition(State::Driving);
+               
             }
         }
-        else if(state == State::Driving) {
+        else if(state == State::DrivingForward || state == State::Turning) {
             if(event == Event::Enter) {
+                // If we're driving forward, do so
+                if(state == State::DrivingForward) {
+                    m_Robot.moveForward(m_Config.getMoveSpeed());
+                }
+                // Otherwisem start turning
+                else {
+                    const float turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
+                    m_Robot.turnOnTheSpot(motorTurn);
+                }
+                
+                // Start timer
                 m_MoveStopwatch.start();
             }
             else if(event == Event::Update) {
-                if(m_MoveStopwatch.elapsed() > m_DriveTime) {
+                // If A is pressed
+                if(m_Joystick.isPressed(HID::JButton::A)) {
+                    // Subtract time we've already moved for from drive time
+                    m_DriveTime -= m_MoveStopwatch.elapsed();
+                    
+                    // Transition to correct paused state
+                    m_StateMachine.transition((state == State::DrivingForward) ? State::PausedDrivingForward : State::PausedTurning);
+                }
+                // Otherwise, if drive time has passed
+                else if(m_MoveStopwatch.elapsed() > m_DriveTime) {
                     m_StateMachine.transition(State::Testing);
                 }
             }
             else if(event == Event::Exit) {
                 m_Robot.stopMoving();
+            }
+        }
+        else if(state == State::PausedDrivingForward || state == State::PausedTurning) {
+            if(event == Event::Update) {
+                // If A is pressed, transition back to correct movement state
+                if(m_Joystick.isPressed(HID::JButton::A)) {
+                    m_StateMachine.transition((state == State::PausedDrivingForward) ? State::DrivingForward : State::Turning);
+                }
             }
         }
         else {
@@ -513,6 +540,9 @@ private:
 
     Milliseconds m_DriveTime;
 
+    // Is testing paused
+    bool m_TestingPaused;
+    
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
