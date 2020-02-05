@@ -280,7 +280,7 @@ private:
 
                     // Calculate difference image
                     cv::absdiff(m_BestSnapshot, m_RotatedSnapshot, m_RotatedSnapshot);
-                    cv::applyColorMap(m_RotatedSnapshot, m_RotatedSnapshot, cv::COLORMAP_JET);
+                    cv::applyColorMap(m_RotatedSnapshot, m_RotatedSnapshot, cv::COLORMAP_HOT);
                     resizeAndProcessImageIntoOutputROI(m_Config.getTestingDifferenceRect(), m_RotatedSnapshot);
 
                     // Show best snapshot
