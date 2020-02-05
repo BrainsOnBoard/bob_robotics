@@ -278,11 +278,8 @@ private:
                         std::rotate_copy(rowPtr, rowPtr + rollPixels, rowPtr + m_Snapshot.cols, rowPtrOut);
                     }
 
-                    // Calculate signed difference image [-255, 255]
-                    //cv::subtract(m_BestSnapshot, m_RotatedSnapshot, m_DifferenceImage, cv::noArray(), CV_16SC1);
-                    //cv::add(m_DifferenceImage, 255, m_DifferenceImage);
-                    cv::addWeighted(m_BestSnapshot, -0.5, m_RotatedSnapshot, 0.5, 128, m_RotatedSnapshot);
-                    //cv::absdiff(m_BestSnapshot, m_RotatedSnapshot, m_RotatedSnapshot);
+                    // Calculate difference image
+                    cv::absdiff(m_BestSnapshot, m_RotatedSnapshot, m_RotatedSnapshot);
                     cv::applyColorMap(m_RotatedSnapshot, m_RotatedSnapshot, cv::COLORMAP_JET);
                     resizeAndProcessImageIntoOutputROI(m_Config.getTestingDifferenceRect(), m_RotatedSnapshot);
 
@@ -390,7 +387,6 @@ private:
     // Scratch images for RIDF calculation
     cv::Mat m_SnapshotDifferenceScratch;
     cv::Mat m_RotatedSnapshot;
-    cv::Mat m_DifferenceImage;
 
     // Array of training snapshots
     std::vector<cv::Mat> m_TrainingSnapshots;
