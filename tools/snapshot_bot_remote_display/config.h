@@ -22,7 +22,7 @@ public:
         m_TrainingSnapshotRects{{100, 500, 720, 100}, {1100, 500, 720, 100}, {100, 650, 720, 100}, {1100, 650, 720, 100},
                                 {100, 800, 720, 100}, {1100, 800, 720, 100}, {100, 950, 720, 100}, {1100, 950, 720, 100}},
         m_TestingBestSnapshotPort(2002), m_TestingLiveRect(420, 150, 1080, 150), m_TestingBestRect(420, 400, 1080, 150),
-        m_TestingDifferenceRect(420, 650, 1080, 150), m_TestingDifferencePalette(1, 256, CV_8UC3), m_TestingRIDFAxisRect(445, 925, 1030, 100),
+        m_TestingDifferenceRect(420, 650, 1080, 150), m_TestingRIDFAxisRect(445, 925, 1030, 100),
         m_TestingRIDFBackgroundColour(255, 255, 255), m_TestingRIDFLineColour(0, 0, 0), m_TestingRIDFLineThickness(4)
     {
     }
@@ -82,13 +82,6 @@ public:
             fs << "ridfBackgroundColour" << getTestingRIDFBackgroundColour();
             fs << "ridfLineColour" << getTestingRIDFLineColour();
             fs << "ridfLineThickness" << getTestingRIDFLineThickness();
-
-            assert(m_TestingDifferencePalette.cols == 256 && m_TestingDifferencePalette.rows == 1);
-            fs << "differencePalette" << "[";
-            for(int i = 0; i < 256; i++) {
-                fs << m_TestingDifferencePalette.at<cv::Vec3b>(i);
-            }
-            fs << "]";
         }
         fs << "}";
         fs << "}";
@@ -128,14 +121,6 @@ public:
             cv::read(testing["ridfBackgroundColour"], m_TestingRIDFBackgroundColour, m_TestingRIDFBackgroundColour);
             cv::read(testing["ridfLineColour"], m_TestingRIDFLineColour, m_TestingRIDFLineColour);
             cv::read(testing["ridfLineThickness"], m_TestingRIDFLineThickness, m_TestingRIDFLineThickness);
-
-            assert(m_TestingDifferencePalette.cols == 256 && m_TestingDifferencePalette.rows == 1);
-            if(testing["differencePalette"].isSeq()) {
-                assert(testing["differencePalette"].size() == 256);
-                for(int i = 0; i < 256; i++) {
-                    testing["differencePalette"][i] >> m_TestingDifferencePalette.at<cv::Vec3b>(i);
-                }
-            }
         }
 
     }
@@ -182,9 +167,6 @@ private:
 
     // Rectangle within which to display difference image when testing
     cv::Rect m_TestingDifferenceRect;
-
-    // Palette for rendering difference image
-    cv::Mat m_TestingDifferencePalette;
 
     // Rectangle within the RIDF rect to display axis
     cv::Rect m_TestingRIDFAxisRect;
