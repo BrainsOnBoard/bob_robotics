@@ -43,18 +43,11 @@ public:
         m_Serial.write(data);
     }
 
-    float getForwards() const;
-    float getSideways() const;
-    float getTurn() const;
-
 private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
     BoBRobotics::SerialInterface m_Serial;
-    float m_Forward;
-    float m_Sideways;
-    float m_Turn;
     const bool m_AlternativeWiring;
 }; // Mecanum
 } // Robots

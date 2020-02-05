@@ -8,7 +8,7 @@
     <include>
       <uri>panoramic_camera</uri>
     </include>
-   
+
     <!-- plugins -->
     <plugin name="rotor_0_blade_1" filename="libLiftDragPlugin.so">
       <a0>0.1</a0>
@@ -141,7 +141,7 @@
       <upward>0 0 1</upward>
       <link_name>iris::rotor_3</link_name>
     </plugin>
-    <plugin name="arducopter_plugin" filename="libgazebo_quadcopter_plugin.so">
+    <plugin name="arducopter_plugin" filename="libuav_plugin.so">
       <imuName>iris_demo::iris::iris/imu_link::imu_sensor</imuName>
       <connectionTimeoutMaxCount>5</connectionTimeoutMaxCount>
       <rotor id="0">
