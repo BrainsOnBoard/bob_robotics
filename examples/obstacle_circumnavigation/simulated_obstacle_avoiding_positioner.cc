@@ -4,7 +4,7 @@
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/simulated_tank.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"

@@ -8,8 +8,8 @@
 #include "robots/control/collision_detector.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
-#include "viz/sfml_world/arena_object.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/arena_object.h"
+#include "viz/sfml/sfml_world.h"
 
 // Eigen
 #include <Eigen/Core>

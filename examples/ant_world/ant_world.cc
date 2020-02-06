@@ -2,9 +2,9 @@
 #include "common/logging.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "hid/joystick_sfml_keyboard.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
+#include "viz/sfml/joystick_keyboard.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     }
 
     // Create HID device for controlling movement
-    auto joystick = HID::JoystickSFMLKeyboard::createJoystick(window);
+    auto joystick = Viz::JoystickKeyboard::createJoystick(window);
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();

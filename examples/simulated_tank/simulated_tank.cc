@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "common/logging.h"
 #include "common/main.h"
-#include "hid/joystick_sfml_keyboard.h"
 #include "robots/simulated_tank.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/joystick_keyboard.h"
+#include "viz/sfml/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -22,7 +22,7 @@ bob_main(int, char **)
     Viz::SFMLWorld display;                         // For displaying the agent
     auto car = display.createCarAgent();
 
-    auto joystick = HID::JoystickSFMLKeyboard::createJoystick(display.getWindow());
+    auto joystick = Viz::JoystickKeyboard::createJoystick(display.getWindow());
     robot.controlWithThumbsticks(*joystick);
 
     joystick->addHandler([&robot](HID::JButton button, bool pressed) {

@@ -1,36 +1,36 @@
 // BoB robotics includes
 #include "common/logging.h"
-#include "hid/joystick_sfml_keyboard.h"
+#include "viz/sfml/joystick_keyboard.h"
 
 // Standard C++ includes
 #include <stdexcept>
 
 namespace BoBRobotics {
-namespace HID {
+namespace Viz {
 
-const JoystickSFMLKeyboard::AxisKey JoystickSFMLKeyboard::AxisKeys[] = {
-    { sf::Keyboard::Key::S, sf::Keyboard::Key::W, JAxis::LeftStickVertical },
-    { sf::Keyboard::Key::D, sf::Keyboard::Key::A, JAxis::LeftStickHorizontal },
-    { sf::Keyboard::Key::Down, sf::Keyboard::Key::Up, JAxis::RightStickVertical },
-    { sf::Keyboard::Key::Right, sf::Keyboard::Key::Left, JAxis::RightStickHorizontal },
-    { sf::Keyboard::Key::PageDown, sf::Keyboard::Key::PageUp, JAxis::RightTrigger }
+const JoystickKeyboard::AxisKey JoystickKeyboard::AxisKeys[] = {
+    { sf::Keyboard::Key::S, sf::Keyboard::Key::W, HID::JAxis::LeftStickVertical },
+    { sf::Keyboard::Key::D, sf::Keyboard::Key::A, HID::JAxis::LeftStickHorizontal },
+    { sf::Keyboard::Key::Down, sf::Keyboard::Key::Up, HID::JAxis::RightStickVertical },
+    { sf::Keyboard::Key::Right, sf::Keyboard::Key::Left, HID::JAxis::RightStickHorizontal },
+    { sf::Keyboard::Key::PageDown, sf::Keyboard::Key::PageUp, HID::JAxis::RightTrigger }
 };
-const JoystickSFMLKeyboard::ButtonKey JoystickSFMLKeyboard::ButtonKeys[] = {
-    { sf::Keyboard::Key::Num1, JButton::A },
-    { sf::Keyboard::Key::Num2, JButton::B },
-    { sf::Keyboard::Key::Num3, JButton::X },
-    { sf::Keyboard::Key::Num4, JButton::Y }
+const JoystickKeyboard::ButtonKey JoystickKeyboard::ButtonKeys[] = {
+    { sf::Keyboard::Key::Num1, HID::JButton::A },
+    { sf::Keyboard::Key::Num2, HID::JButton::B },
+    { sf::Keyboard::Key::Num3, HID::JButton::X },
+    { sf::Keyboard::Key::Num4, HID::JButton::Y }
 };
 
 //------------------------------------------------------------------------
-// BoBRobotics::HID::JoystickSFMLKeyboard
+// BoBRobotics::Viz::JoystickKeyboard
 //------------------------------------------------------------------------
-JoystickSFMLKeyboard::JoystickSFMLKeyboard(sf::Window &window)
+JoystickKeyboard::JoystickKeyboard(sf::Window &window)
   : JoystickBase(0.0f), m_Window(window)
 {}
 
 //------------------------------------------------------------------------
-bool JoystickSFMLKeyboard::updateState()
+bool JoystickKeyboard::updateState()
 {
     bool changed = false;
 
@@ -71,7 +71,7 @@ bool JoystickSFMLKeyboard::updateState()
 }
 
 std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>>
-JoystickSFMLKeyboard::createJoystick(sf::Window &window)
+JoystickKeyboard::createJoystick(sf::Window &window)
 {
     try
     {
@@ -80,8 +80,8 @@ JoystickSFMLKeyboard::createJoystick(sf::Window &window)
     catch(std::runtime_error &ex)
     {
         LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
-        return std::make_unique<HID::JoystickSFMLKeyboard>(window);
+        return std::make_unique<JoystickKeyboard>(window);
     }
 }
-} // HID
+} // Viz
 } // BoBRobotics

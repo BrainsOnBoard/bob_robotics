@@ -5,4 +5,4 @@ BoB_project(SOURCES simulated_obstacle_avoiding_positioner.cc
                     vicon_obstacle_avoiding_positioner.cc
                     vicon_obstacle_circumnavigation.cc
             BOB_MODULES common hid navigation net robots robots/control vicon
-                        viz/sfml_world)
+                        viz/sfml)

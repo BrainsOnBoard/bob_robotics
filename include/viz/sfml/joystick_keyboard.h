@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "joystick.h"
+#include "hid/joystick.h"
 
 // SFML
 #include <SFML/Graphics.hpp>
@@ -10,20 +10,20 @@
 #include <memory>
 
 namespace BoBRobotics {
-namespace HID {
+namespace Viz {
 
 //------------------------------------------------------------------------
-// BoBRobotics::HID::JoystickSFMLKeyboard
+// BoBRobotics::Viz::JoystickKeyboard
 //------------------------------------------------------------------------
 /*!
  * \brief Class for using keyboard (via SFML) as a joystick
  */
-class JoystickSFMLKeyboard : public JoystickBase<JAxis, JButton>
+class JoystickKeyboard : public HID::JoystickBase<HID::JAxis, HID::JButton>
 {
 public:
-    JoystickSFMLKeyboard(sf::Window &window);
+    JoystickKeyboard(sf::Window &window);
 
-    static std::unique_ptr<JoystickBase<JAxis, JButton>> createJoystick(sf::Window &);
+    static std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::Window &);
 
 protected:
     //------------------------------------------------------------------------
@@ -34,11 +34,11 @@ protected:
 private:
     struct AxisKey {
         sf::Keyboard::Key positiveKey, negativeKey;
-        JAxis axis;
+        HID::JAxis axis;
     };
     struct ButtonKey {
         sf::Keyboard::Key key;
-        JButton button;
+        HID::JButton button;
     };
 
     //------------------------------------------------------------------------
