@@ -1,3 +1,4 @@
+#ifdef __linux__
 #include "common/bn055_imu.h"
 
 // Standard C++ includes
@@ -119,3 +120,4 @@ BN055::OperationMode BN055::setMode(OperationMode mode)
     return oldMode;
 }
 }   // namespace BoBRobotics
+#endif // __linux__
