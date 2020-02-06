@@ -112,12 +112,14 @@ macro(BoB_project)
     endif()
 
     # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
-    # or CMake param (defaults to Norbot)
+    # or CMake param
     if(NOT ROBOT_TYPE)
         if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
             set(ROBOT_TYPE $ENV{ROBOT_TYPE})
-        else()
+        elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
             set(ROBOT_TYPE Norbot)
+        else()
+            set(ROBOT_TYPE Tank)
         endif()
     endif()
     message("Default robot type (if used): ${ROBOT_TYPE}")
