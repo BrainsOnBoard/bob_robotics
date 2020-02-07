@@ -88,6 +88,8 @@ getLogLevel(plog::Severity defaultLogLevel)
 
 namespace BoBRobotics {
 namespace Logging {
+Logger Logger::logger;
+
 Logger::Logger(plog::Severity defaultLogLevel)
 {
     // Get log level
@@ -116,7 +118,6 @@ Logger::Logger(plog::Severity defaultLogLevel)
 Logger &
 Logger::getInstance()
 {
-    static Logger logger(DefaultLogLevel);
     return logger;
 }
 
