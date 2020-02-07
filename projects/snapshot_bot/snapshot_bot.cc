@@ -329,7 +329,7 @@ private:
                 // If vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
                     // Get tracking data
-                    const auto objectData = m_ViconTracking.getObjectData(0);
+                    const auto objectData = m_ViconTracking.getObjectData();
                     const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                     const auto &position = pose.position();
                     const auto &attitude = pose.attitude();

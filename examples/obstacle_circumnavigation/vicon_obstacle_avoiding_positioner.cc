@@ -63,7 +63,7 @@ public:
     PositionerExample()
       : m_Tank(m_Client)
       , m_Vicon(51001)
-      , m_ViconObject(m_Vicon.getObjectReference(0))
+      , m_ViconObject(m_Vicon.getObjectReference())
       , m_Positioner(m_Tank,
                      m_ViconObject,
                      StoppingDistance,
