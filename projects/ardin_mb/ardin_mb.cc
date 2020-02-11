@@ -57,14 +57,16 @@ int main(int argc, char *argv[])
     glPointSize(4.0);
 
     // Create memory
-    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+#ifdef NO_GENN
+    Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
+#else
     MBMemory memory;
-
+#endif
     // Create state machine and set it as window user pointer
     const auto worldFilename = Path::getResourcesPath() / "antworld" / "world5000_gray.bin";
     const std::string routeFilename = (argc > 1) ? argv[1] : "";
-    StateHandler stateHandler(worldFilename, routeFilename, memory);
+    StateHandler stateHandler(worldFilename.str(), routeFilename, memory);
 
     // Loop until window should close
     sf::Event event;
