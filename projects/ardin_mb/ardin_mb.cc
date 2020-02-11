@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
                 stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
                 break;
 
-            case sf::Keyboard::Key::Enter:
+            case sf::Keyboard::Key::Return:
                 stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
                 break;
 
