@@ -90,7 +90,6 @@ int main(int argc, char *argv[])
     sf::Event event;
     for (unsigned int frame = 0; window.isOpen(); frame++) {
         // Process events
-        sf::Event event;
         while (window.pollEvent(event)) {
             // Close window: exit
             if (event.type == sf::Event::Closed) {
