@@ -95,6 +95,56 @@ int main(int argc, char *argv[])
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
+            // Key events
+            else if(event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased) {
+                const bool pressed = event.type == sf::Event::KeyPressed;
+
+                // Apply new key state to bits of key bits
+                switch(event.key.code) {
+                    case sf::Keyboard::Key::Left:
+                        stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::Right:
+                        stateHandler.setKeyState(StateHandler::KeyRight, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::Up:
+                        stateHandler.setKeyState(StateHandler::KeyUp, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::Down:
+                        stateHandler.setKeyState(StateHandler::KeyDown, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::R:
+                        stateHandler.setKeyState(StateHandler::KeyReset, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::Space:
+                        stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::Return:
+                        stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::S:
+                        stateHandler.setKeyState(StateHandler::KeySaveSnapshot, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::W:
+                        stateHandler.setKeyState(StateHandler::KeyRandomWalk, pressed);
+                        break;
+
+                    case sf::Keyboard::Key::V:
+                        stateHandler.setKeyState(StateHandler::KeyBuildVectorField, pressed);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
         }
 
         // Clear colour and depth buffer
@@ -107,56 +157,6 @@ int main(int argc, char *argv[])
 
         // Swap front and back buffers
         window.display();
-
-        // Poll for and process events
-        if (window.pollEvent(event) && (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)) {
-            const bool pressed = event.type == sf::Event::KeyPressed;
-
-            // Apply new key state to bits of key bits
-            switch(event.key.code) {
-            case sf::Keyboard::Key::Left:
-                stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
-                break;
-
-            case sf::Keyboard::Key::Right:
-                stateHandler.setKeyState(StateHandler::KeyRight, pressed);
-                break;
-
-            case sf::Keyboard::Key::Up:
-                stateHandler.setKeyState(StateHandler::KeyUp, pressed);
-                break;
-
-            case sf::Keyboard::Key::Down:
-                stateHandler.setKeyState(StateHandler::KeyDown, pressed);
-                break;
-
-            case sf::Keyboard::Key::R:
-                stateHandler.setKeyState(StateHandler::KeyReset, pressed);
-                break;
-
-            case sf::Keyboard::Key::Space:
-                stateHandler.setKeyState(StateHandler::KeyTrainSnapshot, pressed);
-                break;
-
-            case sf::Keyboard::Key::Return:
-                stateHandler.setKeyState(StateHandler::KeyTestSnapshot, pressed);
-                break;
-
-            case sf::Keyboard::Key::S:
-                stateHandler.setKeyState(StateHandler::KeySaveSnapshot, pressed);
-                break;
-
-            case sf::Keyboard::Key::W:
-                stateHandler.setKeyState(StateHandler::KeyRandomWalk, pressed);
-                break;
-
-            case sf::Keyboard::Key::V:
-                stateHandler.setKeyState(StateHandler::KeyBuildVectorField, pressed);
-                break;
-            default:
-                break;
-            }
-        }
     }
 
     return 0;
