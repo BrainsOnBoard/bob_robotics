@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     glLineWidth(4.0);
     glPointSize(4.0);
 
+    Logging::Logger::getInstance();
     // Create memory
 #ifdef NO_GENN
     Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
@@ -68,17 +69,22 @@ int main(int argc, char *argv[])
     std::string routeFilename = "";
     std::string logFilename = "";
     float heightMetres = 0.01f;
+    std::vector<float> minBound;
+    std::vector<float> maxBound;
 
     CLI::App app{"Mushroom body navigation model"};
     app.add_option("--world", worldFilename, "File to load world from", true);
     app.add_option("--height", heightMetres, "Height in metres to navigate at", true);
+    app.add_option("--min-bound", minBound, "Override default world min bound with this one", true)->expected(3);
+    app.add_option("--max-bound", maxBound, "Override default world max bound with this one", true)->expected(3);
     app.add_option("route", routeFilename, "Filename of route");
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);
 
     // Create state machine
-    StateHandler stateHandler(worldFilename, routeFilename, units::length::meter_t{heightMetres}, memory);
+    StateHandler stateHandler(worldFilename, routeFilename, units::length::meter_t{heightMetres},
+                              minBound, maxBound, memory);
 
     // Loop until window should close
     sf::Event event;

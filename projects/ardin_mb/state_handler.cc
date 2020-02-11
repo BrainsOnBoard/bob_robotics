@@ -20,6 +20,7 @@ using namespace units::length;
 // StateHandler
 //----------------------------------------------------------------------------
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, meter_t pathHeight,
+                           const std::vector<float> &minBound, const std::vector<float> &maxBound,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input({ SimParams::displayRenderWidth, SimParams::displayRenderHeight }, { 0, SimParams::displayRenderWidth + 10 }), m_Route(0.2f, 800),
@@ -34,6 +35,15 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
     }
     else {
         m_Renderer.getWorld().loadObj(worldFilename);
+    }
+
+    // Override world bounds if they are specified
+    if(!minBound.empty()) {
+        m_Renderer.getWorld().setMinBound(Vector3<meter_t>(meter_t(minBound[0]), meter_t(minBound[1]), meter_t(minBound[2])));
+    }
+
+    if(!maxBound.empty()) {
+        m_Renderer.getWorld().setMaxBound(Vector3<meter_t>(meter_t(maxBound[0]), meter_t(maxBound[1]), meter_t(maxBound[2])));
     }
 
     // If route is specified

@@ -74,6 +74,7 @@ public:
     };
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename, meter_t pathHeight,
+                 const std::vector<float> &minBound, const std::vector<float> &maxBound,
                  BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
 
     //------------------------------------------------------------------------
