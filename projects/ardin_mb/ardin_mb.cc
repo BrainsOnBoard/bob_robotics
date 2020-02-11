@@ -89,6 +89,15 @@ int main(int argc, char *argv[])
     // Loop until window should close
     sf::Event event;
     for (unsigned int frame = 0; window.isOpen(); frame++) {
+        // Process events
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            // Close window: exit
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+
         // Clear colour and depth buffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
