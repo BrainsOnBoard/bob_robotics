@@ -73,7 +73,7 @@ bool StateHandler::handleEvent(State state, Event event)
     if(event == Event::Update) {
 
         // Render top down and ants eye view
-        m_Renderer.renderPanoramicView(m_Pose.y(), m_Pose.x(), m_PathHeight,
+        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_PathHeight,
                                        m_Pose.yaw(), 0.0_deg, 0.0_deg,
                                        0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
         m_Renderer.renderTopDownView(0, 0, SimParams::displayRenderWidth, SimParams::displayRenderWidth);
