@@ -1,8 +1,4 @@
-// This is the main file, so we do want header definitions for this object
-#undef NO_HEADER_DEFINITIONS
-
 // BoB Robotics includes
-#include "common/path.h"
 #include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
@@ -12,6 +8,9 @@
 #include "mb_params.h"
 #include "sim_params.h"
 #include "state_handler.h"
+
+// CLI11 includes
+#include "third_party/CLI11.hpp"
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -63,10 +62,23 @@ int main(int argc, char *argv[])
 #else
     MBMemory memory;
 #endif
-    // Create state machine and set it as window user pointer
-    const auto worldFilename = Path::getResourcesPath() / "antworld" / "world5000_gray.bin";
-    const std::string routeFilename = (argc > 1) ? argv[1] : "";
-    StateHandler stateHandler(worldFilename.str(), routeFilename, memory);
+
+     // Default parameters"
+    std::string worldFilename = "";
+    std::string routeFilename = "";
+    std::string logFilename = "";
+    float heightMetres = 0.01f;
+
+    CLI::App app{"Mushroom body navigation model"};
+    app.add_option("--world", worldFilename, "File to load world from", true);
+    app.add_option("--height", heightMetres, "Height in metres to navigate at", true);
+    app.add_option("route", routeFilename, "Filename of route");
+
+    // Parse command line arguments
+    CLI11_PARSE(app, argc, argv);
+
+    // Create state machine
+    StateHandler stateHandler(worldFilename, routeFilename, units::length::meter_t{heightMetres}, memory);
 
     // Loop until window should close
     sf::Event event;

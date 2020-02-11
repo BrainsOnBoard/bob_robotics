@@ -73,7 +73,7 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename, meter_t pathHeight,
                  BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
 
     //------------------------------------------------------------------------
@@ -159,6 +159,9 @@ private:
 
     //! Distribution of angles to turn for random walk
     std::uniform_real_distribution<float> m_RandomWalkAngleDistribution;
+
+    //! Height of path
+    const meter_t m_PathHeight;
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;

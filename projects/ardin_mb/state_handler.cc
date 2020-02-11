@@ -4,6 +4,7 @@
 #include <cmath>
 
 // BoBRobotics includes
+#include "common/path.h"
 #include "common/logging.h"
 #include "navigation/visual_navigation_base.h"
 
@@ -18,15 +19,22 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 // StateHandler
 //----------------------------------------------------------------------------
-StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, meter_t pathHeight,
                            BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input({ SimParams::displayRenderWidth, SimParams::displayRenderHeight }, { 0, SimParams::displayRenderWidth + 10 }), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+    m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
+    m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation)
 {
     // Load world
-    m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
+    if(worldFilename.empty()) {
+        m_Renderer.getWorld().load((Path::getResourcesPath() / "antworld" / "world5000_gray.bin").str(),
+                                   SimParams::worldColour, SimParams::groundColour);
+    }
+    else {
+        m_Renderer.getWorld().loadObj(worldFilename);
+    }
 
     // If route is specified
     if(!routeFilename.empty()) {
@@ -55,7 +63,7 @@ bool StateHandler::handleEvent(State state, Event event)
     if(event == Event::Update) {
 
         // Render top down and ants eye view
-        m_Renderer.renderPanoramicView(m_Pose.y(), m_Pose.x(), 0.01_m,
+        m_Renderer.renderPanoramicView(m_Pose.y(), m_Pose.x(), m_PathHeight,
                                        m_Pose.yaw(), 0.0_deg, 0.0_deg,
                                        0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
         m_Renderer.renderTopDownView(0, 0, SimParams::displayRenderWidth, SimParams::displayRenderWidth);
