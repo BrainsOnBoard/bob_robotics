@@ -76,10 +76,10 @@ namespace Net {
  * We set sendFlags to MSG_NOSIGNAL  on Linux, because otherwise a broken pipe
  * will terminate the program.
  */
-#ifdef _WIN32
-constexpr int sendFlags = 0;
-#else
+#ifdef __linux__
 constexpr int sendFlags = MSG_NOSIGNAL;
+#else
+constexpr int sendFlags = 0;
 #endif
 
 /*!

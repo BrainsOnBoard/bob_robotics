@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __linux__
 
 // Standard C++ includes
 #include <functional>
@@ -63,3 +64,4 @@ private:
 }; // Video4LinuxCamera
 } // Video
 } // BoBRobotics
+#endif // __linux__

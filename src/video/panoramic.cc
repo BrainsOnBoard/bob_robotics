@@ -23,8 +23,8 @@ namespace Video {
 //! Try to find a panoramic camera on the current machine and return it
 std::unique_ptr<Input> getPanoramicCamera(cv::VideoCaptureAPIs api)
 {
-#ifdef _WIN32
-    // for Windows we currently just select the first camera
+#ifndef __linux__
+    // for Windows and macOS we currently just select the first camera
     return std::make_unique<OpenCVInput>(0 + api, cv::Size(1280, 720), "webcam360");
 #else
     // get vector of video input devices on system
