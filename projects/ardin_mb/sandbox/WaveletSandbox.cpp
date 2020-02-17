@@ -1,12 +1,12 @@
 
 #include "opencv2/imgproc/imgproc.hpp"
-#include "third_party/wavelib/linuxshared/wavelet2d.h"
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <unistd.h>
+#include "wavelib/wavelet2s.h"
 
 using namespace cv;
 using namespace std;
@@ -45,10 +45,10 @@ main(int argc, char **argv)
     vector<int> length;
     vector<double> coeffs, flag;
     vector<vector<double>> vectorImage = Image2Array(image);
-    WAVELET2D_H::dwt_2d(vectorImage, level, nm,coeffs, flag, length);
+    WAVELET2S_H::dwt_2d(vectorImage, level, nm,coeffs, flag, length);
     
     // Display stuff
-
+    
     String windowName = "The Guitar"; //Name of the window
 
     namedWindow(windowName); // Create a window
