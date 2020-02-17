@@ -6,7 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <unistd.h>
-#include "wavelib/wavelet2s.h"
+#include "third_party/wavelet2s/wavelet2s.h"
 
 using namespace cv;
 using namespace std;
@@ -46,9 +46,9 @@ main(int argc, char **argv)
     vector<double> coeffs, flag;
     vector<vector<double>> vectorImage = Image2Array(image);
     WAVELET2S_H::dwt_2d(vectorImage, level, nm,coeffs, flag, length);
-    
+
     // Display stuff
-    
+
     String windowName = "The Guitar"; //Name of the window
 
     namedWindow(windowName); // Create a window
