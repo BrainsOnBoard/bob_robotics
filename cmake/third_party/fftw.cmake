@@ -1,0 +1,1 @@
+BoB_add_link_libraries(fftw3 fftw3_omp)
