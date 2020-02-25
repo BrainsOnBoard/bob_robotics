@@ -2309,86 +2309,101 @@ void* dwt_2d(vector<vector<double> > &origsig, int J, string nm, vector<double> 
                 , vector<double> &flag , vector<int> &length) {
 // flag will contain
 
-   vector<vector<double> >  sig = origsig;
+        vector<vector<double> >  sig = origsig;
         int rows_n = sig.size(); // No. of rows
-    int cols_n = sig[0].size(); //No. of columns
-    vector<vector<double> > original_copy(rows_n,vector<double>(cols_n));
+        int cols_n = sig[0].size(); //No. of columns
+        vector<vector<double> > original_copy(rows_n,vector<double>(cols_n));
 
         original_copy = sig;
         int Max_Iter;
-                    Max_Iter = min((int) ceil(log( double(sig.size()))/log (2.0)),(int) ceil(log( double(sig[0].size()))/log (2.0)));
-                    if ( Max_Iter < J) {
-                        cout << J << " Iterations are not possible with signals of this dimension "  << endl;
-                        exit(1);
-                    }
-                    vector<double> lp1,hp1,lp2,hp2;
+        Max_Iter = min((int) ceil(log( double(sig.size()))/log (2.0)),(int) ceil(log( double(sig[0].size()))/log (2.0)));
+        
+        if ( Max_Iter < J) 
+        {
+                cout << J << " Iterations are not possible with signals of this dimension "  << endl;
+                exit(1);
+        }
+        
+        vector<double> lp1,hp1,lp2,hp2;
 
-                    flag.push_back(double(J));
-                    flag.push_back(0);
+        flag.push_back(double(J));
+        flag.push_back(0);
 
+        length.insert(length.begin(),cols_n);
+        length.insert(length.begin(),rows_n);
 
-                     length.insert(length.begin(),cols_n);
-                     length.insert(length.begin(),rows_n);
+        int sum_coef = 0;
+        
+        for (int iter = 0; iter < J; iter++) 
+        {
+                filtcoef(nm,lp1,hp1,lp2,hp2);
 
+                rows_n =(int) ceil((double)rows_n /2.0);
+                cols_n =(int) ceil((double) cols_n/2.0);
+                length.insert(length.begin(),cols_n);
+                length.insert(length.begin(),rows_n);
 
-                int sum_coef = 0;
-                 for (int iter = 0; iter < J; iter++) {
-                 filtcoef(nm,lp1,hp1,lp2,hp2);
+                vector<vector<double> >  cA(rows_n, vector<double>(cols_n));
+                vector<vector<double> >  cH(rows_n, vector<double>(cols_n));
+                vector<vector<double> >  cV(rows_n, vector<double>(cols_n));
+                vector<vector<double> >  cD(rows_n, vector<double>(cols_n));
 
-                        rows_n =(int) ceil((double)rows_n /2.0);
-                        cols_n =(int) ceil((double) cols_n/2.0);
-                        length.insert(length.begin(),cols_n);
-                        length.insert(length.begin(),rows_n);
+                if (iter == 0) 
+                {
+                        dwt2(nm,original_copy,cA,cH,cV,cD);
+                } else 
+                {
+                        dwt2(nm,original_copy,cA,cH,cV,cD);
+                }
+        
+                vector<double>   temp_sig2;
 
-                                vector<vector<double> >  cA(rows_n, vector<double>(cols_n));
-                                vector<vector<double> >  cH(rows_n, vector<double>(cols_n));
-                                vector<vector<double> >  cV(rows_n, vector<double>(cols_n));
-                                vector<vector<double> >  cD(rows_n, vector<double>(cols_n));
-
-                                if (iter == 0) {
-                                dwt2(nm,original_copy,cA,cH,cV,cD);
-                                } else {
-                                        dwt2(nm,original_copy,cA,cH,cV,cD);
-
-                                }
-                                vector<double>   temp_sig2;
-
-                    original_copy = cA;
-                    if (iter == J-1) {
-                                for(int i =0; i < rows_n; i++){
-                                        for (int j =0; j < cols_n; j++){
+                original_copy = cA;
+                if (iter == J-1) 
+                {
+                        for(int i =0; i < rows_n; i++)
+                        {
+                                for (int j =0; j < cols_n; j++)
+                                {
                                         double temp=cA[i][j];
                                         temp_sig2.push_back(temp);
-                                        }
                                 }
-                    }
-                                for(int i =0; i < rows_n; i++){
-                                        for (int j = cols_n; j < cols_n * 2; j++){
-                                        double temp =cH[i][j - cols_n];
-                                        temp_sig2.push_back(temp);
-                                        }
-                                }
-
-                                for(int i = rows_n; i < rows_n * 2; i++){
-                                        for (int j =0; j < cols_n; j++){
-                                        double temp=cV[i - rows_n][j];
-                                        temp_sig2.push_back(temp);
-                                        }
-                                }
-
-                                for(int i = rows_n; i < rows_n * 2; i++){
-                                        for (int j = cols_n; j < cols_n * 2; j++){
-                                        double temp =cD[i- rows_n][j - cols_n];
-                                         temp_sig2.push_back(temp);
-                                        }
-                                }
-
-                                dwt_output.insert(dwt_output.begin(),temp_sig2.begin(),temp_sig2.end());
-                                         sum_coef += 4 * rows_n * cols_n;
-
-
-
                         }
+                }
+                
+                for(int i =0; i < rows_n; i++)
+                {
+                        for (int j = cols_n; j < cols_n * 2; j++)
+                        {
+                                double temp =cH[i][j - cols_n];
+                                temp_sig2.push_back(temp);
+                        }
+                }
+
+                for(int i = rows_n; i < rows_n * 2; i++)
+                {
+                        for (int j =0; j < cols_n; j++)
+                        {
+                                double temp=cV[i - rows_n][j];
+                                temp_sig2.push_back(temp);
+                        }
+                }
+
+                for(int i = rows_n; i < rows_n * 2; i++)
+                {
+                        for (int j = cols_n; j < cols_n * 2; j++)
+                        {
+                                double temp =cD[i- rows_n][j - cols_n];
+                                        temp_sig2.push_back(temp);
+                        }
+                }
+
+                dwt_output.insert(dwt_output.begin(),temp_sig2.begin(),temp_sig2.end());
+                sum_coef += 4 * rows_n * cols_n;
+
+
+
+        }
 /*
                         ofstream dwt2out("dwt2out.dat");
                         for (unsigned int i= 0; i < dwt_output.size(); i++){

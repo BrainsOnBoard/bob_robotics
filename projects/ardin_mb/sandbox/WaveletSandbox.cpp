@@ -57,7 +57,7 @@ Image2Array(Mat matImage)
 main(int argc, char **argv)
 {
     // Read the image file
-    Mat image = imread("/home/stefan/Documents/BoB_Code/bob_robotics/projects/ardin_mb/sandbox/img.jpg");
+    Mat image = imread("../img.jpg");
 
     // Check for failure
     if (image.empty()) {
@@ -71,15 +71,14 @@ main(int argc, char **argv)
     
     // Specify Wavelet transform 
     string nm = "db2";
-    int level = 1;
+    int level = 2;
     vector<int> length;
     vector<double> coeffs, flag;
     vector<vector<double>> vectorImage = Image2Array(image);
     // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
     WAVELET2S_H::dwt_2d(vectorImage, level, nm,coeffs, flag, length);
 
-    cout << "Coeffs at 000: " <<  << "\n";
-
+    
     double max;
     vector<int> length2;
     // This algorithm computes DWT of image of any given size. Together with convolution and
@@ -92,6 +91,8 @@ main(int argc, char **argv)
      for( int a = 0; a < length.size(); a = a + 1 ) {
       cout << length[a] << endl;
    }
+
+    vector<vector<double>> A = coeffs[0];
 
     // calculates the length of the coefficient vectors 
     WAVELET2S_H::dwt_output_dim2(length, length2, level);
