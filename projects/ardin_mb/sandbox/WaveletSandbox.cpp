@@ -53,6 +53,21 @@ Image2Array(Mat matImage)
     }
     return vecImage;
 }
+template <class T>
+void LOG(T x){
+    cout << x << "\n";
+    
+}
+
+template<class T>
+vector<T> slice(vector<T> const &v, int start, int stop)
+{
+    auto first = v.cbegin() + start;
+    auto last = v.cbegin() + 1+ stop;
+
+    vector<T> vec(first,last);
+    return vec;
+}
 
 main(int argc, char **argv)
 {
@@ -92,7 +107,22 @@ main(int argc, char **argv)
       cout << length[a] << endl;
    }
 
-    vector<vector<double>> A = coeffs[0];
+    for (int i=0;i<11;i++){
+        auto c = coeffs[i];
+        LOG(c);
+    }
+    
+    vector<double> subset = slice(coeffs,0,10);
+
+    //cout << subset;
+    cout << "Size of subset: ";
+    LOG(subset.size());
+    
+    for (int j=0;j<11;j++){
+        auto p = subset[j];
+        LOG(p);
+    }
+    
 
     // calculates the length of the coefficient vectors 
     WAVELET2S_H::dwt_output_dim2(length, length2, level);
