@@ -1,22 +1,22 @@
 
 #include "opencv2/imgproc/imgproc.hpp"
+#include "third_party/wavelet2s/wavelet2s.h"
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <unistd.h>
-#include "third_party/wavelet2s/wavelet2s.h"
 
 using namespace cv;
 using namespace std;
-
 
 /*
 HELP FUNCTION FO WAVELET EXAMPLE
 This function writes the max value of a 2d array into the max variable 
 */
-void * maxval(vector<vector<double>> &arr, double &max)
+void *
+maxval(vector<vector<double>> &arr, double &max)
 {
     max = 0;
     for (unsigned int i = 0; i < arr.size(); i++) {
@@ -32,7 +32,8 @@ void * maxval(vector<vector<double>> &arr, double &max)
 HELP FUNCTION FO WAVELET EXAMPLE
 This function writes the max value of a 1d array into the max variable 
 */
-void * maxval1(vector<double> &arr, double &max)
+void *
+maxval1(vector<double> &arr, double &max)
 {
     max = 0;
     for (unsigned int i = 0; i < arr.size(); i++) {
@@ -62,20 +63,22 @@ Image2Array(Mat matImage)
 }
 
 // This function prints x to the console
-template <class T>
-void LOG(T x){
+template<class T>
+void
+LOG(T x)
+{
     cout << x << "\n";
-    
 }
 
 // This function slices out a part of a given vector
 template<class T>
-vector<T> slice(vector<T> const &v, int start, int stop)
+vector<T>
+slice(vector<T> const &v, int start, int stop)
 {
-    auto first = v.begin() + start;
-    auto last = v.begin() + 1+ stop;
+    auto first = v.cbegin() + start;
+    auto last = v.cbegin() + 1 + stop;
 
-    vector<T> vec(first,last);
+    vector<T> vec(first, last);
     return vec;
 }
 
@@ -91,70 +94,53 @@ main(int argc, char **argv)
         return -1;
     }
 
+    // Get image dimensions
     int rows = image.rows;
     int cols = image.cols;
-    
-    // Specify Wavelet transform 
+
+    // Specify Wavelet transform
     string nm = "db2";
     int level = 2;
     vector<int> length;
     vector<double> coeffs, flag;
     vector<vector<double>> vectorImage = Image2Array(image);
-    // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
-    WAVELET2S_H::dwt_2d(vectorImage, level, nm,coeffs, flag, length);
 
-    
+    // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
+    WAVELET2S_H::dwt_2d(vectorImage, level, nm, coeffs, flag, length);
+
     double max;
     vector<int> length2;
-    // This algorithm computes DWT of image of any given size. Together with convolution and
-    // subsampling operations it is clear that subsampled images are of different length than
-    // dyadic length images. In order to compute the "effective" size of DWT we do additional
-    // calculations.
+    vector<double> subset = slice(coeffs, 0, 360);
 
+    LOG(length[0]);
+    LOG(subset[0]);
+    LOG(subset[360]);
+    LOG(subset[361]);
 
-    cout << "length:\n";
-     for( int a = 0; a < length.size(); a = a + 1 ) {
-      cout << length[a] << endl;
-   }
-
-    for (int i=0;i<11;i++){
-        auto c = coeffs[i];
-        LOG(c);
-    }
-    
-    vector<double> subset = slice(coeffs,0,10);
-
-    //cout << subset;
-    cout << "Size of subset: ";
-    LOG(subset.size());
-    
-    for (int j=0;j<11;j++){
-        auto p = subset[j];
-        LOG(p);
-    }
     
 
-    // calculates the length of the coefficient vectors 
-    WAVELET2S_H::dwt_output_dim2(length, length2, level);
 
-    cout << "length2:\n";
-     for( int a = 0; a < length.size(); a = a + 1 ) {
-      cout << length2[a] << endl;
-   }
 
-    std::cout << "Size:" << coeffs.size()<< "\n";
-     
-     int siz = length2.size();
-     int rows_n = length2[siz - 2];
-     int cols_n = length2[siz - 1];
-     vector<vector<double>> dwtdisp(rows_n, vector<double>(cols_n));
-     dispDWT(coeffs, dwtdisp, length, length2, level);
-     
-//      vector<vector<double>> dwt_output = dwtdisp;
+    // calculates the length of the coefficient vectors
+    //WAVELET2S_H::dwt_output_dim2(length, length2, level);
+
+    
+    //std::cout << "Size:" << coeffs.size() << "\n";
+
+    // setup the new image dimensions for display
+    //int siz = length2.size();
+    //int rows_n = length2[siz - 2];
+   //int cols_n = length2[siz - 1];
+    
+//     // write coeffs in the right location for the image to be displayed
+//     dispDWT(coeffs, dwtdisp, length, length2, level);
+
+//     vector<vector<double>> dwt_output = dwtdisp;
 //     maxval(dwt_output, max); // max value is needed to take care of overflow which happens because
 //     // of convolution operations performed on unsigned 8 bit images
 //     //Displaying Scaled Image
 //     // Creating Image in OPENCV
+    
 //     IplImage *cvImg; // image used for output
 //     CvSize imgSize;  // size of output image
 //     imgSize.width = cols_n;
@@ -202,7 +188,6 @@ main(int argc, char **argv)
 //     cvShowImage("Reconstructed Image", dvImg); // image visualisation
 //     cvWaitKey();
 //     cvDestroyWindow("Reconstructed Image");
-
 
 //     // Display stuff
 
