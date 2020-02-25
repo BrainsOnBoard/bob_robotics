@@ -11,7 +11,11 @@
 using namespace cv;
 using namespace std;
 
-// This function writes the max value of a 2d array into the max variable
+
+/*
+HELP FUNCTION FO WAVELET EXAMPLE
+This function writes the max value of a 2d array into the max variable 
+*/
 void * maxval(vector<vector<double>> &arr, double &max)
 {
     max = 0;
@@ -24,7 +28,10 @@ void * maxval(vector<vector<double>> &arr, double &max)
     }
     return 0;
 }
-// This function wrotes the mac value of a 1d array into the mac variable
+/*
+HELP FUNCTION FO WAVELET EXAMPLE
+This function writes the max value of a 1d array into the max variable 
+*/
 void * maxval1(vector<double> &arr, double &max)
 {
     max = 0;
@@ -53,17 +60,20 @@ Image2Array(Mat matImage)
     }
     return vecImage;
 }
+
+// This function prints x to the console
 template <class T>
 void LOG(T x){
     cout << x << "\n";
     
 }
 
+// This function slices out a part of a given vector
 template<class T>
 vector<T> slice(vector<T> const &v, int start, int stop)
 {
-    auto first = v.cbegin() + start;
-    auto last = v.cbegin() + 1+ stop;
+    auto first = v.begin() + start;
+    auto last = v.begin() + 1+ stop;
 
     vector<T> vec(first,last);
     return vec;
