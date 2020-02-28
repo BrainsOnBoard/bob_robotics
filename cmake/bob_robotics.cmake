@@ -146,7 +146,7 @@ macro(BoB_project)
     # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
     # Ubuntu (and presumably when linking against other libs in non-standard
     # locations too). This linker flag fixes the problem.
-    if(UNIX)
+    if(UNIX AND NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
     endif()
 
@@ -369,7 +369,9 @@ macro(BoB_build)
 
         # If we don't do this, I get linker errors on the BrickPi for the net
         # module
-        set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
+        if(UNIX AND NOT APPLE)
+            set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
+        endif()
     endif()
 
     # If C++ standard has not been specified explicitly either with a command
