@@ -1,15 +1,21 @@
 
-#include "opencv2/imgproc/imgproc.hpp"
 #include "third_party/wavelet2s/wavelet2s.h"
 #include <iostream>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <Eigen/Core>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <string>
 #include <unistd.h>
+#include <Eigen/Dense>
 
 using namespace cv;
 using namespace std;
+using Eigen::VectorXd;
+using Eigen::MatrixXd;
+using Eigen::Map;
+using Eigen::Matrix;
 
 /*
 HELP FUNCTION FO WAVELET EXAMPLE
@@ -45,7 +51,7 @@ maxval1(vector<double> &arr, double &max)
 }
 
 // This function converts a Mat Image into a 2d vector array
-std::vector<vector<double>>
+vector<vector<double>>
 Image2Array(Mat matImage)
 {
     int rows = (int) matImage.rows;
@@ -60,6 +66,28 @@ Image2Array(Mat matImage)
         }
     }
     return vecImage;
+}
+
+Mat Array2Image(vector<vector<double>> vecImage)
+{
+    Mat matImage(vecImage.size(), vecImage.at(0).size(), CV_64FC1);
+    for(int i=0; i<matImage.rows; ++i)
+    {
+        for(int j=0; j<matImage.cols; ++j)
+        {
+            matImage.at<double>(i, j) = vecImage.at(i).at(j);
+        }
+          
+    }
+    return matImage;
+}
+
+MatrixXd Array2Matrix(vector<vector<double>> data)
+{
+    MatrixXd eMatrix(data.size(), data[0].size());
+    for (int i = 0; i < data.size(); ++i)
+        eMatrix.row(i) = VectorXd::Map(&data[i][0], data[0].size());
+    return eMatrix;
 }
 
 // This function prints x to the console
@@ -85,7 +113,7 @@ slice(vector<T> const &v, int start, int stop)
 main(int argc, char **argv)
 {
     // Read the image file
-    Mat image = imread("../img.jpg");
+    Mat image = imread("../lena.png");
 
     // Check for failure
     if (image.empty()) {
@@ -97,109 +125,85 @@ main(int argc, char **argv)
     // Get image dimensions
     int rows = image.rows;
     int cols = image.cols;
+    // int nc = number of channels
 
     // Specify Wavelet transform
-    string nm = "db2";
+    string nm = "db5";
     int level = 2;
     vector<int> length;
     vector<double> coeffs, flag;
     vector<vector<double>> vectorImage = Image2Array(image);
 
     // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
-    WAVELET2S_H::dwt_2d(vectorImage, level, nm, coeffs, flag, length);
+    dwt_2d(vectorImage, level, nm, coeffs, flag, length);
 
-    double max;
     vector<int> length2;
+    // calculates the length of the coefficient vectors
+    dwt_output_dim2(length, length2, level);
+    
+    // setup the new image dimensions for display
+    int siz = length2.size();
+    int rows_n = length2[siz - 2];
+    int cols_n = length2[siz - 1];
+
+    vector<vector<double> > dwtdisp(rows_n, vector<double>(cols_n));
+    dispDWT(coeffs, dwtdisp, length, length2, level);
+    MatrixXd M = Array2Matrix(dwtdisp);
+    
+    MatrixXd sub = M.bottomLeftCorner(M.rows()-257,255);
+    double maxValue = sub.maxCoeff();
+    for (int i = 0; i<sub.rows(); i++)
+    {
+        for (int j = 0; j<sub.cols(); j++)
+        {
+            if (sub(i,j) <= 0)
+            {
+                sub(i,j) = 0;
+            }
+            else 
+            {
+                sub(i,j) = sub(i,j)/maxValue;
+            }
+        
+        }
+            
+    }
+    
+    LOG(sub.rows());
+    LOG(sub.cols());
+    LOG(sub.maxCoeff());
+    LOG(sub.minCoeff());
+    
+    //Mat img = Array2Image(Matrix2Array(sub));
+
+    LOG(dwtdisp.at(0).at(0));
+    LOG(dwtdisp.size());
+    LOG(dwtdisp.at(0).size());
+    LOG(M.maxCoeff());
+    LOG(M.minCoeff());
+    //LOG(M.min());
     vector<double> subset = slice(coeffs, 0, 360);
 
-    LOG(length[0]);
-    LOG(subset[0]);
-    LOG(subset[360]);
-    LOG(subset[361]);
 
     
-
-
-
-    // calculates the length of the coefficient vectors
-    //WAVELET2S_H::dwt_output_dim2(length, length2, level);
-
-    
+    Mat subImage;
+    eigen2cv(sub,subImage);
     //std::cout << "Size:" << coeffs.size() << "\n";
 
-    // setup the new image dimensions for display
-    //int siz = length2.size();
-    //int rows_n = length2[siz - 2];
-   //int cols_n = length2[siz - 1];
+
     
 //     // write coeffs in the right location for the image to be displayed
-//     dispDWT(coeffs, dwtdisp, length, length2, level);
-
-//     vector<vector<double>> dwt_output = dwtdisp;
-//     maxval(dwt_output, max); // max value is needed to take care of overflow which happens because
-//     // of convolution operations performed on unsigned 8 bit images
-//     //Displaying Scaled Image
-//     // Creating Image in OPENCV
     
-//     IplImage *cvImg; // image used for output
-//     CvSize imgSize;  // size of output image
-//     imgSize.width = cols_n;
-//     imgSize.height = rows_n;
-//     cvImg = cvCreateImage(imgSize, 8, 1);
-//     // dwt_hold is created to hold the dwt output as further operations need to be
-//     // carried out on dwt_output in order to display scaled images.
-//     vector<vector<double>> dwt_hold(rows_n, vector<double>(cols_n));
-//     dwt_hold = dwt_output;
-//     // Setting coefficients of created image to the scaled DWT output values
-//     for (int i = 0; i < imgSize.height; i++) {
-//         for (int j = 0; j < imgSize.width; j++) {
-//             if (dwt_output[i][j] <= 0.0) {
-//                 dwt_output[i][j] = 0.0;
-//             }
-//             if (i <= (length2[0]) && j <= (length2[1])) {
-//                 ((uchar *) (cvImg->imageData + cvImg->widthStep * i))[j] =
-//                         (char) ((dwt_output[i][j] / max) * 255.0);
-//             } else {
-//                 ((uchar *) (cvImg->imageData + cvImg->widthStep * i))[j] =
-//                         (char) (dwt_output[i][j]);
-//             }
-//         }
-//     }
-//     cvNamedWindow("DWT Image", 1);   // creation of a visualisation window
-//     cvShowImage("DWT Image", cvImg); // image visualisation
-//     cvWaitKey();
-//     cvDestroyWindow("DWT Image");
-//     cvSaveImage("dwt.bmp", cvImg);
-//     // Finding IDWT
-//     vector<vector<double>> idwt_output(rows, vector<double>(cols));
-//     idwt_2d_sym(coeffs, flag, nm, idwt_output, length);
-//     //Displaying Reconstructed Image
-//     IplImage *dvImg;
-//     CvSize dvSize; // size of output image
-//     dvSize.width = idwt_output[0].size();
-//     dvSize.height = idwt_output.size();
-//     cout << idwt_output.size() << idwt_output[0].size() << endl;
-//     dvImg = cvCreateImage(dvSize, 8, 1);
-//     for (int i = 0; i < dvSize.height; i++)
-//         for (int j = 0; j < dvSize.width; j++)
-//             ((uchar *) (dvImg->imageData + dvImg->widthStep * i))[j] =
-//                     (char) (idwt_output[i][j]);
-//     cvNamedWindow("Reconstructed Image", 1);   // creation of a visualisation window
-//     cvShowImage("Reconstructed Image", dvImg); // image visualisation
-//     cvWaitKey();
-//     cvDestroyWindow("Reconstructed Image");
 
-//     // Display stuff
+    // vector<vector<double>> dwt_output = dwtdisp;
+    // maxval(dwt_output, max); // max value is needed to take care of overflow which happens because
 
-//     // String windowName = "The Guitar"; //Name of the window
+    //Mat newImage = Array2Image(dwt_output);
 
-//     // namedWindow(windowName); // Create a window
+    namedWindow("Display window", WINDOW_AUTOSIZE);
+    imshow("Display window", subImage);
 
-//     // imshow(windowName, image); // Show our image inside the created window.
+    waitKey(0);
 
-//     // waitKey(0); // Wait for any keystroke in the window
-
-//     // destroyWindow(windowName); //destroy the created window
-
-     return 0;
+    // return 0;
 }
