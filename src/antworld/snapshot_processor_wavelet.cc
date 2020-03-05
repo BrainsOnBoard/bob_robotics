@@ -100,8 +100,8 @@ SnapshotProcessorWavelet::TransferToWaveletDomain(cv::Mat img,
     m_ResponseMatrix = SnapshotProcessorWavelet::selectResponses(m_ResponseMatrix, selectionMode);
 
     // cast back to cv format 
-    eigen2cv(m_ResponseMatrix,m_FinalSnapshot);
-    eigen2cv(m_ResponseMatrix,m_FinalSnapshotFloat);
+    cv::eigen2cv(m_ResponseMatrix,m_FinalSnapshot);
+    cv::eigen2cv(m_ResponseMatrix,m_FinalSnapshotFloat);
     
 }
 
@@ -128,11 +128,11 @@ void SnapshotProcessorWavelet::calcFilterResponses(std::vector<std::vector<doubl
     std::vector<double> flag;
     std::vector<int> length;
     // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
-    dwt_2d(vectorImage, level, nm, coeffs, flag, length);
+    WAVELET2S_H::dwt_2d(vectorImage, level, nm, coeffs, flag, length);
 
     std::vector<int> length2;
     // calculates the length of the coefficient vectors
-    dwt_output_dim2(length, length2, level);
+    WAVELET2S_H::dwt_output_dim2(length, length2, level);
 
     // setup the new image dimensions for display
     int siz = length2.size();
@@ -147,27 +147,27 @@ void SnapshotProcessorWavelet::calcFilterResponses(std::vector<std::vector<doubl
     */
     // create container structure for coefficients
     std::vector<std::vector<double>> dwtdisp(rows_n, vector<double>(cols_n));
-    dispDWT(coeffs, dwtdisp, length, length2, level);
+    WAVELET2S_H::dispDWT(coeffs, dwtdisp, length, length2, level);
 
     // recast into more convinient storage container
     M = Array2Matrix(dwtdisp);
 }
 
-MatrixXd SnapshotProcessorWavelet::Array2Matrix(vector<vector<double>> data)
+Eigen::MatrixXd SnapshotProcessorWavelet::Array2Matrix(std::vector<std::vector<double>> data)
 {
-    MatrixXd eMatrix(data.size(), data[0].size());
+    Eigen::MatrixXd eMatrix(data.size(), data[0].size());
     for (int i = 0; i < data.size(); ++i)
-        eMatrix.row(i) = VectorXd::Map(&data[i][0], data[0].size());
+        eMatrix.row(i) = Eigen::VectorXd::Map(&data[i][0], data[0].size());
     return eMatrix;
 }
 
 Eigen::MatrixXd
 SnapshotProcessorWavelet::selectResponses(Eigen::MatrixXd responseMatrix, std::string selectionMode)
 {
-    if selectionMode.compare((std::string)"vertical")
+    if (selectionMode.compare((std::string)"vertical"))
         {
 
-            MatrixXd sub = responseMatrix.;
+            Eigen::MatrixXd sub = responseMatrix;
             double maxValue = sub.maxCoeff();
             for (int i = 0; i < sub.rows(); i++) {
                 for (int j = 0; j < sub.cols(); j++) {
@@ -181,9 +181,9 @@ SnapshotProcessorWavelet::selectResponses(Eigen::MatrixXd responseMatrix, std::s
 
             return sub;
         }
-    else if selectionMode.compare((std::string) "normalize")
+    else if (selectionMode.compare((std::string) "normalize"))
     {
-            MatrixXd sub = responseMatrix;
+            Eigen::MatrixXd sub = responseMatrix;
             double maxValue = sub.maxCoeff();
             for (int i = 0; i < sub.rows(); i++) {
                 for (int j = 0; j < sub.cols(); j++) {
