@@ -32,7 +32,7 @@ public:
     void process(const cv::Mat &snapshot);
     void TransferToWaveletDomain(cv::Mat img, int level, std::string nm);
     Eigen::MatrixXd selectResponses(Eigen::MatrixXd responseMatrix, std::string selectionMode);
-    void Image2Array(cv::Mat matImage, std::vector<std::vector<double>> &vecImage);
+    std::vector<std::vector<double>> Image2Array(cv::Mat matImage);
     Eigen::MatrixXd Array2Matrix(std::vector<std::vector<double>> data);
     void calcFilterResponses(std::vector<std::vector<double>> vectorImage, int level,std::string nm, Eigen::MatrixXd &M);
     

@@ -89,7 +89,7 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Input.readFrame(m_Snapshot);
 
         // Process snapshot
-        m_SnapshotProcessor.process(m_Snapshot);
+        m_SnapshotProcessorWavelet.process(m_Snapshot);
 
         // If random walk key is pressed, transition to correct state
         if(m_KeyBits.test(KeyRandomWalk)) {

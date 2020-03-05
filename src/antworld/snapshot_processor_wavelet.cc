@@ -81,6 +81,7 @@ SnapshotProcessorWavelet::process(const cv::Mat &snapshot)
 
     // take the final image and transfer it to 
     SnapshotProcessorWavelet::TransferToWaveletDomain(m_FinalSnapshot, m_Level, m_WaveletName);
+    SnapshotProcessorWavelet::TransferToWaveletDomain(m_FinalSnapshotFloat, m_Level, m_WaveletName);
 
 }
 
@@ -90,7 +91,7 @@ SnapshotProcessorWavelet::TransferToWaveletDomain(cv::Mat img,
                                                   std::string nm)
 {
     // transfer image into wavelib comparable representation
-    SnapshotProcessorWavelet::Image2Array(img, m_VectorSnapshot);
+    m_VectorSnapshot = SnapshotProcessorWavelet::Image2Array(img);
 
     // get filter responses in matrix format
     SnapshotProcessorWavelet::calcFilterResponses(m_VectorSnapshot, level, nm, m_ResponseMatrix);
@@ -105,10 +106,11 @@ SnapshotProcessorWavelet::TransferToWaveletDomain(cv::Mat img,
     
 }
 
-void SnapshotProcessorWavelet::Image2Array(cv::Mat matImage, std::vector<std::vector<double>> &vecImage)
+std::vector<std::vector<double>> SnapshotProcessorWavelet::Image2Array(cv::Mat matImage)
 {
     int rows = (int) matImage.rows;
     int cols = (int) matImage.cols;
+    vector<vector<double>> vecImage(rows, vector<double>(cols));
     int k = 1;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -117,6 +119,7 @@ void SnapshotProcessorWavelet::Image2Array(cv::Mat matImage, std::vector<std::ve
             vecImage[i][j] = (double) temp;
         }
     }
+    return vecImage;
 }
 
 void SnapshotProcessorWavelet::calcFilterResponses(std::vector<std::vector<double>> vectorImage,
