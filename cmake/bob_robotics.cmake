@@ -363,6 +363,11 @@ macro(BoB_build)
         # If we don't do this, I get linker errors on the BrickPi for the net
         # module
         set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
+
+        # Stefan's build toolchain is *REALLY* determined to build with C++11
+        string(REPLACE "-std=gnu++11" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+        add_compile_flags(-std=c++14) # Belt and braces
     endif()
 
     # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
@@ -371,9 +376,6 @@ macro(BoB_build)
     # Conversely, only setting the compiler flag means that the surveyor example
     # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
     #       - AD
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_compile_flags(-std=c++14)
-    endif()
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
