@@ -128,7 +128,7 @@ main(int argc, char **argv)
     // int nc = number of channels
 
     // Specify Wavelet transform
-    string nm = "db5";
+    string nm = "db10";
     int level = 2;
     vector<int> length;
     vector<double> coeffs, flag;
@@ -146,6 +146,12 @@ main(int argc, char **argv)
     int rows_n = length2[siz - 2];
     int cols_n = length2[siz - 1];
 
+    /* dwtdisp is basically a matric that arranges the coefficients in a typical 
+        way if you wish to plot them like
+        | LL | HL |
+        | LH | HH |
+
+    */ 
     vector<vector<double> > dwtdisp(rows_n, vector<double>(cols_n));
     dispDWT(coeffs, dwtdisp, length, length2, level);
     MatrixXd M = Array2Matrix(dwtdisp);
