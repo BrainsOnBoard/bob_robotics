@@ -27,8 +27,9 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
     m_SnapshotProcessorWavelet(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight,(std::string) "db5", 2),
     m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation)
+    m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation),m_VisualNavigationWavelet(5)
 {
+    
     // Load world
     if(worldFilename.empty()) {
         m_Renderer.getWorld().load((Path::getResourcesPath() / "antworld" / "world5000_gray.bin").str(),
@@ -62,6 +63,8 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
         m_StateMachine.transition(State::Training);
         return;
     }
+
+    
 
     // Move ant to initial position
     resetAntPosition();

@@ -6,7 +6,7 @@ namespace BoBRobotics {
 namespace Navigation {
 
 // Substitute this by a matrix comparision
-VisualNavigationWavelet::VisualNavigationWavelet()
+VisualNavigationWavelet::VisualNavigationWavelet(int i)
   
 {}
 

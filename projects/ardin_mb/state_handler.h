@@ -20,6 +20,7 @@
 #include "antworld/route_ardin.h"
 #include "antworld/snapshot_processor_ardin.h"
 #include "antworld/snapshot_processor_wavelet.h"
+#include "navigation/visual_navigation_wavelet.h"
 
 // Ardin MB includes
 #include "vector_field.h"
@@ -169,6 +170,7 @@ private:
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
+    BoBRobotics::Navigation::VisualNavigationWavelet &m_VisualNavigationWavelet;
 
     unsigned int m_CurrentVectorFieldPoint;
     std::vector<std::pair<units::angle::degree_t, float>> m_VectorFieldNovelty;
