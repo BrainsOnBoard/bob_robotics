@@ -6,7 +6,7 @@
 // BoBRobotics includes
 #include "common/path.h"
 #include "common/logging.h"
-#include "navigation/visual_navigation_base.h"
+
 
 // Ardin MB includes
 #include "mb_params.h"
@@ -25,9 +25,8 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input({ SimParams::displayRenderWidth, SimParams::displayRenderHeight }, { 0, SimParams::displayRenderWidth + 10 }), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_SnapshotProcessorWavelet(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight,(std::string) "db5", 2),
     m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation),m_VisualNavigationWavelet(5)
+    m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation)
 {
     
     // Load world
@@ -92,7 +91,7 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Input.readFrame(m_Snapshot);
 
         // Process snapshot
-        m_SnapshotProcessorWavelet.process(m_Snapshot);
+        m_SnapshotProcessor.process(m_Snapshot);
 
         // If random walk key is pressed, transition to correct state
         if(m_KeyBits.test(KeyRandomWalk)) {
