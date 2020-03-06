@@ -12,15 +12,15 @@
 namespace BoBRobotics {
 namespace Navigation {
 //------------------------------------------------------------------------
-// BoBRobotics::Navigation::VisualNavigationBase
+// BoBRobotics::Navigation::VisualNavigationWavelet
 //------------------------------------------------------------------------
 //! The base class for visual navigation algorithms (currently just variations on perfect memory)
-class VisualNavigationBase
+class VisualNavigationWavelet
 {
 public:
-    VisualNavigationBase(const cv::Size &unwrapRes);
+    VisualNavigationWavelet();
 
-    virtual ~VisualNavigationBase();
+    virtual ~VisualNavigationWavelet();
 
     //------------------------------------------------------------------------
     // Declared virtuals

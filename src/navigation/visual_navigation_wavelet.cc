@@ -6,18 +6,18 @@ namespace BoBRobotics {
 namespace Navigation {
 
 // Substitute this by a matrix comparision
-VisualNavigationBase::VisualNavigationBase()
+VisualNavigationWavelet::VisualNavigationWavelet()
   
 {}
 
-VisualNavigationBase::~VisualNavigationBase()
+VisualNavigationWavelet::~VisualNavigationWavelet()
 {}
 
 //------------------------------------------------------------------------
 // Public API
 //------------------------------------------------------------------------
 void
-VisualNavigationBase::trainRoute(const ImageDatabase &imdb, bool resizeImages)
+VisualNavigationWavelet::trainRoute(const ImageDatabase &imdb, bool resizeImages)
 {
     cv::Mat image;
     if (resizeImages) {
@@ -40,7 +40,7 @@ VisualNavigationBase::trainRoute(const ImageDatabase &imdb, bool resizeImages)
 }
 
 void
-VisualNavigationBase::setMaskImage(const std::string &path)
+VisualNavigationWavelet::setMaskImage(const std::string &path)
 {
     m_MaskImage = cv::imread(path, cv::IMREAD_GRAYSCALE);
     BOB_ASSERT(m_MaskImage.cols == m_UnwrapRes.width);
@@ -49,13 +49,13 @@ VisualNavigationBase::setMaskImage(const std::string &path)
 }
 
 const cv::Mat &
-VisualNavigationBase::getMaskImage() const
+VisualNavigationWavelet::getMaskImage() const
 {
     return m_MaskImage;
 }
 
 const cv::Size &
-VisualNavigationBase::getUnwrapResolution() const
+VisualNavigationWavelet::getUnwrapResolution() const
 {
     return m_UnwrapRes;
 }
