@@ -19,6 +19,7 @@
 #include "antworld/renderer.h"
 #include "antworld/route_ardin.h"
 #include "antworld/snapshot_processor_ardin.h"
+#include "antworld/snapshot_processor_segment_sky.h"
 
 // Ardin MB includes
 #include "vector_field.h"
