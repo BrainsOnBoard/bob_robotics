@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
     std::string worldFilename = "";
     std::string routeFilename = "";
     std::string logFilename = "";
+    std::string perceptionStorage = "";
     float heightMetres = 0.01f;
     std::vector<float> minBound;
     std::vector<float> maxBound;
@@ -50,6 +51,7 @@ int main(int argc, char *argv[])
     app.add_option("--max-bound", maxBound, "Override default world max bound with this one", true)->expected(3);
     app.add_option("--clear-colour", clearColour, "Set background colour used for rendering", true)->expected(4);
     app.add_option("route", routeFilename, "Filename of route");
+    app.add_option("--perception-storage", perceptionStorage, "Identifyer for Store class");
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);
@@ -75,9 +77,11 @@ int main(int argc, char *argv[])
     glLineWidth(4.0);
     glPointSize(4.0);
 
-    // Create memory
+// Create memory
 #ifdef NO_GENN
-    Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+    Navigation::PerfectMemory<Navigation::PerfectMemoryStore::WVC> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));    
+    
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
 #else
     MBMemory memory;
