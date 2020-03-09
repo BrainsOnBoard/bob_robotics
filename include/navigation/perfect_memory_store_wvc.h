@@ -148,6 +148,9 @@ Eigen::MatrixXd Array2Matrix(std::vector<std::vector<double>> data) const
 
 void compute(cv::Mat image, vector<double>  &responseVector)const
 {
+    cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    cv::imshow( "Display window", image);
+    cv::waitKey(0);
     Eigen::MatrixXd responseMatrix;
     Eigen::VectorXd rVec;
     std::vector<double> coeffs, flag;
@@ -177,6 +180,11 @@ void compute(cv::Mat image, vector<double>  &responseVector)const
     responseMatrix = Array2Matrix(dwtdisp);
     rVec = Eigen::Map<const Eigen::VectorXd>(responseMatrix.data(), responseMatrix.size());
     
+    cv::Mat subImage;
+    cv::eigen2cv(responseMatrix,subImage);
+    cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+    cv::imshow( "Display window", subImage);
+    cv::waitKey(0);
     // cast to vector<double>
     responseVector.resize(rVec.size());
     Eigen::VectorXd::Map(&responseVector[0], rVec.size()) = rVec;
