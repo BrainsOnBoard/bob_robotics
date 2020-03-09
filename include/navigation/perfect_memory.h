@@ -5,6 +5,7 @@
 #include "differencers.h"
 #include "insilico_rotater.h"
 #include "perfect_memory_store_raw.h"
+#include "perfect_memory_store_wvc.h"
 #include "visual_navigation_base.h"
 
 // Third-party includes
