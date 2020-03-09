@@ -1,40 +1,19 @@
 #pragma once
 
 // BoB robotics includes
-<<<<<<< HEAD
+#include "common/logging.h"
+#include "common/macros.h"
 #include "differencers.h"
 #include "ridf_processors.h"
 
 // Third-party includes
 #include "third_party/path.h"
 
-// OpenCV includes
-#include <opencv2/opencv.hpp>
-
 // Eigen includes for matrix comparision
 #include <Eigen/Dence>
 #include <Eigen/Core>
 
-// Standard C includes
-#include <cassert>
-#include <cstdlib>
-
-// Standard C++ includes
-#include <numeric>
-=======
-#include "common/logging.h"
-#include "common/macros.h"
-#include "differencers.h"
-#include "ridf_processors.h"
-
-// third party includes
-#include "third_party/wavelet2s/wavelet2s.h"
-
-// Eigen
-#include <Eigen/Core>
-#include <Eigen/Dense>
-
-// OpenCV
+// OpenCV includes
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
@@ -45,29 +24,13 @@
 // Standard C++ includes
 #include <algorithm>
 #include <stdexcept>
->>>>>>> wvc-memory
+#include <vector>
 #include <vector>
 
 namespace BoBRobotics {
 namespace Navigation {
 namespace PerfectMemoryStore {
 
-<<<<<<< HEAD
-//------------------------------------------------------------------------
-// BoBRobotics::Navigation::PerfectMemoryStore::ResponseMatrix
-//------------------------------------------------------------------------
-/*!
- * \brief The conventional perfect memory (RIDF) algorithm
- *
- * \tparam Differencer This can be AbsDiff or RMSDiff
- */
-class ResponseMatrix
-{
-public:
-    ResponseMatrix()
-    {
-        m_Differencer =  Differencer::FrobeniusDiff();
-=======
 /*numOrientations*
         ((unwrapRes.width - blockSize.width)/blockStride.width + 1)*
         ((unwrapRes.height - blockSize.height)/blockStride.height + 1);*/
@@ -83,7 +46,6 @@ public:
     {
         m_Level = level;
         m_wv = wv;
->>>>>>> wvc-memory
     }
 
     //------------------------------------------------------------------------
@@ -94,18 +56,6 @@ public:
         return m_Snapshots.size();
     }
 
-<<<<<<< HEAD
-    const Eigen::MatrixXd &getSnapshot(size_t index) const
-    {
-        BOB_ASSERT(index < m_Snapshots.size());
-        return m_Snapshots[index];
-    }
-
-    size_t addSnapshot(const cv::Mat &image)
-    {
-        m_Snapshots.emplace_back();
-        image.copyTo(m_Snapshots.back());
-=======
     const cv::Mat &getSnapshot(size_t) const
     {
         throw std::runtime_error("When using WVC features, snapshots aren't stored");
@@ -117,7 +67,6 @@ public:
         m_Snapshots.emplace_back(m_WVCDescriptorSize);
         m_WVC.compute(image, m_Snapshots.back());
         BOB_ASSERT(m_Snapshots.back().size() == m_WVCDescriptorSize);
->>>>>>> wvc-memory
 
         // Return index of new snapshot
         return (m_Snapshots.size() - 1);
@@ -128,13 +77,6 @@ public:
         m_Snapshots.clear();
     }
 
-<<<<<<< HEAD
-    float calcSnapshotDifference(const Eigen::MatrixXd &image, const Eigen::MatrixXd &imageToCompare) const
-    {
-        // Calculate difference between matrix and stored matrices
-        return m_Differencer::mean(image,imageToCompare);
-
-=======
     // Calculate difference between memory and snapshot with index
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &) const
     {
@@ -149,19 +91,12 @@ public:
         // Calculate RMS
         return Differencer::mean(std::accumulate(diffIter, diffIter, 0.0f),
                                  m_WVCDescriptorSize);
->>>>>>> wvc-memory
     }
 
 private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-<<<<<<< HEAD
-    std::vector<Eigen::MatrixXd> m_Snapshots;
-    mutable Differencer m_Differencer;
-    mutable cv::Mat m_DiffScratchImage;
-}; // RawImage
-=======
     std::vector<std::vector<float>> m_Snapshots;
     mutable Differencer m_Differencer;
     int m_Level;
@@ -240,7 +175,6 @@ Eigen::MatrixXd compute(cv::Mat image)
 }
 
 }; // HOG
->>>>>>> wvc-memory
 } // PerfectMemoryStore
 } // Navigation
 } // BoBRobotics

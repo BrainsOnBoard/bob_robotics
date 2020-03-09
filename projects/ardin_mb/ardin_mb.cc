@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
 
 // Create memory
 #ifdef NO_GENN
-    Navigation::PerfectMemory<Navigation::PerfectMemoryStore::WVC> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
-    //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));    
+    //Navigation::PerfectMemory<Navigation::PerfectMemoryStore::WVC> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));
+    Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));    
     
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
 #else
