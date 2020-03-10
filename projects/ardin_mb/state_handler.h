@@ -19,7 +19,7 @@
 #include "antworld/renderer.h"
 #include "antworld/route_ardin.h"
 #include "antworld/snapshot_processor_ardin.h"
-#include "antworld/snapshot_processor_segment_sky.h"
+#include "antworld/snapshot_processor_gray.h"
 
 // Ardin MB includes
 #include "vector_field.h"
@@ -128,6 +128,7 @@ private:
 
     //! Snapshot processor - implements the strange resizing algorithm from original paper
     BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
+    BoBRobotics::AntWorld::SnapshotProcessorGray m_SnapshotProcessorGray;
     
     //! Class for handling rendering of vector field
     VectorField m_VectorField;

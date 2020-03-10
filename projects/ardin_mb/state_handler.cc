@@ -26,6 +26,7 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_Input({ SimParams::displayRenderWidth, SimParams::displayRenderHeight }, { 0, SimParams::displayRenderWidth + 10 }), m_Route(0.2f, 800),
     m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
+    m_SnapshotProcessorGray(SimParams::displayScale, SimParams::intermediateSnapshotWidth),
     m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
     m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation)
 {
@@ -92,7 +93,8 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Input.readFrame(m_Snapshot);
 
         // Process snapshot
-        m_SnapshotProcessor.process(m_Snapshot);
+        //m_SnapshotProcessor.process(m_Snapshot);
+        m_SnapshotProcessorGray.process(m_Snapshot);
 
         // If random walk key is pressed, transition to correct state
         if(m_KeyBits.test(KeyRandomWalk)) {
@@ -117,7 +119,8 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Train memory with snapshot
-            m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
+            //m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
+            m_VisualNavigation.train(m_SnapshotProcessorGray.getFinalSnapshot());
 
             // Mark results from previous training snapshot on route
             m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
