@@ -11,8 +11,8 @@
 #include "third_party/wavelet2s/wavelet2s.h"
 
 // Eigen includes for matrix comparision
-#include <Eigen/Dense>
 #include <Eigen/Core>
+#include <Eigen/Dense>
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -43,7 +43,7 @@ class WVC
 {
 public:
     WVC(const cv::Size &unwrapRes, std::string wv, int level)
-    : m_Differencer(unwrapRes.height*unwrapRes.width)
+      : m_Differencer(unwrapRes.height * unwrapRes.width)
     {
         m_UnwrapRes = unwrapRes;
         m_Level = level;
@@ -66,11 +66,11 @@ public:
     // Add a snapshot to memory and return its index
     size_t addSnapshot(const cv::Mat &image)
     {
-        m_Snapshots.emplace_back((m_UnwrapRes.height*m_UnwrapRes.width));
+        m_Snapshots.emplace_back();
+        
+
         compute(image, m_Snapshots.back());
-        
-        
-        // Return index of new snapshot
+
         return (m_Snapshots.size() - 1);
     }
 
@@ -83,9 +83,9 @@ public:
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &) const
     {
         BOB_ASSERT(imageMask.empty());
-
+        
         // Calculate WVC descriptors of image
-        std::vector<double>  m_responseVector;
+        std::vector<double> m_responseVector;
         compute(image, m_responseVector);
 
         // Calculate differences between image WVC descriptors and snapshot
@@ -93,7 +93,7 @@ public:
 
         // Calculate RMS
         return Differencer::mean(std::accumulate(diffIter, diffIter, 0.0f),
-                                 (m_UnwrapRes.height*m_UnwrapRes.width));
+                                 (m_UnwrapRes.height * m_UnwrapRes.width));
     }
 
 private:
@@ -105,6 +105,7 @@ private:
     int m_Level;
     std::string m_wv;
     cv::Size m_UnwrapRes;
+    bool m_DEBUG = 1;
 
     // This function converts a Mat Image into a 2d vector array
     std::vector<std::vector<double>>
@@ -125,71 +126,78 @@ private:
     }
 
     cv::Mat Array2Image(std::vector<std::vector<double>> vecImage) const
-{
-    cv::Mat matImage(vecImage.size(), vecImage.at(0).size(), CV_64FC1);
-    for(int i=0; i<matImage.rows; ++i)
     {
-        for(int j=0; j<matImage.cols; ++j)
-        {
-            matImage.at<double>(i, j) = vecImage.at(i).at(j);
+        cv::Mat matImage(vecImage.size(), vecImage.at(0).size(), CV_64FC1);
+        for (int i = 0; i < matImage.rows; ++i) {
+            for (int j = 0; j < matImage.cols; ++j) {
+                matImage.at<double>(i, j) = vecImage.at(i).at(j);
+            }
         }
-          
+        return matImage;
     }
-    return matImage;
-}
 
-Eigen::MatrixXd Array2Matrix(std::vector<std::vector<double>> data) const
-{
-    Eigen::MatrixXd eMatrix(data.size(), data[0].size());
-    for (int i = 0; i < data.size(); ++i)
-        eMatrix.row(i) = Eigen::VectorXd::Map(&data[i][0], data[0].size());
-    return eMatrix;
-}
+    Eigen::MatrixXd Array2Matrix(std::vector<std::vector<double>> data) const
+    {
+        Eigen::MatrixXd eMatrix(data.size(), data[0].size());
+        for (int i = 0; i < data.size(); ++i)
+            eMatrix.row(i) = Eigen::VectorXd::Map(&data[i][0], data[0].size());
+        return eMatrix;
+    }
 
-void compute(cv::Mat image, vector<double>  &responseVector)const
-{
-    cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    cv::imshow( "Display window", image);
-    cv::waitKey(0);
-    Eigen::MatrixXd responseMatrix;
-    Eigen::VectorXd rVec;
-    std::vector<double> coeffs, flag;
-    std::vector<std::vector<double>> vectorImage = Image2Array(image);
+    void compute(cv::Mat image, vector<double> &responseVector) const
+    {
+        if (m_DEBUG == 0) {
+            // cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+            // cv::imshow( "Display window", image);
+            // cv::waitKey(0);
+            Eigen::MatrixXd responseMatrix;
+            Eigen::VectorXd rVec;
+            std::vector<double> coeffs, flag;
+            std::vector<std::vector<double>> vectorImage = Image2Array(image);
 
-    // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
-    std::vector<int> length;
-    dwt_2d(vectorImage, m_Level, m_wv, coeffs, flag, length);
+            // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
+            std::vector<int> length;
+            dwt_2d(vectorImage, m_Level, m_wv, coeffs, flag, length);
 
-    std::vector<int> length2;
-    // calculates the length of the coefficient vectors
-    dwt_output_dim2(length, length2, m_Level);
-    
-    // setup the new image dimensions for "display"
-    int siz = length2.size();
-    int rows_n = length2[siz - 2];
-    int cols_n = length2[siz - 1];
+            std::vector<int> length2;
+            // calculates the length of the coefficient vectors
+            dwt_output_dim2(length, length2, m_Level);
 
-    /* dwtdisp is basically a matric that arranges the coefficients in a typical 
+            // setup the new image dimensions for "display"
+            int siz = length2.size();
+            int rows_n = length2[siz - 2];
+            int cols_n = length2[siz - 1];
+
+            /* dwtdisp is basically a matric that arranges the coefficients in a typical 
         way if you wish to plot them like
         | LL | HL |
         | LH | HH |
 
-    */ 
-   std::vector<std::vector<double>> dwtdisp(rows_n, std::vector<double>(cols_n));
-    dispDWT(coeffs, dwtdisp, length, length2, m_Level);
-    responseMatrix = Array2Matrix(dwtdisp);
-    rVec = Eigen::Map<const Eigen::VectorXd>(responseMatrix.data(), responseMatrix.size());
-    
-    cv::Mat subImage;
-    cv::eigen2cv(responseMatrix,subImage);
-    cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
-    cv::imshow( "Display window", subImage);
-    cv::waitKey(0);
-    // cast to vector<double>
-    responseVector.resize(rVec.size());
-    Eigen::VectorXd::Map(&responseVector[0], rVec.size()) = rVec;
-    
-}
+    */
+            std::vector<std::vector<double>> dwtdisp(rows_n, std::vector<double>(cols_n));
+            dispDWT(coeffs, dwtdisp, length, length2, m_Level);
+            responseMatrix = Array2Matrix(dwtdisp);
+            rVec = Eigen::Map<const Eigen::VectorXd>(responseMatrix.data(), responseMatrix.size());
+
+            // cv::Mat subImage;
+            // cv::eigen2cv(responseMatrix,subImage);
+            // cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );// Create a window for display.
+            // cv::imshow( "Display window", subImage);
+            // cv::waitKey(0);
+            // cast to vector<double>
+            responseVector.resize(rVec.size());
+            Eigen::VectorXd::Map(&responseVector[0], rVec.size()) = rVec;
+            int a = 5;
+        }
+        else 
+        {
+            std::vector<std::vector<double>> vectorImage = Image2Array(image);
+            // returns 1D vector that stores the output in the following format A(J) Dh(J) Dv(J) Dd(J) ..... Dh(1) Dv(1) Dd(1)
+            std::vector<int> length;
+            std::vector<double>  flag;
+            dwt_2d(vectorImage, m_Level, m_wv, responseVector, flag, length);
+        }
+    }
 
 }; // HOG
 } // PerfectMemoryStore

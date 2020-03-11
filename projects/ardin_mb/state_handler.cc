@@ -162,7 +162,7 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Test snapshot
-            const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
+            const float difference = m_VisualNavigation.test(m_SnapshotProcessorGray.getFinalSnapshot());
 
             // If this is an improvement on previous best spike count
             if(difference < m_LowestTestDifference) {
@@ -263,7 +263,7 @@ bool StateHandler::handleEvent(State state, Event event)
                 LOGI << "Difference: " << m_VisualNavigation.test(m_Snapshot);
             }
             if(m_KeyBits.test(KeySaveSnapshot)) {
-                cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());
+                cv::imwrite("snapshot.png", m_SnapshotProcessorGray.getFinalSnapshot());
             }
         }
     }
@@ -280,7 +280,7 @@ bool StateHandler::handleEvent(State state, Event event)
         }
         else if(event == Event::Update) {
             // Test snapshot
-            const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
+            const float difference = m_VisualNavigation.test(m_SnapshotProcessorGray.getFinalSnapshot());
 
             // Add novelty to vector
             m_VectorFieldNovelty.push_back(std::make_pair(m_Pose.yaw(), difference));

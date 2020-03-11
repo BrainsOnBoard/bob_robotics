@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 #ifdef NO_GENN
     //Navigation::PerfectMemory<> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight));    
     //Navigation::InfoMax<float> memory(cv::Size(MBParams::inputWidth, MBParams::inputHeight), 0.01f);
-    Navigation::PerfectMemory<Navigation::PerfectMemoryStore::WVC<>> memory(cv::Size(592, 152), "db2", 3);
+    Navigation::PerfectMemory<Navigation::PerfectMemoryStore::WVC<>> memory(cv::Size(592,152), "db1", 1);
 #else
     MBMemory memory;
 #endif
