@@ -18,6 +18,7 @@ class MemoryBase
 {
 public:
     MemoryBase();
+    virtual ~MemoryBase() = default;
 
     //------------------------------------------------------------------------
     // Declared virtuals
@@ -63,8 +64,8 @@ public:
     virtual void test(const cv::Mat &snapshot) override;
     virtual void train(const cv::Mat &snapshot) override;
 
-    virtual void writeCSVHeader(std::ostream &os);
-    virtual void writeCSVLine(std::ostream &os);
+    virtual void writeCSVHeader(std::ostream &os) override;
+    virtual void writeCSVLine(std::ostream &os) override;
 
     //------------------------------------------------------------------------
     // Public API
