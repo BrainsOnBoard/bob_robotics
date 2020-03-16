@@ -22,8 +22,8 @@ public:
     virtual std::string getCameraName() const override;
     virtual cv::Size getOutputSize() const override;
     virtual bool readFrame(cv::Mat &outFrame) override;
-    virtual bool needsUnwrapping() const;
-    virtual void setOutputSize(const cv::Size &);
+    virtual bool needsUnwrapping() const override;
+    virtual void setOutputSize(const cv::Size &) override;
 
 private:
     void setupSockets();
