@@ -1,4 +1,5 @@
 // Standard C++ includes
+#include <algorithm>
 #include <fstream>
 #include <limits>
 #include <iostream>
@@ -19,13 +20,13 @@
 #include <array>
 
 // genn generated code
-#include "Obs_net_CODE/definitions.h"
+#include "radar_bot_CODE/definitions.h"
 
 // Third-party includes
 #include "third_party/units.h"
 
 // BoB robotics includes
-#include "radar/radar.h"
+#include "common/radar.h"
 #include "robots/norbot.h"
 
 using namespace BoBRobotics;

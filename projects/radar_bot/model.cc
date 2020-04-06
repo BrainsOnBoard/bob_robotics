@@ -14,10 +14,8 @@ IMPLEMENT_MODEL(DE);
 
 void modelDefinition(NNmodel &model) 
 {
-      
-
     model.setDT(1);
-    model.setName("Obs_net");
+    model.setName("radar_bot");
 
     //---------------------------------------------------------------------------
     // Build model
