@@ -12,13 +12,13 @@
 #include "common/fsm.h"
 #include "common/pose.h"
 #include "third_party/units.h"
-#include "video/opengl.h"
+#include "video/opengl/opengl.h"
 
 // Libantworld includes
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_ardin.h"
-#include "libantworld/snapshot_processor_ardin.h"
+#include "antworld/common.h"
+#include "antworld/renderer.h"
+#include "antworld/route_ardin.h"
+#include "antworld/snapshot_processor_ardin.h"
 
 // Ardin MB includes
 #include "vector_field.h"

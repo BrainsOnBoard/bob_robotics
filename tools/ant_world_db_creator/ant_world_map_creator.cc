@@ -1,9 +1,10 @@
 // BoB robotics includes
 #include "common/logging.h"
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_continuous.h"
-#include "video/opengl.h"
+#include "common/path.h"
+#include "antworld/common.h"
+#include "antworld/renderer.h"
+#include "antworld/route_continuous.h"
+#include "video/opengl/opengl.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -11,66 +12,38 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// GLFW
-#include <GLFW/glfw3.h>
-
-// Standard C++ includes
-#include <iostream>
+// SFML includes
+#include <SFML/Graphics.hpp>
 
 using namespace BoBRobotics;
 
-// Anonymous namespace
-namespace
-{
-void handleGLFWError(int errorNumber, const char *message)
-{
-    std::cerr << "GLFW error number:" << errorNumber << ", message:" << message << std::endl;
-}
-
+namespace {
 void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
 {
     throw std::runtime_error(message);
 }
-
 }
+
 
 int main()
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
 
-    // Set GLFW error callback
-    glfwSetErrorCallback(handleGLFWError);
+    // Create SFML window
+    sf::Window window(sf::VideoMode(renderWidth, renderHeight),
+                      "Ant world",
+                      sf::Style::Titlebar | sf::Style::Close);
 
-    // Initialize the library
-    if(!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    // Prevent window being resized
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow *window = glfwCreateWindow(renderWidth, renderHeight, "Ant world", nullptr, nullptr);
-    if(!window)
-    {
-        glfwTerminate();
-        std::cerr << "Failed to create window" << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window);
+    // Enable VSync
+    window.setVerticalSyncEnabled(true);
+    window.setActive(true);
 
     // Initialize GLEW
     if(glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
+        LOGE << "Failed to initialize GLEW";
         return EXIT_FAILURE;
     }
-
-    // Enable VSync
-    glfwSwapInterval(1);
 
     glDebugMessageCallback(handleGLError, nullptr);
 
@@ -90,7 +63,7 @@ int main()
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+    renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create input to read snapshots from screen
@@ -106,8 +79,7 @@ int main()
     // Render first person
     renderer.renderTopDownView(0, 0, renderWidth, renderHeight);
 
-    // Swap front and back buffers
-    glfwSwapBuffers(window);
+    window.display();
 
     // Read snapshot
     input.readFrame(map);

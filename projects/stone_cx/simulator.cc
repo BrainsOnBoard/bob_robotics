@@ -1,5 +1,4 @@
 // Standard C++ includes
-#include <iostream>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -12,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
+#include "common/logging.h"
 #include "common/von_mises_distribution.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
@@ -20,7 +20,6 @@
 
 // Model includes
 #include "parameters.h"
-#include "simulatorCommon.h"
 #include "spline.h"
 #include "visualizationCommon.h"
 
@@ -33,9 +32,9 @@ int main()
     const unsigned int pathImageSize = 1000;
     const unsigned int activityImageWidth = 500;
     const unsigned int activityImageHeight = 1000;
-    
+
     const double preferredAngleTN2[] = { Parameters::pi / 4.0, -Parameters::pi / 4.0 };
-    
+
     // Outbound path generation parameters
     const unsigned int numOutwardTimesteps = 1500;
 
@@ -48,24 +47,10 @@ int main()
     const double agentMinAcceleration = 0.0;
     const double agentMaxAcceleration = 0.15;
     const double agentM = 0.5;
-    
+
     allocateMem();
     initialize();
-
-    //---------------------------------------------------------------------------
-    // Initialize neuron parameters
-    //---------------------------------------------------------------------------
-    // TL
-    for(unsigned int i = 0; i < 8; i++) {
-        preferredAngleTL[i] = preferredAngleTL[8 + i] = (Parameters::pi / 4.0) * (double)i;
-    }
-
-    //---------------------------------------------------------------------------
-    // Build connectivity
-    //---------------------------------------------------------------------------
-    buildConnectivity();
-
-    initstone_cx();
+    initializeSparse();
 
     cv::namedWindow("Path", cv::WINDOW_NORMAL);
     cv::resizeWindow("Path", pathImageSize, pathImageSize);
@@ -110,11 +95,11 @@ int main()
     }
 
 #ifdef RECORD_ELECTROPHYS
-    AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
+    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
 #endif  // RECORD_ELECTROPHYS
 
     // Simulate
@@ -127,15 +112,27 @@ int main()
     for(unsigned int i = 0;; i++) {
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
-            speedTN2[j] = (sin(theta + preferredAngleTN2[j]) * xVelocity) + 
+            speedTN2[j] = (sin(theta + preferredAngleTN2[j]) * xVelocity) +
                 (cos(theta + preferredAngleTN2[j]) * yVelocity);
         }
+
+        // Push inputs to device
+        pushspeedTN2ToDevice();
 
         // Update TL input
         headingAngleTL = theta;
 
         // Step network
-        stepTimeCPU();
+        stepTime();
+
+        // Pull outputs from device
+        pullrTLFromDevice();
+        pullrTN2FromDevice();
+        pullrCL1FromDevice();
+        pullrTB1FromDevice();
+        pullrCPU4FromDevice();
+        pullrCPU1FromDevice();
+        pullrPontineFromDevice();
 
 #ifdef RECORD_ELECTROPHYS
         tn2Recorder.record(i);
@@ -159,7 +156,7 @@ int main()
             a = accelerationSpline((double)i);
 
             if(i == (numOutwardTimesteps - 1)) {
-                std::cout << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]) << std::endl;
+                LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
             }
         }
         // Otherwise we're path integrating home

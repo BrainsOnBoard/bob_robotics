@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['robot_20test_20programs',['Robot test programs',['../md_examples_robot_net_README.html',1,'']]],
-  ['readme',['README',['../md_README.html',1,'']]]
+  ['perfect_20memory_20example_1517',['Perfect memory example',['../md_examples_perfect_memory_README.html',1,'']]]
 ];

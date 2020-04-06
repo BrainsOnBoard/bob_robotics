@@ -1,13 +1,14 @@
 
 // BoB robotics includes
 #include "common/logging.h"
+#include "common/path.h"
 #include "common/pose.h"
-#include "libantworld/agent.h"
-#include "libantworld/common.h"
-#include "libantworld/renderer.h"
-#include "libantworld/route_continuous.h"
+#include "antworld/agent.h"
+#include "antworld/common.h"
+#include "antworld/renderer.h"
+#include "antworld/route_continuous.h"
 #include "navigation/image_database.h"
-#include "video/opengl.h"
+#include "video/opengl/opengl.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -15,14 +16,13 @@
 // OpenGL includes
 #include <GL/glew.h>
 
-// GLFW
-#include <GLFW/glfw3.h>
+// SFML includes
+#include <SFML/Graphics.hpp>
 
 // Standard C++ includes
 #include <algorithm>
 #include <string>
 #include <fstream>
-#include <iostream>
 #include <tuple>
 #include <vector>
 
@@ -44,11 +44,12 @@ const cv::Size RenderSize{ 720, 150 };
 class AntWorldDatabaseCreator {
 protected:
     ImageDatabase m_Database;
-    GLFWwindow *m_Window;
+    sf::Window &m_Window;
     AntWorld::Renderer m_Renderer;
     AntWorld::AntAgent m_Agent;
 
-    AntWorldDatabaseCreator(const std::string &databaseName, GLFWwindow *window)
+    AntWorldDatabaseCreator(const std::string &databaseName,
+                            sf::Window &window)
       : m_Database(databaseName)
       , m_Window(window)
       , m_Renderer(256, 0.001, 1000.0, 360_deg)
@@ -57,7 +58,7 @@ protected:
         BOB_ASSERT(m_Database.empty());
 
         // Create renderer
-        m_Renderer.getWorld().load("../../libantworld/world5000_gray.bin",
+        m_Renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                                    {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
     }
 
@@ -67,7 +68,7 @@ protected:
         // Host OpenCV array to hold pixels read from screen
         cv::Mat frame(RenderSize, CV_8UC3);
 
-        for (auto it = poses.cbegin(); !glfwWindowShouldClose(m_Window) && it < poses.cend(); ++it) {
+        for (auto it = poses.cbegin(); m_Window.isOpen() && it < poses.cend(); ++it) {
             // Update agent's position
             m_Agent.setPosition(it->x(), it->y(), AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
@@ -94,7 +95,7 @@ protected:
 
 class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    GridDatabaseCreator(GLFWwindow *window)
+    GridDatabaseCreator(sf::Window &window)
       : AntWorldDatabaseCreator("world5000_grid", window)
     {}
 
@@ -119,7 +120,8 @@ public:
 
 class RouteDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    RouteDatabaseCreator(const std::string &databaseName, GLFWwindow *window,
+    RouteDatabaseCreator(const std::string &databaseName,
+                         sf::Window &window,
                          AntWorld::RouteContinuous &route)
       : AntWorldDatabaseCreator(databaseName, window)
       , m_Route(route)
@@ -140,8 +142,8 @@ public:
         addMetadata(routeRecorder);
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
-            const auto pos = m_Agent.getPosition();
-            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
+            const auto pos = m_Agent.getPose().position();
+            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getPose().attitude()[0], image);
         });
     }
 
@@ -168,10 +170,10 @@ main(int argc, char **argv)
             databaseName = databaseName.substr(0, pos);
         }
 
-        RouteDatabaseCreator creator(databaseName, window.get(), route);
+        RouteDatabaseCreator creator(databaseName, *window, route);
         creator.runForRoute();
     } else {
-        GridDatabaseCreator creator(window.get());
+        GridDatabaseCreator creator(*window);
         creator.runForGrid();
     }
 }

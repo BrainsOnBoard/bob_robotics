@@ -2,7 +2,7 @@
 #include "common/logging.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/norbot.h"
+#include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
@@ -42,7 +42,7 @@ int main()
     auto unwrapper = cam.createUnwrapper(unwrapSize);
 
     // Create motor interface
-    Norbot motor;
+    ROBOT_TYPE motor;
 
     cv::Mat output;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
@@ -55,16 +55,8 @@ int main()
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003,
                                               "c:\\users\\ad374\\Desktop");
 
-    // Wait for tracking
-    while(vicon.getNumObjects() == 0) {
-        std::this_thread::sleep_for(1s);
-        std::cout << "Waiting for object" << std::endl;
-    }
-
     // Start capture
-    if(!viconCaptureControl.startRecording("camera_recorder")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.startRecording("camera_recorder");
 
     // Open file to log capture data and write header
     std::ofstream data("vicon.csv");
@@ -92,9 +84,9 @@ int main()
 
 #ifdef VICON_CAPTURE
             // Get tracking data
-            auto objectData = vicon.getObjectData(0);
-            const auto &position = objectData.getPosition<>();
-            const auto &attitude = objectData.getAttitude<>();
+            auto objectData = vicon.getObjectData();
+            const auto &position = objectData.getPose().position();
+            const auto &attitude = objectData.getPose().attitude();
 
             // Write to CSV
             data << filename << ", " << objectData.getFrameNumber() << ", "
@@ -107,9 +99,7 @@ int main()
 
 #ifdef VICON_CAPTURE
     // Stop capture
-    if(!viconCaptureControl.stopRecording("camera_recorder")) {
-        return EXIT_FAILURE;
-    }
+    viconCaptureControl.stopRecording("camera_recorder");
 #endif  // VICON_CAPTURE
 
     return EXIT_SUCCESS;

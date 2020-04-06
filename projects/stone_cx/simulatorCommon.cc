@@ -3,7 +3,6 @@
 #include "simulatorCommon.h"
 
 // Standard C++ includes
-#include <iostream>
 #include <numeric>
 
 // Common includes
