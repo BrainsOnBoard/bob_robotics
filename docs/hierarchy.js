@@ -23,14 +23,32 @@ var hierarchy =
     [ "BoBRobotics::Robots::Ackermann", "classBoBRobotics_1_1Robots_1_1Ackermann.html", [
       [ "BoBRobotics::Robots::SimulatedAckermann", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html", null ]
     ] ],
+    [ "Catch::Matchers::Impl::Generic::AllOf< ExpressionT >", "classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AllOf.html", null ],
     [ "BoBRobotics::GeNNUtils::AnalogueCSVRecorder< T >", "classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html", null ],
     [ "AntWorldDatabaseCreator", "classAntWorldDatabaseCreator.html", [
       [ "GridDatabaseCreator", "classGridDatabaseCreator.html", null ],
       [ "RouteDatabaseCreator", "classRouteDatabaseCreator.html", null ]
     ] ],
     [ "BoBRobotics::Navigation::AntWorldRotater", "classBoBRobotics_1_1Navigation_1_1AntWorldRotater.html", null ],
+    [ "Catch::Matchers::Impl::Generic::AnyOf< ExpressionT >", "classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AnyOf.html", null ],
+    [ "Catch::Detail::Approx", "classCatch_1_1Detail_1_1Approx.html", null ],
+    [ "Catch::AssertionInfo", "structCatch_1_1AssertionInfo.html", null ],
+    [ "Catch::AssertionResult", "classCatch_1_1AssertionResult.html", null ],
+    [ "Catch::AssertionResultData", "structCatch_1_1AssertionResultData.html", null ],
     [ "io::detail::AsynchronousReader", "classio_1_1detail_1_1AsynchronousReader.html", null ],
+    [ "Catch::AutoReg", "structCatch_1_1AutoReg.html", null ],
     [ "BoBRobotics::BackgroundExceptionCatcher", "classBoBRobotics_1_1BackgroundExceptionCatcher.html", null ],
+    [ "Base", null, [
+      [ "CL1ToTB1", "classCL1ToTB1.html", null ],
+      [ "CPU4ToCPU1", "classCPU4ToCPU1.html", null ],
+      [ "PontineToCPU1", "classPontineToCPU1.html", null ],
+      [ "TBToCPU", "classTBToCPU.html", null ],
+      [ "TN2CPU4", "classTN2CPU4.html", null ]
+    ] ],
+    [ "Base", null, [
+      [ "BoBRobotics::GeNNModels::STDPDopamine", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html", null ],
+      [ "Continuous", "classContinuous.html", null ]
+    ] ],
     [ "Base", null, [
       [ "BoBRobotics::GeNNModels::AdExp", "classBoBRobotics_1_1GeNNModels_1_1AdExp.html", null ],
       [ "BoBRobotics::GeNNModels::Sigmoid", "classBoBRobotics_1_1GeNNModels_1_1Sigmoid.html", null ],
@@ -40,24 +58,16 @@ var hierarchy =
       [ "TN2Linear", "classTN2Linear.html", null ]
     ] ],
     [ "Base", null, [
-      [ "BoBRobotics::GeNNModels::AlphaCurr", "classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html", null ]
-    ] ],
-    [ "Base", null, [
-      [ "CL1ToTB1", "classCL1ToTB1.html", null ],
-      [ "CPU4ToCPU1", "classCPU4ToCPU1.html", null ],
-      [ "PontineToCPU1", "classPontineToCPU1.html", null ],
-      [ "TBToCPU", "classTBToCPU.html", null ],
-      [ "TN2CPU4", "classTN2CPU4.html", null ]
-    ] ],
-    [ "Base", null, [
       [ "PreferredAngle", "classPreferredAngle.html", null ],
       [ "TBToTB", "classTBToTB.html", null ]
     ] ],
     [ "Base", null, [
-      [ "BoBRobotics::GeNNModels::STDPDopamine", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html", null ],
-      [ "Continuous", "classContinuous.html", null ]
+      [ "BoBRobotics::GeNNModels::AlphaCurr", "classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html", null ]
     ] ],
     [ "BoBRobotics::Navigation::BestMatchingSnapshot", "structBoBRobotics_1_1Navigation_1_1BestMatchingSnapshot.html", null ],
+    [ "Catch::Detail::BorgType", "structCatch_1_1Detail_1_1BorgType.html", null ],
+    [ "BoBRobotics::Vicon::BundledVicon", "classBoBRobotics_1_1Vicon_1_1BundledVicon.html", null ],
+    [ "ev3dev::button", "classev3dev_1_1button.html", null ],
     [ "io::ByteSourceBase", "classio_1_1ByteSourceBase.html", [
       [ "io::detail::NonOwningIStreamByteSource", "classio_1_1detail_1_1NonOwningIStreamByteSource.html", null ],
       [ "io::detail::NonOwningStringByteSource", "classio_1_1detail_1_1NonOwningStringByteSource.html", null ],
@@ -66,11 +76,43 @@ var hierarchy =
     [ "BoBRobotics::Vicon::CaptureControl", "classBoBRobotics_1_1Vicon_1_1CaptureControl.html", null ],
     [ "BoBRobotics::Viz::CarDisplay", "classBoBRobotics_1_1Viz_1_1CarDisplay.html", null ],
     [ "BoBRobotics::MapCoordinate::Cartesian< D >", "structBoBRobotics_1_1MapCoordinate_1_1Cartesian.html", null ],
+    [ "Catch::Matchers::Impl::StdString::CasedString", "structCatch_1_1Matchers_1_1Impl_1_1StdString_1_1CasedString.html", null ],
+    [ "Catch::CaseSensitive", "structCatch_1_1CaseSensitive.html", null ],
     [ "BoBRobotics::Robots::CollisionDetector", "classBoBRobotics_1_1Robots_1_1CollisionDetector.html", null ],
+    [ "Catch::CompositeGenerator< T >", "classCatch_1_1CompositeGenerator.html", null ],
     [ "Config", "classConfig.html", null ],
+    [ "control", "classcontrol.html", null ],
+    [ "Catch::CopyableStream", "structCatch_1_1CopyableStream.html", null ],
+    [ "Catch::Counts", "structCatch_1_1Counts.html", null ],
+    [ "plog::CsvFormatter", "classplog_1_1CsvFormatter.html", null ],
     [ "io::CSVReader< column_count, trim_policy, quote_policy, overflow_policy, comment_policy >", "classio_1_1CSVReader.html", null ],
+    [ "Customer", "structCustomer.html", null ],
+    [ "ImFontAtlas::CustomRect", "structImFontAtlas_1_1CustomRect.html", null ],
+    [ "CUSTOMVERTEX", "structCUSTOMVERTEX.html", null ],
     [ "DataFile", "classDataFile.html", null ],
     [ "units::decibel_scale< T >", "structunits_1_1decibel__scale.html", null ],
+    [ "ev3dev::device", "classev3dev_1_1device.html", [
+      [ "ev3dev::dc_motor", "classev3dev_1_1dc__motor.html", null ],
+      [ "ev3dev::led", "classev3dev_1_1led.html", null ],
+      [ "ev3dev::lego_port", "classev3dev_1_1lego__port.html", null ],
+      [ "ev3dev::motor", "classev3dev_1_1motor.html", [
+        [ "ev3dev::large_motor", "classev3dev_1_1large__motor.html", null ],
+        [ "ev3dev::medium_motor", "classev3dev_1_1medium__motor.html", null ],
+        [ "ev3dev::nxt_motor", "classev3dev_1_1nxt__motor.html", null ]
+      ] ],
+      [ "ev3dev::power_supply", "classev3dev_1_1power__supply.html", null ],
+      [ "ev3dev::sensor", "classev3dev_1_1sensor.html", [
+        [ "ev3dev::color_sensor", "classev3dev_1_1color__sensor.html", null ],
+        [ "ev3dev::gyro_sensor", "classev3dev_1_1gyro__sensor.html", null ],
+        [ "ev3dev::i2c_sensor", "classev3dev_1_1i2c__sensor.html", null ],
+        [ "ev3dev::infrared_sensor", "classev3dev_1_1infrared__sensor.html", null ],
+        [ "ev3dev::light_sensor", "classev3dev_1_1light__sensor.html", null ],
+        [ "ev3dev::sound_sensor", "classev3dev_1_1sound__sensor.html", null ],
+        [ "ev3dev::touch_sensor", "classev3dev_1_1touch__sensor.html", null ],
+        [ "ev3dev::ultrasonic_sensor", "classev3dev_1_1ultrasonic__sensor.html", null ]
+      ] ],
+      [ "ev3dev::servo_motor", "classev3dev_1_1servo__motor.html", null ]
+    ] ],
     [ "io::double_quote_escape< sep, quote >", "structio_1_1double__quote__escape.html", null ],
     [ "Drawable", null, [
       [ "Agent", "classAgent.html", null ],
@@ -82,7 +124,19 @@ var hierarchy =
     [ "BoBRobotics::MapCoordinate::Ellipsoid", "structBoBRobotics_1_1MapCoordinate_1_1Ellipsoid.html", null ],
     [ "io::empty_line_comment", "structio_1_1empty__line__comment.html", null ],
     [ "BoBRobotics::Navigation::ImageDatabase::Entry", "structBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Entry.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, Op >", "classCatch_1_1Internal_1_1Evaluator.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, IsEqualTo >", "structCatch_1_1Internal_1_1Evaluator_3_01T1_00_01T2_00_01IsEqualTo_01_4.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, IsGreaterThan >", "structCatch_1_1Internal_1_1Evaluator_3_01T1_00_01T2_00_01IsGreaterThan_01_4.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, IsGreaterThanOrEqualTo >", "structCatch_1_1Internal_1_1Evaluator_3_01T1_00_01T2_00_01IsGreaterThanOrEqualTo_01_4.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, IsLessThan >", "structCatch_1_1Internal_1_1Evaluator_3_01T1_00_01T2_00_01IsLessThan_01_4.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, IsLessThanOrEqualTo >", "structCatch_1_1Internal_1_1Evaluator_3_01T1_00_01T2_00_01IsLessThanOrEqualTo_01_4.html", null ],
+    [ "Catch::Internal::Evaluator< T1, T2, IsNotEqualTo >", "structCatch_1_1Internal_1_1Evaluator_3_01T1_00_01T2_00_01IsNotEqualTo_01_4.html", null ],
+    [ "plog::EventLogAppenderRegistry", "classplog_1_1EventLogAppenderRegistry.html", null ],
+    [ "ExampleAppConsole", "structExampleAppConsole.html", null ],
+    [ "ExampleAppDocuments", "structExampleAppDocuments.html", null ],
+    [ "ExampleAppLog", "structExampleAppLog.html", null ],
     [ "exception", null, [
+      [ "Catch::NotImplementedException", "classCatch_1_1NotImplementedException.html", null ],
       [ "io::error::base", "structio_1_1error_1_1base.html", [
         [ "io::error::can_not_open_file", "structio_1_1error_1_1can__not__open__file.html", null ],
         [ "io::error::duplicated_column_in_header", "structio_1_1error_1_1duplicated__column__in__header.html", null ],
@@ -100,13 +154,45 @@ var hierarchy =
         [ "io::error::too_many_columns", "structio_1_1error_1_1too__many__columns.html", null ]
       ] ]
     ] ],
+    [ "Catch::ExceptionTranslatorRegistrar", "classCatch_1_1ExceptionTranslatorRegistrar.html", null ],
+    [ "Catch::ExpressionLhs< T >", "classCatch_1_1ExpressionLhs.html", null ],
+    [ "Catch::Detail::FalseType", "structCatch_1_1Detail_1_1FalseType.html", null ],
+    [ "FrameContext", "structFrameContext.html", null ],
+    [ "FrameDataForRender", "structFrameDataForRender.html", null ],
+    [ "FrameResources", "structFrameResources.html", null ],
     [ "BoBRobotics::FSM< S >", "classBoBRobotics_1_1FSM.html", null ],
     [ "BoBRobotics::FSM< State >", "classBoBRobotics_1_1FSM.html", null ],
     [ "BoBRobotics::FSM< TankPIDState >", "classBoBRobotics_1_1FSM.html", null ],
+    [ "plog::FuncMessageFormatter", "classplog_1_1FuncMessageFormatter.html", null ],
     [ "BoBRobotics::Robots::Gantry", "classBoBRobotics_1_1Robots_1_1Gantry.html", null ],
+    [ "GLFWgammaramp", "structGLFWgammaramp.html", null ],
+    [ "GLFWimage", "structGLFWimage.html", null ],
+    [ "GLFWvidmode", "structGLFWvidmode.html", null ],
     [ "BoBRobotics::GPS::Gps", "classBoBRobotics_1_1GPS_1_1Gps.html", null ],
     [ "BoBRobotics::GPS::GPSData", "structBoBRobotics_1_1GPS_1_1GPSData.html", null ],
     [ "BoBRobotics::Navigation::PerfectMemoryStore::HOG< Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html", null ],
+    [ "plog::IAppender", "classplog_1_1IAppender.html", [
+      [ "plog::AndroidAppender< Formatter >", "classplog_1_1AndroidAppender.html", null ],
+      [ "plog::ConsoleAppender< Formatter >", "classplog_1_1ConsoleAppender.html", [
+        [ "plog::ColorConsoleAppender< Formatter >", "classplog_1_1ColorConsoleAppender.html", null ]
+      ] ],
+      [ "plog::DebugOutputAppender< Formatter >", "classplog_1_1DebugOutputAppender.html", null ],
+      [ "plog::EventLogAppender< Formatter >", "classplog_1_1EventLogAppender.html", null ],
+      [ "plog::Logger< instance >", "classplog_1_1Logger.html", null ],
+      [ "plog::MyAppender< Formatter >", "classplog_1_1MyAppender.html", null ],
+      [ "plog::RollingFileAppender< Formatter, Converter >", "classplog_1_1RollingFileAppender.html", null ]
+    ] ],
+    [ "Catch::IContext", "structCatch_1_1IContext.html", [
+      [ "Catch::IMutableContext", "structCatch_1_1IMutableContext.html", null ]
+    ] ],
+    [ "Catch::IExceptionTranslator", "structCatch_1_1IExceptionTranslator.html", null ],
+    [ "Catch::IExceptionTranslatorRegistry", "structCatch_1_1IExceptionTranslatorRegistry.html", null ],
+    [ "Catch::IGenerator< T >", "structCatch_1_1IGenerator.html", [
+      [ "Catch::BetweenGenerator< T >", "classCatch_1_1BetweenGenerator.html", null ],
+      [ "Catch::ValuesGenerator< T >", "classCatch_1_1ValuesGenerator.html", null ]
+    ] ],
+    [ "Catch::IGeneratorInfo", "structCatch_1_1IGeneratorInfo.html", null ],
+    [ "Catch::IGeneratorsForTest", "structCatch_1_1IGeneratorsForTest.html", null ],
     [ "io::ignore_overflow", "structio_1_1ignore__overflow.html", null ],
     [ "BoBRobotics::Navigation::ImageDatabase", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html", null ],
     [ "ImageInput", "classImageInput.html", [
@@ -115,7 +201,110 @@ var hierarchy =
       ] ],
       [ "ImageInputRaw", "classImageInputRaw.html", null ]
     ] ],
+    [ "ImBoolVector", "structImBoolVector.html", null ],
+    [ "ImColor", "structImColor.html", null ],
+    [ "ImDrawChannel", "structImDrawChannel.html", null ],
+    [ "ImDrawCmd", "structImDrawCmd.html", null ],
+    [ "ImDrawData", "structImDrawData.html", null ],
+    [ "ImDrawDataBuilder", "structImDrawDataBuilder.html", null ],
+    [ "ImDrawList", "structImDrawList.html", null ],
+    [ "ImDrawListSharedData", "structImDrawListSharedData.html", null ],
+    [ "ImDrawVert", "structImDrawVert.html", null ],
+    [ "ImDrawVertAllegro", "structImDrawVertAllegro.html", null ],
+    [ "ImFont", "structImFont.html", null ],
+    [ "ImFontAtlas", "structImFontAtlas.html", null ],
+    [ "ImFontBuildDstData", "structImFontBuildDstData.html", null ],
+    [ "ImFontBuildDstDataFT", "structImFontBuildDstDataFT.html", null ],
+    [ "ImFontBuildSrcData", "structImFontBuildSrcData.html", null ],
+    [ "ImFontBuildSrcDataFT", "structImFontBuildSrcDataFT.html", null ],
+    [ "ImFontBuildSrcGlyphFT", "structImFontBuildSrcGlyphFT.html", null ],
+    [ "ImFontConfig", "structImFontConfig.html", null ],
+    [ "ImFontGlyph", "structImFontGlyph.html", null ],
+    [ "ImFontGlyphRangesBuilder", "structImFontGlyphRangesBuilder.html", null ],
+    [ "ImGui_ImplVulkan_InitInfo", "structImGui__ImplVulkan__InitInfo.html", null ],
+    [ "ImGui_ImplVulkanH_FrameData", "structImGui__ImplVulkanH__FrameData.html", null ],
+    [ "ImGui_ImplVulkanH_WindowData", "structImGui__ImplVulkanH__WindowData.html", null ],
+    [ "ImGuiColorMod", "structImGuiColorMod.html", null ],
+    [ "ImGuiColumnData", "structImGuiColumnData.html", null ],
+    [ "ImGuiColumnsSet", "structImGuiColumnsSet.html", null ],
+    [ "ImGuiContext", "structImGuiContext.html", null ],
+    [ "ImGuiDataTypeInfo", "structImGuiDataTypeInfo.html", null ],
+    [ "ImGuiGroupData", "structImGuiGroupData.html", null ],
+    [ "ImGuiInputTextCallbackData", "structImGuiInputTextCallbackData.html", null ],
+    [ "ImGuiInputTextState", "structImGuiInputTextState.html", null ],
+    [ "ImGuiIO", "structImGuiIO.html", null ],
+    [ "ImGuiItemHoveredDataBackup", "structImGuiItemHoveredDataBackup.html", null ],
+    [ "ImGuiListClipper", "structImGuiListClipper.html", null ],
+    [ "ImGuiMenuColumns", "structImGuiMenuColumns.html", null ],
+    [ "ImGuiNavMoveResult", "structImGuiNavMoveResult.html", null ],
+    [ "ImGuiNextWindowData", "structImGuiNextWindowData.html", null ],
+    [ "ImGuiOnceUponAFrame", "structImGuiOnceUponAFrame.html", null ],
+    [ "ImGuiPayload", "structImGuiPayload.html", null ],
+    [ "ImGuiPlotArrayGetterData", "structImGuiPlotArrayGetterData.html", null ],
+    [ "ImGuiPopupRef", "structImGuiPopupRef.html", null ],
+    [ "ImGuiResizeGripDef", "structImGuiResizeGripDef.html", null ],
+    [ "ImGuiSettingsHandler", "structImGuiSettingsHandler.html", null ],
+    [ "ImGuiSizeCallbackData", "structImGuiSizeCallbackData.html", null ],
+    [ "ImGuiStorage", "structImGuiStorage.html", null ],
+    [ "ImGuiStyle", "structImGuiStyle.html", null ],
+    [ "ImGuiStyleMod", "structImGuiStyleMod.html", null ],
+    [ "ImGuiStyleVarInfo", "structImGuiStyleVarInfo.html", null ],
+    [ "ImGuiTabBar", "structImGuiTabBar.html", null ],
+    [ "ImGuiTabBarSortItem", "structImGuiTabBarSortItem.html", null ],
+    [ "ImGuiTabItem", "structImGuiTabItem.html", null ],
+    [ "ImGuiTextBuffer", "structImGuiTextBuffer.html", null ],
+    [ "ImGuiTextFilter", "structImGuiTextFilter.html", null ],
+    [ "ImGuiWindow", "structImGuiWindow.html", null ],
+    [ "ImGuiWindowSettings", "structImGuiWindowSettings.html", null ],
+    [ "ImGuiWindowTempData", "structImGuiWindowTempData.html", null ],
+    [ "ImNewDummy", "structImNewDummy.html", null ],
+    [ "ImPool< T >", "structImPool.html", null ],
+    [ "ImPool< ImGuiTabBar >", "structImPool.html", null ],
+    [ "ImRect", "structImRect.html", null ],
     [ "BoBRobotics::Net::IMUNetSource", "classBoBRobotics_1_1Net_1_1IMUNetSource.html", null ],
+    [ "Catch::IMutableRegistryHub", "structCatch_1_1IMutableRegistryHub.html", null ],
+    [ "ImVec1", "structImVec1.html", null ],
+    [ "ImVec2", "structImVec2.html", null ],
+    [ "ImVec4", "structImVec4.html", null ],
+    [ "ImVector< T >", "structImVector.html", null ],
+    [ "ImVector< char * >", "structImVector.html", null ],
+    [ "ImVector< char >", "structImVector.html", null ],
+    [ "ImVector< const char * >", "structImVector.html", null ],
+    [ "ImVector< float >", "structImVector.html", null ],
+    [ "ImVector< ImDrawChannel >", "structImVector.html", null ],
+    [ "ImVector< ImDrawCmd >", "structImVector.html", null ],
+    [ "ImVector< ImDrawIdx >", "structImVector.html", null ],
+    [ "ImVector< ImDrawList * >", "structImVector.html", null ],
+    [ "ImVector< ImDrawVert >", "structImVector.html", null ],
+    [ "ImVector< ImFont * >", "structImVector.html", null ],
+    [ "ImVector< ImFontAtlas::CustomRect >", "structImVector.html", null ],
+    [ "ImVector< ImFontBuildSrcGlyphFT >", "structImVector.html", null ],
+    [ "ImVector< ImFontConfig >", "structImVector.html", null ],
+    [ "ImVector< ImFontGlyph >", "structImVector.html", null ],
+    [ "ImVector< ImGuiColorMod >", "structImVector.html", null ],
+    [ "ImVector< ImGuiColumnData >", "structImVector.html", null ],
+    [ "ImVector< ImGuiColumnsSet >", "structImVector.html", null ],
+    [ "ImVector< ImGuiGroupData >", "structImVector.html", null ],
+    [ "ImVector< ImGuiID >", "structImVector.html", null ],
+    [ "ImVector< ImGuiItemFlags >", "structImVector.html", null ],
+    [ "ImVector< ImGuiPopupRef >", "structImVector.html", null ],
+    [ "ImVector< ImGuiSettingsHandler >", "structImVector.html", null ],
+    [ "ImVector< ImGuiStorage::Pair >", "structImVector.html", null ],
+    [ "ImVector< ImGuiStyleMod >", "structImVector.html", null ],
+    [ "ImVector< ImGuiTabBar * >", "structImVector.html", null ],
+    [ "ImVector< ImGuiTabBar >", "structImVector.html", null ],
+    [ "ImVector< ImGuiTabBarSortItem >", "structImVector.html", null ],
+    [ "ImVector< ImGuiTabItem >", "structImVector.html", null ],
+    [ "ImVector< ImGuiTextFilter::TextRange >", "structImVector.html", null ],
+    [ "ImVector< ImGuiWindow * >", "structImVector.html", null ],
+    [ "ImVector< ImGuiWindowSettings >", "structImVector.html", null ],
+    [ "ImVector< ImTextureID >", "structImVector.html", null ],
+    [ "ImVector< ImVec2 >", "structImVector.html", null ],
+    [ "ImVector< ImVec4 >", "structImVector.html", null ],
+    [ "ImVector< ImWchar >", "structImVector.html", null ],
+    [ "ImVector< int >", "structImVector.html", null ],
+    [ "ImVector< MyDocument >", "structImVector.html", null ],
+    [ "ImVector< unsigned char >", "structImVector.html", null ],
     [ "BoBRobotics::Video::Input", "classBoBRobotics_1_1Video_1_1Input.html", [
       [ "BoBRobotics::AntWorld::RenderTargetInput", "classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html", null ],
       [ "BoBRobotics::Robots::Bebop::VideoStream", "classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html", null ],
@@ -131,6 +320,7 @@ var hierarchy =
       [ "BoBRobotics::Video::RPiCamera", "classBoBRobotics_1_1Video_1_1RPiCamera.html", null ],
       [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
     ] ],
+    [ "InputTextCallback_UserData", "structInputTextCallback__UserData.html", null ],
     [ "BoBRobotics::Navigation::InSilicoRotater", "structBoBRobotics_1_1Navigation_1_1InSilicoRotater.html", null ],
     [ "integral_constant", null, [
       [ "units::traits::has_decibel_scale< T >", "structunits_1_1traits_1_1has__decibel__scale.html", null ],
@@ -148,7 +338,6 @@ var hierarchy =
       [ "units::traits::is_data_transfer_rate_unit< T >", "structunits_1_1traits_1_1is__data__transfer__rate__unit.html", null ],
       [ "units::traits::is_data_unit< T >", "structunits_1_1traits_1_1is__data__unit.html", null ],
       [ "units::traits::is_density_unit< T >", "structunits_1_1traits_1_1is__density__unit.html", null ],
-      [ "units::traits::is_dimensionless_unit< T >", "structunits_1_1traits_1_1is__dimensionless__unit.html", null ],
       [ "units::traits::is_energy_unit< T >", "structunits_1_1traits_1_1is__energy__unit.html", null ],
       [ "units::traits::is_force_unit< T >", "structunits_1_1traits_1_1is__force__unit.html", null ],
       [ "units::traits::is_frequency_unit< T >", "structunits_1_1traits_1_1is__frequency__unit.html", null ],
@@ -179,18 +368,29 @@ var hierarchy =
       [ "units::traits::is_voltage_unit< T >", "structunits_1_1traits_1_1is__voltage__unit.html", null ],
       [ "units::traits::is_volume_unit< T >", "structunits_1_1traits_1_1is__volume__unit.html", null ]
     ] ],
+    [ "Catch::IRegistryHub", "structCatch_1_1IRegistryHub.html", null ],
+    [ "Catch::IResultCapture", "structCatch_1_1IResultCapture.html", null ],
+    [ "Catch::IRunner", "structCatch_1_1IRunner.html", null ],
     [ "is_base_of", null, [
       [ "units::traits::is_base_unit< T >", "structunits_1_1traits_1_1is__base__unit.html", null ]
     ] ],
     [ "CLI::is_bool< T >", "structCLI_1_1is__bool.html", null ],
     [ "CLI::is_bool< bool >", "structCLI_1_1is__bool_3_01bool_01_4.html", null ],
+    [ "units::traits::is_dimensionless_unit< T >", "structunits_1_1traits_1_1is__dimensionless__unit.html", null ],
     [ "is_same", null, [
       [ "units::traits::is_convertible_unit< U1, U2 >", "structunits_1_1traits_1_1is__convertible__unit.html", null ]
     ] ],
     [ "CLI::is_vector< T >", "structCLI_1_1is__vector.html", null ],
     [ "CLI::is_vector< std::vector< T, A > >", "structCLI_1_1is__vector_3_01std_1_1vector_3_01T_00_01A_01_4_01_4.html", null ],
+    [ "Catch::Detail::IsStreamInsertable< T >", "structCatch_1_1Detail_1_1IsStreamInsertable.html", null ],
+    [ "Catch::ITagAliasRegistry", "structCatch_1_1ITagAliasRegistry.html", null ],
+    [ "Catch::ITestCaseRegistry", "structCatch_1_1ITestCaseRegistry.html", null ],
     [ "BoBRobotics::MapCoordinate::LatLon< D >", "structBoBRobotics_1_1MapCoordinate_1_1LatLon.html", null ],
+    [ "ev3dev::lcd", "classev3dev_1_1lcd.html", null ],
     [ "units::linear_scale< T >", "structunits_1_1linear__scale.html", null ],
+    [ "units::linear_scale< double >", "structunits_1_1linear__scale.html", [
+      [ "units::unit_t< Units, T, NonLinearScale >", "classunits_1_1unit__t.html", null ]
+    ] ],
     [ "io::LineReader", "classio_1_1LineReader.html", null ],
     [ "BoBRobotics::Logging::Logger", "classBoBRobotics_1_1Logging_1_1Logger.html", null ],
     [ "BoBRobotics::ImgProc::BeeEye::Map", "classBoBRobotics_1_1ImgProc_1_1BeeEye_1_1Map.html", null ],
@@ -202,19 +402,91 @@ var hierarchy =
         [ "PerfectMemoryConstrained", "classPerfectMemoryConstrained.html", null ]
       ] ]
     ] ],
+    [ "Catch::MessageBuilder", "structCatch_1_1MessageBuilder.html", null ],
+    [ "Catch::MessageInfo", "structCatch_1_1MessageInfo.html", null ],
+    [ "plog::MessageOnlyFormatter", "classplog_1_1MessageOnlyFormatter.html", null ],
     [ "BoBRobotics::MindstormsIMU", "classBoBRobotics_1_1MindstormsIMU.html", null ],
     [ "ModelPlugin", null, [
       [ "gazebo::DifferentialDrivePlugin", "classgazebo_1_1DifferentialDrivePlugin.html", null ],
       [ "gazebo::GazeboQuadCopterPlugin", "classgazebo_1_1GazeboQuadCopterPlugin.html", null ]
     ] ],
+    [ "<MTKViewDelegate>", null, [
+      [ "Renderer", "interfaceRenderer.html", null ]
+    ] ],
+    [ "MyClass", "classMyClass.html", null ],
+    [ "plog::MyConverter", "classplog_1_1MyConverter.html", null ],
+    [ "MyDocument", "structMyDocument.html", null ],
+    [ "plog::MyFormatter", "classplog_1_1MyFormatter.html", null ],
+    [ "Catch::NameAndDesc", "structCatch_1_1NameAndDesc.html", null ],
     [ "BoBRobotics::Video::NetSink", "classBoBRobotics_1_1Video_1_1NetSink.html", null ],
     [ "BoBRobotics::GPS::NMEAParser", "classBoBRobotics_1_1GPS_1_1NMEAParser.html", null ],
     [ "io::no_comment", "structio_1_1no__comment.html", null ],
     [ "io::no_quote_escape< sep >", "structio_1_1no__quote__escape.html", null ],
-    [ "NonLinearScale", null, [
-      [ "units::unit_t< Units, T, NonLinearScale >", "classunits_1_1unit__t.html", null ]
+    [ "plog::util::NonCopyable", "classplog_1_1util_1_1NonCopyable.html", [
+      [ "plog::util::File", "classplog_1_1util_1_1File.html", null ],
+      [ "plog::util::Mutex", "classplog_1_1util_1_1Mutex.html", null ],
+      [ "plog::util::MutexLock", "classplog_1_1util_1_1MutexLock.html", null ],
+      [ "plog::util::Singleton< T >", "classplog_1_1util_1_1Singleton.html", null ],
+      [ "plog::util::Singleton< Logger< instance > >", "classplog_1_1util_1_1Singleton.html", [
+        [ "plog::Logger< instance >", "classplog_1_1Logger.html", null ]
+      ] ]
+    ] ],
+    [ "Catch::NonCopyable", "classCatch_1_1NonCopyable.html", [
+      [ "Catch::IShared", "structCatch_1_1IShared.html", [
+        [ "Catch::ITestCase", "structCatch_1_1ITestCase.html", [
+          [ "Catch::SharedImpl< ITestCase >", "structCatch_1_1SharedImpl.html", [
+            [ "Catch::MethodTestCase< C >", "classCatch_1_1MethodTestCase.html", null ]
+          ] ]
+        ] ],
+        [ "Catch::SharedImpl< T >", "structCatch_1_1SharedImpl.html", null ],
+        [ "Catch::SharedImpl< IShared >", "structCatch_1_1SharedImpl.html", [
+          [ "Catch::Matchers::Impl::Matcher< ExpressionT >", "structCatch_1_1Matchers_1_1Impl_1_1Matcher.html", [
+            [ "Catch::Matchers::Impl::MatcherImpl< DerivedT, ExpressionT >", "structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html", null ]
+          ] ],
+          [ "Catch::Matchers::Impl::Matcher< std::string >", "structCatch_1_1Matchers_1_1Impl_1_1Matcher.html", [
+            [ "Catch::Matchers::Impl::MatcherImpl< Contains, std::string >", "structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html", [
+              [ "Catch::Matchers::Impl::StdString::Contains", "structCatch_1_1Matchers_1_1Impl_1_1StdString_1_1Contains.html", null ]
+            ] ],
+            [ "Catch::Matchers::Impl::MatcherImpl< EndsWith, std::string >", "structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html", [
+              [ "Catch::Matchers::Impl::StdString::EndsWith", "structCatch_1_1Matchers_1_1Impl_1_1StdString_1_1EndsWith.html", null ]
+            ] ],
+            [ "Catch::Matchers::Impl::MatcherImpl< Equals, std::string >", "structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html", [
+              [ "Catch::Matchers::Impl::StdString::Equals", "structCatch_1_1Matchers_1_1Impl_1_1StdString_1_1Equals.html", null ]
+            ] ],
+            [ "Catch::Matchers::Impl::MatcherImpl< StartsWith, std::string >", "structCatch_1_1Matchers_1_1Impl_1_1MatcherImpl.html", [
+              [ "Catch::Matchers::Impl::StdString::StartsWith", "structCatch_1_1Matchers_1_1Impl_1_1StdString_1_1StartsWith.html", null ]
+            ] ]
+          ] ]
+        ] ]
+      ] ],
+      [ "Catch::Section", "classCatch_1_1Section.html", null ]
+    ] ],
+    [ "Catch::Matchers::Impl::Generic::Not< ExpressionT >", "classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1Not.html", null ],
+    [ "<NSApplicationDelegate>", null, [
+      [ "AppDelegate", "interfaceAppDelegate.html", null ],
+      [ "ImGuiExampleAppDelegate", "interfaceImGuiExampleAppDelegate.html", null ]
+    ] ],
+    [ "<NSCopying>", null, [
+      [ "FramebufferDescriptor", "interfaceFramebufferDescriptor.html", null ]
+    ] ],
+    [ "NSObject", null, [
+      [ "AppDelegate", "interfaceAppDelegate.html", null ],
+      [ "FramebufferDescriptor", "interfaceFramebufferDescriptor.html", null ],
+      [ "ImGuiExampleAppDelegate", "interfaceImGuiExampleAppDelegate.html", null ],
+      [ "MetalBuffer", "interfaceMetalBuffer.html", null ],
+      [ "MetalContext", "interfaceMetalContext.html", null ],
+      [ "Renderer", "interfaceRenderer.html", null ]
+    ] ],
+    [ "NSOpenGLView", null, [
+      [ "ImGuiExampleView", "interfaceImGuiExampleView.html", null ]
+    ] ],
+    [ "NSViewController", null, [
+      [ "ViewController", "interfaceViewController.html", null ]
     ] ],
     [ "std::numeric_limits< units::unit_t< Units, T, NonLinearScale > >", "classstd_1_1numeric__limits_3_01units_1_1unit__t_3_01Units_00_01T_00_01NonLinearScale_01_4_01_4.html", null ],
+    [ "Object", null, [
+      [ "Greeter", "interfaceGreeter.html", null ]
+    ] ],
     [ "BoBRobotics::Vicon::ObjectData", "classBoBRobotics_1_1Vicon_1_1ObjectData.html", [
       [ "BoBRobotics::Vicon::ObjectDataVelocity", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html", null ]
     ] ],
@@ -231,65 +503,53 @@ var hierarchy =
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLbyte >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLbyte_01_4.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLfloat >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLfloat_01_4.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLuint >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLuint_01_4.html", null ],
+    [ "Catch::Internal::OperatorTraits< Op >", "structCatch_1_1Internal_1_1OperatorTraits.html", null ],
+    [ "Catch::Internal::OperatorTraits< IsEqualTo >", "structCatch_1_1Internal_1_1OperatorTraits_3_01IsEqualTo_01_4.html", null ],
+    [ "Catch::Internal::OperatorTraits< IsGreaterThan >", "structCatch_1_1Internal_1_1OperatorTraits_3_01IsGreaterThan_01_4.html", null ],
+    [ "Catch::Internal::OperatorTraits< IsGreaterThanOrEqualTo >", "structCatch_1_1Internal_1_1OperatorTraits_3_01IsGreaterThanOrEqualTo_01_4.html", null ],
+    [ "Catch::Internal::OperatorTraits< IsLessThan >", "structCatch_1_1Internal_1_1OperatorTraits_3_01IsLessThan_01_4.html", null ],
+    [ "Catch::Internal::OperatorTraits< IsLessThanOrEqualTo >", "structCatch_1_1Internal_1_1OperatorTraits_3_01IsLessThanOrEqualTo_01_4.html", null ],
+    [ "Catch::Internal::OperatorTraits< IsNotEqualTo >", "structCatch_1_1Internal_1_1OperatorTraits_3_01IsNotEqualTo_01_4.html", null ],
+    [ "Catch::Option< T >", "classCatch_1_1Option.html", null ],
     [ "BoBRobotics::MapCoordinate::OSCoordinate", "structBoBRobotics_1_1MapCoordinate_1_1OSCoordinate.html", null ],
     [ "BoBRobotics::MapCoordinate::OSGB36", "structBoBRobotics_1_1MapCoordinate_1_1OSGB36.html", null ],
+    [ "ImGuiStorage::Pair", "structImGuiStorage_1_1Pair.html", null ],
     [ "filesystem::path", "classfilesystem_1_1path.html", null ],
     [ "BoBRobotics::PID", "classBoBRobotics_1_1PID.html", null ],
+    [ "Catch::pluralise", "structCatch_1_1pluralise.html", null ],
+    [ "Point", "structPoint.html", null ],
+    [ "BoBRobotics::Pose2< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Pose2.html", null ],
+    [ "BoBRobotics::Pose2< units::length::millimeter_t, units::angle::degree_t >", "classBoBRobotics_1_1Pose2.html", null ],
+    [ "BoBRobotics::Pose2< units::unit_t, units::unit_t >", "classBoBRobotics_1_1Pose2.html", null ],
+    [ "BoBRobotics::Pose3< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Pose3.html", null ],
+    [ "BoBRobotics::Pose3< millimeter_t, units::unit_t >", "classBoBRobotics_1_1Pose3.html", null ],
+    [ "BoBRobotics::Pose3< units::unit_t, units::unit_t >", "classBoBRobotics_1_1Pose3.html", null ],
     [ "BoBRobotics::PoseBase< Derived >", "classBoBRobotics_1_1PoseBase.html", [
       [ "BoBRobotics::VectorBase< LengthUnit, N, Derived >", "classBoBRobotics_1_1VectorBase.html", null ]
     ] ],
-    [ "BoBRobotics::PoseBase< Pose2< LengthUnit, AngleUnit > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::Pose2< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Pose2.html", null ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Pose2< units::unit_t, units::unit_t > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::Pose2< units::unit_t, units::unit_t >", "classBoBRobotics_1_1Pose2.html", null ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Pose3< LengthUnit, AngleUnit > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::Pose3< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Pose3.html", null ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Pose3< millimeter_t, units::unit_t > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::Pose3< millimeter_t, units::unit_t >", "classBoBRobotics_1_1Pose3.html", null ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Pose3< units::unit_t, units::unit_t > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::Pose3< units::unit_t, units::unit_t >", "classBoBRobotics_1_1Pose3.html", null ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Vector2< LengthUnit > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::VectorBase< LengthUnit, 2, Vector2< LengthUnit > >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector2< LengthUnit >", "classBoBRobotics_1_1Vector2.html", null ]
-      ] ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Vector2< units::unit_t > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::VectorBase< units::unit_t, 2, Vector2< units::unit_t > >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector2< units::unit_t >", "classBoBRobotics_1_1Vector2.html", null ]
-      ] ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Vector3< LengthUnit > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::VectorBase< LengthUnit, 3, Vector3< LengthUnit > >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector3< LengthUnit >", "classBoBRobotics_1_1Vector3.html", null ]
-      ] ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Vector3< millimeter_t > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::VectorBase< millimeter_t, 3, Vector3< millimeter_t > >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector3< millimeter_t >", "classBoBRobotics_1_1Vector3.html", null ]
-      ] ]
-    ] ],
-    [ "BoBRobotics::PoseBase< Vector3< units::unit_t > >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::VectorBase< units::unit_t, 3, Vector3< units::unit_t > >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector3< units::unit_t >", "classBoBRobotics_1_1Vector3.html", null ]
-      ] ]
-    ] ],
+    [ "Catch::Ptr< T >", "classCatch_1_1Ptr.html", null ],
+    [ "Catch::Ptr< Catch::ITestCase >", "classCatch_1_1Ptr.html", null ],
+    [ "Catch::Ptr< Catch::Matchers::Impl::Matcher< ExpressionT > >", "classCatch_1_1Ptr.html", null ],
     [ "BoBRobotics::Robots::PurePursuitController", "classBoBRobotics_1_1Robots_1_1PurePursuitController.html", null ],
     [ "BoBRobotics::Navigation::Range", "structBoBRobotics_1_1Navigation_1_1Range.html", null ],
     [ "BoBRobotics::Navigation::PerfectMemoryStore::RawImage< Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1RawImage.html", null ],
+    [ "BoBRobotics::Navigation::PerfectMemoryStore::RawImage<>", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1RawImage.html", null ],
+    [ "plog::Record", "classplog_1_1Record.html", null ],
     [ "BoBRobotics::Navigation::ImageDatabase::Recorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html", [
       [ "BoBRobotics::Navigation::ImageDatabase::GridRecorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1GridRecorder.html", null ],
       [ "BoBRobotics::Navigation::ImageDatabase::RouteRecorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html", null ]
     ] ],
+    [ "Catch::RegistrarForTagAliases", "structCatch_1_1RegistrarForTagAliases.html", null ],
+    [ "ev3dev::remote_control", "classev3dev_1_1remote__control.html", null ],
     [ "BoBRobotics::AntWorld::Renderer", "classBoBRobotics_1_1AntWorld_1_1Renderer.html", null ],
+    [ "Renderer()", "categoryRenderer_07_08.html", null ],
     [ "BoBRobotics::AntWorld::RenderMesh", "classBoBRobotics_1_1AntWorld_1_1RenderMesh.html", [
       [ "BoBRobotics::AntWorld::RenderMeshSpherical", "classBoBRobotics_1_1AntWorld_1_1RenderMeshSpherical.html", null ]
     ] ],
     [ "BoBRobotics::AntWorld::RenderTarget", "classBoBRobotics_1_1AntWorld_1_1RenderTarget.html", null ],
+    [ "Catch::ResultBuilder", "classCatch_1_1ResultBuilder.html", null ],
+    [ "Catch::ResultDisposition", "structCatch_1_1ResultDisposition.html", null ],
+    [ "Catch::ResultWas", "structCatch_1_1ResultWas.html", null ],
     [ "BoBRobotics::Navigation::RMSDiff", "classBoBRobotics_1_1Navigation_1_1RMSDiff.html", null ],
     [ "BoBRobotics::Robots::Robot", "classBoBRobotics_1_1Robots_1_1Robot.html", [
       [ "BoBRobotics::AntWorld::AntAgent", "classBoBRobotics_1_1AntWorld_1_1AntAgent.html", null ],
@@ -350,6 +610,10 @@ var hierarchy =
         ] ]
       ] ]
     ] ],
+    [ "Catch::SafeBool", "classCatch_1_1SafeBool.html", null ],
+    [ "Catch::ScopedMessage", "classCatch_1_1ScopedMessage.html", null ],
+    [ "Catch::SectionEndInfo", "structCatch_1_1SectionEndInfo.html", null ],
+    [ "Catch::SectionInfo", "structCatch_1_1SectionInfo.html", null ],
     [ "matplotlibcpp::select_npy_type< T >", "structmatplotlibcpp_1_1select__npy__type.html", null ],
     [ "matplotlibcpp::select_npy_type< bool >", "structmatplotlibcpp_1_1select__npy__type_3_01bool_01_4.html", null ],
     [ "matplotlibcpp::select_npy_type< double >", "structmatplotlibcpp_1_1select__npy__type_3_01double_01_4.html", null ],
@@ -373,6 +637,8 @@ var hierarchy =
     [ "BoBRobotics::AntWorld::SnapshotProcessorArdin", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessorArdin.html", null ],
     [ "BoBRobotics::Net::Socket", "classBoBRobotics_1_1Net_1_1Socket.html", null ],
     [ "BoBRobotics::Net::Connection::SocketWriter", "classBoBRobotics_1_1Net_1_1Connection_1_1SocketWriter.html", null ],
+    [ "ev3dev::sound", "classev3dev_1_1sound.html", null ],
+    [ "Catch::SourceLineInfo", "structCatch_1_1SourceLineInfo.html", null ],
     [ "BoBRobotics::GeNNUtils::SpikeRecorder", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRecorder.html", [
       [ "BoBRobotics::GeNNUtils::SpikeCSVRecorder", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorder.html", null ],
       [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderCached", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderCached.html", null ],
@@ -381,15 +647,44 @@ var hierarchy =
     ] ],
     [ "BoBRobotics::GeNNUtils::SpikeRenderer", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRenderer.html", null ],
     [ "BoBRobotics::FSM< S >::StateHandler", "classBoBRobotics_1_1FSM_1_1StateHandler.html", [
-      [ "BoBRobotics::Robots::TankPID< PoseGetterType >", "classBoBRobotics_1_1Robots_1_1TankPID.html", null ],
       [ "PositionerExample", "classPositionerExample.html", null ],
-      [ "PositionerExample", "classPositionerExample.html", null ],
-      [ "StateHandler", "classStateHandler.html", null ],
-      [ "BoBRobotics::Robots::TankPID< Vicon::ObjectReference<> >", "classBoBRobotics_1_1Robots_1_1TankPID.html", null ]
+      [ "StateHandler", "classStateHandler.html", null ]
     ] ],
+    [ "STB_TexteditState", "structSTB__TexteditState.html", null ],
+    [ "stbrp_context", "structstbrp__context.html", null ],
+    [ "stbrp_node", "structstbrp__node.html", null ],
+    [ "stbrp_rect", "structstbrp__rect.html", null ],
+    [ "StbTexteditRow", "structStbTexteditRow.html", null ],
+    [ "stbtt__bitmap", "structstbtt____bitmap.html", null ],
+    [ "stbtt__buf", "structstbtt____buf.html", null ],
+    [ "stbtt_aligned_quad", "structstbtt__aligned__quad.html", null ],
+    [ "stbtt_bakedchar", "structstbtt__bakedchar.html", null ],
+    [ "stbtt_fontinfo", "structstbtt__fontinfo.html", null ],
+    [ "stbtt_pack_context", "structstbtt__pack__context.html", null ],
+    [ "stbtt_pack_range", "structstbtt__pack__range.html", null ],
+    [ "stbtt_packedchar", "structstbtt__packedchar.html", null ],
+    [ "stbtt_vertex", "structstbtt__vertex.html", null ],
+    [ "StbUndoRecord", "structStbUndoRecord.html", null ],
+    [ "StbUndoState", "structStbUndoState.html", null ],
     [ "BoBRobotics::Stopwatch", "classBoBRobotics_1_1Stopwatch.html", null ],
+    [ "Catch::StreamEndStop", "structCatch_1_1StreamEndStop.html", null ],
+    [ "Catch::StringMaker< R C::* >", "structCatch_1_1StringMaker_3_01R_01C_1_1_5_01_4.html", null ],
+    [ "Catch::StringMaker< T * >", "structCatch_1_1StringMaker_3_01T_01_5_01_4.html", null ],
+    [ "Catch::Detail::StringMakerBase< C >", "structCatch_1_1Detail_1_1StringMakerBase.html", null ],
+    [ "Catch::Detail::StringMakerBase< Detail::IsStreamInsertable< T >::value >", "structCatch_1_1Detail_1_1StringMakerBase.html", [
+      [ "Catch::StringMaker< T >", "structCatch_1_1StringMaker.html", null ]
+    ] ],
+    [ "Catch::Detail::StringMakerBase< true >", "structCatch_1_1Detail_1_1StringMakerBase_3_01true_01_4.html", null ],
     [ "BoBRobotics::AntWorld::Surface", "classBoBRobotics_1_1AntWorld_1_1Surface.html", null ],
     [ "io::detail::SynchronousReader", "classio_1_1detail_1_1SynchronousReader.html", null ],
+    [ "Catch::TagAlias", "structCatch_1_1TagAlias.html", null ],
+    [ "BoBRobotics::Robots::TankPID< PoseGetterType >", "classBoBRobotics_1_1Robots_1_1TankPID.html", null ],
+    [ "BoBRobotics::Robots::TankPID< Vicon::ObjectReference<> >", "classBoBRobotics_1_1Robots_1_1TankPID.html", null ],
+    [ "Catch::TestCaseInfo", "structCatch_1_1TestCaseInfo.html", [
+      [ "Catch::TestCase", "classCatch_1_1TestCase.html", null ]
+    ] ],
+    [ "Catch::TestFailureException", "structCatch_1_1TestFailureException.html", null ],
+    [ "ImGuiTextFilter::TextRange", "structImGuiTextFilter_1_1TextRange.html", null ],
     [ "BoBRobotics::AntWorld::Texture", "classBoBRobotics_1_1AntWorld_1_1Texture.html", null ],
     [ "BoBRobotics::Threadable", "classBoBRobotics_1_1Threadable.html", [
       [ "BoBRobotics::HID::JoystickBase< JAxis, JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
@@ -407,13 +702,18 @@ var hierarchy =
       ] ]
     ] ],
     [ "io::throw_on_overflow", "structio_1_1throw__on__overflow.html", null ],
+    [ "plog::util::Time", "structplog_1_1util_1_1Time.html", null ],
     [ "BoBRobotics::Timer< A >", "classBoBRobotics_1_1Timer.html", null ],
+    [ "Catch::Timer", "classCatch_1_1Timer.html", null ],
     [ "BoBRobotics::TimerAccumulate< A >", "classBoBRobotics_1_1TimerAccumulate.html", null ],
     [ "BoBRobotics::GPS::TimeStamp", "structBoBRobotics_1_1GPS_1_1TimeStamp.html", null ],
     [ "tinydir_dir", "structtinydir__dir.html", null ],
     [ "tinydir_file", "structtinydir__file.html", null ],
+    [ "Catch::Totals", "structCatch_1_1Totals.html", null ],
     [ "BoBRobotics::MapCoordinate::Transform", "structBoBRobotics_1_1MapCoordinate_1_1Transform.html", null ],
     [ "io::trim_chars< trim_char_list >", "structio_1_1trim__chars.html", null ],
+    [ "Catch::Detail::TrueType", "structCatch_1_1Detail_1_1TrueType.html", null ],
+    [ "plog::TxtFormatter", "classplog_1_1TxtFormatter.html", null ],
     [ "type", null, [
       [ "units::traits::is_unit< T >", "structunits_1_1traits_1_1is__unit.html", null ],
       [ "units::traits::is_unit_t< T >", "structunits_1_1traits_1_1is__unit__t.html", null ]
@@ -429,22 +729,36 @@ var hierarchy =
       [ "units::unit_value_sqrt< U1, Eps >", "structunits_1_1unit__value__sqrt.html", null ],
       [ "units::unit_value_subtract< U1, U2 >", "structunits_1_1unit__value__subtract.html", null ]
     ] ],
+    [ "uSynergyContext", "structuSynergyContext.html", null ],
+    [ "uSynergyCookie", "structuSynergyCookie.html", null ],
+    [ "plog::UTF8Converter", "classplog_1_1UTF8Converter.html", [
+      [ "plog::NativeEOLConverter< NextConverter >", "classplog_1_1NativeEOLConverter.html", null ]
+    ] ],
+    [ "BoBRobotics::MapCoordinate::UTMCoordinate", "structBoBRobotics_1_1MapCoordinate_1_1UTMCoordinate.html", null ],
     [ "BoBRobotics::GeNNUtils::VarSlider< T >", "classBoBRobotics_1_1GeNNUtils_1_1VarSlider.html", null ],
+    [ "BoBRobotics::Vector2< LengthUnit >", "classBoBRobotics_1_1Vector2.html", null ],
+    [ "BoBRobotics::Vector2< units::length::millimeter_t >", "classBoBRobotics_1_1Vector2.html", null ],
+    [ "BoBRobotics::Vector2< units::unit_t >", "classBoBRobotics_1_1Vector2.html", null ],
+    [ "BoBRobotics::Vector3< LengthUnit >", "classBoBRobotics_1_1Vector3.html", null ],
+    [ "BoBRobotics::Vector3< millimeter_t >", "classBoBRobotics_1_1Vector3.html", null ],
+    [ "BoBRobotics::Vector3< units::unit_t >", "classBoBRobotics_1_1Vector3.html", null ],
     [ "VectorField", "classVectorField.html", null ],
+    [ "VERTEX_CONSTANT_BUFFER", "structVERTEX__CONSTANT__BUFFER.html", null ],
     [ "BoBRobotics::Video::Video4LinuxCamera", "classBoBRobotics_1_1Video_1_1Video4LinuxCamera.html", [
       [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
     ] ],
+    [ "ViewController()", "categoryViewController_07_08.html", null ],
     [ "BoBRobotics::Navigation::VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html", [
-      [ "BoBRobotics::Navigation::InfoMax< FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", [
-        [ "BoBRobotics::Navigation::InfoMaxRotater< Rotater, FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ]
-      ] ],
-      [ "BoBRobotics::Navigation::PerfectMemory< Store >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", [
-        [ "BoBRobotics::Navigation::PerfectMemoryRotater< Store, RIDFProcessor, Rotater >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryRotater.html", null ]
-      ] ],
+      [ "BoBRobotics::Navigation::InfoMax< FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", null ],
+      [ "BoBRobotics::Navigation::PerfectMemory< Store >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
       [ "BoBRobotics::Navigation::InfoMax< float >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", [
+        [ "BoBRobotics::Navigation::InfoMaxRotater< Rotater, FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ],
         [ "BoBRobotics::Navigation::InfoMaxRotater< BoBRobotics::Navigation::InSilicoRotater, float >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ]
       ] ],
-      [ "MBMemory", "classMBMemory.html", null ]
+      [ "MBMemory", "classMBMemory.html", null ],
+      [ "BoBRobotics::Navigation::PerfectMemory< PerfectMemoryStore::RawImage<> >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", [
+        [ "BoBRobotics::Navigation::PerfectMemoryRotater< Store, RIDFProcessor, Rotater >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryRotater.html", null ]
+      ] ]
     ] ],
     [ "BoBRobotics::VonMisesDistribution< T >", "classBoBRobotics_1_1VonMisesDistribution.html", null ],
     [ "BoBRobotics::Navigation::WeightSnapshotsDynamic< numComp >", "structBoBRobotics_1_1Navigation_1_1WeightSnapshotsDynamic.html", null ],
