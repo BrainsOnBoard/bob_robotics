@@ -33,10 +33,10 @@ bob_main(int, char **)
 #endif
 
     // Read motor commands from network
-    robot.readFromNetwork(connection);
+    robot.readFromNetwork(*connection);
 
     // Run server
-    connection.run();
+    connection->run();
 
     return EXIT_SUCCESS;
 }

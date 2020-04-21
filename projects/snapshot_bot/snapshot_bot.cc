@@ -69,8 +69,8 @@ public:
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             Net::Server server(config.getServerListenPort());
-            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
-            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getUnwrapRes(), "unwrapped");
+            m_Connection = server.waitForConnection();
+            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection, config.getUnwrapRes(), "unwrapped");
         }
 
         // If we should use Vicon tracking
