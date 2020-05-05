@@ -392,7 +392,7 @@ macro(BoB_build)
     # Conversely, only setting the compiler flag means that the surveyor example
     # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
     #       - AD
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
         add_compile_flags(-std=gnu++${CMAKE_CXX_STANDARD})
     endif()
 
