@@ -19,6 +19,7 @@
                 "/usr/include/sdformat-6.0",
                 "/usr/include/sdformat-6.2",
                 "/usr/include/sdformat-9.1",
+                "/usr/include/sdformat-9.2",
                 "${GENN_PATH}/include"
             ],
             "defines": [
@@ -26,7 +27,7 @@
                 "ROBOT_TYPE=Tank",
                 "BOB_ROBOTICS_PATH=\"/some/path\""
             ],
-            "cppStandard": "c++14",
+            "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
         }
     ],
