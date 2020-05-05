@@ -446,7 +446,14 @@ macro(BoB_build)
     # Link all targets against the libraries
     foreach(target IN LISTS BOB_TARGETS)
         target_link_libraries(${target} ${${PROJECT_NAME}_LIBRARIES})
-        target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
+
+        # Older versions of CMake don't have target_link_directories(), but
+        # hopefully we can get away without using it in this case (because we'll
+        # probably only find this on Linux machines which don't care about
+        # linking directories anyway)
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+            target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
+        endif()
     endforeach()
 endmacro()
 
@@ -506,8 +513,12 @@ macro(BoB_add_link_libraries)
 endmacro()
 
 macro(BoB_add_link_directories)
-    set(${PROJECT_NAME}_LIB_DIRS "${${PROJECT_NAME}_LIB_DIRS};${ARGV}"
-    CACHE INTERNAL "${PROJECT_NAME}: Library directories" FORCE)
+    if(${CMAKE_VERSION} VERSION_LESS "3.13.0")
+        link_directories(${ARGV})
+    else()
+        set(${PROJECT_NAME}_LIB_DIRS "${${PROJECT_NAME}_LIB_DIRS};${ARGV}"
+            CACHE INTERNAL "${PROJECT_NAME}: Library directories" FORCE)
+    endif()
 endmacro()
 
 function(BoB_deprecated WHAT ALTERNATIVE)
