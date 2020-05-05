@@ -442,7 +442,6 @@ macro(BoB_build)
     # so that dependencies will always (I think!) be in the right order.
     list(REVERSE ${PROJECT_NAME}_LIBRARIES)
     list(REMOVE_DUPLICATES ${PROJECT_NAME}_LIBRARIES)
-    list(REVERSE ${PROJECT_NAME}_LIBRARIES)
 
     # Link all targets against the libraries
     foreach(target IN LISTS BOB_TARGETS)
