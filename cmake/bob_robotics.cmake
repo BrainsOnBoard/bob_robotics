@@ -365,17 +365,31 @@ macro(BoB_build)
         set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
-    # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
+    # If C++ standard has not been specified explicitly either with a command
+    # line argument or with an environment variable, set the standard to C++14,
+    # the minimum supported by BoB robotics.
+    #
+    # The main reason for allowing users to choose a more recent standard is
+    # because the latest version of Gazebo (v11) requires C++17, so we need it
+    # for Gazebo-based projects.
+    if(NOT DEFINED CMAKE_CXX_STANDARD)
+        if(DEFINED ENV{BOB_ROBOTICS_CXX_STANDARD})
+            set(CMAKE_CXX_STANDARD $ENV{BOB_ROBOTICS_CXX_STANDARD})
+        else()
+            set(CMAKE_CXX_STANDARD 14)
+        endif()
+    endif()
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD by itself doesn't
     # work, so add the compiler flag manually.
     #
     # Conversely, only setting the compiler flag means that the surveyor example
     # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
     #       - AD
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_compile_flags(-std=c++14)
+        add_compile_flags(-std=gnu++${CMAKE_CXX_STANDARD})
     endif()
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Irritatingly, neither GCC nor Clang produce nice ANSI-coloured output if they detect
     # that output "isn't a terminal" - which seems to include whatever pipe-magick cmake includes.
