@@ -16,7 +16,7 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL"
+                          "EXECUTABLE;GENN_MODEL;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -35,6 +35,11 @@ macro(BoB_project)
         get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     endif()
     project(${NAME})
+
+    # Allow for setting the C++ standard on a per-project basis.
+    if(PARSED_ARGS_CXX_STANDARD AND NOT DEFINED CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD ${PARSED_ARGS_CXX_STANDARD})
+    endif()
 
     # Include local *.h files in project. We don't strictly need to do this, but
     # if we don't then they won't be included in generated Visual Studio
