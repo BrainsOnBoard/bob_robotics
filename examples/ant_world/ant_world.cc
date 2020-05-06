@@ -43,11 +43,10 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLcha
     else if (severity == GL_DEBUG_SEVERITY_LOW) {
         LOGI << message;
     } 
-    else
+    else {
         LOGD << message;
     }
 }
-
 }
 
 int main(int argc, char **argv)
