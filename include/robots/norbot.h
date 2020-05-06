@@ -20,7 +20,7 @@ class Norbot : public Tank
     using millimeter_t = units::length::millimeter_t;
 
 public:
-    Norbot(const char *path = "/dev/i2c-1", int slaveAddress = 0x29);
+    Norbot(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x29);
 
     //----------------------------------------------------------------------------
     // Tank virtuals

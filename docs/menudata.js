@@ -1,18 +1,17 @@
 /*
-@ @licstart  The following is the entire license notice for the
+@licstart  The following is the entire license notice for the
 JavaScript code in this file.
 
-Copyright (C) 1997-2017 by Dimitri van Heesch
+Copyright (C) 1997-2019 by Dimitri van Heesch
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+it under the terms of version 2 of the GNU General Public License as published by
+the Free Software Foundation
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
@@ -139,11 +138,29 @@ var menudata={children:[
 {text:"v",url:"functions_func_v.html#index_v"},
 {text:"w",url:"functions_func_w.html#index_w"},
 {text:"~",url:"functions_func_~.html#index__7E"}]},
-{text:"Variables",url:"functions_vars.html"},
+{text:"Variables",url:"functions_vars.html",children:[
+{text:"b",url:"functions_vars.html#index_b"},
+{text:"d",url:"functions_vars.html#index_d"},
+{text:"g",url:"functions_vars.html#index_g"},
+{text:"h",url:"functions_vars.html#index_h"},
+{text:"m",url:"functions_vars.html#index_m"},
+{text:"p",url:"functions_vars.html#index_p"},
+{text:"r",url:"functions_vars.html#index_r"},
+{text:"s",url:"functions_vars.html#index_s"},
+{text:"w",url:"functions_vars.html#index_w"}]},
 {text:"Typedefs",url:"functions_type.html"},
 {text:"Enumerations",url:"functions_enum.html"}]}]},
 {text:"Files",url:"files.html",children:[
 {text:"File List",url:"files.html"},
 {text:"File Members",url:"globals.html",children:[
-{text:"All",url:"globals.html"},
-{text:"Macros",url:"globals_defs.html"}]}]}]}
+{text:"All",url:"globals.html",children:[
+{text:"g",url:"globals.html#index_g"},
+{text:"u",url:"globals.html#index_u"},
+{text:"w",url:"globals.html#index_w"}]},
+{text:"Functions",url:"globals_func.html",children:[
+{text:"g",url:"globals_func.html#index_g"}]},
+{text:"Typedefs",url:"globals_type.html"},
+{text:"Macros",url:"globals_defs.html",children:[
+{text:"g",url:"globals_defs.html#index_g"},
+{text:"u",url:"globals_defs.html#index_u"},
+{text:"w",url:"globals_defs.html#index_w"}]}]}]}]}

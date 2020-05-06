@@ -22,6 +22,7 @@ var namespaceBoBRobotics =
       [ "OSCoordinate", "structBoBRobotics_1_1MapCoordinate_1_1OSCoordinate.html", "structBoBRobotics_1_1MapCoordinate_1_1OSCoordinate" ],
       [ "OSGB36", "structBoBRobotics_1_1MapCoordinate_1_1OSGB36.html", null ],
       [ "Transform", "structBoBRobotics_1_1MapCoordinate_1_1Transform.html", "structBoBRobotics_1_1MapCoordinate_1_1Transform" ],
+      [ "UTMCoordinate", "structBoBRobotics_1_1MapCoordinate_1_1UTMCoordinate.html", "structBoBRobotics_1_1MapCoordinate_1_1UTMCoordinate" ],
       [ "WGS84", "structBoBRobotics_1_1MapCoordinate_1_1WGS84.html", null ]
     ] ],
     [ "Navigation", "namespaceBoBRobotics_1_1Navigation.html", "namespaceBoBRobotics_1_1Navigation" ],

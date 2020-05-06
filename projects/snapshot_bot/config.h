@@ -23,7 +23,7 @@ class Config
 public:
     Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
         m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
-        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_MoveSpeed(0.25),
+        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_MoveSpeed(0.25),
         m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
         m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
     {
@@ -39,7 +39,7 @@ public:
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
-
+    
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
@@ -60,7 +60,8 @@ public:
     bool shouldAutoTrain() const{ return m_AutoTrain; }
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
     Milliseconds getMotorCommandInterval() const{ return m_MotorCommandInterval; }
-
+    Milliseconds getMotorTurnCommandInterval() const{ return m_MotorTurnCommandInterval; }
+    
     bool shouldUseViconTracking() const{ return m_UseViconTracking; }
     int getViconTrackingPort() const{ return m_ViconTrackingPort; }
     const std::string &getViconTrackingObjectName() const{ return m_ViconTrackingObjectName; }
@@ -114,6 +115,7 @@ public:
         fs << "autoTrain" << shouldAutoTrain();
         fs << "trainInterval" << getTrainInterval().count();
         fs << "motorCommandInterval" << getMotorCommandInterval().count();
+        fs << "motorTurnCommandInterval" << getMotorTurnCommandInterval().count();
         fs << "serverListenPort" << getServerListenPort();
         fs << "moveSpeed" << getMoveSpeed();
         fs << "turnThresholds" << "[";
@@ -151,7 +153,7 @@ public:
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
-
+        
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
 
@@ -189,6 +191,8 @@ public:
         double motorCommandInterval;
         cv::read(node["motorCommandInterval"], motorCommandInterval, m_MotorCommandInterval.count());
         m_MotorCommandInterval = (Milliseconds)motorCommandInterval;
+        cv::read(node["motorTurnCommandInterval"], motorCommandInterval, m_MotorTurnCommandInterval.count());
+        m_MotorTurnCommandInterval = (Milliseconds)motorCommandInterval;
 
         if(node["turnThresholds"].isSeq()) {
             m_TurnThresholds.clear();
@@ -281,6 +285,7 @@ private:
     // How many milliseconds do we move for before re-calculating IDF?
     Milliseconds m_TrainInterval;
     Milliseconds m_MotorCommandInterval;
+    Milliseconds m_MotorTurnCommandInterval;
 
     // Listen port used for streaming etc
     int m_ServerListenPort;

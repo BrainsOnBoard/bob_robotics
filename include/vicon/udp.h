@@ -52,21 +52,7 @@ public:
 
     uint32_t getFrameNumber() const;
 
-    template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
-    {
-        return m_Pose.position();
-    }
-
-    template<typename AngleUnit = radian_t>
-    std::array<AngleUnit, 3> getAttitude() const
-    {
-        return convertUnitArray<AngleUnit>(m_Pose.attitude());
-    }
-
-    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
-    Pose3<LengthUnit, AngleUnit> getPose() const
-    {
+    const auto &getPose() const {
         return m_Pose;
     }
 
@@ -110,16 +96,14 @@ public:
     void update(uint32_t frameNumber,
                 Pose3<millimeter_t, radian_t> pose);
 
-    template<typename VelocityUnit = meters_per_second_t>
-    std::array<VelocityUnit, 3> getVelocity() const
+    const auto &getVelocity() const
     {
-        return convertUnitArray<VelocityUnit>(m_Velocity);
+        return m_Velocity;
     }
 
-    template<typename AngularVelocityUnit = radians_per_second_t>
-    std::array<AngularVelocityUnit, 3> getAngularVelocity() const
+    const auto &getAngularVelocity() const
     {
-        return convertUnitArray<AngularVelocityUnit>(m_AngularVelocity);
+        return m_AngularVelocity;
     }
 
 private:
@@ -181,7 +165,7 @@ class ObjectReference
     using radian_t = units::angle::radian_t;
 
 public:
-    ObjectReference(UDPClient<ObjectDataType> &client,
+    ObjectReference(const UDPClient<ObjectDataType> &client,
                     const char *objectName,
                     const Stopwatch::Duration timeoutDuration)
       : m_Client(client)
@@ -190,24 +174,9 @@ public:
         std::strcpy(m_Name, objectName);
     }
 
-    template<typename LengthUnit = millimeter_t>
-    Vector3<LengthUnit> getPosition() const
-    {
-        return getData().template getPosition<LengthUnit>();
-    }
-
-    template<typename AngleUnit = radian_t>
-    std::array<AngleUnit, 3> getAttitude() const
-    {
-        return getData().template getAttitude<AngleUnit>();
-    }
-
-    template<typename LengthUnit = millimeter_t, typename AngleUnit = radian_t>
     auto getPose() const
     {
-        const auto data = getData();
-        return Pose3<LengthUnit, AngleUnit>(data.template getPosition<LengthUnit>(),
-                                            data.template getAttitude<AngleUnit>());
+        return getData().getPose();
     }
 
     const std::string &getName() const { return m_Name; }
@@ -227,7 +196,7 @@ public:
     }
 
 private:
-    UDPClient<ObjectDataType> &m_Client;
+    const UDPClient<ObjectDataType> &m_Client;
     char m_Name[24];
     const Stopwatch::Duration m_TimeoutDuration;
 };
@@ -349,7 +318,7 @@ public:
         m_ReadThread = std::thread(&UDPClient::readThread, this, socket);
     }
 
-    size_t getNumObjects()
+    size_t getNumObjects() const
     {
         waitUntilConnected();
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
@@ -357,8 +326,9 @@ public:
     }
 
     //! Get current pose information for specified object
-    ObjectDataType getObjectData(const std::string &name)
+    ObjectDataType getObjectData(const std::string &name) const
     {
+        // Note: We return by value because m_ObjectData is protected by mutex
         waitUntilConnected();
 
         // Convert to fixed-size char array
@@ -371,14 +341,15 @@ public:
     }
 
      //! Get current pose information for first object
-     ObjectDataType getObjectData()
+     ObjectDataType getObjectData() const
      {
+         // Note: We return by value because m_ObjectData is protected by mutex
          waitUntilConnected();
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
          return m_ObjectData.begin()->second;
      }
 
-     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s)
+     auto getObjectReference(Stopwatch::Duration timeoutDuration = 10s) const
      {
          waitUntilConnected();
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
@@ -389,7 +360,7 @@ public:
 
     //! Returns an object whose pose is updated by the Vicon system over time
     auto getObjectReference(const std::string& name,
-                            Stopwatch::Duration timeoutDuration = 10s)
+                            Stopwatch::Duration timeoutDuration = 10s) const
     {
         waitUntilConnected();
         return ObjectReference<ObjectDataType>(*this,
@@ -398,6 +369,17 @@ public:
     }
 
     bool connected() const { return m_IsConnected; }
+
+    void waitUntilConnected() const
+    {
+        /*
+         * The Vicon system transmits packets at a high frequency, so if we don't
+         * receive data almost immediately then we're not connected.
+         */
+        if (!m_IsConnected && !m_ConnectionMutex.try_lock_for(1s)) {
+            throw std::runtime_error("Could not connect to Vicon system");
+        }
+    }
 
 private:
     //----------------------------------------------------------------------------
@@ -486,17 +468,6 @@ private:
         close(socket);
     }
 
-    void waitUntilConnected()
-    {
-        /*
-         * The Vicon system transmits packets at a high frequency, so if we don't
-         * receive data almost immediately then we're not connected.
-         */
-        if (!m_IsConnected && !m_ConnectionMutex.try_lock_for(1s)) {
-            throw std::runtime_error("Could not connect to Vicon system");
-        }
-    }
-
     struct HashChar {
         //--------------------------------------------------------------------------
         /*! \brief This function returns the 32-bit hash of a string
@@ -565,7 +536,7 @@ private:
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------
-    std::mutex m_ObjectMutex;
+    mutable std::mutex m_ObjectMutex;
 
     /*
      * We use a fixed-size char array as a key, because if we used std::string
@@ -574,9 +545,25 @@ private:
      */
     std::unordered_map<CharArray<24>, ObjectDataType, HashChar> m_ObjectData;
     std::atomic<bool> m_ShouldQuit;
-    std::timed_mutex m_ConnectionMutex;
+    mutable std::timed_mutex m_ConnectionMutex;
     bool m_IsConnected = false;
     std::thread m_ReadThread;
-};
+}; // UDPClient
+
+/**!
+ * \brief A class which both connects to the Vicon system and also has a
+ * 		  getPose() method
+ *
+ * The idea is to use this class by setting POSE_TYPE to Vicon::BundledVicon.
+ * Then the Vicon system will be used as the default pose getter.
+ */
+class BundledVicon
+{
+public:
+    BundledVicon(uint16_t port = 51001);
+    Pose3<units::length::millimeter_t, units::angle::radian_t> getPose() const;
+private:
+    UDPClient<> m_Client;
+}; // BundledVicon
 } // Vicon
 } // BoBRobotics

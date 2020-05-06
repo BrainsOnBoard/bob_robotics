@@ -2,7 +2,7 @@
 #include "common/logging.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
@@ -42,7 +42,7 @@ int main()
     auto unwrapper = cam.createUnwrapper(unwrapSize);
 
     // Create motor interface
-    TANK_TYPE motor;
+    ROBOT_TYPE motor;
 
     cv::Mat output;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
@@ -85,8 +85,8 @@ int main()
 #ifdef VICON_CAPTURE
             // Get tracking data
             auto objectData = vicon.getObjectData();
-            const auto &position = objectData.getPosition<>();
-            const auto &attitude = objectData.getAttitude<>();
+            const auto &position = objectData.getPose().position();
+            const auto &attitude = objectData.getPose().attitude();
 
             // Write to CSV
             data << filename << ", " << objectData.getFrameNumber() << ", "

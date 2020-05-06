@@ -16,12 +16,12 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
+                          "EXECUTABLE;GENN_MODEL;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
 
-    if(NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_GAZEBO_PLUGIN)
+    if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
 
@@ -35,6 +35,11 @@ macro(BoB_project)
         get_filename_component(NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
     endif()
     project(${NAME})
+
+    # Allow for setting the C++ standard on a per-project basis.
+    if(PARSED_ARGS_CXX_STANDARD AND NOT DEFINED CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD ${PARSED_ARGS_CXX_STANDARD})
+    endif()
 
     # Include local *.h files in project. We don't strictly need to do this, but
     # if we don't then they won't be included in generated Visual Studio
@@ -53,28 +58,6 @@ macro(BoB_project)
             add_executable(${target} "${file}" "${H_FILES}")
             list(APPEND BOB_TARGETS ${target})
         endforeach()
-    endif()
-
-    if(PARSED_ARGS_GAZEBO_PLUGIN)
-        get_filename_component(shortname ${PARSED_ARGS_GAZEBO_PLUGIN} NAME)
-        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
-
-        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-        # I'm sometimes getting linker errors when ld is linking against the
-        # static libs for BoB modules (because Gazebo plugins, as shared libs,
-        # are PIC, but the static libs seem not to be). So let's just compile
-        # everything as PIC.
-        if(GNU_TYPE_COMPILER)
-            add_definitions(-fPIC)
-        endif()
-
-        # Gazebo plugins are shared libraries
-        add_library(${target} SHARED ${PARSED_ARGS_GAZEBO_PLUGIN})
-        list(APPEND BOB_TARGETS ${target})
-
-        # We need to link against Gazebo libs
-        BoB_external_libraries(gazebo)
     endif()
 
     # If this project includes a GeNN model...
@@ -128,25 +111,42 @@ macro(BoB_project)
         BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
-    # Allow users to choose the type of tank robot to use with TANK_TYPE env var
+    # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
     # or CMake param (defaults to Norbot)
-    if(NOT TANK_TYPE)
-        if(NOT "$ENV{TANK_TYPE}" STREQUAL "")
-            set(TANK_TYPE $ENV{TANK_TYPE})
+    if(NOT ROBOT_TYPE)
+        if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
+            set(ROBOT_TYPE $ENV{ROBOT_TYPE})
         else()
-            set(TANK_TYPE Norbot)
+            set(ROBOT_TYPE Norbot)
         endif()
     endif()
-    add_definitions(-DTANK_TYPE=${TANK_TYPE} -DTANK_TYPE_${TANK_TYPE})
-    message("Default tank robot type (if used): ${TANK_TYPE}")
+    message("Default robot type (if used): ${ROBOT_TYPE}")
 
-    # For EV3 (Lego) robots, we need an extra module
-    if(${TANK_TYPE} STREQUAL EV3)
+    # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
+    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
+
+    # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
+    # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
+    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+    string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
+    add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
+
+    # Extra modules needed for some robot types
+    if(${ROBOT_TYPE} STREQUAL EV3)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
+    elseif(${ROBOT_TYPE} STREQUAL Gazebo::Tank)
+        list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
 
     # Do linking etc.
     BoB_build()
+
+    # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
+    # Ubuntu (and presumably when linking against other libs in non-standard
+    # locations too). This linker flag fixes the problem.
+    if(UNIX)
+        set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
+    endif()
 
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
@@ -189,7 +189,7 @@ macro(BoB_module_custom)
     cmake_parse_arguments(PARSED_ARGS
                           ""
                           ""
-                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
+                          "SOURCES;GAZEBO_PLUGINS;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB module")
@@ -198,6 +198,32 @@ macro(BoB_module_custom)
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
+
+    if(PARSED_ARGS_GAZEBO_PLUGINS)
+        # I'm sometimes getting linker errors when ld is linking against the
+        # static libs for BoB modules (because Gazebo plugins, as shared libs,
+        # are PIC, but the static libs seem not to be). So let's just compile
+        # everything as PIC.
+        if(GNU_TYPE_COMPILER)
+            add_definitions(-fPIC)
+        endif()
+
+        # We need to link against Gazebo libs
+        BoB_external_libraries(gazebo)
+
+        # Dump plugins into source dir
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+        foreach(plugin IN LISTS PARSED_ARGS_GAZEBO_PLUGINS)
+            # Use the plugin's filename, minus the extension as target name
+            get_filename_component(shortname ${plugin} NAME)
+            string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+
+            # Gazebo plugins are shared libraries
+            add_library(${target} SHARED ${plugin})
+            list(APPEND BOB_TARGETS ${target})
+        endforeach()
+    endif()
 
     # Module name is based on path relative to src/
     file(RELATIVE_PATH NAME "${BOB_ROBOTICS_PATH}/src" "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -249,11 +275,17 @@ macro(always_included_packages)
         find_package(GLEW QUIET)
     endif()
 
+    # Gazebo creates this target unconditionally, so make sure we don't try to
+    # create it twice
+    if(NOT TARGET FreeImage::FreeImage)
+        find_package(gazebo QUIET)
+    endif()
+
     # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake
     # packages may not be present
     if(NOT UNIX)
         if(NOT TARGET SDL2::SDL2)
-            find_package(SDL2)
+            find_package(SDL2 QUIET)
         endif()
         if(NOT TARGET Eigen3::Eigen)
             find_package(Eigen3 QUIET)
@@ -269,6 +301,10 @@ macro(BoB_build)
         set(NO_I2C TRUE)
         add_definitions(-DNO_I2C)
     endif()
+
+    # Add macro so that programs know where the root folder is for e.g. loading
+    # resources
+    add_definitions(-DBOB_ROBOTICS_PATH="${BOB_ROBOTICS_PATH}")
 
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
@@ -322,7 +358,9 @@ macro(BoB_build)
         #
         # Eigen version: 3.3.7
         # gcc version:   9.1.0
-        add_compile_flags(-Wno-deprecated-copy)
+        if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+            add_compile_flags(-Wno-deprecated-copy)
+        endif()
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -332,17 +370,54 @@ macro(BoB_build)
         set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
-    # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
+    # If C++ standard has not been specified explicitly either with a command
+    # line argument or with an environment variable, set the standard to C++14,
+    # the minimum supported by BoB robotics.
+    #
+    # The main reason for allowing users to choose a more recent standard is
+    # because the latest version of Gazebo (v11) requires C++17, so we need it
+    # for Gazebo-based projects.
+    if(NOT DEFINED CMAKE_CXX_STANDARD)
+        if(DEFINED ENV{BOB_ROBOTICS_CXX_STANDARD})
+            set(CMAKE_CXX_STANDARD $ENV{BOB_ROBOTICS_CXX_STANDARD})
+        else()
+            set(CMAKE_CXX_STANDARD 14)
+        endif()
+    endif()
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD by itself doesn't
     # work, so add the compiler flag manually.
     #
     # Conversely, only setting the compiler flag means that the surveyor example
     # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
     #       - AD
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_compile_flags(-std=c++14)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        add_compile_flags(-std=gnu++${CMAKE_CXX_STANDARD})
     endif()
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # Irritatingly, neither GCC nor Clang produce nice ANSI-coloured output if they detect
+    # that output "isn't a terminal" - which seems to include whatever pipe-magick cmake includes.
+    # https://medium.com/@alasher/colored-c-compiler-output-with-ninja-clang-gcc-10bfe7f2b949
+    #
+    # When compiling via Jenkins though, we don't want colourised output because
+    # a) the Jenkins logs don't support colours anyway and b) the colour escape
+    # sequences seem to break Jenkins' auto-parsing of error messages.
+    if(NOT "$ENV{USER}" STREQUAL jenkins)
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            add_compile_flags(-fdiagnostics-color=always)
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            add_compile_flags(-fcolor-diagnostics)
+        endif ()
+    endif()
+
+    # Different Jetson devices have different user-facing I2C interfaces
+    # so read the chip ID and add preprocessor macro
+    if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
+        file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
+        add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
+        message("Tegra chip id: ${TEGRA_CHIP_ID}")
+    endif()
 
     # Set include dirs and link libraries for this module/project
     always_included_packages()
@@ -363,7 +438,6 @@ macro(BoB_build)
     # so that dependencies will always (I think!) be in the right order.
     list(REVERSE ${PROJECT_NAME}_LIBRARIES)
     list(REMOVE_DUPLICATES ${PROJECT_NAME}_LIBRARIES)
-    list(REVERSE ${PROJECT_NAME}_LIBRARIES)
 
     # Link all targets against the libraries
     foreach(target IN LISTS BOB_TARGETS)
@@ -484,112 +558,9 @@ endfunction()
 
 function(BoB_external_libraries)
     foreach(lib IN LISTS ARGV)
-        if(${lib} STREQUAL i2c)
-            if(NOT WIN32 AND NOT NO_I2C)
-                # If it's a new version of i2c-tools then we need to link
-                # against an additonal library
-                execute_process(COMMAND "${CMAKE_CURRENT_LIST_DIR}/is_i2c_tools_new.sh"
-                                RESULT_VARIABLE rv)
-                if(NOT ${rv} EQUAL 0)
-                    BoB_add_link_libraries("i2c")
-                endif()
-            endif()
-        elseif(${lib} STREQUAL opencv)
-            BoB_find_package(OpenCV REQUIRED)
-        elseif(${lib} STREQUAL eigen3)
-            if(UNIX)
-                BoB_add_pkg_config_libraries(eigen3)
-            else()
-                if(NOT TARGET Eigen3::Eigen)
-                    message(FATAL_ERROR "Eigen 3 not found")
-                endif()
-                BoB_add_link_libraries(Eigen3::Eigen)
-            endif()
-
-            # For CMake < 3.9, we need to make the target ourselves
-            if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-                add_compile_flags(-fopenmp)
-            elseif(NOT OpenMP_CXX_FOUND)
-                find_package(Threads REQUIRED)
-                add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
-                set_property(TARGET OpenMP::OpenMP_CXX
-                             PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
-
-                # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
-                set_property(TARGET OpenMP::OpenMP_CXX
-                             PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
-
-                BoB_add_link_libraries(OpenMP::OpenMP_CXX)
-            endif()
-        elseif(${lib} STREQUAL sfml-graphics)
-            # It seems like only newer versions of SFML include a CMake package,
-            # so use pkg-config on Unix instead, in case we don't have it
-            if(UNIX)
-                BoB_add_pkg_config_libraries(sfml-graphics)
-            else()
-                find_package(SFML REQUIRED graphics)
-                BoB_add_link_libraries(sfml-graphics)
-            endif()
-        elseif(${lib} STREQUAL sdl2)
-            # On Unix we use pkg-config to find SDL2, because the CMake package may not
-            # be present
-            if(UNIX)
-                BoB_add_pkg_config_libraries(sdl2)
-            elseif(NOT SDL2_FOUND)
-                message(FATAL_ERROR "Could not find SDL2")
-                BoB_add_link_libraries(SDL2::SDL2)
-            endif()
-
-            # Sorry, Norbert ;-). I can try to help you install SFML if it helps!
-            #       -- Alex
-            BoB_deprecated(SDL2 SFML)
-        elseif(${lib} STREQUAL glfw3)
-            find_package(glfw3 REQUIRED)
-            BoB_add_link_libraries(glfw)
-            BoB_external_libraries(opengl)
-
-            # Most of the GLFW code has already been updated, but we still
-            # need GLFW temporarily for third_party/imgui
-            BoB_deprecated(GLFW SFML)
-        elseif(${lib} STREQUAL glew)
-            if(NOT TARGET GLEW::GLEW)
-                message(FATAL_ERROR "Could not find glew")
-            endif()
-
-            BoB_add_link_libraries(GLEW::GLEW)
-            BoB_external_libraries(opengl)
-        elseif(${lib} STREQUAL opengl)
-            # Newer versions of cmake give a deprecation warning
-            set(OpenGL_GL_PREFERENCE LEGACY)
-
-            find_package(OpenGL REQUIRED)
-            BoB_add_include_directories(${OPENGL_INCLUDE_DIR})
-            BoB_add_link_libraries(${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
-        elseif(${lib} STREQUAL gtest)
-            find_package(GTest REQUIRED)
-            BoB_add_include_directories(${GTEST_INCLUDE_DIRS})
-            BoB_add_link_libraries(${GTEST_LIBRARIES})
-        elseif(${lib} STREQUAL gazebo)
-            # If Gazebo is added as a dependency multiple times (e.g. from
-            # multiple CMakeLists.txt files) then I'm getting an error from the
-            # target FreeImage::FreeImage being created multiple times - AD
-            if(NOT TARGET FreeImage::FreeImage)
-                find_package(gazebo REQUIRED)
-                BoB_add_include_directories(${GAZEBO_INCLUDE_DIRS})
-                BoB_add_link_libraries(${GAZEBO_LIBRARIES})
-                link_directories(${GAZEBO_LIBRARY_DIRS})
-                add_compile_flags(${GAZEBO_CXX_FLAGS})
-            endif()
-        elseif(${lib} STREQUAL spineml_simulation)
-            # Find where user has installed GeNN
-            exec_or_fail("${BOB_ROBOTICS_PATH}/cmake/find_genn.sh")
-            string(STRIP "${SHELL_OUTPUT}" GENN_PATH) # Strip newline
-            message("GENN_PATH: ${GENN_PATH}")
-
-            BoB_add_include_directories("${GENN_PATH}/include")
-            BoB_add_link_libraries("${GENN_PATH}/lib/libspineml_simulator.a"
-                                   "${GENN_PATH}/lib/libspineml_common.a"
-                                   dl)
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/external_libs/${lib}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
         else()
             message(FATAL_ERROR "${lib} is not a recognised library name")
         endif()
@@ -605,46 +576,17 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        if("${module}" STREQUAL matplotlibcpp)
-            find_package(PythonLibs REQUIRED)
-            BoB_add_include_directories(${PYTHON_INCLUDE_DIRS})
-            BoB_add_link_libraries(${PYTHON_LIBRARIES})
+        # Extra actions for third-party modules
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
+        endif()
 
-            # Also include numpy headers on *nix (gives better performance)
-            if(WIN32)
-                add_definitions(-DWITHOUT_NUMPY)
-            else()
-                execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/cmake/find_numpy.py"
-                                RESULT_VARIABLE rv
-                                OUTPUT_VARIABLE numpy_include_path)
-
-                # If we have numpy then use it, otherwise matplotlibcpp will work without it
-                if(${rv} EQUAL 0)
-                    BoB_add_include_directories(${numpy_include_path})
-                else()
-                    add_definitions(-DWITHOUT_NUMPY)
-                endif()
-            endif()
-        else()
-            # Extra actions
-            if(${module} STREQUAL ev3dev-lang-cpp)
-                # Default to BrickPi3
-                if(NOT EV3DEV_PLATFORM)
-                    set(EV3DEV_PLATFORM "BRICKPI3" CACHE STRING "Target ev3dev platform (EV3/BRICKPI/BRICKPI3/PISTORMS)")
-                endif()
-                set_property(CACHE EV3DEV_PLATFORM PROPERTY STRINGS "EV3" "BRICKPI" "BRICKPI3" "PISTORMS")
-                add_definitions(-DEV3DEV_PLATFORM_${EV3DEV_PLATFORM})
-                message("EV3 platform: ${EV3DEV_PLATFORM}")
-
-                BoB_add_link_libraries(ev3dev)
-            elseif(${module} STREQUAL imgui)
-                BoB_add_link_libraries(imgui)
-            endif()
-
+        if(EXISTS "${BOB_ROBOTICS_PATH}/third_party/${module}")
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
             exec_or_fail(${GIT_EXECUTABLE} submodule update --init --recursive third_party/${module}
-                         WORKING_DIRECTORY ${BOB_ROBOTICS_PATH})
+                            WORKING_DIRECTORY "${BOB_ROBOTICS_PATH}")
 
             # If this folder is a cmake project, then build it
             set(module_path ${BOB_ROBOTICS_PATH}/third_party/${module})
@@ -670,7 +612,7 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 endif()
 
 # Set output directories for libs and executables
-set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
+get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 # If this var is defined then this project is being included in another build
 if(NOT DEFINED BOB_DIR)

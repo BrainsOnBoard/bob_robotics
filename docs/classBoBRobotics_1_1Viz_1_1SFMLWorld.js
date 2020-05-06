@@ -8,6 +8,7 @@ var classBoBRobotics_1_1Viz_1_1SFMLWorld =
     [ "createCarAgent", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#a5dc66a121173788c8eb6bdc078e1cb7f", null ],
     [ "createCrossShape", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#af6ea9de081e2fe88a16b3dfb19c9282e", null ],
     [ "createLineStrip", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#a280e264ad34ab0cabd0af8b0f1303982", null ],
+    [ "getWindow", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#a8d2ccd3d6765a184ef71dc12e3041883", null ],
     [ "isOpen", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#a37af0e55690076ace8bc935cc149a70f", null ],
     [ "lengthToPixel", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#aec1db8e1099140e507acf5ce784a35f4", null ],
     [ "mouseClicked", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html#a2ab0a2a085cb0624c44f2d1731c206ed", null ],

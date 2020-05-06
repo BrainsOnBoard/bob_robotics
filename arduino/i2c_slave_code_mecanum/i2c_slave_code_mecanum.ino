@@ -135,7 +135,8 @@ void serialEvent(){
 
 void loop() {
 
-  if (has_serial == 0) {
+  // **NOTE** this code turns off motors unless input is received constantly - not required for our applications
+  /*(if (has_serial == 0) {
     cnt++;
     if (cnt > 10) {
       rearRightMotor->setSpeed(0);
@@ -155,7 +156,7 @@ void loop() {
   } else {
     cnt = 0;
   }
-  has_serial = 0;
+  has_serial = 0;*/
 
   //Serial.println("loop...");
   delay(3);

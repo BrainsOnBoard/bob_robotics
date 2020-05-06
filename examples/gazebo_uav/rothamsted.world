@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+
+<sdf version="1.6">
+  <world name="default">
+    <gui>
+      <camera name="user_camera">
+        <pose>-366 -201 90 0 1.0472 3.5</pose>
+      </camera>
+    </gui>
+    <physics type="ode">
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>100</iters>
+          <sor>1.0</sor>
+        </solver>
+        <constraints>
+          <cfm>0.0</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>0.1</contact_max_correcting_vel>
+          <contact_surface_layer>0.0</contact_surface_layer>
+        </constraints>
+      </ode>
+      <!-- <real_time_update_rate>0</real_time_update_rate> -->
+      <!-- <max_step_size>0.0025</max_step_size> -->
+    </physics>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <model name="heightmap_flight1">
+      <pose>0 0 -200 0 0 0</pose>
+      <include>
+        <uri>model://heightmap_flight1</uri>
+      </include>
+    </model>
+    
+    <model name="iris_demo">
+      <pose>-370 -205 0 0 0 0</pose>
+      <include>
+        <uri>iris_with_standoffs_demo</uri>
+      </include>
+    </model>
+    
+  </world>
+</sdf>

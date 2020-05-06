@@ -6,6 +6,7 @@ var classConfig =
     [ "getMaskImageFilename", "classConfig.html#a64dc0535712fe9e5f42ccc5e78909d4b", null ],
     [ "getMaxSnapshotRotateAngle", "classConfig.html#a09f5491696e49c8275f777099a99b17c", null ],
     [ "getMotorCommandInterval", "classConfig.html#afc935cb5cab61975a1cbe8fa08019c7d", null ],
+    [ "getMotorTurnCommandInterval", "classConfig.html#ac8616e773569e02a98bc446cf5a058d2", null ],
     [ "getMoveSpeed", "classConfig.html#a76948c868abdbba95a1828be6102dd74", null ],
     [ "getNumHOGOrientations", "classConfig.html#a9dd383cc0ca863d1c04ca23d0039e673", null ],
     [ "getNumHOGPixelsPerCell", "classConfig.html#a8d2f13e909423c289d41ad8edf829764", null ],

@@ -16,6 +16,12 @@ Camera::Camera(sf::Window &window, Renderer &renderer, const cv::Size &renderSiz
   , m_Renderer(renderer)
 {}
 
+Pose3<units::length::meter_t, units::angle::degree_t>
+Camera::getPose() const
+{
+    return m_Pose;
+}
+
 sf::Window &
 Camera::getWindow() const
 {

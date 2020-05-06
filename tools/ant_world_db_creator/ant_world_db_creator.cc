@@ -1,6 +1,7 @@
 
 // BoB robotics includes
 #include "common/logging.h"
+#include "common/path.h"
 #include "common/pose.h"
 #include "antworld/agent.h"
 #include "antworld/common.h"
@@ -48,7 +49,7 @@ protected:
     AntWorld::AntAgent m_Agent;
 
     AntWorldDatabaseCreator(const std::string &databaseName,
-                            sf::Window &window, const filesystem::path &executablePath)
+                            sf::Window &window)
       : m_Database(databaseName)
       , m_Window(window)
       , m_Renderer(256, 0.001, 1000.0, 360_deg)
@@ -57,7 +58,7 @@ protected:
         BOB_ASSERT(m_Database.empty());
 
         // Create renderer
-        m_Renderer.getWorld().load(executablePath / "../../resources/antworld/world5000_gray.bin",
+        m_Renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                                    {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
     }
 
@@ -94,8 +95,8 @@ protected:
 
 class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    GridDatabaseCreator(sf::Window &window, const filesystem::path &executablePath)
-      : AntWorldDatabaseCreator("world5000_grid", window, executablePath)
+    GridDatabaseCreator(sf::Window &window)
+      : AntWorldDatabaseCreator("world5000_grid", window)
     {}
 
     void runForGrid()
@@ -121,9 +122,8 @@ class RouteDatabaseCreator : AntWorldDatabaseCreator {
 public:
     RouteDatabaseCreator(const std::string &databaseName,
                          sf::Window &window,
-                         AntWorld::RouteContinuous &route,
-                         const filesystem::path &executablePath)
-      : AntWorldDatabaseCreator(databaseName, window, executablePath)
+                         AntWorld::RouteContinuous &route)
+      : AntWorldDatabaseCreator(databaseName, window)
       , m_Route(route)
     {}
 
@@ -142,8 +142,8 @@ public:
         addMetadata(routeRecorder);
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
-            const auto pos = m_Agent.getPosition();
-            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getAttitude()[0], image);
+            const auto pos = m_Agent.getPose().position();
+            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getPose().attitude()[0], image);
         });
     }
 
@@ -155,7 +155,6 @@ int
 main(int argc, char **argv)
 {
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
-    const auto executablePath = filesystem::path(argv[0]).parent_path();
 
     if (argc > 1) {
         // Create route object and load route file specified by command line
@@ -171,10 +170,10 @@ main(int argc, char **argv)
             databaseName = databaseName.substr(0, pos);
         }
 
-        RouteDatabaseCreator creator(databaseName, *window, route, executablePath);
+        RouteDatabaseCreator creator(databaseName, *window, route);
         creator.runForRoute();
     } else {
-        GridDatabaseCreator creator(*window, executablePath);
+        GridDatabaseCreator creator(*window);
         creator.runForGrid();
     }
 }

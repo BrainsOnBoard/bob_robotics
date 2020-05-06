@@ -10,6 +10,8 @@
 #include "antworld/snapshot_processor_segment_sky.h"
 
 // BoB Robotics includes
+#include "common/path.h"
+#include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_hog.h"

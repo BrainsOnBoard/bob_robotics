@@ -3,6 +3,7 @@ var classev3dev_1_1sensor =
     [ "sensor_type", "classev3dev_1_1sensor.html#a3c8c9d2fd4d2ebaea90ec9d9fd40b813", null ],
     [ "sensor", "classev3dev_1_1sensor.html#a25cf6df3845eb5a3aa6673462787603e", null ],
     [ "sensor", "classev3dev_1_1sensor.html#a3adf0bf3f9b911248d8a7953b9c5cc3f", null ],
+    [ "sensor", "classev3dev_1_1sensor.html#a3e2cfd5c435f9c81a5f8659f016bfd10", null ],
     [ "sensor", "classev3dev_1_1sensor.html#ac9ed7083d9a6117ade35e23d242ae252", null ],
     [ "address", "classev3dev_1_1sensor.html#acbe383b395b9beabd59112e07e12fee7", null ],
     [ "bin_data", "classev3dev_1_1sensor.html#a75739b2dd7fdeb705291699db55a903a", null ],

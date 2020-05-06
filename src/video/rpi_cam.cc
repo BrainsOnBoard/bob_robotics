@@ -40,7 +40,7 @@ RPiCamera::getOutputSize() const
 bool
 RPiCamera::readFrame(cv::Mat &outFrame)
 {
-    uint8_t buffer[72 * 6 * 3];
+    char buffer[72 * 6 * 3];
 
     // Check we're connected
     BOB_ASSERT(m_Socket != INVALID_SOCKET);
@@ -108,7 +108,7 @@ RPiCamera::setupSockets()
 
     // non-blocking socket
 #ifdef WIN32
-    ulong nonblocking_enabled = 1;
+    u_long nonblocking_enabled = 1;
     ioctlsocket(m_Socket, FIONBIO, &nonblocking_enabled);
 #else
     fcntl(m_Socket, F_SETFL, O_NONBLOCK);

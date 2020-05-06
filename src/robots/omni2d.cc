@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "robots/omni2d.h"
 #include "common/logging.h"
+#include "robots/omni2d.h"
 
 // Standard C++ includes
 #include <string>
@@ -41,8 +41,8 @@ Omni2D::addJoystick(HID::Joystick &joystick, float deadZone)
 void
 Omni2D::drive(const HID::Joystick &joystick, float deadZone)
 {
-    drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-          joystick.getState(HID::JAxis::LeftStickVertical),
+    drive(-joystick.getState(HID::JAxis::LeftStickVertical),
+          joystick.getState(HID::JAxis::LeftStickHorizontal),
           joystick.getState(HID::JAxis::RightStickHorizontal),
           deadZone);
 }
@@ -55,17 +55,52 @@ Omni2D::readFromNetwork(Net::Connection &connection)
     connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
         onCommandReceived(connection, command);
     });
+    
+    m_Connection = &connection;
+}
+
+void Omni2D::stopReadingFromNetwork()
+{
+    if (m_Connection) {
+        // Ignore incoming TNK commands
+        m_Connection->setCommandHandler("TNK", nullptr);
+    }
+}
+
+float
+Omni2D::getForwards() const
+{
+    return m_Forward;
+}
+
+float
+Omni2D::getSideways() const
+{
+    return m_Sideways;
+}
+
+float
+Omni2D::getTurn() const
+{
+    return m_Turn;
+}
+
+void Omni2D::setWheelSpeed(float forward, float sideways, float turn)
+{
+    m_Forward = forward;
+    m_Sideways = sideways;
+    m_Turn = turn;
 }
 
 void
-Omni2D::drive(float x, float y, float rot, float deadZone)
+Omni2D::drive(float forward, float sideways, float turn, float deadZone)
 {
-    const bool deadX = (fabs(x) < deadZone);
-    const bool deadY = (fabs(y) < deadZone);
-    const bool deadRot = (fabs(rot) < deadZone);
+    const bool deadForward = (fabs(forward) < deadZone);
+    const bool deadSideways = (fabs(sideways) < deadZone);
+    const bool deadTurn = (fabs(turn) < deadZone);
 
     // Drive motor
-    omni2D(x * !deadX, y * !deadY, rot * !deadRot);
+    omni2D(forward * !deadForward, sideways * !deadSideways, turn * !deadTurn);
 }
 
 void
@@ -77,36 +112,36 @@ Omni2D::onCommandReceived(Net::Connection &, const Net::Command &command)
     }
 
     // parse strings to floats
-    const float left = stof(command[1]);
-    const float right = stof(command[2]);
+    const float forward = stof(command[1]);
+    const float sideways = stof(command[2]);
     const float turn = stof(command[3]);
 
     // send motor command
-    omni2D(left, right, turn);
+    omni2D(forward, sideways, turn);
 }
 
 bool
 Omni2D::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
 {
-    float x = m_X;
-    float y = m_Y;
-    float rot = m_R;
+    float forward = m_Forward;
+    float sideways = m_Sideways;
+    float turn = m_Turn;
     switch (axis) {
     case HID::JAxis::LeftStickVertical:
-        y = value;
+        forward = -value;
         break;
     case HID::JAxis::LeftStickHorizontal:
-        x = value;
+        sideways = value;
         break;
     case HID::JAxis::RightStickHorizontal:
-        rot = value;
+        turn = value;
         break;
     default:
         return false;
     }
 
     // drive robot with joystick
-    drive(x, y, rot, deadZone);
+    drive(forward, sideways, turn, deadZone);
     return true;
 }
 } // Robots

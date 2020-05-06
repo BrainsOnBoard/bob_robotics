@@ -34,6 +34,7 @@
 static sf::Window*          g_Window = NULL;
 static sf::Clock            g_Clock;
 static bool                 g_MouseJustPressed[5] = { false, false, false, false, false };
+static unsigned int         g_JoystickIndex = 0;
 
 #ifdef SFML_WINDOW_AND_CURSOR_PRESENT
 static sf::Cursor           g_MouseCursors[ImGuiMouseCursor_COUNT];
@@ -59,9 +60,10 @@ static void ImGui_ImplSfml_SetClipboardText(void*, const char* text)
 #endif
 }
 
-bool ImGui_ImplSfml_Init(sf::Window* window)
+bool ImGui_ImplSfml_Init(sf::Window* window, unsigned int joystickIndex)
 {
     g_Window = window;
+    g_JoystickIndex = joystickIndex;
     g_Clock.restart();
 
     // Setup back-end capabilities flags
@@ -102,7 +104,7 @@ bool ImGui_ImplSfml_Init(sf::Window* window)
 #ifdef SFML_WINDOW_AND_CURSOR_PRESENT
     g_MouseCursors[ImGuiMouseCursor_Arrow].loadFromSystem(sf::Cursor::Arrow);
     g_MouseCursors[ImGuiMouseCursor_TextInput].loadFromSystem(sf::Cursor::Text);
-    g_MouseCursors[ImGuiMouseCursor_ResizeAll].loadFromSystem(sf::Cursor::SizeAll);.
+    g_MouseCursors[ImGuiMouseCursor_ResizeAll].loadFromSystem(sf::Cursor::SizeAll);
     g_MouseCursors[ImGuiMouseCursor_ResizeNS].loadFromSystem(sf::Cursor::SizeVertical);
     g_MouseCursors[ImGuiMouseCursor_ResizeEW].loadFromSystem(sf::Cursor::SizeHorizontal);
     g_MouseCursors[ImGuiMouseCursor_ResizeNESW].loadFromSystem(sf::Cursor::SizeBottomLeftTopRight);
@@ -188,39 +190,44 @@ void ImGui_ImplSfml_NewFrame()
     ImGui_ImplSfml_UpdateMousePosAndButtons();
     ImGui_ImplSfml_UpdateMouseCursor();
 
-    // Gamepad navigation mapping [BETA]
-    /*memset(io.NavInputs, 0, sizeof(io.NavInputs));
-    if (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad)
+    // Gamepad navigation mapping
+    memset(io.NavInputs, 0, sizeof(io.NavInputs));
+    if ((io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad))
     {
-        // Update gamepad inputs
-        #define MAP_BUTTON(NAV_NO, BUTTON_NO)       { if (buttons_count > BUTTON_NO && buttons[BUTTON_NO] == GLFW_PRESS) io.NavInputs[NAV_NO] = 1.0f; }
-        #define MAP_ANALOG(NAV_NO, AXIS_NO, V0, V1) { float v = (axes_count > AXIS_NO) ? axes[AXIS_NO] : V0; v = (v - V0) / (V1 - V0); if (v > 1.0f) v = 1.0f; if (io.NavInputs[NAV_NO] < v) io.NavInputs[NAV_NO] = v; }
-        int axes_count = 0, buttons_count = 0;
-        const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axes_count);
-        const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttons_count);
-        MAP_BUTTON(ImGuiNavInput_Activate,   0);     // Cross / A
-        MAP_BUTTON(ImGuiNavInput_Cancel,     1);     // Circle / B
-        MAP_BUTTON(ImGuiNavInput_Menu,       2);     // Square / X
-        MAP_BUTTON(ImGuiNavInput_Input,      3);     // Triangle / Y
-        MAP_BUTTON(ImGuiNavInput_DpadLeft,   13);    // D-Pad Left
-        MAP_BUTTON(ImGuiNavInput_DpadRight,  11);    // D-Pad Right
-        MAP_BUTTON(ImGuiNavInput_DpadUp,     10);    // D-Pad Up
-        MAP_BUTTON(ImGuiNavInput_DpadDown,   12);    // D-Pad Down
-        MAP_BUTTON(ImGuiNavInput_FocusPrev,  4);     // L1 / LB
-        MAP_BUTTON(ImGuiNavInput_FocusNext,  5);     // R1 / RB
-        MAP_BUTTON(ImGuiNavInput_TweakSlow,  4);     // L1 / LB
-        MAP_BUTTON(ImGuiNavInput_TweakFast,  5);     // R1 / RB
-        MAP_ANALOG(ImGuiNavInput_LStickLeft, 0,  -0.3f,  -0.9f);
-        MAP_ANALOG(ImGuiNavInput_LStickRight,0,  +0.3f,  +0.9f);
-        MAP_ANALOG(ImGuiNavInput_LStickUp,   1,  +0.3f,  +0.9f);
-        MAP_ANALOG(ImGuiNavInput_LStickDown, 1,  -0.3f,  -0.9f);
-        #undef MAP_BUTTON
-        #undef MAP_ANALOG
-        if (axes_count > 0 && buttons_count > 0)
-            io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
-        else
+        // Poll joystick
+        sf::Joystick::update();
+
+        if(!sf::Joystick::isConnected(g_JoystickIndex)) {
             io.BackendFlags &= ~ImGuiBackendFlags_HasGamepad;
-    }*/
+        }
+        else {
+            io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
+            // Update gamepad inputs
+            #define MAP_BUTTON(NAV_NO, BUTTON_NO)       { if (BUTTON_NO < numButtons && sf::Joystick::isButtonPressed(g_JoystickIndex, BUTTON_NO)) io.NavInputs[NAV_NO] = 1.0f; }
+            #define MAP_ANALOG(NAV_NO, AXIS, V0, V1) { float v = sf::Joystick::getAxisPosition(g_JoystickIndex, sf::Joystick::AXIS); v = (v - V0) / (V1 - V0); if (v > 1.0f) v = 1.0f; if (io.NavInputs[NAV_NO] < v) io.NavInputs[NAV_NO] = v; }
+
+            const unsigned int numButtons = sf::Joystick::getButtonCount(g_JoystickIndex);
+            MAP_BUTTON(ImGuiNavInput_Activate,   0);     // Cross / A
+            MAP_BUTTON(ImGuiNavInput_Cancel,     1);     // Circle / B
+            MAP_BUTTON(ImGuiNavInput_Menu,       2);     // Square / X
+            MAP_BUTTON(ImGuiNavInput_Input,      3);     // Triangle / Y
+            MAP_BUTTON(ImGuiNavInput_DpadLeft,   8);     // D-Pad Left
+            MAP_BUTTON(ImGuiNavInput_DpadRight,  9);     // D-Pad Right
+            MAP_BUTTON(ImGuiNavInput_DpadUp,     11);    // D-Pad Up
+            MAP_BUTTON(ImGuiNavInput_DpadDown,   10);    // D-Pad Down
+            MAP_BUTTON(ImGuiNavInput_FocusPrev,  12);    // L1 / LB
+            MAP_BUTTON(ImGuiNavInput_FocusNext,  13);    // R1 / RB
+            MAP_BUTTON(ImGuiNavInput_TweakSlow,  4);     // L1 / LB
+            MAP_BUTTON(ImGuiNavInput_TweakFast,  5);     // R1 / RB
+
+            MAP_ANALOG(ImGuiNavInput_LStickLeft, X,  -30.0f,  -90.0f);
+            MAP_ANALOG(ImGuiNavInput_LStickRight,X,  +30.0f,  +90.0f);
+            MAP_ANALOG(ImGuiNavInput_LStickUp,   Y,  +30.0f,  +90.0f);
+            MAP_ANALOG(ImGuiNavInput_LStickDown, Y,  -30.0f,  -90.0f);
+            #undef MAP_BUTTON
+            #undef MAP_ANALOG
+        }
+    }
 }
 
 void ImGui_ImplSfml_ProcessEvent(const sf::Event &event)

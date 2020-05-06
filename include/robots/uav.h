@@ -26,7 +26,16 @@ public:
     virtual void stopMoving() override;
 
     //! Start controlling this drone with a joystick
-    void addJoystick(HID::Joystick &joystick);
+    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
+
+    //! Drive the robot using the current joystick state
+    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
+
+    //! Add a handler to the connection to drive robot
+    virtual void readFromNetwork(Net::Connection &connection) override;
+
+    //! Remove and connection handlers that drive this robot
+    virtual void stopReadingFromNetwork() override;
 
 private:
     // Handle joystick axis events

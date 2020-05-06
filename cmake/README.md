@@ -59,7 +59,7 @@ like so:
 ```cmake
 BoB_project(BOB_MODULES ${BOB_MODULES}
             GENN_MODEL model.cc
-            GENN_CPU_ONLY TRUE)
+            GENN_CPU_ONLY)
 ```
 The ``GENN_CPU_ONLY`` parameter is optional.
 

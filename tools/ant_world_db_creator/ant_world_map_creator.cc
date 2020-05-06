@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/logging.h"
+#include "common/path.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
 #include "antworld/route_continuous.h"
@@ -24,7 +25,7 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *messag
 }
 
 
-int main(int, char **argv)
+int main()
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
@@ -62,7 +63,7 @@ int main(int, char **argv)
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+    renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                              {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
 
     // Create input to read snapshots from screen

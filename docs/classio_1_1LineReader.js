@@ -17,6 +17,6 @@ var classio_1_1LineReader =
     [ "next_line", "classio_1_1LineReader.html#a97f4e0129611d9da2b8c966ffe670be5", null ],
     [ "operator=", "classio_1_1LineReader.html#a9ebd7beca16060ffc0ea8df3c0c6ff25", null ],
     [ "set_file_line", "classio_1_1LineReader.html#a581b55d4ced6adb964de50fa8ac6eb08", null ],
-    [ "set_file_name", "classio_1_1LineReader.html#a1a0763d491dec16cebc33134e965dfee", null ],
-    [ "set_file_name", "classio_1_1LineReader.html#a81c56ac68497da5ec874333ce063fd83", null ]
+    [ "set_file_name", "classio_1_1LineReader.html#a81c56ac68497da5ec874333ce063fd83", null ],
+    [ "set_file_name", "classio_1_1LineReader.html#a1a0763d491dec16cebc33134e965dfee", null ]
 ];

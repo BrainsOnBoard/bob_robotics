@@ -5,8 +5,12 @@
 .directory
 .DS_Store
 
+# Produced by third_party/imgui
+**/*imgui.ini
+
 # Temporary files
 *~
+*.autosave
 
 # Temporary Jupyter notebook files
 **/.ipynb_checkpoints/

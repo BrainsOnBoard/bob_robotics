@@ -36,9 +36,7 @@ int main()
         unsigned int frame = 0;
         for(frame = 0;; frame++) {
             // Read from camera
-            if(!cam->readFrame(originalImage)) {
-                return EXIT_FAILURE;
-            }
+            cam->readFrameSync(originalImage);
 
             // Unwrap
             unwrapper.unwrap(originalImage, outputImage);

@@ -24,7 +24,7 @@ class Event;
 class Window;
 }
 
-IMGUI_IMPL_API bool     ImGui_ImplSfml_Init(sf::Window* window);
+IMGUI_IMPL_API bool     ImGui_ImplSfml_Init(sf::Window* window, unsigned int joystickIndex = 0);
 IMGUI_IMPL_API void     ImGui_ImplSfml_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplSfml_NewFrame();
 

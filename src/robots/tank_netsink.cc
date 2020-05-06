@@ -1,8 +1,8 @@
 // BoB robotics includes
-#include "robots/tank_netsink.h"
 #include "common/logging.h"
 #include "common/macros.h"
 #include "common/stopwatch.h"
+#include "robots/tank_netsink.h"
 
 namespace BoBRobotics {
 namespace Robots {

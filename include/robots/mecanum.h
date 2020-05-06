@@ -1,3 +1,4 @@
+#ifdef __linux__
 #pragma once
 
 // BoB robotics includes
@@ -19,12 +20,13 @@ namespace Robots {
 class Mecanum : public Omni2D
 {
 public:
-    Mecanum(const char *path = "/dev/ttyACM0");
-
+    Mecanum(const char *path = "/dev/ttyACM0", bool alternativeWiring = true);
+    virtual ~Mecanum();
+    
     //----------------------------------------------------------------------------
     // Omni2D virtuals
     //----------------------------------------------------------------------------
-    virtual void omni2D(float forwards, float sideways, float turn) override;
+    virtual void omni2D(float forward, float sideways, float turn) override;
 
     //----------------------------------------------------------------------------
     // Public API
@@ -41,18 +43,13 @@ public:
         m_Serial.write(data);
     }
 
-    float getForwards() const;
-    float getSideways() const;
-    float getTurn() const;
-
 private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
     BoBRobotics::SerialInterface m_Serial;
-    float m_Forward;
-    float m_Sideways;
-    float m_Turn;
+    const bool m_AlternativeWiring;
 }; // Mecanum
 } // Robots
 } // BoBRobotics
+#endif	// __linux__

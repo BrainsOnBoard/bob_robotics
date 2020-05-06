@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/path.h"
 #include "common/macros.h"
 #include "common/logging.h"
 #include "imgproc/opencv_unwrap_360.h"
@@ -53,35 +54,19 @@ OpenCVUnwrap360::OpenCVUnwrap360(const cv::Size &cameraResolution,
     const std::string fileName = cameraName + ".yaml";
     filesystem::path filePath(fileName);
 
-    // first check if file exists in working directory
+    // first check if file exists in working directory...
     if (!filePath.exists()) {
-        // next check if there is a local bob_robotics folder (i.e. git
-        // submodule)
-        const filesystem::path paramsDir = filesystem::path("resources") / "panoramic_camera_parameters";
-
-        filePath = filesystem::path("bob_robotics") / paramsDir / fileName;
+        // ...otherwise it'll (hopefully) be in the BoB robotics repo
+        filePath = Path::getResourcesPath() / "panoramic_camera_parameters" / fileName;
         if (!filePath.exists()) {
-            // lastly look for environment variable pointing to
-            // bob_robotics
-            static const char *envVarName = "BOB_ROBOTICS_PATH";
-            const char *env = std::getenv(envVarName);
-            if (!env) {
-                throw std::runtime_error(std::string(envVarName) +
-                                         " environment variable is not set and unwrap "
-                                         "parameters file could not be found locally");
-            }
-
-            filePath = filesystem::path(env) / paramsDir / fileName;
-            if (!filePath.exists()) {
-                throw std::runtime_error(
-                        "Could not find unwrap parameters file for " +
-                        cameraName);
-            }
+            throw std::runtime_error(
+                    "Could not find unwrap parameters file for " +
+                    cameraName);
         }
     }
 
     // read unwrap parameters from file
-    LOG_INFO << "Loading unwrap parameters from " << filePath.str();
+    LOG_INFO << "Loading unwrap parameters from " << filePath;
     cv::FileStorage fs(filePath.str(), cv::FileStorage::READ);
     read(fs["unwrapper"]);
     fs.release();

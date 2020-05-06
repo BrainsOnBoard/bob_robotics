@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['snapshot_20bot',['Snapshot bot',['../md_projects_snapshot_bot_README.html',1,'']]],
-  ['stone_20et_20al_2e_20model_20of_20path_20integration',['Stone et al. Model of path integration',['../md_projects_stone_cx_README.html',1,'']]]
+  ['perfect_20memory_20example_2448',['Perfect memory example',['../md_examples_perfect_memory_README.html',1,'']]],
+  ['pull_5frequest_5ftemplate_2449',['pull_request_template',['../md_third_party_imgui_include_docs_pull_request_template.html',1,'']]],
+  ['plog_20_2d_20portable_2c_20simple_20and_20extensible_20c_2b_2b_20logging_20library_2450',['Plog - portable, simple and extensible C++ logging library',['../md_third_party_plog_README.html',1,'']]]
 ];

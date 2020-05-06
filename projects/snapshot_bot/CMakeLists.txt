@@ -9,9 +9,9 @@ endif()
 if(${TARGET} STREQUAL snapshot_bot)
     BoB_project(EXECUTABLE snapshot_bot
                 SOURCES snapshot_bot.cc memory.cc image_input.cc
-                BOB_MODULES antworld common hid imgproc navigation net vicon video)
+                BOB_MODULES common hid imgproc navigation robots vicon video)
 else()
     BoB_project(EXECUTABLE offline_train
                 SOURCES offline_train.cc memory.cc image_input.cc
-                BOB_MODULES antworld common imgproc navigation video)
+                BOB_MODULES common imgproc navigation video)
 endif()

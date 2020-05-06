@@ -11,6 +11,6 @@ var classplog_1_1Record =
     [ "getTid", "classplog_1_1Record.html#a1eb389624fef0f4d27f307510cfd82ef", null ],
     [ "getTime", "classplog_1_1Record.html#aa9e28a25439c2d758ab38f8739b46022", null ],
     [ "operator<<", "classplog_1_1Record.html#aae4e2c74fdf5ddc7f0f0e82b395b13b4", null ],
-    [ "operator<<", "classplog_1_1Record.html#a2014c38e1265126a7d2b8a2476036508", null ],
-    [ "operator<<", "classplog_1_1Record.html#a4e4a51a08bf65131e5b96b438b5b38eb", null ]
+    [ "operator<<", "classplog_1_1Record.html#a4e4a51a08bf65131e5b96b438b5b38eb", null ],
+    [ "operator<<", "classplog_1_1Record.html#a2014c38e1265126a7d2b8a2476036508", null ]
 ];
