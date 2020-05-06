@@ -1,20 +1,17 @@
 // Ardin MB includes
 #include "mb_memory_ardin.h"
-#include "mb_memory_hog.h"
 #include "sim_params.h"
 #include "state_handler.h"
 #include "visual_navigation_ui.h"
 
 // Antworld includes
 #include "antworld/snapshot_processor_ardin.h"
-#include "antworld/snapshot_processor_segment_sky.h"
 
 // BoB Robotics includes
 #include "common/path.h"
 #include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
-#include "navigation/perfect_memory_store_hog.h"
 
 // OpenGL includes
 #include <GL/glew.h>
@@ -137,23 +134,13 @@ int main(int argc, char *argv[])
     //                                                   memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
     AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
                                                             memory.getUnwrapResolution().height);*/
-    // Mushroom body with orientation features
-    MBMemoryHOG memory;
-    memory.addCLIArguments(app);
-    MBHogUI ui(memory);
-
-    // Create suitable snapshot processor
-    AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
-                                                            memory.getUnwrapResolution().height);
-
-
     // Mushroom body
-    /*MBMemoryArdin memory;
+    MBMemoryArdin memory;
     memory.addCLIArguments(app);
     MBArdinUI ui(memory);
 
     AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
-                                                       memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);*/
+                                                       memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);

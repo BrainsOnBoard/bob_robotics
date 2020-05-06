@@ -13,7 +13,7 @@ MBMemoryArdin::MBMemoryArdin()
     :   MBMemory(MBParamsArdin::numPN, MBParamsArdin::numKC, MBParamsArdin::numEN, MBParamsArdin::numPNSynapsesPerKC,
                  MBParamsArdin::inputWidth, MBParamsArdin::inputHeight,
                  MBParamsArdin::tauD, MBParamsArdin::kcToENWeight, MBParamsArdin::dopamineStrength,
-                 MBParamsArdin::rewardTimeMs, MBParamsArdin::presentDurationMs, MBParamsArdin::timestepMs,
+                 MBParamsArdin::rewardTimeMs, MBParamsArdin::presentDurationMs, MBParamsArdin::postStimuliDurationMs, MBParamsArdin::timestepMs,
                  "mb_memory_ardin"),
         m_SnapshotNormalizedFloat(MBParamsArdin::inputHeight, MBParamsArdin::inputWidth, CV_32FC1)
 {

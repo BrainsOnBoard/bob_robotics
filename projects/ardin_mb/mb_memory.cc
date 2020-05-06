@@ -46,14 +46,14 @@ void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemory::S
 MBMemory::MBMemory(unsigned int numPN, unsigned int numKC, unsigned int numEN, unsigned int numPNSynapsesPerKC,
                    int inputWidth, int inputHeight,
                    double tauD, double kcToENWeight, double dopamineStrength,
-                   double rewardTimeMs, double presentDurationMs, double timestepMs,
+                   double rewardTimeMs, double presentDurationMs, double postStimulusDurationMs, double timestepMs,
                    const std::string &modelName)
 :   Navigation::VisualNavigationBase(cv::Size(inputWidth, inputHeight)), m_SnapshotFloat(inputHeight, inputWidth, CV_32FC1),
     m_NumPN(numPN), m_NumKC(numKC), m_NumEN(numEN), m_NumPNSynapsesPerKC(numPNSynapsesPerKC),
     m_InputWidth(inputWidth), m_InputHeight(inputHeight), m_TauD(tauD), m_KCToENWeight(kcToENWeight), m_TimestepMs(timestepMs),
     m_KCToENDopamineStrength(dopamineStrength), m_RewardTimeMs(rewardTimeMs), m_PresentDurationMs(presentDurationMs),
-    m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0), m_NumUsedWeights(MBParamsHOG::numKC * MBParamsHOG::numEN),
-    m_NumActivePN(0), m_NumActiveKC(0), m_SLM("", modelName)
+    m_PostStimulusDurationMs(postStimulusDurationMs), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
+    m_NumUsedWeights(numKC * numEN), m_NumActivePN(0), m_NumActiveKC(0), m_SLM("", modelName)
 {
     std::mt19937 gen;
 
@@ -153,7 +153,7 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
      // Convert simulation regime parameters to timesteps
     const unsigned long long rewardTimestep = convertMsToTimesteps(m_RewardTimeMs);
     const unsigned int endPresentTimestep = convertMsToTimesteps(m_PresentDurationMs);
-    const unsigned int postStimuliDuration = convertMsToTimesteps(MBParamsHOG::postStimuliDurationMs);
+    const unsigned int postStimuliDuration = convertMsToTimesteps(m_PostStimulusDurationMs);
 
     const unsigned long long duration = endPresentTimestep + postStimuliDuration;
 

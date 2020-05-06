@@ -61,7 +61,7 @@ bool StateHandler::handleEvent(State state, Event event)
     // If this event is an update
     if(event == Event::Update) {
         // Render panoramic view to target
-        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), 1.6_m,
+        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), 0.01_m,
                                        m_Pose.yaw(), m_Pose.pitch(), 0.0_deg,
                                        m_RenderTargetPanoramic);
 

@@ -17,9 +17,6 @@
 #include "navigation/insilico_rotater.h"
 #include "navigation/visual_navigation_base.h"
 
-// Ardin MB includes
-#include "mb_params_hog.h"
-
 // Forward declarations
 namespace CLI
 {
@@ -35,7 +32,7 @@ public:
     MBMemory(unsigned int numPN, unsigned int numKC, unsigned int numEN, unsigned int numPNSynapsesPerKC,
              int inputWidth, int inputHeight,
              double tauD, double kcToENWeight, double dopamineStrength,
-             double rewardTimeMs, double presentDurationMs, double timestepMs,
+             double rewardTimeMs, double presentDurationMs, double postStimulusDurationMs, double timestepMs,
              const std::string &modelName);
     virtual ~MBMemory();
 
@@ -196,6 +193,7 @@ private:
     float m_KCToENDopamineStrength;
     float m_RewardTimeMs;
     float m_PresentDurationMs;
+    float m_PostStimulusDurationMs;
 
     // Spike recording infrastructure
     mutable Spikes m_PNSpikes;

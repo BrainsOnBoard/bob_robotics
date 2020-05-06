@@ -8,16 +8,14 @@
 
 // Antworld includes
 #include "mb_memory_ardin.h"
-#include "mb_memory_hog.h"
 #include "mb_params_ardin.h"
-#include "mb_params_hog.h"
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
 //----------------------------------------------------------------------------
 namespace
 {
-bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, float verticalLineTime, float yScale = 1.0f, float timeAxisStep = 50.0f)
+bool rasterPlot(unsigned int numNeurons, const MBMemory::Spikes &spikes, float verticalLineTime, float yScale = 1.0f, float timeAxisStep = 50.0f)
 {
     if(spikes.empty()) {
         return false;
@@ -68,62 +66,6 @@ bool rasterPlot(unsigned int numNeurons, const MBMemoryHOG::Spikes &spikes, floa
             const float y = rasterTop + ((float)n * yScale);
             ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(x, y), ImVec2(x + 1.0f, y + 1.0f),
                                                       IM_COL32(255, 255, 255, 255));
-        }
-    }
-
-    return true;
-}
-//----------------------------------------------------------------------------
-bool hogPlot(const cv::Mat &features, const std::array<cv::Vec2f, MBParamsHOG::numOrientations> &directions, float drawScale)
-{
-    // Calculate number of cells
-    const size_t numCellX = features.cols;
-    const size_t numCellY = features.rows;
-    constexpr float leftBorder = 40.0f;
-    constexpr float topBorder = 50.0f;
-
-    // Calcualate render size of hog cells
-    const float halfDrawScale = 0.5f * drawScale;
-
-    // Create dummy widget to correctly layout window
-    const float height = (drawScale * numCellY) + topBorder;
-    ImGui::Dummy(ImVec2((drawScale * numCellX) + leftBorder, height));
-
-    const auto windowPos = ImGui::GetWindowPos();
-    const float hogLeft = windowPos.x + leftBorder;
-    const float hogTop = windowPos.y + topBorder;
-
-    // Loop through cells
-    for(size_t x = 0; x < numCellX; x++) {
-        for(size_t y = 0; y < numCellY; y++) {
-            const float drawX = hogLeft + (drawScale * (float)x);
-            const float drawY = hogTop + (drawScale * (float)y);
-
-            // Draw cell border
-            ImGui::GetWindowDrawList()->AddRect(ImVec2(drawX - halfDrawScale, drawY - halfDrawScale),
-                                                ImVec2(drawX + halfDrawScale, drawY + halfDrawScale),
-                                                IM_COL32(128, 128, 128, 255));
-
-            // Get magnitude of features in cell
-            const auto cellFeatures = features.at<cv::Vec<float, MBParamsHOG::numFeatures>>(y, x);
-
-
-            // Draw orientation features
-            for(size_t b = 0; b < MBParamsHOG::numOrientations; b++) {
-                // Skip zero-strength gradients
-                if(cellFeatures[b] == 0.0f) {
-                    continue;
-                }
-
-                const float lineLength = cellFeatures[b] * 10.0f;
-                ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - (directions[b][0] * lineLength), drawY - directions[b][1] * lineLength),
-                                                    ImVec2(drawX + (directions[b][0] * lineLength), drawY + directions[b][1] * lineLength),
-                                                    IM_COL32(255, 255, 255, 255));
-            }
-
-            ImGui::GetWindowDrawList()->AddLine(ImVec2(drawX - halfDrawScale + 2, drawY + halfDrawScale - 1),
-                                                ImVec2(drawX - halfDrawScale + 2, drawY + halfDrawScale - 1 - (cellFeatures[MBParamsHOG::numOrientations] * halfDrawScale)),
-                                                IM_COL32(0, 255, 0, 255));
         }
     }
 
@@ -270,90 +212,4 @@ void MBUI::saveLogs(const std::string &filename)
 MBArdinUI::MBArdinUI(MBMemoryArdin &memory)
     : MBUI(memory, "mb_memory_ardin.yml", MBParamsArdin::numPN, MBParamsArdin::numKC)
 {
-}
-
-//----------------------------------------------------------------------------
-// MBHogUI
-//----------------------------------------------------------------------------
-MBHogUI::MBHogUI(MBMemoryHOG &memory)
-    : MBUI(memory, "mb_memory_hog.yml", MBParamsHOG::numPN, MBParamsHOG::numKC)
-{
-}
-//----------------------------------------------------------------------------
-void MBHogUI::handleUI()
-{
-    if(ImGui::Begin("Features", nullptr, ImGuiWindowFlags_NoResize)) {
-        if(hogPlot(getMemoryHOG().getFeatures(), getMemoryHOG().getDirections(), 60.0f)) {
-        }
-    }
-    ImGui::End();
-
-
-    if(ImGui::Begin("GGN activity")) {
-        ImGui::PlotLines("Membrane\nvoltage", getMemoryHOG().getGGNVoltageHistory().data(), getMemoryHOG().getGGNVoltageHistory().size(), 0, nullptr,
-                         -60.0f, -40.0f, ImVec2(0, 50));
-        ImGui::PlotLines("Inh out", getMemoryHOG().getKCInhInSynHistory().data(), getMemoryHOG().getKCInhInSynHistory().size(), 0, nullptr,
-                         -1.0f, 0.0f, ImVec2(0, 50));
-    }
-    ImGui::End();
-
-    // Superclass
-    MBUI::handleUI();
-}
-//----------------------------------------------------------------------------
-void MBHogUI::handleUIMBProperties()
-{
-    if(ImGui::TreeNode("PN")) {
-            ImGui::SliderFloat("InputCurrentScale", getMemoryHOG().getPNInputCurrentScale(), 0.0f, 1.0f, "%.4f");
-            ImGui::SliderFloat("VThresh", getMemoryHOG().getPNVthresh(), -60.0f, 0.0f);
-            ImGui::SliderFloat("TauM", getMemoryHOG().getPNTauM(), 1.0f, 50.0f);
-            ImGui::SliderFloat("CM", getMemoryHOG().getPNC(), 1.0f, 50.0f);
-            ImGui::TreePop();
-        }
-
-        if(ImGui::TreeNode("GGN->KC")) {
-            ImGui::SliderFloat("Weight", getMemoryHOG().getGGNToKCWeight(), -10.0f, 0.0f);
-
-            ImGui::SliderFloat("VMid", getMemoryHOG().getGGNToKCVMid(), -60.0f, -20.0f);
-            ImGui::SliderFloat("Vslope", getMemoryHOG().getGGNToKCVslope(), 1.0f, 4.0f);
-            ImGui::SliderFloat("Vthresh", getMemoryHOG().getGGNToKCVthresh(), -60.0f, -20.0f);
-            ImGui::TreePop();
-        }
-
-        if(ImGui::TreeNode("KC->GGN")) {
-            ImGui::SliderFloat("Weight", getMemoryHOG().getKCToGGNWeight(), 0.0f, 0.04f, "%.4f");
-            ImGui::TreePop();
-        }
-
-        if(ImGui::TreeNode("PN->KC")) {
-            ImGui::SliderFloat("Weight", getMemoryHOG().getPNToKC(), 0.0f, 0.5f);
-            ImGui::SliderFloat("TauSyn", getMemoryHOG().getPNToKCTauSyn(), 1.0f, 20.0f);
-            ImGui::TreePop();
-        }
-}
-//----------------------------------------------------------------------------
-void MBHogUI::handleUIClear()
-{
-    m_PeakGGNVoltage.clear();
-}
-//----------------------------------------------------------------------------
-void MBHogUI::handleUITraining()
-{
-    // Superclass
-    MBUI::handleUITraining();
-
-    m_PeakGGNVoltage.push_back(*std::max_element(getMemoryHOG().getGGNVoltageHistory().begin(), getMemoryHOG().getGGNVoltageHistory().end()));
-}
-//----------------------------------------------------------------------------
-void MBHogUI::handleUITesting()
-{
-    // Superclass
-    MBUI::handleUITesting();
-
-    m_PeakGGNVoltage.push_back(*std::max_element(getMemoryHOG().getGGNVoltageHistory().begin(), getMemoryHOG().getGGNVoltageHistory().end()));
-}
-//----------------------------------------------------------------------------
-MBMemoryHOG &MBHogUI::getMemoryHOG()
-{
-    return dynamic_cast<MBMemoryHOG&>(getMemory());
 }
