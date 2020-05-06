@@ -229,8 +229,8 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
     // Get world bounds
-    const auto &minBound = Vector3<meter_t>{0_m, 0_m, 0_m};//getWorld().getMinBound();
-    const auto &maxBound = Vector3<meter_t>{10_m, 10_m, 2.83_m};//getWorld().getMaxBound();
+    const auto &minBound = getWorld().getMinBound();
+    const auto &maxBound = getWorld().getMaxBound();
 
     // Configure top-down orthographic projection matrix
     // **TODO** re-implement in Eigen
