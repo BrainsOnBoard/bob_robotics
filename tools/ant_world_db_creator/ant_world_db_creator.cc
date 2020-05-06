@@ -69,6 +69,15 @@ protected:
         cv::Mat frame(RenderSize, CV_8UC3);
 
         for (auto it = poses.cbegin(); m_Window.isOpen() && it < poses.cend(); ++it) {
+            // Process window events
+            sf::Event event;
+            while (m_Window.pollEvent(event)) {
+                // Close window: exit
+                if (event.type == sf::Event::Closed) {
+                    m_Window.close();
+                }
+            }
+            
             // Update agent's position
             m_Agent.setPosition(it->x(), it->y(), AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);

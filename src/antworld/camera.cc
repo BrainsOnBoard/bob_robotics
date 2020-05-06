@@ -1,10 +1,22 @@
 // BoB robotics includes
 #include "antworld/camera.h"
+#include "common/logging.h"
 
 void
-handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message, const void *)
 {
-    throw std::runtime_error(message);
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        LOGE << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        LOGW << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_LOW) {
+        LOGI << message;
+    } 
+    else {
+        LOGD << message;
+    }   
 }
 
 namespace BoBRobotics {
