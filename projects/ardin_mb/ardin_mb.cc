@@ -171,6 +171,33 @@ int main(int argc, char *argv[])
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
+            else if(event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased) {
+                const bool pressed = event.type == sf::Event::KeyPressed;
+                // Apply new key state to bits of key bits
+                switch(event.key.code) {
+                case sf::Keyboard::Key::Left:
+                    stateHandler.setKeyState(StateHandler::KeyLeft, pressed);
+                    break;
+
+                case sf::Keyboard::Key::Right:
+                    stateHandler.setKeyState(StateHandler::KeyRight, pressed);
+                    break;
+
+                case sf::Keyboard::Key::Up:
+                    stateHandler.setKeyState(StateHandler::KeyForward, pressed);
+                    break;
+
+                case sf::Keyboard::Key::Down:
+                    stateHandler.setKeyState(StateHandler::KeyBackward, pressed);
+                    break;
+
+                case sf::Keyboard::Key::R:
+                    stateHandler.setKeyState(StateHandler::KeyReset, pressed);
+                    break;
+                default:
+                    break;
+                }
+            }
             else {
                 ImGui_ImplSfml_ProcessEvent(event);
             }
