@@ -8,7 +8,6 @@
 // Model includes
 #include "mb_params.h"
 
-using namespace BoBRobotics;
 
 //---------------------------------------------------------------------------
 // Standard LIF model extended to take an additional
@@ -56,6 +55,8 @@ IMPLEMENT_MODEL(LIFExtCurrent);
 
 void modelDefinition(NNmodel &model)
 {
+    using namespace BoBRobotics;
+
     model.setDT(MBParams::timestepMs);
     model.setName("ardin_mb");
 
