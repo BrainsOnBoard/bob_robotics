@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/logging.h"
+#include "common/path.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "antworld/common.h"
@@ -30,10 +31,21 @@ using namespace units::time;
 // Anonymous namespace
 namespace
 {
-void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message,
+void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message,
                    const void *)
 {
-    throw std::runtime_error(message);
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        LOGE << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        LOGW << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_LOW) {
+        LOGI << message;
+    } 
+    else
+        LOGD << message;
+    }
 }
 
 }
@@ -90,7 +102,7 @@ int main(int argc, char **argv)
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
-        renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+        renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                                  { 0.0f, 1.0f, 0.0f },
                                  { 0.898f, 0.718f, 0.353f });
     }
@@ -111,6 +123,15 @@ int main(int argc, char **argv)
     Stopwatch moveTimer;
     moveTimer.start();
     while (window.isOpen()) {
+        // Poll events
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            // Close window: exit
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+
         // Poll joystick
         joystick->update();
 
