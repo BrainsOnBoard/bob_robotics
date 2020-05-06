@@ -52,7 +52,7 @@ void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *render
     }
 }
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
 
     Robots::SimulatedAckermann car(1.4_mps, 500_mm); // simulated car

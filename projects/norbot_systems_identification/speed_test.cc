@@ -101,8 +101,7 @@ private:
     Stopwatch m_Stopwatch, m_StopwatchSample;
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // Connect to robot
     LOGI << "Connecting to robot";

@@ -223,8 +223,7 @@ private:
     }
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
 
 

@@ -16,7 +16,7 @@ using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
     Robots::SimulatedAckermann car(1.4_mps, 500_mm); // simulated ackermann car
     Viz::CarDisplay display(10.2_m, 160_mm);         // For displaying the agent

@@ -13,8 +13,7 @@ using namespace std::literals;
 using namespace units::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     Navigation::Range xrange({ 0_mm, 100_mm }, 100_mm);
     Navigation::Range yrange({ 0_mm, 1700_mm }, 100_mm);

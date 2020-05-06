@@ -8,7 +8,7 @@
 
 using namespace BoBRobotics;
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
     BN055 imu;
 

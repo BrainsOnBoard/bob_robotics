@@ -17,8 +17,7 @@
 using namespace std::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // Listen for incoming connection on default port
     Net::Server server;

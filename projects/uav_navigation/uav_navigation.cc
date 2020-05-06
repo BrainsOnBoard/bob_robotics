@@ -232,8 +232,7 @@ private:
     }
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     UAVNavigation nav(45_deg, 20_deg_per_s);
     nav.mainLoop();

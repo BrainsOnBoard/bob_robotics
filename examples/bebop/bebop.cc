@@ -46,8 +46,7 @@ printSpeedLimits(Bebop &drone)
               << vertSpeedLimits.second << ")";
 }
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     /*
      * Connects to the drone.

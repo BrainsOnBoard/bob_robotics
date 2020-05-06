@@ -13,8 +13,7 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // Make connection to robot on default port
     Net::Client client;

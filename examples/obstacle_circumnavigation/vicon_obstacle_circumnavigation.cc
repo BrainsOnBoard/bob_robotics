@@ -8,8 +8,7 @@
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     HID::Joystick joystick;
 

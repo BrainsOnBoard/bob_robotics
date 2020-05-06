@@ -10,7 +10,7 @@ using namespace BoBRobotics;
 using namespace units::literals;
 using namespace std::literals;
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
     Robots::RCCarBot bot;
 

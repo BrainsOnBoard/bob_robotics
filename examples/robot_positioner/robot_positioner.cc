@@ -186,8 +186,7 @@ private:
     BackgroundExceptionCatcher m_Catcher;
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     PositionerExample example;
     example.run();

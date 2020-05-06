@@ -57,8 +57,7 @@ printGoalStats(const Vector2<millimeter_t> &goal, const Pose3<millimeter_t, radi
          << goal.distance2D(robotPosition);
 }
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     // Parameters
     constexpr meter_t stoppingDistance = 3_cm; // if the robot's distance from goal < stopping dist, robot stops

@@ -28,8 +28,7 @@
 using namespace std::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     std::unique_ptr<Video::Input> camera;
     std::unique_ptr<HID::Joystick> joystick;

@@ -16,8 +16,7 @@ using namespace std::literals;
 using namespace units::length;
 using namespace units::angle;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // drone object
     Bebop drone;

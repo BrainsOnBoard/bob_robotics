@@ -19,8 +19,7 @@ using namespace units::literals;
 using namespace units::time;
 using namespace std::literals;
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     std::string ipAddress;
     if (argc > 1) {

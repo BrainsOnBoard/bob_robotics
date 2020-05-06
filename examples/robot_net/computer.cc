@@ -29,8 +29,7 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     // Enable networking on Windows
     OS::Net::WindowsNetworking::initialise();

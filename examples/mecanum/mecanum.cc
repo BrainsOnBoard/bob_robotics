@@ -5,7 +5,7 @@
 
 using namespace BoBRobotics;
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
     HID::Joystick joystick;
     Robots::Mecanum robot;

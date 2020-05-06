@@ -378,7 +378,7 @@ void readHeadingThreadFunc(HeadingSource *headingSource,
 }
 }   // Anonymous namespace
 
-int bob_main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     // Simulation rendering parameters
     constexpr unsigned int activityImageWidth = 500;

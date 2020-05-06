@@ -16,8 +16,7 @@
 #include <exception>
 
 //! Add a definition for this function to your own main *.cc file
-int
-bob_main(int argc, char **argv);
+int bobMain(int argc, char **argv);
 
 int
 main(int argc, char **argv)
@@ -25,7 +24,7 @@ main(int argc, char **argv)
 #ifndef DEBUG
     try {
 #endif // !DEBUG
-        return bob_main(argc, argv);
+        return bobMain(argc, argv);
 #ifndef DEBUG
     } catch (std::exception &e) {
 #ifdef _WIN32
