@@ -141,7 +141,7 @@ inline void sortRows(unsigned int numPre, unsigned int *rowLength, unsigned int 
 }
 //----------------------------------------------------------------------------
 template<typename T>
-inline void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
+void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         for(unsigned int j = 0; j < numPost; j++) {
@@ -151,7 +151,8 @@ inline void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weigh
     }
 }
 //----------------------------------------------------------------------------
-inline void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const unsigned int *ind, unsigned int maxRowLength)
+template<typename IndexType>
+void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const IndexType *ind, unsigned int maxRowLength)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         std::cout << i << ":";
@@ -165,9 +166,9 @@ inline void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength
     }
 }
 //----------------------------------------------------------------------------
-template <typename Generator>
-inline void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
-                                  unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength,
+template <typename Generator, typename IndexType>
+void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, unsigned int numConnections,
+                                  unsigned int *rowLength, IndexType *ind, unsigned int maxRowLength,
                                   Generator &gen)
 {
     // Zero row lengths
@@ -176,7 +177,7 @@ inline void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPo
     // Generate array of presynaptic indices
     std::vector<unsigned int> preIndices(numPre);
     std::iota(preIndices.begin(), preIndices.end(), 0);
-    
+
     // Loop through postsynaptic neurons
     for(unsigned int j = 0; j < numPost; j++) {
         // Loop through connections to make
@@ -199,7 +200,7 @@ inline void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPo
     sortRows(numPre, rowLength, ind, maxRowLength);
 }
 //----------------------------------------------------------------------------
-inline unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
     const double quantile = pow(0.9999, 1.0 / (double)numPre);

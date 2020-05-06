@@ -80,6 +80,7 @@ public:
     };
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+                 meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
                  BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
                  VisualNavigationUI &visualNavigationUI);
 
@@ -186,6 +187,9 @@ private:
 
     //! Snapshot processor - takes screen images and pre-processes
     BoBRobotics::AntWorld::SnapshotProcessor &m_SnapshotProcessor;
+
+    //! Height of path
+    const meter_t m_PathHeight;
 
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;

@@ -7,6 +7,8 @@
 #include "imgui.h"
 
 // BoBRobotics includes
+#include "common/path.h"
+#include "common/logging.h"
 #include "navigation/visual_navigation_base.h"
 
 // Antworld includes
@@ -24,21 +26,32 @@ using namespace units::length;
 // StateHandler
 //----------------------------------------------------------------------------
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+                           meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
                            BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
                            VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800), m_VectorField(20_cm),
     m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_SnapshotProcessor(snapshotProcessor), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
+    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_SnapshotProcessor(snapshotProcessor), m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
 
 {
     // Load world
-    if(worldFilename.substr(worldFilename.length() - 3) == "obj") {
-        m_Renderer.getWorld().loadObj(worldFilename);
+    if(worldFilename.empty()) {
+        m_Renderer.getWorld().load((Path::getResourcesPath() / "antworld" / "world5000_gray.bin").str(),
+                                   SimParams::worldColour, SimParams::groundColour);
     }
     else {
-        m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
+        m_Renderer.getWorld().loadObj(worldFilename);
+    }
+
+    // Override world bounds if they are specified
+    if(!minBound.empty()) {
+        m_Renderer.getWorld().setMinBound(Vector3<meter_t>(meter_t(minBound[0]), meter_t(minBound[1]), meter_t(minBound[2])));
+    }
+
+    if(!maxBound.empty()) {
+        m_Renderer.getWorld().setMaxBound(Vector3<meter_t>(meter_t(maxBound[0]), meter_t(maxBound[1]), meter_t(maxBound[2])));
     }
 
     // If route is specified
@@ -61,7 +74,7 @@ bool StateHandler::handleEvent(State state, Event event)
     // If this event is an update
     if(event == Event::Update) {
         // Render panoramic view to target
-        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), 0.01_m,
+        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_PathHeight,
                                        m_Pose.yaw(), m_Pose.pitch(), 0.0_deg,
                                        m_RenderTargetPanoramic);
 

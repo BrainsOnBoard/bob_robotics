@@ -63,6 +63,9 @@ public:
         return m_MaxBound;
     }
 
+    void setMinBound(const Vector3<meter_t> &minBound){ m_MinBound = minBound; }
+    void setMaxBound(const Vector3<meter_t> &maxBound){ m_MaxBound = maxBound; }
+
 private:
     //------------------------------------------------------------------------
     // Private methods
