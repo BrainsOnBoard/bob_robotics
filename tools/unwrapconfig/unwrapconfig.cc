@@ -2,7 +2,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"

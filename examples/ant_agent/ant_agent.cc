@@ -1,7 +1,6 @@
 // BoB robotics includes
 #include "antworld/agent.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 

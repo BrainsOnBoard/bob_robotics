@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #ifndef _WIN32

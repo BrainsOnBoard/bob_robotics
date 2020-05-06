@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/main.h"
 #include "robots/rc_car_bot.h"
 
 // Standard C++ includes

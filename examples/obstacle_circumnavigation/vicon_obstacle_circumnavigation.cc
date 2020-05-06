@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/main.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "robots/tank_netsink.h"

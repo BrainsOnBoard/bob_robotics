@@ -7,7 +7,7 @@
 #include <thread>
 
 // BoB robotics include
-#include "common/logging.h"
+#include "plog/Log.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::BN055

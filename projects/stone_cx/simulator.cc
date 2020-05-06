@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/von_mises_distribution.h"
 #include "genn_utils/analogue_csv_recorder.h"
 

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "viz/sfml/joystick_keyboard.h"
 
 // Standard C++ includes

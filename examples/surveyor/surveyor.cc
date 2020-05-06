@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/main.h"
 #include "hid/joystick.h"
 #include "robots/surveyor.h"
 

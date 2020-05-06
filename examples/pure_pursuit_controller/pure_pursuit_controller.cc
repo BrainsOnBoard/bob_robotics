@@ -16,7 +16,6 @@
 */
 
 // BoB robotics includes
-#include "common/main.h"
 #include "robots/simulated_ackermann.h"
 #include "robots/control/pure_pursuit_controller.h"
 #include "viz/car_display/car_display.h"

@@ -14,7 +14,7 @@
  */
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 #include "video/rpi_cam.h"

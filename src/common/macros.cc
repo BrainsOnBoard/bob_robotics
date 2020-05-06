@@ -3,7 +3,7 @@
 
 #ifdef _WIN32
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #endif
 
 namespace BoBRobotics {

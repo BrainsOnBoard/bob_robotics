@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "video/netsink.h"
 
 // Standard C++ includes

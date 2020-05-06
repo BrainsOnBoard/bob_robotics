@@ -1,6 +1,6 @@
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/path.h"
 #include "common/pose.h"
 #include "antworld/agent.h"

@@ -10,7 +10,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"

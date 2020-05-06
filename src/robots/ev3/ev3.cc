@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "robots/ev3/ev3.h"
 
 // Third-party includes

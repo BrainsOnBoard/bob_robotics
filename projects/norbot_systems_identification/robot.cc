@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/main.h"
 #include "net/server.h"
 #ifdef NO_I2C
 #include "robots/tank.h"

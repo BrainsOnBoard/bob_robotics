@@ -2,7 +2,7 @@
 #include "antworld/common.h"
 #include "antworld/world.h"
 #include "common/macros.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Third-party includes
 #include "third_party/path.h"

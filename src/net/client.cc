@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "net/client.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "os/net.h"
 
 // Standard C includes

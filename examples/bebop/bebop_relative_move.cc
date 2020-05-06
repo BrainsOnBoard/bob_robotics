@@ -1,6 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "robots/bebop/bebop.h"
 

@@ -6,7 +6,7 @@
 
 // BoB robotics includes
 #include "common/fsm.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"

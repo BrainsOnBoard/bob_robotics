@@ -2,7 +2,6 @@
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"

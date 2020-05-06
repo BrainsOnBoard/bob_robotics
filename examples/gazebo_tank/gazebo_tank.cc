@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "robots/gazebo/camera.h"

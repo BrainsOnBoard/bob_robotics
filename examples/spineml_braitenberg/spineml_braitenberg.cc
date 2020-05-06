@@ -1,6 +1,5 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/main.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"

@@ -1,7 +1,7 @@
 #include "read_data.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/timer.h"
 #include "navigation/image_database.h"
 #include "navigation/infomax.h"

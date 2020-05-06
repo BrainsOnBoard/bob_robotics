@@ -3,7 +3,7 @@
 
 // BoB Robotics includes
 #include "common/path.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 

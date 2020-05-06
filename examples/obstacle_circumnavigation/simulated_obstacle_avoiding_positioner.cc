@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"

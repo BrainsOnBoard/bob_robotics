@@ -1,7 +1,7 @@
 #include "read_data.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 

@@ -1,6 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "robots/simulated_tank.h"
 #include "viz/sfml/joystick_keyboard.h"
 #include "viz/sfml/sfml_world.h"

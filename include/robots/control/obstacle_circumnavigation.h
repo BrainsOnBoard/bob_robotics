@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/geometry.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/pose.h"
 #include "robots/control/collision_detector.h"

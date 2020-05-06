@@ -1,8 +1,7 @@
 // BoB robotics includes
 #include "robots/control/tank_pid.h"
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "vicon/udp.h"

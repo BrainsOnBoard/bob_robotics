@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 

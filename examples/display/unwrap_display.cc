@@ -5,7 +5,7 @@
  */
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "video/panoramic.h"
 #include "video/display.h"
 

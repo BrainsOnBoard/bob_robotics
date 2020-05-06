@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/path.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "navigation/antworld_rotater.h"
 #include "navigation/perfect_memory.h"
 #include "viz/plot_ridf.h"

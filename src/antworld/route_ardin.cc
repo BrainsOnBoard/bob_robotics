@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "antworld/common.h"
 #include "antworld/route_ardin.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <fstream>

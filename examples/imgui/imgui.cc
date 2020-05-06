@@ -9,7 +9,7 @@
 #include <SFML/Graphics.hpp>
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // IMGUI includes
 #include "imgui.h"

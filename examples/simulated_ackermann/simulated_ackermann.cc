@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/main.h"
 #include "robots/simulated_ackermann.h"
 #include "viz/car_display/car_display.h"
 

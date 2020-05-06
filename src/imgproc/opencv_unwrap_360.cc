@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/path.h"
 #include "common/macros.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "imgproc/opencv_unwrap_360.h"
 
 // Standard C++ includes

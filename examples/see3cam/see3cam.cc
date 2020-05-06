@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/pid.h"
 #include "common/timer.h"
 #include "imgproc/opencv_unwrap_360.h"

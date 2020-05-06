@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <string>

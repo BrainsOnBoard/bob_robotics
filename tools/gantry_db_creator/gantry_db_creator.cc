@@ -1,8 +1,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
 #include "robots/gantry.h"
