@@ -95,12 +95,24 @@ int main()
         accelerationSpline.set_points(accelerationTime, accelerationMagnitude);
     }
 
+    // Get pointers to model variables
+    float *headingAngleTL = slm.getScalar<float>("headingAngleTL");
+    float *speedTN2 = slm.getArray<float>("speedTN2");
+    float *rTL = slm.getArray<float>("rTL");
+    float *rCL1 = slm.getArray<float>("rCL1");
+    float *rTB1 = slm.getArray<float>("rTB1");
+    float *rTN2 = slm.getArray<float>("rTN2");
+    float *iCPU4 = slm.getArray<float>("iCPU4");
+    float *rCPU4 = slm.getArray<float>("rCPU4");
+    float *rPontine = slm.getArray<float>("rPontine");
+    float *rCPU1 = slm.getArray<float>("rCPU1");
+
 #ifdef RECORD_ELECTROPHYS
-    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    AnalogueRecorder<float> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2", ",");
+    AnalogueRecorder<float> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1", ",");
+    AnalogueRecorder<float> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1", ",");
+    AnalogueRecorder<float> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4", ",");
+    AnalogueRecorder<float> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1", ",");
 #endif  // RECORD_ELECTROPHYS
 
     // Simulate
@@ -110,17 +122,7 @@ int main()
     double yVelocity = 0.0;
     double xPosition = 0.0;
     double yPosition = 0.0;
-    float *headingAngleTL = slm.getScalar<float>("headingAngleTL");
-    float *speedTN2 = slm.getArray<float>("speedTN2");
-    float *rTL = slm.getArray<float>("rTL");
-    const float *rCL1 = slm.getArray<float>("rCL1");
-    const float *rTB1 = slm.getArray<float>("rTB1");
-    const float *rTN2 = slm.getArray<float>("rTN2");
-    const float *iCPU4 = slm.getArray<float>("iCPU4");
-    const float *rCPU4 = slm.getArray<float>("rCPU4");
-    const float *rPontine = slm.getArray<float>("rPontine");
-    const float *rCPU1 = slm.getArray<float>("rCPU1");
-    for(unsigned int i = 0;; i++) {
+    while(true) {
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
             speedTN2[j] = (sin(theta + preferredAngleTN2[j]) * xVelocity) +
@@ -158,16 +160,16 @@ int main()
         visualize(activityImage, rTL, rCL1, rTB1, rTN2, rCPU4, rPontine, rCPU1);
 
         // If we are on outbound segment of route
-        const bool outbound = (i < numOutwardTimesteps);
+        const bool outbound = (slm.getTimestep() < numOutwardTimesteps);
         double a = 0.0;
         if(outbound) {
             // Update angular velocity
             omega = (pathLambda * omega) + pathVonMises(gen);
 
             // Read linear acceleration off spline
-            a = accelerationSpline((double)i);
+            a = accelerationSpline(slm.getTime());
 
-            if(i == (numOutwardTimesteps - 1)) {
+            if(slm.getTimestep() == (numOutwardTimesteps - 1)) {
                 LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
             }
         }
