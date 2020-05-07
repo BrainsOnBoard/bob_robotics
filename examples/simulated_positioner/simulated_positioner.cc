@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/simulated_tank.h"
@@ -21,8 +21,7 @@ using namespace units::literals;
 using namespace units::angle;
 using namespace std::literals;
 
-int
-main()
+int bobMain(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
     Viz::SFMLWorld display;
@@ -86,4 +85,6 @@ main()
         // A small delay, so we don't eat all the CPU
         std::this_thread::sleep_for(2ms);
     }
+
+    return EXIT_SUCCESS;
 }

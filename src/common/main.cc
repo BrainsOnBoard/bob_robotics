@@ -1,18 +1,13 @@
-// BoB robotics includes
-#include "common/logging.h"
-#include "common/macros.h"
-
 // Third-party includes
+#include "plog/Log.h"
 #include "plog/Appenders/ColorConsoleAppender.h"
 
-// Standard C includes
-#include <cstdlib>
-#include <cstring>
-
 // Standard C++ includes
-#include <string>
+#include <exception>
 
-namespace {
+// Forward declaration; put definition in your own main C++ file
+int bobMain(int argc, char **argv);
+
 // Plog's default TxtFormatter is a bit verbose, so let's implement our own
 struct Formatter
 {
@@ -84,15 +79,16 @@ getLogLevel(plog::Severity defaultLogLevel)
 
     throw std::runtime_error(std::string(severityEnvVar) + " is not a valid log level");
 }
-}
 
-namespace BoBRobotics {
-namespace Logging {
-Logger Logger::logger;
-
-Logger::Logger(plog::Severity defaultLogLevel)
+void
+initLogging()
 {
-    // Get log level
+// Get log level
+#if defined(DEBUG) || defined(_DEBUG)
+    constexpr plog::Severity defaultLogLevel = plog::Severity::debug;
+#else
+    constexpr plog::Severity defaultLogLevel = plog::Severity::info;
+#endif
     const auto severity = getLogLevel(defaultLogLevel);
 
     // Get filename to log to, if specified in env var
@@ -115,11 +111,28 @@ Logger::Logger(plog::Severity defaultLogLevel)
     plog::get()->addAppender(&appender);
 }
 
-Logger &
-Logger::getInstance()
+int
+main(int argc, char **argv)
 {
-    return logger;
-}
+    // We always want plog working
+    initLogging();
 
-} // Logging
-} // BoBRobotics
+#ifndef DEBUG
+    try {
+#endif // !DEBUG
+        return bobMain(argc, argv);
+#ifndef DEBUG
+    } catch (std::exception &e) {
+#ifdef _WIN32
+        // Windows doesn't print exception details by default
+        LOG_FATAL << "Uncaught exception: " << e.what();
+#endif
+
+        // Rethrow exception so it can be handled by OS's default handler
+        throw;
+    } catch (...) {
+        // Rethrow exceptions not of type std::exception
+        throw;
+    }
+#endif // !DEBUG
+}

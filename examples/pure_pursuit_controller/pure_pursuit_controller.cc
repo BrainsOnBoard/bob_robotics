@@ -16,7 +16,6 @@
 */
 
 // BoB robotics includes
-#include "common/main.h"
 #include "robots/simulated_ackermann.h"
 #include "robots/control/pure_pursuit_controller.h"
 #include "viz/car_display/car_display.h"
@@ -52,7 +51,7 @@ void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *render
     }
 }
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
 
     Robots::SimulatedAckermann car(1.4_mps, 500_mm); // simulated car

@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/semaphore.h"
 #include "robots/gazebo/node.h"

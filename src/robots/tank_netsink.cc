@@ -1,11 +1,14 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/stopwatch.h"
 #include "robots/tank_netsink.h"
 
 namespace BoBRobotics {
 namespace Robots {
+
+// Explicitly instantiate
+template class TankNetSinkBase<Net::Connection &>;
 
 BundledTankNetSink::BundledTankNetSink()
   : TankNetSinkBase<Net::Client>()

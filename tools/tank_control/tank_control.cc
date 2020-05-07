@@ -1,7 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "net/server.h"
@@ -28,8 +27,7 @@
 using namespace std::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     std::unique_ptr<Video::Input> camera;
     std::unique_ptr<HID::Joystick> joystick;

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "robots/omni2d.h"
 
 // Standard C++ includes

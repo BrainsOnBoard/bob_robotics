@@ -1,7 +1,7 @@
 #ifdef __linux__
 // BoB robotics includes
 #include "video/v4l_camera.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C includes
 #include <cstring>

@@ -21,8 +21,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     /************************************Gazebo setup************/
 
@@ -69,4 +68,6 @@ main(int argc, char **argv)
     display->close();
     Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
+
+    return EXIT_SUCCESS;
 }

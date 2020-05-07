@@ -1,6 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "robots/bebop/bebop.h"
 
@@ -16,8 +15,7 @@ using namespace std::literals;
 using namespace units::length;
 using namespace units::angle;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // drone object
     Bebop drone;

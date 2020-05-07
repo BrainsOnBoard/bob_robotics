@@ -2,7 +2,7 @@
 #include "antworld/route_continuous.h"
 #include "antworld/common.h"
 #include "common/macros.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <algorithm>

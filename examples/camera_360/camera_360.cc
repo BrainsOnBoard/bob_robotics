@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/timer.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
@@ -8,7 +8,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 
-int main()
+int bobMain(int, char **)
 {
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;

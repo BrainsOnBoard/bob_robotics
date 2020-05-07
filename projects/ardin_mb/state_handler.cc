@@ -4,7 +4,7 @@
 #include <cmath>
 
 // BoBRobotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "navigation/visual_navigation_base.h"
 
 // Ardin MB includes

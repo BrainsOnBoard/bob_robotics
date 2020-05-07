@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/von_mises_distribution.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
@@ -26,7 +26,7 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
 
-int main()
+int bobMain(int, char **)
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;

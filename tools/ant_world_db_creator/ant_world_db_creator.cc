@@ -1,6 +1,6 @@
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/path.h"
 #include "common/pose.h"
 #include "antworld/agent.h"
@@ -160,8 +160,7 @@ private:
     AntWorld::RouteContinuous &m_Route;
 };
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
@@ -185,4 +184,6 @@ main(int argc, char **argv)
         GridDatabaseCreator creator(*window);
         creator.runForGrid();
     }
+
+    return EXIT_SUCCESS;
 }

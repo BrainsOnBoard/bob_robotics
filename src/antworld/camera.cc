@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "antworld/camera.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 void
 handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message, const void *)

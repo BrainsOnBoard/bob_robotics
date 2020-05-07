@@ -2,8 +2,7 @@
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
 #include "common/lm9ds1_imu.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/imu_netsource.h"
@@ -378,7 +377,7 @@ void readHeadingThreadFunc(HeadingSource *headingSource,
 }
 }   // Anonymous namespace
 
-int bob_main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     // Simulation rendering parameters
     constexpr unsigned int activityImageWidth = 500;

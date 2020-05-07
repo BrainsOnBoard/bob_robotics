@@ -9,8 +9,7 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/robot_type.h"
@@ -68,8 +67,7 @@ run(Video::Input &camera)
     }
 }
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     try {
         /*

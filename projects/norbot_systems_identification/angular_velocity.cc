@@ -1,8 +1,7 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/background_exception_catcher.h"
-#include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
@@ -19,8 +18,7 @@ using namespace units::literals;
 using namespace units::time;
 using namespace std::literals;
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     std::string ipAddress;
     if (argc > 1) {

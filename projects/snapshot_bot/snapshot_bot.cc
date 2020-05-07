@@ -6,7 +6,7 @@
 
 // BoB robotics includes
 #include "common/fsm.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -476,7 +476,7 @@ private:
 };
 }   // Anonymous namespace
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
 

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/path.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
@@ -36,7 +36,7 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLcha
 }
 
 
-int main()
+int bobMain(int, char **)
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
