@@ -12,8 +12,10 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// GeNN userproject includes
+#include "sharedLibraryModel.h"
+
 // BoB robotics includes
-#include "genn_utils/shared_library_model.h"
 #include "navigation/insilico_rotater.h"
 #include "navigation/visual_navigation_base.h"
 
@@ -133,7 +135,7 @@ protected:
         return (unsigned int)std::round(ms / m_TimestepMs);
     }
 
-    BoBRobotics::GeNNUtils::SharedLibraryModelFloat &getSLM() const
+    SharedLibraryModel<float> &getSLM() const
     {
         return m_SLM;
     }
@@ -208,7 +210,7 @@ private:
     mutable unsigned int m_NumActivePN;
     mutable unsigned int m_NumActiveKC;
 
-    mutable BoBRobotics::GeNNUtils::SharedLibraryModelFloat m_SLM;
+    mutable SharedLibraryModel<float> m_SLM;
 
     mutable std::vector<float> m_RotatedDifferences;
 };
