@@ -140,6 +140,9 @@ macro(BoB_project)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
 
+    # We always need the common module so that main() is defined
+    list(APPEND PARSED_ARGS_BOB_MODULES common)
+
     # Do linking etc.
     BoB_build()
 
