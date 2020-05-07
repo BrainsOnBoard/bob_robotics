@@ -7,6 +7,9 @@
 namespace BoBRobotics {
 namespace Robots {
 
+// Explicitly instantiate
+template class TankNetSinkBase<Net::Connection &>;
+
 BundledTankNetSink::BundledTankNetSink()
   : TankNetSinkBase<Net::Client>()
 {
