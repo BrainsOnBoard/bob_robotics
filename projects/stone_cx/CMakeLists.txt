@@ -21,7 +21,6 @@ endif()
 BoB_project(EXECUTABLE ${TARGET}
             SOURCES ${SOURCES}
             BOB_MODULES ${BOB_MODULES}
-            GENN_MODEL model.cc
-            GENN_CPU_ONLY TRUE
+            INCLUDE_GENN_USERPROJECTS
             EXTERNAL_LIBS opencv
             OPTIONS RECORD_ELECTROPHYS RECORD_SENSORS USE_SEE3CAM USE_EV3)

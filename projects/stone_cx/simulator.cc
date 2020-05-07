@@ -10,13 +10,13 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// GeNN user project includes
+#include "analogueRecorder.h"
+#include "sharedLibraryModel.h"
+
 // Common includes
 #include "common/logging.h"
 #include "common/von_mises_distribution.h"
-#include "genn_utils/analogue_csv_recorder.h"
-
-// GeNN generated code includes
-#include "stone_cx_CODE/definitions.h"
 
 // Model includes
 #include "parameters.h"
@@ -48,9 +48,10 @@ int main()
     const double agentMaxAcceleration = 0.15;
     const double agentM = 0.5;
 
-    allocateMem();
-    initialize();
-    initializeSparse();
+    SharedLibraryModel<float> slm("", "stone_cx");
+    slm.allocateMem();
+    slm.initialize();
+    slm.initializeSparse();
 
     cv::namedWindow("Path", cv::WINDOW_NORMAL);
     cv::resizeWindow("Path", pathImageSize, pathImageSize);
@@ -109,6 +110,16 @@ int main()
     double yVelocity = 0.0;
     double xPosition = 0.0;
     double yPosition = 0.0;
+    float *headingAngleTL = slm.getScalar<float>("headingAngleTL");
+    float *speedTN2 = slm.getArray<float>("speedTN2");
+    float *rTL = slm.getArray<float>("rTL");
+    const float *rCL1 = slm.getArray<float>("rCL1");
+    const float *rTB1 = slm.getArray<float>("rTB1");
+    const float *rTN2 = slm.getArray<float>("rTN2");
+    const float *iCPU4 = slm.getArray<float>("iCPU4");
+    const float *rCPU4 = slm.getArray<float>("rCPU4");
+    const float *rPontine = slm.getArray<float>("rPontine");
+    const float *rCPU1 = slm.getArray<float>("rCPU1");
     for(unsigned int i = 0;; i++) {
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
@@ -117,22 +128,23 @@ int main()
         }
 
         // Push inputs to device
-        pushspeedTN2ToDevice();
+        slm.pushVarToDevice("TN2", "speed");
 
         // Update TL input
-        headingAngleTL = theta;
+        *headingAngleTL = theta;
 
         // Step network
-        stepTime();
+        slm.stepTime();
 
         // Pull outputs from device
-        pullrTLFromDevice();
-        pullrTN2FromDevice();
-        pullrCL1FromDevice();
-        pullrTB1FromDevice();
-        pullrCPU4FromDevice();
-        pullrCPU1FromDevice();
-        pullrPontineFromDevice();
+        slm.pullVarFromDevice("TL", "r");
+        slm.pullVarFromDevice("TN2", "r");
+        slm.pullVarFromDevice("CL1", "r");
+        slm.pullVarFromDevice("TB1", "r");
+        slm.pullVarFromDevice("CPU4", "i");
+        slm.pullVarFromDevice("CPU4", "r");
+        slm.pullVarFromDevice("CPU1", "r");
+        slm.pullVarFromDevice("Pontine", "r");
 
 #ifdef RECORD_ELECTROPHYS
         tn2Recorder.record(i);
@@ -143,7 +155,7 @@ int main()
 #endif  // RECORD_ELECTROPHYS
 
         // Visualize network activity
-        visualize(activityImage);
+        visualize(activityImage, rTL, rCL1, rTB1, rTN2, rCPU4, rPontine, rCPU1);
 
         // If we are on outbound segment of route
         const bool outbound = (i < numOutwardTimesteps);
@@ -162,8 +174,8 @@ int main()
         // Otherwise we're path integrating home
         else {
             // Sum left and right motor activity
-            const scalar leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
-            const scalar rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
+            const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
+            const float rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
 
             // Use difference between left and right to calculate angular velocity
             omega = -agentM * (rightMotor - leftMotor);
@@ -194,7 +206,9 @@ int main()
         // Show output image
         cv::imshow("Path", pathImage);
         cv::imshow("Activity", activityImage);
-        cv::waitKey(1);
+        if(cv::waitKey(1) == 27) {
+            break;
+        }
     }
     return 0;
 }
