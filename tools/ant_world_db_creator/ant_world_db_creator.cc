@@ -160,8 +160,7 @@ private:
     AntWorld::RouteContinuous &m_Route;
 };
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 

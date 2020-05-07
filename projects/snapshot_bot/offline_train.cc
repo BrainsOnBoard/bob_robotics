@@ -5,7 +5,7 @@
 // BoB robotics includes
 #include "plog/Log.h"
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
 

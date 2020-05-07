@@ -88,7 +88,7 @@ constexpr int sendFlags = 0;
  * This class does nothing on *nix.
  *
  * Use it like so:
- *   int main()
+ *   int bobMain()
  *   {
  *      try {
  *          BoBRobotics::OS::Net::WindowsNetworking net;

@@ -6,8 +6,7 @@
 
 namespace plt = matplotlibcpp;
 
-int
-main()
+int bobMain()
 {
     // do some plotting :-)
     plt::plot({ 1, 2, 3, 4 });

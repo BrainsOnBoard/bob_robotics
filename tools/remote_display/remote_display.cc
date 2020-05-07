@@ -5,8 +5,7 @@
 
 using namespace BoBRobotics;
 
-int
-main()
+int bobMain()
 {
     Net::Client client;
     Video::NetSource video{ client };

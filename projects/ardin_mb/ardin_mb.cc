@@ -33,7 +33,7 @@
 
 using namespace BoBRobotics;
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     // Create SFML window
     sf::Window window(sf::VideoMode(SimParams::displayRenderWidth, SimParams::displayRenderHeight + SimParams::displayRenderWidth + 10),

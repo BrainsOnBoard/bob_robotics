@@ -8,7 +8,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 
-int main()
+int bobMain()
 {
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;

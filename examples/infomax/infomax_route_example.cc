@@ -67,8 +67,7 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
     plt::show();
 }
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     if (argc < 2) {
         LOGE << "Must specify a route, e.g.:"

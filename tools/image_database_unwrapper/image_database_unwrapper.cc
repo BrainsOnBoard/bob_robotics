@@ -6,8 +6,7 @@
 
 using namespace BoBRobotics;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     // We must have a path + an optional image size
     BOB_ASSERT(argc == 2 || argc == 4);

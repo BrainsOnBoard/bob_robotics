@@ -5,8 +5,7 @@
 using namespace BoBRobotics::Navigation;
 using namespace BoBRobotics::Viz;
 
-int
-main()
+int bobMain()
 {
     // Class to run perfect memory algorithm
     cv::Size imSize(180, 50);

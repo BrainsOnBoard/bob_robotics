@@ -391,7 +391,7 @@ void completeCopy(std::istream &inputObjFile, std::ofstream &outputObjFile,
 }
 }   // Anonymous namespace
 
-int main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
 
     if(argc < 2) {

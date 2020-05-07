@@ -24,8 +24,7 @@ trainRoute(T &pm, const filesystem::path &routePath)
     LOGI << "Loaded " << pm.getNumSnapshots() << " snapshots";
 }
 
-int
-main(int, char **)
+int bobMain(int, char **)
 {
     /*
      * I've set the width of the image to be the same as the (raw) unwrapped

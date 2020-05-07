@@ -44,7 +44,7 @@ void setMode(Mode newMode, Mode &mode, cv::Mat &output, cv::Mat &unwrapped) {
 }
 }
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     // Open camera
     const unsigned int deviceIndex = (argc > 1) ? std::atoi(argv[1]) : 0;

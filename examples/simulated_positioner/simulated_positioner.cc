@@ -21,8 +21,7 @@ using namespace units::literals;
 using namespace units::angle;
 using namespace std::literals;
 
-int
-main()
+int bobMain()
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
     Viz::SFMLWorld display;

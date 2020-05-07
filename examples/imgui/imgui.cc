@@ -18,7 +18,7 @@
 #include "examples/imgui_impl_opengl2.h"
 
 
-int main(int, char**)
+int bobMain(int, char**)
 {
     sf::Window window(sf::VideoMode(1280, 720), "Dear ImGui SFML+OpenGL2 example");
 

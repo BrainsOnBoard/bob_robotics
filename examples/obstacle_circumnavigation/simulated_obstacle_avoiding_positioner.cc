@@ -17,8 +17,7 @@ using namespace units::time;
 using namespace units::literals;
 using namespace units::angle;
 
-int
-main()
+int bobMain()
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
     Viz::SFMLWorld display;

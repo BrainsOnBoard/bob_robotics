@@ -36,7 +36,7 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLcha
 }
 
 
-int main()
+int bobMain()
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;

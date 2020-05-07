@@ -7,7 +7,7 @@
 
 using namespace BoBRobotics;
 
-int main()
+int bobMain()
 {
     const float radiansToDegrees = 180.0f / 3.14159f;
     LM9DS1 imu;

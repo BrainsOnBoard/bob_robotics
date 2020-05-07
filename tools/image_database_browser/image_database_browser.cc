@@ -15,8 +15,7 @@
 
 using namespace BoBRobotics;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     // Check we have one command-line argument
     BOB_ASSERT(argc == 2);

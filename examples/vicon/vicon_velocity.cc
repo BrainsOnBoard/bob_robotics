@@ -12,7 +12,7 @@ using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 using namespace units::angular_velocity;
 
-int main()
+int bobMain()
 {
     UDPClient<ObjectDataVelocity> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");

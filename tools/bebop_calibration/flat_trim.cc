@@ -4,7 +4,7 @@
 // Standard C++ includes
 #include <iostream>
 
-int main()
+int bobMain()
 {
     BoBRobotics::Robots::Bebop drone;
 

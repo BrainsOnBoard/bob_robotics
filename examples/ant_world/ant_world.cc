@@ -49,7 +49,7 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLcha
 }
 }
 
-int main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     const auto turnSpeed = 200_deg_per_s;
     const auto moveSpeed = 3_mps;

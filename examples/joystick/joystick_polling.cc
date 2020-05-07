@@ -8,8 +8,7 @@
 
 using namespace BoBRobotics::HID;
 
-int
-main()
+int bobMain()
 {
     Joystick js;
     for (int i = 1; !js.isDown(JButton::B); i++) {

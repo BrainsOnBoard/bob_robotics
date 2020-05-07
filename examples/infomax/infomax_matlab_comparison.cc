@@ -85,8 +85,7 @@ runTest(const filesystem::path &dataPath, int num)
               << matlabOutputWeightsMany - infomax.getWeights();
 }
 
-int
-main(int, char **argv)
+int bobMain(int, char **argv)
 {
     // Path where test *.bin files live
     const auto dataPath = filesystem::path(argv[0]).parent_path() / "test_data";

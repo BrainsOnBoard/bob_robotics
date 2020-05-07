@@ -11,7 +11,7 @@
 
 using namespace BoBRobotics::Video;
 
-int main()
+int bobMain()
 {
     auto cam = getPanoramicCamera();
     Display display(*cam, {1240, 600});

@@ -24,8 +24,7 @@
 
 using namespace BoBRobotics::Video;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     if (argc == 1) {
         // if no args supplied, use default webcam

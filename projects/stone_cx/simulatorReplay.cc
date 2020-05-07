@@ -37,7 +37,7 @@ double readDoubleField(std::istringstream &lineStream)
 }
 }
 
-int main()
+int bobMain()
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;
