@@ -19,4 +19,5 @@ int bobMain()
         std::cout << "Angle: " << angle << "; velocity: " << velocity << std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    return EXIT_SUCCESS;
 }

@@ -15,4 +15,6 @@ int bobMain()
 
     // Run program
     while (runner->update());
+
+    return EXIT_SUCCESS;
 }

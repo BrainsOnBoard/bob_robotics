@@ -55,4 +55,6 @@ int bobMain(int argc, char **argv)
             }
         } while (false);
     }
+
+    return EXIT_SUCCESS;
 }

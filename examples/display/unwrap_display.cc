@@ -16,4 +16,5 @@ int bobMain()
     auto cam = getPanoramicCamera();
     Display display(*cam, {1240, 600});
     display.run();
+    return EXIT_SUCCESS;
 }

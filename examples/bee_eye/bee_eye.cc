@@ -125,4 +125,6 @@ int bobMain(int argc, char **argv)
             break;
         }
     }
+
+    return EXIT_SUCCESS;
 }

@@ -21,4 +21,6 @@ int bobMain()
 
     // Plot RIDF
     plotRIDF(differences);
+
+    return EXIT_SUCCESS;
 }

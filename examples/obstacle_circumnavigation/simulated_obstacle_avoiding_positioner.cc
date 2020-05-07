@@ -110,4 +110,5 @@ int bobMain()
             }
         }
     }
+    return EXIT_SUCCESS;
 }

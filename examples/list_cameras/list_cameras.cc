@@ -10,4 +10,5 @@ int bobMain()
     for (auto cam : BoBRobotics::OS::Video::getCameras()) {
         LOGI << "- Device " << cam.first << ": " << cam.second;
     }
+    return EXIT_SUCCESS;
 }

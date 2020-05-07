@@ -15,4 +15,6 @@ int bobMain()
     std::cout << "Doing flat trim calibration of IMUs..." << std::endl;
     drone.doFlatTrimCalibration();
     std::cout << "Calibration complete." << std::endl;
+
+    return EXIT_SUCCESS;
 }

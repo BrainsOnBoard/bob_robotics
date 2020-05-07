@@ -10,4 +10,5 @@ int bobMain()
     Robots::Gazebo::Camera cam;
     Video::Display display(cam);
     display.run();
+    return EXIT_SUCCESS;
 }

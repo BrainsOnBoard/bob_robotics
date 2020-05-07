@@ -85,4 +85,6 @@ int bobMain()
         // A small delay, so we don't eat all the CPU
         std::this_thread::sleep_for(2ms);
     }
+
+    return EXIT_SUCCESS;
 }

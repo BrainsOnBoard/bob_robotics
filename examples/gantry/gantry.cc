@@ -53,4 +53,6 @@ int bobMain()
         LOGW << "Uncaught exception: " << e.what();
 		return 1;
     }
+
+    return EXIT_SUCCESS;
 }

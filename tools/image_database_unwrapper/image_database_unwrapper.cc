@@ -18,4 +18,6 @@ int bobMain(int argc, char **argv)
     // Unwrap image database
     Navigation::ImageDatabase database(argv[1]);
     database.unwrap("unwrapped_" + database.getName(), unwrapRes);
+
+    return EXIT_SUCCESS;
 }

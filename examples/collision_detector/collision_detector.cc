@@ -120,4 +120,6 @@ int bobMain()
         agent.setVertices(collisionDetector.getRobotVertices());
         display.update(objectShapes, agent);
     }
+
+    return EXIT_SUCCESS;
 }

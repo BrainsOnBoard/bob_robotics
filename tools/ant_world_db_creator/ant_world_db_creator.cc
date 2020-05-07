@@ -184,4 +184,6 @@ int bobMain(int argc, char **argv)
         GridDatabaseCreator creator(*window);
         creator.runForGrid();
     }
+
+    return EXIT_SUCCESS;
 }

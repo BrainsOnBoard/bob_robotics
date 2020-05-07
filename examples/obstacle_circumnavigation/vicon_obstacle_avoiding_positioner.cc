@@ -224,8 +224,6 @@ private:
 
 int bobMain(int, char **)
 {
-
-
     PositionerExample example;
     example.run();
 

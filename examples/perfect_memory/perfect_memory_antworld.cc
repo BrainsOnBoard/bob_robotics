@@ -87,4 +87,6 @@ int bobMain(int, char **)
         plotRIDF(allDifferences[snapshot]);
         LOGI;
     }
+
+    return EXIT_SUCCESS;
 }

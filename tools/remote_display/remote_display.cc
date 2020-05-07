@@ -12,4 +12,5 @@ int bobMain()
     client.runInBackground();
     Video::Display display{ video };
     display.run();
+    return EXIT_SUCCESS;
 }

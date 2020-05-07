@@ -65,4 +65,6 @@ int bobMain(int argc, char **argv)
     display->close();
     Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
+
+    return EXIT_SUCCESS;
 }
