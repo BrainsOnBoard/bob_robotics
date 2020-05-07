@@ -71,11 +71,16 @@ macro(BoB_project)
         if(GENN_BUILDMODEL)
             # Remove filename to get path to GeNN bin directory
             get_filename_component(GENN_BIN_PATH ${GENN_BUILDMODEL} DIRECTORY)
-            
+
             # Get absolute path to userproject include
             get_filename_component(GENN_USERPROJECT ${GENN_BIN_PATH}/../userproject/include ABSOLUTE)
             message("GeNN found in ${GENN_USERPROJECT}")
             BoB_add_include_directories(${GENN_USERPROJECT})
+
+            # On *nix link dl
+            if(NOT WIN32)
+                BoB_add_link_libraries(dl)
+            endif()
         else()
             message(FATAL_ERROR "GeNN not found. Please install and ensure it is in path.")
         endif()
