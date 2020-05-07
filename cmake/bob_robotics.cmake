@@ -366,12 +366,6 @@ macro(BoB_build)
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-
-        # If we don't do this, I get linker errors on the BrickPi for the net
-        # module
-        if(UNIX AND NOT APPLE)
-            set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
-        endif()
     endif()
 
     # If C++ standard has not been specified explicitly either with a command
