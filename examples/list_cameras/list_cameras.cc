@@ -4,7 +4,7 @@
 
 // Standard C++ includes
 
-int bobMain()
+int bobMain(int, char **)
 {
     LOGI << "Cameras:";
     for (auto cam : BoBRobotics::OS::Video::getCameras()) {

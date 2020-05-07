@@ -22,7 +22,7 @@ auto now()
     return std::chrono::high_resolution_clock::now();
 }
 
-int bobMain()
+int bobMain(int, char **)
 {
     Vicon::UDPClient<> vicon(51001);
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");

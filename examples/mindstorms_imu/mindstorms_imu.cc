@@ -9,7 +9,7 @@
 using namespace units::angle;
 using namespace units::angular_velocity;
 
-int bobMain()
+int bobMain(int, char **)
 {
     BoBRobotics::MindstormsIMU imu;
     degree_t angle;

@@ -8,7 +8,7 @@
 #include <vector>
 #include <thread>
 
-int bobMain()
+int bobMain(int, char **)
 {
     const char *path_linux = "/dev/ttyACM0";       // path for linux systems
    // const char *path_mac = "/dev/cu.usbmodem141401"; // the path for mac is often different!

@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "robots/simulated_tank.h"
 
-int bobMain()
+int bobMain(int, char **)
 {
     // Our tank-like agent
     Robots::SimulatedTank<> tank;

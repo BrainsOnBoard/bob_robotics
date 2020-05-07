@@ -52,7 +52,7 @@ private:
     sf::ConvexShape m_Shape;
 };
 
-int bobMain()
+int bobMain(int, char **)
 {
     // The x and y dimensions of the robot
     using V = Vector2<meter_t>;

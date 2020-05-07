@@ -17,7 +17,7 @@ using namespace BoBRobotics::Robots;
 using namespace BoBRobotics::Video;
 using namespace std::literals;
 
-int bobMain()
+int bobMain(int, char **)
 {
     constexpr unsigned int recordingInterval = 10;
     constexpr float joystickDeadzone = 0.25f;

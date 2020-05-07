@@ -23,7 +23,7 @@ using UTM::UTMtoLL;
 using CARCoordiante = Cartesian<WGS84>;
 using GPSCoordinate = LatLon<WGS84>;
 
-int bobMain()
+int bobMain(int, char **)
 {
     using namespace units::literals;
     

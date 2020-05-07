@@ -21,7 +21,7 @@
 using namespace BoBRobotics;
 using namespace units::literals;
 
-int bobMain()
+int bobMain(int, char **)
 {
     try {
         // Object to interface with gantry robot

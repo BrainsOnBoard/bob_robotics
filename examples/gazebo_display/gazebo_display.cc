@@ -4,7 +4,7 @@
 
 using namespace BoBRobotics;
 
-int bobMain()
+int bobMain(int, char **)
 {
     //Initialize Gazebo camera display
     Robots::Gazebo::Camera cam;

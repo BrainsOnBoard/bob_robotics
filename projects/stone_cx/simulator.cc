@@ -26,7 +26,7 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
 
-int bobMain()
+int bobMain(int, char **)
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;

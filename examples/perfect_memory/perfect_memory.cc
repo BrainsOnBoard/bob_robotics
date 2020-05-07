@@ -20,7 +20,7 @@ trainRoute(T &pm)
     LOGI << "Loaded " << pm.getNumSnapshots() << " snapshots";
 }
 
-int bobMain()
+int bobMain(int, char **)
 {
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;

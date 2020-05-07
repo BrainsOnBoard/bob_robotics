@@ -36,7 +36,7 @@ initButton(Joystick &joystick, JButton button)
     onButtonEvent(button, joystick.isDown(button));
 }
 
-int bobMain()
+int bobMain(int, char **)
 {
     LOGI << "Joystick test program";
     LOGI << "Press return to quit";

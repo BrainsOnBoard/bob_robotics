@@ -32,7 +32,7 @@ void buildFilter(cv::Mat &filter, float preferredAngle)
 }
 }   // Anonymous namespace
 
-int bobMain()
+int bobMain(int, char **)
 {
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;
