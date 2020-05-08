@@ -1,3 +1,6 @@
+// BoB robotics includes
+#include "common/main.h"
+
 // Third-party includes
 #include "plog/Log.h"
 #include "plog/Appenders/ColorConsoleAppender.h"
@@ -80,6 +83,7 @@ getLogLevel(plog::Severity defaultLogLevel)
     throw std::runtime_error(std::string(severityEnvVar) + " is not a valid log level");
 }
 
+namespace BoBRobotics {
 void
 initLogging()
 {
@@ -110,12 +114,13 @@ initLogging()
     static plog::ColorConsoleAppender<Formatter> appender;
     plog::get()->addAppender(&appender);
 }
+} // BoBRobotics
 
 int
 main(int argc, char **argv)
 {
     // We always want plog working
-    initLogging();
+    BoBRobotics::initLogging();
 
     /*
      * When debugging, it's handy to know exactly which version of the source
