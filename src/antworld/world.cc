@@ -111,6 +111,8 @@ namespace AntWorld
 void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
+    LOGI << "Loading " << filename << "...";
+    
     // Create single surface
     m_Surfaces.clear();
     m_Surfaces.emplace_back();
@@ -214,6 +216,8 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
 //----------------------------------------------------------------------------
 void World::loadObj(const filesystem::path &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
+    LOGI << "Loading " << filename << "...";
+
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &hardwareMaxTextureSize);
