@@ -16,7 +16,7 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL;CXX_STANDARD"
+                          "EXECUTABLE;SHARED_LIB;GENN_MODEL;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -46,7 +46,18 @@ macro(BoB_project)
     # projects.
     file(GLOB H_FILES "*.h")
 
-    if(PARSED_ARGS_EXECUTABLE)
+    if(PARSED_ARGS_SHARED_LIB)
+        set(NAME ${PARSED_ARGS_SHARED_LIB})
+        add_library(${NAME} SHARED "${PARSED_ARGS_SOURCES}" "${H_FILES}")
+        set_target_properties(${NAME} PROPERTIES PREFIX ""
+                                                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+        set(BOB_TARGETS ${NAME})
+
+        if(GNU_TYPE_COMPILER)
+            # add_definitions(-fPIC)
+            add_compile_flags(-fPIC)
+        endif()
+    elseif(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set(BOB_TARGETS ${NAME})
@@ -741,3 +752,5 @@ add_definitions(
 
 # Look for additional CMake packages in the current folder
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
+
+add_compile_options(-fPIC)
