@@ -62,12 +62,10 @@ static void
 Agent_dealloc(AgentObject *self)
 {
     if (self->members) {
-        LOGI << "CALLING DELETE";
         delete self->members;
     }
-    LOGI << "FREEING MEMORY";
     Py_TYPE(self)->tp_free(reinterpret_cast<PyObject *>(self));
-    LOGI << "MEMORY FREED!";
+    LOGD  << "Agent object deallocated";
 }
 
 static PyObject *
