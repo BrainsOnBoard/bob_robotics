@@ -54,7 +54,6 @@ macro(BoB_project)
         set(BOB_TARGETS ${NAME})
 
         if(GNU_TYPE_COMPILER)
-            # add_definitions(-fPIC)
             add_compile_flags(-fPIC)
         endif()
     elseif(PARSED_ARGS_EXECUTABLE)
@@ -366,9 +365,7 @@ macro(BoB_build)
     endif()
 
     # Flags for gcc and clang
-    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-        set(GNU_TYPE_COMPILER TRUE)
-
+    if(GNU_TYPE_COMPILER)
         # Default to building with -march=native
         if(NOT DEFINED ENV{ARCH})
             set(ENV{ARCH} native)
@@ -733,6 +730,10 @@ if(WIN32)
     add_definitions(-D_WINSOCKAPI_)
 endif()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(GNU_TYPE_COMPILER TRUE)
+endif()
+
 # Assume we always need plog
 BoB_third_party(plog)
 
@@ -752,5 +753,3 @@ add_definitions(
 
 # Look for additional CMake packages in the current folder
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
-
-add_compile_options(-fPIC)
