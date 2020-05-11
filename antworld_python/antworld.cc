@@ -8,9 +8,8 @@
 
 // Python includes
 #include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
-
-#include <algorithm>
 
 using namespace BoBRobotics;
 
@@ -27,7 +26,7 @@ struct AgentObjectData {
 };
 
 struct AgentObject {
-	PyObject_HEAD;
+	PyObject_HEAD
 	AgentObjectData *members;
 };
 
@@ -120,13 +119,14 @@ Agent_read_frame_greyscale(AgentObject *self, PyObject *)
 
 	// Allocate new numpy array
     const npy_intp dims[2] = { size.height, size.width };
-    PyObject *array = PyArray_SimpleNew(2, dims, NPY_UINT8);
+    auto array = PyArray_SimpleNew(2, dims, NPY_UINT8);
     if (!array)
         return nullptr;
 
     try {
     	// A cv::Mat wrapper for the allocated data
-    	cv::Mat frame{ size.height, size.width, CV_8U, PyArray_DATA(array) };
+        auto data = PyArray_DATA(reinterpret_cast<PyArrayObject *>(array));
+        cv::Mat frame{ size.height, size.width, CV_8U, data };
 
         self->members->agent.readGreyscaleFrameSync(frame);
     } catch (std::exception &e) {
@@ -234,37 +234,19 @@ static PyTypeObject AgentType = {
     (newfunc) Agent_new,        /* tp_new */
 };
 
-// static PyObject *
-// exposedFunction(PyObject * /*self*/, PyObject * /*args*/)
-// {
-//     LOGI << "hello from c++";
-//     Py_RETURN_NONE;
-// }
-
-// static PyMethodDef ModuleFunctions[] = {
-//     { "exposedFunction", exposedFunction, METH_VARARGS, "a function" },
-//     { nullptr, nullptr, 0, nullptr }
-// };
-
-/* Module definition */
 static struct PyModuleDef ModuleDefinitions
 {
     PyModuleDef_HEAD_INIT,
-	// Module name as string
 	"antworld",
-	// Module documentation (docstring)
-	"A sample C++ native-code module for python3.",
+	"A Python wrapper for the BoB robotics ant world module",
 	-1,
-	// Functions exposed to the module
-	// ModuleFunctions
 };
-
 
 PyMODINIT_FUNC
 PyInit_antworld(void)
 {
-    import_array(); // load numpy
-    BoBRobotics::initLogging();
+    import_array();             // init numpy
+    BoBRobotics::initLogging(); // init plog
 
 	if (PyType_Ready(&AgentType) < 0)
         return nullptr;
