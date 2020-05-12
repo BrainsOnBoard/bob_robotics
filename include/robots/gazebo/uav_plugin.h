@@ -121,6 +121,6 @@ private:
     std::ofstream m_Logfile;
 
     /// \brief PID target values
-    ignition::math::v4::Pose3d m_LoiterReference;
+    ignition::math::Pose3d m_LoiterReference;
 };
 }

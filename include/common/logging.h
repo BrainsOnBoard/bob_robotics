@@ -18,16 +18,10 @@ public:
     static Logger &getInstance();
 
 private:
-    Logger(plog::Severity defaultLogLevel);
+    Logger(plog::Severity defaultLogLevel = DefaultLogLevel);
+    static Logger logger;
 }; // Logger
 
-#ifndef NO_HEADER_DEFINITIONS
-/*
- * We use this dummy object with global scope so that logging is initialised
- * before main() is called.
- */
-Logger &loggerObject = Logger::getInstance();
-#endif
 
 } // Logging
 } // BoBRobotics

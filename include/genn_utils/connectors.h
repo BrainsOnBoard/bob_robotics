@@ -1,7 +1,8 @@
 #pragma once
 
 // BoB robotics includes
-#include "../common/macros.h"
+#include "common/logging.h"
+#include "common/macros.h"
 
 // Standard C++ includes
 #include <algorithm>

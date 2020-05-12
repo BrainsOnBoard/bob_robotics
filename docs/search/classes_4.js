@@ -1,9 +1,12 @@
 var searchData=
 [
-  ['datafile_796',['DataFile',['../classDataFile.html',1,'']]],
-  ['decibel_5fscale_797',['decibel_scale',['../structunits_1_1decibel__scale.html',1,'units']]],
-  ['differentialdriveplugin_798',['DifferentialDrivePlugin',['../classgazebo_1_1DifferentialDrivePlugin.html',1,'gazebo']]],
-  ['display_799',['Display',['../classBoBRobotics_1_1Video_1_1Display.html',1,'BoBRobotics::Video']]],
-  ['double_5fquote_5fescape_800',['double_quote_escape',['../structio_1_1double__quote__escape.html',1,'io']]],
-  ['duplicated_5fcolumn_5fin_5fheader_801',['duplicated_column_in_header',['../structio_1_1error_1_1duplicated__column__in__header.html',1,'io::error']]]
+  ['datafile_1301',['DataFile',['../classDataFile.html',1,'']]],
+  ['dc_5fmotor_1302',['dc_motor',['../classev3dev_1_1dc__motor.html',1,'ev3dev']]],
+  ['debugoutputappender_1303',['DebugOutputAppender',['../classplog_1_1DebugOutputAppender.html',1,'plog']]],
+  ['decibel_5fscale_1304',['decibel_scale',['../structunits_1_1decibel__scale.html',1,'units']]],
+  ['device_1305',['device',['../classev3dev_1_1device.html',1,'ev3dev']]],
+  ['differentialdriveplugin_1306',['DifferentialDrivePlugin',['../classgazebo_1_1DifferentialDrivePlugin.html',1,'gazebo']]],
+  ['display_1307',['Display',['../classBoBRobotics_1_1Video_1_1Display.html',1,'BoBRobotics::Video']]],
+  ['double_5fquote_5fescape_1308',['double_quote_escape',['../structio_1_1double__quote__escape.html',1,'io']]],
+  ['duplicated_5fcolumn_5fin_5fheader_1309',['duplicated_column_in_header',['../structio_1_1error_1_1duplicated__column__in__header.html',1,'io::error']]]
 ];
