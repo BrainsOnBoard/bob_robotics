@@ -32,8 +32,7 @@
                 "BOB_PROJECT_GIT_COMMIT=\"abcdef\"",
                 "BOB_ROBOTICS_GIT_COMMIT=\"abcdef\""
             ],
-            "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "cppStandard": "c++14"
         }
     ],
     "version": 4
