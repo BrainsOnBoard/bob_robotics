@@ -9,6 +9,7 @@
 #include "common/logging.h"
 #include "navigation/differencers.h"
 #include "navigation/insilico_rotater.h"
+#include "os/keycodes.h"
 #include "net/client.h"
 #include "video/netsource.h"
 
@@ -133,7 +134,7 @@ private:
 
                 // Read input and update
                 const int key = cv::waitKey(20);
-                if(key == 27) {
+                if((key & OS::KeyMask) == OS::KeyCodes::Escape) {
                     return false;
                 }
             }
