@@ -1,3 +1,4 @@
+#ifndef __APPLE__ // Not working on OSX yet
 #include "os/windows_include.h"
 
 // BoB robotics includes
@@ -44,3 +45,4 @@ getResolution()
 } // Screen
 } // OS
 } // BoBRobotics
+#endif // !__APPLE__

@@ -1,6 +1,6 @@
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/path.h"
 #include "common/pose.h"
 #include "antworld/agent.h"
@@ -69,6 +69,15 @@ protected:
         cv::Mat frame(RenderSize, CV_8UC3);
 
         for (auto it = poses.cbegin(); m_Window.isOpen() && it < poses.cend(); ++it) {
+            // Process window events
+            sf::Event event;
+            while (m_Window.pollEvent(event)) {
+                // Close window: exit
+                if (event.type == sf::Event::Closed) {
+                    m_Window.close();
+                }
+            }
+            
             // Update agent's position
             m_Agent.setPosition(it->x(), it->y(), AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
@@ -151,8 +160,7 @@ private:
     AntWorld::RouteContinuous &m_Route;
 };
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
@@ -176,4 +184,6 @@ main(int argc, char **argv)
         GridDatabaseCreator creator(*window);
         creator.runForGrid();
     }
+
+    return EXIT_SUCCESS;
 }

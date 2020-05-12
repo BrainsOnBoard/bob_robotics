@@ -6,7 +6,7 @@
 
 // BoB robotics includes
 #include "common/fsm.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -69,8 +69,8 @@ public:
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             Net::Server server(config.getServerListenPort());
-            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
-            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getUnwrapRes(), "unwrapped");
+            m_Connection = server.waitForConnection();
+            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection, config.getUnwrapRes(), "unwrapped");
         }
 
         // If we should use Vicon tracking
@@ -329,7 +329,7 @@ private:
                 // If vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
                     // Get tracking data
-                    const auto objectData = m_ViconTracking.getObjectData(0);
+                    const auto objectData = m_ViconTracking.getObjectData();
                     const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                     const auto &position = pose.position();
                     const auto &attitude = pose.attitude();
@@ -476,7 +476,7 @@ private:
 };
 }   // Anonymous namespace
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
 

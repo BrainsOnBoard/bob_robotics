@@ -14,6 +14,9 @@
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
+// PLOG includes
+#include "plog/Log.h"
+
 // OpenGL includes
 #include <GL/glew.h>
 
@@ -43,7 +46,7 @@
 
 using namespace BoBRobotics;
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     // Default parameters"
     std::string worldFilename = "";

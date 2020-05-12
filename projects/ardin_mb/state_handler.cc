@@ -6,9 +6,11 @@
 // IMGUI
 #include "imgui.h"
 
+// PLOG includes
+#include "plog/Log.h"
+
 // BoBRobotics includes
 #include "common/path.h"
-#include "common/logging.h"
 #include "navigation/visual_navigation_base.h"
 
 // Antworld includes

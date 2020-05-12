@@ -5,8 +5,7 @@
 using namespace BoBRobotics::Navigation;
 using namespace BoBRobotics::Viz;
 
-int
-main()
+int bobMain(int, char **)
 {
     // Class to run perfect memory algorithm
     cv::Size imSize(180, 50);
@@ -22,4 +21,6 @@ main()
 
     // Plot RIDF
     plotRIDF(differences);
+
+    return EXIT_SUCCESS;
 }

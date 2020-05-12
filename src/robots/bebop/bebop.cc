@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "robots/bebop/bebop.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 
 using namespace units::angle;

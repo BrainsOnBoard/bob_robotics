@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
@@ -13,7 +13,7 @@ using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     UDPClient<> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");

@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "differencers.h"
 #include "ridf_processors.h"
 

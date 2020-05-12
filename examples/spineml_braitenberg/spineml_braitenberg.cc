@@ -1,12 +1,11 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/main.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"
 #include "robots/simulated_tank.h"
-#include "viz/sfml_world/arena_object.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/arena_object.h"
+#include "viz/sfml/sfml_world.h"
 
 // SpineML simulator includes
 #include "spineml/simulator/simulator.h"
@@ -26,7 +25,7 @@ using namespace units::length;
 using namespace units::math;
 using namespace units::literals;
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
     // The x and y dimensions of the robot
     // **THINK** if would be nice if this was part of a robot class?

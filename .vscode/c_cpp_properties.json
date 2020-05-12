@@ -20,6 +20,7 @@
                 "/usr/include/sdformat-6.2",
                 "/usr/include/sdformat-9.1",
                 "/usr/include/sdformat-9.2",
+                "/usr/include/SDL2",
                 "${GENN_PATH}/include"
             ],
             "defines": [

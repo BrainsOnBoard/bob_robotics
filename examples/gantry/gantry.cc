@@ -10,7 +10,7 @@
 #include "os/windows_include.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
@@ -21,8 +21,7 @@
 using namespace BoBRobotics;
 using namespace units::literals;
 
-int
-main()
+int bobMain(int, char **)
 {
     try {
         // Object to interface with gantry robot
@@ -54,4 +53,6 @@ main()
         LOGW << "Uncaught exception: " << e.what();
 		return 1;
     }
+
+    return EXIT_SUCCESS;
 }

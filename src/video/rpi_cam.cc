@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 // Extra POSIX includes
-#if defined(unix) || defined(__unix__) || defined(__unix)
+#ifndef _WIN32
 #include <fcntl.h>
 #endif
 

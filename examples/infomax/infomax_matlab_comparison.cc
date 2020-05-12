@@ -1,7 +1,7 @@
 #include "read_data.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
@@ -85,8 +85,7 @@ runTest(const filesystem::path &dataPath, int num)
               << matlabOutputWeightsMany - infomax.getWeights();
 }
 
-int
-main(int, char **argv)
+int bobMain(int, char **argv)
 {
     // Path where test *.bin files live
     const auto dataPath = filesystem::path(argv[0]).parent_path() / "test_data";

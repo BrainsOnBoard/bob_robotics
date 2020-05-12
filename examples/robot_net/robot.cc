@@ -9,8 +9,7 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/robot_type.h"
@@ -40,22 +39,22 @@ run(Video::Input &camera)
     auto connection = server.waitForConnection();
 
     // Stream camera synchronously over network
-    Video::NetSink netSink(connection, camera.getOutputSize(), camera.getCameraName());
+    Video::NetSink netSink(*connection, camera.getOutputSize(), camera.getCameraName());
 
     // Initialise robot
     Robots::ROBOT_TYPE tank;
 
     // Read motor commands from network
-    tank.readFromNetwork(connection);
+    tank.readFromNetwork(*connection);
 
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
-    connection.runInBackground();
+    connection->runInBackground();
 
     // Send frames over network
     cv::Mat frame;
-    while (connection.isOpen()) {
+    while (connection->isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 
@@ -68,8 +67,7 @@ run(Video::Input &camera)
     }
 }
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     try {
         /*

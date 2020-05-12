@@ -1,8 +1,7 @@
 // BoB robotics includes
 #include "robots/control/tank_pid.h"
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "vicon/udp.h"
@@ -57,8 +56,7 @@ printGoalStats(const Vector2<millimeter_t> &goal, const Pose3<millimeter_t, radi
          << goal.distance2D(robotPosition);
 }
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     // Parameters
     constexpr meter_t stoppingDistance = 3_cm; // if the robot's distance from goal < stopping dist, robot stops

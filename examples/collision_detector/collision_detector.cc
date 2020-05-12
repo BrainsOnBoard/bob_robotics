@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
@@ -8,8 +8,8 @@
 #include "robots/control/collision_detector.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
-#include "viz/sfml_world/arena_object.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/arena_object.h"
+#include "viz/sfml/sfml_world.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -52,8 +52,7 @@ private:
     sf::ConvexShape m_Shape;
 };
 
-int
-main()
+int bobMain(int, char **)
 {
     // The x and y dimensions of the robot
     using V = Vector2<meter_t>;
@@ -121,4 +120,6 @@ main()
         agent.setVertices(collisionDetector.getRobotVertices());
         display.update(objectShapes, agent);
     }
+
+    return EXIT_SUCCESS;
 }

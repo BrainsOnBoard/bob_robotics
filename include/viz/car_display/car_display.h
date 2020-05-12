@@ -7,7 +7,7 @@
 #include "third_party/units.h"
 
 // SDL
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 // Standard C++ includes
 #include <array>

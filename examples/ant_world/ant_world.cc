@@ -1,10 +1,11 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
+#include "common/path.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "hid/joystick_sfml_keyboard.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
+#include "viz/sfml/joystick_keyboard.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -30,15 +31,25 @@ using namespace units::time;
 // Anonymous namespace
 namespace
 {
-void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message,
+void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message,
                    const void *)
 {
-    throw std::runtime_error(message);
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        LOGE << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        LOGW << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_LOW) {
+        LOGI << message;
+    } 
+    else {
+        LOGD << message;
+    }
+}
 }
 
-}
-
-int main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     const auto turnSpeed = 200_deg_per_s;
     const auto moveSpeed = 3_mps;
@@ -90,13 +101,13 @@ int main(int argc, char **argv)
                                     4096,
                                     GL_COMPRESSED_RGB);
     } else {
-        renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+        renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                                  { 0.0f, 1.0f, 0.0f },
                                  { 0.898f, 0.718f, 0.353f });
     }
 
     // Create HID device for controlling movement
-    auto joystick = HID::JoystickSFMLKeyboard::createJoystick(window);
+    auto joystick = Viz::JoystickKeyboard::createJoystick(window);
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();
@@ -111,6 +122,15 @@ int main(int argc, char **argv)
     Stopwatch moveTimer;
     moveTimer.start();
     while (window.isOpen()) {
+        // Poll events
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            // Close window: exit
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
+
         // Poll joystick
         joystick->update();
 

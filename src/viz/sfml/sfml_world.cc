@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/path.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/sfml_world.h"
 
 // SFML
 #include <SFML/Graphics.hpp>

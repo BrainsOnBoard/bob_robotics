@@ -4,7 +4,7 @@
 
 using namespace BoBRobotics;
 
-int main()
+int bobMain(int, char **)
 {
     constexpr float joystickDeadzone = 0.25f;
 

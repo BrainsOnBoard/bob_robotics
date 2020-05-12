@@ -15,7 +15,7 @@
 #include "sharedLibraryModel.h"
 
 // Common includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/von_mises_distribution.h"
 
 // Model includes
@@ -26,7 +26,7 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
 
-int main()
+int bobMain(int, char **)
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;

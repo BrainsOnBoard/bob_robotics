@@ -1,1 +1,5 @@
-BoB_find_package(OpenCV REQUIRED)
+if(APPLE)
+    BoB_add_pkg_config_libraries(opencv4)
+else()
+    BoB_find_package(OpenCV REQUIRED)
+endif()

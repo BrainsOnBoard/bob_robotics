@@ -2,14 +2,12 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/main.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "robots/tank_netsink.h"
 #include "vicon/udp.h"
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     HID::Joystick joystick;
 

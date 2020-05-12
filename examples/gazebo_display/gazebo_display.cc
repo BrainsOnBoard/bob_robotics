@@ -4,11 +4,11 @@
 
 using namespace BoBRobotics;
 
-int
-main()
+int bobMain(int, char **)
 {
     //Initialize Gazebo camera display
     Robots::Gazebo::Camera cam;
     Video::Display display(cam);
     display.run();
+    return EXIT_SUCCESS;
 }

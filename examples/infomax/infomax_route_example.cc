@@ -1,7 +1,7 @@
 #include "read_data.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/timer.h"
 #include "navigation/image_database.h"
 #include "navigation/infomax.h"
@@ -67,8 +67,7 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
     plt::show();
 }
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     if (argc < 2) {
         LOGE << "Must specify a route, e.g.:"

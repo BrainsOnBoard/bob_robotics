@@ -2,7 +2,6 @@
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
@@ -63,7 +62,7 @@ public:
     PositionerExample()
       : m_Tank(m_Client)
       , m_Vicon(51001)
-      , m_ViconObject(m_Vicon.getObjectReference(0))
+      , m_ViconObject(m_Vicon.getObjectReference())
       , m_Positioner(m_Tank,
                      m_ViconObject,
                      StoppingDistance,
@@ -223,11 +222,8 @@ private:
     }
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
-
-
     PositionerExample example;
     example.run();
 

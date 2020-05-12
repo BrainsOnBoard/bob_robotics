@@ -1,4 +1,4 @@
-// GeNN includes
+  // GeNN includes
 #include "modelSpec.h"
 
 // BoB robotics includes
@@ -8,7 +8,6 @@
 // Model includes
 #include "mb_params_ardin.h"
 
-using namespace BoBRobotics;
 
 //---------------------------------------------------------------------------
 // Standard LIF model extended to take an additional
@@ -56,6 +55,7 @@ IMPLEMENT_MODEL(LIFExtCurrent);
 
 void modelDefinition(NNmodel &model)
 {
+    using namespace BoBRobotics;
     model.setDT(MBParamsArdin::timestepMs);
     model.setName("mb_memory_ardin");
 

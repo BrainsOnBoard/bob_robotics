@@ -4,7 +4,7 @@
 // Standard C++ includes
 #include <iostream>
 
-int main()
+int bobMain(int, char **)
 {
     BoBRobotics::Robots::Bebop drone;
 
@@ -15,4 +15,6 @@ int main()
     std::cout << "Doing flat trim calibration of IMUs..." << std::endl;
     drone.doFlatTrimCalibration();
     std::cout << "Calibration complete." << std::endl;
+
+    return EXIT_SUCCESS;
 }

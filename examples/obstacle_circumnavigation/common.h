@@ -6,8 +6,8 @@
 #include "robots/control/collision_detector.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/tank.h"
-#include "viz/sfml_world/arena_object.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/arena_object.h"
+#include "viz/sfml/sfml_world.h"
 
 // Eigen
 #include <Eigen/Core>

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 
 // Standard C++ includes
@@ -8,8 +8,7 @@
 
 using namespace BoBRobotics::HID;
 
-int
-main()
+int bobMain(int, char **)
 {
     Joystick js;
     for (int i = 1; !js.isDown(JButton::B); i++) {
@@ -29,4 +28,6 @@ main()
         // wait
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    return EXIT_SUCCESS;
 }

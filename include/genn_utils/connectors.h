@@ -129,12 +129,13 @@ inline unsigned int binomialInverseCDF(double cdf, unsigned int n, double p)
     throw std::runtime_error("Invalid CDF parameterse");
 }
 //----------------------------------------------------------------------------
-inline void sortRows(unsigned int numPre, unsigned int *rowLength, unsigned int *ind, unsigned int maxRowLength)
+template<typename IndexType>
+void sortRows(unsigned int numPre, unsigned int *rowLength, IndexType *ind, unsigned int maxRowLength)
 {
     // Loop through rows and sort indices
     for(unsigned int i = 0; i < numPre; i++) {
-        unsigned int *indexStart = &ind[i * maxRowLength];
-        unsigned int *indexEnd = indexStart + rowLength[i];
+        IndexType *indexStart = &ind[i * maxRowLength];
+        IndexType *indexEnd = indexStart + rowLength[i];
 
         std::sort(indexStart, indexEnd);
     }
@@ -189,7 +190,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
             const unsigned int i = preIndices[dis(gen)];
 
             // Add synapse
-            ind[(i * maxRowLength) + rowLength[i]++] = j;
+            ind[(i * maxRowLength) + rowLength[i]++] = (IndexType)j;
 
             // Swap the last available preindex with the one we have now used
             std::swap(preIndices[i], preIndices[numPre - c]);
@@ -200,7 +201,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     sortRows(numPre, rowLength, ind, maxRowLength);
 }
 //----------------------------------------------------------------------------
-unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+inline unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
     const double quantile = pow(0.9999, 1.0 / (double)numPre);

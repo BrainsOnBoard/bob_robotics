@@ -1,6 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "robots/bebop/bebop.h"
 #include "video/display.h"
@@ -46,8 +45,7 @@ printSpeedLimits(Bebop &drone)
               << vertSpeedLimits.second << ")";
 }
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     /*
      * Connects to the drone.

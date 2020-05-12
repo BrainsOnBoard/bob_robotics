@@ -1,4 +1,5 @@
 #include "antworld/route_ardin.h"
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <fstream>

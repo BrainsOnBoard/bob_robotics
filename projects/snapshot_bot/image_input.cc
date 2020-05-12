@@ -2,7 +2,7 @@
 #include "image_input.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Snapshot bot includes
 #include "config.h"

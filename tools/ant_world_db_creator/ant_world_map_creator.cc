@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/path.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
@@ -18,14 +18,25 @@
 using namespace BoBRobotics;
 
 namespace {
-void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message, const void *)
 {
-    throw std::runtime_error(message);
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        LOGE << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        LOGW << message;
+    } 
+    else if (severity == GL_DEBUG_SEVERITY_LOW) {
+        LOGI << message;
+    } 
+    else {
+        LOGD << message;
+    }   
 }
 }
 
 
-int main()
+int bobMain(int, char **)
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;

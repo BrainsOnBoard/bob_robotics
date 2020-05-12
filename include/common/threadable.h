@@ -34,11 +34,6 @@ public:
     //! Stop the background thread
     virtual void stop();
 
-    Threadable(const Threadable &old) = delete;
-    void operator=(const Threadable &old) = delete;
-    Threadable(Threadable &&old);
-    Threadable &operator=(Threadable &&old) = default;
-
 private:
     std::thread m_Thread;
     std::atomic<bool> m_DoRun;

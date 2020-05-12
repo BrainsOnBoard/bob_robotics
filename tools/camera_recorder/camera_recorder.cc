@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "robots/robot_type.h"
@@ -17,7 +17,7 @@ using namespace BoBRobotics::Robots;
 using namespace BoBRobotics::Video;
 using namespace std::literals;
 
-int main()
+int bobMain(int, char **)
 {
     constexpr unsigned int recordingInterval = 10;
     constexpr float joystickDeadzone = 0.25f;

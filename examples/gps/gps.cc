@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/gps.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/map_coordinate.h"
 
 // Standard C++ includes
@@ -8,7 +8,7 @@
 #include <vector>
 #include <thread>
 
-int main()
+int bobMain(int, char **)
 {
     const char *path_linux = "/dev/ttyACM0";       // path for linux systems
    // const char *path_mac = "/dev/cu.usbmodem141401"; // the path for mac is often different!
@@ -57,5 +57,4 @@ int main()
 
 
     return 0;
-
 }

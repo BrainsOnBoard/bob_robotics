@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/main.h"
 #include "net/server.h"
 #ifdef NO_I2C
 #include "robots/tank.h"
@@ -17,8 +16,7 @@
 using namespace std::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // Listen for incoming connection on default port
     Net::Server server;
@@ -33,10 +31,10 @@ bob_main(int, char **)
 #endif
 
     // Read motor commands from network
-    robot.readFromNetwork(connection);
+    robot.readFromNetwork(*connection);
 
     // Run server
-    connection.run();
+    connection->run();
 
     return EXIT_SUCCESS;
 }

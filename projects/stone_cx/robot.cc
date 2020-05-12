@@ -2,8 +2,7 @@
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
 #include "common/lm9ds1_imu.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/imu_netsource.h"
@@ -71,7 +70,7 @@ public:
 class SpeedSource
 {
 public:
-    virtual std::array<float, 2> getSpeed() = 0; 
+    virtual std::array<float, 2> getSpeed() = 0;
 };
 
 //---------------------------------------------------------------------------
@@ -110,7 +109,7 @@ public:
         // Calculate heading angle from magneto data and set atomic value
         return radian_t(std::atan2(magnetoData[0], magnetoData[2]));
     }
- 
+
 private:
     //------------------------------------------------------------------------
     // Members
@@ -221,7 +220,7 @@ private:
 class SpeedSourceOmni2DDeadReckon : public SpeedSource
 {
 public:
-    SpeedSourceOmni2DDeadReckon(const Robots::Omni2D &omni, 
+    SpeedSourceOmni2DDeadReckon(const Robots::Omni2D &omni,
                                  const std::array<radian_t, 2> &preferredAngleTN2 = {45_deg, -45_deg},
                                  float velocityScale = 1.0f)
     :   m_Omni(omni), m_PreferredAngleTN2(preferredAngleTN2), m_VelocityScale(velocityScale)
@@ -325,7 +324,7 @@ public:
     :   m_Omni(omni)
     {
     }
-    
+
     virtual void drive(float left, float right, bool log) override
     {
         const float length = (left * left) + (right * right);
@@ -342,7 +341,7 @@ public:
 
         m_Omni.omni2D(forward * 0.5f, 0.0f, steering * 8.0f);
     }
-    
+
 private:
     Robots::Omni2D &m_Omni;
 };
@@ -379,7 +378,7 @@ void readHeadingThreadFunc(HeadingSource *headingSource,
 }
 }   // Anonymous namespace
 
-int bob_main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     // Simulation rendering parameters
     constexpr unsigned int activityImageWidth = 500;
@@ -391,7 +390,7 @@ int bob_main(int argc, char *argv[])
 
     std::unique_ptr<SpeedSource> speedSource = createSpeedSource(motor);
     std::unique_ptr<MotorController> motorController = createMotorController(motor);
-    
+
 #ifdef ROBOT_TYPE_EV3
     std::unique_ptr<HeadingSource> headingSource = std::make_unique<HeadingSourceEV3IMU>(motor.getConnection());
 #else
@@ -406,7 +405,7 @@ int bob_main(int argc, char *argv[])
 
         // Create server and sink for sending activity image over network
         server = std::make_unique<Net::Server>();
-        connection = std::make_unique<Net::Connection>(server->waitForConnection());
+        connection = server->waitForConnection();
         netSink = std::make_unique<Video::NetSink>(*connection,
                                                    cv::Size(activityImageWidth, activityImageHeight),
                                                    "activity");

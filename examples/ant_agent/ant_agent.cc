@@ -1,7 +1,6 @@
 // BoB robotics includes
 #include "antworld/agent.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 
@@ -21,8 +20,7 @@ using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int
-bob_main(int, char **argv)
+int bobMain(int, char **argv)
 {
     const cv::Size RenderSize{ 720, 150 };
     const meter_t AntHeight = 1_cm;

@@ -87,12 +87,14 @@ macro(BoB_project)
     endif()
 
     # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
-    # or CMake param (defaults to Norbot)
+    # or CMake param
     if(NOT ROBOT_TYPE)
         if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
             set(ROBOT_TYPE $ENV{ROBOT_TYPE})
-        else()
+        elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
             set(ROBOT_TYPE Norbot)
+        else()
+            set(ROBOT_TYPE Tank)
         endif()
     endif()
     message("Default robot type (if used): ${ROBOT_TYPE}")
@@ -113,13 +115,16 @@ macro(BoB_project)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
 
+    # We always need the common module so that main() is defined
+    list(APPEND PARSED_ARGS_BOB_MODULES common)
+
     # Do linking etc.
     BoB_build()
 
     # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
     # Ubuntu (and presumably when linking against other libs in non-standard
     # locations too). This linker flag fixes the problem.
-    if(UNIX)
+    if(UNIX AND NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
     endif()
 
@@ -339,10 +344,6 @@ macro(BoB_build)
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-
-        # If we don't do this, I get linker errors on the BrickPi for the net
-        # module
-        set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
     # If C++ standard has not been specified explicitly either with a command
@@ -417,6 +418,14 @@ macro(BoB_build)
     # Link all targets against the libraries
     foreach(target IN LISTS BOB_TARGETS)
         target_link_libraries(${target} ${${PROJECT_NAME}_LIBRARIES})
+
+        # Older versions of CMake don't have target_link_directories(), but
+        # hopefully we can get away without using it in this case (because we'll
+        # probably only find this on Linux machines which don't care about
+        # linking directories anyway)
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+            target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
+        endif()
     endforeach()
 endmacro()
 
@@ -475,6 +484,15 @@ macro(BoB_add_link_libraries)
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 endmacro()
 
+macro(BoB_add_link_directories)
+    if(${CMAKE_VERSION} VERSION_LESS "3.13.0")
+        link_directories(${ARGV})
+    else()
+        set(${PROJECT_NAME}_LIB_DIRS "${${PROJECT_NAME}_LIB_DIRS};${ARGV}"
+            CACHE INTERNAL "${PROJECT_NAME}: Library directories" FORCE)
+    endif()
+endmacro()
+
 function(BoB_deprecated WHAT ALTERNATIVE)
     message(WARNING "!!!!! WARNING: Use of ${WHAT} in BoB robotics code is deprecated and will be removed in future. Use ${ALTERNATIVE} instead. !!!!!")
 endfunction()
@@ -520,6 +538,7 @@ function(BoB_find_package)
     find_package(${ARGV})
     BoB_add_include_directories(${${ARGV0}_INCLUDE_DIRS})
     BoB_add_link_libraries(${${ARGV0}_LIBS} ${${ARGV0}_LIBRARIES})
+    BoB_add_link_directories(${${ARGV0}_LIB_DIR})
 endfunction()
 
 function(BoB_add_pkg_config_libraries)
@@ -527,7 +546,9 @@ function(BoB_add_pkg_config_libraries)
     foreach(lib IN LISTS ARGV)
         pkg_check_modules(${lib} REQUIRED ${lib})
         BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
+        BoB_add_link_directories(${${lib}_LIBRARY_DIRS})
         BoB_add_link_libraries(${${lib}_LIBRARIES})
+        add_compile_flags(${${lib}_CFLAGS} ${${lib}_LDFLAGS})
     endforeach()
 endfunction()
 
