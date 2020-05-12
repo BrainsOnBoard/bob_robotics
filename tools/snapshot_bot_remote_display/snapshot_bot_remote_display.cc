@@ -304,7 +304,7 @@ private:
             }
         }
         else {
-            LOGE << "Invalid state";
+            throw std::runtime_error("Invalid state");
             return false;
         }
 
@@ -323,7 +323,7 @@ private:
             m_SnapshotBotState = State::Testing;
         }
         else {
-            LOGE << "Unknown snapshot bot state '" << command[1] << "'";
+            throw std::runtime_error("Unknown snapshot bot state '" + command[1] + "'");
         }
     }
 
