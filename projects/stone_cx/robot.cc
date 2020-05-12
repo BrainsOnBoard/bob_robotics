@@ -20,8 +20,9 @@
 
 #include <opencv2/opencv.hpp>
 
-// GeNN generated code includes
-#include "stone_cx_CODE/definitions.h"
+// GeNN user project includes
+#include "analogueRecorder.h"
+#include "sharedLibraryModel.h"
 
 // Model includes
 #include "parameters.h"
@@ -420,10 +421,10 @@ int bob_main(int argc, char *argv[])
     // Create joystick interface
     Joystick joystick;
 
-    // Initialise GeNN
-    allocateMem();
-    initialize();
-    initializeSparse();
+    SharedLibraryModel<float> slm("", "stone_cx");
+    slm.allocateMem();
+    slm.initialize();
+    slm.initializeSparse();
 
     // Atomic flag for quitting child threads
     std::atomic<bool> shouldQuit{false};
@@ -443,6 +444,18 @@ int bob_main(int argc, char *argv[])
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
+
+    // Get pointers to model variables
+    float *headingAngleTL = slm.getScalar<float>("headingAngleTL");
+    float *speedTN2 = slm.getArray<float>("speedTN2");
+    float *rTL = slm.getArray<float>("rTL");
+    float *rCL1 = slm.getArray<float>("rCL1");
+    float *rTB1 = slm.getArray<float>("rTB1");
+    float *rTN2 = slm.getArray<float>("rTN2");
+    float *iCPU4 = slm.getArray<float>("iCPU4");
+    float *rCPU4 = slm.getArray<float>("rCPU4");
+    float *rPontine = slm.getArray<float>("rPontine");
+    float *rCPU1 = slm.getArray<float>("rCPU1");
 
     // Loop until second joystick button is pressed
     bool outbound = true;
@@ -465,9 +478,9 @@ int bob_main(int argc, char *argv[])
         }
 
         // Update heading from IMU
-        headingAngleTL = heading;
-        if(headingAngleTL < 0.0) {
-            headingAngleTL = (2.0 * Parameters::pi) + headingAngleTL;
+        *headingAngleTL = heading;
+        if(*headingAngleTL < 0.0) {
+            *headingAngleTL = (2.0 * Parameters::pi) + *headingAngleTL;
         }
 
         // Calculate dead reckoning speed from motor
@@ -476,29 +489,29 @@ int bob_main(int argc, char *argv[])
         speedTN2[Parameters::HemisphereRight] = speed[1];
 
         // Push inputs to device
-        pushspeedTN2ToDevice();
+        slm.pushVarToDevice("TN2", "speed");
 
 #ifdef RECORD_SENSORS
         data << heading << ", " << speed;
 #endif
         // Step network
-        stepTime();
+        slm.stepTime();
 
         // Pull outputs from device
-        pullrCPU4FromDevice();
-        pullrCPU1FromDevice();
+        slm.pullVarFromDevice("CPU4", "r");
+        slm.pullVarFromDevice("CPU1", "r");
 
         // If we should be streaming activity
         if(doVisualise) {
             // Pull additional outputs from device
-            pullrTLFromDevice();
-            pullrTN2FromDevice();
-            pullrCL1FromDevice();
-            pullrTB1FromDevice();
-            pullrPontineFromDevice();
+            slm.pullVarFromDevice("TL", "r");
+            slm.pullVarFromDevice("TN2", "r");
+            slm.pullVarFromDevice("CL1", "r");
+            slm.pullVarFromDevice("TB1", "r");
+            slm.pullVarFromDevice("Pontine", "r");
 
             // Render network activity
-            visualize(activityImage);
+            visualize(activityImage, rTL, rCL1, rTB1, rTN2, rCPU4, rPontine, rCPU1);
 
 #ifdef ROBOT_TYPE_EV3
             cv::imshow("activity", activityImage);
