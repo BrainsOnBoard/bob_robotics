@@ -99,8 +99,6 @@ bool StateHandler::handleEvent(State state, Event event)
         if(m_KeyBits.test(KeyBuildVectorField)) {
             m_StateMachine.transition(State::BuildingVectorField);
         }
-
-        cv::waitKey(1);
     }
 
     // If we're in training state
