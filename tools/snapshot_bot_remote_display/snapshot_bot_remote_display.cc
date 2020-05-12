@@ -236,8 +236,9 @@ private:
                              });
 
                     // Get range of
-                    const float minRIDF = *std::min_element(m_RIDF.cbegin(), m_RIDF.cend());
-                    const float maxRIDF = *std::max_element(m_RIDF.cbegin(), m_RIDF.cend());
+                    const auto minMaxRIDF = std::minmax_element(m_RIDF.cbegin(), m_RIDF.cend());
+                    const float minRIDF = *minMaxRIDF.first;
+                    const float maxRIDF = *minMaxRIDF.second;
 
                     // Get RIDF axis rect and calculate scale factors
                     const auto &ridfAxisRect = m_Config.getTestingRIDFAxisRect();
