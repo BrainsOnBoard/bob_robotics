@@ -22,8 +22,9 @@ class Config
 
 public:
     Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
-        m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
-        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_MoveSpeed(0.25),
+        m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
+        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), 
+        m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1), m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25),
         m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
         m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
     {
@@ -46,7 +47,7 @@ public:
     const std::string &getTestingSuffix() const{ return m_TestingSuffix; }
 
     const cv::Size &getUnwrapRes() const{ return m_UnwrapRes; }
-
+    const cv::Rect &getCroppedRect() const{ return m_CroppedRect; }
 
     const std::string &getMaskImageFilename() const{ return m_MaskImageFilename; }
     const std::string &getWatershedMarkerImageFilename() const{ return m_WatershedMarkerImageFilename; }
@@ -73,7 +74,9 @@ public:
     const std::string &getViconCaptureControlPath() const{ return m_ViconCaptureControlPath; }
 
     int getServerListenPort() const{ return m_ServerListenPort; }
-
+    int getSnapshotServerListenPort() const{ return m_SnapshotServerListenPort; }
+    int getBestSnapshotServerListenPort() const{ return m_BestSnapshotServerListenPort; }
+    
     float getMoveSpeed() const{ return m_MoveSpeed; }
 
     float getTurnSpeed(units::angle::degree_t angleDifference) const
@@ -107,6 +110,7 @@ public:
         fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
         fs << "unwrapRes" << getUnwrapRes();
+        fs << "croppedRect" << getCroppedRect();
         fs << "maskImageFilename" << getMaskImageFilename();
         fs << "watershedMarkerImageFilename" << getWatershedMarkerImageFilename();
         fs << "numHOGOrientations" << getNumHOGOrientations();
@@ -117,6 +121,8 @@ public:
         fs << "motorCommandInterval" << getMotorCommandInterval().count();
         fs << "motorTurnCommandInterval" << getMotorTurnCommandInterval().count();
         fs << "serverListenPort" << getServerListenPort();
+        fs << "snapshotServerListenPort" << getSnapshotServerListenPort();
+        fs << "bestSnapshotServerListenPort" << getBestSnapshotServerListenPort();
         fs << "moveSpeed" << getMoveSpeed();
         fs << "turnThresholds" << "[";
         for(const auto &t : m_TurnThresholds) {
@@ -168,6 +174,7 @@ public:
 
         cv::read(node["maxSnapshotRotateDegrees"], m_MaxSnapshotRotateDegrees, m_MaxSnapshotRotateDegrees);
         cv::read(node["unwrapRes"], m_UnwrapRes, m_UnwrapRes);
+        cv::read(node["croppedRect"], m_CroppedRect, m_CroppedRect);
 
         cv::String maskImageFilename;
         cv::read(node["maskImageFilename"], maskImageFilename, m_MaskImageFilename);
@@ -181,6 +188,8 @@ public:
         cv::read(node["numHOGPixelsPerCell"], m_NumHOGPixelsPerCell, m_NumHOGPixelsPerCell);
         cv::read(node["joystickDeadzone"], m_JoystickDeadzone, m_JoystickDeadzone);
         cv::read(node["serverListenPort"], m_ServerListenPort, m_ServerListenPort);
+        cv::read(node["snapshotServerListenPort"], m_SnapshotServerListenPort, m_SnapshotServerListenPort);
+        cv::read(node["bestSnapshotServerListenPort"], m_BestSnapshotServerListenPort, m_BestSnapshotServerListenPort);
         cv::read(node["autoTrain"], m_AutoTrain, m_AutoTrain);
         cv::read(node["moveSpeed"], m_MoveSpeed, m_MoveSpeed);
 
@@ -266,6 +275,9 @@ private:
     // What resolution to unwrap panoramas to?
     cv::Size m_UnwrapRes;
 
+    // Rectangle to crop unwrapped image into 
+    cv::Rect m_CroppedRect;
+
     // Filename of mask used to crop out unwanted bits of robot
     std::string m_MaskImageFilename;
 
@@ -289,6 +301,8 @@ private:
 
     // Listen port used for streaming etc
     int m_ServerListenPort;
+    int m_SnapshotServerListenPort;
+    int m_BestSnapshotServerListenPort;
 
     // How fast robot should move when heading to snapshot
     float m_MoveSpeed;

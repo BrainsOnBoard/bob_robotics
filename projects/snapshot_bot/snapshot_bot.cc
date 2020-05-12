@@ -1,10 +1,12 @@
 // Standard C++ includes
 #include <chrono>
 #include <fstream>
+#include <future>
 #include <limits>
 #include <memory>
 
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "common/fsm.h"
 #include "common/logging.h"
 #include "common/stopwatch.h"
@@ -44,7 +46,10 @@ enum class State
     Training,
     WaitToTest,
     Testing,
-    Driving,
+    DrivingForward,
+    Turning,
+    PausedDrivingForward,
+    PausedTurning,
 };
 
 //------------------------------------------------------------------------
@@ -58,8 +63,8 @@ class RobotFSM : FSM<State>::StateHandler
 public:
     RobotFSM(const Config &config)
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(Video::getPanoramicCamera(cv::CAP_V4L)),
-        m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3),
-        m_DifferenceImage(config.getUnwrapRes(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
+        m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3), m_Cropped(config.getCroppedRect().size(), CV_8UC3),
+        m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
         m_Robot(), m_NumSnapshots(0)
     {
@@ -68,9 +73,42 @@ public:
 
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
-            Net::Server server(config.getServerListenPort());
-            m_Connection = std::make_unique<Net::Connection>(server.waitForConnection());
-            m_NetSink = std::make_unique<Video::NetSink>(*m_Connection.get(), config.getUnwrapRes(), "unwrapped");
+            // Spawn async tasks to wait for connections
+            auto liveAsync = std::async(std::launch::async,
+                                        [this]()
+                                        {
+                                            Net::Server server(m_Config.getServerListenPort());
+                                            m_LiveConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                        });
+            
+            auto snapshotAsync = std::async(std::launch::async,
+                                            [this]()
+                                            {
+                                                Net::Server server(m_Config.getSnapshotServerListenPort());
+                                                m_SnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                            });
+            
+            auto bestSnapshotAsync = std::async(std::launch::async,
+                                                [this]()
+                                                {
+                                                    Net::Server server(m_Config.getBestSnapshotServerListenPort());
+                                                    m_BestSnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                                });
+            
+            // Wait for all connections to be established
+            liveAsync.wait();
+            snapshotAsync.wait();
+            bestSnapshotAsync.wait();
+            
+            // Create netsinks
+            m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection, config.getCroppedRect().size(), "live");
+            m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
+            m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
+            
+            // Start background threads for transmitting images
+            m_LiveConnection->runInBackground();
+            m_SnapshotConnection->runInBackground();
+            m_BestSnapshotConnection->runInBackground();
         }
 
         // If we should use Vicon tracking
@@ -161,8 +199,8 @@ private:
                 return false;
             }
 
-            if(state != State::Testing) {
-                 // Drive motors using joystick
+            // If we're in a suitable state, drive motors using joystick
+            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {                 
                 m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
             }
 
@@ -174,6 +212,14 @@ private:
             // Unwrap frame
             m_Unwrapper.unwrap(m_Output, m_Unwrapped);
 
+            // Crop frame
+            m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
+            
+            // If we should stream output, send unwrapped frame
+            if(m_Config.shouldStreamOutput()) {
+                m_LiveNetSink->sendFrame(m_Cropped);
+            }
+            
             cv::waitKey(1);
         }
 
@@ -195,6 +241,11 @@ private:
                 cv::FileStorage settingsFile((m_Config.getOutputPath() / "training_settings.yaml").str(), cv::FileStorage::WRITE);
                 settingsFile << "unwrapper" << m_Unwrapper;
 
+                // If we should stream, send state update
+                if(m_Config.shouldStreamOutput()) {
+                    m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TRAINING\n");
+                }
+                
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
                     m_LogFile.close();
@@ -221,27 +272,28 @@ private:
                 system(("rm -f " + snapshotWildcard).c_str());
             }
             else if(event == Event::Update) {
-                // While testing, if we should stream output, send unwrapped frame
-                if(m_Config.shouldStreamOutput()) {
-                    m_NetSink->sendFrame(m_Unwrapped);
-                }
-
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && m_TrainingStopwatch.elapsed() > m_Config.getTrainInterval())) {
                     // Update last train time
                     m_TrainingStopwatch.start();
 
                     // Train memory
-                    LOGI << "\tTrained snapshot" ;
-                    m_Memory->train(m_ImageInput->processSnapshot(m_Unwrapped));
+                    LOGI << "\tTrained snapshot";
+                    const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
+                    m_Memory->train(processedSnapshot);
 
                     // Write raw snapshot to disk
                     const std::string filename = getSnapshotPath(m_NumSnapshots++).str();
-                    cv::imwrite(filename, m_Unwrapped);
+                    cv::imwrite(filename, m_Cropped);
 
                     // Write time
                     m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", " << filename;
 
+                    // If we should stream output, send snapshot
+                    if(m_Config.shouldStreamOutput()) {
+                        m_SnapshotNetSink->sendFrame(processedSnapshot);
+                    }
+                    
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
@@ -283,6 +335,11 @@ private:
                 cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
                 settingsFile << "unwrapper" << m_Unwrapper;
 
+                // If we should stream, send state update
+                if(m_Config.shouldStreamOutput()) {
+                    m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TESTING\n");
+                }
+                
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
                     m_LogFile.close();
@@ -318,7 +375,8 @@ private:
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
-                m_Memory->test(m_ImageInput->processSnapshot(m_Unwrapped));
+                const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped); 
+                m_Memory->test(processedSnapshot);
 
                 // Write time
                 m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
@@ -344,65 +402,81 @@ private:
                     m_LogFile << ", " << filename;
                     // Build path to test image and save
                     const auto testImagePath = m_Config.getOutputPath() / filename;
-                    cv::imwrite(testImagePath.str(), m_Unwrapped);
+                    cv::imwrite(testImagePath.str(), m_Cropped);
                 }
 
                 m_LogFile << std::endl;
 
                 // If we should stream output
                 if(m_Config.shouldStreamOutput()) {
+                    // Send out snapshot
+                    m_SnapshotNetSink->sendFrame(processedSnapshot);
+                    
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
                     if(perfectMemory != nullptr) {
-                        // Get matched snapshot
-                        const cv::Mat &matchedSnapshot = perfectMemory->getBestSnapshot();
-
-                        // Calculate difference image
-                        cv::absdiff(matchedSnapshot, m_Unwrapped, m_DifferenceImage);
-
-                        char status[255];
-                        sprintf(status, "Angle:%f deg, Min difference:%f", degree_t(perfectMemory->getBestHeading()).value(), perfectMemory->getLowestDifference());
-                        cv::putText(m_DifferenceImage, status, cv::Point(0, m_Config.getUnwrapRes().height -20),
-                                    cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, 0xFF);
-
-                        // Send annotated difference image
-                        m_NetSink->sendFrame(m_DifferenceImage);
+                        // Send best snapshot
+                        m_BestSnapshotNetSink->sendFrame(perfectMemory->getBestSnapshot());
                     }
                     else {
                         LOGW << "WARNING: Can only stream output from a perfect memory";
                     }
                 }
 
-                // Determine how fast we should turn based on the absolute angle
-                auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
-
-                // If we should turn, do so
-                if(turnSpeed > 0.0f) {
-                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
-                    m_Robot.turnOnTheSpot(motorTurn);
+                // If we should turn, set timer and transition to turning state
+                if(m_Config.getTurnSpeed(m_Memory->getBestHeading()) > 0.0f) {
                     m_DriveTime = m_Config.getMotorTurnCommandInterval();
+                    m_StateMachine.transition(State::Turning);
                 }
-                // Otherwise drive forwards
+                // Otherwise, set timer and transition to driving forward state
                 else {
-                    m_Robot.moveForward(m_Config.getMoveSpeed());
                     m_DriveTime = m_Config.getMotorCommandInterval();
+                    m_StateMachine.transition(State::DrivingForward);
                 }
 
-                // Transition to driving state
-                m_StateMachine.transition(State::Driving);
+               
             }
         }
-        else if(state == State::Driving) {
+        else if(state == State::DrivingForward || state == State::Turning) {
             if(event == Event::Enter) {
+                // If we're driving forward, do so
+                if(state == State::DrivingForward) {
+                    m_Robot.moveForward(m_Config.getMoveSpeed());
+                }
+                // Otherwisem start turning
+                else {
+                    const float turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
+                    m_Robot.turnOnTheSpot(motorTurn);
+                }
+                
+                // Start timer
                 m_MoveStopwatch.start();
             }
             else if(event == Event::Update) {
-                if(m_MoveStopwatch.elapsed() > m_DriveTime) {
+                // If A is pressed
+                if(m_Joystick.isPressed(HID::JButton::A)) {
+                    // Subtract time we've already moved for from drive time
+                    m_DriveTime -= m_MoveStopwatch.elapsed();
+                    
+                    // Transition to correct paused state
+                    m_StateMachine.transition((state == State::DrivingForward) ? State::PausedDrivingForward : State::PausedTurning);
+                }
+                // Otherwise, if drive time has passed
+                else if(m_MoveStopwatch.elapsed() > m_DriveTime) {
                     m_StateMachine.transition(State::Testing);
                 }
             }
             else if(event == Event::Exit) {
                 m_Robot.stopMoving();
+            }
+        }
+        else if(state == State::PausedDrivingForward || state == State::PausedTurning) {
+            if(event == Event::Update) {
+                // If A is pressed, transition back to correct movement state
+                if(m_Joystick.isPressed(HID::JButton::A)) {
+                    m_StateMachine.transition((state == State::PausedDrivingForward) ? State::DrivingForward : State::Turning);
+                }
             }
         }
         else {
@@ -430,6 +504,7 @@ private:
     // OpenCV images used to store raw camera frame and unwrapped panorama
     cv::Mat m_Output;
     cv::Mat m_Unwrapped;
+    cv::Mat m_Cropped;
     cv::Mat m_DifferenceImage;
 
     // OpenCV-based panorama unwrapper
@@ -465,14 +540,21 @@ private:
 
     Milliseconds m_DriveTime;
 
+    // Is testing paused
+    bool m_TestingPaused;
+    
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
-    // Connection for streaming etc
-    std::unique_ptr<Net::Connection> m_Connection;
+    // Connections for streaming live images
+    std::unique_ptr<Net::Connection> m_LiveConnection;
+    std::unique_ptr<Net::Connection> m_SnapshotConnection;
+    std::unique_ptr<Net::Connection> m_BestSnapshotConnection;
 
-    // Sink for video to send over server
-    std::unique_ptr<Video::NetSink> m_NetSink;
+    // Sinks for video to send over server
+    std::unique_ptr<Video::NetSink> m_LiveNetSink;
+    std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
+    std::unique_ptr<Video::NetSink> m_BestSnapshotNetSink;
 };
 }   // Anonymous namespace
 
@@ -494,7 +576,7 @@ int main(int argc, char *argv[])
         cv::FileStorage configFile(configFilename, cv::FileStorage::WRITE);
         configFile << "config" << config;
     }
-
+    BackgroundExceptionCatcher backgroundEx;
     RobotFSM robot(config);
 
     {
@@ -503,6 +585,9 @@ int main(int argc, char *argv[])
         unsigned int frame = 0;
         for(frame = 0; robot.update(); frame++) {
         }
+
+        // Check for background exceptions and re-throw
+        backgroundEx.check();
 
         const double msPerFrame = timer.get() / (double)frame;
         LOGI << "FPS:" << 1000.0 / msPerFrame;
