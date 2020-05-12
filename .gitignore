@@ -1,3 +1,7 @@
+# Archive files
+**/*.tar.*
+**/*.zip
+
 # CMake build dir
 **/build/*
 
