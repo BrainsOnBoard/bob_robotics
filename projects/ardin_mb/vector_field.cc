@@ -29,10 +29,14 @@ void VectorField::createVertices(meter_t startX, meter_t endX, meter_t gridX,
     m_NumY = (unsigned int)units::math::ceil((endY - startY) / gridY);
 
     // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_LinesVAO);
+    if(m_LinesVAO == 0) {
+        glGenVertexArrays(1, &m_LinesVAO);
+    }
 
     // Generate vertex buffer objects for positions
-    glGenBuffers(1, &m_LinesPositionVBO);
+    if(m_LinesPositionVBO == 0) {
+        glGenBuffers(1, &m_LinesPositionVBO);
+    }
 
     // Bind vertex array
     glBindVertexArray(m_LinesVAO);
@@ -66,6 +70,7 @@ void VectorField::createVertices(meter_t startX, meter_t endX, meter_t gridX,
 
     // Unbind VAO
     glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //------------------------------------------------------------------------
 VectorField::~VectorField()
@@ -120,5 +125,6 @@ void VectorField::setNovelty(unsigned int point, const std::vector<std::pair<uni
     glBindBuffer(GL_ARRAY_BUFFER, m_LinesPositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, (point * sizeof(float) * 4),
                     sizeof(float) * 2, position);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }

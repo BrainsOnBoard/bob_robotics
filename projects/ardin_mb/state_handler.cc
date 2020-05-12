@@ -58,7 +58,6 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
     if(!routeFilename.empty()) {
         loadRoute(routeFilename);
 
-        //handleUI();
         // Start training
         m_StateMachine.transition(State::Training);
         return;
@@ -92,7 +91,7 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Route.render(m_Pose.x(), m_Pose.y(), m_Pose.yaw());
 
         // Render vector field
-        //m_VectorField.render();
+        m_VectorField.render();
 
         // Unbind top-down render target
         m_RenderTargetTopDown.unbind();
@@ -351,9 +350,6 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_Pose.x() -= SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
                 m_Pose.y() -= SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
             }
-            //if(m_KeyBits.test(KeySaveSnapshot)) {
-            //    cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());
-            //}
         }
     }
     else if(state == State::BuildingVectorField) {
@@ -366,8 +362,18 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // Clear vector of novelty values
             m_VectorFieldNovelty.clear();
+            ImGui::OpenPopup("Calculating vector field...");
         }
         else if(event == Event::Update) {
+            // Show training progress
+            if(ImGui::BeginPopupModal("Calculating vector field...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar(std::min(1.0f, (float)m_CurrentVectorFieldPoint / (float)m_VectorField.getNumPoints()), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
+
             // Test snapshot
             const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
 
@@ -488,8 +494,8 @@ void StateHandler::loadRoute(const std::string &filename)
     const auto &routeMax = m_Route.getMaxBound();
 
     // Create vector field geometry to cover route bounds
-    //m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
-    //                             routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+    m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
+                                 routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
 }
 //----------------------------------------------------------------------------
 bool StateHandler::handleUI()
@@ -574,6 +580,10 @@ bool StateHandler::handleUI()
 
             if(ImGui::MenuItem("Random walk", nullptr, false, routeLoaded)) {
                 m_StateMachine.transition(State::RandomWalk);
+            }
+
+            if(ImGui::MenuItem("Build vector field", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::BuildingVectorField);
             }
             ImGui::EndMenu();
         }
