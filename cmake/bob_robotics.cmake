@@ -52,6 +52,7 @@ macro(BoB_project)
         set_target_properties(${NAME} PROPERTIES PREFIX ""
                                                  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
         set(BOB_TARGETS ${NAME})
+        add_definitions(-DBOB_SHARED_LIB)
 
         if(GNU_TYPE_COMPILER)
             add_compile_flags(-fPIC)

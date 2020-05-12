@@ -8,9 +8,6 @@
 // Standard C++ includes
 #include <exception>
 
-// Forward declaration; put definition in your own main C++ file
-int bobMain(int argc, char **argv);
-
 // Plog's default TxtFormatter is a bit verbose, so let's implement our own
 struct Formatter
 {
@@ -116,6 +113,10 @@ initLogging()
 }
 } // BoBRobotics
 
+#ifndef BOB_SHARED_LIB
+// Forward declaration; put definition in your own main C++ file
+int bobMain(int argc, char **argv);
+
 int
 main(int argc, char **argv)
 {
@@ -148,3 +149,4 @@ main(int argc, char **argv)
     }
 #endif // !DEBUG
 }
+#endif // !BOB_SHARED_LIB

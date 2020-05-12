@@ -264,9 +264,3 @@ PyInit_antworld(void)
 
 	return pModule;
 }
-
-int
-bobMain(int, char **)
-{
-    return EXIT_SUCCESS;
-}
