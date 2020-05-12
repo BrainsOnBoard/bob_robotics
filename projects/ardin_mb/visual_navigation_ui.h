@@ -31,6 +31,7 @@ public:
 //----------------------------------------------------------------------------
 // MBUI
 //----------------------------------------------------------------------------
+#ifndef NO_GENN
 class MBUI : public VisualNavigationUI
 {
 public:
@@ -77,32 +78,4 @@ class MBArdinUI : public MBUI
 public:
     MBArdinUI(MBMemoryArdin &memory);
 };
-
-//----------------------------------------------------------------------------
-// MBHogUI
-//----------------------------------------------------------------------------
-class MBHogUI : public MBUI
-{
-public:
-    MBHogUI(MBMemoryHOG &memory);
-
-    //----------------------------------------------------------------------------
-    // VisualNavigationUI virtuals
-    //----------------------------------------------------------------------------
-    virtual void handleUI() override;
-    virtual void handleUITraining() override;
-    virtual void handleUITesting() override;
-
-protected:
-    virtual void handleUIMBProperties() override;
-    virtual void handleUIClear() override;
-
-private:
-    MBMemoryHOG &getMemoryHOG();
-
-    //----------------------------------------------------------------------------
-    // Members
-    //----------------------------------------------------------------------------
-    // Data for plotting
-    std::vector<float> m_PeakGGNVoltage;
-};
+#endif  // NO_GENN

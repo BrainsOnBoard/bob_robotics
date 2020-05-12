@@ -7,6 +7,7 @@
 #include "imgui.h"
 
 // Antworld includes
+#ifndef NO_GENN
 #include "mb_memory_ardin.h"
 #include "mb_params_ardin.h"
 
@@ -213,3 +214,4 @@ MBArdinUI::MBArdinUI(MBMemoryArdin &memory)
     : MBUI(memory, "mb_memory_ardin.yml", MBParamsArdin::numPN, MBParamsArdin::numKC)
 {
 }
+#endif  // NO_GENN

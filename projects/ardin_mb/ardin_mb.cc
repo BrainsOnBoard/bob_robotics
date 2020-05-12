@@ -1,5 +1,7 @@
 // Ardin MB includes
-#include "mb_memory_ardin.h"
+#ifndef NO_GENN
+    #include "mb_memory_ardin.h"
+#endif
 #include "sim_params.h"
 #include "state_handler.h"
 #include "visual_navigation_ui.h"
@@ -23,7 +25,6 @@
 
 // IMGUI
 #include "imgui.h"
-//#include "examples/imgui_impl_sfml.h"
 #include "imgui_impl_sfml.h"
 #include "examples/imgui_impl_opengl2.h"
 
@@ -104,22 +105,16 @@ int main(int argc, char *argv[])
     ImGui_ImplOpenGL2_Init();
 
 #ifdef NO_GENN
-
-    /*Navigation::PerfectMemory<> memory(cv::Size(36, 10));
+    Navigation::PerfectMemory<> memory(cv::Size(36, 10));
     VisualNavigationUI ui;
-    //AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
-    //                                                   memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
-    AntWorld::SnapshotProcessorSegmentSky snapshotProcessor(memory.getUnwrapResolution().width,
-                                                            memory.getUnwrapResolution().height);*/
 #else
     // Mushroom body
     MBMemoryArdin memory;
     memory.addCLIArguments(app);
     MBArdinUI ui(memory);
-
+#endif
     AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
                                                        memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
-#endif
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);
