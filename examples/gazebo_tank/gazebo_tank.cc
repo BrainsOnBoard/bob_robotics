@@ -33,7 +33,7 @@ int bobMain(int argc, char **argv)
     /************************************Gazebo setup end************/
     std::unique_ptr<Video::Display> display;
     std::unique_ptr<Gazebo::Camera> cam;
-    if(argc >= 3) { // Initialize gazebo camera if more than 2 arguements are provided (display switch and camera url)
+    if(argc >= 3) { // Initialize gazebo camera if more than 2 arguments are provided (display switch and camera url)
         std::cout << "Display switch enabled.\n";
         if(strcmp(argv[1], "-p") == 0) {
             std::cout << "Using panoramic camera.\n";
