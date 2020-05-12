@@ -56,7 +56,7 @@ public:
         glEnableClientState(GL_VERTEX_ARRAY);
 
         // Calculate number of vertices from positions
-        m_NumVertices = positions.size() / size;
+        m_NumVertices = static_cast<unsigned int>(positions.size() / size);
 
         // Unbind buffer
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -97,7 +97,7 @@ public:
         uploadBuffer(indices, m_IBO, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
 
         // Cache number of indices
-        m_NumIndices = indices.size();
+        m_NumIndices = static_cast<unsigned int>(indices.size());
 
         // **NOTE** GL_ELEMENT_ARRAY_BUFFER works subtly different from GL_ARRAY_BUFFER
         // as it has no client state/pointer tying it to the VAO. Therefore we need to

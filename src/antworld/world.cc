@@ -163,14 +163,26 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
         }
 
         // Add first ground plane triangle vertex positions
-        positions[0] = m_MinBound[0].value();   positions[1] = m_MinBound[1].value();   positions[2] = 0.0f;
-        positions[3] = m_MaxBound[0].value();   positions[4] = m_MaxBound[1].value();   positions[5] = 0.0f;
-        positions[6] = m_MinBound[0].value();   positions[7] = m_MaxBound[1].value();   positions[8] = 0.0f;
+        positions[0] = static_cast<float>(m_MinBound[0].value());
+        positions[1] = static_cast<float>(m_MinBound[1].value());
+        positions[2] = 0.0f;
+        positions[3] = static_cast<float>(m_MaxBound[0].value());
+        positions[4] = static_cast<float>(m_MaxBound[1].value());
+        positions[5] = 0.0f;
+        positions[6] = static_cast<float>(m_MinBound[0].value());
+        positions[7] = static_cast<float>(m_MaxBound[1].value());
+        positions[8] = 0.0f;
 
         // Add second ground plane triangle vertex positions
-        positions[9] = m_MinBound[0].value();   positions[10] = m_MinBound[1].value();  positions[11] = 0.0f;
-        positions[12] = m_MaxBound[0].value();  positions[13] = m_MinBound[1].value();  positions[14] = 0.0f;
-        positions[15] = m_MaxBound[0].value();  positions[16] = m_MaxBound[1].value();  positions[17] = 0.0f;
+        positions[9] = static_cast<float>(m_MinBound[0].value());
+        positions[10] = static_cast<float>(m_MinBound[1].value());
+        positions[11] = 0.0f;
+        positions[12] = static_cast<float>(m_MaxBound[0].value());
+        positions[13] = static_cast<float>(m_MinBound[1].value());
+        positions[14] = 0.0f;
+        positions[15] = static_cast<float>(m_MaxBound[0].value());
+        positions[16] = static_cast<float>(m_MaxBound[1].value());
+        positions[17] = 0.0f;
 
         // Upload positions
         surface.uploadPositions(positions);
@@ -200,9 +212,8 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
             // Loop through vertices that make up triangle and
             // set to world colour multiplied by triangle colour
             for(unsigned int v = 0; v < 3; v++) {
-                colours[18 + (t * 9) + (v * 3)] = worldColour[0] * triangleColour;
-                colours[18 + (t * 9) + (v * 3) + 1] = worldColour[1] * triangleColour;
-                colours[18 + (t * 9) + (v * 3) + 2] = worldColour[2] * triangleColour;
+                colours[18 + (t * 9) + (v * 3)] = worldColour[0] * static_cast<float>(triangleColour);
+                colours[18 + (t * 9) + (v * 3) + 1] = worldColour[1] * static_cast<float>(triangleColour);
             }
         }
 
