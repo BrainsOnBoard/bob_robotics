@@ -101,9 +101,9 @@ public:
             bestSnapshotAsync.wait();
             
             // Create netsinks
-            m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection.get(), config.getCroppedRect().size(), "live");
-            m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection.get(), config.getCroppedRect().size(), "snapshot");
-            m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection.get(), config.getCroppedRect().size(), "best_snapshot");
+            m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection, config.getCroppedRect().size(), "live");
+            m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
+            m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
             
             // Start background threads for transmitting images
             m_LiveConnection->runInBackground();
