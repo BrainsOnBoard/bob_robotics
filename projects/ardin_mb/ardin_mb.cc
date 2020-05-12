@@ -10,7 +10,6 @@
 #include "antworld/snapshot_processor_ardin.h"
 
 // BoB Robotics includes
-#include "common/logging.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
