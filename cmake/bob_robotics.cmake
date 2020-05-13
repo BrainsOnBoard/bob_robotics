@@ -49,10 +49,10 @@ macro(BoB_project)
     if(PARSED_ARGS_SHARED_LIB)
         set(NAME ${PARSED_ARGS_SHARED_LIB})
         add_library(${NAME} SHARED "${PARSED_ARGS_SOURCES}" "${H_FILES}")
-        set_target_properties(${NAME} PROPERTIES PREFIX ""
-                                                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+        set_target_properties(${NAME} PROPERTIES PREFIX "")
         set(BOB_TARGETS ${NAME})
         add_definitions(-DBOB_SHARED_LIB)
+        install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
 
         if(GNU_TYPE_COMPILER)
             add_compile_flags(-fPIC)
