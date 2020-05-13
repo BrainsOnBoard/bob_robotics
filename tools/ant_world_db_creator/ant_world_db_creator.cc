@@ -55,12 +55,13 @@ protected:
 
     AntWorldDatabaseCreator(const filesystem::path &databaseName,
                             bool oldAntWorld,
+                            meter_t agentHeight,
                             sf::Window &window)
       : m_Database(databaseName)
       , m_Window(window)
       , m_Renderer(512, 0.1)
       , m_Agent(window, m_Renderer, RenderSize)
-      , m_AgentHeight(oldAntWorld ? 0.01_m : 1.5_m) // "New" ant world starts mysteriously high up
+      , m_AgentHeight(agentHeight)
       , m_OldAntWorld(oldAntWorld)
     {
         BOB_ASSERT(m_Database.empty());
@@ -119,7 +120,8 @@ class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
     GridDatabaseCreator(const filesystem::path &databaseName, bool oldAntWorld,
                         sf::Window &window)
-      : AntWorldDatabaseCreator(databaseName, oldAntWorld, window)
+      : AntWorldDatabaseCreator(databaseName, oldAntWorld,
+                                oldAntWorld ? 0.01_m : 1.5_m, window)
     {}
 
     void runForGrid()
@@ -156,7 +158,8 @@ public:
                          bool oldAntWorld,
                          sf::Window &window,
                          AntWorld::RouteContinuous &route)
-      : AntWorldDatabaseCreator(databaseName, oldAntWorld, window)
+      : AntWorldDatabaseCreator(databaseName, oldAntWorld,
+                                oldAntWorld ? 0.01_m : 1.8_m, window)
       , m_Route(route)
     {}
 
