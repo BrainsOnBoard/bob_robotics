@@ -16,7 +16,7 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "GENN_CPU_ONLY"
-                          "EXECUTABLE;SHARED_LIB;GENN_MODEL;CXX_STANDARD"
+                          "EXECUTABLE;PYTHON_MODULE;GENN_MODEL;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -46,10 +46,16 @@ macro(BoB_project)
     # projects.
     file(GLOB H_FILES "*.h")
 
-    if(PARSED_ARGS_SHARED_LIB)
-        set(NAME ${PARSED_ARGS_SHARED_LIB})
+    if(PARSED_ARGS_PYTHON_MODULE)
+        set(NAME ${PARSED_ARGS_PYTHON_MODULE})
+        if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+            set(NAME ${NAME}_d)
+        endif()
         add_library(${NAME} SHARED "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set_target_properties(${NAME} PROPERTIES PREFIX "")
+        if(WIN32)
+            set_target_properties(${NAME} PROPERTIES SUFFIX ".pyd")
+        endif()
         set(BOB_TARGETS ${NAME})
         add_definitions(-DBOB_SHARED_LIB)
         install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
@@ -57,6 +63,7 @@ macro(BoB_project)
         if(GNU_TYPE_COMPILER)
             add_compile_flags(-fPIC)
         endif()
+        BoB_external_libraries(python)
     elseif(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
