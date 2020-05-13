@@ -53,7 +53,7 @@ protected:
     const meter_t m_AgentHeight;
     const bool m_OldAntWorld;
 
-    AntWorldDatabaseCreator(const std::string &databaseName,
+    AntWorldDatabaseCreator(const filesystem::path &databaseName,
                             bool oldAntWorld,
                             sf::Window &window)
       : m_Database(databaseName)
@@ -117,8 +117,9 @@ protected:
 
 class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    GridDatabaseCreator(bool oldAntWorld, sf::Window &window)
-      : AntWorldDatabaseCreator("world5000_grid", oldAntWorld, window)
+    GridDatabaseCreator(const filesystem::path &databaseName, bool oldAntWorld,
+                        sf::Window &window)
+      : AntWorldDatabaseCreator(databaseName, oldAntWorld, window)
     {}
 
     void runForGrid()
@@ -151,7 +152,7 @@ public:
 
 class RouteDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    RouteDatabaseCreator(const std::string &databaseName,
+    RouteDatabaseCreator(const filesystem::path &databaseName,
                          bool oldAntWorld,
                          sf::Window &window,
                          AntWorld::RouteContinuous &route)
@@ -185,6 +186,7 @@ private:
 
 int bobMain(int argc, char **argv)
 {
+    const auto currentDir = filesystem::path{ argv[0] }.parent_path();
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
     // Allow for using the old, lower-res ant world
@@ -211,13 +213,13 @@ int bobMain(int argc, char **argv)
                 databaseName = databaseName.substr(0, pos);
             }
 
-            RouteDatabaseCreator creator(databaseName, oldAntWorld, *window, route);
+            RouteDatabaseCreator creator(currentDir / databaseName, oldAntWorld, *window, route);
             creator.runForRoute();
 
             argv++;
         } while (--argc > 1);
     } else {
-        GridDatabaseCreator creator(oldAntWorld, *window);
+        GridDatabaseCreator creator(currentDir / "world5000_grid", oldAntWorld, *window);
         creator.runForGrid();
     }
 
