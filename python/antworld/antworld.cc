@@ -53,11 +53,6 @@ Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
         return nullptr;
     }
 
-    // /*
-    //  * I feel like we shouldn't have to manually increment the refcount here,
-    //  * but if we don't then we get a segfault on exit ¯\_(ツ)_/¯
-    //  */
-    // Py_INCREF(self);
     return self;
 }
 
