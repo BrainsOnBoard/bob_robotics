@@ -298,6 +298,26 @@ macro(always_included_packages)
     endif()
 endmacro()
 
+macro(get_git_commit DIR VARNAME)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE ${VARNAME}
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    if(NOT ${rv} EQUAL 0)
+        # Git might fail (e.g. if we're not in a git repo), but let's carry on regardless
+        set(${VARNAME} "(unknown)")
+    else()
+        # Append -dirty if worktree has been modified
+        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
+        RESULT_VARIABLE rv)
+        if(NOT ${rv} EQUAL 0)
+            set(${VARNAME} ${${VARNAME}}-dirty)
+        endif()
+    endif()
+endmacro()
+
 macro(BoB_build)
     # Don't build i2c code if NO_I2C environment variable is set
     if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (NOT "$ENV{NO_I2C}" STREQUAL 0 AND NOT "$ENV{NO_I2C}" STREQUAL "")))
@@ -310,6 +330,12 @@ macro(BoB_build)
     # Add macro so that programs know where the root folder is for e.g. loading
     # resources
     add_definitions(-DBOB_ROBOTICS_PATH="${BOB_ROBOTICS_PATH}")
+
+    # Pass the current git commits of project and BoB robotics as C macros
+    get_git_commit("${BOB_ROBOTICS_PATH}" BOB_ROBOTICS_GIT_COMMIT)
+    get_git_commit("${CMAKE_SOURCE_DIR}" PROJECT_GIT_COMMIT)
+    add_definitions(-DBOB_ROBOTICS_GIT_COMMIT="${BOB_ROBOTICS_GIT_COMMIT}"
+                    -DBOB_PROJECT_GIT_COMMIT="${PROJECT_GIT_COMMIT}")
 
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
