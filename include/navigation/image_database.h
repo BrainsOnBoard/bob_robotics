@@ -30,7 +30,7 @@ using namespace units::literals;
 struct Range
 {
     using millimeter_t = units::length::millimeter_t;
-    const millimeter_t begin, end, separation;
+    millimeter_t begin, end, separation;
 
     constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
                     const millimeter_t separation)
