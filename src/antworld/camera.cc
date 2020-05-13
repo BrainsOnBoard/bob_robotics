@@ -112,7 +112,7 @@ Camera::initialiseWindow(const cv::Size &size)
     glDebugMessageCallback(handleGLError, nullptr);
 
     // Set clear colour to match matlab and enable depth test
-    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.75f, 0.75f, 0.75f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glLineWidth(4.0);
     glPointSize(4.0);
