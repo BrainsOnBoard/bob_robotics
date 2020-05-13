@@ -26,6 +26,9 @@
 #include <tuple>
 #include <vector>
 
+// Standard C includes
+#include <cstring>
+
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 using namespace units::angle;
@@ -34,11 +37,11 @@ using namespace units::literals;
 using namespace units::math;
 
 /*
-* I've set the width of the image to be the same as the (raw) unwrapped
-* images we get from the robot gantry, but the height is greater (cf. 58)
-* because I wanted to keep the aspect ratio as it was (200x40).
-*      -- AD
-*/
+ * I've set the width of the image to be the same as the (raw) unwrapped
+ * images we get from the robot gantry, but the height is greater (cf. 58)
+ * because I wanted to keep the aspect ratio as it was (200x40).
+ *      -- AD
+ */
 const cv::Size RenderSize{ 720, 150 };
 
 class AntWorldDatabaseCreator {
@@ -47,19 +50,30 @@ protected:
     sf::Window &m_Window;
     AntWorld::Renderer m_Renderer;
     AntWorld::AntAgent m_Agent;
+    const meter_t m_AgentHeight;
+    const bool m_OldAntWorld;
 
     AntWorldDatabaseCreator(const std::string &databaseName,
+                            bool oldAntWorld,
                             sf::Window &window)
       : m_Database(databaseName)
       , m_Window(window)
-      , m_Renderer(256, 0.001, 1000.0, 360_deg)
+      , m_Renderer(512, 0.1)
       , m_Agent(window, m_Renderer, RenderSize)
+      , m_AgentHeight(oldAntWorld ? 0.01_m : 1.5_m) // "New" ant world starts mysteriously high up
+      , m_OldAntWorld(oldAntWorld)
     {
         BOB_ASSERT(m_Database.empty());
 
         // Create renderer
-        m_Renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
-                                   {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+        const auto antWorldPath = Path::getResourcesPath() / "antworld";
+        if (oldAntWorld) {
+            m_Renderer.getWorld().load(antWorldPath / "world5000_gray.bin",
+                                       { 0.0f, 1.0f, 0.0f },
+                                       { 0.898f, 0.718f, 0.353f });
+        } else {
+            m_Renderer.getWorld().loadObj(antWorldPath / "seville_vegetation_downsampled.obj");
+        }
     }
 
     template<typename PoseVectorType, typename RecordOp>
@@ -79,8 +93,9 @@ protected:
             }
             
             // Update agent's position
-            m_Agent.setPosition(it->x(), it->y(), AgentHeight);
+            m_Agent.setPosition(it->x(), it->y(), m_AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
+            LOGD << "Current pose: " << m_Agent.getPose();
 
             // Get current view
             m_Agent.readFrameSync(frame);
@@ -98,28 +113,35 @@ protected:
                  << "needsUnwrapping" << false
                  << "isGreyscale" << false;
     }
-
-    const millimeter_t AgentHeight = 1_cm;
 };
 
 class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    GridDatabaseCreator(sf::Window &window)
-      : AntWorldDatabaseCreator("world5000_grid", window)
+    GridDatabaseCreator(bool oldAntWorld, sf::Window &window)
+      : AntWorldDatabaseCreator("world5000_grid", oldAntWorld, window)
     {}
 
     void runForGrid()
     {
-        const millimeter_t gridSpacing = 10_cm;
+        constexpr auto gridSpacing = 10_cm;
 
-        // Get world bounds
-        const auto &worldMinBound = m_Renderer.getWorld().getMinBound();
-        const auto &worldMaxBound = m_Renderer.getWorld().getMaxBound();
+        Range xrange, yrange;
+        if (m_OldAntWorld) {
+            // Get world bounds
+            const auto &worldMinBound = m_Renderer.getWorld().getMinBound();
+            xrange.begin = worldMinBound[0];
+            yrange.begin = worldMinBound[1];
+            const auto &worldMaxBound = m_Renderer.getWorld().getMaxBound();
+            xrange.end = worldMaxBound[0];
+            yrange.end = worldMaxBound[1];
+        } else {
+            xrange.begin = yrange.begin = -2.5_m;
+            xrange.end = yrange.end = 2.5_m;
+        }
+        xrange.separation = yrange.separation = gridSpacing;
 
         // Make GridRecorder
-        Range xrange({worldMinBound[0], worldMaxBound[0]}, gridSpacing);
-        Range yrange({worldMinBound[1], worldMaxBound[1]}, gridSpacing);
-        auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, AgentHeight);
+        auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, {m_AgentHeight});
         addMetadata(gridRecorder);
 
         // Record image database
@@ -130,9 +152,10 @@ public:
 class RouteDatabaseCreator : AntWorldDatabaseCreator {
 public:
     RouteDatabaseCreator(const std::string &databaseName,
+                         bool oldAntWorld,
                          sf::Window &window,
                          AntWorld::RouteContinuous &route)
-      : AntWorldDatabaseCreator(databaseName, window)
+      : AntWorldDatabaseCreator(databaseName, oldAntWorld, window)
       , m_Route(route)
     {}
 
@@ -164,24 +187,37 @@ int bobMain(int argc, char **argv)
 {
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
+    // Allow for using the old, lower-res ant world
+    bool oldAntWorld = false;
+    if (argc > 1 && strcmp(argv[1], "--old-ant-world") == 0) {
+        oldAntWorld = true;
+        argc--;
+        argv++;
+    }
+
     if (argc > 1) {
-        // Create route object and load route file specified by command line
-        AntWorld::RouteContinuous route(0.2f, 800);
-        route.load(argv[1]);
+        // Remaining arguments are paths to route files
+        do {
+            // Create route object and load route file specified by command line
+            AntWorld::RouteContinuous route(0.2f, 800);
+            route.load(argv[1]);
 
-        // Get filename from route path
-        std::string databaseName = filesystem::path(argv[1]).filename();
+            // Get filename from route path
+            std::string databaseName = filesystem::path(argv[1]).filename();
 
-        // If it exists, remove extension
-        const size_t pos = databaseName.find_last_of(".");
-        if (pos != std::string::npos) {
-            databaseName = databaseName.substr(0, pos);
-        }
+            // Remove extension
+            const size_t pos = databaseName.find_last_of(".");
+            if (pos != std::string::npos) {
+                databaseName = databaseName.substr(0, pos);
+            }
 
-        RouteDatabaseCreator creator(databaseName, *window, route);
-        creator.runForRoute();
+            RouteDatabaseCreator creator(databaseName, oldAntWorld, *window, route);
+            creator.runForRoute();
+
+            argv++;
+        } while (--argc > 1);
     } else {
-        GridDatabaseCreator creator(*window);
+        GridDatabaseCreator creator(oldAntWorld, *window);
         creator.runForGrid();
     }
 
