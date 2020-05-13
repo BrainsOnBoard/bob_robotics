@@ -53,7 +53,7 @@ protected:
     const meter_t m_AgentHeight;
     const bool m_OldAntWorld;
 
-    AntWorldDatabaseCreator(const filesystem::path &databaseName,
+    AntWorldDatabaseCreator(const std::string &databaseName,
                             bool oldAntWorld,
                             meter_t agentHeight,
                             sf::Window &window)
@@ -118,9 +118,8 @@ protected:
 
 class GridDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    GridDatabaseCreator(const filesystem::path &databaseName, bool oldAntWorld,
-                        sf::Window &window)
-      : AntWorldDatabaseCreator(databaseName, oldAntWorld,
+    GridDatabaseCreator(bool oldAntWorld, sf::Window &window)
+      : AntWorldDatabaseCreator("world5000_grid", oldAntWorld,
                                 oldAntWorld ? 0.01_m : 1.5_m, window)
     {}
 
@@ -154,7 +153,7 @@ public:
 
 class RouteDatabaseCreator : AntWorldDatabaseCreator {
 public:
-    RouteDatabaseCreator(const filesystem::path &databaseName,
+    RouteDatabaseCreator(const std::string &databaseName,
                          bool oldAntWorld,
                          sf::Window &window,
                          AntWorld::RouteContinuous &route)
@@ -189,7 +188,6 @@ private:
 
 int bobMain(int argc, char **argv)
 {
-    const auto currentDir = filesystem::path{ argv[0] }.parent_path();
     auto window = AntWorld::AntAgent::initialiseWindow(RenderSize);
 
     // Allow for using the old, lower-res ant world
@@ -216,13 +214,13 @@ int bobMain(int argc, char **argv)
                 databaseName = databaseName.substr(0, pos);
             }
 
-            RouteDatabaseCreator creator(currentDir / databaseName, oldAntWorld, *window, route);
+            RouteDatabaseCreator creator(databaseName, oldAntWorld, *window, route);
             creator.runForRoute();
 
             argv++;
         } while (--argc > 1);
     } else {
-        GridDatabaseCreator creator(currentDir / "world5000_grid", oldAntWorld, *window);
+        GridDatabaseCreator creator(oldAntWorld, *window);
         creator.runForGrid();
     }
 
