@@ -13,21 +13,23 @@
 
 using namespace BoBRobotics;
 
-struct AgentObjectData {
-	AgentObjectData(const cv::Size &renderSize)
-	  : window{ AntWorld::AntAgent::initialiseWindow(renderSize) }
-	  , renderer(256, 0.001, 1000.0, 360_deg)
-	  , agent(*window, renderer, renderSize)
-	{}
+struct AgentObjectData
+{
+    AgentObjectData(const cv::Size &renderSize)
+      : window{ AntWorld::AntAgent::initialiseWindow(renderSize) }
+      , renderer(256, 0.001, 1000.0, 360_deg)
+      , agent(*window, renderer, renderSize)
+    {}
 
-	std::unique_ptr<sf::Window> window;
-	AntWorld::Renderer renderer;
-	AntWorld::AntAgent agent;
+    std::unique_ptr<sf::Window> window;
+    AntWorld::Renderer renderer;
+    AntWorld::AntAgent agent;
 };
 
-struct AgentObject {
-	PyObject_HEAD
-	AgentObjectData *members;
+struct AgentObject
+{
+    PyObject_HEAD
+            AgentObjectData *members;
 };
 
 static PyObject *
@@ -64,7 +66,7 @@ Agent_dealloc(AgentObject *self)
         delete self->members;
     }
     Py_TYPE(self)->tp_free(reinterpret_cast<PyObject *>(self));
-    LOGD  << "Agent object deallocated";
+    LOGD << "Agent object deallocated";
 }
 
 static PyObject *
@@ -88,9 +90,9 @@ Agent_load_world(AgentObject *self, PyObject *args)
             throw std::runtime_error{ "Unknown file type" };
         }
     } catch (std::exception &e) {
-		PyErr_SetString(PyExc_RuntimeError, e.what());
-		return nullptr;
-	}
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return nullptr;
+    }
 
     // Return world limits as a tuple of tuples: (xlim, ylim, zlim) = ...
     const auto &worldMin = world.getMaxBound();
@@ -113,26 +115,53 @@ Agent_load_world(AgentObject *self, PyObject *args)
 }
 
 static PyObject *
+Agent_read_frame(AgentObject *self, PyObject *)
+{
+    const auto size = self->members->agent.getOutputSize();
+
+    // Allocate new numpy array
+    const npy_intp dims[3] = { size.height, size.width, 3 };
+    auto array = PyArray_SimpleNew(3, dims, NPY_UINT8);
+    if (!array)
+        return nullptr;
+
+    try {
+        // A cv::Mat wrapper for the allocated data
+        auto data = PyArray_DATA(reinterpret_cast<PyArrayObject *>(array));
+        cv::Mat frame{ size.height, size.width, CV_8UC3, data };
+        self->members->agent.readFrameSync(frame);
+        BOB_ASSERT(frame.type() == CV_8UC3);
+    } catch (std::exception &e) {
+        Py_DECREF(array);
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return nullptr;
+    }
+
+    // array is now populated with image data
+    return array;
+}
+
+static PyObject *
 Agent_read_frame_greyscale(AgentObject *self, PyObject *)
 {
     const auto size = self->members->agent.getOutputSize();
 
-	// Allocate new numpy array
+    // Allocate new numpy array
     const npy_intp dims[2] = { size.height, size.width };
     auto array = PyArray_SimpleNew(2, dims, NPY_UINT8);
     if (!array)
         return nullptr;
 
     try {
-    	// A cv::Mat wrapper for the allocated data
+        // A cv::Mat wrapper for the allocated data
         auto data = PyArray_DATA(reinterpret_cast<PyArrayObject *>(array));
-        cv::Mat frame{ size.height, size.width, CV_8U, data };
-
+        cv::Mat frame{ size.height, size.width, CV_8UC1, data };
         self->members->agent.readGreyscaleFrameSync(frame);
+        BOB_ASSERT(frame.type() == CV_8UC1);
     } catch (std::exception &e) {
         Py_DECREF(array);
-    	PyErr_SetString(PyExc_RuntimeError, e.what());
-    	return nullptr;
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        return nullptr;
     }
 
     // array is now populated with image data
@@ -142,15 +171,15 @@ Agent_read_frame_greyscale(AgentObject *self, PyObject *)
 static PyObject *
 Agent_set_position(AgentObject *self, PyObject *args)
 {
-	using namespace units::length;
+    using namespace units::length;
 
-	double x, y, z;
-	if (!PyArg_ParseTuple(args, "ddd", &x, &y, &z)) {
-		return nullptr;
-	}
+    double x, y, z;
+    if (!PyArg_ParseTuple(args, "ddd", &x, &y, &z)) {
+        return nullptr;
+    }
 
-	// Assume no exceptions thrown
-	self->members->agent.setPosition(meter_t{ x }, meter_t{ y }, meter_t{ z });
+    // Assume no exceptions thrown
+    self->members->agent.setPosition(meter_t{ x }, meter_t{ y }, meter_t{ z });
 
     Py_RETURN_NONE;
 }
@@ -158,16 +187,15 @@ Agent_set_position(AgentObject *self, PyObject *args)
 static PyObject *
 Agent_set_attitude(AgentObject *self, PyObject *args)
 {
-	using namespace units::angle;
+    using namespace units::angle;
 
     double yaw, pitch, roll;
-	if (!PyArg_ParseTuple(args, "ddd", &yaw, &pitch, &roll)) {
-		return nullptr;
-	}
+    if (!PyArg_ParseTuple(args, "ddd", &yaw, &pitch, &roll)) {
+        return nullptr;
+    }
 
-	// Assume no exceptions thrown
-    self->members->agent.setAttitude(degree_t{ yaw }, degree_t{ pitch },
-									 degree_t{ roll });
+    // Assume no exceptions thrown
+    self->members->agent.setAttitude(degree_t{ yaw }, degree_t{ pitch }, degree_t{ roll });
 
     Py_RETURN_NONE;
 }
@@ -248,19 +276,19 @@ PyInit_antworld(void)
     import_array();             // init numpy
     BoBRobotics::initLogging(); // init plog
 
-	if (PyType_Ready(&AgentType) < 0)
+    if (PyType_Ready(&AgentType) < 0)
         return nullptr;
 
-	PyObject *pModule = PyModule_Create(&ModuleDefinitions);
-	if (!pModule)
-		return nullptr;
-	PyModule_AddStringConstant(pModule, "bob_robotics_path", BOB_ROBOTICS_PATH);
+    PyObject *pModule = PyModule_Create(&ModuleDefinitions);
+    if (!pModule)
+        return nullptr;
+    PyModule_AddStringConstant(pModule, "bob_robotics_path", BOB_ROBOTICS_PATH);
 
-	Py_INCREF(&AgentType);
-	if (PyModule_AddObject(pModule, "Agent", (PyObject *) &AgentType) < 0) {
-		Py_DECREF(&AgentType);
-		Py_DECREF(pModule);
-	}
+    Py_INCREF(&AgentType);
+    if (PyModule_AddObject(pModule, "Agent", (PyObject *) &AgentType) < 0) {
+        Py_DECREF(&AgentType);
+        Py_DECREF(pModule);
+    }
 
-	return pModule;
+    return pModule;
 }

@@ -18,7 +18,7 @@ print("starting at (%f, %f, %f)" % (xstart, y, z))
 
 for x in range(3):
     agent.set_position(x + xstart, y, z)
-    im = agent.read_frame_greyscale()
+    im = agent.read_frame()
     filename = "antworld%i.png" % x
     print("Saving image as %s..." % filename)
     cv2.imwrite(filename, im)
