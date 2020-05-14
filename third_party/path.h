@@ -360,6 +360,7 @@ remove_all(const path &path)
 
         // For reading contents of directory
         tinydir_dir dir;
+        memset(&dir, 0, sizeof(dir));
         tinydir_open(&dir, path.str().c_str());
         for (; dir.has_next; tinydir_next(&dir)) {
             tinydir_file file;
