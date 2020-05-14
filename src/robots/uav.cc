@@ -1,6 +1,9 @@
 // BoB robotics includes
 #include "robots/uav.h"
 
+// Standard C++ includes
+#include <stdexcept>
+
 namespace BoBRobotics {
 namespace Robots {
 
