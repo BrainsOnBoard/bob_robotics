@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 include(../../cmake/bob_robotics.cmake)
 BoB_project(SOURCES antworld.cc
             PYTHON_MODULE antworld
+            BOB_MODULES antworld
             EXTERNAL_LIBS numpy)
 
 # On gcc I'm getting this warning for static definitions of structs, but it
