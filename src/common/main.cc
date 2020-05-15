@@ -117,6 +117,13 @@ main(int argc, char **argv)
     // We always want plog working
     initLogging();
 
+    /*
+     * When debugging, it's handy to know exactly which version of the source
+     * code we compiled.
+     */
+    LOGD << "Project git commit: " BOB_PROJECT_GIT_COMMIT;
+    LOGD << "BoB robotics git commit: " BOB_ROBOTICS_GIT_COMMIT;
+
 #ifndef DEBUG
     try {
 #endif // !DEBUG

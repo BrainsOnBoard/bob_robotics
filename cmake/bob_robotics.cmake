@@ -131,7 +131,7 @@ macro(BoB_project)
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
+        file(GLOB dll_files "${VCPKG_PACKAGE_DIR}/bin/*.dll")
         foreach(file IN LISTS dll_files)
             get_filename_component(filename "${file}" NAME)
             if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
@@ -218,11 +218,6 @@ macro(BoB_module_custom)
 endmacro()
 
 macro(BoB_init)
-    # CMake defaults to 32-bit builds on Windows
-    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
-        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
-    endif()
-
     # For release builds, CMake disables assertions, but a) this isn't what we
     # want and b) it will break code.
     if(MSVC)
@@ -273,6 +268,26 @@ macro(always_included_packages)
     endif()
 endmacro()
 
+macro(get_git_commit DIR VARNAME)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE ${VARNAME}
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    if(NOT ${rv} EQUAL 0)
+        # Git might fail (e.g. if we're not in a git repo), but let's carry on regardless
+        set(${VARNAME} "(unknown)")
+    else()
+        # Append -dirty if worktree has been modified
+        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
+        RESULT_VARIABLE rv)
+        if(NOT ${rv} EQUAL 0)
+            set(${VARNAME} ${${VARNAME}}-dirty)
+        endif()
+    endif()
+endmacro()
+
 macro(BoB_build)
     # Don't build i2c code if NO_I2C environment variable is set
     if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (NOT "$ENV{NO_I2C}" STREQUAL 0 AND NOT "$ENV{NO_I2C}" STREQUAL "")))
@@ -285,6 +300,12 @@ macro(BoB_build)
     # Add macro so that programs know where the root folder is for e.g. loading
     # resources
     add_definitions(-DBOB_ROBOTICS_PATH="${BOB_ROBOTICS_PATH}")
+
+    # Pass the current git commits of project and BoB robotics as C macros
+    get_git_commit("${BOB_ROBOTICS_PATH}" BOB_ROBOTICS_GIT_COMMIT)
+    get_git_commit("${CMAKE_SOURCE_DIR}" PROJECT_GIT_COMMIT)
+    add_definitions(-DBOB_ROBOTICS_GIT_COMMIT="${BOB_ROBOTICS_GIT_COMMIT}"
+                    -DBOB_PROJECT_GIT_COMMIT="${PROJECT_GIT_COMMIT}")
 
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
@@ -636,17 +657,32 @@ if(WIN32)
         message(FATAL_ERROR "The environment VCPKG_ROOT must be set on Windows")
     endif()
 
+    # When using Visual Studio as a target, you have to specify whether you want
+    # a 32- or 64-bit build when CMake is invoked. Use this to determine the
+    # correct vcpkg libraries to look for or default to 64-bit.
+    if(CMAKE_GENERATOR_PLATFORM)
+        set(PLATFORM ${CMAKE_GENERATOR_PLATFORM}-windows)
+    else()
+        set(PLATFORM x64-windows)
+    endif()
+    set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}")
+
+
     # The vcpkg toolchain in theory should do something like this already, but
     # if we don't do this, then cmake can't find any of vcpkg's packages
-    file(GLOB children "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/share/*")
+    file(GLOB children "${VCPKG_PACKAGE_DIR}/share/*")
     foreach(child IN LISTS children)
         if(IS_DIRECTORY "${child}")
             list(APPEND CMAKE_PREFIX_PATH "${child}")
         endif()
     endforeach()
 
+    # Link against vcpkg packages' libs
+    link_directories("${VCPKG_PACKAGE_DIR}/lib")
+
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DNOMINMAX)
 endif()
 
 # Assume we always need plog

@@ -27,6 +27,7 @@ bob_robotics.includes
 # Visual Studio code user files
 /.vscode/*.json
 !/.vscode/c_cpp_properties.json
+!/.vscode/extensions.json
 *.code-workspace
 
 # Ignore object files
