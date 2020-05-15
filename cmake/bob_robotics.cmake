@@ -156,7 +156,7 @@ macro(BoB_project)
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
+        file(GLOB dll_files "${VCPKG_PACKAGE_DIR}/bin/*.dll")
         foreach(file IN LISTS dll_files)
             get_filename_component(filename "${file}" NAME)
             if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
@@ -243,11 +243,6 @@ macro(BoB_module_custom)
 endmacro()
 
 macro(BoB_init)
-    # CMake defaults to 32-bit builds on Windows
-    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
-        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
-    endif()
-
     # For release builds, CMake disables assertions, but a) this isn't what we
     # want and b) it will break code.
     if(MSVC)
@@ -687,14 +682,28 @@ if(WIN32)
         message(FATAL_ERROR "The environment VCPKG_ROOT must be set on Windows")
     endif()
 
+    # When using Visual Studio as a target, you have to specify whether you want
+    # a 32- or 64-bit build when CMake is invoked. Use this to determine the
+    # correct vcpkg libraries to look for or default to 64-bit.
+    if(CMAKE_GENERATOR_PLATFORM)
+        set(PLATFORM ${CMAKE_GENERATOR_PLATFORM}-windows)
+    else()
+        set(PLATFORM x64-windows)
+    endif()
+    set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}")
+
+
     # The vcpkg toolchain in theory should do something like this already, but
     # if we don't do this, then cmake can't find any of vcpkg's packages
-    file(GLOB children "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/share/*")
+    file(GLOB children "${VCPKG_PACKAGE_DIR}/share/*")
     foreach(child IN LISTS children)
         if(IS_DIRECTORY "${child}")
             list(APPEND CMAKE_PREFIX_PATH "${child}")
         endif()
     endforeach()
+
+    # Link against vcpkg packages' libs
+    link_directories("${VCPKG_PACKAGE_DIR}/lib")
 
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
