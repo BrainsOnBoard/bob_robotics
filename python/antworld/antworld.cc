@@ -209,15 +209,17 @@ Agent_update_display(AgentObject *self, PyObject *)
 
 static PyMethodDef Agent_methods[] = {
     { "load_world", (PyCFunction) Agent_load_world, METH_VARARGS,
-	  "Load a 3D world from a .obj or .bin file" },
-	{ "read_frame_greyscale", (PyCFunction) Agent_read_frame_greyscale, METH_NOARGS,
-	  "Read the current view as a numpy array" },
-	{ "set_position", (PyCFunction) Agent_set_position, METH_VARARGS,
-	  "Set the agent's current position" },
-	{ "set_attitude", (PyCFunction) Agent_set_attitude, METH_VARARGS,
-	  "Set the agent's current attitude" },
-	{ "update_display", (PyCFunction) Agent_update_display, METH_NOARGS,
-	  "Render to the current window (you don't need to call this explicitly if calling read_frame)" },
+      "Load a 3D world from a .obj or .bin file" },
+    { "read_frame", (PyCFunction) Agent_read_frame, METH_NOARGS,
+      "Read the current view in colour as a numpy array" },
+    { "read_frame_greyscale", (PyCFunction) Agent_read_frame_greyscale, METH_NOARGS,
+      "Read the current view in greyscale as a numpy array" },
+    { "set_position", (PyCFunction) Agent_set_position, METH_VARARGS,
+      "Set the agent's current position" },
+    { "set_attitude", (PyCFunction) Agent_set_attitude, METH_VARARGS,
+      "Set the agent's current attitude" },
+    { "update_display", (PyCFunction) Agent_update_display, METH_NOARGS,
+      "Render to the current window (you don't need to call this explicitly if calling read_frame)" },
     {}
 };
 
@@ -265,9 +267,9 @@ static PyTypeObject AgentType = {
 static struct PyModuleDef ModuleDefinitions
 {
     PyModuleDef_HEAD_INIT,
-	"antworld",
-	"A Python wrapper for the BoB robotics ant world module",
-	-1,
+    "antworld",
+    "A Python wrapper for the BoB robotics ant world module",
+    -1,
 };
 
 PyMODINIT_FUNC
