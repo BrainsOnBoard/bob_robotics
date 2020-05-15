@@ -707,7 +707,19 @@ if(WIN32)
 
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+    # We don't want the min/max macros defined in windows.h
     add_definitions(-DNOMINMAX)
+
+    # the version of the Windows API that we want
+    add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
+
+    # for a less bloated version of windows.h
+    add_definitions(-D_WIN32_LEAN_AND_MEAN)
+
+    # disable the winsock v1 API, which is included by default and conflicts
+    # with v2 of the API
+    add_definitions(-D_WINSOCKAPI_)
 endif()
 
 # Assume we always need plog

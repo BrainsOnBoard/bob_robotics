@@ -7,15 +7,13 @@
  * in when I can be bothered. -- AD
  */
 
-#include "os/windows_include.h"
-
 // BoB robotics includes
-#include "plog/Log.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 using namespace BoBRobotics;
