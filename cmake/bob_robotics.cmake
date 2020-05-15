@@ -707,6 +707,7 @@ if(WIN32)
 
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-DNOMINMAX)
 endif()
 
 # Assume we always need plog
