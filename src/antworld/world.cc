@@ -112,7 +112,7 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
                  const GLfloat (&groundColour)[3])
 {
     LOGI << "Loading " << filename << "...";
-    
+
     // Create single surface
     m_Surfaces.clear();
     m_Surfaces.emplace_back();
@@ -214,6 +214,7 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
             for(unsigned int v = 0; v < 3; v++) {
                 colours[18 + (t * 9) + (v * 3)] = worldColour[0] * static_cast<float>(triangleColour);
                 colours[18 + (t * 9) + (v * 3) + 1] = worldColour[1] * static_cast<float>(triangleColour);
+                colours[18 + (t * 9) + (v * 3) + 2] = worldColour[2] * static_cast<float>(triangleColour);
             }
         }
 
