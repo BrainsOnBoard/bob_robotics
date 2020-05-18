@@ -1,5 +1,7 @@
 // BoB robotics includes
 #include "antworld/camera.h"
+
+// Third-party includes
 #include "plog/Log.h"
 
 void
@@ -7,16 +9,16 @@ handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *me
 {
     if (severity == GL_DEBUG_SEVERITY_HIGH) {
         LOGE << message;
-    } 
+    }
     else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
         LOGW << message;
-    } 
+    }
     else if (severity == GL_DEBUG_SEVERITY_LOW) {
         LOGI << message;
-    } 
+    }
     else {
         LOGD << message;
-    }   
+    }
 }
 
 namespace BoBRobotics {
@@ -61,13 +63,29 @@ Camera::setAttitude(degree_t yaw, degree_t pitch, degree_t roll)
 bool
 Camera::readFrame(cv::Mat &frame)
 {
+    // Render
     update();
 
-    // Read frame
-    return Video::OpenGL::readFrame(frame);
+    // Read frame (they're always synchronous for Video::OpenGL anyway)
+    Video::OpenGL::readFrame(frame);
+
+    // Swap buffers
+    m_Window.display();
+
+    return true;
 }
 
-bool
+void
+Camera::display()
+{
+    // Render
+    update();
+
+    // Swap buffers
+    m_Window.display();
+}
+
+void
 Camera::update()
 {
     // Render to m_Window
@@ -79,11 +97,6 @@ Camera::update()
     // Render first person
     const auto size = getOutputSize();
     m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_Pose.z(), m_Pose.yaw(), m_Pose.pitch(), m_Pose.roll(), 0, 0, size.width, size.height);
-
-    // Swap front and back buffers
-    m_Window.display();
-
-    return true;
 }
 
 bool

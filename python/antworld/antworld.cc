@@ -28,8 +28,10 @@ struct AgentObjectData
 
 struct AgentObject
 {
+    // clang-format off
     PyObject_HEAD
-            AgentObjectData *members;
+    AgentObjectData *members;
+    // clang-format on
 };
 
 static PyObject *
@@ -201,13 +203,14 @@ Agent_set_attitude(AgentObject *self, PyObject *args)
 }
 
 static PyObject *
-Agent_update_display(AgentObject *self, PyObject *)
+Agent_display(AgentObject *self, PyObject *)
 {
-    self->members->agent.update();
+    self->members->agent.display();
     Py_RETURN_NONE;
 }
 
 static PyMethodDef Agent_methods[] = {
+    // clang-format off
     { "load_world", (PyCFunction) Agent_load_world, METH_VARARGS,
       "Load a 3D world from a .obj or .bin file" },
     { "read_frame", (PyCFunction) Agent_read_frame, METH_NOARGS,
@@ -218,13 +221,16 @@ static PyMethodDef Agent_methods[] = {
       "Set the agent's current position" },
     { "set_attitude", (PyCFunction) Agent_set_attitude, METH_VARARGS,
       "Set the agent's current attitude" },
-    { "update_display", (PyCFunction) Agent_update_display, METH_NOARGS,
+    { "display", (PyCFunction) Agent_display, METH_NOARGS,
       "Render to the current window (you don't need to call this explicitly if calling read_frame)" },
     {}
+    // clang-format on
 };
 
 static PyTypeObject AgentType = {
+    // clang-format off
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    // clang-format on
     "antworld.Agent",           /* tp_name */
     sizeof(AgentObject),        /* tp_basicsize */
     0,                          /* tp_itemsize */
@@ -266,10 +272,12 @@ static PyTypeObject AgentType = {
 
 static struct PyModuleDef ModuleDefinitions
 {
+    // clang-format off
     PyModuleDef_HEAD_INIT,
     "antworld",
     "A Python wrapper for the BoB robotics ant world module",
     -1,
+    // clang-format on
 };
 
 PyMODINIT_FUNC
