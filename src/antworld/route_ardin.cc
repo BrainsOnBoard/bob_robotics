@@ -245,7 +245,7 @@ void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
 
     glPushMatrix();
     glTranslatef(0.0f, 0.0f, 0.1f);
-    glDrawArrays(GL_POINTS, 0, m_Waypoints.size());
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_Waypoints.size()));
 
     // If there are any route points, bind
     if(m_RouteNumPoints > 0) {
@@ -256,8 +256,8 @@ void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(antX.value(), antY.value(), 0.1f);
-    glRotatef(-antHeading.value(), 0.0f, 0.0f, 1.0f);
+    glTranslatef(static_cast<GLfloat>(antX.value()), static_cast<GLfloat>(antY.value()), 0.1f);
+    glRotatef(static_cast<GLfloat>(-antHeading.value()), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 

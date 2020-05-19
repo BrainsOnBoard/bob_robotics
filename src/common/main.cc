@@ -1,12 +1,12 @@
+// BoB robotics includes
+#include "common/main.h"
+
 // Third-party includes
 #include "plog/Log.h"
 #include "plog/Appenders/ColorConsoleAppender.h"
 
 // Standard C++ includes
 #include <exception>
-
-// Forward declaration; put definition in your own main C++ file
-int bobMain(int argc, char **argv);
 
 // Plog's default TxtFormatter is a bit verbose, so let's implement our own
 struct Formatter
@@ -80,6 +80,7 @@ getLogLevel(plog::Severity defaultLogLevel)
     throw std::runtime_error(std::string(severityEnvVar) + " is not a valid log level");
 }
 
+namespace BoBRobotics {
 void
 initLogging()
 {
@@ -110,12 +111,17 @@ initLogging()
     static plog::ColorConsoleAppender<Formatter> appender;
     plog::get()->addAppender(&appender);
 }
+} // BoBRobotics
+
+#ifndef BOB_SHARED_LIB
+// Forward declaration; put definition in your own main C++ file
+int bobMain(int argc, char **argv);
 
 int
 main(int argc, char **argv)
 {
     // We always want plog working
-    initLogging();
+    BoBRobotics::initLogging();
 
     /*
      * When debugging, it's handy to know exactly which version of the source
@@ -143,3 +149,4 @@ main(int argc, char **argv)
     }
 #endif // !DEBUG
 }
+#endif // !BOB_SHARED_LIB
