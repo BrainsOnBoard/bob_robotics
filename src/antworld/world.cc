@@ -281,7 +281,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             stripWindowsLineEnding(lineString);
 
             // Entirely skip comment or empty lines
-            if(lineString[0] == '#' || lineString.empty()) {
+            if(lineString.empty() || lineString[0] == '#') {
                 continue;
             }
 
