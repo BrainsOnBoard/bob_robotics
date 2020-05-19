@@ -56,7 +56,7 @@ public:
         glEnableClientState(GL_VERTEX_ARRAY);
 
         // Calculate number of vertices from positions
-        m_NumVertices = static_cast<unsigned int>(positions.size() / size);
+        m_NumVertices = static_cast<GLsizei>(positions.size() / size);
 
         // Unbind buffer
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -97,13 +97,13 @@ public:
         uploadBuffer(indices, m_IBO, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
 
         // Cache number of indices
-        m_NumIndices = static_cast<unsigned int>(indices.size());
+        m_NumIndices = static_cast<GLsizei>(indices.size());
 
         // **NOTE** GL_ELEMENT_ARRAY_BUFFER works subtly different from GL_ARRAY_BUFFER
         // as it has no client state/pointer tying it to the VAO. Therefore we need to
         // leave it bound until after we unbind the VAO - makes sense but ugly
     }
-    
+
     void setTexture(const Texture *texture){ m_Texture = texture; }
 
 private:
@@ -134,9 +134,8 @@ private:
     GLuint m_ColourVBO;
     GLuint m_TexCoordVBO;
     GLuint m_IBO;
-    
-    unsigned int m_NumVertices;
-    unsigned int m_NumIndices;
+
+    GLsizei m_NumVertices, m_NumIndices;
 
     const Texture *m_Texture;
 };
