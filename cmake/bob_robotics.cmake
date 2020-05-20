@@ -174,17 +174,12 @@ macro(BoB_project)
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        file(GLOB dll_files "${VCPKG_PACKAGE_DIR}/bin/*.dll")
-        foreach(file IN LISTS dll_files)
-            get_filename_component(filename "${file}" NAME)
-            if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
-                message("Copying ${filename} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}...")
-                file(COPY "${file}"
-                     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-            endif()
+        # Add custom command to 
+        foreach(target IN LISTS BOB_TARGETS)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat ${target} ${VCPKG_PACKAGE_DIR}
+            )
         endforeach()
-
-        link_directories("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     endif()
 endmacro()
 
@@ -674,12 +669,10 @@ get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_L
 
 # If this var is defined then this project is being included in another build
 if(NOT DEFINED BOB_DIR)
-    if(WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
-    else()
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    if(WIN32) 
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
     endif()
 
     # Folder to build BoB modules + third-party modules
