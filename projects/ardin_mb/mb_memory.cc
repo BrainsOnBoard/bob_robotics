@@ -53,7 +53,7 @@ MBMemory::MBMemory(unsigned int numPN, unsigned int numKC, unsigned int numEN, u
     m_InputWidth(inputWidth), m_InputHeight(inputHeight), m_TauD(tauD), m_KCToENWeight(kcToENWeight), m_TimestepMs(timestepMs),
     m_KCToENDopamineStrength(dopamineStrength), m_RewardTimeMs(rewardTimeMs), m_PresentDurationMs(presentDurationMs),
     m_PostStimulusDurationMs(postStimulusDurationMs), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
-    m_NumUsedWeights(numKC * numEN), m_NumActivePN(0), m_NumActiveKC(0), m_SLM("", modelName)
+    m_NumUsedWeights(numKC * numEN), m_NumActivePN(0), m_NumActiveKC(0), m_SLM(".", modelName)
 {
     std::mt19937 gen;
 
