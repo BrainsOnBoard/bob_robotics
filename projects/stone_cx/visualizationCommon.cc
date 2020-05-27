@@ -6,6 +6,9 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// GeNN generated code includes
+#include "stone_cx_CODE/definitions.h"
+
 // Model includes
 #include "parameters.h"
 
@@ -16,7 +19,7 @@ namespace
 {
 
 template<typename F>
-void drawNeuronActivity(float activity, const cv::Point &position, F getColourFn, cv::Mat &image)
+void drawNeuronActivity(scalar activity, const cv::Point &position, F getColourFn, cv::Mat &image)
 {
     // Convert activity to a 8-bit level
     const unsigned char gray = (unsigned char)(255.0f * std::min(1.0f, std::max(0.0f, activity)));
@@ -26,7 +29,7 @@ void drawNeuronActivity(float activity, const cv::Point &position, F getColourFn
 }
 
 template<typename F>
-void drawPopulationActivity(const float *popActivity, int popSize, const char *popName,
+void drawPopulationActivity(scalar *popActivity, int popSize, const char *popName,
                             const cv::Point &position, F getColourFn, cv::Mat &image, int numColumns=0)
 {
     // If (invalid) default number of columns is specified, use popsize
@@ -68,8 +71,7 @@ cv::Scalar getBlues(unsigned char gray)
 
 namespace BoBRobotics {
 namespace StoneCX {
-void visualize(cv::Mat &activityImage, const float *rTL, const float *rCL1, const float *rTB1, const float *rTN2,
-               const float *rCPU4, const float *rPontine, const float *rCPU1)
+void visualize(cv::Mat &activityImage)
 {
     // Draw compass system activity
     drawPopulationActivity(rTL, Parameters::numTL, "TL", cv::Point(10, 10),
