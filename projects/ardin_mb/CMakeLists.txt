@@ -13,7 +13,4 @@ else()
                 BOB_MODULES common antworld navigation
                 THIRD_PARTY imgui
                 INCLUDE_GENN_USERPROJECTS)
-
-    # **TODO** this doesn't seem to work reliably
-    BoB_add_link_libraries(dl)
 endif()
