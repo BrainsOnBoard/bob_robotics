@@ -4,9 +4,6 @@
  * Use the corresponding "computer" program to connect to the server.
  */
 
-// Windows headers
-#include "os/windows_include.h"
-
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "plog/Log.h"

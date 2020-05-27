@@ -96,7 +96,7 @@ int bobMain(int argc, char **argv)
         if (!modelPath) {
             throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
         }
-        renderer.getWorld().loadObj((filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj").str(),
+        renderer.getWorld().loadObj(filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj",
                                     0.1f,
                                     4096,
                                     GL_COMPRESSED_RGB);

@@ -4,9 +4,6 @@
  * screen. Press escape to exit.
  */
 
-// Windows headers
-#include "os/windows_include.h"
-
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 

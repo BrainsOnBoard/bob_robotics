@@ -1,12 +1,12 @@
-#include "os/windows_include.h"
-
 // BoB robotics includes
-#include "plog/Log.h"
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 using namespace std::literals;
 using namespace units::literals;

@@ -13,10 +13,8 @@
 
 // Headers to be included
 #ifdef _WIN32
-// Our common header for including windows.h with the right #defines in place
-#include "windows_include.h"
-
 // Include the (new) winsock API
+#undef _WINSOCKAPI_
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #include <ws2tcpip.h>

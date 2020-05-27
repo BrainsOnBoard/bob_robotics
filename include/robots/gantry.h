@@ -1,7 +1,5 @@
 #pragma once
 
-#include "os/windows_include.h"
-
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/pose.h"

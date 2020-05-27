@@ -69,7 +69,7 @@ int bobMain(int, char **argv)
         lastPose = pose;
 
         // Update display
-        agent.update();
+        agent.display();
     }
 
     return EXIT_SUCCESS;

@@ -16,7 +16,7 @@ macro(BoB_project)
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
                           "INCLUDE_GENN_USERPROJECTS"
-                          "EXECUTABLE;CXX_STANDARD"
+                          "EXECUTABLE;PYTHON_MODULE;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -46,7 +46,25 @@ macro(BoB_project)
     # projects.
     file(GLOB H_FILES "*.h")
 
-    if(PARSED_ARGS_EXECUTABLE)
+    if(PARSED_ARGS_PYTHON_MODULE)
+        set(NAME ${PARSED_ARGS_PYTHON_MODULE})
+        if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+            set(NAME ${NAME}_d)
+        endif()
+        add_library(${NAME} SHARED "${PARSED_ARGS_SOURCES}" "${H_FILES}")
+        set_target_properties(${NAME} PROPERTIES PREFIX "")
+        if(WIN32)
+            set_target_properties(${NAME} PROPERTIES SUFFIX ".pyd")
+        endif()
+        set(BOB_TARGETS ${NAME})
+        add_definitions(-DBOB_SHARED_LIB)
+        install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
+
+        if(GNU_TYPE_COMPILER)
+            add_compile_flags(-fPIC)
+        endif()
+        BoB_external_libraries(python)
+    elseif(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set(BOB_TARGETS ${NAME})
@@ -131,17 +149,12 @@ macro(BoB_project)
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        file(GLOB dll_files "${VCPKG_PACKAGE_DIR}/bin/*.dll")
-        foreach(file IN LISTS dll_files)
-            get_filename_component(filename "${file}" NAME)
-            if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
-                message("Copying ${filename} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}...")
-                file(COPY "${file}"
-                     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-            endif()
+        # Add custom command to 
+        foreach(target IN LISTS BOB_TARGETS)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
+            )
         endforeach()
-
-        link_directories("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     endif()
 endmacro()
 
@@ -330,9 +343,7 @@ macro(BoB_build)
     endif()
 
     # Flags for gcc and clang
-    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-        set(GNU_TYPE_COMPILER TRUE)
-
+    if(GNU_TYPE_COMPILER)
         # Default to building with -march=native
         if(NOT DEFINED ENV{ARCH})
             set(ENV{ARCH} native)
@@ -633,12 +644,10 @@ get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_L
 
 # If this var is defined then this project is being included in another build
 if(NOT DEFINED BOB_DIR)
-    if(WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
-    else()
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+    if(WIN32) 
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
     endif()
 
     # Folder to build BoB modules + third-party modules
@@ -682,7 +691,23 @@ if(WIN32)
 
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+    # We don't want the min/max macros defined in windows.h
     add_definitions(-DNOMINMAX)
+
+    # the version of the Windows API that we want
+    add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
+
+    # for a less bloated version of windows.h
+    add_definitions(-D_WIN32_LEAN_AND_MEAN)
+
+    # disable the winsock v1 API, which is included by default and conflicts
+    # with v2 of the API
+    add_definitions(-D_WINSOCKAPI_)
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(GNU_TYPE_COMPILER TRUE)
 endif()
 
 # Assume we always need plog

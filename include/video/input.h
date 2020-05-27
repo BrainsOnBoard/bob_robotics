@@ -66,6 +66,8 @@ public:
     //! Read a frame synchronously, blocking until a new frame is received
     void readFrameSync(cv::Mat &outFrame);
 
+    void readGreyscaleFrameSync(cv::Mat &outFrame);
+
     //! Allows OpenCV to serialise info about this Input
     void write(cv::FileStorage &fs) const;
 

@@ -1,6 +1,3 @@
-// windows.h
-#include "os/windows_include.h"
-
 // BoB robotics includes
 #include "plog/Log.h"
 #include "imgproc/opencv_unwrap_360.h"
