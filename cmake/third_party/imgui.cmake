@@ -4,4 +4,6 @@ BoB_add_link_libraries(imgui)
 BoB_external_libraries(glew sfml-graphics)
 
 # Suppress warning
-add_compile_flags(-Wno-stringop-truncation)
+if(GNU_TYPE_COMPILER)
+    add_compile_flags(-Wno-stringop-truncation)
+endif()
