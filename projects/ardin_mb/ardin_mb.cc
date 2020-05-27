@@ -45,7 +45,7 @@
 
 using namespace BoBRobotics;
 
-int bobMain(int argc, char *argv[])
+int bobMain(int argc, char **argv)
 {
     // Default parameters"
     std::string worldFilename = "";
