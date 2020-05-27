@@ -97,9 +97,9 @@ void VectorField::render()
 std::tuple<meter_t, meter_t> VectorField::getPoint(unsigned int point) const
 {
     // Convert index into x and y grid coordinates
-    const auto index = div(point, m_NumX);
-    const unsigned int xGrid = index.rem;
-    const unsigned int yGrid = index.quot;
+    const auto index = div((int)point, (int)m_NumX);
+    const int xGrid = index.rem;
+    const int yGrid = index.quot;
 
     return std::make_tuple(m_StartX + ((float)xGrid * m_GridX),
                            m_StartY + ((float)yGrid * m_GridY));
