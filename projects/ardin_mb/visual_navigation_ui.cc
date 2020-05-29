@@ -16,6 +16,21 @@
 //----------------------------------------------------------------------------
 namespace
 {
+void saveSpikes(const MBMemory::Spikes &spikes, const std::string &filename)
+{
+    std::ofstream csvStream(filename);
+
+    csvStream << "Time [ms], Neuron ID" << std::endl;
+
+    // Loop through timesteps during which spikes occured
+    for(const auto &timestepSpikes : spikes) {
+        // Loop through neuron ids which spiked this timestep
+        for(unsigned int n : timestepSpikes.second) {
+            csvStream << timestepSpikes.first << "," << n << std::endl;
+        }
+    }
+}
+//----------------------------------------------------------------------------
 bool rasterPlot(unsigned int numNeurons, const MBMemory::Spikes &spikes, float verticalLineTime, float yScale = 1.0f, float timeAxisStep = 50.0f)
 {
     if(spikes.empty()) {
@@ -132,6 +147,9 @@ void MBUI::handleUI()
             ImGui::Text("%u/%u active", m_Memory.getNumActivePN(), m_NumPN);
             ImGui::Text("%u spikes", m_Memory.getNumPNSpikes());
         }
+        if(ImGui::Button("Save")) {
+            saveSpikes(m_Memory.getPNSpikes(), "pn_spikes.csv");
+        }
     }
     ImGui::End();
 
@@ -140,12 +158,18 @@ void MBUI::handleUI()
             ImGui::Text("%u/%u active", m_Memory.getNumActiveKC(), m_NumKC);
             ImGui::Text("%u spikes", m_Memory.getNumKCSpikes());
         }
+        if(ImGui::Button("Save")) {
+            saveSpikes(m_Memory.getKCSpikes(), "kc_spikes.csv");
+        }
     }
     ImGui::End();
 
     if(ImGui::Begin("EN spikes")) {
         if(rasterPlot(1, m_Memory.getENSpikes(), *m_Memory.getPresentDurationMs())){
             ImGui::Text("%u spikes", m_Memory.getNumENSpikes());
+        }
+        if(ImGui::Button("Save")) {
+            saveSpikes(m_Memory.getENSpikes(), "en_spikes.csv");
         }
     }
     ImGui::End();
