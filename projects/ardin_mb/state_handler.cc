@@ -495,7 +495,7 @@ void StateHandler::loadRoute(const std::string &filename)
     const auto &routeMin = m_Route.getMinBound();
     const auto &routeMax = m_Route.getMaxBound();
 
-    // Create vector field geometry to cover route bounds
+    // Create vector field geometry to cover area of route bounds with 20cm border around it
     m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
                                  routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
 }
