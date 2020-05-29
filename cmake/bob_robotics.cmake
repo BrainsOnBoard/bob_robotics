@@ -125,7 +125,7 @@ macro(BoB_project)
                 add_custom_command(PRE_BUILD
                                 OUTPUT ${genn_model_dest}
                                 DEPENDS ${genn_model_src}
-                                COMMAND genn-buildmodel.sh
+                                COMMAND ${GENN_BUILDMODEL}
                                         ${genn_model_src}
                                         ${CPU_FLAG}
                                         -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
