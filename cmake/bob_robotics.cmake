@@ -15,8 +15,8 @@ macro(BoB_project)
     # Parse input args
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
-                          "INCLUDE_GENN_USERPROJECTS;GENN_MODEL;GENN_CPU_ONLY"
-                          "EXECUTABLE;PYTHON_MODULE;CXX_STANDARD"
+                          "INCLUDE_GENN_USERPROJECTS;GENN_CPU_ONLY"
+                          "EXECUTABLE;GENN_MODEL;PYTHON_MODULE;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -79,7 +79,7 @@ macro(BoB_project)
     endif()
 
     # If this project includes a GeNN model...
-    if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+    if(PARSED_ARGS_GENN_MODEL OR PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
         # Find genn-buildmodel (which should be in the path)
         if(WIN32)
             find_program(GENN_BUILDMODEL genn-buildmodel.bat)
@@ -94,62 +94,64 @@ macro(BoB_project)
             get_filename_component(GENN_USERPROJECT ${GENN_BIN_PATH}/../userproject/include ABSOLUTE)
             message("GeNN found in ${GENN_USERPROJECT}")
             BoB_add_include_directories(${GENN_USERPROJECT})
+            # If th
+            if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+                # On *nix link dl
+                if(NOT WIN32)
+                    BoB_add_link_libraries(dl)
+                endif()
+            elseif(PARSED_ARGS_GENN_MODEL)
+                get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+                set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
+                set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
+                set(genn_model_dest "${genn_model_dir}/runner.cc")
 
-            # On *nix link dl
-            if(NOT WIN32)
-                BoB_add_link_libraries(dl)
+                if(NOT GENN_CPU_ONLY)
+                    if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
+                        set(GENN_CPU_ONLY TRUE)
+                    else()
+                        set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+                    endif()
+                endif(NOT GENN_CPU_ONLY)
+                if(GENN_CPU_ONLY)
+                    message("Building GeNN model for CPU only")
+                    add_definitions(-DCPU_ONLY)
+                    set(CPU_FLAG -c)
+                else()
+                    message("Building GeNN model with CUDA")
+                endif()
+
+                # Custom command to generate source code with GeNN
+                add_custom_command(PRE_BUILD
+                                OUTPUT ${genn_model_dest}
+                                DEPENDS ${genn_model_src}
+                                COMMAND genn-buildmodel.sh
+                                        ${genn_model_src}
+                                        ${CPU_FLAG}
+                                        -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
+                                COMMENT "Generating source code with GeNN")
+
+                # Custom command to generate librunner.so
+                add_custom_command(PRE_BUILD
+                                OUTPUT ${genn_model_dir}/librunner.so
+                                DEPENDS ${genn_model_dest}
+                                COMMAND make -C "${genn_model_dir}")
+
+                add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+
+                # Our targets depend on librunner.so
+                BoB_add_include_directories(/usr/include/genn)
+                BoB_add_link_libraries(${genn_model_dir}/librunner.so)
+                foreach(target IN LISTS BOB_TARGETS)
+                    add_dependencies(${target} ${PROJECT_NAME}_genn_model)
+                endforeach()
+
+                # So code can access headers in the *_CODE folder
+                BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
             endif()
         else()
             message(FATAL_ERROR "GeNN not found. Please install and ensure it is in path.")
         endif()
-    elseif(PARSED_ARGS_GENN_MODEL)
-        get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
-        set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
-        set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
-        set(genn_model_dest "${genn_model_dir}/runner.cc")
-
-        if(NOT GENN_CPU_ONLY)
-            if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
-                set(GENN_CPU_ONLY TRUE)
-            else()
-                set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
-            endif()
-        endif(NOT GENN_CPU_ONLY)
-        if(GENN_CPU_ONLY)
-            message("Building GeNN model for CPU only")
-            add_definitions(-DCPU_ONLY)
-            set(CPU_FLAG -c)
-        else()
-            message("Building GeNN model with CUDA")
-        endif()
-
-        # Custom command to generate source code with GeNN
-        add_custom_command(PRE_BUILD
-                           OUTPUT ${genn_model_dest}
-                           DEPENDS ${genn_model_src}
-                           COMMAND genn-buildmodel.sh
-                                   ${genn_model_src}
-                                   ${CPU_FLAG}
-                                   -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
-                           COMMENT "Generating source code with GeNN")
-
-        # Custom command to generate librunner.so
-        add_custom_command(PRE_BUILD
-                           OUTPUT ${genn_model_dir}/librunner.so
-                           DEPENDS ${genn_model_dest}
-                           COMMAND make -C "${genn_model_dir}")
-
-        add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
-
-        # Our targets depend on librunner.so
-        BoB_add_include_directories(/usr/include/genn)
-        BoB_add_link_libraries(${genn_model_dir}/librunner.so)
-        foreach(target IN LISTS BOB_TARGETS)
-            add_dependencies(${target} ${PROJECT_NAME}_genn_model)
-        endforeach()
-
-        # So code can access headers in the *_CODE folder
-        BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
     endif()
 
     # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
@@ -197,7 +199,7 @@ macro(BoB_project)
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        # Add custom command to 
+        # Add custom command to
         foreach(target IN LISTS BOB_TARGETS)
             add_custom_command(TARGET ${target} POST_BUILD
                 COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
@@ -693,7 +695,7 @@ get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_L
 # If this var is defined then this project is being included in another build
 if(NOT DEFINED BOB_DIR)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
-    if(WIN32) 
+    if(WIN32)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR})
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
     endif()
