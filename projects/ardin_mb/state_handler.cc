@@ -555,11 +555,7 @@ bool StateHandler::handleUI()
                 for(unsigned int r = 1; r <= 14; r++) {
                     sprintf(routeFilename, "ant1_route%u.bin", r);
                     if(ImGui::MenuItem(routeFilename)) {
-                        const char *bobRoboticsPath = std::getenv("BOB_ROBOTICS_PATH");
-                        assert(bobRoboticsPath != nullptr);
-                        std::string routePath = std::string(bobRoboticsPath) + "/resources/antworld/";
-
-                        loadRoute(routePath + routeFilename);
+                        loadRoute((Path::getResourcesPath() / "antworld" / routeFilename).str());
                     }
                 }
                 ImGui::EndMenu();
