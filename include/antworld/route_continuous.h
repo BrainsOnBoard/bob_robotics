@@ -39,12 +39,22 @@ public:
     void render(meter_t antX, meter_t antY, degree_t antHeading) const;
 
     bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
-    std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
+    std::tuple<meter_t, meter_t> getDistanceToRoute(meter_t x, meter_t y) const;
     Pose2<meter_t, degree_t> getPose(meter_t distance) const;
 
     void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(meter_t x, meter_t y, bool error);
     meter_t getLength() const{ return m_CumulativeDistance.back(); }
+
+    const Vector2<meter_t> &getMinBound()
+    {
+        return m_MinBound;
+    }
+
+    const Vector2<meter_t> &getMaxBound()
+    {
+        return m_MaxBound;
+    }
 
     size_t size() const{ return m_Waypoints.size(); }
 
@@ -68,6 +78,9 @@ private:
     GLuint m_OverlayVAO;
     GLuint m_OverlayPositionVBO;
     GLuint m_OverlayColoursVBO;
+
+    Vector2<meter_t> m_MinBound;
+    Vector2<meter_t> m_MaxBound;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

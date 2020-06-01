@@ -1,13 +1,8 @@
 #pragma once
 
-// BoB robotics includes
-#include "common/macros.h"
-
-// PLOG includes
-#include "plog/Log.h"
-
 // Standard C++ includes
 #include <algorithm>
+#include <iostream>
 #include <numeric>
 #include <random>
 #include <stdexcept>
@@ -26,7 +21,7 @@ namespace GeNNUtils {
 //----------------------------------------------------------------------------
 // Evaluates continued fraction for incomplete beta function by modified Lentz's method
 // Adopted from numerical recipes in C p227
-double betacf(double a, double b, double x)
+inline double betacf(double a, double b, double x)
 {
     const int maxIterations = 200;
     const double epsilon = 3.0E-7;
@@ -88,7 +83,7 @@ double betacf(double a, double b, double x)
 //----------------------------------------------------------------------------
 // Returns the incomplete beta function Ix(a, b)
 // Adopted from numerical recipes in C p227
-double betai(double a, double b, double x)
+inline double betai(double a, double b, double x)
 {
     if (x < 0.0 || x > 1.0) {
         throw std::runtime_error("Bad x in routine betai");
@@ -107,7 +102,7 @@ double betai(double a, double b, double x)
     if (x < ((a + 1.0) / (a + b + 2.0))) {
         return bt * betacf(a, b, x) / a;
     }
-    // Otherwise, use continued fraction after making the
+    // Otherwise, use continued fraction after making the 
     // symmetry transformation.
     else {
         return 1.0 - (bt * betacf(b, a, 1.0 - x) / b);
@@ -151,9 +146,9 @@ void printDenseMatrix(unsigned int numPre, unsigned int numPost, T *weights)
 {
     for(unsigned int i = 0; i < numPre; i++) {
         for(unsigned int j = 0; j < numPost; j++) {
-            LOGI << *(weights++) << ",";
+            std::cout << *(weights++) << ",";
         }
-        LOGI << std::endl;
+        std::cout << std::endl;
     }
 }
 //----------------------------------------------------------------------------
@@ -161,14 +156,14 @@ template<typename IndexType>
 void printRaggedMatrix(unsigned int numPre, const unsigned int *rowLength, const IndexType *ind, unsigned int maxRowLength)
 {
     for(unsigned int i = 0; i < numPre; i++) {
-        LOGI << i << ":";
+        std::cout << i << ":";
 
-        const IndexType *rowInd = &ind[i * maxRowLength];
+        const unsigned int *rowInd = &ind[i * maxRowLength];
         for(unsigned int j = 0; j < rowLength[i]; j++) {
-            LOGI << rowInd[j] << ",";
+            std::cout << rowInd[j] << ",";
         }
 
-        LOGI << std::endl;
+        std::cout << std::endl;
     }
 }
 //----------------------------------------------------------------------------
@@ -206,7 +201,7 @@ void buildFixedNumberPreConnector(unsigned int numPre, unsigned int numPost, uns
     sortRows(numPre, rowLength, ind, maxRowLength);
 }
 //----------------------------------------------------------------------------
-unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
+inline unsigned int calcFixedNumberPreConnectorMaxConnections(unsigned int numPre, unsigned int numPost, unsigned int numConnections)
 {
     // Calculate suitable quantile for 0.9999 change when drawing numPre times
     const double quantile = pow(0.9999, 1.0 / (double)numPre);

@@ -3,28 +3,32 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// Libantworld includes
+#include "snapshot_processor.h"
+
+//----------------------------------------------------------------------------
+// BoBRobotics::AntWorld::SnapshotProcessorArdin
+//----------------------------------------------------------------------------
+//! OpenCV-based snapshot processor - uses OpenCV on CPU to process snapshots
+//! In the manner described in Ardin, Webb (2016)
 namespace BoBRobotics
 {
 namespace AntWorld
 {
-//----------------------------------------------------------------------------
-// BoBRobotics::AntWorld::SnapshotProcessor
-//----------------------------------------------------------------------------
-//! OpenCV-based snapshot processor - uses OpenCV on CPU to process snapshots
-class SnapshotProcessorArdin
+class SnapshotProcessorArdin : public SnapshotProcessor
 {
 public:
     SnapshotProcessorArdin(int displayScale, int intermediateWidth, int intermediateHeight,
                            int outputWidth, int outputHeight);
 
     //------------------------------------------------------------------------
-    // Public API
+    // SnapshotProcessor virtuals
     //------------------------------------------------------------------------
-    // Process input snapshot (probably at screen resolution)
-    void process(const cv::Mat &snapshot);
+    //! Process input snapshot (probably at screen resolution)
+    virtual void process(const cv::Mat &snapshot) override;
 
-    const cv::Mat &getFinalSnapshot() const{ return m_FinalSnapshot; }
-    const cv::Mat &getFinalSnapshotFloat() const{ return m_FinalSnapshotFloat; }
+    //! Get processed snapshot - should be in a CV_8UC1 format image
+    virtual const cv::Mat &getFinalSnapshot() const override{ return m_FinalSnapshot; }
 
 private:
     //------------------------------------------------------------------------
@@ -46,8 +50,6 @@ private:
 
     // Host OpenCV array to hold final resolution greyscale snapshot
     cv::Mat m_FinalSnapshot;
-
-    cv::Mat m_FinalSnapshotFloat;
 
     // CLAHE algorithm for histogram normalization
     cv::Ptr<cv::CLAHE> m_Clahe;

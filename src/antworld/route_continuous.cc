@@ -26,7 +26,7 @@ namespace AntWorld
 RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries)
     : m_WaypointsVAO(0), m_WaypointsPositionVBO(0), m_WaypointsColourVBO(0),
     m_RouteVAO(0), m_RoutePositionVBO(0), m_RouteColourVBO(0), m_RouteNumPoints(0), m_RouteMaxPoints(maxRouteEntries),
-    m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0)
+    m_OverlayVAO(0), m_OverlayPositionVBO(0), m_OverlayColoursVBO(0), m_MinBound{0_m, 0_m}, m_MaxBound{0_m, 0_m}
 {
     const GLfloat arrowPositions[] = {
         0.0f, 0.0f,
@@ -89,6 +89,10 @@ RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries
     // Set colour pointer and enable client state in VAO
     glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_COLOR_ARRAY);
+
+    // Unbind
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 RouteContinuous::RouteContinuous(float arrowLength, unsigned int maxRouteEntries, const std::string &filename)
@@ -117,6 +121,10 @@ RouteContinuous::~RouteContinuous()
 //----------------------------------------------------------------------------
 void RouteContinuous::load(const std::string &filename)
 {
+    // Clear existing waypoints and headings
+    m_Waypoints.clear();
+    m_Headings.clear();
+
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
@@ -132,9 +140,11 @@ void RouteContinuous::load(const std::string &filename)
     // Allocate path points
     m_Waypoints.resize(numPoints);
 
+    // Initialise bounds to limits of underlying data types
+    std::fill_n(&m_MinBound[0], 2, std::numeric_limits<meter_t>::max());
+    std::fill_n(&m_MaxBound[0], 2, std::numeric_limits<meter_t>::min());
+
     // Loop through components(X and Y, ignoring heading)
-    GLfloat min[2] = {std::numeric_limits<GLfloat>::max(), std::numeric_limits<GLfloat>::max()};
-    GLfloat max[2] = {std::numeric_limits<GLfloat>::lowest(), std::numeric_limits<GLfloat>::lowest()};
     for(unsigned int c = 0; c < 2; c++) {
         // Loop through points on path
         for(unsigned int i = 0; i < numPoints; i++) {
@@ -146,12 +156,14 @@ void RouteContinuous::load(const std::string &filename)
             m_Waypoints[i][c] = static_cast<GLfloat>(pointPosition / 100.0);
 
             // Update min and max
-            min[c] = std::min(min[c], m_Waypoints[i][c]);
-            max[c] = std::max(max[c], m_Waypoints[i][c]);
+            m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(m_Waypoints[i][c]));
+            m_MaxBound[c] = units::math::max(m_MaxBound[c], meter_t(m_Waypoints[i][c]));
         }
     }
 
-    LOG_INFO << "X range = (" << min[0] << ", " << max[0] << "), y range = (" << min[1] << ", " << max[1] << ")";
+    LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")";
+    LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
+
     // Reserve headings
     const size_t numSegments = m_Waypoints.size() - 1;
     m_Headings.reserve(numSegments);
@@ -176,11 +188,18 @@ void RouteContinuous::load(const std::string &filename)
     }
 
     // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_WaypointsVAO);
+    if(m_WaypointsVAO == 0) {
+        glGenVertexArrays(1, &m_WaypointsVAO);
+    }
 
     // Generate vertex buffer objects for positions and colours
-    glGenBuffers(1, &m_WaypointsPositionVBO);
-    glGenBuffers(1, &m_WaypointsColourVBO);
+    if(m_WaypointsPositionVBO == 0) {
+        glGenBuffers(1, &m_WaypointsPositionVBO);
+    }
+
+    if(m_WaypointsColourVBO == 0) {
+        glGenBuffers(1, &m_WaypointsColourVBO);
+    }
 
     // Bind vertex array
     glBindVertexArray(m_WaypointsVAO);
@@ -203,6 +222,10 @@ void RouteContinuous::load(const std::string &filename)
         glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_COLOR_ARRAY);
     }
+
+    // Unbind VAOs
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) const
@@ -228,6 +251,8 @@ void RouteContinuous::render(meter_t antX, meter_t antY, degree_t antHeading) co
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
+    // Unbind VAOs
+    glBindVertexArray(0);
 }
 //----------------------------------------------------------------------------
 bool RouteContinuous::atDestination(meter_t x, meter_t y, meter_t threshold) const
@@ -242,7 +267,7 @@ bool RouteContinuous::atDestination(meter_t x, meter_t y, meter_t threshold) con
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter_t y) const
+std::tuple<meter_t, meter_t> RouteContinuous::getDistanceToRoute(meter_t x, meter_t y) const
 {
     // Loop through segments
     meter_t minimumDistance = std::numeric_limits<meter_t>::max();
@@ -259,7 +284,7 @@ std::tuple<meter_t, size_t> RouteContinuous::getDistanceToRoute(meter_t x, meter
     }
 
     // Return the minimum distance to the path and the segment in which this occured
-    return std::make_tuple(minimumDistance, nearestWaypoint);
+    return std::make_tuple(minimumDistance, m_CumulativeDistance[nearestWaypoint]);
 }
 //----------------------------------------------------------------------------
 Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
@@ -327,7 +352,7 @@ void RouteContinuous::addPoint(meter_t x, meter_t y, bool error)
     glBindBuffer(GL_ARRAY_BUFFER, m_RoutePositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, m_RouteNumPoints * sizeof(float) * 2,
                     sizeof(float) * 2, position);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_RouteNumPoints++;
 }
 }   // namespace AntWorld

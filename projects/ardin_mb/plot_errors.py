@@ -1,5 +1,6 @@
 import re
 import sys
+from os import path
 import matplotlib.pyplot as plt
 
 def read_errors(filename):
@@ -17,8 +18,11 @@ def read_errors(filename):
     return errors
 
 # Read errors
-errors = read_errors(sys.argv[1])
+names = [path.basename(a) for a in sys.argv[1:]]
+errors = [read_errors(a) for a in sys.argv[1:]]
 
 fig, axis = plt.subplots()
 axis.boxplot(errors, 0, '')
+axis.set_xticklabels(names)
+axis.set_ylabel("Number of errors")
 plt.show()

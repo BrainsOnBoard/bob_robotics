@@ -15,7 +15,6 @@ SnapshotProcessorArdin::SnapshotProcessorArdin(int displayScale, int intermediat
     m_OutputWidth(outputWidth), m_OutputHeight(outputHeight),
     m_IntermediateSnapshotGreyscale(intermediateHeight, intermediateWidth, CV_8UC1),
     m_FinalSnapshot(outputHeight, outputWidth, CV_8UC1),
-    m_FinalSnapshotFloat(outputHeight, outputWidth, CV_32FC1),
     m_Clahe(cv::createCLAHE(40.0, cv::Size(8, 8)))
 {
     // Check that the display scale is a multiple of 4
