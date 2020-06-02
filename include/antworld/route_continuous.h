@@ -36,14 +36,14 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void load(const std::string &filename);
-    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
+    void render(const Vector2<meter_t> &position, degree_t antHeading, meter_t height = meter_t{0.1}) const;
 
-    bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
-    std::tuple<meter_t, meter_t> getDistanceToRoute(meter_t x, meter_t y) const;
+    bool atDestination(const Vector2<meter_t> &position, meter_t threshold) const;
+    std::tuple<meter_t, meter_t> getDistanceToRoute(const Vector2<meter_t> &position) const;
     Pose2<meter_t, degree_t> getPose(meter_t distance) const;
 
     void setWaypointFamiliarity(size_t pos, double familiarity);
-    void addPoint(meter_t x, meter_t y, bool error);
+    void addPoint(const Vector2<meter_t> &position, bool error);
     meter_t getLength() const{ return m_CumulativeDistance.back(); }
 
     const Vector2<meter_t> &getMinBound()

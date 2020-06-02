@@ -42,12 +42,12 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void load(const std::string &filename, bool realign = true);
-    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
+    void render(const Vector2<meter_t> &position, degree_t yaw, meter_t height = meter_t{0.1}) const;
 
-    bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
-    std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
+    bool atDestination(const Vector2<meter_t> &position, meter_t threshold) const;
+    std::tuple<meter_t, size_t> getDistanceToRoute(const Vector2<meter_t> &position) const;
     void setWaypointFamiliarity(size_t pos, double familiarity);
-    void addPoint(meter_t x, meter_t y, bool error);
+    void addPoint(const Vector2<meter_t> &position, bool error);
 
     const Vector2<meter_t> &getMinBound()
     {

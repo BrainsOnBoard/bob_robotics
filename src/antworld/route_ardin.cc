@@ -257,13 +257,13 @@ void RouteArdin::load(const std::string &filename, bool realign)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
-void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
+void RouteArdin::render(const Vector2<meter_t> &position, degree_t yaw, meter_t height) const
 {
     // Bind route VAO
     glBindVertexArray(m_WaypointsVAO);
 
     glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.1f);
+    glTranslatef(0.0f, 0.0f, static_cast<GLfloat>(height.value()));
     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_Waypoints.size()));
 
     // If there are any route points, bind
@@ -275,8 +275,8 @@ void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(static_cast<GLfloat>(antX.value()), static_cast<GLfloat>(antY.value()), 0.1f);
-    glRotatef(static_cast<GLfloat>(-antHeading.value()), 0.0f, 0.0f, 1.0f);
+    glTranslatef(static_cast<GLfloat>(position.x().value()), static_cast<GLfloat>(position.y().value()), 0.0f);
+    glRotatef(static_cast<GLfloat>(-yaw.value()), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
@@ -284,7 +284,7 @@ void RouteArdin::render(meter_t antX, meter_t antY, degree_t antHeading) const
     glBindVertexArray(0);
 }
 //----------------------------------------------------------------------------
-bool RouteArdin::atDestination(meter_t x, meter_t y, meter_t threshold) const
+bool RouteArdin::atDestination(const Vector2<meter_t> &position, meter_t threshold) const
 {
     // If route's empty, there is no destination so return false
     if(m_Waypoints.empty()) {
@@ -292,18 +292,18 @@ bool RouteArdin::atDestination(meter_t x, meter_t y, meter_t threshold) const
     }
     // Otherwise return true if
     else {
-        return (distance(m_Waypoints.back(), x, y) < threshold);
+        return (distance(m_Waypoints.back(), position.x(), position.y()) < threshold);
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(meter_t x, meter_t y) const
+std::tuple<meter_t, size_t> RouteArdin::getDistanceToRoute(const Vector2<meter_t> &position) const
 {
     // Loop through segments
     meter_t minimumDistance = std::numeric_limits<meter_t>::max();
     size_t nearestWaypoint;
     for(unsigned int s = 0; s < m_Waypoints.size(); s++)
     {
-        const meter_t distanceToWaypoint = distance(m_Waypoints[s], x, y);
+        const meter_t distanceToWaypoint = distance(m_Waypoints[s], position.x(), position.y());
 
         // If this is closer than current minimum, update minimum and nearest waypoint
         if(distanceToWaypoint < minimumDistance) {
@@ -328,12 +328,12 @@ void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
-void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
+void RouteArdin::addPoint(const Vector2<meter_t> &position, bool error)
 {
     const static uint8_t errorColour[3] = {0xFF, 0, 0};
     const static uint8_t correctColour[3] = {0, 0xFF, 0};
 
-    const float position[2] = { (float)x.value(), (float)y.value() };
+    const float positionRaw[2] = { (float)position.x().value(), (float)position.y().value() };
 
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RouteColourVBO);
@@ -343,7 +343,7 @@ void RouteArdin::addPoint(meter_t x, meter_t y, bool error)
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_RoutePositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, m_RouteNumPoints * sizeof(float) * 2,
-                    sizeof(float) * 2, position);
+                    sizeof(float) * 2, positionRaw);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_RouteNumPoints++;
 }

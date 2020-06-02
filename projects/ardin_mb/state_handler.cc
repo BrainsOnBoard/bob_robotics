@@ -90,10 +90,10 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Renderer.renderTopDownView(m_RenderTargetTopDown, false, false);
 
         // Render route
-        m_Route.render(m_Pose.x(), m_Pose.y(), m_Pose.yaw());
+        m_Route.render(m_Pose, m_Pose.yaw(), m_PathHeight);
 
         // Render vector field
-        m_VectorField.render();
+        m_VectorField.render(m_PathHeight);
 
         // Unbind top-down render target
         m_RenderTargetTopDown.unbind();
@@ -178,7 +178,7 @@ bool StateHandler::handleEvent(State state, Event event)
             m_Pose.yaw() -= (SimParams::scanAngle / 2.0);
 
             // Add initial replay point to route
-            m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
+            m_Route.addPoint(m_Pose, false);
 
             m_TestingScan = 0;
 
@@ -433,11 +433,11 @@ void StateHandler::resetAntPosition()
 bool StateHandler::checkAntPosition()
 {
     // If we've reached destination
-    if(m_Route.atDestination(m_Pose.x(), m_Pose.y(), SimParams::errorDistance)) {
+    if(m_Route.atDestination(m_Pose, SimParams::errorDistance)) {
         std::cerr << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors" << std::endl;
 
         // Add final point to route
-        m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
+        m_Route.addPoint(m_Pose, false);
 
         // Stop
         return false;
@@ -454,7 +454,7 @@ bool StateHandler::checkAntPosition()
         // Calculate distance to route
         meter_t distanceToRoute;
         size_t nearestRouteWaypoint;
-        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose.x(), m_Pose.y());
+        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose);
         std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
 
         // If we are further away than error threshold
@@ -471,7 +471,7 @@ bool StateHandler::checkAntPosition()
             m_MaxTestPoint = std::max(m_MaxTestPoint, snapWaypoint);
 
             // Add error point to route
-            m_Route.addPoint(m_Pose.x(), m_Pose.y(), true);
+            m_Route.addPoint(m_Pose, true);
 
             // Increment error counter
             m_NumTestErrors++;
@@ -479,7 +479,7 @@ bool StateHandler::checkAntPosition()
         // Otherwise, update maximum test point reached and add 'correct' point to route
         else {
             m_MaxTestPoint = std::max(m_MaxTestPoint, nearestRouteWaypoint);
-            m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
+            m_Route.addPoint(m_Pose, false);
         }
 
         return true;
