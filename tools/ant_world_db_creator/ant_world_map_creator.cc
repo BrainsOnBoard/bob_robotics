@@ -82,6 +82,9 @@ int bobMain(int argc, char **argv)
                                  { 0.898f, 0.718f, 0.353f });
     } else {
         renderer.getWorld().loadObj(antWorldPath / "seville_vegetation_downsampled.obj");
+
+        renderer.getWorld().setMinBound({0_m, 0_m, 0_m});
+        renderer.getWorld().setMaxBound({10_m, 10_m, 2.8_m});
     }
 
     // Create input to read snapshots from screen
