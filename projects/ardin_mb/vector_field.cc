@@ -79,14 +79,14 @@ VectorField::~VectorField()
     glDeleteVertexArrays(1, &m_LinesVAO);
 }
 //------------------------------------------------------------------------
-void VectorField::render()
+void VectorField::render(meter_t height)
 {
     // Bind lines VAO
     glBindVertexArray(m_LinesVAO);
 
     // Draw lines
     glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.1f);
+    glTranslatef(0.0f, 0.0f, static_cast<GLfloat>(height.value()));
     glDrawArrays(GL_LINES, 0, getNumPoints() * 2);
     glPopMatrix();
 
