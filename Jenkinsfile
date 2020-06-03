@@ -1,5 +1,12 @@
 #!groovy​
 
+// only keep 100 builds to prevent disk usage from growing out of control
+properties([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', 
+                              artifactNumToKeepStr: '', 
+                              daysToKeepStr: '', 
+                              numToKeepStr: '100'))])
+                              
 //--------------------------------------------------------------------------
 // Helper functions
 //--------------------------------------------------------------------------
