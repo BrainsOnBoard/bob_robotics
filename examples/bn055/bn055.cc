@@ -1,6 +1,5 @@
 // BoB robotics includes
-#include "common/main.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/bn055_imu.h"
 
 // Standard C includes
@@ -8,7 +7,7 @@
 
 using namespace BoBRobotics;
 
-int bob_main(int, char **)
+int bobMain(int, char **)
 {
     BN055 imu;
 

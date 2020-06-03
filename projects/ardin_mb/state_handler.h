@@ -17,10 +17,12 @@
 // Libantworld includes
 #include "antworld/common.h"
 #include "antworld/renderer.h"
+#include "antworld/render_target.h"
+#include "antworld/render_target_input.h"
 #include "antworld/route_ardin.h"
-#include "antworld/snapshot_processor_ardin.h"
 
 // Ardin MB includes
+#include "opencv_texture.h"
 #include "vector_field.h"
 
 // Forward declarations
@@ -30,7 +32,13 @@ namespace Navigation
 {
     class VisualNavigationBase;
 }
+namespace AntWorld
+{
+    class SnapshotProcessor;
 }
+}
+
+class VisualNavigationUI;
 
 //----------------------------------------------------------------------------
 // Enumerations
@@ -40,6 +48,7 @@ enum class State
     Invalid,
     Training,
     Testing,
+    BuildingRIDF,
     RandomWalk,
     FreeMovement,
     BuildingVectorField,
@@ -62,20 +71,18 @@ public:
     {
         KeyLeft,
         KeyRight,
+        KeyForward,
+        KeyBackward,
         KeyUp,
         KeyDown,
         KeyReset,
-        KeyTrainSnapshot,
-        KeyTestSnapshot,
-        KeySaveSnapshot,
-        KeyRandomWalk,
-        KeyBuildVectorField,
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename, meter_t pathHeight,
-                 const std::vector<float> &minBound, const std::vector<float> &maxBound,
-                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+                 meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
+                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
+                 VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
     // Public API
@@ -104,6 +111,12 @@ private:
     //! Checks whether current position is still on route/at end etc
     bool checkAntPosition();
 
+    //! Load a route
+    void loadRoute(const std::string &filename);
+
+    //! Update UI
+    bool handleUI();
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
@@ -118,15 +131,17 @@ private:
 
     //! Renderer used for ant world
     BoBRobotics::AntWorld::Renderer m_Renderer;
+    BoBRobotics::AntWorld::RenderTarget m_RenderTargetTopDown;
+    BoBRobotics::AntWorld::RenderTarget m_RenderTargetPanoramic;
 
     //! OpenGL video input used for reading image from framebuffer
-    BoBRobotics::Video::OpenGL m_Input;
+    BoBRobotics::AntWorld::RenderTargetInput m_Input;
 
     //! Route handler - implements the various bits of route-regularizing weirdness from original paper
     BoBRobotics::AntWorld::RouteArdin m_Route;
 
-    //! Snapshot processor - implements the strange resizing algorithm from original paper
-    BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
+    //! OpenCV texture wrapper used to render final snapshot
+    OpenCVTexture m_FinalSnapshotTexture;
 
     //! Class for handling rendering of vector field
     VectorField m_VectorField;
@@ -158,8 +173,20 @@ private:
     //! RNG used for random walk
     std::mt19937 m_RNG;
 
+    //! Distribution of position jitter
+    std::normal_distribution<float> m_PositionJitterDistributionCM;
+
     //! Distribution of angles to turn for random walk
     std::uniform_real_distribution<float> m_RandomWalkAngleDistribution;
+
+    //! Should we quit after training? (useful for automated parameter sweeping)
+    const bool m_QuitAfterTrain;
+
+    //! Should we automatically test after training? (useful for automated benchmarking)
+    const bool m_AutoTest;
+
+    //! Snapshot processor - takes screen images and pre-processes
+    BoBRobotics::AntWorld::SnapshotProcessor &m_SnapshotProcessor;
 
     //! Height of path
     const meter_t m_PathHeight;
@@ -167,6 +194,11 @@ private:
     //! Model used for visual navigation
     BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
 
+    //! Object used to handle visual navigation model-specific UI
+    VisualNavigationUI &m_VisualNavigationUI;
+
     unsigned int m_CurrentVectorFieldPoint;
     std::vector<std::pair<units::angle::degree_t, float>> m_VectorFieldNovelty;
+
+    std::vector<float> m_RIDFNovelty;
 };

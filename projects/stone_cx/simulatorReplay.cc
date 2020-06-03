@@ -14,7 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
 // GeNN generated code includes
@@ -37,7 +37,7 @@ double readDoubleField(std::istringstream &lineStream)
 }
 }
 
-int main()
+int bobMain(int, char **)
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;

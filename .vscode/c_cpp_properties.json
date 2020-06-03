@@ -9,7 +9,9 @@
                 "${workspaceFolder}/third_party/plog/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
                 "/usr/include/python3.7m",
+                "/usr/include/python3.8",
                 "/usr/lib/python3.7/site-packages/numpy/core/include",
+                "/usr/lib/python3.8/site-packages/numpy/core/include",
                 "/usr/include/eigen3",
                 "/usr/include/opencv4",
                 "/usr/include/gazebo-9",
@@ -20,15 +22,17 @@
                 "/usr/include/sdformat-6.2",
                 "/usr/include/sdformat-9.1",
                 "/usr/include/sdformat-9.2",
+                "/usr/include/SDL2",
                 "${GENN_PATH}/include"
             ],
             "defines": [
                 "ROBOT_TYPE_TANK",
                 "ROBOT_TYPE=Tank",
-                "BOB_ROBOTICS_PATH=\"/some/path\""
+                "BOB_ROBOTICS_PATH=\"/some/path\"",
+                "BOB_PROJECT_GIT_COMMIT=\"abcdef\"",
+                "BOB_ROBOTICS_GIT_COMMIT=\"abcdef\""
             ],
-            "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "cppStandard": "c++14"
         }
     ],
     "version": 4

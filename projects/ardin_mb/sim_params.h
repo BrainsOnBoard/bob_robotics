@@ -31,19 +31,13 @@ namespace SimParams
     // What colour should the brightest tussocks be?
     constexpr float worldColour[] = {0.0f, 1.0f, 0.0f};
 
-    // Size of snapshots for initial pre-processing
-    constexpr unsigned int intermediateSnapshotWidth = 74;
-    constexpr unsigned int intermediateSnapshotHeight = 19;
-
-    // How much larger than intermediate snapshots, rendering is performed at
-    constexpr unsigned int displayScale = 8;
-
     // From these calculate display size
-    constexpr unsigned int displayRenderWidth = intermediateSnapshotWidth * displayScale;
-    constexpr unsigned int displayRenderHeight = intermediateSnapshotHeight * displayScale;
+    constexpr unsigned int displayRenderWidth = 74 * 8;//688;
+    constexpr unsigned int displayRenderHeight = 19 * 8;//160;
 
     // Ant parameters
     // How fast does the ant move each timestep?
-    constexpr degree_t antTurnStep = 4.0_deg;
-    constexpr meter_t antMoveStep = 0.05_m;
+    constexpr degree_t antTurnStep = 1.0_deg;
+    constexpr meter_t antMoveStep = 0.01_m;
+    constexpr degree_t antPitchStep = 1.0_deg;
 }

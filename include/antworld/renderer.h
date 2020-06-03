@@ -33,7 +33,7 @@ class Renderer
 
 public:
     Renderer(GLsizei cubemapSize = 256, double nearClip = 0.001, double farClip = 1000.0,
-             degree_t horizontalFOV = 296_deg, degree_t verticalFOV = 75_deg);
+             degree_t horizontalFOV = 360_deg, degree_t verticalFOV = 75_deg);
     virtual ~Renderer();
 
 

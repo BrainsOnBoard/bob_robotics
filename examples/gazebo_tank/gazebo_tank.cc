@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "robots/gazebo/camera.h"
@@ -23,8 +23,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     /************************************Gazebo setup************/
 
@@ -66,4 +65,6 @@ main(int argc, char **argv)
     display->close();
     Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
+
+    return EXIT_SUCCESS;
 }

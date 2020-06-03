@@ -79,9 +79,6 @@ public:
 
 }; // TankNetSinkBase
 
-// Explicitly instantiate
-template class TankNetSinkBase<Net::Connection &>;
-
 //! Default type for controlling robots over network
 using TankNetSink = TankNetSinkBase<Net::Connection &>;
 

@@ -1,9 +1,11 @@
-#include "os/windows_include.h"
+#ifndef __APPLE__ // Not working on OSX yet
 
 // BoB robotics includes
 #include "os/screen.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include "windows.h"
+#else
 // Standard C++ includes
 #include <stdexcept>
 #endif
@@ -44,3 +46,4 @@ getResolution()
 } // Screen
 } // OS
 } // BoBRobotics
+#endif // !__APPLE__

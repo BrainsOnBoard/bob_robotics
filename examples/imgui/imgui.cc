@@ -9,7 +9,7 @@
 #include <SFML/Graphics.hpp>
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // IMGUI includes
 #include "imgui.h"
@@ -18,7 +18,7 @@
 #include "examples/imgui_impl_opengl2.h"
 
 
-int main(int, char**)
+int bobMain(int, char**)
 {
     sf::Window window(sf::VideoMode(1280, 720), "Dear ImGui SFML+OpenGL2 example");
 

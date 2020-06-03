@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "video/input.h"
 
@@ -60,7 +60,15 @@ void
 Input::readFrameSync(cv::Mat &outFrame)
 {
     while (!readFrame(outFrame)) {
-        std::this_thread::sleep_for(10ms);
+        std::this_thread::sleep_for(5ms);
+    }
+}
+
+void
+Input::readGreyscaleFrameSync(cv::Mat &outFrame)
+{
+    while (!readGreyscaleFrame(outFrame)) {
+        std::this_thread::sleep_for(5ms);
     }
 }
 

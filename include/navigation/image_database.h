@@ -14,6 +14,7 @@
 // Standard C++ includes
 #include <array>
 #include <fstream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,13 +31,13 @@ using namespace units::literals;
 struct Range
 {
     using millimeter_t = units::length::millimeter_t;
-    const millimeter_t begin, end, separation;
+    millimeter_t begin, end, separation;
 
     constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
                     const millimeter_t separation)
-    : begin(beginAndEnd.first)
-    , end(beginAndEnd.second)
-    , separation(separation)
+      : begin(beginAndEnd.first)
+      , end(beginAndEnd.second)
+      , separation(separation)
     {
         if (begin == end) {
             BOB_ASSERT(separation == 0_mm);
@@ -48,6 +49,12 @@ struct Range
 
     constexpr Range(const millimeter_t value)
       : Range({ value, value }, 0_mm)
+    {}
+
+    constexpr Range()
+      : begin{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
+      , end{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
+      , separation{ 0_mm }
     {}
 
     size_t size() const;

@@ -3,8 +3,7 @@
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "robots/robot_type.h"
@@ -186,8 +185,7 @@ private:
     BackgroundExceptionCatcher m_Catcher;
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     PositionerExample example;
     example.run();

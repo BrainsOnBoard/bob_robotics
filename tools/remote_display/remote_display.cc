@@ -5,12 +5,12 @@
 
 using namespace BoBRobotics;
 
-int
-main()
+int bobMain(int, char **)
 {
     Net::Client client;
     Video::NetSource video{ client };
     client.runInBackground();
     Video::Display display{ video };
     display.run();
+    return EXIT_SUCCESS;
 }

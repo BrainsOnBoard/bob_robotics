@@ -1,20 +1,18 @@
-#include "os/windows_include.h"
-
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
 #include "navigation/image_database.h"
 #include "os/keycodes.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 
+// Third-party includes
+#include "plog/Log.h"
+
 using namespace std::literals;
 using namespace units::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     Navigation::Range xrange({ 0_mm, 100_mm }, 100_mm);
     Navigation::Range yrange({ 0_mm, 1700_mm }, 100_mm);

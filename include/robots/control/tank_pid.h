@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "vicon/udp.h"

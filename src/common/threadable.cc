@@ -41,11 +41,6 @@ Threadable::stop()
     }
 }
 
-Threadable::Threadable(Threadable &&old)
-  : m_Thread(std::move(old.m_Thread))
-  , m_DoRun(old.m_DoRun.load())
-{}
-
 void
 Threadable::runCatchExceptions()
 {

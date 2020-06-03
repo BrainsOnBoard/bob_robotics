@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/i2c_interface.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <string>

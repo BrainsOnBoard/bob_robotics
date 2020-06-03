@@ -8,7 +8,7 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -78,33 +78,33 @@ public:
                                         [this]()
                                         {
                                             Net::Server server(m_Config.getServerListenPort());
-                                            m_LiveConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                            m_LiveConnection = server.waitForConnection();
                                         });
-            
+
             auto snapshotAsync = std::async(std::launch::async,
                                             [this]()
                                             {
                                                 Net::Server server(m_Config.getSnapshotServerListenPort());
-                                                m_SnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                                m_SnapshotConnection = server.waitForConnection();
                                             });
-            
+
             auto bestSnapshotAsync = std::async(std::launch::async,
                                                 [this]()
                                                 {
                                                     Net::Server server(m_Config.getBestSnapshotServerListenPort());
-                                                    m_BestSnapshotConnection = std::make_unique<Net::Connection>(server.waitForConnection());
+                                                    m_BestSnapshotConnection = server.waitForConnection();
                                                 });
-            
+
             // Wait for all connections to be established
             liveAsync.wait();
             snapshotAsync.wait();
             bestSnapshotAsync.wait();
-            
+
             // Create netsinks
             m_LiveNetSink = std::make_unique<Video::NetSink>(*m_LiveConnection, config.getCroppedRect().size(), "live");
             m_SnapshotNetSink = std::make_unique<Video::NetSink>(*m_SnapshotConnection, config.getCroppedRect().size(), "snapshot");
             m_BestSnapshotNetSink = std::make_unique<Video::NetSink>(*m_BestSnapshotConnection, config.getCroppedRect().size(), "best_snapshot");
-            
+
             // Start background threads for transmitting images
             m_LiveConnection->runInBackground();
             m_SnapshotConnection->runInBackground();
@@ -200,7 +200,7 @@ private:
             }
 
             // If we're in a suitable state, drive motors using joystick
-            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {                 
+            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {
                 m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
             }
 
@@ -214,12 +214,12 @@ private:
 
             // Crop frame
             m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
-            
+
             // If we should stream output, send unwrapped frame
             if(m_Config.shouldStreamOutput()) {
                 m_LiveNetSink->sendFrame(m_Cropped);
             }
-            
+
             cv::waitKey(1);
         }
 
@@ -245,7 +245,7 @@ private:
                 if(m_Config.shouldStreamOutput()) {
                     m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TRAINING\n");
                 }
-                
+
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
                     m_LogFile.close();
@@ -293,7 +293,7 @@ private:
                     if(m_Config.shouldStreamOutput()) {
                         m_SnapshotNetSink->sendFrame(processedSnapshot);
                     }
-                    
+
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
@@ -339,7 +339,7 @@ private:
                 if(m_Config.shouldStreamOutput()) {
                     m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TESTING\n");
                 }
-                
+
                 // Close log file if it's already open
                 if(m_LogFile.is_open()) {
                     m_LogFile.close();
@@ -375,7 +375,7 @@ private:
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
-                const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped); 
+                const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
                 m_Memory->test(processedSnapshot);
 
                 // Write time
@@ -387,7 +387,7 @@ private:
                 // If vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
                     // Get tracking data
-                    const auto objectData = m_ViconTracking.getObjectData(0);
+                    const auto objectData = m_ViconTracking.getObjectData();
                     const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                     const auto &position = pose.position();
                     const auto &attitude = pose.attitude();
@@ -411,7 +411,7 @@ private:
                 if(m_Config.shouldStreamOutput()) {
                     // Send out snapshot
                     m_SnapshotNetSink->sendFrame(processedSnapshot);
-                    
+
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
                     if(perfectMemory != nullptr) {
@@ -434,7 +434,7 @@ private:
                     m_StateMachine.transition(State::DrivingForward);
                 }
 
-               
+
             }
         }
         else if(state == State::DrivingForward || state == State::Turning) {
@@ -449,7 +449,7 @@ private:
                     const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
                     m_Robot.turnOnTheSpot(motorTurn);
                 }
-                
+
                 // Start timer
                 m_MoveStopwatch.start();
             }
@@ -458,7 +458,7 @@ private:
                 if(m_Joystick.isPressed(HID::JButton::A)) {
                     // Subtract time we've already moved for from drive time
                     m_DriveTime -= m_MoveStopwatch.elapsed();
-                    
+
                     // Transition to correct paused state
                     m_StateMachine.transition((state == State::DrivingForward) ? State::PausedDrivingForward : State::PausedTurning);
                 }
@@ -542,7 +542,7 @@ private:
 
     // Is testing paused
     bool m_TestingPaused;
-    
+
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
@@ -558,7 +558,7 @@ private:
 };
 }   // Anonymous namespace
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
 

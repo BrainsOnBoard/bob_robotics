@@ -15,8 +15,8 @@ macro(BoB_project)
     # Parse input args
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
-                          "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL;CXX_STANDARD"
+                          "INCLUDE_GENN_USERPROJECTS;GENN_CPU_ONLY"
+                          "EXECUTABLE;GENN_MODEL;PYTHON_MODULE;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
@@ -46,7 +46,25 @@ macro(BoB_project)
     # projects.
     file(GLOB H_FILES "*.h")
 
-    if(PARSED_ARGS_EXECUTABLE)
+    if(PARSED_ARGS_PYTHON_MODULE)
+        set(NAME ${PARSED_ARGS_PYTHON_MODULE})
+        if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+            set(NAME ${NAME}_d)
+        endif()
+        add_library(${NAME} SHARED "${PARSED_ARGS_SOURCES}" "${H_FILES}")
+        set_target_properties(${NAME} PROPERTIES PREFIX "")
+        if(WIN32)
+            set_target_properties(${NAME} PROPERTIES SUFFIX ".pyd")
+        endif()
+        set(BOB_TARGETS ${NAME})
+        add_definitions(-DBOB_SHARED_LIB)
+        install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
+
+        if(GNU_TYPE_COMPILER)
+            add_compile_flags(-fPIC)
+        endif()
+        BoB_external_libraries(python)
+    elseif(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set(BOB_TARGETS ${NAME})
@@ -61,63 +79,90 @@ macro(BoB_project)
     endif()
 
     # If this project includes a GeNN model...
-    if(PARSED_ARGS_GENN_MODEL)
-        get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
-        set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
-        set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
-        set(genn_model_dest "${genn_model_dir}/runner.cc")
-
-        if(NOT GENN_CPU_ONLY)
-            if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
-                set(GENN_CPU_ONLY TRUE)
-            else()
-                set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
-            endif()
-        endif(NOT GENN_CPU_ONLY)
-        if(GENN_CPU_ONLY)
-            message("Building GeNN model for CPU only")
-            add_definitions(-DCPU_ONLY)
-            set(CPU_FLAG -c)
+    if(PARSED_ARGS_GENN_MODEL OR PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+        # Find genn-buildmodel (which should be in the path)
+        if(WIN32)
+            find_program(GENN_BUILDMODEL genn-buildmodel.bat)
         else()
-            message("Building GeNN model with CUDA")
+            find_program(GENN_BUILDMODEL genn-buildmodel.sh)
         endif()
+        if(GENN_BUILDMODEL)
+            # Remove filename to get path to GeNN bin directory
+            get_filename_component(GENN_BIN_PATH ${GENN_BUILDMODEL} DIRECTORY)
 
-        # Custom command to generate source code with GeNN
-        add_custom_command(PRE_BUILD
-                           OUTPUT ${genn_model_dest}
-                           DEPENDS ${genn_model_src}
-                           COMMAND genn-buildmodel.sh
-                                   ${genn_model_src}
-                                   ${CPU_FLAG}
-                                   -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
-                           COMMENT "Generating source code with GeNN")
+            # Get absolute path to userproject include
+            get_filename_component(GENN_USERPROJECT ${GENN_BIN_PATH}/../userproject/include ABSOLUTE)
+            message("GeNN found in ${GENN_USERPROJECT}")
+            BoB_add_include_directories(${GENN_USERPROJECT})
+            # If th
+            if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+                # On *nix link dl
+                if(NOT WIN32)
+                    BoB_add_link_libraries(dl)
+                endif()
+            elseif(PARSED_ARGS_GENN_MODEL)
+                get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+                set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
+                set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
+                set(genn_model_dest "${genn_model_dir}/runner.cc")
 
-        # Custom command to generate librunner.so
-        add_custom_command(PRE_BUILD
-                           OUTPUT ${genn_model_dir}/librunner.so
-                           DEPENDS ${genn_model_dest}
-                           COMMAND make -C "${genn_model_dir}")
+                if(NOT GENN_CPU_ONLY)
+                    if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
+                        set(GENN_CPU_ONLY TRUE)
+                    else()
+                        set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+                    endif()
+                endif(NOT GENN_CPU_ONLY)
+                if(GENN_CPU_ONLY)
+                    message("Building GeNN model for CPU only")
+                    add_definitions(-DCPU_ONLY)
+                    set(CPU_FLAG -c)
+                else()
+                    message("Building GeNN model with CUDA")
+                endif()
 
-        add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+                # Custom command to generate source code with GeNN
+                add_custom_command(PRE_BUILD
+                                OUTPUT ${genn_model_dest}
+                                DEPENDS ${genn_model_src}
+                                COMMAND ${GENN_BUILDMODEL}
+                                        ${genn_model_src}
+                                        ${CPU_FLAG}
+                                        -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
+                                COMMENT "Generating source code with GeNN")
 
-        # Our targets depend on librunner.so
-        BoB_add_include_directories(/usr/include/genn)
-        BoB_add_link_libraries(${genn_model_dir}/librunner.so)
-        foreach(target IN LISTS BOB_TARGETS)
-            add_dependencies(${target} ${PROJECT_NAME}_genn_model)
-        endforeach()
+                # Custom command to generate librunner.so
+                add_custom_command(PRE_BUILD
+                                OUTPUT ${genn_model_dir}/librunner.so
+                                DEPENDS ${genn_model_dest}
+                                COMMAND make -C "${genn_model_dir}")
 
-        # So code can access headers in the *_CODE folder
-        BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+                add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+
+                # Our targets depend on librunner.so
+                BoB_add_include_directories(/usr/include/genn)
+                BoB_add_link_libraries(${genn_model_dir}/librunner.so)
+                foreach(target IN LISTS BOB_TARGETS)
+                    add_dependencies(${target} ${PROJECT_NAME}_genn_model)
+                endforeach()
+
+                # So code can access headers in the *_CODE folder
+                BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+            endif()
+        else()
+            message(FATAL_ERROR "GeNN not found. Please install and ensure it is in path.")
+        endif()
     endif()
 
     # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
-    # or CMake param (defaults to Norbot)
+    # or CMake param
     if(NOT ROBOT_TYPE)
         if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
             set(ROBOT_TYPE $ENV{ROBOT_TYPE})
-        else()
+        elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
             set(ROBOT_TYPE Norbot)
+        else()
+            set(ROBOT_TYPE Tank)
         endif()
     endif()
     message("Default robot type (if used): ${ROBOT_TYPE}")
@@ -138,30 +183,28 @@ macro(BoB_project)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
 
+    # We always need the common module so that main() is defined
+    list(APPEND PARSED_ARGS_BOB_MODULES common)
+
     # Do linking etc.
     BoB_build()
 
     # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
     # Ubuntu (and presumably when linking against other libs in non-standard
     # locations too). This linker flag fixes the problem.
-    if(UNIX)
+    if(UNIX AND NOT APPLE)
         set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
     endif()
 
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
-        foreach(file IN LISTS dll_files)
-            get_filename_component(filename "${file}" NAME)
-            if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
-                message("Copying ${filename} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}...")
-                file(COPY "${file}"
-                     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-            endif()
+        # Add custom command to
+        foreach(target IN LISTS BOB_TARGETS)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
+            )
         endforeach()
-
-        link_directories("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     endif()
 endmacro()
 
@@ -238,11 +281,6 @@ macro(BoB_module_custom)
 endmacro()
 
 macro(BoB_init)
-    # CMake defaults to 32-bit builds on Windows
-    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
-        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
-    endif()
-
     # For release builds, CMake disables assertions, but a) this isn't what we
     # want and b) it will break code.
     if(MSVC)
@@ -293,6 +331,26 @@ macro(always_included_packages)
     endif()
 endmacro()
 
+macro(get_git_commit DIR VARNAME)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE ${VARNAME}
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    if(NOT ${rv} EQUAL 0)
+        # Git might fail (e.g. if we're not in a git repo), but let's carry on regardless
+        set(${VARNAME} "(unknown)")
+    else()
+        # Append -dirty if worktree has been modified
+        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
+        RESULT_VARIABLE rv)
+        if(NOT ${rv} EQUAL 0)
+            set(${VARNAME} ${${VARNAME}}-dirty)
+        endif()
+    endif()
+endmacro()
+
 macro(BoB_build)
     # Don't build i2c code if NO_I2C environment variable is set
     if(NOT I2C_MESSAGE_DISPLAYED AND (NO_I2C OR (NOT "$ENV{NO_I2C}" STREQUAL 0 AND NOT "$ENV{NO_I2C}" STREQUAL "")))
@@ -305,6 +363,12 @@ macro(BoB_build)
     # Add macro so that programs know where the root folder is for e.g. loading
     # resources
     add_definitions(-DBOB_ROBOTICS_PATH="${BOB_ROBOTICS_PATH}")
+
+    # Pass the current git commits of project and BoB robotics as C macros
+    get_git_commit("${BOB_ROBOTICS_PATH}" BOB_ROBOTICS_GIT_COMMIT)
+    get_git_commit("${CMAKE_SOURCE_DIR}" PROJECT_GIT_COMMIT)
+    add_definitions(-DBOB_ROBOTICS_GIT_COMMIT="${BOB_ROBOTICS_GIT_COMMIT}"
+                    -DBOB_PROJECT_GIT_COMMIT="${PROJECT_GIT_COMMIT}")
 
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
@@ -329,9 +393,7 @@ macro(BoB_build)
     endif()
 
     # Flags for gcc and clang
-    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-        set(GNU_TYPE_COMPILER TRUE)
-
+    if(GNU_TYPE_COMPILER)
         # Default to building with -march=native
         if(NOT DEFINED ENV{ARCH})
             set(ENV{ARCH} native)
@@ -364,10 +426,6 @@ macro(BoB_build)
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-
-        # If we don't do this, I get linker errors on the BrickPi for the net
-        # module
-        set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
     # If C++ standard has not been specified explicitly either with a command
@@ -442,6 +500,14 @@ macro(BoB_build)
     # Link all targets against the libraries
     foreach(target IN LISTS BOB_TARGETS)
         target_link_libraries(${target} ${${PROJECT_NAME}_LIBRARIES})
+
+        # Older versions of CMake don't have target_link_directories(), but
+        # hopefully we can get away without using it in this case (because we'll
+        # probably only find this on Linux machines which don't care about
+        # linking directories anyway)
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+            target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
+        endif()
     endforeach()
 endmacro()
 
@@ -500,6 +566,15 @@ macro(BoB_add_link_libraries)
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 endmacro()
 
+macro(BoB_add_link_directories)
+    if(${CMAKE_VERSION} VERSION_LESS "3.13.0")
+        link_directories(${ARGV})
+    else()
+        set(${PROJECT_NAME}_LIB_DIRS "${${PROJECT_NAME}_LIB_DIRS};${ARGV}"
+            CACHE INTERNAL "${PROJECT_NAME}: Library directories" FORCE)
+    endif()
+endmacro()
+
 function(BoB_deprecated WHAT ALTERNATIVE)
     message(WARNING "!!!!! WARNING: Use of ${WHAT} in BoB robotics code is deprecated and will be removed in future. Use ${ALTERNATIVE} instead. !!!!!")
 endfunction()
@@ -545,6 +620,7 @@ function(BoB_find_package)
     find_package(${ARGV})
     BoB_add_include_directories(${${ARGV0}_INCLUDE_DIRS})
     BoB_add_link_libraries(${${ARGV0}_LIBS} ${${ARGV0}_LIBRARIES})
+    BoB_add_link_directories(${${ARGV0}_LIB_DIR})
 endfunction()
 
 function(BoB_add_pkg_config_libraries)
@@ -552,7 +628,9 @@ function(BoB_add_pkg_config_libraries)
     foreach(lib IN LISTS ARGV)
         pkg_check_modules(${lib} REQUIRED ${lib})
         BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
+        BoB_add_link_directories(${${lib}_LIBRARY_DIRS})
         BoB_add_link_libraries(${${lib}_LIBRARIES})
+        add_compile_flags(${${lib}_CFLAGS} ${${lib}_LDFLAGS})
     endforeach()
 endfunction()
 
@@ -616,12 +694,10 @@ get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_L
 
 # If this var is defined then this project is being included in another build
 if(NOT DEFINED BOB_DIR)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
     if(WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
-    else()
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
     endif()
 
     # Folder to build BoB modules + third-party modules
@@ -640,17 +716,48 @@ if(WIN32)
         message(FATAL_ERROR "The environment VCPKG_ROOT must be set on Windows")
     endif()
 
+    # When using Visual Studio as a target, you have to specify whether you want
+    # a 32- or 64-bit build when CMake is invoked. Use this to determine the
+    # correct vcpkg libraries to look for or default to 64-bit.
+    if(CMAKE_GENERATOR_PLATFORM)
+        set(PLATFORM ${CMAKE_GENERATOR_PLATFORM}-windows)
+    else()
+        set(PLATFORM x64-windows)
+    endif()
+    set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}")
+
+
     # The vcpkg toolchain in theory should do something like this already, but
     # if we don't do this, then cmake can't find any of vcpkg's packages
-    file(GLOB children "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/share/*")
+    file(GLOB children "${VCPKG_PACKAGE_DIR}/share/*")
     foreach(child IN LISTS children)
         if(IS_DIRECTORY "${child}")
             list(APPEND CMAKE_PREFIX_PATH "${child}")
         endif()
     endforeach()
 
+    # Link against vcpkg packages' libs
+    link_directories("${VCPKG_PACKAGE_DIR}/lib")
+
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+    # We don't want the min/max macros defined in windows.h
+    add_definitions(-DNOMINMAX)
+
+    # the version of the Windows API that we want
+    add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
+
+    # for a less bloated version of windows.h
+    add_definitions(-D_WIN32_LEAN_AND_MEAN)
+
+    # disable the winsock v1 API, which is included by default and conflicts
+    # with v2 of the API
+    add_definitions(-D_WINSOCKAPI_)
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(GNU_TYPE_COMPILER TRUE)
 endif()
 
 # Assume we always need plog

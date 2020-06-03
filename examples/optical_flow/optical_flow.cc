@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/timer.h"
 #include "imgproc/opencv_optical_flow.h"
 #include "video/panoramic.h"
@@ -32,7 +32,7 @@ void buildFilter(cv::Mat &filter, float preferredAngle)
 }
 }   // Anonymous namespace
 
-int main()
+int bobMain(int, char **)
 {
     const cv::Size unwrapRes(90, 25);
     const unsigned int outputScale = 10;

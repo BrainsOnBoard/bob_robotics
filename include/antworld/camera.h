@@ -25,13 +25,13 @@ public:
            Renderer &renderer,
            const cv::Size &renderSize);
 
+    void display();
     Pose3<meter_t, degree_t> getPose() const;
     sf::Window &getWindow() const;
     bool isOpen() const;
     void setPose(const Pose3<meter_t, degree_t> &pose);
     void setPosition(meter_t x, meter_t y, meter_t z);
     void setAttitude(degree_t yaw, degree_t pitch, degree_t roll);
-    bool update();
 
     // Virtuals
     virtual bool readFrame(cv::Mat &outFrame) override;
@@ -43,6 +43,7 @@ private:
     sf::Window &m_Window;
     Renderer &m_Renderer;
 
+    void update();
 }; // Camera
 } // AntWorld
 } // BoBRobotics

@@ -5,7 +5,7 @@
 #include <fstream>
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // BoB robotics third party includes
 #include "third_party/path.h"

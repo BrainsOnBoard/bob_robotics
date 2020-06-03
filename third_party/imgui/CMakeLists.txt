@@ -17,7 +17,10 @@ if(Freetype_FOUND)
     set(imgui_LIBRARIES ${FREETYPE_LIBRARIES} CACHE INTERNAL "imgui: Libraries" FORCE)
 endif()
 
-if(GNU_TYPE_COMPILER)
+if(WIN32)
+    # Hack needed so we can find SFML headers here
+    include_directories("$ENV{VCPKG_ROOT}/installed/x64-windows/include")
+else()
     # Supress warnings from inside imgui
     add_compile_flags(-Wno-class-memaccess)
 endif()

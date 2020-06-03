@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/lm9ds1_imu.h"
 
 // Standard C includes
@@ -7,7 +7,7 @@
 
 using namespace BoBRobotics;
 
-int main()
+int bobMain(int, char **)
 {
     const float radiansToDegrees = 180.0f / 3.14159f;
     LM9DS1 imu;

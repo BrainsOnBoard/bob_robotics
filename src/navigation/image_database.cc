@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
 
@@ -110,6 +110,8 @@ ImageDatabase::Recorder::Recorder(ImageDatabase &imageDatabase,
     m_YAML << "metadata"
            << "{"
            << "time" << timeStr
+           << "project_git_commit" << BOB_PROJECT_GIT_COMMIT
+           << "bob_robotics_git_commit" << BOB_ROBOTICS_GIT_COMMIT
            << "type" << (isRoute ? "route" : "grid");
 }
 

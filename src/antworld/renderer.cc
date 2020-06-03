@@ -232,18 +232,19 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     const auto &minBound = getWorld().getMinBound();
     const auto &maxBound = getWorld().getMaxBound();
 
-    // Configure top-down orthographic projection matrix
+    // Configure top-down orthographic projection matrix to frame world in XY plane 
+    // and with the clipping planes far enough apart to contain the range in Z
     // **TODO** re-implement in Eigen
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(minBound[0].value(), maxBound[0].value(),
             minBound[1].value(), maxBound[1].value(),
-            -1.0, maxBound[2].value() - minBound[2].value());
+            0.0, maxBound[2].value() - minBound[2].value());
 
-    // Build modelview matrix to centre world
+    // Build modelview matrix so that the 'top' is up against the near clip plane
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glScalef(1.0f, 1.0f, -1.0f);
+    glTranslatef(0.0f, 0.0f, -static_cast<GLfloat>(maxBound[2].value()));
 
     // Render geometry
     renderTopDownGeometry();
