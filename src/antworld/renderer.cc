@@ -244,7 +244,7 @@ void Renderer::renderTopDownView(GLint viewportX, GLint viewportY, GLsizei viewp
     // Build modelview matrix so that the 'top' is up against the near clip plane
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glTranslatef(0.0f, 0.0f, -maxBound[2].value());
+    glTranslatef(0.0f, 0.0f, -static_cast<GLfloat>(maxBound[2].value()));
 
     // Render geometry
     renderTopDownGeometry();
