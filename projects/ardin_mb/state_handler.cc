@@ -90,7 +90,7 @@ bool StateHandler::handleEvent(State state, Event event)
         m_Renderer.renderTopDownView(m_RenderTargetTopDown, false, false);
 
         // Render route
-        m_Route.render(m_Pose, m_Pose.yaw(), m_PathHeight);
+        m_Route.render(m_Pose, m_PathHeight);
 
         // Render vector field
         m_VectorField.render(m_PathHeight);

@@ -42,7 +42,7 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void load(const std::string &filename, bool realign = true);
-    void render(const Vector2<meter_t> &position, degree_t yaw, meter_t height = meter_t{0.1}) const;
+    void render(const Pose2<meter_t, degree_t> &pose, meter_t height = meter_t{0.1}) const;
 
     bool atDestination(const Vector2<meter_t> &position, meter_t threshold) const;
     std::tuple<meter_t, size_t> getDistanceToRoute(const Vector2<meter_t> &position) const;

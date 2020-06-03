@@ -257,7 +257,7 @@ void RouteArdin::load(const std::string &filename, bool realign)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------
-void RouteArdin::render(const Vector2<meter_t> &position, degree_t yaw, meter_t height) const
+void RouteArdin::render(const Pose2<meter_t, degree_t> &pose, meter_t height) const
 {
     // Bind route VAO
     glBindVertexArray(m_WaypointsVAO);
@@ -275,8 +275,8 @@ void RouteArdin::render(const Vector2<meter_t> &position, degree_t yaw, meter_t 
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(static_cast<GLfloat>(position.x().value()), static_cast<GLfloat>(position.y().value()), 0.0f);
-    glRotatef(static_cast<GLfloat>(-yaw.value()), 0.0f, 0.0f, 1.0f);
+    glTranslatef(static_cast<GLfloat>(pose.x().value()), static_cast<GLfloat>(pose.y().value()), 0.0f);
+    glRotatef(static_cast<GLfloat>(-pose.yaw().value()), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
 
