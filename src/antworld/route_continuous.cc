@@ -124,6 +124,7 @@ void RouteContinuous::load(const std::string &filename)
     // Clear existing waypoints and headings
     m_Waypoints.clear();
     m_Headings.clear();
+    m_CumulativeDistance.clear();
 
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
@@ -240,13 +241,12 @@ void RouteContinuous::render(const Pose2<meter_t, degree_t> &pose, meter_t heigh
     // If there are any route points, bind
     if(m_RouteNumPoints > 0) {
         glBindVertexArray(m_RouteVAO);
-
         glDrawArrays(GL_LINE_STRIP, 0, m_RouteNumPoints);
     }
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(static_cast<GLfloat>(pose.x().value()), static_cast<GLfloat>(pose.y().value()), 0.0f);
+    glTranslatef(static_cast<GLfloat>(pose.x().value()), static_cast<GLfloat>(pose.y().value()), 0.01f);
     glRotatef(static_cast<GLfloat>(-pose.yaw().value()), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
