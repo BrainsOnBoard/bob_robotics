@@ -8,8 +8,8 @@ Example usage is given in the file `test_antworld.py`.
 Compilation requires [scikit-build](https://pypi.org/project/scikit-build).
 
 Build as usual:
-``sh
+```sh
 python setup.py bdist_wheel
-``
+```
 
 **NOTE**: Currently this module needs to be packaged manually.
