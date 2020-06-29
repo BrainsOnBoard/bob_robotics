@@ -121,10 +121,6 @@ RouteContinuous::~RouteContinuous()
 //----------------------------------------------------------------------------
 void RouteContinuous::load(const std::string &filename)
 {
-    // Clear existing waypoints and headings
-    m_Waypoints.clear();
-    m_Headings.clear();
-
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
     if(!input.good()) {
@@ -137,12 +133,9 @@ void RouteContinuous::load(const std::string &filename)
     input.seekg(0);
     LOG_INFO << "Route has " << numPoints << " points";
 
-    // Allocate path points
+    // Clear and allocate waypoints
+    m_Waypoints.clear();
     m_Waypoints.resize(numPoints);
-
-    // Initialise bounds to limits of underlying data types
-    std::fill_n(&m_MinBound[0], 2, std::numeric_limits<meter_t>::max());
-    std::fill_n(&m_MaxBound[0], 2, std::numeric_limits<meter_t>::min());
 
     // Loop through components(X and Y, ignoring heading)
     for(unsigned int c = 0; c < 2; c++) {
@@ -154,78 +147,11 @@ void RouteContinuous::load(const std::string &filename)
 
             // Scale to metres and insert into route
             m_Waypoints[i][c] = static_cast<GLfloat>(pointPosition / 100.0);
-
-            // Update min and max
-            m_MinBound[c] = units::math::min(m_MinBound[c], meter_t(m_Waypoints[i][c]));
-            m_MaxBound[c] = units::math::max(m_MaxBound[c], meter_t(m_Waypoints[i][c]));
         }
     }
 
-    LOG_INFO << "Min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")";
-    LOG_INFO << "Max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
-
-    // Reserve headings
-    const size_t numSegments = m_Waypoints.size() - 1;
-    m_Headings.reserve(numSegments);
-
-    // Reserve array of cumulative distances
-    m_CumulativeDistance.reserve(m_Waypoints.size());
-    m_CumulativeDistance.push_back(0_m);
-
-    // Loop through route segments
-    for(unsigned int i = 0; i < numSegments; i++) {
-        // Get waypoints at start and end of segment
-        const auto &segmentStart = m_Waypoints[i];
-        const auto &segmentEnd = m_Waypoints[i + 1];
-
-        // Add segment heading to array
-        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
-                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
-
-        // Calculate segment length and
-        const meter_t segmentLength(distance(segmentStart, segmentEnd));
-        m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
-    }
-
-    // Create a vertex array object to bind everything together
-    if(m_WaypointsVAO == 0) {
-        glGenVertexArrays(1, &m_WaypointsVAO);
-    }
-
-    // Generate vertex buffer objects for positions and colours
-    if(m_WaypointsPositionVBO == 0) {
-        glGenBuffers(1, &m_WaypointsPositionVBO);
-    }
-
-    if(m_WaypointsColourVBO == 0) {
-        glGenBuffers(1, &m_WaypointsColourVBO);
-    }
-
-    // Bind vertex array
-    glBindVertexArray(m_WaypointsVAO);
-
-    // Bind and upload positions buffer
-    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsPositionVBO);
-    glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(GLfloat) * 2, m_Waypoints.data(), GL_STATIC_DRAW);
-
-    // Set vertex pointer and enable client state in VAO
-    glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-    glEnableClientState(GL_VERTEX_ARRAY);
-
-    {
-        // Bind and upload zeros to colour buffer
-        std::vector<uint8_t> colours(m_Waypoints.size() * 3, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
-        glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(uint8_t) * 3, colours.data(), GL_DYNAMIC_DRAW);
-
-        // Set colour pointer and enable client state in VAO
-        glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_COLOR_ARRAY);
-    }
-
-    // Unbind VAOs
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // Rebuild route
+    rebuildRoute();
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::render(const Pose2<meter_t, degree_t> &pose, meter_t height) const
@@ -235,18 +161,17 @@ void RouteContinuous::render(const Pose2<meter_t, degree_t> &pose, meter_t heigh
 
     glPushMatrix();
     glTranslatef(0.0f, 0.0f, static_cast<GLfloat>(height.value()));
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_Waypoints.size()));
+    glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(m_Waypoints.size()));
 
     // If there are any route points, bind
     if(m_RouteNumPoints > 0) {
         glBindVertexArray(m_RouteVAO);
-
         glDrawArrays(GL_LINE_STRIP, 0, m_RouteNumPoints);
     }
 
     glBindVertexArray(m_OverlayVAO);
 
-    glTranslatef(static_cast<GLfloat>(pose.x().value()), static_cast<GLfloat>(pose.y().value()), 0.0f);
+    glTranslatef(static_cast<GLfloat>(pose.x().value()), static_cast<GLfloat>(pose.y().value()), 0.01f);
     glRotatef(static_cast<GLfloat>(-pose.yaw().value()), 0.0f, 0.0f, 1.0f);
     glDrawArrays(GL_LINES, 0, 2);
     glPopMatrix();
@@ -330,7 +255,6 @@ void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
     glBufferSubData(GL_ARRAY_BUFFER, pos * sizeof(uint8_t) * 3, sizeof(uint8_t) * 3, colour);
-
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::addPoint(const Vector2<meter_t> &position, bool error)
@@ -355,5 +279,94 @@ void RouteContinuous::addPoint(const Vector2<meter_t> &position, bool error)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_RouteNumPoints++;
 }
+//----------------------------------------------------------------------------
+void RouteContinuous::rebuildRoute()
+{
+    // Calculate minimum and maximum bounds in X and Y
+    const auto minMaxX = std::minmax_element(m_Waypoints.cbegin(), m_Waypoints.cend(),
+                                             [](const std::array<GLfloat, 2> &a, const std::array<GLfloat, 2> &b)
+                                             {
+                                                 return (a[0] < b[0]);
+                                             });
+    const auto minMaxY = std::minmax_element(m_Waypoints.cbegin(), m_Waypoints.cend(),
+                                             [](const std::array<GLfloat, 2> &a, const std::array<GLfloat, 2> &b)
+                                             {
+                                                 return (a[1] < b[1]);
+                                             });
+    m_MinBound[0] = meter_t{(*minMaxX.first)[0]};
+    m_MaxBound[0] = meter_t{(*minMaxX.second)[0]};
+    m_MinBound[1] = meter_t{(*minMaxY.first)[1]};
+    m_MaxBound[1] = meter_t{(*minMaxY.second)[1]};
+    LOG_INFO << "Route min: (" << m_MinBound[0] << ", " << m_MinBound[1] << ")";
+    LOG_INFO << "Route max: (" << m_MaxBound[0] << ", " << m_MaxBound[1] << ")";
+
+    // Clear existing  headings and cumulative distances
+    m_Headings.clear();
+    m_CumulativeDistance.clear();
+
+    // Reserve headings
+    const size_t numSegments = m_Waypoints.size() - 1;
+    m_Headings.reserve(numSegments);
+
+    // Reserve array of cumulative distances
+    m_CumulativeDistance.reserve(m_Waypoints.size());
+    m_CumulativeDistance.push_back(0_m);
+
+    // Loop through route segments
+    for(unsigned int i = 0; i < numSegments; i++) {
+        // Get waypoints at start and end of segment
+        const auto &segmentStart = m_Waypoints[i];
+        const auto &segmentEnd = m_Waypoints[i + 1];
+
+        // Add segment heading to array
+        m_Headings.push_back(atan2(units::length::meter_t(segmentStart[1] - segmentEnd[1]),
+                                   units::length::meter_t(segmentEnd[0] - segmentStart[0])));
+
+        // Calculate segment length and
+        const meter_t segmentLength(distance(segmentStart, segmentEnd));
+        m_CumulativeDistance.push_back(m_CumulativeDistance.back() + segmentLength);
+    }
+
+    // Create a vertex array object to bind everything together
+    if(m_WaypointsVAO == 0) {
+        glGenVertexArrays(1, &m_WaypointsVAO);
+    }
+
+    // Generate vertex buffer objects for positions and colours
+    if(m_WaypointsPositionVBO == 0) {
+        glGenBuffers(1, &m_WaypointsPositionVBO);
+    }
+
+    if(m_WaypointsColourVBO == 0) {
+        glGenBuffers(1, &m_WaypointsColourVBO);
+    }
+
+    // Bind vertex array
+    glBindVertexArray(m_WaypointsVAO);
+
+    // Bind and upload positions buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsPositionVBO);
+    glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(GLfloat) * 2, m_Waypoints.data(), GL_STATIC_DRAW);
+
+    // Set vertex pointer and enable client state in VAO
+    glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    {
+        // Bind and upload zeros to colour buffer
+        std::vector<uint8_t> colours(m_Waypoints.size() * 3, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
+        glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(uint8_t) * 3, colours.data(), GL_DYNAMIC_DRAW);
+
+        // Set colour pointer and enable client state in VAO
+        glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
+        glEnableClientState(GL_COLOR_ARRAY);
+    }
+
+    // Unbind VAOs
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+//----------------------------------------------------------------------------
 }   // namespace AntWorld
 }   // namespace BoBRobotics
