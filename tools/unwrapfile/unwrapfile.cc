@@ -176,7 +176,6 @@ int bobMain(int argc, char** argv)
     CLI::App app{ "A program to unwrap panoramic images and videos" };
 
     bool copysound = true;
-    bool extractFrames = false;
     unsigned int frameInterval = 1;
     std::string cameraName = "pixpro_usb";
     std::vector<unsigned int> resolutionVec = { 1920, 590 };
@@ -199,6 +198,7 @@ int bobMain(int argc, char** argv)
     CLI11_PARSE(app, argc, argv);
     const cv::Size unwrappedResolution{ static_cast<int>(resolutionVec[0]),
                                         static_cast<int>(resolutionVec[1]) };
+    bool extractFrames = app.count("--extract-frames") > 0;
 
     // Process filename arguments
     bool anyvideo = false;
