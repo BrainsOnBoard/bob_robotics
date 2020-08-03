@@ -1,5 +1,12 @@
+# Allow user to choose python binary. PYTHON_VERSION_STRING is set by skbuild,
+# so it's a useful fallback. The default is just to use the binary called "python".
+if(NOT DEFINED ENV{PYTHON_BIN})
+    string(SUBSTRING "${PYTHON_VERSION_STRING}" 0 3 PYVER)
+    set(ENV{PYTHON_BIN} python${PYVER})
+endif()
+
 # Try to find numpy path
-execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/bin/find_numpy.py"
+execute_process(COMMAND "$ENV{PYTHON_BIN}" "${BOB_ROBOTICS_PATH}/bin/find_numpy.py"
                 RESULT_VARIABLE rv
                 OUTPUT_VARIABLE numpy_include_path)
 
