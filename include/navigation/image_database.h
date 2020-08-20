@@ -241,6 +241,8 @@ private:
     static constexpr const char *EntriesFilename = "database_entries.csv";
 
     void loadMetadata();
+    bool loadCSV();
+    void readDirectoryEntries();
     void writeImage(const std::string &filename, const cv::Mat &image) const;
     void addNewEntries(std::vector<Entry> &newEntries);
     void writeEntry(std::ofstream &os, const Entry &e);
