@@ -10,6 +10,8 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
+#include <algorithm>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
@@ -31,30 +33,48 @@ int bobMain(int argc, char **argv)
     // Iterate through images with arrow keys
     cv::namedWindow(argv[0]);
     for (size_t i = 0; i < database.size();) {
-        std::stringstream ss;
+        std::stringstream ssTitle, ssNumber;
         const auto pos = database[i].position;
-        ss << database.getName() << " [" << 1 + i << "/" << database.size() << "]"
+        ssTitle << database.getName() << " [" << i << "/" << database.size() << "]"
            << " (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")";
         cv::imshow(argv[0], images[i]);
-        cv::setWindowTitle(argv[0], ss.str());
+        cv::setWindowTitle(argv[0], ssTitle.str());
+
+        size_t newi = i;
         do {
-            switch (cv::waitKeyEx(50) & OS::KeyMask) {
+            const auto key = cv::waitKeyEx(50) & OS::KeyMask;
+            if (key >= '0' && key <= '9') {
+                ssNumber << static_cast<char>(key);
+                std::cout << "Frame: " << ssNumber.str() << std::endl;
+                continue;
+            }
+
+            switch (key) {
             case OS::KeyCodes::Escape:
-                return 0;
+                return EXIT_SUCCESS;
             case OS::KeyCodes::Right:
-                ++i;
+                if (newi < database.size() - 1) {
+                    newi++;
+                }
                 break;
             case OS::KeyCodes::Left:
-                if (i > 0) {
-                    --i;
-                    break;
+                if (newi > 0) {
+                    newi--;
                 }
-                // fall through
+                break;
+            case 'g':
+                if (!ssNumber.str().empty()) {
+                    newi = std::min(std::stoul(ssNumber.str()), database.size() - 1);
+                }
+                break;
             default:
                 continue;
             }
-        } while (false);
-    }
 
+            ssNumber.str("");
+            ssNumber.clear();
+        } while (i == newi);
+        i = newi;
+    }
     return EXIT_SUCCESS;
 }
