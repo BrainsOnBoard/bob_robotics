@@ -17,11 +17,11 @@ macro(BoB_project)
     cmake_parse_arguments(PARSED_ARGS
                           "INCLUDE_GENN_USERPROJECTS;GENN_CPU_ONLY"
                           "EXECUTABLE;GENN_MODEL;PYTHON_MODULE;CXX_STANDARD"
-                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
+                          "SOURCES;MEX_SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
 
-    if(NOT PARSED_ARGS_SOURCES)
+    if(NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_MEX_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
 
@@ -64,6 +64,23 @@ macro(BoB_project)
             add_compile_flags(-fPIC)
         endif()
         BoB_external_libraries(python)
+    elseif(PARSED_ARGS_MEX_SOURCES)
+        # Build each *.cc file as a separate mex file
+        foreach(file IN LISTS PARSED_ARGS_MEX_SOURCES)
+            get_filename_component(shortname ${file} NAME)
+            string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+            # add_executable(${target} "${file}" "${H_FILES}")
+            add_library(${target} SHARED ${file})
+            list(APPEND BOB_TARGETS ${target})
+            # message(FATAL_ERROR "DIR: ${CMAKE_SOURCE_DIR}")
+
+            if(WIN32)
+                set_target_properties(${target} PROPERTIES SUFFIX .mexw64)
+            else()
+                set_target_properties(${target} PROPERTIES PREFIX "" SUFFIX .mexa64)
+            endif()
+            install(TARGETS ${target} LIBRARY DESTINATION "${CMAKE_SOURCE_DIR}")
+        endforeach()
     elseif(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
@@ -724,7 +741,7 @@ if(WIN32)
     else()
         set(PLATFORM x64-windows)
     endif()
-    
+
     if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
         set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}/debug")
     else()

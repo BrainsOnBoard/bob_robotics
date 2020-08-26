@@ -22,6 +22,7 @@
                 "/usr/include/sdformat-6.2",
                 "/usr/include/sdformat-9.1",
                 "/usr/include/sdformat-9.2",
+                "/usr/local/MATLAB/R2020a/extern/include",
                 "/usr/include/SDL2",
                 "${GENN_PATH}/include"
             ],

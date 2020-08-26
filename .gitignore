@@ -20,6 +20,10 @@
 # Temporary Jupyter notebook files
 **/.ipynb_checkpoints/
 
+# Matlab
+*.asv
+*.mex[aw]64
+
 # QT creator project files
 bob_robotics.cflags
 bob_robotics.cxxflags
