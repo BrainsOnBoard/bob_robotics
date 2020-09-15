@@ -1,5 +1,8 @@
 #pragma once
 
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
 // Standard C++ includes
 #include <algorithm>
 #include <iostream>

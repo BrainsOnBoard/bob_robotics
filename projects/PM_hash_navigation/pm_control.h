@@ -1,7 +1,7 @@
-#include "../../robots/rc_car_bot.h"
+#include "robots/rc_car_bot.h"
 
 // third party includes
-#include "../../third_party/units.h"
+#include "third_party/units.h"
 
 using namespace units::literals;
 

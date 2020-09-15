@@ -1,12 +1,14 @@
 // database
 #pragma once
 
+// OpenCV includes
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#include <fstream>
-#include <iostream>
 
 struct Match
 {

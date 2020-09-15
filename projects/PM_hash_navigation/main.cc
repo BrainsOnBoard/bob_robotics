@@ -1,27 +1,29 @@
 //main
-
-// BoB robotics includes
-#include "common/logging.h"
-#include "common/timer.h"
-#include "imgproc/opencv_unwrap_360.h"
+#include "pm_control.h"
 #include "pm_hasher.h"
 #include "snapshot_db.h"
+
+// BoB robotics includes
+// #include "common/logging.h" // not needed in new BoB robotics
+#include "common/main.h"
+#include "common/timer.h"
+#include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
 
 // Standard C++ includes
 #include <iostream>
+#include <chrono>
 
 // Standard C includes
-#include "pm_control.h"
 #include <cmath>
 
-#include <chrono>
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/ocl.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/objdetect.hpp>
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/core/ocl.hpp>
+// #include <opencv2/core/utility.hpp>
+// #include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/imgproc.hpp>
+// #include <opencv2/objdetect.hpp>
+#include <opencv2/opencv.hpp>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
@@ -48,7 +50,7 @@ angleNormalise(int angle)
 }
 
 int
-main(int argc, char **argv)
+bobMain(int argc, char **argv)
 {
     const int WIDTH = 320;
     const int HEIGHT = 90;
@@ -153,7 +155,7 @@ main(int argc, char **argv)
             ss << "training_data/training_image" << m_index << ".jpg";
             std::string path;
             ss >> path;
-            cv::Mat image = cv::imread(path, CV_LOAD_IMAGE_COLOR); // Read the file
+            cv::Mat image = cv::imread(path, cv::IMREAD_COLOR); // Read the file
             cv::Mat resized;
 
             if (image.size().height > 0) {
