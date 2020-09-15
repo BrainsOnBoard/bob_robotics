@@ -4,49 +4,51 @@
 #include "common/logging.h"
 #include "common/timer.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "video/panoramic.h"
 #include "pm_hasher.h"
 #include "snapshot_db.h"
+#include "video/panoramic.h"
 
 // Standard C++ includes
 #include <iostream>
 
 // Standard C includes
-#include <cmath>
 #include "pm_control.h"
+#include <cmath>
 
-#include <opencv2/objdetect.hpp>
+#include <chrono>
 #include <opencv2/core/core.hpp>
+#include <opencv2/core/ocl.hpp>
+#include <opencv2/core/utility.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/core/utility.hpp>
-#include <opencv2/core/ocl.hpp>
-#include <chrono>
- 
+#include <opencv2/objdetect.hpp>
+
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 
-int pixelToAngle(int pixel, int imageWidth) {
+int
+pixelToAngle(int pixel, int imageWidth)
+{
     int angle = 0;
-    float oneDegreeVal =(float)imageWidth / 360.0;
+    float oneDegreeVal = (float) imageWidth / 360.0;
 
-    angle = (int)( (float)pixel/oneDegreeVal);
+    angle = (int) ((float) pixel / oneDegreeVal);
     return angle;
 }
 
-int angleNormalise(int angle) {
-	angle = (angle + 180) % 360;
-	if (angle < 0) {
-		angle += 360;
-	}
-	return angle-180;
+int
+angleNormalise(int angle)
+{
+    angle = (angle + 180) % 360;
+    if (angle < 0) {
+        angle += 360;
+    }
+    return angle - 180;
 }
 
-
-
-
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     const int WIDTH = 320;
     const int HEIGHT = 90;
@@ -61,18 +63,12 @@ int main(int argc, char **argv)
     const auto cameraRes = cam->getOutputSize();
     // Create images
     cv::Mat originalImage(cameraRes, CV_8UC3);
-    
 
     //cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
     //cv::resizeWindow("Unwrapped", unwrapRes.width * outputScale,
-//                     unwrapRes.height * outputScale);
+    //                     unwrapRes.height * outputScale);
 
-    
-    
-   
-
-
-    PM_Control controller; 
+    PM_Control controller;
     int mode;
     int isPanoramic = 0;
     if (argc >= 2) {
@@ -80,35 +76,28 @@ int main(int argc, char **argv)
         if (argc >= 3) {
             isPanoramic = atoi(argv[2]);
         }
-        
     }
     Snapshot_DB datab;
 
     if (mode == 0) {
-	std::cout << "Training..." << std::endl;
-	cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
-    	cv::resizeWindow("Unwrapped", unwrapRes.width * outputScale, unwrapRes.height* outputScale);
+        std::cout << "Training..." << std::endl;
+        cv::namedWindow("Unwrapped", cv::WINDOW_NORMAL);
+        cv::resizeWindow("Unwrapped", unwrapRes.width * outputScale, unwrapRes.height * outputScale);
 
-    }	
-    else if (mode == 1) {
+    } else if (mode == 1) {
         std::cout << "Testing..." << std::endl;
         datab.loadTrainingData();
-       // cv::namedWindow("Matched", cv::WINDOW_NORMAL);
-       // cv::resizeWindow("Matched", unwrapRes.width * outputScale,
+        // cv::namedWindow("Matched", cv::WINDOW_NORMAL);
+        // cv::resizeWindow("Matched", unwrapRes.width * outputScale,
         //            unwrapRes.height * outputScale);
-
     }
 
-  
     // ----- camera loop ---------------
     unsigned int frame = 0;
 
-
-
-
-    for(frame = 0;; frame++) {
+    for (frame = 0;; frame++) {
         // Read from camera
-        if(!cam->readFrame(originalImage)) {
+        if (!cam->readFrame(originalImage)) {
             return EXIT_FAILURE;
         }
         //cv::blur(originalImage, originalImage, cv::Size(3,3));
@@ -116,144 +105,120 @@ int main(int argc, char **argv)
         cv::Mat outputImage(unwrapRes, CV_8UC3);
         cv::cvtColor(originalImage, originalImage, cv::COLOR_RGB2GRAY);
         // Apply Histogram Equalization
-       // cv::equalizeHist( originalImage, originalImage );
-        originalImage.convertTo(originalImage, CV_32F, 1.0/255);
-        
+        // cv::equalizeHist( originalImage, originalImage );
+        originalImage.convertTo(originalImage, CV_32F, 1.0 / 255);
+
         if (isPanoramic) {
             unwrapper.unwrap(originalImage, outputImage);
         } else {
-            cv::resize(originalImage,outputImage, unwrapRes,0,0);
+            cv::resize(originalImage, outputImage, unwrapRes, 0, 0);
         }
-        
-        
-       
-        
-        if (mode == 0) datab.addSnapshot(outputImage);
+
+        if (mode == 0)
+            datab.addSnapshot(outputImage);
         else {
-           // if (outputImage.width() > 0 && outputImage.height() > 0) {
-               
-                //Match match =  datab.findBestMatchAngleBruteForce(outputImage); 
-                cv::Mat rotatedView;
-                cv::Mat resizedRotatedView;
-                Match match =  datab.findBestMatchRotation(outputImage, rotatedView);
+            // if (outputImage.width() > 0 && outputImage.height() > 0) {
 
-                // show best rotated view
-		std::stringstream strs;
-		int anglepix = pixelToAngle(match._best_rotation, unwrapRes.width);
-		int ang = pixelToAngle(anglepix, unwrapRes.width);
+            //Match match =  datab.findBestMatchAngleBruteForce(outputImage);
+            cv::Mat rotatedView;
+            cv::Mat resizedRotatedView;
+            Match match = datab.findBestMatchRotation(outputImage, rotatedView);
 
-		std::cout << " ang " << ang << std::endl;
+            // show best rotated view
+            std::stringstream strs;
+            int anglepix = pixelToAngle(match._best_rotation, unwrapRes.width);
+            int ang = pixelToAngle(anglepix, unwrapRes.width);
 
-		int angleNormalised = angleNormalise(anglepix);
-		strs << " angle " << angleNormalised;  // print normalised angle
-		cv::resize(rotatedView,resizedRotatedView, {WIDTH*outputScale,HEIGHT*outputScale});
-		cv::putText(
-			resizedRotatedView, 
-			strs.str(),
-		        cv::Point(20,20), // Coordinates
-		        cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
-		        1.3, // Scale. 2.0 = 2x bigger
-		        {255,0,255}, // BGR Color
-		        1 // Line Thickness (Optional)
-                );
-              //  cv::imshow("rotated view", resizedRotatedView);
-                
+            std::cout << " ang " << ang << std::endl;
 
-		// move with car 
-		controller.updateMotors(angleNormalised);
-		
+            int angleNormalised = angleNormalise(anglepix);
+            strs << " angle " << angleNormalised; // print normalised angle
+            cv::resize(rotatedView, resizedRotatedView, { WIDTH * outputScale, HEIGHT * outputScale });
+            cv::putText(
+                    resizedRotatedView,
+                    strs.str(),
+                    cv::Point(20, 20),              // Coordinates
+                    cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
+                    1.3,                            // Scale. 2.0 = 2x bigger
+                    { 255, 0, 255 },                // BGR Color
+                    1                               // Line Thickness (Optional)
+            );
+            //  cv::imshow("rotated view", resizedRotatedView);
 
+            // move with car
+            controller.updateMotors(angleNormalised);
 
+            int m_index = match._match_index;
+            std::stringstream ss;
+            ss << "training_data/training_image" << m_index << ".jpg";
+            std::string path;
+            ss >> path;
+            cv::Mat image = cv::imread(path, CV_LOAD_IMAGE_COLOR); // Read the file
+            cv::Mat resized;
 
+            if (image.size().height > 0) {
+                std::stringstream strs;
 
-                int m_index = match._match_index;
-                std::stringstream ss;
-                ss << "training_data/training_image" << m_index << ".jpg";
-                std::string path;
-                ss >> path;
-                cv::Mat image = cv::imread(path, CV_LOAD_IMAGE_COLOR);   // Read the file
-                cv::Mat resized;
-                
+                int score = match._score;
+                int index = match._match_index;
+                int anglePix = match._best_rotation;
+                int angle = angleNormalise(pixelToAngle(anglePix, unwrapRes.width));
 
-                if (image.size().height > 0) {
-                    std::stringstream strs;
-                    
-                    int score = match._score;
-                    int index = match._match_index;
-                    int anglePix = match._best_rotation;
-		    int angle = angleNormalise(pixelToAngle(anglePix, unwrapRes.width));
+                strs << "Score: " << score << "| Index : " << index << " | Angle : " << angle;
 
-                    strs << "Score: " << score << "| Index : " << index << " | Angle : " << angle;
-                    
-                    cv::Scalar colornum;
-                 
-                    if( score < 3) {
-                        colornum = cv::Scalar(0,255,0);
-                    }                          
-                    else if( score >= 3 && score < 5) {
-                        colornum = cv::Scalar(128,255,0);
+                cv::Scalar colornum;
 
-                    }                                                    
-                    else if (score >= 5 && score < 8) {
-                        colornum = cv::Scalar(178,255,102);
-                    }                                                 
-                    else if (score >= 8 && score < 12) {
-                        colornum = cv::Scalar(255,255,0);
-                    }                                                 
-                    else if (score >= 12 && score < 18) {
-                        colornum = cv::Scalar(255,128,0);
-                    }                                                     
-                    else if (score >= 18){
-                        colornum = cv::Scalar(255,0,0);
-                    }
-                          
-                    
-                    cv::resize(image,resized, {WIDTH,HEIGHT});
-                    cv::putText(
-                        resized, 
-                        strs.str(),
-                        cv::Point(20,20), // Coordinates
-                        cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
-                        0.5, // Scale. 2.0 = 2x bigger
-                        colornum, // BGR Color
-                        1 // Line Thickness (Optional)
-                    );
+                if (score < 3) {
+                    colornum = cv::Scalar(0, 255, 0);
+                } else if (score >= 3 && score < 5) {
+                    colornum = cv::Scalar(128, 255, 0);
 
-                    if (score < 18) {
-                        cv::imshow("Matched", resized);
-                    }
-                    
+                } else if (score >= 5 && score < 8) {
+                    colornum = cv::Scalar(178, 255, 102);
+                } else if (score >= 8 && score < 12) {
+                    colornum = cv::Scalar(255, 255, 0);
+                } else if (score >= 12 && score < 18) {
+                    colornum = cv::Scalar(255, 128, 0);
+                } else if (score >= 18) {
+                    colornum = cv::Scalar(255, 0, 0);
                 }
-				// TO DO : get distribution of direction angles
-				// creating the direction visual 
-           
-            
+
+                cv::resize(image, resized, { WIDTH, HEIGHT });
+                cv::putText(
+                        resized,
+                        strs.str(),
+                        cv::Point(20, 20),              // Coordinates
+                        cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
+                        0.5,                            // Scale. 2.0 = 2x bigger
+                        colornum,                       // BGR Color
+                        1                               // Line Thickness (Optional)
+                );
+
+                if (score < 18) {
+                    cv::imshow("Matched", resized);
+                }
+            }
+            // TO DO : get distribution of direction angles
+            // creating the direction visual
         }
 
         // Show frame difference
-        
-        cv::resize(outputImage,outputImage, {WIDTH,HEIGHT});
-        
-       
-        
+
+        cv::resize(outputImage, outputImage, { WIDTH, HEIGHT });
+
         cv::imshow("Unwrapped", outputImage);
-        if(cv::waitKey(1) == 27) {
+        if (cv::waitKey(1) == 27) {
             break;
         }
-	
-	cv::waitKey(1);
-	//std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        cv::waitKey(1);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
-    if (mode == 0) { 
+    if (mode == 0) {
         datab.saveImages();
         datab.saveTrainingData();
         std::cout << "training data saved to disk" << std::endl;
-    } 
-    
-        
-    
+    }
 
     return EXIT_SUCCESS;
 }
-
-
