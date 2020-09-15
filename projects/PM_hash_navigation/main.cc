@@ -97,13 +97,14 @@ bobMain(int argc, char **argv)
     // ----- camera loop ---------------
     unsigned int frame = 0;
 
+    cv::Mat rotatedView, resizedRotatedView, image, resized;
+    cv::Mat outputImage(unwrapRes, CV_8UC3);
     for (frame = 0;; frame++) {
         // Read from camera
         cam->readFrameSync(originalImage);
 
         //cv::blur(originalImage, originalImage, cv::Size(3,3));
         // Unwrap
-        cv::Mat outputImage(unwrapRes, CV_8UC3);
         cv::cvtColor(originalImage, originalImage, cv::COLOR_RGB2GRAY);
         // Apply Histogram Equalization
         // cv::equalizeHist( originalImage, originalImage );
@@ -121,8 +122,6 @@ bobMain(int argc, char **argv)
             // if (outputImage.width() > 0 && outputImage.height() > 0) {
 
             //Match match =  datab.findBestMatchAngleBruteForce(outputImage);
-            cv::Mat rotatedView;
-            cv::Mat resizedRotatedView;
             Match match = datab.findBestMatchRotation(outputImage, rotatedView);
 
             // show best rotated view
@@ -154,8 +153,7 @@ bobMain(int argc, char **argv)
             ss << "training_data/training_image" << m_index << ".jpg";
             std::string path;
             ss >> path;
-            cv::Mat image = cv::imread(path, cv::IMREAD_COLOR); // Read the file
-            cv::Mat resized;
+            image = cv::imread(path, cv::IMREAD_COLOR); // Read the file
 
             if (image.size().height > 0) {
                 std::stringstream strs;
