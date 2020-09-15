@@ -135,7 +135,7 @@ public:
         //return transWrap(imageIn, turnAngle, 0);
     }
 
-    Match findBestMatchRotation(cv::Mat &currentView, cv::Mat &bestRotatedView)
+    Match findBestMatchRotation(const cv::Mat &currentView, cv::Mat &bestRotatedView)
     {
         unsigned long long int hash;
         m_hasher.computeDCT_Hash(currentView, hash);
@@ -148,13 +148,11 @@ public:
         std::vector<cv::Mat> rotatedViews;
         // get all rotations of the current view
         for (int i = 0; i < currentView.size().width; i++) {
-            cv::Mat out = currentView.clone();
-            cv::Mat currCopy = currentView.clone();
-            rollImage(currCopy, out, i);
+            rotatedViews.emplace_back(currentView.size(), currentView.type());
+            rollImage(currentView, rotatedViews.back(), i);
             unsigned long long int rotHash;
-            m_hasher.computeDCT_Hash(out, rotHash);
+            m_hasher.computeDCT_Hash(rotatedViews.back(), rotHash);
             rotationHashes.push_back(rotHash);
-            rotatedViews.push_back(out);
         }
 
         // for all the current rotated view 0-360

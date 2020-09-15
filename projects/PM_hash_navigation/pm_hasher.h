@@ -25,7 +25,7 @@ public:
         return count;
     }
 
-    void computeDCT_Hash(cv::Mat &in, unsigned long long &hash)
+    void computeDCT_Hash(const cv::Mat &in, unsigned long long &hash)
     {
 
         cv::Mat dct_mat;
