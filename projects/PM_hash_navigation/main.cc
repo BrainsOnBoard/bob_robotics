@@ -99,9 +99,8 @@ bobMain(int argc, char **argv)
 
     for (frame = 0;; frame++) {
         // Read from camera
-        if (!cam->readFrame(originalImage)) {
-            return EXIT_FAILURE;
-        }
+        cam->readFrameSync(originalImage);
+
         //cv::blur(originalImage, originalImage, cv::Size(3,3));
         // Unwrap
         cv::Mat outputImage(unwrapRes, CV_8UC3);
