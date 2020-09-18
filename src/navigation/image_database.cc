@@ -299,9 +299,10 @@ ImageDatabase::loadCSV()
         fields.clear();
         while (std::getline(lineStream, field, ',')) {
             // Trim whitespace from left (not C++ at its prettiest!)
-            field.erase(field.begin(), std::find_if(field.begin(), field.end(), [](int ch) {
-                            return !std::isspace(ch);
-                        }));
+            const auto notSpace = [](char c) {
+                return !std::isspace(c);
+            };
+            field.erase(field.begin(), std::find_if(field.begin(), field.end(), notSpace));
             fields.push_back(field);
         }
         if (fields.size() < 5) {
