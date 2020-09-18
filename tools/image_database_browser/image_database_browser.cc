@@ -77,8 +77,6 @@ int bobMain(int argc, char **argv)
                     newi = std::min(std::stoul(ssNumber.str()), database.size() - 1);
                 }
                 break;
-            default:
-                continue;
             }
 
             ssNumber.str("");
