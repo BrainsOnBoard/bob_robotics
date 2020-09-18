@@ -1,7 +1,11 @@
 // BoB robotics includes
-#include "plog/Log.h"
-#include "imgproc/opencv_unwrap_360.h"
+#include "common/macros.h"
 #include "navigation/image_database.h"
+#include "imgproc/opencv_unwrap_360.h"
+
+// Third-party includes
+#include "plog/Log.h"
+#include "third_party/tinydir.h"
 
 // Standard C includes
 #include <ctime>
@@ -247,34 +251,46 @@ ImageDatabase::RouteRecorder::record(const Vector3<millimeter_t> &position,
 }
 
 ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
-    : ImageDatabase(filesystem::path(databasePath), overwrite)
+  : ImageDatabase(filesystem::path(databasePath), overwrite)
 {}
 
 ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
-    : ImageDatabase(filesystem::path(databasePath), overwrite)
+  : ImageDatabase(filesystem::path(databasePath), overwrite)
 {}
 
 ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrite)
-    : m_Path(databasePath)
+  : m_Path(databasePath)
 {
     if (overwrite && databasePath.exists()) {
         LOG_WARNING << "Database already exists; overwriting";
         filesystem::remove_all(databasePath);
-    }
-
-    // If we don't have any entries, it's an empty database
-    const auto entriesPath = m_Path / EntriesFilename;
-    if (!entriesPath.exists()) {
-        // Make sure we have a directory to save into
-        filesystem::create_directory(m_Path);
+        BOB_ASSERT(filesystem::create_directory(m_Path));
         return;
     }
 
     // Try to read metadata from YAML file
     loadMetadata();
 
-    // Read in entries from CSV file
+    // Try to read entries from CSV file
+    if (!loadCSV()) {
+        // Make sure we have a directory to save into
+        filesystem::create_directory(m_Path);
+
+        LOGW << "Could not find CSV file, searching for image files in folder";
+        readDirectoryEntries();
+    }
+}
+
+bool
+ImageDatabase::loadCSV()
+{
+    // If we don't have any entries, it's an empty database
+    const auto entriesPath = m_Path / EntriesFilename;
     std::ifstream entriesFile(entriesPath.str());
+    if (!entriesFile.good()) {
+        return false;
+    }
+
     std::string line, field;
     std::vector<std::string> fields;
     std::getline(entriesFile, line); // skip first line
@@ -283,9 +299,10 @@ ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrit
         fields.clear();
         while (std::getline(lineStream, field, ',')) {
             // Trim whitespace from left (not C++ at its prettiest!)
-            field.erase(field.begin(), std::find_if(field.begin(), field.end(), [](int ch) {
-                return !std::isspace(ch);
-            }));
+            const auto notSpace = [](char c) {
+                return !std::isspace(c);
+            };
+            field.erase(field.begin(), std::find_if(field.begin(), field.end(), notSpace));
             fields.push_back(field);
         }
         if (fields.size() < 5) {
@@ -309,14 +326,59 @@ ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrit
         // Save details to vector
         Entry entry{
             { millimeter_t(std::stod(fields[0])),
-                millimeter_t(std::stod(fields[1])),
-                millimeter_t(std::stod(fields[2])) },
+              millimeter_t(std::stod(fields[1])),
+              millimeter_t(std::stod(fields[2])) },
             degree_t(std::stod(fields[3])),
             m_Path / fields[4],
             gridPosition
         };
         m_Entries.push_back(entry);
     }
+
+    return true;
+}
+
+void
+ImageDatabase::readDirectoryEntries()
+{
+    // For reading contents of directory
+    tinydir_dir dir;
+    memset(&dir, 0, sizeof(dir));
+    BOB_ASSERT(tinydir_open(&dir, m_Path.str().c_str()) == 0);
+    for (; dir.has_next; BOB_ASSERT(tinydir_next(&dir) == 0)) {
+        tinydir_file file;
+        if (tinydir_readfile(&dir, &file)) {
+            tinydir_close(&dir);
+            throw std::runtime_error("Could not read from directory");
+        }
+        if (file.is_dir) {
+            continue;
+        }
+
+        const filesystem::path fileName = file.path;
+        auto ext = fileName.extension();
+        for (char &c : ext) {
+            c = ::tolower(c);
+        }
+        if (ext == "jpg" || ext == "jpeg" || ext == "png") {
+            // Save details to vector
+            Entry entry{
+                { millimeter_t(NAN),
+                  millimeter_t(NAN),
+                  millimeter_t(NAN) },
+                degree_t(NAN),
+                fileName,
+                { 0, 0, 0 }
+            };
+            m_Entries.push_back(entry);
+        }
+    }
+
+    // Sort entries alphabetically by file path
+    const auto byname = [](const Entry &e1, const Entry &e2) {
+        return e1.path.str() < e2.path.str();
+    };
+    std::sort(m_Entries.begin(), m_Entries.end(), byname);
 }
 
 //! Get the path of the directory corresponding to this ImageDatabase
@@ -327,7 +389,8 @@ ImageDatabase::getPath() const
 }
 
 //! Get one Entry from the database
-const ImageDatabase::Entry &ImageDatabase::operator[](size_t i) const
+const ImageDatabase::Entry &
+ImageDatabase::operator[](size_t i) const
 {
     return m_Entries[i];
 }

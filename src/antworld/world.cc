@@ -314,7 +314,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             else if(commandString == "vt") {
                 // Read texture coordinate and check there's no unhandled components following it
                 readVector<2>(lineStream, rawTexCoords, 1.0f);
-                BOB_ASSERT(lineStream.eof())
+                BOB_ASSERT(lineStream.eof());
             }
             else if(commandString == "vn") {
                 // ignore vertex normals for now

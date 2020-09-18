@@ -33,10 +33,12 @@ public:
  * objects' destructors are called and they can be stopped before they bang into
  * a wall.
  */
-#define BOB_ASSERT(EXPRESSION)                                                        \
-    if (!(EXPRESSION)) {                                                              \
-        throw BoBRobotics::AssertionFailedException(#EXPRESSION, __FILE__, __LINE__); \
-    }
+#define BOB_ASSERT(EXPRESSION)                                                            \
+    [&]() {                                                                               \
+        if (!(EXPRESSION)) {                                                              \
+            throw BoBRobotics::AssertionFailedException(#EXPRESSION, __FILE__, __LINE__); \
+        }                                                                                 \
+    }()
 
 /**!
  * \brief Defines a packed struct in MSVC or GNU-type compilers.
