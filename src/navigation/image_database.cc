@@ -360,7 +360,7 @@ ImageDatabase::readDirectoryEntries()
         for (char &c : ext) {
             c = ::tolower(c);
         }
-        if (ext == "jpg" || ext == "png") {
+        if (ext == "jpg" || ext == "jpeg" || ext == "png") {
             // Save details to vector
             Entry entry{
                 { millimeter_t(NAN),
