@@ -45,6 +45,13 @@ int bobMain(int argc, char **argv)
 
         size_t newi = i;
         do {
+            /*
+             * If the user presses a number key, we append this digit to a
+             * stringstream and when the user then presses 'g' we jump to that
+             * frame number. For example, if the user enters '1', '0', '0', 'g'
+             * then we jump to frame number 100 (the same way you jump to a line
+             * in vim).
+             */
             const auto key = cv::waitKeyEx(50) & OS::KeyMask;
             if (key >= '0' && key <= '9') {
                 ssNumber << static_cast<char>(key);
