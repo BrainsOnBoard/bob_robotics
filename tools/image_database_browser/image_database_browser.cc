@@ -52,7 +52,13 @@ int bobMain(int argc, char **argv)
              * then we jump to frame number 100 (the same way you jump to a line
              * in vim).
              */
-            const auto key = cv::waitKeyEx(50) & OS::KeyMask;
+            auto key = cv::waitKeyEx(50);
+            if (key == -1) {
+                // No key pressed, so try again
+                continue;
+            }
+            key &= OS::KeyMask;
+
             if (key >= '0' && key <= '9') {
                 ssNumber << static_cast<char>(key);
                 std::cout << "Frame: " << ssNumber.str() << std::endl;
