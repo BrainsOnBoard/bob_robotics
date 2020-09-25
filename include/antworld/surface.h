@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <array>
 #include <vector>
 
 // OpenGL includes
@@ -32,6 +33,11 @@ class Surface
 public:
     Surface();
     ~Surface();
+
+    //------------------------------------------------------------------------
+    // Typedefines
+    //------------------------------------------------------------------------
+    typedef std::array<GLfloat, 3> Colour;
 
     //------------------------------------------------------------------------
     // Public API
@@ -106,6 +112,8 @@ public:
 
     void setTexture(const Texture *texture){ m_Texture = texture; }
 
+    void setColour(const Colour &colour) { m_Colour = colour; }
+
 private:
     //------------------------------------------------------------------------
     // Private methods
@@ -138,6 +146,8 @@ private:
     GLsizei m_NumVertices, m_NumIndices;
 
     const Texture *m_Texture;
+
+    Colour m_Colour;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

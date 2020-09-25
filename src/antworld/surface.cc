@@ -10,7 +10,7 @@ namespace AntWorld
 {
 Surface::Surface() 
 :   m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_IBO(0), 
-    m_NumVertices(0), m_NumIndices(0), m_Texture(nullptr)
+    m_NumVertices(0), m_NumIndices(0), m_Texture(nullptr), m_Colour{{1.0f, 1.0f, 1.0f}}
 {
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_VAO);
@@ -41,6 +41,9 @@ void Surface::bind() const
 {
     // Bind world VAO
     glBindVertexArray(m_VAO);
+
+    // Set colour
+    glColor3fv(m_Colour.data());
 }
 //----------------------------------------------------------------------------
 void Surface::unbind() const
