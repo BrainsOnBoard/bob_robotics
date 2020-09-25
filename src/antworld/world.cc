@@ -253,8 +253,8 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
     // 3 - a vector of floating point texture coordinates (U, V)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLbyte>, std::vector<GLfloat>>> objSurfaces;
 
-    // Map of material names to texture indices
-    std::map<std::string, Texture*> textureNames;
+    // Map of material names to texture pointers and colour names
+    std::map<std::string, std::tuple<Texture*, Surface::Colour>> materialNames;
 
     // Parser
     {
@@ -296,7 +296,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
                 // Parse materials
                 loadMaterials(basePath, parameterString,
                               textureFormat, maxTextureSize,
-                              textureNames);
+                              materialNames);
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
@@ -378,11 +378,19 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
         const auto &objSurface = objSurfaces[s];
         auto &surface = m_Surfaces[s];
 
+        // Find corresponding material
+        const auto mtl = materialNames.find(std::get<0>(objSurface));
+
         // Bind material
         surface.bind();
 
         // Upload positions from obj file
         surface.uploadPositions(std::get<1>(objSurface));
+
+        // If material was found, set colour
+        if(mtl != materialNames.end()) {
+            surface.setColour(std::get<1>(mtl->second));
+        }
 
         // If there are any vertex colours, upload them from obj file
         if(!std::get<2>(objSurface).empty()) {
@@ -394,10 +402,9 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             // Upload texture coordinates from obj file
             surface.uploadTexCoords(std::get<3>(objSurface));
 
-            // Find texture corresponding to this surface
-            const auto tex = textureNames.find(std::get<0>(objSurface));
-            if(tex != textureNames.end()) {
-                surface.setTexture(tex->second);
+            // If material was found, set texture
+            if(mtl != materialNames.end()) {
+                surface.setTexture(std::get<0>(mtl->second));
             }
         }
 
@@ -418,7 +425,7 @@ void World::render() const
 //----------------------------------------------------------------------------
 void World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
                           GLint textureFormat, int maxTextureSize,
-                          std::map<std::string, Texture*> &textureNames)
+                          std::map<std::string, std::tuple<Texture*, Surface::Colour>> &materialNames)
 {
     // Open obj file
     std::ifstream mtlFile((basePath / filename).str());
@@ -447,16 +454,33 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
         // Read command from first token
         lineStream >> commandString;
+
+        // If command is a material name
         if(commandString == "newmtl") {
             lineStream >> currentMaterialName;
             LOG_INFO << "\tReading material: " << currentMaterialName;
         }
-        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
-            || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
-            || commandString == "d" || commandString == "illum")
-        {
-            // ignore lighting properties
+        // Otherwise, if command specifies a diffuse colour
+        else if(commandString == "Kd") {
+            // Read colour
+            Surface::Colour colour;
+            for(unsigned int i = 0; i < 3; i++) {
+                lineStream >> colour[i];
+            }
+
+            // If material doesn't yet exist, emplace new material with colour and no texture
+            auto mtl = materialNames.find(currentMaterialName);
+            if(mtl == materialNames.cend()) {
+                materialNames.emplace(std::piecewise_construct,
+                                      std::forward_as_tuple(currentMaterialName),
+                                      std::forward_as_tuple(nullptr, colour));
+            }
+            // Otherwise, set colour in existing material
+            else {
+                std::get<1>(mtl->second) = colour;
+            }
         }
+        // Otherwise, if command specifies a diffuse map
         else if(commandString == "map_Kd") {
             BOB_ASSERT(!currentMaterialName.empty());
 
@@ -473,7 +497,6 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 
             LOG_DEBUG << "\t\tTexture: '" << textureFilename << "'";
-
 
             // Load texture and add to map
             const std::string texturePath = (basePath / textureFilename).str();
@@ -513,11 +536,30 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
                 m_Textures.emplace_back(new Texture());
                 m_Textures.back()->upload(texture, textureFormat);
 
-                // Add name to map
-                const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
-                BOB_ASSERT(inserted);
+                // If material doesn't yet exist, emplace new material with texture and default colour
+                auto mtl = materialNames.find(currentMaterialName);
+                if(mtl == materialNames.cend()) {
+                    materialNames.emplace(std::piecewise_construct,
+                                          std::forward_as_tuple(currentMaterialName),
+                                          std::forward_as_tuple(m_Textures.back().get(), Surface::DefaultColour));
+                }
+                // Otherwise
+                else {
+                    // Ensure texture isn't already set for this material
+                    BOB_ASSERT(std::get<0>(mtl->second) == nullptr);
+
+                    // Set texture in material
+                    std::get<0>(mtl->second) = m_Textures.back().get();
+                }
             }
         }
+        // Otherwise, if it's another material property, ignore
+        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Ks" ||
+                commandString == "Ke" || commandString == "Ni" || commandString == "d" ||
+                commandString == "illum")
+        {
+        }
+        // Otherwise, give warning
         else {
             LOG_WARNING << "Unhandled mtl tag '" << commandString << "'";
         }
