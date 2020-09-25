@@ -8,9 +8,12 @@ namespace BoBRobotics
 {
 namespace AntWorld
 {
+//----------------------------------------------------------------------------
+const Surface::Colour Surface::DefaultColour = {1.0f, 1.0f, 1.0f};
+//----------------------------------------------------------------------------
 Surface::Surface() 
 :   m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_IBO(0), 
-    m_NumVertices(0), m_NumIndices(0), m_Texture(nullptr), m_Colour{{1.0f, 1.0f, 1.0f}}
+    m_NumVertices(0), m_NumIndices(0), m_Texture(nullptr), m_Colour(DefaultColour)
 {
     // Create a vertex array object to bind everything together
     glGenVertexArrays(1, &m_VAO);
