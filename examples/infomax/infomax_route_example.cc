@@ -72,8 +72,6 @@ int bobMain(int argc, char **argv)
         return 1;
     }
 
-    LOGI << "Eigen is using " << Eigen::nbThreads() << " threads.";
-
     // Where we are loading images from
     const filesystem::path routePath(argv[1]);
 

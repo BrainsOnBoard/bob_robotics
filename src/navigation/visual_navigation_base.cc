@@ -1,13 +1,34 @@
 // BoB robotics includes
-#include "navigation/visual_navigation_base.h"
 #include "common/macros.h"
+#include "navigation/visual_navigation_base.h"
+
+// Third-party includes
+#include "plog/Log.h"
+
+// OpenMP
+#include <omp.h>
 
 namespace BoBRobotics {
 namespace Navigation {
 
+int getMaxThreads()
+{
+#ifdef _OPENMP
+    return omp_get_max_threads();
+#else
+    return 1;
+#endif
+}
+
 VisualNavigationBase::VisualNavigationBase(const cv::Size &unwrapRes)
   : m_UnwrapRes(unwrapRes)
-{}
+{
+    LOGI << "Running on " << getMaxThreads() << " threads" << std::endl;
+
+#ifndef _OPENMP
+    LOGW << "This program was not compiled with OpenMP support. Execution will be single threaded." << std::endl;
+#endif
+}
 
 VisualNavigationBase::~VisualNavigationBase()
 {}
