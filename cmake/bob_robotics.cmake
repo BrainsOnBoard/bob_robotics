@@ -306,7 +306,7 @@ macro(always_included_packages)
     # with the include path and link flags and it seems that this target isn't
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT TARGET OpenMP::OpenMP_CXX)
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
@@ -724,7 +724,7 @@ if(WIN32)
     else()
         set(PLATFORM x64-windows)
     endif()
-    
+
     if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
         set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}/debug")
     else()

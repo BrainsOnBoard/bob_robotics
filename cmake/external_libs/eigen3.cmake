@@ -6,11 +6,4 @@ else()
     message(FATAL_ERROR "Eigen 3 not found")
 endif()
 
-# For CMake < 3.9, we need to make the target ourselves
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    add_compile_flags(-fopenmp)
-elseif(OpenMP_CXX_FOUND)
-    BoB_add_link_libraries(OpenMP::OpenMP_CXX)
-else()
-    message(WARNING "Could not find OpenMP; Eigen will be single threaded")
-endif()
+BoB_external_libraries(openmp)
