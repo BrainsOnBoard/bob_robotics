@@ -20,27 +20,31 @@
 namespace BoBRobotics {
 namespace Navigation {
 namespace Internal {
-    inline uint8_t *begin(const cv::Mat &image)
-    {
-        return image.data;
-    }
+inline uint8_t *
+begin(const cv::Mat &image)
+{
+    return image.data;
+}
 
-    inline uint8_t *end(const cv::Mat &image)
-    {
-        return &image.data[image.cols * image.rows];
-    }
+inline uint8_t *
+end(const cv::Mat &image)
+{
+    return &image.data[image.cols * image.rows];
+}
 
-    template<typename T>
-    inline auto begin(const T &input)
-    {
-        return std::begin(input);
-    }
+template<typename T>
+inline auto
+begin(const T &input)
+{
+    return std::begin(input);
+}
 
-    template<typename T>
-    inline auto end(const T &input)
-    {
-        return std::end(input);
-    }
+template<typename T>
+inline auto
+end(const T &input)
+{
+    return std::end(input);
+}
 }
 
 //------------------------------------------------------------------------
@@ -54,11 +58,9 @@ namespace Internal {
 class AbsDiff
 {
 public:
-    AbsDiff(const int) {}
-
     template<typename InputArray1, typename InputArray2, typename OutputArray>
-    inline auto operator()(const InputArray1 &src1, const InputArray2 &src2,
-                           OutputArray &dst)
+    static auto calculate(size_t, const InputArray1 &src1,
+                          const InputArray2 &src2, OutputArray &dst)
     {
         // Calculate absdiff
         cv::absdiff(src1, src2, dst);
@@ -83,32 +85,26 @@ public:
  */
 class RMSDiff
 {
-    public:
-    RMSDiff(const size_t imSize) : m_Differences(imSize)
-    {}
-
+public:
     template<typename InputArray1, typename InputArray2, typename OutputArray>
-    inline std::vector<float>::iterator operator()(const InputArray1 &src1,
-                                                   const InputArray2 &src2,
-                                                   OutputArray &dst)
+    static auto calculate(size_t imSize, const InputArray1 &src1,
+                          const InputArray2 &src2, OutputArray &dst)
     {
+        thread_local std::vector<float> diffs(imSize);
+
         cv::absdiff(src1, src2, dst);
-        const auto sqDiff = [](const auto val)
-        {
+        const auto sqDiff = [](const auto val) {
             const auto d = static_cast<float>(val);
             return d * d;
         };
-        std::transform(Internal::begin(dst), Internal::end(dst), std::begin(m_Differences), sqDiff);
-        return m_Differences.begin();
+        std::transform(Internal::begin(dst), Internal::end(dst), std::begin(diffs), sqDiff);
+        return diffs.begin();
     }
 
     static inline float mean(const float sum, const float n)
     {
         return sqrt(sum / n);
     }
-
-    private:
-    std::vector<float> m_Differences;
 };
 } // Navigation
 } // BoBRobotics

@@ -58,24 +58,10 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        const auto &unwrapRes = getUnwrapResolution();
-        BOB_ASSERT(image.cols == unwrapRes.width);
-        BOB_ASSERT(image.rows == unwrapRes.height);
-        BOB_ASSERT(image.type() == CV_8UC1);
-
-        const size_t numSnapshots = getNumSnapshots();
-        BOB_ASSERT(numSnapshots > 0);
-
-        // Clear differences (won't free)
-        m_Differences.clear();
-
-        // Loop through snapshots and caculate differences
-        for (size_t s = 0; s < numSnapshots; s++) {
-            m_Differences.push_back(calcSnapshotDifference(image, getMaskImage(), s));
-        }
+        const auto &diffs = testInternal(image);
 
         // Return smallest difference
-        return *std::min_element(m_Differences.begin(), m_Differences.end());
+        return *std::min_element(diffs.begin(), diffs.end());
     }
 
     virtual void clearMemory() override
@@ -97,8 +83,7 @@ public:
      */
     const std::vector<float> &getImageDifferences(const cv::Mat &image) const
     {
-        test(image);
-        return m_Differences;
+        return testInternal(image);
     }
 
 protected:
@@ -115,7 +100,29 @@ private:
     // Private members
     //------------------------------------------------------------------------
     Store m_Store;
-    mutable std::vector<float> m_Differences;
+
+    auto &testInternal(const cv::Mat &image) const
+    {
+        const auto &unwrapRes = getUnwrapResolution();
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+        BOB_ASSERT(image.type() == CV_8UC1);
+
+        const size_t numSnapshots = getNumSnapshots();
+        BOB_ASSERT(numSnapshots > 0);
+
+        // Clear differences
+        thread_local std::vector<float> diffs;
+        diffs.reserve(numSnapshots);
+        diffs.clear();
+
+        // Loop through snapshots and caculate differences
+        for (size_t s = 0; s < numSnapshots; s++) {
+            diffs.push_back(calcSnapshotDifference(image, getMaskImage(), s));
+        }
+
+        return diffs;
+    }
 };
 
 //------------------------------------------------------------------------
@@ -127,7 +134,7 @@ class PerfectMemoryRotater : public PerfectMemory<Store>
 public:
     template<class... Ts>
     PerfectMemoryRotater(const cv::Size unwrapRes, Ts &&... args)
-    :   PerfectMemory<Store>(unwrapRes, std::forward<Ts>(args)...)
+      : PerfectMemory<Store>(unwrapRes, std::forward<Ts>(args)...)
     {
     }
 
@@ -140,11 +147,11 @@ public:
      * angles.
      */
     template<class... Ts>
-    const std::vector<std::vector<float>> &getImageDifferences(Ts &&... args) const
+    const auto &getImageDifferences(Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
-        return m_RotatedDifferences;
+        return m_RotationDifferences;
     }
 
     /*!
@@ -169,50 +176,45 @@ public:
         std::vector<float> minDifferences;
         minDifferences.reserve(numSnapshots);
         for (size_t i = 0; i < numSnapshots; i++) {
-            const auto elem = std::min_element(std::cbegin(m_RotatedDifferences[i]), std::cend(m_RotatedDifferences[i]));
-            bestColumns.push_back(std::distance(std::cbegin(m_RotatedDifferences[i]), elem));
+            const auto elem = std::min_element(std::cbegin(m_RotationDifferences[i]), std::cend(m_RotationDifferences[i]));
+            bestColumns.push_back(std::distance(std::cbegin(m_RotationDifferences[i]), elem));
             minDifferences.push_back(*elem);
         }
 
         // Return result
         return std::tuple_cat(RIDFProcessor()(bestColumns, minDifferences, rotater),
-                              std::make_tuple(std::cref(m_RotatedDifferences)));
+                              std::make_tuple(std::cref(m_RotationDifferences)));
     }
 
 private:
+    mutable std::vector<std::vector<float>> m_RotationDifferences;
+
     //------------------------------------------------------------------------
     // Private API
     //------------------------------------------------------------------------
     template<class RotaterType>
     void calcImageDifferences(RotaterType &rotater) const
     {
-        const size_t numSnapshots = this->getNumSnapshots();
+        const auto numSnapshots = this->getNumSnapshots();
         BOB_ASSERT(numSnapshots > 0);
 
         // Preallocate snapshot difference vectors
-        while (m_RotatedDifferences.size() < numSnapshots) {
-            m_RotatedDifferences.emplace_back(rotater.numRotations());
+        while (m_RotationDifferences.size() < numSnapshots) {
+            m_RotationDifferences.emplace_back(rotater.numRotations());
         }
 
-        // Start thread pool
-        #pragma omp parallel
-
         // Scan across image columns
+        #pragma omp parallel
         rotater.rotate(
                 [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
                     // Loop through snapshots (in parallel, if possible)
                     #pragma omp for
                     for (size_t s = 0; s < numSnapshots; s++) {
                         // Calculate difference
-                        m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
+                        m_RotationDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
     }
-
-    //------------------------------------------------------------------------
-    // Members
-    //------------------------------------------------------------------------
-    mutable std::vector<std::vector<float>> m_RotatedDifferences;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

@@ -30,8 +30,8 @@ class HOG
 {
 public:
     HOG(const cv::Size &unwrapRes, const cv::Size &cellSize, int numOrientations)
-    :   m_HOGDescriptorSize(numOrientations * (unwrapRes.width / cellSize.width) * (unwrapRes.height / cellSize.height)),
-        m_Differencer(m_HOGDescriptorSize)
+      : m_HOGDescriptorSize(numOrientations * (unwrapRes.width / cellSize.width)
+                            * (unwrapRes.height / cellSize.height))
     {
         LOG_INFO << "Creating perfect memory for " << m_HOGDescriptorSize<< " entry HOG features";
 
@@ -78,16 +78,21 @@ public:
     }
 
     // Calculate difference between memory and snapshot with index
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &) const
+    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask,
+                                 size_t snapshot, const cv::Mat &) const
     {
         BOB_ASSERT(imageMask.empty());
 
         // Calculate HOG descriptors of image
-        m_HOG.compute(image, m_ScratchDescriptors);
-        BOB_ASSERT(m_ScratchDescriptors.size() == m_HOGDescriptorSize);
+        thread_local std::vector<float> scratchDescriptors;
+        m_HOG.compute(image, scratchDescriptors);
+        BOB_ASSERT(scratchDescriptors.size() == m_HOGDescriptorSize);
 
         // Calculate differences between image HOG descriptors and snapshot
-        auto diffIter = m_Differencer(m_Snapshots[snapshot], m_ScratchDescriptors, m_ScratchDescriptors);
+        auto diffIter = Differencer::calculate(image.rows * image.cols,
+                                               m_Snapshots[snapshot],
+                                               scratchDescriptors,
+                                               scratchDescriptors);
 
         // Calculate RMS
         return Differencer::mean(std::accumulate(diffIter, diffIter + m_HOGDescriptorSize, 0.0f),
@@ -98,10 +103,8 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    mutable std::vector<float> m_ScratchDescriptors;
     std::vector<std::vector<float>> m_Snapshots;
     cv::HOGDescriptor m_HOG;
-    mutable Differencer m_Differencer;
 }; // HOG
 } // PerfectMemoryStore
 } // Navigation

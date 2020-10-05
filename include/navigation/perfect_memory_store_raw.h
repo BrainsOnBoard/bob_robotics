@@ -34,9 +34,7 @@ template<typename Differencer = AbsDiff>
 class RawImage
 {
 public:
-    RawImage(const cv::Size unwrapRes)
-      : m_Differencer(unwrapRes.width * unwrapRes.height)
-      , m_DiffScratchImage(unwrapRes, CV_8UC1)
+    RawImage(const cv::Size &)
     {}
 
     //------------------------------------------------------------------------
@@ -71,7 +69,8 @@ public:
     {
         // Calculate difference between image and stored image
         const int imSize = image.rows * image.cols;
-        auto diffIter = m_Differencer(image, m_Snapshots[snapshot], m_DiffScratchImage);
+        thread_local cv::Mat diffScratchImage(image.size(), image.type());
+        auto diffIter = Differencer::calculate(imSize, image, m_Snapshots[snapshot], diffScratchImage);
 
         // If there's no mask
         if (imageMask.empty()) {
@@ -112,8 +111,6 @@ private:
     // Members
     //------------------------------------------------------------------------
     std::vector<cv::Mat> m_Snapshots;
-    mutable Differencer m_Differencer;
-    mutable cv::Mat m_DiffScratchImage;
 }; // RawImage
 } // PerfectMemoryStore
 } // Navigation
