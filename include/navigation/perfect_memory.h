@@ -115,7 +115,8 @@ private:
         BOB_ASSERT(numSnapshots > 0);
 
         // Clear differences
-        thread_local std::vector<float> diffs;
+        static std::vector<float> diffs;
+        #pragma omp threadprivate(diffs)
         diffs.reserve(numSnapshots);
         diffs.clear();
 

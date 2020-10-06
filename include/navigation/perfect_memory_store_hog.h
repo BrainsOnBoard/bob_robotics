@@ -84,7 +84,8 @@ public:
         BOB_ASSERT(imageMask.empty());
 
         // Calculate HOG descriptors of image
-        thread_local std::vector<float> scratchDescriptors;
+        static std::vector<float> scratchDescriptors;
+        #pragma omp threadprivate(scratchDescriptors)
         m_HOG.compute(image, scratchDescriptors);
         BOB_ASSERT(scratchDescriptors.size() == m_HOGDescriptorSize);
 

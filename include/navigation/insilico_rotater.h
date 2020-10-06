@@ -1,7 +1,6 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/omp.h"
 #include "common/macros.h"
 
 // Third-party includes
@@ -49,31 +48,31 @@ struct InSilicoRotater
             BOB_ASSERT(image.isContinuous());
             BOB_ASSERT(beginRoll < endRoll);
             BOB_ASSERT((distance(endRoll, beginRoll) % scanStep) == 0);
-
-            for (auto &image : m_ScratchImages.elements()) {
-                image.create(unwrapRes, CV_8UC1);
-            }
-            if (!maskImage.empty()) {
-                for (auto &mask : m_ScratchMaskImages.elements()) {
-                    mask.create(unwrapRes, maskImage.type());
-                }
-            }
-       }
+      }
 
         template<class Func>
         void rotate(Func func) const
         {
-            #pragma omp parallel for
-            for (auto i = m_BeginRoll; i < m_EndRoll; i += m_ScanStep) {
-                auto &scratchImage = m_ScratchImages.current();
-                auto &scratchMask = m_ScratchMaskImages.current();
-                const auto index = toIndex(i);
-                rollImage(m_Image, scratchImage, index);
-                if (!scratchMask.empty()) {
-                    rollImage(m_MaskImage, scratchMask, index);
+            #pragma omp parallel
+            {
+                static cv::Mat scratchImage, scratchMask;
+                #pragma omp threadprivate(scratchImage, scratchMask)
+
+                scratchImage.create(m_Image.size(), CV_8UC1);
+                if (!m_MaskImage.empty()) {
+                    scratchMask.create(m_MaskImage.size(), m_MaskImage.type());
                 }
 
-                func(scratchImage, scratchMask, distance(m_BeginRoll, i));
+                #pragma omp for
+                for (auto i = m_BeginRoll; i < m_EndRoll; i += m_ScanStep) {
+                    const auto index = toIndex(i);
+                    rollImage(m_Image, scratchImage, index);
+                    if (!scratchMask.empty()) {
+                        rollImage(m_MaskImage, scratchMask, index);
+                    }
+
+                    func(scratchImage, scratchMask, distance(m_BeginRoll, i));
+                }
             }
        }
 
@@ -91,7 +90,7 @@ struct InSilicoRotater
         const size_t m_ScanStep;
         const IterType m_BeginRoll, m_EndRoll;
         const cv::Mat &m_Image, &m_MaskImage;
-        static OMP::Array<cv::Mat> m_ScratchImages, m_ScratchMaskImages;
+        static cv::Mat m_ScratchImages, m_ScratchMaskImages;
 
         static void rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t pixels)
         {
@@ -161,11 +160,5 @@ struct InSilicoRotater
         return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, image.cols);
     }
 };
-
-template<class IterType>
-OMP::Array<cv::Mat> InSilicoRotater::RotaterInternal<IterType>::m_ScratchImages;
-
-template<class IterType>
-OMP::Array<cv::Mat> InSilicoRotater::RotaterInternal<IterType>::m_ScratchMaskImages;
 } // Navigation
 } // BoBRobotics

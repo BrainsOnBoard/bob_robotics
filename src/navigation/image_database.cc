@@ -447,17 +447,19 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bo
     images.resize(oldSize + m_Entries.size());
 
     #pragma omp parallel
-    if (size.empty()) {
-        #pragma omp for
-        for (size_t i = 0; i < m_Entries.size(); i++) {
-            images[i + oldSize] = m_Entries[i].load(greyscale);
-        }
-    } else {
-        thread_local cv::Mat tmp;
-        #pragma omp for
-        for (size_t i = 0; i < m_Entries.size(); i++) {
-            tmp = m_Entries[i].load(greyscale);
-            cv::resize(tmp, images[i + oldSize], size);
+    {
+        if (size.empty()) {
+            #pragma omp for
+            for (size_t i = 0; i < m_Entries.size(); i++) {
+                images[i + oldSize] = m_Entries[i].load(greyscale);
+            }
+        } else {
+            cv::Mat tmp;
+            #pragma omp for private(tmp)
+            for (size_t i = 0; i < m_Entries.size(); i++) {
+                tmp = m_Entries[i].load(greyscale);
+                cv::resize(tmp, images[i + oldSize], size);
+            }
         }
     }
 }

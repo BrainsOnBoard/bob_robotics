@@ -69,7 +69,9 @@ public:
     {
         // Calculate difference between image and stored image
         const int imSize = image.rows * image.cols;
-        thread_local cv::Mat diffScratchImage(image.size(), image.type());
+        static cv::Mat diffScratchImage;
+        #pragma omp threadprivate(diffScratchImage)
+        diffScratchImage.create(image.size(), image.type());
         auto diffIter = Differencer::calculate(imSize, image, m_Snapshots[snapshot], diffScratchImage);
 
         // If there's no mask

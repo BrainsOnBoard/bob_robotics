@@ -90,7 +90,9 @@ public:
     static auto calculate(size_t imSize, const InputArray1 &src1,
                           const InputArray2 &src2, OutputArray &dst)
     {
-        thread_local std::vector<float> diffs(imSize);
+        static std::vector<float> diffs;
+        #pragma omp threadprivate(diffs)
+        diffs.resize(imSize);
 
         cv::absdiff(src1, src2, dst);
         const auto sqDiff = [](const auto val) {
