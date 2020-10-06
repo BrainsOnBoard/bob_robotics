@@ -61,10 +61,10 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        const auto &diffs = testInternal(image);
+        testInternal(image);
 
         // Return smallest difference
-        return *std::min_element(diffs.begin(), diffs.end());
+        return *std::min_element(m_Differences.begin(), m_Differences.end());
     }
 
     virtual void clearMemory() override
@@ -86,7 +86,8 @@ public:
      */
     const std::vector<float> &getImageDifferences(const cv::Mat &image) const
     {
-        return testInternal(image);
+        testInternal(image);
+        return m_Differences;
     }
 
 protected:
@@ -103,8 +104,9 @@ private:
     // Private members
     //------------------------------------------------------------------------
     Store m_Store;
+    mutable std::vector<float> m_Differences;
 
-    auto &testInternal(const cv::Mat &image) const
+    void testInternal(const cv::Mat &image) const
     {
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
@@ -114,18 +116,13 @@ private:
         const size_t numSnapshots = getNumSnapshots();
         BOB_ASSERT(numSnapshots > 0);
 
-        // Clear differences
-        static std::vector<float> diffs;
-        #pragma omp threadprivate(diffs)
-        diffs.reserve(numSnapshots);
-        diffs.clear();
+        m_Differences.resize(numSnapshots);
 
         // Loop through snapshots and caculate differences
+        #pragma omp parallel for
         for (size_t s = 0; s < numSnapshots; s++) {
-            diffs.push_back(calcSnapshotDifference(image, getMaskImage(), s));
+            m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
         }
-
-        return diffs;
     }
 };
 
@@ -175,24 +172,23 @@ public:
         const size_t numSnapshots = this->getNumSnapshots();
 
         // Now get the minimum for each snapshot and the column this corresponds to
-        std::vector<size_t> bestColumns;
-        bestColumns.reserve(numSnapshots);
-        std::vector<float> minDifferences;
-        minDifferences.reserve(numSnapshots);
+        m_BestColumns.resize(numSnapshots);
+        m_MinimumDifferences.resize(numSnapshots);
+
+        #pragma omp parallel for
         for (size_t i = 0; i < numSnapshots; i++) {
-            size_t minIndex;
-            auto minVal = m_RotatedDifferences.row(i).minCoeff(&minIndex);
-            bestColumns.push_back(minIndex);
-            minDifferences.push_back(minVal);
+            m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
         }
 
         // Return result
-        return std::tuple_cat(RIDFProcessor()(bestColumns, minDifferences, rotater),
+        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater),
                               std::make_tuple(&m_RotatedDifferences));
     }
 
 private:
     mutable Eigen::MatrixXf m_RotatedDifferences;
+    mutable std::vector<size_t> m_BestColumns;
+    mutable std::vector<float> m_MinimumDifferences;
 
     //------------------------------------------------------------------------
     // Private API
