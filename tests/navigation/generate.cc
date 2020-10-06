@@ -38,10 +38,10 @@ int main(int, char **argv)
         << NumTestImages << "][" << TestImageSize.width << "] = { \n";
 
     const auto &differences = pm.getImageDifferences(TestImages[0]);
-    for (const auto &snapDiffs : differences) {
+    for (int row = 0; row < differences.rows(); row++) {
         ofs << "    { ";
-        for (const auto diff : snapDiffs) {
-            ofs << diff << ", ";
+        for (int col = 0; col < differences.cols(); col++) {
+            ofs << differences(row, col) << ", ";
         }
         ofs << "},\n";
     }

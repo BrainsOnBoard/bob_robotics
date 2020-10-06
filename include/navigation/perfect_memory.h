@@ -10,6 +10,9 @@
 // Third-party includes
 #include "third_party/units.h"
 
+// Eigen
+#include <Eigen/Core>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -176,18 +179,19 @@ public:
         std::vector<float> minDifferences;
         minDifferences.reserve(numSnapshots);
         for (size_t i = 0; i < numSnapshots; i++) {
-            const auto elem = std::min_element(std::cbegin(m_RotatedDifferences[i]), std::cend(m_RotatedDifferences[i]));
-            bestColumns.push_back(std::distance(std::cbegin(m_RotatedDifferences[i]), elem));
-            minDifferences.push_back(*elem);
+            size_t minIndex;
+            auto minVal = m_RotatedDifferences.row(i).minCoeff(&minIndex);
+            bestColumns.push_back(minIndex);
+            minDifferences.push_back(minVal);
         }
 
         // Return result
         return std::tuple_cat(RIDFProcessor()(bestColumns, minDifferences, rotater),
-                              std::make_tuple(std::cref(m_RotatedDifferences)));
+                              std::make_tuple(&m_RotatedDifferences));
     }
 
 private:
-    mutable std::vector<std::vector<float>> m_RotatedDifferences;
+    mutable Eigen::MatrixXf m_RotatedDifferences;
 
     //------------------------------------------------------------------------
     // Private API
@@ -199,9 +203,7 @@ private:
         BOB_ASSERT(numSnapshots > 0);
 
         // Preallocate snapshot difference vectors
-        while (m_RotatedDifferences.size() < numSnapshots) {
-            m_RotatedDifferences.emplace_back(rotater.numRotations());
-        }
+        m_RotatedDifferences.resize(numSnapshots, rotater.numRotations());
 
         // Scan across image columns
         rotater.rotate(
@@ -209,7 +211,7 @@ private:
                     // Loop through snapshots
                     for (size_t s = 0; s < numSnapshots; s++) {
                         // Calculate difference
-                        m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
+                        m_RotatedDifferences(s, i) = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
     }

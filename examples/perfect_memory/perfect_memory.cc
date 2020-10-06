@@ -24,7 +24,7 @@ int bobMain(int, char **)
 {
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
-    std::vector<std::vector<float>> allDifferences;
+    const Eigen::MatrixXf *allDifferences;
 
     {
         LOGI << "Testing with best-matching snapshot method...";
