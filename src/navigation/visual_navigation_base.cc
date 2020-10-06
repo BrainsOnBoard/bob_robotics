@@ -39,23 +39,14 @@ VisualNavigationBase::~VisualNavigationBase()
 void
 VisualNavigationBase::trainRoute(const ImageDatabase &imdb, bool resizeImages)
 {
-    cv::Mat image;
-    if (resizeImages) {
-        cv::Mat imageResized;
-        for (const auto &e : imdb) {
-            image = e.loadGreyscale();
-            BOB_ASSERT(image.type() == CV_8UC1);
-            cv::resize(image, imageResized, m_UnwrapRes);
-            train(imageResized);
-        }
-    } else {
-        for (const auto &e : imdb) {
-            image = e.loadGreyscale();
-            BOB_ASSERT(image.type() == CV_8UC1);
-            BOB_ASSERT(image.cols == m_UnwrapRes.width);
-            BOB_ASSERT(image.rows == m_UnwrapRes.height);
-            train(image);
-        }
+    trainRoute(imdb.loadImages(resizeImages ? m_UnwrapRes : cv::Size{}));
+}
+
+void
+VisualNavigationBase::trainRoute(const std::vector<cv::Mat> &images)
+{
+    for (auto &image : images) {
+        train(image);
     }
 }
 

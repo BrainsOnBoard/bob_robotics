@@ -11,27 +11,22 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 
-template<typename T>
-void
-trainRoute(T &pm)
-{
-    // Load snapshots
-    pm.trainRoute("../../tools/ant_world_db_creator/ant1_route1", true);
-    LOGI << "Loaded " << pm.getNumSnapshots() << " snapshots";
-}
-
 int bobMain(int, char **)
 {
     const cv::Size imSize(180, 50);
     units::angle::degree_t heading;
     const Eigen::MatrixXf *allDifferences;
 
+    const ImageDatabase imdb{ "../../tools/ant_world_db_creator/ant1_route1" };
+    const auto snapshots = imdb.loadImages(imSize);
+    LOGI << "Loaded " << snapshots.size() << " snapshots";
+
     {
         LOGI << "Testing with best-matching snapshot method...";
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemoryRotater<> pm(imSize);
-        trainRoute(pm);
+        pm.trainRoute(snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -51,7 +46,7 @@ int bobMain(int, char **)
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemoryRotater<> pm(imSize);
-        trainRoute(pm);
+        pm.trainRoute(snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -72,7 +67,7 @@ int bobMain(int, char **)
     {
         LOGI << "Testing with RMS image difference...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>> pm(imSize);
-        trainRoute(pm);
+        pm.trainRoute(snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -91,7 +86,7 @@ int bobMain(int, char **)
         constexpr size_t numComp = 3;
         LOGI <<  "Testing with " << numComp << " weighted snapshots...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, WeightSnapshotsDynamic<numComp>> pm(imSize);
-        trainRoute(pm);
+        pm.trainRoute(snapshots);
 
         Timer<> t{ "Time taken for testing: " };
 
@@ -111,7 +106,7 @@ int bobMain(int, char **)
         LOGI << "Testing with HOG...";
 
         PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize, cv::Size(10, 10), 8);
-        trainRoute(pm);
+        pm.trainRoute(snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
