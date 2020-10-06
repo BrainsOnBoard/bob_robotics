@@ -41,6 +41,7 @@ bob_robotics.includes
 **/*.obj
 **/*.lib
 **/*.dll
+**/*.exe
 
 # Ignore dependency files
 **/*.d
