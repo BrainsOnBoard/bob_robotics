@@ -231,13 +231,12 @@ private:
     template<typename R>
     void calcImageDifferences(R &rotater) const
     {
-        // Ensure there's enough space in rotated differe
-        m_RotatedDifferences.reserve(rotater.numRotations());
-        m_RotatedDifferences.clear();
+        // Ensure there's enough space in m_RotatedDifferences
+        m_RotatedDifferences.resize(rotater.numRotations());
 
         // Populate rotated differences with results
-        rotater.rotate([this] (const cv::Mat &image, auto, auto) {
-            m_RotatedDifferences.push_back(this->test(image));
+        rotater.rotate([this] (const cv::Mat &image, const cv::Mat &, size_t i) {
+            m_RotatedDifferences[i] = this->test(image);
         });
     }
 
