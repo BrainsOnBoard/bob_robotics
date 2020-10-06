@@ -204,11 +204,9 @@ private:
         }
 
         // Scan across image columns
-        #pragma omp parallel
         rotater.rotate(
                 [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
-                    // Loop through snapshots (in parallel, if possible)
-                    #pragma omp for
+                    // Loop through snapshots
                     for (size_t s = 0; s < numSnapshots; s++) {
                         // Calculate difference
                         m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
