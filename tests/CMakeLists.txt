@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 include(../cmake/bob_robotics.cmake)
 BoB_project(SOURCES tests.cc
-            BOB_MODULES imgproc video
+            BOB_MODULES imgproc navigation video
             EXTERNAL_LIBS gtest eigen3)
 
 # We need to run a script to generate a header file before compiling
