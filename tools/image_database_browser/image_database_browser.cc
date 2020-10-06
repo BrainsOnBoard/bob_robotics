@@ -28,7 +28,7 @@ int bobMain(int argc, char **argv)
 
     // Load images
     std::cout << "Loading images..." << std::endl;
-    std::vector<cv::Mat> images{ database.size() };
+    const auto images = database.loadImages({}, false);
 
     // Iterate through images with arrow keys
     cv::namedWindow(argv[0]);
@@ -37,9 +37,6 @@ int bobMain(int argc, char **argv)
         const auto pos = database[i].position;
         ssTitle << database.getName() << " [" << i << "/" << database.size() << "]"
                 << " (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")";
-        if (images[i].empty()) {
-            images[i] = database[i].load(false);
-        }
         cv::imshow(argv[0], images[i]);
         cv::setWindowTitle(argv[0], ssTitle.str());
 
