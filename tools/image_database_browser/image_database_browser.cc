@@ -38,7 +38,7 @@ int bobMain(int argc, char **argv)
         ssTitle << database.getName() << " [" << i << "/" << database.size() << "]"
                 << " (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")";
         if (images[i].empty()) {
-            images[i] = database[i].load();
+            images[i] = database[i].load(false);
         }
         cv::imshow(argv[0], images[i]);
         cv::setWindowTitle(argv[0], ssTitle.str());

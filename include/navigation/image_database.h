@@ -78,8 +78,7 @@ public:
         filesystem::path path;
         std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
 
-        cv::Mat load() const;
-        cv::Mat loadGreyscale() const;
+        cv::Mat load(bool greyscale = true) const;
     };
 
     //! Base class for GridRecorder and RouteRecorder
@@ -192,10 +191,10 @@ public:
     bool isGrid() const;
 
     //! Load all of the images in this database into memory and return
-    std::vector<cv::Mat> getImages() const;
+    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, bool greyscale = true) const;
 
     //! Load all of the images in this database into the specified std::vector<>
-    void getImages(std::vector<cv::Mat> &images) const;
+    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {}, bool greyscale = true) const;
 
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;

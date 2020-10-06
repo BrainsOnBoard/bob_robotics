@@ -89,7 +89,7 @@ int bobMain(int argc, char **argv)
 
         cv::Mat image;
         for (size_t i = 1; i < routeImages.size(); i++) {
-            image = routeImages[i].loadGreyscale();
+            image = routeImages[i].load();
             images.emplace_back(imSize, CV_8UC1);
             cv::resize(image, images.back(), imSize);
 
