@@ -151,7 +151,7 @@ public:
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
-        return m_RotationDifferences;
+        return m_RotatedDifferences;
     }
 
     /*!
@@ -176,18 +176,18 @@ public:
         std::vector<float> minDifferences;
         minDifferences.reserve(numSnapshots);
         for (size_t i = 0; i < numSnapshots; i++) {
-            const auto elem = std::min_element(std::cbegin(m_RotationDifferences[i]), std::cend(m_RotationDifferences[i]));
-            bestColumns.push_back(std::distance(std::cbegin(m_RotationDifferences[i]), elem));
+            const auto elem = std::min_element(std::cbegin(m_RotatedDifferences[i]), std::cend(m_RotatedDifferences[i]));
+            bestColumns.push_back(std::distance(std::cbegin(m_RotatedDifferences[i]), elem));
             minDifferences.push_back(*elem);
         }
 
         // Return result
         return std::tuple_cat(RIDFProcessor()(bestColumns, minDifferences, rotater),
-                              std::make_tuple(std::cref(m_RotationDifferences)));
+                              std::make_tuple(std::cref(m_RotatedDifferences)));
     }
 
 private:
-    mutable std::vector<std::vector<float>> m_RotationDifferences;
+    mutable std::vector<std::vector<float>> m_RotatedDifferences;
 
     //------------------------------------------------------------------------
     // Private API
@@ -199,8 +199,8 @@ private:
         BOB_ASSERT(numSnapshots > 0);
 
         // Preallocate snapshot difference vectors
-        while (m_RotationDifferences.size() < numSnapshots) {
-            m_RotationDifferences.emplace_back(rotater.numRotations());
+        while (m_RotatedDifferences.size() < numSnapshots) {
+            m_RotatedDifferences.emplace_back(rotater.numRotations());
         }
 
         // Scan across image columns
@@ -211,7 +211,7 @@ private:
                     #pragma omp for
                     for (size_t s = 0; s < numSnapshots; s++) {
                         // Calculate difference
-                        m_RotationDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
+                        m_RotatedDifferences[s][i] = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
     }
