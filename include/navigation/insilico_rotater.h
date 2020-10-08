@@ -58,6 +58,11 @@ struct InSilicoRotater
                 static cv::Mat scratchImage, scratchMask;
                 #pragma omp threadprivate(scratchImage, scratchMask)
 
+                /*
+                 * Allocate scratchImage and scratchMask lazily. This means they
+                 * will always have the correct size, even if the size of
+                 * m_Image changes between calls.
+                 */
                 scratchImage.create(m_Image.size(), CV_8UC1);
                 if (!m_MaskImage.empty()) {
                     scratchMask.create(m_MaskImage.size(), m_MaskImage.type());
