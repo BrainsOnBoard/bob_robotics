@@ -3,6 +3,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <iterator>
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"

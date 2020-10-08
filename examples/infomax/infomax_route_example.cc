@@ -36,18 +36,15 @@ using namespace units::math;
 using FloatType = float;
 using InfoMaxType = InfoMaxRotater<InSilicoRotater, FloatType>;
 
-void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
-                 const std::vector<double> &ally, const std::vector<cv::Mat> &images)
+void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
+               const std::vector<double> &y, const std::vector<cv::Mat> &images)
 {
-    std::vector<double> x, y, u, v;
+    std::vector<double> u, v;
     {
         // Test network
         LOGI << "Testing network...";
         Timer<> t{ "Network testing took: " };
         for (size_t i = 0; i < images.size(); i++) {
-            x.push_back(allx[i]);
-            y.push_back(ally[i]);
-
             // Get heading and convert to vector
             const units::angle::radian_t heading = std::get<0>(infomax.getHeading(images[i]));
             double sinx, cosx;
@@ -75,8 +72,6 @@ int bobMain(int argc, char **argv)
         return 1;
     }
 
-    LOGI << "Eigen is using " << Eigen::nbThreads() << " threads.";
-
     // Where we are loading images from
     const filesystem::path routePath(argv[1]);
 
@@ -94,7 +89,7 @@ int bobMain(int argc, char **argv)
 
         cv::Mat image;
         for (size_t i = 1; i < routeImages.size(); i++) {
-            image = routeImages[i].loadGreyscale();
+            image = routeImages[i].load();
             images.emplace_back(imSize, CV_8UC1);
             cv::resize(image, images.back(), imSize);
 

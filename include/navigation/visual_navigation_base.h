@@ -8,6 +8,7 @@
 
 // Standard C++ includes
 #include <string>
+#include <vector>
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -38,6 +39,7 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Train algorithm with specified route
+    void trainRoute(const std::vector<cv::Mat> &images);
     void trainRoute(const ImageDatabase &imdb, bool resizeImages = false);
 
     //! Set mask image (e.g. for masking part of robot)

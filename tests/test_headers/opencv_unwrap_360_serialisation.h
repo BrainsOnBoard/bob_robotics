@@ -32,4 +32,3 @@ TEST(OpenCVUnwrap360, Serialisation) {
     EXPECT_EQ(unwrapper1.m_Flip, unwrapper2.m_Flip);
     BOB_EXPECT_UNIT_T_EQ(unwrapper1.m_OffsetAngle, unwrapper2.m_OffsetAngle);
 }
-

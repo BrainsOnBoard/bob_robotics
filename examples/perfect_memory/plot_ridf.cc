@@ -17,10 +17,14 @@ int bobMain(int, char **)
     pm.train(snap);
 
     // Compare snapshot with itself
-    std::vector<float> differences = pm.getImageDifferences(snap)[0];
+    const auto differences = pm.getImageDifferences(snap).row(0);
 
     // Plot RIDF
-    plotRIDF(differences);
+    std::vector<float> diffVec;
+    for (int i = 0; i < differences.cols(); i++) {
+        diffVec.push_back(differences(i));
+    }
+    plotRIDF(diffVec);
 
     return EXIT_SUCCESS;
 }

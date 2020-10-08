@@ -25,8 +25,8 @@ using namespace units::literals;
 struct BestMatchingSnapshot
 {
     template<typename Rotater>
-    auto operator()(std::vector<size_t> &bestCols,
-                    std::vector<float> &minDifferences,
+    auto operator()(const std::vector<size_t> &bestCols,
+                    const std::vector<float> &minDifferences,
                     const Rotater &rotater)
     {
         // Get index corresponding to best-matching snapshot

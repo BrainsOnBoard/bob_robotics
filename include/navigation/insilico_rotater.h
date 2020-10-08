@@ -39,10 +39,8 @@ struct InSilicoRotater
           : m_ScanStep(scanStep)
           , m_BeginRoll(beginRoll)
           , m_EndRoll(endRoll)
-          , m_ImageOriginal(image)
-          , m_MaskImageOriginal(maskImage)
-          , m_Image(unwrapRes.height, unwrapRes.width, CV_8UC1)
-          , m_MaskImage(maskImage.rows, maskImage.cols, maskImage.type())
+          , m_Image(image)
+          , m_MaskImage(maskImage)
         {
             BOB_ASSERT(image.cols == unwrapRes.width);
             BOB_ASSERT(image.rows == unwrapRes.height);
@@ -50,37 +48,42 @@ struct InSilicoRotater
             BOB_ASSERT(image.isContinuous());
             BOB_ASSERT(beginRoll < endRoll);
             BOB_ASSERT((distance(endRoll, beginRoll) % scanStep) == 0);
-
-            const auto index = toIndex(beginRoll);
-            rollImage(image, m_Image, index);
-            if (!maskImage.empty()) {
-                rollImage(maskImage, m_MaskImage, index);
-            }
-        }
+      }
 
         template<class Func>
-        void rotate(Func func)
+        void rotate(Func func) const
         {
-            auto i = m_BeginRoll;
-            while (true) {
-                func(m_Image, m_MaskImage, distance(m_BeginRoll, i));
+            #pragma omp parallel
+            {
+                static cv::Mat scratchImage, scratchMask;
+                #pragma omp threadprivate(scratchImage, scratchMask)
 
-                i += m_ScanStep;
-                if (i >= m_EndRoll) {
-                    break;
+                /*
+                 * Allocate scratchImage and scratchMask lazily. This means they
+                 * will always have the correct size, even if the size of
+                 * m_Image changes between calls.
+                 */
+                scratchImage.create(m_Image.size(), CV_8UC1);
+                if (!m_MaskImage.empty()) {
+                    scratchMask.create(m_MaskImage.size(), m_MaskImage.type());
                 }
 
-                const auto index = toIndex(i);
-                rollImage(m_ImageOriginal, m_Image, index);
-                if (!m_MaskImageOriginal.empty()) {
-                    rollImage(m_MaskImageOriginal, m_MaskImage, index);
+                #pragma omp for
+                for (auto i = m_BeginRoll; i < m_EndRoll; i += m_ScanStep) {
+                    const auto index = toIndex(i);
+                    rollImage(m_Image, scratchImage, index);
+                    if (!scratchMask.empty()) {
+                        rollImage(m_MaskImage, scratchMask, index);
+                    }
+
+                    func(scratchImage, scratchMask, distance(m_BeginRoll, i));
                 }
             }
-        }
+       }
 
         units::angle::radian_t columnToHeading(size_t column) const
         {
-            return units::angle::turn_t{ (double) toIndex(m_BeginRoll + column) / (double) m_ImageOriginal.cols };
+            return units::angle::turn_t{ (double) toIndex(m_BeginRoll + column) / (double) m_Image.cols };
         }
 
         size_t numRotations() const
@@ -91,8 +94,7 @@ struct InSilicoRotater
     private:
         const size_t m_ScanStep;
         const IterType m_BeginRoll, m_EndRoll;
-        const cv::Mat &m_ImageOriginal, &m_MaskImageOriginal;
-        cv::Mat m_Image, m_MaskImage;
+        const cv::Mat &m_Image, &m_MaskImage;
 
         static void rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t pixels)
         {

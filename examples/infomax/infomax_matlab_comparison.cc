@@ -46,8 +46,7 @@ runTest(const filesystem::path &dataPath, int num)
 
     // Load training image
     auto imageMatrix = readData<uint8_t>(dataPath / (pref + "train_image.bin"s));
-    const cv::Mat image(imageMatrix.rows(), imageMatrix.cols(),
-                        CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
+    const cv::Mat image(imageMatrix.rows(), imageMatrix.cols(), CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
 
     // Make our InfoMax runner object
     InfoMaxRotater<InSilicoRotater, double> infomax(image.size(), initWeights);
@@ -59,20 +58,17 @@ runTest(const filesystem::path &dataPath, int num)
     infomax.trainUY();
 
     LOGI << "Weights before training: "
-              << initWeights
-             ;
+         << initWeights;
 
     LOGI << "Image: "
-              << imageMatrix.cast<int>()
-             ;
+         << imageMatrix.cast<int>();
 
     LOGI << "U: " << u;
     LOGI << "Y: " << y;
 
     const auto &weights = infomax.getWeights();
     LOGI << "Weights after training: "
-              << weights
-             ;
+         << weights;
 
     LOGI << "Diff U: " << matlabU - u;
     LOGI << "Diff Y: " << matlabY - y;
@@ -82,10 +78,11 @@ runTest(const filesystem::path &dataPath, int num)
         infomax.train(image);
     }
     LOGI << "Diff weights (" << manyRuns << " runs): "
-              << matlabOutputWeightsMany - infomax.getWeights();
+         << matlabOutputWeightsMany - infomax.getWeights();
 }
 
-int bobMain(int, char **argv)
+int
+bobMain(int, char **argv)
 {
     // Path where test *.bin files live
     const auto dataPath = filesystem::path(argv[0]).parent_path() / "test_data";

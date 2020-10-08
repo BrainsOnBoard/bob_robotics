@@ -47,23 +47,26 @@ int bobMain(int, char **)
     agent.setPosition(5.5_m, 4_m, 10_mm);
 
     units::angle::degree_t heading;
+    size_t snapshot;
+    float difference;
+    const Eigen::MatrixXf *allDifferences;
 
     {
         LOGI << "Using ant world rotater...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, BestMatchingSnapshot, AntWorldRotater> pm(RenderSize);
         trainRoute(pm, routePath);
 
-        size_t snapshot;
-        float difference;
-        std::vector<std::vector<float>> allDifferences;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(agent, 2_deg);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
 
         // Plot RIDF
-        plotRIDF(allDifferences[snapshot]);
-        LOGI;
+        std::vector<float> diffVec;
+        for (int i = 0; i < allDifferences->cols(); i++) {
+            diffVec.push_back((*allDifferences)(snapshot, i));
+        }
+        plotRIDF(diffVec);
     }
 
     {
@@ -75,17 +78,17 @@ int bobMain(int, char **)
         cv::Mat fr;
         agent.readGreyscaleFrame(fr);
 
-        size_t snapshot;
-        float difference;
-        std::vector<std::vector<float>> allDifferences;
         std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(fr);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
 
         // Plot RIDF
-        plotRIDF(allDifferences[snapshot]);
-        LOGI;
+        std::vector<float> diffVec;
+        for (int i = 0; i < allDifferences->cols(); i++) {
+            diffVec.push_back((*allDifferences)(snapshot, i));
+        }
+        plotRIDF(diffVec);
     }
 
     return EXIT_SUCCESS;
