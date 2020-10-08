@@ -56,8 +56,24 @@ int bobMain(int argc, char **argv)
     const unsigned int width = 1024;
     const unsigned int height = 262;
 
-    // Whether to use the 3D reconstructed Rothamsted model
-    const bool useRothamstedModel = argc > 1 && strcmp(argv[1], "--rothamsted") == 0;
+    // If an argument is passed
+    filesystem::path modelPath;
+    if(argc > 1) {
+        // If it's the magical rothamsted argument
+        if(strcmp(argv[1], "--rothamsted") == 0) {
+            const char *rothamstedPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
+            if(!rothamstedPath) {
+                throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
+            }
+
+            // Set model path to first rothamsted model
+            modelPath = filesystem::path(rothamstedPath).parent_path() / "flight_1_decimate.obj";
+        }
+        // Otherwise, use argument directly as path
+        else {
+            modelPath = filesystem::path(argv[1]);
+        }
+    }
 
     // Create SFML window
     sf::Window window(sf::VideoMode{ width, height },
@@ -91,19 +107,16 @@ int bobMain(int argc, char **argv)
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     AntWorld::Renderer renderer(512, 0.1);
-    if (useRothamstedModel) {
-        const char *modelPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
-        if (!modelPath) {
-            throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
-        }
-        renderer.getWorld().loadObj(filesystem::path(modelPath).parent_path() / "flight_1_decimate.obj",
-                                    0.1f,
+    if(modelPath.empty()) {
+        renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
+                                 {0.0f, 1.0f, 0.0f},
+                                 {0.898f, 0.718f, 0.353f});
+    }
+    else {
+        renderer.getWorld().loadObj(modelPath,
+                                    1.0f,
                                     4096,
                                     GL_COMPRESSED_RGB);
-    } else {
-        renderer.getWorld().load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
-                                 { 0.0f, 1.0f, 0.0f },
-                                 { 0.898f, 0.718f, 0.353f });
     }
 
     // Create HID device for controlling movement

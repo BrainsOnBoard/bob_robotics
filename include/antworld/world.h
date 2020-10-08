@@ -72,7 +72,7 @@ private:
     //------------------------------------------------------------------------
     void loadMaterials(const filesystem::path &basePath, const std::string &filename,
                        GLint textureFormat, int maxTextureSize,
-                       std::map<std::string, Texture*> &textureNames);
+                       std::map<std::string, std::tuple<Texture*, Surface::Colour>> &materialNames);
 
     //------------------------------------------------------------------------
     // Members

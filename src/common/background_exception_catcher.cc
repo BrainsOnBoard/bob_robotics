@@ -8,6 +8,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <string>
 
 namespace {
