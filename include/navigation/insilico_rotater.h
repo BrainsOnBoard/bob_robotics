@@ -90,7 +90,6 @@ struct InSilicoRotater
         const size_t m_ScanStep;
         const IterType m_BeginRoll, m_EndRoll;
         const cv::Mat &m_Image, &m_MaskImage;
-        static cv::Mat m_ScratchImages, m_ScratchMaskImages;
 
         static void rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t pixels)
         {
