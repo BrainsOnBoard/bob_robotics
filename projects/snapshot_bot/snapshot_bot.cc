@@ -540,9 +540,6 @@ private:
 
     Milliseconds m_DriveTime;
 
-    // Is testing paused
-    bool m_TestingPaused;
-
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
 
