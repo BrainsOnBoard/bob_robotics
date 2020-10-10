@@ -1,21 +1,22 @@
-// Standard C++ includes
-#include <numeric>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
+// Snapshot bot display includes
+#include "config.h"
 
 // BoB robotics includes
 #include "common/fsm.h"
-#include "common/logging.h"
 #include "navigation/differencers.h"
 #include "navigation/insilico_rotater.h"
 #include "os/keycodes.h"
 #include "net/client.h"
 #include "video/netsource.h"
 
+// Third-party includes
+#include "plog/Log.h"
 
-// Snapshot bot display includes
-#include "config.h"
+// OpenCV
+#include <opencv2/opencv.hpp>
+
+// Standard C++ includes
+#include <numeric>
 
 using namespace BoBRobotics;
 
@@ -198,19 +199,16 @@ private:
                     // Ensure there is enough space in RIDF
                     m_RIDF.resize(numScanColumns * 2);
 
-                    // Create functor to calculate difference between images
-                    Navigation::AbsDiff differencer(imageWidth);
-
                     // Scan across columns on left of image
                     cv::Mat mask;
                     auto rotatorLeft = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
                                                                            1, 0, numScanColumns);
                     rotatorLeft.rotate(
-                            [imageSize, numScanColumns, &differencer, this]
+                            [imageSize, numScanColumns, this]
                             (const cv::Mat &fr, const cv::Mat &, size_t i)
                             {
                                 // Calculate image difference
-                                auto diffIter = differencer(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
+                                auto diffIter = Navigation::AbsDiff::calculate(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
 
                                 float sumDifference = std::accumulate(diffIter, diffIter + imageSize, 0.0f);
 
@@ -223,11 +221,11 @@ private:
                     auto rotatorRight = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
                                                                             1, imageWidth - numScanColumns, imageWidth);
                     rotatorRight.rotate(
-                            [imageSize, numScanColumns, &differencer, this]
+                            [imageSize, numScanColumns, this]
                             (const cv::Mat &fr, const cv::Mat &, size_t i)
                             {
                                 // Calculate image difference
-                                auto diffIter = differencer(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
+                                auto diffIter = Navigation::AbsDiff::calculate(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
 
                                 float sumDifference = std::accumulate(diffIter, diffIter + imageSize, 0.0f);
 
