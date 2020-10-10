@@ -20,7 +20,7 @@ int bobMain(int, char **)
     Viz::SFMLWorld display;                         // For displaying the agent
     auto car = display.createCarAgent();
 
-    auto joystick = Viz::JoystickKeyboard::createJoystick(display.getWindow());
+    auto joystick = Viz::JoystickKeyboard::createJoystick();
     robot.controlWithThumbsticks(*joystick);
 
     joystick->addHandler([&robot](HID::JButton button, bool pressed) {

@@ -36,13 +36,13 @@ void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLcha
 {
     if (severity == GL_DEBUG_SEVERITY_HIGH) {
         LOGE << message;
-    } 
+    }
     else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
         LOGW << message;
-    } 
+    }
     else if (severity == GL_DEBUG_SEVERITY_LOW) {
         LOGI << message;
-    } 
+    }
     else {
         LOGD << message;
     }
@@ -120,7 +120,7 @@ int bobMain(int argc, char **argv)
     }
 
     // Create HID device for controlling movement
-    auto joystick = Viz::JoystickKeyboard::createJoystick(window);
+    auto joystick = Viz::JoystickKeyboard::createJoystick();
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();

@@ -25,8 +25,8 @@ const JoystickKeyboard::ButtonKey JoystickKeyboard::ButtonKeys[] = {
 //------------------------------------------------------------------------
 // BoBRobotics::Viz::JoystickKeyboard
 //------------------------------------------------------------------------
-JoystickKeyboard::JoystickKeyboard(sf::Window &window)
-  : JoystickBase(0.0f), m_Window(window)
+JoystickKeyboard::JoystickKeyboard()
+  : JoystickBase(0.0f)
 {}
 
 //------------------------------------------------------------------------
@@ -71,7 +71,7 @@ bool JoystickKeyboard::updateState()
 }
 
 std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>>
-JoystickKeyboard::createJoystick(sf::Window &window)
+JoystickKeyboard::createJoystick()
 {
     try
     {
@@ -80,7 +80,7 @@ JoystickKeyboard::createJoystick(sf::Window &window)
     catch(std::runtime_error &ex)
     {
         LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
-        return std::make_unique<JoystickKeyboard>(window);
+        return std::make_unique<JoystickKeyboard>();
     }
 }
 } // Viz
