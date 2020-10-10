@@ -11,6 +11,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <iterator>
 #include <type_traits>
 #include <vector>
 
@@ -59,8 +60,8 @@ class AbsDiff
 {
 public:
     template<typename InputArray1, typename InputArray2, typename OutputArray>
-    static auto calculate(size_t, const InputArray1 &src1,
-                          const InputArray2 &src2, OutputArray &dst)
+    static auto calculate(const InputArray1 &src1, const InputArray2 &src2,
+                          OutputArray &dst)
     {
         // Calculate absdiff
         cv::absdiff(src1, src2, dst);
@@ -87,19 +88,20 @@ class RMSDiff
 {
 public:
     template<typename InputArray1, typename InputArray2, typename OutputArray>
-    static auto calculate(size_t imSize, const InputArray1 &src1,
+    static auto calculate(const InputArray1 &src1,
                           const InputArray2 &src2, OutputArray &dst)
     {
         static std::vector<float> diffs;
         #pragma omp threadprivate(diffs)
-        diffs.resize(imSize);
+        diffs.clear();
 
         cv::absdiff(src1, src2, dst);
+
         const auto sqDiff = [](const auto val) {
             const auto d = static_cast<float>(val);
             return d * d;
         };
-        std::transform(Internal::begin(dst), Internal::end(dst), std::begin(diffs), sqDiff);
+        std::transform(Internal::begin(dst), Internal::end(dst), std::back_inserter(diffs), sqDiff);
         return diffs.begin();
     }
 

@@ -72,7 +72,7 @@ public:
         static cv::Mat diffScratchImage;
         #pragma omp threadprivate(diffScratchImage)
         diffScratchImage.create(image.size(), image.type());
-        auto diffIter = Differencer::calculate(imSize, image, m_Snapshots[snapshot], diffScratchImage);
+        auto diffIter = Differencer::calculate(image, m_Snapshots[snapshot], diffScratchImage);
 
         // If there's no mask
         if (imageMask.empty()) {
