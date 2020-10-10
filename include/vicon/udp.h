@@ -169,9 +169,9 @@ public:
                     const char *objectName,
                     const Stopwatch::Duration timeoutDuration)
       : m_Client(client)
+      , m_Name(objectName)
       , m_TimeoutDuration(timeoutDuration)
     {
-        std::strcpy(m_Name, objectName);
     }
 
     auto getPose() const
@@ -197,7 +197,7 @@ public:
 
 private:
     const UDPClient<ObjectDataType> &m_Client;
-    char m_Name[24];
+    const std::string m_Name;
     const Stopwatch::Duration m_TimeoutDuration;
 };
 
