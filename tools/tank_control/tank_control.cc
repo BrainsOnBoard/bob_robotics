@@ -83,7 +83,7 @@ int bobMain(int, char **)
     }
     if (camera) {
         // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+        netSink = std::make_unique<Video::NetSink>(*connection, camera->getOutputSize(), camera->getCameraName());
     }
 
     // Run server in background,, catching any exceptions for rethrowing
