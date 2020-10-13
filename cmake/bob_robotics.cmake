@@ -316,7 +316,7 @@ macro(always_included_packages)
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
     if(ENABLE_OPENMP)
-        if(APPLE)
+        if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
             macos_find_homebrew_openmp()
         endif()
         find_package(OpenMP QUIET)
