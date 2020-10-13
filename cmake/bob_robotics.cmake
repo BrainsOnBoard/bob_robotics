@@ -302,12 +302,24 @@ macro(always_included_packages)
     # Assume we always want threading
     find_package(Threads REQUIRED)
 
+    if(NOT DEFINED ENABLE_OPENMP)
+        # By default disable OpenMP support on MSVC and enable it otherwise
+        if(WIN32)
+            set(ENABLE_OPENMP FALSE)
+        else()
+            set(ENABLE_OPENMP TRUE)
+        endif()
+    endif()
+
     # Annoyingly, these packages export a target rather than simply variables
     # with the include path and link flags and it seems that this target isn't
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
-    if(NOT WIN32 AND NOT TARGET OpenMP::OpenMP_CXX)
+    if(ENABLE_OPENMP)
         find_package(OpenMP QUIET)
+        if(NOT OpenMP_CXX_FOUND)
+            message(WARNING "Could not find OpenMP; code will be single-threaded")
+        endif()
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
