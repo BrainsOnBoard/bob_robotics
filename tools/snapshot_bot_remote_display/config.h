@@ -1,15 +1,17 @@
 #pragma once
 
+// Third-party includes
+#include "third_party/units.h"
+
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C++ includes
 #include <string>
 #include <vector>
 
 // Standard C includes
 #include <cstdint>
-
-// OpenCV
-#include <opencv2/opencv.hpp>
-
 
 //------------------------------------------------------------------------
 // Config

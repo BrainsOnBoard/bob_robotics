@@ -23,7 +23,7 @@ using namespace units::math;
 // MemoryBase
 //------------------------------------------------------------------------
 MemoryBase::MemoryBase()
-:   m_BestHeading(0.0_deg), m_LowestDifference(std::numeric_limits<size_t>::max())
+:   m_BestHeading(0.0_deg), m_LowestDifference(std::numeric_limits<float>::infinity())
 {
 }
 //------------------------------------------------------------------------

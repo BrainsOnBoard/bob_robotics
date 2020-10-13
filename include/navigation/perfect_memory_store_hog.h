@@ -90,8 +90,7 @@ public:
         BOB_ASSERT(scratchDescriptors.size() == m_HOGDescriptorSize);
 
         // Calculate differences between image HOG descriptors and snapshot
-        auto diffIter = Differencer::calculate(image.rows * image.cols,
-                                               m_Snapshots[snapshot],
+        auto diffIter = Differencer::calculate(m_Snapshots[snapshot],
                                                scratchDescriptors,
                                                scratchDescriptors);
 

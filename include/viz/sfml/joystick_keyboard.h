@@ -21,9 +21,9 @@ namespace Viz {
 class JoystickKeyboard : public HID::JoystickBase<HID::JAxis, HID::JButton>
 {
 public:
-    JoystickKeyboard(sf::Window &window);
+    JoystickKeyboard();
 
-    static std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::Window &);
+    static std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick();
 
 protected:
     //------------------------------------------------------------------------
@@ -44,7 +44,6 @@ private:
     //------------------------------------------------------------------------
     // Private members
     //------------------------------------------------------------------------
-    sf::Window &m_Window;
     static const AxisKey AxisKeys[];
     static const ButtonKey ButtonKeys[];
 }; // JoystickLinux
