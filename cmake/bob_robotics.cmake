@@ -316,7 +316,9 @@ macro(always_included_packages)
     # "passed up" by add_subdirectory(), so we always include these packages on
     # the off-chance we need them.
     if(ENABLE_OPENMP)
-        macos_find_homebrew_openmp()
+        if(APPLE)
+            macos_find_homebrew_openmp()
+        endif()
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
@@ -362,10 +364,6 @@ macro(get_git_commit DIR VARNAME)
 endmacro()
 
 macro(macos_find_homebrew_openmp)
-    if(NOT APPLE)
-        return()
-    endif()
-
     # See if libomp was installed with homebrew...
     execute_process(COMMAND brew --prefix libomp
                     RESULT_VARIABLE rv
