@@ -144,8 +144,7 @@ public:
      *
      * The parameters are perfect-forwarded to the Rotater class, so e.g. for
      * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
-     * for the scan step and for the AntWorldRotater, one passes in one or more
-     * angles.
+     * for the scan step.
      */
     template<class... Ts>
     const auto &getImageDifferences(Ts &&... args) const
@@ -161,8 +160,7 @@ public:
      *
      * The parameters are perfect-forwarded to the Rotater class, so e.g. for
      * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
-     * for the scan step and for the AntWorldRotater, one passes in one or more
-     * angles.
+     * for the scan step.
      */
     template<class... Ts>
     auto getHeading(Ts &&... args) const
