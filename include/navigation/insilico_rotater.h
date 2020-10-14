@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "algorithms.h"
 #include "common/macros.h"
 
 // Third-party includes
@@ -71,9 +72,9 @@ struct InSilicoRotater
                 #pragma omp for
                 for (auto i = m_BeginRoll; i < m_EndRoll; i += m_ScanStep) {
                     const auto index = toIndex(i);
-                    rollImage(m_Image, scratchImage, index);
+                    rollImage<uchar>(m_Image, scratchImage, index);
                     if (!scratchMask.empty()) {
-                        rollImage(m_MaskImage, scratchMask, index);
+                        rollImage<uchar>(m_MaskImage, scratchMask, index);
                     }
 
                     func(scratchImage, scratchMask, distance(m_BeginRoll, i));
@@ -95,19 +96,6 @@ struct InSilicoRotater
         const size_t m_ScanStep;
         const IterType m_BeginRoll, m_EndRoll;
         const cv::Mat &m_Image, &m_MaskImage;
-
-        static void rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t pixels)
-        {
-            // Loop through rows
-            for (int y = 0; y < imageIn.rows; y++) {
-                // Get pointer to start of row
-                const uint8_t *rowPtr = imageIn.ptr(y);
-                uint8_t *rowPtrOut = imageOut.ptr(y);
-
-                // Rotate row to left by pixels
-                std::rotate_copy(rowPtr, rowPtr + pixels, rowPtr + imageIn.cols, rowPtrOut);
-            }
-        }
 
         static size_t distance(size_t first, size_t last)
         {
