@@ -298,6 +298,10 @@ macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
+# Annoyingly, various packages export a target rather than simply variables
+# with the include path and link flags and it seems that these targets
+# aren't "passed up" by add_subdirectory(), so we always include these
+# packages on the off-chance we need them somewhere
 macro(always_included_packages)
     # Assume we always want threading
     find_package(Threads REQUIRED)
@@ -311,10 +315,6 @@ macro(always_included_packages)
         endif()
     endif()
 
-    # Annoyingly, these packages export a target rather than simply variables
-    # with the include path and link flags and it seems that this target isn't
-    # "passed up" by add_subdirectory(), so we always include these packages on
-    # the off-chance we need them.
     if(ENABLE_OPENMP)
         if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
             macos_find_homebrew_openmp()
