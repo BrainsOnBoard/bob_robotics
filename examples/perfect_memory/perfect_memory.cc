@@ -53,12 +53,13 @@ int bobMain(int, char **)
 
         // Treat snapshot #10 as test data
         const auto snap = pm.getSnapshot(10);
-        std::vector<size_t> rotations(snap.cols / 2);
-        std::iota(rotations.begin(), rotations.end(), snap.cols / 2);
+        const size_t begin = snap.cols / 4;
+        const size_t end = snap.cols * 3 / 4;
+        const size_t step = 2;
 
         size_t snapshot;
         float difference;
-        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap, rotations.begin(), rotations.end());
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap, step, begin, end);
         LOGI << "Heading: " << heading;
         LOGI << "Best-matching snapshot: #" << snapshot;
         LOGI << "Difference score: " << difference;
