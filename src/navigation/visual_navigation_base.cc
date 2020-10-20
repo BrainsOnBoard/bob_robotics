@@ -41,7 +41,7 @@ VisualNavigationBase::~VisualNavigationBase()
 void
 VisualNavigationBase::trainRoute(const ImageDatabase &imdb, bool resizeImages)
 {
-    trainRoute(imdb.loadImages(resizeImages ? m_UnwrapRes : cv::Size{}));
+    // trainRoute(imdb.loadImages(resizeImages ? m_UnwrapRes : cv::Size{}));
 }
 
 void

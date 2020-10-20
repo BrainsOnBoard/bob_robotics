@@ -30,52 +30,20 @@ namespace PerfectMemoryStore {
  *
  * \tparam Differencer This can be AbsDiff or RMSDiff
  */
-template<typename Differencer = AbsDiff>
-class RawImage
+template<class Differencer = AbsDiff>
+struct RawImage
 {
-public:
-    RawImage()
-    {}
+    using StoreType = std::vector<cv::Mat>;
 
-    RawImage(const cv::Size &)
-    {}
-
-    //------------------------------------------------------------------------
-    // Public API
-    //------------------------------------------------------------------------
-    size_t getNumSnapshots() const
-    {
-        return m_Snapshots.size();
-    }
-
-    const cv::Mat &getSnapshot(size_t index) const
-    {
-        BOB_ASSERT(index < m_Snapshots.size());
-        return m_Snapshots[index];
-    }
-
-    size_t addSnapshot(const cv::Mat &image)
-    {
-        m_Snapshots.emplace_back();
-        image.copyTo(m_Snapshots.back());
-
-        // Return index of new snapshot
-        return (m_Snapshots.size() - 1);
-    }
-
-    void clear()
-    {
-        m_Snapshots.clear();
-    }
-
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &snapshotMask) const
+    auto operator()(const cv::Mat &image, const cv::Mat &imageMask,
+                    const cv::Mat &snapshot)
     {
         // Calculate difference between image and stored image
         const int imSize = image.rows * image.cols;
         static cv::Mat diffScratchImage;
         #pragma omp threadprivate(diffScratchImage)
         diffScratchImage.create(image.size(), image.type());
-        auto diffIter = Differencer::calculate(image, m_Snapshots[snapshot], diffScratchImage);
+        auto diffIter = Differencer::calculate(image, snapshot, diffScratchImage);
 
         // If there's no mask
         if (imageMask.empty()) {
@@ -88,7 +56,6 @@ public:
         else {
             // Get raw access to rotated mask associated with image and non-rotated mask associated with snapshot
             uint8_t *imageMaskPtr = imageMask.data;
-            uint8_t *snapshotMaskPtr = snapshotMask.data;
 
             // Loop through pixels
             float sumDifference = 0.0f;
@@ -96,7 +63,7 @@ public:
             const uint8_t *end = &imageMaskPtr[imSize];
             while (imageMaskPtr < end) {
                 // If this pixel is masked by neither of the masks
-                if (*imageMaskPtr++ != 0 && *snapshotMaskPtr++) {
+                if (*imageMaskPtr++ != 0) {
                     // Accumulate sum of differences
                     sumDifference += (float) *diffIter;
 
@@ -110,12 +77,6 @@ public:
             return Differencer::mean(sumDifference, (float) numUnmaskedPixels);
         }
     }
-
-private:
-    //------------------------------------------------------------------------
-    // Members
-    //------------------------------------------------------------------------
-    std::vector<cv::Mat> m_Snapshots;
 }; // RawImage
 } // PerfectMemoryStore
 } // Navigation

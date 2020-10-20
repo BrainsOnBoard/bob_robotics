@@ -432,34 +432,31 @@ ImageDatabase::isGrid() const
 
 //! Load all of the images in this database into memory and return
 std::vector<cv::Mat>
-ImageDatabase::loadImages(const cv::Size &size, bool greyscale) const
+ImageDatabase::loadImages(int type, const cv::Size &size) const
 {
     std::vector<cv::Mat> images;
-    loadImages(images, size, greyscale);
+    loadImages(images, type, size);
     return images;
 }
 
 //! Load all of the images in this database into the specified std::vector<>
 void
-ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bool greyscale) const
+ImageDatabase::loadImages(std::vector<cv::Mat> &images, int type,
+                          const cv::Size &size) const
 {
+    const int channels = CV_MAT_CN(type);
     size_t oldSize = images.size();
     images.resize(oldSize + m_Entries.size());
 
-    #pragma omp parallel
-    {
-        if (size.empty()) {
-            #pragma omp for
-            for (size_t i = 0; i < m_Entries.size(); i++) {
-                images[i + oldSize] = m_Entries[i].load(greyscale);
-            }
-        } else {
-            cv::Mat tmp;
-            #pragma omp for private(tmp)
-            for (size_t i = 0; i < m_Entries.size(); i++) {
-                tmp = m_Entries[i].load(greyscale);
-                cv::resize(tmp, images[i + oldSize], size);
-            }
+    #pragma omp parallel for
+    for (size_t i = 0; i < m_Entries.size(); i++) {
+        cv::Mat &image = images[i + oldSize];
+        image = m_Entries[i].load(channels == 1);
+        image.convertTo(image, type);
+        BOB_ASSERT(image.channels() == channels);
+
+        if (!size.empty()) {
+            cv::resize(image, image, size);
         }
     }
 }

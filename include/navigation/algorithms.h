@@ -1,77 +1,135 @@
 #pragma once
 
+// BoB robotics includes
+#include "imgproc/roll_image.h"
+#include "navigation/differencers_new.h"
+
+// Third-party includes
+#include "third_party/units.h"
+
+// Eigen
+#include <Eigen/Core>
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
 #include <algorithm>
+#include <utility>
 
 namespace BoBRobotics {
 namespace Navigation {
 
-template<class It1, class It2, class It3>
-void
-__rollImage(const It1 begin, const It2 end, size_t stride, It3 out, size_t rotationRight)
-{
-    for (auto it = begin; it < end; std::advance(it, stride), std::advance(out, stride)) {
-        std::rotate_copy(it, std::next(it, rotationRight), std::next(it, stride), out);
-    }
-}
+// template<class Iter>
+// auto getBestRotation(Iter begin, Iter end, size_t width=std::distance(begin, end))
+// {
+//     using namespace units::angle;
 
-/**!
- * \brief Rolls panoramic imageIn rotationRight pixels to the right, putting the
- *        result in imageOut.
- *
- * This function assumes that imageIn and imageOut are both continuous and that
- * their types match what is specified by T.
- */
+//     const auto min = std::min_element(begin, end);
+//     const degree_t angle = turn_t{ (double) std::distance(begin, min) /
+//                                    (double) width };
+//     return std::make_pair(angle, *min);
+// }
+
+// template<class Container>
+// auto getBestRotation(const Container &vals, size_t width=std::distance(begin, end))
+// {
+//     return getBestRotation(std::cbegin(vals), std::cend(vals), width);
+// }
+
 template<class T>
-void
-rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t rotationRight)
-{
-    const auto begin = reinterpret_cast<T *>(imageIn.data);
-    const auto end = &begin[imageIn.rows * imageIn.cols];
-    const auto out = reinterpret_cast<T *>(imageOut.data);
-    __rollImage(begin, end, imageIn.cols, out, rotationRight);
-}
+class RowIterator {
+public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = T;
+    using pointer = T*;
+    using reference = T&;
 
-template<class Func>
-void
-forEachRotation(const cv::Mat &image, Func func, const cv::Mat &mask,
-                size_t columnStep, size_t startColumn, size_t endColumn)
-{
-#pragma omp parallel
+    RowIterator(T *data, const size_t stride=1)
+      : m_Data(data)
+      , m_Stride(stride)
+    {}
+
+    T *operator*() const { return m_Data; }
+
+    auto &operator++()
     {
-        static cv::Mat scratchImage, scratchMask;
-#pragma omp threadprivate(scratchImage, scratchMask)
-        /*
-        * Allocate scratchImage and scratchMask lazily. This means they
-        * will always have the correct size, even if the size of
-        * m_Image changes between calls.
-        */
-        scratchImage.create(image.size(), CV_8UC1);
-        if (!mask.empty()) {
-            scratchMask.create(mask.size(), mask.type());
-        }
-
-#pragma omp for
-        for (size_t rot = startColumn; rot < endColumn; rot += columnStep) {
-            rollImage<uchar>(image, scratchImage, rot);
-            if (!scratchMask.empty()) {
-                rollImage<uchar>(mask, scratchMask, rot);
-            }
-
-            func(scratchImage, scratchMask, (rot - startColumn) / columnStep);
-        }
+        m_Data += m_Stride;
+        return *this;
     }
+
+    bool operator==(const T *other) { return m_Data == other; }
+    bool operator==(RowIterator<T> other) { return m_Data == other.m_Data; }
+
+    template<class U>
+    bool operator!=(const U val) { return !(*this == val); }
+
+private:
+    T *m_Data;
+    const size_t m_Stride;
+};
+
+template <
+    typename T,
+    typename std::enable_if_t<std::is_base_of<Eigen::MatrixBase<T>, T>::value, int> = 0
+>
+auto __getIterator(T &values)
+{
+    return RowIterator<float>{ values.data(), (size_t)values.cols() };
+}
+
+template <
+    typename T,
+    typename std::enable_if_t<!std::is_base_of<Eigen::MatrixBase<T>, T>::value, int> = 0
+>
+auto __getIterator(T &values)
+{
+    return std::begin(values);
+}
+
+template<class It1, class It2, class Func>
+void
+calculateRIDFMulti(const cv::Mat &image, const It1 snapBegin, const It1 snapEnd,
+                   It2 diffRowsBegin, Func calcSnapshotDifference,
+                   size_t columnStep, size_t columnBegin, size_t columnEnd)
+{
+    auto snapshotComp = [&](const cv::Mat &rotImage, size_t rotation) {
+        auto diffsIter = diffRowsBegin;
+        for (auto snap = snapBegin; snap != snapEnd; ++snap, ++diffsIter) {
+            (*diffsIter)[rotation] = calcSnapshotDifference(rotImage, *snap);
+        }
+    };
+    ImgProc::forEachRotation<float>(image, snapshotComp, columnStep, columnBegin, columnEnd);
+}
+
+template<class ImageType, class Container, class Differences, class Func>
+void
+calculateRIDFMulti(const ImageType &image, const Container &snapshots,
+                   Differences &differences, Func calcSnapshotDifference)
+{
+    auto iterPair = __getIterator(differences);
+    calculateRIDFMulti(image, std::cbegin(snapshots), std::cend(snapshots),
+                       iterPair.first, iterPair.second, calcSnapshotDifference);
 }
 
 template<class Func>
-void
-forEachRotation(const cv::Mat &image, Func func, const cv::Mat &mask = {},
-                size_t columnStep = 1, size_t startColumn = 0)
+const auto &
+calculateRIDF(const cv::Mat &image, const cv::Mat &snapshot,
+              Func calcSnapshotDifference)
 {
-    forEachRotation(image, func, mask, columnStep, startColumn, image.cols);
+    static std::vector<float> differences;
+    differences.resize(image.cols);
+    calculateRIDFMulti(image, &snapshot, &snapshot + 1, &differences,
+                       calcSnapshotDifference, 1, 0, image.cols);
+    return differences;
 }
+
+inline const auto &
+calculateRIDF(const cv::Mat &image, const cv::Mat &snapshot)
+{
+    return calculateRIDF(image, snapshot, AbsDiff{});
+}
+
 } // Navigation
 } // BoBRobotics
