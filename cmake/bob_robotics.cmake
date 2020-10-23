@@ -486,11 +486,6 @@ macro(BoB_build)
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
-    # Clang needs to be linked against libm and libstdc++ explicitly
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        BoB_add_link_libraries(m stdc++)
-    endif()
-
     # The list of linked libraries can end up very long with lots of duplicate
     # entries and this can break ld, so remove them. We remove from the start,
     # so that dependencies will always (I think!) be in the right order.
