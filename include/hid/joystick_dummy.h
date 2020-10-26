@@ -47,6 +47,7 @@ class JoystickDummy
   : public JoystickBase<JAxisDummy, JButtonDummy>
 {
 public:
+    JoystickDummy() {}
     JoystickDummy(float) {}
 
     virtual bool updateState() override
