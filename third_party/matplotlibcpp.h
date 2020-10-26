@@ -6,6 +6,7 @@
 #include <numeric>
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 #include <stdint.h> // <cstdint> requires c++11 support
 
 #if __cplusplus > 199711L || _MSC_VER > 1800

@@ -298,15 +298,27 @@ macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
+# Annoyingly, various packages export a target rather than simply variables
+# with the include path and link flags and it seems that these targets
+# aren't "passed up" by add_subdirectory(), so we always include these
+# packages on the off-chance we need them somewhere
 macro(always_included_packages)
     # Assume we always want threading
     find_package(Threads REQUIRED)
 
-    # Annoyingly, these packages export a target rather than simply variables
-    # with the include path and link flags and it seems that this target isn't
-    # "passed up" by add_subdirectory(), so we always include these packages on
-    # the off-chance we need them.
-    if(NOT WIN32 AND NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT DEFINED ENABLE_OPENMP)
+        # By default disable OpenMP support on MSVC and enable it otherwise
+        if(WIN32)
+            set(ENABLE_OPENMP FALSE)
+        else()
+            set(ENABLE_OPENMP TRUE)
+        endif()
+    endif()
+
+    if(ENABLE_OPENMP)
+        if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            macos_find_homebrew_openmp()
+        endif()
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
@@ -348,6 +360,21 @@ macro(get_git_commit DIR VARNAME)
         if(NOT ${rv} EQUAL 0)
             set(${VARNAME} ${${VARNAME}}-dirty)
         endif()
+    endif()
+endmacro()
+
+macro(macos_find_homebrew_openmp)
+    # See if libomp was installed with homebrew...
+    execute_process(COMMAND brew --prefix libomp
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE LIBOMP_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # ...success!
+    if(${rv} EQUAL 0)
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_LIB_NAMES omp)
+        set(OpenMP_omp_LIBRARY "${LIBOMP_PREFIX}/lib/libomp.a")
     endif()
 endmacro()
 
