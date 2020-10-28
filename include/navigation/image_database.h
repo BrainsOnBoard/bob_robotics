@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/pose.h"
+#include "common/range.h"
 #include "common/string.h"
 
 // Third-party includes
@@ -29,42 +30,6 @@
 namespace BoBRobotics {
 namespace Navigation {
 using namespace units::literals;
-
-//------------------------------------------------------------------------
-// BoBRobotics::Navigation::Range
-//------------------------------------------------------------------------
-//! A range of values in millimetres
-struct Range
-{
-    using millimeter_t = units::length::millimeter_t;
-    millimeter_t begin, end, separation;
-
-    constexpr Range(const std::pair<millimeter_t, millimeter_t> beginAndEnd,
-                    const millimeter_t separation)
-      : begin(beginAndEnd.first)
-      , end(beginAndEnd.second)
-      , separation(separation)
-    {
-        if (begin == end) {
-            BOB_ASSERT(separation == 0_mm);
-        } else {
-            BOB_ASSERT(begin < end);
-            BOB_ASSERT(separation > 0_mm);
-        }
-    }
-
-    constexpr Range(const millimeter_t value)
-      : Range({ value, value }, 0_mm)
-    {}
-
-    constexpr Range()
-      : begin{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
-      , end{ millimeter_t{ std::numeric_limits<double>::quiet_NaN() } }
-      , separation{ 0_mm }
-    {}
-
-    size_t size() const;
-};
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::ImageDatabase
@@ -221,14 +186,14 @@ public:
       : public Recorder<NumExtraFields> {
     public:
         template<class... Ts>
-        GridRecorder(ImageDatabase &imageDatabase, const Range &xrange,
-                     const Range &yrange, const Range &zrange = Range(0_mm),
+        GridRecorder(ImageDatabase &imageDatabase, const Range<millimeter_t> &xrange,
+                     const Range<millimeter_t> &yrange, const Range<millimeter_t> &zrange = Range<millimeter_t>(0_mm),
                      degree_t heading = 0_deg, Ts &&... extraFieldNames)
           : Recorder<NumExtraFields>(imageDatabase, false,
                                      std::forward<Ts>(extraFieldNames)...)
           , m_Heading(heading)
-          , m_Begin(xrange.begin, yrange.begin, zrange.begin)
-          , m_Separation(xrange.separation, yrange.separation, zrange.separation)
+          , m_Begin(*xrange.begin(), *yrange.begin(), *zrange.begin())
+          , m_Separation(xrange.getStep(), yrange.getStep(), zrange.getStep())
           , m_Size({ xrange.size(), yrange.size(), zrange.size() })
           , m_Current({ 0, 0, 0 })
         {
@@ -396,8 +361,8 @@ public:
 
     //! Start recording a grid of images
     template<class... Ts>
-    auto getGridRecorder(const Range &xrange, const Range &yrange,
-                         const Range &zrange = Range(0_mm),
+    auto getGridRecorder(const Range<millimeter_t> &xrange, const Range<millimeter_t> &yrange,
+                         const Range<millimeter_t> &zrange = Range<millimeter_t>(0_mm),
                          degree_t heading = 0_deg, Ts &&... extraFieldNames)
     {
         return GridRecorder<sizeof...(extraFieldNames)>{

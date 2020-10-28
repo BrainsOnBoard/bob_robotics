@@ -28,12 +28,6 @@ namespace Navigation {
 constexpr const char *ImageDatabase::MetadataFilename;
 constexpr const char *ImageDatabase::EntriesFilename;
 
-size_t
-Range::size() const
-{
-    return (separation == 0_mm) ? 1 : (1 + ((end - begin) / separation).to<size_t>());
-}
-
 cv::Mat
 ImageDatabase::Entry::load(bool greyscale) const
 {
