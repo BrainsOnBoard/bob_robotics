@@ -366,6 +366,7 @@ ImageDatabase::readDirectoryEntries()
             m_Entries.push_back(entry);
         }
     }
+    tinydir_close(&dir);
 
     // Sort entries alphabetically by file path
     const auto byname = [](const Entry &e1, const Entry &e2) {
