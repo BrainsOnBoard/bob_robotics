@@ -73,8 +73,8 @@ public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
-        Vector3<millimeter_t> position;
-        degree_t heading;
+        Vector3<millimeter_t> position = Vector3<millimeter_t>::nan();
+        degree_t heading{ NAN };
         filesystem::path path;
         std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
 

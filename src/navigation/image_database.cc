@@ -348,22 +348,15 @@ ImageDatabase::readDirectoryEntries()
             continue;
         }
 
-        const filesystem::path fileName = file.path;
+        filesystem::path fileName = file.path;
         auto ext = fileName.extension();
         for (char &c : ext) {
             c = ::tolower(c);
         }
         if (ext == "jpg" || ext == "jpeg" || ext == "png") {
             // Save details to vector
-            Entry entry{
-                { millimeter_t(NAN),
-                  millimeter_t(NAN),
-                  millimeter_t(NAN) },
-                degree_t(NAN),
-                fileName,
-                { 0, 0, 0 }
-            };
-            m_Entries.push_back(entry);
+            m_Entries.emplace_back();
+            m_Entries.back().path = std::move(fileName);
         }
     }
     tinydir_close(&dir);
