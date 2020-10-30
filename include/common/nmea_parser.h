@@ -34,6 +34,7 @@ type 1 or 9 update, null field when DGPS is not used
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <vector>
 
 namespace BoBRobotics
@@ -92,7 +93,6 @@ struct TimeStamp
 struct GPSData {
     BoBRobotics::MapCoordinate::GPSCoordinate coordinate;  // Latitude and longitude coordinate
     units::length::meter_t altitude;                       // Altitude above ellipsoid
-    units::velocity::meters_per_second_t velocity;         // velocity
     int numberOfSatellites;                                 // Currently observed number of satelites
     double horizontalDilution;                             // horizontal dilution - lower value is better
     GPSQuality gpsQuality;                                 // GPS quality indicator
@@ -108,34 +108,35 @@ class NMEAParser {
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
-    using meters_per_second_t = units::velocity::meters_per_second_t;
+
 
     private:
 
     static std::vector<std::string> parseNMEAstring(const std::string &textToParse,
-                                                    const std::string &NMEA_sentence_id) {
+                                                    const char* NMEA_sentence_id) {
 
         if (textToParse.empty()) throw GPSError("Empty string to parse");
 
         using namespace std;
-        const char delimiter = '$';      // sentences separated by [$]
+        const char delimiter = '\n';      // sentences separated by [$]
         const char w_delimiter = ',';    // elements separated by  [,]
 
         bool found = false;
-        string sentence;
+        string sentence, foundSentence;
         istringstream split(textToParse);
         while (getline(split, sentence, delimiter)) {
-            if (sentence.find(NMEA_sentence_id) != string::npos) {
+            if (std::strstr(sentence.c_str(), NMEA_sentence_id)) {
                 found = true;
-                break;
+                foundSentence = sentence;
             }
         }
         if (!found) {
+            std::cout << foundSentence << std::endl;
             throw GPSError("cannot find NMEA id");
         }
 
         // separating the sentence to words
-        istringstream splitWord{ sentence };
+        istringstream splitWord{ foundSentence };
         vector<string> words;
         for (string word; getline(splitWord, word, w_delimiter); words.push_back(word));
 
@@ -151,7 +152,6 @@ class NMEAParser {
         arcminute_t         latitudeMinutes, longitudeMinutes;
         char                latDirection, longDirection;
         meter_t             altitude;
-        meters_per_second_t velocity;
         double              horizontalDilution;
         int                 numberOfSatellites;
         int                 gpsQualityIndicator;
@@ -160,7 +160,7 @@ class NMEAParser {
 
         try {
             if (toParse.empty()) throw GPSError("Emtpy serial output");
-            vector<string> elements= parseNMEAstring(toParse, "GNGGA"); // parse string
+            vector<string> elements= parseNMEAstring(toParse, "$GNGGA"); // parse string
             if (elements.size() < 10) throw GPSError("Wrong number of elements when parsing the string");
             string timeString = elements[1];
             TimeStamp time{ timeString };
@@ -174,8 +174,6 @@ class NMEAParser {
             numberOfSatellites = stoi(elements[7]);
             horizontalDilution = stod(elements[8]);
             altitude = meter_t(stod(elements[9]));
-            vector<string> elementsRMC= parseNMEAstring(toParse, "GNRMC"); // parse GNRMC for velocity
-            velocity = units::velocity::knot_t(stod(elementsRMC[7])); // we change unit from knot to meters_per_second
             qualityOfGps = static_cast<GPSQuality>(gpsQualityIndicator);
 
             // adding up the latitude and longitude parts
@@ -192,7 +190,6 @@ class NMEAParser {
             data.coordinate = coordinate;
             data.numberOfSatellites = numberOfSatellites;
             data.altitude = altitude;
-            data.velocity = velocity;
             data.horizontalDilution = horizontalDilution;
             data.gpsQuality = qualityOfGps;
             data.time = time; // UTC time
