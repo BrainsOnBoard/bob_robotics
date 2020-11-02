@@ -50,10 +50,11 @@ ImageDatabase::Entry::hasExtraField(const std::string &name) const
 const std::string &
 ImageDatabase::Entry::getExtraField(const std::string &name) const
 {
-    BOB_ASSERT(hasExtraField(name));
+    const auto pos = extraFields.find(name);
+    BOB_ASSERT(pos != extraFields.cend());
 
     // This is needed because operator[] is non-const for std::unordered_map
-    return extraFields.find(name)->second;
+    return pos->second;
 }
 
 ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
