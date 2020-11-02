@@ -62,8 +62,14 @@ public:
             return static_cast<ssize_t>((m_Value - it.m_Value) / m_Step);
         }
 
+        auto &operator+=(difference_type i)
+        {
+            m_Value += i * m_Step;
+            return *this;
+        }
+
     private:
-        const T m_Step;
+        T m_Step;
         T m_Value;
     };
 

@@ -348,10 +348,44 @@ public:
     bool isGrid() const;
 
     //! Load all of the images in this database into memory and return
-    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, bool greyscale = true) const;
+    std::vector<cv::Mat> loadImages(int type, const cv::Size &size = {}) const;
 
     //! Load all of the images in this database into the specified std::vector<>
-    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {}, bool greyscale = true) const;
+    void loadImages(std::vector<cv::Mat> &images, int type,
+                    const cv::Size &size = {}) const;
+
+
+    // //! Load all of the images in this database into memory and return
+    // template<class PixelType>
+    // std::vector<cv::Mat>
+    // loadImages(const cv::Size &size = {}, bool greyscale = true) const
+    // {
+    //     std::vector<cv::Mat> images;
+    //     loadImages<PixelType>(images, size, greyscale);
+    //     return images;
+    // }
+
+    // //! Load all of the images in this database into the specified std::vector<>
+    // template<class PixelType>
+    // void
+    // loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
+    //            bool greyscale = true) const
+    // {
+    //     size_t oldSize = images.size();
+    //     images.resize(oldSize + m_Entries.size());
+
+    //     #pragma omp parallel for
+    //     for (size_t i = 0; i < m_Entries.size(); i++) {
+    //         cv::Mat &image = images[i + oldSize];
+    //         image = m_Entries[i].load(greyscale);
+    //         image.convertTo(image, CV_MAKE_TYPE(cv::DataType<PixelType>::depth,
+    //                                             image.channels()));
+
+    //         if (!size.empty()) {
+    //             cv::resize(image, image, size);
+    //         }
+    //     }
+    // }
 
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;
