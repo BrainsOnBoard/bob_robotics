@@ -260,7 +260,7 @@ public:
         }
 
         //! Get a vector of all possible positions for this grid
-        std::vector<Vector3<millimeter_t>> getPositions()
+        std::vector<Vector3<millimeter_t>> getPositions() const
         {
             std::vector<Vector3<millimeter_t>> positions;
             positions.reserve(maximumSize());
