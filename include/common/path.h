@@ -29,7 +29,8 @@ getResourcesPath();
 
 //! Generate a novel file/directory path, e.g. for a data file
 filesystem::path
-getNewPath(const filesystem::path &rootPath, const std::string &extension = "");
+getNewPath(const filesystem::path &rootPath = getProgramFolder(),
+           const std::string &extension = "");
 
 } // Path
 } // BoBRobotics
