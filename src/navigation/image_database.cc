@@ -68,6 +68,8 @@ ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
 ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrite)
   : m_Path(databasePath)
 {
+    LOGI << "Using image database at " << databasePath;
+
     if (overwrite && databasePath.exists()) {
         LOG_WARNING << "Database already exists; overwriting";
         filesystem::remove_all(databasePath);
