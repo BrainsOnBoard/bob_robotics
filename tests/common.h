@@ -6,11 +6,6 @@
 // Google Test
 #include "gtest/gtest.h"
 
-// Standard C++ includes
-#include <string>
-#include <utility>
-
-// Put these using declarations here so we don't have to bother putting it in the test headers
 namespace BoBRobotics {}
 using namespace BoBRobotics;
 using namespace units::literals;

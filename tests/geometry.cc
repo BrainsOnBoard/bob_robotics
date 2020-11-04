@@ -3,9 +3,6 @@
 // BoB robotics includes
 #include "common/geometry.h"
 
-#include <array>
-#include <algorithm>
-
 template<int Rows1, int Cols1, int Rows2, int Cols2>
 void EXPECT_EIGEN_EQ(const Eigen::Matrix<double, Rows1, Cols1> &m1, const Eigen::Matrix<double, Rows2, Cols2> &m2)
 {

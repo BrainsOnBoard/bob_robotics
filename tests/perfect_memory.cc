@@ -1,6 +1,6 @@
-#include "../navigation/generate_images.h"
-#include "../navigation/PerfectMemoryRotater__.h"
 #include "common.h"
+#include "navigation/generate_images.h"
+#include "navigation/PerfectMemoryRotater__.h"
 
 // BoB robotics includes
 #include "navigation/perfect_memory.h"
