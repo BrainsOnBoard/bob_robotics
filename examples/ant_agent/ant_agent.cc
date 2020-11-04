@@ -1,10 +1,11 @@
 // BoB robotics includes
 #include "antworld/agent.h"
-#include "plog/Log.h"
+#include "common/path.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 
 // OpenCV
@@ -32,7 +33,7 @@ int bobMain(int, char **argv)
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
-    world.load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+    world.load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                { 0.0f, 1.0f, 0.0f },
                { 0.898f, 0.718f, 0.353f });
     const auto minBound = world.getMinBound();

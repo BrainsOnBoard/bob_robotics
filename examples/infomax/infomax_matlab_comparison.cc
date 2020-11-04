@@ -1,11 +1,12 @@
 #include "read_data.h"
 
 // BoB robotics includes
-#include "plog/Log.h"
+#include "common/path.h"
 #define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 
 // Eigen
@@ -85,7 +86,7 @@ int
 bobMain(int, char **argv)
 {
     // Path where test *.bin files live
-    const auto dataPath = filesystem::path(argv[0]).parent_path() / "test_data";
+    const auto dataPath = BoBRobotics::Path::getProgramFolder() / "test_data";
 
     // Run tests
     runTest(dataPath, 1);
