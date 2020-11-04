@@ -5,6 +5,14 @@
 
 namespace BoBRobotics {
 namespace Path {
+//! Get the path of the folder containing the currently running program
+filesystem::path
+getProgramFolder();
+
+//! Get the path of the currently running program
+filesystem::path
+getProgramPath();
+
 /**!
  * \brief Get the path to the BoB robotics repository
  *
