@@ -17,6 +17,9 @@
 #include "video/panoramic.h"
 
 #include <sys/stat.h>
+#include <ctime>
+
+
 
 
 
@@ -33,6 +36,7 @@ using namespace BoBRobotics::Video;
 #define HEIGHT 72
 
 #define IS_UNWRAP true
+#define UPDATE_INTERVAL 500
 
 
 void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
@@ -53,7 +57,11 @@ void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
 
 }
 
-int bobMain(int, char **)
+void saveThread(cv::Mat img, std::string fileName) {
+    cv::imwrite(fileName, img);
+}
+
+int bobMain(int argc, char* argv[])
 {
 
     using degree_t = units::angle::degree_t;
@@ -69,6 +77,26 @@ int bobMain(int, char **)
     int numTrials = maxTrials;
     std::atomic<bool> shouldQuit{false};
     std::mutex mex;
+
+
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+    std::string str(buffer);
+
+    int seconds_to_run = 30; // default value
+    if (argc > 1) {
+        seconds_to_run = stoi(std::string(argv[1]));
+        std::cout << "running for " << seconds_to_run << " seconds" << std::endl;
+
+    }
+
+
 
     // check to see if we get valid coordinates by checking GPS quality
     while (numTrials > 0) {
@@ -89,7 +117,9 @@ int bobMain(int, char **)
     }
 
     std::string folderName;
-    std::cin >> folderName;
+    //std::cin >> folderName;
+
+    folderName = str;
 
     const char *c  = folderName.c_str();
     mkdir(c, 0777);
@@ -108,10 +138,10 @@ int bobMain(int, char **)
 
 
     // start camera thread
-    cv::Mat originalImage, tmpImage, unwrappedImage;
+    cv::Mat tmpImage, unwrappedImage, resized;
     cv::Mat outputImage(cv::Size(WIDTH,HEIGHT), CV_8UC3);
     std::thread readCameraThread(&readCameraThreadFunc, cam.get(), std::ref(tmpImage), std::ref(shouldQuit), std::ref(mex));
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 
     // create and open file to write gps coordinates
     std::ofstream coordinates;
@@ -151,12 +181,12 @@ int bobMain(int, char **)
 
             // output results
     	   // if (i%5 == 0) { // only output once ever sec
-            std::cout << std::setprecision(10) << "GPS quality: " << gpsQual << " latitude: " << coord.lat.value()<< " longitude: " <<  coord.lon.value()  << " num sats: " << data.numberOfSatellites <<  std::endl;
+            std::cout << std::setprecision(10) << "GPS quality: " << gpsQual << " latitude: " << coord.lat.value()<< " longitude: " <<  coord.lon.value()  << " num sats: " << data.numberOfSatellites << " time: " << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000 << std::endl;
 
 	        std::ostringstream fileString, folderString;
             fileString << folderName << "/image" << i << ".png";
 	        folderString << folderName << "/coordinates.csv";
-            const std::string fileName = fileString.str();
+            std::string fileName = fileString.str();
 
             //  headers:   gpsQuality|latitude|longitude|altitude|roll|pitch|yaw|imagename|timestamp
             coordinates.open (folderString.str(), std::ofstream::app); // open coordinates.csv file and append
@@ -165,30 +195,41 @@ int bobMain(int, char **)
             coordinates.close();
 
             // poll from camera thread
+            cv::Mat originalImage;
+            mex.lock();
             tmpImage.copyTo(originalImage);
+            mex.unlock();
 
-            cv::Mat resized;
             if (originalImage.size().height > 0) {
-                cv::resize(originalImage, resized, cv::Size(), 0.2, 0.2);
-                cv::imwrite(fileName, originalImage);
-                cv::imshow("orig",resized);
+               // cv::resize(originalImage, resized, cv::Size(), 0.2, 0.2);
+               // cv::imshow("orig",resized);
             }
 
+            std::thread imwriteThread{ &saveThread, std::move(originalImage), std::move(fileName) };
+            imwriteThread.detach();
 
-            int count = (std::chrono::milliseconds(1000) - sw.elapsed()).count();
+            int count = (std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed()).count();
             //std::cout << " count " << count/1000000 << " " << std::endl;
             count /= 1000000;
-            if ( cv::waitKey(count) == 27) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(count));
+
+
+
+
+            if ( (static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000)>seconds_to_run ) {
+
+
                 shouldQuit = true;
                 readCameraThread.join();
 
                 break;
             }
             i++;
+            std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
         }
         catch(BoBRobotics::GPS::GPSError &e) {
             std::cout << e.what() << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000) - sw.elapsed());
+            std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
         }
     }
 
