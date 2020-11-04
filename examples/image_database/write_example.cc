@@ -1,5 +1,4 @@
 // BoB robotics includes
-#include "common/path.h"
 #include "navigation/image_database.h"
 #include "video/randominput.h"
 
@@ -12,10 +11,8 @@ using namespace units::literals;
 
 int bobMain(int, char **argv)
 {
-    // Make a new image database; make folder with random name in current folder
-    const auto programPath = filesystem::path{ argv[0] }.parent_path();
-    const auto imdbPath = Path::getNewPath(programPath);
-    Navigation::ImageDatabase imdb{ imdbPath };
+    // Make a new image database with default path
+    Navigation::ImageDatabase imdb;
 
     // Use randomly generated images
     Video::RandomInput<> cam{ { 180, 50 }, "random", /*seed=*/42 };

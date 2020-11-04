@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "common/macros.h"
+#include "common/path.h"
 #include "common/pose.h"
 #include "common/string.h"
 
@@ -356,7 +357,8 @@ public:
 
     ImageDatabase(const char *databasePath, bool overwrite = false);
     ImageDatabase(const std::string &databasePath, bool overwrite = false);
-    ImageDatabase(const filesystem::path &databasePath, bool overwrite = false);
+    ImageDatabase(const filesystem::path &databasePath = Path::getNewPath(),
+                  bool overwrite = false);
 
     //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const;
