@@ -1,6 +1,7 @@
 #include "generate_images.h"
 
 // BoB robotics includes
+#include "common/path.h"
 #include "common/macros.h"
 #include "navigation/perfect_memory.h"
 
@@ -16,7 +17,7 @@
 #define XSTR(s) STR(s)
 #define FILENAME (XSTR(NAVIGATION_ALGO) ".h")
 
-int main(int, char **argv)
+int main(int, char **)
 {
     generateImages();
     BoBRobotics::Navigation::NAVIGATION_ALGO pm{ TestImageSize };
@@ -30,7 +31,7 @@ int main(int, char **argv)
             c = '_';
     }
 
-    const auto filepath = filesystem::path{ argv[0] }.parent_path() / filename;
+    const auto filepath = BoBRobotics::Path::getProgramFolder() / filename;
     std::ofstream ofs{ filepath.str() };
     BOB_ASSERT(ofs.good());
     ofs << std::setprecision(12);

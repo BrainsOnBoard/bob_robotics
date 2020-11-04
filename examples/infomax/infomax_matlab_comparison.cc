@@ -83,7 +83,7 @@ runTest(const filesystem::path &dataPath, int num)
 }
 
 int
-bobMain(int, char **argv)
+bobMain(int, char **)
 {
     // Path where test *.bin files live
     const auto dataPath = BoBRobotics::Path::getProgramFolder() / "test_data";

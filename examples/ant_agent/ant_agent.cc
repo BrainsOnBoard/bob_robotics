@@ -21,7 +21,7 @@ using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int bobMain(int, char **argv)
+int bobMain(int, char **)
 {
     const cv::Size RenderSize{ 720, 150 };
     const meter_t AntHeight = 1_cm;

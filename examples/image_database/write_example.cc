@@ -9,7 +9,7 @@ using namespace BoBRobotics;
 using namespace units::length;
 using namespace units::literals;
 
-int bobMain(int, char **argv)
+int bobMain(int, char **)
 {
     // Make a new image database with default path
     Navigation::ImageDatabase imdb;
