@@ -36,7 +36,7 @@ using namespace BoBRobotics::Video;
 #define HEIGHT 72
 
 #define IS_UNWRAP true
-#define UPDATE_INTERVAL 500
+#define UPDATE_INTERVAL 200
 
 
 void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
@@ -184,14 +184,14 @@ int bobMain(int argc, char* argv[])
             std::cout << std::setprecision(10) << "GPS quality: " << gpsQual << " latitude: " << coord.lat.value()<< " longitude: " <<  coord.lon.value()  << " num sats: " << data.numberOfSatellites << " time: " << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000 << std::endl;
 
 	        std::ostringstream fileString, folderString;
-            fileString << folderName << "/image" << i << ".png";
+            fileString << folderName << "/image" << i << ".jpg";
 	        folderString << folderName << "/coordinates.csv";
             std::string fileName = fileString.str();
 
             //  headers:   gpsQuality|latitude|longitude|altitude|roll|pitch|yaw|imagename|timestamp
             coordinates.open (folderString.str(), std::ofstream::app); // open coordinates.csv file and append
             coordinates << std::setprecision(10) << std::fixed << gpsQual << "," << coord.lat.value() << "," << coord.lon.value() << "," << data.altitude.value()  << "," << roll << "," << pitch << "," << yaw  << ",";
-            coordinates << "image" << i << ".png" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
+            coordinates << "image" << i << ".jpg" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
             coordinates.close();
 
             // poll from camera thread
@@ -201,7 +201,7 @@ int bobMain(int argc, char* argv[])
             mex.unlock();
 
             if (originalImage.size().height > 0) {
-               // cv::resize(originalImage, resized, cv::Size(), 0.2, 0.2);
+               // cv::resize(originalImage, originalImage, cv::Size(), 0.5, 0.5);
                // cv::imshow("orig",resized);
             }
 
