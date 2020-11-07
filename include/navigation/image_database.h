@@ -437,6 +437,9 @@ public:
     static std::string getFilename(const Vector3<millimeter_t> &position,
                                    const std::string &imageFormat = "png");
 
+    //! Return true if fn1 should be sorted before fn2
+    static bool fileNameCompare(const std::string &fn1, const std::string &fn2);
+
 private:
     const filesystem::path m_Path;
     std::vector<Entry> m_Entries;

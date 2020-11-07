@@ -15,6 +15,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 
@@ -236,11 +237,11 @@ ImageDatabase::readDirectoryEntries()
     }
     tinydir_close(&dir);
 
-    // Sort entries alphabetically by file path
-    const auto byname = [](const Entry &e1, const Entry &e2) {
-        return e1.path.str() < e2.path.str();
+    // Try to sort by number in file name and fall back on alphabetic comparison
+    const auto byName = [](const auto &e1, const auto &e2) {
+        return ImageDatabase::fileNameCompare(e1.path.filename(), e2.path.filename());
     };
-    std::sort(m_Entries.begin(), m_Entries.end(), byname);
+    std::sort(m_Entries.begin(), m_Entries.end(), byName);
 }
 
 //! Get the path of the directory corresponding to this ImageDatabase
@@ -452,6 +453,21 @@ ImageDatabase::getFilename(const Vector3<millimeter_t> &position,
        << std::setw(7) << iposition[1] << "_"
        << std::setw(7) << iposition[2] << "." << imageFormat;
     return ss.str();
+}
+
+bool
+ImageDatabase::fileNameCompare(const std::string &fn1, const std::string &fn2)
+{
+    std::regex regex{ R"(^([^0-9]*)([0-9]+)\.(.+)$)" };
+    std::smatch m1, m2;
+    if (!std::regex_match(fn1, m1, regex) || !std::regex_match(fn2, m2, regex)
+        || m1[1] != m2[1] || m1[3] != m2[3]) {
+        // Fall back on alphabetic comparison
+        return fn1 < fn2;
+    }
+
+    // Compare using the number in the file name
+    return std::stoul(m1[2]) < std::stoul(m2[2]);
 }
 
 void
