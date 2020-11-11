@@ -527,7 +527,7 @@ macro(BoB_build)
         # hopefully we can get away without using it in this case (because we'll
         # probably only find this on Linux machines which don't care about
         # linking directories anyway)
-        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+        if(${CMAKE_VERSION} VERSION_GREATER "3.13.0" OR ${CMAKE_VERSION} EQUAL "3.13.0")
             target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
         endif()
     endforeach()
