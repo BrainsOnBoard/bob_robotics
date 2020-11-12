@@ -3,8 +3,8 @@
 // BoB robotics includes
 #include "common/geometry.h"
 
-#include <array>
-#include <algorithm>
+// Third-party includes
+#include "third_party/units.h"
 
 template<int Rows1, int Cols1, int Rows2, int Cols2>
 void EXPECT_EIGEN_EQ(const Eigen::Matrix<double, Rows1, Cols1> &m1, const Eigen::Matrix<double, Rows2, Cols2> &m2)
@@ -28,7 +28,7 @@ TEST(Geometry, ResizeObjectBy) {
                      -1.5,  1,
                       1.5,  1,
                       1.5, -1;
-    resizePolygonBy(object, 0.5_m);
+    BoBRobotics::resizePolygonBy(object, units::length::meter_t{ 0.5 });
 
     EXPECT_EIGEN_EQ(object, objectResized);
 }

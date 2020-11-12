@@ -1,0 +1,7 @@
+/read_example
+/write_example
+
+# Image database files
+*.png
+*.csv
+*.yaml

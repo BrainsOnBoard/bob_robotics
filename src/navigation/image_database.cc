@@ -1,18 +1,21 @@
 // BoB robotics includes
 #include "common/macros.h"
-#include "navigation/image_database.h"
+#include "common/string.h"
 #include "imgproc/opencv_unwrap_360.h"
+#include "navigation/image_database.h"
 
 // Third-party includes
 #include "plog/Log.h"
 #include "third_party/tinydir.h"
 
 // Standard C includes
+#include <cstring>
 #include <ctime>
 
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 
@@ -39,208 +42,20 @@ ImageDatabase::Entry::load(bool greyscale) const
     return cv::imread(path.str(), greyscale ? cv::IMREAD_GRAYSCALE : cv::IMREAD_COLOR);
 }
 
-ImageDatabase::Recorder::~Recorder()
+bool
+ImageDatabase::Entry::hasExtraField(const std::string &name) const
 {
-    if (m_Recording) {
-        save();
-    }
+    return extraFields.find(name) != extraFields.cend();
 }
 
-cv::FileStorage &
-ImageDatabase::Recorder::getMetadataWriter()
+const std::string &
+ImageDatabase::Entry::getExtraField(const std::string &name) const
 {
-    return m_YAML;
-}
+    const auto pos = extraFields.find(name);
+    BOB_ASSERT(pos != extraFields.cend());
 
-void
-ImageDatabase::Recorder::abortSave()
-{
-    m_Recording = false;
-}
-
-void
-ImageDatabase::Recorder::save()
-{
-    // Write metadata to file
-    {
-        m_YAML << "}";
-
-        const auto path = (m_ImageDatabase.m_Path / MetadataFilename).str();
-        LOG_INFO << "Writing metadata to " << path << "...";
-        std::ofstream os(path);
-        os << m_YAML.releaseAndGetString();
-    }
-
-    m_ImageDatabase.addNewEntries(m_NewEntries);
-    m_Recording = false;
-}
-
-size_t
-ImageDatabase::Recorder::size() const
-{
-    return m_NewEntries.size();
-}
-
-std::string
-ImageDatabase::Recorder::getImageFormat() const
-{
-    return m_ImageFormat;
-}
-
-ImageDatabase::Recorder::Recorder(ImageDatabase &imageDatabase,
-                                  const bool isRoute,
-                                  const std::string &imageFormat)
-  : m_ImageDatabase(imageDatabase)
-  , m_ImageFormat(imageFormat)
-  , m_Recording(true)
-  , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
-{
-    // Set this property of the ImageDatabase
-    imageDatabase.m_IsRoute = isRoute;
-
-    // Get current date and time
-    std::time_t now = std::time(nullptr);
-    char timeStr[sizeof("0000-00-00 00:00:00")];
-    BOB_ASSERT(0 != std::strftime(timeStr, sizeof(timeStr), "%F %T", std::localtime(&now)));
-
-    // Write some metadata; users can add extra
-    m_YAML << "metadata"
-           << "{"
-           << "time" << timeStr
-           << "project_git_commit" << BOB_PROJECT_GIT_COMMIT
-           << "bob_robotics_git_commit" << BOB_ROBOTICS_GIT_COMMIT
-           << "type" << (isRoute ? "route" : "grid");
-}
-
-void
-ImageDatabase::Recorder::addEntry(const std::string &filename,
-                                  const cv::Mat &image,
-                                  const Vector3<millimeter_t> &position,
-                                  const degree_t heading,
-                                  const std::array<size_t, 3> &gridPosition)
-{
-    BOB_ASSERT(m_Recording);
-    m_ImageDatabase.writeImage(filename, image);
-    m_NewEntries.emplace_back(Entry{
-            position, heading, m_ImageDatabase.m_Path / filename, gridPosition });
-}
-
-ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
-                                          const Range &xrange,
-                                          const Range &yrange,
-                                          const Range &zrange,
-                                          degree_t heading,
-                                          const std::string &imageFormat)
-  : Recorder(imageDatabase, false, imageFormat)
-  , m_Heading(heading)
-  , m_Begin(xrange.begin, yrange.begin, zrange.begin)
-  , m_Separation(xrange.separation, yrange.separation, zrange.separation)
-  , m_Size({ xrange.size(), yrange.size(), zrange.size() })
-  , m_Current({ 0, 0, 0 })
-{
-    BOB_ASSERT(!imageDatabase.isRoute());
-
-    // Save some extra, grid-specific metadata
-    m_YAML << "grid"
-           << "{"
-           << "beginAtMM"
-           << "[:" << m_Begin[0]() << m_Begin[1]() << m_Begin[2]() << "]"
-           << "separationMM"
-           << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
-           << "size"
-           << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
-           << "}";
-}
-
-//! Get the physical position represented by grid coordinates
-Vector3<millimeter_t>
-ImageDatabase::GridRecorder::getPosition(const std::array<size_t, 3> &gridPosition) const
-{
-    BOB_ASSERT(gridPosition[0] < m_Size[0] && gridPosition[1] < m_Size[1] && gridPosition[2] < m_Size[2]);
-    Vector3<millimeter_t> position;
-    for (size_t i = 0; i < position.size(); i++) {
-        position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
-    }
-    return position;
-}
-
-//! Get a vector of all possible positions for this grid
-std::vector<Vector3<millimeter_t>>
-ImageDatabase::GridRecorder::getPositions()
-{
-    std::vector<Vector3<millimeter_t>> positions;
-    positions.reserve(maximumSize());
-
-    for (size_t x = 0; x < sizeX(); x++) {
-        for (size_t y = 0; y < sizeY(); y++) {
-            for (size_t z = 0; z < sizeZ(); z++) {
-                positions.emplace_back(getPosition({ x, y, z }));
-            }
-        }
-    }
-    return positions;
-}
-
-//! Save a new image into the database
-void
-ImageDatabase::GridRecorder::record(const cv::Mat &image)
-{
-    BOB_ASSERT(m_Current[2] < sizeZ());
-    record(m_Current, image);
-
-    if (++m_Current[0] == sizeX()) {
-        m_Current[0] = 0;
-        if (++m_Current[1] == sizeY()) {
-            m_Current[1] = 0;
-            m_Current[2]++;
-        }
-    }
-}
-
-//! Save a new image into the database at the specified coordinates
-void
-ImageDatabase::GridRecorder::record(const std::array<size_t, 3> &gridPosition, const cv::Mat &image)
-{
-    const auto position = getPosition(gridPosition);
-    const std::string filename = ImageDatabase::getFilename(position, getImageFormat());
-    addEntry(filename, image, position, m_Heading, { gridPosition[0], gridPosition[1], gridPosition[2] });
-}
-
-size_t
-ImageDatabase::GridRecorder::maximumSize() const
-{
-    return sizeX() * sizeY() * sizeZ();
-}
-size_t
-ImageDatabase::GridRecorder::sizeX() const
-{
-    return m_Size[0];
-}
-size_t
-ImageDatabase::GridRecorder::sizeY() const
-{
-    return m_Size[1];
-}
-size_t
-ImageDatabase::GridRecorder::sizeZ() const
-{
-    return m_Size[2];
-}
-
-ImageDatabase::RouteRecorder::RouteRecorder(ImageDatabase &imageDatabase,
-                                            const std::string &imageFormat)
-  : Recorder(imageDatabase, true, imageFormat)
-{
-    BOB_ASSERT(!imageDatabase.isGrid());
-}
-
-void
-ImageDatabase::RouteRecorder::record(const Vector3<millimeter_t> &position,
-                                     degree_t heading,
-                                     const cv::Mat &image)
-{
-    const std::string filename = ImageDatabase::getFilename(size(), getImageFormat());
-    addEntry(filename, image, position, heading);
+    // This is needed because operator[] is non-const for std::unordered_map
+    return pos->second;
 }
 
 ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
@@ -254,6 +69,8 @@ ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
 ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrite)
   : m_Path(databasePath)
 {
+    LOGI << "Using image database at " << databasePath;
+
     if (overwrite && databasePath.exists()) {
         LOG_WARNING << "Database already exists; overwriting";
         filesystem::remove_all(databasePath);
@@ -284,48 +101,107 @@ ImageDatabase::loadCSV()
         return false;
     }
 
-    std::string line, field;
+    std::string line;
+    if (!std::getline(entriesFile, line)) {
+        // ...then it's an empty file
+        return false;
+    }
+
+    // Read field names, using comma as separator and trimming whitespace
     std::vector<std::string> fields;
-    std::getline(entriesFile, line); // skip first line
-    while (std::getline(entriesFile, line)) {
-        std::stringstream lineStream(line);
-        fields.clear();
-        while (std::getline(lineStream, field, ',')) {
-            // Trim whitespace from left (not C++ at its prettiest!)
-            const auto notSpace = [](char c) {
-                return !std::isspace(c);
-            };
-            field.erase(field.begin(), std::find_if(field.begin(), field.end(), notSpace));
-            fields.push_back(field);
-        }
-        if (fields.size() < 5) {
-            break;
-        }
+    strSplit(line, ',', fields);
+    std::for_each(fields.begin(), fields.end(), strTrim);
+    const size_t numFields = fields.size();
 
-        std::array<size_t, 3> gridPosition;
-        if (fields.size() >= 8) {
-            if (!hasMetadata()) {
-                // Infer that it is a grid
-                m_IsRoute = false;
-            }
+    constexpr std::array<const char *, 8> defaultFieldNames{
+        "X [mm]", "Y [mm]", "Z [mm]", "Heading [degrees]", "Filename", "Grid X",
+        "Grid Y", "Grid Z"
+    };
 
-            gridPosition[0] = static_cast<size_t>(std::stoul(fields[5]));
-            gridPosition[1] = static_cast<size_t>(std::stoul(fields[6]));
-            gridPosition[2] = static_cast<size_t>(std::stoul(fields[7]));
+    /*
+     * Go through field names, figuring out which are standard ones and which
+     * are extra, user-defined ones
+     */
+    std::array<int, defaultFieldNames.size()> fieldNameIdx;
+    std::fill(fieldNameIdx.begin(), fieldNameIdx.end(), -1);
+    std::unordered_map<size_t, std::string> extraFieldNames;
+    for (size_t i = 0; i < fields.size(); i++) {
+        const auto matchesField = [&fields, i](const char *name) {
+            return strcmp(fields[i].c_str(), name) == 0;
+        };
+        const auto def = std::find_if(defaultFieldNames.begin(),
+                                      defaultFieldNames.end(), matchesField);
+
+        if (def != defaultFieldNames.end()) {
+            // If it's a default one, save the column number for later parsing
+            fieldNameIdx[std::distance(defaultFieldNames.begin(), def)] = i;
         } else {
-            gridPosition = { 0, 0, 0 };
+            extraFieldNames.emplace(i, std::move(fields[i]));
+        }
+    }
+
+    // Sanity check the file: we need the first five columns
+    const auto validIdx = [](int idx) {
+        return idx != -1;
+    };
+    BOB_ASSERT(std::all_of(fieldNameIdx.cbegin(), fieldNameIdx.cbegin() + 5, validIdx));
+
+    // Assume it's a grid if we have any of the Grid fields...
+    if (!hasMetadata()) {
+        m_IsRoute = !std::any_of(fieldNameIdx.cbegin() + 5, fieldNameIdx.cend(), validIdx);
+    }
+
+    // ...but we require *all* Grid fields for it to be valid
+    if (!m_IsRoute) {
+        BOB_ASSERT(std::all_of(fieldNameIdx.cbegin() + 5, fieldNameIdx.cend(), validIdx));
+    }
+
+    // Read data line by line
+    while (std::getline(entriesFile, line)) {
+        // Ignore empty lines
+        strTrim(line);
+        if (line.empty()) {
+            continue;
+        }
+
+        // Use comma as delimiter
+        strSplit(line, ',', fields);
+        BOB_ASSERT(fields.size() == numFields);
+        std::for_each(fields.begin(), fields.end(), strTrim);
+
+        // Get values for any user-defined fields
+        std::unordered_map<std::string, std::string> extraFields;
+        for (size_t i = 0; i < fields.size(); i++) {
+            const auto pos = extraFieldNames.find(i);
+            if (pos != extraFieldNames.cend()) {
+                extraFields.emplace(pos->second, std::move(fields[i]));
+            }
+        }
+
+        // Get the value for a given default field
+        const auto getDefaultField = [&fields, &fieldNameIdx](size_t i) {
+            return fields[fieldNameIdx[i]];
+        };
+
+        // Get grid position for grid databases
+        std::array<size_t, 3> gridPosition;
+        if (!m_IsRoute) {
+            gridPosition[0] = static_cast<size_t>(std::stoul(getDefaultField(5)));
+            gridPosition[1] = static_cast<size_t>(std::stoul(getDefaultField(6)));
+            gridPosition[2] = static_cast<size_t>(std::stoul(getDefaultField(7)));
         }
 
         // Save details to vector
         Entry entry{
-            { millimeter_t(std::stod(fields[0])),
-              millimeter_t(std::stod(fields[1])),
-              millimeter_t(std::stod(fields[2])) },
-            degree_t(std::stod(fields[3])),
-            m_Path / fields[4],
-            gridPosition
+            { millimeter_t(std::stod(getDefaultField(0))),
+              millimeter_t(std::stod(getDefaultField(1))),
+              millimeter_t(std::stod(getDefaultField(2))) },
+            degree_t(std::stod(getDefaultField(3))),
+            m_Path / getDefaultField(4),
+            gridPosition,
+            std::move(extraFields)
         };
-        m_Entries.push_back(entry);
+        m_Entries.emplace_back(std::move(entry));
     }
 
     return true;
@@ -348,30 +224,24 @@ ImageDatabase::readDirectoryEntries()
             continue;
         }
 
-        const filesystem::path fileName = file.path;
+        filesystem::path fileName = file.path;
         auto ext = fileName.extension();
         for (char &c : ext) {
             c = ::tolower(c);
         }
         if (ext == "jpg" || ext == "jpeg" || ext == "png") {
             // Save details to vector
-            Entry entry{
-                { millimeter_t(NAN),
-                  millimeter_t(NAN),
-                  millimeter_t(NAN) },
-                degree_t(NAN),
-                fileName,
-                { 0, 0, 0 }
-            };
-            m_Entries.push_back(entry);
+            m_Entries.emplace_back();
+            m_Entries.back().path = std::move(fileName);
         }
     }
+    tinydir_close(&dir);
 
-    // Sort entries alphabetically by file path
-    const auto byname = [](const Entry &e1, const Entry &e2) {
-        return e1.path.str() < e2.path.str();
+    // Try to sort by number in file name and fall back on alphabetic comparison
+    const auto byName = [](const auto &e1, const auto &e2) {
+        return ImageDatabase::fileNameCompare(e1.path.filename(), e2.path.filename());
     };
-    std::sort(m_Entries.begin(), m_Entries.end(), byname);
+    std::sort(m_Entries.begin(), m_Entries.end(), byName);
 }
 
 //! Get the path of the directory corresponding to this ImageDatabase
@@ -479,24 +349,6 @@ ImageDatabase::getName() const
     return m_Path.filename();
 }
 
-//! Start recording a grid of images
-ImageDatabase::GridRecorder
-ImageDatabase::getGridRecorder(const Range &xrange,
-                               const Range &yrange,
-                               const Range &zrange,
-                               degree_t heading,
-                               const std::string &imageFormat)
-{
-    return GridRecorder(*this, xrange, yrange, zrange, heading, imageFormat);
-}
-
-//! Start recording a route
-ImageDatabase::RouteRecorder
-ImageDatabase::getRouteRecorder(const std::string &imageFormat)
-{
-    return RouteRecorder(*this, imageFormat);
-}
-
 //! Get the resolution of saved images
 cv::Size
 ImageDatabase::getResolution() const
@@ -534,11 +386,11 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     // Create new metadata (YAML) file
     {
         /*
-            * There is no way to edit a persistence file in OpenCV, so we have
-            * to do it ourselves in this ugly way.
-            *
-            * First, copy all fields, except for changing needsUnwrapping to false.
-            */
+         * There is no way to edit a persistence file in OpenCV, so we have
+         * to do it ourselves in this ugly way.
+         *
+         * First, copy all fields, except for changing needsUnwrapping to false.
+         */
         std::string line;
         std::ofstream ofs((destination / MetadataFilename).str());
         for (std::ifstream ifs((m_Path / MetadataFilename).str()); std::getline(ifs, line);) {
@@ -603,6 +455,28 @@ ImageDatabase::getFilename(const Vector3<millimeter_t> &position,
     return ss.str();
 }
 
+bool
+ImageDatabase::fileNameCompare(const std::string &fn1, const std::string &fn2)
+{
+    // Find file names like (string)(number)(extension), e.g. "image45.png"
+    std::regex regex{ R"(^([^0-9]*)([0-9]+)\.(.+)$)" };
+
+    /*
+     * If the prefixes (e.g. "image" in "image45.png") and the file extensions
+     * match...
+     */
+    std::smatch m1, m2;
+    if (std::regex_match(fn1, m1, regex) && std::regex_match(fn2, m2, regex)
+        && m1[1] == m2[1] && m1[3] == m2[3]) {
+
+        // ...then use the numbers for comparison
+        return std::stoul(m1[2]) < std::stoul(m2[2]);
+    }
+
+    // ...else fall back on alphabetic comparison
+    return fn1 < fn2;
+}
+
 void
 ImageDatabase::loadMetadata()
 {
@@ -645,52 +519,7 @@ ImageDatabase::writeImage(const std::string &filename, const cv::Mat &image) con
 {
     const filesystem::path path = m_Path / filename;
     BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
-    cv::imwrite(path.str(), image);
-}
-
-void
-ImageDatabase::addNewEntries(std::vector<Entry> &newEntries)
-{
-    if (newEntries.empty()) {
-        LOG_WARNING << "No new entries added, nothing will be written";
-        return;
-    }
-
-    const std::string path = (m_Path / EntriesFilename).str();
-    LOG_INFO << "Writing entries to " << path << "...";
-
-    // Move new entries into this object's vector
-    m_Entries.reserve(m_Entries.size() + newEntries.size());
-    for (auto &&e : newEntries) {
-        m_Entries.emplace_back(std::move(e));
-    }
-
-    // Write image entries info to CSV file
-    std::ofstream os(path);
-    if (m_IsRoute) {
-        os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename" << std::endl;
-        for (auto &e : m_Entries) {
-            writeEntry(os, e);
-            os << std::endl;
-        }
-    } else {
-        os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename, Grid X, Grid Y, Grid Z" << std::endl;
-        for (auto &e : m_Entries) {
-            writeEntry(os, e);
-            os << ", " << e.gridPosition[0] << ", " << e.gridPosition[1] << ", " << e.gridPosition[2];
-            os << std::endl;
-        }
-    }
-
-    // Reload metadata, in case it's changed
-    loadMetadata();
-}
-
-void
-ImageDatabase::writeEntry(std::ofstream &os, const ImageDatabase::Entry &e)
-{
-    os << e.position[0]() << ", " << e.position[1]() << ", "
-       << e.position[2]() << ", " << e.heading() << ", " << e.path.filename();
+    BOB_ASSERT(cv::imwrite(path.str(), image));
 }
 } // Navigation
 } // BoB robotics

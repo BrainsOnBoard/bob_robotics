@@ -92,7 +92,7 @@ protected:
                     m_Window.close();
                 }
             }
-            
+
             // Update agent's position
             m_Agent.setPosition(it->x(), it->y(), m_AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
@@ -106,7 +106,7 @@ protected:
         }
     }
 
-    void addMetadata(ImageDatabase::Recorder &recorder)
+    void addMetadata(ImageDatabase::Recorder<> &recorder)
     {
         // Record "camera" info
         auto &metadata = recorder.getMetadataWriter();
