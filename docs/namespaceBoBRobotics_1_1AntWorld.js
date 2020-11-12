@@ -13,6 +13,7 @@ var namespaceBoBRobotics_1_1AntWorld =
     [ "RenderTargetInput", "classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html", "classBoBRobotics_1_1AntWorld_1_1RenderTargetInput" ],
     [ "RouteArdin", "classBoBRobotics_1_1AntWorld_1_1RouteArdin.html", "classBoBRobotics_1_1AntWorld_1_1RouteArdin" ],
     [ "RouteContinuous", "classBoBRobotics_1_1AntWorld_1_1RouteContinuous.html", "classBoBRobotics_1_1AntWorld_1_1RouteContinuous" ],
+    [ "SnapshotProcessor", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessor.html", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessor" ],
     [ "SnapshotProcessorArdin", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessorArdin.html", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessorArdin" ],
     [ "Surface", "classBoBRobotics_1_1AntWorld_1_1Surface.html", "classBoBRobotics_1_1AntWorld_1_1Surface" ],
     [ "Texture", "classBoBRobotics_1_1AntWorld_1_1Texture.html", "classBoBRobotics_1_1AntWorld_1_1Texture" ],

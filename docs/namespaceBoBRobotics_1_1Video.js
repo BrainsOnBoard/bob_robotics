@@ -7,7 +7,5 @@ var namespaceBoBRobotics_1_1Video =
     [ "OpenCVInput", "classBoBRobotics_1_1Video_1_1OpenCVInput.html", "classBoBRobotics_1_1Video_1_1OpenCVInput" ],
     [ "OpenGL", "classBoBRobotics_1_1Video_1_1OpenGL.html", "classBoBRobotics_1_1Video_1_1OpenGL" ],
     [ "RandomInput", "classBoBRobotics_1_1Video_1_1RandomInput.html", "classBoBRobotics_1_1Video_1_1RandomInput" ],
-    [ "RPiCamera", "classBoBRobotics_1_1Video_1_1RPiCamera.html", "classBoBRobotics_1_1Video_1_1RPiCamera" ],
-    [ "See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", "classBoBRobotics_1_1Video_1_1See3CAM__CU40" ],
-    [ "Video4LinuxCamera", "classBoBRobotics_1_1Video_1_1Video4LinuxCamera.html", "classBoBRobotics_1_1Video_1_1Video4LinuxCamera" ]
+    [ "RPiCamera", "classBoBRobotics_1_1Video_1_1RPiCamera.html", "classBoBRobotics_1_1Video_1_1RPiCamera" ]
 ];
