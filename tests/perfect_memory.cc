@@ -9,7 +9,7 @@ TEST(PerfectMemory, AllDifferences)
 {
     generateImages();
 
-    Navigation::PerfectMemoryRotater<> pm{ TestImageSize };
+    BoBRobotics::Navigation::PerfectMemoryRotater<> pm{ TestImageSize };
     for (const auto &image : TestImages) {
         pm.train(image);
     }

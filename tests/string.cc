@@ -3,6 +3,8 @@
 // BoB robotics includes
 #include "common/string.h"
 
+using namespace BoBRobotics;
+
 const std::string testString = "  test  ";
 TEST(strTrim, strTrimLeft)
 {

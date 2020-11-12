@@ -3,6 +3,8 @@
 // BoB robotics includes
 #include "common/circstat.h"
 
+using namespace BoBRobotics;
+
 TEST(CircStatTest, NormaliseAngle180) {
     BOB_EXPECT_UNIT_T_EQ(normaliseAngle180(360_deg), 0_deg);
     BOB_EXPECT_UNIT_T_EQ(normaliseAngle180(-360_deg), 0_deg);

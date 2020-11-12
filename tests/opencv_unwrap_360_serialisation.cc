@@ -3,18 +3,20 @@
 // BoB robotics includes
 #include "imgproc/opencv_unwrap_360.h"
 
+using namespace BoBRobotics::ImgProc;
+
 TEST(OpenCVUnwrap360, Serialisation)
 {
     const cv::Size cameraResolution(1280, 400);
     const cv::Size unwrapResolution(180, 50);
-    ImgProc::OpenCVUnwrap360 unwrapper1(cameraResolution,
-                                        unwrapResolution,
-                                        0.45468750000000002,
-                                        0.20499999999999999,
-                                        0.087499999999999994,
-                                        0.19,
-                                        0_deg,
-                                        true);
+    OpenCVUnwrap360 unwrapper1(cameraResolution,
+                               unwrapResolution,
+                               0.45468750000000002,
+                               0.20499999999999999,
+                               0.087499999999999994,
+                               0.19,
+                               0_deg,
+                               true);
 
     // Serialise data
     cv::FileStorage fsWrite(".yaml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
@@ -22,7 +24,7 @@ TEST(OpenCVUnwrap360, Serialisation)
     const std::string yamlStr = fsWrite.releaseAndGetString();
 
     // Deserialise data
-    ImgProc::OpenCVUnwrap360 unwrapper2(cameraResolution, unwrapResolution);
+    OpenCVUnwrap360 unwrapper2(cameraResolution, unwrapResolution);
     cv::FileStorage fsRead(yamlStr, cv::FileStorage::READ | cv::FileStorage::MEMORY);
     fsRead["unwrapper"] >> unwrapper2;
 
