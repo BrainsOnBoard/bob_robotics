@@ -458,16 +458,23 @@ ImageDatabase::getFilename(const Vector3<millimeter_t> &position,
 bool
 ImageDatabase::fileNameCompare(const std::string &fn1, const std::string &fn2)
 {
+    // Find file names like (string)(number)(extension), e.g. "image45.png"
     std::regex regex{ R"(^([^0-9]*)([0-9]+)\.(.+)$)" };
+
+    /*
+     * If the prefixes (e.g. "image" in "image45.png") and the file extensions
+     * match...
+     */
     std::smatch m1, m2;
-    if (!std::regex_match(fn1, m1, regex) || !std::regex_match(fn2, m2, regex)
-        || m1[1] != m2[1] || m1[3] != m2[3]) {
-        // Fall back on alphabetic comparison
-        return fn1 < fn2;
+    if (std::regex_match(fn1, m1, regex) && std::regex_match(fn2, m2, regex)
+        && m1[1] == m2[1] && m1[3] == m2[3]) {
+
+        // ...then use the numbers for comparison
+        return std::stoul(m1[2]) < std::stoul(m2[2]);
     }
 
-    // Compare using the number in the file name
-    return std::stoul(m1[2]) < std::stoul(m2[2]);
+    // ...else fall back on alphabetic comparison
+    return fn1 < fn2;
 }
 
 void
