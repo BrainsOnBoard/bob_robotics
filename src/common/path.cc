@@ -31,21 +31,21 @@ getProgramDirectory()
 filesystem::path
 getProgramPath()
 {
-#ifdef __linux__
+#if defined(__linux__)
     char path[PATH_MAX + 1];
     ssize_t len = readlink("/proc/self/exe", path, PATH_MAX);
     BOB_ASSERT(len >= 0);
     path[len] = '\0';
-#endif
-#ifdef _WIN32
+#elif defined(_WIN32)
     wchar_t path[MAX_PATH];
     DWORD len = GetModuleFileNameW(nullptr, path, MAX_PATH);
     BOB_ASSERT(len > 0);
-#endif
-#ifdef __APPLE__
+#elif defined(__APPLE__)
     char path[MAXPATHLEN + 1];
     uint32_t len = sizeof(path);
     BOB_ASSERT(_NSGetExecutablePath(path, &len) == 0);
+#else
+    #error "Unsupported platform"
 #endif
 
     return filesystem::path{ path };
