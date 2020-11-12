@@ -7,7 +7,7 @@ namespace BoBRobotics {
 namespace Path {
 //! Get the path of the folder containing the currently running program
 filesystem::path
-getProgramFolder();
+getProgramDirectory();
 
 //! Get the path of the currently running program
 filesystem::path
@@ -29,7 +29,7 @@ getResourcesPath();
 
 //! Generate a novel file/directory path, e.g. for a data file
 filesystem::path
-getNewPath(const filesystem::path &rootPath = getProgramFolder(),
+getNewPath(const filesystem::path &rootPath = getProgramDirectory(),
            const std::string &extension = "");
 
 } // Path

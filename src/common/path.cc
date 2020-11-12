@@ -23,7 +23,7 @@
 namespace BoBRobotics {
 namespace Path {
 filesystem::path
-getProgramFolder()
+getProgramDirectory()
 {
     return getProgramPath().parent_path();
 }

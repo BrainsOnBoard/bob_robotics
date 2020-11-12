@@ -86,7 +86,7 @@ int
 bobMain(int, char **)
 {
     // Path where test *.bin files live
-    const auto dataPath = BoBRobotics::Path::getProgramFolder() / "test_data";
+    const auto dataPath = BoBRobotics::Path::getProgramDirectory() / "test_data";
 
     // Run tests
     runTest(dataPath, 1);

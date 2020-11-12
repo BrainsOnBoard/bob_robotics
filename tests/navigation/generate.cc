@@ -31,7 +31,7 @@ int main(int, char **)
             c = '_';
     }
 
-    const auto filepath = BoBRobotics::Path::getProgramFolder() / filename;
+    const auto filepath = BoBRobotics::Path::getProgramDirectory() / filename;
     std::ofstream ofs{ filepath.str() };
     BOB_ASSERT(ofs.good());
     ofs << std::setprecision(12);
