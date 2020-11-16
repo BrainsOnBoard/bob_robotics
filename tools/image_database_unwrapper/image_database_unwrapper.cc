@@ -13,7 +13,7 @@ int bobMain(int argc, char **argv)
 
     // Either parse image size from command line or use default
     const cv::Size unwrapRes = argc == 4 ? cv::Size(std::stoi(argv[2]), std::stoi(argv[3]))
-                                         : cv::Size(720, 58);
+                                         : cv::Size(720, 150);
 
     // Unwrap image database
     const filesystem::path inPath{ argv[1] };
