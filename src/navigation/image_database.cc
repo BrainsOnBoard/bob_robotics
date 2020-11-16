@@ -417,7 +417,7 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     // Finally, unwrap all images and save to new folder
     cv::Mat unwrapped;
     std::string outPath;
-    #pragma omp parallel for private(outPath)
+    #pragma omp parallel for private(unwrapped) private(outPath)
     for (size_t i = 0; i < size(); i++) {
         unwrapper.unwrap(m_Entries[i].load(false), unwrapped);
         outPath = (destination / m_Entries[i].path.filename()).str();
