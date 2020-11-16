@@ -16,8 +16,12 @@ int bobMain(int argc, char **argv)
                                          : cv::Size(720, 58);
 
     // Unwrap image database
-    Navigation::ImageDatabase database(argv[1]);
-    database.unwrap("unwrapped_" + database.getName(), unwrapRes);
+    const filesystem::path inPath{ argv[1] };
+    const Navigation::ImageDatabase database(inPath);
+    const filesystem::path outPath = inPath.parent_path() /
+                                        ("unwrapped_" + inPath.filename());
+    std::cout << "Creating new database in " << outPath << "\n";
+    database.unwrap(outPath, unwrapRes);
 
     return EXIT_SUCCESS;
 }
