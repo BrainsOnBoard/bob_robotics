@@ -427,7 +427,8 @@ public:
      *  \brief Unwrap all the panoramic images in this database into a new
      *         folder, creating a new database.
      */
-    void unwrap(const filesystem::path &destination, const cv::Size &unwrapRes);
+    void unwrap(const filesystem::path &destination,
+                const cv::Size &unwrapRes) const;
 
     //! Get a filename for a route-type database
     static std::string getFilename(const size_t routeIndex,

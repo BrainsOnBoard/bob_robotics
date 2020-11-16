@@ -50,7 +50,7 @@ public:
 
     void updateMaps();
 
-    void unwrap(const cv::Mat &input, cv::Mat &output);
+    void unwrap(const cv::Mat &input, cv::Mat &output) const;
 
     //! Serialise this object.
     void write(cv::FileStorage &fs) const;

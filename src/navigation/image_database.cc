@@ -369,7 +369,7 @@ ImageDatabase::hasMetadata() const
  *         folder, creating a new database.
  */
 void
-ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwrapRes)
+ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwrapRes) const
 {
     // Check that the database doesn't already exist
     BOB_ASSERT(!(destination / EntriesFilename).exists());
