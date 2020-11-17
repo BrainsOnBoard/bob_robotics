@@ -7,6 +7,7 @@
                 "${workspaceFolder}",
                 "${workspaceFolder}/third_party/ev3dev-lang-cpp",
                 "${workspaceFolder}/third_party/plog/include",
+                "${workspaceFolder}/third_party/pybind11/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
                 "/usr/include/python3.7m",
                 "/usr/include/python3.8",
