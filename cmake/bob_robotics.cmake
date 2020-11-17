@@ -58,7 +58,7 @@ macro(BoB_project)
         endif()
         set(BOB_TARGETS ${NAME})
         add_definitions(-DBOB_SHARED_LIB)
-        install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
+        install(TARGETS ${NAME} LIBRARY DESTINATION ${NAME})
 
         if(GNU_TYPE_COMPILER)
             add_compile_flags(-fPIC)
