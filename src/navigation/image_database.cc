@@ -369,7 +369,7 @@ ImageDatabase::hasMetadata() const
  *         folder, creating a new database.
  */
 void
-ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwrapRes)
+ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwrapRes) const
 {
     // Check that the database doesn't already exist
     BOB_ASSERT(!(destination / EntriesFilename).exists());
@@ -415,12 +415,12 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     }
 
     // Finally, unwrap all images and save to new folder
-    cv::Mat unwrapped(unwrapRes, CV_8UC3);
+    cv::Mat unwrapped;
     std::string outPath;
-    for (auto &entry : m_Entries) {
-        unwrapper.unwrap(entry.load(false), unwrapped);
-        outPath = (destination / entry.path.filename()).str();
-        LOG_INFO << "Writing to " << outPath;
+    #pragma omp parallel for private(unwrapped) private(outPath)
+    for (size_t i = 0; i < size(); i++) {
+        unwrapper.unwrap(m_Entries[i].load(false), unwrapped);
+        outPath = (destination / m_Entries[i].path.filename()).str();
         BOB_ASSERT(cv::imwrite(outPath, unwrapped));
     }
 }
