@@ -116,6 +116,11 @@ int bobMain(int argc, char* argv[])
         exit(1);
     }
 
+    auto gps_time =  gps.getGPSData().time;
+    int gps_hour = gps_time.hour;
+    int gps_minute = gps_time.minute;
+    int gps_second = gps_time.second;
+
     std::string folderName;
     //std::cin >> folderName;
 
