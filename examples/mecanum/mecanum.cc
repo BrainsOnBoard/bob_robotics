@@ -50,7 +50,5 @@ int bobMain(int, char **)
 
     } while(!joystick.isDown(HID::JButton::Start));
 
-    return 0;
-
     return EXIT_SUCCESS;
 }
