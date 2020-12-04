@@ -30,17 +30,21 @@ Mecanum::omni2D(float forward, float sideways, float turn)
 {
     // Cache left and right
     setWheelSpeed(forward, sideways, turn);
-    
-    // resolve to motor speeds
-    float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
-    float m2 = m_AlternativeWiring ? (+sideways + forward + turn) : (+sideways + forward + turn);
-    float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
-    float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
 
+    // resolve to motor speeds
+    const float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
+    const float m2 = m_AlternativeWiring ? (+sideways + forward + turn) : (+sideways + forward + turn);
+    const float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
+    const float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
+
+    driveMotors(m1, m2, m3, m4);
+
+}
+//----------------------------------------------------------------------------
+void Mecanum::driveMotors(float m1, float m2, float m3, float m4)
+{
     // clamp values to be between -1 and 1 after resolving
-    const auto cap = [](float &val) {
-        val = std::min(1.f, std::max(val, -1.f));
-    };
+    const auto cap = [](float &val) { val = std::min(1.f, std::max(val, -1.f)); };
     cap(m1);
     cap(m2);
     cap(m3);
