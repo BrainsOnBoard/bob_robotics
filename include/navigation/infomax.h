@@ -43,7 +43,9 @@ public:
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
-    {}
+    {
+        BOB_ASSERT(initialWeights.cols() == unwrapRes.width * unwrapRes.height);
+    }
 
     InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
       : VisualNavigationBase(unwrapRes)
