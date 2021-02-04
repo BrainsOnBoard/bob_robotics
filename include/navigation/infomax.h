@@ -49,7 +49,7 @@ public:
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
-                                    1 + unwrapRes.width * unwrapRes.height))
+                                    unwrapRes.width * unwrapRes.height))
     {}
 
     //------------------------------------------------------------------------
