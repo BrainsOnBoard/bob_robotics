@@ -50,8 +50,8 @@ public:
     InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
-      , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
-                                    unwrapRes.width * unwrapRes.height))
+      , m_Weights(generateInitialWeights(unwrapRes.width * unwrapRes.height,
+                                         unwrapRes.width * unwrapRes.height))
     {}
 
     //------------------------------------------------------------------------
@@ -72,7 +72,7 @@ public:
     //! Generates new random weights
     virtual void clearMemory() override
     {
-        m_Weights = getInitialWeights(m_Weights.cols(), m_Weights.rows());
+        m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
     }
 
     //------------------------------------------------------------------------
@@ -83,40 +83,9 @@ public:
         return m_Weights;
     }
 
-#ifndef EXPOSE_INFOMAX_INTERNALS
-    private:
-#endif
-    void trainUY()
-    {
-        // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
-        const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
-        const auto sumYU = (m_Y.array() + m_U.array()).matrix();
-        const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
-        m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
-    }
-
-    void calculateUY(const cv::Mat &image)
-    {
-        BOB_ASSERT(image.type() == CV_8UC1);
-
-        const cv::Size &unwrapRes = getUnwrapResolution();
-        BOB_ASSERT(image.cols == unwrapRes.width);
-        BOB_ASSERT(image.rows == unwrapRes.height);
-
-        // Convert image to vector of floats
-        m_U = m_Weights * getFloatVector(image);
-        m_Y = tanh(m_U.array());
-    }
-
-    std::pair<VectorType, VectorType> getUY() const
-    {
-        // Copy the vectors
-        return std::make_pair<>(m_U, m_Y);
-    }
-
-    static MatrixType getInitialWeights(const int numInputs,
-                                        const int numHidden,
-                                        const unsigned seed = std::random_device()())
+    static MatrixType generateInitialWeights(const int numInputs,
+                                             const int numHidden,
+                                             const unsigned seed = std::random_device()())
     {
         // Note that we transpose this matrix after normalisation
         MatrixType weights(numInputs, numHidden);
@@ -150,6 +119,38 @@ public:
         LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
 
         return weights.transpose();
+    }
+
+
+#ifndef EXPOSE_INFOMAX_INTERNALS
+    private:
+#endif
+    void trainUY()
+    {
+        // weights = weights + lrate/N * (eye(H)-(y+u)*u') * weights;
+        const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
+        const auto sumYU = (m_Y.array() + m_U.array()).matrix();
+        const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
+        m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
+    }
+
+    void calculateUY(const cv::Mat &image)
+    {
+        BOB_ASSERT(image.type() == CV_8UC1);
+
+        const cv::Size &unwrapRes = getUnwrapResolution();
+        BOB_ASSERT(image.cols == unwrapRes.width);
+        BOB_ASSERT(image.rows == unwrapRes.height);
+
+        // Convert image to vector of floats
+        m_U = m_Weights * getFloatVector(image);
+        m_Y = tanh(m_U.array());
+    }
+
+    std::pair<VectorType, VectorType> getUY() const
+    {
+        // Copy the vectors
+        return std::make_pair<>(m_U, m_Y);
     }
 
 private:
