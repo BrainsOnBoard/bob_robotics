@@ -1,7 +1,6 @@
-#include "read_data.h"
-
 // BoB robotics includes
 #include "common/path.h"
+#include "common/serialise_matrix.h"
 #define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
@@ -27,6 +26,7 @@
 
 using namespace std::literals;
 using namespace Eigen;
+using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 
 void
@@ -39,14 +39,14 @@ runTest(const filesystem::path &dataPath, int num)
 
     // Load matrices of weights
     const auto pref = "test"s + snum + "_"s;
-    const auto initWeights = readData<>(dataPath / (pref + "weights_init.bin"s));
-    const auto matlabOutputWeights = readData<>(dataPath / (pref + "weights_out.bin"s));
-    const auto matlabOutputWeightsMany = readData<>(dataPath / (pref + "weights_out_many.bin"));
-    const auto matlabU = readData<>(dataPath / (pref + "u.bin"s));
-    const auto matlabY = readData<>(dataPath / (pref + "y.bin"s));
+    const auto initWeights = readMatrix<double>(dataPath / (pref + "weights_init.bin"s));
+    const auto matlabOutputWeights = readMatrix<double>(dataPath / (pref + "weights_out.bin"s));
+    const auto matlabOutputWeightsMany = readMatrix<double>(dataPath / (pref + "weights_out_many.bin"));
+    const auto matlabU = readMatrix<double>(dataPath / (pref + "u.bin"s));
+    const auto matlabY = readMatrix<double>(dataPath / (pref + "y.bin"s));
 
     // Load training image
-    auto imageMatrix = readData<uint8_t>(dataPath / (pref + "train_image.bin"s));
+    auto imageMatrix = readMatrix<uint8_t>(dataPath / (pref + "train_image.bin"s));
     const cv::Mat image(imageMatrix.rows(), imageMatrix.cols(), CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
 
     // Make our InfoMax runner object
