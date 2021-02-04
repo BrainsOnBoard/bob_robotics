@@ -3,6 +3,9 @@
 // BoB robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
+
+// Third-party includes
+#include "third_party/path.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -122,7 +125,7 @@ public:
     virtual void test(const cv::Mat &snapshot) override;
     virtual void train(const cv::Mat &snapshot) override;
 
-    void saveWeights(const std::string &filename) const;
+    void saveWeights(const filesystem::path &filename) const;
 
 protected:
     //------------------------------------------------------------------------
