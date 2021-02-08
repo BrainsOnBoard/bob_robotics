@@ -94,13 +94,10 @@ public:
 
         std::default_random_engine generator(seed);
         std::normal_distribution<FloatType> distribution;
-        for (int i = 0; i < numInputs; i++) {
-            for (int j = 0; j < numHidden; j++) {
-                weights(i, j) = distribution(generator);
-            }
-        }
+        std::generate_n(weights.data(), weights.size(), [&]() { return distribution(generator); });
 
-        LOG_VERBOSE << "Initial weights" << std::endl << weights;
+        LOG_VERBOSE << "Initial weights" << std::endl
+                    << weights;
 
         // Normalise mean and SD for row so mean == 0 and SD == 1
         const auto means = weights.rowwise().mean();
