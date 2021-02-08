@@ -7,8 +7,8 @@ using namespace BoBRobotics::Navigation;
 
 TEST(ImageDatabase, fileNameCompare) {
     const auto check = [](const auto &x, const auto &y) {
-        ASSERT_TRUE(ImageDatabase::fileNameCompare(x, y));
-        ASSERT_FALSE(ImageDatabase::fileNameCompare(y, x));
+        EXPECT_TRUE(ImageDatabase::fileNameCompare(x, y));
+        EXPECT_FALSE(ImageDatabase::fileNameCompare(y, x));
     };
 
     check("a", "b");
