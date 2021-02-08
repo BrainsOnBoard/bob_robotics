@@ -168,7 +168,7 @@ private:
     template<class T>
     static auto matrixSD(const T &mat)
     {
-        return (mat.array() * mat.array()).rowwise().mean();
+        return (mat.array() * mat.array()).rowwise().mean().sqrt();
     }
 }; // InfoMax
 
