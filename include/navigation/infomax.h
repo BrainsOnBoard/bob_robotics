@@ -2,11 +2,11 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "plog/Log.h"
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Eigen
@@ -20,6 +20,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <exception>
 #include <random>
 #include <tuple>
 #include <utility>
@@ -27,6 +28,10 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+class WeightsBlewUpError
+  : std::exception
+{};
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
@@ -48,10 +53,10 @@ public:
     }
 
     InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
-      , m_LearningRate(learningRate)
-      , m_Weights(generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                         unwrapRes.width * unwrapRes.height))
+      : InfoMax(unwrapRes,
+                generateInitialWeights(unwrapRes.width * unwrapRes.height,
+                                       unwrapRes.width * unwrapRes.height),
+                learningRate)
     {}
 
     //------------------------------------------------------------------------
@@ -128,7 +133,21 @@ public:
         const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
         const auto sumYU = (m_Y.array() + m_U.array()).matrix();
         const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
+
         m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
+
+        /*
+         * If the learning rate is too low, we may end up with NaNs in our
+         * weight matrix, which will silently muck up subsequent calculations.
+         * I don't *think* this will ever be an issue with a sensibly small
+         * learning rate, but if so, the learning rate could be reduced at this
+         * point instead of just bailing out.
+         */
+        const auto ptr = m_Weights.data();
+        const auto check = [](auto val) { return std::isnan(val); };
+        if (std::any_of(&ptr[0], &ptr[m_Weights.size()], check)) {
+            throw WeightsBlewUpError{};
+        }
     }
 
     void calculateUY(const cv::Mat &image)
