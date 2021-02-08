@@ -137,7 +137,7 @@ public:
         m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
 
         /*
-         * If the learning rate is too low, we may end up with NaNs in our
+         * If the learning rate is too high, we may end up with NaNs in our
          * weight matrix, which will silently muck up subsequent calculations.
          * I don't *think* this will ever be an issue with a sensibly small
          * learning rate, but if so, the learning rate could be reduced at this

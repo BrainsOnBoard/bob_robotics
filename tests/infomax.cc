@@ -28,6 +28,7 @@ TEST(InfoMax, RandomWeightsDistribution)
     }
 }
 
+// Check that too high a learning rate causes weights to blow up
 TEST(InfoMax, ExplodingWeights)
 {
     InfoMaxRotater<> infomax{ TestImageSize, InitialWeights, /*learningRate=*/0.1f };
@@ -39,6 +40,7 @@ TEST(InfoMax, ExplodingWeights)
     }, WeightsBlewUpError);
 }
 
+// Check that using a sensible learning rate doesn't throw an exception
 TEST(InfoMax, NonExplodingWeights)
 {
     InfoMaxRotater<> infomax{ TestImageSize, InitialWeights, /*learningRate=*/1e-5f };
