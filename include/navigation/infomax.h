@@ -142,10 +142,10 @@ public:
          * I don't *think* this will ever be an issue with a sensibly small
          * learning rate, but if so, the learning rate could be reduced at this
          * point instead of just bailing out.
+         *
+         * So if there are any NaNs then throw an error.
          */
-        const auto ptr = m_Weights.data();
-        const auto check = [](auto val) { return std::isnan(val); };
-        if (std::any_of(&ptr[0], &ptr[m_Weights.size()], check)) {
+        if (!(m_Weights.array() == m_Weights.array()).all()) {
             throw WeightsBlewUpError{};
         }
     }
