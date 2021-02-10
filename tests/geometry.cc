@@ -9,7 +9,7 @@
 template<int Rows1, int Cols1, int Rows2, int Cols2>
 void EXPECT_EIGEN_EQ(const Eigen::Matrix<double, Rows1, Cols1> &m1, const Eigen::Matrix<double, Rows2, Cols2> &m2)
 {
-    ASSERT_EQ(m1.size(), m2.size());
+    EXPECT_EQ(m1.size(), m2.size());
     for (int i = 0; i < m1.rows(); i++) {
         for (int j = 0; j < m1.cols(); j++) {
             EXPECT_DOUBLE_EQ(m1(i, j), m2(i, j));
