@@ -1,8 +1,6 @@
 var units_8h =
 [
     [ "is_ratio", "structunits_1_1traits_1_1is__ratio.html", null ],
-    [ "is_dimensionless_unit", "structunits_1_1traits_1_1is__dimensionless__unit.html", null ],
-    [ "decibel_scale", "structunits_1_1decibel__scale.html", "structunits_1_1decibel__scale" ],
     [ "linear_scale", "structunits_1_1linear__scale.html", "structunits_1_1linear__scale" ],
     [ "is_scalar_unit", "structunits_1_1traits_1_1is__scalar__unit.html", null ],
     [ "is_dimensionless_unit", "structunits_1_1traits_1_1is__dimensionless__unit.html", null ],

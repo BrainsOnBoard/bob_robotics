@@ -329,7 +329,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
                 // ignore smoothing
             }
             else if(commandString == "f") {
-                // If there are no textures, surfaces aren't always created (at least be MeshLab), so create a default one
+                // If there are no textures, surfaces aren't always created (at least by MeshLab), so create a default one
                 if(objSurfaces.empty()) {
                     LOG_WARNING << "Encountered faces before any surfaces are defined - adding default surface";
                     objSurfaces.emplace_back("default", std::initializer_list<GLfloat>(),

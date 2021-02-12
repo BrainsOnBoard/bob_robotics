@@ -23,13 +23,13 @@ var hierarchy =
     [ "BoBRobotics::Robots::Ackermann", "classBoBRobotics_1_1Robots_1_1Ackermann.html", [
       [ "BoBRobotics::Robots::SimulatedAckermann", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html", null ]
     ] ],
+    [ "AgentObject", "structAgentObject.html", null ],
+    [ "AgentObjectData", "structAgentObjectData.html", null ],
     [ "Catch::Matchers::Impl::Generic::AllOf< ExpressionT >", "classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AllOf.html", null ],
-    [ "BoBRobotics::GeNNUtils::AnalogueCSVRecorder< T >", "classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html", null ],
     [ "AntWorldDatabaseCreator", "classAntWorldDatabaseCreator.html", [
       [ "GridDatabaseCreator", "classGridDatabaseCreator.html", null ],
       [ "RouteDatabaseCreator", "classRouteDatabaseCreator.html", null ]
     ] ],
-    [ "BoBRobotics::Navigation::AntWorldRotater", "classBoBRobotics_1_1Navigation_1_1AntWorldRotater.html", null ],
     [ "Catch::Matchers::Impl::Generic::AnyOf< ExpressionT >", "classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AnyOf.html", null ],
     [ "Catch::Detail::Approx", "classCatch_1_1Detail_1_1Approx.html", null ],
     [ "Catch::AssertionInfo", "structCatch_1_1AssertionInfo.html", null ],
@@ -46,10 +46,6 @@ var hierarchy =
       [ "TN2CPU4", "classTN2CPU4.html", null ]
     ] ],
     [ "Base", null, [
-      [ "BoBRobotics::GeNNModels::STDPDopamine", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html", null ],
-      [ "Continuous", "classContinuous.html", null ]
-    ] ],
-    [ "Base", null, [
       [ "BoBRobotics::GeNNModels::AdExp", "classBoBRobotics_1_1GeNNModels_1_1AdExp.html", null ],
       [ "BoBRobotics::GeNNModels::Sigmoid", "classBoBRobotics_1_1GeNNModels_1_1Sigmoid.html", null ],
       [ "CPU4Sigmoid", "classCPU4Sigmoid.html", null ],
@@ -63,6 +59,10 @@ var hierarchy =
     ] ],
     [ "Base", null, [
       [ "BoBRobotics::GeNNModels::AlphaCurr", "classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html", null ]
+    ] ],
+    [ "Base", null, [
+      [ "BoBRobotics::GeNNModels::STDPDopamine", "classBoBRobotics_1_1GeNNModels_1_1STDPDopamine.html", null ],
+      [ "Continuous", "classContinuous.html", null ]
     ] ],
     [ "BoBRobotics::Navigation::BestMatchingSnapshot", "structBoBRobotics_1_1Navigation_1_1BestMatchingSnapshot.html", null ],
     [ "Catch::Detail::BorgType", "structCatch_1_1Detail_1_1BorgType.html", null ],
@@ -157,6 +157,7 @@ var hierarchy =
     [ "Catch::ExceptionTranslatorRegistrar", "classCatch_1_1ExceptionTranslatorRegistrar.html", null ],
     [ "Catch::ExpressionLhs< T >", "classCatch_1_1ExpressionLhs.html", null ],
     [ "Catch::Detail::FalseType", "structCatch_1_1Detail_1_1FalseType.html", null ],
+    [ "Formatter", "structFormatter.html", null ],
     [ "FrameContext", "structFrameContext.html", null ],
     [ "FrameDataForRender", "structFrameDataForRender.html", null ],
     [ "FrameResources", "structFrameResources.html", null ],
@@ -317,8 +318,7 @@ var hierarchy =
         ] ]
       ] ],
       [ "BoBRobotics::Video::RandomInput< GeneratorType >", "classBoBRobotics_1_1Video_1_1RandomInput.html", null ],
-      [ "BoBRobotics::Video::RPiCamera", "classBoBRobotics_1_1Video_1_1RPiCamera.html", null ],
-      [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
+      [ "BoBRobotics::Video::RPiCamera", "classBoBRobotics_1_1Video_1_1RPiCamera.html", null ]
     ] ],
     [ "InputTextCallback_UserData", "structInputTextCallback__UserData.html", null ],
     [ "BoBRobotics::Navigation::InSilicoRotater", "structBoBRobotics_1_1Navigation_1_1InSilicoRotater.html", null ],
@@ -392,7 +392,6 @@ var hierarchy =
       [ "units::unit_t< Units, T, NonLinearScale >", "classunits_1_1unit__t.html", null ]
     ] ],
     [ "io::LineReader", "classio_1_1LineReader.html", null ],
-    [ "BoBRobotics::Logging::Logger", "classBoBRobotics_1_1Logging_1_1Logger.html", null ],
     [ "BoBRobotics::ImgProc::BeeEye::Map", "classBoBRobotics_1_1ImgProc_1_1BeeEye_1_1Map.html", null ],
     [ "MemoryBase", "classMemoryBase.html", [
       [ "InfoMax", "classInfoMax.html", [
@@ -402,6 +401,28 @@ var hierarchy =
         [ "PerfectMemoryConstrained", "classPerfectMemoryConstrained.html", null ]
       ] ]
     ] ],
+    [ "MergedNeuronInitGroup0", "structMergedNeuronInitGroup0.html", null ],
+    [ "MergedNeuronInitGroup1", "structMergedNeuronInitGroup1.html", null ],
+    [ "MergedNeuronInitGroup2", "structMergedNeuronInitGroup2.html", null ],
+    [ "MergedNeuronInitGroup3", "structMergedNeuronInitGroup3.html", null ],
+    [ "MergedNeuronInitGroup4", "structMergedNeuronInitGroup4.html", null ],
+    [ "MergedNeuronInitGroup5", "structMergedNeuronInitGroup5.html", null ],
+    [ "MergedNeuronSpikeQueueUpdateGroup0", "structMergedNeuronSpikeQueueUpdateGroup0.html", null ],
+    [ "MergedNeuronUpdateGroup0", "structMergedNeuronUpdateGroup0.html", null ],
+    [ "MergedNeuronUpdateGroup1", "structMergedNeuronUpdateGroup1.html", null ],
+    [ "MergedNeuronUpdateGroup2", "structMergedNeuronUpdateGroup2.html", null ],
+    [ "MergedNeuronUpdateGroup3", "structMergedNeuronUpdateGroup3.html", null ],
+    [ "MergedNeuronUpdateGroup4", "structMergedNeuronUpdateGroup4.html", null ],
+    [ "MergedNeuronUpdateGroup5", "structMergedNeuronUpdateGroup5.html", null ],
+    [ "MergedSynapseConnectivityInitGroup0", "structMergedSynapseConnectivityInitGroup0.html", null ],
+    [ "MergedSynapseConnectivityInitGroup1", "structMergedSynapseConnectivityInitGroup1.html", null ],
+    [ "MergedSynapseConnectivityInitGroup2", "structMergedSynapseConnectivityInitGroup2.html", null ],
+    [ "MergedSynapseConnectivityInitGroup3", "structMergedSynapseConnectivityInitGroup3.html", null ],
+    [ "MergedSynapseConnectivityInitGroup4", "structMergedSynapseConnectivityInitGroup4.html", null ],
+    [ "MergedSynapseConnectivityInitGroup5", "structMergedSynapseConnectivityInitGroup5.html", null ],
+    [ "MergedSynapseDenseInitGroup0", "structMergedSynapseDenseInitGroup0.html", null ],
+    [ "MergedSynapseDynamicsGroup0", "structMergedSynapseDynamicsGroup0.html", null ],
+    [ "MergedSynapseDynamicsGroup1", "structMergedSynapseDynamicsGroup1.html", null ],
     [ "Catch::MessageBuilder", "structCatch_1_1MessageBuilder.html", null ],
     [ "Catch::MessageInfo", "structCatch_1_1MessageInfo.html", null ],
     [ "plog::MessageOnlyFormatter", "classplog_1_1MessageOnlyFormatter.html", null ],
@@ -422,15 +443,6 @@ var hierarchy =
     [ "BoBRobotics::GPS::NMEAParser", "classBoBRobotics_1_1GPS_1_1NMEAParser.html", null ],
     [ "io::no_comment", "structio_1_1no__comment.html", null ],
     [ "io::no_quote_escape< sep >", "structio_1_1no__quote__escape.html", null ],
-    [ "plog::util::NonCopyable", "classplog_1_1util_1_1NonCopyable.html", [
-      [ "plog::util::File", "classplog_1_1util_1_1File.html", null ],
-      [ "plog::util::Mutex", "classplog_1_1util_1_1Mutex.html", null ],
-      [ "plog::util::MutexLock", "classplog_1_1util_1_1MutexLock.html", null ],
-      [ "plog::util::Singleton< T >", "classplog_1_1util_1_1Singleton.html", null ],
-      [ "plog::util::Singleton< Logger< instance > >", "classplog_1_1util_1_1Singleton.html", [
-        [ "plog::Logger< instance >", "classplog_1_1Logger.html", null ]
-      ] ]
-    ] ],
     [ "Catch::NonCopyable", "classCatch_1_1NonCopyable.html", [
       [ "Catch::IShared", "structCatch_1_1IShared.html", [
         [ "Catch::ITestCase", "structCatch_1_1ITestCase.html", [
@@ -460,6 +472,15 @@ var hierarchy =
         ] ]
       ] ],
       [ "Catch::Section", "classCatch_1_1Section.html", null ]
+    ] ],
+    [ "plog::util::NonCopyable", "classplog_1_1util_1_1NonCopyable.html", [
+      [ "plog::util::File", "classplog_1_1util_1_1File.html", null ],
+      [ "plog::util::Mutex", "classplog_1_1util_1_1Mutex.html", null ],
+      [ "plog::util::MutexLock", "classplog_1_1util_1_1MutexLock.html", null ],
+      [ "plog::util::Singleton< T >", "classplog_1_1util_1_1Singleton.html", null ],
+      [ "plog::util::Singleton< Logger< instance > >", "classplog_1_1util_1_1Singleton.html", [
+        [ "plog::Logger< instance >", "classplog_1_1Logger.html", null ]
+      ] ]
     ] ],
     [ "Catch::Matchers::Impl::Generic::Not< ExpressionT >", "classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1Not.html", null ],
     [ "<NSApplicationDelegate>", null, [
@@ -498,6 +519,7 @@ var hierarchy =
     [ "BoBRobotics::Robots::ObstacleCircumnavigator< PoseGetterType >", "classBoBRobotics_1_1Robots_1_1ObstacleCircumnavigator.html", null ],
     [ "BoBRobotics::Robots::ObstacleCircumnavigator< Vicon::ObjectReference<> >", "classBoBRobotics_1_1Robots_1_1ObstacleCircumnavigator.html", null ],
     [ "BoBRobotics::ImgProc::OpenCVOpticalFlow", "classBoBRobotics_1_1ImgProc_1_1OpenCVOpticalFlow.html", null ],
+    [ "OpenCVTexture", "classOpenCVTexture.html", null ],
     [ "BoBRobotics::ImgProc::OpenCVUnwrap360", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< T >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLbyte >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLbyte_01_4.html", null ],
@@ -535,9 +557,10 @@ var hierarchy =
     [ "BoBRobotics::Navigation::PerfectMemoryStore::RawImage< Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1RawImage.html", null ],
     [ "BoBRobotics::Navigation::PerfectMemoryStore::RawImage<>", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1RawImage.html", null ],
     [ "plog::Record", "classplog_1_1Record.html", null ],
-    [ "BoBRobotics::Navigation::ImageDatabase::Recorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html", [
-      [ "BoBRobotics::Navigation::ImageDatabase::GridRecorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1GridRecorder.html", null ],
-      [ "BoBRobotics::Navigation::ImageDatabase::RouteRecorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html", null ]
+    [ "BoBRobotics::Navigation::ImageDatabase::Recorder< NumExtraFields >", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html", null ],
+    [ "BoBRobotics::Navigation::ImageDatabase::Recorder< 0 >", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html", [
+      [ "BoBRobotics::Navigation::ImageDatabase::GridRecorder< NumExtraFields >", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1GridRecorder.html", null ],
+      [ "BoBRobotics::Navigation::ImageDatabase::RouteRecorder< NumExtraFields >", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html", null ]
     ] ],
     [ "Catch::RegistrarForTagAliases", "structCatch_1_1RegistrarForTagAliases.html", null ],
     [ "ev3dev::remote_control", "classev3dev_1_1remote__control.html", null ],
@@ -583,7 +606,6 @@ var hierarchy =
       [ "BoBRobotics::NotImplementedException", "classBoBRobotics_1_1NotImplementedException.html", null ],
       [ "BoBRobotics::OS::Net::NetworkError", "classBoBRobotics_1_1OS_1_1Net_1_1NetworkError.html", null ],
       [ "BoBRobotics::Vicon::TimedOutError", "classBoBRobotics_1_1Vicon_1_1TimedOutError.html", null ],
-      [ "BoBRobotics::Video::Video4LinuxCamera::Error", "classBoBRobotics_1_1Video_1_1Video4LinuxCamera_1_1Error.html", null ],
       [ "CLI::Error", "classCLI_1_1Error.html", [
         [ "CLI::ConstructionError", "classCLI_1_1ConstructionError.html", [
           [ "CLI::BadNameString", "classCLI_1_1BadNameString.html", null ],
@@ -634,17 +656,13 @@ var hierarchy =
     [ "BoBRobotics::Viz::SFMLWorld", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html", null ],
     [ "io::single_and_empty_line_comment< comment_start_char_list >", "structio_1_1single__and__empty__line__comment.html", null ],
     [ "io::single_line_comment< comment_start_char_list >", "structio_1_1single__line__comment.html", null ],
-    [ "BoBRobotics::AntWorld::SnapshotProcessorArdin", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessorArdin.html", null ],
+    [ "BoBRobotics::AntWorld::SnapshotProcessor", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessor.html", [
+      [ "BoBRobotics::AntWorld::SnapshotProcessorArdin", "classBoBRobotics_1_1AntWorld_1_1SnapshotProcessorArdin.html", null ]
+    ] ],
     [ "BoBRobotics::Net::Socket", "classBoBRobotics_1_1Net_1_1Socket.html", null ],
     [ "BoBRobotics::Net::Connection::SocketWriter", "classBoBRobotics_1_1Net_1_1Connection_1_1SocketWriter.html", null ],
     [ "ev3dev::sound", "classev3dev_1_1sound.html", null ],
     [ "Catch::SourceLineInfo", "structCatch_1_1SourceLineInfo.html", null ],
-    [ "BoBRobotics::GeNNUtils::SpikeRecorder", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRecorder.html", [
-      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorder", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorder.html", null ],
-      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderCached", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderCached.html", null ],
-      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderDelay", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelay.html", null ],
-      [ "BoBRobotics::GeNNUtils::SpikeCSVRecorderDelayCached", "classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderDelayCached.html", null ]
-    ] ],
     [ "BoBRobotics::GeNNUtils::SpikeRenderer", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRenderer.html", null ],
     [ "BoBRobotics::FSM< S >::StateHandler", "classBoBRobotics_1_1FSM_1_1StateHandler.html", [
       [ "PositionerExample", "classPositionerExample.html", null ],
@@ -687,13 +705,17 @@ var hierarchy =
     [ "ImGuiTextFilter::TextRange", "structImGuiTextFilter_1_1TextRange.html", null ],
     [ "BoBRobotics::AntWorld::Texture", "classBoBRobotics_1_1AntWorld_1_1Texture.html", null ],
     [ "BoBRobotics::Threadable", "classBoBRobotics_1_1Threadable.html", [
-      [ "BoBRobotics::HID::JoystickBase< JAxis, JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
-        [ "BoBRobotics::HID::JoystickSFMLKeyboard", "classBoBRobotics_1_1HID_1_1JoystickSFMLKeyboard.html", null ]
-      ] ],
+      [ "BoBRobotics::HID::JoystickBase< JAxis, JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", null ],
       [ "BoBRobotics::Net::Connection", "classBoBRobotics_1_1Net_1_1Connection.html", [
         [ "BoBRobotics::Net::Client", "classBoBRobotics_1_1Net_1_1Client.html", null ]
       ] ],
       [ "BoBRobotics::Video::Display", "classBoBRobotics_1_1Video_1_1Display.html", null ],
+      [ "BoBRobotics::HID::JoystickBase< HID::JAxis, HID::JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
+        [ "BoBRobotics::Viz::JoystickKeyboard", "classBoBRobotics_1_1Viz_1_1JoystickKeyboard.html", null ]
+      ] ],
+      [ "BoBRobotics::HID::JoystickBase< JAxisDummy, JButtonDummy >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
+        [ "BoBRobotics::HID::JoystickDummy", "classBoBRobotics_1_1HID_1_1JoystickDummy.html", null ]
+      ] ],
       [ "BoBRobotics::HID::JoystickBase< JAxisLinux, JButtonLinux >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
         [ "BoBRobotics::HID::JoystickLinux", "classBoBRobotics_1_1HID_1_1JoystickLinux.html", null ]
       ] ],
@@ -703,8 +725,8 @@ var hierarchy =
     ] ],
     [ "io::throw_on_overflow", "structio_1_1throw__on__overflow.html", null ],
     [ "plog::util::Time", "structplog_1_1util_1_1Time.html", null ],
-    [ "BoBRobotics::Timer< A >", "classBoBRobotics_1_1Timer.html", null ],
     [ "Catch::Timer", "classCatch_1_1Timer.html", null ],
+    [ "BoBRobotics::Timer< A >", "classBoBRobotics_1_1Timer.html", null ],
     [ "BoBRobotics::TimerAccumulate< A >", "classBoBRobotics_1_1TimerAccumulate.html", null ],
     [ "BoBRobotics::GPS::TimeStamp", "structBoBRobotics_1_1GPS_1_1TimeStamp.html", null ],
     [ "tinydir_dir", "structtinydir__dir.html", null ],
@@ -744,9 +766,6 @@ var hierarchy =
     [ "BoBRobotics::Vector3< units::unit_t >", "classBoBRobotics_1_1Vector3.html", null ],
     [ "VectorField", "classVectorField.html", null ],
     [ "VERTEX_CONSTANT_BUFFER", "structVERTEX__CONSTANT__BUFFER.html", null ],
-    [ "BoBRobotics::Video::Video4LinuxCamera", "classBoBRobotics_1_1Video_1_1Video4LinuxCamera.html", [
-      [ "BoBRobotics::Video::See3CAM_CU40", "classBoBRobotics_1_1Video_1_1See3CAM__CU40.html", null ]
-    ] ],
     [ "ViewController()", "categoryViewController_07_08.html", null ],
     [ "BoBRobotics::Navigation::VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html", [
       [ "BoBRobotics::Navigation::InfoMax< FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", null ],
@@ -755,9 +774,16 @@ var hierarchy =
         [ "BoBRobotics::Navigation::InfoMaxRotater< Rotater, FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ],
         [ "BoBRobotics::Navigation::InfoMaxRotater< BoBRobotics::Navigation::InSilicoRotater, float >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ]
       ] ],
-      [ "MBMemory", "classMBMemory.html", null ],
+      [ "MBMemory", "classMBMemory.html", [
+        [ "MBMemoryArdin", "classMBMemoryArdin.html", null ]
+      ] ],
       [ "BoBRobotics::Navigation::PerfectMemory< PerfectMemoryStore::RawImage<> >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", [
         [ "BoBRobotics::Navigation::PerfectMemoryRotater< Store, RIDFProcessor, Rotater >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryRotater.html", null ]
+      ] ]
+    ] ],
+    [ "VisualNavigationUI", "classVisualNavigationUI.html", [
+      [ "MBUI", "classMBUI.html", [
+        [ "MBArdinUI", "classMBArdinUI.html", null ]
       ] ]
     ] ],
     [ "BoBRobotics::VonMisesDistribution< T >", "classBoBRobotics_1_1VonMisesDistribution.html", null ],

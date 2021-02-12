@@ -1,24 +1,26 @@
 /*
-@licstart  The following is the entire license notice for the
-JavaScript code in this file.
+ @licstart  The following is the entire license notice for the JavaScript code in this file.
 
-Copyright (C) 1997-2019 by Dimitri van Heesch
+ The MIT License (MIT)
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of version 2 of the GNU General Public License as published by
-the Free Software Foundation
+ Copyright (C) 1997-2020 by Dimitri van Heesch
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ and associated documentation files (the "Software"), to deal in the Software without restriction,
+ including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-You should have received a copy of the GNU General Public License along
-with this program; if not, write to the Free Software Foundation, Inc.,
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ The above copyright notice and this permission notice shall be included in all copies or
+ substantial portions of the Software.
 
-@licend  The above is the entire license notice
-for the JavaScript code in this file
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ @licend  The above is the entire license notice for the JavaScript code in this file
 */
 var NAVTREE =
 [
@@ -40,6 +42,7 @@ var NAVTREE =
     [ "Ardin et al. Model of navigation", "md_projects_ardin_mb_README.html", null ],
     [ "Snapshot bot", "md_projects_snapshot_bot_README.html", null ],
     [ "Stone et al. Model of path integration", "md_projects_stone_cx_README.html", null ],
+    [ "AntWorld Python module", "md_python_antworld_README.html", null ],
     [ "README", "md_README.html", null ],
     [ "Unit tests", "md_tests_README.html", null ],
     [ "README", "md_third_party_ev3dev-lang-cpp_demos_README.html", null ],
@@ -93,34 +96,35 @@ var NAVTREE =
 
 var NAVTREEINDEX =
 [
-".html",
-"classBoBRobotics_1_1GeNNUtils_1_1SpikeCSVRecorderCached.html#a69668b434af20c8a5c4cc4c7dd467afa",
-"classBoBRobotics_1_1Pose2.html",
-"classBoBRobotics_1_1Robots_1_1Tank.html#a9b0f4647755b30f5bf2e5dc1df7ea7c7",
-"classBoBRobotics_1_1Video_1_1See3CAM__CU40.html#ad9eefb3db365ce3060332d3d7aa2cae1",
-"classCatch_1_1Detail_1_1Approx.html#a807330c63266fc914abdf6e461255a54",
-"classPerfectMemory.html#a436e386c6f489377e89872e79d88fce5",
-"classev3dev_1_1motor.html#a303cada4d7d792b7c6640297daa0bcf4",
-"classio_1_1detail_1_1NonOwningStringByteSource.html#a8fd604017b38e20f90386b6e10bd95a3",
-"group__UnitContainers.html",
-"group__keys.html#ga2924cb5349ebbf97c8987f3521c44f39",
-"group__window.html#gab5997a25187e9fd5c6f2ecbbc8dfd7e9",
-"structCatch_1_1AssertionResultData.html#a37179edde9f853f22d4456677fd97701",
-"structCatch_1_1TestCaseInfo.html#a5f37291295e3a6de2dd85324c941edaf",
-"structImFontAtlas.html#a2654afbbf73835bf08278cdc6c181a96",
-"structImGuiContext.html#aa79e158ac0aeaf53cc16e9277fd4431b",
-"structImGuiPayload.html",
-"structImGuiWindow.html#ac0d04b743eab132900c1ededc8eab9f6",
-"structStbUndoRecord.html#ab73cd4d8554984e87743dee20945e360",
-"structuSynergyContext.html#a3f44b4a2f15dd75694100f1e4a7c11cb",
-"units_8h.html#a0f32cbab687ec6d5e77a82d594e0eceb",
-"units_8h.html#a3152abdf9ce5c68a363303a4071f3abf",
-"units_8h.html#a4ee524a50503cdf26de396b254aded65",
-"units_8h.html#a6fa394bb344cb8dd06e3f7cd1372bf9f",
-"units_8h.html#a8f8455cfcc9594b58e2c499095408ff4",
-"units_8h.html#aaea3b9cdcf5d48af06f2ab62daf2c75f",
-"units_8h.html#ace9c12a5495a4a592392d0f654dbcc0e",
-"units_8h.html#aee0f237655b34c005fd8ff50cb13740b"
+"UTM_8h.html",
+"classBoBRobotics_1_1HID_1_1JoystickDummy.html#ad76663298bba863bf40e23268f9db9c3",
+"classBoBRobotics_1_1Robots_1_1Bebop.html#a11b8b2fe1d5e5955ea3e132583141a18",
+"classBoBRobotics_1_1SerialInterface.html#afdce3ecf42281528ef1184866443afc9",
+"classCLI_1_1ConfigError.html#a5645e94dcde5ba6ece2b2b62d2eeca4b",
+"classCatch_1_1ResultBuilder.html#a75ac2dbabd8d4b4b3a75de9bbc3abf02",
+"classPreferredAngle.html",
+"classev3dev_1_1motor.html#a7be0efc854676711d9f833fd6d4f79c0",
+"classplog_1_1ConsoleAppender.html#adabe0be03f9a7b1fd6d6b3c7a979b0e5",
+"group__UnitManipulators.html#gace72ca1410a8c171eafe012f152e8926",
+"group__keys.html#ga6908a4bda9950a3e2b73f794bbe985df",
+"interfaceFramebufferDescriptor.html#a2c56d16fb908893ac4ec0e0a8ddc3f71",
+"structCatch_1_1CaseSensitive.html#aad49d3aee2d97066642fffa919685c6aa4ffff8d29b481f0116abc37228cd53f6",
+"structCatch_1_1Totals.html",
+"structImFontAtlas.html#a4985c51d8a5270ff027f13fa44a14371",
+"structImGuiContext.html#ab6f5d3daaa248a26bdbcb098d73640c1",
+"structImGuiPayload.html#a88c2293d356eb05e7a30d7693de186f2",
+"structImGuiWindow.html#ad51248766b9a815ce20b0d11e13b42b0",
+"structMergedNeuronUpdateGroup0.html#aff270df02a29d0dadcbc360f15f850eb",
+"structmatplotlibcpp_1_1select__npy__type_3_01int64__t_01_4.html",
+"structunits_1_1unit__value__subtract.html",
+"units_8h.html#a216b193921327c6238602cd7fa3140dc",
+"units_8h.html#a3eb12ab2a08533a661c6fff47c81147a",
+"units_8h.html#a5ea2a683b2c76331ddd17cecbf764294",
+"units_8h.html#a7e7881cea8c7d68b7da310dfe4ca506c",
+"units_8h.html#a9c0e9fd686bf68cf057c0f8a7953dc33",
+"units_8h.html#abd76f59fc0a39624c5a604f5017762c3",
+"units_8h.html#add15ef15d5267dc08bc3fa2f2478ec20",
+"units_8h.html#afb62f757f43b1e253d81b9e1f2ca65df"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

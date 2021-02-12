@@ -1,6 +1,7 @@
 var classMemoryBase =
 [
     [ "MemoryBase", "classMemoryBase.html#a706f85a88fe56b167874eade3c25df88", null ],
+    [ "~MemoryBase", "classMemoryBase.html#a180f9f5126b9ff1e99cc0d94d8d99f0f", null ],
     [ "getBestHeading", "classMemoryBase.html#ad0f044ca6c21cbb650a3e3e42a269e60", null ],
     [ "getLowestDifference", "classMemoryBase.html#a15d956511352c7128ddfab387fc9d4f1", null ],
     [ "setBestHeading", "classMemoryBase.html#a7484eb3112536996e89492c1f081e081", null ],
