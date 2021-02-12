@@ -12,9 +12,6 @@ var namespaceBoBRobotics =
     ] ],
     [ "HID", "namespaceBoBRobotics_1_1HID.html", "namespaceBoBRobotics_1_1HID" ],
     [ "ImgProc", "namespaceBoBRobotics_1_1ImgProc.html", "namespaceBoBRobotics_1_1ImgProc" ],
-    [ "Logging", null, [
-      [ "Logger", "classBoBRobotics_1_1Logging_1_1Logger.html", null ]
-    ] ],
     [ "MapCoordinate", null, [
       [ "Cartesian", "structBoBRobotics_1_1MapCoordinate_1_1Cartesian.html", "structBoBRobotics_1_1MapCoordinate_1_1Cartesian" ],
       [ "Ellipsoid", "structBoBRobotics_1_1MapCoordinate_1_1Ellipsoid.html", "structBoBRobotics_1_1MapCoordinate_1_1Ellipsoid" ],
@@ -35,6 +32,7 @@ var namespaceBoBRobotics =
       [ "ArenaObject", "classBoBRobotics_1_1Viz_1_1ArenaObject.html", "classBoBRobotics_1_1Viz_1_1ArenaObject" ],
       [ "CarDisplay", "classBoBRobotics_1_1Viz_1_1CarDisplay.html", "classBoBRobotics_1_1Viz_1_1CarDisplay" ],
       [ "CrossShape", "classBoBRobotics_1_1Viz_1_1CrossShape.html", "classBoBRobotics_1_1Viz_1_1CrossShape" ],
+      [ "JoystickKeyboard", "classBoBRobotics_1_1Viz_1_1JoystickKeyboard.html", "classBoBRobotics_1_1Viz_1_1JoystickKeyboard" ],
       [ "SFMLWorld", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html", "classBoBRobotics_1_1Viz_1_1SFMLWorld" ]
     ] ],
     [ "AssertionFailedException", "classBoBRobotics_1_1AssertionFailedException.html", "classBoBRobotics_1_1AssertionFailedException" ],

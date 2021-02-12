@@ -5,5 +5,7 @@ var classBoBRobotics_1_1AntWorld_1_1World =
     [ "getMinBound", "classBoBRobotics_1_1AntWorld_1_1World.html#aaf6e83ff1b16571a78fba04ce67f4640", null ],
     [ "load", "classBoBRobotics_1_1AntWorld_1_1World.html#a3e72cfa7307b1d6d8c59fc0a7c5b9a30", null ],
     [ "loadObj", "classBoBRobotics_1_1AntWorld_1_1World.html#ad7d9f2c14c63bac3c606ea86890f2930", null ],
-    [ "render", "classBoBRobotics_1_1AntWorld_1_1World.html#a0788cd59c32d71c53addd0b09a1bf173", null ]
+    [ "render", "classBoBRobotics_1_1AntWorld_1_1World.html#a0788cd59c32d71c53addd0b09a1bf173", null ],
+    [ "setMaxBound", "classBoBRobotics_1_1AntWorld_1_1World.html#a2375f7cfd0828380a2005925a0677908", null ],
+    [ "setMinBound", "classBoBRobotics_1_1AntWorld_1_1World.html#adf0952d57ed16a0265d5e92fbdd50ea6", null ]
 ];

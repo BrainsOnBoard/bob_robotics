@@ -133,7 +133,7 @@ OpenCVUnwrap360::updateMaps()
 }
 
 void
-OpenCVUnwrap360::unwrap(const cv::Mat &input, cv::Mat &output)
+OpenCVUnwrap360::unwrap(const cv::Mat &input, cv::Mat &output) const
 {
     cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
 }

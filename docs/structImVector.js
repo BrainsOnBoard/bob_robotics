@@ -1,5 +1,6 @@
 var structImVector =
 [
+    [ "const_iterator", "structImVector.html#aedeac9c5080f9d6ce96ae837768ee4c4", null ],
     [ "iterator", "structImVector.html#a74b5478f1f6fd471cc71219bce483db6", null ],
     [ "value_type", "structImVector.html#a8bd77e4e7581d8e5f9e98d7c2f3c2a80", null ],
     [ "ImVector", "structImVector.html#a547fff373659fd848c3ecc6b25a83f25", null ],
@@ -36,7 +37,6 @@ var structImVector =
     [ "size_in_bytes", "structImVector.html#ade9f2e937e47b0e0f9970dcfba038204", null ],
     [ "swap", "structImVector.html#afcec0d2a1e28aebe412b6efd06f0a77a", null ],
     [ "Capacity", "structImVector.html#abd24482b4d30d22e37582e521e5bfb33", null ],
-    [ "const_iterator", "structImVector.html#ac0a8ba6d5d2329d657ff3d9560f7e96c", null ],
     [ "Data", "structImVector.html#ac0e46e8b30cb079d93c8f0aad7d7cbd0", null ],
     [ "Size", "structImVector.html#abbfd157947f66280d27b21d70a16df8d", null ]
 ];

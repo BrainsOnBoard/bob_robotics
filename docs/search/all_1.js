@@ -1,7 +1,7 @@
 var searchData=
 [
   ['abbreviation_1',['abbreviation',['../classunits_1_1unit__t.html#ad79c79ec73cd83200af8b6c0867c69c9',1,'units::unit_t']]],
-  ['abortsave_2',['abortSave',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#afba94754fb7dac7ee11d63647c05dacf',1,'BoBRobotics::Navigation::ImageDatabase::Recorder']]],
+  ['abortsave_2',['abortSave',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#aff504f60472fe0be28efad455288ac56',1,'BoBRobotics::Navigation::ImageDatabase::Recorder']]],
   ['abs_3',['abs',['../group__UnitMath.html#ga1dd8baba0276c51feeb892983d41ef47',1,'units::math']]],
   ['absdiff_4',['AbsDiff',['../classBoBRobotics_1_1Navigation_1_1AbsDiff.html',1,'BoBRobotics::Navigation']]],
   ['acceleration_5funit_5',['acceleration_unit',['../namespaceunits_1_1category.html#a63109d118398c8b0f4123690c021b352',1,'units::category']]],
@@ -13,15 +13,15 @@ var searchData=
   ['addtowaypoint_11',['addToWayPoint',['../classBoBRobotics_1_1Robots_1_1PurePursuitController.html#a148bced2839e7e9b70a3b4aa1e8a9bfd',1,'BoBRobotics::Robots::PurePursuitController']]],
   ['adexp_12',['AdExp',['../classBoBRobotics_1_1GeNNModels_1_1AdExp.html',1,'BoBRobotics::GeNNModels']]],
   ['agent_13',['Agent',['../classAgent.html',1,'']]],
-  ['allof_14',['AllOf',['../classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AllOf.html',1,'Catch::Matchers::Impl::Generic']]],
-  ['alphacurr_15',['AlphaCurr',['../classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html',1,'BoBRobotics::GeNNModels']]],
-  ['analoguecsvrecorder_16',['AnalogueCSVRecorder',['../classBoBRobotics_1_1GeNNUtils_1_1AnalogueCSVRecorder.html',1,'BoBRobotics::GeNNUtils']]],
-  ['androidappender_17',['AndroidAppender',['../classplog_1_1AndroidAppender.html',1,'plog']]],
-  ['angle_5funit_18',['angle_unit',['../namespaceunits_1_1category.html#a72f2400dc89006d0f0a79e3c2869b460',1,'units::category']]],
-  ['angular_5fvelocity_5funit_19',['angular_velocity_unit',['../namespaceunits_1_1category.html#a2ae69164cc4250e18d555c17b203b121',1,'units::category']]],
-  ['antagent_20',['AntAgent',['../classBoBRobotics_1_1AntWorld_1_1AntAgent.html',1,'BoBRobotics::AntWorld']]],
-  ['antworlddatabasecreator_21',['AntWorldDatabaseCreator',['../classAntWorldDatabaseCreator.html',1,'']]],
-  ['antworldrotater_22',['AntWorldRotater',['../classBoBRobotics_1_1Navigation_1_1AntWorldRotater.html',1,'BoBRobotics::Navigation']]],
+  ['agentobject_14',['AgentObject',['../structAgentObject.html',1,'']]],
+  ['agentobjectdata_15',['AgentObjectData',['../structAgentObjectData.html',1,'']]],
+  ['allof_16',['AllOf',['../classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AllOf.html',1,'Catch::Matchers::Impl::Generic']]],
+  ['alphacurr_17',['AlphaCurr',['../classBoBRobotics_1_1GeNNModels_1_1AlphaCurr.html',1,'BoBRobotics::GeNNModels']]],
+  ['androidappender_18',['AndroidAppender',['../classplog_1_1AndroidAppender.html',1,'plog']]],
+  ['angle_5funit_19',['angle_unit',['../namespaceunits_1_1category.html#a72f2400dc89006d0f0a79e3c2869b460',1,'units::category']]],
+  ['angular_5fvelocity_5funit_20',['angular_velocity_unit',['../namespaceunits_1_1category.html#a2ae69164cc4250e18d555c17b203b121',1,'units::category']]],
+  ['antagent_21',['AntAgent',['../classBoBRobotics_1_1AntWorld_1_1AntAgent.html',1,'BoBRobotics::AntWorld']]],
+  ['antworlddatabasecreator_22',['AntWorldDatabaseCreator',['../classAntWorldDatabaseCreator.html',1,'']]],
   ['anyof_23',['AnyOf',['../classCatch_1_1Matchers_1_1Impl_1_1Generic_1_1AnyOf.html',1,'Catch::Matchers::Impl::Generic']]],
   ['appdelegate_24',['AppDelegate',['../interfaceAppDelegate.html',1,'']]],
   ['approx_25',['Approx',['../classCatch_1_1Detail_1_1Approx.html',1,'Catch::Detail']]],
@@ -40,5 +40,6 @@ var searchData=
   ['atanh_38',['atanh',['../group__UnitMath.html#ga8262877321f58e73f76a90e1317e1608',1,'units::math']]],
   ['atto_39',['atto',['../group__UnitManipulators.html#gaae513fa68478da5ffc6dd1b739da560f',1,'units']]],
   ['autoreg_40',['AutoReg',['../structCatch_1_1AutoReg.html',1,'Catch']]],
-  ['ardin_20et_20al_2e_20model_20of_20navigation_41',['Ardin et al. Model of navigation',['../md_projects_ardin_mb_README.html',1,'']]]
+  ['ardin_20et_20al_2e_20model_20of_20navigation_41',['Ardin et al. Model of navigation',['../md_projects_ardin_mb_README.html',1,'']]],
+  ['antworld_20python_20module_42',['AntWorld Python module',['../md_python_antworld_README.html',1,'']]]
 ];

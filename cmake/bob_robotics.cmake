@@ -58,7 +58,7 @@ macro(BoB_project)
         endif()
         set(BOB_TARGETS ${NAME})
         add_definitions(-DBOB_SHARED_LIB)
-        install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
+        install(TARGETS ${NAME} LIBRARY DESTINATION ${NAME})
 
         if(GNU_TYPE_COMPILER)
             add_compile_flags(-fPIC)
@@ -298,15 +298,27 @@ macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
+# Annoyingly, various packages export a target rather than simply variables
+# with the include path and link flags and it seems that these targets
+# aren't "passed up" by add_subdirectory(), so we always include these
+# packages on the off-chance we need them somewhere
 macro(always_included_packages)
     # Assume we always want threading
     find_package(Threads REQUIRED)
 
-    # Annoyingly, these packages export a target rather than simply variables
-    # with the include path and link flags and it seems that this target isn't
-    # "passed up" by add_subdirectory(), so we always include these packages on
-    # the off-chance we need them.
-    if(NOT WIN32 AND NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT DEFINED ENABLE_OPENMP)
+        # By default disable OpenMP support on MSVC and enable it otherwise
+        if(WIN32)
+            set(ENABLE_OPENMP FALSE)
+        else()
+            set(ENABLE_OPENMP TRUE)
+        endif()
+    endif()
+
+    if(ENABLE_OPENMP)
+        if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            macos_find_homebrew_openmp()
+        endif()
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
@@ -348,6 +360,21 @@ macro(get_git_commit DIR VARNAME)
         if(NOT ${rv} EQUAL 0)
             set(${VARNAME} ${${VARNAME}}-dirty)
         endif()
+    endif()
+endmacro()
+
+macro(macos_find_homebrew_openmp)
+    # See if libomp was installed with homebrew...
+    execute_process(COMMAND brew --prefix libomp
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE LIBOMP_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # ...success!
+    if(${rv} EQUAL 0)
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_LIB_NAMES omp)
+        set(OpenMP_omp_LIBRARY "${LIBOMP_PREFIX}/lib/libomp.a")
     endif()
 endmacro()
 
@@ -486,11 +513,6 @@ macro(BoB_build)
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
-    # Clang needs to be linked against libm and libstdc++ explicitly
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        BoB_add_link_libraries(m stdc++)
-    endif()
-
     # The list of linked libraries can end up very long with lots of duplicate
     # entries and this can break ld, so remove them. We remove from the start,
     # so that dependencies will always (I think!) be in the right order.
@@ -505,7 +527,7 @@ macro(BoB_build)
         # hopefully we can get away without using it in this case (because we'll
         # probably only find this on Linux machines which don't care about
         # linking directories anyway)
-        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+        if(${CMAKE_VERSION} VERSION_GREATER "3.13.0" OR ${CMAKE_VERSION} EQUAL "3.13.0")
             target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
         endif()
     endforeach()

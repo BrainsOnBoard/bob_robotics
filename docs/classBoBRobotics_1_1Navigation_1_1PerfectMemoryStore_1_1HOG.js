@@ -1,7 +1,6 @@
 var classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG =
 [
-    [ "HOG", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html#a91fbf6623c07dbb34b5d367fb95d8533", null ],
-    [ "HOG", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html#a22e95ee0328f481d8d463da8e2ede19b", null ],
+    [ "HOG", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html#a72763dba0d461ad6d7c46679ed3fd0b3", null ],
     [ "addSnapshot", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html#a4ff6d4e84686e93de5ac962367723a92", null ],
     [ "calcSnapshotDifference", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html#a51c7dc88f9036f3b7c40e76a36ad2f82", null ],
     [ "clear", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html#ad0e67e8a7bf824a6e7f11c34ddb1d3cc", null ],

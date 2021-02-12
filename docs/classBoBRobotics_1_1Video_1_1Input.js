@@ -8,6 +8,7 @@ var classBoBRobotics_1_1Video_1_1Input =
     [ "readFrame", "classBoBRobotics_1_1Video_1_1Input.html#a4418eaac74351b81051d3d8aa0f38f42", null ],
     [ "readFrameSync", "classBoBRobotics_1_1Video_1_1Input.html#a90b7197c48f9bcca8bc59f63e63094e3", null ],
     [ "readGreyscaleFrame", "classBoBRobotics_1_1Video_1_1Input.html#a2e032c7159b4d1875b8bc91b65e19d35", null ],
+    [ "readGreyscaleFrameSync", "classBoBRobotics_1_1Video_1_1Input.html#a3a8a723e78b95f51594d91ecf4337de1", null ],
     [ "setOutputSize", "classBoBRobotics_1_1Video_1_1Input.html#acc9d9390fbe7760b885bac78eb7fa5b9", null ],
     [ "write", "classBoBRobotics_1_1Video_1_1Input.html#a40751def5212f7e3eaadd1fe0a4a07ee", null ]
 ];

@@ -86,9 +86,21 @@ RCCarBot::stopMoving()
     move(0, 0_deg);
 }
 
+void
+RCCarBot::updateState()
+{
+    uint8_t buffer[2];
+    m_I2C.read(buffer);
+    m_speed = 2*float(int(buffer[0])-127) / 255;
+    m_turningAngle = degree_t( 90 - int(buffer[1]));
+    std::cout << m_speed << " " << m_turningAngle << std::endl;
+
+}
+
 float
 RCCarBot::getSpeed() const
 {
+
     return m_speed;
 }
 
