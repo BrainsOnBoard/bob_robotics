@@ -14,8 +14,8 @@ const int MINCONTROL = 1050;   // minimum value of speed control
 const int MAXCONTROL = 1900;   // maximum value of speed control
 const int SPEEDERROR = 20;     // error limit when checking if controller active
 const int TURNINGERROR = 5;    // error limit when checking if remote controller active
-const int MINSTEERING = 880;
-const int MAXSTEERING = 1850;
+const int MINSTEERING = 890;
+const int MAXSTEERING = 1820;
 
 // arduino I/O pins
 const byte STEERING = 3;
@@ -36,7 +36,7 @@ void setup() {
     esc.attach(THROTTLE_CONTROL);      //attach esc to pin
     steering.attach(STEERING_CONTROL); //attach steering to pin
     
-    //Serial.begin(9600);
+    Serial.begin(9600);
 
     // starts i2c connection
     Wire.begin(SLAVE_ADDRESS);
@@ -76,10 +76,9 @@ bool checkRemote() {
     remoteControlSpeed = pulseIn(THROTTLE, HIGH);
     remoteControlSteering = pulseIn(STEERING, HIGH);
     
-    //uint8_t mappedSpeed = map(remoteControlSpeed, MAXCONTROL, MINCONTROL, 0, 255);
-    //uint8_t mappedSteering = map(remoteControlSteering, MAXSTEERING, MINSTEERING, 0, 255);
     
-    //Serial.println("speed " + String(mappedSpeed) + " steering " +  String(mappedSteering));
+    
+    Serial.println("speed " + String(remoteControlSpeed) + " steering " +  String(remoteControlSteering));
 
     // the receiver gives a PWM signal of around 950, when remote controller is not connected
     if (remoteControlSpeed < PWMCONNECTED) {
@@ -117,13 +116,31 @@ void sendEvent() {
 
     uint8_t toSend[2];
     
-    uint8_t mappedSpeed = map(remoteControlSpeed, MAXCONTROL, MINCONTROL, 0, 255);
+    if (remoteControlSpeed > MAXCONTROL) {
+      remoteControlSpeed = MAXCONTROL;
+    }
     
-    uint8_t mappedSteering = map(remoteControlSteering, MAXSTEERING, MINSTEERING, 0, 255);
+    if (remoteControlSpeed < MINCONTROL) {
+      remoteControlSpeed = MINCONTROL;
+    }
+    
+    if (remoteControlSteering > MAXSTEERING) {
+      remoteControlSteering = MAXSTEERING;
+    }
+    
+    if (remoteControlSteering < MINSTEERING) {
+      remoteControlSteering = MINSTEERING;
+    }
+    
+    uint8_t mappedSpeed = map(remoteControlSpeed, MINCONTROL, MAXCONTROL, 0, 255);
+    uint8_t mappedSteering = map(remoteControlSteering, MINSTEERING, MAXSTEERING, 55, 125);
     
     
     toSend[0] = mappedSpeed;
     toSend[1] = mappedSteering;
+    
+
+    
     Wire.write(toSend,2);
 }
 
