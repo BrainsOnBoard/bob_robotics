@@ -164,7 +164,7 @@ int bobMain(int argc, char* argv[])
     //write headers  for csv
     std::string csvpath = folderName + "/coordinates.csv";
     coordinates.open (csvpath, std::ofstream::trunc);
-    coordinates  << "gps quality" << "," << "lat" << "," << "lon" << "," << "altitude"  << "," << "roll" << "," << "pitch" << "," << "yaw"  << ",";
+    coordinates << "speed" << "," << "steering angle" << "," << "gps quality" << "," << "lat" << "," << "lon" << "," << "altitude"  << "," << "roll" << "," << "pitch" << "," << "yaw"  << ",";
     coordinates << "image name" << "," << "timestamp" <<"\n";
     coordinates.close();
 
@@ -180,7 +180,7 @@ int bobMain(int argc, char* argv[])
     for (;;) {
         // poll from camera thread
 
-        bot.updateState();
+
 
         cv::Mat originalImage;
         mex.lock();
@@ -216,9 +216,13 @@ int bobMain(int argc, char* argv[])
 	        folderString << folderName << "/coordinates.csv";
 
 
-            //  headers:   gpsQuality|latitude|longitude|altitude|roll|pitch|yaw|imagename|timestamp
+            bot.updateState();
+            auto bot_speed = bot.getSpeed();
+            auto turn_ang = bot.getTurningAngle();
+
+            //  headers:   speed|steering_angle|gpsQuality|latitude|longitude|altitude|roll|pitch|yaw|imagename|timestamp
             coordinates.open (folderString.str(), std::ofstream::app); // open coordinates.csv file and append
-            coordinates << std::setprecision(10) << std::fixed << gpsQual << "," << coord.lat.value() << "," << coord.lon.value() << "," << data.altitude.value()  << "," << roll << "," << pitch << "," << yaw  << ",";
+            coordinates << std::setprecision(10) << std::fixed << bot_speed << "," <<  turn_ang.to<double>() << "," << gpsQual << "," << coord.lat.value() << "," << coord.lon.value() << "," << data.altitude.value()  << "," << roll << "," << pitch << "," << yaw  << ",";
             coordinates << "image" << i << ".jpg" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
             coordinates.close();
 
