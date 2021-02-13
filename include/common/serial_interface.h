@@ -19,7 +19,7 @@ class SerialInterface
 public:
     SerialInterface();
     SerialInterface(const char *path);
-    virtual ~SerialInterface();
+    ~SerialInterface();
 
     //---------------------------------------------------------------------
     // Public API
