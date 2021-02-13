@@ -10,6 +10,9 @@
 // Standard C++ includes
 #include <stdexcept>
 
+// Forward declaration
+struct termios;
+
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
 // SerialInterface
@@ -23,6 +26,7 @@ public:
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
+    termios getAttributes() const;
     void setAttributes(int speed);
     void setBlocking(bool should_block);
     bool readByte(uint8_t &byte);

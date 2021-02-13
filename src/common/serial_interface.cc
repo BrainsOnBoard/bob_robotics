@@ -47,14 +47,21 @@ SerialInterface::~SerialInterface()
 //---------------------------------------------------------------------
 // Public API
 //---------------------------------------------------------------------
+termios
+SerialInterface::getAttributes() const
+{
+    termios tty;
+    if (tcgetattr(m_Serial_fd, &tty) != 0) {
+        throw std::runtime_error("Error in call to tcgetattr: " + std::string(strerror(errno)));
+    }
+
+    return tty;
+}
+
 void
 SerialInterface::setAttributes(int speed)
 {
-    struct termios tty;
-    memset(&tty, 0, sizeof tty);
-    if (tcgetattr(m_Serial_fd, &tty) != 0) {
-        throw std::runtime_error("Error in setup from tcgetattr: " + std::string(strerror(errno)));
-    }
+    termios tty = getAttributes();
 
     cfsetospeed(&tty, speed);
     cfsetispeed(&tty, speed);
