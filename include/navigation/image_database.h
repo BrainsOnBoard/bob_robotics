@@ -117,8 +117,9 @@ public:
 
                 const auto path = (m_ImageDatabase.m_Path / MetadataFilename).str();
                 LOG_INFO << "Writing metadata to " << path << "...";
-                std::ofstream os(path);
-                os << m_YAML.releaseAndGetString();
+                std::ofstream ofs(path);
+                ofs.exceptions(std::ios::badbit | std::ios::failbit);
+                ofs << m_YAML.releaseAndGetString();
             }
 
             m_ImageDatabase.addNewEntries(m_NewEntries, m_ExtraFieldNames);

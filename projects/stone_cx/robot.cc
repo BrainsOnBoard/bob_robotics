@@ -437,6 +437,7 @@ int bobMain(int argc, char *argv[])
 
 #ifdef RECORD_SENSORS
     std::ofstream data("data.csv");
+    data.exceptions(std::ios::badbit | std::ios::failbit);
 #endif
 
     // Run server in background,, catching any exceptions for rethrowing
