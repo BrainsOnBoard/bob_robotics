@@ -61,7 +61,7 @@ SerialInterface::setAttributes(const termios &tty) const
 }
 
 bool
-SerialInterface::readByte(uint8_t &byte)
+SerialInterface::readByte(uint8_t &byte) const
 {
     const ssize_t ret = ::read(m_Serial_fd, reinterpret_cast<char *>(&byte), 1);
     if (ret < 0) {
@@ -78,7 +78,7 @@ SerialInterface::readByte(uint8_t &byte)
 }
 
 void
-SerialInterface::writeByte(uint8_t byte)
+SerialInterface::writeByte(uint8_t byte) const
 {
     if (::write(m_Serial_fd, &byte, 1) < 0) {
         throw std::runtime_error("Failed to write byte to serial port");

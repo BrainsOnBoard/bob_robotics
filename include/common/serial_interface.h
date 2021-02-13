@@ -26,12 +26,11 @@ public:
     //---------------------------------------------------------------------
     termios getAttributes() const;
     void setAttributes(const termios &tty) const;
-    void setAttributes(int speed);
-    void setBlocking(bool should_block);
-    bool readByte(uint8_t &byte);
+
+    bool readByte(uint8_t &byte) const;
 
     template<typename T, size_t N>
-    bool read(T (&data)[N])
+    bool read(T (&data)[N]) const
     {
         if (::read(m_Serial_fd, &data[0], sizeof(T) * N) < 0) {
             // Then we're waiting for data on a non-blocking socket
@@ -46,11 +45,11 @@ public:
         return true;
     }
 
-    void writeByte(uint8_t byte);
+    void writeByte(uint8_t byte) const;
 
     // writes data
     template<typename T, size_t N>
-    void write(const T (&data)[N])
+    void write(const T (&data)[N]) const
     {
         const size_t size = sizeof(T) * N;
         if (::write(m_Serial_fd, &data[0], size) != size) {
