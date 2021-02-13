@@ -9,6 +9,7 @@
 
 // Standard C++ includes
 #include <stdexcept>
+#include <string>
 
 
 namespace BoBRobotics {
@@ -44,6 +45,8 @@ public:
 
         return true;
     }
+
+    bool read(std::string &out);
 
     void writeByte(uint8_t byte) const;
 

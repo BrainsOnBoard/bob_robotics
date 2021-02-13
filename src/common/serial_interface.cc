@@ -1,12 +1,14 @@
 #ifdef __linux__ // This code is Linux only
 
 // BoB robotics includes
+#include "common/macros.h"
 #include "common/serial_interface.h"
 
 // Third-party includes
 #include "plog/Log.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -73,6 +75,27 @@ SerialInterface::readByte(uint8_t &byte) const
         // Otherwise it's a proper error
         throw std::runtime_error("Failed to read byte from serial port");
     }
+
+    return true;
+}
+
+bool
+SerialInterface::read(std::string &out)
+{
+    char buf[1024];
+    const ssize_t ret = ::read(m_Serial_fd, buf, sizeof(buf));
+    if (ret == -1) {
+        // No data on non-blocking socket
+        if (errno == EAGAIN) {
+            return false;
+        }
+
+        throw std::runtime_error("Error reading from serial port: " + std::string(strerror(errno)));
+    }
+
+    // Copy to output buffer
+    out.clear();
+    std::copy_n(buf, ret, std::back_inserter(out));
 
     return true;
 }
