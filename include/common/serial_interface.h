@@ -1,7 +1,7 @@
 #pragma once
 
 // Posix includes
-#include <fcntl.h>
+#include <termios.h>
 #include <unistd.h>
 
 // Standard C includes
@@ -10,8 +10,6 @@
 // Standard C++ includes
 #include <stdexcept>
 
-// Forward declaration
-struct termios;
 
 namespace BoBRobotics {
 //----------------------------------------------------------------------------
@@ -27,6 +25,7 @@ public:
     // Public API
     //---------------------------------------------------------------------
     termios getAttributes() const;
+    void setAttributes(const termios &tty) const;
     void setAttributes(int speed);
     void setBlocking(bool should_block);
     bool readByte(uint8_t &byte);

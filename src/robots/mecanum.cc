@@ -15,7 +15,28 @@ namespace BoBRobotics {
 namespace Robots {
 Mecanum::Mecanum(const char *path, bool alternativeWiring)
   : m_Serial(path), m_AlternativeWiring(alternativeWiring)
-{}
+{
+    auto tty = m_Serial.getAttributes();
+
+    tty.c_cflag |= B9600;            /* set baud rate */
+    tty.c_cflag |= (CLOCAL | CREAD); /* ignore modem controls */
+    tty.c_cflag &= ~CSIZE;
+    tty.c_cflag |= CS8;      /* 8-bit characters */
+    tty.c_cflag &= ~PARENB;  /* no parity bit */
+    tty.c_cflag &= ~CSTOPB;  /* only need 1 stop bit */
+    tty.c_cflag &= ~CRTSCTS; /* no hardware flowcontrol */
+
+    /* setup for non-canonical mode */
+    tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+    tty.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+    tty.c_oflag &= ~OPOST;
+
+    /* fetch bytes as they become available */
+    tty.c_cc[VMIN] = 1;  // set to 0 for non-blocking
+    tty.c_cc[VTIME] = 5; // set timeout to 0.5 secs
+
+    m_Serial.setAttributes(tty);
+}
 
 Mecanum::~Mecanum()
 {
