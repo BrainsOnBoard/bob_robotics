@@ -12,7 +12,16 @@ class GPSReader
 {
 public:
     GPSReader(const char *devicePath);
+
+    /*!
+     * \brief Attempt to read GPS data from the serial device.
+     *
+     * Returns true if data was successfully read and false if no new data was
+     * available. Throws an exception if the data is malformed.
+     */
     bool read(GPSData &data);
+
+    //! Set the underlying serial device to (non)blocking mode for reading
     void setBlocking(bool);
 
 private:
