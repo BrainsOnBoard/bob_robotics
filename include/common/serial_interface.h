@@ -17,14 +17,12 @@ namespace BoBRobotics {
 class SerialInterface
 {
 public:
-    SerialInterface();
     SerialInterface(const char *path);
     ~SerialInterface();
 
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
-    void setup(const char *path);
     void setAttributes(int speed);
     void setBlocking(bool should_block);
     bool readByte(uint8_t &byte);

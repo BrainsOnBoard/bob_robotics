@@ -20,31 +20,9 @@
 #include <unistd.h>
 
 namespace BoBRobotics {
-SerialInterface::SerialInterface()
-{
-}
-
 SerialInterface::SerialInterface(const char *path)
+  : m_Serial_fd{ open(path, O_WRONLY | O_NOCTTY | O_SYNC) }
 {
-    setup(path);
-}
-
-SerialInterface::~SerialInterface()
-{
-    // Close Serial port
-    if (m_Serial_fd >= 0) {
-        close(m_Serial_fd);
-    }
-}
-
-//---------------------------------------------------------------------
-// Public API
-//---------------------------------------------------------------------
-void
-SerialInterface::setup(const char *path)
-{
-
-    m_Serial_fd = open(path, O_WRONLY | O_NOCTTY | O_SYNC);
     if (m_Serial_fd < 0) {
         throw std::runtime_error("Could not open serial interface: " + std::string(strerror(errno)));
     }
@@ -58,6 +36,17 @@ SerialInterface::setup(const char *path)
     LOGI << "Serial successfully initialised";
 }
 
+SerialInterface::~SerialInterface()
+{
+    // Close Serial port
+    if (m_Serial_fd >= 0) {
+        close(m_Serial_fd);
+    }
+}
+
+//---------------------------------------------------------------------
+// Public API
+//---------------------------------------------------------------------
 void
 SerialInterface::setAttributes(int speed)
 {
