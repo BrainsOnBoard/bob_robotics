@@ -20,10 +20,20 @@ using namespace std::literals;
 int
 bobMain(int argc, char **argv)
 {
-    const char *path_linux = "/dev/ttyACM0"; // path for linux systems
-                                             // const char *path_mac = "/dev/cu.usbmodem141401"; // the path for mac is often different!
+#ifdef __linux__
+    BOB_ASSERT(argc <= 2);
+    const char *devicePath = (argc == 3) ? argv[1] : SerialInterface::DefaultLinuxDevicePath;
+#else
+    /*
+     * Need to provide path explicitly on macOS!
+     * (e.g.: ./gps /dev/cu.usbmodem141401)
+     */
+    BOB_ASSERT(argc == 2);
 
-    GPSReader gps{ path_linux };
+    const char *devicePath = argv[1];
+#endif
+
+    GPSReader gps{ devicePath };
 
     // if GPS location is invalid, keep trying to get a valid one
     // if failed x times we exit
