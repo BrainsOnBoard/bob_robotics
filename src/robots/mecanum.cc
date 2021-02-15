@@ -13,8 +13,9 @@
 
 namespace BoBRobotics {
 namespace Robots {
-Mecanum::Mecanum(const char *path, bool alternativeWiring)
-  : m_Serial(path), m_AlternativeWiring(alternativeWiring)
+Mecanum::Mecanum(bool alternativeWiring, const char *devicePath)
+  : m_AlternativeWiring(alternativeWiring)
+  , m_Serial(devicePath)
 {
     auto tty = m_Serial.getAttributes();
 

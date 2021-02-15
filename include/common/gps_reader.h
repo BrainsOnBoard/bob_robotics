@@ -11,7 +11,7 @@ namespace GPS {
 class GPSReader
 {
 public:
-    GPSReader(const char *devicePath);
+    GPSReader(const char *devicePath = SerialInterface::DefaultLinuxDevicePath);
 
     /*!
      * \brief Attempt to read GPS data from the serial device.

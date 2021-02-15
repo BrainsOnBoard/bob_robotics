@@ -19,7 +19,8 @@ namespace BoBRobotics {
 class SerialInterface
 {
 public:
-    SerialInterface(const char *path);
+    static constexpr const char *DefaultLinuxDevicePath = "/dev/ttyACM0";
+    SerialInterface(const char *path = DefaultLinuxDevicePath);
     ~SerialInterface();
 
     //---------------------------------------------------------------------
