@@ -153,8 +153,7 @@ parse(const std::string &toParse, GPSData &data)
     int gpsQualityIndicator;
     GPSQuality qualityOfGps;
 
-    // Let's reuse our data structure so we don't have to reallocate with every call
-    static array<string, 9> elements;
+    array<string, 9> elements;
     if (!splitString(toParse, elements, "$GNGGA")) {
         return false;
     }
