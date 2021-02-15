@@ -72,6 +72,7 @@ bobMain(int argc, char **argv)
                 // Indicate that polling has taken place, even though we don't yet have a reading
                 std::cout << "(data not yet available)" << std::endl;
                 std::this_thread::sleep_for(100ms);
+                continue;
             }
 
             const auto &coord = data.coordinate;
