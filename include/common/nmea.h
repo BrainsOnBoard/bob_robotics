@@ -109,7 +109,7 @@ template<size_t N>
 bool
 splitString(const std::string &line,
             std::array<std::string, N> &fields,
-            const char *sentenceId)
+            const std::string &sentenceId)
 {
     std::string field;
     std::istringstream lineStream{ line };
