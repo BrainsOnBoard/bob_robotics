@@ -144,56 +144,30 @@ parse(const std::string &toParse, GPSData &data)
         return false;
     }
 
-    degree_t latitude, longitude;
-    arcminute_t latitudeMinutes, longitudeMinutes;
-    char latDirection, longDirection;
-    meter_t altitude;
-    double horizontalDilution;
-    int numberOfSatellites;
-    int gpsQualityIndicator;
-    GPSQuality qualityOfGps;
-
     array<string, 9> elements;
     if (!splitString(toParse, elements, "$GNGGA")) {
         return false;
     }
 
     try {
-        TimeStamp time{ elements[0] };
-        latitude = degree_t(stod(elements[1].substr(0, 2)));
-        latitudeMinutes = arcminute_t(stod(elements[1].substr(2, 8)));
-        latDirection = elements[2][0];
-        longitude = degree_t(stod(elements[3].substr(0, 3)));
-        longitudeMinutes = arcminute_t(stod(elements[3].substr(3, 9)));
-        longDirection = elements[4][0];
-        gpsQualityIndicator = stoi(elements[5]);
-        numberOfSatellites = stoi(elements[6]);
-        horizontalDilution = stod(elements[7]);
-        altitude = meter_t(stod(elements[8]));
-        qualityOfGps = static_cast<GPSQuality>(gpsQualityIndicator);
-
-        // adding up the latitude and longitude parts
-        latitude += latitudeMinutes;
-        longitude += longitudeMinutes;
-
-        // West and South has negative angles
-        if (longDirection == 'W')
-            longitude = -longitude;
-        if (latDirection == 'S')
-            latitude = -latitude;
-
-        MapCoordinate::GPSCoordinate coordinate;
-        coordinate.lat = latitude;
-        coordinate.lon = longitude;
-        data.coordinate = coordinate;
-        data.numberOfSatellites = numberOfSatellites;
-        data.altitude = altitude;
-        data.horizontalDilution = horizontalDilution;
-        data.gpsQuality = qualityOfGps;
-        data.time = time; // UTC time
-    } catch (std::invalid_argument &e) {
+        data.time = TimeStamp{ elements[0] }; // UTC time
+        data.coordinate.lat = degree_t(stod(elements[1].substr(0, 2))) +
+                              arcminute_t(stod(elements[1].substr(2, 8)));
+        if (elements[2][0] == 'W') {
+            data.coordinate.lat = -data.coordinate.lat;
+        }
+        data.coordinate.lon = degree_t(stod(elements[3].substr(0, 3))) +
+                              arcminute_t(stod(elements[3].substr(3, 9)));
+        if (elements[4][0] == 'S') {
+            data.coordinate.lon = -data.coordinate.lon;
+        }
+        data.gpsQuality = static_cast<GPSQuality>(stoi(elements[5]));
+        data.numberOfSatellites = stoi(elements[6]);
+        data.horizontalDilution = stod(elements[7]);
+        data.coordinate.height = meter_t{ stod(elements[8]) };
+    } catch (invalid_argument &e) {
         throw GPSError(e.what());
-    } catch (std::out_of_range &e) {
+    } catch (out_of_range &e) {
         throw GPSError(e.what());
     }
 
