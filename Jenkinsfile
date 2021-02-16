@@ -109,6 +109,9 @@ for(b = 0; b < builderNodes.size(); b++) {
                     def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
                     def runTestsCommand = "./tests --gtest_output=xml:test_results.xml 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\"";
                     def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
+
+                    // Archive output
+                    archive uniqueMsg;
                 }
             }
 
