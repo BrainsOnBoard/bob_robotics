@@ -99,6 +99,8 @@ for(b = 0; b < builderNodes.size(); b++) {
             }
 
             runBuild("examples", nodeLabel);
+            runBuild("projects", nodeLabel);
+            runBuild("tools", nodeLabel);
             runBuild("tests", nodeLabel);
 
             stage("Running tests (" + env.NODE_NAME + ")") {
