@@ -90,7 +90,7 @@ int bobMain(int argc, char* argv[])
     time (&rawtime);
     timeinfo = localtime(&rawtime);
 
-    strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+    strftime(buffer,sizeof(buffer),"%d-%m-%Y",timeinfo);
     std::string str(buffer);
 
     int seconds_to_run = 30; // default value
@@ -132,7 +132,12 @@ int bobMain(int argc, char* argv[])
     //usb_folder << "../../../../../media/usb/dataset_images/" << str;
     //folderName = usb_folder.str();
 
-    folderName = str;
+
+    std::ostringstream gps_timestring;
+    gps_timestring << str << ";" << gps_hour << ":" << gps_minute << ":" << gps_second;
+    folderName = gps_timestring.str();
+    //folderName = str;
+
 
 
 
