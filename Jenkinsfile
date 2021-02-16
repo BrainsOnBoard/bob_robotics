@@ -22,36 +22,41 @@ void setBuildStatus(String message, String state) {
 }
 
 def runBuild(String name, String nodeLabel) {
-    dir(name) {
-        // Delete CMake cache folder
-        dir("build") {
-            deleteDir();
+    stage("Building " + name + " (" + env.NODE_NAME + ")") {
+        // Run automatic tests
+        if (isUnix()) {
+            dir(name) {
+                // Delete CMake cache folder
+                dir("build") {
+                    deleteDir();
+                }
+
+                // Generate unique name for message
+                def uniqueMsg = "msg_" + name + "_" + env.NODE_NAME;
+
+                setBuildStatus("Building " + name, "PENDING");
+
+                // Build tests and set build status based on return code
+                def statusCode = sh script:"./build_all.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+                if(statusCode != 0) {
+                    setBuildStatus("Building " + name, "FAILURE");
+                }
+
+                // Parse test output for GCC warnings
+                // **NOTE** driving WarningsPublisher from pipeline is entirely undocumented
+                // this is based mostly on examples here https://github.com/kitconcept/jenkins-pipeline-examples
+                // **YUCK** fatal errors aren't detected by the 'GNU Make + GNU C Compiler (gcc)' parser
+                // however JENKINS-18081 fixes this for
+                // the 'GNU compiler 4 (gcc)' parser at the expense of it not detecting make errors...
+                def parserName = ("mac" in nodeLabel) ? "Apple LLVM Compiler (Clang)" : "GNU compiler 4 (gcc)";
+                step([$class: "WarningsPublisher",
+                    parserConfigurations: [[parserName: parserName, pattern: uniqueMsg]],
+                    unstableTotalAll: '0', usePreviousBuildAsReference: true]);
+
+                // Archive output
+                archive uniqueMsg;
+            }
         }
-
-        // Generate unique name for message
-        def uniqueMsg = "msg_" + name + "_" + env.NODE_NAME;
-
-        setBuildStatus("Building " + name, "PENDING");
-
-        // Build tests and set build status based on return code
-        def statusCode = sh script:"./build_all.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
-        if(statusCode != 0) {
-            setBuildStatus("Building " + name, "FAILURE");
-        }
-
-        // Parse test output for GCC warnings
-        // **NOTE** driving WarningsPublisher from pipeline is entirely undocumented
-        // this is based mostly on examples here https://github.com/kitconcept/jenkins-pipeline-examples
-        // **YUCK** fatal errors aren't detected by the 'GNU Make + GNU C Compiler (gcc)' parser
-        // however JENKINS-18081 fixes this for
-        // the 'GNU compiler 4 (gcc)' parser at the expense of it not detecting make errors...
-        def parserName = ("mac" in nodeLabel) ? "Apple LLVM Compiler (Clang)" : "GNU compiler 4 (gcc)";
-        step([$class: "WarningsPublisher",
-            parserConfigurations: [[parserName: parserName, pattern: uniqueMsg]],
-            unstableTotalAll: '0', usePreviousBuildAsReference: true]);
-
-        // Archive output
-        archive uniqueMsg;
     }
 }
 
@@ -96,12 +101,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 checkout scm
             }
 
-            stage("Building examples (" + env.NODE_NAME + ")") {
-                // Run automatic tests
-                if (isUnix()) {
-                    runBuild("examples", nodeLabel);
-                }
-            }
+            runBuild("examples", nodeLabel);
         }
     }
 }
