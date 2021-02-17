@@ -104,6 +104,7 @@ for(b = 0; b < builderNodes.size(); b++) {
             runBuild("tests", nodeLabel);
 
             stage("Running tests (" + env.NODE_NAME + ")") {
+                setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
                 dir("tests") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
@@ -112,6 +113,11 @@ for(b = 0; b < builderNodes.size(); b++) {
 
                     // Archive output
                     archive uniqueMsg;
+
+                    // If tests failed, set failure status
+                    if(runTestsStatus != 0) {
+                        setBuildStatus("Running tests (" + env.NODE_NAME + ")", "FAILURE");
+                    }
                 }
             }
 
