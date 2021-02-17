@@ -40,17 +40,6 @@ def runBuild(String name, String nodeLabel) {
                 setBuildStatus("Building " + name, "FAILURE");
             }
 
-            // Parse test output for GCC warnings
-            // **NOTE** driving WarningsPublisher from pipeline is entirely undocumented
-            // this is based mostly on examples here https://github.com/kitconcept/jenkins-pipeline-examples
-            // **YUCK** fatal errors aren't detected by the 'GNU Make + GNU C Compiler (gcc)' parser
-            // however JENKINS-18081 fixes this for
-            // the 'GNU compiler 4 (gcc)' parser at the expense of it not detecting make errors...
-            def parserName = ("mac" in nodeLabel) ? "Apple LLVM Compiler (Clang)" : "GNU compiler 4 (gcc)";
-            step([$class: "WarningsPublisher",
-                parserConfigurations: [[parserName: parserName, pattern: uniqueMsg]],
-                unstableTotalAll: '0', usePreviousBuildAsReference: true]);
-
             // Archive output
             archive uniqueMsg;
         }
@@ -106,6 +95,9 @@ for(b = 0; b < builderNodes.size(); b++) {
             runBuild("projects", nodeLabel);
             runBuild("tools", nodeLabel);
             runBuild("tests", nodeLabel);
+
+            // Parse test output for GCC warnings
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_*_" + env.NODE_NAME)
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
