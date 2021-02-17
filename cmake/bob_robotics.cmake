@@ -94,13 +94,13 @@ macro(BoB_project)
             get_filename_component(GENN_USERPROJECT ${GENN_BIN_PATH}/../userproject/include ABSOLUTE)
             message("GeNN found in ${GENN_USERPROJECT}")
             BoB_add_include_directories(${GENN_USERPROJECT})
-            # If th
-            if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+
+            if(PARSED_ARGS_GENN_MODEL)
                 # On *nix link dl
                 if(NOT WIN32)
                     BoB_add_link_libraries(dl)
                 endif()
-            elseif(PARSED_ARGS_GENN_MODEL)
+
                 get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
                 set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
                 set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
