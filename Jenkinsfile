@@ -119,7 +119,7 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             stage("Gathering test results (" + env.NODE_NAME + ")") {
                 dir("tests") {
-                    junit test_results.xml
+                    junit 'test_results.xml'
                 }
             }
         }
