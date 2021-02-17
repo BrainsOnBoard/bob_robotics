@@ -97,7 +97,7 @@ for(b = 0; b < builderNodes.size(); b++) {
             runBuild("tests", nodeLabel);
 
             // Parse test output for GCC warnings
-            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_*_" + env.NODE_NAME)
+            recordIssues enabledForFailure: true, aggregatingResults: true, tool: gcc(pattern: "**/msg_*_" + env.NODE_NAME)
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
