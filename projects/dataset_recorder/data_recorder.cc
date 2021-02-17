@@ -27,6 +27,7 @@
 
 // Standard C++ includes
 #include <iostream>
+#include <sstream>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
@@ -90,7 +91,7 @@ int bobMain(int argc, char* argv[])
     time (&rawtime);
     timeinfo = localtime(&rawtime);
 
-    strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+    strftime(buffer,sizeof(buffer),"%d-%m-%Y",timeinfo);
     std::string str(buffer);
 
     int seconds_to_run = 30; // default value
@@ -126,16 +127,14 @@ int bobMain(int argc, char* argv[])
     int gps_minute = gps_time.minute;
     int gps_second = gps_time.second;
 
-    std::string folderName;
+    std::stringstream ss;
+    ss << str << " " << gps_hour << ":" << gps_minute << ":" << gps_second;
 
     //std::ostringstream usb_f
     //usb_folder << "../../../../../media/usb/dataset_images/" << str;
     //folderName = usb_folder.str();
 
-    folderName = str;
-
-
-
+    const auto folderName = ss.str();
     const char *c  = folderName.c_str();
     mkdir(c, 0777);
     std::cout << "directory " << c << " created" << std::endl;
