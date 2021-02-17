@@ -17,3 +17,6 @@ else()
                 GENN_MODEL model_ardin.cc
                 THIRD_PARTY imgui)
 endif()
+
+# Suppress warning from inside imgui
+add_compile_flags(-Wno-int-to-pointer-cast)
