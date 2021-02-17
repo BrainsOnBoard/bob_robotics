@@ -94,12 +94,16 @@ macro(BoB_project)
             get_filename_component(GENN_USERPROJECT ${GENN_BIN_PATH}/../userproject/include ABSOLUTE)
             message("GeNN found in ${GENN_USERPROJECT}")
             BoB_add_include_directories(${GENN_USERPROJECT})
-            # If th
+            # If the user just wants the userprojects headers...
             if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
                 # On *nix link dl
                 if(NOT WIN32)
                     BoB_add_link_libraries(dl)
                 endif()
+
+                # If GeNN is installed to /usr the above method for finding
+                # userprojects headers won't work
+                BoB_add_include_directories(/usr/include/genn)
             elseif(PARSED_ARGS_GENN_MODEL)
                 get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
                 set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
