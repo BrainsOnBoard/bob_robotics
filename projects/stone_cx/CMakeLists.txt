@@ -6,7 +6,7 @@ if(NOT TARGET)
 endif()
 
 if(${TARGET} STREQUAL simulator)
-    set(SOURCES simulator.cc visualizationCommon.cc)
+    set(SOURCES simulator.cc spline.cc visualizationCommon.cc)
     set(BOB_MODULES common)
 elseif(${TARGET} STREQUAL simulatorReplay)
     set(SOURCES simulatorReplay.cc visualizationCommon.cc)
