@@ -35,7 +35,7 @@ def runBuild(String name, String nodeLabel) {
             setBuildStatus("Building " + name, "PENDING");
 
             // Build tests and set build status based on return code
-            def statusCode = sh script:"./build_all.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+            def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
             if(statusCode != 0) {
                 setBuildStatus("Building " + name, "FAILURE");
             }
@@ -96,6 +96,10 @@ for(b = 0; b < builderNodes.size(); b++) {
         node(nodeName) {
             stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
+            }
+
+            stage("Downloading and building GeNN (" + env.NODE_NAME + ")") {
+                sh 'bin/download_and_build_genn.sh'
             }
 
             runBuild("examples", nodeLabel);
