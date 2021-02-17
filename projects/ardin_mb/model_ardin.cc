@@ -57,7 +57,7 @@ void modelDefinition(NNmodel &model)
 {
     using namespace BoBRobotics;
     model.setDT(MBParamsArdin::timestepMs);
-    model.setName("ardin_mb");
+    model.setName("mb_memory_ardin");
 
     //---------------------------------------------------------------------------
     // Neuron model parameters
