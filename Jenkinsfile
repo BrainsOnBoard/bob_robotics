@@ -99,6 +99,15 @@ for(b = 0; b < builderNodes.size(); b++) {
             // Parse test output for GCC warnings
             recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME)
 
+            stage("Running clang-tidy (" + env.NODE_NAME + ")") {
+                def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check"
+                if(runClangTidyStatus != 0) {
+                    setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
+                } else {
+                    junit 'clang_tidy_results.xml'
+                }
+            }
+
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
                 dir("tests") {
