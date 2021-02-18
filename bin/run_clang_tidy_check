@@ -175,9 +175,8 @@ if __name__ == '__main__':
         json.dump(all_json, file)
 
     # Run clang-tidy in parallel over source files and concatenate output
-    files = [obj['file'] for obj in all_json]
     with mp.Pool() as pool:
-        output = ''.join(pool.map(run_clang_tidy, files[0:10])).split('\n')
+        output = ''.join(pool.map(run_clang_tidy, (obj['file'] for obj in all_json))).split('\n')
 
     # Convert into JUnit-style output file that Jenkins can parse
     converter = ClangTidyConverter(os.getcwd())
