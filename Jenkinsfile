@@ -130,9 +130,7 @@ for(b = 0; b < builderNodes.size(); b++) {
             }
 
             stage("Gathering test results (" + env.NODE_NAME + ")") {
-                dir("tests") {
-                    junit '**/*_test_results.xml'
-                }
+                junit '**/*_test_results.xml'
             }
         }
     }
