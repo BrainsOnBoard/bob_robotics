@@ -11,19 +11,21 @@ import subprocess
 from xml.sax.saxutils import escape
 
 INCLUDE_CHECKS = (
-    'clang-analyzer-*',
-    'concurrency-*',
-    'misc-*',
-    'modernize-*',
-    'openmp-*',
+    # 'clang-analyzer-*',
+    # 'concurrency-*',
+    # 'misc-*',
+    # 'modernize-*',
+    # 'openmp-*',
 )
 
 # Some of these are a bit overzealous...
 EXCLUDE_CHECKS = (
-    'modernize-avoid-c-arrays',
-    'modernize-use-auto',
-    'modernize-use-trailing-return-type',
-    'modernize-raw-string-literal',
+    '*osx.*',
+    'clang-analyzer-webkit*'
+    # 'modernize-avoid-c-arrays',
+    # 'modernize-use-auto',
+    # 'modernize-use-trailing-return-type',
+    # 'modernize-raw-string-literal',
 )
 
 # Create a `ErrorDescription` tuple with all the information we want to keep.
@@ -128,13 +130,22 @@ class ClangTidyConverter:
         # Print the junit file.
         self.print_junit_file(output_file)
 
-checks = itertools.chain(INCLUDE_CHECKS, ('-' + check for check in EXCLUDE_CHECKS))
-check_args = '-checks=' + ','.join(checks)
-print('Running clang-tidy with following checks: ' + check_args)
+check_args = None
+if INCLUDE_CHECKS or EXCLUDE_CHECKS:
+    checks = itertools.chain(INCLUDE_CHECKS, ('-' + check for check in EXCLUDE_CHECKS))
+    check_args = '-checks=' + ','.join(checks)
+
+print('Running clang-tidy with following checks: ')
+args = ['/usr/bin/clang-tidy', '-list-checks']
+if check_args:
+    args.append(check_args)
+subprocess.run(args)
 
 def run_clang_tidy(file):
-    proc = subprocess.Popen(['/usr/bin/clang-tidy', '-p', '.', check_args, file],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    args = ['/usr/bin/clang-tidy', '-p', '.', file]
+    if check_args:
+        args.append(check_args)
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = proc.communicate()[0].decode('utf-8')
     if stdout != '':
         print(stdout)
