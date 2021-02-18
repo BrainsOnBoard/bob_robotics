@@ -175,5 +175,5 @@ if __name__ == '__main__':
 
     # Convert into JUnit-style output file that Jenkins can parse
     converter = ClangTidyConverter(os.getcwd())
-    with open('clang_tidy_results.xml', 'w') as file:
+    with open('clang_tidy_test_results.xml', 'w') as file:
         converter.convert(output, file)

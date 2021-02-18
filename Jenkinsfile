@@ -108,8 +108,6 @@ for(b = 0; b < builderNodes.size(); b++) {
 
                 if(runClangTidyStatus != 0) {
                     setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
-                } else {
-                    junit 'clang_tidy_results.xml'
                 }
             }
 
@@ -118,7 +116,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 dir("tests") {
                     // Generate unique name for message
                     def uniqueMsg = "test_results_" + env.NODE_NAME;
-                    def runTestsCommand = "./tests --gtest_output=xml:test_results.xml 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\"";
+                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\"";
                     def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
                     // Archive output
@@ -133,7 +131,7 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             stage("Gathering test results (" + env.NODE_NAME + ")") {
                 dir("tests") {
-                    junit 'test_results.xml'
+                    junit '**/*_test_results.xml'
                 }
             }
         }
