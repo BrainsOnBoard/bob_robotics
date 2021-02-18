@@ -30,7 +30,7 @@ def runBuild(String name, String nodeLabel) {
             }
 
             // Generate unique name for message
-            def uniqueMsg = "msg_" + name + "_" + env.NODE_NAME;
+            def uniqueMsg = "build_" + name + "_" + env.NODE_NAME;
 
             setBuildStatus("Building " + name, "PENDING");
 
@@ -97,11 +97,11 @@ for(b = 0; b < builderNodes.size(); b++) {
             runBuild("tests", nodeLabel);
 
             // Parse test output for GCC warnings
-            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME)
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME)
 
             stage("Running clang-tidy (" + env.NODE_NAME + ")") {
                 // Generate unique name for message
-                def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
+                def uniqueMsg = "clang_tidy_" + env.NODE_NAME;
                 def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\""
 
                 archive uniqueMsg;
@@ -117,7 +117,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
                 dir("tests") {
                     // Generate unique name for message
-                    def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
+                    def uniqueMsg = "test_results_" + env.NODE_NAME;
                     def runTestsCommand = "./tests --gtest_output=xml:test_results.xml 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\"";
                     def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
