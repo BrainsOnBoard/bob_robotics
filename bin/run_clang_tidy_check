@@ -155,6 +155,7 @@ def run_clang_tidy(file):
 if __name__ == '__main__':
     all_json = []
     all_files = set()
+    exclude_path = os.path.join(os.getcwd(), 'third_party')
     for root, _, files in os.walk('.'):
         # Trim initial ./
         root = root[2:]
@@ -172,10 +173,9 @@ if __name__ == '__main__':
             with open(os.path.join(root, 'compile_commands.json'), 'r') as file:
                 for cmd in json.load(file):
                     # Don't add duplicate files
-                    if not cmd['file'] in all_files:
+                    if not cmd['file'].startswith(exclude_path) and not cmd['file'] in all_files:
                         all_json.append(cmd)
                         all_files.add(cmd['file'])
-
 
     # Check we found at least one compile_commands.json
     assert len(all_json) > 0
