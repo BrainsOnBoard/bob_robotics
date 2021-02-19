@@ -16,6 +16,7 @@ INCLUDE_CHECKS = (
     'misc-*',
     # 'modernize-*',
     'openmp-*',
+    'performance-*',
 )
 
 # Some of these are a bit overzealous...
