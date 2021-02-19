@@ -55,7 +55,10 @@ GZ_REGISTER_MODEL_PLUGIN(GazeboQuadCopterPlugin)
 /// \return True if the parameter was found in _sdf, false otherwise.
 template <class T>
 void
-getSdfParam(sdf::ElementPtr _sdf, const std::string &_name, T &_param, const T &_defaultValue, const bool &_verbose = false)
+getSdfParam(sdf::ElementPtr _sdf, // NOLINT
+            const std::string &_name,
+            T &_param,
+            const T &_defaultValue, bool _verbose = false)
 {
     if (_sdf->HasElement(_name)) {
         _param = _sdf->GetElement(_name)->Get<T>();

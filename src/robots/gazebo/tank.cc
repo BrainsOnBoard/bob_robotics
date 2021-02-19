@@ -11,7 +11,7 @@ namespace Robots {
 namespace Gazebo {
 
 Tank::Tank(const meters_per_second_t maximumSpeed,
-           gazebo::transport::NodePtr node)
+           gazebo::transport::NodePtr node) // NOLINT
   : m_MaximumSpeed(getAngularVelocity(maximumSpeed, 0.3_m))
 {
     // Publish to the  differential_drive_robot topic
