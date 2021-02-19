@@ -170,7 +170,7 @@ if check_args:
     args.append(check_args)
 subprocess.run(args)
 
-generate_fixes = sys.argv and sys.argv[1] == '--generate-fixes'
+generate_fixes = len(sys.argv) > 1 and sys.argv[1] == '--generate-fixes'
 FIXES_DIR = 'clang_tidy_fixes'
 if generate_fixes and not os.path.isdir('fixes'):
     os.mkdir(FIXES_DIR)
