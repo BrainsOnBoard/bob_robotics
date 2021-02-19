@@ -14,7 +14,7 @@
 namespace BoBRobotics {
 namespace Robots {
 //! Control for a Lego Mindstorms tank robot
-class EV3
+class EV3 final
   : public Tank
 {
 public:

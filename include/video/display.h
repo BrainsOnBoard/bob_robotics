@@ -28,7 +28,8 @@ namespace Video {
  *
  * Should be built with OpenCV and -pthread.
  */
-class Display : public Threadable
+class Display final
+  : public Threadable
 {
 public:
     /*!

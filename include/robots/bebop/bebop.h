@@ -102,7 +102,7 @@ checkError(eARCONTROLLER_ERROR err)
  * It also provides an interface to access the drone's video stream.
  */
 //------------------------------------------------------------------------------
-class Bebop
+class Bebop final
   : public UAV
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
