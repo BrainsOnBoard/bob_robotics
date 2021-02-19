@@ -13,7 +13,7 @@ from xml.sax.saxutils import escape
 INCLUDE_CHECKS = (
     'clang-analyzer-*',
     'concurrency-*',
-    # 'misc-*',
+    'misc-*',
     # 'modernize-*',
     'openmp-*',
 )
