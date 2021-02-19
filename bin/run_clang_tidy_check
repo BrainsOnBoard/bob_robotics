@@ -11,6 +11,7 @@ import subprocess
 from xml.sax.saxutils import escape
 
 INCLUDE_CHECKS = (
+    'bugprone-*',
     'clang-analyzer-*',
     'concurrency-*',
     'misc-*',
