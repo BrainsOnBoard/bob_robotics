@@ -195,7 +195,10 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     m_Sub = m_Node->Subscribe(topicName, &GazeboQuadCopterPlugin::OnMsg, this);
     std::cerr << "Subsribed to " << topicName << "\n";
     // Listen to the update event. This event is broadcast every simulation iteration.
-    m_UpdateConnection = event::Events::ConnectWorldUpdateBegin([this] { OnUpdate(); });
+    const auto onUpdate = [this](const auto &) {
+        OnUpdate();
+    };
+    m_UpdateConnection = event::Events::ConnectWorldUpdateBegin(onUpdate);
     std::cout << "GazeboQuadCopter ready to fly. The force will be with you" << std::endl;
 
     // Altitude hold PID Controller
