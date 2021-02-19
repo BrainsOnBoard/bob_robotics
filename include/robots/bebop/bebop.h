@@ -217,7 +217,7 @@ public:
     State getState();
     VideoStream &getVideoStream();
     void takePhoto();
-    void setFlightEventHandler(FlightEventHandler);
+    void setFlightEventHandler(const FlightEventHandler &);
 
     //! Default maximum tilt for pitch and roll.
     static constexpr auto DefaultMaximumTilt = 8_deg;
