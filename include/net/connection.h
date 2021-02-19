@@ -67,7 +67,7 @@ public:
      * e.g. if it's an IMG command, it should be handled by Video::NetSource.
      * Set to nullptr to disable and ignore these commands.
      */
-    void setCommandHandler(const std::string &commandName, const CommandHandler handler);
+    void setCommandHandler(const std::string &commandName, const CommandHandler &handler);
 
     //! Read a specified number of bytes into a buffer
     void read(void *buffer, size_t length);

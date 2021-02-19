@@ -35,7 +35,7 @@ Connection::~Connection()
 
 bool Connection::isOpen() const { return m_Socket.isOpen(); }
 
-void Connection::setCommandHandler(const std::string &commandName, const CommandHandler handler)
+void Connection::setCommandHandler(const std::string &commandName, const CommandHandler &handler)
 {
     std::lock_guard<std::mutex> guard(m_CommandHandlersMutex);
     m_CommandHandlers.emplace(commandName, handler);

@@ -42,7 +42,7 @@ public:
               unsigned int width,
               unsigned int height,
               uint32_t pixelFormat);
-    void enumerateControls(std::function<void(const v4l2_queryctrl &)> processControl);
+    void enumerateControls(const std::function<void(const v4l2_queryctrl &)> &processControl);
     void queryControl(uint32_t id, v4l2_queryctrl &queryControl);
     uint32_t capture(void *&buffer);
     int32_t getControlValue(uint32_t id) const;

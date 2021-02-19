@@ -22,7 +22,7 @@ const int BIG_PX_JUMP = 5;
 inline void
 drawCalibrationLine(cv::Mat &imorig, cv::Point p1, cv::Point p2)
 {
-    cv::line(imorig, p1, p2, cv::Scalar(0x00, 0xff, 0x00), 2);
+    cv::line(imorig, std::move(p1), std::move(p2), cv::Scalar(0x00, 0xff, 0x00), 2);
 }
 
 int bobMain(int argc, char **argv)
