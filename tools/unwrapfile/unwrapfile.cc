@@ -142,9 +142,8 @@ void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval
     BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
 
     // Extract title from filename
-    const size_t titlePos = filepath.filename().find_last_of(".");
+    const size_t titlePos = filepath.filename().find_last_of('.');
     const std::string filetitle = filepath.filename().substr(0, titlePos);
-
 
     // Loop through frames
     unsigned int i = 0;
