@@ -23,6 +23,10 @@ INCLUDE_CHECKS = (
 # Some of these are a bit overzealous...
 EXCLUDE_CHECKS = (
     '*osx.*',
+    'bugprone-branch-clone',
+    'bugprone-exception-escape',
+    'bugprone-integer-division',
+    'bugprone-narrowing-conversions',
     'clang-analyzer-webkit*',
     'misc-non-private-member-variables-in-classes',
     # 'modernize-avoid-c-arrays',
@@ -140,7 +144,7 @@ if INCLUDE_CHECKS or EXCLUDE_CHECKS:
     checks = itertools.chain(INCLUDE_CHECKS, ('-' + check for check in EXCLUDE_CHECKS))
     check_args = '-checks=' + ','.join(checks)
 
-print('Running clang-tidy with following checks: ')
+# List the currently enabled checks
 args = ['/usr/bin/clang-tidy', '-list-checks']
 if check_args:
     args.append(check_args)
