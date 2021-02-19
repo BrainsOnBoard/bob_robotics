@@ -11,7 +11,7 @@ Threadable::Threadable()
 {}
 
 Threadable::~Threadable()
-{}
+= default;
 
 void
 Threadable::run()

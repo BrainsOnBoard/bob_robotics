@@ -8,7 +8,7 @@
 namespace BoBRobotics {
 namespace Robots {
 Ackermann::~Ackermann()
-{}
+= default;
 
 void
 Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)

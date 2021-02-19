@@ -12,7 +12,7 @@ template <typename T>static int sgn(T val) {
 namespace BoBRobotics {
 namespace Robots {
 
-PurePursuitController::PurePursuitController() {}
+PurePursuitController::PurePursuitController() = default;
 
 PurePursuitController::PurePursuitController(millimeter_t lookahead,
                                              millimeter_t wheelBaseLength,

@@ -21,8 +21,7 @@
 
 namespace BoBRobotics {
 SerialInterface::SerialInterface()
-{
-}
+= default;
 
 SerialInterface::SerialInterface(const char *path)
 {

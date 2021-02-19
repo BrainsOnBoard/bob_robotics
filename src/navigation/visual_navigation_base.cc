@@ -33,7 +33,7 @@ VisualNavigationBase::VisualNavigationBase(const cv::Size &unwrapRes)
 }
 
 VisualNavigationBase::~VisualNavigationBase()
-{}
+= default;
 
 //------------------------------------------------------------------------
 // Public API
