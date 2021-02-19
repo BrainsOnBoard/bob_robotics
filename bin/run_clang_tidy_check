@@ -15,7 +15,7 @@ INCLUDE_CHECKS = (
     'clang-analyzer-*',
     'concurrency-*',
     'misc-*',
-    # 'modernize-*',
+    'modernize-*',
     'openmp-*',
     'performance-*',
 )
@@ -29,10 +29,10 @@ EXCLUDE_CHECKS = (
     'bugprone-narrowing-conversions',
     'clang-analyzer-webkit*',
     'misc-non-private-member-variables-in-classes',
-    # 'modernize-avoid-c-arrays',
-    # 'modernize-use-auto',
-    # 'modernize-use-trailing-return-type',
-    # 'modernize-raw-string-literal',
+    'modernize-avoid-c-arrays',
+    'modernize-use-auto',
+    'modernize-use-trailing-return-type',
+    'modernize-raw-string-literal',
     'openmp-use-default-none',
     'performance-type-promotion-in-math-fn',
 )
