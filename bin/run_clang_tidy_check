@@ -21,7 +21,8 @@ INCLUDE_CHECKS = (
 # Some of these are a bit overzealous...
 EXCLUDE_CHECKS = (
     '*osx.*',
-    'clang-analyzer-webkit*'
+    'clang-analyzer-webkit*',
+    'openmp-use-default-none',
     # 'modernize-avoid-c-arrays',
     # 'modernize-use-auto',
     # 'modernize-use-trailing-return-type',
