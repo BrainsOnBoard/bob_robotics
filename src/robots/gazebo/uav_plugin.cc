@@ -337,8 +337,8 @@ void
 GazeboQuadCopterPlugin::ResetPIDs()
 {
     // Reset velocity PID for rotors
-    for (size_t i = 0; i < m_Rotors.size(); ++i) {
-        m_Rotors[i].m_Cmd = 0;
+    for (auto &rotor : m_Rotors) {
+        rotor.m_Cmd = 0;
     }
 }
 
@@ -348,13 +348,13 @@ GazeboQuadCopterPlugin::ApplyMotorForces(const double _dt)
 {
     MotorMixing(_dt);
     // update velocity PID for rotors and apply force to joint
-    for (size_t i = 0; i < m_Rotors.size(); ++i) {
-        const double velTarget = m_Rotors[i].m_Multiplier *
-                           m_Rotors[i].m_Cmd /
-                           m_Rotors[i].m_RotorVelocitySlowdownSim;
-        const double vel = m_Rotors[i].m_Joint->GetVelocity(0);
+    for (auto &rotor : m_Rotors) {
+        const double velTarget = rotor.m_Multiplier *
+                           rotor.m_Cmd /
+                           rotor.m_RotorVelocitySlowdownSim;
+        const double vel = rotor.m_Joint->GetVelocity(0);
         const double error = vel - velTarget;
-        const double force = m_Rotors[i].m_Pid.Update(error, _dt);
-        m_Rotors[i].m_Joint->SetForce(0, force);
+        const double force = rotor.m_Pid.Update(error, _dt);
+        rotor.m_Joint->SetForce(0, force);
     }
 }

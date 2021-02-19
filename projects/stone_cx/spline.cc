@@ -15,11 +15,11 @@ void band_matrix::resize(int dim, int n_u, int n_l)
     BOB_ASSERT(n_l>=0);
     m_upper.resize(n_u+1);
     m_lower.resize(n_l+1);
-    for(size_t i=0; i<m_upper.size(); i++) {
-        m_upper[i].resize(dim);
+    for(auto &upper : m_upper) {
+        upper.resize(dim);
     }
-    for(size_t i=0; i<m_lower.size(); i++) {
-        m_lower[i].resize(dim);
+    for(auto &lower : m_lower) {
+        lower.resize(dim);
     }
 }
 int band_matrix::dim() const
