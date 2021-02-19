@@ -11,7 +11,7 @@ class DifferentialDrivePlugin : public ModelPlugin
 public:
     /// \brief Constructor
     DifferentialDrivePlugin()
-    = default;
+    {}
 
     /// \brief The load function is called by Gazebo when the plugin is
     /// inserted into simulation

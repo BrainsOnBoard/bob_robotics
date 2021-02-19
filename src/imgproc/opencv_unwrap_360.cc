@@ -24,7 +24,7 @@ using namespace units::literals;
 using namespace units::angle;
 
 OpenCVUnwrap360::OpenCVUnwrap360()
-= default;
+{}
 
 OpenCVUnwrap360::OpenCVUnwrap360(const cv::Size &cameraResolution,
                                  const cv::Size &unwrappedResolution,
