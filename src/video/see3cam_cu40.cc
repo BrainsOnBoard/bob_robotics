@@ -208,7 +208,7 @@ See3CAM_CU40::calculateImageEntropy(const cv::Mat &mask)
 
     // Sum together entropy for each colour channel
     float entropy = 0.0f;
-    for (auto &c : hist) {
+    for (const auto &c : hist) {
         entropy -= std::accumulate(
                 std::begin(c),
                 std::end(c),
