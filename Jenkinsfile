@@ -101,7 +101,7 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             stage("Running clang-tidy (" + env.NODE_NAME + ")") {
                 // Generate unique name for message
-                def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
+                def uniqueMsg = "msg_build_clang_tidy_" + env.NODE_NAME;
                 def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\""
 
                 archive uniqueMsg;
