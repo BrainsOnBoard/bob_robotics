@@ -156,7 +156,7 @@ public:
                 // If we are using InfoMax save the weights now
                 if(m_Config.shouldUseInfoMax()) {
                     InfoMax *infoMax= dynamic_cast<InfoMax*>(m_Memory.get());
-                    infoMax->saveWeights((m_Config.getOutputPath() / "weights.bin").str());
+                    infoMax->saveWeights(m_Config.getOutputPath() / "weights.bin");
                 }
             }
 

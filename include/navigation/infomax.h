@@ -2,11 +2,11 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "plog/Log.h"
 #include "insilico_rotater.h"
 #include "visual_navigation_base.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Eigen
@@ -20,6 +20,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <exception>
 #include <random>
 #include <tuple>
 #include <utility>
@@ -27,6 +28,10 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+class WeightsBlewUpError
+  : std::exception
+{};
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
@@ -43,13 +48,15 @@ public:
       : VisualNavigationBase(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
-    {}
+    {
+        BOB_ASSERT(initialWeights.cols() == unwrapRes.width * unwrapRes.height);
+    }
 
     InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
-      , m_LearningRate(learningRate)
-      , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
-                                    1 + unwrapRes.width * unwrapRes.height))
+      : InfoMax(unwrapRes,
+                generateInitialWeights(unwrapRes.width * unwrapRes.height,
+                                       unwrapRes.width * unwrapRes.height),
+                learningRate)
     {}
 
     //------------------------------------------------------------------------
@@ -70,7 +77,7 @@ public:
     //! Generates new random weights
     virtual void clearMemory() override
     {
-        m_Weights = getInitialWeights(m_Weights.cols(), m_Weights.rows());
+        m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
     }
 
     //------------------------------------------------------------------------
@@ -81,6 +88,42 @@ public:
         return m_Weights;
     }
 
+    static MatrixType generateInitialWeights(const int numInputs,
+                                             const int numHidden,
+                                             const unsigned seed = std::random_device()())
+    {
+        // Note that we transpose this matrix after normalisation
+        MatrixType weights(numInputs, numHidden);
+
+        LOG_INFO << "Seed for weights is: " << seed;
+
+        std::default_random_engine generator(seed);
+        std::normal_distribution<FloatType> distribution;
+        std::generate_n(weights.data(), weights.size(), [&]() { return distribution(generator); });
+
+        LOG_VERBOSE << "Initial weights" << std::endl
+                    << weights;
+
+        // Normalise mean and SD for row so mean == 0 and SD == 1
+        const auto means = weights.rowwise().mean();
+        LOG_VERBOSE << "Means" << std::endl << means;
+
+        weights.colwise() -= means;
+        LOG_VERBOSE << "Weights after subtracting means" << std::endl << weights;
+
+        LOG_VERBOSE << "New means" << std::endl << weights.rowwise().mean();
+
+        const auto sd = matrixSD(weights);
+        LOG_VERBOSE << "SD" << std::endl << sd;
+
+        weights = weights.array().colwise() / sd;
+        LOG_VERBOSE << "Weights after dividing by SD" << std::endl << weights;
+        LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
+
+        return weights.transpose();
+    }
+
+
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
 #endif
@@ -90,7 +133,21 @@ public:
         const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
         const auto sumYU = (m_Y.array() + m_U.array()).matrix();
         const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
+
         m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
+
+        /*
+         * If the learning rate is too high, we may end up with NaNs in our
+         * weight matrix, which will silently muck up subsequent calculations.
+         * I don't *think* this will ever be an issue with a sensibly small
+         * learning rate, but if so, the learning rate could be reduced at this
+         * point instead of just bailing out.
+         *
+         * So if there are any NaNs then throw an error.
+         */
+        if (!(m_Weights.array() == m_Weights.array()).all()) {
+            throw WeightsBlewUpError{};
+        }
     }
 
     void calculateUY(const cv::Mat &image)
@@ -112,44 +169,6 @@ public:
         return std::make_pair<>(m_U, m_Y);
     }
 
-    static MatrixType getInitialWeights(const int numInputs,
-                                        const int numHidden,
-                                        const unsigned seed = std::random_device()())
-    {
-        // Note that we transpose this matrix after normalisation
-        MatrixType weights(numInputs, numHidden);
-
-        LOG_INFO << "Seed for weights is: " << seed;
-
-        std::default_random_engine generator(seed);
-        std::normal_distribution<FloatType> distribution;
-        for (int i = 0; i < numInputs; i++) {
-            for (int j = 0; j < numHidden; j++) {
-                weights(i, j) = distribution(generator);
-            }
-        }
-
-        LOG_VERBOSE << "Initial weights" << std::endl << weights;
-
-        // Normalise mean and SD for row so mean == 0 and SD == 1
-        const auto means = weights.rowwise().mean();
-        LOG_VERBOSE << "Means" << std::endl << means;
-
-        weights.colwise() -= means;
-        LOG_VERBOSE << "Weights after subtracting means" << std::endl << weights;
-
-        LOG_VERBOSE << "New means" << std::endl << weights.rowwise().mean();
-
-        const auto sd = matrixSD(weights);
-        LOG_VERBOSE << "SD" << std::endl << sd;
-
-        weights = weights.array().colwise() / sd;
-        LOG_VERBOSE << "Weights after dividing by SD" << std::endl << weights;
-        LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
-
-        return weights.transpose();
-    }
-
 private:
     size_t m_SnapshotCount = 0;
     FloatType m_LearningRate;
@@ -165,7 +184,7 @@ private:
     template<class T>
     static auto matrixSD(const T &mat)
     {
-        return (mat.array() * mat.array()).rowwise().mean();
+        return (mat.array() * mat.array()).rowwise().mean().sqrt();
     }
 }; // InfoMax
 

@@ -1,9 +1,15 @@
 [submodule "third_party/ev3dev-lang-cpp"]
 	path = third_party/ev3dev-lang-cpp
-	url = ../../alexdewar/ev3dev-lang-cpp.git
+	url = ../../alexdewar/ev3dev-lang-cpp
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = ../../google/googletest
 [submodule "third_party/imgui/include"]
 	path = third_party/imgui/include
-	url = ../../ocornut/imgui.git
+	url = ../../ocornut/imgui
 [submodule "third_party/plog"]
 	path = third_party/plog
-	url = ../../SergiusTheBest/plog.git
+	url = ../../SergiusTheBest/plog
+[submodule "third_party/pybind11"]
+	path = third_party/pybind11
+	url = ../../pybind/pybind11

@@ -12,8 +12,8 @@
 #include <cstring>
 
 // POSIX includes
+#include <cstdlib>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 

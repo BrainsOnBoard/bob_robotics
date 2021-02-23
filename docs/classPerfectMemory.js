@@ -8,6 +8,6 @@ var classPerfectMemory =
     [ "setBestSnapshotIndex", "classPerfectMemory.html#a454b3c545202fc4eb6c25cae611eb277", null ],
     [ "test", "classPerfectMemory.html#aa65dbdf64547c3e4fb63335648047cc5", null ],
     [ "train", "classPerfectMemory.html#a4d873fede6b7624b0cb6f0f86d921d9e", null ],
-    [ "writeCSVHeader", "classPerfectMemory.html#a994dcaec4269b5c7a549fa656a59f5b9", null ],
-    [ "writeCSVLine", "classPerfectMemory.html#aa7891cf4a2b505d0d80304a57761937e", null ]
+    [ "writeCSVHeader", "classPerfectMemory.html#a3e31df8395eab3961e67700efa094229", null ],
+    [ "writeCSVLine", "classPerfectMemory.html#a011988b0c93e2c100fbd63de677a0a5f", null ]
 ];

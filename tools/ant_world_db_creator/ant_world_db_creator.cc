@@ -92,7 +92,7 @@ protected:
                     m_Window.close();
                 }
             }
-            
+
             // Update agent's position
             m_Agent.setPosition(it->x(), it->y(), m_AgentHeight);
             m_Agent.setAttitude(it->yaw(), 0_deg, 0_deg);
@@ -106,7 +106,7 @@ protected:
         }
     }
 
-    void addMetadata(ImageDatabase::Recorder &recorder)
+    void addMetadata(ImageDatabase::Recorder<> &recorder)
     {
         // Record "camera" info
         auto &metadata = recorder.getMetadataWriter();
@@ -209,7 +209,7 @@ int bobMain(int argc, char **argv)
             std::string databaseName = filesystem::path(argv[1]).filename();
 
             // Remove extension
-            const size_t pos = databaseName.find_last_of(".");
+            const size_t pos = databaseName.find_last_of('.');
             if (pos != std::string::npos) {
                 databaseName = databaseName.substr(0, pos);
             }

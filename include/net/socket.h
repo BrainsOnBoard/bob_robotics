@@ -73,7 +73,7 @@ public:
     //! Send a string over the socket.
     void send(const std::string &msg);
 
-    Socket(Socket &&old);
+    Socket(Socket &&old) noexcept;
 
 private:
     socket_t m_Handle;

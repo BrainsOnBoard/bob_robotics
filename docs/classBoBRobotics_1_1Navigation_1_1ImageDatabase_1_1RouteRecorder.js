@@ -1,5 +1,5 @@
 var classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder =
 [
-    [ "RouteRecorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html#a8b80c2d1b2512678ba68d7263076d2f6", null ],
-    [ "record", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html#a1956884543fb5ab5ec282f758a03b5b5", null ]
+    [ "RouteRecorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html#af3ed89d8de6e3fdab9d73a99cc9be7d9", null ],
+    [ "record", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1RouteRecorder.html#a3d38bc1e9bd73852b5c62efbbb4b0627", null ]
 ];

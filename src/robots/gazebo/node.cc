@@ -11,7 +11,7 @@ gazebo::transport::NodePtr
 getNode()
 {
     // Load gazebo as a client
-    gazebo::client::setup(0, 0);
+    gazebo::client::setup(0, nullptr);
 
     // Create our node for publishing joystick values
     gazebo::transport::NodePtr node(new gazebo::transport::Node());
