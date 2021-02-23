@@ -103,10 +103,10 @@ void receiveEvent(int bytes) {
     // check incoming bytes from master
     uint8_t read_array[2];
     int i = 0;
-    while(Wire.available()) {
+    for(int i = 0; Wire.available() && i < 2; i++) {
         read_array[i] = Wire.read();
-        i++;
     }
+    
     movement[0] = read_array[0]; // throttle value
     movement[1] = read_array[1]; // steering value
     updateMotors = true;
@@ -117,30 +117,26 @@ void sendEvent() {
     uint8_t toSend[2];
     
     if (remoteControlSpeed > MAXCONTROL) {
-      remoteControlSpeed = MAXCONTROL;
+        remoteControlSpeed = MAXCONTROL;
     }
     
     if (remoteControlSpeed < MINCONTROL) {
-      remoteControlSpeed = MINCONTROL;
+        remoteControlSpeed = MINCONTROL;
     }
     
     if (remoteControlSteering > MAXSTEERING) {
-      remoteControlSteering = MAXSTEERING;
+        remoteControlSteering = MAXSTEERING;
     }
     
     if (remoteControlSteering < MINSTEERING) {
-      remoteControlSteering = MINSTEERING;
+        remoteControlSteering = MINSTEERING;
     }
     
     uint8_t mappedSpeed = map(remoteControlSpeed, MINCONTROL, MAXCONTROL, 0, 255);
     uint8_t mappedSteering = map(remoteControlSteering, MINSTEERING, MAXSTEERING, 55, 125);
     
-    
     toSend[0] = mappedSpeed;
     toSend[1] = mappedSteering;
-    
-
-    
     Wire.write(toSend,2);
 }
 
