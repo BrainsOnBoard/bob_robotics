@@ -32,12 +32,12 @@ def runBuild(String name, String nodeLabel) {
             // Generate unique name for message
             def uniqueMsg = "msg_build_" + name + "_" + env.NODE_NAME;
 
-            setBuildStatus("Building " + name, "PENDING");
+            setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "PENDING");
 
             // Build tests and set build status based on return code
             def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
             if(statusCode != 0) {
-                setBuildStatus("Building " + name, "FAILURE");
+                setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "FAILURE");
             }
 
             // Archive output
