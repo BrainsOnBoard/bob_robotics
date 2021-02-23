@@ -104,7 +104,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 dir("tests") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
-                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\"";
+                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
                     def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
                     // Archive output
@@ -126,7 +126,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 stage("Running clang-tidy (" + env.NODE_NAME + ")") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
-                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\""
+                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\""
 
                     archive uniqueMsg;
 
