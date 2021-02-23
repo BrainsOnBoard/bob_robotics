@@ -56,7 +56,7 @@ ObjectDataVelocity::update(uint32_t frameNumber,
 
     // Calculate velocities (m/s)
     const auto oldPosition = getPose().position();
-    calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<millimeter_t>());
+    calculateVelocities(pose.position(), oldPosition, m_Velocity, deltaS, alpha, std::minus<>());
 
     // Calculate angular velocities (rad/s)
     const auto oldAttitude = getPose().attitude();

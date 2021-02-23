@@ -21,7 +21,7 @@ using namespace units::literals;
 // BoBRobotics::Robots::RCCarBot
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
-class RCCarBot
+class RCCarBot final
   : public Ackermann
 {
     using degree_t = units::angle::degree_t;

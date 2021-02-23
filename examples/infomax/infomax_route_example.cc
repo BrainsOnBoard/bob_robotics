@@ -44,9 +44,9 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
         // Test network
         LOGI << "Testing network...";
         Timer<> t{ "Network testing took: " };
-        for (size_t i = 0; i < images.size(); i++) {
+        for (const auto &image : images) {
             // Get heading and convert to vector
-            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(images[i]));
+            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(image));
             double sinx, cosx;
             sincos(heading.value(), &sinx, &cosx);
             u.push_back(cosx);

@@ -55,7 +55,10 @@ GZ_REGISTER_MODEL_PLUGIN(GazeboQuadCopterPlugin)
 /// \return True if the parameter was found in _sdf, false otherwise.
 template <class T>
 void
-getSdfParam(sdf::ElementPtr _sdf, const std::string &_name, T &_param, const T &_defaultValue, const bool &_verbose = false)
+getSdfParam(sdf::ElementPtr _sdf, // NOLINT
+            const std::string &_name,
+            T &_param,
+            const T &_defaultValue, bool _verbose = false)
 {
     if (_sdf->HasElement(_name)) {
         _param = _sdf->GetElement(_name)->Get<T>();
@@ -192,7 +195,10 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     m_Sub = m_Node->Subscribe(topicName, &GazeboQuadCopterPlugin::OnMsg, this);
     std::cerr << "Subsribed to " << topicName << "\n";
     // Listen to the update event. This event is broadcast every simulation iteration.
-    m_UpdateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&GazeboQuadCopterPlugin::OnUpdate, this));
+    const auto onUpdate = [this](const auto &) {
+        OnUpdate();
+    };
+    m_UpdateConnection = event::Events::ConnectWorldUpdateBegin(onUpdate);
     std::cout << "GazeboQuadCopter ready to fly. The force will be with you" << std::endl;
 
     // Altitude hold PID Controller
@@ -334,8 +340,8 @@ void
 GazeboQuadCopterPlugin::ResetPIDs()
 {
     // Reset velocity PID for rotors
-    for (size_t i = 0; i < m_Rotors.size(); ++i) {
-        m_Rotors[i].m_Cmd = 0;
+    for (auto &rotor : m_Rotors) {
+        rotor.m_Cmd = 0;
     }
 }
 
@@ -345,13 +351,13 @@ GazeboQuadCopterPlugin::ApplyMotorForces(const double _dt)
 {
     MotorMixing(_dt);
     // update velocity PID for rotors and apply force to joint
-    for (size_t i = 0; i < m_Rotors.size(); ++i) {
-        const double velTarget = m_Rotors[i].m_Multiplier *
-                           m_Rotors[i].m_Cmd /
-                           m_Rotors[i].m_RotorVelocitySlowdownSim;
-        const double vel = m_Rotors[i].m_Joint->GetVelocity(0);
+    for (auto &rotor : m_Rotors) {
+        const double velTarget = rotor.m_Multiplier *
+                           rotor.m_Cmd /
+                           rotor.m_RotorVelocitySlowdownSim;
+        const double vel = rotor.m_Joint->GetVelocity(0);
         const double error = vel - velTarget;
-        const double force = m_Rotors[i].m_Pid.Update(error, _dt);
-        m_Rotors[i].m_Joint->SetForce(0, force);
+        const double force = rotor.m_Pid.Update(error, _dt);
+        rotor.m_Joint->SetForce(0, force);
     }
 }
