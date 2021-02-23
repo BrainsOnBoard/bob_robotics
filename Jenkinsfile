@@ -129,7 +129,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 archive uniqueMsg;
 
                 if(runClangTidyStatus == 0) {
-                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_*_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME)
+                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME)
                 } else {
                     setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
                 }
