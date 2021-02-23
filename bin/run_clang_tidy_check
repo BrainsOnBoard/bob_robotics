@@ -14,6 +14,7 @@
 # fixes at present (though most of the modernize-* checks seem to work).
 
 import collections
+import glob
 import itertools
 import json
 import logging
@@ -94,26 +95,19 @@ if __name__ == '__main__':
     all_json = []
     all_files = set()
     exclude_path = os.path.join(os.getcwd(), 'third_party')
-    for root, _, files in os.walk('.'):
-        # Trim initial ./
-        root = root[2:]
 
-        # Don't load the compile_commands.json file from this folder -- that's the output!
-        if root == '':
+    for filepath in glob.glob('**/compile_commands.json', recursive=True):
+        # If it's in the root folder then it's our output file...
+        if filepath == 'compile_commands.json':
             continue
 
-        # Skip hidden folders
-        if any(name != '' and name[0] == '.' for name in root.split('/')):
-            continue
-
-        if any(f == 'compile_commands.json' for f in files):
-            print('Found compile_commands.json in ' + root)
-            with open(os.path.join(root, 'compile_commands.json'), 'r') as file:
-                for cmd in json.load(file):
-                    # Don't add duplicate files
-                    if not cmd['file'].startswith(exclude_path) and not cmd['file'] in all_files:
-                        all_json.append(cmd)
-                        all_files.add(cmd['file'])
+        print('Found ' + filepath)
+        with open(filepath, 'r') as file:
+            for cmd in json.load(file):
+                # Don't add duplicate files
+                if not cmd['file'].startswith(exclude_path) and not cmd['file'] in all_files:
+                    all_json.append(cmd)
+                all_files.add(cmd['file'])
 
     # Check we found at least one compile_commands.json
     assert len(all_json) > 0
