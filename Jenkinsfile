@@ -32,12 +32,12 @@ def runBuild(String name, String nodeLabel) {
             // Generate unique name for message
             def uniqueMsg = "msg_build_" + name + "_" + env.NODE_NAME;
 
-            setBuildStatus("Building " + name, "PENDING");
+            setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "PENDING");
 
             // Build tests and set build status based on return code
             def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
             if(statusCode != 0) {
-                setBuildStatus("Building " + name, "FAILURE");
+                setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "FAILURE");
             }
 
             // Archive output
@@ -97,14 +97,14 @@ for(b = 0; b < builderNodes.size(); b++) {
             runBuild("tests", nodeLabel);
 
             // Parse test output for GCC warnings
-            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME)
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
                 dir("tests") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
-                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\"";
+                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
                     def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
                     // Archive output
@@ -122,15 +122,15 @@ for(b = 0; b < builderNodes.size(); b++) {
             }
 
             // Only run on nodes which actually have clang-tidy installed
-            if("clang_tidy" in nodeLabel) {
+            if(nodeLabel.contains("clang_tidy")) {
                 stage("Running clang-tidy (" + env.NODE_NAME + ")") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
-                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\""
+                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\""
 
                     archive uniqueMsg;
 
-                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME)
+                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
                     if(runClangTidyStatus != 0) {
                         setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
                     }
