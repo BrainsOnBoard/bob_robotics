@@ -38,13 +38,6 @@ using namespace BoBRobotics::Video;
 using namespace std::literals;
 
 
-#define WIDTH 192
-#define HEIGHT 72
-
-#define IS_UNWRAP true
-
-
-
 void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
                         cv::Mat &img,
                         std::atomic<bool> &shouldQuit,
@@ -61,10 +54,7 @@ void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
 int bobMain(int argc, char* argv[])
 {
     constexpr auto UPDATE_INTERVAL = 100ms;
-
     using degree_t = units::angle::degree_t;
-    std::vector<cv::Mat> images;
-    std::vector<std::string> fileNames;
 
     // setting up
     const char *path_linux = "/dev/ttyACM1"; // path for linux systems
@@ -134,11 +124,10 @@ int bobMain(int argc, char* argv[])
     LOGD << "camera initialised " << cameraRes;
 
 
-    cv::Mat imgOrig;
+
     //--------------------------------->>>>>>>>>>> START RECORDING <<<<<<<<<<<<----------------------------
     // start camera thread
-    cv::Mat tmpImage, unwrappedImage, resized;
-    cv::Mat outputImage(cv::Size(WIDTH,HEIGHT), CV_8UC3);
+    cv::Mat tmpImage;
     std::thread readCameraThread(&readCameraThreadFunc, cam.get(), std::ref(tmpImage), std::ref(shouldQuit), std::ref(mex));
     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
     BoBRobotics::BackgroundExceptionCatcher catcher;
