@@ -318,7 +318,7 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bo
 
     #pragma omp parallel
     {
-        if (size.empty()) {
+        if (size == cv::Size{}) {
             #pragma omp for
             for (size_t i = 0; i < m_Entries.size(); i++) {
                 images[i + oldSize] = m_Entries[i].load(greyscale);
