@@ -97,7 +97,7 @@ for(b = 0; b < builderNodes.size(); b++) {
             runBuild("tests", nodeLabel);
 
             // Parse test output for GCC warnings
-            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME)
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
@@ -130,7 +130,7 @@ for(b = 0; b < builderNodes.size(); b++) {
 
                     archive uniqueMsg;
 
-                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME)
+                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
                     if(runClangTidyStatus != 0) {
                         setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
                     }
