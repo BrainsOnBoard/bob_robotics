@@ -20,6 +20,7 @@
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
 
+#include <unistd.h>
 #include <sys/stat.h>
 #include <ctime>
 
@@ -247,6 +248,9 @@ int bobMain(int argc, char* argv[])
 
         i++;
     }
+
+    // Make sure that written data is actually written to disk before we exit
+    ::sync();
+
     return EXIT_SUCCESS;
 }
-
