@@ -152,7 +152,6 @@ class NMEAParser {
         arcminute_t         latitudeMinutes, longitudeMinutes;
         char                latDirection, longDirection;
         meter_t             altitude;
-        meters_per_second_t velocity;
         double              horizontalDilution;
         int                 numberOfSatellites;
         int                 gpsQualityIndicator;
