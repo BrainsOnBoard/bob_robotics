@@ -209,7 +209,7 @@ int bobMain(int argc, char **argv)
             std::string databaseName = filesystem::path(argv[1]).filename();
 
             // Remove extension
-            const size_t pos = databaseName.find_last_of(".");
+            const size_t pos = databaseName.find_last_of('.');
             if (pos != std::string::npos) {
                 databaseName = databaseName.substr(0, pos);
             }

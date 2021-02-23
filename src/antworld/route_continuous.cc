@@ -196,9 +196,9 @@ std::tuple<meter_t, meter_t> RouteContinuous::getDistanceToRoute(const Vector2<m
 {
     // Loop through segments
     meter_t minimumDistance = std::numeric_limits<meter_t>::max();
-    size_t nearestWaypoint;
-    for(unsigned int s = 0; s < m_Waypoints.size(); s++)
-    {
+    size_t nearestWaypoint = std::numeric_limits<size_t>::max();
+
+    for (unsigned int s = 0; s < m_Waypoints.size(); s++) {
         const meter_t distanceToWaypoint = distance(m_Waypoints[s], position.x(), position.y());
 
         // If this is closer than current minimum, update minimum and nearest waypoint
@@ -209,7 +209,7 @@ std::tuple<meter_t, meter_t> RouteContinuous::getDistanceToRoute(const Vector2<m
     }
 
     // Return the minimum distance to the path and the segment in which this occured
-    return std::make_tuple(minimumDistance, m_CumulativeDistance[nearestWaypoint]);
+    return std::make_tuple(minimumDistance, m_CumulativeDistance.at(nearestWaypoint));
 }
 //----------------------------------------------------------------------------
 Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
