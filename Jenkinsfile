@@ -121,8 +121,8 @@ for(b = 0; b < builderNodes.size(); b++) {
                 junit '**/*_test_results.xml'
             }
 
-            // Jamie's machine doesn't have clang-tidy installed, but we probably don't need to run this on multiple machines anyhow...
-            if(env.NODE_NAME == "INF900802") {
+            // Only run on nodes which actually have clang-tidy installed
+            if("clang_tidy" in nodeLabel) {
                 stage("Running clang-tidy (" + env.NODE_NAME + ")") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
