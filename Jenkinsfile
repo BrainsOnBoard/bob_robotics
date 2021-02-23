@@ -121,19 +121,21 @@ for(b = 0; b < builderNodes.size(); b++) {
                 junit '**/*_test_results.xml'
             }
 
-            stage("Running clang-tidy (" + env.NODE_NAME + ")") {
-                // Generate unique name for message
-                def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
-                def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\""
+            // Jamie's machine doesn't have clang-tidy installed, but we probably don't need to run this on multiple machines anyhow...
+            if(env.NODE_NAME == "INF900802") {
+                stage("Running clang-tidy (" + env.NODE_NAME + ")") {
+                    // Generate unique name for message
+                    def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
+                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1>> \"" + uniqueMsg + "\" 2>> \"" + uniqueMsg + "\""
 
-                archive uniqueMsg;
+                    archive uniqueMsg;
 
-                recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME)
-                if(runClangTidyStatus != 0) {
-                    setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
+                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME)
+                    if(runClangTidyStatus != 0) {
+                        setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
+                    }
                 }
             }
-
         }
     }
 }
