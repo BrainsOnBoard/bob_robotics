@@ -122,7 +122,7 @@ for(b = 0; b < builderNodes.size(); b++) {
             }
 
             // Only run on nodes which actually have clang-tidy installed
-            if("clang_tidy" in nodeLabel) {
+            if(nodeLabel.contains("clang_tidy")) {
                 stage("Running clang-tidy (" + env.NODE_NAME + ")") {
                     // Generate unique name for message
                     def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
