@@ -16,10 +16,11 @@
 #include "common/map_coordinate.h"
 #include "common/bn055_imu.h"
 #include "robots/rc_car_bot.h"
+#include "video/opencvinput.h"
+#include "third_party/UTM.h"
 
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
-
 #include <unistd.h>
 #include <sys/stat.h>
 #include <ctime>
@@ -54,7 +55,7 @@ void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
 
 int bobMain(int argc, char* argv[])
 {
-    constexpr auto UPDATE_INTERVAL = 100ms;
+    constexpr auto UPDATE_INTERVAL = 15ms;
     using degree_t = units::angle::degree_t;
 
     // setting up
@@ -112,7 +113,7 @@ int bobMain(int argc, char* argv[])
 
     if (numTrials == 0) {
         LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
-        return EXIT_FAILURE;
+      //  return EXIT_FAILURE;
     }
     std::stringstream ss;
     ss << "imgdataset_"  << str << "_" << gps_hour << "-" << gps_minute << "-" << gps_second;
@@ -120,11 +121,10 @@ int bobMain(int argc, char* argv[])
     const char *c  = folderName.c_str();
     BOB_ASSERT(mkdir(c, 0777) == 0);
     LOGD << "directory " << c << " created";
-    auto cam = getPanoramicCamera();
+    auto pref_size = cv::Size(1440,1440);
+    auto cam = std::make_unique<OpenCVInput>(cv::CAP_V4L, pref_size, "pixpro_usb");
     const auto cameraRes = cam->getOutputSize();
-    LOGD << "camera initialised " << cameraRes;
-
-
+    LOGI << "camera initialised " << cameraRes;
 
     //--------------------------------->>>>>>>>>>> START RECORDING <<<<<<<<<<<<----------------------------
     // start camera thread
@@ -142,12 +142,22 @@ int bobMain(int argc, char* argv[])
 
     std::ofstream coordinates; // file handle
     std::ostringstream folderString;
-    folderString << folderName << "/coordinates.csv";
-    //  headers:   speed|steering_angle|gpsQuality|latitude|longitude|altitude|roll|pitch|yaw|imagename|timestamp
+    folderString << folderName << "/database_entries.csv";
+
     //write headers  for csv
     coordinates.open (folderString.str(), std::ofstream::trunc);
-    coordinates << "speed" << "," << "steering angle" << "," << "gps quality" << "," << "lat" << "," << "lon" << "," << "altitude"  << "," << "roll" << "," << "pitch" << "," << "yaw"  << ",";
-    coordinates << "image name" << "," << "timestamp" <<"\n";
+    coordinates
+        << "Timestamp [ms]" << ","
+        << "X [mm]" << ","
+        << "Y [mm]" << ","
+        << "Z [mm]" << ","
+        << "Heading [degrees]" << ","
+        << "Pitch [degrees]" << ","
+        << "Roll [degrees]" << ","
+        << "Speed" << ","
+        << "Steering angle [degrees]"  << ","
+        << "Filename" << ","
+        << "GPS quality" <<"\n";
 
     for (;;) {
         // poll from camera thread
@@ -160,10 +170,10 @@ int bobMain(int argc, char* argv[])
         fileString << folderName << "/image" << i << ".jpg";
         std::string fileName = fileString.str();
 
-
         if (!cv::imwrite(fileName, originalImage)) {
             LOGW << "Could not save image file";
         }
+
         // get imu data
         float roll,pitch,yaw;
         try {
@@ -207,28 +217,30 @@ int bobMain(int argc, char* argv[])
                 << " num sats: " << data.numberOfSatellites
                 << " time: " << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000 << std::endl;
 
+
+            // converting to UTM
+            double UTMNorthing,UTMEasting, X, Y;
+            char UTMZone[4];
+            UTM::LLtoUTM(coord.lat.value(),coord.lon.value(),UTMNorthing,UTMEasting,UTMZone);
+            X = UTMEasting;
+            Y = UTMNorthing;
+
             coordinates << std::setprecision(10) << std::fixed
-                << bot_speed << ","
-                <<  turn_ang.to<double>() << ","
-                << gpsQual << ","
-                << coord.lat.value() << ","
-                << coord.lon.value() << ","
-                << data.altitude.value()  << ","
-                << roll << ","
+                << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() << ","
+                << X << ","
+                << Y << ","
+                << data.altitude.value()*1000 << ","
+                << yaw << ","
                 << pitch << ","
-                << yaw  << ","
-                << "image" << i << ".jpg" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
+                << roll << ","
+                << bot_speed << ","
+                << turn_ang.to<double>() << ","
+                << "image" << i << ".jpg" << ","
+                << gpsQual << ","
+                << UTMZone << "\n";
+
             // calculating time to wait if loop was done faster thann update time
             std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
-
-            if ( (static_cast<units::time::second_t>(sw_timestamp.elapsed()).value())>seconds_to_run ) {
-                // if we quit, close file handles, threads etc...
-                coordinates.close();
-                shouldQuit = true;
-                readCameraThread.join();
-                break;
-            }
-
 
         }
         catch(BoBRobotics::GPS::GPSError &e) {
@@ -244,6 +256,16 @@ int bobMain(int argc, char* argv[])
                 << pitch << ","
                 << yaw  << ","
                 << "image" << i << ".jpg" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
+        }
+
+
+
+        if ( (static_cast<units::time::second_t>(sw_timestamp.elapsed()).value())>seconds_to_run ) {
+            // if we quit, close file handles, threads etc...
+            coordinates.close();
+            shouldQuit = true;
+            readCameraThread.join();
+            break;
         }
 
         i++;
