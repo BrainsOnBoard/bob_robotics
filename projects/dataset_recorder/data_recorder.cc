@@ -55,7 +55,7 @@ void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
 
 int bobMain(int argc, char* argv[])
 {
-    constexpr auto UPDATE_INTERVAL = 15ms;
+    constexpr auto UPDATE_INTERVAL = 66ms;
     using degree_t = units::angle::degree_t;
 
     // setting up
@@ -243,19 +243,22 @@ int bobMain(int argc, char* argv[])
             std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
 
         }
+        // if there is a gps error write nan values
         catch(BoBRobotics::GPS::GPSError &e) {
             LOGW << e.what();
             coordinates << std::setprecision(10) << std::fixed
+                << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() << ","
+                << NAN << ","
+                << NAN << ","
+                << NAN << ","
+                << yaw << ","
+                << pitch << ","
+                << roll << ","
                 << bot_speed << ","
                 << turn_ang.to<double>() << ","
+                << "image" << i << ".jpg" << ","
                 << NAN << ","
-                << NAN << ","
-                << NAN << ","
-                << NAN  << ","
-                << roll << ","
-                << pitch << ","
-                << yaw  << ","
-                << "image" << i << ".jpg" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
+                << NAN << "\n";
         }
 
 
