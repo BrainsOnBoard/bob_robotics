@@ -84,7 +84,7 @@ int bobMain(int argc, char* argv[])
     }
 
     // check to see if we get valid coordinates by checking GPS quality
-    int gps_hour,gps_minute,gps_second;
+    int gps_hour=0,gps_minute=0,gps_second=0;
     BoBRobotics::GPS::TimeStamp gps_time;
     bool found = false;
     while (numTrials > 0 && !found) {
@@ -113,7 +113,7 @@ int bobMain(int argc, char* argv[])
 
     if (numTrials == 0) {
         LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
-      //  return EXIT_FAILURE;
+        return EXIT_FAILURE;
     }
     std::stringstream ss;
     ss << "imgdataset_"  << str << "_" << gps_hour << "-" << gps_minute << "-" << gps_second;
