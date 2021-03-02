@@ -94,7 +94,8 @@ def run_clang_tidy(file):
 if __name__ == '__main__':
     all_json = []
     all_files = set()
-    exclude_path = os.path.join(os.getcwd(), 'third_party')
+    cwd = os.getcwd() + '/'
+    exclude_path = os.path.join(cwd, 'third_party')
 
     for filepath in glob.glob('**/compile_commands.json', recursive=True):
         # If it's in the root folder then it's our output file...
@@ -106,8 +107,8 @@ if __name__ == '__main__':
             for cmd in json.load(file):
                 # Don't add duplicate files
                 if not cmd['file'].startswith(exclude_path) and not cmd['file'] in all_files:
+                    all_files.add(cmd['file'])
                     all_json.append(cmd)
-                all_files.add(cmd['file'])
 
     # Check we found at least one compile_commands.json
     assert len(all_json) > 0
@@ -117,6 +118,10 @@ if __name__ == '__main__':
     with open('compile_commands.json', 'w') as file:
         json.dump(all_json, file)
 
+    print('Running clang-tidy on the following files:')
+    for filepath in sorted(filepath.replace(cwd, '') for filepath in all_files):
+        print('\t' + filepath)
+
     # Run clang-tidy in parallel over source files and concatenate output
     with mp.Pool() as pool:
-        pool.map(run_clang_tidy, (obj['file'] for obj in all_json))
+        pool.map(run_clang_tidy, all_files)

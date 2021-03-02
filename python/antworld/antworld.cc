@@ -117,7 +117,7 @@ Agent_read_frame(AgentObject *self, PyObject *)
     const auto size = self->members->agent.getOutputSize();
 
     // Allocate new numpy array
-    const npy_intp dims[3] = { size.height, size.width, 3 };
+    npy_intp dims[3] = { size.height, size.width, 3 };
     auto array = PyArray_SimpleNew(3, dims, NPY_UINT8);
     if (!array)
         return nullptr;
@@ -144,7 +144,7 @@ Agent_read_frame_greyscale(AgentObject *self, PyObject *)
     const auto size = self->members->agent.getOutputSize();
 
     // Allocate new numpy array
-    const npy_intp dims[2] = { size.height, size.width };
+    npy_intp dims[2] = { size.height, size.width };
     auto array = PyArray_SimpleNew(2, dims, NPY_UINT8);
     if (!array)
         return nullptr;
