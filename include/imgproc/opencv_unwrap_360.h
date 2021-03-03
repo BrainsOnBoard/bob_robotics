@@ -88,7 +88,7 @@ write(cv::FileStorage &fs,
 void
 read(const cv::FileNode &node,
      OpenCVUnwrap360 &x,
-     OpenCVUnwrap360 defaultValue = OpenCVUnwrap360());
+     const OpenCVUnwrap360 &defaultValue = OpenCVUnwrap360());
 
 } // ImgProc
 } // BoBRobotics

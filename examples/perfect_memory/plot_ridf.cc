@@ -21,6 +21,7 @@ int bobMain(int, char **)
 
     // Plot RIDF
     std::vector<float> diffVec;
+    diffVec.reserve(differences.cols());
     for (int i = 0; i < differences.cols(); i++) {
         diffVec.push_back(differences(i));
     }

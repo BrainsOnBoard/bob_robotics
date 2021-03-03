@@ -318,7 +318,7 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bo
 
     #pragma omp parallel
     {
-        if (size.empty()) {
+        if (size == cv::Size{}) {
             #pragma omp for
             for (size_t i = 0; i < m_Entries.size(); i++) {
                 images[i + oldSize] = m_Entries[i].load(greyscale);
@@ -417,11 +417,23 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     // Finally, unwrap all images and save to new folder
     cv::Mat unwrapped;
     std::string outPath;
-    #pragma omp parallel for private(unwrapped) private(outPath)
+    size_t imwriteErrors = 0;
+
+#pragma omp parallel for private(unwrapped) private(outPath) shared(imwriteErrors)
     for (size_t i = 0; i < size(); i++) {
         unwrapper.unwrap(m_Entries[i].load(false), unwrapped);
         outPath = (destination / m_Entries[i].path.filename()).str();
-        BOB_ASSERT(cv::imwrite(outPath, unwrapped));
+
+        // We shouldn't raise exceptions in an OpenMP block, so flag up the error this way
+        if (!cv::imwrite(outPath, unwrapped)) {
+            imwriteErrors++;
+        }
+    }
+
+    if (imwriteErrors > 0) {
+        std::stringstream ss;
+        ss << imwriteErrors << "/" << size() << " images could not be saved";
+        throw std::runtime_error(ss.str());
     }
 }
 

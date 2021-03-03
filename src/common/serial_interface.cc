@@ -16,7 +16,7 @@
 #include <cstring>
 
 // Posix includes
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>

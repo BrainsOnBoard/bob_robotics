@@ -5,19 +5,24 @@
 #include <mutex>
 #include <atomic>
 #include <fstream>
+#include <chrono>
 
 // BoB includes
 #include "common/main.h"
 #include "common/stopwatch.h"
 #include "common/background_exception_catcher.h"
 #include "common/gps_reader.h"
+#include "plog/Log.h"
+#include "common/macros.h"
 #include "common/map_coordinate.h"
 #include "common/bn055_imu.h"
 #include "robots/rc_car_bot.h"
+#include "video/opencvinput.h"
+#include "third_party/UTM.h"
 
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
-
+#include <unistd.h>
 #include <sys/stat.h>
 #include <ctime>
 
@@ -28,17 +33,12 @@
 
 // Standard C++ includes
 #include <iostream>
+#include <sstream>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
-
-
-#define WIDTH 192
-#define HEIGHT 72
-
-#define IS_UNWRAP true
-#define UPDATE_INTERVAL 1 // 200
+using namespace std::literals;
 
 
 void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
@@ -47,30 +47,17 @@ void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
                         std::mutex &mutex)
 {
 
-    //auto unwrapper = cam->createUnwrapper(cv::Size(WIDTH,HEIGHT));
-
     while(!shouldQuit) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         std::lock_guard<std::mutex> lock(mutex);
         cam->readFrame(img);
-
-
     }
-
-
-}
-
-void saveThread(cv::Mat img, std::string fileName) {
-
-    cv::imwrite(fileName, img);
 }
 
 int bobMain(int argc, char* argv[])
 {
-
+    constexpr auto UPDATE_INTERVAL = 66ms;
     using degree_t = units::angle::degree_t;
-    std::vector<cv::Mat> images;
-    std::vector<std::string> fileNames;
 
     // setting up
     const char *path_linux = "/dev/ttyACM1"; // path for linux systems
@@ -83,186 +70,214 @@ int bobMain(int argc, char* argv[])
     std::atomic<bool> shouldQuit{false};
     std::mutex mex;
 
-
     time_t rawtime;
     struct tm * timeinfo;
     char buffer[80];
-
     time (&rawtime);
     timeinfo = localtime(&rawtime);
-
-    strftime(buffer,sizeof(buffer),"%d-%m-%Y %H:%M:%S",timeinfo);
+    strftime(buffer,sizeof(buffer),"%d-%m-%Y",timeinfo);
     std::string str(buffer);
 
     int seconds_to_run = 30; // default value
     if (argc > 1) {
         seconds_to_run = stoi(std::string(argv[1]));
-        std::cout << "running for " << seconds_to_run << " seconds" << std::endl;
-
+        LOGD << "running for " << seconds_to_run << " seconds";
     }
 
     // check to see if we get valid coordinates by checking GPS quality
-    while (numTrials > 0) {
+    int gps_hour=0,gps_minute=0,gps_second=0;
+    BoBRobotics::GPS::TimeStamp gps_time;
+    bool found = false;
+    while (numTrials > 0 && !found) {
         try {
             gps.read(data);
             if (data.gpsQuality != GPS::GPSQuality::INVALID) {
-                std::cout << " we have a valid measurement" << std::endl;
-                break;
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                // getting time data to set folder name
+                gps_time =  data.time;
+                gps_hour = gps_time.hour;
+                gps_minute = gps_time.minute;
+                gps_second = gps_time.second;
+                found = true;
+                LOGD << " we have a valid measurement";
+
+            } else {
+                numTrials--;
             }
-        } catch(...) {
-            std::cout << " measuring failed, trying again in 1 second " << "[" << maxTrials - numTrials << "/" << maxTrials << "]" << std::endl;
+
+        } catch(BoBRobotics::GPS::GPSError &e) {
+            LOGW << " measuring failed, trying again in 1 second " << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             numTrials--;
         }
     }
+
     if (numTrials == 0) {
-        std::cout << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program " << std::endl;
-        exit(1);
+        LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
+        return EXIT_FAILURE;
     }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    gps.read(data);
-    auto gps_time = data.time;
-    int gps_hour = gps_time.hour;
-    int gps_minute = gps_time.minute;
-    int gps_second = gps_time.second;
-
-    std::string folderName;
-
-    //std::ostringstream usb_f
-    //usb_folder << "../../../../../media/usb/dataset_images/" << str;
-    //folderName = usb_folder.str();
-
-    folderName = str;
-
-
-
+    std::stringstream ss;
+    ss << "imgdataset_"  << str << "_" << gps_hour << "-" << gps_minute << "-" << gps_second;
+    const auto folderName = ss.str();
     const char *c  = folderName.c_str();
-    mkdir(c, 0777);
-    std::cout << "directory " << c << " created" << std::endl;
-
-    auto cam = getPanoramicCamera();
+    BOB_ASSERT(mkdir(c, 0777) == 0);
+    LOGD << "directory " << c << " created";
+    auto pref_size = cv::Size(1440,1440);
+    auto cam = std::make_unique<OpenCVInput>(cv::CAP_V4L, pref_size, "pixpro_usb");
     const auto cameraRes = cam->getOutputSize();
-    std::cout << "camera initialised" << std::endl;
+    LOGI << "camera initialised " << cameraRes;
 
-    // unwrapper for camera
-   // auto unwrapper = cam->createUnwrapper(cv::Size(WIDTH,HEIGHT));
-
-
-    cv::Mat imgOrig;
     //--------------------------------->>>>>>>>>>> START RECORDING <<<<<<<<<<<<----------------------------
-
-
     // start camera thread
-    cv::Mat tmpImage, unwrappedImage, resized;
-    cv::Mat outputImage(cv::Size(WIDTH,HEIGHT), CV_8UC3);
+    cv::Mat tmpImage;
     std::thread readCameraThread(&readCameraThreadFunc, cam.get(), std::ref(tmpImage), std::ref(shouldQuit), std::ref(mex));
-    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-
-    // create and open file to write gps coordinates
-    std::ofstream coordinates;
-
-    //write headers  for csv
-    std::string csvpath = folderName + "/coordinates.csv";
-    coordinates.open (csvpath, std::ofstream::trunc);
-    coordinates << "speed" << "," << "steering angle" << "," << "gps quality" << "," << "lat" << "," << "lon" << "," << "altitude"  << "," << "roll" << "," << "pitch" << "," << "yaw"  << ",";
-    coordinates << "image name" << "," << "timestamp" <<"\n";
-    coordinates.close();
-
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
     BoBRobotics::BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
 
     int i = 0;
     BoBRobotics::Stopwatch sw, sw_timestamp;
     std::array<degree_t, 3> angles;
-    // for x timestep
+    // for x timestep - starting stopwatch
     sw_timestamp.start();
+
+    std::ofstream coordinates; // file handle
+    std::ostringstream folderString;
+    folderString << folderName << "/database_entries.csv";
+
+    //write headers  for csv
+    coordinates.open (folderString.str(), std::ofstream::trunc);
+    coordinates
+        << "Timestamp [ms]" << ","
+        << "X [mm]" << ","
+        << "Y [mm]" << ","
+        << "Z [mm]" << ","
+        << "Heading [degrees]" << ","
+        << "Pitch [degrees]" << ","
+        << "Roll [degrees]" << ","
+        << "Speed" << ","
+        << "Steering angle [degrees]"  << ","
+        << "Filename" << ","
+        << "GPS quality" <<"\n";
+
     for (;;) {
         // poll from camera thread
-
-
-
+        sw.start();
         cv::Mat originalImage;
         mex.lock();
         tmpImage.copyTo(originalImage);
         mex.unlock();
-
-        std::ostringstream fileString, folderString;
+        std::ostringstream fileString;
         fileString << folderName << "/image" << i << ".jpg";
         std::string fileName = fileString.str();
-        std::thread imwriteThread{ &saveThread, std::move(originalImage), std::move(fileName) };
-        imwriteThread.detach();
 
+        if (!cv::imwrite(fileName, originalImage)) {
+            LOGW << "Could not save image file";
+        }
+
+        // get imu data
+        float roll,pitch,yaw;
+        try {
+            angles = imu.getEulerAngles();
+            yaw = angles[0].value();
+            pitch = angles[1].value();
+            roll = angles[2].value();
+        } catch(std::exception &e) {
+            LOGE << "Could not read from IMU: " << e.what();
+            roll = NAN;
+            pitch = NAN;
+            yaw = NAN;
+        }
+
+        // read speed and steering angle from robot
+        float bot_speed;
+        degree_t turn_ang;
+        try {
+            bot.updateState();
+            bot_speed =  bot.getSpeed();
+            turn_ang = bot.getTurningAngle();
+        } catch(std::exception &e) {
+            // if we can't read speed or angle, we just write nan values
+            LOGE << "Could not read speed and steering angle from robot : " << e.what();
+            bot_speed = NAN;
+            turn_ang = 0_deg;
+        }
         try {
             catcher.check();
-            sw.start();
-            // get imu data
-            angles = imu.getEulerAngles();
-            float yaw = angles[0].value();
-            float pitch = angles[1].value();
-            float roll = angles[2].value();
 
             // get gps data
             gps.read(data);
             BoBRobotics::MapCoordinate::GPSCoordinate coord = data.coordinate;
-            BoBRobotics::GPS::TimeStamp time = data.time;
             int gpsQual = (int) data.gpsQuality; // gps quality
 
             // output results
-    	   // if (i%5 == 0) { // only output once ever sec
-            std::cout << std::setprecision(10) << "GPS quality: " << gpsQual << " latitude: " << coord.lat.value()<< " longitude: " <<  coord.lon.value()  << " num sats: " << data.numberOfSatellites << " time: " << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000 << std::endl;
+            LOGD << std::setprecision(10)
+                << "GPS quality: " << gpsQual
+                << " latitude: " << coord.lat.value()
+                << " longitude: " <<  coord.lon.value()
+                << " num sats: " << data.numberOfSatellites
+                << " time: " << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000 << std::endl;
 
 
-	        folderString << folderName << "/coordinates.csv";
+            // converting to UTM
+            double UTMNorthing,UTMEasting, X, Y;
+            char UTMZone[4];
+            UTM::LLtoUTM(coord.lat.value(),coord.lon.value(),UTMNorthing,UTMEasting,UTMZone);
+            X = UTMEasting;
+            Y = UTMNorthing;
 
+            coordinates << std::setprecision(10) << std::fixed
+                << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() << ","
+                << X << ","
+                << Y << ","
+                << data.altitude.value()*1000 << ","
+                << yaw << ","
+                << pitch << ","
+                << roll << ","
+                << bot_speed << ","
+                << turn_ang.to<double>() << ","
+                << "image" << i << ".jpg" << ","
+                << gpsQual << ","
+                << UTMZone << "\n";
 
-            bot.updateState();
-            auto bot_speed = bot.getSpeed();
-            auto turn_ang = bot.getTurningAngle();
-
-            //  headers:   speed|steering_angle|gpsQuality|latitude|longitude|altitude|roll|pitch|yaw|imagename|timestamp
-            coordinates.open (folderString.str(), std::ofstream::app); // open coordinates.csv file and append
-            coordinates << std::setprecision(10) << std::fixed << bot_speed << "," <<  turn_ang.to<double>() << "," << gpsQual << "," << coord.lat.value() << "," << coord.lon.value() << "," << data.altitude.value()  << "," << roll << "," << pitch << "," << yaw  << ",";
-            coordinates << "image" << i << ".jpg" << "," << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() <<"\n";
-            coordinates.close();
-
-
-
-
-
-
-
-            int count = (std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed()).count();
-            //std::cout << " count " << count/1000000 << " " << std::endl;
-            count /= 1000000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(count));
-
-
-
-
-            if ( (static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000)>seconds_to_run ) {
-
-
-                shouldQuit = true;
-                readCameraThread.join();
-
-                break;
-            }
-
+            // calculating time to wait if loop was done faster thann update time
             std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
+
         }
+        // if there is a gps error write nan values
         catch(BoBRobotics::GPS::GPSError &e) {
-            std::cout << e.what() << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
+            LOGW << e.what();
+            coordinates << std::setprecision(10) << std::fixed
+                << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value() << ","
+                << NAN << ","
+                << NAN << ","
+                << NAN << ","
+                << yaw << ","
+                << pitch << ","
+                << roll << ","
+                << bot_speed << ","
+                << turn_ang.to<double>() << ","
+                << "image" << i << ".jpg" << ","
+                << NAN << ","
+                << NAN << "\n";
+        }
+
+
+
+        if ( (static_cast<units::time::second_t>(sw_timestamp.elapsed()).value())>seconds_to_run ) {
+            // if we quit, close file handles, threads etc...
+            coordinates.close();
+            shouldQuit = true;
+            readCameraThread.join();
+            break;
         }
 
         i++;
     }
 
+    // Make sure that written data is actually written to disk before we exit
+    ::sync();
 
-
-    return 0;
-
+    return EXIT_SUCCESS;
 }
-

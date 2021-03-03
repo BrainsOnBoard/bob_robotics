@@ -20,7 +20,7 @@ const int BIG_PX_JUMP = 5;
 
 /* draws a line for the calibration cross */
 inline void
-drawCalibrationLine(cv::Mat &imorig, cv::Point p1, cv::Point p2)
+drawCalibrationLine(cv::Mat &imorig, const cv::Point &p1, const cv::Point &p2)
 {
     cv::line(imorig, p1, p2, cv::Scalar(0x00, 0xff, 0x00), 2);
 }

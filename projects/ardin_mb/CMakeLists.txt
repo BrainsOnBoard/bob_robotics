@@ -14,3 +14,6 @@ else()
                 THIRD_PARTY imgui
                 INCLUDE_GENN_USERPROJECTS)
 endif()
+
+# Suppress warning from inside imgui
+add_compile_flags(-Wno-int-to-pointer-cast)

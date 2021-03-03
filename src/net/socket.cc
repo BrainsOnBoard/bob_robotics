@@ -81,7 +81,7 @@ Socket::send(const std::string &msg)
     LOG_VERBOSE << ">>> " << msg;
 }
 
-Socket::Socket(Socket &&old)
+Socket::Socket(Socket &&old) noexcept
   : m_Handle(old.m_Handle)
 {
     old.m_Handle = INVALID_SOCKET;

@@ -2,11 +2,11 @@
 
 // only keep 100 builds to prevent disk usage from growing out of control
 properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', 
-                              artifactNumToKeepStr: '', 
-                              daysToKeepStr: '', 
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '',
+                              artifactNumToKeepStr: '',
+                              daysToKeepStr: '',
                               numToKeepStr: '100'))])
-                              
+
 //--------------------------------------------------------------------------
 // Helper functions
 //--------------------------------------------------------------------------
@@ -19,6 +19,31 @@ void setBuildStatus(String message, String state) {
         errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
         statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
     ]);
+}
+
+def runBuild(String name, String nodeLabel) {
+    stage("Building " + name + " (" + env.NODE_NAME + ")") {
+        dir(name) {
+            // Delete CMake cache folder
+            dir("build") {
+                deleteDir();
+            }
+
+            // Generate unique name for message
+            def uniqueMsg = "msg_build_" + name + "_" + env.NODE_NAME;
+
+            setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "PENDING");
+
+            // Build tests and set build status based on return code
+            def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+            if(statusCode != 0) {
+                setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "FAILURE");
+            }
+
+            // Archive output
+            archive uniqueMsg;
+        }
+    }
 }
 
 //--------------------------------------------------------------------------
@@ -53,7 +78,7 @@ def builders = [:]
 for(b = 0; b < builderNodes.size(); b++) {
     // **YUCK** meed to bind the label variable before the closure - can't do 'for (label in labels)'
     def nodeName = builderNodes.get(b).get(0)
-    def nodeLabel = builderNodes.get(b).get(1)
+    def nodeLabel = builderNodes.get(b).get(1).toString()
 
     // Create a map to pass in to the 'parallel' step so we can fire all the builds at once
     builders[nodeName] = {
@@ -62,39 +87,52 @@ for(b = 0; b < builderNodes.size(); b++) {
                 checkout scm
             }
 
-            stage("Building examples (" + env.NODE_NAME + ")") {
-                // Run automatic tests
-                if (isUnix()) {
-                    dir("examples") {
-                        // Delete CMake cache folder
-                        dir("build") {
-                            deleteDir();
-                        }
+            stage("Downloading and building GeNN (" + env.NODE_NAME + ")") {
+                sh 'bin/download_and_build_genn.sh'
+            }
 
-                        // Generate unique name for message
-                        def uniqueMsg = "msg_" + env.NODE_NAME;
+            runBuild("examples", nodeLabel);
+            runBuild("projects", nodeLabel);
+            runBuild("tools", nodeLabel);
+            runBuild("tests", nodeLabel);
 
-                        setBuildStatus("Building examples", "PENDING");
+            // Parse test output for GCC warnings
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
 
-                        // Build tests and set build status based on return code
-                        def statusCode = sh script:"./build_all.sh 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
-                        if(statusCode != 0) {
-                            setBuildStatus("Building examples", "FAILURE");
-                        }
+            stage("Running tests (" + env.NODE_NAME + ")") {
+                setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
+                dir("tests") {
+                    // Generate unique name for message
+                    def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
+                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
+                    def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
-                        // Parse test output for GCC warnings
-                        // **NOTE** driving WarningsPublisher from pipeline is entirely undocumented
-                        // this is based mostly on examples here https://github.com/kitconcept/jenkins-pipeline-examples
-                        // **YUCK** fatal errors aren't detected by the 'GNU Make + GNU C Compiler (gcc)' parser
-                        // however JENKINS-18081 fixes this for
-                        // the 'GNU compiler 4 (gcc)' parser at the expense of it not detecting make errors...
-                        def parserName = ("mac" in nodeLabel) ? "Apple LLVM Compiler (Clang)" : "GNU compiler 4 (gcc)";
-                        step([$class: "WarningsPublisher",
-                            parserConfigurations: [[parserName: parserName, pattern: uniqueMsg]],
-                            unstableTotalAll: '0', usePreviousBuildAsReference: true]);
+                    // Archive output
+                    archive uniqueMsg;
 
-                        // Archive output
-                        archive uniqueMsg;
+                    // If tests failed, set failure status
+                    if(runTestsStatus != 0) {
+                        setBuildStatus("Running tests (" + env.NODE_NAME + ")", "FAILURE");
+                    }
+                }
+            }
+
+            stage("Gathering test results (" + env.NODE_NAME + ")") {
+                junit '**/*_test_results.xml'
+            }
+
+            // Only run on nodes which actually have clang-tidy installed
+            if(nodeLabel.contains("clang_tidy")) {
+                stage("Running clang-tidy (" + env.NODE_NAME + ")") {
+                    // Generate unique name for message
+                    def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
+                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\""
+
+                    archive uniqueMsg;
+
+                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
+                    if(runClangTidyStatus != 0) {
+                        setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
                     }
                 }
             }

@@ -1,3 +1,6 @@
+# JUnit-style test results for Jenkins
+*_test_results.xml
+
 # Archive files
 **/*.tar.*
 **/*.zip
@@ -80,7 +83,6 @@ bob_robotics.includes
 x64/
 x86/
 bld/
-[Bb]in/
 [Oo]bj/
 [Ll]og/
 

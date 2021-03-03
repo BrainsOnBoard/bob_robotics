@@ -4,7 +4,7 @@
 #define SLAVE_ADDRESS 0x29
 
 volatile int movement[2];   // holds data about speed and turning
-volatile bool updateMotors; // ture if we got commands from i2c
+volatile bool updateMotors; // true if we got commands from i2c
 int remoteControlSpeed;     // signal from remote control (speed)
 int remoteControlSteering;  // signal from remote control (steering)
 
@@ -35,7 +35,7 @@ void setup() {
     // setup servos
     esc.attach(THROTTLE_CONTROL);      //attach esc to pin
     steering.attach(STEERING_CONTROL); //attach steering to pin
-    
+
     Serial.begin(9600);
 
     // starts i2c connection
@@ -48,7 +48,7 @@ void setup() {
 
 void loop() {
     // if there is incoming command from the remote controller, we block other controls
-    
+
     if (checkRemote()) {
         updateMotors = false;
     }
@@ -75,9 +75,9 @@ bool checkRemote() {
     // read PWM from receiver
     remoteControlSpeed = pulseIn(THROTTLE, HIGH);
     remoteControlSteering = pulseIn(STEERING, HIGH);
-    
-    
-    
+
+
+
     Serial.println("speed " + String(remoteControlSpeed) + " steering " +  String(remoteControlSteering));
 
     // the receiver gives a PWM signal of around 950, when remote controller is not connected
@@ -101,46 +101,45 @@ bool checkRemote() {
 // to update the motor values
 void receiveEvent(int bytes) {
     // check incoming bytes from master
-    uint8_t read_array[2];
-    int i = 0;
-    while(Wire.available()) {
-        read_array[i] = Wire.read();
-        i++;
+    uint8_t read_array[bytes];
+    int read_byte = 0; // number of bytes read
+    for(read_byte = 0; Wire.available() && read_byte < bytes; read_byte++) {
+        read_array[read_byte] = Wire.read();
     }
-    movement[0] = read_array[0]; // throttle value
-    movement[1] = read_array[1]; // steering value
-    updateMotors = true;
+
+    if (read_byte+1==bytes) { // check if we did read all the data
+        movement[0] = read_array[0]; // throttle value
+        movement[1] = read_array[1]; // steering value
+        updateMotors = true;
+    }
+
 }
 
 void sendEvent() {
 
     uint8_t toSend[2];
-    
+
     if (remoteControlSpeed > MAXCONTROL) {
-      remoteControlSpeed = MAXCONTROL;
+        remoteControlSpeed = MAXCONTROL;
     }
-    
+
     if (remoteControlSpeed < MINCONTROL) {
-      remoteControlSpeed = MINCONTROL;
+        remoteControlSpeed = MINCONTROL;
     }
-    
+
     if (remoteControlSteering > MAXSTEERING) {
-      remoteControlSteering = MAXSTEERING;
+        remoteControlSteering = MAXSTEERING;
     }
-    
+
     if (remoteControlSteering < MINSTEERING) {
-      remoteControlSteering = MINSTEERING;
+        remoteControlSteering = MINSTEERING;
     }
-    
+
     uint8_t mappedSpeed = map(remoteControlSpeed, MINCONTROL, MAXCONTROL, 0, 255);
     uint8_t mappedSteering = map(remoteControlSteering, MINSTEERING, MAXSTEERING, 55, 125);
-    
-    
+
     toSend[0] = mappedSpeed;
     toSend[1] = mappedSteering;
-    
-
-    
     Wire.write(toSend,2);
 }
 

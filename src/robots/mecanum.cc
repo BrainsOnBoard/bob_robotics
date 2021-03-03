@@ -55,7 +55,7 @@ Mecanum::omni2D(float forward, float sideways, float turn)
 
     // resolve to motor speeds
     const float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
-    const float m2 = m_AlternativeWiring ? (+sideways + forward + turn) : (+sideways + forward + turn);
+    const float m2 = +sideways + forward + turn;
     const float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
     const float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
 

@@ -33,7 +33,7 @@ void saveMaxQualityJPG(const std::string &filename, const cv::Mat &image)
 }
 
 /* unwrap a JPEG file */
-void unwrapJPEG(const filesystem::path filepath, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapJPEG(const filesystem::path &filepath, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     // read image into memory
     cv::Mat im = cv::imread(filepath.str(), cv::IMREAD_COLOR);
@@ -54,7 +54,7 @@ void unwrapJPEG(const filesystem::path filepath, const cv::Size &unwrappedResolu
 }
 
 /* unwrap an MP4 video */
-void unwrapMP4(const filesystem::path filepath, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4(const filesystem::path &filepath, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     // open video file
     cv::VideoCapture cap(filepath.str());
@@ -126,7 +126,7 @@ void unwrapMP4(const filesystem::path filepath, bool copysound, const cv::Size &
 }
 
 /* unwrap an MP4 video, saving frames to JPG */
-void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4Frames(const filesystem::path &filepath, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     // open video file
     cv::VideoCapture cap(filepath.str());
@@ -142,9 +142,8 @@ void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval
     BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
 
     // Extract title from filename
-    const size_t titlePos = filepath.filename().find_last_of(".");
+    const size_t titlePos = filepath.filename().find_last_of('.');
     const std::string filetitle = filepath.filename().substr(0, titlePos);
-
 
     // Loop through frames
     unsigned int i = 0;

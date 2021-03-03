@@ -214,7 +214,7 @@ write(cv::FileStorage &fs,
 void
 read(const cv::FileNode &node,
      OpenCVUnwrap360 &x,
-     OpenCVUnwrap360 defaultValue)
+     const OpenCVUnwrap360 &defaultValue)
 {
     if (node.empty()) {
         x = defaultValue;
