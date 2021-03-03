@@ -181,9 +181,8 @@ int bobMain(int argc, char* argv[])
             yaw = angles[0].value();
             pitch = angles[1].value();
             roll = angles[2].value();
-        } catch(...) {
-
-            // if we can't read the imu, we just write nan values
+        } catch(std::exception &e) {
+            LOGE << "Could not read from IMU: " << e.what();
             roll = NAN;
             pitch = NAN;
             yaw = NAN;
@@ -196,8 +195,9 @@ int bobMain(int argc, char* argv[])
             bot.updateState();
             bot_speed =  bot.getSpeed();
             turn_ang = bot.getTurningAngle();
-        } catch(...) {
+        } catch(std::exception &e) {
             // if we can't read speed or angle, we just write nan values
+            LOGE << "Could not read speed and steering angle from robot : " << e.what();
             bot_speed = NAN;
             turn_ang = 0_deg;
         }
@@ -210,7 +210,7 @@ int bobMain(int argc, char* argv[])
             int gpsQual = (int) data.gpsQuality; // gps quality
 
             // output results
-            LOGI << std::setprecision(10)
+            LOGD << std::setprecision(10)
                 << "GPS quality: " << gpsQual
                 << " latitude: " << coord.lat.value()
                 << " longitude: " <<  coord.lon.value()
