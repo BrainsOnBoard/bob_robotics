@@ -475,8 +475,9 @@ private:
         }
 
         // Write image entries info to CSV file
-        std::ofstream os(path);
-        BOB_ASSERT(os.good());
+        std::ofstream os;
+        os.exceptions(std::ios::badbit | std::ios::failbit);
+        os.open(path);
         os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename";
         if (!m_IsRoute) {
             os << ", Grid X, Grid Y, Grid Z";
