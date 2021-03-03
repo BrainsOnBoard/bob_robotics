@@ -7,39 +7,39 @@
 #include "map_coordinate.h"
 
 
-namespace BoBRobotics 
+namespace BoBRobotics
 {
-namespace GPS 
+namespace GPS
 {
 
 class Gps {
 
     private:
-    
+
     SerialReader sreader;
     const char *m_device_path;
     bool isConnected;
-    
+
     public:
 
-    Gps() {}
+    Gps() : m_device_path(NULL), isConnected(false) {}
 
     Gps(const char *device_path) : m_device_path(device_path), isConnected(false) {
         connect(device_path);
     }
 
-    void connect(const char *device_path) {     
+    void connect(const char *device_path) {
         sreader.connect(device_path);
         if (!sreader.isConnected()) throw GPSError("device not found");
         m_device_path = device_path;
         isConnected = true;
-       
+
     }
 
     GPSData getGPSData() {
         GPSData data;
         if (!isConnected) throw GPSError("Not connected to the device");
-        data = NMEAParser::parseNMEA(sreader.readData()); 
+        data = NMEAParser::parseNMEA(sreader.readData());
         return data;
     }
 };
