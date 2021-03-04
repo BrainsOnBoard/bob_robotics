@@ -16,7 +16,7 @@
 #include "common/map_coordinate.h"
 #include "common/bn055_imu.h"
 #include "robots/rc_car_bot.h"
-#include "video/opencvinput.h"
+#include "video/panoramic.h"
 #include "third_party/UTM.h"
 
 #include "imgproc/opencv_unwrap_360.h"
@@ -40,19 +40,6 @@ using namespace BoBRobotics::Video;
 using namespace std::literals;
 
 
-void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
-                        cv::Mat &img,
-                        std::atomic<bool> &shouldQuit,
-                        std::mutex &mutex)
-{
-
-    while(!shouldQuit) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::lock_guard<std::mutex> lock(mutex);
-        cam->readFrame(img);
-    }
-}
-
 int bobMain(int argc, char* argv[])
 {
     constexpr auto UPDATE_INTERVAL = 66ms;
@@ -66,8 +53,6 @@ int bobMain(int argc, char* argv[])
     BoBRobotics::BN055 imu;
     const int maxTrials = 3;
     int numTrials = maxTrials;
-    std::atomic<bool> shouldQuit{false};
-    std::mutex mex;
 
     time_t rawtime;
     struct tm * timeinfo;
@@ -121,16 +106,11 @@ int bobMain(int argc, char* argv[])
     const char *c  = folderName.c_str();
     BOB_ASSERT(mkdir(c, 0777) == 0);
     LOGD << "directory " << c << " created";
-    auto pref_size = cv::Size(1440,1440);
-    auto cam = std::make_unique<OpenCVInput>(cv::CAP_V4L, pref_size, "pixpro_usb");
-    const auto cameraRes = cam->getOutputSize();
-    LOGI << "camera initialised " << cameraRes;
+    auto cam = getPanoramicCamera();
+    LOGI << "camera initialised " << cam->getOutputSize();
 
     //--------------------------------->>>>>>>>>>> START RECORDING <<<<<<<<<<<<----------------------------
     // start camera thread
-    cv::Mat tmpImage;
-    std::thread readCameraThread(&readCameraThreadFunc, cam.get(), std::ref(tmpImage), std::ref(shouldQuit), std::ref(mex));
-    std::this_thread::sleep_for(std::chrono::milliseconds(4000));
     BoBRobotics::BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
 
@@ -159,13 +139,13 @@ int bobMain(int argc, char* argv[])
         << "Filename" << ","
         << "GPS quality" <<"\n";
 
+    cv::Mat originalImage;
     for (;;) {
         // poll from camera thread
         sw.start();
-        cv::Mat originalImage;
-        mex.lock();
-        tmpImage.copyTo(originalImage);
-        mex.unlock();
+
+        cam->readFrameSync(originalImage);
+
         std::ostringstream fileString;
         fileString << folderName << "/image" << i << ".jpg";
         std::string fileName = fileString.str();
@@ -266,8 +246,6 @@ int bobMain(int argc, char* argv[])
         if ( (static_cast<units::time::second_t>(sw_timestamp.elapsed()).value())>seconds_to_run ) {
             // if we quit, close file handles, threads etc...
             coordinates.close();
-            shouldQuit = true;
-            readCameraThread.join();
             break;
         }
 
