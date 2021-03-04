@@ -157,7 +157,8 @@ int bobMain(int argc, char* argv[])
         << "Speed" << ","
         << "Steering angle [degrees]"  << ","
         << "Filename" << ","
-        << "GPS quality" <<"\n";
+        << "GPS quality" << ","
+        << "UTM zone" << "\n";
 
     for (;;) {
         // poll from camera thread
