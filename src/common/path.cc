@@ -63,21 +63,21 @@ getResourcesPath()
     return getRepoPath() / "resources";
 }
 
+
 filesystem::path
-getNewPath(const filesystem::path &rootPath, const std::string &extension)
+getNewPath(const std::tm &currentTime, const filesystem::path &rootPath,
+           const std::string &extension)
 {
     // Put a timestamp in the filename
     std::stringstream ss;
-    const auto timer = time(nullptr);
-    const auto currentTime = localtime(&timer);
     ss << std::setfill('0')
-       << std::setw(4) << currentTime->tm_year + 1900
-       << std::setw(2) << currentTime->tm_mon
-       << std::setw(2) << currentTime->tm_mday
+       << std::setw(4) << currentTime.tm_year + 1900
+       << std::setw(2) << currentTime.tm_mon
+       << std::setw(2) << currentTime.tm_mday
        << "_"
-       << std::setw(2) << currentTime->tm_hour
-       << std::setw(2) << currentTime->tm_min
-       << std::setw(2) << currentTime->tm_sec;
+       << std::setw(2) << currentTime.tm_hour
+       << std::setw(2) << currentTime.tm_min
+       << std::setw(2) << currentTime.tm_sec;
     const auto fileNameRoot = (rootPath / ss.str()).str();
     filesystem::path path = fileNameRoot + extension;
     if (!path.exists()) {
@@ -95,6 +95,14 @@ getNewPath(const filesystem::path &rootPath, const std::string &extension)
         ss.str(std::string{}); // clear stringstream
     }
     return path;
+}
+
+filesystem::path
+getNewPath(const filesystem::path &rootPath, const std::string &extension)
+{
+    const auto timer = time(nullptr);
+    const auto currentTime = localtime(&timer);
+    return getNewPath(*currentTime, rootPath, extension);
 }
 } // Path
 } // BoBRobotics
