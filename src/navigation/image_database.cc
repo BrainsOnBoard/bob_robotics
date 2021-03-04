@@ -126,12 +126,7 @@ ImageDatabase::loadCSV()
     std::fill(fieldNameIdx.begin(), fieldNameIdx.end(), -1);
     std::unordered_map<size_t, std::string> extraFieldNames;
     for (size_t i = 0; i < fields.size(); i++) {
-        const auto matchesField = [&fields, i](const char *name) {
-            return strcmp(fields[i].c_str(), name) == 0;
-        };
-        const auto def = std::find_if(defaultFieldNames.begin(),
-                                      defaultFieldNames.end(), matchesField);
-
+        const auto def = std::find(defaultFieldNames.begin(), defaultFieldNames.end(), fields[i]);
         if (def != defaultFieldNames.end()) {
             // If it's a default one, save the column number for later parsing
             fieldNameIdx[std::distance(defaultFieldNames.begin(), def)] = i;
