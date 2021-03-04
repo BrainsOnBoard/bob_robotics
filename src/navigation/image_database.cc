@@ -38,8 +38,9 @@ Range::size() const
 cv::Mat
 ImageDatabase::Entry::load(bool greyscale) const
 {
-    BOB_ASSERT(path.exists());
-    return cv::imread(path.str(), greyscale ? cv::IMREAD_GRAYSCALE : cv::IMREAD_COLOR);
+    auto img = cv::imread(path.str(), greyscale ? cv::IMREAD_GRAYSCALE : cv::IMREAD_COLOR);
+    BOB_ASSERT(!img.empty());
+    return img;
 }
 
 bool
