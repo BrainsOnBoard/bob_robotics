@@ -36,14 +36,16 @@ public:
      */
     virtual std::string getCameraName() const;
 
+    virtual double getFrameRate() const;
+
+    //! Get the current output resolution of this video stream
+    virtual cv::Size getOutputSize() const = 0;
+
     //! Whether this video source needs unwrapping with an ImgProc::OpenCVUnwrap360
     virtual bool needsUnwrapping() const;
 
     //! Set the output resolution of this video stream
     virtual void setOutputSize(const cv::Size &);
-
-    //! Get the current output resolution of this video stream
-    virtual cv::Size getOutputSize() const = 0;
 
     /*!
      * \brief Try to read a frame in colour from this video source

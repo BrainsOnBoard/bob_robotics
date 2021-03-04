@@ -31,6 +31,8 @@ Input::getCameraName() const
     return DefaultCameraName;
 }
 
+BOB_NOT_IMPLEMENTED(double Input::getFrameRate() const)
+
 bool
 Input::readGreyscaleFrame(cv::Mat &outFrame)
 {
