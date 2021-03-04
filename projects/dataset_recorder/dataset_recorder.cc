@@ -1,46 +1,38 @@
-// standard includes
-#include<string>
-#include<vector>
-#include <thread>
-#include <mutex>
-#include <atomic>
-#include <chrono>
-
-// BoB includes
-#include "common/main.h"
-#include "common/stopwatch.h"
+// BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
-#include "common/macros.h"
-#include "common/gps.h"
-#include "common/map_coordinate.h"
 #include "common/bn055_imu.h"
+#include "common/gps.h"
+#include "common/macros.h"
+#include "common/main.h"
+#include "common/map_coordinate.h"
+#include "common/stopwatch.h"
+#include "imgproc/opencv_unwrap_360.h"
 #include "robots/rc_car_bot.h"
 #include "video/panoramic.h"
-#include "third_party/UTM.h"
 
-#include "imgproc/opencv_unwrap_360.h"
-#include "video/panoramic.h"
+// Third-party includes
+#include "plog/Log.h"
+
+// POSIX includes
 #include <unistd.h>
-#include <sys/stat.h>
+
+// Standard C includes
 #include <ctime>
 
-
-
-
-
-
 // Standard C++ includes
+#include <chrono>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <thread>
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace BoBRobotics::Video;
 using namespace std::literals;
 
-
-int bobMain(int argc, char* argv[])
+int
+bobMain(int argc, char *argv[])
 {
     constexpr auto UPDATE_INTERVAL = 66ms;
     using degree_t = units::angle::degree_t;
