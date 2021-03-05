@@ -107,7 +107,7 @@ bobMain(int argc, char *argv[])
     catcher.trapSignals();
 
     int i = 0;
-    BoBRobotics::Stopwatch sw, sw_timestamp;
+    BoBRobotics::Stopwatch sw_timestamp;
     std::array<degree_t, 3> angles;
     // for x timestep - starting stopwatch
     sw_timestamp.start();
@@ -134,8 +134,6 @@ bobMain(int argc, char *argv[])
     cv::Mat originalImage;
     for (;;) {
         // poll from camera thread
-        sw.start();
-
         cam->readFrameSync(originalImage);
 
         std::ostringstream fileString;
@@ -210,10 +208,6 @@ bobMain(int argc, char *argv[])
                 << "image" << i << ".jpg" << ","
                 << gpsQual << ","
                 << UTMZone << "\n";
-
-            // calculating time to wait if loop was done faster thann update time
-            std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_INTERVAL) - sw.elapsed());
-
         }
         // if there is a gps error write nan values
         catch(BoBRobotics::GPS::GPSError &e) {
