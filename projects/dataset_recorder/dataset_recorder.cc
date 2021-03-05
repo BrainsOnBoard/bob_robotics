@@ -49,7 +49,6 @@ bobMain(int argc, char *argv[])
     LOGD << "running for " << runTime;
 
     // check to see if we get valid coordinates by checking GPS quality
-    GPS::TimeStamp gpsTime;
     GPS::GPSData gpsData;
     for (; numTrials > 0; numTrials--) {
         try {
@@ -62,11 +61,7 @@ bobMain(int argc, char *argv[])
         }
 
         if (gpsData.gpsQuality != GPS::GPSQuality::INVALID) {
-            std::this_thread::sleep_for(2s);
-
-            // getting time data to set folder name
-            gpsTime = gps.getGPSData().time;
-            LOGD << " we have a valid measurement";
+            LOGI << " we have a valid measurement";
             break;
         }
     }
@@ -85,9 +80,9 @@ bobMain(int argc, char *argv[])
      * Use GPS to get time, because Jetsons don't remember the system time
      * across boots.
      */
-    currentTime.tm_hour = gpsTime.hour;
-    currentTime.tm_min = gpsTime.minute;
-    currentTime.tm_sec = gpsTime.second;
+    currentTime.tm_hour = gpsData.time.hour;
+    currentTime.tm_min = gpsData.time.minute;
+    currentTime.tm_sec = gpsData.time.second;
 
     // Make a new image database using current time to generate folder name
     Navigation::ImageDatabase database{ currentTime };
@@ -117,7 +112,7 @@ bobMain(int argc, char *argv[])
     for (auto timestamp = 0_ms; timestamp < runTime; timestamp = sw.elapsed()) {
         catcher.check();
 
-        // poll from camera thread
+        // Read image from camera (synchronously)
         cam->readFrameSync(frame);
 
         // get imu data
