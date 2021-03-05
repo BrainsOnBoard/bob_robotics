@@ -28,6 +28,7 @@
 
 using namespace BoBRobotics;
 using namespace std::literals;
+using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
 using namespace units::time;
@@ -35,9 +36,6 @@ using namespace units::time;
 int
 bobMain(int argc, char *argv[])
 {
-    constexpr auto UPDATE_INTERVAL = 66ms;
-    using degree_t = units::angle::degree_t;
-
     // setting up
     const char *path_linux = "/dev/ttyACM1"; // path for linux systems
     Robots::RCCarBot bot;
