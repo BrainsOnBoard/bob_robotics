@@ -189,7 +189,7 @@ public:
             std::stringstream ss;
             ss << std::setfill('0')
                << std::setw(4) << (creationTime.tm_year + 1900) << "-"
-               << std::setw(2) << creationTime.tm_mon << "-"
+               << std::setw(2) << (creationTime.tm_mon + 1) << "-"
                << std::setw(2) << creationTime.tm_mday << " "
                << std::setw(2) << creationTime.tm_hour << ":"
                << std::setw(2) << creationTime.tm_min << ":"

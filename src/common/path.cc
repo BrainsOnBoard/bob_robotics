@@ -72,7 +72,7 @@ getNewPath(const std::tm &currentTime, const filesystem::path &rootPath,
     std::stringstream ss;
     ss << std::setfill('0')
        << std::setw(4) << currentTime.tm_year + 1900
-       << std::setw(2) << currentTime.tm_mon
+       << std::setw(2) << currentTime.tm_mon + 1
        << std::setw(2) << currentTime.tm_mday
        << "_"
        << std::setw(2) << currentTime.tm_hour
