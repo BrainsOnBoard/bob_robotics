@@ -76,6 +76,7 @@ class ImageDatabase
 {
     using degree_t = units::angle::degree_t;
     using millimeter_t = units::length::millimeter_t;
+    using hertz_t = units::frequency::hertz_t;
 
 public:
     //! The metadata for an entry in an ImageDatabase
@@ -485,7 +486,7 @@ public:
 
     //! Start recording a route, saving images into video file
     template<class... Ts>
-    auto getRouteVideoRecorder(const cv::Size &resolution, double fps,
+    auto getRouteVideoRecorder(const cv::Size &resolution, hertz_t fps,
                                Ts&&... extraFieldNames)
     {
         m_Resolution = resolution;
@@ -499,7 +500,7 @@ public:
         return recorder;
     }
 
-    double getFrameRate() const;
+    hertz_t getFrameRate() const;
 
     //! Get the resolution of saved images
     cv::Size getResolution() const;
@@ -578,7 +579,7 @@ private:
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;
     std::tm m_CreationTime;
-    double m_FrameRate = 0.0;
+    hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
     static constexpr const char *EntriesFilename = "database_entries.csv";

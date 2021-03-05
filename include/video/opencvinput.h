@@ -60,7 +60,7 @@ public:
     //------------------------------------------------------------------------
     virtual std::string getCameraName() const override;
     virtual cv::Size getOutputSize() const override;
-    virtual double getFrameRate() const override;
+    virtual units::frequency::hertz_t getFrameRate() const override;
     virtual bool readFrame(cv::Mat &outFrame) override;
     virtual void setOutputSize(const cv::Size &outSize) override;
 

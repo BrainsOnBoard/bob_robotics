@@ -81,7 +81,7 @@ ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database)
     const auto path = database.getPath() / m_FileName;
     BOB_ASSERT(!path.exists()); // Don't overwrite by mistake
     m_Writer.open(path.str(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-                  database.getFrameRate(), database.getResolution());
+                  database.getFrameRate().value(), database.getResolution());
     BOB_ASSERT(m_Writer.isOpened());
 }
 
@@ -424,10 +424,10 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bo
     }
 }
 
-double
+units::frequency::hertz_t
 ImageDatabase::getFrameRate() const
 {
-    BOB_ASSERT(m_FrameRate != 0.0);
+    BOB_ASSERT(m_FrameRate != hertz_t{ 0 });
     return m_FrameRate;
 }
 
