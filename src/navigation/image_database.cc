@@ -399,7 +399,6 @@ ImageDatabase::loadImages(const cv::Size &size, bool greyscale) const
 void
 ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bool greyscale) const
 {
-    Timer<> t{ "Loaded images in: " };
     size_t oldSize = images.size();
     images.resize(oldSize + m_Entries.size());
 
