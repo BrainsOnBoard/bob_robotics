@@ -54,8 +54,9 @@ bobMain(int argc, char *argv[])
     for (; numTrials > 0; numTrials--) {
         try {
             gpsData = gps.getGPSData();
-        } catch(GPS::GPSError &e) {
-            LOGW << " measuring failed, trying again in 1 second " << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
+        } catch (GPS::GPSError &e) {
+            LOGW << " measuring failed, trying again in 1 second "
+                 << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
             std::this_thread::sleep_for(1s);
             continue;
         }
@@ -77,7 +78,7 @@ bobMain(int argc, char *argv[])
 
     // Use the system clock to get date (might be wrong!)
     time_t rawtime;
-    time (&rawtime);
+    time(&rawtime);
     std::tm currentTime = *localtime(&rawtime);
 
     /*
@@ -135,9 +136,9 @@ bobMain(int argc, char *argv[])
         degree_t turnAngle = 0_deg;
         try {
             bot.updateState();
-            botSpeed =  bot.getSpeed();
+            botSpeed = bot.getSpeed();
             turnAngle = bot.getTurningAngle();
-        } catch(std::exception &e) {
+        } catch (std::exception &e) {
             // if we can't read speed or angle, we just write nan values
             LOGE << "Could not read speed and steering angle from robot : " << e.what();
         }
@@ -148,25 +149,24 @@ bobMain(int argc, char *argv[])
 
             // output results
             LOGD << std::setprecision(10)
-                << "GPS quality: " << gpsQual
-                << " latitude: " << coord.lat.value()
-                << " longitude: " << coord.lon.value()
-                << " num sats: " << gpsData.numberOfSatellites
-                << " time: " << static_cast<millisecond_t>(sw.elapsed()).value() / 1000 << std::endl;
+                 << "GPS quality: " << gpsQual
+                 << " latitude: " << coord.lat.value()
+                 << " longitude: " << coord.lon.value()
+                 << " num sats: " << gpsData.numberOfSatellites
+                 << " time: " << timestamp.value() << std::endl;
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
-            recorder.record(utm.toVector(), degree_t{ yaw }, frame,
-                            pitch, roll, botSpeed, turnAngle.value(),
-                            utm.zone, (int) gpsData.gpsQuality,
-                            timestamp.value());
+            recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
+                            botSpeed, turnAngle.value(), utm.zone,
+                            (int) gpsData.gpsQuality, timestamp.value());
         }
         // if there is a gps error write nan values
-        catch(GPS::GPSError &e) {
+        catch (GPS::GPSError &e) {
             LOGW << e.what();
             recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                            frame, pitch, roll, botSpeed, turnAngle.value(),
-                            "", -1, timestamp.value());
+                            frame, pitch, roll, botSpeed, turnAngle.value(), "",
+                            -1, timestamp.value());
         }
     }
 
