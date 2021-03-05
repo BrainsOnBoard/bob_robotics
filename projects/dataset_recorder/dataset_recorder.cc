@@ -108,6 +108,7 @@ bobMain(int argc, char *argv[])
                                                    "Roll [degrees]",
                                                    "Speed",
                                                    "Steering angle [degrees]",
+                                                   "UTM zone",
                                                    "GPS quality",
                                                    "Timestamp [ms]");
 
@@ -159,14 +160,15 @@ bobMain(int argc, char *argv[])
             const auto utm = MapCoordinate::latLonToUTM(coord);
             recorder.record(utm.toVector(), degree_t{ yaw }, frame,
                             pitch, roll, botSpeed, turnAngle.value(),
-                            (int) gpsData.gpsQuality, timestamp.value());
+                            utm.zone, (int) gpsData.gpsQuality,
+                            timestamp.value());
         }
         // if there is a gps error write nan values
         catch(GPS::GPSError &e) {
             LOGW << e.what();
             recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                            frame, pitch, roll, botSpeed, turnAngle.value(), -1,
-                            timestamp.value());
+                            frame, pitch, roll, botSpeed, turnAngle.value(),
+                            "", -1, timestamp.value());
         }
     }
 
