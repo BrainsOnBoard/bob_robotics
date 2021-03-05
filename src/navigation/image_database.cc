@@ -81,7 +81,7 @@ ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database)
     const auto path = database.getPath() / m_FileName;
     BOB_ASSERT(!path.exists()); // Don't overwrite by mistake
     m_Writer.open(path.str(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-                  database.getFrameRate().value(), database.getResolution());
+                  database.getFrameRate(), database.getResolution());
     BOB_ASSERT(m_Writer.isOpened());
 }
 
@@ -132,20 +132,21 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              bool overwrite)
   : m_Path{ std::move(databasePath) }
 {
-    LOGI << "Using image database at " << m_Path;
+    LOGI << "Using image database at " << databasePath;
 
     // If we're making a new database then we need a creation time
-    if (overwrite && m_Path.exists()) {
+    if (overwrite && databasePath.exists()) {
         m_CreationTime = creationTime ? *creationTime : getCurrentTime();
 
         LOG_WARNING << "Database already exists; overwriting";
-        filesystem::remove_all(m_Path);
+        filesystem::remove_all(databasePath);
         BOB_ASSERT(filesystem::create_directory(m_Path));
         return;
     }
 
     // Try to read metadata from YAML file
     memset(&m_CreationTime, 0, sizeof(m_CreationTime));
+    m_CreationTime.tm_isdst = -1;
     loadMetadata();
 
     // Try to read entries from CSV file
@@ -424,10 +425,10 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bo
     }
 }
 
-units::frequency::hertz_t
+double
 ImageDatabase::getFrameRate() const
 {
-    BOB_ASSERT(m_FrameRate != hertz_t{ 0 });
+    BOB_ASSERT(m_FrameRate != 0.0);
     return m_FrameRate;
 }
 
@@ -595,11 +596,8 @@ ImageDatabase::loadMetadata()
         metadata["camera"]["resolution"] >> size;
         m_Resolution = { size[0], size[1] };
 
-        // These will only be set if database was recorded as a video file
+        // This will only be set if database was recorded as a video file
         metadata["video_file"] >> m_VideoFileName;
-        double fps = 0;
-        metadata["frame_rate"] >> fps;
-        m_FrameRate = hertz_t{ fps };
 
         std::string time;
         metadata["time"] >> time;
