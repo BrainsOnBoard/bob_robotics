@@ -132,14 +132,14 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              bool overwrite)
   : m_Path{ std::move(databasePath) }
 {
-    LOGI << "Using image database at " << databasePath;
+    LOGI << "Using image database at " << m_Path;
 
     // If we're making a new database then we need a creation time
-    if (overwrite && databasePath.exists()) {
+    if (overwrite && m_Path.exists()) {
         m_CreationTime = creationTime ? *creationTime : getCurrentTime();
 
         LOG_WARNING << "Database already exists; overwriting";
-        filesystem::remove_all(databasePath);
+        filesystem::remove_all(m_Path);
         BOB_ASSERT(filesystem::create_directory(m_Path));
         return;
     }
