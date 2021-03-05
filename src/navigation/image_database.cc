@@ -132,14 +132,14 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              bool overwrite)
   : m_Path{ std::move(databasePath) }
 {
-    LOGI << "Using image database at " << databasePath;
+    LOGI << "Using image database at " << m_Path;
 
     // If we're making a new database then we need a creation time
-    if (overwrite && databasePath.exists()) {
+    if (overwrite && m_Path.exists()) {
         m_CreationTime = creationTime ? *creationTime : getCurrentTime();
 
         LOG_WARNING << "Database already exists; overwriting";
-        filesystem::remove_all(databasePath);
+        filesystem::remove_all(m_Path);
         BOB_ASSERT(filesystem::create_directory(m_Path));
         return;
     }
@@ -596,13 +596,17 @@ ImageDatabase::loadMetadata()
         metadata["camera"]["resolution"] >> size;
         m_Resolution = { size[0], size[1] };
 
-        // This will only be set if database was recorded as a video file
+        // These will only be set if database was recorded as a video file
         metadata["video_file"] >> m_VideoFileName;
+        double fps = 0;
+        metadata["frame_rate"] >> fps;
+        m_FrameRate = hertz_t{ fps };
 
         std::string time;
         metadata["time"] >> time;
         if (!time.empty()) {
-            std::get_time(&m_CreationTime, "%Y-%m-%d %H:%M:%S");
+            std::istringstream ss{ time };
+            ss >> std::get_time(&m_CreationTime, "%Y-%m-%d %H:%M:%S");
         }
     }
 }
