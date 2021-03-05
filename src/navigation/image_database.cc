@@ -59,6 +59,61 @@ ImageDatabase::Entry::getExtraField(const std::string &name) const
     return pos->second;
 }
 
+void
+ImageDatabase::ImageFileWriter::setImageFormat(std::string format)
+{
+    m_ImageFormat = std::move(format);
+}
+
+void
+ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry)
+{
+    filesystem::path path = getCurrentFilenameRoot() + "." + m_ImageFormat;
+    BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
+    BOB_ASSERT(cv::imwrite(path.str(), frame));
+
+    entry.path = std::move(path);
+}
+
+ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database)
+  : m_FileName{ database.getName() + ".mp4" }
+{
+    const auto path = database.getPath() / m_FileName;
+    BOB_ASSERT(!path.exists()); // Don't overwrite by mistake
+    m_Writer.open(path.str(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
+                  database.getFrameRate(), database.getResolution());
+    BOB_ASSERT(m_Writer.isOpened());
+}
+
+const std::string &
+ImageDatabase::VideoFileWriter::getVideoFileName() const
+{
+    return m_FileName;
+}
+
+void
+ImageDatabase::VideoFileWriter::writeFrame(const cv::Mat &frame, Entry &)
+{
+    m_Writer.write(frame);
+}
+
+std::tm
+getCurrentTime()
+{
+    auto timer = time(nullptr);
+    return *std::localtime(&timer);
+}
+
+ImageDatabase::ImageDatabase()
+  : ImageDatabase{ getCurrentTime() }
+{
+}
+
+ImageDatabase::ImageDatabase(const std::tm &creationTime)
+  : ImageDatabase{ &creationTime, Path::getNewPath(creationTime), false }
+{
+}
+
 ImageDatabase::ImageDatabase(const char *databasePath, bool overwrite)
   : ImageDatabase(filesystem::path(databasePath), overwrite)
 {}
@@ -67,12 +122,22 @@ ImageDatabase::ImageDatabase(const std::string &databasePath, bool overwrite)
   : ImageDatabase(filesystem::path(databasePath), overwrite)
 {}
 
-ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrite)
-  : m_Path(databasePath)
+ImageDatabase::ImageDatabase(filesystem::path databasePath, bool overwrite)
+  : ImageDatabase{ nullptr, std::move(databasePath), overwrite }
+{
+}
+
+ImageDatabase::ImageDatabase(const std::tm *creationTime,
+                             filesystem::path databasePath,
+                             bool overwrite)
+  : m_Path{ std::move(databasePath) }
 {
     LOGI << "Using image database at " << databasePath;
 
+    // If we're making a new database then we need a creation time
     if (overwrite && databasePath.exists()) {
+        m_CreationTime = creationTime ? *creationTime : getCurrentTime();
+
         LOG_WARNING << "Database already exists; overwriting";
         filesystem::remove_all(databasePath);
         BOB_ASSERT(filesystem::create_directory(m_Path));
@@ -80,6 +145,7 @@ ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrit
     }
 
     // Try to read metadata from YAML file
+    memset(&m_CreationTime, 0, sizeof(m_CreationTime));
     loadMetadata();
 
     // Try to read entries from CSV file
@@ -88,7 +154,13 @@ ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrit
         filesystem::create_directory(m_Path);
 
         LOGW << "Could not find CSV file, searching for image files in folder";
-        readDirectoryEntries();
+        if (!readDirectoryEntries()) {
+            /*
+             * Now that we *know* it's an empty database, it makes sense to
+             * assign a creation time.
+             */
+            m_CreationTime = creationTime ? *creationTime : getCurrentTime();
+        }
     }
 }
 
@@ -140,7 +212,15 @@ ImageDatabase::loadCSV()
     const auto validIdx = [](int idx) {
         return idx != -1;
     };
-    BOB_ASSERT(std::all_of(fieldNameIdx.cbegin(), fieldNameIdx.cbegin() + 5, validIdx));
+    BOB_ASSERT(std::all_of(fieldNameIdx.cbegin(), fieldNameIdx.cbegin() + 4, validIdx));
+
+    /*
+     * The Filename column is optional, but only if there is a video file
+     * associated with this database.
+     */
+    if (!validIdx(fieldNameIdx[4])) {
+        BOB_ASSERT(!m_VideoFileName.empty());
+    }
 
     // Assume it's a grid if we have any of the Grid fields...
     if (!hasMetadata()) {
@@ -203,7 +283,7 @@ ImageDatabase::loadCSV()
     return true;
 }
 
-void
+bool
 ImageDatabase::readDirectoryEntries()
 {
     // For reading contents of directory
@@ -238,6 +318,16 @@ ImageDatabase::readDirectoryEntries()
         return ImageDatabase::fileNameCompare(e1.path.filename(), e2.path.filename());
     };
     std::sort(m_Entries.begin(), m_Entries.end(), byName);
+
+    return !m_Entries.empty();
+}
+
+const std::tm &
+ImageDatabase::getCreationTime() const
+{
+    // Check that we actually have a creation time
+    BOB_ASSERT(m_CreationTime.tm_year != 0);
+    return m_CreationTime;
 }
 
 //! Get the path of the directory corresponding to this ImageDatabase
@@ -309,25 +399,37 @@ ImageDatabase::loadImages(const cv::Size &size, bool greyscale) const
 void
 ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bool greyscale) const
 {
+    Timer<> t{ "Loaded images in: " };
     size_t oldSize = images.size();
     images.resize(oldSize + m_Entries.size());
 
-    #pragma omp parallel
-    {
-        if (size == cv::Size{}) {
-            #pragma omp for
-            for (size_t i = 0; i < m_Entries.size(); i++) {
-                images[i + oldSize] = m_Entries[i].load(greyscale);
-            }
-        } else {
-            cv::Mat tmp;
-            #pragma omp for private(tmp)
-            for (size_t i = 0; i < m_Entries.size(); i++) {
-                tmp = m_Entries[i].load(greyscale);
-                cv::resize(tmp, images[i + oldSize], size);
-            }
-        }
+    size_t errors;
+    if (size == cv::Size{}) {
+        errors = forEachImage(
+                [&images, oldSize](size_t i, const cv::Mat &img) {
+                    img.copyTo(images[i + oldSize]);
+                },
+                greyscale);
+    } else {
+        errors = forEachImage(
+                [&images, oldSize, size](size_t i, const cv::Mat &img) {
+                    cv::resize(img, images[i + oldSize], size);
+                },
+                greyscale);
     }
+
+    if (errors > 0) {
+        std::stringstream ss;
+        ss << errors << "/" << m_Entries.size() << " images could not be loaded";
+        throw std::runtime_error(ss.str());
+    }
+}
+
+double
+ImageDatabase::getFrameRate() const
+{
+    BOB_ASSERT(m_FrameRate != 0.0);
+    return m_FrameRate;
 }
 
 //! Access the metadata for this database via OpenCV's persistence API
@@ -349,7 +451,7 @@ ImageDatabase::getName() const
 cv::Size
 ImageDatabase::getResolution() const
 {
-    BOB_ASSERT(hasMetadata());
+    BOB_ASSERT(!m_Resolution.empty());
     return m_Resolution;
 }
 
@@ -414,57 +516,25 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
         }
     }
 
-    // Finally, unwrap all images and save to new folder
-    cv::Mat unwrapped;
-    std::string outPath;
-    size_t imwriteErrors = 0;
+    /*
+     * *If* forEachImage runs in parallel, then each thread will need its own
+     * copy of these scrach variables.
+     */
+    static thread_local cv::Mat unwrapped;
+    static thread_local std::string outPath;
 
-#pragma omp parallel for private(unwrapped) private(outPath) shared(imwriteErrors)
-    for (size_t i = 0; i < size(); i++) {
-        unwrapper.unwrap(m_Entries[i].load(false), unwrapped);
+    // Finally, unwrap all images and save to new folder
+    const auto errors = forEachImage([&](size_t i, const cv::Mat &image) {
+        unwrapper.unwrap(image, unwrapped);
         outPath = (destination / m_Entries[i].path.filename()).str();
 
-        // We shouldn't raise exceptions in an OpenMP block, so flag up the error this way
-        if (!cv::imwrite(outPath, unwrapped)) {
-            imwriteErrors++;
-        }
-    }
-
-    if (imwriteErrors > 0) {
+        BOB_ASSERT(cv::imwrite(outPath, unwrapped));
+    }, /*greyscale=*/false);
+    if (errors) {
         std::stringstream ss;
-        ss << imwriteErrors << "/" << size() << " images could not be saved";
+        ss << errors << "/" << size() << " images could not be unwrapped";
         throw std::runtime_error(ss.str());
     }
-}
-
-//! Get a filename for a route-type database
-std::string
-ImageDatabase::getFilename(const size_t routeIndex,
-                           const std::string &imageFormat)
-{
-    std::ostringstream ss;
-    ss << "image_" << std::setw(5) << std::setfill('0') << routeIndex << "." << imageFormat;
-    return ss.str();
-}
-
-//! Get a filename for a grid-type database
-std::string
-ImageDatabase::getFilename(const Vector3<millimeter_t> &position,
-                           const std::string &imageFormat)
-{
-    // Convert to integers
-    std::array<int, 3> iposition;
-    std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
-        return static_cast<int>(units::math::round(mm));
-    });
-
-    // Make filename
-    std::ostringstream ss;
-    ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
-       << std::setw(7) << iposition[0] << "_"
-       << std::setw(7) << iposition[1] << "_"
-       << std::setw(7) << iposition[2] << "." << imageFormat;
-    return ss.str();
 }
 
 bool
@@ -525,15 +595,16 @@ ImageDatabase::loadMetadata()
         std::vector<int> size(2);
         metadata["camera"]["resolution"] >> size;
         m_Resolution = { size[0], size[1] };
-    }
-}
 
-void
-ImageDatabase::writeImage(const std::string &filename, const cv::Mat &image) const
-{
-    const filesystem::path path = m_Path / filename;
-    BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
-    BOB_ASSERT(cv::imwrite(path.str(), image));
+        // This will only be set if database was recorded as a video file
+        metadata["video_file"] >> m_VideoFileName;
+
+        std::string time;
+        metadata["time"] >> time;
+        if (!time.empty()) {
+            std::get_time(&m_CreationTime, "%Y-%m-%d %H:%M:%S");
+        }
+    }
 }
 } // Navigation
 } // BoB robotics
