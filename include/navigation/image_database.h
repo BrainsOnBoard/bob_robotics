@@ -495,7 +495,8 @@ public:
         RouteRecorder<VideoFileWriter, sizeof...(extraFieldNames)> recorder{
             *this, std::forward<Ts>(extraFieldNames)...
         };
-        recorder.getMetadataWriter() << "video_file" << recorder.getVideoFileName();
+        recorder.getMetadataWriter() << "video_file" << recorder.getVideoFileName()
+                                     << "frame_rate" << m_FrameRate.value();
 
         return recorder;
     }

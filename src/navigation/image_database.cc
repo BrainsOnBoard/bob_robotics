@@ -595,8 +595,11 @@ ImageDatabase::loadMetadata()
         metadata["camera"]["resolution"] >> size;
         m_Resolution = { size[0], size[1] };
 
-        // This will only be set if database was recorded as a video file
+        // These will only be set if database was recorded as a video file
         metadata["video_file"] >> m_VideoFileName;
+        double fps = 0;
+        metadata["frame_rate"] >> fps;
+        m_FrameRate = hertz_t{ fps };
 
         std::string time;
         metadata["time"] >> time;
