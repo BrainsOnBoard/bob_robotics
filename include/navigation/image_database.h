@@ -240,6 +240,12 @@ public:
             setExtraFields(std::forward<Ts>(otherValues)...);
         }
 
+        template<class... Ts>
+        void setExtraFields(const char *value, Ts&&... otherValues)
+        {
+            setExtraFields(std::string{ value }, std::forward<Ts>(otherValues)...);
+        }
+
         template<class T, class... Ts>
         void setExtraFields(T value, Ts&&... otherValues)
         {
