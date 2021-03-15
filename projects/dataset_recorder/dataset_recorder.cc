@@ -109,7 +109,7 @@ bobMain(int argc, char *argv[])
     cv::Mat frame;
     catcher.trapSignals();
     sw.start();
-    for (auto timestamp = 0_ms; timestamp < runTime; timestamp = sw.elapsed()) {
+    for (auto time = 0_ms; time < runTime; time = sw.elapsed()) {
         catcher.check();
 
         // Read image from camera (synchronously)
@@ -148,20 +148,20 @@ bobMain(int argc, char *argv[])
                  << " latitude: " << coord.lat.value()
                  << " longitude: " << coord.lon.value()
                  << " num sats: " << gpsData.numberOfSatellites
-                 << " time: " << timestamp.value() << std::endl;
+                 << " time: " << time.value() << std::endl;
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
             recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
                             botSpeed, turnAngle.value(), utm.zone,
-                            (int) gpsData.gpsQuality, timestamp.value());
+                            (int) gpsData.gpsQuality, time.value());
         }
         // if there is a gps error write nan values
         catch (GPS::GPSError &e) {
             LOGW << e.what();
             recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
                             frame, pitch, roll, botSpeed, turnAngle.value(), "",
-                            -1, timestamp.value());
+                            -1, time.value());
         }
     }
 
