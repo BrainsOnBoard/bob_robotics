@@ -449,10 +449,12 @@ public:
     bool isGrid() const;
 
     //! Load all of the images in this database into memory and return
-    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, bool greyscale = true) const;
+    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, size_t frameSkip = 1,
+                                    bool greyscale = true) const;
 
     //! Load all of the images in this database into the specified std::vector<>
-    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {}, bool greyscale = true) const;
+    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
+                    size_t frameSkip = 1, bool greyscale = true) const;
 
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;
@@ -510,57 +512,63 @@ public:
     bool hasMetadata() const;
 
     template<class Func>
-    size_t forEachImage(const Func &func, bool greyscale = true) const
+    void forEachImage(const Func &func, size_t frameSkip = 1,
+                        bool greyscale = true) const
     {
+        BOB_ASSERT(frameSkip > 0);
+
         if (empty()) {
-            return 0;
+            return;
         }
 
         // If database consists of individual image files...
-        if (m_VideoFileName.empty()) {
-            size_t errors = 0;
+        if (m_VideoFilePath.empty()) {
+            std::exception_ptr eptr;
 
-            /*
-             * You can't have uncaught exceptions eminating from OpenMP blocks,
-             * so we just count the number of errors thrown instead.
-             */
-            #pragma omp parallel for shared(errors)
-            for (size_t i = 0; i < m_Entries.size(); i++) {
+            #pragma omp parallel shared(eptr)
+            #pragma omp for
+            for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
+                /*
+                 * You can't have uncaught exceptions eminating from OpenMP blocks,
+                 * so we catch them and rethrow later.
+                 */
                 try {
-                    func(i, m_Entries[i].load(greyscale));
-                } catch (std::exception &e) {
-                    LOGE << "Error occurred in forEachImage: " << e.what();
-
-                    #pragma omp atomic
-                    errors++;
+                    func(i, m_Entries[i * frameSkip].load(greyscale));
+                } catch (...) {
+                    eptr = std::current_exception();
+                    #pragma omp cancel for
                 }
             }
 
-            return errors;
+            // Check if an error occurred
+            if (eptr) {
+                std::rethrow_exception(eptr);
+            }
+
+            return;
         }
 
         // ...otherwise we have a video file
-        cv::VideoCapture cap{ (m_Path / m_VideoFileName).str() };
+        cv::VideoCapture cap{ m_VideoFilePath.str() };
         BOB_ASSERT(cap.isOpened());
 
         cv::Mat img;
-        for (size_t i = 0; i < m_Entries.size(); i++) {
-            try {
-                BOB_ASSERT(cap.read(img));
-
-                if (greyscale) {
-                    cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
-                }
-
-                func(i, img);
-            } catch (std::exception &e) {
-                LOGE << "Error occurred in forEachImage: " << e.what();
-                return m_Entries.size() - i;
+        for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
+            /*
+             * It is possible to explicitly jump to a given frame with OpenCV,
+             * but that turns out to be reeeeeeeaaaally slow.
+             */
+            for (size_t j = 1; j < frameSkip; j++) {
+                BOB_ASSERT(cap.grab());
             }
-        }
+            BOB_ASSERT(cap.read(img));
 
-        // Signal that all images were processed correctly
-        return 0;
+            if (greyscale) {
+                cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
+            }
+
+            func(i, img);
+        }
     }
 
     /**!
@@ -574,8 +582,8 @@ public:
     static bool fileNameCompare(const std::string &fn1, const std::string &fn2);
 
 private:
-    filesystem::path m_Path;
-    std::string m_VideoFileName;
+    const filesystem::path m_Path;
+    filesystem::path m_VideoFilePath;
     std::vector<Entry> m_Entries;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;
@@ -619,7 +627,7 @@ private:
         os.exceptions(std::ios::badbit | std::ios::failbit);
         os.open(path);
         os << "X [mm], Y [mm], Z [mm], Heading [degrees]";
-        if (m_VideoFileName.empty()) {
+        if (m_VideoFilePath.empty()) {
             os << ", Filename";
         }
         if (!m_IsRoute) {
@@ -636,7 +644,7 @@ private:
                << e.position[2]() << ", " << e.heading();
 
             // ...this is only written if we're not saving as a video
-            if (m_VideoFileName.empty()) {
+            if (m_VideoFilePath.empty()) {
                 os << ", " << e.path.filename();
             }
 

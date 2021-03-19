@@ -132,6 +132,9 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              bool overwrite)
   : m_Path{ std::move(databasePath) }
 {
+    memset(&m_CreationTime, 0, sizeof(m_CreationTime));
+    m_CreationTime.tm_isdst = -1;
+
     LOGI << "Using image database at " << m_Path;
 
     // If we're making a new database then we need a creation time
@@ -144,9 +147,27 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
         return;
     }
 
+    // Allow for loading a standalone video file as an image database
+    if (m_Path.is_file()) {
+        auto ext = m_Path.extension();
+        for (char &c : ext) {
+            c = ::tolower(c);
+        }
+        BOB_ASSERT(ext == "mp4");
+
+        m_VideoFilePath = m_Path;
+
+        // Populate m_Entries with empty entries
+        cv::VideoCapture cap{ m_Path.str() };
+        BOB_ASSERT(cap.isOpened());
+        m_Entries.resize(static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_COUNT)));
+
+        return;
+    } else {
+        BOB_ASSERT(m_Path.is_directory());
+    }
+
     // Try to read metadata from YAML file
-    memset(&m_CreationTime, 0, sizeof(m_CreationTime));
-    m_CreationTime.tm_isdst = -1;
     loadMetadata();
 
     // Try to read entries from CSV file
@@ -220,7 +241,7 @@ ImageDatabase::loadCSV()
      * associated with this database.
      */
     if (!validIdx(fieldNameIdx[4])) {
-        BOB_ASSERT(!m_VideoFileName.empty());
+        BOB_ASSERT(!m_VideoFilePath.empty());
     }
 
     // Assume it's a grid if we have any of the Grid fields...
@@ -389,39 +410,36 @@ ImageDatabase::isGrid() const
 
 //! Load all of the images in this database into memory and return
 std::vector<cv::Mat>
-ImageDatabase::loadImages(const cv::Size &size, bool greyscale) const
+ImageDatabase::loadImages(const cv::Size &size, size_t frameSkip,
+                          bool greyscale) const
 {
     std::vector<cv::Mat> images;
-    loadImages(images, size, greyscale);
+    loadImages(images, size, frameSkip, greyscale);
     return images;
 }
 
 //! Load all of the images in this database into the specified std::vector<>
 void
-ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bool greyscale) const
+ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
+                          size_t frameSkip, bool greyscale) const
 {
     size_t oldSize = images.size();
-    images.resize(oldSize + m_Entries.size());
+    images.resize(oldSize + m_Entries.size() / frameSkip);
 
-    size_t errors;
     if (size == cv::Size{}) {
-        errors = forEachImage(
+        forEachImage(
                 [&images, oldSize](size_t i, const cv::Mat &img) {
                     img.copyTo(images[i + oldSize]);
                 },
+                frameSkip,
                 greyscale);
     } else {
-        errors = forEachImage(
+        forEachImage(
                 [&images, oldSize, size](size_t i, const cv::Mat &img) {
                     cv::resize(img, images[i + oldSize], size);
                 },
+                frameSkip,
                 greyscale);
-    }
-
-    if (errors > 0) {
-        std::stringstream ss;
-        ss << errors << "/" << m_Entries.size() << " images could not be loaded";
-        throw std::runtime_error(ss.str());
     }
 }
 
@@ -524,17 +542,12 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     static thread_local std::string outPath;
 
     // Finally, unwrap all images and save to new folder
-    const auto errors = forEachImage([&](size_t i, const cv::Mat &image) {
+    forEachImage([&](size_t i, const cv::Mat &image) {
         unwrapper.unwrap(image, unwrapped);
         outPath = (destination / m_Entries[i].path.filename()).str();
 
         BOB_ASSERT(cv::imwrite(outPath, unwrapped));
-    }, /*greyscale=*/false);
-    if (errors) {
-        std::stringstream ss;
-        ss << errors << "/" << size() << " images could not be unwrapped";
-        throw std::runtime_error(ss.str());
-    }
+    }, /*frameSkip=*/1, /*greyscale=*/false);
 }
 
 bool
@@ -597,7 +610,12 @@ ImageDatabase::loadMetadata()
         m_Resolution = { size[0], size[1] };
 
         // These will only be set if database was recorded as a video file
-        metadata["video_file"] >> m_VideoFileName;
+        std::string videoFileName;
+        metadata["video_file"] >> videoFileName;
+        if (!videoFileName.empty()) {
+            m_VideoFilePath = m_Path / videoFileName;
+        }
+
         double fps = 0;
         metadata["frame_rate"] >> fps;
         m_FrameRate = hertz_t{ fps };

@@ -19,23 +19,25 @@ using namespace BoBRobotics;
 
 int bobMain(int argc, char **argv)
 {
+    constexpr size_t FrameSkip = 1;
+
     // Check we have one command-line argument
     BOB_ASSERT(argc == 2);
 
     // Load database metadata
-    Navigation::ImageDatabase database(argv[1]);
+    const Navigation::ImageDatabase database(argv[1]);
     BOB_ASSERT(!database.empty());
 
     // Load images
     std::cout << "Loading images..." << std::endl;
-    const auto images = database.loadImages({}, false);
+    const auto images = database.loadImages({}, FrameSkip, false);
 
     // Iterate through images with arrow keys
     cv::namedWindow(argv[0]);
-    for (size_t i = 0; i < database.size();) {
+    for (size_t i = 0; i < images.size();) {
         std::stringstream ssTitle, ssNumber;
-        const auto pos = database[i].position;
-        ssTitle << database.getName() << " [" << i << "/" << database.size() << "]"
+        const auto pos = database[i * FrameSkip].position;
+        ssTitle << database.getName() << " [" << i << "/" << images.size() << "]"
                 << " (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")";
         cv::imshow(argv[0], images[i]);
         cv::setWindowTitle(argv[0], ssTitle.str());
@@ -66,7 +68,7 @@ int bobMain(int argc, char **argv)
             case OS::KeyCodes::Escape:
                 return EXIT_SUCCESS;
             case OS::KeyCodes::Right:
-                if (newi < database.size() - 1) {
+                if (newi < images.size() - 1) {
                     newi++;
                 }
                 break;
@@ -77,7 +79,7 @@ int bobMain(int argc, char **argv)
                 break;
             case 'g':
                 if (!ssNumber.str().empty()) {
-                    newi = std::min(std::stoul(ssNumber.str()), database.size() - 1);
+                    newi = std::min(std::stoul(ssNumber.str()), images.size() - 1);
                 }
                 break;
             }
