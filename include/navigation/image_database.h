@@ -582,8 +582,7 @@ public:
     static bool fileNameCompare(const std::string &fn1, const std::string &fn2);
 
 private:
-    const filesystem::path m_Path;
-    filesystem::path m_VideoFilePath;
+    filesystem::path m_Path, m_VideoFilePath;
     std::vector<Entry> m_Entries;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;

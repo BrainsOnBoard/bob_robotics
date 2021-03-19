@@ -156,13 +156,12 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
         BOB_ASSERT(ext == "mp4");
 
         m_VideoFilePath = m_Path;
+        m_Path = m_Path.parent_path();
 
         // Populate m_Entries with empty entries
-        cv::VideoCapture cap{ m_Path.str() };
+        cv::VideoCapture cap{ m_VideoFilePath.str() };
         BOB_ASSERT(cap.isOpened());
         m_Entries.resize(static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_COUNT)));
-
-        return;
     } else {
         BOB_ASSERT(m_Path.is_directory());
     }
@@ -172,11 +171,11 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
 
     // Try to read entries from CSV file
     if (!loadCSV()) {
-        // Make sure we have a directory to save into
-        filesystem::create_directory(m_Path);
+        LOGW << "Could not find CSV file";
+        if (m_VideoFilePath.empty() && !readDirectoryEntries()) {
+            // Make sure we have a directory to save into
+            filesystem::create_directory(m_Path);
 
-        LOGW << "Could not find CSV file, searching for image files in folder";
-        if (!readDirectoryEntries()) {
             /*
              * Now that we *know* it's an empty database, it makes sense to
              * assign a creation time.
@@ -308,6 +307,10 @@ ImageDatabase::loadCSV()
 bool
 ImageDatabase::readDirectoryEntries()
 {
+    if (!m_Path.exists()) {
+        return false;
+    }
+
     // For reading contents of directory
     tinydir_dir dir;
     memset(&dir, 0, sizeof(dir));
