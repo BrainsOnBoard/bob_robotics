@@ -327,7 +327,7 @@ ImageDatabase::loadCSV()
         }
     }
 
-    // Sanity check the file: we need the first five columns
+    // Sanity check the file: we need the first four columns
     const auto validIdx = [](int idx) {
         return idx != -1;
     };
