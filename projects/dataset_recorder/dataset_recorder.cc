@@ -98,13 +98,13 @@ bobMain(int argc, char *argv[])
 
     auto recorder = database.getRouteVideoRecorder(cam->getOutputSize(),
                                                    cam->getFrameRate(),
-                                                   "Pitch [degrees]",
-                                                   "Roll [degrees]",
-                                                   "Speed",
-                                                   "Steering angle [degrees]",
-                                                   "UTM zone",
-                                                   "GPS quality",
-                                                   "Timestamp [ms]");
+                                                   { "Pitch [degrees]",
+                                                     "Roll [degrees]",
+                                                     "Speed",
+                                                     "Steering angle [degrees]",
+                                                     "UTM zone",
+                                                     "GPS quality",
+                                                     "Timestamp [ms]" });
 
     cv::Mat frame;
     catcher.trapSignals();

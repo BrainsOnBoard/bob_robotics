@@ -123,7 +123,7 @@ public:
     };
 
     //! Base class for GridRecorder and RouteRecorder
-    template<class FrameWriterType, size_t NumExtraFields = 0>
+    template<class FrameWriterType>
     class Recorder
       : public FrameWriterType
     {
@@ -163,7 +163,7 @@ public:
         size_t size() const { return m_NewEntries.size(); }
 
     private:
-        const std::array<std::string, NumExtraFields> m_ExtraFieldNames;
+        const std::vector<std::string> m_ExtraFieldNames;
         ImageDatabase &m_ImageDatabase;
         bool m_Recording;
         std::vector<Entry> m_NewEntries;
@@ -174,9 +174,9 @@ public:
         template<class... Ts>
         Recorder(ImageDatabase &imageDatabase,
                  const bool isRoute,
-                 Ts &&... extraFieldNames)
+                 std::vector<std::string> extraFieldNames)
           : FrameWriterType{ imageDatabase }
-          , m_ExtraFieldNames({ std::forward<Ts>(extraFieldNames)... })
+          , m_ExtraFieldNames(std::move(extraFieldNames))
           , m_ImageDatabase(imageDatabase)
           , m_Recording(true)
           , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
@@ -211,8 +211,7 @@ public:
                       const std::array<size_t, 3> &gridPosition,
                       Ts&&... extraFieldValues)
         {
-            static_assert(sizeof...(extraFieldValues) == NumExtraFields,
-                          "Must supply correct number of extra field values");
+            BOB_ASSERT(sizeof...(extraFieldValues) == m_ExtraFieldNames.size());
             BOB_ASSERT(m_Recording);
 
             Entry newEntry{
@@ -259,82 +258,21 @@ public:
     };
 
     //! For recording a grid of images at a fixed heading
-    template<size_t NumExtraFields = 0>
     class GridRecorder
-      : public Recorder<ImageFileWriter, NumExtraFields> {
+      : public Recorder<ImageFileWriter> {
     public:
-        template<class... Ts>
         GridRecorder(ImageDatabase &imageDatabase, const Range &xrange,
                      const Range &yrange, const Range &zrange = Range(0_mm),
-                     degree_t heading = 0_deg, Ts &&... extraFieldNames)
-          : Recorder<ImageFileWriter, NumExtraFields>(imageDatabase, false,
-                                                      std::forward<Ts>(extraFieldNames)...)
-          , m_Heading(heading)
-          , m_Begin(xrange.begin, yrange.begin, zrange.begin)
-          , m_Separation(xrange.separation, yrange.separation, zrange.separation)
-          , m_Size({ xrange.size(), yrange.size(), zrange.size() })
-          , m_Current({ 0, 0, 0 })
-        {
-            BOB_ASSERT(!imageDatabase.isRoute());
+                     degree_t heading = 0_deg,
+                     std::vector<std::string> extraFieldNames = {});
 
-            // Save some extra, grid-specific metadata
-            this->m_YAML << "grid"
-                         << "{"
-                         << "beginAtMM"
-                         << "[:" << m_Begin[0]() << m_Begin[1]() << m_Begin[2]() << "]"
-                         << "separationMM"
-                         << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
-                         << "size"
-                         << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
-                         << "}";
-        }
-
-        std::string getCurrentFilenameRoot() const override
-        {
-            // Convert to integers
-            std::array<int, 3> iposition;
-            const auto position = getPosition(m_Current);
-            std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
-                return static_cast<int>(units::math::round(mm));
-            });
-
-            // Make filename
-            std::ostringstream ss;
-            ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
-               << std::setw(7) << iposition[0] << "_"
-               << std::setw(7) << iposition[1] << "_"
-               << std::setw(7) << iposition[2];
-            return (this->getImageDatabase().getPath() / ss.str()).str();
-        }
+        std::string getCurrentFilenameRoot() const override;
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const
-        {
-            BOB_ASSERT(gridPosition[0] < m_Size[0]
-                        && gridPosition[1] < m_Size[1]
-                        && gridPosition[2] < m_Size[2]);
-            Vector3<millimeter_t> position;
-            for (size_t i = 0; i < position.size(); i++) {
-                position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
-            }
-            return position;
-        }
+        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const;
 
         //! Get a vector of all possible positions for this grid
-        std::vector<Vector3<millimeter_t>> getPositions() const
-        {
-            std::vector<Vector3<millimeter_t>> positions;
-            positions.reserve(maximumSize());
-
-            for (size_t x = 0; x < sizeX(); x++) {
-                for (size_t y = 0; y < sizeY(); y++) {
-                    for (size_t z = 0; z < sizeZ(); z++) {
-                        positions.emplace_back(getPosition({ x, y, z }));
-                    }
-                }
-            }
-            return positions;
-        }
+        std::vector<Vector3<millimeter_t>> getPositions() const;
 
         /**!
          * \brief Save a new image into the database with values for extra
@@ -369,14 +307,10 @@ public:
                      std::forward<Ts>(extraFieldValues)...);
         }
 
-        size_t maximumSize() const
-        {
-            return sizeX() * sizeY() * sizeZ();
-        }
-
-        size_t sizeX() const { return m_Size[0]; }
-        size_t sizeY() const { return m_Size[1]; }
-        size_t sizeZ() const { return m_Size[2]; }
+        size_t maximumSize() const;
+        size_t sizeX() const;
+        size_t sizeY() const;
+        size_t sizeZ() const;
 
     private:
         const degree_t m_Heading;
@@ -386,14 +320,13 @@ public:
     };
 
     //! For saving images recorded along a route
-    template<class FrameWriterType, size_t NumExtraFields = 0>
+    template<class FrameWriterType>
     class RouteRecorder
-      : public Recorder<FrameWriterType, NumExtraFields> {
+      : public Recorder<FrameWriterType> {
     public:
-        template<class... Ts>
-        RouteRecorder(ImageDatabase &imageDatabase, Ts&&... extraFieldNames)
-          : Recorder<FrameWriterType, NumExtraFields>(imageDatabase, true,
-                                                      std::forward<Ts>(extraFieldNames)...)
+        RouteRecorder(ImageDatabase &imageDatabase, std::vector<std::string> extraFieldNames)
+          : Recorder<FrameWriterType>(imageDatabase, true,
+                                      std::move(extraFieldNames))
         {
             BOB_ASSERT(!imageDatabase.isGrid());
         }
@@ -466,42 +399,18 @@ public:
     const std::tm &getCreationTime() const;
 
     //! Start recording a grid of images
-    template<class... Ts>
-    auto getGridRecorder(const Range &xrange, const Range &yrange,
-                         const Range &zrange = Range(0_mm),
-                         degree_t heading = 0_deg, Ts &&... extraFieldNames)
-    {
-        return GridRecorder<sizeof...(extraFieldNames)>{
-            *this, xrange, yrange, zrange, heading,
-            std::forward<Ts>(extraFieldNames)...
-        };
-    }
+    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
+                                 const Range &zrange = Range(0_mm),
+                                 degree_t heading = 0_deg,
+                                 std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    template<class... Ts>
-    auto getRouteRecorder(Ts&&... extraFieldNames)
-    {
-        return RouteRecorder<ImageFileWriter, sizeof...(extraFieldNames)>{
-            *this, std::forward<Ts>(extraFieldNames)...
-        };
-    }
+    RouteRecorder<ImageFileWriter> getRouteRecorder(std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route, saving images into video file
-    template<class... Ts>
-    auto getRouteVideoRecorder(const cv::Size &resolution, hertz_t fps,
-                               Ts&&... extraFieldNames)
-    {
-        m_Resolution = resolution;
-        m_FrameRate = fps;
-
-        RouteRecorder<VideoFileWriter, sizeof...(extraFieldNames)> recorder{
-            *this, std::forward<Ts>(extraFieldNames)...
-        };
-        recorder.getMetadataWriter() << "video_file" << recorder.getVideoFileName()
-                                     << "frame_rate" << m_FrameRate.value();
-
-        return recorder;
-    }
+    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
+                                                         hertz_t fps,
+                                                         std::vector<std::string> extraFieldNames = {});
 
     hertz_t getFrameRate() const;
 
@@ -600,67 +509,8 @@ private:
     bool readDirectoryEntries();
     void writeImage(const std::string &filename, const cv::Mat &image) const;
 
-    template<size_t N>
     void addNewEntries(std::vector<Entry> &newEntries,
-                       const std::array<std::string, N> &extraFieldNames)
-    {
-        if (newEntries.empty()) {
-            LOG_WARNING << "No new entries added, nothing will be written";
-            return;
-        }
-
-        // Reload metadata, in case it's changed
-        loadMetadata();
-
-        const std::string path = (m_Path / EntriesFilename).str();
-        LOG_INFO << "Writing entries to " << path << "...";
-
-        // Move new entries into this object's vector
-        m_Entries.reserve(m_Entries.size() + newEntries.size());
-        for (auto &&e : newEntries) {
-            m_Entries.emplace_back(std::move(e));
-        }
-
-        // Write image entries info to CSV file
-        std::ofstream os;
-        os.exceptions(std::ios::badbit | std::ios::failbit);
-        os.open(path);
-        os << "X [mm], Y [mm], Z [mm], Heading [degrees]";
-        if (m_VideoFilePath.empty()) {
-            os << ", Filename";
-        }
-        if (!m_IsRoute) {
-            os << ", Grid X, Grid Y, Grid Z";
-        }
-        for (const auto &name : extraFieldNames) {
-            os << ", " << name;
-        }
-        os << "\n";
-
-        for (auto &e : m_Entries) {
-            // These fields are always written...
-            os << e.position[0]() << ", " << e.position[1]() << ", "
-               << e.position[2]() << ", " << e.heading();
-
-            // ...this is only written if we're not saving as a video
-            if (m_VideoFilePath.empty()) {
-                os << ", " << e.path.filename();
-            }
-
-            // ...and these are only written if it's a grid database
-            if (!m_IsRoute) {
-                os << ", " << e.gridPosition[0] << ", " << e.gridPosition[1]
-                   << ", " << e.gridPosition[2];
-            }
-
-            // Write any extra user-specified field values
-            for (const auto &name : extraFieldNames) {
-                os << ", " << e.extraFields[name];
-            }
-
-            os << "\n";
-        }
-    }
+                       const std::vector<std::string> &extraFieldNames);
 }; // ImageDatabase
 } // Navigation
 } // BoB robotics
