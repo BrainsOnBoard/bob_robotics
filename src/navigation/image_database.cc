@@ -260,7 +260,7 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
         cv::VideoCapture cap{ m_VideoFilePath.str() };
         BOB_ASSERT(cap.isOpened());
         m_Entries.resize(static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_COUNT)));
-    } else {
+    } else if (m_Path.exists()) {
         BOB_ASSERT(m_Path.is_directory());
     }
 
