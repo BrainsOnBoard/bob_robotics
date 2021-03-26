@@ -681,12 +681,24 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
         BOB_ASSERT(!ifs.fail());
         ifs.exceptions(std::ios::badbit);
         while (std::getline(ifs, line)) {
-            const auto pos = line.find("needsUnwrapping:");
+            // The new database won't need unwrapping anymore
+            auto pos = line.find("needsUnwrapping:");
             if (pos != std::string::npos) {
                 ofs << std::string(pos, ' ') << "needsUnwrapping: 0\n";
-            } else {
-                ofs << line << "\n";
+                continue;
             }
+
+            // The new database won't have a video file
+            pos = line.find("video_file:");
+            if (pos != std::string::npos) {
+                continue;
+            }
+            pos = line.find("frame_rate:");
+            if (pos != std::string::npos) {
+                continue;
+            }
+
+            ofs << line << "\n";
         }
 
         // Append info about the unwrapping object, indenting appropriately
@@ -711,9 +723,13 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     // Finally, unwrap all images and save to new folder
     forEachImage([&](size_t i, const cv::Mat &image) {
         unwrapper.unwrap(image, unwrapped);
-        outPath = (destination / m_Entries[i].path.filename()).str();
+        if (m_Entries[i].path.empty()) {
+            outPath = "image" + std::to_string(i) + ".jpg";
+        } else {
+            outPath = m_Entries[i].path.filename();
+        }
 
-        BOB_ASSERT(cv::imwrite(outPath, unwrapped));
+        BOB_ASSERT(cv::imwrite((destination / outPath).str(), unwrapped));
     }, /*frameSkip=*/1, /*greyscale=*/false);
 }
 
