@@ -660,8 +660,11 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     ImgProc::OpenCVUnwrap360 unwrapper(getResolution(), unwrapRes, camName);
     filesystem::create_directory(destination);
 
-    // Copy entries (CSV) file
-    filesystem::copy_file(m_Path / EntriesFilename, destination / EntriesFilename);
+    // Copy entries (CSV) file if it exists
+    const auto csvPath = m_Path / EntriesFilename;
+    if (csvPath.exists()) {
+        filesystem::copy_file(csvPath, destination / EntriesFilename);
+    }
 
     // Create new metadata (YAML) file
     {
