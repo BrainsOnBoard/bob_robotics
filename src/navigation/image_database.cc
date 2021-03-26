@@ -59,11 +59,10 @@ ImageDatabase::Entry::getExtraField(const std::string &name) const
     return pos->second;
 }
 
-void
-ImageDatabase::ImageFileWriter::setImageFormat(std::string format)
-{
-    m_ImageFormat = std::move(format);
-}
+ImageDatabase::ImageFileWriter::ImageFileWriter(const ImageDatabase &,
+                                                std::string imageFormat)
+  : m_ImageFormat{ std::move(imageFormat) }
+{}
 
 void
 ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry)
@@ -75,13 +74,19 @@ ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry)
     entry.path = std::move(path);
 }
 
-ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database)
-  : m_FileName{ database.getName() + ".mp4" }
+ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database,
+                                                const std::pair<const std::string &, const std::string &> &format)
+  : m_FileName{ database.getName() + "." + format.first }
 {
     const auto path = database.getPath() / m_FileName;
     BOB_ASSERT(!path.exists()); // Don't overwrite by mistake
-    m_Writer.open(path.str(), cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-                  database.getFrameRate().value(), database.getResolution());
+
+    const auto &fourcc = format.second;
+    BOB_ASSERT(fourcc.size() == 4);
+    m_Writer.open(path.str(),
+                  cv::VideoWriter::fourcc(fourcc[0], fourcc[1], fourcc[2], fourcc[3]),
+                  database.getFrameRate().value(),
+                  database.getResolution());
     BOB_ASSERT(m_Writer.isOpened());
 }
 
@@ -102,8 +107,10 @@ ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
                                           const Range &yrange,
                                           const Range &zrange,
                                           degree_t heading,
+                                          std::string imageFormat,
                                           std::vector<std::string> extraFieldNames)
-  : Recorder<ImageFileWriter>(imageDatabase, false, std::move(extraFieldNames))
+  : Recorder<ImageFileWriter>(imageDatabase, false, std::move(imageFormat),
+                              std::move(extraFieldNames))
   , m_Heading(heading)
   , m_Begin(xrange.begin, yrange.begin, zrange.begin)
   , m_Separation(xrange.separation, yrange.separation, zrange.separation)
@@ -251,7 +258,6 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
         for (char &c : ext) {
             c = ::tolower(c);
         }
-        BOB_ASSERT(ext == "mp4");
 
         m_VideoFilePath = m_Path;
         m_Path = m_Path.parent_path();
@@ -463,30 +469,46 @@ ImageDatabase::getCreationTime() const
 ImageDatabase::GridRecorder
 ImageDatabase::getGridRecorder(const Range &xrange, const Range &yrange,
                                const Range &zrange, degree_t heading,
+                               std::string imageFormat,
                                std::vector<std::string> extraFieldNames)
 {
     return ImageDatabase::GridRecorder{ *this, xrange, yrange, zrange, heading,
+                                        std::move(imageFormat),
                                         std::move(extraFieldNames) };
 }
 
 ImageDatabase::RouteRecorder<ImageDatabase::ImageFileWriter>
-ImageDatabase::getRouteRecorder(std::vector<std::string> extraFieldNames)
+ImageDatabase::getRouteRecorder(std::string imageFormat,
+                                std::vector<std::string> extraFieldNames)
 {
     return ImageDatabase::RouteRecorder<ImageFileWriter>{
-        *this, std::move(extraFieldNames)
+        *this, std::move(imageFormat), std::move(extraFieldNames)
     };
 }
 
 ImageDatabase::RouteRecorder<ImageDatabase::VideoFileWriter>
 ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
-                                     hertz_t fps,
+                                     units::frequency::hertz_t fps,
+                                     std::vector<std::string> extraFieldNames)
+{
+    return getRouteVideoRecorder(resolution, fps, "avi", "MJPG", std::move(extraFieldNames));
+}
+
+ImageDatabase::RouteRecorder<ImageDatabase::VideoFileWriter>
+ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
+                                     units::frequency::hertz_t fps,
+                                     const std::string &extension,
+                                     const std::string &codec,
                                      std::vector<std::string> extraFieldNames)
 {
     m_Resolution = resolution;
     m_FrameRate = fps;
 
+    const std::pair<const std::string &, const std::string &> format{ extension, codec };
     RouteRecorder<VideoFileWriter> recorder{
-        *this, std::move(extraFieldNames)
+        *this,
+        format,
+        std::move(extraFieldNames)
     };
     recorder.getMetadataWriter() << "video_file" << recorder.getVideoFileName()
                                  << "frame_rate" << m_FrameRate.value();

@@ -102,18 +102,18 @@ public:
     class ImageFileWriter
       : public FrameWriter {
     public:
-        ImageFileWriter(const ImageDatabase &) {}
-        void setImageFormat(std::string);
+        ImageFileWriter(const ImageDatabase &, std::string imageFormat);
         void writeFrame(const cv::Mat &frame, Entry &entry) override;
 
     private:
-        std::string m_ImageFormat = "png";
+        const std::string m_ImageFormat;
     };
 
     class VideoFileWriter
       : public FrameWriter {
     public:
-        VideoFileWriter(const ImageDatabase &);
+        VideoFileWriter(const ImageDatabase &,
+                        const std::pair<const std::string &, const std::string &> &format);
         void writeFrame(const cv::Mat &frame, Entry &entry) override;
         const std::string &getVideoFileName() const;
 
@@ -171,11 +171,12 @@ public:
     protected:
         cv::FileStorage m_YAML;
 
-        template<class... Ts>
+        template<class T, class... Ts>
         Recorder(ImageDatabase &imageDatabase,
-                 const bool isRoute,
+                 bool isRoute,
+                 T &&format,
                  std::vector<std::string> extraFieldNames)
-          : FrameWriterType{ imageDatabase }
+          : FrameWriterType{ imageDatabase, std::move(format) }
           , m_ExtraFieldNames(std::move(extraFieldNames))
           , m_ImageDatabase(imageDatabase)
           , m_Recording(true)
@@ -264,6 +265,7 @@ public:
         GridRecorder(ImageDatabase &imageDatabase, const Range &xrange,
                      const Range &yrange, const Range &zrange = Range(0_mm),
                      degree_t heading = 0_deg,
+                     std::string imageFormat = "png",
                      std::vector<std::string> extraFieldNames = {});
 
         std::string getCurrentFilenameRoot() const override;
@@ -324,8 +326,11 @@ public:
     class RouteRecorder
       : public Recorder<FrameWriterType> {
     public:
-        RouteRecorder(ImageDatabase &imageDatabase, std::vector<std::string> extraFieldNames)
+        template<class T>
+        RouteRecorder(ImageDatabase &imageDatabase, T &&format,
+                      std::vector<std::string> extraFieldNames)
           : Recorder<FrameWriterType>(imageDatabase, true,
+                                      std::move(format),
                                       std::move(extraFieldNames))
         {
             BOB_ASSERT(!imageDatabase.isGrid());
@@ -402,14 +407,26 @@ public:
     GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
                                  const Range &zrange = Range(0_mm),
                                  degree_t heading = 0_deg,
+                                 std::string imageFormat = "png",
                                  std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    RouteRecorder<ImageFileWriter> getRouteRecorder(std::vector<std::string> extraFieldNames = {});
+    RouteRecorder<ImageFileWriter> getRouteRecorder(std::string imageFormat = "png",
+                                                    std::vector<std::string> extraFieldNames = {});
 
-    //! Start recording a route, saving images into video file
+    /**!
+     * \brief Start recording a route, saving images into video file using
+     *        default AVI/MJPEG format.
+     */
     RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
                                                          hertz_t fps,
+                                                         std::vector<std::string> extraFieldNames = {});
+
+    //! Start recording a route, saving images into video file with a custom codec
+    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
+                                                         hertz_t fps,
+                                                         const std::string &extension,
+                                                         const std::string &codec,
                                                          std::vector<std::string> extraFieldNames = {});
 
     hertz_t getFrameRate() const;
