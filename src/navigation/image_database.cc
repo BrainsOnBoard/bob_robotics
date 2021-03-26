@@ -649,10 +649,12 @@ ImageDatabase::hasMetadata() const
  *         folder, creating a new database.
  */
 void
-ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwrapRes) const
+ImageDatabase::unwrap(const filesystem::path &destination,
+                      const cv::Size &unwrapRes, size_t frameSkip) const
 {
     // Check that the database doesn't already exist
     BOB_ASSERT(!(destination / EntriesFilename).exists());
+    BOB_ASSERT(frameSkip != 0);
 
     // Create object for unwrapping images
     std::string camName;
@@ -663,6 +665,9 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     // Copy entries (CSV) file if it exists
     const auto csvPath = m_Path / EntriesFilename;
     if (csvPath.exists()) {
+        // **TODO**: Selectively copy CSV file entries for this case instead
+        BOB_ASSERT(frameSkip > 1);
+
         filesystem::copy_file(csvPath, destination / EntriesFilename);
     }
 
@@ -701,6 +706,9 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
             ofs << line << "\n";
         }
 
+        // Save this value
+        ofs << "  frame_skip: " << frameSkip << "\n";
+
         // Append info about the unwrapping object, indenting appropriately
         cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
         fs << "unwrapper" << unwrapper;
@@ -730,7 +738,7 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
         }
 
         BOB_ASSERT(cv::imwrite((destination / outPath).str(), unwrapped));
-    }, /*frameSkip=*/1, /*greyscale=*/false);
+    }, frameSkip, /*greyscale=*/false);
 }
 
 bool
