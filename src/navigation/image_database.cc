@@ -270,15 +270,22 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
     // Try to read entries from CSV file
     if (!loadCSV()) {
         LOGW << "Could not find CSV file";
-        if (m_VideoFilePath.empty() && !readDirectoryEntries()) {
-            // Make sure we have a directory to save into
-            filesystem::create_directory(m_Path);
+        if (m_VideoFilePath.empty()) {
+            if (!readDirectoryEntries()) {
+                // Make sure we have a directory to save into
+                filesystem::create_directory(m_Path);
 
-            /*
-             * Now that we *know* it's an empty database, it makes sense to
-             * assign a creation time.
-             */
-            m_CreationTime = creationTime ? *creationTime : getCurrentTime();
+                /*
+                 * Now that we *know* it's an empty database, it makes sense to
+                 * assign a creation time.
+                 */
+                m_CreationTime = creationTime ? *creationTime : getCurrentTime();
+            }
+        } else {
+            // Populate m_Entries with empty entries
+            cv::VideoCapture cap{ m_VideoFilePath.str() };
+            BOB_ASSERT(cap.isOpened());
+            m_Entries.resize(static_cast<size_t>(cap.get(cv::CAP_PROP_FRAME_COUNT)));
         }
     }
 }
