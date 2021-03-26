@@ -98,6 +98,8 @@ bobMain(int argc, char *argv[])
 
     auto recorder = database.getRouteVideoRecorder(cam->getOutputSize(),
                                                    cam->getFrameRate(),
+                                                   "mp4",
+                                                   "mp4v",
                                                    { "Pitch [degrees]",
                                                      "Roll [degrees]",
                                                      "Speed",
