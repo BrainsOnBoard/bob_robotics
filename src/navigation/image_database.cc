@@ -9,7 +9,6 @@
 #include "third_party/tinydir.h"
 
 // Standard C includes
-#include <cstring>
 #include <ctime>
 
 // Standard C++ includes
@@ -236,8 +235,8 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
                              filesystem::path databasePath,
                              bool overwrite)
   : m_Path{ std::move(databasePath) }
+  , m_CreationTime{}
 {
-    memset(&m_CreationTime, 0, sizeof(m_CreationTime));
     m_CreationTime.tm_isdst = -1;
 
     LOGI << "Using image database at " << m_Path;
@@ -423,8 +422,7 @@ ImageDatabase::readDirectoryEntries()
     }
 
     // For reading contents of directory
-    tinydir_dir dir;
-    memset(&dir, 0, sizeof(dir));
+    tinydir_dir dir{};
     BOB_ASSERT(tinydir_open(&dir, m_Path.str().c_str()) == 0);
     for (; dir.has_next; BOB_ASSERT(tinydir_next(&dir) == 0)) {
         tinydir_file file;
