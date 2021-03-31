@@ -38,6 +38,6 @@ int bobMain(int argc, char *argv[])
         }
     }
 
-    infomax.saveWeights((config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin")).str());
+    infomax.saveWeights(config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin"));
     return EXIT_SUCCESS;
 }

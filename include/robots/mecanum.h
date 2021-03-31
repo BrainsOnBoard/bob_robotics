@@ -22,11 +22,14 @@ class Mecanum : public Omni2D
 public:
     Mecanum(const char *path = "/dev/ttyACM0", bool alternativeWiring = true);
     virtual ~Mecanum();
-    
+
     //----------------------------------------------------------------------------
     // Omni2D virtuals
     //----------------------------------------------------------------------------
     virtual void omni2D(float forward, float sideways, float turn) override;
+
+    //! Drive robot using individual motor speeds - all range from -1 to 1
+    void driveMotors(float m1, float m2, float m3, float m4);
 
     //----------------------------------------------------------------------------
     // Public API

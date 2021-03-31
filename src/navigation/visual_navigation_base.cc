@@ -5,8 +5,10 @@
 // Third-party includes
 #include "plog/Log.h"
 
+#ifdef _OPENMP
 // OpenMP
 #include <omp.h>
+#endif
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -23,9 +25,9 @@ int getMaxThreads()
 VisualNavigationBase::VisualNavigationBase(const cv::Size &unwrapRes)
   : m_UnwrapRes(unwrapRes)
 {
+#ifdef _OPENMP
     LOGI << "Running on " << getMaxThreads() << " threads" << std::endl;
-
-#ifndef _OPENMP
+#else
     LOGW << "This program was not compiled with OpenMP support. Execution will be single threaded." << std::endl;
 #endif
 }

@@ -21,7 +21,7 @@ using namespace units::literals;
 // BoBRobotics::Robots::RCCarBot
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
-class RCCarBot
+class RCCarBot final
   : public Ackermann
 {
     using degree_t = units::angle::degree_t;
@@ -38,6 +38,7 @@ public:
     virtual void steer(float left) override;
     virtual void steer(units::angle::degree_t left) override;
     virtual degree_t getMaximumTurn() const override;
+    virtual void updateState();
 
     //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
     virtual void move(float speed, degree_t turningAngle) override;

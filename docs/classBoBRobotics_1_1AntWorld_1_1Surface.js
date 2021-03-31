@@ -1,10 +1,12 @@
 var classBoBRobotics_1_1AntWorld_1_1Surface =
 [
+    [ "Colour", "classBoBRobotics_1_1AntWorld_1_1Surface.html#a82488027ecb30c7b714b4e5eddf2d467", null ],
     [ "Surface", "classBoBRobotics_1_1AntWorld_1_1Surface.html#a75a2f14f79bcb9e6e3a353b642317c38", null ],
     [ "~Surface", "classBoBRobotics_1_1AntWorld_1_1Surface.html#aaad030793fdbcb1542d590c80513194a", null ],
     [ "bind", "classBoBRobotics_1_1AntWorld_1_1Surface.html#acd798f0f029e54ce9c82be878003129e", null ],
     [ "bindTextured", "classBoBRobotics_1_1AntWorld_1_1Surface.html#a3a7d6d16e96cb8f743a3ea711f3dd0a8", null ],
     [ "render", "classBoBRobotics_1_1AntWorld_1_1Surface.html#a5b397f113deba485e9e5319619b88bd5", null ],
+    [ "setColour", "classBoBRobotics_1_1AntWorld_1_1Surface.html#af398f6aaae462b4fb298f933b79ceada", null ],
     [ "setTexture", "classBoBRobotics_1_1AntWorld_1_1Surface.html#a451ef132542d0af66a16ff3e53bea05f", null ],
     [ "unbind", "classBoBRobotics_1_1AntWorld_1_1Surface.html#ab9eb39b0aa55de651d874ef713905f9a", null ],
     [ "unbindIndices", "classBoBRobotics_1_1AntWorld_1_1Surface.html#ad5a6e2fc20862f6ae685409a31bc7b61", null ],

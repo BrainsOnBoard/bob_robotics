@@ -157,7 +157,7 @@ Video4LinuxCamera::open(const std::string &device,
 }
 
 void
-Video4LinuxCamera::enumerateControls(std::function<void(const v4l2_queryctrl &)> processControl)
+Video4LinuxCamera::enumerateControls(const std::function<void(const v4l2_queryctrl &)> &processControl)
 {
     // Fill control query structure
     v4l2_queryctrl queryControl;

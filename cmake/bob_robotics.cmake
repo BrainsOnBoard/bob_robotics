@@ -58,7 +58,7 @@ macro(BoB_project)
         endif()
         set(BOB_TARGETS ${NAME})
         add_definitions(-DBOB_SHARED_LIB)
-        install(TARGETS ${NAME} LIBRARY DESTINATION antworld)
+        install(TARGETS ${NAME} LIBRARY DESTINATION ${NAME})
 
         if(GNU_TYPE_COMPILER)
             add_compile_flags(-fPIC)
@@ -80,77 +80,88 @@ macro(BoB_project)
 
     # If this project includes a GeNN model...
     if(PARSED_ARGS_GENN_MODEL OR PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
-        # Find genn-buildmodel (which should be in the path)
         if(WIN32)
-            find_program(GENN_BUILDMODEL genn-buildmodel.bat)
+            set(shext bat)
         else()
-            find_program(GENN_BUILDMODEL genn-buildmodel.sh)
+            set(shext sh)
         endif()
-        if(GENN_BUILDMODEL)
-            # Remove filename to get path to GeNN bin directory
-            get_filename_component(GENN_BIN_PATH ${GENN_BUILDMODEL} DIRECTORY)
 
-            # Get absolute path to userproject include
-            get_filename_component(GENN_USERPROJECT ${GENN_BIN_PATH}/../userproject/include ABSOLUTE)
-            message("GeNN found in ${GENN_USERPROJECT}")
-            BoB_add_include_directories(${GENN_USERPROJECT})
-            # If th
-            if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
-                # On *nix link dl
-                if(NOT WIN32)
-                    BoB_add_link_libraries(dl)
-                endif()
-            elseif(PARSED_ARGS_GENN_MODEL)
-                get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
-                set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
-                set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
-                set(genn_model_dest "${genn_model_dir}/runner.cc")
-
-                if(NOT GENN_CPU_ONLY)
-                    if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
-                        set(GENN_CPU_ONLY TRUE)
-                    else()
-                        set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
-                    endif()
-                endif(NOT GENN_CPU_ONLY)
-                if(GENN_CPU_ONLY)
-                    message("Building GeNN model for CPU only")
-                    add_definitions(-DCPU_ONLY)
-                    set(CPU_FLAG -c)
-                else()
-                    message("Building GeNN model with CUDA")
-                endif()
-
-                # Custom command to generate source code with GeNN
-                add_custom_command(PRE_BUILD
-                                OUTPUT ${genn_model_dest}
-                                DEPENDS ${genn_model_src}
-                                COMMAND ${GENN_BUILDMODEL}
-                                        ${genn_model_src}
-                                        ${CPU_FLAG}
-                                        -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
-                                COMMENT "Generating source code with GeNN")
-
-                # Custom command to generate librunner.so
-                add_custom_command(PRE_BUILD
-                                OUTPUT ${genn_model_dir}/librunner.so
-                                DEPENDS ${genn_model_dest}
-                                COMMAND make -C "${genn_model_dir}")
-
-                add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
-
-                # Our targets depend on librunner.so
-                BoB_add_include_directories(/usr/include/genn)
-                BoB_add_link_libraries(${genn_model_dir}/librunner.so)
-                foreach(target IN LISTS BOB_TARGETS)
-                    add_dependencies(${target} ${PROJECT_NAME}_genn_model)
-                endforeach()
-
-                # So code can access headers in the *_CODE folder
-                BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
-            endif()
+        if(DEFINED GENN_PATH)
+            set(GENN_BUILDMODEL "${GENN_PATH}/bin/genn-buildmodel.${shext}")
         else()
-            message(FATAL_ERROR "GeNN not found. Please install and ensure it is in path.")
+            # Find genn-buildmodel (which should be in the path)
+            find_program(GENN_BUILDMODEL genn-buildmodel.${shext})
+            if(NOT DEFINED GENN_BUILDMODEL)
+                message(FATAL_ERROR "GeNN not found. Please install and ensure it is in path or set the GENN_PATH CMake variable.")
+            endif()
+
+            # Figure out path to GeNN
+            get_filename_component(GENN_BIN_PATH ${GENN_BUILDMODEL} DIRECTORY)
+            get_filename_component(GENN_PATH ${GENN_BIN_PATH}/.. ABSOLUTE)
+        endif()
+        message("GeNN found in ${GENN_PATH}")
+
+        # Include userproject headers
+        BoB_add_include_directories(${GENN_PATH}/userproject/include)
+
+        # If the user just wants the userprojects headers...
+        if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+            # On *nix link dl
+            if(NOT WIN32)
+                BoB_add_link_libraries(dl)
+            endif()
+
+            # If GeNN is installed to /usr the above method for finding
+            # userprojects headers won't work
+            BoB_add_include_directories(/usr/include/genn)
+        elseif(PARSED_ARGS_GENN_MODEL)
+            get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+            set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
+            set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
+            set(genn_model_dest "${genn_model_dir}/runner.cc")
+
+            if(NOT GENN_CPU_ONLY)
+                if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
+                    set(GENN_CPU_ONLY TRUE)
+                else()
+                    set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+                endif()
+            endif(NOT GENN_CPU_ONLY)
+            if(GENN_CPU_ONLY)
+                message("Building GeNN model for CPU only")
+                add_definitions(-DCPU_ONLY)
+                set(CPU_FLAG -c)
+            else()
+                message("Building GeNN model with CUDA")
+            endif()
+
+            # Custom command to generate source code with GeNN
+            add_custom_command(PRE_BUILD
+                            OUTPUT ${genn_model_dest}
+                            DEPENDS ${genn_model_src}
+                            COMMAND ${GENN_BUILDMODEL}
+                                    ${genn_model_src}
+                                    ${CPU_FLAG}
+                                    -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
+                            COMMENT "Generating source code with GeNN")
+
+            # Custom command to generate librunner.so
+            add_custom_command(PRE_BUILD
+                            OUTPUT ${genn_model_dir}/librunner.so
+                            DEPENDS ${genn_model_dest}
+                            COMMAND make -C "${genn_model_dir}")
+
+            add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+
+            # Our targets depend on librunner.so
+            BoB_add_include_directories(/usr/include/genn)
+            BoB_add_link_libraries(${genn_model_dir}/librunner.so)
+            foreach(target IN LISTS BOB_TARGETS)
+                add_dependencies(${target} ${PROJECT_NAME}_genn_model)
+            endforeach()
+
+            # So code can access headers in the *_CODE folder
+            BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
         endif()
     endif()
 
@@ -298,15 +309,27 @@ macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
+# Annoyingly, various packages export a target rather than simply variables
+# with the include path and link flags and it seems that these targets
+# aren't "passed up" by add_subdirectory(), so we always include these
+# packages on the off-chance we need them somewhere
 macro(always_included_packages)
     # Assume we always want threading
     find_package(Threads REQUIRED)
 
-    # Annoyingly, these packages export a target rather than simply variables
-    # with the include path and link flags and it seems that this target isn't
-    # "passed up" by add_subdirectory(), so we always include these packages on
-    # the off-chance we need them.
-    if(NOT WIN32 AND NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT DEFINED ENABLE_OPENMP)
+        # By default disable OpenMP support on MSVC and enable it otherwise
+        if(WIN32)
+            set(ENABLE_OPENMP FALSE)
+        else()
+            set(ENABLE_OPENMP TRUE)
+        endif()
+    endif()
+
+    if(ENABLE_OPENMP)
+        if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            macos_find_homebrew_openmp()
+        endif()
         find_package(OpenMP QUIET)
     endif()
     if(NOT TARGET GLEW::GLEW)
@@ -348,6 +371,21 @@ macro(get_git_commit DIR VARNAME)
         if(NOT ${rv} EQUAL 0)
             set(${VARNAME} ${${VARNAME}}-dirty)
         endif()
+    endif()
+endmacro()
+
+macro(macos_find_homebrew_openmp)
+    # See if libomp was installed with homebrew...
+    execute_process(COMMAND brew --prefix libomp
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE LIBOMP_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # ...success!
+    if(${rv} EQUAL 0)
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_LIB_NAMES omp)
+        set(OpenMP_omp_LIBRARY "${LIBOMP_PREFIX}/lib/libomp.a")
     endif()
 endmacro()
 
@@ -486,11 +524,6 @@ macro(BoB_build)
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
 
-    # Clang needs to be linked against libm and libstdc++ explicitly
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        BoB_add_link_libraries(m stdc++)
-    endif()
-
     # The list of linked libraries can end up very long with lots of duplicate
     # entries and this can break ld, so remove them. We remove from the start,
     # so that dependencies will always (I think!) be in the right order.
@@ -505,7 +538,7 @@ macro(BoB_build)
         # hopefully we can get away without using it in this case (because we'll
         # probably only find this on Linux machines which don't care about
         # linking directories anyway)
-        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13.0")
+        if(${CMAKE_VERSION} VERSION_GREATER "3.13.0" OR ${CMAKE_VERSION} EQUAL "3.13.0")
             target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
         endif()
     endforeach()

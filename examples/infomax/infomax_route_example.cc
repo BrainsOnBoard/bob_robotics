@@ -1,12 +1,11 @@
-#include "read_data.h"
-
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/timer.h"
+#include "common/serialise_matrix.h"
 #include "navigation/image_database.h"
 #include "navigation/infomax.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -28,6 +27,7 @@
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
+using namespace std::literals;
 namespace plt = matplotlibcpp;
 
 using namespace units::literals;
@@ -44,9 +44,9 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
         // Test network
         LOGI << "Testing network...";
         Timer<> t{ "Network testing took: " };
-        for (size_t i = 0; i < images.size(); i++) {
+        for (const auto &image : images) {
             // Get heading and convert to vector
-            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(images[i]));
+            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(image));
             double sinx, cosx;
             sincos(heading.value(), &sinx, &cosx);
             u.push_back(cosx);
@@ -107,7 +107,7 @@ int bobMain(int argc, char **argv)
     // If we already have a network for these params, load from disk
     if (netPath.exists()) {
         LOGI << "Loading weights from " << netPath;
-        const auto weights = readData<FloatType>(netPath);
+        const auto weights = readMatrix<FloatType>(netPath);
 
         InfoMaxType infomax(imSize, weights);
         doTesting(infomax, x, y, images);
@@ -129,11 +129,7 @@ int bobMain(int argc, char **argv)
 
             // Write weights to disk
             LOGI << "Writing weights to " << netPath;
-            const auto weights = infomax.getWeights();
-            std::ofstream netFile(netPath.str(), std::ios::binary);
-            const int size[2] { (int) weights.rows(), (int) weights.cols() };
-            netFile.write(reinterpret_cast<const char *>(size), sizeof(size));
-            netFile.write(reinterpret_cast<const char *>(weights.data()), weights.size() * sizeof(float));
+            writeMatrix(netPath, infomax.getWeights());
         }
 
         doTesting(infomax, x, y, images);

@@ -5,9 +5,10 @@
 #include <fstream>
 
 // BoB robotics includes
-#include "plog/Log.h"
+#include "common/serialise_matrix.h"
 
 // BoB robotics third party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 
 // Snapshot bot includes
@@ -140,13 +141,10 @@ void InfoMax::train(const cv::Mat &snapshot)
     getInfoMax().train(snapshot);
 }
 //-----------------------------------------------------------------------
-void InfoMax::saveWeights(const std::string &filename) const
+void InfoMax::saveWeights(const filesystem::path &filename) const
 {
     // Write weights to disk
-    std::ofstream netFile(filename, std::ios::binary);
-    const int size[2] { (int) getInfoMax().getWeights().rows(), (int) getInfoMax().getWeights().cols() };
-    netFile.write(reinterpret_cast<const char *>(size), sizeof(size));
-    netFile.write(reinterpret_cast<const char *>(getInfoMax().getWeights().data()), getInfoMax().getWeights().size() * sizeof(float));
+    writeMatrix(filename, getInfoMax().getWeights());
 }
 //-----------------------------------------------------------------------
 InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size &inputSize)
@@ -155,19 +153,7 @@ InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size
     if(weightPath.exists()) {
         LOGI << "\tLoading weights from " << weightPath;
 
-        std::ifstream is(weightPath.str(), std::ios::binary);
-        if (!is.good()) {
-            throw std::runtime_error("Could not open " + weightPath.str());
-        }
-
-        // The matrix size is encoded as 2 x int32_t
-        int32_t size[2];
-        is.read(reinterpret_cast<char *>(&size), sizeof(size));
-
-        // Create data array and fill it
-        InfoMaxWeightMatrixType weights(size[0], size[1]);
-        is.read(reinterpret_cast<char*>(weights.data()), sizeof(float) * weights.size());
-
+        const auto weights = readMatrix<InfoMaxWeightMatrixType::Scalar>(weightPath);
         return InfoMaxType(inputSize, weights);
     }
     else {

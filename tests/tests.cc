@@ -1,7 +1,5 @@
-#include "test_headers/common.h"
-
-// Automatically generated includes for the files in test_headers
-#include ".include_test_headers.h"
+// Google Test
+#include "gtest/gtest.h"
 
 int bobMain(int argc, char **argv)
 {
