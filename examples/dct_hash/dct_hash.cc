@@ -10,7 +10,7 @@ int bobMain(int, char **)
     cv::Mat img1 = imread(image_path1, cv::IMREAD_GRAYSCALE);
 	cv::Mat img2 = imread(image_path2, cv::IMREAD_GRAYSCALE);
 
-	// convert to calculate dct 
+	// convert to calculate dct
 	img1.convertTo(img1, CV_32F, 1.0/255);
 	img2.convertTo(img2, CV_32F, 1.0/255);
 
@@ -22,8 +22,8 @@ int bobMain(int, char **)
 
 	int distance = DCTHash::distance(hash1,hash2);
 	std::cout << "the distance between the 2 images is " << distance << std::endl;
-   
-	int k = cv::waitKey(0); // Wait for a keystroke in the window
-   
+
+	cv::waitKey(0); // Wait for a keystroke in the window
+
     return 0;
 }
