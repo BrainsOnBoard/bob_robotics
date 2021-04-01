@@ -503,7 +503,8 @@ public:
      */
     void unwrap(const filesystem::path &destination,
                 const cv::Size &unwrapRes,
-                size_t frameSkip = 1) const;
+                size_t frameSkip = 1,
+                bool greyscale = false) const;
 
     //! Return true if fn1 should be sorted before fn2
     static bool fileNameCompare(const std::string &fn1, const std::string &fn2);

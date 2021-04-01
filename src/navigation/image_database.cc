@@ -648,7 +648,8 @@ ImageDatabase::hasMetadata() const
  */
 void
 ImageDatabase::unwrap(const filesystem::path &destination,
-                      const cv::Size &unwrapRes, size_t frameSkip) const
+                      const cv::Size &unwrapRes, size_t frameSkip,
+                      bool greyscale) const
 {
     // Check that the database doesn't already exist
     BOB_ASSERT(!(destination / EntriesFilename).exists());
@@ -703,6 +704,12 @@ ImageDatabase::unwrap(const filesystem::path &destination,
                     continue;
                 }
 
+                // Set this field if converting to greyscale
+                if (greyscale && key == "isGreyscale") {
+                    ofs << whitespace << "isGreyscale: 1\n";
+                    continue;
+                }
+
                 // Update the resolution
                 if (key == "resolution") {
                     ofs << whitespace << "resolution: [ " << unwrapRes.width
@@ -751,7 +758,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         }
 
         BOB_ASSERT(cv::imwrite((destination / outPath).str(), unwrapped));
-    }, frameSkip, /*greyscale=*/false);
+    }, frameSkip, greyscale);
 }
 
 bool
