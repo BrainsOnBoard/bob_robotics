@@ -508,8 +508,8 @@ ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
         format,
         std::move(extraFieldNames)
     };
-    recorder.getMetadataWriter() << "video_file" << recorder.getVideoFileName()
-                                 << "frame_rate" << m_FrameRate.value();
+    recorder.getMetadataWriter() << "videoFile" << recorder.getVideoFileName()
+                                 << "frameRate" << m_FrameRate.value();
 
     return recorder;
 }
@@ -692,11 +692,11 @@ ImageDatabase::unwrap(const filesystem::path &destination,
             }
 
             // The new database won't have a video file
-            pos = line.find("video_file:");
+            pos = line.find("videoFile:");
             if (pos != std::string::npos) {
                 continue;
             }
-            pos = line.find("frame_rate:");
+            pos = line.find("frameRate:");
             if (pos != std::string::npos) {
                 continue;
             }
@@ -705,7 +705,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         }
 
         // Save this value
-        ofs << "  frame_skip: " << frameSkip << "\n";
+        ofs << "  frameSkip: " << frameSkip << "\n";
 
         // Append info about the unwrapping object, indenting appropriately
         cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
@@ -800,13 +800,13 @@ ImageDatabase::loadMetadata()
 
         // These will only be set if database was recorded as a video file
         std::string videoFileName;
-        metadata["video_file"] >> videoFileName;
+        metadata["videoFile"] >> videoFileName;
         if (!videoFileName.empty()) {
             m_VideoFilePath = m_Path / videoFileName;
         }
 
         double fps = 0;
-        metadata["frame_rate"] >> fps;
+        metadata["frameRate"] >> fps;
         m_FrameRate = hertz_t{ fps };
 
         std::string time;
