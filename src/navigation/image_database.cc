@@ -671,36 +671,49 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         filesystem::copy_file(csvPath, destination / EntriesFilename);
     }
 
-    // Create new metadata (YAML) file
+    /*
+     * Create new metadata (YAML) file.
+     *
+     * There is no way to edit a persistence file in OpenCV, so we have
+     * to do it ourselves in this ugly way.
+     */
     {
-        /*
-         * There is no way to edit a persistence file in OpenCV, so we have
-         * to do it ourselves in this ugly way.
-         *
-         * First, copy all fields, except for changing needsUnwrapping to false.
-         */
         std::string line;
         std::ofstream ofs((destination / MetadataFilename).str());
         ofs.exceptions(std::ios::badbit | std::ios::failbit);
         std::ifstream ifs((m_Path / MetadataFilename).str());
         BOB_ASSERT(!ifs.fail());
         ifs.exceptions(std::ios::badbit);
-        while (std::getline(ifs, line)) {
-            // The new database won't need unwrapping anymore
-            auto pos = line.find("needsUnwrapping:");
-            if (pos != std::string::npos) {
-                ofs << std::string(pos, ' ') << "needsUnwrapping: 0\n";
-                continue;
-            }
 
-            // The new database won't have a video file
-            pos = line.find("videoFile:");
-            if (pos != std::string::npos) {
-                continue;
-            }
-            pos = line.find("frameRate:");
-            if (pos != std::string::npos) {
-                continue;
+        /*
+         * Match expressions of the form: (whitespace)(key name): (value)
+         *
+         * This obvs isn't a proper YAML parser but it should be good enough.
+         */
+        const std::regex regex{ "^(\\s*)(\\w+):.*" };
+        std::smatch match;
+        while (std::getline(ifs, line)) {
+            if (std::regex_match(line, match, regex)) {
+                const auto &whitespace = match[1];
+                const auto &key = match[2];
+
+                // The new database won't need unwrapping anymore
+                if (key == "needsUnwrapping") {
+                    ofs << whitespace << "needsUnwrapping: 0\n";
+                    continue;
+                }
+
+                // Update the resolution
+                if (key == "resolution") {
+                    ofs << whitespace << "resolution: [ " << unwrapRes.width
+                        << ", " << unwrapRes.height << " ]\n";
+                    continue;
+                }
+
+                // The new database won't have a video file
+                if (key == "videoFile" || key == "frameRate") {
+                    continue;
+                }
             }
 
             ofs << line << "\n";
