@@ -652,7 +652,9 @@ ImageDatabase::unwrap(const filesystem::path &destination,
 {
     // Check that the database doesn't already exist
     BOB_ASSERT(!(destination / EntriesFilename).exists());
+
     BOB_ASSERT(frameSkip != 0);
+    BOB_ASSERT(m_NeedsUnwrapping);
 
     // Create object for unwrapping images
     std::string camName;
@@ -792,6 +794,9 @@ ImageDatabase::loadMetadata()
         } else {
             throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
         }
+
+        // Check whether images are panoramic or not
+        metadata["needsUnwrapping"] >> m_NeedsUnwrapping;
 
         // Get image resolution
         std::vector<int> size(2);

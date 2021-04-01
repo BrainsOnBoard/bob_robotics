@@ -516,6 +516,7 @@ private:
     std::tm m_CreationTime;
     hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
+    bool m_NeedsUnwrapping = true;
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
     static constexpr const char *EntriesFilename = "database_entries.csv";
 
