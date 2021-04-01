@@ -718,7 +718,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
                 }
 
                 // The new database won't have a video file
-                if (key == "videoFile" || key == "frameRate") {
+                if (key == "videoFile") {
                     continue;
                 }
             }
