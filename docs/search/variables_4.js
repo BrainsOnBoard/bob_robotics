@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['height_2311',['height',['../structGLFWvidmode.html#ac65942a5f6981695517437a9d571d03c',1,'GLFWvidmode::height()'],['../structGLFWimage.html#a0b7d95368f0c80d5e5c9875057c7dbec',1,'GLFWimage::height()']]]
+  ['extrafields_4900',['extraFields',['../structBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Entry.html#aaf500f2c290aec731fa1b99b9eb28710',1,'BoBRobotics::Navigation::ImageDatabase::Entry']]]
 ];

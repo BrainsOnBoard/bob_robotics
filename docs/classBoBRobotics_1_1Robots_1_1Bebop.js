@@ -34,7 +34,7 @@ var classBoBRobotics_1_1Robots_1_1Bebop =
     [ "land", "classBoBRobotics_1_1Robots_1_1Bebop.html#aa1287fb23d722c06a23c0401d057142f", null ],
     [ "relativeMove", "classBoBRobotics_1_1Robots_1_1Bebop.html#ac7ac8ec8a3a5c985c125ac097900523a", null ],
     [ "resetRelativeMoveState", "classBoBRobotics_1_1Robots_1_1Bebop.html#a22e992eed948a4235e0ae4ff31bc5f26", null ],
-    [ "setFlightEventHandler", "classBoBRobotics_1_1Robots_1_1Bebop.html#a22b22a92aa2578ddde061670b0b59b93", null ],
+    [ "setFlightEventHandler", "classBoBRobotics_1_1Robots_1_1Bebop.html#a1e88c51a17ad4a1a85521c95d5f21c0a", null ],
     [ "setPitch", "classBoBRobotics_1_1Robots_1_1Bebop.html#a960e464b31ce743414b619eafcce325c", null ],
     [ "setRoll", "classBoBRobotics_1_1Robots_1_1Bebop.html#a338c19aeaaf02fcaa44e6be10003f595", null ],
     [ "setVerticalSpeed", "classBoBRobotics_1_1Robots_1_1Bebop.html#a11b8b2fe1d5e5955ea3e132583141a18", null ],

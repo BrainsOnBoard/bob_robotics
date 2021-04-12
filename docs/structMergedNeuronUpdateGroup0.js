@@ -1,8 +1,8 @@
 var structMergedNeuronUpdateGroup0 =
 [
     [ "numNeurons", "structMergedNeuronUpdateGroup0.html#aff270df02a29d0dadcbc360f15f850eb", null ],
-    [ "r", "structMergedNeuronUpdateGroup0.html#abd6eb3159f4a17b5d49757145e473303", null ],
-    [ "speed", "structMergedNeuronUpdateGroup0.html#ad913e895a9a7210b22afc97fc5da40fd", null ],
-    [ "spk", "structMergedNeuronUpdateGroup0.html#a0678378718bfa495190826a8506538e6", null ],
-    [ "spkCnt", "structMergedNeuronUpdateGroup0.html#abd8d62874533c5634e736b86e48bb2a4", null ]
+    [ "r", "structMergedNeuronUpdateGroup0.html#a3664130ebbffc7dde61067e68ec0ebcc", null ],
+    [ "speed", "structMergedNeuronUpdateGroup0.html#abfdded49b99f66bc69a6bf540311aef9", null ],
+    [ "spk", "structMergedNeuronUpdateGroup0.html#aa2b63813adbb76811adc814322899649", null ],
+    [ "spkCnt", "structMergedNeuronUpdateGroup0.html#a5a6d2520ec22de09d18e9fc0440b3edb", null ]
 ];

@@ -1,8 +1,8 @@
 var structMergedNeuronInitGroup3 =
 [
-    [ "inSynInSyn0", "structMergedNeuronInitGroup3.html#aeaa4346e4159d45513c00b9f36a791d8", null ],
+    [ "inSynInSyn0", "structMergedNeuronInitGroup3.html#a27e5353e3649b1add7f7bf69fcd13a5a", null ],
     [ "numNeurons", "structMergedNeuronInitGroup3.html#a5fa310b6a7a626c8efe9f3f93ecc82f0", null ],
-    [ "r", "structMergedNeuronInitGroup3.html#a98dd6626722c416b732fa712d0cf3ba3", null ],
-    [ "spk", "structMergedNeuronInitGroup3.html#a802e0de3b9ce44268c25b94f3d3b7c24", null ],
-    [ "spkCnt", "structMergedNeuronInitGroup3.html#a93460030a139c36104086747d99a5d78", null ]
+    [ "r", "structMergedNeuronInitGroup3.html#a957d9e8e5019d6725702022fc49ff1e8", null ],
+    [ "spk", "structMergedNeuronInitGroup3.html#add541e2b7ce5f24045806cbd6d7df6b2", null ],
+    [ "spkCnt", "structMergedNeuronInitGroup3.html#ad6fb0e440a5892a69e718524db4ff63a", null ]
 ];
