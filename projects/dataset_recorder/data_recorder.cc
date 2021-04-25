@@ -40,8 +40,8 @@ using namespace BoBRobotics::Video;
 using namespace std::literals;
 
 
-void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
-                        cv::Mat &img,
+void readCameraThreadFunc(BoBRobotics::Video::Input *cam, BoBRobotics::Video::Input *cam_s,
+                        cv::Mat &img, cv::Mat &img_s,
                         std::atomic<bool> &shouldQuit,
                         std::mutex &mutex)
 {
@@ -50,6 +50,7 @@ void readCameraThreadFunc(BoBRobotics::Video::Input *cam,
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         std::lock_guard<std::mutex> lock(mutex);
         cam->readFrame(img);
+        cam_s->readFrame(img_s);
     }
 }
 
@@ -113,7 +114,7 @@ int bobMain(int argc, char* argv[])
 
     if (numTrials == 0) {
         LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
-        return EXIT_FAILURE;
+       // return EXIT_FAILURE;
     }
     std::stringstream ss;
     ss << "imgdataset_"  << str << "_" << gps_hour << "-" << gps_minute << "-" << gps_second;
@@ -121,15 +122,24 @@ int bobMain(int argc, char* argv[])
     const char *c  = folderName.c_str();
     BOB_ASSERT(mkdir(c, 0777) == 0);
     LOGD << "directory " << c << " created";
+
+    // open stereo cam
+
+
+
     auto pref_size = cv::Size(1440,1440);
-    auto cam = std::make_unique<OpenCVInput>(cv::CAP_V4L, pref_size, "pixpro_usb");
+    auto pref_size_s = cv::Size(2560, 960);
+    auto cam = std::make_unique<OpenCVInput>(1, pref_size, "pixpro_usb");
+    auto cam_stereo = std::make_unique<OpenCVInput>(0, pref_size_s, "stereo_cam");
     const auto cameraRes = cam->getOutputSize();
+    const auto cameraRes_s = cam_stereo->getOutputSize();
     LOGI << "camera initialised " << cameraRes;
+    LOGI << "stereo camera initialised " << cameraRes_s;
 
     //--------------------------------->>>>>>>>>>> START RECORDING <<<<<<<<<<<<----------------------------
     // start camera thread
-    cv::Mat tmpImage;
-    std::thread readCameraThread(&readCameraThreadFunc, cam.get(), std::ref(tmpImage), std::ref(shouldQuit), std::ref(mex));
+    cv::Mat tmpImage,tmpImage_s;
+    std::thread readCameraThread(&readCameraThreadFunc, cam.get(), cam_stereo.get(), std::ref(tmpImage), std::ref(tmpImage_s), std::ref(shouldQuit), std::ref(mex));
     std::this_thread::sleep_for(std::chrono::milliseconds(4000));
     BoBRobotics::BackgroundExceptionCatcher catcher;
     catcher.trapSignals();
@@ -163,9 +173,10 @@ int bobMain(int argc, char* argv[])
     for (;;) {
         // poll from camera thread
         sw.start();
-        cv::Mat originalImage;
+        cv::Mat originalImage, original_stereo;
         mex.lock();
         tmpImage.copyTo(originalImage);
+        tmpImage_s.copyTo(original_stereo);
         mex.unlock();
         std::ostringstream fileString;
         fileString << folderName << "/image" << i << ".jpg";
@@ -173,6 +184,12 @@ int bobMain(int argc, char* argv[])
 
         if (!cv::imwrite(fileName, originalImage)) {
             LOGW << "Could not save image file";
+        }
+        std::ostringstream fileString1;
+        fileString1 << folderName << "/stereo_image" << i << ".jpg";
+        cv::rotate(original_stereo, original_stereo, cv::ROTATE_180);
+        if (!cv::imwrite(fileName, original_stereo)) {
+            LOGW << "Could not save stereo image file";
         }
 
         // get imu data
@@ -217,7 +234,6 @@ int bobMain(int argc, char* argv[])
                 << " longitude: " <<  coord.lon.value()
                 << " num sats: " << data.numberOfSatellites
                 << " time: " << static_cast<units::time::millisecond_t>(sw_timestamp.elapsed()).value()/1000 << std::endl;
-
 
             // converting to UTM
             double UTMNorthing,UTMEasting, X, Y;
