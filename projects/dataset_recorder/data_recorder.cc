@@ -18,6 +18,7 @@
 #include "robots/rc_car_bot.h"
 #include "video/opencvinput.h"
 #include "third_party/UTM.h"
+#include "os/video.h"
 
 #include "imgproc/opencv_unwrap_360.h"
 #include "video/panoramic.h"
@@ -116,6 +117,23 @@ int bobMain(int argc, char* argv[])
         LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
        // return EXIT_FAILURE;
     }
+    auto cameras = OS::Video::getCameras();
+    int stereo_device_num = -1;
+    int panoramic_device_num = -1;
+    std::string panoramic_cam_name = "PIXPRO SP360 4K";
+    std::string cam_3d_name = "3D USB Camera";
+    for (auto cams : cameras) {
+
+        if (cams.second == panoramic_cam_name) {
+            LOGI << " PIXPRO SP360 4K available";
+            panoramic_device_num = cams.first;
+        }
+        if (cams.second == cam_3d_name) {
+            LOGI << " 3D USB Camera avaialable ";
+            stereo_device_num = cams.first;
+        }
+    }
+
     std::stringstream ss;
     ss << "imgdataset_"  << str << "_" << gps_hour << "-" << gps_minute << "-" << gps_second;
     const auto folderName = ss.str();
@@ -123,14 +141,10 @@ int bobMain(int argc, char* argv[])
     BOB_ASSERT(mkdir(c, 0777) == 0);
     LOGD << "directory " << c << " created";
 
-    // open stereo cam
-
-
-
     auto pref_size = cv::Size(1440,1440);
     auto pref_size_s = cv::Size(2560, 960);
-    auto cam = std::make_unique<OpenCVInput>(1, pref_size, "pixpro_usb");
-    auto cam_stereo = std::make_unique<OpenCVInput>(0, pref_size_s, "stereo_cam");
+    auto cam = std::make_unique<OpenCVInput>(panoramic_device_num, pref_size, "pixpro_usb");
+    auto cam_stereo = std::make_unique<OpenCVInput>(stereo_device_num, pref_size_s, "3D_USB_Camera");
     const auto cameraRes = cam->getOutputSize();
     const auto cameraRes_s = cam_stereo->getOutputSize();
     LOGI << "camera initialised " << cameraRes;
