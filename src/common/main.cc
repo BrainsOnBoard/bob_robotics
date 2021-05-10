@@ -104,10 +104,10 @@ initLogging()
     plog::init(severity, filename.c_str());
 
     /*
-         * Also print log messages to console in colour.
-         *
-         * The plog documentation reports that this should have static scope.
-         */
+     * Also print log messages to console in colour.
+     *
+     * The plog documentation reports that this should have static scope.
+     */
     static plog::ColorConsoleAppender<Formatter> appender;
     plog::get()->addAppender(&appender);
 }
