@@ -8,6 +8,9 @@
 // Standard C++ includes
 #include <exception>
 
+// Standard C includes
+#include <cstring>
+
 // Plog's default TxtFormatter is a bit verbose, so let's implement our own
 struct Formatter
 {
@@ -123,12 +126,61 @@ main(int argc, char **argv)
     // We always want plog working
     BoBRobotics::initLogging();
 
+    auto commitSev = plog::Severity::debug;
+#ifdef BOB_IS_EXPERIMENT
+    commitSev = plog::Severity::info; // Always print this info for an experiment
+    bool good = true;
+
+    LOGI << "Code compiled with IS_EXPERIMENT=TRUE; doing extra checks to see "
+            "if results will be suitable for publication...";
+
+#ifdef BOB_GIT_FAILED
+    good = false;
+
+    LOGE << "CMake was unable to run git, so there will be no record of which "
+            "version of the code is in use! Please download BoB robotics using "
+            "git clone.";
+#else
+#ifdef BOB_GIT_TREE_DIRTY
+    good = false;
+    LOGE << "The git working tree is dirty! You should stash or commit your "
+            "changes then rebuild this program for a real experiment. (The "
+            "reason is that otherwise there will be no record of exactly which "
+            "version of the code was used and so it cannot be guaranteed that "
+            "the experiment(s) can be repeated.)";
+#endif // BOB_GIT_TREE_DIRTY
+
+#ifdef BOB_GIT_COMMIT_NOT_IN_MASTER
+    good = false;
+    LOGE << "The current git commit for this code is not in the master branch. "
+            "All code used in publications must be reviewed and merged before "
+            "being used to collect data!";
+#endif // BOB_GIT_COMMIT_NOT_IN_MASTER
+
+#endif // BOB_GIT_FAILED
+
+#ifdef DEBUG
+    good = false;
+    LOGW << "This code is a debug build. You almost certainly want to rebuild "
+            "with cmake -DCMAKE_BUILD_TYPE=Release for experiments.";
+#endif // DEBUG
+
+    // Give some feedback in the case that no errors were printed
+    if (good) {
+        LOGI << "Extra experiment checks passed 🥳!";
+    }
+
+#endif // BOB_IS_EXPERIMENT
+
+    LOG(commitSev) << "BoB robotics git commit: " BOB_ROBOTICS_GIT_COMMIT;
+
     /*
-     * When debugging, it's handy to know exactly which version of the source
-     * code we compiled.
+     * BoB robotics could be being used as an external library, in which case
+     * there may be a different git tree in which the current program lives.
      */
-    LOGD << "Project git commit: " BOB_PROJECT_GIT_COMMIT;
-    LOGD << "BoB robotics git commit: " BOB_ROBOTICS_GIT_COMMIT;
+    if (strcmp(BOB_ROBOTICS_GIT_COMMIT, BOB_PROJECT_GIT_COMMIT) != 0) {
+        LOG(commitSev) << "Project git commit: " BOB_PROJECT_GIT_COMMIT;
+    }
 
 #ifndef DEBUG
     try {

@@ -15,7 +15,7 @@ macro(BoB_project)
     # Parse input args
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
-                          "INCLUDE_GENN_USERPROJECTS;GENN_CPU_ONLY"
+                          "INCLUDE_GENN_USERPROJECTS;GENN_CPU_ONLY;IS_EXPERIMENT"
                           "EXECUTABLE;GENN_MODEL;PYTHON_MODULE;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
@@ -45,6 +45,12 @@ macro(BoB_project)
     # if we don't then they won't be included in generated Visual Studio
     # projects.
     file(GLOB H_FILES "*.h")
+
+    # Used so that we can do extra checks etc. for code that should be
+    # experiment grade
+    if(PARSED_ARGS_IS_EXPERIMENT)
+        add_definitions(-DBOB_IS_EXPERIMENT)
+    endif()
 
     if(PARSED_ARGS_PYTHON_MODULE)
         set(NAME ${PARSED_ARGS_PYTHON_MODULE})
@@ -354,23 +360,24 @@ macro(always_included_packages)
     endif()
 endmacro()
 
-macro(get_git_commit DIR VARNAME)
+macro(get_git_commit DIR VARNAME RV_VARNAME)
     find_package(Git REQUIRED)
     execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
-                    RESULT_VARIABLE rv
+                    RESULT_VARIABLE ${RV_VARNAME}
                     OUTPUT_VARIABLE ${VARNAME}
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    if(NOT ${rv} EQUAL 0)
+    if(NOT ${RV_VARNAME} EQUAL 0)
         # Git might fail (e.g. if we're not in a git repo), but let's carry on regardless
         set(${VARNAME} "(unknown)")
-    else()
-        # Append -dirty if worktree has been modified
-        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
-        RESULT_VARIABLE rv)
-        if(NOT ${rv} EQUAL 0)
-            set(${VARNAME} ${${VARNAME}}-dirty)
-        endif()
+        return()
+    endif()
+
+    # Append -dirty if worktree has been modified
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
+                    RESULT_VARIABLE git_dirty_rv)
+    if(NOT ${git_dirty_rv} EQUAL 0)
+        set(${VARNAME} ${${VARNAME}}-dirty)
     endif()
 endmacro()
 
@@ -403,8 +410,27 @@ macro(BoB_build)
     add_definitions(-DBOB_ROBOTICS_PATH="${BOB_ROBOTICS_PATH}")
 
     # Pass the current git commits of project and BoB robotics as C macros
-    get_git_commit("${BOB_ROBOTICS_PATH}" BOB_ROBOTICS_GIT_COMMIT)
-    get_git_commit("${CMAKE_SOURCE_DIR}" PROJECT_GIT_COMMIT)
+    get_git_commit("${CMAKE_SOURCE_DIR}" PROJECT_GIT_COMMIT rv)
+    get_git_commit("${BOB_ROBOTICS_PATH}" BOB_ROBOTICS_GIT_COMMIT rv)
+
+    if (${rv} EQUAL 0)
+        # The git working tree is dirty
+        if ("${BOB_ROBOTICS_GIT_COMMIT}" MATCHES dirty)
+            add_definitions(-DBOB_GIT_TREE_DIRTY)
+        endif()
+
+        # Check whether the current commit is in master branch
+        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" branch -a --contains ${BOB_ROBOTICS_GIT_COMMIT}
+                        OUTPUT_VARIABLE ov
+                        ERROR_VARIABLE ev)
+        string(REGEX MATCH " (origin/)?master" match "${ov}")
+        if("${match}" STREQUAL "")
+            add_definitions(-DBOB_GIT_COMMIT_NOT_IN_MASTER)
+        endif()
+    else()
+        add_definitions(-DBOB_GIT_FAILED)
+    endif()
+
     add_definitions(-DBOB_ROBOTICS_GIT_COMMIT="${BOB_ROBOTICS_GIT_COMMIT}"
                     -DBOB_PROJECT_GIT_COMMIT="${PROJECT_GIT_COMMIT}")
 
