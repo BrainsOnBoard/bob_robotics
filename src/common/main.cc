@@ -85,7 +85,7 @@ void
 initLogging()
 {
 // Get log level
-#if defined(DEBUG) || defined(_DEBUG)
+#ifdef DEBUG
     constexpr plog::Severity defaultLogLevel = plog::Severity::debug;
 #else
     constexpr plog::Severity defaultLogLevel = plog::Severity::info;
