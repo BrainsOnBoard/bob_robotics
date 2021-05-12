@@ -5,9 +5,8 @@
 
 #pragma once
 
-// Standard C includes
-#include <cmath>
-#include <cstdlib>
+// OpenCV
+#include <opencv2/opencv.hpp>
 
 // Standard C++ includes
 #include <algorithm>
@@ -15,8 +14,9 @@
 #include <type_traits>
 #include <vector>
 
-// OpenCV
-#include <opencv2/opencv.hpp>
+// Standard C includes
+#include <cmath>
+#include <cstdlib>
 
 namespace BoBRobotics {
 namespace Navigation {
