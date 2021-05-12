@@ -4,6 +4,7 @@
 #endif
 #include "sim_params.h"
 #include "state_handler.h"
+#include "visual_navigation_bob.h"
 #include "visual_navigation_ui.h"
 
 // Antworld includes
@@ -107,7 +108,7 @@ int bobMain(int argc, char **argv)
     ImGui_ImplOpenGL2_Init();
 
 #ifdef NO_GENN
-    Navigation::PerfectMemory<> memory(cv::Size(36, 10));
+    VisualNavigationBoB<Navigation::PerfectMemory<>> memory(cv::Size(36, 10));
     VisualNavigationUI ui;
 #else
     // Mushroom body

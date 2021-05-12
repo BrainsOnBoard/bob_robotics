@@ -28,16 +28,13 @@
 // Forward declarations
 namespace BoBRobotics
 {
-namespace Navigation
-{
-    class VisualNavigationBase;
-}
 namespace AntWorld
 {
     class SnapshotProcessor;
 }
 }
 
+class VisualNavigationBase;
 class VisualNavigationUI;
 
 //----------------------------------------------------------------------------
@@ -81,7 +78,7 @@ public:
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
                  meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
-                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
+                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
                  VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
@@ -192,7 +189,7 @@ private:
     const meter_t m_PathHeight;
 
     //! Model used for visual navigation
-    BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
+    VisualNavigationBase &m_VisualNavigation;
 
     //! Object used to handle visual navigation model-specific UI
     VisualNavigationUI &m_VisualNavigationUI;

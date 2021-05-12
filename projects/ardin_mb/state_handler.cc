@@ -11,13 +11,13 @@
 
 // BoBRobotics includes
 #include "common/path.h"
-#include "navigation/visual_navigation_base.h"
 
 // Antworld includes
 #include "antworld/snapshot_processor.h"
 
 // Ardin MB includes
 #include "sim_params.h"
+#include "visual_navigation_base.h"
 #include "visual_navigation_ui.h"
 
 using namespace BoBRobotics;
@@ -29,7 +29,7 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
                            meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
-                           BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
+                           BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
                            VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),

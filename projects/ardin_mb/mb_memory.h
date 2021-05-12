@@ -17,18 +17,14 @@
 
 // BoB robotics includes
 #include "navigation/insilico_rotater.h"
-#include "navigation/visual_navigation_base.h"
 
-// Forward declarations
-namespace CLI
-{
-class App;
-}
+// Ardin MB includes
+#include "visual_navigation_base.h"
 
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
-class MBMemory : public BoBRobotics::Navigation::VisualNavigationBase
+class MBMemory : public VisualNavigationBase
 {
 public:
     MBMemory(unsigned int numPN, unsigned int numKC, unsigned int numEN, unsigned int numPNSynapsesPerKC,
@@ -55,13 +51,10 @@ public:
     //! Clear the memory
     virtual void clearMemory() override;
 
-    //------------------------------------------------------------------------
-    // Declared virtuals
-    //------------------------------------------------------------------------
-    virtual void write(cv::FileStorage &fs) const;
-    virtual void read(const cv::FileNode &node);
+    virtual void write(cv::FileStorage &fs) const override;
+    virtual void read(const cv::FileNode &node) override;
 
-    virtual void addCLIArguments(CLI::App&){}
+    virtual void addCLIArguments(CLI::App&) override{}
 
     //------------------------------------------------------------------------
     // Public API
