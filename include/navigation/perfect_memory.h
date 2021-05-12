@@ -47,9 +47,14 @@ public:
     {}
 
     //------------------------------------------------------------------------
+    // Typedefines
+    //------------------------------------------------------------------------
+    typedef std::pair<size_t, size_t> Window;
+
+    //------------------------------------------------------------------------
     // Constants
     //------------------------------------------------------------------------
-    static constexpr std::pair<size_t, size_t> FullWindow = std::make_pair(0, std::numeric_limits<size_t>::max());
+    static constexpr Window FullWindow = std::make_pair(0, std::numeric_limits<size_t>::max());
 
     //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
@@ -79,7 +84,7 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Test the algorithm with the specified image within a specified 'window' of snapshots
-    float test(const cv::Mat &image, std::pair<size_t, size_t> window) const
+    float test(const cv::Mat &image, const Window &window) const
     {
         testInternal(image, window);
 
@@ -96,7 +101,7 @@ public:
     /*!
      * \brief Get differences between current view and stored snapshots
      */
-    const std::vector<float> &getImageDifferences(const cv::Mat &image, std::pair<size_t, size_t> window = FullWindow) const
+    const std::vector<float> &getImageDifferences(const cv::Mat &image, const Window &window = FullWindow) const
     {
         testInternal(image, window);
         return m_Differences;
@@ -118,23 +123,23 @@ private:
     Store m_Store;
     mutable std::vector<float> m_Differences;
 
-    void testInternal(const cv::Mat &image, std::pair<size_t, size_t> window) const
+    void testInternal(const cv::Mat &image, const Window &window) const
     {
         // Ensure that minimum and maximum snapshot are within range
-        window.first = std::min(window.first, getNumSnapshots());
-        window.second = std::min(window.second, getNumSnapshots());
+        const size_t snapshotBegin = std::min(window.first, getNumSnapshots());
+        const size_t snapshotEnd = std::min(window.second, getNumSnapshots());
 
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
-        BOB_ASSERT(window.first < window.second);
+        BOB_ASSERT(snapshotBegin < snapshotEnd);
 
-        m_Differences.resize(window.second - window.first);
+        m_Differences.resize(snapshotEnd - snapshotBegin);
 
         // Loop through snapshots and caculate differences
         #pragma omp parallel for
-        for (size_t s = window.first; s < window.second; s++) {
+        for (size_t s = snapshotBegin; s < snapshotEnd; s++) {
             m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
         }
     }
