@@ -455,7 +455,7 @@ public:
             #pragma omp for
             for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
                 /*
-                 * You can't have uncaught exceptions eminating from OpenMP blocks,
+                 * You can't have uncaught exceptions emanating from OpenMP blocks,
                  * so we catch them and rethrow later.
                  */
                 try {

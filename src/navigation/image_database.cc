@@ -743,7 +743,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
 
     /*
      * *If* forEachImage runs in parallel, then each thread will need its own
-     * copy of these scrach variables.
+     * copy of these scratch variables.
      */
     static thread_local cv::Mat unwrapped;
     static thread_local std::string outPath;
