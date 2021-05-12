@@ -35,6 +35,11 @@ public:
         return m_Memory.test(image);
     }
 
+    //! Perform any updates that should happen at end of test scan
+    virtual void resetTestScan() override
+    {
+    }
+
     //! Clear the memory
     virtual void clearMemory() override
     {

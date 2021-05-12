@@ -226,6 +226,9 @@ bool StateHandler::handleEvent(State state, Event event)
             else {
                 std::cout << "Scan complete: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
 
+                // Perform any stateful updates in visual navigation class
+                m_VisualNavigation.resetTestScan();
+
                 // Snap ant to it's best heading
                 m_Pose.yaw() = m_BestTestHeading;
 

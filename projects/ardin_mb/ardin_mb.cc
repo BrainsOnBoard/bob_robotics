@@ -5,6 +5,7 @@
 #include "sim_params.h"
 #include "state_handler.h"
 #include "visual_navigation_bob.h"
+#include "visual_navigation_perfect_memory_window.h"
 #include "visual_navigation_ui.h"
 
 // Antworld includes
@@ -13,6 +14,7 @@
 // BoB Robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_window.h"
 
 // PLOG includes
 #include "plog/Log.h"
@@ -108,7 +110,9 @@ int bobMain(int argc, char **argv)
     ImGui_ImplOpenGL2_Init();
 
 #ifdef NO_GENN
-    VisualNavigationBoB<Navigation::PerfectMemory<>> memory(cv::Size(36, 10));
+    //VisualNavigationBoB<Navigation::PerfectMemory<>> memory(cv::Size(36, 10));
+    VisualNavigationPerfectMemoryWindow<> memory(std::make_unique<Navigation::PerfectMemoryWindow::Fixed>(10),
+                                                 cv::Size(36, 10));
     VisualNavigationUI ui;
 #else
     // Mushroom body

@@ -54,7 +54,7 @@ public:
     //------------------------------------------------------------------------
     // Constants
     //------------------------------------------------------------------------
-    static constexpr Window FullWindow = std::make_pair(0, std::numeric_limits<size_t>::max());
+    static const Window FullWindow;
 
     //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
@@ -144,6 +144,9 @@ private:
         }
     }
 };
+
+template<typename Store>
+const typename PerfectMemory<Store>::Window PerfectMemory<Store>::FullWindow = std::make_pair(0, std::numeric_limits<size_t>::max());
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryRotater

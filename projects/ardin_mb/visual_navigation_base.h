@@ -28,6 +28,9 @@ public:
     //! Test the algorithm with the specified image
     virtual float test(const cv::Mat &image) = 0;
 
+    //! Perform any updates that should happen at end of test scan
+    virtual void resetTestScan() = 0;
+
     //! Clear the memory
     virtual void clearMemory() = 0;
 
