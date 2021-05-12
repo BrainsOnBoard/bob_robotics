@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 // Standard C++ includes
+#include <limits>
 #include <utility>
 
 namespace BoBRobotics {
@@ -27,8 +28,31 @@ public:
 };
 
 //----------------------------------------------------------------------------
+// BoBRobotics::Navigation::PerfectMemoryWindow::Full
+//----------------------------------------------------------------------------
+//! Full window always searches entire perfect memory
+class Full : public Base
+{
+public:
+    //------------------------------------------------------------------------
+    // Base virtuals
+    //------------------------------------------------------------------------
+    //! Get window of snapshots
+    virtual std::pair<size_t, size_t> getWindow() const override
+    {
+        return std::make_pair(0, std::numeric_limits<size_t>::max());
+    }
+
+    //! Updates windows based on index of best snapshot and the corresponding low
+    virtual void updateWindow(size_t, float) override
+    {
+    }
+};
+
+//----------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryWindow::Fixed
 //----------------------------------------------------------------------------
+//! Fixed windows searches for route images within a fixed size window
 class Fixed : public Base
 {
 public:
@@ -61,6 +85,8 @@ private:
 //----------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient
 //----------------------------------------------------------------------------
+//! Dynamic best match gradient windows searches for route images within a window
+//! which grows and contracts based on whether familiarity increases or decreases
 class DynamicBestMatchGradient : public Base
 {
 public:

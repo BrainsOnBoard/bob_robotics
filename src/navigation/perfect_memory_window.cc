@@ -2,7 +2,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <limits>
 
 namespace BoBRobotics {
 namespace Navigation {
