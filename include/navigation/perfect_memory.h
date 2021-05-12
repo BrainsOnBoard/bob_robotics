@@ -140,7 +140,7 @@ private:
         // Loop through snapshots and caculate differences
         #pragma omp parallel for
         for (size_t s = snapshotBegin; s < snapshotEnd; s++) {
-            m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
+            m_Differences[s - snapshotBegin] = calcSnapshotDifference(image, getMaskImage(), s);
         }
     }
 };
