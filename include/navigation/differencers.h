@@ -56,9 +56,8 @@ end(const T &input)
  *
  * Can be passed to PerfectMemory as a template parameter.
  */
-class AbsDiff
+struct AbsDiff
 {
-public:
     template<typename InputArray1, typename InputArray2, typename OutputArray>
     static auto calculate(const InputArray1 &src1, const InputArray2 &src2,
                           OutputArray &dst)
@@ -84,9 +83,8 @@ public:
  *
  * Can be passed to PerfectMemory as a template parameter.
  */
-class RMSDiff
+struct RMSDiff
 {
-public:
     template<typename InputArray1, typename InputArray2, typename OutputArray>
     static auto calculate(const InputArray1 &src1,
                           const InputArray2 &src2, OutputArray &dst)
