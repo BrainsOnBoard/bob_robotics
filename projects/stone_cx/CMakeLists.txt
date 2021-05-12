@@ -18,7 +18,8 @@ else()
     message(FATAL_ERROR "Bad target specified")
 endif()
 
-BoB_project(EXECUTABLE ${TARGET}
+BoB_project(IS_EXPERIMENT TRUE
+            EXECUTABLE ${TARGET}
             SOURCES ${SOURCES}
             BOB_MODULES ${BOB_MODULES}
             GENN_MODEL model.cc
