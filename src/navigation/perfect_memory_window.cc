@@ -70,8 +70,8 @@ void DynamicBestMatchGradient::updateWindow(size_t bestSnapshot, float lowestDif
             m_FwdLASize = (m_FwdLASize > (m_MinFwdLASize + m_FwdLADecreaseSize)) ? (m_FwdLASize - m_FwdLADecreaseSize) : m_MinFwdLASize;
             m_RevLASize = (m_RevLASize > (m_MinRevLASize + m_RevLADecreaseSize)) ? (m_RevLASize - m_RevLADecreaseSize) : m_MinRevLASize;
         }
-        // Otherwise, increase both fwd and rev lookahead sizes
-        else {
+        // Otherwise, if new difference is greater, increase both fwd and rev lookahead sizes
+        else if(lowestDifference > m_LastLowestDifference){
             m_FwdLASize = std::min(m_MaxFwdLASize,
                                               m_FwdLASize + m_FwdLAIncreaseSize);
             m_RevLASize = std::min(m_MaxRevLASize,
