@@ -46,6 +46,11 @@ public:
     {}
 
     //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+    static constexpr std::pair<size_t, size_t> FullWindow = std::make_pair(0, std::numeric_limits<size_t>::max());
+
+    //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
     virtual void train(const cv::Mat &image) override
@@ -61,7 +66,7 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        return test(image, std::make_pair(0, std::numeric_limits<size_t>::max()));
+        return test(image, FullWindow);
     }
 
     virtual void clearMemory() override
@@ -72,10 +77,10 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    //! Test the algorithm with the specified image against specified range of snapshots
-    float test(const cv::Mat &image, std::pair<size_t, size_t> snapshotRange) const
+    //! Test the algorithm with the specified image within a specified 'window' of snapshots
+    float test(const cv::Mat &image, std::pair<size_t, size_t> window) const
     {
-        testInternal(image, snapshotRange);
+        testInternal(image, window);
 
         // Return smallest difference
         return *std::min_element(m_Differences.begin(), m_Differences.end());
@@ -90,10 +95,9 @@ public:
     /*!
      * \brief Get differences between current view and stored snapshots
      */
-    const std::vector<float> &getImageDifferences(const cv::Mat &image,
-                                                  std::pair<size_t, size_t> snapshotRange = std::make_pair(0, std::numeric_limits<size_t>::max())) const
+    const std::vector<float> &getImageDifferences(const cv::Mat &image, std::pair<size_t, size_t> window = FullWindow) const
     {
-        testInternal(image, snapshotRange);
+        testInternal(image, window);
         return m_Differences;
     }
 
@@ -113,23 +117,23 @@ private:
     Store m_Store;
     mutable std::vector<float> m_Differences;
 
-    void testInternal(const cv::Mat &image, std::pair<size_t, size_t> snapshotRange) const
+    void testInternal(const cv::Mat &image, std::pair<size_t, size_t> window) const
     {
         // Ensure that minimum and maximum snapshot are within range
-        snapshotRange.first = std::min(snapshotRange.first, getNumSnapshots());
-        snapshotRange.second = std::min(snapshotRange.second, getNumSnapshots());
+        window.first = std::min(window.first, getNumSnapshots());
+        window.second = std::min(window.second, getNumSnapshots());
 
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
-        BOB_ASSERT(snapshotRange.first < snapshotRange.second);
+        BOB_ASSERT(window.first < window.second);
 
-        m_Differences.resize(snapshotRange.second - snapshotRange.first);
+        m_Differences.resize(window.second - window.first);
 
         // Loop through snapshots and caculate differences
         #pragma omp parallel for
-        for (size_t s = snapshotRange.first; s < snapshotRange.second; s++) {
+        for (size_t s = window.first; s < window.second; s++) {
             m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
         }
     }
