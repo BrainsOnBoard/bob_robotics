@@ -667,7 +667,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
     const auto csvPath = m_Path / EntriesFilename;
     if (csvPath.exists()) {
         // **TODO**: Selectively copy CSV file entries for this case instead
-        BOB_ASSERT(frameSkip > 1);
+        BOB_ASSERT(frameSkip == 1);
 
         filesystem::copy_file(csvPath, destination / EntriesFilename);
     }
