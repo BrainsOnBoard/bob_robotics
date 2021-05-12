@@ -118,7 +118,7 @@ private:
 
         m_Differences.resize(numSnapshots);
 
-        // Loop through snapshots and caculate differences
+        // Loop through snapshots and calculate differences
         #pragma omp parallel for
         for (size_t s = 0; s < numSnapshots; s++) {
             m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
