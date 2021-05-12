@@ -48,7 +48,7 @@ public:
         // Get window
         const auto window = m_Window->getWindow();
 
-        LOGI << "Testing within window" << window.first << "-" << window.second;
+        LOGD << "Testing within window" << window.first << "-" << window.second;
 
         // Get image differences within window
         const auto &differences = m_Memory.getImageDifferences(image, window);
@@ -70,7 +70,8 @@ public:
     //! Perform any updates that should happen at end of test scan
     virtual void resetTestScan() override
     {
-         LOGI << "Updating window with best image=" << m_BestImageIndex << ", difference:" << m_MinTestDifference;
+        LOGD << "Updating window with best image=" << m_BestImageIndex << ", difference:" << m_MinTestDifference;
+
         // Update window
         m_Window->updateWindow(m_BestImageIndex, m_MinTestDifference);
 
