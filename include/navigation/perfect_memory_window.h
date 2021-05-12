@@ -32,7 +32,7 @@ public:
 class Fixed : public Base
 {
 public:
-    Fixed(size_t forwardLookaheadSize, size_t reverseLookaheadSize = 0);
+    Fixed(size_t fwdLASize, size_t revLASize = 0);
 
     //------------------------------------------------------------------------
     // Base virtuals
@@ -50,14 +50,61 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    //! How many images to look forward and backwards in perfect memory
-    const size_t m_ForwardLookaheadSize;
-    const size_t m_ReverseLookaheadSize;
+    //! How many images to look fwd and backwards in perfect memory
+    const size_t m_FwdLASize;
+    const size_t m_RevLASize;
 
     //! Pointer to last position in window
     size_t m_MemoryPointer;
 };
 
+//----------------------------------------------------------------------------
+// BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient
+//----------------------------------------------------------------------------
+class DynamicBestMatchGradient : public Base
+{
+public:
+    DynamicBestMatchGradient(size_t fwdLASize, size_t fwdLAIncreaseSize, size_t fwdLADecreaseSize, size_t minFwdLASize, size_t maxFwdLASize,
+                             size_t revLASize = 0, size_t revLAIncreaseSize = 0, size_t revLADecreaseSize = 0, size_t minRevLASize = 0, size_t maxRevLASize = 0);
+
+    //------------------------------------------------------------------------
+    // Base virtuals
+    //------------------------------------------------------------------------
+    //! Get window of snapshots
+    virtual std::pair<size_t, size_t> getWindow() const override;
+
+    //! Updates windows based on index of best snapshot and the corresponding low
+    virtual void updateWindow(size_t bestSnapshot, float lowestDifference) override;
+
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    //! Minimum numbers of images to look fwd and backwards in perfect memory
+    const size_t m_MinFwdLASize;
+    const size_t m_MinRevLASize;
+
+    //! Maximums numbers of images to look fwd and backwards in perfect memory
+    const size_t m_MaxFwdLASize;
+    const size_t m_MaxRevLASize;
+
+    //! How much to increase fwd and rev lookaheads by if difference increases
+    const size_t m_FwdLAIncreaseSize;
+    const size_t m_RevLAIncreaseSize;
+
+    //! How much to decrease fwd and rev lookaheads by if difference decreases
+    const size_t m_FwdLADecreaseSize;
+    const size_t m_RevLADecreaseSize;
+
+    //! How many images to look fwd and backwards in perfect memory
+    size_t m_FwdLASize;
+    size_t m_RevLASize;
+
+    float m_LastLowestDifference;
+
+    //! Pointer to last position in window
+    size_t m_MemoryPointer;
+};
 } // PerfectMemoryWindow
 } // Navigation
 } // BoBRobotics
