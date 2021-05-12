@@ -61,7 +61,7 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        return test(image, 0, std::numeric_limits<size_t>::max());
+        return test(image, std::make_pair(0, std::numeric_limits<size_t>::max()));
     }
 
     virtual void clearMemory() override
@@ -73,9 +73,9 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Test the algorithm with the specified image against specified range of snapshots
-    float test(const cv::Mat &image, size_t minSnapshot, size_t maxSnapshot) const
+    float test(const cv::Mat &image, std::pair<size_t, size_t> snapshotRange) const
     {
-        testInternal(image, minSnapshot, maxSnapshot);
+        testInternal(image, snapshotRange);
 
         // Return smallest difference
         return *std::min_element(m_Differences.begin(), m_Differences.end());
@@ -90,10 +90,10 @@ public:
     /*!
      * \brief Get differences between current view and stored snapshots
      */
-    const std::vector<float> &getImageDifferences(const cv::Mat &image, size_t minSnapshot = 0,
-                                                  size_t maxSnapshot = std::numeric_limits<size_t>::max()) const
+    const std::vector<float> &getImageDifferences(const cv::Mat &image,
+                                                  std::pair<size_t, size_t> snapshotRange = std::make_pair(0, std::numeric_limits<size_t>::max())) const
     {
-        testInternal(image, minSnapshot, maxSnapshot);
+        testInternal(image, snapshotRange);
         return m_Differences;
     }
 
@@ -113,23 +113,23 @@ private:
     Store m_Store;
     mutable std::vector<float> m_Differences;
 
-    void testInternal(const cv::Mat &image, size_t minSnapshot, size_t maxSnapshot) const
+    void testInternal(const cv::Mat &image, std::pair<size_t, size_t> snapshotRange) const
     {
         // Ensure that minimum and maximum snapshot are within range
-        minSnapshot = std::min(minSnapshot, getNumSnapshots());
-        maxSnapshot = std::min(maxSnapshot, getNumSnapshots());
+        snapshotRange.first = std::min(snapshotRange.first, getNumSnapshots());
+        snapshotRange.second = std::min(snapshotRange.second, getNumSnapshots());
 
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
-        BOB_ASSERT(minSnapshot < maxSnapshot);
+        BOB_ASSERT(snapshotRange.first < snapshotRange.second);
 
-        m_Differences.resize(maxSnapshot - minSnapshot);
+        m_Differences.resize(snapshotRange.second - snapshotRange.first);
 
         // Loop through snapshots and caculate differences
         #pragma omp parallel for
-        for (size_t s = minSnapshot; s < maxSnapshot; s++) {
+        for (size_t s = snapshotRange.first; s < snapshotRange.second; s++) {
             m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
         }
     }
