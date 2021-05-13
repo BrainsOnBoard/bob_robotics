@@ -1,10 +1,10 @@
 var structMergedNeuronUpdateGroup4 =
 [
-    [ "i", "structMergedNeuronUpdateGroup4.html#abe6b40498d64a414f98ad0a53d182d66", null ],
-    [ "inSynInSyn0", "structMergedNeuronUpdateGroup4.html#acbc36daffc63d75d7d51b8c8f9803e75", null ],
-    [ "inSynInSyn1", "structMergedNeuronUpdateGroup4.html#a96bfbc8177703833091d053eb6b3315c", null ],
+    [ "i", "structMergedNeuronUpdateGroup4.html#a36a85ec04a84bd4b2995123a17f6b422", null ],
+    [ "inSynInSyn0", "structMergedNeuronUpdateGroup4.html#a09ce3ee14ffe3ae85ea90a46170d1143", null ],
+    [ "inSynInSyn1", "structMergedNeuronUpdateGroup4.html#a4b25d9c121f031dba057c67b3ade7231", null ],
     [ "numNeurons", "structMergedNeuronUpdateGroup4.html#aac490d149281386e2aebe8893d8f6511", null ],
-    [ "r", "structMergedNeuronUpdateGroup4.html#a494abecc95785e0732f5c66ca4d405ce", null ],
-    [ "spk", "structMergedNeuronUpdateGroup4.html#ad69e4ef3525b9e345493251a5acf968c", null ],
-    [ "spkCnt", "structMergedNeuronUpdateGroup4.html#a6c1a29f8c3b20a3de3a786a7d0a19b66", null ]
+    [ "r", "structMergedNeuronUpdateGroup4.html#a58e649478304bbe83f3a26b33e668a98", null ],
+    [ "spk", "structMergedNeuronUpdateGroup4.html#aa3b981fcb7bcb9c56bfc17a4eaf4ce23", null ],
+    [ "spkCnt", "structMergedNeuronUpdateGroup4.html#a915dc66067d4760f60250bca2e9bf671", null ]
 ];

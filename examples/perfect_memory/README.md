@@ -5,6 +5,9 @@ The image set used for the example can be generated with the ``ant_world_db_crea
 ```sh
 # From bob_robotics
 cd tools/ant_world_db_creator
-make
-./ant_world_db_creator ../../libantworld/ant1_route1.bin
+mkdir build
+cd build
+cmake ..
+make -j$(nproc)
+../ant_world_db_creator ../../../resources/antworld/ant1_route1.bin
 ```

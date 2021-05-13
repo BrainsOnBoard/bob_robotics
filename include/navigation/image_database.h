@@ -202,6 +202,11 @@ public:
                    << "time" << ss.str()
                    << "project_git_commit" << BOB_PROJECT_GIT_COMMIT
                    << "bob_robotics_git_commit" << BOB_ROBOTICS_GIT_COMMIT
+#ifdef BOB_IS_EXPERIMENT
+                   << "is_experiment" << 1
+#else
+                   << "is_experiment" << 0
+#endif
                    << "type" << (isRoute ? "route" : "grid");
         }
 

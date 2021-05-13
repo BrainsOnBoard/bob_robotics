@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['window_20reference_2496',['Window reference',['../group__window.html',1,'']]]
+  ['type_20traits_5146',['Type Traits',['../group__TypeTraits.html',1,'']]]
 ];
