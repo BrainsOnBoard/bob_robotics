@@ -10,6 +10,7 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <limits>
 #include <map>
 #include <string>
 
@@ -22,11 +23,12 @@ class Config
 
 public:
     Config() : m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
-        m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50), m_WatershedMarkerImageFilename("segmentation.png"),
-        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort),
-        m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1), m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25),
-        m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
-        m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
+        m_MaxSnapshotRotateDegrees(180.0), m_PMFwdLASize(std::numeric_limits<size_t>::max()), m_PMFwdLAIncreaseSize(0), m_PMFwdLADecreaseSize(0),
+        m_PMMinFwdLASize(0), m_PMMaxFwdLASize(std::numeric_limits<size_t>::max()), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50),
+        m_WatershedMarkerImageFilename("segmentation.png"), m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0),
+        m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1),
+        m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25), m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}},
+        m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"), m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
     {
     }
 
@@ -41,6 +43,12 @@ public:
     bool shouldStreamOutput() const{ return m_StreamOutput; }
 
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
+
+    size_t getPMFwdLASize() const{ return m_PMFwdLASize; }
+    size_t getPMFwdLAIncreaseSize() const{ return m_PMFwdLAIncreaseSize; }
+    size_t getPMFwdLADecreaseSize() const{ return m_PMFwdLADecreaseSize; }
+    size_t getPMMinFwdLASize() const{ return m_PMMinFwdLASize; }
+    size_t getPMMaxFwdLASize() const{ return m_PMMaxFwdLASize; }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
     const std::string &getTestingSuffix() const{ return m_TestingSuffix; }
@@ -103,6 +111,11 @@ public:
         fs << "outputPath" << getOutputPath().str();
         fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
+        fs << "pmFwdLASize" << getIntegerSize(getPMFwdLASize());
+        fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdLAIncreaseSize());
+        fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdLAIncreaseSize());
+        fs << "pmMinFwdLASize" << getIntegerSize(getPMMinFwdLASize());
+        fs << "pmMaxFwdLASize" << getIntegerSize(getPMMaxFwdLASize());
         fs << "unwrapRes" << getUnwrapRes();
         fs << "croppedRect" << getCroppedRect();
         fs << "maskImageFilename" << getMaskImageFilename();
@@ -164,6 +177,13 @@ public:
         m_TestingSuffix = (std::string)testingSuffix;
 
         cv::read(node["maxSnapshotRotateDegrees"], m_MaxSnapshotRotateDegrees, m_MaxSnapshotRotateDegrees);
+
+        readIntegerSize(node["pmFwdLASize"], m_PMFwdLASize, m_PMFwdLASize);
+        readIntegerSize(node["pmFwdLAIncreaseSize"], m_PMFwdLAIncreaseSize, m_PMFwdLAIncreaseSize);
+        readIntegerSize(node["pmFwdLADecreaseSize"], m_PMFwdLADecreaseSize, m_PMFwdLADecreaseSize);
+        readIntegerSize(node["pmMinFwdLASize"], m_PMMinFwdLASize, m_PMMinFwdLASize);
+        readIntegerSize(node["pmMaxFwdLASize"], m_PMMaxFwdLASize, m_PMMaxFwdLASize);
+
         cv::read(node["unwrapRes"], m_UnwrapRes, m_UnwrapRes);
         cv::read(node["croppedRect"], m_CroppedRect, m_CroppedRect);
 
@@ -231,6 +251,35 @@ public:
 
 private:
     //------------------------------------------------------------------------
+    // Static methods
+    //------------------------------------------------------------------------
+    // **YUCK** as well as std::strings, it also seems like OpenCV can't serialise size_t
+    static int getIntegerSize(size_t value)
+    {
+        if(value == std::numeric_limits<size_t>::max()) {
+            return -1;
+        }
+        else {
+            return static_cast<int>(value);
+        }
+    }
+
+    static void readIntegerSize(const cv::FileNode &node, size_t &value, size_t defaultValue)
+    {
+        const int defaultIntValue = (defaultValue == std::numeric_limits<size_t>::max()) ? -1 : static_cast<int>(defaultValue);
+
+        int intValue;
+        cv::read(node, intValue, defaultIntValue);
+
+        if(intValue == -1) {
+            value = std::numeric_limits<size_t>::max();
+        }
+        else {
+            value = static_cast<size_t>(intValue);
+        }
+    }
+
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
     bool m_UseBinaryImage;
@@ -257,6 +306,21 @@ private:
 
     // Maximum (absolute) angle snapshots will be rotated by
     double m_MaxSnapshotRotateDegrees;
+
+    //! Initial size of perfect memory forward lookahead window
+    size_t m_PMFwdLASize;
+
+    //! Size of increases in perfect memory forward lookahead window
+    size_t m_PMFwdLAIncreaseSize;
+
+    //! Size of decreases in perfect memory forward lookahead window
+    size_t m_PMFwdLADecreaseSize;
+
+    //! Minimum size of perfect memory forward lookahead window
+    size_t m_PMMinFwdLASize;
+
+    //! Maximum size of perfect memory forward lookahead window
+    size_t m_PMMaxFwdLASize;
 
     // What resolution to unwrap panoramas to?
     cv::Size m_UnwrapRes;
