@@ -92,6 +92,11 @@ public:
         return m_Memory.getUnwrapResolution();
     }
 
+    virtual std::pair<size_t, size_t> getHighlightedWaypoints() const
+    {
+        return m_Window->getWindow();
+    }
+
 private:
     //------------------------------------------------------------------------
     // Members

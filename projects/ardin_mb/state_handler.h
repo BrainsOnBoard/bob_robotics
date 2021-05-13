@@ -168,6 +168,9 @@ private:
     //! Counters for total number of steps made when testing (or random walking)
     unsigned int m_NumTestSteps;
 
+    //! Should route highlights be shown (rather than familiarity)
+    bool m_ShowRouteHighlight;
+
     //! RNG used for random walk
     std::mt19937 m_RNG;
 

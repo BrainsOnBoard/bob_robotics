@@ -127,6 +127,7 @@ void RouteArdin::load(const std::string &filename, bool realign)
     // Clear existing waypoints and headings
     m_Waypoints.clear();
     m_Headings.clear();
+    m_Colours.clear();
     m_TrainedSnapshots.clear();
 
     // Open file for binary IO
@@ -241,16 +242,16 @@ void RouteArdin::load(const std::string &filename, bool realign)
     glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    {
-        // Bind and upload zeros to colour buffer
-        std::vector<uint8_t> colours(m_Waypoints.size() * 3, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
-        glBufferData(GL_ARRAY_BUFFER, m_Waypoints.size() * sizeof(uint8_t) * 3, colours.data(), GL_DYNAMIC_DRAW);
+    // Resize and zero colours
+    m_Colours.resize(m_Waypoints.size(), {0, 0, 0});
 
-        // Set colour pointer and enable client state in VAO
-        glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
-        glEnableClientState(GL_COLOR_ARRAY);
-    }
+    // Bind and upload colour buffer
+    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
+    glBufferData(GL_ARRAY_BUFFER, m_Colours.size() * sizeof(uint8_t) * 3, m_Colours.data(), GL_DYNAMIC_DRAW);
+
+    // Set colour pointer and enable client state in VAO
+    glColorPointer(3, GL_UNSIGNED_BYTE, 0, BUFFER_OFFSET(0));
+    glEnableClientState(GL_COLOR_ARRAY);
 
     // Unbind VAOs
     glBindVertexArray(0);
@@ -320,11 +321,35 @@ void RouteArdin::setWaypointFamiliarity(size_t pos, double familiarity)
 {
     // Convert familiarity to a grayscale colour
     const uint8_t intensity = (uint8_t)std::min(255.0, std::max(0.0, std::round(255.0 * familiarity)));
-    const uint8_t colour[3] = {intensity, intensity, intensity};
+    m_Colours[pos] = {intensity, intensity, intensity};
 
     // Update this positions colour in colour buffer
     glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, pos * sizeof(uint8_t) * 3, sizeof(uint8_t) * 3, colour);
+    glBufferSubData(GL_ARRAY_BUFFER, pos * sizeof(uint8_t) * 3, sizeof(uint8_t) * 3, &m_Colours[pos]);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+//----------------------------------------------------------------------------
+void RouteArdin::highlightWaypointRange(size_t begin, size_t end)
+{
+    // Define colours
+    const std::array<uint8_t, 3> black{0, 0, 0};
+    const std::array<uint8_t, 3> white{255, 255, 255};
+
+    // Constrain end within waypoints
+    end = std::min(end, m_Waypoints.size());
+
+    // Fill black before begin
+    std::fill(m_Colours.begin(), m_Colours.begin() + begin, black);
+
+    // Fill white between begin and end
+    std::fill(m_Colours.begin() + begin, m_Colours.begin() + end, white);
+
+    // Fill black after end
+    std::fill(m_Colours.begin() + end, m_Colours.end(), black);
+
+    // Re-upload colours
+    glBindBuffer(GL_ARRAY_BUFFER, m_WaypointsColourVBO);
+    glBufferData(GL_ARRAY_BUFFER, m_Colours.size() * sizeof(uint8_t) * 3, m_Colours.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //----------------------------------------------------------------------------

@@ -51,6 +51,11 @@ public:
         return m_Memory.getUnwrapResolution();
     }
 
+    virtual std::pair<size_t, size_t> getHighlightedWaypoints() const
+    {
+        return std::make_pair(0, std::numeric_limits<size_t>::max());
+    }
+
 private:
     //------------------------------------------------------------------------
     // Members
