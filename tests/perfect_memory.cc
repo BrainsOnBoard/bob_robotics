@@ -4,7 +4,14 @@
 // BoB robotics includes
 #include "navigation/perfect_memory.h"
 
+using namespace BoBRobotics::Navigation;
+
 TEST(PerfectMemory, SampleImage)
 {
-    testAlgo<BoBRobotics::Navigation::PerfectMemoryRotater<>>("pm.bin");
+    testAlgo<PerfectMemoryRotater<>>("pm.bin");
+}
+
+TEST(PerfectMemory, SampleImageRMS)
+{
+    testAlgo<PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>>("pm_rms.bin");
 }
