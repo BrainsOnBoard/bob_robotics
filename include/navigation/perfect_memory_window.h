@@ -25,28 +25,9 @@ public:
 
     //! Updates windows based on index of best snapshot and the corresponding low
     virtual void updateWindow(size_t bestSnapshot, float lowestDifference) = 0;
-};
 
-//----------------------------------------------------------------------------
-// BoBRobotics::Navigation::PerfectMemoryWindow::Full
-//----------------------------------------------------------------------------
-//! Full window always searches entire perfect memory
-class Full : public Base
-{
-public:
-    //------------------------------------------------------------------------
-    // Base virtuals
-    //------------------------------------------------------------------------
-    //! Get window of snapshots
-    virtual std::pair<size_t, size_t> getWindow() const override
-    {
-        return std::make_pair(0, std::numeric_limits<size_t>::max());
-    }
-
-    //! Updates windows based on index of best snapshot and the corresponding low
-    virtual void updateWindow(size_t, float) override
-    {
-    }
+    //! Resets window e.g. if agent is displaced
+    virtual void resetWindow() = 0;
 };
 
 //----------------------------------------------------------------------------
@@ -65,10 +46,10 @@ public:
     virtual std::pair<size_t, size_t> getWindow() const override;
 
     //! Updates windows based on index of best snapshot and the corresponding low
-    virtual void updateWindow(size_t bestSnapshot, float) override
-    {
-        m_MemoryPointer = bestSnapshot;
-    }
+    virtual void updateWindow(size_t bestSnapshot, float) override;
+
+    //! Resets window e.g. if agent is displaced
+    virtual void resetWindow() override;
 
 private:
     //------------------------------------------------------------------------
@@ -101,6 +82,9 @@ public:
 
     //! Updates windows based on index of best snapshot and the corresponding low
     virtual void updateWindow(size_t bestSnapshot, float lowestDifference) override;
+
+    //! Resets window e.g. if agent is displaced
+    virtual void resetWindow() override;
 
 private:
     //------------------------------------------------------------------------
