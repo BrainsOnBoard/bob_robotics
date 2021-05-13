@@ -597,6 +597,13 @@ bool StateHandler::handleUI()
             }
             ImGui::EndMenu();
         }
+
+        if(ImGui::BeginMenu("View")) {
+            if(ImGui::MenuItem("Route highlights", nullptr, m_ShowRouteHighlight)) {
+                m_ShowRouteHighlight = !m_ShowRouteHighlight;
+            }
+            ImGui::EndMenu();
+        }
         ImGui::EndMainMenuBar();
     }
 
