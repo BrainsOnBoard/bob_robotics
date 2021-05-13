@@ -27,7 +27,8 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 // StateHandler
 //----------------------------------------------------------------------------
-StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+                           float jitterSD, bool quitAfterTrain, bool autoTest, bool realignRoutes,
                            meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
                            BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
                            VisualNavigationUI &visualNavigationUI)
@@ -35,7 +36,7 @@ StateHandler::StateHandler(const std::string &worldFilename, const std::string &
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
     m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800), m_VectorField(20_cm),
     m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_SnapshotProcessor(snapshotProcessor), m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
+    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_RealignRoutes(realignRoutes), m_SnapshotProcessor(snapshotProcessor), m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
 
 {
     // Load world
@@ -492,7 +493,7 @@ bool StateHandler::checkAntPosition()
 void StateHandler::loadRoute(const std::string &filename)
 {
     // If loading route is successful
-    m_Route.load(filename);
+    m_Route.load(filename, m_RealignRoutes);
 
     // Get bounds of route
     const auto &routeMin = m_Route.getMinBound();

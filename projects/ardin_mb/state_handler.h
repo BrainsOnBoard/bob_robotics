@@ -76,7 +76,8 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+                 float jitterSD, bool quitAfterTrain, bool autoTest, bool realignRoutes,
                  meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
                  BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
                  VisualNavigationUI &visualNavigationUI);
@@ -181,6 +182,9 @@ private:
 
     //! Should we automatically test after training? (useful for automated benchmarking)
     const bool m_AutoTest;
+
+    //! In the original paper, routes were 're-aligned' so
+    const bool m_RealignRoutes;
 
     //! Snapshot processor - takes screen images and pre-processes
     BoBRobotics::AntWorld::SnapshotProcessor &m_SnapshotProcessor;

@@ -57,6 +57,7 @@ int bobMain(int argc, char **argv)
     float jitterSD = 0.0f;
     bool quitAfterTrain = false;
     bool autoTest = false;
+    bool unalignedRoutes = false;
     float heightMetres = 0.01f;
     std::vector<float> minBound;
     std::vector<float> maxBound;
@@ -68,6 +69,7 @@ int bobMain(int argc, char **argv)
     app.add_option("--log", logFilename, "File to log to", true);
     app.add_flag("--quit-after-train", quitAfterTrain, "Whether to quit once model is trained");
     app.add_flag("--auto-test", autoTest, "Whether to test the model once it's trained");
+    app.add_flag("--unaligned-routes", unalignedRoutes, "Whether to align routes following original method");
     app.add_option("--height", heightMetres, "Height in metres to navigate at", true);
     app.add_option("--min-bound", minBound, "Override default world min bound with this one", true)->expected(3);
     app.add_option("--max-bound", maxBound, "Override default world max bound with this one", true)->expected(3);
@@ -136,7 +138,7 @@ int bobMain(int argc, char **argv)
     glPointSize(4.0);
 
     // Create state machine and set it as window user pointer
-    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest,
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest, !unalignedRoutes,
                               units::length::meter_t{heightMetres}, minBound, maxBound,
                               snapshotProcessor, memory, ui);
 
