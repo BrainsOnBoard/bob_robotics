@@ -157,6 +157,23 @@ void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
         m_Window.updateWindow(rightBestSnapshot, rightLowestDifference);
     }
 }
+//------------------------------------------------------------------------
+void PerfectMemoryConstrainedDynamicWindow::writeCSVHeader(std::ostream &os)
+{
+    // Superclass
+    PerfectMemory::writeCSVHeader(os);
+
+    os << ", Window start, Window end";
+}
+//------------------------------------------------------------------------
+void PerfectMemoryConstrainedDynamicWindow::writeCSVLine(std::ostream &os)
+{
+    // Superclass
+    PerfectMemory::writeCSVLine(os);
+
+    const auto window = m_Window.getWindow();
+    os << ", " << window.first << ", " << window.second;
+}
 
 //------------------------------------------------------------------------
 // InfoMax

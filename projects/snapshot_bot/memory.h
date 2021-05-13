@@ -102,6 +102,9 @@ class PerfectMemoryConstrained : public PerfectMemory
 public:
     PerfectMemoryConstrained(const Config &config, const cv::Size &inputSize);
 
+    //------------------------------------------------------------------------
+    // MemoryBase virtuals
+    //------------------------------------------------------------------------
     virtual void test(const cv::Mat &snapshot) override;
 
 private:
@@ -120,8 +123,13 @@ class PerfectMemoryConstrainedDynamicWindow : public PerfectMemory
 public:
     PerfectMemoryConstrainedDynamicWindow(const Config &config, const cv::Size &inputSize);
 
+    //------------------------------------------------------------------------
+    // MemoryBase virtuals
+    //------------------------------------------------------------------------
     virtual void test(const cv::Mat &snapshot) override;
 
+    virtual void writeCSVHeader(std::ostream &os) override;
+    virtual void writeCSVLine(std::ostream &os) override;
 private:
     //------------------------------------------------------------------------
     // Members
