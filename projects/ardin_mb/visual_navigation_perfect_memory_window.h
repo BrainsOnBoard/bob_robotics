@@ -51,7 +51,7 @@ public:
         LOGD << "Testing within window" << window.first << "-" << window.second;
 
         // Get image differences within window
-        const auto &differences = m_Memory.getImageDifferences(image, window);
+        const auto &differences = m_Memory.getImageDifferences(window, image);
 
         // Find minimum difference in window
         const auto minDifference = std::min_element(differences.begin(), differences.end());
