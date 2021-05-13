@@ -177,7 +177,7 @@ public:
     const auto &getImageDifferences(const typename PerfectMemory<Store>::Window &window, Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(window, rotater);
+        calcImageDifferences(0, std::numeric_limits<size_t>::max(), rotater);
         return m_RotatedDifferences;
     }
 
@@ -192,7 +192,7 @@ public:
     const auto &getImageDifferences(Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(PerfectMemory<Store>::FullWindow, rotater);
+        calcImageDifferences(0, std::numeric_limits<size_t>::max(), rotater);
         return m_RotatedDifferences;
     }
 
@@ -202,10 +202,11 @@ public:
      *
      * The parameters are perfect-forwarded to the Rotater class, so e.g. for
      * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
-     * for the scan step.
+     * for the scan step. **NOTE** I wanted window to be a const reference but for
+     * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
-    auto getHeading(const typename PerfectMemory<Store>::Window &window, Ts &&... args) const
+    auto getHeading(typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
         // Ensure that minimum and maximum snapshot are within range
         const size_t snapshotBegin = std::min(window.first, this->getNumSnapshots());
