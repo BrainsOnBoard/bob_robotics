@@ -21,9 +21,9 @@ class Config
     using Milliseconds = std::chrono::duration<double, std::milli>;
 
 public:
-    Config() : m_UseHOG(false), m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
-        m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50), m_WatershedMarkerImageFilename("segmentation.png"), m_NumHOGOrientations(8), m_NumHOGPixelsPerCell(10),
-        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), 
+    Config() : m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
+        m_MaxSnapshotRotateDegrees(180.0), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50), m_WatershedMarkerImageFilename("segmentation.png"),
+        m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0), m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort),
         m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1), m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25),
         m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}}, m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"),
         m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
@@ -33,14 +33,13 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    bool shouldUseHOG() const{ return m_UseHOG; }
     bool shouldUseBinaryImage() const{ return m_UseBinaryImage; }
     bool shouldUseHorizonVector() const{ return m_UseHorizonVector; }
     bool shouldTrain() const{ return m_Train; }
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
-    
+
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
@@ -52,17 +51,13 @@ public:
     const std::string &getMaskImageFilename() const{ return m_MaskImageFilename; }
     const std::string &getWatershedMarkerImageFilename() const{ return m_WatershedMarkerImageFilename; }
 
-    int getNumHOGOrientations() const{ return m_NumHOGOrientations; }
-    int getNumHOGPixelsPerCell() const{ return m_NumHOGPixelsPerCell; }
-    int getHOGDescriptorSize() const{ return (getUnwrapRes().width * getUnwrapRes().height * getNumHOGOrientations()) / (getNumHOGPixelsPerCell() * getNumHOGPixelsPerCell()); }
-
     float getJoystickDeadzone() const{ return m_JoystickDeadzone; }
 
     bool shouldAutoTrain() const{ return m_AutoTrain; }
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
     Milliseconds getMotorCommandInterval() const{ return m_MotorCommandInterval; }
     Milliseconds getMotorTurnCommandInterval() const{ return m_MotorTurnCommandInterval; }
-    
+
     bool shouldUseViconTracking() const{ return m_UseViconTracking; }
     int getViconTrackingPort() const{ return m_ViconTrackingPort; }
     const std::string &getViconTrackingObjectName() const{ return m_ViconTrackingObjectName; }
@@ -76,7 +71,7 @@ public:
     int getServerListenPort() const{ return m_ServerListenPort; }
     int getSnapshotServerListenPort() const{ return m_SnapshotServerListenPort; }
     int getBestSnapshotServerListenPort() const{ return m_BestSnapshotServerListenPort; }
-    
+
     float getMoveSpeed() const{ return m_MoveSpeed; }
 
     float getTurnSpeed(units::angle::degree_t angleDifference) const
@@ -99,7 +94,6 @@ public:
     void write(cv::FileStorage& fs) const
     {
         fs << "{";
-        fs << "shouldUseHOG" << shouldUseHOG();
         fs << "shouldUseBinaryImage" << shouldUseBinaryImage();
         fs << "shouldUseHorizonVector" << shouldUseHorizonVector();
         fs << "shouldTrain" << shouldTrain();
@@ -113,8 +107,6 @@ public:
         fs << "croppedRect" << getCroppedRect();
         fs << "maskImageFilename" << getMaskImageFilename();
         fs << "watershedMarkerImageFilename" << getWatershedMarkerImageFilename();
-        fs << "numHOGOrientations" << getNumHOGOrientations();
-        fs << "numHOGPixelsPerCell" << getNumHOGPixelsPerCell();
         fs << "joystickDeadzone" << getJoystickDeadzone();
         fs << "autoTrain" << shouldAutoTrain();
         fs << "trainInterval" << getTrainInterval().count();
@@ -152,14 +144,13 @@ public:
     {
         // Read settings
         // **NOTE** we use cv::read rather than stream operators as we want to use current values as defaults
-        cv::read(node["shouldUseHOG"], m_UseHOG, m_UseHOG);
         cv::read(node["shouldUseBinaryImage"], m_UseBinaryImage, m_UseBinaryImage);
         cv::read(node["shouldUseHorizonVector"], m_UseHorizonVector, m_UseHorizonVector);
         cv::read(node["shouldTrain"], m_Train, m_Train);
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
-        
+
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
 
@@ -184,8 +175,6 @@ public:
         cv::read(node["watershedMarkerImageFilename"], watershedMarkerImageFilename, m_WatershedMarkerImageFilename);
         m_WatershedMarkerImageFilename = (std::string)watershedMarkerImageFilename;
 
-        cv::read(node["numHOGOrientations"], m_NumHOGOrientations, m_NumHOGOrientations);
-        cv::read(node["numHOGPixelsPerCell"], m_NumHOGPixelsPerCell, m_NumHOGPixelsPerCell);
         cv::read(node["joystickDeadzone"], m_JoystickDeadzone, m_JoystickDeadzone);
         cv::read(node["serverListenPort"], m_ServerListenPort, m_ServerListenPort);
         cv::read(node["snapshotServerListenPort"], m_SnapshotServerListenPort, m_SnapshotServerListenPort);
@@ -244,9 +233,6 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    // Should we use HOG features or raw images?
-    bool m_UseHOG;
-
     bool m_UseBinaryImage;
 
     bool m_UseHorizonVector;
@@ -275,7 +261,7 @@ private:
     // What resolution to unwrap panoramas to?
     cv::Size m_UnwrapRes;
 
-    // Rectangle to crop unwrapped image into 
+    // Rectangle to crop unwrapped image into
     cv::Rect m_CroppedRect;
 
     // Filename of mask used to crop out unwanted bits of robot
@@ -283,10 +269,6 @@ private:
 
     // Filename of image used to provide markers to watershed segmentation algorithm;
     std::string m_WatershedMarkerImageFilename;
-
-    // HOG configuration
-    int m_NumHOGOrientations;
-    int m_NumHOGPixelsPerCell;
 
     // How large should the deadzone be on the analogue joystick?
     float m_JoystickDeadzone;
