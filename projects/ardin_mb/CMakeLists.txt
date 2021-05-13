@@ -16,4 +16,6 @@ else()
 endif()
 
 # Suppress warning from inside imgui
-add_compile_flags(-Wno-int-to-pointer-cast)
+if(NOT WIN32)
+    add_compile_flags(-Wno-int-to-pointer-cast)
+endif()
