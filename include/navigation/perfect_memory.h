@@ -72,7 +72,7 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        return test(image, FullWindow);
+        return test(FullWindow, image);
     }
 
     virtual void clearMemory() override
@@ -84,9 +84,9 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Test the algorithm with the specified image within a specified 'window' of snapshots
-    float test(const cv::Mat &image, const Window &window) const
+    float test(const Window &window, const cv::Mat &image) const
     {
-        testInternal(image, window);
+        testInternal(window, image);
 
         // Return smallest difference
         return *std::min_element(m_Differences.begin(), m_Differences.end());
@@ -98,12 +98,17 @@ public:
     //! Return a specific snapshot
     const cv::Mat &getSnapshot(size_t index) const{ return m_Store.getSnapshot(index); }
 
-    /*!
-     * \brief Get differences between current view and stored snapshots
-     */
-    const std::vector<float> &getImageDifferences(const cv::Mat &image, const Window &window = FullWindow) const
+    //! Get differences between current view and all stored snapshots
+    const std::vector<float> &getImageDifferences(const cv::Mat &image) const
     {
-        testInternal(image, window);
+        testInternal(FullWindow, image);
+        return m_Differences;
+    }
+
+    //! Get differences between current view and specified 'window' of stored snapshots
+    const std::vector<float> &getImageDifferences(const Window &window, const cv::Mat &image) const
+    {
+        testInternal(window, image);
         return m_Differences;
     }
 
@@ -123,7 +128,7 @@ private:
     Store m_Store;
     mutable std::vector<float> m_Differences;
 
-    void testInternal(const cv::Mat &image, const Window &window) const
+    void testInternal(const Window &window, const cv::Mat &image) const
     {
         // Ensure that minimum and maximum snapshot are within range
         const size_t snapshotBegin = std::min(window.first, getNumSnapshots());
@@ -162,6 +167,21 @@ public:
     }
 
     /*!
+     * \brief Get differences between current view and stored snapshots within a 'window'
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step.
+     */
+    template<class... Ts>
+    const auto &getImageDifferences(const typename PerfectMemory<Store>::Window &window, Ts &&... args) const
+    {
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(window, rotater);
+        return m_RotatedDifferences;
+    }
+
+    /*!
      * \brief Get differences between current view and stored snapshots
      *
      * The parameters are perfect-forwarded to the Rotater class, so e.g. for
@@ -172,8 +192,43 @@ public:
     const auto &getImageDifferences(Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(rotater);
+        calcImageDifferences(PerfectMemory<Store>::FullWindow, rotater);
         return m_RotatedDifferences;
+    }
+
+    /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots within a 'window'
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step.
+     */
+    template<class... Ts>
+    auto getHeading(const typename PerfectMemory<Store>::Window &window, Ts &&... args) const
+    {
+        // Ensure that minimum and maximum snapshot are within range
+        const size_t snapshotBegin = std::min(window.first, this->getNumSnapshots());
+        const size_t snapshotEnd = std::min(window.second, this->getNumSnapshots());
+
+        BOB_ASSERT(snapshotBegin < snapshotEnd);
+
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        calcImageDifferences(snapshotBegin, snapshotEnd, rotater);
+
+        // Now get the minimum for each snapshot and the column this corresponds to
+        const size_t numSnapshots = snapshotEnd - snapshotBegin;
+        m_BestColumns.resize(numSnapshots);
+        m_MinimumDifferences.resize(numSnapshots);
+
+        #pragma omp parallel for
+        for (size_t i  = 0; i < numSnapshots; i++) {
+            m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
+        }
+
+        // Return result
+        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater),
+                              std::make_tuple(&m_RotatedDifferences));
     }
 
     /*!
@@ -187,22 +242,7 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(rotater);
-        const size_t numSnapshots = this->getNumSnapshots();
-
-        // Now get the minimum for each snapshot and the column this corresponds to
-        m_BestColumns.resize(numSnapshots);
-        m_MinimumDifferences.resize(numSnapshots);
-
-        #pragma omp parallel for
-        for (size_t i = 0; i < numSnapshots; i++) {
-            m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
-        }
-
-        // Return result
-        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater),
-                              std::make_tuple(&m_RotatedDifferences));
+        return getHeading(PerfectMemory<Store>::FullWindow, std::forward<Ts>(args)...);
     }
 
 private:
@@ -214,24 +254,21 @@ private:
     // Private API
     //------------------------------------------------------------------------
     template<class RotaterType>
-    void calcImageDifferences(RotaterType &rotater) const
+    void calcImageDifferences(size_t snapshotBegin, size_t snapshotEnd, RotaterType &rotater) const
     {
-        const auto numSnapshots = this->getNumSnapshots();
-        BOB_ASSERT(numSnapshots > 0);
-
         // Preallocate snapshot difference vectors
-        m_RotatedDifferences.resize(numSnapshots, rotater.numRotations());
+        m_RotatedDifferences.resize(snapshotEnd - snapshotBegin, rotater.numRotations());
 
         // Scan across image columns
         rotater.rotate(
-                [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
+                [this, snapshotBegin, snapshotEnd](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
                     // Loop through snapshots
-                    for (size_t s = 0; s < numSnapshots; s++) {
+                    for (size_t s = snapshotBegin; s < snapshotEnd; s++) {
                         // Calculate difference
-                        m_RotatedDifferences(s, i) = this->calcSnapshotDifference(fr, mask, s);
+                        m_RotatedDifferences(s - snapshotBegin, i) = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
     }
-}; // PerfectMemoryBase
+};
 } // Navigation
 } // BoBRobotics

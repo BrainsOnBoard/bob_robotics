@@ -30,6 +30,16 @@ std::pair<size_t, size_t> Fixed::getWindow() const
             m_MemoryPointer + m_FwdLASize);
     }
 }
+//----------------------------------------------------------------------------
+void Fixed::updateWindow(size_t bestSnapshot, float)
+{
+    m_MemoryPointer = bestSnapshot;
+}
+//----------------------------------------------------------------------------
+void Fixed::resetWindow()
+{
+    m_MemoryPointer = std::numeric_limits<size_t>::max();
+}
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient
@@ -82,6 +92,11 @@ void DynamicBestMatchGradient::updateWindow(size_t bestSnapshot, float lowestDif
     // Update memory pointer and last lowest difference
     m_MemoryPointer = bestSnapshot;
     m_LastLowestDifference = lowestDifference;
+}
+//----------------------------------------------------------------------------
+void DynamicBestMatchGradient::resetWindow()
+{
+    m_MemoryPointer = std::numeric_limits<size_t>::max();
 }
 } // PerfectMemoryWindow
 } // Navigation

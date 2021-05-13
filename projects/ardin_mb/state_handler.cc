@@ -27,15 +27,16 @@ using namespace units::length;
 //----------------------------------------------------------------------------
 // StateHandler
 //----------------------------------------------------------------------------
-StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+                           float jitterSD, bool quitAfterTrain, bool autoTest, bool realignRoutes,
                            meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
                            BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
                            VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
     m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
-    m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800), m_VectorField(20_cm),
+    m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800), m_VectorField(20_cm), m_ShowRouteHighlight(true),
     m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
-    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_SnapshotProcessor(snapshotProcessor), m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
+    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_RealignRoutes(realignRoutes), m_SnapshotProcessor(snapshotProcessor), m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
 
 {
     // Load world
@@ -147,7 +148,9 @@ bool StateHandler::handleEvent(State state, Event event)
             }
 
             // Mark results from previous training snapshot on route
-            m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
+            if(!m_ShowRouteHighlight) {
+                m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
+            }
 
             // If GeNN isn't training and we have more route points to train
             if(m_TrainPoint < m_Route.size()) {
@@ -228,6 +231,12 @@ bool StateHandler::handleEvent(State state, Event event)
 
                 // Perform any stateful updates in visual navigation class
                 m_VisualNavigation.resetTestScan();
+
+                // If we should show highlights, do so
+                if(m_ShowRouteHighlight) {
+                    const auto highlight = m_VisualNavigation.getHighlightedWaypoints();
+                    m_Route.highlightWaypointRange(highlight.first, highlight.second);
+                }
 
                 // Snap ant to it's best heading
                 m_Pose.yaw() = m_BestTestHeading;
@@ -492,7 +501,7 @@ bool StateHandler::checkAntPosition()
 void StateHandler::loadRoute(const std::string &filename)
 {
     // If loading route is successful
-    m_Route.load(filename);
+    m_Route.load(filename, m_RealignRoutes);
 
     // Get bounds of route
     const auto &routeMin = m_Route.getMinBound();
@@ -585,6 +594,13 @@ bool StateHandler::handleUI()
 
             if(ImGui::MenuItem("Build vector field", nullptr, false, routeLoaded)) {
                 m_StateMachine.transition(State::BuildingVectorField);
+            }
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("View")) {
+            if(ImGui::MenuItem("Route highlights", nullptr, m_ShowRouteHighlight)) {
+                m_ShowRouteHighlight = !m_ShowRouteHighlight;
             }
             ImGui::EndMenu();
         }
