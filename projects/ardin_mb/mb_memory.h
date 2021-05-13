@@ -46,10 +46,23 @@ public:
     virtual void train(const cv::Mat &image) override;
 
     //! Test the algorithm with the specified image
-    virtual float test(const cv::Mat &image) const override;
+    virtual float test(const cv::Mat &image) override;
+
+    //! Perform any updates that should happen at end of test scan
+    virtual void resetTestScan() override {};
 
     //! Clear the memory
     virtual void clearMemory() override;
+
+    virtual const cv::Size &getUnwrapResolution() const override
+    {
+        return cv::Size(m_InputWidth, m_InputHeight);
+    }
+
+    virtual std::pair<size_t, size_t> getHighlightedWaypoints() const
+    {
+        return std::make_pair(0, std::numeric_limits<size_t>::max());
+    }
 
     virtual void write(cv::FileStorage &fs) const override;
     virtual void read(const cv::FileNode &node) override;
@@ -115,10 +128,10 @@ protected:
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    virtual void initPresent(unsigned long long duration) const = 0;
-    virtual void beginPresent(const cv::Mat &snapshotFloat) const = 0;
-    virtual void endPresent() const = 0;
-    virtual void recordAdditional() const{}
+    virtual void initPresent(unsigned long long duration) = 0;
+    virtual void beginPresent(const cv::Mat &snapshotFloat) = 0;
+    virtual void endPresent() = 0;
+    virtual void recordAdditional(){}
 
     //------------------------------------------------------------------------
     // Protected methods
@@ -128,7 +141,7 @@ protected:
         return (unsigned int)std::round(ms / m_TimestepMs);
     }
 
-    SharedLibraryModel<float> &getSLM() const
+    SharedLibraryModel<float> &getSLM()
     {
         return m_SLM;
     }
@@ -137,7 +150,7 @@ private:
     //------------------------------------------------------------------------
     // Private API
     //------------------------------------------------------------------------
-    std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train) const;
+    std::tuple<unsigned int, unsigned int, unsigned int> present(const cv::Mat &image, bool train);
 
     template<typename R>
     void calcImageDifferences(R &rotater) const
@@ -156,7 +169,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     // Floating point version of snapshot
-    mutable cv::Mat m_SnapshotFloat;
+    cv::Mat m_SnapshotFloat;
 
     // Model parameters
     const unsigned int m_NumPN;
@@ -191,19 +204,19 @@ private:
     float m_PostStimulusDurationMs;
 
     // Spike recording infrastructure
-    mutable Spikes m_PNSpikes;
-    mutable Spikes m_KCSpikes;
-    mutable Spikes m_ENSpikes;
+    Spikes m_PNSpikes;
+    Spikes m_KCSpikes;
+    Spikes m_ENSpikes;
 
-    mutable unsigned int m_NumPNSpikes;
-    mutable unsigned int m_NumKCSpikes;
-    mutable unsigned int m_NumENSpikes;
+    unsigned int m_NumPNSpikes;
+    unsigned int m_NumKCSpikes;
+    unsigned int m_NumENSpikes;
 
-    mutable unsigned int m_NumUsedWeights;
-    mutable unsigned int m_NumActivePN;
-    mutable unsigned int m_NumActiveKC;
+    unsigned int m_NumUsedWeights;
+    unsigned int m_NumActivePN;
+    unsigned int m_NumActiveKC;
 
-    mutable SharedLibraryModel<float> m_SLM;
+    SharedLibraryModel<float> m_SLM;
 
-    mutable std::vector<float> m_RotatedDifferences;
+    std::vector<float> m_RotatedDifferences;
 };
