@@ -784,7 +784,7 @@ if(WIN32)
         set(PLATFORM x64-windows)
     endif()
 
-    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
         set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}/debug")
     else()
         set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}")
