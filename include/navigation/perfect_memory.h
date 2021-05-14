@@ -177,8 +177,14 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
+        // Ensure that minimum and maximum snapshot are within range
+        const size_t snapshotBegin = std::min(window.first, this->getNumSnapshots());
+        const size_t snapshotEnd = std::min(window.second, this->getNumSnapshots());
+
+        BOB_ASSERT(snapshotBegin < snapshotEnd);
+
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(0, std::numeric_limits<size_t>::max(), rotater);
+        calcImageDifferences(snapshotBegin, snapshotEnd, rotater);
         return m_RotatedDifferences;
     }
 
@@ -193,7 +199,7 @@ public:
     const auto &getImageDifferences(Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(0, std::numeric_limits<size_t>::max(), rotater);
+        calcImageDifferences(0, this->getNumSnapshots(), rotater);
         return m_RotatedDifferences;
     }
 
