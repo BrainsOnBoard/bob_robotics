@@ -10,7 +10,6 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <memory>
 
 //----------------------------------------------------------------------------
 // VisualNavigationPerfectMemoryWindow
@@ -23,12 +22,12 @@ class VisualNavigationPerfectMemoryWindow : public VisualNavigationBase
     template<typename T>
     using PerfectMemory = BoBRobotics::Navigation::PerfectMemory<T>;
 
-    typedef std::unique_ptr<BoBRobotics::Navigation::PerfectMemoryWindow::Base> WindowPtr;
+    typedef BoBRobotics::Navigation::PerfectMemoryWindow::Base &WindowRef;
 
 public:
     template<class... Ts>
-    VisualNavigationPerfectMemoryWindow(WindowPtr window, Ts &&... args)
-    :   m_Memory(std::forward<Ts>(args)...), m_Window(std::move(window)),
+    VisualNavigationPerfectMemoryWindow(WindowRef window, Ts &&... args)
+    :   m_Memory(std::forward<Ts>(args)...), m_Window(window),
         m_MinTestDifference(std::numeric_limits<float>::max()), m_BestImageIndex(std::numeric_limits<size_t>::max())
     {
     }
@@ -46,7 +45,7 @@ public:
     virtual float test(const cv::Mat &image) override
     {
         // Get window
-        const auto window = m_Window->getWindow();
+        const auto window = m_Window.getWindow();
 
         LOGD << "Testing within window" << window.first << "-" << window.second;
 
@@ -73,7 +72,7 @@ public:
         LOGD << "Updating window with best image=" << m_BestImageIndex << ", difference:" << m_MinTestDifference;
 
         // Update window
-        m_Window->updateWindow(m_BestImageIndex, m_MinTestDifference);
+        m_Window.updateWindow(m_BestImageIndex, m_MinTestDifference);
 
         // Reset state
         m_MinTestDifference = std::numeric_limits<float>::max();
@@ -94,7 +93,7 @@ public:
 
     virtual std::pair<size_t, size_t> getHighlightedWaypoints() const
     {
-        return m_Window->getWindow();
+        return m_Window.getWindow();
     }
 
 private:
@@ -102,7 +101,7 @@ private:
     // Members
     //------------------------------------------------------------------------
     PerfectMemory<S> m_Memory;
-    WindowPtr m_Window;
+    WindowRef m_Window;
 
     float m_MinTestDifference;
     size_t m_BestImageIndex;

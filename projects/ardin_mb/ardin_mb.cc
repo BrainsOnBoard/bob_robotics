@@ -113,11 +113,11 @@ int bobMain(int argc, char **argv)
 
 #ifdef NO_GENN
     //VisualNavigationBoB<Navigation::PerfectMemory<>> memory(cv::Size(36, 10));
-    /*VisualNavigationPerfectMemoryWindow<> memory(std::make_unique<Navigation::PerfectMemoryWindow::Fixed>(10),
-                                                   cv::Size(36, 10));*/
-    VisualNavigationPerfectMemoryWindow<> memory(
-        std::make_unique<Navigation::PerfectMemoryWindow::DynamicBestMatchGradient>(10, 5, 5, 10, 200),
-        cv::Size(36, 10));
+
+    //auto perfectMemoryWindow = Navigation::PerfectMemoryWindow::Fixed(10);
+    auto perfectMemoryWindow = Navigation::PerfectMemoryWindow::DynamicBestMatchGradient(10, {5, 5, 10, 200});
+    VisualNavigationPerfectMemoryWindow<> memory(perfectMemoryWindow, cv::Size(36, 10));
+
     VisualNavigationUI ui;
 #else
     // Mushroom body

@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 // Standard C++ includes
+#include <algorithm>
 #include <limits>
 #include <utility>
 
@@ -71,8 +72,35 @@ private:
 class DynamicBestMatchGradient : public Base
 {
 public:
-    DynamicBestMatchGradient(size_t fwdLASize, size_t fwdLAIncreaseSize, size_t fwdLADecreaseSize, size_t minFwdLASize, size_t maxFwdLASize,
-                             size_t revLASize = 0, size_t revLAIncreaseSize = 0, size_t revLADecreaseSize = 0, size_t minRevLASize = 0, size_t maxRevLASize = 0);
+    struct WindowConfig
+    {
+        //! How much to increase the size of window by if best image difference increases
+        size_t increaseSize;
+
+        //! How much to decrease the size of window by if best image difference decreases
+        size_t decreaseSize;
+
+         //! Minimum size of window to search in perfect memory
+        size_t minSize;
+
+        //! Maximum size of window to search in perfect memory
+        size_t maxSize;
+
+        //! Helper to decrease size as specified by config
+        size_t decreaseWindowSize(size_t size) const
+        {
+            return (size > (minSize + decreaseSize)) ? (size - decreaseSize) : minSize;
+        }
+
+        //! Helper to increase size as specified by config
+        size_t increaseWindowSize(size_t size) const
+        {
+            return std::min(maxSize, size + increaseSize);
+        }
+    };
+
+    DynamicBestMatchGradient(size_t fwdWindowSize, const WindowConfig &fwdWindowConfig,
+                             size_t revWindowSize = 0, const WindowConfig &revWindowConfig = {0, 0, 0, 0});
 
     //------------------------------------------------------------------------
     // Base virtuals
@@ -87,29 +115,20 @@ public:
     virtual void resetWindow() override;
 
 private:
+
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    //! Minimum numbers of images to look fwd and backwards in perfect memory
-    const size_t m_MinFwdLASize;
-    const size_t m_MinRevLASize;
-
-    //! Maximums numbers of images to look fwd and backwards in perfect memory
-    const size_t m_MaxFwdLASize;
-    const size_t m_MaxRevLASize;
-
-    //! How much to increase fwd and rev lookaheads by if difference increases
-    const size_t m_FwdLAIncreaseSize;
-    const size_t m_RevLAIncreaseSize;
-
-    //! How much to decrease fwd and rev lookaheads by if difference decreases
-    const size_t m_FwdLADecreaseSize;
-    const size_t m_RevLADecreaseSize;
+    // Configuration of forward and reverse search windows
+    const WindowConfig m_FwdWindowConfig;
+    const WindowConfig m_RevWindowConfig;
 
     //! How many images to look fwd and backwards in perfect memory
-    size_t m_FwdLASize;
-    size_t m_RevLASize;
+    size_t m_FwdWindowSize;
+    size_t m_RevWindowSize;
 
+    //! Lowest image difference encountered at last update
     float m_LastLowestDifference;
 
     //! Pointer to last position in window

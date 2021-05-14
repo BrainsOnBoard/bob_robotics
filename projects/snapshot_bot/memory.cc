@@ -120,8 +120,7 @@ void PerfectMemoryConstrained::test(const cv::Mat &snapshot)
 PerfectMemoryConstrainedDynamicWindow::PerfectMemoryConstrainedDynamicWindow(const Config &config, const cv::Size &inputSize)
 :   PerfectMemory(config, inputSize), m_ImageWidth(inputSize.width),
     m_NumScanColumns((size_t)std::round(turn_t(config.getMaxSnapshotRotateAngle()).value() * (double)inputSize.width)),
-    m_Window(config.getPMFwdLASize(), config.getPMFwdLAIncreaseSize(), config.getPMFwdLADecreaseSize(),
-             config.getPMMinFwdLASize(), config.getPMMaxFwdLASize())
+    m_Window(config.getPMFwdLASize(), config.getPMFwdConfig())
 {
 }
 //------------------------------------------------------------------------

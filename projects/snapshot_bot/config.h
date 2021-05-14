@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "navigation/perfect_memory_window.h"
 #include "net/connection.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -20,11 +21,11 @@
 class Config
 {
     using Milliseconds = std::chrono::duration<double, std::milli>;
+    using WindowConfig = BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient::WindowConfig;
 
 public:
     Config() : m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false),
-        m_MaxSnapshotRotateDegrees(180.0), m_PMFwdLASize(std::numeric_limits<size_t>::max()), m_PMFwdLAIncreaseSize(0), m_PMFwdLADecreaseSize(0),
-        m_PMMinFwdLASize(0), m_PMMaxFwdLASize(std::numeric_limits<size_t>::max()), m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50),
+        m_MaxSnapshotRotateDegrees(180.0), m_PMFwdLASize(std::numeric_limits<size_t>::max()), m_PMFwdConfig{0, 0, 0, 0}, m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50),
         m_WatershedMarkerImageFilename("segmentation.png"), m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0),
         m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1),
         m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25), m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}},
@@ -45,10 +46,7 @@ public:
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
 
     size_t getPMFwdLASize() const{ return m_PMFwdLASize; }
-    size_t getPMFwdLAIncreaseSize() const{ return m_PMFwdLAIncreaseSize; }
-    size_t getPMFwdLADecreaseSize() const{ return m_PMFwdLADecreaseSize; }
-    size_t getPMMinFwdLASize() const{ return m_PMMinFwdLASize; }
-    size_t getPMMaxFwdLASize() const{ return m_PMMaxFwdLASize; }
+    const WindowConfig &getPMFwdConfig() const{ return m_PMFwdConfig; }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
     const std::string &getTestingSuffix() const{ return m_TestingSuffix; }
@@ -112,10 +110,10 @@ public:
         fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
         fs << "pmFwdLASize" << getIntegerSize(getPMFwdLASize());
-        fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdLAIncreaseSize());
-        fs << "pmFwdLADecreaseSize" << getIntegerSize(getPMFwdLADecreaseSize());
-        fs << "pmMinFwdLASize" << getIntegerSize(getPMMinFwdLASize());
-        fs << "pmMaxFwdLASize" << getIntegerSize(getPMMaxFwdLASize());
+        fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdConfig().increaseSize);
+        fs << "pmFwdLADecreaseSize" << getIntegerSize(getPMFwdConfig().decreaseSize);
+        fs << "pmMinFwdLASize" << getIntegerSize(getPMFwdConfig().minSize);
+        fs << "pmMaxFwdLASize" << getIntegerSize(getPMFwdConfig().maxSize);
         fs << "unwrapRes" << getUnwrapRes();
         fs << "croppedRect" << getCroppedRect();
         fs << "maskImageFilename" << getMaskImageFilename();
@@ -179,10 +177,10 @@ public:
         cv::read(node["maxSnapshotRotateDegrees"], m_MaxSnapshotRotateDegrees, m_MaxSnapshotRotateDegrees);
 
         readIntegerSize(node["pmFwdLASize"], m_PMFwdLASize, m_PMFwdLASize);
-        readIntegerSize(node["pmFwdLAIncreaseSize"], m_PMFwdLAIncreaseSize, m_PMFwdLAIncreaseSize);
-        readIntegerSize(node["pmFwdLADecreaseSize"], m_PMFwdLADecreaseSize, m_PMFwdLADecreaseSize);
-        readIntegerSize(node["pmMinFwdLASize"], m_PMMinFwdLASize, m_PMMinFwdLASize);
-        readIntegerSize(node["pmMaxFwdLASize"], m_PMMaxFwdLASize, m_PMMaxFwdLASize);
+        readIntegerSize(node["pmFwdLAIncreaseSize"], m_PMFwdConfig.increaseSize, m_PMFwdConfig.increaseSize);
+        readIntegerSize(node["pmFwdLADecreaseSize"], m_PMFwdConfig.decreaseSize, m_PMFwdConfig.decreaseSize);
+        readIntegerSize(node["pmMinFwdLASize"], m_PMFwdConfig.minSize, m_PMFwdConfig.minSize);
+        readIntegerSize(node["pmMaxFwdLASize"], m_PMFwdConfig.maxSize, m_PMFwdConfig.maxSize);
 
         cv::read(node["unwrapRes"], m_UnwrapRes, m_UnwrapRes);
         cv::read(node["croppedRect"], m_CroppedRect, m_CroppedRect);
@@ -310,17 +308,8 @@ private:
     //! Initial size of perfect memory forward lookahead window
     size_t m_PMFwdLASize;
 
-    //! Size of increases in perfect memory forward lookahead window
-    size_t m_PMFwdLAIncreaseSize;
-
-    //! Size of decreases in perfect memory forward lookahead window
-    size_t m_PMFwdLADecreaseSize;
-
-    //! Minimum size of perfect memory forward lookahead window
-    size_t m_PMMinFwdLASize;
-
-    //! Maximum size of perfect memory forward lookahead window
-    size_t m_PMMaxFwdLASize;
+    //! Configuration for perfect memory forward lookahead window
+    WindowConfig m_PMFwdConfig;
 
     // What resolution to unwrap panoramas to?
     cv::Size m_UnwrapRes;

@@ -1,8 +1,5 @@
 #include "navigation/perfect_memory_window.h"
 
-// Standard C++ includes
-#include <algorithm>
-
 namespace BoBRobotics {
 namespace Navigation {
 namespace PerfectMemoryWindow {
@@ -44,13 +41,10 @@ void Fixed::resetWindow()
 //----------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient
 //----------------------------------------------------------------------------
-DynamicBestMatchGradient::DynamicBestMatchGradient(size_t fwdLASize, size_t fwdLAIncreaseSize, size_t fwdLADecreaseSize, size_t minFwdLASize, size_t maxFwdLASize,
-                                                   size_t revLASize, size_t revLAIncreaseSize, size_t revLADecreaseSize, size_t minRevLASize, size_t maxRevLASize)
-:   m_MinFwdLASize(minFwdLASize), m_MinRevLASize(minRevLASize),
-    m_MaxFwdLASize(maxFwdLASize), m_MaxRevLASize(maxRevLASize),
-    m_FwdLAIncreaseSize(fwdLAIncreaseSize), m_RevLAIncreaseSize(revLAIncreaseSize),
-    m_FwdLADecreaseSize(fwdLADecreaseSize), m_RevLADecreaseSize(revLADecreaseSize),
-    m_FwdLASize(fwdLASize), m_RevLASize(revLASize),
+DynamicBestMatchGradient::DynamicBestMatchGradient(size_t fwdWindowSize, const WindowConfig &fwdWindowConfig,
+                                                   size_t revWindowSize, const WindowConfig &revWindowConfig)
+:   m_FwdWindowConfig(fwdWindowConfig), m_RevWindowConfig(revWindowConfig),
+    m_FwdWindowSize(fwdWindowSize), m_RevWindowSize(revWindowSize),
     m_LastLowestDifference(0.0f), m_MemoryPointer(std::numeric_limits<size_t>::max())
 {
 }
@@ -65,8 +59,8 @@ std::pair<size_t, size_t> DynamicBestMatchGradient::getWindow() const
     // **NOTE** because size_t is unsigned, we need to be careful at the minimum
     else {
         return std::make_pair(
-            (m_MemoryPointer >= m_RevLASize) ? (m_MemoryPointer - m_RevLASize) : 0,
-            m_MemoryPointer + m_FwdLASize);
+            (m_MemoryPointer >= m_RevWindowSize) ? (m_MemoryPointer - m_RevWindowSize) : 0,
+            m_MemoryPointer + m_FwdWindowSize);
     }
 }
 //----------------------------------------------------------------------------
@@ -77,15 +71,13 @@ void DynamicBestMatchGradient::updateWindow(size_t bestSnapshot, float lowestDif
         // If new difference is lower, decrease fwd and rev lookahead sizes
         // **NOTE** because size_t is unsigned, we need to be careful at the minimum
         if(lowestDifference < m_LastLowestDifference) {
-            m_FwdLASize = (m_FwdLASize > (m_MinFwdLASize + m_FwdLADecreaseSize)) ? (m_FwdLASize - m_FwdLADecreaseSize) : m_MinFwdLASize;
-            m_RevLASize = (m_RevLASize > (m_MinRevLASize + m_RevLADecreaseSize)) ? (m_RevLASize - m_RevLADecreaseSize) : m_MinRevLASize;
+            m_FwdWindowSize = m_FwdWindowConfig.decreaseWindowSize(m_FwdWindowSize);
+            m_RevWindowSize = m_RevWindowConfig.decreaseWindowSize(m_RevWindowSize);
         }
-        // Otherwise, if new difference is greater, increase both fwd and rev lookahead sizes
+        // Otherwise, if new difference is greater, increase both fwd and rev window sizes
         else if(lowestDifference > m_LastLowestDifference){
-            m_FwdLASize = std::min(m_MaxFwdLASize,
-                                              m_FwdLASize + m_FwdLAIncreaseSize);
-            m_RevLASize = std::min(m_MaxRevLASize,
-                                              m_RevLASize + m_RevLAIncreaseSize);
+            m_FwdWindowSize = m_FwdWindowConfig.increaseWindowSize(m_FwdWindowSize);
+            m_RevWindowSize = m_RevWindowConfig.increaseWindowSize(m_RevWindowSize);
         }
     }
 
