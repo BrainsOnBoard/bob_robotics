@@ -17,14 +17,13 @@ std::pair<size_t, size_t> Fixed::getWindow() const
 {
     // If this is our first update, return a full window
     if(m_MemoryPointer == std::numeric_limits<size_t>::max()) {
-        return std::make_pair(0, std::numeric_limits<size_t>::max());
+        return {0, std::numeric_limits<size_t>::max()};
     }
     // Otherwise, return a window centred around memory memory pointer
     // **NOTE** because size_t is unsigned, we need to be careful at the minimum
     else {
-        return std::make_pair(
-            (m_MemoryPointer >= m_RevLASize) ? (m_MemoryPointer - m_RevLASize) : 0,
-            m_MemoryPointer + m_FwdLASize);
+        return {(m_MemoryPointer >= m_RevLASize) ? (m_MemoryPointer - m_RevLASize) : 0,
+                m_MemoryPointer + m_FwdLASize};
     }
 }
 //----------------------------------------------------------------------------
@@ -53,14 +52,13 @@ std::pair<size_t, size_t> DynamicBestMatchGradient::getWindow() const
 {
     // If this is our first update, return a full window
     if(m_MemoryPointer == std::numeric_limits<size_t>::max()) {
-        return std::make_pair(0, std::numeric_limits<size_t>::max());
+        return {0, std::numeric_limits<size_t>::max()};
     }
     // Otherwise, return a window centred around memory memory pointer
     // **NOTE** because size_t is unsigned, we need to be careful at the minimum
     else {
-        return std::make_pair(
-            (m_MemoryPointer >= m_RevWindowSize) ? (m_MemoryPointer - m_RevWindowSize) : 0,
-            m_MemoryPointer + m_FwdWindowSize);
+        return {(m_MemoryPointer >= m_RevWindowSize) ? (m_MemoryPointer - m_RevWindowSize) : 0,
+                m_MemoryPointer + m_FwdWindowSize};
     }
 }
 //----------------------------------------------------------------------------
