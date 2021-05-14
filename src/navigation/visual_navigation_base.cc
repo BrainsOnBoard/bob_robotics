@@ -10,6 +10,9 @@
 #include <omp.h>
 #endif
 
+// Standard C++ includes
+#include <algorithm>
+
 namespace BoBRobotics {
 namespace Navigation {
 
@@ -59,6 +62,10 @@ VisualNavigationBase::setMaskImage(const std::string &path)
     BOB_ASSERT(m_MaskImage.cols == m_UnwrapRes.width);
     BOB_ASSERT(m_MaskImage.rows == m_UnwrapRes.height);
     BOB_ASSERT(m_MaskImage.type() == CV_8UC1);
+
+    // Set any non-zero element to 255 so we have a true binary mask
+    std::transform(m_MaskImage.datastart, m_MaskImage.dataend, m_MaskImage.datastart,
+                   [](uint8_t val) { return val ? 0xff : 0; });
 }
 
 const cv::Mat &
