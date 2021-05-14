@@ -171,10 +171,11 @@ public:
      *
      * The parameters are perfect-forwarded to the Rotater class, so e.g. for
      * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
-     * for the scan step.
+     * for the scan step. **NOTE** I wanted window to be a const reference but for
+     * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
-    const auto &getImageDifferences(const typename PerfectMemory<Store>::Window &window, Ts &&... args) const
+    const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
         calcImageDifferences(0, std::numeric_limits<size_t>::max(), rotater);
