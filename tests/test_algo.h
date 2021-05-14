@@ -14,8 +14,6 @@ void testAlgo(const std::string &filename)
 {
     using namespace BoBRobotics;
 
-    generateImages();
-
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
