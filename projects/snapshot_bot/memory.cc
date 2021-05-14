@@ -139,21 +139,21 @@ void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
     size_t rightBestSnapshot;
     std::tie(rightBestHeading, rightBestSnapshot, rightLowestDifference, std::ignore) = getPM().getHeading(
         m_Window.getWindow(), snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
-
+    //std::cout << leftBestSnapshot + m_Window.getWindow().first << "," << rightBestSnapshot + m_Window.getWindow().second << ", " << m_Window.getWindow().first << ", " << m_Window.getWindow().second << std::endl;
     // If best result came from left scan
     if(leftLowestDifference < rightLowestDifference) {
         setLowestDifference(leftLowestDifference / 255.0f);
         setBestHeading(leftBestHeading);
         setBestSnapshotIndex(leftBestSnapshot + m_Window.getWindow().first);
 
-        m_Window.updateWindow(leftBestSnapshot, leftLowestDifference);
+        m_Window.updateWindow(leftBestSnapshot + m_Window.getWindow().first, leftLowestDifference);
     }
     else {
         setLowestDifference(rightLowestDifference / 255.0f);
         setBestHeading(rightBestHeading);
         setBestSnapshotIndex(rightBestSnapshot + m_Window.getWindow().first);
 
-        m_Window.updateWindow(rightBestSnapshot, rightLowestDifference);
+        m_Window.updateWindow(rightBestSnapshot + m_Window.getWindow().first, rightLowestDifference);
     }
 }
 //------------------------------------------------------------------------
