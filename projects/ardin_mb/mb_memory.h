@@ -49,7 +49,7 @@ public:
     virtual float test(const cv::Mat &image) override;
 
     //! Perform any updates that should happen at end of test scan
-    virtual void resetTestScan() override {};
+    virtual void resetTestScan() override {}
 
     //! Clear the memory
     virtual void clearMemory() override;
