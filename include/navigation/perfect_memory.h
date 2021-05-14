@@ -259,7 +259,7 @@ private:
         clampWindow(window);
 
         // Preallocate snapshot difference vectors
-        m_RotatedDifferences.resize(window.second - window.second, rotater.numRotations());
+        m_RotatedDifferences.resize(window.second - window.first, rotater.numRotations());
 
         // Scan across image columns
         rotater.rotate(
