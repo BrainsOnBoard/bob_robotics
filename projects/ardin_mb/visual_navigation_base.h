@@ -34,12 +34,10 @@ public:
     //! Clear the memory
     virtual void clearMemory() = 0;
 
-    virtual const cv::Size &getUnwrapResolution() const = 0;
+    virtual const cv::Size getUnwrapResolution() const = 0;
 
     virtual std::pair<size_t, size_t> getHighlightedWaypoints() const = 0;
 
     virtual void write(cv::FileStorage&) const{}
     virtual void read(const cv::FileNode&){}
-
-    virtual void addCLIArguments(CLI::App&){}
 };

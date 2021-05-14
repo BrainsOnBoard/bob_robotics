@@ -46,7 +46,7 @@ public:
         m_Memory.clearMemory();
     }
 
-    virtual const cv::Size &getUnwrapResolution() const override
+    virtual const cv::Size getUnwrapResolution() const override
     {
         return m_Memory.getUnwrapResolution();
     }

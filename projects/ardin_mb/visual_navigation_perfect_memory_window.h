@@ -16,18 +16,16 @@
 //----------------------------------------------------------------------------
 //! Very thin wrapper to allow VisualNavigationBase wrap BoB
 //! navigation algorithms which can be used without additional state etc
-template<typename S = BoBRobotics::Navigation::PerfectMemoryStore::RawImage<>>
+template<typename W, typename S = BoBRobotics::Navigation::PerfectMemoryStore::RawImage<>>
 class VisualNavigationPerfectMemoryWindow : public VisualNavigationBase
 {
-    template<typename T>
-    using PerfectMemory = BoBRobotics::Navigation::PerfectMemory<T>;
-
-    typedef BoBRobotics::Navigation::PerfectMemoryWindow::Base &WindowRef;
+    typedef BoBRobotics::Navigation::PerfectMemory<S> PerfectMemory;
 
 public:
-    template<class... Ts>
-    VisualNavigationPerfectMemoryWindow(WindowRef window, Ts &&... args)
-    :   m_Memory(std::forward<Ts>(args)...), m_Window(window),
+    template<typename... Ps, typename... Ws>
+    VisualNavigationPerfectMemoryWindow(const std::tuple<Ps...> &pmArgs, const std::tuple<Ws...> &windowArgs)
+    :   m_Memory(construct<PerfectMemory>(pmArgs, std::index_sequence_for<Ps...>{})),
+        m_Window(construct<W>(windowArgs, std::index_sequence_for<Ws...>{})),
         m_MinTestDifference(std::numeric_limits<float>::max()), m_BestImageIndex(std::numeric_limits<size_t>::max())
     {
     }
@@ -86,7 +84,7 @@ public:
         m_Memory.clearMemory();
     }
 
-    virtual const cv::Size &getUnwrapResolution() const override
+    virtual const cv::Size getUnwrapResolution() const override
     {
         return m_Memory.getUnwrapResolution();
     }
@@ -98,10 +96,21 @@ public:
 
 private:
     //------------------------------------------------------------------------
+    // Static helpers
+    //------------------------------------------------------------------------
+    //! Without std::apply in C++17 one step of indirection is required to call
+    //! functions (and constructors) with a tuple of arguments...This is that!
+    template<typename T, typename... As, std::size_t... Is>
+    static T construct(const std::tuple<As...> &args, std::index_sequence<Is...>)
+    {
+        return T(std::get<Is>(args)...);
+    }
+
+    //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    PerfectMemory<S> m_Memory;
-    WindowRef m_Window;
+    PerfectMemory m_Memory;
+    W m_Window;
 
     float m_MinTestDifference;
     size_t m_BestImageIndex;
