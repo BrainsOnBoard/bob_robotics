@@ -272,7 +272,7 @@ private:
                 });
     }
 
-    void clampWindow(typename PerfectMemory<Store>::Window &window)
+    void clampWindow(typename PerfectMemory<Store>::Window &window) const
     {
         // Ensure that minimum and maximum snapshot are within range
         window.first = std::min(window.first, this->getNumSnapshots());
