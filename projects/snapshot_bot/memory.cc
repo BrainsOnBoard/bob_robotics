@@ -147,16 +147,16 @@ void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
     if(leftLowestDifference < rightLowestDifference) {
         setLowestDifference(leftLowestDifference / 255.0f);
         setBestHeading(leftBestHeading);
-        setBestSnapshotIndex(leftBestSnapshot + window.first);
+        setBestSnapshotIndex(leftBestSnapshot);
 
-        m_Window.updateWindow(leftBestSnapshot + window.first, leftLowestDifference);
+        m_Window.updateWindow(leftBestSnapshot, leftLowestDifference);
     }
     else {
         setLowestDifference(rightLowestDifference / 255.0f);
         setBestHeading(rightBestHeading);
-        setBestSnapshotIndex(rightBestSnapshot + window.first);
+        setBestSnapshotIndex(rightBestSnapshot);
 
-        m_Window.updateWindow(rightBestSnapshot + window.first, rightLowestDifference);
+        m_Window.updateWindow(rightBestSnapshot, rightLowestDifference);
     }
 }
 //------------------------------------------------------------------------

@@ -218,7 +218,7 @@ public:
         }
 
         // Return result
-        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater),
+        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater, window.first),
                               std::make_tuple(&m_RotatedDifferences));
     }
 
