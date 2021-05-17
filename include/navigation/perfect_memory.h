@@ -52,11 +52,6 @@ public:
     typedef std::pair<size_t, size_t> Window;
 
     //------------------------------------------------------------------------
-    // Constants
-    //------------------------------------------------------------------------
-    static const Window FullWindow;
-
-    //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
     virtual void train(const cv::Mat &image) override
@@ -72,7 +67,7 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        return test(FullWindow, image);
+        return test(getFullWindow(), image);
     }
 
     virtual void clearMemory() override
@@ -101,7 +96,7 @@ public:
     //! Get differences between current view and all stored snapshots
     const std::vector<float> &getImageDifferences(const cv::Mat &image) const
     {
-        testInternal(FullWindow, image);
+        testInternal(getFullWindow(), image);
         return m_Differences;
     }
 
@@ -121,6 +116,11 @@ protected:
         return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMaskImage());
     }
 
+    Window getFullWindow() const
+    {
+        return {0, getNumSnapshots()};
+    }
+
 private:
     //------------------------------------------------------------------------
     // Private members
@@ -135,7 +135,7 @@ private:
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
         BOB_ASSERT(window.first < getNumSnapshots());
-        BOB_ASSERT(window.second < getNumSnapshots());
+        BOB_ASSERT(window.second <= getNumSnapshots());
         BOB_ASSERT(window.first < window.second);
 
         m_Differences.resize(window.second - window.first);
@@ -188,7 +188,7 @@ public:
     const auto &getImageDifferences(Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences({0, getNumSnapshots()}, rotater);
+        calcImageDifferences(this->getFullWindow(), rotater);
         return m_RotatedDifferences;
     }
 
@@ -233,7 +233,7 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        return getHeading({0, getNumSnapshots()}, std::forward<Ts>(args)...);
+        return getHeading(this->getFullWindow(), std::forward<Ts>(args)...);
     }
 
 private:
@@ -247,8 +247,8 @@ private:
     template<class RotaterType>
     void calcImageDifferences(typename PerfectMemory<Store>::Window window, RotaterType &rotater) const
     {
-        BOB_ASSERT(window.first < getNumSnapshots());
-        BOB_ASSERT(window.second < getNumSnapshots());
+        BOB_ASSERT(window.first < this->getNumSnapshots());
+        BOB_ASSERT(window.second <= this->getNumSnapshots());
         BOB_ASSERT(window.first < window.second);
 
         // Preallocate snapshot difference vectors
