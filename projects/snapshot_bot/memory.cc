@@ -126,8 +126,9 @@ PerfectMemoryConstrainedDynamicWindow::PerfectMemoryConstrainedDynamicWindow(con
 //------------------------------------------------------------------------
 void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
 {
+    // Get current window
     const auto window = m_Window.getWindow(getPM().getNumSnapshots());
-    
+
     // Get best heading from left side of scan
     degree_t leftBestHeading;
     float leftLowestDifference;
