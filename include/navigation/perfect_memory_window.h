@@ -22,7 +22,7 @@ public:
     // Declared virtuals
     //------------------------------------------------------------------------
     //! Get window of snapshots
-    virtual std::pair<size_t, size_t> getWindow() const = 0;
+    virtual std::pair<size_t, size_t> getWindow(size_t numSnapshots) const = 0;
 
     //! Updates windows based on index of best snapshot and the corresponding low
     virtual void updateWindow(size_t bestSnapshot, float lowestDifference) = 0;
@@ -44,7 +44,7 @@ public:
     // Base virtuals
     //------------------------------------------------------------------------
     //! Get window of snapshots
-    virtual std::pair<size_t, size_t> getWindow() const override;
+    virtual std::pair<size_t, size_t> getWindow(size_t numSnapshots) const override;
 
     //! Updates windows based on index of best snapshot and the corresponding low
     virtual void updateWindow(size_t bestSnapshot, float) override;
@@ -57,8 +57,8 @@ private:
     // Members
     //------------------------------------------------------------------------
     //! How many images to look fwd and backwards in perfect memory
-    const size_t m_FwdLASize;
-    const size_t m_RevLASize;
+    const size_t m_FwdWindowSize;
+    const size_t m_RevWindowSize;
 
     //! Pointer to last position in window
     size_t m_MemoryPointer;
@@ -106,7 +106,7 @@ public:
     // Base virtuals
     //------------------------------------------------------------------------
     //! Get window of snapshots
-    virtual std::pair<size_t, size_t> getWindow() const override;
+    virtual std::pair<size_t, size_t> getWindow(size_t numSnapshots) const override;
 
     //! Updates windows based on index of best snapshot and the corresponding low
     virtual void updateWindow(size_t bestSnapshot, float lowestDifference) override;

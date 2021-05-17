@@ -43,7 +43,7 @@ public:
     virtual float test(const cv::Mat &image) override
     {
         // Get window
-        const auto window = m_Window.getWindow();
+        const auto window = m_Window.getWindow(m_Memory.getNumSnapshots());
 
         LOGD << "Testing within window" << window.first << "-" << window.second;
 
@@ -91,7 +91,7 @@ public:
 
     virtual std::pair<size_t, size_t> getHighlightedWaypoints() const
     {
-        return m_Window.getWindow();
+        return m_Window.getWindow(m_Memory.getNumSnapshots());
     }
 
 private:

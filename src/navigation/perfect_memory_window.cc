@@ -1,5 +1,39 @@
 #include "navigation/perfect_memory_window.h"
 
+// BoB robotics includes
+#include "common/macros.h"
+
+//----------------------------------------------------------------------------
+// Anonymous namespace
+//----------------------------------------------------------------------------
+namespace
+{
+std::pair<size_t, size_t> clampWindow(size_t memoryPointer, size_t fwdWindowSize,
+                                      size_t revWindowSize, size_t numSnapshots)
+{
+    // If this is our first update, return a full window
+    if(memoryPointer == std::numeric_limits<size_t>::max()) {
+        return {0, numSnapshots};
+    }
+    // Otherwise, return a window centred around memory memory pointer
+    else {
+        // Check memory pointer is valid
+        BOB_ASSERT(memoryPointer < numSnapshots);
+
+        // Clamp end of window to last snapshot
+        const size_t windowEnd = std::min(memoryPointer + fwdWindowSize, numSnapshots);
+
+        // Clamp beginning of window at first snapshot
+        // **NOTE** because size_t is unsigned, we need to be careful at the minimum
+        const size_t windowSize = fwdWindowSize + revWindowSize;
+        const size_t windowStart = (windowEnd > windowSize) ? (windowEnd - windowSize) : 0;
+
+        // Return window
+        return {windowStart, windowEnd};
+    }
+}
+}   // Anonymous namespace
+
 namespace BoBRobotics {
 namespace Navigation {
 namespace PerfectMemoryWindow {
@@ -8,23 +42,15 @@ namespace PerfectMemoryWindow {
 // BoBRobotics::Navigation::PerfectMemoryWindow::Fixed
 //----------------------------------------------------------------------------
 Fixed::Fixed(size_t fwdLASize, size_t revLASize)
-:   m_FwdLASize(fwdLASize), m_RevLASize(revLASize),
+:   m_FwdWindowSize(fwdLASize), m_RevWindowSize(revLASize),
     m_MemoryPointer(std::numeric_limits<size_t>::max())
 {
 }
 //----------------------------------------------------------------------------
-std::pair<size_t, size_t> Fixed::getWindow() const
+std::pair<size_t, size_t> Fixed::getWindow(size_t numSnapshots) const
 {
-    // If this is our first update, return a full window
-    if(m_MemoryPointer == std::numeric_limits<size_t>::max()) {
-        return {0, std::numeric_limits<size_t>::max()};
-    }
-    // Otherwise, return a window centred around memory memory pointer
-    // **NOTE** because size_t is unsigned, we need to be careful at the minimum
-    else {
-        return {(m_MemoryPointer >= m_RevLASize) ? (m_MemoryPointer - m_RevLASize) : 0,
-                m_MemoryPointer + m_FwdLASize};
-    }
+    // Return valid window, centred around memory pointer
+    return clampWindow(m_MemoryPointer, m_FwdWindowSize, m_RevWindowSize, numSnapshots);
 }
 //----------------------------------------------------------------------------
 void Fixed::updateWindow(size_t bestSnapshot, float)
@@ -48,18 +74,10 @@ DynamicBestMatchGradient::DynamicBestMatchGradient(size_t fwdWindowSize, const W
 {
 }
 //----------------------------------------------------------------------------
-std::pair<size_t, size_t> DynamicBestMatchGradient::getWindow() const
+std::pair<size_t, size_t> DynamicBestMatchGradient::getWindow(size_t numSnapshots) const
 {
-    // If this is our first update, return a full window
-    if(m_MemoryPointer == std::numeric_limits<size_t>::max()) {
-        return {0, std::numeric_limits<size_t>::max()};
-    }
-    // Otherwise, return a window centred around memory memory pointer
-    // **NOTE** because size_t is unsigned, we need to be careful at the minimum
-    else {
-        return {(m_MemoryPointer >= m_RevWindowSize) ? (m_MemoryPointer - m_RevWindowSize) : 0,
-                m_MemoryPointer + m_FwdWindowSize};
-    }
+    // Return valid window, centred around memory pointer
+    return clampWindow(m_MemoryPointer, m_FwdWindowSize, m_RevWindowSize, numSnapshots);
 }
 //----------------------------------------------------------------------------
 void DynamicBestMatchGradient::updateWindow(size_t bestSnapshot, float lowestDifference)

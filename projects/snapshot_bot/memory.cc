@@ -126,34 +126,36 @@ PerfectMemoryConstrainedDynamicWindow::PerfectMemoryConstrainedDynamicWindow(con
 //------------------------------------------------------------------------
 void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
 {
+    const auto window = m_Window.getWindow(getPM().getNumSnapshots());
+    
     // Get best heading from left side of scan
     degree_t leftBestHeading;
     float leftLowestDifference;
     size_t leftBestSnapshot;
     std::tie(leftBestHeading, leftBestSnapshot, leftLowestDifference, std::ignore) = getPM().getHeading(
-        m_Window.getWindow(), snapshot, 1, 0, m_NumScanColumns);
+        window, snapshot, 1, 0, m_NumScanColumns);
 
     // Get best heading from right side of scan
     degree_t rightBestHeading;
     float rightLowestDifference;
     size_t rightBestSnapshot;
     std::tie(rightBestHeading, rightBestSnapshot, rightLowestDifference, std::ignore) = getPM().getHeading(
-        m_Window.getWindow(), snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
+        window, snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
 
     // If best result came from left scan
     if(leftLowestDifference < rightLowestDifference) {
         setLowestDifference(leftLowestDifference / 255.0f);
         setBestHeading(leftBestHeading);
-        setBestSnapshotIndex(leftBestSnapshot + m_Window.getWindow().first);
+        setBestSnapshotIndex(leftBestSnapshot + window.first);
 
-        m_Window.updateWindow(leftBestSnapshot + m_Window.getWindow().first, leftLowestDifference);
+        m_Window.updateWindow(leftBestSnapshot + window.first, leftLowestDifference);
     }
     else {
         setLowestDifference(rightLowestDifference / 255.0f);
         setBestHeading(rightBestHeading);
-        setBestSnapshotIndex(rightBestSnapshot + m_Window.getWindow().first);
+        setBestSnapshotIndex(rightBestSnapshot + window.first);
 
-        m_Window.updateWindow(rightBestSnapshot + m_Window.getWindow().first, rightLowestDifference);
+        m_Window.updateWindow(rightBestSnapshot + window.first, rightLowestDifference);
     }
 }
 //------------------------------------------------------------------------
@@ -170,7 +172,7 @@ void PerfectMemoryConstrainedDynamicWindow::writeCSVLine(std::ostream &os)
     // Superclass
     PerfectMemory::writeCSVLine(os);
 
-    const auto window = m_Window.getWindow();
+    const auto window = m_Window.getWindow(getPM().getNumSnapshots());
     os << ", " << window.first << ", " << window.second;
 }
 

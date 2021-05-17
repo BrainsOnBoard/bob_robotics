@@ -130,28 +130,23 @@ private:
 
     void testInternal(const Window &window, const cv::Mat &image) const
     {
-        // Ensure that minimum and maximum snapshot are within range
-        const size_t snapshotBegin = std::min(window.first, getNumSnapshots());
-        const size_t snapshotEnd = std::min(window.second, getNumSnapshots());
-
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
-        BOB_ASSERT(snapshotBegin < snapshotEnd);
+        BOB_ASSERT(window.first < getNumSnapshots());
+        BOB_ASSERT(window.second < getNumSnapshots());
+        BOB_ASSERT(window.first < window.second);
 
-        m_Differences.resize(snapshotEnd - snapshotBegin);
+        m_Differences.resize(window.second - window.first);
 
         // Loop through snapshots and caculate differences
         #pragma omp parallel for
-        for (size_t s = snapshotBegin; s < snapshotEnd; s++) {
-            m_Differences[s - snapshotBegin] = calcSnapshotDifference(image, getMaskImage(), s);
+        for (size_t s = window.first; s < window.second; s++) {
+            m_Differences[s - window.first] = calcSnapshotDifference(image, getMaskImage(), s);
         }
     }
 };
-
-template<typename Store>
-const typename PerfectMemory<Store>::Window PerfectMemory<Store>::FullWindow = std::make_pair(0, std::numeric_limits<size_t>::max());
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryRotater
@@ -193,7 +188,7 @@ public:
     const auto &getImageDifferences(Ts &&... args) const
     {
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(PerfectMemory<Store>::FullWindow, rotater);
+        calcImageDifferences({0, getNumSnapshots()}, rotater);
         return m_RotatedDifferences;
     }
 
@@ -209,9 +204,6 @@ public:
     template<class... Ts>
     auto getHeading(typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
-        // Clamp the window
-        clampWindow(window);
-
         auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
 
@@ -241,7 +233,7 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        return getHeading(PerfectMemory<Store>::FullWindow, std::forward<Ts>(args)...);
+        return getHeading({0, getNumSnapshots()}, std::forward<Ts>(args)...);
     }
 
 private:
@@ -255,8 +247,9 @@ private:
     template<class RotaterType>
     void calcImageDifferences(typename PerfectMemory<Store>::Window window, RotaterType &rotater) const
     {
-        // Clamp the window
-        clampWindow(window);
+        BOB_ASSERT(window.first < getNumSnapshots());
+        BOB_ASSERT(window.second < getNumSnapshots());
+        BOB_ASSERT(window.first < window.second);
 
         // Preallocate snapshot difference vectors
         m_RotatedDifferences.resize(window.second - window.first, rotater.numRotations());
@@ -270,15 +263,6 @@ private:
                         m_RotatedDifferences(s - window.first, i) = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
-    }
-
-    void clampWindow(typename PerfectMemory<Store>::Window &window) const
-    {
-        // Ensure that minimum and maximum snapshot are within range
-        window.first = std::min(window.first, this->getNumSnapshots());
-        window.second = std::min(window.second, this->getNumSnapshots());
-
-        BOB_ASSERT(window.first <= window.second);
     }
 };
 } // Navigation
