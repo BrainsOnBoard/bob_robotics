@@ -19,6 +19,7 @@ namespace
 void saveSpikes(const MBMemory::Spikes &spikes, const std::string &filename)
 {
     std::ofstream csvStream(filename);
+    csvStream.exceptions(std::ios::badbit | std::ios::failbit);
 
     csvStream << "Time [ms], Neuron ID" << std::endl;
 
@@ -224,6 +225,7 @@ void MBUI::saveLogs(const std::string &filename)
 
     std::cout << "Logging..." << std::endl;
     std::ofstream log(filename);
+    log.exceptions(std::ios::badbit | std::ios::failbit);
 
     log << "Num active PNs, Num active KCs" << std::endl;
     for(size_t i = 0; i < m_ActiveKCData.size(); i++) {

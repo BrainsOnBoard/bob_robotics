@@ -68,6 +68,8 @@ public:
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
         m_Robot(), m_NumSnapshots(0)
     {
+        m_LogFile.exceptions(std::ios::badbit | std::ios::failbit);
+
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
@@ -252,7 +254,6 @@ private:
                 }
 
                 m_LogFile.open((m_Config.getOutputPath() / "training.csv").str());
-                BOB_ASSERT(m_LogFile.good());
 
                 // Write header
                 m_LogFile << "Time [s], Filename";

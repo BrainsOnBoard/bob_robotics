@@ -247,6 +247,8 @@ std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv:
     m_SLM.pullStateFromDevice("EN");
 
     std::ofstream terminalStream("terminal_synaptic_state.csv");
+    terminalStream.exceptions(std::ios::badbit | std::ios::failbit);
+
     terminalStream << "Weight, Eligibility" << std::endl;
     for(unsigned int s = 0; s < m_NumKC * m_NumEN; s++) {
         terminalStream << m_GKCToEN[s] << "," << m_CKCToEN[s] * std::exp(-(t - m_TCKCToEN[s]) / 40.0) << std::endl;

@@ -423,6 +423,7 @@ int bobMain(int argc, char **argv)
             LOGF << "Cannot open obj file: " << argv[1];
             return EXIT_FAILURE;
         }
+        inputObjFile.exceptions(std::ios::badbit);
 
         // If only one argument is passed, find bounds of model
         if(argc == 2) {
@@ -437,6 +438,7 @@ int bobMain(int argc, char **argv)
 
             // Open output file
             std::ofstream outputObjFile(outputPath.str());
+            outputObjFile.exceptions(std::ios::badbit | std::ios::failbit);
 
             // Parse bounds
             const float min[3]{ strtof(argv[2], nullptr), strtof(argv[3], nullptr), strtof(argv[4], nullptr) };

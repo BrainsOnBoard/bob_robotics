@@ -120,9 +120,7 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
 
     // Open file for binary IO
     std::ifstream input(filename.str(), std::ios::binary);
-    if(!input.good()) {
-        throw std::runtime_error("Cannot open world file:" + filename.str());
-    }
+    input.exceptions(std::ios::badbit | std::ios::failbit);
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
@@ -265,9 +263,8 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
 
         // Open obj file
         std::ifstream objFile(filename.str());
-        if(!objFile.good()) {
-            throw std::runtime_error("Cannot open obj file: " + filename.str());
-        }
+        BOB_ASSERT(!objFile.fail());
+        objFile.exceptions(std::ios::badbit);
 
         // Get base path to load materials etc relative to
         const auto basePath = filename.make_absolute().parent_path();
@@ -429,9 +426,8 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 {
     // Open obj file
     std::ifstream mtlFile((basePath / filename).str());
-    if(!mtlFile.good()) {
-        throw std::runtime_error("Cannot open mtl file: " + filename);
-    }
+    BOB_ASSERT(!mtlFile.fail());
+    mtlFile.exceptions(std::ios::badbit);
 
     LOG_DEBUG << "Reading material file: " << filename;
 
