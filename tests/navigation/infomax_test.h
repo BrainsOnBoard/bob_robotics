@@ -8,7 +8,7 @@ class InfoMaxTest
 public:
     InfoMaxTest(const cv::Size &unwrapRes)
       : InfoMaxRotater<>{ unwrapRes, generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                                            unwrapRes.width * unwrapRes.height, /*seed=*/42)}
+                                                            unwrapRes.width * unwrapRes.height + 1, /*seed=*/42)}
     {}
 
     template<class... Ts>
