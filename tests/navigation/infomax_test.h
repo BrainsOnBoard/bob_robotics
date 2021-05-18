@@ -12,7 +12,7 @@ public:
     {}
 
     template<class... Ts>
-    const auto getImageDifferences(Ts&&... args) const
+    auto getImageDifferences(Ts&&... args) const
     {
         const auto &diffs = InfoMaxRotater<>::getImageDifferences(std::forward<Ts>(args)...);
 
