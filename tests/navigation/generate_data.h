@@ -9,14 +9,15 @@
 // Standard C++ includes
 #include <string>
 #include <type_traits>
+#include <utility>
 
-template<class Algo>
+template<class Algo, class... Ts>
 void
-generateData(const char *filename)
+generateData(const char *filename, Ts&&... args)
 {
     using namespace BoBRobotics;
 
-    Algo algo{ TestImageSize };
+    Algo algo{ TestImageSize, std::forward<Ts>(args)... };
     for (const auto &image : TestImages) {
         algo.train(image);
     }

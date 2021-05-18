@@ -8,16 +8,17 @@
 
 // Standard C++ includes
 #include <string>
+#include <utility>
 
-template<class AlgoType>
-void testAlgo(const std::string &filename)
+template<class AlgoType, class... Ts>
+void testAlgo(const std::string &filename, Ts&&... args)
 {
     using namespace BoBRobotics;
 
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
-    AlgoType algo{ TestImageSize };
+    AlgoType algo{ TestImageSize, std::forward<Ts>(args)... };
     for (const auto &image : TestImages) {
         algo.train(image);
     }
