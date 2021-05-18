@@ -64,7 +64,7 @@ VisualNavigationBase::setMaskImage(const std::string &path)
     BOB_ASSERT(m_MaskImage.type() == CV_8UC1);
 
     // Set any non-zero element to 255 so we have a true binary mask
-    std::transform(m_MaskImage.datastart, m_MaskImage.dataend, m_MaskImage.datastart,
+    std::transform(m_MaskImage.datastart, m_MaskImage.dataend, m_MaskImage.data,
                    [](uint8_t val) { return val ? 0xff : 0; });
 }
 
