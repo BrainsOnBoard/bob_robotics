@@ -43,6 +43,7 @@ public:
     void trainRoute(const ImageDatabase &imdb, bool resizeImages = false);
 
     //! Set mask image (e.g. for masking part of robot)
+    void setMaskImage(cv::Mat mask);
     void setMaskImage(const std::string &path);
 
     //! Return mask image
