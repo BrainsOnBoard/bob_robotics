@@ -3,6 +3,10 @@
 
 int bobMain(int, char **)
 {
-    generateData<BoBRobotics::Navigation::InfoMaxTest>("infomax.bin");
+    /*
+     * Don't test mask case for now because of this issue:
+     *      https://github.com/BrainsOnBoard/bob_robotics/issues/221
+     */
+    generateDataRaw<BoBRobotics::Navigation::InfoMaxTest>("infomax.bin", {});
     return EXIT_SUCCESS;
 }

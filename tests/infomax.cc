@@ -9,7 +9,7 @@ const auto InitialWeights = InfoMax<>::generateInitialWeights(TestImageSize.widt
 
 TEST(InfoMax, SampleImage)
 {
-    testAlgo<InfoMaxTest>("infomax.bin");
+    testAlgoRaw<InfoMaxTest>("infomax.bin", {});
 }
 
 // Check that the columns have means of approx 0 and SDs of approx 1

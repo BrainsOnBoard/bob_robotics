@@ -10,15 +10,16 @@
 #include <string>
 #include <utility>
 
-template<class AlgoType, class... Ts>
-void testAlgo(const std::string &filename, Ts&&... args)
+template<class Algo, class... Ts>
+void testAlgoRaw(const std::string &filename, cv::Mat mask, Ts&&... args)
 {
     using namespace BoBRobotics;
 
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
-    AlgoType algo{ TestImageSize, std::forward<Ts>(args)... };
+    Algo algo{ TestImageSize, std::forward<Ts>(args)... };
+    algo.setMaskImage(std::move(mask));
     for (const auto &image : TestImages) {
         algo.train(image);
     }
@@ -30,4 +31,11 @@ void testAlgo(const std::string &filename, Ts&&... args)
             EXPECT_FLOAT_EQ(differences(snap, col), trueDifferences(snap, col));
         }
     }
+}
+
+template<class Algo, class... Ts>
+void testAlgo(const std::string &filename, Ts&&... args)
+{
+    testAlgoRaw<Algo>(filename, {}, std::forward<Ts>(args)...);
+    testAlgoRaw<Algo>("mask_" + filename, TestMask, std::forward<Ts>(args)...);
 }

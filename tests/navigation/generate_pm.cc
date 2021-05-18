@@ -11,6 +11,9 @@ bobMain(int, char **)
 {
     generateData<PerfectMemoryRotater<>>("pm.bin");
     generateData<PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>>("pm_rms.bin");
-    generateData<PerfectMemoryRotater<PerfectMemoryStore::HOG<>>>("pm_hog.bin", cv::Size(10, 10), 8);
+
+    // The HOG code doesn't support using a mask, so don't try
+    generateDataRaw<PerfectMemoryRotater<PerfectMemoryStore::HOG<>>>("pm_hog.bin", {}, cv::Size(10, 10), 8);
+
     return EXIT_SUCCESS;
 }

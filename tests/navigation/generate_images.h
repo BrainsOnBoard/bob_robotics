@@ -23,5 +23,14 @@ static inline std::array<cv::Mat, NumTestImages> generateImages()
 
     return images;
 }
-
 static const auto TestImages = generateImages();
+
+static inline cv::Mat generateMask()
+{
+    cv::Mat mask{ TestImageSize, CV_8UC1 };
+    mask = cv::Scalar{ 255.0 };
+    cv::Mat subset{ mask, cv::Rect{ 0, 0, 10, 5 } };
+    subset = cv::Scalar{ 0.0 };
+    return mask;
+}
+static const auto TestMask = generateMask();

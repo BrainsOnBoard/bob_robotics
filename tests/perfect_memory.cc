@@ -19,5 +19,5 @@ TEST(PerfectMemory, SampleImageRMS)
 
 TEST(PerfectMemory, SampleImageHOG)
 {
-    testAlgo<PerfectMemoryRotater<PerfectMemoryStore::HOG<>>>("pm_hog.bin", cv::Size(10, 10), 8);
+    testAlgoRaw<PerfectMemoryRotater<PerfectMemoryStore::HOG<>>>("pm_hog.bin", {}, cv::Size(10, 10), 8);
 }
