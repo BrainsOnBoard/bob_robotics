@@ -5,6 +5,9 @@
 
 #pragma once
 
+// BoB robotics includes
+#include "common/macros.h"
+
 // OpenCV
 #include <opencv2/opencv.hpp>
 
@@ -12,6 +15,8 @@
 #include <algorithm>
 #include <iterator>
 #include <type_traits>
+#include <numeric>
+#include <utility>
 #include <vector>
 
 // Standard C includes
@@ -46,6 +51,40 @@ end(const T &input)
 {
     return std::end(input);
 }
+}
+
+template<class Iter>
+std::pair<float, size_t>
+maskedSum(Iter it, size_t count, const cv::Mat &mask1, const cv::Mat &mask2)
+{
+    BOB_ASSERT(mask1.size() == mask2.size());
+
+    // If there's no mask
+    if (mask1.empty()) {
+        float sum = std::accumulate(it, it + count, 0.0f);
+        return { sum, count };
+    }
+
+    uint8_t *maskPtr1 = mask1.data;
+    uint8_t *maskPtr2 = mask2.data;
+
+    float sum = 0.0f;
+    size_t numUnmaskedPixels = 0;
+    while (maskPtr1 < mask1.dataend) {
+        // If this pixel is masked by neither of the masks
+        if (*maskPtr1 && *maskPtr2) {
+            // Accumulate sum of differences
+            sum += (float) *it;
+
+            // Increment unmasked pixels count
+            numUnmaskedPixels++;
+        }
+        ++maskPtr1;
+        ++maskPtr2;
+        ++it;
+    }
+
+    return { sum, numUnmaskedPixels };
 }
 
 //------------------------------------------------------------------------
