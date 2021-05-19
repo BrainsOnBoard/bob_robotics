@@ -12,9 +12,19 @@ TEST(PerfectMemory, SampleImage)
     testAlgo<PerfectMemoryRotater<>>("pm.bin");
 }
 
+TEST(PerfectMemory, SampleImageMask)
+{
+    testAlgoMask<PerfectMemoryRotater<>>("mask_pm.bin");
+}
+
 TEST(PerfectMemory, SampleImageRMS)
 {
     testAlgo<PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>>("pm_rms.bin");
+}
+
+TEST(PerfectMemory, SampleImageRMSMask)
+{
+    testAlgoMask<PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>>("mask_pm_rms.bin");
 }
 
 TEST(PerfectMemory, SampleImageHOG)

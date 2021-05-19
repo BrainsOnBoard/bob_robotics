@@ -37,5 +37,10 @@ template<class Algo, class... Ts>
 void testAlgo(const std::string &filename, Ts&&... args)
 {
     testAlgoRaw<Algo>(filename, {}, std::forward<Ts>(args)...);
-    testAlgoRaw<Algo>("mask_" + filename, TestMask, std::forward<Ts>(args)...);
+}
+
+template<class Algo, class... Ts>
+void testAlgoMask(const std::string &filename, Ts&&... args)
+{
+    testAlgoRaw<Algo>(filename, TestMask, std::forward<Ts>(args)...);
 }
