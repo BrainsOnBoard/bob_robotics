@@ -13,79 +13,65 @@
 
 // Standard C++ includes
 #include <algorithm>
-#include <iterator>
-#include <type_traits>
 #include <numeric>
 #include <utility>
 #include <vector>
 
 // Standard C includes
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
 
 namespace BoBRobotics {
 namespace Navigation {
-namespace Internal {
-inline uint8_t *
-begin(const cv::Mat &image)
-{
-    return image.data;
-}
 
-inline uint8_t *
-end(const cv::Mat &image)
+template<class Derived, class VecType>
+class DifferencerBase
 {
-    return &image.data[image.cols * image.rows];
-}
-
-template<typename T>
-inline auto
-begin(const T &input)
-{
-    return std::begin(input);
-}
-
-template<typename T>
-inline auto
-end(const T &input)
-{
-    return std::end(input);
-}
-}
-
-template<class Iter>
-std::pair<float, size_t>
-maskedSum(Iter it, size_t count, const cv::Mat &mask1, const cv::Mat &mask2)
-{
-    BOB_ASSERT(mask1.size() == mask2.size());
-
-    // If there's no mask
-    if (mask1.empty()) {
-        float sum = std::accumulate(it, it + count, 0.0f);
-        return { sum, count };
+public:
+    float operator()(cv::InputArray &src1,
+                     cv::InputArray &src2,
+                     const cv::Mat &mask1 = {},
+                     const cv::Mat &mask2 = {})
+    {
+        auto obj = static_cast<Derived *>(this);
+        size_t count = obj->calculate(src1, src2, m_ScratchVector, mask1, mask2);
+        return obj->mean(m_ScratchVector, count, mask1, mask2);
     }
 
-    uint8_t *maskPtr1 = mask1.data;
-    uint8_t *maskPtr2 = mask2.data;
+    VecType &getScratchVector() { return m_ScratchVector; }
 
-    float sum = 0.0f;
-    size_t numUnmaskedPixels = 0;
-    while (maskPtr1 < mask1.dataend) {
-        // If this pixel is masked by neither of the masks
-        if (*maskPtr1 && *maskPtr2) {
-            // Accumulate sum of differences
-            sum += (float) *it;
+protected:
+    cv::Mat &combineMasks(const cv::Mat &mask1, const cv::Mat &mask2)
+    {
+        BOB_ASSERT(mask1.empty() || mask1.type() == CV_8UC1);
+        BOB_ASSERT(mask2.empty() || mask2.type() == CV_8UC1);
 
-            // Increment unmasked pixels count
-            numUnmaskedPixels++;
+        if (mask1.empty()) {
+            m_MaskScratch = mask2;
+        } else if (mask2.empty()) {
+            m_MaskScratch = mask1;
+        } else {
+#ifdef DEBUG
+            // Only do these extra checks if we're debugging because they're costly
+            const auto check = [](const cv::Mat &mask) {
+                BOB_ASSERT(std::all_of(mask.datastart, mask.dataend, [](uint8_t val) {
+                    return val == 0 || val == 0xff;
+                }));
+            };
+            check(mask1);
+            check(mask2);
+#endif
+
+            cv::bitwise_and(mask1, mask2, m_MaskScratch);
         }
-        ++maskPtr1;
-        ++maskPtr2;
-        ++it;
+
+        return m_MaskScratch;
     }
 
-    return { sum, numUnmaskedPixels };
-}
+private:
+    cv::Mat m_MaskScratch;
+    VecType m_ScratchVector;
+};
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::AbsDiff
@@ -95,23 +81,27 @@ maskedSum(Iter it, size_t count, const cv::Mat &mask1, const cv::Mat &mask2)
  *
  * Can be passed to PerfectMemory as a template parameter.
  */
-struct AbsDiff
+class AbsDiff
 {
-    template<typename InputArray1, typename InputArray2, typename OutputArray>
-    static auto calculate(const InputArray1 &src1, const InputArray2 &src2,
-                          OutputArray &dst)
+public:
+    template<class VecType = cv::Mat>
+    class Internal
+      : public DifferencerBase<AbsDiff::Internal<VecType>, VecType>
     {
-        // Calculate absdiff
-        cv::absdiff(src1, src2, dst);
+    public:
+        size_t calculate(cv::InputArray &src1, cv::InputArray &src2,
+                         cv::OutputArray &dst, const cv::Mat &, const cv::Mat &)
+        {
+            cv::absdiff(src1, src2, dst);
+            return 0;
+        }
 
-        // Return copy of output iterator
-        return Internal::begin(dst);
-    }
-
-    static inline float mean(const float sum, const float n)
-    {
-        return sum / n;
-    }
+        float mean(cv::InputArray &arr, size_t, const cv::Mat &mask1,
+                   const cv::Mat &mask2)
+        {
+            return cv::mean(arr, this->combineMasks(mask1, mask2))[0];
+        }
+    };
 };
 
 //------------------------------------------------------------------------
@@ -122,30 +112,57 @@ struct AbsDiff
  *
  * Can be passed to PerfectMemory as a template parameter.
  */
-struct RMSDiff
+class RMSDiff
 {
-    template<typename InputArray1, typename InputArray2, typename OutputArray>
-    static auto calculate(const InputArray1 &src1,
-                          const InputArray2 &src2, OutputArray &dst)
+public:
+    template<class VecType = cv::Mat>
+    class Internal
+      : public DifferencerBase<RMSDiff::Internal<VecType>, VecType>
     {
-        static std::vector<float> diffs;
-        #pragma omp threadprivate(diffs)
-        diffs.clear();
+    public:
+        size_t calculate(cv::InputArray &src1, cv::InputArray &src2,
+                         cv::OutputArray &dst, const cv::Mat &mask1,
+                         const cv::Mat &mask2)
+        {
+            // Get pixel-wise absolute difference
+            cv::absdiff(src1, src2, dst);
+            BOB_ASSERT(dst.type() == CV_8UC1);
+            auto dstMat = dst.getMat();
 
-        cv::absdiff(src1, src2, dst);
+            const auto &mask = this->combineMasks(mask1, mask2);
+            size_t n;
+            if (mask.empty()) {
+                auto size = src1.size();
+                n = size.width * size.height;
+            } else {
+                // If there's a mask, we should zero out the unused pixels
+                cv::bitwise_and(dstMat, mask, dstMat);
+                n = static_cast<size_t>(cv::sum(mask)[0]) / 0xff;
+            }
 
-        const auto sqDiff = [](const auto val) {
-            const auto d = static_cast<float>(val);
-            return d * d;
-        };
-        std::transform(Internal::begin(dst), Internal::end(dst), std::back_inserter(diffs), sqDiff);
-        return diffs.begin();
-    }
+            // Square the differences
+            const auto sz = dstMat.size();
+            m_Differences.resize(sz.width * sz.height);
+            const auto sq = [](uint8_t val) {
+                float fval = val;
+                return fval * fval;
+            };
+            std::transform(dstMat.datastart, dstMat.dataend, m_Differences.begin(), sq);
 
-    static inline float mean(const float sum, const float n)
-    {
-        return sqrt(sum / n);
-    }
+            return n;
+        }
+
+        float mean(cv::InputArray &, size_t count, const cv::Mat &,
+                   const cv::Mat &)
+        {
+            return sqrtf(cv::sum(m_Differences)[0] / (float) count);
+        }
+
+    private:
+        // We need a second scratch variable to store square differences
+        std::vector<float> m_Differences;
+    };
 };
+
 } // Navigation
 } // BoBRobotics

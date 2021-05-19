@@ -67,17 +67,14 @@ public:
 
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &snapshotMask) const
     {
+        /*
+         * Workaround for a really longstanding gcc bug:
+         *      https://gcc.gnu.org/bugzilla/show_bug.cgi?id=27557
+         */
+        static thread_local typename Differencer::template Internal<> differencer;
+
         // Calculate difference between image and stored image
-        static cv::Mat diffScratchImage;
-        #pragma omp threadprivate(diffScratchImage)
-        diffScratchImage.create(image.size(), image.type());
-        auto diffIter = Differencer::calculate(image, m_Snapshots[snapshot], diffScratchImage);
-
-        float sum;
-        size_t count;
-        std::tie(sum, count) = maskedSum(diffIter, image.rows * image.cols, imageMask, snapshotMask);
-
-        return Differencer::mean(sum, static_cast<float>(count));
+        return differencer(image, m_Snapshots[snapshot], imageMask, snapshotMask);
     }
 
 private:
