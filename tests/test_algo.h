@@ -25,12 +25,7 @@ void testAlgoRaw(const std::string &filename, cv::Mat mask, Ts&&... args)
     }
 
     const auto &differences = algo.getImageDifferences(TestImages[0]);
-    BOB_ASSERT(trueDifferences.size() == differences.size());
-    for (int snap = 0; snap < differences.rows(); snap++) {
-        for (int col = 0; col < differences.cols(); col++) {
-            EXPECT_FLOAT_EQ(differences(snap, col), trueDifferences(snap, col));
-        }
-    }
+    compareFloatMatrices(differences, trueDifferences);
 }
 
 template<class Algo, class... Ts>

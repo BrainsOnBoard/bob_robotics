@@ -50,10 +50,5 @@ TEST(PerfectMemory, SampleImageHOG)
     }
 
     const auto &differences = algo.getImageDifferences(TestImages[0]);
-    BOB_ASSERT(trueDifferences.size() == differences.size());
-    for (int snap = 0; snap < differences.rows(); snap++) {
-        for (int col = 0; col < differences.cols(); col++) {
-            EXPECT_NEAR(differences(snap, col), trueDifferences(snap, col), precision);
-        }
-    }
+    compareFloatMatrices(differences, trueDifferences, precision);
 }
