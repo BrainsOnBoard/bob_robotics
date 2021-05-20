@@ -26,93 +26,89 @@ compare(const cv::Mat &m1, const cv::Mat &m2, const cv::Mat &expected,
     EXPECT_FLOAT_EQ(differencer.mean(scratch, count, mask1, mask2), expectedMean);
 }
 
-const cv::Size size{ 8, 4 };
-const auto zeros = cv::Mat::zeros(size, CV_8UC1);
-const auto ones = cv::Mat::ones(size, CV_8UC1);
-
-TEST(Differencers, AbsDiff)
+class Differencers
+  : public ::testing::Test
 {
-    compare<AbsDiff>(zeros, zeros, zeros, 0.f);
-    compare<AbsDiff>(ones, ones, zeros, 0.f);
-    compare<AbsDiff>(zeros, ones, ones, 1.f);
+protected:
+    const cv::Size m_Size{ 8, 4 };
+    const cv::Mat m_Zeros{ m_Size, CV_8UC1, cv::Scalar(0) };
+    const cv::Mat m_Ones{ m_Size, CV_8UC1, cv::Scalar(1) };
+    cv::Mat m_Half1{ m_Size, CV_8UC1, cv::Scalar(0) };
+    cv::Mat m_Half2{ m_Size, CV_8UC1, cv::Scalar(0) };
+    cv::Mat m_Mask1{ m_Size, CV_8UC1, cv::Scalar(0xff) };
+    cv::Mat m_Mask2{ m_Size, CV_8UC1, cv::Scalar(0xff) };
+
+    void SetUp() override
+    {
+        m_Half1.rowRange(0, m_Half1.rows / 2) = 1;
+        m_Half2.rowRange(m_Half2.rows / 2, m_Half2.rows) = 1;
+        m_Mask1.colRange(0, m_Mask1.cols / 2) = 0;
+        m_Mask2.row(0) = 0;
+    }
+};
+
+TEST_F(Differencers, AbsDiff)
+{
+    compare<AbsDiff>(m_Zeros, m_Zeros, m_Zeros, 0.f);
+    compare<AbsDiff>(m_Ones, m_Ones, m_Zeros, 0.f);
+    compare<AbsDiff>(m_Zeros, m_Ones, m_Ones, 1.f);
 }
 
-TEST(Differencers, AbsDiffMask)
+TEST_F(Differencers, AbsDiffMask)
 {
-    cv::Mat half = zeros;
-    half.rowRange(0, half.rows / 2) = 1;
-
-    cv::Mat mask{ size, CV_8UC1, 255 };
-    mask.colRange(0, mask.cols / 2) = 0;
-    compare<AbsDiff>(zeros, zeros, zeros, 0.f, mask, mask);
-    compare<AbsDiff>(ones, ones, zeros, 0.f, mask, mask);
-    compare<AbsDiff>(zeros, ones, ones, 1.f, mask, mask);
-    compare<AbsDiff>(zeros, half, half, 0.5f, mask, mask);
-
-    cv::Mat mask2{ size, CV_8UC1, 255 };
-    mask2.row(0) = 0;
-    compare<AbsDiff>(zeros, half, half, 1.f / 3.f, mask2, mask2);
+    compare<AbsDiff>(m_Zeros, m_Zeros, m_Zeros, 0.f, m_Mask1, m_Mask1);
+    compare<AbsDiff>(m_Ones, m_Ones, m_Zeros, 0.f, m_Mask1, m_Mask1);
+    compare<AbsDiff>(m_Zeros, m_Ones, m_Ones, 1.f, m_Mask1, m_Mask1);
+    compare<AbsDiff>(m_Zeros, m_Half1, m_Half1, 0.5f, m_Mask1, m_Mask1);
+    compare<AbsDiff>(m_Zeros, m_Half1, m_Half1, 1.f / 3.f, m_Mask2, m_Mask2);
 }
 
-TEST(Differencers, RMSDiff)
+TEST_F(Differencers, RMSDiff)
 {
-    compare<RMSDiff>(zeros, zeros, zeros, 0.f);
-    compare<RMSDiff>(ones, ones, zeros, 0.f);
-    compare<RMSDiff>(zeros, ones, ones, 1.f);
+    RMSDiff::Internal<> rmsDiff;
+    EXPECT_FLOAT_EQ(rmsDiff(m_Zeros, m_Zeros), 0.f);
+    EXPECT_FLOAT_EQ(rmsDiff(m_Ones, m_Ones), 0.f);
+    EXPECT_FLOAT_EQ(rmsDiff(m_Zeros, m_Ones), 1.f);
 
     // Verified with MATLAB
-    RMSDiff::Internal<> rmsDiff;
     const cv::Mat_<uint8_t> im1{ 208, 231, 32, 233, 161 };
     const cv::Mat_<uint8_t> im2{ 25, 71, 139, 244, 246 };
     EXPECT_FLOAT_EQ(rmsDiff(im1, im2), 124.8070510828615f);
 }
 
-TEST(Differencers, RMSDiffMask)
+TEST_F(Differencers, RMSDiffMask)
 {
-    cv::Mat half = zeros;
-    half.rowRange(0, half.rows / 2) = 1;
-
-    cv::Mat mask{ size, CV_8UC1, 255 };
-    mask.colRange(0, mask.cols / 2) = 0;
-    compare<AbsDiff>(zeros, zeros, zeros, 0.f, mask, mask);
-    compare<AbsDiff>(ones, ones, zeros, 0.f, mask, mask);
-    compare<AbsDiff>(zeros, ones, ones, 1.f, mask, mask);
-    compare<AbsDiff>(zeros, half, half, 0.5f, mask, mask);
-
-    cv::Mat mask2{ size, CV_8UC1, 255 };
-    mask2.row(0) = 0;
-    compare<AbsDiff>(zeros, half, half, 1.f / 3.f, mask2, mask2);
-
     RMSDiff::Internal<> rmsDiff;
+    EXPECT_FLOAT_EQ(rmsDiff(m_Zeros, m_Zeros, m_Mask1), 0.f);
+    EXPECT_FLOAT_EQ(rmsDiff(m_Ones, m_Ones, m_Mask1), 0.f);
+    EXPECT_FLOAT_EQ(rmsDiff(m_Zeros, m_Ones, m_Mask1), 1.f);
+    EXPECT_FLOAT_EQ(rmsDiff(m_Zeros, m_Half1, m_Mask1), sqrtf(0.5f));
+    EXPECT_FLOAT_EQ(rmsDiff(m_Zeros, m_Half1, m_Mask2), sqrtf(1.f / 3.f));
+
     const cv::Mat_<uint8_t> im1{ 100, 208, 231, 32, 233, 161 };
     const cv::Mat_<uint8_t> im2{ 0, 25, 71, 139, 244, 246 };
     const cv::Mat_<uint8_t> mask3{ 0, 255, 255, 255, 255, 255 };
     EXPECT_FLOAT_EQ(rmsDiff(im1, im2, mask3), 124.8070510828615f);
 }
 
-TEST(Differencers, CorrCoefficient)
+TEST_F(Differencers, CorrCoefficient)
 {
     CorrCoefficient::Internal<> ccoeff;
-
-    cv::Mat half1 = zeros;
-    half1.rowRange(0, half1.rows / 2) = 1;
-    cv::Mat half2 = zeros;
-    half2.rowRange(half2.rows / 2, half2.rows) = 1;
 
     /*
      * You can't calculate Pearson's rho if one of the input vectors is entirely
      * composed of the same value (you get a divide-by-zero).
      */
-    EXPECT_THROW({ ccoeff(zeros, zeros); }, std::invalid_argument);
-    EXPECT_THROW({ ccoeff(zeros, half1); }, std::invalid_argument);
-    EXPECT_THROW({ ccoeff(half1, zeros); }, std::invalid_argument);
+    EXPECT_THROW({ ccoeff(m_Zeros, m_Zeros); }, std::invalid_argument);
+    EXPECT_THROW({ ccoeff(m_Zeros, m_Half1); }, std::invalid_argument);
+    EXPECT_THROW({ ccoeff(m_Half1, m_Zeros); }, std::invalid_argument);
 
     /*
      * Note that we are using 1 - abs(Pearson's rho) to give us a difference
      * value.
      */
-    EXPECT_FLOAT_EQ(ccoeff(half1, half1), 0.f);
-    EXPECT_FLOAT_EQ(ccoeff(half2, half1), 0.f);
+    EXPECT_FLOAT_EQ(ccoeff(m_Half1, m_Half1), 0.f);
+    EXPECT_FLOAT_EQ(ccoeff(m_Half2, m_Half1), 0.f);
 
     // Verified with MATLAB
     const cv::Mat_<uint8_t> im1{ 167, 9, 217, 238, 173 };
