@@ -59,6 +59,12 @@ TEST(Differencers, RMSDiff)
     compare<RMSDiff>(zeros, zeros, zeros, 0.f);
     compare<RMSDiff>(ones, ones, zeros, 0.f);
     compare<RMSDiff>(zeros, ones, ones, 1.f);
+
+    // Verified with MATLAB
+    RMSDiff::Internal<> rmsDiff;
+    const cv::Mat_<uint8_t> im1{ 208, 231, 32, 233, 161 };
+    const cv::Mat_<uint8_t> im2{ 25, 71, 139, 244, 246 };
+    EXPECT_FLOAT_EQ(rmsDiff(im1, im2), 124.8070510828615f);
 }
 
 TEST(Differencers, RMSDiffMask)
@@ -76,6 +82,12 @@ TEST(Differencers, RMSDiffMask)
     cv::Mat mask2{ size, CV_8UC1, 255 };
     mask2.row(0) = 0;
     compare<AbsDiff>(zeros, half, half, 1.f / 3.f, mask2, mask2);
+
+    RMSDiff::Internal<> rmsDiff;
+    const cv::Mat_<uint8_t> im1{ 100, 208, 231, 32, 233, 161 };
+    const cv::Mat_<uint8_t> im2{ 0, 25, 71, 139, 244, 246 };
+    const cv::Mat_<uint8_t> mask3{ 0, 255, 255, 255, 255, 255 };
+    EXPECT_FLOAT_EQ(rmsDiff(im1, im2, mask3), 124.8070510828615f);
 }
 
 TEST(Differencers, CorrCoefficient)
