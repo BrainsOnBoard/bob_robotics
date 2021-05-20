@@ -192,7 +192,6 @@ private:
                 if(m_BestSnapshotReceived && m_SnapshotReceived) {
                     BOB_ASSERT(m_Snapshot.type() == CV_8UC1);
 
-                    const int imageSize = m_Snapshot.size().width * m_Snapshot.size().height;
                     const int imageWidth = m_Snapshot.size().width;
                     const int numScanColumns = (int)std::round(units::angle::turn_t(m_Config.getMaxSnapshotRotateAngle()).value() * (double)imageWidth);
 
@@ -204,16 +203,11 @@ private:
                     auto rotatorLeft = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
                                                                            1, 0, numScanColumns);
                     rotatorLeft.rotate(
-                            [imageSize, numScanColumns, this]
+                            [numScanColumns, this]
                             (const cv::Mat &fr, const cv::Mat &, size_t i)
                             {
-                                // Calculate image difference
-                                auto diffIter = Navigation::AbsDiff::calculate(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
-
-                                float sumDifference = std::accumulate(diffIter, diffIter + imageSize, 0.0f);
-
-                                // Store mean difference in RIDF
-                                m_RIDF[numScanColumns - 1 - i] = Navigation::AbsDiff::mean(sumDifference, imageSize);
+                                // Store mean abs difference in RIDF
+                                m_RIDF[numScanColumns - 1 - i] = this->m_Differencer(fr, m_BestSnapshot);
                             });
 
 
@@ -221,17 +215,12 @@ private:
                     auto rotatorRight = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
                                                                             1, imageWidth - numScanColumns, imageWidth);
                     rotatorRight.rotate(
-                            [imageSize, numScanColumns, this]
+                            [numScanColumns, this]
                             (const cv::Mat &fr, const cv::Mat &, size_t i)
                             {
-                                // Calculate image difference
-                                auto diffIter = Navigation::AbsDiff::calculate(fr, m_BestSnapshot, m_SnapshotDifferenceScratch);
-
-                                float sumDifference = std::accumulate(diffIter, diffIter + imageSize, 0.0f);
-
-                                // Store mean difference in RIDF
-                                m_RIDF[(2 * numScanColumns) - 1 - i] = Navigation::AbsDiff::mean(sumDifference, imageSize);
-                             });
+                                // Store mean abs difference in RIDF
+                                m_RIDF[(2 * numScanColumns) - 1 - i] = this->m_Differencer(fr, m_BestSnapshot);
+                            });
 
                     // Get range of
                     const auto minMaxRIDF = std::minmax_element(m_RIDF.cbegin(), m_RIDF.cend());
@@ -385,7 +374,7 @@ private:
     cv::Mat m_Snapshot;
 
     // Scratch images for RIDF calculation
-    cv::Mat m_SnapshotDifferenceScratch;
+    Navigation::AbsDiff::Internal<> m_Differencer;
     cv::Mat m_RotatedSnapshot;
 
     // Array of training snapshots
