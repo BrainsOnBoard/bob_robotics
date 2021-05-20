@@ -13,7 +13,9 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <array>
 #include <numeric>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -161,6 +163,59 @@ public:
     private:
         // We need a second scratch variable to store square differences
         std::vector<float> m_Differences;
+    };
+};
+
+//------------------------------------------------------------------------
+// BoBRobotics::Navigation::CorrCoefficient
+//------------------------------------------------------------------------
+/*!
+ * \brief For calculating difference based on Pearson's correlation coefficient
+ *
+ * Can be passed to PerfectMemory as a template parameter.
+ *
+ * Note that we use 1 - abs(Pearson's rho) to give us a difference value, as we
+ * want to calculate the dissimilarity between images.
+ */
+struct CorrCoefficient {
+    /*
+     * NB: This template parameter is unused, but left in for consistency with
+     * other differencer classes.
+     */
+    template<class VecType = void>
+    class Internal
+    {
+    public:
+        float operator()(cv::InputArray &src1, cv::InputArray &src2,
+                         const cv::Mat &mask1 = {}, const cv::Mat &mask2 = {})
+        {
+            // Don't support masks for now
+            BOB_ASSERT(mask1.empty() && mask2.empty());
+
+            const auto allSame = [](cv::InputArray &arr) {
+                const auto m = arr.getMat();
+                BOB_ASSERT(m.type() == CV_8UC1);
+                auto beg = m.datastart;
+                auto end = m.dataend;
+                return std::all_of(beg + 1, end,
+                                   [beg](uint8_t val) { return val == *beg; });
+            };
+            if (allSame(src1) || allSame(src2)) {
+                throw std::invalid_argument("Vectors src1 and src2 must have "
+                                            "more than one unique value (e.g. "
+                                            "they cannot be all zeros)");
+            }
+
+            std::array<float, 1> dst;
+            cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED);
+
+            /*
+             * As we're interested in *dissimilarity* between images, we use
+             * 1 - correlation coefficient. For our purposes, it doesn't matter
+             * whether the correlation is positive or negative.
+             */
+            return 1.f - fabsf(dst[0]);
+        }
     };
 };
 

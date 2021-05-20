@@ -77,3 +77,33 @@ TEST(Differencers, RMSDiffMask)
     mask2.row(0) = 0;
     compare<AbsDiff>(zeros, half, half, 1.f / 3.f, mask2, mask2);
 }
+
+TEST(Differencers, CorrCoefficient)
+{
+    CorrCoefficient::Internal<> ccoeff;
+
+    cv::Mat half1 = zeros;
+    half1.rowRange(0, half1.rows / 2) = 1;
+    cv::Mat half2 = zeros;
+    half2.rowRange(half2.rows / 2, half2.rows) = 1;
+
+    /*
+     * You can't calculate Pearson's rho if one of the input vectors is entirely
+     * composed of the same value (you get a divide-by-zero).
+     */
+    EXPECT_THROW({ ccoeff(zeros, zeros); }, std::invalid_argument);
+    EXPECT_THROW({ ccoeff(zeros, half1); }, std::invalid_argument);
+    EXPECT_THROW({ ccoeff(half1, zeros); }, std::invalid_argument);
+
+    /*
+     * Note that we are using 1 - abs(Pearson's rho) to give us a difference
+     * value.
+     */
+    EXPECT_FLOAT_EQ(ccoeff(half1, half1), 0.f);
+    EXPECT_FLOAT_EQ(ccoeff(half2, half1), 0.f);
+
+    // Verified with MATLAB
+    const cv::Mat_<uint8_t> im1{ 167, 9, 217, 238, 173 };
+    const cv::Mat_<uint8_t> im2{ 193, 189, 100, 167, 44 };
+    EXPECT_FLOAT_EQ(ccoeff(im1, im2), 1.f - 0.362822774581930f);
+}
