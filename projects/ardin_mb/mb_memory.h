@@ -85,7 +85,7 @@ public:
     template<class... Ts>
     const std::vector<float> &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(this->getUnwrapResolution(), this->getMaskImage(),
+        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(this->getUnwrapResolution(), this->getMask(),
                                                                         std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
@@ -98,7 +98,7 @@ public:
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(unwrapRes, this->getMaskImage(),
+        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(unwrapRes, this->getMask(),
                                                                         std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 

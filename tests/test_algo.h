@@ -19,7 +19,7 @@ void testAlgoRaw(const std::string &filename, cv::Mat mask, Ts&&... args)
     const auto trueDifferences = readMatrix<float>(filepath);
 
     Algo algo{ TestImageSize, std::forward<Ts>(args)... };
-    algo.setMaskImage(std::move(mask));
+    algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {
         algo.train(image);
     }

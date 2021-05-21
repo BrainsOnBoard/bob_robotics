@@ -96,7 +96,7 @@ protected:
     //------------------------------------------------------------------------
     float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const
     {
-        return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMaskImage());
+        return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMask());
     }
 
 private:
@@ -121,7 +121,7 @@ private:
         // Loop through snapshots and calculate differences
         #pragma omp parallel for
         for (size_t s = 0; s < numSnapshots; s++) {
-            m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
+            m_Differences[s] = calcSnapshotDifference(image, getMask(), s);
         }
     }
 };
@@ -149,7 +149,7 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
@@ -165,7 +165,7 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         const size_t numSnapshots = this->getNumSnapshots();
 

@@ -46,7 +46,7 @@ PerfectMemory::PerfectMemory(const Config &config, const cv::Size &inputSize)
 {
     // Load mask image
     if(!config.getMaskImageFilename().empty()) {
-        getPM().setMaskImage(config.getMaskImageFilename());
+        getPM().setMask(config.getMaskImageFilename());
     }
 }
 //------------------------------------------------------------------------

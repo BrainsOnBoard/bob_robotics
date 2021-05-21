@@ -43,11 +43,11 @@ public:
     void trainRoute(const ImageDatabase &imdb, bool resizeImages = false);
 
     //! Set mask image (e.g. for masking part of robot)
-    void setMaskImage(cv::Mat mask);
-    void setMaskImage(const std::string &path);
+    void setMask(cv::Mat mask);
+    void setMask(const std::string &path);
 
     //! Return mask image
-    const cv::Mat &getMaskImage() const;
+    const cv::Mat &getMask() const;
 
     //! Get the resolution of images
     const cv::Size &getUnwrapResolution() const;
@@ -57,7 +57,7 @@ private:
     // Private members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
-    cv::Mat m_MaskImage;
+    cv::Mat m_Mask;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

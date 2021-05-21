@@ -31,7 +31,7 @@ struct InSilicoRotater
     {
     public:
         RotaterInternal(const cv::Size &unwrapRes,
-                        const cv::Mat &maskImage,
+                        const cv::Mat &mask,
                         const cv::Mat &image,
                         size_t scanStep,
                         IterType beginRoll,
@@ -40,7 +40,7 @@ struct InSilicoRotater
           , m_BeginRoll(beginRoll)
           , m_EndRoll(endRoll)
           , m_Image(image)
-          , m_MaskImage(maskImage)
+          , m_Mask(mask)
         {
             BOB_ASSERT(image.cols == unwrapRes.width);
             BOB_ASSERT(image.rows == unwrapRes.height);
@@ -64,8 +64,8 @@ struct InSilicoRotater
                  * m_Image changes between calls.
                  */
                 scratchImage.create(m_Image.size(), CV_8UC1);
-                if (!m_MaskImage.empty()) {
-                    scratchMask.create(m_MaskImage.size(), m_MaskImage.type());
+                if (!m_Mask.empty()) {
+                    scratchMask.create(m_Mask.size(), m_Mask.type());
                 }
 
                 #pragma omp for
@@ -73,7 +73,7 @@ struct InSilicoRotater
                     const auto index = toIndex(i);
                     rollImage(m_Image, scratchImage, index);
                     if (!scratchMask.empty()) {
-                        rollImage(m_MaskImage, scratchMask, index);
+                        rollImage(m_Mask, scratchMask, index);
                     }
 
                     func(scratchImage, scratchMask, distance(m_BeginRoll, i));
@@ -94,7 +94,7 @@ struct InSilicoRotater
     private:
         const size_t m_ScanStep;
         const IterType m_BeginRoll, m_EndRoll;
-        const cv::Mat &m_Image, &m_MaskImage;
+        const cv::Mat &m_Image, &m_Mask;
 
         static void rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t pixels)
         {
@@ -135,33 +135,33 @@ struct InSilicoRotater
     template<typename IterType>
     static auto
     create(const cv::Size &unwrapRes,
-           const cv::Mat &maskImage,
+           const cv::Mat &mask,
            const cv::Mat &image,
            IterType beginRoll,
            IterType endRoll)
     {
-        return RotaterInternal<IterType>(unwrapRes, maskImage, image, 1, beginRoll, endRoll);
+        return RotaterInternal<IterType>(unwrapRes, mask, image, 1, beginRoll, endRoll);
     }
 
     static auto
     create(const cv::Size &unwrapRes,
-           const cv::Mat &maskImage,
+           const cv::Mat &mask,
            const cv::Mat &image,
            size_t scanStep,
            size_t beginRoll,
            size_t endRoll)
     {
-        return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, endRoll);
+        return RotaterInternal<size_t>(unwrapRes, mask, image, scanStep, beginRoll, endRoll);
     }
 
     static auto
     create(const cv::Size &unwrapRes,
-           const cv::Mat &maskImage,
+           const cv::Mat &mask,
            const cv::Mat &image,
            size_t scanStep = 1,
            size_t beginRoll = 0)
     {
-        return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, image.cols);
+        return RotaterInternal<size_t>(unwrapRes, mask, image, scanStep, beginRoll, image.cols);
     }
 };
 } // Navigation

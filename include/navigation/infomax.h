@@ -213,7 +213,7 @@ public:
     template<class... Ts>
     const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
@@ -224,7 +224,7 @@ public:
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(unwrapRes, this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference
