@@ -234,13 +234,7 @@ public:
 
         // Convert this to an angle
         radian_t heading = rotater.columnToHeading(bestIndex);
-        while (heading <= -180_deg) {
-            heading += 360_deg;
-        }
-        while (heading > 180_deg) {
-            heading -= 360_deg;
-        }
-
+        heading = normaliseAngle180(heading);
         return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
     }
 
