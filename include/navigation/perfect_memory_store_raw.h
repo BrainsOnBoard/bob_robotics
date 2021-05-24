@@ -1,8 +1,9 @@
 #pragma once
 
 // BoB robotics includes
-#include "differencers.h"
-#include "ridf_processors.h"
+#include "imgproc/mask.h"
+#include "navigation/differencers.h"
+#include "navigation/ridf_processors.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -65,7 +66,10 @@ public:
         m_Snapshots.clear();
     }
 
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot, const cv::Mat &snapshotMask) const
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &imageMask,
+                                 size_t snapshot,
+                                 const ImgProc::Mask &snapshotMask) const
     {
         /*
          * Workaround for a really longstanding gcc bug:

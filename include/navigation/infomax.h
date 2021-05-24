@@ -2,8 +2,9 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "insilico_rotater.h"
-#include "visual_navigation_base.h"
+#include "imgproc/mask.h"
+#include "navigation/insilico_rotater.h"
+#include "navigation/visual_navigation_base.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -254,7 +255,7 @@ private:
         m_RotatedDifferences.resize(rotater.numRotations());
 
         // Populate rotated differences with results
-        rotater.rotate([this] (const cv::Mat &image, const cv::Mat &, size_t i) {
+        rotater.rotate([this] (const cv::Mat &image, const ImgProc::Mask &, size_t i) {
             m_RotatedDifferences[i] = this->test(image);
         });
     }

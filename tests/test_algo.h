@@ -5,16 +5,17 @@
 // BoB robotics includes
 #include "common/path.h"
 #include "common/serialise_matrix.h"
+#include "imgproc/mask.h"
 
 // Standard C++ includes
 #include <string>
 #include <utility>
 
-template<class Algo, class... Ts>
-void testAlgoRaw(const std::string &filename, cv::Mat mask, Ts&&... args)
-{
-    using namespace BoBRobotics;
+using namespace BoBRobotics;
 
+template<class Algo, class... Ts>
+void testAlgoRaw(const std::string &filename, ImgProc::Mask mask, Ts&&... args)
+{
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 

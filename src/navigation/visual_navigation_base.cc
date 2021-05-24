@@ -56,31 +56,12 @@ VisualNavigationBase::trainRoute(const std::vector<cv::Mat> &images)
 }
 
 void
-VisualNavigationBase::setMask(cv::Mat mask)
+VisualNavigationBase::setMask(ImgProc::Mask mask)
 {
-    // Clear mask
-    if (mask.empty()) {
-        m_Mask = cv::Mat{};
-        return;
-    }
-
-    BOB_ASSERT(mask.size() == m_UnwrapRes);
-    BOB_ASSERT(mask.type() == CV_8UC1);
-
     m_Mask = std::move(mask);
-
-    // Set any non-zero element to 255 so we have a true binary mask
-    std::transform(m_Mask.datastart, m_Mask.dataend, m_Mask.data,
-                   [](uint8_t val) { return val ? 0xff : 0; });
 }
 
-void
-VisualNavigationBase::setMask(const std::string &path)
-{
-    setMask(cv::imread(path, cv::IMREAD_GRAYSCALE));
-}
-
-const cv::Mat &
+const ImgProc::Mask &
 VisualNavigationBase::getMask() const
 {
     return m_Mask;

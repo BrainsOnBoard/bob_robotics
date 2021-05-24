@@ -5,18 +5,19 @@
 // BoB robotics includes
 #include "common/path.h"
 #include "common/serialise_matrix.h"
+#include "imgproc/mask.h"
 
 // Standard C++ includes
 #include <string>
 #include <type_traits>
 #include <utility>
 
+using namespace BoBRobotics;
+
 template<class Algo, class... Ts>
 void
-generateDataRaw(const std::string &filename, cv::Mat mask, Ts&&... args)
+generateDataRaw(const std::string &filename, ImgProc::Mask mask, Ts&&... args)
 {
-    using namespace BoBRobotics;
-
     Algo algo{ TestImageSize, std::forward<Ts>(args)... };
     algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {

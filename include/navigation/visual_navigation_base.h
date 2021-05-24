@@ -2,6 +2,7 @@
 
 // BoB robotics includes
 #include "image_database.h"
+#include "imgproc/mask.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -43,11 +44,10 @@ public:
     void trainRoute(const ImageDatabase &imdb, bool resizeImages = false);
 
     //! Set mask image (e.g. for masking part of robot)
-    void setMask(cv::Mat mask);
-    void setMask(const std::string &path);
+    void setMask(ImgProc::Mask mask);
 
     //! Return mask image
-    const cv::Mat &getMask() const;
+    const ImgProc::Mask &getMask() const;
 
     //! Get the resolution of images
     const cv::Size &getUnwrapResolution() const;
@@ -57,7 +57,7 @@ private:
     // Private members
     //------------------------------------------------------------------------
     const cv::Size m_UnwrapRes;
-    cv::Mat m_Mask;
+    ImgProc::Mask m_Mask;
 }; // PerfectMemoryBase
 } // Navigation
 } // BoBRobotics

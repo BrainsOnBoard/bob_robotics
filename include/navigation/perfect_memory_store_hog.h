@@ -2,9 +2,11 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "plog/Log.h"
 #include "differencers.h"
 #include "ridf_processors.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -78,8 +80,10 @@ public:
     }
 
     // Calculate difference between memory and snapshot with index
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask,
-                                 size_t snapshot, const cv::Mat &) const
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &imageMask,
+                                 size_t snapshot,
+                                 const ImgProc::Mask &) const
     {
         BOB_ASSERT(imageMask.empty());
 

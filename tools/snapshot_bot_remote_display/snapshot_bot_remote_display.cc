@@ -199,12 +199,11 @@ private:
                     m_RIDF.resize(numScanColumns * 2);
 
                     // Scan across columns on left of image
-                    cv::Mat mask;
-                    auto rotatorLeft = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
+                    auto rotatorLeft = Navigation::InSilicoRotater::create(m_Snapshot.size(), {}, m_Snapshot,
                                                                            1, 0, numScanColumns);
                     rotatorLeft.rotate(
                             [numScanColumns, this]
-                            (const cv::Mat &fr, const cv::Mat &, size_t i)
+                            (const cv::Mat &fr, const ImgProc::Mask &, size_t i)
                             {
                                 // Store mean abs difference in RIDF
                                 m_RIDF[numScanColumns - 1 - i] = this->m_Differencer(fr, m_BestSnapshot);
@@ -212,11 +211,11 @@ private:
 
 
                     // Scan across columns on right of image
-                    auto rotatorRight = Navigation::InSilicoRotater::create(m_Snapshot.size(), mask, m_Snapshot,
+                    auto rotatorRight = Navigation::InSilicoRotater::create(m_Snapshot.size(), {}, m_Snapshot,
                                                                             1, imageWidth - numScanColumns, imageWidth);
                     rotatorRight.rotate(
                             [numScanColumns, this]
-                            (const cv::Mat &fr, const cv::Mat &, size_t i)
+                            (const cv::Mat &fr, const ImgProc::Mask &, size_t i)
                             {
                                 // Store mean abs difference in RIDF
                                 m_RIDF[(2 * numScanColumns) - 1 - i] = this->m_Differencer(fr, m_BestSnapshot);

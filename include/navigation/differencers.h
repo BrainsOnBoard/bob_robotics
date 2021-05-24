@@ -7,6 +7,7 @@
 
 // BoB robotics includes
 #include "common/macros.h"
+#include "imgproc/mask.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -32,8 +33,8 @@ class DifferencerBase
 public:
     float operator()(cv::InputArray &src1,
                      cv::InputArray &src2,
-                     const cv::Mat &mask1 = {},
-                     const cv::Mat &mask2 = {})
+                     const ImgProc::Mask &mask1 = {},
+                     const ImgProc::Mask &mask2 = {})
     {
         auto obj = static_cast<Derived *>(this);
         size_t count = obj->calculate(src1, src2, m_ScratchVector, mask1, mask2);
@@ -42,36 +43,7 @@ public:
 
     VecType &getScratchVector() { return m_ScratchVector; }
 
-protected:
-    cv::Mat &combineMasks(const cv::Mat &mask1, const cv::Mat &mask2)
-    {
-        BOB_ASSERT(mask1.empty() || mask1.type() == CV_8UC1);
-        BOB_ASSERT(mask2.empty() || mask2.type() == CV_8UC1);
-
-        if (mask1.empty()) {
-            m_MaskScratch = mask2;
-        } else if (mask2.empty()) {
-            m_MaskScratch = mask1;
-        } else {
-#ifdef DEBUG
-            // Only do these extra checks if we're debugging because they're costly
-            const auto check = [](const cv::Mat &mask) {
-                BOB_ASSERT(std::all_of(mask.datastart, mask.dataend, [](uint8_t val) {
-                    return val == 0 || val == 0xff;
-                }));
-            };
-            check(mask1);
-            check(mask2);
-#endif
-
-            cv::bitwise_and(mask1, mask2, m_MaskScratch);
-        }
-
-        return m_MaskScratch;
-    }
-
 private:
-    cv::Mat m_MaskScratch;
     VecType m_ScratchVector;
 };
 
@@ -92,17 +64,22 @@ public:
     {
     public:
         size_t calculate(cv::InputArray &src1, cv::InputArray &src2,
-                         cv::OutputArray &dst, const cv::Mat &, const cv::Mat &)
+                         cv::OutputArray &dst, const ImgProc::Mask &,
+                         const ImgProc::Mask &)
         {
             cv::absdiff(src1, src2, dst);
             return 0;
         }
 
-        float mean(cv::InputArray &arr, size_t, const cv::Mat &mask1,
-                   const cv::Mat &mask2)
+        float mean(cv::InputArray &arr, size_t, const ImgProc::Mask &mask1,
+                   const ImgProc::Mask &mask2)
         {
-            return cv::mean(arr, this->combineMasks(mask1, mask2))[0];
+            mask1.combine(mask2, m_CombinedMask);
+            return cv::mean(arr, m_CombinedMask.get())[0];
         }
+
+    private:
+        ImgProc::Mask m_CombinedMask;
     };
 };
 
@@ -123,24 +100,16 @@ public:
     {
     public:
         size_t calculate(cv::InputArray &src1, cv::InputArray &src2,
-                         cv::OutputArray &dst, const cv::Mat &mask1,
-                         const cv::Mat &mask2)
+                         cv::OutputArray &dst, const ImgProc::Mask &mask1,
+                         const ImgProc::Mask &mask2)
         {
             // Get pixel-wise absolute difference
             cv::absdiff(src1, src2, dst);
             BOB_ASSERT(dst.type() == CV_8UC1);
             auto dstMat = dst.getMat();
 
-            const auto &mask = this->combineMasks(mask1, mask2);
-            size_t n;
-            if (mask.empty()) {
-                auto size = src1.size();
-                n = size.width * size.height;
-            } else {
-                // If there's a mask, we should zero out the unused pixels
-                cv::bitwise_and(dstMat, mask, dstMat);
-                n = static_cast<size_t>(cv::sum(mask)[0]) / 0xff;
-            }
+            mask1.combine(mask2, m_CombinedMask);
+            m_CombinedMask.apply(dstMat, dstMat);
 
             // Square the differences
             const auto sz = dstMat.size();
@@ -151,11 +120,11 @@ public:
             };
             std::transform(dstMat.datastart, dstMat.dataend, m_Differences.begin(), sq);
 
-            return n;
+            return m_CombinedMask.countUnmaskedPixels(src1.size());
         }
 
-        float mean(cv::InputArray &, size_t count, const cv::Mat &,
-                   const cv::Mat &)
+        float mean(cv::InputArray &, size_t count, const ImgProc::Mask &,
+                   const ImgProc::Mask &)
         {
             return sqrtf(cv::sum(m_Differences)[0] / (float) count);
         }
@@ -163,6 +132,7 @@ public:
     private:
         // We need a second scratch variable to store square differences
         std::vector<float> m_Differences;
+        ImgProc::Mask m_CombinedMask;
     };
 };
 
@@ -187,7 +157,8 @@ struct CorrCoefficient {
     {
     public:
         float operator()(cv::InputArray &src1, cv::InputArray &src2,
-                         const cv::Mat &mask1 = {}, const cv::Mat &mask2 = {})
+                         const ImgProc::Mask &mask1 = {},
+                         const ImgProc::Mask &mask2 = {})
         {
             // Don't support masks for now
             BOB_ASSERT(mask1.empty() && mask2.empty());

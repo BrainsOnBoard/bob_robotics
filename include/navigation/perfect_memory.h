@@ -94,9 +94,10 @@ protected:
     //------------------------------------------------------------------------
     // Protected API
     //------------------------------------------------------------------------
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &mask, size_t snapshot) const
     {
-        return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMask());
+        return m_Store.calcSnapshotDifference(image, mask, snapshot, getMask());
     }
 
 private:
@@ -202,7 +203,7 @@ private:
 
         // Scan across image columns
         rotater.rotate(
-                [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
+                [this, numSnapshots](const cv::Mat &fr, const ImgProc::Mask &mask, size_t i) {
                     // Loop through snapshots
                     for (size_t s = 0; s < numSnapshots; s++) {
                         // Calculate difference
