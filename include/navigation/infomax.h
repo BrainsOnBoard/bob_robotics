@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/circstat.h"
 #include "common/macros.h"
 #include "imgproc/mask.h"
 #include "navigation/insilico_rotater.h"
@@ -72,7 +73,7 @@ public:
     virtual float test(const cv::Mat &image) const override
     {
         const auto decs = m_Weights * getFloatVector(image);
-        return decs.array().abs().sum();
+        return decs.array().abs().mean() / FloatType{ 0xff };
     }
 
     //! Generates new random weights
