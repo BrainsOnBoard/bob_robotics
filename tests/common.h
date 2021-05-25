@@ -15,6 +15,8 @@ void compareFloatMatricesPredicate(const T &m1, const U &m2, const Pred &compare
                   "m1 and m2 must contain floats");
 
     ASSERT_EQ(m1.size(), m2.size());
+
+    SCOPED_TRACE("Comparing matrices");
     for (int i = 0; i < m1.rows(); i++) {
         for (int j = 0; j < m1.cols(); j++) {
             compare(m1(i, j), m2(i, j));
