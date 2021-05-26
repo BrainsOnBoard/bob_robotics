@@ -270,8 +270,8 @@ GazeboQuadCopterPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
 
     const char *logfile_location = std::getenv("LOG_FILE");
     if (logfile_location != nullptr) {
+        m_Logfile.exceptions(std::ios::badbit | std::ios::failbit);
         m_Logfile.open(logfile_location, std::ios_base::app);
-        GZ_ASSERT(m_Logfile.good(), "Log file cannot be opened.\n");
     }
     else{
         std::cerr<< "LOG_FILE not set. Flight log is disabled.\n";

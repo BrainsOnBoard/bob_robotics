@@ -94,12 +94,12 @@ ImageDatabase::ImageDatabase(const filesystem::path &databasePath, bool overwrit
 bool
 ImageDatabase::loadCSV()
 {
-    // If we don't have any entries, it's an empty database
     const auto entriesPath = m_Path / EntriesFilename;
     std::ifstream entriesFile(entriesPath.str());
-    if (!entriesFile.good()) {
+    if (entriesFile.fail()) {
         return false;
     }
+    entriesFile.exceptions(std::ios::badbit);
 
     std::string line;
     if (!std::getline(entriesFile, line)) {
@@ -393,7 +393,11 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
          */
         std::string line;
         std::ofstream ofs((destination / MetadataFilename).str());
-        for (std::ifstream ifs((m_Path / MetadataFilename).str()); std::getline(ifs, line);) {
+        ofs.exceptions(std::ios::badbit | std::ios::failbit);
+        std::ifstream ifs((m_Path / MetadataFilename).str());
+        BOB_ASSERT(!ifs.fail());
+        ifs.exceptions(std::ios::badbit);
+        while (std::getline(ifs, line)) {
             const auto pos = line.find("needsUnwrapping:");
             if (pos != std::string::npos) {
                 ofs << std::string(pos, ' ') << "needsUnwrapping: 0\n";
@@ -499,7 +503,9 @@ ImageDatabase::loadMetadata()
         m_IsRoute = true;
         m_MetadataYAML.reset();
     } else {
-        std::ifstream ifs(metadataPath.str());
+        std::ifstream ifs{ metadataPath.str() };
+        ifs.exceptions(std::ios::badbit | std::ios::failbit);
+
         std::stringstream ss;
         ss << "%YAML:1.0\n"
            << ifs.rdbuf();

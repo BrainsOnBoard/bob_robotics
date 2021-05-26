@@ -46,6 +46,7 @@ int bobMain(int argc, char **argv)
 
     Stopwatch stopwatch;
     std::ofstream dataFile;
+    dataFile.exceptions(std::ios::badbit | std::ios::failbit);
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001); // For getting robot's position
 
     // If we're recording, ignore axis movements
@@ -69,10 +70,8 @@ int bobMain(int argc, char **argv)
             if (!stopwatch.started()) {
                 // Open a new file for writing
                 dataFile.open("data/angular_velocity.csv");
-                BOB_ASSERT(dataFile.good());
                 dataFile << "Time [ms], Yaw [rad], Pitch [rad], Roll [rad], "
-                         << "Yaw velocity [rad/s], Pitch velocity [rad/s], Roll velocity [rad/s]"
-                        ;
+                         << "Yaw velocity [rad/s], Pitch velocity [rad/s], Roll velocity [rad/s]";
 
                 // Spin robot
                 stopwatch.start();

@@ -49,7 +49,8 @@ public:
         m_FilePath = dataDir / ss.str();
 
         // Open file and write header
-        m_FileStream = std::ofstream(m_FilePath.str());
+        m_FileStream.exceptions(std::ios::badbit | std::ios::failbit);
+        m_FileStream.open(m_FilePath.str());
         m_FileStream << "x, y, t\n";
         m_FileStream << std::setprecision(10); // set number of decimal places
 

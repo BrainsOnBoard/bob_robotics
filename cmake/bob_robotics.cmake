@@ -337,6 +337,16 @@ macro(always_included_packages)
             macos_find_homebrew_openmp()
         endif()
         find_package(OpenMP QUIET)
+
+        # For old versions of CMake (< 3.9) we need to manually add compiler flags instead
+        if (NOT OpenMP_CXX_FOUND)
+            if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+                add_compile_flags(-fopenmp)
+            else()
+                # Otherwise, signal that we couldn't find it
+                set(ENABLE_OPENMP FALSE)
+            endif()
+        endif()
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
@@ -534,9 +544,10 @@ macro(BoB_build)
     endif()
 
     # Different Jetson devices have different user-facing I2C interfaces
-    # so read the chip ID and add preprocessor macro
+    # so read the chip ID and add preprocessor macro, stripping trailing whitespace (carriage return)
     if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
         file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
+        string(STRIP ${TEGRA_CHIP_ID} TEGRA_CHIP_ID)
         add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
         message("Tegra chip id: ${TEGRA_CHIP_ID}")
     endif()
@@ -784,7 +795,7 @@ if(WIN32)
         set(PLATFORM x64-windows)
     endif()
 
-    if(${CMAKE_BUILD_TYPE} STREQUAL Debug)
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
         set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}/debug")
     else()
         set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}")
