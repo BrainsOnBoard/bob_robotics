@@ -1,9 +1,12 @@
 // BoB robotics includes
-#include "plog/Log.h"
+#include "common/path.h"
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_raw.h"
 #include "navigation/perfect_memory_store_hog.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -17,7 +20,7 @@ int bobMain(int, char **)
     units::angle::degree_t heading;
     const Eigen::MatrixXf *allDifferences;
 
-    const ImageDatabase imdb{ "../../tools/ant_world_db_creator/ant1_route1" };
+    const ImageDatabase imdb{ Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1" };
     const auto snapshots = imdb.loadImages(imSize);
     LOGI << "Loaded " << snapshots.size() << " snapshots";
 
