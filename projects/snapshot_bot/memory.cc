@@ -6,6 +6,7 @@
 
 // BoB robotics includes
 #include "common/serialise_matrix.h"
+#include "imgproc/mask.h"
 
 // BoB robotics third party includes
 #include "plog/Log.h"
@@ -46,7 +47,7 @@ PerfectMemory::PerfectMemory(const Config &config, const cv::Size &inputSize)
 {
     // Load mask image
     if(!config.getMaskImageFilename().empty()) {
-        getPM().setMask(config.getMaskImageFilename());
+        getPM().setMask(ImgProc::Mask{ config.getMaskImageFilename() });
     }
 }
 //------------------------------------------------------------------------
