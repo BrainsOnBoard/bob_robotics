@@ -534,9 +534,10 @@ macro(BoB_build)
     endif()
 
     # Different Jetson devices have different user-facing I2C interfaces
-    # so read the chip ID and add preprocessor macro
+    # so read the chip ID and add preprocessor macro, stripping trailing whitespace (carriage return)
     if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
         file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
+        string(STRIP ${TEGRA_CHIP_ID} TEGRA_CHIP_ID)
         add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
         message("Tegra chip id: ${TEGRA_CHIP_ID}")
     endif()
