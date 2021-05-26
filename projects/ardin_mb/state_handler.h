@@ -28,16 +28,13 @@
 // Forward declarations
 namespace BoBRobotics
 {
-namespace Navigation
-{
-    class VisualNavigationBase;
-}
 namespace AntWorld
 {
     class SnapshotProcessor;
 }
 }
 
+class VisualNavigationBase;
 class VisualNavigationUI;
 
 //----------------------------------------------------------------------------
@@ -79,9 +76,10 @@ public:
         KeyMax
     };
 
-    StateHandler(const std::string &worldFilename, const std::string &routeFilename, float jitterSD, bool quitAfterTrain, bool autoTest,
+    StateHandler(const std::string &worldFilename, const std::string &routeFilename,
+                 float jitterSD, bool quitAfterTrain, bool autoTest, bool realignRoutes,
                  meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
-                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, BoBRobotics::Navigation::VisualNavigationBase &visualNavigation,
+                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
                  VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
@@ -170,6 +168,9 @@ private:
     //! Counters for total number of steps made when testing (or random walking)
     unsigned int m_NumTestSteps;
 
+    //! Should route highlights be shown (rather than familiarity)
+    bool m_ShowRouteHighlight;
+
     //! RNG used for random walk
     std::mt19937 m_RNG;
 
@@ -185,6 +186,9 @@ private:
     //! Should we automatically test after training? (useful for automated benchmarking)
     const bool m_AutoTest;
 
+    //! In the original paper, routes were 're-aligned' so
+    const bool m_RealignRoutes;
+
     //! Snapshot processor - takes screen images and pre-processes
     BoBRobotics::AntWorld::SnapshotProcessor &m_SnapshotProcessor;
 
@@ -192,7 +196,7 @@ private:
     const meter_t m_PathHeight;
 
     //! Model used for visual navigation
-    BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
+    VisualNavigationBase &m_VisualNavigation;
 
     //! Object used to handle visual navigation model-specific UI
     VisualNavigationUI &m_VisualNavigationUI;

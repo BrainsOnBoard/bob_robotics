@@ -48,7 +48,7 @@ MBMemory::MBMemory(unsigned int numPN, unsigned int numKC, unsigned int numEN, u
                    double tauD, double kcToENWeight, double dopamineStrength,
                    double rewardTimeMs, double presentDurationMs, double postStimulusDurationMs, double timestepMs,
                    const std::string &modelName)
-:   Navigation::VisualNavigationBase(cv::Size(inputWidth, inputHeight)), m_SnapshotFloat(inputHeight, inputWidth, CV_32FC1),
+:   m_SnapshotFloat(inputHeight, inputWidth, CV_32FC1),
     m_NumPN(numPN), m_NumKC(numKC), m_NumEN(numEN), m_NumPNSynapsesPerKC(numPNSynapsesPerKC),
     m_InputWidth(inputWidth), m_InputHeight(inputHeight), m_TauD(tauD), m_KCToENWeight(kcToENWeight), m_TimestepMs(timestepMs),
     m_KCToENDopamineStrength(dopamineStrength), m_RewardTimeMs(rewardTimeMs), m_PresentDurationMs(presentDurationMs),
@@ -112,7 +112,7 @@ void MBMemory::train(const cv::Mat &image)
     present(image, true);
 }
 //----------------------------------------------------------------------------
-float MBMemory::test(const cv::Mat &image) const
+float MBMemory::test(const cv::Mat &image)
 {
     // Get number of EN spikes
     return (float)std::get<2>(present(image, false));
@@ -144,7 +144,7 @@ void MBMemory::read(const cv::FileNode &node)
     }
 }
 //----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train) const
+std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train)
 {
     BOB_ASSERT(image.cols == m_InputWidth);
     BOB_ASSERT(image.rows == m_InputHeight);
