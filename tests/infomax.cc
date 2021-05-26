@@ -1,15 +1,27 @@
 #include "common.h"
-#include "test_algo.h"
+
+// BoB robotics includes
+#include "common/serialise_matrix.h"
 #include "navigation/generate_images.h"
 #include "navigation/infomax_test.h"
 
+using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 
 const auto InitialWeights = InfoMax<>::generateInitialWeights(TestImageSize.width * TestImageSize.height, 100, /*seed=*/42);
 
 TEST(InfoMax, SampleImage)
 {
-    testAlgoRaw<InfoMaxTest>("infomax.bin", {});
+    const auto filepath = Path::getProgramDirectory() / "navigation" / "infomax.bin";
+    const auto trueDifferences = readMatrix<float>(filepath);
+
+    InfoMaxTest algo{ TestImageSize };
+    for (const auto &image : TestImages) {
+        algo.train(image);
+    }
+
+    const auto &differences = algo.getImageDifferences(TestImages[0]);
+    compareFloatMatrices(differences, trueDifferences);
 }
 
 // Check that the columns have means of approx 0 and SDs of approx 1

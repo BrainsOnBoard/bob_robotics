@@ -107,6 +107,11 @@ public:
         return m_Differences;
     }
 
+    Window getFullWindow() const
+    {
+        return {0, getNumSnapshots()};
+    }
+
 protected:
     //------------------------------------------------------------------------
     // Protected API
@@ -115,11 +120,6 @@ protected:
                                  const ImgProc::Mask &mask, size_t snapshot) const
     {
         return m_Store.calcSnapshotDifference(image, mask, snapshot, getMask());
-    }
-
-    Window getFullWindow() const
-    {
-        return {0, getNumSnapshots()};
     }
 
 private:

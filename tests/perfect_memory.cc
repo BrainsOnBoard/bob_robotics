@@ -6,28 +6,27 @@
 #include "navigation/perfect_memory_store_hog.h"
 
 using namespace BoBRobotics::Navigation;
+using Window = std::pair<size_t, size_t>;
 
-TEST(PerfectMemory, SampleImage)
-{
-    testAlgo<PerfectMemoryRotater<>>("pm.bin");
-}
+#define PM_TEST_WINDOW(TEST_NAME, ALGO, FILENAME, MASK)      \
+    TEST(PerfectMemory, TEST_NAME)                           \
+    {                                                        \
+        testAlgo<ALGO>(FILENAME, MASK, {});                  \
+    }                                                        \
+    TEST(PerfectMemory, TEST_NAME##Window)                   \
+    {                                                        \
+        testAlgo<ALGO>("window_" FILENAME, MASK, { 0, 10 }); \
+    }
 
-TEST(PerfectMemory, SampleImageMask)
-{
-    testAlgoMask<PerfectMemoryRotater<>>("mask_pm.bin");
-}
+#define PM_TEST(TEST_NAME, ALGO, FILENAME)        \
+    PM_TEST_WINDOW(TEST_NAME, ALGO, FILENAME, {}) \
+    PM_TEST_WINDOW(TEST_NAME##Mask, ALGO, "mask_" FILENAME, TestMask)
 
-TEST(PerfectMemory, SampleImageRMS)
-{
-    testAlgo<PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>>("pm_rms.bin");
-}
+PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
+PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
 
-TEST(PerfectMemory, SampleImageRMSMask)
-{
-    testAlgoMask<PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>>("mask_pm_rms.bin");
-}
-
-TEST(PerfectMemory, SampleImageHOG)
+void
+testHog(const std::string &filename, std::pair<size_t, size_t> window)
 {
     /*
      * Using GTest's default EXPECT_FLOAT_EQ() method gives test failures when
@@ -41,7 +40,7 @@ TEST(PerfectMemory, SampleImageHOG)
 
     using namespace BoBRobotics;
 
-    const auto filepath = Path::getProgramDirectory() / "navigation" / "pm_hog.bin";
+    const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
     PerfectMemoryRotater<PerfectMemoryStore::HOG<>> algo{ TestImageSize, cv::Size(10, 10), 8 };
@@ -49,6 +48,19 @@ TEST(PerfectMemory, SampleImageHOG)
         algo.train(image);
     }
 
-    const auto &differences = algo.getImageDifferences(TestImages[0]);
+    if (window == Window{}) {
+        window = algo.getFullWindow();
+    }
+    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
     compareFloatMatrices(differences, trueDifferences, precision);
+}
+
+TEST(PerfectMemory, SampleImageHOG)
+{
+    testHog("pm_hog.bin", {});
+}
+
+TEST(PerfectMemory, SampleImageHogWindow)
+{
+    testHog("window_pm_hog.bin", { 0, 10 });
 }
