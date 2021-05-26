@@ -365,7 +365,7 @@ private:
                     // Delete old testing images
                     const std::string testWildcard = (m_Config.getOutputPath() / ("test" +  m_Config.getTestingSuffix() + "_*.png")).str();
                     system(("rm -f " + testWildcard).c_str());
-                    
+
                     m_StateMachine.transition(State::Testing);
                 }
             }
@@ -444,7 +444,7 @@ private:
                 if(state == State::DrivingForward) {
                     m_Robot.moveForward(m_Config.getMoveSpeed());
                 }
-                // Otherwisem start turning
+                // Otherwise start turning
                 else {
                     const float turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
                     const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
