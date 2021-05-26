@@ -337,6 +337,16 @@ macro(always_included_packages)
             macos_find_homebrew_openmp()
         endif()
         find_package(OpenMP QUIET)
+
+        # For old versions of CMake (< 3.9) we need to manually add compiler flags instead
+        if (NOT OpenMP_CXX_FOUND)
+            if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+                add_compile_flags(-fopenmp)
+            else()
+                # Otherwise, signal that we couldn't find it
+                set(ENABLE_OPENMP FALSE)
+            endif()
+        endif()
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
