@@ -746,18 +746,29 @@ ImageDatabase::unwrap(const filesystem::path &destination,
      * copy of these scratch variables.
      */
     static thread_local cv::Mat unwrapped;
-    static thread_local std::string outPath;
 
-    // Finally, unwrap all images and save to new folder
-    forEachImage([&](size_t i, const cv::Mat &image) {
-        unwrapper.unwrap(image, unwrapped);
-        if (m_Entries[i].path.empty()) {
-            outPath = "image" + std::to_string(i) + ".jpg";
+    /*
+     * Finally, unwrap all images and save to new folder.
+     *
+     * Working out the filepath in the OpenMP loop seems to cause segfaults, for
+     * some reason that's beyond me, so let's just work them out in advance.
+     */
+    std::vector<std::string> filePaths;
+    filePaths.reserve(size());
+    std::string filename;
+    for (size_t i = 0; i < size(); i++) {
+        const auto &path = m_Entries[i].path;
+        if (path.empty()) {
+            filename = "image" + std::to_string(i) + ".jpg";
         } else {
-            outPath = m_Entries[i].path.filename();
+            filename = path.filename();
         }
 
-        BOB_ASSERT(cv::imwrite((destination / outPath).str(), unwrapped));
+        filePaths.emplace_back((destination / filename).str());
+    }
+    forEachImage([&](size_t i, const cv::Mat &image) {
+        unwrapper.unwrap(image, unwrapped);
+        BOB_ASSERT(cv::imwrite(filePaths[i], unwrapped));
     }, frameSkip, greyscale);
 }
 
