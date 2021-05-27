@@ -86,45 +86,6 @@ public:
     unsigned int getNumActivePN() const{ return m_NumActivePN; }
     unsigned int getNumActiveKC() const{ return m_NumActiveKC; }
 
-<<<<<<< HEAD
-    template<class... Ts>
-    const std::vector<float> &getImageDifferences(Ts &&... args) const
-    {
-        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(this->getUnwrapResolution(), this->getMask(),
-                                                                        std::forward<Ts>(args)...);
-        calcImageDifferences(rotater);
-        return m_RotatedDifferences;
-    }
-
-    template<class... Ts>
-    auto getHeading(Ts &&... args) const
-    {
-        using namespace units::literals;
-        using radian_t = units::angle::radian_t;
-
-        const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = BoBRobotics::Navigation::InSilicoRotater::create(unwrapRes, this->getMask(),
-                                                                        std::forward<Ts>(args)...);
-        calcImageDifferences(rotater);
-
-        // Find index of lowest difference
-        const auto el = std::min_element(m_RotatedDifferences.cbegin(), m_RotatedDifferences.cend());
-        const size_t bestIndex = std::distance(m_RotatedDifferences.cbegin(), el);
-
-        // Convert this to an angle
-        radian_t heading = rotater.columnToHeading(bestIndex);
-        while (heading <= -180_deg) {
-            heading += 360_deg;
-        }
-        while (heading > 180_deg) {
-            heading -= 360_deg;
-        }
-
-        return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
-    }
-
-=======
->>>>>>> origin/master
 protected:
     //------------------------------------------------------------------------
     // Declared virtuals
