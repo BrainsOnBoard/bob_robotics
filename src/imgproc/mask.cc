@@ -85,7 +85,7 @@ Mask::set(cv::Mat mask, const cv::Size &size)
 
     // The user has requested a specific size of mask
     if (!size.empty()) {
-        cv::resize(mask, mask, size);
+        cv::resize(mask, mask, size, {}, {}, cv::INTER_NEAREST);
     }
 
     // Needs to be composed of bytes
