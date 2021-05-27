@@ -111,11 +111,14 @@ bobMain(int argc, char *argv[])
     cv::Mat frame;
     catcher.trapSignals();
     sw.start();
-    for (auto time = 0_ms; time < runTime; time = sw.elapsed()) {
+    for (auto time = 0_ms; time < runTime;) {
         catcher.check();
 
         // Read image from camera (synchronously)
         cam->readFrameSync(frame);
+
+        // Sync time to when camera frame was read
+        time = sw.elapsed();
 
         // get imu data
         double roll = NAN, pitch = NAN, yaw = NAN;
