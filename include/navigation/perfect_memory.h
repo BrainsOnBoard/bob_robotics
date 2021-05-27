@@ -107,18 +107,19 @@ public:
         return m_Differences;
     }
 
+    Window getFullWindow() const
+    {
+        return {0, getNumSnapshots()};
+    }
+
 protected:
     //------------------------------------------------------------------------
     // Protected API
     //------------------------------------------------------------------------
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &mask, size_t snapshot) const
     {
-        return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMaskImage());
-    }
-
-    Window getFullWindow() const
-    {
-        return {0, getNumSnapshots()};
+        return m_Store.calcSnapshotDifference(image, mask, snapshot, getMask());
     }
 
 private:
@@ -140,10 +141,10 @@ private:
 
         m_Differences.resize(window.second - window.first);
 
-        // Loop through snapshots and caculate differences
+        // Loop through snapshots and calculate differences
         #pragma omp parallel for
         for (size_t s = window.first; s < window.second; s++) {
-            m_Differences[s - window.first] = calcSnapshotDifference(image, getMaskImage(), s);
+            m_Differences[s - window.first] = calcSnapshotDifference(image, getMask(), s);
         }
     }
 };
@@ -172,7 +173,7 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
         return m_RotatedDifferences;
     }
@@ -187,7 +188,7 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(this->getFullWindow(), rotater);
         return m_RotatedDifferences;
     }
@@ -204,7 +205,7 @@ public:
     template<class... Ts>
     auto getHeading(typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
 
         // Now get the minimum for each snapshot and the column this corresponds to
@@ -256,7 +257,7 @@ private:
 
         // Scan across image columns
         rotater.rotate(
-                [this, &window](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
+                [this, &window](const cv::Mat &fr, const ImgProc::Mask &mask, size_t i) {
                     // Loop through snapshots
                     for (size_t s = window.first; s < window.second; s++) {
                         // Calculate difference
