@@ -17,6 +17,7 @@
 #include <array>
 #include <numeric>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -136,6 +137,14 @@ public:
     };
 };
 
+template<class T>
+bool allSame(cv::InputArray &arr)
+{
+    const cv::Mat_<T> m = arr.getMat();
+    return std::all_of(m.begin() + 1, m.end(),
+                       [&m](T val) { return val == *m.begin(); });
+}
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::CorrCoefficient
 //------------------------------------------------------------------------
@@ -149,11 +158,12 @@ public:
  */
 struct CorrCoefficient {
     /*
-     * NB: This template parameter is unused, but left in for consistency with
-     * other differencer classes.
+     * NB: We don't need any scratch storage, but the user can choose to have
+     * some (e.g. for the HOG flavour of perfect memory).
      */
-    template<class VecType = void>
+    template<class VecType = std::tuple<>>
     class Internal
+      : public DifferencerBase<CorrCoefficient::Internal<VecType>, VecType>
     {
     public:
         float operator()(cv::InputArray &src1, cv::InputArray &src2,
@@ -162,16 +172,25 @@ struct CorrCoefficient {
         {
             // Don't support masks for now
             BOB_ASSERT(mask1.empty() && mask2.empty());
+            BOB_ASSERT(src1.type() == src2.type());
 
-            const auto allSame = [](cv::InputArray &arr) {
-                const auto m = arr.getMat();
-                BOB_ASSERT(m.type() == CV_8UC1);
-                auto beg = m.datastart;
-                auto end = m.dataend;
-                return std::all_of(beg + 1, end,
-                                   [beg](uint8_t val) { return val == *beg; });
-            };
-            if (allSame(src1) || allSame(src2)) {
+            /*
+             * NB: We could easily support other mat types but these are the
+             * only ones we care about for now.
+             */
+            bool nonUniqueInputArray;
+            switch (src1.type()) {
+            case CV_8UC1:
+                nonUniqueInputArray = allSame<uint8_t>(src1) || allSame<uint8_t>(src2);
+                break;
+            case CV_32FC1:
+                nonUniqueInputArray = allSame<float>(src1) || allSame<float>(src2);
+                break;
+            default:
+                throw std::invalid_argument("Unsupported mat type: " + std::to_string(src1.type()));
+            }
+
+            if (nonUniqueInputArray) {
                 throw std::invalid_argument("Vectors src1 and src2 must have "
                                             "more than one unique value (e.g. "
                                             "they cannot be all zeros)");

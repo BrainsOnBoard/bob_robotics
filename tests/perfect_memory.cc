@@ -26,6 +26,7 @@ PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
 PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
 PM_TEST_WINDOW(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "pm_ccoeff.bin", {})
 
+template<class Store>
 void
 testHog(const std::string &filename, std::pair<size_t, size_t> window)
 {
@@ -44,7 +45,7 @@ testHog(const std::string &filename, std::pair<size_t, size_t> window)
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
-    PerfectMemoryRotater<PerfectMemoryStore::HOG<>> algo{ TestImageSize, cv::Size(10, 10), 8 };
+    PerfectMemoryRotater<Store> algo{ TestImageSize, cv::Size(10, 10), 8 };
     for (const auto &image : TestImages) {
         algo.train(image);
     }
@@ -58,10 +59,20 @@ testHog(const std::string &filename, std::pair<size_t, size_t> window)
 
 TEST(PerfectMemory, SampleImageHOG)
 {
-    testHog("pm_hog.bin", {});
+    testHog<PerfectMemoryStore::HOG<>>("pm_hog.bin", {});
 }
 
 TEST(PerfectMemory, SampleImageHogWindow)
 {
-    testHog("window_pm_hog.bin", { 0, 10 });
+    testHog<PerfectMemoryStore::HOG<>>("window_pm_hog.bin", { 0, 10 });
+}
+
+TEST(PerfectMemory, SampleImageHOGCorrCoefficient)
+{
+    testHog<PerfectMemoryStore::HOG<CorrCoefficient>>("pm_hog_ccoeff.bin", {});
+}
+
+TEST(PerfectMemory, SampleImageHogCorrCoefficientWindow)
+{
+    testHog<PerfectMemoryStore::HOG<CorrCoefficient>>("window_pm_hog_ccoeff.bin", { 0, 10 });
 }

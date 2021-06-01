@@ -17,6 +17,7 @@ bobMain(int, char **)
 
     // The HOG code doesn't support using a mask, so don't try
     generateDataWindow<PerfectMemoryRotater<PerfectMemoryStore::HOG<>>>("pm_hog.bin", {}, cv::Size(10, 10), 8);
+    generateDataWindow<PerfectMemoryRotater<PerfectMemoryStore::HOG<CorrCoefficient>>>("pm_hog_ccoeff.bin", {}, cv::Size(10, 10), 8);
 
     return EXIT_SUCCESS;
 }
