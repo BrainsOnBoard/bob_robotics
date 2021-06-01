@@ -724,12 +724,6 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        # Extra actions for third-party modules
-        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
-        if(EXISTS "${incpath}")
-            include("${incpath}")
-        endif()
-
         if(EXISTS "${BOB_ROBOTICS_PATH}/third_party/${module}")
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
@@ -748,6 +742,12 @@ function(BoB_third_party)
 
             # Link against extra libs, if needed
             BoB_add_link_libraries(${${module}_LIBRARIES})
+        endif()
+
+        # Extra actions for third-party modules
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
         endif()
     endforeach()
 endfunction()
