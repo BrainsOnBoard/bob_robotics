@@ -37,12 +37,16 @@ generateDataRaw(const std::string &filename, ImgProc::Mask mask, Window window,
 
 template<class Algo, class... Ts>
 void
+generateDataWindow(const std::string &filename, const ImgProc::Mask &mask, Ts&&... args)
+{
+    generateDataRaw<Algo>(filename, mask, {}, std::forward<Ts>(args)...);
+    generateDataRaw<Algo>("window_" + filename, mask, { 0, 10 }, std::forward<Ts>(args)...);
+}
+
+template<class Algo, class... Ts>
+void
 generateData(const std::string &filename, Ts&&... args)
 {
-    generateDataRaw<Algo>(filename, {}, {}, std::forward<Ts>(args)...);
-    generateDataRaw<Algo>("mask_" + filename, TestMask, {}, std::forward<Ts>(args)...);
-
-    const Window window{ 0, 10 };
-    generateDataRaw<Algo>("window_" + filename, {}, window, std::forward<Ts>(args)...);
-    generateDataRaw<Algo>("window_mask_" + filename, TestMask, window, std::forward<Ts>(args)...);
+    generateDataWindow<Algo>(filename, {}, std::forward<Ts>(args)...);
+    generateDataWindow<Algo>("mask_" + filename, TestMask, std::forward<Ts>(args)...);
 }
