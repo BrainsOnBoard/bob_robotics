@@ -170,8 +170,6 @@ struct CorrCoefficient {
                          const ImgProc::Mask &mask1 = {},
                          const ImgProc::Mask &mask2 = {})
         {
-            // Don't support masks for now
-            BOB_ASSERT(mask1.empty() && mask2.empty());
             BOB_ASSERT(src1.type() == src2.type());
 
             /*
@@ -197,7 +195,8 @@ struct CorrCoefficient {
             }
 
             std::array<float, 1> dst;
-            cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED);
+            mask1.combine(mask2, m_CombinedMask);
+            cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED, m_CombinedMask.get());
 
             /*
              * As we're interested in *dissimilarity* between images, we use
@@ -206,6 +205,9 @@ struct CorrCoefficient {
              */
             return 1.f - fabsf(dst[0]);
         }
+
+    private:
+        ImgProc::Mask m_CombinedMask;
     };
 };
 

@@ -24,7 +24,7 @@ using Window = std::pair<size_t, size_t>;
 
 PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
 PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
-PM_TEST_WINDOW(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "pm_ccoeff.bin", {})
+PM_TEST(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "pm_ccoeff.bin")
 
 template<class Store>
 void
