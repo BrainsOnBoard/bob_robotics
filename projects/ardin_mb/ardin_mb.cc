@@ -4,6 +4,8 @@
 #endif
 #include "sim_params.h"
 #include "state_handler.h"
+#include "visual_navigation_bob.h"
+#include "visual_navigation_perfect_memory_window.h"
 #include "visual_navigation_ui.h"
 
 // Antworld includes
@@ -12,6 +14,7 @@
 // BoB Robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_window.h"
 
 // PLOG includes
 #include "plog/Log.h"
@@ -54,10 +57,18 @@ int bobMain(int argc, char **argv)
     float jitterSD = 0.0f;
     bool quitAfterTrain = false;
     bool autoTest = false;
+    bool unalignedRoutes = false;
     float heightMetres = 0.01f;
     std::vector<float> minBound;
     std::vector<float> maxBound;
     std::vector<float> clearColour{0.0f, 1.0f, 1.0f, 1.0f};
+    std::string algorithm = "perfect_memory";
+    std::set<std::string> supportedAlgorithms{"perfect_memory", "infomax", "perfect_memory_fixed_window",
+                                              "perfect_memory_dynamic_window"};
+#ifndef NO_GENN
+    algorithm = "mb_ardin";
+    supportedAlgorithms.insert("mb_ardin");
+#endif
 
     CLI::App app{"Mushroom body navigation model"};
     app.add_option("--jitter", jitterSD, "Amount of jitter (cm) to apply when recapitulating routes", true);
@@ -65,10 +76,12 @@ int bobMain(int argc, char **argv)
     app.add_option("--log", logFilename, "File to log to", true);
     app.add_flag("--quit-after-train", quitAfterTrain, "Whether to quit once model is trained");
     app.add_flag("--auto-test", autoTest, "Whether to test the model once it's trained");
+    app.add_flag("--unaligned-routes", unalignedRoutes, "Whether to align routes following original method");
     app.add_option("--height", heightMetres, "Height in metres to navigate at", true);
     app.add_option("--min-bound", minBound, "Override default world min bound with this one", true)->expected(3);
     app.add_option("--max-bound", maxBound, "Override default world max bound with this one", true)->expected(3);
     app.add_option("--clear-colour", clearColour, "Set background colour used for rendering", true)->expected(4);
+    app.add_option("--algorithm", algorithm, "Visual navigation algorithm", true)->check(CLI::IsMember(supportedAlgorithms));
     app.add_option("route", routeFilename, "Filename of route");
 
     // Parse command line arguments
@@ -106,17 +119,43 @@ int bobMain(int argc, char **argv)
     ImGui_ImplSfml_Init(&window);
     ImGui_ImplOpenGL2_Init();
 
-#ifdef NO_GENN
-    Navigation::PerfectMemory<> memory(cv::Size(36, 10));
-    VisualNavigationUI ui;
-#else
-    // Mushroom body
-    MBMemoryArdin memory;
-    memory.addCLIArguments(app);
-    MBArdinUI ui(memory);
+    // Select memory and corresponding UI class at runtime
+    std::unique_ptr<VisualNavigationBase> memory;
+    std::unique_ptr<VisualNavigationUI> ui;
+    if(algorithm == "perfect_memory") {
+        memory = std::make_unique<VisualNavigationBoB<Navigation::PerfectMemory<>>>(cv::Size(36, 10));
+        ui = std::make_unique<VisualNavigationUI>();
+    }
+    else if(algorithm == "infomax") {
+        memory = std::make_unique<VisualNavigationBoB<Navigation::InfoMax<>>>(cv::Size(36, 10));
+        ui = std::make_unique<VisualNavigationUI>();
+    }
+    else if(algorithm == "perfect_memory_fixed_window") {
+        memory = std::make_unique<VisualNavigationPerfectMemoryWindow<Navigation::PerfectMemoryWindow::Fixed>>(
+            std::forward_as_tuple(cv::Size(36, 10)),
+            std::forward_as_tuple(10));
+
+        ui = std::make_unique<VisualNavigationUI>();
+    }
+    else if(algorithm == "perfect_memory_dynamic_window") {
+        using PMWindow = Navigation::PerfectMemoryWindow::DynamicBestMatchGradient;
+
+        memory = std::make_unique<VisualNavigationPerfectMemoryWindow<PMWindow>>(
+            std::forward_as_tuple(cv::Size(36, 10)),
+            std::forward_as_tuple(10, PMWindow::WindowConfig{5, 5, 10, 200}));
+
+        ui = std::make_unique<VisualNavigationUI>();
+    }
+#ifndef NO_GENN
+    else if(algorithm == "mb_ardin") {
+        // Mushroom body
+        MBMemoryArdin *mbMemory = new MBMemoryArdin();
+        memory = std::unique_ptr<VisualNavigationBase>(mbMemory);
+        ui = std::make_unique<MBArdinUI>(*mbMemory);
+    }
 #endif
     AntWorld::SnapshotProcessorArdin snapshotProcessor(8, 74, 19,
-                                                       memory.getUnwrapResolution().width, memory.getUnwrapResolution().height);
+                                                       memory->getUnwrapResolution().width, memory->getUnwrapResolution().height);
 
     // Parse command line arguments
     CLI11_PARSE(app, argc, argv);
@@ -128,9 +167,9 @@ int bobMain(int argc, char **argv)
     glPointSize(4.0);
 
     // Create state machine and set it as window user pointer
-    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest,
+    StateHandler stateHandler(worldFilename, routeFilename, jitterSD, quitAfterTrain, autoTest, !unalignedRoutes,
                               units::length::meter_t{heightMetres}, minBound, maxBound,
-                              snapshotProcessor, memory, ui);
+                              snapshotProcessor, *memory, *ui);
 
      // Loop until window should close
     for(unsigned int frame = 0; window.isOpen(); frame++) {
@@ -200,7 +239,7 @@ int bobMain(int argc, char **argv)
 
     // Save logs
     // **YUCK** this probably shouldn't be part of UI
-    ui.saveLogs(logFilename);
+    ui->saveLogs(logFilename);
 
      // Cleanup UI
     ImGui_ImplOpenGL2_Shutdown();

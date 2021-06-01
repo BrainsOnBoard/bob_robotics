@@ -6,6 +6,7 @@
 
 // BoB robotics includes
 #include "common/serialise_matrix.h"
+#include "imgproc/mask.h"
 
 // BoB robotics third party includes
 #include "plog/Log.h"
@@ -46,7 +47,7 @@ PerfectMemory::PerfectMemory(const Config &config, const cv::Size &inputSize)
 {
     // Load mask image
     if(!config.getMaskImageFilename().empty()) {
-        getPM().setMask(config.getMaskImageFilename());
+        getPM().setMask(ImgProc::Mask{ config.getMaskImageFilename() });
     }
 }
 //------------------------------------------------------------------------
@@ -112,6 +113,69 @@ void PerfectMemoryConstrained::test(const cv::Mat &snapshot)
     setLowestDifference(std::min(leftLowestDifference, rightLowestDifference) / 255.0f);
     setBestHeading((leftLowestDifference < rightLowestDifference) ? leftBestHeading : rightBestHeading);
     setBestSnapshotIndex((leftLowestDifference < rightLowestDifference) ? leftBestSnapshot : rightBestSnapshot);
+}
+
+//------------------------------------------------------------------------
+// PerfectMemoryConstrainedDynamicWindow
+//------------------------------------------------------------------------
+PerfectMemoryConstrainedDynamicWindow::PerfectMemoryConstrainedDynamicWindow(const Config &config, const cv::Size &inputSize)
+:   PerfectMemory(config, inputSize), m_ImageWidth(inputSize.width),
+    m_NumScanColumns((size_t)std::round(turn_t(config.getMaxSnapshotRotateAngle()).value() * (double)inputSize.width)),
+    m_Window(config.getPMFwdLASize(), config.getPMFwdConfig())
+{
+}
+//------------------------------------------------------------------------
+void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
+{
+    // Get current window
+    const auto window = m_Window.getWindow(getPM().getNumSnapshots());
+
+    // Get best heading from left side of scan
+    degree_t leftBestHeading;
+    float leftLowestDifference;
+    size_t leftBestSnapshot;
+    std::tie(leftBestHeading, leftBestSnapshot, leftLowestDifference, std::ignore) = getPM().getHeading(
+        window, snapshot, 1, 0, m_NumScanColumns);
+
+    // Get best heading from right side of scan
+    degree_t rightBestHeading;
+    float rightLowestDifference;
+    size_t rightBestSnapshot;
+    std::tie(rightBestHeading, rightBestSnapshot, rightLowestDifference, std::ignore) = getPM().getHeading(
+        window, snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
+
+    // If best result came from left scan
+    if(leftLowestDifference < rightLowestDifference) {
+        setLowestDifference(leftLowestDifference / 255.0f);
+        setBestHeading(leftBestHeading);
+        setBestSnapshotIndex(leftBestSnapshot);
+
+        m_Window.updateWindow(leftBestSnapshot, leftLowestDifference);
+    }
+    else {
+        setLowestDifference(rightLowestDifference / 255.0f);
+        setBestHeading(rightBestHeading);
+        setBestSnapshotIndex(rightBestSnapshot);
+
+        m_Window.updateWindow(rightBestSnapshot, rightLowestDifference);
+    }
+}
+//------------------------------------------------------------------------
+void PerfectMemoryConstrainedDynamicWindow::writeCSVHeader(std::ostream &os)
+{
+    // Superclass
+    PerfectMemory::writeCSVHeader(os);
+
+    os << ", Window start, Window end";
+}
+//------------------------------------------------------------------------
+void PerfectMemoryConstrainedDynamicWindow::writeCSVLine(std::ostream &os)
+{
+    // Superclass
+    PerfectMemory::writeCSVLine(os);
+
+    const auto window = m_Window.getWindow(getPM().getNumSnapshots());
+    os << ", " << window.first << ", " << window.second;
 }
 
 //------------------------------------------------------------------------
@@ -204,8 +268,14 @@ std::unique_ptr<MemoryBase> createMemory(const Config &config, const cv::Size &i
     }
     else {
         if(config.getMaxSnapshotRotateAngle() < 180_deg) {
-            LOGI << "Creating PerfectMemoryConstrained";
-            return std::make_unique<PerfectMemoryConstrained>(config, inputSize);
+            if(config.getPMFwdLASize() == std::numeric_limits<size_t>::max()) {
+                LOGI << "Creating PerfectMemoryConstrained";
+                return std::make_unique<PerfectMemoryConstrained>(config, inputSize);
+            }
+            else {
+                LOGI << "Creating PerfectMemoryConstrainedDynamicWindow";
+                return std::make_unique<PerfectMemoryConstrainedDynamicWindow>(config, inputSize);
+            }
         }
         else {
             LOGI << "Creating PerfectMemory";

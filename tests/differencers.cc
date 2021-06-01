@@ -22,7 +22,7 @@ using namespace BoBRobotics::Navigation;
         std::tie(doesMatch, mean) = compare<AbsDiff>(m1, m2, expected, mask1, mask2); \
         EXPECT_TRUE(doesMatch);                                                       \
         EXPECT_TRUE(mean == expectedMean);                                            \
-    } while (false);
+    } while (false)
 
 #define COMPARE(m1, m2, expected, expectedMean) \
     COMPARE_MASK(m1, m2, expected, expectedMean, {}, {})

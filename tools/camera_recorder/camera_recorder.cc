@@ -60,6 +60,7 @@ int bobMain(int, char **)
 
     // Open file to log capture data and write header
     std::ofstream data("vicon.csv");
+    data.exceptions(std::ios::badbit | std::ios::failbit);
     data << "Filename, Frame, X, Y, Z, Rx, Ry, Rz" << std::endl;
 #endif  // VICON_CAPTURE
 

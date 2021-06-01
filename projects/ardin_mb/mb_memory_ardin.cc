@@ -21,11 +21,11 @@ MBMemoryArdin::MBMemoryArdin()
     m_IExtPN = getSLM().getArray<float>("IextPN");
 }
 //----------------------------------------------------------------------------
-void MBMemoryArdin::initPresent(unsigned long long) const
+void MBMemoryArdin::initPresent(unsigned long long)
 {
 }
 //----------------------------------------------------------------------------
-void MBMemoryArdin::beginPresent(const cv::Mat &snapshotFloat) const
+void MBMemoryArdin::beginPresent(const cv::Mat &snapshotFloat)
 {
     // Normalise input
     cv::normalize(snapshotFloat, m_SnapshotNormalizedFloat);
@@ -39,7 +39,7 @@ void MBMemoryArdin::beginPresent(const cv::Mat &snapshotFloat) const
     getSLM().pushVarToDevice("PN", "Iext");
 }
 //----------------------------------------------------------------------------
-void MBMemoryArdin::endPresent() const
+void MBMemoryArdin::endPresent()
 {
     // Zero external input current
     std::fill_n(m_IExtPN, MBParamsArdin::numPN, 0.0f);
@@ -48,6 +48,6 @@ void MBMemoryArdin::endPresent() const
     getSLM().pushVarToDevice("PN", "Iext");
 }
 //----------------------------------------------------------------------------
-void MBMemoryArdin::recordAdditional() const
+void MBMemoryArdin::recordAdditional()
 {
 }

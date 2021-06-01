@@ -12,31 +12,23 @@
 #include <utility>
 
 using namespace BoBRobotics;
+using Window = std::pair<size_t, size_t>;
 
-template<class Algo, class... Ts>
-void testAlgoRaw(const std::string &filename, ImgProc::Mask mask, Ts&&... args)
+template<class Algo>
+void testAlgo(const std::string &filename, ImgProc::Mask mask, Window window)
 {
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
-    Algo algo{ TestImageSize, std::forward<Ts>(args)... };
+    Algo algo{ TestImageSize };
     algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {
         algo.train(image);
     }
 
-    const auto &differences = algo.getImageDifferences(TestImages[0]);
+    if (window == Window{}) {
+        window = algo.getFullWindow();
+    }
+    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
     compareFloatMatrices(differences, trueDifferences);
-}
-
-template<class Algo, class... Ts>
-void testAlgo(const std::string &filename, Ts&&... args)
-{
-    testAlgoRaw<Algo>(filename, {}, std::forward<Ts>(args)...);
-}
-
-template<class Algo, class... Ts>
-void testAlgoMask(const std::string &filename, Ts&&... args)
-{
-    testAlgoRaw<Algo>(filename, TestMask, std::forward<Ts>(args)...);
 }
