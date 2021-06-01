@@ -1,9 +1,7 @@
 #pragma once
 
 // Opteran DevKit includes
-extern "C" {
 #include "devkit_driver/src/devkit_driver.h"
-}
 
 // BoB robotics includes
 #include "common/macros.h"
