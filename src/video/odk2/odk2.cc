@@ -5,10 +5,12 @@
 #include "plog/Log.h"
 
 // Eigen
-#include <Eigen/Geometry/Quaternion.h>
+#include <Eigen/Geometry>
 
 // Standard C++ includes
 #include <stdexcept>
+
+using namespace units::angle;
 
 //------------------------------------------------------------------------
 // BoBRobotics::Video::ODK2
@@ -57,7 +59,6 @@ bool ODK2::readFrame(cv::Mat &outFrame)
 
     // If there's a new frame
     if(m_RawFrameBuf.timestampUs > m_LastRawFrameTimestep) {
-        using namespace units::angle;
         using namespace units::literals;
 
         // Ensure output image is correctly formatted

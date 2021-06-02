@@ -14,6 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
+#include <array>
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -28,6 +29,10 @@ namespace Video {
 //! A thin wrapper for reading cylindrically unwrapped data from Opteran DevKit
 class ODK2 : public Input
 {
+    using degree_t = units::angle::degree_t;
+    using radian_t = units::angle::radian_t;
+    using turn_t = units::angle::turn_t;
+
 public:
     //! Create a new video stream, using the default given by OpenCV
     ODK2(const std::string &hostIP = "192.168.2.1", const std::string &remoteIP = "192.168.2.9");
