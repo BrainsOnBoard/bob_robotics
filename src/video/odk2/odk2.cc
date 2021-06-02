@@ -111,6 +111,12 @@ std::array<degree_t, 3> ODK2::getEulerAngles() const
     m_OutputBufsMutex.lock();
     Eigen::Quaternionf q(m_IMUBuf.q.w, m_IMUBuf.q.x, m_IMUBuf.q.y, m_IMUBuf.q.z);
     m_OutputBufsMutex.unlock();
+
+    // Convert to euler angles
+    // **TODO** check order
+    const auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+
+    return {radian_t{euler[0]}, radian_t{euler[1]}, radian_t{euler[2]}};
 }
 //------------------------------------------------------------------------
 void ODK2::readThread()
