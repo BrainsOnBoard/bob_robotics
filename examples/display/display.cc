@@ -18,6 +18,9 @@
 #include "video/display.h"
 #include "video/opencvinput.h"
 #include "video/rpi_cam.h"
+#ifndef NO_ODK2
+#include "video/odk2/odk2.h"
+#endif
 
 // Standard C includes
 #include <cstring>
@@ -45,7 +48,16 @@ int bobMain(int argc, char **argv)
                 RPiCamera cam(50091);
                 Display display(cam);
                 display.run();
-            } else {
+            }
+#ifndef NO_ODK2
+            // Otherwise, if it's an Opteran devkit
+            else if (strcmp(argv[1], "o") == 0) {
+                ODK2 cam;
+                Display display(cam);
+                display.run();
+            }
+#endif
+            else {
                 OpenCVInput cam(argv[1]);
                 Display display(cam);
                 display.run();
