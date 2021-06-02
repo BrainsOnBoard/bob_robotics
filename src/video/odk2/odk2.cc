@@ -3,7 +3,9 @@
 
 // Third party includes
 #include "plog/Log.h"
-#include "third_party/units.h"
+
+// Eigen
+#include <Eigen/Geometry/Quaternion.h>
 
 // Standard C++ includes
 #include <stdexcept>
@@ -28,6 +30,7 @@ ODK2::ODK2(const std::string &hostIP, const std::string &remoteIP)
     }
 
     // Configure output buffers data structure
+    // **NOTE** all buffers are required whether we want the data or not
     m_OutputBufs.rawFrame = &m_RawFrameBuf;
     m_OutputBufs.flowFrame = &m_FlowFrameBuf;
     m_OutputBufs.rawCamera = &m_RawCameraBuf;
@@ -48,20 +51,9 @@ ODK2::~ODK2()
     }
 }
 //------------------------------------------------------------------------
-std::string ODK2::getCameraName() const
-{
-    return "Opteran DevKit";
-}
-//------------------------------------------------------------------------
-cv::Size ODK2::getOutputSize() const
-{
-    // For the purposes of BoB robotics we just use the equitorial band of the ODK2
-    return cv::Size(BAND_WIDTH, BAND_HEIGHT);
-}
-//------------------------------------------------------------------------
 bool ODK2::readFrame(cv::Mat &outFrame)
 {
-    std::lock_guard<std::mutex> l(m_OutputBufMutex);
+    std::lock_guard<std::mutex> l(m_OutputBufsMutex);
 
     // If there's a new frame
     if(m_RawFrameBuf.timestampUs > m_LastRawFrameTimestep) {
@@ -86,10 +78,13 @@ bool ODK2::readFrame(cv::Mat &outFrame)
 
         LOGD << "Processing frame heading=" << headingIdx;
 
-        // Loop through pixels in horizontal band
+        // Loop through rows of horizontal band
         for(int i = 0; i < BAND_HEIGHT; i++) {
-            uint8_t *pixel = outFrame.ptr<uint8_t>(i);
+            // Get pointer to row
+            // **NOTE** we want to flip output
+            uint8_t *pixel = outFrame.ptr<uint8_t>(BAND_HEIGHT - i - 1);
 
+            // Loop through columns of horizontal band
             for (int j = 0; j < BAND_WIDTH; j++) {
                 const int bandIdx = (i * BAND_WIDTH) + ((j + headingIdx) % BAND_WIDTH);
 
@@ -109,17 +104,28 @@ bool ODK2::readFrame(cv::Mat &outFrame)
     }
 }
 //------------------------------------------------------------------------
+std::array<degree_t, 3> ODK2::getEulerAngles() const
+{
+    // Create Eigen quaternion
+    m_OutputBufsMutex.lock();
+    Eigen::Quaternionf q(m_IMUBuf.q.w, m_IMUBuf.q.x, m_IMUBuf.q.y, m_IMUBuf.q.z);
+    m_OutputBufsMutex.unlock();
+}
+//------------------------------------------------------------------------
 void ODK2::readThread()
 {
     while(!m_ShouldQuit) {
-        m_OutputBufMutex.lock();
+        // Lock output mutex and read packets from driver
+        // **NOTE** because this is a C function it won't throw so no need to use a std::lock_guard
+        m_OutputBufsMutex.lock();
         const int ret = devkit_driver_run_rx(&m_State, &m_OutputBufs);
-        m_OutputBufMutex.unlock();
+        m_OutputBufsMutex.unlock();
 
-        // Error
+        // No data
         if(ret == 0) {
-            LOGV << "No data";
+            LOGD << "No data";
         }
+        // Error
         else if (ret < 0) {
             if (ret == DEVKIT_DRIVER_RX_TIMEOUT) {
                 LOGW << "RX timeout";
@@ -128,6 +134,7 @@ void ODK2::readThread()
                 throw std::runtime_error("Error in devkit driver RX (" + std::to_string(ret) + ")");
             }
         }
+        // Valid data
         else if (ret > 0) {
             if (ret == DEVKIT_DRIVER_RAW_FRAME_VALID) {
                 LOGD << "Got raw frame with timestamp " << m_RawFrameBuf.timestampUs;
