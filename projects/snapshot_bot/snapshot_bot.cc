@@ -304,7 +304,9 @@ private:
                         const auto &attitude = pose.attitude();
 
                         // Write to CSV
-                        m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", " << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
+                        m_LogFile << ", " << objectData.getFrameNumber() << ", ";
+                        m_LogFile << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", ";
+                        m_LogFile << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
                     }
                     m_LogFile << std::endl;
                 }
@@ -394,7 +396,9 @@ private:
                     const auto &attitude = pose.attitude();
 
                     // Write extra logging data
-                    m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0] << ", " << position[1] << ", " << position[2] << ", " << attitude[0] << ", " << attitude[1] << ", " << attitude[2];
+                    m_LogFile << ", " << objectData.getFrameNumber() << ", ";
+                    m_LogFile << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", ";
+                    m_LogFile << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
                 }
 
                 // If we should save diagnostics when testing
