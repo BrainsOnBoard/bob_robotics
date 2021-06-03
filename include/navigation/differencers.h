@@ -194,7 +194,11 @@ struct CorrCoefficient {
                                             "they cannot be all zeros)");
             }
 
+#if OPENCV_MAJOR_VERSION < 4
+            std::vector<float> dst;
+#else
             std::array<float, 1> dst;
+#endif
             mask1.combine(mask2, m_CombinedMask);
             cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED, m_CombinedMask.get());
 
