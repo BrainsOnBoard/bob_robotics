@@ -23,11 +23,13 @@ int bobMain(int, char**)
 
         // Get euler angles from ODK2
         const auto euler = odk2.getEulerAngles();
-        std::cout << "Heading:" << euler[0] << std::endl;
+        std::cout << "Orientation: (" << euler[0].value() << ", " << euler[1].value() << ", "<< euler[2].value() << ") degrees" << std::endl;
 
         // Pump events and stop if escape is pressed
         if(cv::waitKey(1) == 27) {
             break;
         }
     }
+
+    return EXIT_SUCCESS;
 }
