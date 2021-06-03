@@ -23,7 +23,7 @@ int bobMain(int, char **)
 	int distance = DCTHash::distance(hash1,hash2);
 	std::cout << "the distance between the 2 images is " << distance << std::endl;
 
-	cv::waitKey(0); // Wait for a keystroke in the window
+	cv::waitKey(5000); // Wait for 5 sec in the window
 
     return 0;
 }
