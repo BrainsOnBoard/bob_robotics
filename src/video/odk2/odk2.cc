@@ -4,9 +4,6 @@
 // Third party includes
 #include "plog/Log.h"
 
-// Eigen
-#include <Eigen/Geometry>
-
 // Standard C++ includes
 #include <stdexcept>
 
@@ -57,24 +54,26 @@ bool ODK2::readFrame(cv::Mat &outFrame)
 {
     std::lock_guard<std::mutex> l(m_OutputBufsMutex);
 
+    // Ensure output image is correctly formatted
+    // **NOTE** we do this even if there's no image data so output frame is always right size
+    outFrame.create(BAND_HEIGHT, BAND_WIDTH, CV_8UC3);
+
     // If there's a new frame
     if(m_RawFrameBuf.timestampUs > m_LastRawFrameTimestep) {
         using namespace units::literals;
-
-        // Ensure output image is correctly formatted
-        outFrame.create(BAND_HEIGHT, BAND_WIDTH, CV_8UC3);
 
         // Update last timestep
         m_LastRawFrameTimestep = m_RawFrameBuf.timestampUs;
 
         // Extract quaternion components from frame
-        const float q0 = m_RawFrameBuf.quaternion.w;
-        const float q1 = m_RawFrameBuf.quaternion.x;
-        const float q2 = m_RawFrameBuf.quaternion.y;
-        const float q3 = m_RawFrameBuf.quaternion.z;
+        const float qw = m_RawFrameBuf.quaternion.w;
+        const float qx = m_RawFrameBuf.quaternion.x;
+        const float qy = m_RawFrameBuf.quaternion.y;
+        const float qz = m_RawFrameBuf.quaternion.z;
 
         // Calculate heading from quaternion
-        const radian_t heading(atan2(2.0 * ((q0 * q3) + (q1 * q2)), 1.0 - (2.0 * ((q2 * q2) + (q3 * q3)))));
+        const radian_t heading(std::atan2(2.0 * ((qw * qz) + (qx * qy)),
+                                          1.0 - (2.0 * ((qy * qy) + (qz * qz)))));
         const uint32_t headingIdx = turn_t(heading + 180_deg).value() * BAND_WIDTH;
 
         LOGD << "Processing frame heading=" << headingIdx;
@@ -107,16 +106,30 @@ bool ODK2::readFrame(cv::Mat &outFrame)
 //------------------------------------------------------------------------
 std::array<degree_t, 3> ODK2::getEulerAngles() const
 {
-    // Create Eigen quaternion
+    // Extract quaternion components from frame
     m_OutputBufsMutex.lock();
-    Eigen::Quaternionf q(m_IMUBuf.q.w, m_IMUBuf.q.x, m_IMUBuf.q.y, m_IMUBuf.q.z);
+    const float qw = m_IMUBuf.q.w;
+    const float qx = m_IMUBuf.q.x;
+    const float qy = m_IMUBuf.q.y;
+    const float qz = m_IMUBuf.q.z;
     m_OutputBufsMutex.unlock();
 
-    // Convert to euler angles
-    // **TODO** check order
-    const auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+    // **NOTE** this whole process should be doable using Eigen but I can't make it work so
+    // used https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    // Calculate heading from quaternion
+    const radian_t heading(std::atan2(2.0 * ((qw * qz) + (qx * qy)),
+                                      1.0 - (2.0 * ((qy * qy) + (qz * qz)))));
 
-    return {radian_t{euler[0]}, radian_t{euler[1]}, radian_t{euler[2]}};
+    // Calculate roll from quaternion
+    const radian_t roll(std::atan2(2.0 * ((qw * qx) + (qy * qz)),
+                                   1.0 - (2.0 * ((qx * qx) + (qy * qy)))));
+
+    // Calculate pitch from quaternion
+    const double sinp = 2.0 * ((qw * qy) - (qz * qx));
+    const radian_t pitch((std::abs(sinp) >= 1.0) ? std::copysign(M_PI / 2.0, sinp) : std::asin(sinp));
+
+    // To match BN055, we want to return in heading, roll, pitch
+    return {heading, roll, pitch};
 }
 //------------------------------------------------------------------------
 void ODK2::readThread()
