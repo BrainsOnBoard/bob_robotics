@@ -13,6 +13,9 @@ int bobMain(int, char**)
     cv::namedWindow("Raw frame", cv::WINDOW_NORMAL);
     cv::resizeWindow("Raw frame", odk2.getOutputSize().width * 2, odk2.getOutputSize().height * 2);
 
+    cv::namedWindow("Mask", cv::WINDOW_NORMAL);
+    cv::resizeWindow("Mask", odk2.getOutputSize().width * 2, odk2.getOutputSize().height * 2);
+
     cv::Mat cameraImage;
     while(true) {
         // Read frames
@@ -20,6 +23,9 @@ int bobMain(int, char**)
 
         // Show raw frame
         cv::imshow("Raw frame", cameraImage);
+
+        // Show mask
+        cv::imshow("Mask", odk2.getMask());
 
         // Get euler angles from ODK2
         const auto euler = odk2.getEulerAngles();
