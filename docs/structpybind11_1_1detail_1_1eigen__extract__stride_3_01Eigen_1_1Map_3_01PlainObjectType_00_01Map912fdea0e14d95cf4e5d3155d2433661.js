@@ -1,0 +1,4 @@
+var structpybind11_1_1detail_1_1eigen__extract__stride_3_01Eigen_1_1Map_3_01PlainObjectType_00_01Map912fdea0e14d95cf4e5d3155d2433661 =
+[
+    [ "type", "structpybind11_1_1detail_1_1eigen__extract__stride_3_01Eigen_1_1Map_3_01PlainObjectType_00_01Map912fdea0e14d95cf4e5d3155d2433661.html#a2fb696685f43a8177eca8f6726816992", null ]
+];

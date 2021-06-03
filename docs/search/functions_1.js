@@ -1,5 +1,26 @@
 var searchData=
 [
-  ['bebop_1998',['Bebop',['../classBoBRobotics_1_1Robots_1_1Bebop.html#a90cc82bc65ac45f0afff72835dcd9c2c',1,'BoBRobotics::Robots::Bebop']]],
-  ['begin_1999',['begin',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#af1a3e571257883379bfe876d2930e249',1,'BoBRobotics::Navigation::ImageDatabase']]]
+  ['abbreviation_4371',['abbreviation',['../classunits_1_1unit__t.html#ad79c79ec73cd83200af8b6c0867c69c9',1,'units::unit_t']]],
+  ['abortsave_4372',['abortSave',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#aff504f60472fe0be28efad455288ac56',1,'BoBRobotics::Navigation::ImageDatabase::Recorder']]],
+  ['abs_4373',['abs',['../group__UnitMath.html#ga1dd8baba0276c51feeb892983d41ef47',1,'units::math']]],
+  ['acos_4374',['acos',['../group__UnitMath.html#ga83597409663ca3af0892acf87844af49',1,'units::math']]],
+  ['acosh_4375',['acosh',['../group__UnitMath.html#ga29860e26570c2decc2bb8710c1ae911c',1,'units::math']]],
+  ['add_5fostream_5fredirect_4376',['add_ostream_redirect',['../namespacepybind11.html#a93c945c5879938b28d274b7ad7a74207',1,'pybind11']]],
+  ['addhandler_4377',['addHandler',['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a6736e009a54091f7c4df0182fe31bac4',1,'BoBRobotics::HID::JoystickBase::addHandler(ButtonHandler handler)'],['../classBoBRobotics_1_1HID_1_1JoystickBase.html#a5943d48ad182b67d2d9eb386c0ba420d',1,'BoBRobotics::HID::JoystickBase::addHandler(AxisHandler handler)']]],
+  ['addjoystick_4378',['addJoystick',['../classBoBRobotics_1_1AntWorld_1_1AntAgent.html#a56bec2fdb4f39a1f814ab181819f664c',1,'BoBRobotics::AntWorld::AntAgent::addJoystick()'],['../classBoBRobotics_1_1Robots_1_1Omni2D.html#a247cc62c45d88bc074e13bc5531c74bd',1,'BoBRobotics::Robots::Omni2D::addJoystick()'],['../classBoBRobotics_1_1Robots_1_1Robot.html#aefed5d3ab19f8ad22008a3836739d33b',1,'BoBRobotics::Robots::Robot::addJoystick()'],['../classBoBRobotics_1_1Robots_1_1Tank.html#a8574aa450a56fa948a1bc47e312f44d1',1,'BoBRobotics::Robots::Tank::addJoystick()'],['../classBoBRobotics_1_1Robots_1_1UAV.html#aedb1bae6b013b4cfb9719d1c6ec17db6',1,'BoBRobotics::Robots::UAV::addJoystick()']]],
+  ['addtowaypoint_4379',['addToWayPoint',['../classBoBRobotics_1_1Robots_1_1PurePursuitController.html#a148bced2839e7e9b70a3b4aa1e8a9bfd',1,'BoBRobotics::Robots::PurePursuitController']]],
+  ['adjustforparameterizedtests_4380',['AdjustForParameterizedTests',['../classgoogletest-filter-unittest_1_1GTestFilterUnitTest.html#a34dfc0ab056c19a6644fab9880a49c42',1,'googletest-filter-unittest::GTestFilterUnitTest']]],
+  ['allocate_5flayout_4381',['allocate_layout',['../structpybind11_1_1detail_1_1instance.html#a4e87038aac7ab30d4fe6d55eeecdb28e',1,'pybind11::detail::instance']]],
+  ['arg_4382',['arg',['../structpybind11_1_1arg.html#a4e7680725e9ed71188842ca15ac9c72f',1,'pybind11::arg']]],
+  ['arg_5fv_4383',['arg_v',['../structpybind11_1_1arg__v.html#a3b4491d508a843665f0da3a4266dc12f',1,'pybind11::arg_v::arg_v(const arg &amp;base, T &amp;&amp;x, const char *descr=nullptr)'],['../structpybind11_1_1arg__v.html#ad663a0692515f70e43f00d1c18c7326f',1,'pybind11::arg_v::arg_v(const char *name, T &amp;&amp;x, const char *descr=nullptr)']]],
+  ['asin_4384',['asin',['../group__UnitMath.html#ga6070806b3322a08af3ee934731ddcc31',1,'units::math']]],
+  ['asinh_4385',['asinh',['../group__UnitMath.html#gaffaf53aeed1529243100d0922bdce834',1,'units::math']]],
+  ['assertequalignoreleadingwhitespace_4386',['assertEqualIgnoreLeadingWhitespace',['../classcpp_1_1gmock__class__test_1_1TestCase.html#a68f88bba11511f8c582123d47bf80464',1,'cpp::gmock_class_test::TestCase']]],
+  ['assertequivalentnodes_4387',['AssertEquivalentNodes',['../classgtest__xml__test__utils_1_1GTestXMLTestCase.html#a977273e8863f4f41d121bb5a64b08d32',1,'gtest_xml_test_utils::GTestXMLTestCase']]],
+  ['assertpartitionisvalid_4388',['AssertPartitionIsValid',['../classgoogletest-filter-unittest_1_1GTestFilterUnitTest.html#adcd73eb79d053b0baf4aa600044c4d0e',1,'googletest-filter-unittest::GTestFilterUnitTest']]],
+  ['assertsetequal_4389',['AssertSetEqual',['../classgoogletest-filter-unittest_1_1GTestFilterUnitTest.html#ace0dfd41efa0dc5c019c1e96e6ce8137',1,'googletest-filter-unittest::GTestFilterUnitTest']]],
+  ['atan_4390',['atan',['../group__UnitMath.html#gab8c42d9f521a8909fe92caeb674c30bb',1,'units::math']]],
+  ['atan2_4391',['atan2',['../group__UnitMath.html#ga845823260245af2abc83d2cf47f6e74b',1,'units::math']]],
+  ['atanh_4392',['atanh',['../group__UnitMath.html#ga8262877321f58e73f76a90e1317e1608',1,'units::math']]],
+  ['attr_4393',['attr',['../classpybind11_1_1detail_1_1object__api.html#a1ed2f42e544637c80b31c05c88cb916e',1,'pybind11::detail::object_api::attr(const char *key) const'],['../classpybind11_1_1detail_1_1object__api.html#a1515b5309996f3109e3e73ea6c1ab8df',1,'pybind11::detail::object_api::attr(handle key) const']]]
 ];

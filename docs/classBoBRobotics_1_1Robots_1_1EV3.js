@@ -1,7 +1,7 @@
 var classBoBRobotics_1_1Robots_1_1EV3 =
 [
     [ "MotorType", "classBoBRobotics_1_1Robots_1_1EV3.html#a50859f704cef3261d1c48f7c969dfb17", null ],
-    [ "EV3", "classBoBRobotics_1_1Robots_1_1EV3.html#aa41be17b19ff8be27ac2427f7a22f90b", null ],
+    [ "EV3", "classBoBRobotics_1_1Robots_1_1EV3.html#a51b2016b82e4d41d767c8b06d37f8671", null ],
     [ "~EV3", "classBoBRobotics_1_1Robots_1_1EV3.html#a2ce654310846ed452fa177ccac918b6b", null ],
     [ "getAbsoluteMaximumSpeed", "classBoBRobotics_1_1Robots_1_1EV3.html#ac511b0b344ee0a32189ed6431725f6d8", null ],
     [ "getRobotWidth", "classBoBRobotics_1_1Robots_1_1EV3.html#ae8e65f3a5d3cdafce5820cb464c3f6bc", null ],

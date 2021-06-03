@@ -1,5 +1,50 @@
 var group__error__group =
 [
+    [ "Using Mocks in Tests", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#UsingMocks", null ],
+    [ "Setting Default Actions", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#OnCall", null ],
+    [ "Setting Expectations", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#ExpectCall", null ],
+    [ "Matchers", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MatcherList", [
+      [ "Mocking a Normal Class", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MockClass", null ],
+      [ "Mocking a Class Template", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MockTemplate", null ],
+      [ "Floating-Point Matchers", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#FpMatchers", null ],
+      [ "Multi-argument Matchers", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MultiArgMatchers", null ],
+      [ "Using Matchers as Predicates", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MatchersAsPredicatesCheat", null ]
+    ] ],
+    [ "Actions", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#ActionList", null ],
+    [ "Cardinalities", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#CardinalityList", [
+      [ "The After Clause", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#AfterClause", null ],
+      [ "Sequences", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#UsingSequences", null ]
+    ] ],
+    [ "Mocking Non-virtual Methods", "md_third_party_googletest_googlemock_docs_cook_book.html#MockingNonVirtualMethods", null ],
+    [ "The Nice, the Strict, and the Naggy", "md_third_party_googletest_googlemock_docs_cook_book.html#NiceStrictNaggy", null ],
+    [ "Simplifying the Interface without Breaking Existing Code", "md_third_party_googletest_googlemock_docs_cook_book.html#SimplerInterfaces", null ],
+    [ "Delegating Calls to a Fake", "md_third_party_googletest_googlemock_docs_cook_book.html#DelegatingToFake", null ],
+    [ "Combining Matchers", "md_third_party_googletest_googlemock_docs_cook_book.html#CombiningMatchers", null ],
+    [ "Casting Matchers", "md_third_party_googletest_googlemock_docs_cook_book.html#SafeMatcherCast", null ],
+    [ "Selecting Between Overloaded Functions", "md_third_party_googletest_googlemock_docs_cook_book.html#SelectOverload", null ],
+    [ "Matchers must have no side-effects", "md_third_party_googletest_googlemock_docs_cook_book.html#PureMatchers", null ],
+    [ "Knowing When to Expect", "md_third_party_googletest_googlemock_docs_cook_book.html#UseOnCall", null ],
+    [ "Understanding Uninteresting vs Unexpected Calls", "md_third_party_googletest_googlemock_docs_cook_book.html#uninteresting-vs-unexpected", null ],
+    [ "Ignoring Uninteresting Arguments", "md_third_party_googletest_googlemock_docs_cook_book.html#ParameterlessExpectations", null ],
+    [ "Expecting Ordered Calls", "md_third_party_googletest_googlemock_docs_cook_book.html#OrderedCalls", null ],
+    [ "Expecting Partially Ordered Calls", "md_third_party_googletest_googlemock_docs_cook_book.html#PartialOrder", null ],
+    [ "Verifying Complex Arguments", "md_third_party_googletest_googlemock_docs_cook_book.html#SaveArgVerify", null ],
+    [ "Mocking Side Effects", "md_third_party_googletest_googlemock_docs_cook_book.html#MockingSideEffects", null ],
+    [ "Setting the Default Value for a Return Type", "md_third_party_googletest_googlemock_docs_cook_book.html#DefaultValue", null ],
+    [ "Using Functions/Methods/Functors/Lambdas as Actions", "md_third_party_googletest_googlemock_docs_cook_book.html#FunctionsAsActions", null ],
+    [ "Selecting an Action's Arguments", "md_third_party_googletest_googlemock_docs_cook_book.html#SelectingArgs", [
+      [ "Legacy workarounds for move-only types", "md_third_party_googletest_googlemock_docs_cook_book.html#LegacyMoveOnly", null ]
+    ] ],
+    [ "Using Check Points", "md_third_party_googletest_googlemock_docs_cook_book.html#UsingCheckPoints", null ],
+    [ "Using gMock and Threads", "md_third_party_googletest_googlemock_docs_cook_book.html#UsingThreads", null ],
+    [ "Writing New Matchers Quickly", "md_third_party_googletest_googlemock_docs_cook_book.html#NewMatchers", null ],
+    [ "Writing New Actions Quickly", "md_third_party_googletest_googlemock_docs_cook_book.html#QuickNewActions", null ],
+    [ "Writing New Monomorphic Actions", "md_third_party_googletest_googlemock_docs_cook_book.html#NewMonoActions", null ],
+    [ "Writing New Polymorphic Actions", "md_third_party_googletest_googlemock_docs_cook_book.html#NewPolyActions", null ],
+    [ "Mock std::function", "md_third_party_googletest_googlemock_docs_cook_book.html#MockFunction", [
+      [ "Using Multiple Expectations", "GMockForDummies.html#MultiExpectations", null ],
+      [ "All Expectations Are Sticky (Unless Said Otherwise)", "GMockForDummies.html#StickyExpectations", null ]
+    ] ],
     [ "Error", "classCLI_1_1Error.html", [
       [ "Error", "classCLI_1_1Error.html#a7b30cbdb0c6f3ef3d5550df7d8e18904", null ],
       [ "Error", "classCLI_1_1Error.html#a52187308eced1fc96f270ef384dbd7a2", null ],

@@ -2,9 +2,11 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "plog/Log.h"
 #include "differencers.h"
 #include "ridf_processors.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
@@ -78,25 +80,26 @@ public:
     }
 
     // Calculate difference between memory and snapshot with index
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask,
-                                 size_t snapshot, const cv::Mat &) const
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &imageMask,
+                                 size_t snapshot,
+                                 const ImgProc::Mask &) const
     {
         BOB_ASSERT(imageMask.empty());
 
+        /*
+         * Workaround for a really longstanding gcc bug:
+         *      https://gcc.gnu.org/bugzilla/show_bug.cgi?id=27557
+         */
+        static thread_local typename Differencer::template Internal<std::vector<float>> differencer;
+
         // Calculate HOG descriptors of image
-        static std::vector<float> scratchDescriptors;
-        #pragma omp threadprivate(scratchDescriptors)
+        auto &scratchDescriptors = differencer.getScratchVector();
         m_HOG.compute(image, scratchDescriptors);
         BOB_ASSERT(scratchDescriptors.size() == m_HOGDescriptorSize);
 
         // Calculate differences between image HOG descriptors and snapshot
-        auto diffIter = Differencer::calculate(m_Snapshots[snapshot],
-                                               scratchDescriptors,
-                                               scratchDescriptors);
-
-        // Calculate RMS
-        return Differencer::mean(std::accumulate(diffIter, diffIter + m_HOGDescriptorSize, 0.0f),
-                                 m_HOGDescriptorSize);
+        return differencer(m_Snapshots[snapshot], scratchDescriptors);
     }
 
 private:

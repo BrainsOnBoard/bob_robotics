@@ -2,8 +2,9 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "insilico_rotater.h"
-#include "visual_navigation_base.h"
+#include "imgproc/mask.h"
+#include "navigation/insilico_rotater.h"
+#include "navigation/visual_navigation_base.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -213,7 +214,7 @@ public:
     template<class... Ts>
     const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
@@ -224,7 +225,7 @@ public:
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(unwrapRes, this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference
@@ -254,7 +255,7 @@ private:
         m_RotatedDifferences.resize(rotater.numRotations());
 
         // Populate rotated differences with results
-        rotater.rotate([this] (const cv::Mat &image, const cv::Mat &, size_t i) {
+        rotater.rotate([this] (const cv::Mat &image, const ImgProc::Mask &, size_t i) {
             m_RotatedDifferences[i] = this->test(image);
         });
     }

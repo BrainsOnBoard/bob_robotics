@@ -117,8 +117,9 @@ public:
 
                 const auto path = (m_ImageDatabase.m_Path / MetadataFilename).str();
                 LOG_INFO << "Writing metadata to " << path << "...";
-                std::ofstream os(path);
-                os << m_YAML.releaseAndGetString();
+                std::ofstream ofs(path);
+                ofs.exceptions(std::ios::badbit | std::ios::failbit);
+                ofs << m_YAML.releaseAndGetString();
             }
 
             m_ImageDatabase.addNewEntries(m_NewEntries, m_ExtraFieldNames);
@@ -169,6 +170,11 @@ public:
                    << "time" << timeStr
                    << "project_git_commit" << BOB_PROJECT_GIT_COMMIT
                    << "bob_robotics_git_commit" << BOB_ROBOTICS_GIT_COMMIT
+#ifdef BOB_IS_EXPERIMENT
+                   << "is_experiment" << 1
+#else
+                   << "is_experiment" << 0
+#endif
                    << "type" << (isRoute ? "route" : "grid");
         }
 
@@ -474,8 +480,9 @@ private:
         }
 
         // Write image entries info to CSV file
-        std::ofstream os(path);
-        BOB_ASSERT(os.good());
+        std::ofstream os;
+        os.exceptions(std::ios::badbit | std::ios::failbit);
+        os.open(path);
         os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename";
         if (!m_IsRoute) {
             os << ", Grid X, Grid Y, Grid Z";

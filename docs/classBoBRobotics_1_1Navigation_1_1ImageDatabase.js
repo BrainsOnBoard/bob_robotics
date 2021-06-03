@@ -23,5 +23,5 @@ var classBoBRobotics_1_1Navigation_1_1ImageDatabase =
     [ "loadImages", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a53e3677416cd3ec19dc472d8efbfc46b", null ],
     [ "operator[]", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a885670006a37ea821b3a0cc7d9d3bf64", null ],
     [ "size", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#aa515e66ad311858e9ba28d4ebb70806e", null ],
-    [ "unwrap", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a1ad60e9b4bf0a688dae257fc4ed02d1c", null ]
+    [ "unwrap", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a6d3d5a518e645e67dc6476c7592c7a77", null ]
 ];

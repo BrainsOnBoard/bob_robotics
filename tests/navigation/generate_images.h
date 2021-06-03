@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "imgproc/mask.h"
 #include "video/randominput.h"
 
 // OpenCV
@@ -23,5 +24,13 @@ static inline std::array<cv::Mat, NumTestImages> generateImages()
 
     return images;
 }
-
 static const auto TestImages = generateImages();
+
+static inline auto generateMask()
+{
+    cv::Mat mask{ TestImageSize, CV_8UC1, cv::Scalar(255.0) };
+    cv::Mat subset{ mask, cv::Rect{ 0, 0, 10, 5 } };
+    subset = cv::Scalar{ 0.0 };
+    return BoBRobotics::ImgProc::Mask{ std::move(mask) };
+}
+static const auto TestMask = generateMask();

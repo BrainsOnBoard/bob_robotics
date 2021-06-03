@@ -3,8 +3,64 @@
 
 // BoB robotics includes
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_store_hog.h"
 
-TEST(PerfectMemory, SampleImage)
+using namespace BoBRobotics::Navigation;
+using Window = std::pair<size_t, size_t>;
+
+#define PM_TEST_WINDOW(TEST_NAME, ALGO, FILENAME, MASK)      \
+    TEST(PerfectMemory, TEST_NAME)                           \
+    {                                                        \
+        testAlgo<ALGO>(FILENAME, MASK, {});                  \
+    }                                                        \
+    TEST(PerfectMemory, TEST_NAME##Window)                   \
+    {                                                        \
+        testAlgo<ALGO>("window_" FILENAME, MASK, { 0, 10 }); \
+    }
+
+#define PM_TEST(TEST_NAME, ALGO, FILENAME)        \
+    PM_TEST_WINDOW(TEST_NAME, ALGO, FILENAME, {}) \
+    PM_TEST_WINDOW(TEST_NAME##Mask, ALGO, "mask_" FILENAME, TestMask)
+
+PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
+PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
+
+void
+testHog(const std::string &filename, std::pair<size_t, size_t> window)
 {
-    testAlgo<BoBRobotics::Navigation::PerfectMemoryRotater<>>("pm.bin");
+    /*
+     * Using GTest's default EXPECT_FLOAT_EQ() method gives test failures when
+     * this test is run through Jenkins, though not on my local machine,
+     * presumably due to differences in how floating-point numbers are
+     * processed. So just choose an explicit (conservative) level of precision
+     * for this test.
+     *      -- AD
+     */
+    constexpr float precision = 1e-7f;
+
+    using namespace BoBRobotics;
+
+    const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
+    const auto trueDifferences = readMatrix<float>(filepath);
+
+    PerfectMemoryRotater<PerfectMemoryStore::HOG<>> algo{ TestImageSize, cv::Size(10, 10), 8 };
+    for (const auto &image : TestImages) {
+        algo.train(image);
+    }
+
+    if (window == Window{}) {
+        window = algo.getFullWindow();
+    }
+    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    compareFloatMatrices(differences, trueDifferences, precision);
+}
+
+TEST(PerfectMemory, SampleImageHOG)
+{
+    testHog("pm_hog.bin", {});
+}
+
+TEST(PerfectMemory, SampleImageHogWindow)
+{
+    testHog("window_pm_hog.bin", { 0, 10 });
 }

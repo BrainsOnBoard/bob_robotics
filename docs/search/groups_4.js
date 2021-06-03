@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['keyboard_20keys_2484',['Keyboard keys',['../group__keys.html',1,'']]]
+  ['initialization_2c_20version_20and_20error_20reference_5136',['Initialization, version and error reference',['../group__init.html',1,'']]],
+  ['input_20reference_5137',['Input reference',['../group__input.html',1,'']]]
 ];

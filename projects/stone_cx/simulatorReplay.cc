@@ -14,6 +14,7 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
+#include "common/macros.h"
 #include "plog/Log.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
@@ -86,6 +87,8 @@ int bobMain(int, char **)
 #endif  // RECORD_ELECTROPHYS
 
     std::ifstream replayData("data.csv");
+    BOB_ASSERT(replayData.good());
+    replayData.exceptions(std::ios::badbit);
 
     // Simulate
     double theta = 0.0;

@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['statedown_2447',['StateDown',['../namespaceBoBRobotics_1_1HID.html#a71b9d0f7acdc0b32f717ada7451fed1da622959432403395e54fad67b30741abc',1,'BoBRobotics::HID']]],
-  ['statepressed_2448',['StatePressed',['../namespaceBoBRobotics_1_1HID.html#a71b9d0f7acdc0b32f717ada7451fed1da3d29d2aca19c95d918264ba7c1cbbbc1',1,'BoBRobotics::HID']]],
-  ['statereleased_2449',['StateReleased',['../namespaceBoBRobotics_1_1HID.html#a71b9d0f7acdc0b32f717ada7451fed1da23a0155d09d58c6c0988a67adb1da8c9',1,'BoBRobotics::HID']]]
+  ['automatic_5087',['automatic',['../namespacepybind11.html#a5f83e7a05cee9068927633ac47dbe69ca2bd9c0ed00116be1258e0cc66617d7c8',1,'pybind11']]],
+  ['automatic_5freference_5088',['automatic_reference',['../namespacepybind11.html#a5f83e7a05cee9068927633ac47dbe69ca1c1628c22d69b3b9bac4b5c3674852e3',1,'pybind11']]]
 ];

@@ -68,6 +68,8 @@ public:
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
         m_Robot(), m_NumSnapshots(0)
     {
+        m_LogFile.exceptions(std::ios::badbit | std::ios::failbit);
+
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
 
@@ -252,7 +254,6 @@ private:
                 }
 
                 m_LogFile.open((m_Config.getOutputPath() / "training.csv").str());
-                BOB_ASSERT(m_LogFile.good());
 
                 // Write header
                 m_LogFile << "Time [s], Filename";
@@ -303,7 +304,9 @@ private:
                         const auto &attitude = pose.attitude();
 
                         // Write to CSV
-                        m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", " << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
+                        m_LogFile << ", " << objectData.getFrameNumber() << ", ";
+                        m_LogFile << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", ";
+                        m_LogFile << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
                     }
                     m_LogFile << std::endl;
                 }
@@ -323,6 +326,48 @@ private:
             }
             else if(event == Event::Update) {
                 if(m_Joystick.isPressed(HID::JButton::B)) {
+                    // Open settings file and write unwrapper settings to it
+                    cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
+                    settingsFile << "unwrapper" << m_Unwrapper;
+
+                    // If we should stream, send state update
+                    if(m_Config.shouldStreamOutput()) {
+                        m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TESTING\n");
+                    }
+
+                    // Close log file if it's already open
+                    if(m_LogFile.is_open()) {
+                        m_LogFile.close();
+                    }
+
+                    // Open log file
+                    m_LogFile.open((m_Config.getOutputPath() / ("testing" + m_Config.getTestingSuffix() + ".csv")).str());
+                    BOB_ASSERT(m_LogFile.good());
+
+                    // Write heading for time column
+                    m_LogFile << "Time [s], ";
+
+                    // Write memory-specific CSV header
+                    m_Memory->writeCSVHeader(m_LogFile);
+
+                    // If Vicon tracking is available, write additional header fields
+                    if(m_Config.shouldUseViconTracking()) {
+                        m_LogFile << ", Frame number, X, Y, Z, Rx, Ry, Rz";
+                    }
+
+                    if(m_Config.shouldSaveTestingDiagnostic()) {
+                        m_LogFile << ", Filename";
+                    }
+                    m_LogFile << std::endl;
+
+                    // Reset test time and test image
+                    m_RecordingStopwatch.start();
+                    m_TestImageIndex = 0;
+
+                    // Delete old testing images
+                    const std::string testWildcard = (m_Config.getOutputPath() / ("test" +  m_Config.getTestingSuffix() + "_*.png")).str();
+                    system(("rm -f " + testWildcard).c_str());
+
                     m_StateMachine.transition(State::Testing);
                 }
             }
@@ -330,48 +375,6 @@ private:
         else if(state == State::Testing) {
             if(event == Event::Enter) {
                 LOGI << "Testing: finding snapshot" ;
-
-                // Open settings file and write unwrapper settings to it
-                cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
-                settingsFile << "unwrapper" << m_Unwrapper;
-
-                // If we should stream, send state update
-                if(m_Config.shouldStreamOutput()) {
-                    m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TESTING\n");
-                }
-
-                // Close log file if it's already open
-                if(m_LogFile.is_open()) {
-                    m_LogFile.close();
-                }
-
-                // Open log file
-                m_LogFile.open((m_Config.getOutputPath() / ("testing" + m_Config.getTestingSuffix() + ".csv")).str());
-                BOB_ASSERT(m_LogFile.good());
-
-                // Write heading for time column
-                m_LogFile << "Time [s], ";
-
-                // Write memory-specific CSV header
-                m_Memory->writeCSVHeader(m_LogFile);
-
-                // If Vicon tracking is available, write additional header fields
-                if(m_Config.shouldUseViconTracking()) {
-                    m_LogFile << ", Frame number, X, Y, Z, Rx, Ry, Rz";
-                }
-
-                if(m_Config.shouldSaveTestingDiagnostic()) {
-                    m_LogFile << ", Filename";
-                }
-                m_LogFile << std::endl;
-
-                // Reset test time and test image
-                m_RecordingStopwatch.start();
-                m_TestImageIndex = 0;
-
-                // Delete old testing images
-                const std::string testWildcard = (m_Config.getOutputPath() / ("test" +  m_Config.getTestingSuffix() + "_*.png")).str();
-                system(("rm -f " + testWildcard).c_str());
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
@@ -393,7 +396,9 @@ private:
                     const auto &attitude = pose.attitude();
 
                     // Write extra logging data
-                    m_LogFile << ", " << objectData.getFrameNumber() << ", " << position[0] << ", " << position[1] << ", " << position[2] << ", " << attitude[0] << ", " << attitude[1] << ", " << attitude[2];
+                    m_LogFile << ", " << objectData.getFrameNumber() << ", ";
+                    m_LogFile << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", ";
+                    m_LogFile << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
                 }
 
                 // If we should save diagnostics when testing
@@ -443,7 +448,7 @@ private:
                 if(state == State::DrivingForward) {
                     m_Robot.moveForward(m_Config.getMoveSpeed());
                 }
-                // Otherwisem start turning
+                // Otherwise start turning
                 else {
                     const float turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
                     const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;

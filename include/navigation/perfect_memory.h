@@ -26,6 +26,7 @@
 #include <limits>
 #include <numeric>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace BoBRobotics {
@@ -46,6 +47,11 @@ public:
     {}
 
     //------------------------------------------------------------------------
+    // Typedefines
+    //------------------------------------------------------------------------
+    typedef std::pair<size_t, size_t> Window;
+
+    //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
     virtual void train(const cv::Mat &image) override
@@ -61,10 +67,7 @@ public:
 
     virtual float test(const cv::Mat &image) const override
     {
-        testInternal(image);
-
-        // Return smallest difference
-        return *std::min_element(m_Differences.begin(), m_Differences.end());
+        return test(getFullWindow(), image);
     }
 
     virtual void clearMemory() override
@@ -75,28 +78,48 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-     //! Return the number of snapshots that have been read into memory
+    //! Test the algorithm with the specified image within a specified 'window' of snapshots
+    float test(const Window &window, const cv::Mat &image) const
+    {
+        testInternal(window, image);
+
+        // Return smallest difference
+        return *std::min_element(m_Differences.begin(), m_Differences.end());
+    }
+
+    //! Return the number of snapshots that have been read into memory
     size_t getNumSnapshots() const{ return m_Store.getNumSnapshots(); }
 
     //! Return a specific snapshot
     const cv::Mat &getSnapshot(size_t index) const{ return m_Store.getSnapshot(index); }
 
-    /*!
-     * \brief Get differences between current view and stored snapshots
-     */
+    //! Get differences between current view and all stored snapshots
     const std::vector<float> &getImageDifferences(const cv::Mat &image) const
     {
-        testInternal(image);
+        testInternal(getFullWindow(), image);
         return m_Differences;
+    }
+
+    //! Get differences between current view and specified 'window' of stored snapshots
+    const std::vector<float> &getImageDifferences(const Window &window, const cv::Mat &image) const
+    {
+        testInternal(window, image);
+        return m_Differences;
+    }
+
+    Window getFullWindow() const
+    {
+        return {0, getNumSnapshots()};
     }
 
 protected:
     //------------------------------------------------------------------------
     // Protected API
     //------------------------------------------------------------------------
-    float calcSnapshotDifference(const cv::Mat &image, const cv::Mat &imageMask, size_t snapshot) const
+    float calcSnapshotDifference(const cv::Mat &image,
+                                 const ImgProc::Mask &mask, size_t snapshot) const
     {
-        return m_Store.calcSnapshotDifference(image, imageMask, snapshot, getMaskImage());
+        return m_Store.calcSnapshotDifference(image, mask, snapshot, getMask());
     }
 
 private:
@@ -106,22 +129,22 @@ private:
     Store m_Store;
     mutable std::vector<float> m_Differences;
 
-    void testInternal(const cv::Mat &image) const
+    void testInternal(const Window &window, const cv::Mat &image) const
     {
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
+        BOB_ASSERT(window.first < getNumSnapshots());
+        BOB_ASSERT(window.second <= getNumSnapshots());
+        BOB_ASSERT(window.first < window.second);
 
-        const size_t numSnapshots = getNumSnapshots();
-        BOB_ASSERT(numSnapshots > 0);
+        m_Differences.resize(window.second - window.first);
 
-        m_Differences.resize(numSnapshots);
-
-        // Loop through snapshots and caculate differences
+        // Loop through snapshots and calculate differences
         #pragma omp parallel for
-        for (size_t s = 0; s < numSnapshots; s++) {
-            m_Differences[s] = calcSnapshotDifference(image, getMaskImage(), s);
+        for (size_t s = window.first; s < window.second; s++) {
+            m_Differences[s - window.first] = calcSnapshotDifference(image, getMask(), s);
         }
     }
 };
@@ -140,6 +163,22 @@ public:
     }
 
     /*!
+     * \brief Get differences between current view and stored snapshots within a 'window'
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step. **NOTE** I wanted window to be a const reference but for
+     * reasons that are beyond me, if it is a reference the second overload always gets selected
+     */
+    template<class... Ts>
+    const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, Ts &&... args) const
+    {
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        calcImageDifferences(window, rotater);
+        return m_RotatedDifferences;
+    }
+
+    /*!
      * \brief Get differences between current view and stored snapshots
      *
      * The parameters are perfect-forwarded to the Rotater class, so e.g. for
@@ -149,9 +188,39 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(rotater);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        calcImageDifferences(this->getFullWindow(), rotater);
         return m_RotatedDifferences;
+    }
+
+    /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots within a 'window'
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step. **NOTE** I wanted window to be a const reference but for
+     * reasons that are beyond me, if it is a reference the second overload always gets selected
+     */
+    template<class... Ts>
+    auto getHeading(typename PerfectMemory<Store>::Window window, Ts &&... args) const
+    {
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        calcImageDifferences(window, rotater);
+
+        // Now get the minimum for each snapshot and the column this corresponds to
+        const size_t numSnapshots = window.second - window.first;
+        m_BestColumns.resize(numSnapshots);
+        m_MinimumDifferences.resize(numSnapshots);
+
+        #pragma omp parallel for
+        for (size_t i  = 0; i < numSnapshots; i++) {
+            m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
+        }
+
+        // Return result
+        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater, window.first),
+                              std::make_tuple(&m_RotatedDifferences));
     }
 
     /*!
@@ -165,22 +234,7 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
-        calcImageDifferences(rotater);
-        const size_t numSnapshots = this->getNumSnapshots();
-
-        // Now get the minimum for each snapshot and the column this corresponds to
-        m_BestColumns.resize(numSnapshots);
-        m_MinimumDifferences.resize(numSnapshots);
-
-        #pragma omp parallel for
-        for (size_t i = 0; i < numSnapshots; i++) {
-            m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
-        }
-
-        // Return result
-        return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater),
-                              std::make_tuple(&m_RotatedDifferences));
+        return getHeading(this->getFullWindow(), std::forward<Ts>(args)...);
     }
 
 private:
@@ -192,24 +246,25 @@ private:
     // Private API
     //------------------------------------------------------------------------
     template<class RotaterType>
-    void calcImageDifferences(RotaterType &rotater) const
+    void calcImageDifferences(typename PerfectMemory<Store>::Window window, RotaterType &rotater) const
     {
-        const auto numSnapshots = this->getNumSnapshots();
-        BOB_ASSERT(numSnapshots > 0);
+        BOB_ASSERT(window.first < this->getNumSnapshots());
+        BOB_ASSERT(window.second <= this->getNumSnapshots());
+        BOB_ASSERT(window.first < window.second);
 
         // Preallocate snapshot difference vectors
-        m_RotatedDifferences.resize(numSnapshots, rotater.numRotations());
+        m_RotatedDifferences.resize(window.second - window.first, rotater.numRotations());
 
         // Scan across image columns
         rotater.rotate(
-                [this, numSnapshots](const cv::Mat &fr, const cv::Mat &mask, size_t i) {
+                [this, &window](const cv::Mat &fr, const ImgProc::Mask &mask, size_t i) {
                     // Loop through snapshots
-                    for (size_t s = 0; s < numSnapshots; s++) {
+                    for (size_t s = window.first; s < window.second; s++) {
                         // Calculate difference
-                        m_RotatedDifferences(s, i) = this->calcSnapshotDifference(fr, mask, s);
+                        m_RotatedDifferences(s - window.first, i) = this->calcSnapshotDifference(fr, mask, s);
                     }
                 });
     }
-}; // PerfectMemoryBase
+};
 } // Navigation
 } // BoBRobotics

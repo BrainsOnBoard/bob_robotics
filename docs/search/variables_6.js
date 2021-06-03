@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['pixels_2328',['pixels',['../structGLFWimage.html#a0c532a5c2bb715555279b7817daba0fb',1,'GLFWimage']]]
+  ['green_4905',['green',['../structGLFWgammaramp.html#affccc6f5df47820b6562d709da3a5a3a',1,'GLFWgammaramp']]],
+  ['greenbits_4906',['greenBits',['../structGLFWvidmode.html#a292fdd281f3485fb3ff102a5bda43faa',1,'GLFWvidmode']]],
+  ['grid_5fsize_4907',['grid_size',['../UTM_8h.html#a79f3126fc1c850a6a88b6165e3c01bc0',1,'UTM']]]
 ];
