@@ -11,37 +11,21 @@
 //opencv
 #include <opencv2/opencv.hpp>
 
-class DCTHash {
-
-    public:
+namespace DCTHash
+{
     //! computes the DCT hash
-    static std::bitset<64> computeHash(const cv::Mat &in) {
+    inline static std::bitset<64> computeHash(const cv::Mat &in) {
 
         cv::Mat dct_mat;
         cv::dct(in, dct_mat);
-        cv::Rect roi( 0, 0, 8, 8);
-        cv::Mat low_dct( dct_mat, roi );
-
-		std::vector<float> vec;
-		for (int row = 0; row < 8; row++) {
-			for (int col = 0; col < 8; col++) {
-			    vec.push_back(low_dct.at<float>(row,col));
-			}
-		}
-
-		// calculate median value
-		std::sort(std::begin(vec), std::end(vec));
-		float medianv;
-		const int n = 64;
-		if (n % 2 != 0) {
-			medianv = vec[n/2];
-		} else {
-			medianv = (vec[(n-1)/2] + vec[n/2]) / 2;
-		}
-
+        cv::Mat rect(dct_mat,{ 0, 0, 8, 8});                // we only need the low 8x8 frequencies
+        std::sort(rect.begin<float>(),rect.end<float>());   // sorting to get median value
+        const float median= rect.at<float>(-1+rect.size().height/2,rect.size().width-1); 
+        rect = {dct_mat,{ 0, 0, 8, 8}};                     // re-assigning so we get the correct order back
+	
         std::bitset<64> binary;
         for (size_t i = 0; i < 64; i++) {
-            if(reinterpret_cast<float *>(low_dct.data)[i] > medianv) {
+            if(reinterpret_cast<float *>(rect.data)[i] > median) {
                 binary.set(i, 1);
             }
         }
@@ -49,11 +33,11 @@ class DCTHash {
     }
 
     //! computes the hamming distance between 2 image hashes
-    static int distance(const std::bitset<64> &hash1, const std::bitset<64> &hash2) {
+    inline static int distance(const std::bitset<64> &hash1, const std::bitset<64> &hash2) {
         const std::bitset<64> delta = hash1 ^ hash2;
         const int distance = delta.count();
         return distance;
     }
 
-};
+}
 
