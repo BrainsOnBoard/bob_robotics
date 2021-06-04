@@ -18,9 +18,11 @@ computeHash(const cv::Mat &in)
     cv::Mat dct_mat;
     cv::dct(in, dct_mat);
     cv::Mat rect(dct_mat, { 0, 0, 8, 8 });             // we only need the low 8x8 frequencies
-    std::sort(rect.begin<float>(), rect.end<float>()); // sorting to get median value
-    const float median = rect.at<float>(-1 + rect.size().height / 2, rect.size().width - 1);
-    rect = { dct_mat, { 0, 0, 8, 8 } };                // re-assigning so we get the correct order back
+
+    std::array<float, 33> sorted;
+    std::partial_sort_copy(rect.begin<float>(), rect.end<float>(), sorted.begin(), sorted.end());
+    const float median = (sorted[31] + sorted[32]) /2
+
 
     std::bitset<64> binary;
     for (size_t i = 0; i < 64; i++) {
