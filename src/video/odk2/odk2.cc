@@ -53,11 +53,12 @@ ODK2::~ODK2()
 //------------------------------------------------------------------------
 bool ODK2::readFrame(cv::Mat &outFrame)
 {
-    std::lock_guard<std::mutex> l(m_OutputBufsMutex);
-
     // Ensure output image is correctly formatted
     // **NOTE** we do this even if there's no image data so output frame is always right size
     outFrame.create(BAND_HEIGHT, BAND_WIDTH, CV_8UC3);
+
+    // Obtain output buffer lock
+    std::lock_guard<std::mutex> l(m_OutputBufsMutex);
 
     // If there's a new frame
     if(m_RawFrameBuf.timestampUs > m_LastRawFrameTimestep) {
@@ -66,18 +67,15 @@ bool ODK2::readFrame(cv::Mat &outFrame)
         // Update last timestep
         m_LastRawFrameTimestep = m_RawFrameBuf.timestampUs;
 
-        // Extract quaternion components from frame
-        const float qw = m_RawFrameBuf.quaternion.w;
-        const float qx = m_RawFrameBuf.quaternion.x;
-        const float qy = m_RawFrameBuf.quaternion.y;
-        const float qz = m_RawFrameBuf.quaternion.z;
+        // Get reference to quaternion to save typing
+        const auto &q = m_RawFrameBuf.quaternion;
 
         // Calculate heading from quaternion
-        const radian_t heading(std::atan2(2.0 * ((qw * qz) + (qx * qy)),
-                                          1.0 - (2.0 * ((qy * qy) + (qz * qz)))));
+        const radian_t heading(std::atan2(2.0 * ((q.w * q.z) + (q.x * q.y)),
+                                          1.0 - (2.0 * ((q.y * q.y) + (q.z * q.z)))));
         const uint32_t headingIdx = turn_t(heading + 180_deg).value() * BAND_WIDTH;
 
-        LOGD << "Processing frame heading=" << headingIdx;
+        LOGD << "Processing frame heading = " << headingIdx;
 
         // Loop through rows of horizontal band
         for(int i = 0; i < BAND_HEIGHT; i++) {
@@ -115,26 +113,23 @@ bool ODK2::readFrame(cv::Mat &outFrame)
 //------------------------------------------------------------------------
 std::array<degree_t, 3> ODK2::getEulerAngles() const
 {
-    // Extract quaternion components from frame
+    // Obtain lock and get copy of fused IMU quaternion
     m_OutputBufsMutex.lock();
-    const float qw = m_IMUBuf.q.w;
-    const float qx = m_IMUBuf.q.x;
-    const float qy = m_IMUBuf.q.y;
-    const float qz = m_IMUBuf.q.z;
+    const auto q = m_IMUBuf.q;
     m_OutputBufsMutex.unlock();
 
     // **NOTE** this whole process should be doable using Eigen but I can't make it work so
     // used https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
     // Calculate heading from quaternion
-    const radian_t heading(std::atan2(2.0 * ((qw * qz) + (qx * qy)),
-                                      1.0 - (2.0 * ((qy * qy) + (qz * qz)))));
+    const radian_t heading(std::atan2(2.0 * ((q.w * q.z) + (q.x * q.y)),
+                                      1.0 - (2.0 * ((q.y * q.y) + (q.z * q.z)))));
 
     // Calculate roll from quaternion
-    const radian_t roll(std::atan2(2.0 * ((qw * qx) + (qy * qz)),
-                                   1.0 - (2.0 * ((qx * qx) + (qy * qy)))));
+    const radian_t roll(std::atan2(2.0 * ((q.w * q.x) + (q.y * q.z)),
+                                   1.0 - (2.0 * ((q.x * q.x) + (q.y * q.y)))));
 
     // Calculate pitch from quaternion
-    const double sinp = 2.0 * ((qw * qy) - (qz * qx));
+    const double sinp = 2.0 * ((q.w * q.y) - (q.z * q.x));
     const radian_t pitch((std::abs(sinp) >= 1.0) ? std::copysign(M_PI / 2.0, sinp) : std::asin(sinp));
 
     // To match BN055, we want to return in heading, roll, pitch
