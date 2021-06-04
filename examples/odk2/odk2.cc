@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "video/odk2/odk2.h"
 
 // Standard C++ includes
@@ -9,6 +10,7 @@ using namespace BoBRobotics::Video;
 int bobMain(int, char**)
 {
     ODK2 odk2;
+    BoBRobotics::BackgroundExceptionCatcher catcher;
 
     cv::namedWindow("Raw frame", cv::WINDOW_NORMAL);
     cv::resizeWindow("Raw frame", odk2.getOutputSize().width * 2, odk2.getOutputSize().height * 2);
@@ -18,6 +20,9 @@ int bobMain(int, char**)
 
     cv::Mat cameraImage;
     while(true) {
+        // Check for background exceptions
+        catcher.check();
+
         // Read frames
         odk2.readFrame(cameraImage);
 

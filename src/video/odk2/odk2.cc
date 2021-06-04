@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "video/odk2/odk2.h"
 
 // Third party includes
@@ -138,47 +139,51 @@ std::array<degree_t, 3> ODK2::getEulerAngles() const
 //------------------------------------------------------------------------
 void ODK2::readThread()
 {
-    while(!m_ShouldQuit) {
-        // Lock output mutex and read packets from driver
-        // **NOTE** because this is a C function it won't throw so no need to use a std::lock_guard
-        m_OutputBufsMutex.lock();
-        const int ret = devkit_driver_run_rx(&m_State, &m_OutputBufs);
-        m_OutputBufsMutex.unlock();
+    try {
+        while(!m_ShouldQuit) {
+            // Lock output mutex and read packets from driver
+            // **NOTE** because this is a C function it won't throw so no need to use a std::lock_guard
+            m_OutputBufsMutex.lock();
+            const int ret = devkit_driver_run_rx(&m_State, &m_OutputBufs);
+            m_OutputBufsMutex.unlock();
 
-        // No data
-        if(ret == 0) {
-            LOGD << "No data";
+            // No data
+            if(ret == 0) {
+                LOGD << "No data";
+            }
+            // Error
+            else if (ret < 0) {
+                if (ret == DEVKIT_DRIVER_RX_TIMEOUT) {
+                    LOGW << "RX timeout";
+                }
+                else {
+                    throw std::runtime_error("Error in devkit driver RX (" + std::to_string(ret) + ")");
+                }
+            }
+            // Valid data
+            else if (ret > 0) {
+                if (ret == DEVKIT_DRIVER_RAW_FRAME_VALID) {
+                    LOGD << "Got raw frame with timestamp " << m_RawFrameBuf.timestampUs;
+                }
+                else if (ret == DEVKIT_DRIVER_FLOW_FRAME_VALID) {
+                    LOGD << "Got flow frame with timestamp " << m_FlowFrameBuf.timestampUs;
+                }
+                else if (ret == DEVKIT_DRIVER_RAW_CAMERA_VALID) {
+                    LOGD << "Got raw camera frame with timestamp " << m_RawCameraBuf.timestampUs;
+                }
+                else if (ret == DEVKIT_DRIVER_IMU_VALID) {
+                    LOGD << "Got IMU sample with timestamp " << m_IMUBuf.timestampUs;
+                }
+                else if (ret == DEVKIT_DRIVER_STATE_VALID) {
+                    LOGD << "Got state estimate with timestamp " << m_StateBuf.timestampUs;
+                }
+                else {
+                    LOGW << "RX unknown frame";
+                }
+            }
         }
-        // Error
-        else if (ret < 0) {
-            if (ret == DEVKIT_DRIVER_RX_TIMEOUT) {
-                LOGW << "RX timeout";
-            }
-            else {
-                throw std::runtime_error("Error in devkit driver RX (" + std::to_string(ret) + ")");
-            }
-        }
-        // Valid data
-        else if (ret > 0) {
-            if (ret == DEVKIT_DRIVER_RAW_FRAME_VALID) {
-                LOGD << "Got raw frame with timestamp " << m_RawFrameBuf.timestampUs;
-            }
-            else if (ret == DEVKIT_DRIVER_FLOW_FRAME_VALID) {
-                LOGD << "Got flow frame with timestamp " << m_FlowFrameBuf.timestampUs;
-            }
-            else if (ret == DEVKIT_DRIVER_RAW_CAMERA_VALID) {
-                LOGD << "Got raw camera frame with timestamp " << m_RawCameraBuf.timestampUs;
-            }
-            else if (ret == DEVKIT_DRIVER_IMU_VALID) {
-                LOGD << "Got IMU sample with timestamp " << m_IMUBuf.timestampUs;
-            }
-            else if (ret == DEVKIT_DRIVER_STATE_VALID) {
-                LOGD << "Got state estimate with timestamp " << m_StateBuf.timestampUs;
-            }
-            else {
-                LOGW << "RX unknown frame";
-            }
-        }
+    } catch (...) {
+        BackgroundExceptionCatcher::set(std::current_exception());
     }
 }
 
