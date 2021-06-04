@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "common/circstat.h"
 #include "video/odk2/odk2.h"
 
 // Third party includes
@@ -124,7 +125,7 @@ std::array<degree_t, 3> ODK2::getEulerAngles() const
 
     // Calculate pitch from quaternion
     const double sinp = 2.0 * ((q.w * q.y) - (q.z * q.x));
-    const radian_t pitch((std::abs(sinp) >= 1.0) ? std::copysign(M_PI / 2.0, sinp) : std::asin(sinp));
+    const radian_t pitch((std::abs(sinp) >= 1.0) ? std::copysign(pi<double>() / 2.0, sinp) : std::asin(sinp));
 
     // To match BN055, we want to return in heading, roll, pitch
     return {heading, roll, pitch};
