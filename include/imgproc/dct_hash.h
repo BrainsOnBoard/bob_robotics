@@ -11,6 +11,8 @@
 //opencv
 #include <opencv2/opencv.hpp>
 
+namespace BoBRobotics {
+namespace ImgProc {
 namespace DCTHash {
 //! computes the DCT hash
 inline std::bitset<64>
@@ -41,4 +43,6 @@ distance(const std::bitset<64> &hash1, const std::bitset<64> &hash2)
     return distance;
 }
 
-}
+} // DCTHash
+} // ImgProc
+} // BoBRobotics

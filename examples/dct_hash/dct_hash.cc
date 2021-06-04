@@ -3,6 +3,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+using namespace BoBRobotics::ImgProc;
+
 int
 bobMain(int, char **)
 {
