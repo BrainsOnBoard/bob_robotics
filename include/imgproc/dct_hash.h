@@ -21,7 +21,7 @@ computeHash(const cv::Mat &in)
 
     std::array<float, 33> sorted;
     std::partial_sort_copy(rect.begin<float>(), rect.end<float>(), sorted.begin(), sorted.end());
-    const float median = (sorted[31] + sorted[32]) /2
+    const float median = (sorted[31] + sorted[32]) /2;
 
 
     std::bitset<64> binary;
