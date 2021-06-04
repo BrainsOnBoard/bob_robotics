@@ -16,7 +16,6 @@ using namespace units::angle;
 namespace BoBRobotics {
 namespace Video {
 ODK2::ODK2(const std::string &hostIP, const std::string &remoteIP)
-:   m_Mask(BAND_HEIGHT, BAND_WIDTH, CV_8UC1)
 {
     // Build config
     devkitDriverConfig_t config = {};
@@ -82,8 +81,7 @@ bool ODK2::readFrame(cv::Mat &outFrame)
         for(int i = 0; i < BAND_HEIGHT; i++) {
             // Get pointer to rows in outFrame and mask
             // **NOTE** we want to flip output
-            cv::Vec3b *outPixel = outFrame.ptr<cv::Vec3b>(BAND_HEIGHT - i - 1);
-            uint8_t *outMask = m_Mask.ptr<uint8_t>(BAND_HEIGHT - i - 1);
+            uint8_t *outPixel = outFrame.ptr<uint8_t>(BAND_HEIGHT - i - 1);
 
             // Loop through columns of horizontal band
             for (int j = 0; j < BAND_WIDTH; j++) {
@@ -92,16 +90,11 @@ bool ODK2::readFrame(cv::Mat &outFrame)
                 // Get fourpi index to map to band pixel
                 const int fourpiIdx = band_to_fourpi(bandIdx, bandType_horz);
 
-                // Create pixel into OpenCV image
-                const cv::Vec3b pixel(m_RawFrameBuf.image[fourpiIdx * 3],
-                                      m_RawFrameBuf.image[(fourpiIdx * 3) + 1],
-                                      m_RawFrameBuf.image[(fourpiIdx * 3) + 2]);
-
                 // Write pixel to OpenCV image
-                *outPixel++ = pixel;
-
-                // If pixel is black, clear mask otherwise set
-                *outMask++ = (pixel[0] == 0 && pixel[1] == 0 && pixel[2] == 0) ? 0 : 255;
+                // **NOTE** convert RGB->BGR
+                *outPixel++ = m_RawFrameBuf.image[(fourpiIdx * 3) + 2];
+                *outPixel++ = m_RawFrameBuf.image[(fourpiIdx * 3) + 1];
+                *outPixel++ = m_RawFrameBuf.image[(fourpiIdx * 3) + 0];
             }
         }
 

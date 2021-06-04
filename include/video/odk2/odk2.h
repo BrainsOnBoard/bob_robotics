@@ -52,9 +52,6 @@ public:
     //! Get Euler angles from ODK2 IMU
     std::array<degree_t, 3> getEulerAngles() const;
 
-    //! Get mask
-    const cv::Mat &getMask() const{ return m_Mask; }
-
 private:
     //------------------------------------------------------------------------
     // Private methods
@@ -79,8 +76,6 @@ private:
 
     // Last raw frame timestep
     uint64_t m_LastRawFrameTimestep = 0;
-
-    cv::Mat m_Mask;
 
     // Read thread
     std::thread m_ReadThread;
