@@ -1,15 +1,12 @@
 #pragma once
 
+// OpenCV
+#include <opencv2/opencv.hpp>
+
 // Standard C++ includes
 #include <algorithm>
 #include <bitset>
-#include <iostream>
-#include <string>
-// Standard C includes
-#include <cmath>
 
-//opencv
-#include <opencv2/opencv.hpp>
 
 namespace BoBRobotics {
 namespace ImgProc {
