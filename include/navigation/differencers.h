@@ -194,7 +194,8 @@ struct CorrCoefficient {
                                             "they cannot be all zeros)");
             }
 
-#if OPENCV_MAJOR_VERSION < 4
+            // OpenCV v3 doesn't support passing std::arrays as cv::OutputArrays
+#if CV_VERSION_MAJOR < 4
             std::vector<float> dst;
 #else
             std::array<float, 1> dst;
