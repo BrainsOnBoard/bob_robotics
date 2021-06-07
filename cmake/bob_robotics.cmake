@@ -219,7 +219,7 @@ macro(BoB_project)
         # Add custom command to
         foreach(target IN LISTS BOB_TARGETS)
             add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
+                COMMAND "${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat" "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
             )
         endforeach()
     endif()
