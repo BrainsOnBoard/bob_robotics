@@ -62,12 +62,12 @@ TEST(PerfectMemory, SampleImageCCoeffWindow)
  * of OpenCV < 4.5.2. Just disable the tests in this case.
  */
 #ifdef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
-TEST(PerfectMemory, SampleImageCCoeff)
+TEST(PerfectMemory, SampleImageCCoeffMask)
 {
     testCCoeff("mask_pm_ccoeff.bin", TestMask, {});
 }
 
-TEST(PerfectMemory, SampleImageCCoeffWindow)
+TEST(PerfectMemory, SampleImageCCoeffWindowMask)
 {
     testCCoeff("window_mask_pm_ccoeff.bin", TestMask, { 0, 10 });
 }
