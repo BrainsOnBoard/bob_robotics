@@ -102,24 +102,12 @@ public:
         std::normal_distribution<FloatType> distribution;
         std::generate_n(weights.data(), weights.size(), [&]() { return distribution(generator); });
 
-        LOG_VERBOSE << "Initial weights" << std::endl
-                    << weights;
-
         // Normalise mean and SD for row so mean == 0 and SD == 1
         const auto means = weights.rowwise().mean();
-        LOG_VERBOSE << "Means" << std::endl << means;
-
         weights.colwise() -= means;
-        LOG_VERBOSE << "Weights after subtracting means" << std::endl << weights;
-
-        LOG_VERBOSE << "New means" << std::endl << weights.rowwise().mean();
 
         const auto sd = matrixSD(weights);
-        LOG_VERBOSE << "SD" << std::endl << sd;
-
         weights = weights.array().colwise() / sd;
-        LOG_VERBOSE << "Weights after dividing by SD" << std::endl << weights;
-        LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
 
         return weights.transpose();
     }
