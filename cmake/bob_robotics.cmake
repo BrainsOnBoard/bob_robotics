@@ -324,12 +324,7 @@ macro(always_included_packages)
     find_package(Threads REQUIRED)
 
     if(NOT DEFINED ENABLE_OPENMP)
-        # By default disable OpenMP support on MSVC and enable it otherwise
-        if(WIN32)
-            set(ENABLE_OPENMP FALSE)
-        else()
-            set(ENABLE_OPENMP TRUE)
-        endif()
+        set(ENABLE_OPENMP TRUE)
     endif()
 
     if(ENABLE_OPENMP)
