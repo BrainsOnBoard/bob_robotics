@@ -24,7 +24,37 @@ using Window = std::pair<size_t, size_t>;
 
 PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
 PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
-PM_TEST_WINDOW(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "pm_ccoeff.bin", {})
+
+void testCCoeff(const std::string &filename, ImgProc::Mask mask, std::pair<size_t, size_t> window)
+{
+    using namespace BoBRobotics;
+    constexpr float precision = 1e-5f;
+
+    const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
+    const auto trueDifferences = readMatrix<float>(filepath);
+
+    PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>> algo{ TestImageSize };
+    algo.setMask(std::move(mask));
+    for (const auto &image : TestImages) {
+        algo.train(image);
+    }
+
+    if (window == Window{}) {
+        window = algo.getFullWindow();
+    }
+    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    compareFloatMatrices(differences, trueDifferences, precision);
+}
+
+TEST(PerfectMemory, SampleImageCCoeff)
+{
+    testCCoeff("pm_ccoeff.bin", {}, {});
+}
+
+TEST(PerfectMemory, SampleImageCCoeffWindow)
+{
+    testCCoeff("window_pm_ccoeff.bin", {}, { 0, 10 });
+}
 
 /*
  * There seems to be a bug meaning that non-empty image masks break
@@ -32,7 +62,15 @@ PM_TEST_WINDOW(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawIm
  * of OpenCV < 4.5.2. Just disable the tests in this case.
  */
 #ifdef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
-PM_TEST_WINDOW(SampleImageCCoeffMask, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "mask_pm_ccoeff.bin", TestMask);
+TEST(PerfectMemory, SampleImageCCoeff)
+{
+    testCCoeff("mask_pm_ccoeff.bin", TestMask, {});
+}
+
+TEST(PerfectMemory, SampleImageCCoeffWindow)
+{
+    testCCoeff("window_mask_pm_ccoeff.bin", TestMask, { 0, 10 });
+}
 #else
 TEST(PerfectMemory, DISABLED_SampleImageCCoeffMask)
 {}
