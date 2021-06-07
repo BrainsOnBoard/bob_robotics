@@ -8,6 +8,9 @@
 #include "plog/Log.h"
 #include "third_party/tinydir.h"
 
+// TBB
+#include <tbb/parallel_for.h>
+
 // Standard C includes
 #include <cstring>
 #include <ctime>
@@ -316,21 +319,22 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size, bo
     size_t oldSize = images.size();
     images.resize(oldSize + m_Entries.size());
 
-    #pragma omp parallel
-    {
-        if (size == cv::Size{}) {
-            #pragma omp for
-            for (size_t i = 0; i < m_Entries.size(); i++) {
-                images[i + oldSize] = m_Entries[i].load(greyscale);
-            }
-        } else {
-            cv::Mat tmp;
-            #pragma omp for private(tmp)
-            for (size_t i = 0; i < m_Entries.size(); i++) {
-                tmp = m_Entries[i].load(greyscale);
-                cv::resize(tmp, images[i + oldSize], size);
-            }
-        }
+    if (size == cv::Size{}) {
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, m_Entries.size()),
+                          [&](const auto &r) {
+                              for (size_t i = r.begin(); i != r.end(); ++i) {
+                                  images[i + oldSize] = m_Entries[i].load(greyscale);
+                              }
+                          });
+    } else {
+        thread_local cv::Mat tmp;
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, m_Entries.size()),
+                          [&](const auto &r) {
+                              for (size_t i = r.begin(); i != r.end(); ++i) {
+                                  tmp = m_Entries[i].load(greyscale);
+                                  cv::resize(tmp, images[i + oldSize], size);
+                              }
+                          });
     }
 }
 
@@ -419,26 +423,17 @@ ImageDatabase::unwrap(const filesystem::path &destination, const cv::Size &unwra
     }
 
     // Finally, unwrap all images and save to new folder
-    cv::Mat unwrapped;
-    std::string outPath;
-    size_t imwriteErrors = 0;
+    thread_local cv::Mat unwrapped;
+    thread_local std::string outPath;
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, size()),
+                      [&](const auto &r) {
+                          for (size_t i = r.begin(); i != r.end(); ++i) {
+                              unwrapper.unwrap(m_Entries[i].load(false), unwrapped);
+                              outPath = (destination / m_Entries[i].path.filename()).str();
 
-#pragma omp parallel for private(unwrapped) private(outPath) shared(imwriteErrors)
-    for (size_t i = 0; i < size(); i++) {
-        unwrapper.unwrap(m_Entries[i].load(false), unwrapped);
-        outPath = (destination / m_Entries[i].path.filename()).str();
-
-        // We shouldn't raise exceptions in an OpenMP block, so flag up the error this way
-        if (!cv::imwrite(outPath, unwrapped)) {
-            imwriteErrors++;
-        }
-    }
-
-    if (imwriteErrors > 0) {
-        std::stringstream ss;
-        ss << imwriteErrors << "/" << size() << " images could not be saved";
-        throw std::runtime_error(ss.str());
-    }
+                              BOB_ASSERT(cv::imwrite(outPath, unwrapped));
+                          }
+                      });
 }
 
 //! Get a filename for a route-type database
