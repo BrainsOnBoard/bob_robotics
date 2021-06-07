@@ -156,7 +156,7 @@ bool allSame(cv::InputArray &arr)
  * is passed in so that users know to upgrade (which is probably the easiest
  * solution).
  */
-#if CV_VERSION_MAJOR >= 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 2
+#if (CV_VERSION_MAJOR << 16 | CV_VERSION_MINOR << 8 | CV_VERSION_REVISION) >= 0x040502
 #define BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
 #endif
 
