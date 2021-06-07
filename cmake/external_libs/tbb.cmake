@@ -1,1 +1,1 @@
-BoB_find_package(TBB)
+BoB_find_package(TBB REQUIRED)
