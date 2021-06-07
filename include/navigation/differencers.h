@@ -145,6 +145,21 @@ bool allSame(cv::InputArray &arr)
                        [&m](T val) { return val == *m.begin(); });
 }
 
+/*
+ * OpenCV v4.5.1 appears to have a bug where passing a non-empty mask into
+ * cv::matchTemplate() when using the cv::TM_CCOEFF_NORMED method causes a
+ * not-very-instructive assertion failure deep inside OpenCV code (and mangles
+ * the contents of the input arrays in the process).
+ *
+ * This bug *may* not apply to earlier versions of OpenCV, but for now, just
+ * emit an error for older versions of OpenCV in the case that a non-empty mask
+ * is passed in so that users know to upgrade (which is probably the easiest
+ * solution).
+ */
+#if CV_VERSION_MAJOR >= 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 2
+#define BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
+#endif
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::CorrCoefficient
 //------------------------------------------------------------------------
@@ -194,13 +209,23 @@ struct CorrCoefficient {
                                             "they cannot be all zeros)");
             }
 
-            // OpenCV v3 doesn't support passing std::arrays as cv::OutputArrays
+            // See comment above...
+#ifndef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
+            if (!mask1.empty() || !mask2.empty()) {
+                throw std::runtime_error("OpenCV versions older than 4.5.2 "
+                                         "can't handle using masks for "
+                                         "correlation coefficients (your "
+                                         "version: " CV_VERSION ")");
+            }
+#endif
+            mask1.combine(mask2, m_CombinedMask);
+
+            // OpenCV v3 doesn't allow for passing std::arrays as cv::OutputArrays
 #if CV_VERSION_MAJOR < 4
             std::vector<float> dst;
 #else
             std::array<float, 1> dst;
 #endif
-            mask1.combine(mask2, m_CombinedMask);
             cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED, m_CombinedMask.get());
 
             /*

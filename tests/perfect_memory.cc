@@ -24,7 +24,22 @@ using Window = std::pair<size_t, size_t>;
 
 PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
 PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
-PM_TEST(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "pm_ccoeff.bin")
+PM_TEST_WINDOW(SampleImageCCoeff, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "pm_ccoeff.bin", {})
+
+/*
+ * There seems to be a bug meaning that non-empty image masks break
+ * cv::matchTemplate() when the cv::TM_CCOEFF_NORMED method is used for versions
+ * of OpenCV < 4.5.2. Just disable the tests in this case.
+ */
+#ifdef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
+PM_TEST_WINDOW(SampleImageCCoeffMask, PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>>, "mask_pm_ccoeff.bin", TestMask);
+#else
+TEST(PerfectMemory, DISABLED_SampleImageCCoeffMask)
+{}
+
+TEST(PerfectMemory, DISABLED_SampleImageCCoeffMaskWindow)
+{}
+#endif
 
 template<class Store>
 void
