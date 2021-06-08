@@ -17,6 +17,7 @@
 #include <array>
 #include <numeric>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -136,6 +137,29 @@ public:
     };
 };
 
+template<class T>
+bool allSame(cv::InputArray &arr)
+{
+    const cv::Mat_<T> m = arr.getMat();
+    return std::all_of(m.begin() + 1, m.end(),
+                       [&m](T val) { return val == *m.begin(); });
+}
+
+/*
+ * OpenCV v4.5.1 appears to have a bug where passing a non-empty mask into
+ * cv::matchTemplate() when using the cv::TM_CCOEFF_NORMED method causes a
+ * not-very-instructive assertion failure deep inside OpenCV code (and mangles
+ * the contents of the input arrays in the process).
+ *
+ * This bug *may* not apply to earlier versions of OpenCV, but for now, just
+ * emit an error for older versions of OpenCV in the case that a non-empty mask
+ * is passed in so that users know to upgrade (which is probably the easiest
+ * solution).
+ */
+#if (CV_VERSION_MAJOR << 16 | CV_VERSION_MINOR << 8 | CV_VERSION_REVISION) >= 0x040502
+#define BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
+#endif
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::CorrCoefficient
 //------------------------------------------------------------------------
@@ -149,36 +173,60 @@ public:
  */
 struct CorrCoefficient {
     /*
-     * NB: This template parameter is unused, but left in for consistency with
-     * other differencer classes.
+     * NB: We don't need any scratch storage, but the user can choose to have
+     * some (e.g. for the HOG flavour of perfect memory).
      */
-    template<class VecType = void>
+    template<class VecType = std::tuple<>>
     class Internal
+      : public DifferencerBase<CorrCoefficient::Internal<VecType>, VecType>
     {
     public:
         float operator()(cv::InputArray &src1, cv::InputArray &src2,
                          const ImgProc::Mask &mask1 = {},
                          const ImgProc::Mask &mask2 = {})
         {
-            // Don't support masks for now
-            BOB_ASSERT(mask1.empty() && mask2.empty());
+            BOB_ASSERT(src1.type() == src2.type());
 
-            const auto allSame = [](cv::InputArray &arr) {
-                const auto m = arr.getMat();
-                BOB_ASSERT(m.type() == CV_8UC1);
-                auto beg = m.datastart;
-                auto end = m.dataend;
-                return std::all_of(beg + 1, end,
-                                   [beg](uint8_t val) { return val == *beg; });
-            };
-            if (allSame(src1) || allSame(src2)) {
+            /*
+             * NB: We could easily support other mat types but these are the
+             * only ones we care about for now.
+             */
+            bool nonUniqueInputArray;
+            switch (src1.type()) {
+            case CV_8UC1:
+                nonUniqueInputArray = allSame<uint8_t>(src1) || allSame<uint8_t>(src2);
+                break;
+            case CV_32FC1:
+                nonUniqueInputArray = allSame<float>(src1) || allSame<float>(src2);
+                break;
+            default:
+                throw std::invalid_argument("Unsupported mat type: " + std::to_string(src1.type()));
+            }
+
+            if (nonUniqueInputArray) {
                 throw std::invalid_argument("Vectors src1 and src2 must have "
                                             "more than one unique value (e.g. "
                                             "they cannot be all zeros)");
             }
 
+            // See comment above...
+#ifndef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
+            if (!mask1.empty() || !mask2.empty()) {
+                throw std::runtime_error("OpenCV versions older than 4.5.2 "
+                                         "can't handle using masks for "
+                                         "correlation coefficients (your "
+                                         "version: " CV_VERSION ")");
+            }
+#endif
+            mask1.combine(mask2, m_CombinedMask);
+
+            // OpenCV v3 doesn't allow for passing std::arrays as cv::OutputArrays
+#if CV_VERSION_MAJOR < 4
+            std::vector<float> dst;
+#else
             std::array<float, 1> dst;
-            cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED);
+#endif
+            cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED, m_CombinedMask.get());
 
             /*
              * As we're interested in *dissimilarity* between images, we use
@@ -187,6 +235,9 @@ struct CorrCoefficient {
              */
             return 1.f - fabsf(dst[0]);
         }
+
+    private:
+        ImgProc::Mask m_CombinedMask;
     };
 };
 
