@@ -444,7 +444,7 @@ public:
 
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
-                      bool greyscale = true) const
+                        bool greyscale = true) const
     {
         BOB_ASSERT(frameSkip > 0);
 
