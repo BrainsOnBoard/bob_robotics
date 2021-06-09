@@ -351,12 +351,10 @@ ImageDatabase::loadCSV()
     BOB_ASSERT(std::all_of(fieldNameIdx.cbegin(), fieldNameIdx.cbegin() + 4, validIdx));
 
     /*
-     * The Filename column is optional, but only if there is a video file
-     * associated with this database.
+     * The Filename column is required for image-type databases, but doesn't
+     * make sense for video-type ones.
      */
-    if (!validIdx(fieldNameIdx[4])) {
-        BOB_ASSERT(!m_VideoFilePath.empty());
-    }
+    BOB_ASSERT(validIdx(fieldNameIdx[4]) == m_VideoFilePath.empty());
 
     // Assume it's a grid if we have any of the Grid fields...
     if (!hasMetadata()) {
