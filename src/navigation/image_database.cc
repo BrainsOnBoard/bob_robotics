@@ -407,7 +407,7 @@ ImageDatabase::loadCSV()
               millimeter_t(std::stod(getDefaultField(1))),
               millimeter_t(std::stod(getDefaultField(2))) },
             degree_t(std::stod(getDefaultField(3))),
-            m_Path / getDefaultField(4),
+            m_VideoFilePath.empty() ? m_Path / getDefaultField(4) : filesystem::path{},
             gridPosition,
             std::move(extraFields)
         };
