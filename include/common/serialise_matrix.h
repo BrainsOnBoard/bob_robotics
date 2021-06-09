@@ -18,9 +18,11 @@ template<class T>
 auto
 readMatrix(const filesystem::path &filepath)
 {
+    BOB_ASSERT(filepath.is_file());
+
     // Open file
     std::ifstream ifs;
-    ifs.exceptions(std::ios::badbit | std::ios::eofbit);
+    ifs.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
     ifs.open(filepath.str(), std::ios::in | std::ios::binary);
 
     // The matrix size is encoded as 2 x int32_t
@@ -40,7 +42,7 @@ void
 writeMatrix(const filesystem::path &filepath, const T &matrix)
 {
     std::ofstream ofs;
-    ofs.exceptions(std::ios::badbit);
+    ofs.exceptions(std::ios::badbit | std::ios::failbit);
     ofs.open(filepath.str(), std::ios::out | std::ios::binary);
 
     const int size[2]{ (int) matrix.rows(), (int) matrix.cols() };

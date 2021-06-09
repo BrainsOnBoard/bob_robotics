@@ -219,7 +219,7 @@ macro(BoB_project)
         # Add custom command to
         foreach(target IN LISTS BOB_TARGETS)
             add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
+                COMMAND "${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat" "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
             )
         endforeach()
     endif()
@@ -324,12 +324,7 @@ macro(always_included_packages)
     find_package(Threads REQUIRED)
 
     if(NOT DEFINED ENABLE_OPENMP)
-        # By default disable OpenMP support on MSVC and enable it otherwise
-        if(WIN32)
-            set(ENABLE_OPENMP FALSE)
-        else()
-            set(ENABLE_OPENMP TRUE)
-        endif()
+        set(ENABLE_OPENMP TRUE)
     endif()
 
     if(ENABLE_OPENMP)
@@ -337,6 +332,16 @@ macro(always_included_packages)
             macos_find_homebrew_openmp()
         endif()
         find_package(OpenMP QUIET)
+
+        # For old versions of CMake (< 3.9) we need to manually add compiler flags instead
+        if (NOT OpenMP_CXX_FOUND)
+            if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+                add_compile_flags(-fopenmp)
+            else()
+                # Otherwise, signal that we couldn't find it
+                set(ENABLE_OPENMP FALSE)
+            endif()
+        endif()
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
@@ -534,9 +539,10 @@ macro(BoB_build)
     endif()
 
     # Different Jetson devices have different user-facing I2C interfaces
-    # so read the chip ID and add preprocessor macro
+    # so read the chip ID and add preprocessor macro, stripping trailing whitespace (carriage return)
     if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
         file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
+        string(STRIP ${TEGRA_CHIP_ID} TEGRA_CHIP_ID)
         add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
         message("Tegra chip id: ${TEGRA_CHIP_ID}")
     endif()
@@ -713,12 +719,6 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        # Extra actions for third-party modules
-        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
-        if(EXISTS "${incpath}")
-            include("${incpath}")
-        endif()
-
         if(EXISTS "${BOB_ROBOTICS_PATH}/third_party/${module}")
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
@@ -737,6 +737,12 @@ function(BoB_third_party)
 
             # Link against extra libs, if needed
             BoB_add_link_libraries(${${module}_LIBRARIES})
+        endif()
+
+        # Extra actions for third-party modules
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
         endif()
     endforeach()
 endfunction()

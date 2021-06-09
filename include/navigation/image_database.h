@@ -14,6 +14,9 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// TBB
+#include <tbb/parallel_for.h>
+
 // Standard C includes
 #include <ctime>
 
@@ -444,7 +447,7 @@ public:
 
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
-                        bool greyscale = true) const
+                      bool greyscale = true) const
     {
         BOB_ASSERT(frameSkip > 0);
 
@@ -454,27 +457,12 @@ public:
 
         // If database consists of individual image files...
         if (m_VideoFilePath.empty()) {
-            std::exception_ptr eptr;
-
-            #pragma omp parallel shared(eptr)
-            #pragma omp for
-            for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
-                /*
-                 * You can't have uncaught exceptions emanating from OpenMP blocks,
-                 * so we catch them and rethrow later.
-                 */
-                try {
-                    func(i, m_Entries[i * frameSkip].load(greyscale));
-                } catch (...) {
-                    eptr = std::current_exception();
-                    #pragma omp cancel for
-                }
-            }
-
-            // Check if an error occurred
-            if (eptr) {
-                std::rethrow_exception(eptr);
-            }
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, m_Entries.size() / frameSkip),
+                              [&](const auto &r) {
+                                  for (size_t i = r.begin(); i != r.end(); ++i) {
+                                      func(i, m_Entries[i * frameSkip].load(greyscale));
+                                  }
+                              });
 
             return;
         }

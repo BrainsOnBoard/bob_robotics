@@ -9,7 +9,7 @@ FOR /F %%d IN ('dumpbin /dependents "%~1" ^| FINDSTR /I /R "[a-zA-Z_-]*\.dll"') 
         REM If newer file exists in VCPKG, copy
         XCOPY /D /Q "!VCPKG_FILE!" "%~dp1" > NUL
         REM recurse as dll may also have dependencies
-        CALL %~dp0copy_dependencies_vcpkg.bat "%~dp1\%%d" "%~2"
+        CALL "%~dp0copy_dependencies_vcpkg.bat" "%~dp1\%%d" "%~2"
     )
 )
 ENDLOCAL

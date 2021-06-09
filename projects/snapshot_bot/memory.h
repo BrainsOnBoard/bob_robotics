@@ -3,6 +3,7 @@
 // BoB robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_window.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -101,6 +102,9 @@ class PerfectMemoryConstrained : public PerfectMemory
 public:
     PerfectMemoryConstrained(const Config &config, const cv::Size &inputSize);
 
+    //------------------------------------------------------------------------
+    // MemoryBase virtuals
+    //------------------------------------------------------------------------
     virtual void test(const cv::Mat &snapshot) override;
 
 private:
@@ -109,6 +113,30 @@ private:
     //------------------------------------------------------------------------
     const int m_ImageWidth;
     const size_t m_NumScanColumns;
+};
+
+//------------------------------------------------------------------------
+// PerfectMemoryConstrainedDynamicWindow
+//------------------------------------------------------------------------
+class PerfectMemoryConstrainedDynamicWindow : public PerfectMemory
+{
+public:
+    PerfectMemoryConstrainedDynamicWindow(const Config &config, const cv::Size &inputSize);
+
+    //------------------------------------------------------------------------
+    // MemoryBase virtuals
+    //------------------------------------------------------------------------
+    virtual void test(const cv::Mat &snapshot) override;
+
+    virtual void writeCSVHeader(std::ostream &os) override;
+    virtual void writeCSVLine(std::ostream &os) override;
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    const int m_ImageWidth;
+    const size_t m_NumScanColumns;
+    BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient m_Window;
 };
 
 //------------------------------------------------------------------------

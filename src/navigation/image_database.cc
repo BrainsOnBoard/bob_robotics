@@ -8,6 +8,9 @@
 #include "plog/Log.h"
 #include "third_party/tinydir.h"
 
+// TBB
+#include <tbb/parallel_for.h>
+
 // Standard C includes
 #include <ctime>
 
