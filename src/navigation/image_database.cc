@@ -41,7 +41,9 @@ cv::Mat
 ImageDatabase::Entry::load(bool greyscale) const
 {
     auto img = cv::imread(path.str(), greyscale ? cv::IMREAD_GRAYSCALE : cv::IMREAD_COLOR);
-    BOB_ASSERT(!img.empty());
+    if (img.empty()) {
+        throw std::runtime_error("Could not load image file at " + path.str());
+    }
     return img;
 }
 
