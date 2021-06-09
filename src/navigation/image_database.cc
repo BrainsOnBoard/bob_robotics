@@ -744,15 +744,15 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         }
     }
 
-    /*
-     * *If* forEachImage runs in parallel, then each thread will need its own
-     * copy of these scratch variables.
-     */
-    static thread_local cv::Mat unwrapped;
-    static thread_local std::string outPath;
-
     // Finally, unwrap all images and save to new folder
     forEachImage([&](size_t i, const cv::Mat &image) {
+        /*
+         * *If* forEachImage runs in parallel, then each thread will need its own
+         * copy of these scratch variables.
+         */
+        static thread_local cv::Mat unwrapped;
+        static thread_local std::string outPath;
+
         unwrapper.unwrap(image, unwrapped);
         if (m_Entries[i].path.empty()) {
             outPath = "image" + std::to_string(i) + ".jpg";
