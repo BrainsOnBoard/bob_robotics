@@ -473,13 +473,6 @@ public:
 
         cv::Mat img;
         for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
-            /*
-             * It is possible to explicitly jump to a given frame with OpenCV,
-             * but that turns out to be reeeeeeeaaaally slow.
-             */
-            for (size_t j = 1; j < frameSkip; j++) {
-                BOB_ASSERT(cap.grab());
-            }
             BOB_ASSERT(cap.read(img));
 
             if (greyscale) {
@@ -487,6 +480,13 @@ public:
             }
 
             func(i, img);
+
+            /*
+             * It is possible to explicitly jump to a given frame with OpenCV,
+             * but that turns out to be reeeeeeeaaaally slow.
+             */
+            for (size_t j = 1; j < frameSkip && cap.grab(); j++)
+                ;
         }
     }
 
