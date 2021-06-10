@@ -517,6 +517,7 @@ private:
     ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
                   bool overwrite);
 
+    void generateUnwrapCSV(const filesystem::path &destination, size_t frameSkip) const;
     void loadMetadata();
     bool loadCSV();
     bool readDirectoryEntries();

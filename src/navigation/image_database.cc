@@ -645,6 +645,52 @@ ImageDatabase::hasMetadata() const
     return static_cast<bool>(m_MetadataYAML);
 }
 
+void
+ImageDatabase::generateUnwrapCSV(const filesystem::path &dst, size_t frameSkip) const
+{
+    const auto src = m_Path / EntriesFilename;
+    if (!src.exists()) {
+        return;
+    }
+
+    std::ifstream ifs;
+    ifs.exceptions(std::ios::badbit);
+    ifs.open(src.str());
+
+    std::string line;
+    if (!std::getline(ifs, line)) {
+        // ...then it's an empty file
+        return;
+    }
+
+    std::ofstream ofs;
+    ofs.exceptions(std::ios::badbit | std::ios::failbit);
+    ofs.open((dst / EntriesFilename).str());
+
+    // Copy headers; if the source is a video file we need to append file names
+    ofs << line;
+    if (!m_VideoFilePath.empty()) {
+        ofs << ",Filename";
+    }
+    ofs << "\n";
+
+    for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
+        BOB_ASSERT(std::getline(ifs, line));
+        BOB_ASSERT(!line.empty());
+
+        ofs << line;
+        if (!m_VideoFilePath.empty()) {
+            ofs << ",image" << i << ".jpg";
+        }
+        ofs << "\n";
+
+        // Skip the requested number of lines
+        for (size_t j = 1; j < frameSkip; j++) {
+            BOB_ASSERT(std::getline(ifs, line));
+        }
+    }
+}
+
 /**!
  *  \brief Unwrap all the panoramic images in this database into a new
  *         folder, creating a new database.
@@ -666,14 +712,8 @@ ImageDatabase::unwrap(const filesystem::path &destination,
     ImgProc::OpenCVUnwrap360 unwrapper(getResolution(), unwrapRes, camName);
     filesystem::create_directory(destination);
 
-    // Copy entries (CSV) file if it exists
-    const auto csvPath = m_Path / EntriesFilename;
-    if (csvPath.exists()) {
-        // **TODO**: Selectively copy CSV file entries for this case instead
-        BOB_ASSERT(frameSkip == 1);
-
-        filesystem::copy_file(csvPath, destination / EntriesFilename);
-    }
+    // Generate new CSV file from the old (if it exists)
+    generateUnwrapCSV(destination, frameSkip);
 
     /*
      * Create new metadata (YAML) file.
@@ -757,7 +797,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         if (m_Entries[i].path.empty()) {
             outPath = "image" + std::to_string(i) + ".jpg";
         } else {
-            outPath = m_Entries[i].path.filename();
+            outPath = m_Entries[i * frameSkip].path.filename();
         }
 
         BOB_ASSERT(cv::imwrite((destination / outPath).str(), unwrapped));
