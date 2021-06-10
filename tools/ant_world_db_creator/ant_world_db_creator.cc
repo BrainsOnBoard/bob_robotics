@@ -106,10 +106,9 @@ protected:
         }
     }
 
-    void addMetadata(ImageDatabase::Recorder<> &recorder)
+    void addMetadata(cv::FileStorage &metadata)
     {
         // Record "camera" info
-        auto &metadata = recorder.getMetadataWriter();
         metadata << "camera" << m_Agent
                  << "needsUnwrapping" << false
                  << "isGreyscale" << false;
@@ -144,7 +143,7 @@ public:
 
         // Make GridRecorder
         auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, {m_AgentHeight});
-        addMetadata(gridRecorder);
+        addMetadata(gridRecorder.getMetadataWriter());
 
         // Record image database
         run(gridRecorder.getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder.record(image); });
@@ -174,7 +173,7 @@ public:
 
         // Record image database
         auto routeRecorder = m_Database.getRouteRecorder();
-        addMetadata(routeRecorder);
+        addMetadata(routeRecorder.getMetadataWriter());
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
             const auto pos = m_Agent.getPose().position();
