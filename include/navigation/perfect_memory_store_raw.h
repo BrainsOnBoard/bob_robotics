@@ -71,10 +71,6 @@ public:
                                  size_t snapshot,
                                  const ImgProc::Mask &snapshotMask) const
     {
-        /*
-         * Workaround for a really longstanding gcc bug:
-         *      https://gcc.gnu.org/bugzilla/show_bug.cgi?id=27557
-         */
         static thread_local typename Differencer::template Internal<> differencer;
 
         // Calculate difference between image and stored image

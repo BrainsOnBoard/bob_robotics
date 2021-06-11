@@ -87,10 +87,6 @@ public:
     {
         BOB_ASSERT(imageMask.empty());
 
-        /*
-         * Workaround for a really longstanding gcc bug:
-         *      https://gcc.gnu.org/bugzilla/show_bug.cgi?id=27557
-         */
         static thread_local typename Differencer::template Internal<std::vector<float>> differencer;
 
         // Calculate HOG descriptors of image
