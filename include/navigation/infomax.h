@@ -78,9 +78,8 @@ public:
 
     float test(const cv::Mat &image, const ImgProc::Mask &extraMask) const
     {
-        static cv::Mat scratchImage;
-        static ImgProc::Mask scratchMask;
-#pragma omp threadprivate(scratchImage, scratchMask)
+        static thread_local cv::Mat scratchImage;
+        static thread_local ImgProc::Mask scratchMask;
 
         extraMask.combine(getMask(), scratchMask);
         scratchMask.apply(image, scratchImage);
