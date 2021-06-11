@@ -11,8 +11,8 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// Standard C++ includes
-#include <algorithm>
+// TBB
+#include <tbb/parallel_for.h>
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -55,21 +55,19 @@ struct InSilicoRotater
         template<class Func>
         void rotate(Func func) const
         {
-            #pragma omp parallel
-            {
-                static cv::Mat scratchImage;
-                static ImgProc::Mask scratchMask;
-                #pragma omp threadprivate(scratchImage, scratchMask)
+            static thread_local cv::Mat scratchImage;
+            static thread_local ImgProc::Mask scratchMask;
 
-                #pragma omp for
-                for (auto i = m_BeginRoll; i < m_EndRoll; i += m_ScanStep) {
-                    const auto index = toIndex(i);
-                    ImgProc::roll(m_Image, scratchImage, index);
-                    m_Mask.roll(scratchMask, index);
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, numRotations()),
+                [&](const auto &r) {
+                    for (size_t i = r.begin(); i != r.end(); ++i) {
+                        const auto index = toIndex(m_BeginRoll + i * m_ScanStep);
+                        ImgProc::roll(m_Image, scratchImage, index);
+                        m_Mask.roll(scratchMask, index);
 
-                    func(scratchImage, scratchMask, distance(m_BeginRoll, i));
-                }
-            }
+                        func(scratchImage, scratchMask, i);
+                    }
+                });
        }
 
         units::angle::radian_t columnToHeading(size_t column) const

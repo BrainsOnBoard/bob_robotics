@@ -16,6 +16,9 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
+// TBB
+#include <tbb/parallel_for.h>
+
 // Standard C includes
 #include <cstdlib>
 
@@ -142,10 +145,12 @@ private:
         m_Differences.resize(window.second - window.first);
 
         // Loop through snapshots and calculate differences
-        #pragma omp parallel for
-        for (size_t s = window.first; s < window.second; s++) {
-            m_Differences[s - window.first] = calcSnapshotDifference(image, getMask(), s);
-        }
+        tbb::parallel_for(tbb::blocked_range<size_t>(window.first, window.second),
+            [&](const auto &r) {
+                for (size_t s = r.begin(); s != r.end(); ++s) {
+                    m_Differences[s - window.first] = calcSnapshotDifference(image, getMask(), s);
+                }
+            });
     }
 };
 
@@ -213,10 +218,12 @@ public:
         m_BestColumns.resize(numSnapshots);
         m_MinimumDifferences.resize(numSnapshots);
 
-        #pragma omp parallel for
-        for (size_t i  = 0; i < numSnapshots; i++) {
-            m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
-        }
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, numSnapshots),
+                          [&](const auto &r) {
+                              for (size_t i = r.begin(); i != r.end(); ++i) {
+                                  m_MinimumDifferences[i] = m_RotatedDifferences.row(i).minCoeff(&m_BestColumns[i]);
+                              }
+                          });
 
         // Return result
         return std::tuple_cat(RIDFProcessor()(m_BestColumns, m_MinimumDifferences, rotater, window.first),

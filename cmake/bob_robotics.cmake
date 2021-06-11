@@ -219,7 +219,7 @@ macro(BoB_project)
         # Add custom command to
         foreach(target IN LISTS BOB_TARGETS)
             add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
+                COMMAND "${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat" "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
             )
         endforeach()
     endif()
@@ -324,12 +324,7 @@ macro(always_included_packages)
     find_package(Threads REQUIRED)
 
     if(NOT DEFINED ENABLE_OPENMP)
-        # By default disable OpenMP support on MSVC and enable it otherwise
-        if(WIN32)
-            set(ENABLE_OPENMP FALSE)
-        else()
-            set(ENABLE_OPENMP TRUE)
-        endif()
+        set(ENABLE_OPENMP TRUE)
     endif()
 
     if(ENABLE_OPENMP)
@@ -850,6 +845,7 @@ add_definitions(
     -DENABLE_PREDEFINED_ANGLE_UNITS
     -DENABLE_PREDEFINED_VELOCITY_UNITS
     -DENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+    -DENABLE_PREDEFINED_FREQUENCY_UNITS
 )
 
 # Look for additional CMake packages in the current folder

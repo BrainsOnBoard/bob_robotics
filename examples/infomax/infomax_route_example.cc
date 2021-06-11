@@ -30,15 +30,14 @@ using namespace BoBRobotics::Navigation;
 using namespace std::literals;
 namespace plt = matplotlibcpp;
 
-using namespace units::literals;
-using namespace units::math;
-
 using FloatType = float;
 using InfoMaxType = InfoMaxRotater<InSilicoRotater, FloatType>;
 
 void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
                const std::vector<double> &y, const std::vector<cv::Mat> &images)
 {
+    using namespace units::math;
+
     std::vector<double> u, v;
     {
         // Test network
@@ -46,11 +45,9 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
         Timer<> t{ "Network testing took: " };
         for (const auto &image : images) {
             // Get heading and convert to vector
-            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(image));
-            double sinx, cosx;
-            sincos(heading.value(), &sinx, &cosx);
-            u.push_back(cosx);
-            v.push_back(sinx);
+            const auto heading = std::get<0>(infomax.getHeading(image));
+            u.push_back(cos(heading));
+            v.push_back(sin(heading));
         }
     }
 
