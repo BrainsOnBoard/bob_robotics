@@ -86,7 +86,7 @@ public:
 
         const auto n = extraMask.countUnmaskedPixels(image.size());
         return testSum(scratchImage, scratchMask) / static_cast<float>(0xff * n);
-        }
+    }
 
     //! Generates new random weights
     virtual void clearMemory() override
