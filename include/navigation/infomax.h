@@ -63,13 +63,13 @@ public:
     //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image) override
+    virtual void train(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) override
     {
         calculateUY(image);
         trainUY();
     }
 
-    virtual float test(const cv::Mat &image) const override
+    virtual float test(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const override
     {
         const auto decs = m_Weights * getFloatVector(image);
         return decs.array().abs().sum();

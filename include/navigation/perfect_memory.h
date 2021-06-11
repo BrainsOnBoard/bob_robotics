@@ -57,7 +57,7 @@ public:
     //------------------------------------------------------------------------
     // VisualNavigationBase virtuals
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image) override
+    virtual void train(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) override
     {
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
@@ -68,7 +68,7 @@ public:
         m_Store.addSnapshot(image);
     }
 
-    virtual float test(const cv::Mat &image) const override
+    virtual float test(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const override
     {
         return test(getFullWindow(), image);
     }
@@ -82,9 +82,9 @@ public:
     // Public API
     //------------------------------------------------------------------------
     //! Test the algorithm with the specified image within a specified 'window' of snapshots
-    float test(const Window &window, const cv::Mat &image) const
+    float test(const Window &window, const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const
     {
-        testInternal(window, image);
+        testInternal(window, image, mask);
 
         // Return smallest difference
         return *std::min_element(m_Differences.begin(), m_Differences.end());
@@ -97,16 +97,16 @@ public:
     const cv::Mat &getSnapshot(size_t index) const{ return m_Store.getSnapshot(index); }
 
     //! Get differences between current view and all stored snapshots
-    const std::vector<float> &getImageDifferences(const cv::Mat &image) const
+    const std::vector<float> &getImageDifferences(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const
     {
-        testInternal(getFullWindow(), image);
+        testInternal(getFullWindow(), image, mask);
         return m_Differences;
     }
 
     //! Get differences between current view and specified 'window' of stored snapshots
-    const std::vector<float> &getImageDifferences(const Window &window, const cv::Mat &image) const
+    const std::vector<float> &getImageDifferences(const Window &window, const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const
     {
-        testInternal(window, image);
+        testInternal(window, image, mask);
         return m_Differences;
     }
 
@@ -122,7 +122,7 @@ protected:
     float calcSnapshotDifference(const cv::Mat &image,
                                  const ImgProc::Mask &mask, size_t snapshot) const
     {
-        return m_Store.calcSnapshotDifference(image, mask, snapshot, getMask());
+        return m_Store.calcSnapshotDifference(image, mask, snapshot);
     }
 
 private:
@@ -132,12 +132,18 @@ private:
     Store m_Store;
     mutable std::vector<float> m_Differences;
 
-    void testInternal(const Window &window, const cv::Mat &image) const
+    void testInternal(const Window &window, const cv::Mat &image, const ImgProc::Mask &mask) const
     {
         const auto &unwrapRes = getUnwrapResolution();
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
+        if(!mask.empty()) {
+            BOB_ASSERT(mask.get().cols == unwrapRes.width);
+            BOB_ASSERT(mask.get().rows == unwrapRes.height);
+            BOB_ASSERT(mask.get().type() == CV_8UC1);
+        }
+
         BOB_ASSERT(window.first < getNumSnapshots());
         BOB_ASSERT(window.second <= getNumSnapshots());
         BOB_ASSERT(window.first < window.second);
@@ -148,7 +154,7 @@ private:
         tbb::parallel_for(tbb::blocked_range<size_t>(window.first, window.second),
             [&](const auto &r) {
                 for (size_t s = r.begin(); s != r.end(); ++s) {
-                    m_Differences[s - window.first] = calcSnapshotDifference(image, getMask(), s);
+                    m_Differences[s - window.first] = calcSnapshotDifference(image, mask, s);
                 }
             });
     }

@@ -36,18 +36,6 @@ VisualNavigationBase::trainRoute(const std::vector<cv::Mat> &images)
     }
 }
 
-void
-VisualNavigationBase::setMask(ImgProc::Mask mask)
-{
-    m_Mask = std::move(mask);
-}
-
-const ImgProc::Mask &
-VisualNavigationBase::getMask() const
-{
-    return m_Mask;
-}
-
 const cv::Size &
 VisualNavigationBase::getUnwrapResolution() const
 {
