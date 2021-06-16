@@ -124,8 +124,8 @@ struct units::unit&lt; Conversion, BaseUnit, PiExponent, Translation &gt;</h3>
 <p>Type representing an arbitrary unit. </p>
 <p><code>unit</code> types are used as tags for the <code>conversion</code> function. They are <em>not</em> containers (see <code><a class="el" href="classunits_1_1unit__t.html" title="Container for values which represent quantities of a given unit.">unit_t</a></code> for a container class). Each unit is defined by:</p>
 <ul>
-<li><a class="el" href="structA.html">A</a> <code>std::ratio</code> defining the conversion factor to the base unit type. (e.g. <code>std::ratio&lt;1,12&gt;</code> for inches to feet)</li>
-<li><a class="el" href="structA.html">A</a> base unit that the unit is derived from (or a unit category. Must be of type <code>unit</code> or <code><a class="el" href="structunits_1_1base__unit.html" title="Class representing SI base unit types.">base_unit</a></code>)</li>
+<li>A <code>std::ratio</code> defining the conversion factor to the base unit type. (e.g. <code>std::ratio&lt;1,12&gt;</code> for inches to feet)</li>
+<li>A base unit that the unit is derived from (or a unit category. Must be of type <code>unit</code> or <code><a class="el" href="structunits_1_1base__unit.html" title="Class representing SI base unit types.">base_unit</a></code>)</li>
 <li>An exponent representing factors of PI required by the conversion. (e.g. <code>std::ratio&lt;-1&gt;</code> for a radians to degrees conversion)</li>
 <li>a ratio representing a datum translation required for the conversion (e.g. <code>std::ratio&lt;32&gt;</code> for a farenheit to celsius conversion)</li>
 </ul>

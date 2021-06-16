@@ -1,29 +1,5 @@
 var searchData=
 [
-  ['keep_5falive_1221',['keep_alive',['../structpybind11_1_1keep__alive.html',1,'pybind11']]],
-  ['key_5ferror_1222',['key_error',['../classpybind11_1_1key__error.html',1,'pybind11']]],
-  ['keyboard_20keys_1223',['Keyboard keys',['../group__keys.html',1,'']]],
-  ['kibi_1224',['kibi',['../group__UnitManipulators.html#gae128b8e57133ff8044ca21d494d73674',1,'units']]],
-  ['kilo_1225',['kilo',['../group__UnitManipulators.html#gaf1b5108a86458a17f2a28245e52018ca',1,'units']]],
-  ['kind_1226',['kind',['../classpybind11_1_1dtype.html#a3ab57c8ab9837424204f476cf2a48cb7',1,'pybind11::dtype']]],
-  ['kindof_1227',['KindOf',['../structtesting_1_1internal_1_1KindOf.html',1,'testing::internal']]],
-  ['kindof_3c_20bool_20_3e_1228',['KindOf&lt; bool &gt;',['../structtesting_1_1internal_1_1KindOf_3_01bool_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20char_20_3e_1229',['KindOf&lt; char &gt;',['../structtesting_1_1internal_1_1KindOf_3_01char_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20double_20_3e_1230',['KindOf&lt; double &gt;',['../structtesting_1_1internal_1_1KindOf_3_01double_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20float_20_3e_1231',['KindOf&lt; float &gt;',['../structtesting_1_1internal_1_1KindOf_3_01float_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20int_20_3e_1232',['KindOf&lt; int &gt;',['../structtesting_1_1internal_1_1KindOf_3_01int_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20int64_20_3e_1233',['KindOf&lt; Int64 &gt;',['../structtesting_1_1internal_1_1KindOf_3_01Int64_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20long_20_3e_1234',['KindOf&lt; long &gt;',['../structtesting_1_1internal_1_1KindOf_3_01long_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20long_20double_20_3e_1235',['KindOf&lt; long double &gt;',['../structtesting_1_1internal_1_1KindOf_3_01long_01double_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20short_20_3e_1236',['KindOf&lt; short &gt;',['../structtesting_1_1internal_1_1KindOf_3_01short_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20signed_20char_20_3e_1237',['KindOf&lt; signed char &gt;',['../structtesting_1_1internal_1_1KindOf_3_01signed_01char_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20uint64_20_3e_1238',['KindOf&lt; UInt64 &gt;',['../structtesting_1_1internal_1_1KindOf_3_01UInt64_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20unsigned_20char_20_3e_1239',['KindOf&lt; unsigned char &gt;',['../structtesting_1_1internal_1_1KindOf_3_01unsigned_01char_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20unsigned_20int_20_3e_1240',['KindOf&lt; unsigned int &gt;',['../structtesting_1_1internal_1_1KindOf_3_01unsigned_01int_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20unsigned_20long_20_3e_1241',['KindOf&lt; unsigned long &gt;',['../structtesting_1_1internal_1_1KindOf_3_01unsigned_01long_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20unsigned_20short_20_3e_1242',['KindOf&lt; unsigned short &gt;',['../structtesting_1_1internal_1_1KindOf_3_01unsigned_01short_01_4.html',1,'testing::internal']]],
-  ['kindof_3c_20wchar_5ft_20_3e_1243',['KindOf&lt; wchar_t &gt;',['../structtesting_1_1internal_1_1KindOf_3_01wchar__t_01_4.html',1,'testing::internal']]],
-  ['kw_5fonly_1244',['kw_only',['../structpybind11_1_1kw__only.html',1,'pybind11']]],
-  ['kwargs_1245',['kwargs',['../classpybind11_1_1kwargs.html',1,'pybind11']]],
-  ['kwargs_5fproxy_1246',['kwargs_proxy',['../classpybind11_1_1detail_1_1kwargs__proxy.html',1,'pybind11::detail']]]
+  ['kibi_631',['kibi',['../group__UnitManipulators.html#gae128b8e57133ff8044ca21d494d73674',1,'units']]],
+  ['kilo_632',['kilo',['../group__UnitManipulators.html#gaf1b5108a86458a17f2a28245e52018ca',1,'units']]]
 ];

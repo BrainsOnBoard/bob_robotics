@@ -1,8 +1,0 @@
-var structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__other_3_01Type_01_4_1_1value_01_4_01_4 =
-[
-    [ "cast_op_type", "structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__other_3_01Type_01_4_1_1value_01_4_01_4.html#a9f0dd696853163ff8f0f771dafe89ab6", null ],
-    [ "Matrix", "structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__other_3_01Type_01_4_1_1value_01_4_01_4.html#a0e3a5af9be865a781c901892ec0b193d", null ],
-    [ "props", "structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__other_3_01Type_01_4_1_1value_01_4_01_4.html#ac796e70da1e4429d0231aca7915973fd", null ],
-    [ "load", "structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__other_3_01Type_01_4_1_1value_01_4_01_4.html#a8826c8eb77dea58edf6945dd72648442", null ],
-    [ "operator Type", "structpybind11_1_1detail_1_1type__caster_3_01Type_00_01enable__if__t_3_01is__eigen__other_3_01Type_01_4_1_1value_01_4_01_4.html#a7df082b61d58d4c14d78aed601b8c780", null ]
-];
