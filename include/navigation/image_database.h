@@ -220,7 +220,10 @@ public:
                       const std::array<size_t, 3> &gridPosition,
                       Ts&&... extraFieldValues)
         {
-            BOB_ASSERT(sizeof...(extraFieldValues) == m_ExtraFieldNames.size());
+            // **NOTE** for reasons I can't quite comprehend, "BOB_ASSERT(sizeof...(extraFieldValues) == m_ExtraFieldNames.size());"
+            // results in "error C2065: 'extraFieldValues': undeclared identifier" on Visual Studio
+            constexpr size_t numExtraFields = sizeof...(extraFieldValues);
+            BOB_ASSERT(numExtraFields == m_ExtraFieldNames.size());
             BOB_ASSERT(m_Recording);
 
             Entry newEntry{
