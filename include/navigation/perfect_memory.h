@@ -65,7 +65,7 @@ public:
         BOB_ASSERT(image.type() == CV_8UC1);
 
         // Add snapshot
-        m_Store.addSnapshot(image);
+        m_Store.addSnapshot(image, mask);
     }
 
     virtual float test(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const override
@@ -94,7 +94,10 @@ public:
     size_t getNumSnapshots() const{ return m_Store.getNumSnapshots(); }
 
     //! Return a specific snapshot
-    const cv::Mat &getSnapshot(size_t index) const{ return m_Store.getSnapshot(index); }
+    const cv::Mat &getSnapshot(size_t index) const{ return m_Store.getSnapshot(index).first; }
+
+    //! Return a specific snapshot and mask associated with it
+    const std::pair<cv::Mat, ImgProc::Mask> &getMaskedSnapshot(size_t index) const{ return m_Store.getSnapshot(index); }
 
     //! Get differences between current view and all stored snapshots
     const std::vector<float> &getImageDifferences(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const
@@ -182,9 +185,9 @@ public:
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
-    const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, Ts &&... args) const
+    const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, ImgProc::Mask mask, Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), mask, std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
         return m_RotatedDifferences;
     }
@@ -197,11 +200,35 @@ public:
      * for the scan step.
      */
     template<class... Ts>
+    const auto &getImageDifferences(typename PerfectMemory<Store>::Window window, Ts &&... args) const
+    {
+        return getImageDifferences(window, ImgProc::Mask{}, std::forward<Ts>(args)...);
+    }
+
+    /*!
+     * \brief Get differences between current view and stored snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step.
+     */
+    template<class... Ts>
+    const auto &getImageDifferences(ImgProc::Mask mask, Ts &&... args) const
+    {
+        return getImageDifferences(getFullWindow(), mask, std::forward<Ts>(args)...);
+    }
+
+    /*!
+     * \brief Get differences between current view and stored snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step.
+     */
+    template<class... Ts>
     const auto &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
-        calcImageDifferences(this->getFullWindow(), rotater);
-        return m_RotatedDifferences;
+        return getImageDifferences(getFullWindow(), ImgProc::Mask{}, std::forward<Ts>(args)...);
     }
 
     /*!
@@ -214,9 +241,9 @@ public:
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
-    auto getHeading(typename PerfectMemory<Store>::Window window, Ts &&... args) const
+    auto getHeading(typename PerfectMemory<Store>::Window window, ImgProc::Mask mask, Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), mask, std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
 
         // Now get the minimum for each snapshot and the column this corresponds to
@@ -236,6 +263,34 @@ public:
                               std::make_tuple(&m_RotatedDifferences));
     }
 
+     /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step.
+     */
+    template<class... Ts>
+    auto getHeading(ImgProc::Mask mask, Ts &&... args) const
+    {
+        return getHeading(this->getFullWindow(), mask, std::forward<Ts>(args)...);
+    }
+
+    /*!
+     * \brief Get an estimate for heading based on comparing image with stored
+     *        snapshots
+     *
+     * The parameters are perfect-forwarded to the Rotater class, so e.g. for
+     * InSilicoRotater one passes in a cv::Mat and (optionally) an unsigned int
+     * for the scan step.
+     */
+    template<class... Ts>
+    auto getHeading(typename PerfectMemory<Store>::Window window, Ts &&... args) const
+    {
+        return getHeading(window, ImgProc::Mask{}, std::forward<Ts>(args)...);
+    }
+
     /*!
      * \brief Get an estimate for heading based on comparing image with stored
      *        snapshots
@@ -247,7 +302,7 @@ public:
     template<class... Ts>
     auto getHeading(Ts &&... args) const
     {
-        return getHeading(this->getFullWindow(), std::forward<Ts>(args)...);
+        return getHeading(this->getFullWindow(), ImgProc::Mask{}, std::forward<Ts>(args)...);
     }
 
 private:

@@ -103,7 +103,7 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    std::vector<std::pair<std::vector<float>, cv::Mat>> m_Snapshots;
+    std::vector<std::vector<float>> m_Snapshots;
     cv::HOGDescriptor m_HOG;
 }; // HOG
 } // PerfectMemoryStore
