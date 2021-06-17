@@ -1,7 +1,0 @@
-var structpybind11_1_1detail_1_1type__caster_3_01Eigen_1_1Ref_3_01PlainObjectType_00_010_00_01Stride2258cce5c5e035b3807dee5b2e18f5a8 =
-[
-    [ "cast_op_type", "structpybind11_1_1detail_1_1type__caster_3_01Eigen_1_1Ref_3_01PlainObjectType_00_010_00_01Stride2258cce5c5e035b3807dee5b2e18f5a8.html#a2426cfebed8c7324a581a6c962345562", null ],
-    [ "load", "structpybind11_1_1detail_1_1type__caster_3_01Eigen_1_1Ref_3_01PlainObjectType_00_010_00_01Stride2258cce5c5e035b3807dee5b2e18f5a8.html#a5e66e6fb143353dff71aeb276eed85d0", null ],
-    [ "operator Type &", "structpybind11_1_1detail_1_1type__caster_3_01Eigen_1_1Ref_3_01PlainObjectType_00_010_00_01Stride2258cce5c5e035b3807dee5b2e18f5a8.html#a4757918286f57f8c400314d0059c8f41", null ],
-    [ "operator Type *", "structpybind11_1_1detail_1_1type__caster_3_01Eigen_1_1Ref_3_01PlainObjectType_00_010_00_01Stride2258cce5c5e035b3807dee5b2e18f5a8.html#a73a5760acd495055dd84c60e2c243827", null ]
-];

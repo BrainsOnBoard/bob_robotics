@@ -128,7 +128,7 @@ template&lt;class U , class... Us&gt; </div>
 </div><div class="memdoc">
 
 <p>Represents a unit type made up from other units. </p>
-<p>Compound units are formed by multiplying the units of all the types provided in the template argument. Types provided must inherit from <code>unit</code>. <a class="el" href="structA.html">A</a> compound unit can be formed from any number of other units, and unit manipulators like <code>inverse</code> and <code>squared</code> are supported. E.g. to specify acceleration, on could create <code>using acceleration = compound_unit&lt;length::meters, inverse&lt;squared&lt;seconds&gt;&gt;;</code> </p><dl class="tparams"><dt>Template Parameters</dt><dd>
+<p>Compound units are formed by multiplying the units of all the types provided in the template argument. Types provided must inherit from <code>unit</code>. A compound unit can be formed from any number of other units, and unit manipulators like <code>inverse</code> and <code>squared</code> are supported. E.g. to specify acceleration, on could create <code>using acceleration = compound_unit&lt;length::meters, inverse&lt;squared&lt;seconds&gt;&gt;;</code> </p><dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">U...</td><td>units which, when multiplied together, form the desired compound unit. </td></tr>
   </table>

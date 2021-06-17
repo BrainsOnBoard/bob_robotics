@@ -1,13 +1,15 @@
 var searchData=
 [
-  ['elapsed_4440',['elapsed',['../classBoBRobotics_1_1Stopwatch.html#ac982ba179e306bd022d8279cebc60962',1,'BoBRobotics::Stopwatch']]],
-  ['empty_4441',['empty',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#ae4163ed082cdbc7f08f7bfe3677e8517',1,'BoBRobotics::Navigation::ImageDatabase']]],
-  ['end_4442',['end',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a9e0bbbf5491289a0fb430ee9f1263bb5',1,'BoBRobotics::Navigation::ImageDatabase::end()'],['../classpybind11_1_1detail_1_1object__api.html#a011483f62a9bd3c0fb60bfc7749fc28f',1,'pybind11::detail::object_api::end()']]],
-  ['ensure_4443',['ensure',['../classpybind11_1_1array.html#a816d966ca405344a5b2b60a2630154c8',1,'pybind11::array::ensure()'],['../classpybind11_1_1array__t.html#a797040d736c5ac32ecd3210c1ee0d2da',1,'pybind11::array_t::ensure()']]],
-  ['equal_4444',['equal',['../classpybind11_1_1detail_1_1object__api.html#ae2519f24cb6168e118de4847da444d75',1,'pybind11::detail::object_api']]],
-  ['error_5falready_5fset_4445',['error_already_set',['../classpybind11_1_1error__already__set.html#a1acfe9ccd94ca09628a9ba6b7c52b9d3',1,'pybind11::error_already_set']]],
-  ['exp_4446',['exp',['../group__UnitMath.html#ga37ffdd257c05eb6916d62bfbbc0890e2',1,'units::math']]],
-  ['exp2_4447',['exp2',['../group__UnitMath.html#ga872856d20626a6b912cc97b63bc95c89',1,'units::math']]],
-  ['expm1_4448',['expm1',['../group__UnitMath.html#ga9aee32f9e268b7135c66fc1fb887f44a',1,'units::math']]],
-  ['export_5fvalues_4449',['export_values',['../classpybind11_1_1enum__.html#a2c7d70e5e0407e0160072219ead94e19',1,'pybind11::enum_']]]
+  ['each_1828',['each',['../classCLI_1_1Option.html#aed167addae1cd83b958d41d67d6a0288',1,'CLI::Option']]],
+  ['elapsed_1829',['elapsed',['../classBoBRobotics_1_1Stopwatch.html#ac982ba179e306bd022d8279cebc60962',1,'BoBRobotics::Stopwatch']]],
+  ['empty_1830',['empty',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#ae4163ed082cdbc7f08f7bfe3677e8517',1,'BoBRobotics::Navigation::ImageDatabase::empty()'],['../classCLI_1_1Option.html#af5677ee4a55c2a85784f64198db6b452',1,'CLI::Option::empty()']]],
+  ['enabled_5fby_5fdefault_1831',['enabled_by_default',['../classCLI_1_1App.html#afce0e89d19f39a0ba4532bb82315b817',1,'CLI::App']]],
+  ['end_1832',['end',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a9e0bbbf5491289a0fb430ee9f1263bb5',1,'BoBRobotics::Navigation::ImageDatabase']]],
+  ['envname_1833',['envname',['../classCLI_1_1Option.html#aa1969c5f5a525910d761756a6d8e63a8',1,'CLI::Option']]],
+  ['excludes_1834',['excludes',['../classCLI_1_1Option.html#a758ca7c5f8bf8a9fc2ccd4c347f871fb',1,'CLI::Option::excludes()'],['../classCLI_1_1App.html#a4ccf4cf49a8e221507a56224a353b860',1,'CLI::App::excludes(App *app)'],['../classCLI_1_1App.html#af8af6e58e767ec987d5ca0ee9fad16b9',1,'CLI::App::excludes(Option *opt)'],['../classCLI_1_1Option.html#ae18a3913306b0f468c9e13e6046b6ffc',1,'CLI::Option::excludes(std::string opt_name)'],['../classCLI_1_1Option.html#a9597b8271ebc4ad41c2e86f31834a1a3',1,'CLI::Option::excludes(Option *opt)']]],
+  ['exit_1835',['exit',['../classCLI_1_1App.html#aac000657ef11647125ba91af38fd7d9c',1,'CLI::App']]],
+  ['exp_1836',['exp',['../group__UnitMath.html#ga37ffdd257c05eb6916d62bfbbc0890e2',1,'units::math']]],
+  ['exp2_1837',['exp2',['../group__UnitMath.html#ga872856d20626a6b912cc97b63bc95c89',1,'units::math']]],
+  ['expected_1838',['expected',['../classCLI_1_1Option.html#af75c26433baa09c7c762bfb9eb466215',1,'CLI::Option::expected(int value)'],['../classCLI_1_1Option.html#ac471b8485c4df8c0411880a58a6f6e8a',1,'CLI::Option::expected(int value_min, int value_max)']]],
+  ['expm1_1839',['expm1',['../group__UnitMath.html#ga9aee32f9e268b7135c66fc1fb887f44a',1,'units::math']]]
 ];

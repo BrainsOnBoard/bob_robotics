@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['operator_5fnew_4948',['operator_new',['../structpybind11_1_1detail_1_1type__record.html#a57a7e0f37a3c11d3af9687b6d7883370',1,'pybind11::detail::type_record']]],
-  ['owned_4949',['owned',['../structpybind11_1_1detail_1_1instance.html#a8a2005f2b03490c24273ac666219fe90',1,'pybind11::detail::instance']]]
+  ['option_5fdefaults_5f_2290',['option_defaults_',['../classCLI_1_1App.html#a34da062f6cc255048384b72e0ec6c276',1,'CLI::App']]],
+  ['options_5f_2291',['options_',['../classCLI_1_1App.html#a862e55a8c1fe3676452aadc6a222f865',1,'CLI::App']]]
 ];

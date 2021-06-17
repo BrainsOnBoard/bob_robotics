@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['copy_5089',['copy',['../namespacepybind11.html#a5f83e7a05cee9068927633ac47dbe69ca12cba3ee81cf4a793796a51b6327c678',1,'pybind11']]]
+  ['parsing_2409',['parsing',['../classCLI_1_1Option.html#af0ffb597bb042b6f77f31e11ec3abc7dadbc77665f51d780a776978e34f065af5',1,'CLI::Option']]]
 ];

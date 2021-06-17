@@ -1,17 +1,24 @@
 var namespaceBoBRobotics_1_1Navigation =
 [
-    [ "Internal", null, [
-      [ "begin", "differencers_8h.html#ae7c94f262bf072f987aa05822f89a492", null ],
-      [ "begin", "differencers_8h.html#ababdc7ab6eb213ddc07ac7bb959697cb", null ],
-      [ "end", "differencers_8h.html#a4958d835cd7feff999347e127c7d2d33", null ],
-      [ "end", "differencers_8h.html#a39ff01d4611b3c6d3f652dc13b4d87ce", null ]
-    ] ],
     [ "PerfectMemoryStore", null, [
       [ "HOG", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG" ],
       [ "RawImage", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1RawImage.html", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1RawImage" ]
     ] ],
-    [ "AbsDiff", "classBoBRobotics_1_1Navigation_1_1AbsDiff.html", null ],
-    [ "RMSDiff", "classBoBRobotics_1_1Navigation_1_1RMSDiff.html", null ],
+    [ "PerfectMemoryWindow", null, [
+      [ "Base", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1Base.html", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1Base" ],
+      [ "Fixed", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1Fixed.html", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1Fixed" ],
+      [ "DynamicBestMatchGradient", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1DynamicBestMatchGradient.html", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1DynamicBestMatchGradient" ]
+    ] ],
+    [ "DifferencerBase", "classBoBRobotics_1_1Navigation_1_1DifferencerBase.html", "classBoBRobotics_1_1Navigation_1_1DifferencerBase" ],
+    [ "AbsDiff", "classBoBRobotics_1_1Navigation_1_1AbsDiff.html", [
+      [ "Internal", "classBoBRobotics_1_1Navigation_1_1AbsDiff_1_1Internal.html", "classBoBRobotics_1_1Navigation_1_1AbsDiff_1_1Internal" ]
+    ] ],
+    [ "RMSDiff", "classBoBRobotics_1_1Navigation_1_1RMSDiff.html", [
+      [ "Internal", "classBoBRobotics_1_1Navigation_1_1RMSDiff_1_1Internal.html", "classBoBRobotics_1_1Navigation_1_1RMSDiff_1_1Internal" ]
+    ] ],
+    [ "CorrCoefficient", "structBoBRobotics_1_1Navigation_1_1CorrCoefficient.html", [
+      [ "Internal", "classBoBRobotics_1_1Navigation_1_1CorrCoefficient_1_1Internal.html", "classBoBRobotics_1_1Navigation_1_1CorrCoefficient_1_1Internal" ]
+    ] ],
     [ "Range", "structBoBRobotics_1_1Navigation_1_1Range.html", "structBoBRobotics_1_1Navigation_1_1Range" ],
     [ "ImageDatabase", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html", "classBoBRobotics_1_1Navigation_1_1ImageDatabase" ],
     [ "WeightsBlewUpError", "classBoBRobotics_1_1Navigation_1_1WeightsBlewUpError.html", null ],
@@ -24,6 +31,7 @@ var namespaceBoBRobotics_1_1Navigation =
     [ "WeightSnapshotsDynamic", "structBoBRobotics_1_1Navigation_1_1WeightSnapshotsDynamic.html", "structBoBRobotics_1_1Navigation_1_1WeightSnapshotsDynamic" ],
     [ "VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase" ],
     [ "InfoMaxTest", "classBoBRobotics_1_1Navigation_1_1InfoMaxTest.html", "classBoBRobotics_1_1Navigation_1_1InfoMaxTest" ],
-    [ "getMaxThreads", "namespaceBoBRobotics_1_1Navigation.html#aa35853b92992bd73c7096b108f1d9bec", null ],
+    [ "allSame", "namespaceBoBRobotics_1_1Navigation.html#a603c44baf6c56a2e8761af6069c06cfb", null ],
+    [ "getCurrentTime", "namespaceBoBRobotics_1_1Navigation.html#aefefffcc27bf3da831f787260fcf5791", null ],
     [ "readObjects", "namespaceBoBRobotics_1_1Navigation.html#ad44859ed75022131fc1a6dd8060267b9", null ]
 ];
