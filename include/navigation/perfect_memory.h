@@ -70,7 +70,7 @@ public:
 
     virtual float test(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const override
     {
-        return test(getFullWindow(), image);
+        return test(getFullWindow(), image, mask);
     }
 
     virtual void clearMemory() override
@@ -215,7 +215,7 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(ImgProc::Mask mask, Ts &&... args) const
     {
-        return getImageDifferences(getFullWindow(), mask, std::forward<Ts>(args)...);
+        return getImageDifferences(this->getFullWindow(), mask, std::forward<Ts>(args)...);
     }
 
     /*!
@@ -228,7 +228,7 @@ public:
     template<class... Ts>
     const auto &getImageDifferences(Ts &&... args) const
     {
-        return getImageDifferences(getFullWindow(), ImgProc::Mask{}, std::forward<Ts>(args)...);
+        return getImageDifferences(this->getFullWindow(), ImgProc::Mask{}, std::forward<Ts>(args)...);
     }
 
     /*!
