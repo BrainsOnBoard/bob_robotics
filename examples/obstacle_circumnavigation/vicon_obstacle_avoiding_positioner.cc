@@ -109,7 +109,7 @@ public:
         }
     }
 
-    virtual bool handleEvent(State state, Event event) override
+    bool handleEvent(State state, Event event) override
     {
         if (state == InvalidState) {
             return true;

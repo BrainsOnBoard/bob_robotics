@@ -42,7 +42,7 @@ public:
         }
     }
 
-    virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override
+    void draw(sf::RenderTarget &target, sf::RenderStates states) const override
     {
         target.draw(m_Shape, states);
     }

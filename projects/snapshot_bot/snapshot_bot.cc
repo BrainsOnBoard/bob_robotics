@@ -184,7 +184,7 @@ private:
     //------------------------------------------------------------------------
     // FSM::StateHandler virtuals
     //------------------------------------------------------------------------
-    virtual bool handleEvent(State state, Event event) override
+    bool handleEvent(State state, Event event) override
     {
         // If this event is an update
         if(event == Event::Update) {

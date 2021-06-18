@@ -51,7 +51,6 @@ EXCLUDE_CHECKS = (
     'modernize-use-emplace',
     'modernize-use-equals-default',
     'modernize-use-nodiscard',
-    'modernize-use-override',
     'modernize-raw-string-literal',
     'modernize-use-trailing-return-type',
     'performance-type-promotion-in-math-fn',
