@@ -18,6 +18,7 @@ import itertools
 import json
 import multiprocessing as mp
 import os
+import shutil
 import subprocess
 import sys
 from xml.sax.saxutils import escape
@@ -75,7 +76,9 @@ subprocess.run(args)
 
 generate_fixes = len(sys.argv) > 1 and '--generate-fixes' in sys.argv
 FIXES_DIR = 'clang_tidy_fixes'
-if generate_fixes and not os.path.isdir('fixes'):
+if generate_fixes:
+    if os.path.exists(FIXES_DIR):
+        shutil.rmtree(FIXES_DIR)
     os.mkdir(FIXES_DIR)
 
 def run_clang_tidy(file):
