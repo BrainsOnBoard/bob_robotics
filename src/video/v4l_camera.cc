@@ -133,7 +133,7 @@ Video4LinuxCamera::open(const std::string &device,
                 m_Camera,                  // Camera device to map within
                 m_BufferInfo[i].m.offset); // Offset into device 'file'
                                            // where buffer should be mapped
-        if (m_Buffer[i] == MAP_FAILED) {
+        if (m_Buffer[i] == MAP_FAILED) {   // NOLINT
             throw Error("Cannot mmap buffer");
         }
 

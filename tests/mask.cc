@@ -46,7 +46,7 @@ TEST_F(Mask, apply)
     m_EmptyMask.apply(matTest, matResult);
     EXPECT_TRUE(equals(matResult, matTest));
 
-    cv::Mat matExpected = matTest;
+    cv::Mat matExpected = matTest; // NOLINT
     matExpected.colRange(0, m_Size.width / 2) = cv::Scalar(0x00);
 
     m_ExampleMask.apply(matTest, matResult);
@@ -70,7 +70,7 @@ TEST_F(Mask, combine)
     {
         cv::Mat otherMask{ m_Size, CV_8UC1, cv::Scalar(0x01) };
         otherMask.rowRange(0, m_Size.height / 2) = cv::Scalar(0x00);
-        cv::Mat expected = otherMask;
+        cv::Mat expected = otherMask; // NOLINT
         expected.colRange(0, m_Size.width / 2) = cv::Scalar(0x00);
 
         ImgProc::Mask combined3;
