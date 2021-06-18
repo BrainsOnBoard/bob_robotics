@@ -56,7 +56,14 @@ EXCLUDE_CHECKS = (
     'performance-type-promotion-in-math-fn',
 )
 check_args = None
-if INCLUDE_CHECKS or EXCLUDE_CHECKS:
+
+# If the user passes -checks=[something] as an argument, use this instead of our
+# own default checks
+for arg in sys.argv[1:]:
+    if arg.startswith('-checks='):
+        check_args = arg
+
+if check_args is None and (INCLUDE_CHECKS or EXCLUDE_CHECKS):
     checks = itertools.chain(INCLUDE_CHECKS, ('-' + check for check in EXCLUDE_CHECKS))
     check_args = '-checks=' + ','.join(checks)
 
@@ -66,7 +73,7 @@ if check_args:
     args.append(check_args)
 subprocess.run(args)
 
-generate_fixes = len(sys.argv) > 1 and sys.argv[1] == '--generate-fixes'
+generate_fixes = len(sys.argv) > 1 and '--generate-fixes' in sys.argv
 FIXES_DIR = 'clang_tidy_fixes'
 if generate_fixes and not os.path.isdir('fixes'):
     os.mkdir(FIXES_DIR)
