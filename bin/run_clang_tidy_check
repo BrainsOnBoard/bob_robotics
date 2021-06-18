@@ -13,14 +13,11 @@
 # Note that only a small subset of the checks are actually capable of generating
 # fixes at present (though most of the modernize-* checks seem to work).
 
-import collections
 import glob
 import itertools
 import json
-import logging
 import multiprocessing as mp
 import os
-import re
 import subprocess
 import sys
 from xml.sax.saxutils import escape
