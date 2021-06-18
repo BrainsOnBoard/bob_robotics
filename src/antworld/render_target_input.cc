@@ -11,7 +11,7 @@ namespace AntWorld
 {
 cv::Size RenderTargetInput::getOutputSize() const
 {
-    return cv::Size(m_RenderTarget.getWidth(), m_RenderTarget.getHeight());
+    return {m_RenderTarget.getWidth(), m_RenderTarget.getHeight()};
 }
 //----------------------------------------------------------------------------
 bool RenderTargetInput::readFrame(cv::Mat &outFrame)

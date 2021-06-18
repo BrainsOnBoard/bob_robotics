@@ -279,7 +279,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
 cv::Size
 Bebop::VideoStream::getOutputSize() const
 {
-    return cv::Size(856, 480);
+    return {856, 480};
 }
 
 std::string

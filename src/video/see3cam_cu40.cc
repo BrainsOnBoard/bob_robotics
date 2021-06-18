@@ -342,7 +342,7 @@ See3CAM_CU40::getSuperPixelHeight() const
 cv::Size
 See3CAM_CU40::getSuperPixelSize() const
 {
-    return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
+    return {static_cast<int>(getSuperPixelWidth()), static_cast<int>(getSuperPixelHeight())};
 }
 
 bool
