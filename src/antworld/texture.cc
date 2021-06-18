@@ -26,7 +26,7 @@ void Texture::bind() const
     glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 //----------------------------------------------------------------------------
-void Texture::unbind() 
+void Texture::unbind()
 {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
