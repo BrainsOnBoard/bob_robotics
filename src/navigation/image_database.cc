@@ -394,7 +394,7 @@ ImageDatabase::loadCSV()
         };
 
         // Get grid position for grid databases
-        std::array<size_t, 3> gridPosition;
+        std::array<size_t, 3> gridPosition{0, 0, 0};
         if (!m_IsRoute) {
             gridPosition[0] = static_cast<size_t>(std::stoul(getDefaultField(5)));
             gridPosition[1] = static_cast<size_t>(std::stoul(getDefaultField(6)));
