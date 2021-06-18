@@ -21,6 +21,7 @@
 *~
 *.autosave
 *.swp
+*.kate-swp
 
 # Temporary Jupyter notebook files
 **/.ipynb_checkpoints/
