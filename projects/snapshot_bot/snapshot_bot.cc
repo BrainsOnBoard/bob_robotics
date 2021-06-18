@@ -66,7 +66,7 @@ public:
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3), m_Cropped(config.getCroppedRect().size(), CV_8UC3),
         m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
         m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
-        m_Robot(), m_NumSnapshots(0)
+        m_NumSnapshots(0)
     {
         m_LogFile.exceptions(std::ios::badbit | std::ios::failbit);
 
@@ -327,7 +327,7 @@ private:
             else if(event == Event::Update) {
                 if(m_Joystick.isPressed(HID::JButton::B)) {
                     // Open settings file and write unwrapper settings to it
-                    cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
+                    cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str(), cv::FileStorage::WRITE);
                     settingsFile << "unwrapper" << m_Unwrapper;
 
                     // If we should stream, send state update

@@ -31,7 +31,7 @@ Socket::~Socket()
 }
 
 void
-Socket::close()
+Socket::close() const
 {
     ::close(m_Handle);
 }
@@ -88,7 +88,7 @@ Socket::Socket(Socket &&old) noexcept
 }
 
 void
-Socket::throwError(const std::string &msg)
+Socket::throwError(const std::string &msg) const
 {
     if (isOpen()) {
         close();

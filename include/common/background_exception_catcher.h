@@ -30,7 +30,7 @@ public:
     void trapSignals(const std::unordered_set<int> &signals = DEFAULT_TRAPPED_SIGNALS);
 
     //! Checks if the global exception is set and rethrows it if so
-    void check() const;
+    static void check();
 
     //! Sets the global exception
     static void set(const std::exception_ptr &error);

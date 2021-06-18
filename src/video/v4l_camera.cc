@@ -157,7 +157,7 @@ Video4LinuxCamera::open(const std::string &device,
 }
 
 void
-Video4LinuxCamera::enumerateControls(const std::function<void(const v4l2_queryctrl &)> &processControl)
+Video4LinuxCamera::enumerateControls(const std::function<void(const v4l2_queryctrl &)> &processControl) const
 {
     // Fill control query structure
     v4l2_queryctrl queryControl;
@@ -178,7 +178,7 @@ Video4LinuxCamera::enumerateControls(const std::function<void(const v4l2_queryct
 }
 
 void
-Video4LinuxCamera::queryControl(uint32_t id, v4l2_queryctrl &queryControl)
+Video4LinuxCamera::queryControl(uint32_t id, v4l2_queryctrl &queryControl) const
 {
     // Fill control query structure
     memset(&queryControl, 0, sizeof(v4l2_queryctrl));
@@ -229,7 +229,7 @@ Video4LinuxCamera::getControlValue(uint32_t id) const
 }
 
 void
-Video4LinuxCamera::setControlValue(uint32_t id, int32_t value)
+Video4LinuxCamera::setControlValue(uint32_t id, int32_t value) const
 {
     // Fill control structure
     v4l2_control control;

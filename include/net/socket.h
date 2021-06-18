@@ -57,7 +57,7 @@ public:
     virtual ~Socket();
 
     //! Close the socket
-    void close();
+    void close() const;
 
     //! Check if socket is still open
     bool isOpen() const;
@@ -78,7 +78,7 @@ public:
 private:
     socket_t m_Handle;
 
-    void throwError(const std::string &msg);
+    void throwError(const std::string &msg) const;
 }; // Socket
 } // Net
 } // BoBRobotics

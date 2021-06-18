@@ -313,7 +313,7 @@ private:
         }
     }
 
-    void processImage(cv::Mat &image)
+    static void processImage(cv::Mat &image)
     {
         if(image.type() == CV_8UC1) {
             cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);

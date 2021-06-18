@@ -71,8 +71,8 @@ private:
     // Private methods
     //------------------------------------------------------------------------
     void generateCubeFaceLookAtMatrices();
-    void applyFrame(meter_t x, meter_t y, meter_t z,
-                    degree_t yaw, degree_t pitch, degree_t roll);
+    static void applyFrame(meter_t x, meter_t y, meter_t z,
+                           degree_t yaw, degree_t pitch, degree_t roll);
 
     //------------------------------------------------------------------------
     // Members

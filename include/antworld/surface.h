@@ -43,12 +43,12 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void bind() const;
-    void unbind() const;
+    static void unbind() ;
 
     void bindTextured() const;
     void unbindTextured() const;
 
-    void unbindIndices() const;
+    static void unbindIndices() ;
     void render(GLenum primitive = GL_TRIANGLES, GLenum indexType = GL_UNSIGNED_INT) const;
 
     template<typename T>

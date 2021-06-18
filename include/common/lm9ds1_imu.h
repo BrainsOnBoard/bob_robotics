@@ -305,7 +305,7 @@ private:
     //----------------------------------------------------------------------------
     // Private methods
     //----------------------------------------------------------------------------
-    uint8_t readByte(I2CInterface &interface, uint8_t address);
+    static uint8_t readByte(I2CInterface &interface, uint8_t address);
 
     template<typename T, size_t N>
     void readData(I2CInterface &interface, uint8_t address, T (&data)[N])
@@ -314,7 +314,7 @@ private:
         interface.read(data);
     }
 
-    void writeByte(I2CInterface &interface, uint8_t address, uint8_t byte);
+    static void writeByte(I2CInterface &interface, uint8_t address, uint8_t byte);
     uint8_t readAccelGyroByte(AccelGyroReg reg);
 
     template<typename T, size_t N>

@@ -49,7 +49,7 @@ void Surface::bind() const
     glColor3fv(m_Colour.data());
 }
 //----------------------------------------------------------------------------
-void Surface::unbind() const
+void Surface::unbind() 
 {
     // Unbind vertex array
     glBindVertexArray(0);
@@ -80,7 +80,7 @@ void Surface::unbindTextured() const
     }
 }
 //----------------------------------------------------------------------------
-void Surface::unbindIndices() const
+void Surface::unbindIndices() 
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

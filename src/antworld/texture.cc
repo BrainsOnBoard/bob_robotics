@@ -26,13 +26,13 @@ void Texture::bind() const
     glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 //----------------------------------------------------------------------------
-void Texture::unbind() const
+void Texture::unbind() 
 {
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 //----------------------------------------------------------------------------
-void Texture::upload(const cv::Mat &texture, GLint textureFormat)
+void Texture::upload(const cv::Mat &texture, GLint textureFormat) const
 {
     // Bind texture
     glBindTexture(GL_TEXTURE_2D, m_Texture);
