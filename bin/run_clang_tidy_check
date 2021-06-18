@@ -31,7 +31,6 @@ INCLUDE_CHECKS = (
     'concurrency-*',
     'misc-*',
     'modernize-*',
-    'openmp-*',
     'performance-*',
 )
 
@@ -55,7 +54,6 @@ EXCLUDE_CHECKS = (
     'modernize-raw-string-literal',
     'modernize-use-trailing-return-type',
     'modernize-return-braced-init-list',
-    'openmp-use-default-none',
     'performance-type-promotion-in-math-fn',
 )
 check_args = None
