@@ -1,4 +1,5 @@
 *.mp4
+clang_tidy_fixes
 
 # JUnit-style test results for Jenkins
 *_test_results.xml
@@ -21,6 +22,7 @@
 *~
 *.autosave
 *.swp
+*.kate-swp
 
 # Temporary Jupyter notebook files
 **/.ipynb_checkpoints/

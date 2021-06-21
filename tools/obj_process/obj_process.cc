@@ -6,6 +6,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
+#include <limits>
 #include <map>
 #include <sstream>
 #include <vector>
