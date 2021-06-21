@@ -244,7 +244,7 @@ Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
     return {x, y, 90_deg + m_Headings[prevWaypointIndex]};
 }
 //----------------------------------------------------------------------------
-void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)
+void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity) const
 {
     // Convert familiarity to a grayscale colour
     const uint8_t intensity = (uint8_t)std::min(255.0, std::max(0.0, std::round(255.0 * familiarity)));
