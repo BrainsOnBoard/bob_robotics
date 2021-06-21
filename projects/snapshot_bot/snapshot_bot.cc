@@ -8,12 +8,13 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
-#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
+#include "imgproc/mask.h"
 #include "net/server.h"
+#include "plog/Log.h"
 #include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
@@ -113,6 +114,11 @@ public:
             m_BestSnapshotConnection->runInBackground();
         }
 
+         // If a static mask image is specified, set it as the mask
+        if(!m_Config.getMaskImageFilename().empty()) {
+            m_Mask.set(m_Config.getMaskImageFilename());
+        }
+
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
             // Connect to port specified in config
@@ -146,7 +152,7 @@ public:
                         std::cout << "." << std::flush;
                         const auto &processedSnapshot = m_ImageInput->processSnapshot(cv::imread(filename.str()));
                         //cv::imwrite((m_Config.getOutputPath() / ("processed_" + std::to_string(m_NumSnapshots) + ".png")).str(), processedSnapshot);
-                        m_Memory->train(processedSnapshot);
+                        m_Memory->train(processedSnapshot, m_Mask);
                     }
                     // Otherwise, stop searching
                     else {
@@ -281,7 +287,7 @@ private:
                     // Train memory
                     LOGI << "\tTrained snapshot";
                     const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                    m_Memory->train(processedSnapshot);
+                    m_Memory->train(processedSnapshot, m_Mask);
 
                     // Write raw snapshot to disk
                     const std::string filename = getSnapshotPath(m_NumSnapshots++).str();
@@ -379,7 +385,7 @@ private:
             else if(event == Event::Update) {
                 // Find matching snapshot
                 const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                m_Memory->test(processedSnapshot);
+                m_Memory->test(processedSnapshot, m_Mask);
 
                 // Write time
                 m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
@@ -514,6 +520,9 @@ private:
 
     // OpenCV-based panorama unwrapper
     ImgProc::OpenCVUnwrap360 m_Unwrapper;
+
+    // Mask for image matching
+    ImgProc::Mask m_Mask;
 
     // Image processor
     std::unique_ptr<ImageInput> m_ImageInput;
