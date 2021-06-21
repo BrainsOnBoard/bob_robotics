@@ -420,7 +420,7 @@ private:
             else if(event == Event::Update) {
                 // Find matching snapshot
                 const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                m_Memory->test(processedSnapshot, m_Config.shouldUseODK2() ? m_Mask.clone() : m_Mask);
+                m_Memory->test(processedSnapshot, m_Mask);
 
                 // Write time
                 m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
