@@ -32,7 +32,7 @@ void Texture::unbind() const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 //----------------------------------------------------------------------------
-void Texture::upload(const cv::Mat &texture, GLint textureFormat) const
+void Texture::upload(const cv::Mat &texture, GLint textureFormat)
 {
     // Bind texture
     glBindTexture(GL_TEXTURE_2D, m_Texture);

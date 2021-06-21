@@ -61,6 +61,7 @@ EXCLUDE_CHECKS = (
     'readability-implicit-bool-conversion',
     'readability-isolate-declaration',
     'readability-magic-numbers',
+    'readability-make-member-function-const',
     'readability-named-parameter',
     'readability-static-accessed-through-instance',
     'readability-uppercase-literal-suffix',
