@@ -13,14 +13,12 @@
 # Note that only a small subset of the checks are actually capable of generating
 # fixes at present (though most of the modernize-* checks seem to work).
 
-import collections
 import glob
 import itertools
 import json
-import logging
 import multiprocessing as mp
 import os
-import re
+import shutil
 import subprocess
 import sys
 from xml.sax.saxutils import escape
@@ -31,8 +29,8 @@ INCLUDE_CHECKS = (
     'concurrency-*',
     'misc-*',
     'modernize-*',
-    'openmp-*',
     'performance-*',
+    'readability-*',
 )
 
 # Some of these are a bit overzealous...
@@ -41,7 +39,9 @@ EXCLUDE_CHECKS = (
     'bugprone-branch-clone',
     'bugprone-exception-escape',
     'bugprone-integer-division',
+    'bugprone-macro-parentheses',
     'bugprone-narrowing-conversions',
+    'concurrency-mt-unsafe',
     'clang-analyzer-webkit*',
     'misc-non-private-member-variables-in-classes',
     'modernize-avoid-c-arrays',
@@ -51,15 +51,31 @@ EXCLUDE_CHECKS = (
     'modernize-use-emplace',
     'modernize-use-equals-default',
     'modernize-use-nodiscard',
-    'modernize-use-override',
     'modernize-raw-string-literal',
     'modernize-use-trailing-return-type',
-    'modernize-return-braced-init-list',
-    'openmp-use-default-none',
     'performance-type-promotion-in-math-fn',
+    'readability-braces-around-statements',
+    'readability-convert-member-functions-to-static',
+    'readability-else-after-return',
+    'readability-function-cognitive-complexity',
+    'readability-implicit-bool-conversion',
+    'readability-isolate-declaration',
+    'readability-magic-numbers',
+    'readability-make-member-function-const',
+    'readability-named-parameter',
+    'readability-static-accessed-through-instance',
+    'readability-uppercase-literal-suffix',
+    'readability-qualified-auto',
 )
 check_args = None
-if INCLUDE_CHECKS or EXCLUDE_CHECKS:
+
+# If the user passes -checks=[something] as an argument, use this instead of our
+# own default checks
+for arg in sys.argv[1:]:
+    if arg.startswith('-checks='):
+        check_args = arg
+
+if check_args is None and (INCLUDE_CHECKS or EXCLUDE_CHECKS):
     checks = itertools.chain(INCLUDE_CHECKS, ('-' + check for check in EXCLUDE_CHECKS))
     check_args = '-checks=' + ','.join(checks)
 
@@ -69,10 +85,10 @@ if check_args:
     args.append(check_args)
 subprocess.run(args)
 
-generate_fixes = len(sys.argv) > 1 and sys.argv[1] == '--generate-fixes'
 FIXES_DIR = 'clang_tidy_fixes'
-if generate_fixes and not os.path.isdir('fixes'):
-    os.mkdir(FIXES_DIR)
+if os.path.exists(FIXES_DIR):
+    shutil.rmtree(FIXES_DIR)
+os.mkdir(FIXES_DIR)
 
 def run_clang_tidy(file):
     args = ['/usr/bin/clang-tidy', '-p', '.', file]
@@ -81,10 +97,9 @@ def run_clang_tidy(file):
     if check_args:
         args.append(check_args)
 
-    # Optionally generate fixes
-    if generate_fixes:
-        fixes_file = os.path.join(FIXES_DIR, file.replace('/', '_') + '.yaml')
-        args.append('--export-fixes=' + fixes_file)
+    # Generate fixes
+    fixes_file = os.path.join(FIXES_DIR, file.replace('/', '_') + '.yaml')
+    args.append('--export-fixes=' + fixes_file)
 
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = proc.communicate()[0].decode('utf-8')
@@ -125,3 +140,9 @@ if __name__ == '__main__':
     # Run clang-tidy in parallel over source files and concatenate output
     with mp.Pool() as pool:
         pool.map(run_clang_tidy, all_files)
+
+    # Remove the folder if it's empty
+    try:
+        os.rmdir('clang_tidy_fixes')
+    except:
+        pass

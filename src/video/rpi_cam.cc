@@ -34,7 +34,7 @@ cv::Size
 RPiCamera::getOutputSize() const
 {
     // this is fixed
-    return cv::Size(152, 72);
+    return {152, 72};
 }
 
 bool
