@@ -646,8 +646,7 @@ ImageDatabase::hasMetadata() const
 }
 
 void
-ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
-                                 size_t frameSkip) const
+ImageDatabase::generateUnwrapCSV(const filesystem::path &dst, size_t frameSkip) const
 {
     const auto src = m_Path / EntriesFilename;
     if (!src.exists()) {
@@ -666,7 +665,7 @@ ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
 
     std::ofstream ofs;
     ofs.exceptions(std::ios::badbit | std::ios::failbit);
-    ofs.open((destination / EntriesFilename).str());
+    ofs.open((dst / EntriesFilename).str());
 
     // Copy headers; if the source is a video file we need to append file names
     ofs << line;

@@ -58,7 +58,7 @@ RenderTarget::~RenderTarget()
     glDeleteFramebuffers(1, &m_FBO);
 }
 //----------------------------------------------------------------------------
-void RenderTarget::bind() const
+void RenderTarget::bind()
 {
     // Bind the cubemap FBO for offscreen rendering
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);

@@ -74,7 +74,7 @@ BackgroundExceptionCatcher::trapSignals(const std::unordered_set<int> &signals)
 
 //! Checks if the global exception is set and rethrows it if so
 void
-BackgroundExceptionCatcher::check() 
+BackgroundExceptionCatcher::check() const
 {
     std::exception_ptr eptr;
     ExceptionPtrMutex.lock();

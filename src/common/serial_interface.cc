@@ -59,7 +59,7 @@ SerialInterface::setup(const char *path)
 }
 
 void
-SerialInterface::setAttributes(int speed) const
+SerialInterface::setAttributes(int speed)
 {
     struct termios tty;
     memset(&tty, 0, sizeof tty);
@@ -92,7 +92,7 @@ SerialInterface::setAttributes(int speed) const
 }
 
 void
-SerialInterface::setBlocking(bool should_block) const
+SerialInterface::setBlocking(bool should_block)
 {
     struct termios tty;
     memset(&tty, 0, sizeof tty);
@@ -109,7 +109,7 @@ SerialInterface::setBlocking(bool should_block) const
 }
 
 bool
-SerialInterface::readByte(uint8_t &byte) const
+SerialInterface::readByte(uint8_t &byte)
 {
     const ssize_t ret = ::read(m_Serial_fd, reinterpret_cast<char *>(&byte), 1);
     if (ret < 0) {
@@ -126,7 +126,7 @@ SerialInterface::readByte(uint8_t &byte) const
 }
 
 void
-SerialInterface::writeByte(uint8_t byte) const
+SerialInterface::writeByte(uint8_t byte)
 {
     if (::write(m_Serial_fd, &byte, 1) < 0) {
         throw std::runtime_error("Failed to write byte to serial port");

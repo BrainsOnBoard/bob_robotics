@@ -26,8 +26,8 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void bind() const;
-    static void unbind() ;
-    void upload(const cv::Mat &texture, GLint textureFormat) const;
+    void unbind() const;
+    void upload(const cv::Mat &texture, GLint textureFormat);
 
 private:
     //------------------------------------------------------------------------

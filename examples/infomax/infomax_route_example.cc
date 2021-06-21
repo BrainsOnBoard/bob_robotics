@@ -82,7 +82,7 @@ int bobMain(int argc, char **argv)
         LOGI << "Loading images from " << routePath << "...";
         Timer<> loadingTimer{ "Images loaded in: " };
         const ImageDatabase routeImages(routePath);
-        assert(!routeImages.empty());
+        assert(routeImages.size() > 0);
 
         cv::Mat image;
         for (size_t i = 1; i < routeImages.size(); i++) {

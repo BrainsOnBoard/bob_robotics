@@ -30,17 +30,17 @@ RCCarBot::~RCCarBot()
 
 //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
 void
-RCCarBot::move(float speed, degree_t left)
+RCCarBot::move(float speed, degree_t turningAngle)
 {
     BOB_ASSERT(speed >= -1.f && speed <= 1.f);
-    BOB_ASSERT(left >= -35_deg && left <= 35_deg);
+    BOB_ASSERT(turningAngle >= -35_deg && turningAngle <= 35_deg);
 
     m_speed = speed;
-    m_turningAngle = left;
+    m_turningAngle = turningAngle;
 
     // mapping to the range
     uint8_t uspeed = (speed * 255) + sgn(-speed) * 127;     // mapping to : 0-127 backward, 127-255 forward
-    uint8_t uturn = (uint8_t)(90.0 + left.value()); // mapping to : 65 full left 90 center 125 full right
+    uint8_t uturn = (uint8_t)(90.0 + turningAngle.value()); // mapping to : 65 full left 90 center 125 full right
     uint8_t buffer[2] = { uspeed, uturn };
     m_I2C.write(buffer); // send to arduino on i2c
 }
@@ -60,21 +60,21 @@ RCCarBot::moveForward(float speed)
 }
 
 void
-RCCarBot::steer(float left)
+RCCarBot::steer(float turningAngle)
 {
-    steer(left * 35_deg);
+    steer(turningAngle * 35_deg);
 }
 
 void
-RCCarBot::steer(units::angle::degree_t left)
+RCCarBot::steer(units::angle::degree_t turningAngle)
 {
-    BOB_ASSERT(left >= -35_deg && left <= 35_deg);
+    BOB_ASSERT(turningAngle >= -35_deg && turningAngle <= 35_deg);
 
-    m_turningAngle = left;
+    m_turningAngle = turningAngle;
 
     // mapping to the range
     uint8_t uspeed = (m_speed * 255) + sgn(-m_speed) * 127;     // mapping to : 0-127 backward, 127-255 forward
-    uint8_t uturn = (uint8_t)(90.0 + left.value()); // mapping to : 65 full left 90 center 125 full right
+    uint8_t uturn = (uint8_t)(90.0 + turningAngle.value()); // mapping to : 65 full left 90 center 125 full right
     uint8_t buffer[2] = { uspeed, uturn };
     m_I2C.write(buffer); // send to arduino on i2c
 }

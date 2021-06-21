@@ -25,9 +25,9 @@ public:
     // Public API
     //---------------------------------------------------------------------
     void setup(const char *path);
-    void setAttributes(int speed) const;
-    void setBlocking(bool should_block) const;
-    bool readByte(uint8_t &byte) const;
+    void setAttributes(int speed);
+    void setBlocking(bool should_block);
+    bool readByte(uint8_t &byte);
 
     template<typename T, size_t N>
     bool read(T (&data)[N])
@@ -45,7 +45,7 @@ public:
         return true;
     }
 
-    void writeByte(uint8_t byte) const;
+    void writeByte(uint8_t byte);
 
     // writes data
     template<typename T, size_t N>

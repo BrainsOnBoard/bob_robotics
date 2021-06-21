@@ -19,9 +19,9 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void bind() const;
-    static void unbind();
-    static void clear();
+    void bind();
+    void unbind();
+    void clear();
 
     GLuint getTexture() const{ return m_Texture; }
     GLsizei getWidth() const{ return m_Width; }

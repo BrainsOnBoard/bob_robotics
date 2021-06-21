@@ -31,7 +31,7 @@ CollisionDetector::collisionOccurred(Vector2<meter_t> &firstCollisionPosition)
     m_CollidedObjectId = std::numeric_limits<size_t>::max();
 
     // If there aren't obstacles, we can't have hit them
-    if (m_ResizedObjects.empty()) {
+    if (m_ResizedObjects.size() == 0) {
         return false;
     }
 

@@ -75,7 +75,7 @@ Mask::roll(Mask &out, size_t pixelsLeft) const
 }
 
 void
-Mask::set(cv::Mat mask, const cv::Size &resizeTo)
+Mask::set(cv::Mat mask, const cv::Size &size)
 {
     if (mask.empty()) {
         // Clears mask
@@ -84,8 +84,8 @@ Mask::set(cv::Mat mask, const cv::Size &resizeTo)
     }
 
     // The user has requested a specific size of mask
-    if (resizeTo != cv::Size{ 0, 0 }) {
-        cv::resize(mask, mask, resizeTo, {}, {}, cv::INTER_NEAREST);
+    if (size != cv::Size{ 0, 0 }) {
+        cv::resize(mask, mask, size, {}, {}, cv::INTER_NEAREST);
     }
 
     // Needs to be composed of bytes
@@ -101,14 +101,14 @@ Mask::set(cv::Mat mask, const cv::Size &resizeTo)
 }
 
 void
-Mask::set(const filesystem::path &imagePath, const cv::Size &resizeTo)
+Mask::set(const filesystem::path &imagePath, const cv::Size &size)
 {
     cv::Mat mask = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
     if (mask.empty()) {
         throw std::runtime_error("Could not load mask from " + imagePath.str());
     }
 
-    set(std::move(mask), resizeTo);
+    set(std::move(mask), size);
 }
 
 } //ImgProc

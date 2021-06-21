@@ -41,7 +41,7 @@ public:
     virtual void updateState();
 
     //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
-    virtual void move(float speed, degree_t left) override;
+    virtual void move(float speed, degree_t turningAngle) override;
 
     //! Stop the car
     virtual void stopMoving() override;

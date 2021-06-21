@@ -225,7 +225,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
      * http://developer.parrot.com/blog/2016/ARSDK-3-8-release/
      *
      * */
-    if (m_UpdateCodecParams && !m_CodecData.empty()) {
+    if (m_UpdateCodecParams && m_CodecData.size()) {
         m_Packet.data = &m_CodecData[0];
         m_Packet.size = static_cast<int>(m_CodecData.size());
         int32_t frame_finished = 0;

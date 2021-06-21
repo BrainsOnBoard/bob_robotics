@@ -80,7 +80,7 @@ public:
     std::tuple<meter_t, meter_t> getDistanceToRoute(const Vector2<meter_t> &position) const;
     Pose2<meter_t, degree_t> getPose(meter_t distance) const;
 
-    void setWaypointFamiliarity(size_t pos, double familiarity) const;
+    void setWaypointFamiliarity(size_t pos, double familiarity);
     void addPoint(const Vector2<meter_t> &position, bool error);
     meter_t getLength() const{ return m_CumulativeDistance.back(); }
 
