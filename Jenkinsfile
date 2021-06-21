@@ -46,12 +46,6 @@ def runBuild(String name, String nodeLabel) {
     }
 }
 
-def isDirEmpty(dir) {
-    def contents = sh(script: "ls " + dir, returnStdout: true).trim()
-    println(contents)
-    return null == contents || "".equals(contents)
-}
-
 //--------------------------------------------------------------------------
 // Entry point
 //--------------------------------------------------------------------------
@@ -142,7 +136,8 @@ for(b = 0; b < builderNodes.size(); b++) {
                     }
 
                     // If there are auto-generated fixes, archive these in a zip file
-                    if(!isDirEmpty("./clang_tidy_fixes")) {
+                    def hasFixes = fileExists "./clang_tidy_fixes"
+                    if(hasFixes) {
                         // **YUCK**: clang-tidy's fixes use absolute paths
                         sh "sed -i 's|" + env.WORKSPACE + "|.|g' ./clang_tidy_fixes/*"
 

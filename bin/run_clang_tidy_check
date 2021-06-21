@@ -139,3 +139,9 @@ if __name__ == '__main__':
     # Run clang-tidy in parallel over source files and concatenate output
     with mp.Pool() as pool:
         pool.map(run_clang_tidy, all_files)
+
+    # Remove the folder if it's empty
+    try:
+        os.rmdir('clang_tidy_fixes')
+    except:
+        pass
