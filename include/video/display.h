@@ -58,7 +58,7 @@ public:
     Video::Input &getVideoInput();
 
     //! Return true if the display window is open
-    bool isOpen();
+    bool isOpen() const;
 
     /*!
      * \brief Try to read a new frame from the video source and display it

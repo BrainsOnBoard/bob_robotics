@@ -37,12 +37,12 @@ void UAV::setPitch(float pitch)
     m_Pitch = pitch;
     sendCommand();
 }
-void UAV::setRoll(float roll)
+void UAV::setRoll(float right)
 {
     if(!m_Armed){
         return;
     }
-    m_Roll = roll;
+    m_Roll = right;
     sendCommand();
 }
 void UAV::setVerticalSpeed(float up)
@@ -53,12 +53,12 @@ void UAV::setVerticalSpeed(float up)
     m_Thrust = up*0.5 + 0.5;
     sendCommand();
 }
-void UAV::setYawSpeed(float yaw)
+void UAV::setYawSpeed(float right)
 {
     if(!m_Armed){
         return;
     }
-    m_Yaw = yaw;
+    m_Yaw = right;
     sendCommand();
 }
 void UAV::sendCommand()

@@ -75,7 +75,7 @@ I2CInterface::setup(const char *path, int slaveAddress)
 }
 
 uint8_t
-I2CInterface::readByteCommand(uint8_t address)
+I2CInterface::readByteCommand(uint8_t address) const
 {
     const auto data = i2c_smbus_read_byte_data(m_I2C, address);
     if (data < 0) {
@@ -86,7 +86,7 @@ I2CInterface::readByteCommand(uint8_t address)
 }
 
 uint8_t
-I2CInterface::readByte()
+I2CInterface::readByte() const
 {
     const auto data = i2c_smbus_read_byte(m_I2C);
     if (data < 0) {
@@ -97,7 +97,7 @@ I2CInterface::readByte()
 }
 
 void
-I2CInterface::writeByteCommand(uint8_t address, uint8_t byte)
+I2CInterface::writeByteCommand(uint8_t address, uint8_t byte) const
 {
     if (i2c_smbus_write_byte_data(m_I2C, address, byte) < 0) {
         throw std::runtime_error("Failed to write byte to i2c bus");
@@ -105,7 +105,7 @@ I2CInterface::writeByteCommand(uint8_t address, uint8_t byte)
 }
 
 void
-I2CInterface::writeByte(uint8_t byte)
+I2CInterface::writeByte(uint8_t byte) const
 {
     if (i2c_smbus_write_byte(m_I2C, byte) < 0) {
         throw std::runtime_error("Failed to write byte to i2c bus");

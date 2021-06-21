@@ -34,8 +34,8 @@ public:
     // Public API
     //---------------------------------------------------------------------
     void setup(const char *path, int slaveAddress);
-    uint8_t readByteCommand(uint8_t address);
-    uint8_t readByte();
+    uint8_t readByteCommand(uint8_t address) const;
+    uint8_t readByte() const;
 
     template<typename T, size_t N>
     void read(T (&data)[N])
@@ -46,8 +46,8 @@ public:
         }
     }
 
-    void writeByteCommand(uint8_t address, uint8_t byte);
-    void writeByte(uint8_t byte);
+    void writeByteCommand(uint8_t address, uint8_t byte) const;
+    void writeByte(uint8_t byte) const;
 
     // writes data
     template<typename T, size_t N>

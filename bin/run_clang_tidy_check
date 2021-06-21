@@ -30,6 +30,7 @@ INCLUDE_CHECKS = (
     'misc-*',
     'modernize-*',
     'performance-*',
+    'readability-*',
 )
 
 # Some of these are a bit overzealous...
@@ -53,6 +54,17 @@ EXCLUDE_CHECKS = (
     'modernize-raw-string-literal',
     'modernize-use-trailing-return-type',
     'performance-type-promotion-in-math-fn',
+    'readability-braces-around-statements',
+    'readability-convert-member-functions-to-static',
+    'readability-else-after-return',
+    'readability-function-cognitive-complexity',
+    'readability-implicit-bool-conversion',
+    'readability-isolate-declaration',
+    'readability-magic-numbers',
+    'readability-named-parameter',
+    'readability-static-accessed-through-instance',
+    'readability-uppercase-literal-suffix',
+    'readability-qualified-auto',
 )
 check_args = None
 

@@ -27,7 +27,7 @@ public:
     //------------------------------------------------------------------------
     void bind() const;
     void unbind() const;
-    void upload(const cv::Mat &texture, GLint textureFormat);
+    void upload(const cv::Mat &texture, GLint textureFormat) const;
 
 private:
     //------------------------------------------------------------------------

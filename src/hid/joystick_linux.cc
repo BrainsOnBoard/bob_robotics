@@ -83,7 +83,7 @@ JoystickLinux::updateState()
 // Private methods
 //------------------------------------------------------------------------
 bool
-JoystickLinux::read(js_event &event)
+JoystickLinux::read(js_event &event) const
 {
     ssize_t bytes;
     do {

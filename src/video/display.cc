@@ -43,7 +43,7 @@ Video::Input &Display::getVideoInput()
     return m_VideoInput;
 }
 
-bool Display::isOpen()
+bool Display::isOpen() const
 {
     return m_IsOpen;
 }
