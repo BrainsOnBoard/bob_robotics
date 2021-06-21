@@ -31,7 +31,7 @@ using namespace std::literals;
 namespace plt = matplotlibcpp;
 
 using FloatType = float;
-using InfoMaxType = InfoMaxRotater<InSilicoRotater, FloatType>;
+using InfoMaxType = InfoMaxRotater<FloatType>;
 
 void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
                const std::vector<double> &y, const std::vector<cv::Mat> &images)
