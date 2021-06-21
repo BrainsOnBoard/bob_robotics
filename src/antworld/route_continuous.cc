@@ -123,9 +123,7 @@ void RouteContinuous::load(const std::string &filename)
 {
     // Open file for binary IO
     std::ifstream input(filename, std::ios::binary);
-    if(!input.good()) {
-        throw std::runtime_error("Cannot open route file: " + filename);
-    }
+    input.exceptions(std::ios::badbit | std::ios::failbit);
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);

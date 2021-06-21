@@ -5,30 +5,30 @@
 // BoB robotics includes
 #include "common/path.h"
 #include "common/serialise_matrix.h"
+#include "imgproc/mask.h"
 
 // Standard C++ includes
 #include <string>
+#include <utility>
 
-template<class AlgoType>
-void testAlgo(const std::string &filename)
+using namespace BoBRobotics;
+using Window = std::pair<size_t, size_t>;
+
+template<class Algo>
+void testAlgo(const std::string &filename, ImgProc::Mask mask, Window window)
 {
-    using namespace BoBRobotics;
-
-    generateImages();
-
     const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
-    AlgoType algo{ TestImageSize };
+    Algo algo{ TestImageSize };
+    algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {
         algo.train(image);
     }
 
-    const auto &differences = algo.getImageDifferences(TestImages[0]);
-    BOB_ASSERT(trueDifferences.size() == differences.size());
-    for (int snap = 0; snap < differences.rows(); snap++) {
-        for (int col = 0; col < differences.cols(); col++) {
-            EXPECT_FLOAT_EQ(differences(snap, col), trueDifferences(snap, col));
-        }
+    if (window == Window{}) {
+        window = algo.getFullWindow();
     }
+    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    compareFloatMatrices(differences, trueDifferences);
 }

@@ -1,6 +1,5 @@
 var group__TypeTraits =
 [
-    [ "traits", "namespaceunits_1_1traits.html", null ],
     [ "is_base_unit", "structunits_1_1traits_1_1is__base__unit.html", null ],
     [ "is_unit", "structunits_1_1traits_1_1is__unit.html", null ],
     [ "is_convertible_unit", "structunits_1_1traits_1_1is__convertible__unit.html", null ],

@@ -9,5 +9,5 @@ var classBoBRobotics_1_1Net_1_1Connection =
     [ "read", "classBoBRobotics_1_1Net_1_1Connection.html#aa408605b3aa7edf6531148aec37988ba", null ],
     [ "readNextCommand", "classBoBRobotics_1_1Net_1_1Connection.html#a67e5975cb340d22496cf3b3240b6f69f", null ],
     [ "runInternal", "classBoBRobotics_1_1Net_1_1Connection.html#a71c8b4060e752bdc535ed8130b1b3ac3", null ],
-    [ "setCommandHandler", "classBoBRobotics_1_1Net_1_1Connection.html#a3724e11e462945434bcee2dbbbf9033a", null ]
+    [ "setCommandHandler", "classBoBRobotics_1_1Net_1_1Connection.html#a1ad979c9887e3a43eea720e5e1251c65", null ]
 ];

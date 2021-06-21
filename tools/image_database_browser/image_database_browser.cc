@@ -4,6 +4,7 @@
 #include "os/keycodes.h"
 
 // Third-party includes
+#include "third_party/CLI11.hpp"
 #include "third_party/path.h"
 
 // OpenCV
@@ -19,23 +20,33 @@ using namespace BoBRobotics;
 
 int bobMain(int argc, char **argv)
 {
-    // Check we have one command-line argument
-    BOB_ASSERT(argc == 2);
+    size_t frameSkip = 1;
+
+    // Handle command-line arguments
+    CLI::App app{ "Tool for examining the contents of an image database." };
+    app.add_option("-s,--skip-frames", frameSkip, "Number of frames to skip when reading");
+    app.allow_extras();
+    CLI11_PARSE(app, argc, argv);
+    BOB_ASSERT(frameSkip > 0);
+    if (app.remaining_size() != 1) {
+        std::cout << app.help();
+        return 1;
+    }
 
     // Load database metadata
-    Navigation::ImageDatabase database(argv[1]);
+    const Navigation::ImageDatabase database{ app.remaining()[0] };
     BOB_ASSERT(!database.empty());
 
     // Load images
     std::cout << "Loading images..." << std::endl;
-    const auto images = database.loadImages({}, false);
+    const auto images = database.loadImages({}, frameSkip, false);
 
     // Iterate through images with arrow keys
     cv::namedWindow(argv[0]);
-    for (size_t i = 0; i < database.size();) {
+    for (size_t i = 0; i < images.size();) {
         std::stringstream ssTitle, ssNumber;
-        const auto pos = database[i].position;
-        ssTitle << database.getName() << " [" << i << "/" << database.size() << "]"
+        const auto pos = database[i * frameSkip].position;
+        ssTitle << database.getName() << " [" << i << "/" << images.size() << "]"
                 << " (" << pos[0] << ", " << pos[1] << ", " << pos[2] << ")";
         cv::imshow(argv[0], images[i]);
         cv::setWindowTitle(argv[0], ssTitle.str());
@@ -66,7 +77,7 @@ int bobMain(int argc, char **argv)
             case OS::KeyCodes::Escape:
                 return EXIT_SUCCESS;
             case OS::KeyCodes::Right:
-                if (newi < database.size() - 1) {
+                if (newi < images.size() - 1) {
                     newi++;
                 }
                 break;
@@ -77,7 +88,7 @@ int bobMain(int argc, char **argv)
                 break;
             case 'g':
                 if (!ssNumber.str().empty()) {
-                    newi = std::min(std::stoul(ssNumber.str()), database.size() - 1);
+                    newi = std::min(std::stoul(ssNumber.str()), images.size() - 1);
                 }
                 break;
             }

@@ -10,7 +10,7 @@ var classStateHandler =
       [ "KeyReset", "classStateHandler.html#a0d0688dcffdd0d6ca15ef542352681d8a6d512551245fd64613e56d45d3b1189e", null ],
       [ "KeyMax", "classStateHandler.html#a0d0688dcffdd0d6ca15ef542352681d8a84c87436edbecd76f0fd3ac54b1605e3", null ]
     ] ],
-    [ "StateHandler", "classStateHandler.html#a9a074d9a20865979ab5451a817fd2ab1", null ],
+    [ "StateHandler", "classStateHandler.html#a029d2a7fc68226ef569d9d93a622c804", null ],
     [ "setKeyState", "classStateHandler.html#a8cee07986b276debd569e2eb8dd11f03", null ],
     [ "update", "classStateHandler.html#aa4dc1c8bcfc9ddbf4f753e83c2c48f12", null ]
 ];

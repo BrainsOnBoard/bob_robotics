@@ -19,6 +19,13 @@ std::string OpenCVInput::getCameraName() const
     return m_CameraName;
 }
 
+units::frequency::hertz_t OpenCVInput::getFrameRate() const
+{
+    const auto val = m_Device.get(cv::CAP_PROP_FPS);
+    BOB_ASSERT(val != 0.0);
+    return units::frequency::hertz_t{ val };
+}
+
 cv::Size OpenCVInput::getOutputSize() const
 {
     cv::Size outSize;

@@ -2,8 +2,9 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "insilico_rotater.h"
-#include "visual_navigation_base.h"
+#include "imgproc/mask.h"
+#include "navigation/insilico_rotater.h"
+#include "navigation/visual_navigation_base.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -101,24 +102,12 @@ public:
         std::normal_distribution<FloatType> distribution;
         std::generate_n(weights.data(), weights.size(), [&]() { return distribution(generator); });
 
-        LOG_VERBOSE << "Initial weights" << std::endl
-                    << weights;
-
         // Normalise mean and SD for row so mean == 0 and SD == 1
         const auto means = weights.rowwise().mean();
-        LOG_VERBOSE << "Means" << std::endl << means;
-
         weights.colwise() -= means;
-        LOG_VERBOSE << "Weights after subtracting means" << std::endl << weights;
-
-        LOG_VERBOSE << "New means" << std::endl << weights.rowwise().mean();
 
         const auto sd = matrixSD(weights);
-        LOG_VERBOSE << "SD" << std::endl << sd;
-
         weights = weights.array().colwise() / sd;
-        LOG_VERBOSE << "Weights after dividing by SD" << std::endl << weights;
-        LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
 
         return weights.transpose();
     }
@@ -213,7 +202,7 @@ public:
     template<class... Ts>
     const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
@@ -224,7 +213,7 @@ public:
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = Rotater::create(unwrapRes, this->getMask(), std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference
@@ -254,7 +243,7 @@ private:
         m_RotatedDifferences.resize(rotater.numRotations());
 
         // Populate rotated differences with results
-        rotater.rotate([this] (const cv::Mat &image, const cv::Mat &, size_t i) {
+        rotater.rotate([this] (const cv::Mat &image, const ImgProc::Mask &, size_t i) {
             m_RotatedDifferences[i] = this->test(image);
         });
     }

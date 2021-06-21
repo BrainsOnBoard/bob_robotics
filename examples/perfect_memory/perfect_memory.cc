@@ -1,9 +1,12 @@
 // BoB robotics includes
-#include "plog/Log.h"
+#include "common/path.h"
 #include "common/timer.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_raw.h"
 #include "navigation/perfect_memory_store_hog.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <algorithm>
@@ -17,7 +20,7 @@ int bobMain(int, char **)
     units::angle::degree_t heading;
     const Eigen::MatrixXf *allDifferences;
 
-    const ImageDatabase imdb{ "../../tools/ant_world_db_creator/ant1_route1" };
+    const ImageDatabase imdb{ Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1" };
     const auto snapshots = imdb.loadImages(imSize);
     LOGI << "Loaded " << snapshots.size() << " snapshots";
 
@@ -83,6 +86,24 @@ int bobMain(int, char **)
     }
 
     {
+        LOGI << "Testing with correlation coefficient difference...";
+        PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>> pm(imSize);
+        pm.trainRoute(snapshots);
+
+        // Time testing phase
+        Timer<> t{ "Time taken for testing: " };
+
+        // Treat snapshot #10 as test data
+        const auto snap = pm.getSnapshot(10);
+        size_t snapshot;
+        float difference;
+        std::tie(heading, snapshot, difference, allDifferences) = pm.getHeading(snap);
+        LOGI << "Heading: " << heading;
+        LOGI << "Best-matching snapshot: #" << snapshot;
+        LOGI << "Difference score: " << difference;
+    }
+
+    {
         constexpr size_t numComp = 3;
         LOGI <<  "Testing with " << numComp << " weighted snapshots...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, WeightSnapshotsDynamic<numComp>> pm(imSize);
@@ -112,7 +133,7 @@ int bobMain(int, char **)
         Timer<> t{ "Time taken for testing: " };
 
         // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread("../../tools/ant_world_db_creator/ant1_route1/image_00010.png", cv::IMREAD_GRAYSCALE);
+        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1/image00010.png").str(), cv::IMREAD_GRAYSCALE);
         cv::resize(snap, snap, imSize);
         size_t snapshot;
         float difference;

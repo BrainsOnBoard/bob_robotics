@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['norbot_20shopping_20list_2517',['Norbot shopping list',['../md_docs_source_robot-shopping-list.html',1,'']]]
+  ['perfect_20memory_20example_2462',['Perfect memory example',['../md_examples_perfect_memory_README.html',1,'']]]
 ];

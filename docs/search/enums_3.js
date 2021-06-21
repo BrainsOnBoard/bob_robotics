@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['state_2446',['State',['../classBoBRobotics_1_1Robots_1_1Bebop.html#a59412f323d3c7f591706a206fe8c6cb7',1,'BoBRobotics::Robots::Bebop']]]
+  ['option_5fstate_2405',['option_state',['../classCLI_1_1Option.html#af0ffb597bb042b6f77f31e11ec3abc7d',1,'CLI::Option']]],
+  ['options_2406',['Options',['../classCLI_1_1AsNumberWithUnit.html#a4f1b96d1a43a6acb3f85b68dd6f5a321',1,'CLI::AsNumberWithUnit']]]
 ];

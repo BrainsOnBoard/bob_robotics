@@ -2,6 +2,7 @@
     "recommendations": [
         "EditorConfig.EditorConfig",
         "ms-vscode.cpptools",
-        "twxs.cmake"
+        "twxs.cmake",
+        "davidschuldenfrei.gtest-adapter"
     ]
 }

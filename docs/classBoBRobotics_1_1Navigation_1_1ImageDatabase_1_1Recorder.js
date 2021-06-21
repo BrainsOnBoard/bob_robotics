@@ -1,16 +1,16 @@
 var classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder =
 [
-    [ "~Recorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#ad2a3c0744720534671ebf30e66c320d6", null ],
-    [ "Recorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a09403052fc4eeb9178f12fb0c825e7ac", null ],
-    [ "abortSave", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#aff504f60472fe0be28efad455288ac56", null ],
-    [ "addEntry", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a386b01a8d9f1c68ab74dd6285b3329b9", null ],
-    [ "getImageFormat", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a86a213426771288a451a2b597b58a0cb", null ],
-    [ "getMetadataWriter", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a7ebab1025f27524bcc06f76e22860935", null ],
-    [ "save", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#aacecd25a9d2fe957dc82d6848b6ad7ab", null ],
-    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a0d16e3dd52a36c61a96cea7fd8810fbb", null ],
-    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a2a995e7bf59d05e91804f6b33a7c7d0d", null ],
-    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a1246b05adbae2628dd97b30f2efaa71a", null ],
-    [ "setImageFormat", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#afef08be67d28bf12aa6573c55f9df0bf", null ],
-    [ "size", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a295d587f3a285f3fdad24ec69c69bd46", null ],
-    [ "m_YAML", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#ae0ae486857f88a89f8523e0dfe6e2fff", null ]
+    [ "~Recorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a2d46a905ea7b333c91d2f2be030ecc33", null ],
+    [ "Recorder", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#af36ae953819de897633669e4619c2cb6", null ],
+    [ "abortSave", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a7980eb291a9f2032594a2c85d8b92128", null ],
+    [ "addEntry", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#ac100b89089f2090721230afa81d4e90d", null ],
+    [ "getImageDatabase", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#aefab3a69b8aab2feef2ca30a220314bc", null ],
+    [ "getMetadataWriter", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#ae955d702fbff7b97f7af1f8d9c71688f", null ],
+    [ "save", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a1d2e7d3b0f6a3b8bfa6b015d83c89a77", null ],
+    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#ac2002151c5fd48bd5a419dfe817ef935", null ],
+    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#ad4672e303149fd03369741087c4b7039", null ],
+    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#aec375a131d4086c31cdee64fd02dedb2", null ],
+    [ "setExtraFields", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a9bfe007aa6114c50bb042f0a7e6a793d", null ],
+    [ "size", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a76a5c8c225621b10161b51d23691d9c8", null ],
+    [ "m_YAML", "classBoBRobotics_1_1Navigation_1_1ImageDatabase_1_1Recorder.html#a549708e7f906264828003baa846e9d1d", null ]
 ];

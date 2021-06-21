@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['size_2332',['size',['../structGLFWgammaramp.html#ad620e1cffbff9a32c51bca46301b59a5',1,'GLFWgammaramp']]]
+  ['labels_5f_2262',['labels_',['../classCLI_1_1FormatterBase.html#a2ee79421fa339b227d6cb9ca1bce4ad1',1,'CLI::FormatterBase']]],
+  ['lnames_5f_2263',['lnames_',['../classCLI_1_1Option.html#ae06feaf7ca62a5497514a09f44724430',1,'CLI::Option']]]
 ];
