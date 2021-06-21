@@ -184,12 +184,12 @@ public:
     /*!
      * \brief Get differences between current view with mask and stored snapshots within a 'window'
      *
-     * Any additional parameters specifying rotation constraints are perfect-forwarded to 
+     * Any additional parameters specifying rotation constraints are perfect-forwarded to
      * InSilicoRotater::create. **NOTE** I wanted mask and window to be const references but for
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
-    const auto &getImageDifferences(const cv::Mat &image, ImgProc::Mask mask, Window window, Ts &&... args) const
+    const auto &getImageDifferences(const cv::Mat &image, ImgProc::Mask mask, typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
         auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
@@ -199,39 +199,39 @@ public:
     /*!
      * \brief Get differences between current view with mask and stored snapshots
      *
-     * Any additional parameters specifying rotation constraints are perfect-forwarded to 
-     * InSilicoRotater::create. **NOTE**I wanted mask and window to be const references but for
+     * Any additional parameters specifying rotation constraints are perfect-forwarded to
+     * InSilicoRotater::create. **NOTE** I wanted mask and window to be const references but for
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
     const auto &getImageDifferences(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
-        return getImageDifferences(image, mask, getFullWindow(), std::forward<Ts>(args)...);
+        return getImageDifferences(image, mask, this->getFullWindow(), std::forward<Ts>(args)...);
     }
 
     /*!
      * \brief Get differences between current view and stored snapshots
      *
-     * Any additional parameters specifying rotation constraints are perfect-forwarded to 
+     * Any additional parameters specifying rotation constraints are perfect-forwarded to
      * InSilicoRotater::create. **NOTE** I wanted mask and window to be const references but for
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
     const auto &getImageDifferences(const cv::Mat &image, Ts &&... args) const
     {
-        return getImageDifferences(image, ImgProc::Mask{}, getFullWindow(), std::forward<Ts>(args)...);
+        return getImageDifferences(image, ImgProc::Mask{}, this->getFullWindow(), std::forward<Ts>(args)...);
     }
 
     /*!
      * \brief Get an estimate for heading based on current view with mask
      *        and stored snapshots within a 'window'
      *
-     * Any additional parameters specifying rotation constraints are perfect-forwarded to 
-     * InSilicoRotater::create. **NOTE**I wanted mask and window to be const references but for
+     * Any additional parameters specifying rotation constraints are perfect-forwarded to
+     * InSilicoRotater::create. **NOTE** I wanted mask and window to be const references but for
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
-    auto getHeading(const cv::Mat &image, ImgProc::Mask mask, Window window, Ts &&... args) const
+    auto getHeading(const cv::Mat &image, ImgProc::Mask mask, typename PerfectMemory<Store>::Window window, Ts &&... args) const
     {
         auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(window, rotater);
@@ -254,22 +254,22 @@ public:
     }
 
     /*!
-     * \brief Get an estimate for heading based on current view with mask and stored snapshots 
+     * \brief Get an estimate for heading based on current view with mask and stored snapshots
      *
-     * Any additional parameters specifying rotation constraints are perfect-forwarded to 
+     * Any additional parameters specifying rotation constraints are perfect-forwarded to
      * InSilicoRotater::create. **NOTE**I wanted mask and window to be const references but for
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
     template<class... Ts>
     auto getHeading(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
-        return getHeading(image, mask, this_>getFullWindow(), std::forward<Ts>(args)...);
+        return getHeading(image, mask, this->getFullWindow(), std::forward<Ts>(args)...);
     }
 
     /*!
      * \brief Get an estimate for heading based on current view  and stored snapshots
      *
-     * Any additional parameters specifying rotation constraints are perfect-forwarded to 
+     * Any additional parameters specifying rotation constraints are perfect-forwarded to
      * InSilicoRotater::create. **NOTE**I wanted mask and window to be const references but for
      * reasons that are beyond me, if it is a reference the second overload always gets selected
      */
