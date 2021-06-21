@@ -67,10 +67,10 @@ public:
         m_Store.addSnapshot(image, mask);
     }
 
-    float test(const cv::Mat &image, ImgProc::Mask &mask = ImgProc::Mask{},
-               const Window &window = getFullWindow()) const
+    float test(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{},
+               const Window &window = defaultWindow) const
     {
-        testInternal(image, mask, window);
+        testInternal(image, mask, applyDefaultWindow(window));
 
         // Return smallest difference
         return *std::min_element(m_Differences.begin(), m_Differences.end());
@@ -92,9 +92,9 @@ public:
 
     //! Get differences between current view and all stored snapshots
     const std::vector<float> &getImageDifferences(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{},
-                                                  const Window &window = getFullWindow()) const
+                                                  const Window &window = defaultWindow) const
     {
-        testInternal(image, mask, window);
+        testInternal(image, mask, applyDefaultWindow(window));
         return m_Differences;
     }
 
@@ -107,6 +107,8 @@ public:
     const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
 
 protected:
+    static const Window defaultWindow;
+
     //------------------------------------------------------------------------
     // Protected API
     //------------------------------------------------------------------------
@@ -150,7 +152,21 @@ private:
                 }
             });
     }
+
+    Window applyDefaultWindow(const Window &window) const
+    {
+        // If window is set to default values, set it to full valid window
+        if(window == defaultWindow) {
+            return getFullWindow();
+        }
+        else {
+            return window;
+        }
+    }
 };
+
+template<typename Store>
+const typename PerfectMemory<Store>::Window PerfectMemory<Store>::defaultWindow = { std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max() };
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::PerfectMemoryRotater

@@ -45,7 +45,7 @@ public:
     InfoMax(const cv::Size &unwrapRes,
             const MatrixType &initialWeights,
             FloatType learningRate = 0.0001)
-      : m_UnwrapResolution(unwrapRes)
+      : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
     {
@@ -110,7 +110,7 @@ public:
     }
 
     //! Get the resolution of images
-    const cv::Size &getUnwrapResolution() const { return m_UnwrapResolution; }
+    const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
 
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
