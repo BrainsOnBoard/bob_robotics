@@ -24,7 +24,7 @@ void band_matrix::resize(int dim, int n_u, int n_l)
 }
 int band_matrix::dim() const
 {
-    if(m_upper.size()>0) {
+    if(!m_upper.empty()) {
         return m_upper[0].size();
     } else {
         return 0;
@@ -135,7 +135,7 @@ std::vector<double> band_matrix::lu_solve(const std::vector<double>& b,
 {
     BOB_ASSERT( this->dim()==(int)b.size() );
     std::vector<double>  x,y;
-    if(is_lu_decomposed==false) {
+    if(!is_lu_decomposed) {
         this->lu_decompose();
     }
     y=this->l_solve(b);
@@ -153,7 +153,7 @@ void spline::set_boundary(spline::bd_type left, double left_value,
                           spline::bd_type right, double right_value,
                           bool force_linear_extrapolation)
 {
-    BOB_ASSERT(m_x.size()==0);          // set_points() must not have happened yet
+    BOB_ASSERT(m_x.empty());          // set_points() must not have happened yet
     m_left=left;
     m_right=right;
     m_left_value=left_value;
@@ -175,7 +175,7 @@ void spline::set_points(const std::vector<double>& x,
         BOB_ASSERT(m_x[i]<m_x[i+1]);
     }
 
-    if(cubic_spline==true) { // cubic spline interpolation
+    if(cubic_spline) { // cubic spline interpolation
         // setting up the matrix and right hand side of the equation system
         // for the parameters b[]
         band_matrix A(n,1,1);
@@ -240,7 +240,7 @@ void spline::set_points(const std::vector<double>& x,
     }
 
     // for left extrapolation coefficients
-    m_b0 = (m_force_linear_extrapolation==false) ? m_b[0] : 0.0;
+    m_b0 = (!m_force_linear_extrapolation) ? m_b[0] : 0.0;
     m_c0 = m_c[0];
 
     // for the right extrapolation coefficients
@@ -249,7 +249,7 @@ void spline::set_points(const std::vector<double>& x,
     // m_b[n-1] is determined by the boundary condition
     m_a[n-1]=0.0;
     m_c[n-1]=3.0*m_a[n-2]*h*h+2.0*m_b[n-2]*h+m_c[n-2];   // = f'_{n-2}(x_{n-1})
-    if(m_force_linear_extrapolation==true)
+    if(m_force_linear_extrapolation)
         m_b[n-1]=0.0;
 }
 

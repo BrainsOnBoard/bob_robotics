@@ -24,7 +24,7 @@ public:
     virtual void takeOff() override;
     virtual void land() override;
     virtual void setPitch(float pitch) override;
-    virtual void setRoll(float right) override;
+    virtual void setRoll(float roll) override;
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
     virtual void sendCommand();

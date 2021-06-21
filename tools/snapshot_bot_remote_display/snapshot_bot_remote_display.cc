@@ -84,7 +84,7 @@ private:
     //------------------------------------------------------------------------
     // FSM::StateHandler virtuals
     //------------------------------------------------------------------------
-    virtual bool handleEvent(State state, Event event) override
+    bool handleEvent(State state, Event event) override
     {
         // If there is a state transition to apply, do so
         const State snapshotBotState = m_SnapshotBotState.exchange(State::Invalid);

@@ -230,7 +230,7 @@ private:
     //------------------------------------------------------------------------
     // FSM::StateHandler virtuals
     //------------------------------------------------------------------------
-    virtual bool handleEvent(State state, Event event) override
+    bool handleEvent(State state, Event event) override
     {
         // If this event is an update
         if(event == Event::Update) {
@@ -381,7 +381,7 @@ private:
             else if(event == Event::Update) {
                 if(m_Joystick.isPressed(HID::JButton::B)) {
                     // Open settings file and write unwrapper settings to it
-                    cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str().c_str(), cv::FileStorage::WRITE);
+                    cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str(), cv::FileStorage::WRITE);
                     settingsFile << "unwrapper" << m_Unwrapper;
 
                     // If we should stream, send state update

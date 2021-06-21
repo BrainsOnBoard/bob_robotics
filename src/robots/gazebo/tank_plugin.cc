@@ -18,7 +18,7 @@ public:
     /// \param[in] _model A pointer to the model that this plugin is
     /// attached to.
     /// \param[in] _sdf A pointer to the plugin's SDF element.
-    virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
+    void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) override
     {
         // Safety check
         if (_model->GetJointCount() == 0) {
