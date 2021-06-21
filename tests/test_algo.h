@@ -21,14 +21,13 @@ void testAlgo(const std::string &filename, ImgProc::Mask mask, Window window)
     const auto trueDifferences = readMatrix<float>(filepath);
 
     Algo algo{ TestImageSize };
-    algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {
-        algo.train(image);
+        algo.train(image, mask);
     }
 
     if (window == Window{}) {
         window = algo.getFullWindow();
     }
-    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    const auto &differences = algo.getImageDifferences(TestImages[0], mask, window);
     compareFloatMatrices(differences, trueDifferences);
 }
