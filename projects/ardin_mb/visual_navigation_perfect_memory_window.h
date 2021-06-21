@@ -48,7 +48,7 @@ public:
         LOGD << "Testing within window" << window.first << "-" << window.second;
 
         // Get image differences within window
-        const auto &differences = m_Memory.getImageDifferences(window, image);
+        const auto &differences = m_Memory.getImageDifferences(image, BoBRobotics::ImgProc::Mask{}, window);
 
         // Find minimum difference in window
         const auto minDifference = std::min_element(differences.begin(), differences.end());
@@ -80,7 +80,6 @@ public:
     //! Clear the memory
     virtual void clearMemory() override
     {
-        // **TODO** clear window
         m_Memory.clearMemory();
     }
 

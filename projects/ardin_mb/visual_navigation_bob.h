@@ -3,14 +3,11 @@
 // Ardin MB includes
 #include "visual_navigation_base.h"
 
-// BoB Robotics includes
-#include "navigation/perfect_memory.h"
-
 //----------------------------------------------------------------------------
 // BoBWrapper
 //----------------------------------------------------------------------------
-//! Very thin wrapper to allow VisualNavigationBase wrap BoB
-//! navigation algorithms which can be used without additional state etc
+//! Very thin wrapper to allow BoB navigation algorithms
+//! which can be used without additional state etc
 template<typename T>
 class VisualNavigationBoB : public VisualNavigationBase
 {
