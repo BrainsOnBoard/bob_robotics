@@ -4,6 +4,7 @@
 #include <csignal>
 
 // Standard C++ includes
+#include <mutex>
 #include <stdexcept>
 #include <unordered_set>
 #include <vector>
@@ -37,6 +38,7 @@ public:
 private:
     std::vector<int> m_Signals;
     static bool CatcherExists;
+    static std::mutex ExceptionPtrMutex;
     static std::exception_ptr ExceptionPtr;
 }; // BackgroundExceptionCatcher
 } // BoBRobotics
