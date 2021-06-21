@@ -62,13 +62,13 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void train(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{})
+    void train(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{})
     {
         calculateUY(image);
         trainUY();
     }
 
-    float test(const cv::Mat &image, const ImgProc::Mask &mask = ImgProc::Mask{}) const
+    float test(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{}) const
     {
         const auto decs = m_Weights * getFloatVector(image);
         return decs.array().abs().sum();
@@ -80,7 +80,7 @@ public:
         m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
     }
 
-    
+
     const MatrixType &getWeights() const
     {
         return m_Weights;
@@ -200,20 +200,26 @@ public:
     // Public API
     //------------------------------------------------------------------------
     template<class... Ts>
-    const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
+    const std::vector<FloatType> &getImageDifferences(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
-        auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
 
     template<class... Ts>
-    auto getHeading(Ts &&... args) const
+    const std::vector<FloatType> &getImageDifferences(const cv::Mat &image, Ts &&... args) const
+    {
+        return getImageDifferences(image, ImgProc::Mask{}, std::forward<Ts>(args)...);
+    }
+
+    template<class... Ts>
+    auto getHeading(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = InSilicoRotater::create(unwrapRes, this->getMask(), std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(unwrapRes, mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference
@@ -230,6 +236,12 @@ public:
         }
 
         return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
+    }
+
+    template<class... Ts>
+    auto getHeading(const cv::Mat &image, Ts &&... args) const
+    {
+        return getHeading(image, ImgProc::Mask{}, std::forward<Ts>(args)...);
     }
 
 private:
