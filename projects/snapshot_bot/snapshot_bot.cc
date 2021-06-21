@@ -56,6 +56,10 @@ enum class State
     PausedTurning,
 };
 
+// Bounds used for extracting masks from ODK2 images
+const cv::Scalar odk2MaskLowerBound(1, 1, 1);
+const cv::Scalar odk2MaskUpperBound(255, 255, 255);
+
 //------------------------------------------------------------------------
 // RobotFSM
 //------------------------------------------------------------------------
@@ -158,11 +162,22 @@ public:
                 for(m_NumSnapshots = 0;;m_NumSnapshots++) {
                     const auto filename = getSnapshotPath(m_NumSnapshots);
 
-                    // If file exists, load image and train memory on it
+                    // If file exists
                     if(filename.exists()) {
                         std::cout << "." << std::flush;
-                        const auto &processedSnapshot = m_ImageInput->processSnapshot(cv::imread(filename.str()));
-                        //cv::imwrite((m_Config.getOutputPath() / ("processed_" + std::to_string(m_NumSnapshots) + ".png")).str(), processedSnapshot);
+
+                        // Load snapshot
+                        const cv::Mat snapshot = cv::imread(filename.str());
+
+                        // If we're using ODK2, extract mask from iamge
+                        if(m_Config.shouldUseODK2()) {
+                            m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+                        }
+
+                        // Process snapshot
+                        const cv::Mat &processedSnapshot = m_ImageInput->processSnapshot(snapshot);
+
+                        // Train model
                         m_Memory->train(processedSnapshot, m_Mask);
                     }
                     // Otherwise, stop searching
@@ -257,9 +272,7 @@ private:
 
             // If we're using the ODK2, generate mask from all black pixels in cropped image
             if(m_Config.shouldUseODK2()) {
-                const cv::Scalar maskLowerBound(1, 1, 1);
-                const cv::Scalar maskUpperBound(255, 255, 255);
-                m_Mask.set(m_Cropped, maskLowerBound, maskUpperBound);
+                m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
             }
 
             // Pump OpenCV event queue
