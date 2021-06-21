@@ -11,8 +11,8 @@ namespace AntWorld
 //----------------------------------------------------------------------------
 const Surface::Colour Surface::DefaultColour = {1.0f, 1.0f, 1.0f};
 //----------------------------------------------------------------------------
-Surface::Surface()
-:   m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_IBO(0),
+Surface::Surface() 
+:   m_PositionVBO(0), m_ColourVBO(0), m_TexCoordVBO(0), m_IBO(0), 
     m_NumVertices(0), m_NumIndices(0), m_Texture(nullptr), m_Colour(DefaultColour)
 {
     // Create a vertex array object to bind everything together
@@ -32,7 +32,7 @@ Surface::~Surface()
     if(m_TexCoordVBO != 0) {
         glDeleteBuffers(1, &m_TexCoordVBO);
     }
-
+    
     if(m_IBO != 0) {
         glDeleteBuffers(1, &m_IBO);
     }
@@ -49,7 +49,7 @@ void Surface::bind() const
     glColor3fv(m_Colour.data());
 }
 //----------------------------------------------------------------------------
-void Surface::unbind()
+void Surface::unbind() 
 {
     // Unbind vertex array
     glBindVertexArray(0);
@@ -80,7 +80,7 @@ void Surface::unbindTextured() const
     }
 }
 //----------------------------------------------------------------------------
-void Surface::unbindIndices()
+void Surface::unbindIndices() 
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
