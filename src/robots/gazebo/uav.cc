@@ -37,12 +37,12 @@ void UAV::setPitch(float pitch)
     m_Pitch = pitch;
     sendCommand();
 }
-void UAV::setRoll(float right)
+void UAV::setRoll(float roll)
 {
     if(!m_Armed){
         return;
     }
-    m_Roll = right;
+    m_Roll = roll;
     sendCommand();
 }
 void UAV::setVerticalSpeed(float up)
