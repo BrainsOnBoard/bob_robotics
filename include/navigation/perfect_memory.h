@@ -132,11 +132,7 @@ private:
         BOB_ASSERT(image.cols == unwrapRes.width);
         BOB_ASSERT(image.rows == unwrapRes.height);
         BOB_ASSERT(image.type() == CV_8UC1);
-        if(!mask.empty()) {
-            BOB_ASSERT(mask.get().cols == unwrapRes.width);
-            BOB_ASSERT(mask.get().rows == unwrapRes.height);
-            BOB_ASSERT(mask.get().type() == CV_8UC1);
-        }
+        BOB_ASSERT(mask.isValid(unwrapRes));
 
         BOB_ASSERT(window.first < getNumSnapshots());
         BOB_ASSERT(window.second <= getNumSnapshots());
