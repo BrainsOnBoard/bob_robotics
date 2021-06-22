@@ -98,8 +98,8 @@ Mask::set(cv::Mat mask, const cv::Size &size)
     }
 
     // The user has requested a specific size of mask
-    if (resizeTo != cv::Size{ 0, 0 }) {
-        cv::resize(mask, mask, resizeTo, {}, {}, cv::INTER_NEAREST);
+    if (size != cv::Size{ 0, 0 }) {
+        cv::resize(mask, mask, size, {}, {}, cv::INTER_NEAREST);
     }
 
     // Needs to be composed of bytes
@@ -115,14 +115,14 @@ Mask::set(cv::Mat mask, const cv::Size &size)
 }
 
 void
-Mask::set(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size)
+Mask::set(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size)
 {
     // Set mask from pixels within specified bounds
     cv::inRange(image, lower, upper, m_Mask);
 
     // The user has requested a specific size of mask
-    if (resizeTo != cv::Size{ 0, 0 }) {
-        cv::resize(m_Mask, m_Mask, resizeTo, {}, {}, cv::INTER_NEAREST);
+    if (size != cv::Size{ 0, 0 }) {
+        cv::resize(m_Mask, m_Mask, size, {}, {}, cv::INTER_NEAREST);
     }
 }
 
@@ -134,7 +134,7 @@ Mask::set(const filesystem::path &imagePath, const cv::Size &size)
         throw std::runtime_error("Could not load mask from " + imagePath.str());
     }
 
-    set(std::move(mask), resizeTo);
+    set(std::move(mask), size);
 }
 
 } //ImgProc
