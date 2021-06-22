@@ -24,7 +24,7 @@ public:
     explicit Mask(cv::Mat mask, const cv::Size &resizeTo = {});
 
     //! Construct a mask based on a cv::Mat where pixels outside of lower and upper range are masked
-    explicit Mask(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo = {});
+    explicit Mask(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo = {});
 
     //! Load a mask from an image file
     explicit Mask(const filesystem::path &imagePath, const cv::Size &resizeTo = {});

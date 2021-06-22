@@ -14,9 +14,9 @@ Mask::Mask(cv::Mat mask, const cv::Size &resizeTo)
     set(std::move(mask), resizeTo);
 }
 
-Mask::Mask(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo)
+Mask::Mask(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo)
 {
-    set(std::move(image), lower, upper, resizeTo);
+    set(image, lower, upper, resizeTo);
 }
 
 Mask::Mask(const filesystem::path &imagePath, const cv::Size &resizeTo)
