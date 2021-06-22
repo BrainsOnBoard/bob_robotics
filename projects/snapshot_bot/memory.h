@@ -15,6 +15,14 @@
 // Forward declarations
 class Config;
 
+namespace BoBRobotics
+{
+namespace ImgProc
+{
+class Mask;
+}
+}
+
 //------------------------------------------------------------------------
 // MemoryBase
 //------------------------------------------------------------------------
@@ -27,8 +35,8 @@ public:
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    virtual void test(const cv::Mat &snapshot) = 0;
-    virtual void train(const cv::Mat &snapshot) = 0;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) = 0;
+    virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) = 0;
 
     virtual void writeCSVHeader(std::ostream &os);
     virtual void writeCSVLine(std::ostream &os);
@@ -65,8 +73,8 @@ public:
     //------------------------------------------------------------------------
     // MemoryBase virtuals
     //------------------------------------------------------------------------
-    virtual void test(const cv::Mat &snapshot) override;
-    virtual void train(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
+    virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
     virtual void writeCSVHeader(std::ostream &os) override;
     virtual void writeCSVLine(std::ostream &os) override;
@@ -105,7 +113,7 @@ public:
     //------------------------------------------------------------------------
     // MemoryBase virtuals
     //------------------------------------------------------------------------
-    virtual void test(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
 private:
     //------------------------------------------------------------------------
@@ -126,7 +134,7 @@ public:
     //------------------------------------------------------------------------
     // MemoryBase virtuals
     //------------------------------------------------------------------------
-    virtual void test(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
     virtual void writeCSVHeader(std::ostream &os) override;
     virtual void writeCSVLine(std::ostream &os) override;
@@ -144,14 +152,14 @@ private:
 //------------------------------------------------------------------------
 class InfoMax : public MemoryBase
 {
-    using InfoMaxType = BoBRobotics::Navigation::InfoMaxRotater<BoBRobotics::Navigation::InSilicoRotater, float>;
+    using InfoMaxType = BoBRobotics::Navigation::InfoMaxRotater<float>;
     using InfoMaxWeightMatrixType = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>;
 
 public:
     InfoMax(const Config &config, const cv::Size &inputSize);
 
-    virtual void test(const cv::Mat &snapshot) override;
-    virtual void train(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
+    virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
     void saveWeights(const filesystem::path &filename) const;
 
@@ -179,7 +187,7 @@ class InfoMaxConstrained : public InfoMax
 public:
     InfoMaxConstrained(const Config &config, const cv::Size &inputSize);
 
-    virtual void test(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
 private:
     //------------------------------------------------------------------------

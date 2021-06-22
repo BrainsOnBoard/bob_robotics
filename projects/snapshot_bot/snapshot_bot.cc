@@ -8,17 +8,21 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
-#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
+#include "imgproc/mask.h"
 #include "net/server.h"
+#include "plog/Log.h"
 #include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/netsink.h"
 #include "video/panoramic.h"
+#ifdef USE_ODK2
+#include "video/odk2/odk2.h"
+#endif
 
 // BoB robotics third-party includes
 #include "third_party/path.h"
@@ -52,6 +56,10 @@ enum class State
     PausedTurning,
 };
 
+// Bounds used for extracting masks from ODK2 images
+const cv::Scalar odk2MaskLowerBound(1, 1, 1);
+const cv::Scalar odk2MaskUpperBound(255, 255, 255);
+
 //------------------------------------------------------------------------
 // RobotFSM
 //------------------------------------------------------------------------
@@ -62,16 +70,20 @@ class RobotFSM : FSM<State>::StateHandler
 
 public:
     RobotFSM(const Config &config)
-    :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(Video::getPanoramicCamera(cv::CAP_V4L)),
+    :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(getPanoramicCamera(config)),
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3), m_Cropped(config.getCroppedRect().size(), CV_8UC3),
-        m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_Unwrapper(m_Camera->createUnwrapper(config.getUnwrapRes())),
-        m_ImageInput(createImageInput(config)), m_Memory(createMemory(config, m_ImageInput->getOutputSize())),
-        m_NumSnapshots(0)
+        m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_ImageInput(createImageInput(config)),
+        m_Memory(createMemory(config, m_ImageInput->getOutputSize())), m_NumSnapshots(0)
     {
         m_LogFile.exceptions(std::ios::badbit | std::ios::failbit);
 
         // Create output directory (if necessary)
         filesystem::create_directory(m_Config.getOutputPath());
+
+        // If camera image will need unwrapping, create unwrapper
+        if(m_Camera->needsUnwrapping()) {
+            m_Unwrapper = m_Camera->createUnwrapper(config.getUnwrapRes());
+        }
 
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
@@ -113,6 +125,12 @@ public:
             m_BestSnapshotConnection->runInBackground();
         }
 
+         // If a static mask image is specified, set it as the mask
+        if(!m_Config.getMaskImageFilename().empty()) {
+            BOB_ASSERT(!m_Config.shouldUseODK2());
+            m_Mask.set(m_Config.getMaskImageFilename());
+        }
+
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
             // Connect to port specified in config
@@ -135,18 +153,32 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         }
         else {
+            // **TODO** save ODK2 masks
+            BOB_ASSERT(!m_Config.shouldUseODK2());
+
             // If we're not using InfoMax or pre-trained weights don't exist
             if(!m_Config.shouldUseInfoMax() || !(m_Config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin")).exists()) {
                 LOGI << "Training on stored snapshots";
                 for(m_NumSnapshots = 0;;m_NumSnapshots++) {
                     const auto filename = getSnapshotPath(m_NumSnapshots);
 
-                    // If file exists, load image and train memory on it
+                    // If file exists
                     if(filename.exists()) {
                         std::cout << "." << std::flush;
-                        const auto &processedSnapshot = m_ImageInput->processSnapshot(cv::imread(filename.str()));
-                        //cv::imwrite((m_Config.getOutputPath() / ("processed_" + std::to_string(m_NumSnapshots) + ".png")).str(), processedSnapshot);
-                        m_Memory->train(processedSnapshot);
+
+                        // Load snapshot
+                        const cv::Mat snapshot = cv::imread(filename.str());
+
+                        // If we're using ODK2, extract mask from iamge
+                        if(m_Config.shouldUseODK2()) {
+                            m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+                        }
+
+                        // Process snapshot
+                        const cv::Mat &processedSnapshot = m_ImageInput->processSnapshot(snapshot);
+
+                        // Train model
+                        m_Memory->train(processedSnapshot, m_Mask);
                     }
                     // Otherwise, stop searching
                     else {
@@ -157,7 +189,7 @@ public:
 
                 // If we are using InfoMax save the weights now
                 if(m_Config.shouldUseInfoMax()) {
-                    InfoMax *infoMax= dynamic_cast<InfoMax*>(m_Memory.get());
+                    InfoMax *infoMax = dynamic_cast<InfoMax*>(m_Memory.get());
                     infoMax->saveWeights(m_Config.getOutputPath() / "weights.bin");
                 }
             }
@@ -179,6 +211,20 @@ private:
     filesystem::path getSnapshotPath(size_t index) const
     {
         return m_Config.getOutputPath() / ("snapshot_" + std::to_string(index) + ".png");
+    }
+
+    std::unique_ptr<Video::Input> getPanoramicCamera(const Config &config)
+    {
+        if(config.shouldUseODK2()) {
+#ifdef USE_ODK2
+            return std::make_unique<Video::ODK2>();
+#else
+            throw std::runtime_error("Snapshot bot not compiled with ODK2 support - please re-run cmake with -DUSE_ODK2=1");
+#endif
+        }
+        else {
+            return Video::getPanoramicCamera(cv::CAP_V4L);
+        }
     }
 
     //------------------------------------------------------------------------
@@ -211,17 +257,25 @@ private:
                 return false;
             }
 
-            // Unwrap frame
-            m_Unwrapper.unwrap(m_Output, m_Unwrapped);
+            // If our camera image needs unwrapping
+            if(m_Camera->needsUnwrapping()) {
+                // Unwrap the image
+                m_Unwrapper.unwrap(m_Output, m_Unwrapped);
 
-            // Crop frame
-            m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
-
-            // If we should stream output, send unwrapped frame
-            if(m_Config.shouldStreamOutput()) {
-                m_LiveNetSink->sendFrame(m_Cropped);
+                // Crop unwrapped frame
+                m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
+            }
+            // Otherwise, crop camera image directly
+            else {
+                m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
             }
 
+            // If we're using the ODK2, generate mask from all black pixels in cropped image
+            if(m_Config.shouldUseODK2()) {
+                m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+            }
+
+            // Pump OpenCV event queue
             cv::waitKey(1);
         }
 
@@ -281,7 +335,7 @@ private:
                     // Train memory
                     LOGI << "\tTrained snapshot";
                     const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                    m_Memory->train(processedSnapshot);
+                    m_Memory->train(processedSnapshot, m_Config.shouldUseODK2() ? m_Mask.clone() : m_Mask);
 
                     // Write raw snapshot to disk
                     const std::string filename = getSnapshotPath(m_NumSnapshots++).str();
@@ -379,7 +433,7 @@ private:
             else if(event == Event::Update) {
                 // Find matching snapshot
                 const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                m_Memory->test(processedSnapshot);
+                m_Memory->test(processedSnapshot, m_Mask);
 
                 // Write time
                 m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
@@ -514,6 +568,9 @@ private:
 
     // OpenCV-based panorama unwrapper
     ImgProc::OpenCVUnwrap360 m_Unwrapper;
+
+    // Mask for image matching
+    ImgProc::Mask m_Mask;
 
     // Image processor
     std::unique_ptr<ImageInput> m_ImageInput;

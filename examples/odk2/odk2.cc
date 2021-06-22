@@ -31,7 +31,8 @@ int bobMain(int, char**)
         std::cout << "Orientation: (" << euler[0].value() << ", " << euler[1].value() << ", "<< euler[2].value() << ") degrees" << std::endl;
 
         // Pump events and stop if escape is pressed
-        if(cv::waitKey(1) == 27) {
+        const int key = cv::waitKey(1) & OS::KeyMask;
+        if(key == 27) {
             break;
         }
     }

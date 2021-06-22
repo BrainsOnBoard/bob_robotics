@@ -14,6 +14,11 @@ Mask::Mask(cv::Mat mask, const cv::Size &resizeTo)
     set(std::move(mask), resizeTo);
 }
 
+Mask::Mask(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo)
+{
+    set(image, lower, upper, resizeTo);
+}
+
 Mask::Mask(const filesystem::path &imagePath, const cv::Size &resizeTo)
 {
     set(imagePath, resizeTo);
@@ -64,6 +69,15 @@ Mask::isValid(const cv::Size &imageSize) const
     return empty() || m_Mask.size() == imageSize;
 }
 
+Mask
+Mask::clone() const
+{
+    // Clone mask image into new mask and return
+    Mask newMask;
+    newMask.m_Mask = m_Mask.clone();
+    return newMask;
+}
+
 void
 Mask::roll(Mask &out, size_t pixelsLeft) const
 {
@@ -75,7 +89,7 @@ Mask::roll(Mask &out, size_t pixelsLeft) const
 }
 
 void
-Mask::set(cv::Mat mask, const cv::Size &resizeTo)
+Mask::set(cv::Mat mask, const cv::Size &size)
 {
     if (mask.empty()) {
         // Clears mask
@@ -84,8 +98,8 @@ Mask::set(cv::Mat mask, const cv::Size &resizeTo)
     }
 
     // The user has requested a specific size of mask
-    if (resizeTo != cv::Size{ 0, 0 }) {
-        cv::resize(mask, mask, resizeTo, {}, {}, cv::INTER_NEAREST);
+    if (size != cv::Size{ 0, 0 }) {
+        cv::resize(mask, mask, size, {}, {}, cv::INTER_NEAREST);
     }
 
     // Needs to be composed of bytes
@@ -101,14 +115,26 @@ Mask::set(cv::Mat mask, const cv::Size &resizeTo)
 }
 
 void
-Mask::set(const filesystem::path &imagePath, const cv::Size &resizeTo)
+Mask::set(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size)
+{
+    // Set mask from pixels within specified bounds
+    cv::inRange(image, lower, upper, m_Mask);
+
+    // The user has requested a specific size of mask
+    if (size != cv::Size{ 0, 0 }) {
+        cv::resize(m_Mask, m_Mask, size, {}, {}, cv::INTER_NEAREST);
+    }
+}
+
+void
+Mask::set(const filesystem::path &imagePath, const cv::Size &size)
 {
     cv::Mat mask = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
     if (mask.empty()) {
         throw std::runtime_error("Could not load mask from " + imagePath.str());
     }
 
-    set(std::move(mask), resizeTo);
+    set(std::move(mask), size);
 }
 
 } //ImgProc

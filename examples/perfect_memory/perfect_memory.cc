@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/path.h"
 #include "common/timer.h"
+#include "navigation/image_database.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_store_raw.h"
 #include "navigation/perfect_memory_store_hog.h"
@@ -13,6 +14,20 @@
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
+
+//------------------------------------------------------------------------
+// Anonymous namespace
+//------------------------------------------------------------------------
+namespace
+{
+template<typename PM>
+void trainRoute(PM &pm, const std::vector<cv::Mat> &images)
+{
+    for (auto &image : images) {
+        pm.train(image);
+    }
+}
+}
 
 int bobMain(int, char **)
 {
@@ -29,7 +44,7 @@ int bobMain(int, char **)
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemoryRotater<> pm(imSize);
-        pm.trainRoute(snapshots);
+        trainRoute(pm, snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -49,7 +64,7 @@ int bobMain(int, char **)
 
         // Default algorithm: find best-matching snapshot, use abs diff
         PerfectMemoryRotater<> pm(imSize);
-        pm.trainRoute(snapshots);
+        trainRoute(pm, snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -70,7 +85,7 @@ int bobMain(int, char **)
     {
         LOGI << "Testing with RMS image difference...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>> pm(imSize);
-        pm.trainRoute(snapshots);
+        trainRoute(pm, snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -88,7 +103,7 @@ int bobMain(int, char **)
     {
         LOGI << "Testing with correlation coefficient difference...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>> pm(imSize);
-        pm.trainRoute(snapshots);
+        trainRoute(pm, snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
@@ -107,7 +122,7 @@ int bobMain(int, char **)
         constexpr size_t numComp = 3;
         LOGI <<  "Testing with " << numComp << " weighted snapshots...";
         PerfectMemoryRotater<PerfectMemoryStore::RawImage<>, WeightSnapshotsDynamic<numComp>> pm(imSize);
-        pm.trainRoute(snapshots);
+        trainRoute(pm, snapshots);
 
         Timer<> t{ "Time taken for testing: " };
 
@@ -127,7 +142,7 @@ int bobMain(int, char **)
         LOGI << "Testing with HOG...";
 
         PerfectMemoryRotater<PerfectMemoryStore::HOG<>> pm(imSize, cv::Size(10, 10), 8);
-        pm.trainRoute(snapshots);
+        trainRoute(pm, snapshots);
 
         // Time testing phase
         Timer<> t{ "Time taken for testing: " };
