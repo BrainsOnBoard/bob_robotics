@@ -52,7 +52,7 @@ public:
     void roll(Mask &out, size_t pixelsLeft) const;
 
     void set(cv::Mat mask, const cv::Size &size = {});
-    void set(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size = {});
+    void set(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size = {});
     void set(const filesystem::path &imagePath, const cv::Size &size = {});
 
 private:

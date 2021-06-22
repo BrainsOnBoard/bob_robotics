@@ -73,7 +73,7 @@ public:
     :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(getPanoramicCamera(config)),
         m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3), m_Cropped(config.getCroppedRect().size(), CV_8UC3),
         m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_ImageInput(createImageInput(config)),
-        m_Memory(createMemory(config, m_ImageInput->getOutputSize())), m_Robot(), m_NumSnapshots(0)
+        m_Memory(createMemory(config, m_ImageInput->getOutputSize())), m_NumSnapshots(0)
     {
         m_LogFile.exceptions(std::ios::badbit | std::ios::failbit);
 

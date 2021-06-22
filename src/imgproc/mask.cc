@@ -89,7 +89,7 @@ Mask::roll(Mask &out, size_t pixelsLeft) const
 }
 
 void
-Mask::set(cv::Mat mask, const cv::Size &resizeTo)
+Mask::set(cv::Mat mask, const cv::Size &size)
 {
     if (mask.empty()) {
         // Clears mask
@@ -115,7 +115,7 @@ Mask::set(cv::Mat mask, const cv::Size &resizeTo)
 }
 
 void
-Mask::set(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo)
+Mask::set(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size)
 {
     // Set mask from pixels within specified bounds
     cv::inRange(image, lower, upper, m_Mask);
@@ -127,7 +127,7 @@ Mask::set(cv::Mat image, const cv::Scalar &lower, const cv::Scalar &upper, const
 }
 
 void
-Mask::set(const filesystem::path &imagePath, const cv::Size &resizeTo)
+Mask::set(const filesystem::path &imagePath, const cv::Size &size)
 {
     cv::Mat mask = cv::imread(imagePath.str(), cv::IMREAD_GRAYSCALE);
     if (mask.empty()) {

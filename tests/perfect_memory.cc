@@ -25,7 +25,7 @@ using Window = std::pair<size_t, size_t>;
 PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
 PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
 
-void testCCoeff(const std::string &filename, ImgProc::Mask mask, std::pair<size_t, size_t> window)
+void testCCoeff(const std::string &filename, const ImgProc::Mask &mask, std::pair<size_t, size_t> window)
 {
     using namespace BoBRobotics;
     constexpr float precision = 1e-5f;
