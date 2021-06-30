@@ -14,21 +14,6 @@ Omni2D::omni2D(float forward, float sideways, float turn)
     LOGI << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn;
 }
 
-void Omni2D::moveForward(float speed)
-{
-    omni2D(speed, 0.0f, 0.0f);
-}
-
-void Omni2D::turnOnTheSpot(float clockwiseSpeed)
-{
-    omni2D(0.0f, 0.0f, clockwiseSpeed);
-}
-
-void Omni2D::stopMoving()
-{
-    omni2D(0.0f, 0.0f, 0.0f);
-}
-
 void
 Omni2D::addJoystick(HID::Joystick &joystick, float deadZone)
 {
@@ -63,8 +48,14 @@ void Omni2D::stopReadingFromNetwork()
 {
     if (m_Connection) {
         // Ignore incoming TNK commands
-        m_Connection->setCommandHandler("TNK", nullptr);
+        m_Connection->setCommandHandler("OMN", nullptr);
     }
+}
+
+void Omni2D::tank(float left, float right)
+{
+    std::cout << left << "," <<right << std::endl;
+    omni2D((left + right) / 2.0f, 0.0f, (left - right) / 2.0f);
 }
 
 float
