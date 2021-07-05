@@ -46,9 +46,9 @@ public:
  * NB: Don't define your struct with commas in or it'll break the macro.
  */
 #ifdef __GNUC__
-#define BOB_PACKED(class_to_pack) class_to_pack __attribute__((__packed__))
+#define BOB_PACKED(...) __VA_ARGS__ __attribute__((__packed__))
 #else
-#define BOB_PACKED(class_to_pack) __pragma(pack(push, 1)) class_to_pack __pragma(pack(pop))
+#define BOB_PACKED(...) __pragma(pack(push, 1)) __VA_ARGS__ __pragma(pack(pop))
 #endif
 
 #define BOB_NOT_IMPLEMENTED(funcdef)                          \
