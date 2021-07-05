@@ -98,7 +98,7 @@ public:
         // Get state machine to carry out appropriate action
         m_StateMachine.update();
 
-        // Return true if we're at goal (within m_DistanceTolerance)
+        // Return false if we're at goal (within m_DistanceTolerance)
         return m_StateMachine.getCurrentState() != TankPIDState::AtGoal;
     }
 
