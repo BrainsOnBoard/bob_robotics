@@ -30,7 +30,7 @@ int bobMain(int, char **)
     client.runInBackground();
 
     // Object to run object circumnavigator
-    auto runner = createRunner(tank, viconObject);
+    auto runner = createRunner(tank, *viconObject);
     do {
         // Check for exceptions on background thread
         catcher.check();

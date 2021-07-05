@@ -64,7 +64,7 @@ public:
       , m_Vicon(51001)
       , m_ViconObject(m_Vicon.getObjectReference())
       , m_Positioner(m_Tank,
-                     m_ViconObject,
+                     *m_ViconObject,
                      StoppingDistance,
                      AllowedHeadingError,
                      K1,
@@ -75,7 +75,7 @@ public:
                      PositionerMinSpeed,
                      PositionerMaxSpeed)
       , m_CollisionDetector{ getRobotDimensions(m_Tank), Navigation::readObjects("objects.yaml"), 30_cm, 1_cm }
-      , m_Circumnavigator{ m_Tank, m_ViconObject, m_CollisionDetector }
+      , m_Circumnavigator{ m_Tank, *m_ViconObject, m_CollisionDetector }
       , m_AvoidingPositioner(m_Positioner, m_Circumnavigator)
       , m_StateMachine(this, InvalidState)
     {
@@ -196,7 +196,7 @@ private:
     Net::Client m_Client;
     Robots::TankNetSink m_Tank;
     Vicon::UDPClient<> m_Vicon;
-    Vicon::ObjectReference<> m_ViconObject;
+    std::unique_ptr<Vicon::ObjectReference<>> m_ViconObject;
     HID::Joystick m_Joystick;
     Robots::RobotPositioner<Vicon::ObjectReference<>> m_Positioner;
     Robots::CollisionDetector m_CollisionDetector;

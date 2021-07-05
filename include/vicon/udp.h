@@ -300,8 +300,8 @@ public:
 
         // Convert to fixed-size char array
         BOB_ASSERT(name.size() < 24);
-        char bytes[24];
-        strcpy(bytes, name.c_str());
+        std::array<char, 24> bytes;
+        strcpy(bytes.data(), name.c_str());
 
         std::lock_guard<std::mutex> guard(m_ObjectMutex);
         return m_ObjectData.at(bytes);
@@ -320,9 +320,8 @@ public:
      {
          waitUntilConnected();
          std::lock_guard<std::mutex> guard(m_ObjectMutex);
-         return ObjectReference<ObjectDataType>(*this,
-                                                m_ObjectData.begin()->first,
-                                                timeoutDuration);
+         return std::make_unique<ObjectReference<ObjectDataType>>(
+             *this, m_ObjectData.begin()->first.data(), timeoutDuration);
      }
 
     //! Returns an object whose pose is updated by the Vicon system over time
@@ -330,9 +329,8 @@ public:
                             Stopwatch::Duration timeoutDuration = 10s) const
     {
         waitUntilConnected();
-        return ObjectReference<ObjectDataType>(*this,
-                                               name.c_str(),
-                                               timeoutDuration);
+        return std::make_unique<ObjectReference<ObjectDataType>>(
+            *this, name.c_str(), timeoutDuration);
     }
 
     bool connected() const { return m_IsConnected; }
