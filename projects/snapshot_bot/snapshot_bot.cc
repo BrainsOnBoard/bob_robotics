@@ -13,9 +13,11 @@
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "imgproc/mask.h"
+#include "navigation/read_objects.h"
 #include "net/server.h"
 #include "plog/Log.h"
 #include "robots/robot_type.h"
+#include "robots/control/tank_pid.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/netsink.h"
@@ -135,6 +137,9 @@ public:
         if(m_Config.shouldUseViconTracking()) {
             // Connect to port specified in config
             m_ViconTracking.connect(m_Config.getViconTrackingPort());
+
+            // Get Vicon tracking object
+            m_ViconObject = m_ViconTracking.getObjectReference(m_Config.getViconTrackingObjectName());
         }
 
         // If we should use Vicon capture control
@@ -145,6 +150,24 @@ public:
 
             // Start capture
             m_ViconCaptureControl.startRecording(m_Config.getViconCaptureControlName());
+        }
+
+         // If a training path is specified
+        if(!m_Config.getTrainingPath().empty()) {
+            // Give error if Vicon tracking isn't enabled
+            if(!m_Config.shouldUseViconTracking()) {
+                throw std::runtime_error("Snapshot bot can only follow a pre-programmed training path if Vicon tracking is enabled");
+            }
+
+            // Load training route
+            m_TrainingRoute = Navigation::readObjects(m_Config.getTrainingPath()).at(0);
+            LOGI << "Loaded training route with " << m_TrainingRoute.size() << " points from " << m_Config.getTrainingPath();
+
+            // Create tank PID
+            m_TankPID = std::make_unique<Robots::TankPID<Vicon::ObjectReference<Vicon::ObjectData>>>(
+                m_Robot, m_ViconObject, m_Config.getTankPIDKP(), m_Config.getTankPIDKI(), m_Config.getTankPIDKD(),
+                m_Config.getTankPIDDistanceTolerance(), m_Config.getTankPIDAngleTolerance(),
+                m_Config.getTankPIDStartTurningThreshold(), m_Config.getTankPIDAverageSpeed());
         }
 
         // If we should train
@@ -248,7 +271,10 @@ private:
             }
 
             // If we're in a suitable state, drive motors using joystick
-            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {
+            // **NOTE** if we're training with a pre-programmed training route joystick can't be used
+            if(state == State::WaitToTrain || (state == State::Training && m_TrainingRoute.empty())
+                || state == State::WaitToTest)
+            {
                 m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
             }
 
@@ -309,6 +335,16 @@ private:
 
                 m_LogFile.open((m_Config.getOutputPath() / "training.csv").str());
 
+                // If we have a training route
+                if(!m_TrainingRoute.empty()) {
+                    // Set iterator to first waypoint
+                    m_CurrentTrainingRouteWaypoint = m_TrainingRoute.cbegin();
+
+                    // Start moving towards it
+                    m_TankPID->moveTo(*m_CurrentTrainingRouteWaypoint);
+                    LOGD << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
+                }
+
                 // Write header
                 m_LogFile << "Time [s], Filename";
 
@@ -327,6 +363,26 @@ private:
                 system(("rm -f " + snapshotWildcard).c_str());
             }
             else if(event == Event::Update) {
+                // If we have a training route
+                if(!m_TrainingRoute.empty()) {
+                    // If we've reached waypoint
+                    if(!m_TankPID->pollPositioner()) {
+                        // Move on to next waypoiny
+                        m_CurrentTrainingRouteWaypoint++;
+
+                        // Stop robot
+                        m_Robot.stopMoving();
+
+                        // If there're more waypoints to go, move to next waypoint
+                        if (m_CurrentTrainingRouteWaypoint != m_TrainingRoute.cend()) {
+                            LOGD << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
+                            m_TankPID->moveTo(*m_CurrentTrainingRouteWaypoint);
+                        }
+                        else {
+                            LOGI << "Reached last training waypoint";
+                        }
+                    }
+                }
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && m_TrainingStopwatch.elapsed() > m_Config.getTrainInterval())) {
                     // Update last train time
@@ -352,7 +408,7 @@ private:
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
-                        const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
+                        const auto objectData = m_ViconObject.getData();
                         const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                         const auto &position = pose.position();
                         const auto &attitude = pose.attitude();
@@ -444,7 +500,7 @@ private:
                 // If vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
                     // Get tracking data
-                    const auto objectData = m_ViconTracking.getObjectData();
+                    const auto objectData = m_ViconObject.getData();
                     const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                     const auto &position = pose.position();
                     const auto &attitude = pose.attitude();
@@ -594,6 +650,12 @@ private:
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
 
+    // Vicon tracking object
+    Vicon::ObjectReference<Vicon::ObjectData> m_ViconObject;
+
+    // PID controller for driving robot
+    std::unique_ptr<Robots::TankPID<Vicon::ObjectReference<Vicon::ObjectData>>> m_TankPID;
+
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 
@@ -604,6 +666,10 @@ private:
 
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
+
+    // Vector of points to drive between
+    std::vector<Vector2<millimeter_t>> m_TrainingRoute;
+    std::vector<Vector2<millimeter_t>>::const_iterator m_CurrentTrainingRouteWaypoint;
 
     // Connections for streaming live images
     std::unique_ptr<Net::Connection> m_LiveConnection;
