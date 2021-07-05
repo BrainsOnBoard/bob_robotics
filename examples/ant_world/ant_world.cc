@@ -6,11 +6,11 @@
 #include "antworld/common.h"
 #include "antworld/render_target_hex_display.h"
 #include "antworld/renderer.h"
-#include "antworld/renderer_stereo.h"
 #include "viz/sfml/joystick_keyboard.h"
 
 
 // Third-party includes
+#include "third_party/CLI11.hpp"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -58,7 +58,6 @@ int bobMain(int argc, char **argv)
     const auto moveSpeed = 1_mps;
     const unsigned int width = 1024;
     const unsigned int height = 500;//853;
-
 
     // If an argument is passed
     filesystem::path modelPath;
@@ -112,17 +111,13 @@ int bobMain(int argc, char **argv)
     // Create renderer - increasing cubemap size to improve quality in larger window
     // and pushing back clipping plane to reduce Z fighting
     //auto renderer = AntWorld::Renderer::createSpherical(512, 0.001, 1000.0, 296_deg, 75_deg);
-    auto renderer = AntWorld::RendererStereo::createHexagonal(256, 0.001, 1000.0, 0.0016,
-                                                              "../../resources/antworld/eye_border_BT_77973.bin", 3_deg);
-    //AntWorld::RendererStereo renderer(512, 0.1, 1000.0, 0.0016, "../../resources/antworld/eye_border_BT_77973.bin", 64, 64);
-    //                                      512, 0.1);
-
+    auto renderer = AntWorld::Renderer::createHexagonal(512, 0.001, 1000.0, 296_deg, 75_deg);
+    
     // Create a render target for displaying world re-mapped onto hexagonal mesh
-    AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMeshLeft()),
-                                                  *dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMeshRight()));
+    AntWorld::RenderTargetHexDisplay renderTarget(*dynamic_cast<const AntWorld::RenderMeshHexagonal*>(renderer->getRenderMesh()));
 
-    if (!overrideModel.empty()) {
-        renderer->getWorld().loadObj(overrideModel,
+    if (!modelPath.empty()) {
+        renderer->getWorld().loadObj(modelPath,
                                     1.0f,
                                     4096,
                                     GL_COMPRESSED_RGB);
@@ -193,6 +188,8 @@ int bobMain(int argc, char **argv)
 
         // Render hexagonal visualization of render target
         renderTarget.render(0, 0, width, height);
+        //renderer->renderPanoramicView(x, y, z, yaw, pitch, 0_deg,
+        //                              0, 0, width, height);
 
         // Swap front and back buffers
         window.display();
