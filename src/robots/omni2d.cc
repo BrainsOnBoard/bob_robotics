@@ -36,16 +36,22 @@ Omni2D::drive(const HID::Joystick &joystick, float deadZone)
 void
 Omni2D::readFromNetwork(Net::Connection &connection)
 {
+    // Superclass
+    Tank::readFromNetwork(connection);
+
     // handle incoming TNK commands
     connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
-        onCommandReceived(connection, command);
+        onOmniCommandReceived(connection, command);
     });
-    
+
     m_Connection = &connection;
 }
 
 void Omni2D::stopReadingFromNetwork()
 {
+    // Superclass
+    Tank::stopReadingFromNetwork();
+
     if (m_Connection) {
         // Ignore incoming TNK commands
         m_Connection->setCommandHandler("OMN", nullptr);
@@ -54,7 +60,7 @@ void Omni2D::stopReadingFromNetwork()
 
 void Omni2D::tank(float left, float right)
 {
-    std::cout << left << "," <<right << std::endl;
+    // Implement tank controls in terms of omni
     omni2D((left + right) / 2.0f, 0.0f, (left - right) / 2.0f);
 }
 
@@ -95,7 +101,7 @@ Omni2D::drive(float forward, float sideways, float turn, float deadZone)
 }
 
 void
-Omni2D::onCommandReceived(Net::Connection &, const Net::Command &command)
+Omni2D::onOmniCommandReceived(Net::Connection &, const Net::Command &command)
 {
     // second space separates left and right parameters
     if (command.size() != 4) {

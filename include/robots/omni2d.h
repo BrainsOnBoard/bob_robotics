@@ -26,7 +26,7 @@ public:
     virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
     virtual void readFromNetwork(Net::Connection &connection) override;
     virtual void stopReadingFromNetwork() override;
-    
+
     //------------------------------------------------------------------------
     // Tank virtuals
     //------------------------------------------------------------------------
@@ -38,10 +38,10 @@ public:
     float getForwards() const;
     float getSideways() const;
     float getTurn() const;
-    
+
 protected:
     void setWheelSpeed(float forward, float sideways, float turn);
-    
+
 private:
     float m_Forward = 0;
     float m_Sideways = 0;
@@ -49,7 +49,7 @@ private:
     Net::Connection *m_Connection = nullptr;
 
     void drive(float forward, float sideways, float turn, float deadZone);
-    void onCommandReceived(Net::Connection &, const Net::Command &command);
+    void onOmniCommandReceived(Net::Connection &, const Net::Command &command);
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 }; // Omni2D
 } // Robots
