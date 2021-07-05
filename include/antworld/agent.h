@@ -35,19 +35,34 @@ public:
              meters_per_second_t velocity = DefaultVelocity,
              radians_per_second_t turnSpeed = DefaultTurnSpeed);
 
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
+    //----------------------------------------------------------------------------
+    // Robot virtuals
+    //----------------------------------------------------------------------------
+    virtual void moveForward(float speed) override;
 
+    virtual void turnOnTheSpot(float clockwiseSpeed) override;
+
+    virtual void stopMoving() override;
+
+    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
+
+    //! Drive the robot using the current joystick state
+    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
+
+    //! Add a handler to the connection to drive robot
+    virtual void readFromNetwork(Net::Connection &connection) override;
+
+    //! Remove and connection handlers that drive this robot
+    virtual void stopReadingFromNetwork() override;
+
+    //----------------------------------------------------------------------------
+    // Public API
+    //----------------------------------------------------------------------------
     radians_per_second_t getMaximumTurnSpeed() const;
 
     void setPosition(meter_t x, meter_t y, meter_t z);
 
     void setAttitude(degree_t yaw, degree_t pitch, degree_t roll);
-
-    virtual void stopMoving() override;
-
-    virtual void moveForward(float speed) override;
-
-    virtual void turnOnTheSpot(float clockwiseSpeed) override;
 
     void updatePose(const units::time::second_t elapsedTime);
 

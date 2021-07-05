@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['wait',['wait',['../classBoBRobotics_1_1Semaphore.html#a31a4aa8947d52d9b92768ad795f53b2e',1,'BoBRobotics::Semaphore']]],
-  ['waitonce',['waitOnce',['../classBoBRobotics_1_1Semaphore.html#ac00ad101ae1e2d74135c454e62207782',1,'BoBRobotics::Semaphore']]],
-  ['waittostopmoving',['waitToStopMoving',['../classBoBRobotics_1_1Robots_1_1Gantry.html#a3b2b2528c996771649ea9d25380f177d',1,'BoBRobotics::Robots::Gantry']]],
-  ['write',['write',['../classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html#a4b7a71a2aa2f7430025fb3979bf2b2e7',1,'BoBRobotics::ImgProc::OpenCVUnwrap360::write()'],['../classBoBRobotics_1_1Video_1_1Input.html#a40751def5212f7e3eaadd1fe0a4a07ee',1,'BoBRobotics::Video::Input::write()'],['../namespaceBoBRobotics_1_1Video.html#a787176f175254bb6bd8d063a34a1a8e8',1,'BoBRobotics::Video::write()']]]
+  ['validate_5fpositionals_2188',['validate_positionals',['../classCLI_1_1App.html#ad107f40cfb9d4301a47713465e6c66e7',1,'CLI::App']]],
+  ['validator_2189',['Validator',['../classCLI_1_1Validator.html#a71df7c1c94c4abceee930eef957f5b76',1,'CLI::Validator::Validator(std::string validator_desc)'],['../classCLI_1_1Validator.html#aede1b1a51a7f924342a92cbbd3ee41be',1,'CLI::Validator::Validator(std::function&lt; std::string(std::string &amp;)&gt; op, std::string validator_desc, std::string validator_name=&quot;&quot;)']]],
+  ['value_2190',['value',['../classunits_1_1unit__t.html#a5bb6799c6eb6f4cab7b47490ab03b9a1',1,'units::unit_t::value()'],['../structunits_1_1unit__value__add.html#acc92394eedf6c99ca58e084450b2afdd',1,'units::unit_value_add::value()'],['../structunits_1_1unit__value__subtract.html#aa17d1e6270cbb5554fd424698b0d314c',1,'units::unit_value_subtract::value()'],['../structunits_1_1unit__value__multiply.html#a20b685f1942d5a3017700ac7595d7548',1,'units::unit_value_multiply::value()'],['../structunits_1_1unit__value__divide.html#a7580c9bc9ddd8120d11fc76890ba961b',1,'units::unit_value_divide::value()'],['../structunits_1_1unit__value__power.html#a3446bc38fe11fc76264063cd2cbbbe46',1,'units::unit_value_power::value()'],['../structunits_1_1unit__value__sqrt.html#ade4226553e2a1b732b602cf80a86623f',1,'units::unit_value_sqrt::value()']]],
+  ['valueseparator_2191',['valueSeparator',['../classCLI_1_1ConfigBase.html#a7245cefabbffb0bce2f2b48d35e24039',1,'CLI::ConfigBase']]]
 ];

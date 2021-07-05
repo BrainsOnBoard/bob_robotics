@@ -33,7 +33,7 @@ void saveMaxQualityJPG(const std::string &filename, const cv::Mat &image)
 }
 
 /* unwrap a JPEG file */
-void unwrapJPEG(const filesystem::path filepath, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapJPEG(const filesystem::path &filepath, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     // read image into memory
     cv::Mat im = cv::imread(filepath.str(), cv::IMREAD_COLOR);
@@ -54,7 +54,7 @@ void unwrapJPEG(const filesystem::path filepath, const cv::Size &unwrappedResolu
 }
 
 /* unwrap an MP4 video */
-void unwrapMP4(const filesystem::path filepath, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4(const filesystem::path &filepath, bool copysound, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     // open video file
     cv::VideoCapture cap(filepath.str());
@@ -126,7 +126,7 @@ void unwrapMP4(const filesystem::path filepath, bool copysound, const cv::Size &
 }
 
 /* unwrap an MP4 video, saving frames to JPG */
-void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
+void unwrapMP4Frames(const filesystem::path &filepath, unsigned int frameInterval, const cv::Size &unwrappedResolution, const std::string &cameraName)
 {
     // open video file
     cv::VideoCapture cap(filepath.str());
@@ -142,9 +142,8 @@ void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval
     BoBRobotics::ImgProc::OpenCVUnwrap360 unwrapper(fr.size(), unwrappedResolution, cameraName);
 
     // Extract title from filename
-    const size_t titlePos = filepath.filename().find_last_of(".");
+    const size_t titlePos = filepath.filename().find_last_of('.');
     const std::string filetitle = filepath.filename().substr(0, titlePos);
-
 
     // Loop through frames
     unsigned int i = 0;
@@ -171,12 +170,11 @@ void unwrapMP4Frames(const filesystem::path filepath, unsigned int frameInterval
 }
 }   // Anonymous namespace
 
-int main(int argc, char** argv)
+int bobMain(int argc, char** argv)
 {
     CLI::App app{ "A program to unwrap panoramic images and videos" };
 
     bool copysound = true;
-    bool extractFrames = false;
     unsigned int frameInterval = 1;
     std::string cameraName = "pixpro_usb";
     std::vector<unsigned int> resolutionVec = { 1920, 590 };
@@ -199,6 +197,7 @@ int main(int argc, char** argv)
     CLI11_PARSE(app, argc, argv);
     const cv::Size unwrappedResolution{ static_cast<int>(resolutionVec[0]),
                                         static_cast<int>(resolutionVec[1]) };
+    bool extractFrames = app.count("--extract-frames") > 0;
 
     // Process filename arguments
     bool anyvideo = false;

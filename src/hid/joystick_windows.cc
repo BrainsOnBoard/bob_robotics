@@ -9,6 +9,7 @@
 
 // Standard C++ includes
 #include <chrono>
+#include <stdexcept>
 #include <thread>
 
 namespace {

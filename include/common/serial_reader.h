@@ -1,6 +1,8 @@
 // USB-reader
 #pragma once
 
+#include <stdexcept>
+
 #include <string>
 #include "termios.h"
 #include <sys/types.h>
@@ -31,9 +33,9 @@ class SerialReader {
 
     //! reads the serial port (USB) and returns the string from it
     std::string readData() {
-        try {
+//        try {
             if (fileDescriptor < 0) {
-                throw "You are not connected to the device";
+                throw std::runtime_error("You are not connected to the device");
             }
         
             std::string serialString;
@@ -55,21 +57,21 @@ class SerialReader {
             }
             tcflush(fileDescriptor, TCIFLUSH);
             return serialString;
-        }
+        /*}
         catch(const char *error) {
             std::cout << "[SerialReader:readData()] : " << error << std::endl;
         }
-        return "";
+        return "";*/
 
     }
 
 
     void connect(const char *serial_device_path) {
     
-        try {        
+//        try {        
             fileDescriptor= open(serial_device_path, O_RDWR | O_NOCTTY);
             if (fileDescriptor < 0) {
-                throw "device not found";
+                throw std::runtime_error("device not found");
             }    
             connected = true;
 
@@ -89,10 +91,10 @@ class SerialReader {
             /* now clean the modem line and activate the settings for the port */
             tcflush(fileDescriptor, TCIFLUSH);
             tcsetattr(fileDescriptor,TCSANOW,&settings);
-        }
+/*        }
         catch(const char *s) {
             std::cout << "[SerialReader:connect()]: " << s <<  std::endl;
-        }
+        }*/
     }
 
     bool isConnected() const { return connected; }

@@ -33,20 +33,6 @@ public:
         return m_AxisLength;
     }
 
-    template<typename ReturnLengthUnit = LengthUnit>
-    Vector3<ReturnLengthUnit> getPosition()
-    {
-        updatePose();
-        return { m_Pose.x(), m_Pose.y(), 0_m };
-    }
-
-    template<typename ReturnAngleUnit = AngleUnit>
-    std::array<ReturnAngleUnit, 3> getAttitude()
-    {
-        updatePose();
-        return { m_Pose.yaw(), 0_rad, 0_rad };
-    }
-
     const auto &getPose()
     {
         updatePose();

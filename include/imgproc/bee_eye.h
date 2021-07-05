@@ -32,6 +32,7 @@ public:
         if (useMask) {
             const auto maskPath = Path::getResourcesPath() / "bee_eye_mask.png";
             m_Mask = cv::imread(maskPath.str(), cv::IMREAD_GRAYSCALE);
+            BOB_ASSERT(!m_Mask.empty()); // Check file loaded successfully
             BOB_ASSERT(m_Mask.type() == CV_8UC1);
             cv::resize(m_Mask, m_Mask, sz_out);
         }

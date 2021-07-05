@@ -7,22 +7,19 @@
  * in when I can be bothered. -- AD
  */
 
-#include "os/windows_include.h"
-
 // BoB robotics includes
-#include "common/logging.h"
 #include "robots/gantry.h"
 #include "video/display.h"
 #include "video/opencvinput.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 using namespace BoBRobotics;
 using namespace units::literals;
 
-int
-main()
+int bobMain(int, char **)
 {
     try {
         // Object to interface with gantry robot
@@ -47,11 +44,13 @@ main()
         LOGI << "Gantry moved.\n";
 
         // Print the gantry's current position
-        const auto pos = gantry.getPosition<>();
+        const auto pos = gantry.getPosition();
         LOGI << "Gantry is at: " << pos[0] << ", " << pos[1] << ", "
                   << pos[2] << "\n";
     } catch (std::exception &e) {
         LOGW << "Uncaught exception: " << e.what();
 		return 1;
     }
+
+    return EXIT_SUCCESS;
 }

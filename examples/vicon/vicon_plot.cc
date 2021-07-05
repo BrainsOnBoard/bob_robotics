@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "viz/plot_agent.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
@@ -22,8 +22,7 @@ auto now()
     return std::chrono::high_resolution_clock::now();
 }
 
-int
-main()
+int bobMain(int, char **)
 {
     Vicon::UDPClient<> vicon(51001);
     Vicon::CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
@@ -34,7 +33,7 @@ main()
     do {
         plt::figure(1);
         auto data = vicon.getObjectData();
-        Viz::plotAgent(data.getPose<>(), -2500_mm, 2500_mm, -2500_mm, 2500_mm);
+        Viz::plotAgent(data.getPose(), -2500_mm, 2500_mm, -2500_mm, 2500_mm);
         if (data.timeSinceReceived() > 500ms) {
             if (!warningGiven) {
                 LOGW << "Object is out of range";

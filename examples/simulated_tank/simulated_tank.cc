@@ -1,9 +1,8 @@
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
-#include "hid/joystick.h"
+#include "plog/Log.h"
 #include "robots/simulated_tank.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/joystick_keyboard.h"
+#include "viz/sfml/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -15,17 +14,16 @@
 using namespace BoBRobotics;
 using namespace units::literals;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
     Viz::SFMLWorld display;                         // For displaying the agent
     auto car = display.createCarAgent();
 
-    HID::Joystick joystick(0.25f);
-    robot.controlWithThumbsticks(joystick);
+    auto joystick = Viz::JoystickKeyboard::createJoystick();
+    robot.controlWithThumbsticks(*joystick);
 
-    joystick.addHandler([&robot](HID::JButton button, bool pressed) {
+    joystick->addHandler([&robot](HID::JButton button, bool pressed) {
         if (pressed && button == HID::JButton::Start) {
             robot.setPose({}); // Reset to origin
             return true;
@@ -42,8 +40,8 @@ bob_main(int, char **)
         display.update(car);
 
         // Check for joystick events
-        joystick.update();
-    } while (!joystick.isPressed(HID::JButton::B) && display.isOpen());
+        joystick->update();
+    } while (!joystick->isPressed(HID::JButton::B) && display.isOpen());
 
     return EXIT_SUCCESS;
 }

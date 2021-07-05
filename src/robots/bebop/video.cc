@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "robots/bebop/bebop.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -225,7 +225,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
      * http://developer.parrot.com/blog/2016/ARSDK-3-8-release/
      *
      * */
-    if (m_UpdateCodecParams && m_CodecData.size()) {
+    if (m_UpdateCodecParams && !m_CodecData.empty()) {
         m_Packet.data = &m_CodecData[0];
         m_Packet.size = static_cast<int>(m_CodecData.size());
         int32_t frame_finished = 0;
@@ -279,7 +279,7 @@ Bebop::VideoStream::decode(const ARCONTROLLER_Frame_t *framePtr)
 cv::Size
 Bebop::VideoStream::getOutputSize() const
 {
-    return cv::Size(856, 480);
+    return {856, 480};
 }
 
 std::string

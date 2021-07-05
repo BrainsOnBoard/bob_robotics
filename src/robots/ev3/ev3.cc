@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "robots/ev3/ev3.h"
 
 // Third-party includes
@@ -26,8 +26,8 @@ checkMotor(const EV3::MotorType &motor, const std::string &label)
     }
 }
 
-EV3::EV3(const ev3dev::address_type leftMotorPort,
-         const ev3dev::address_type rightMotorPort)
+EV3::EV3(const ev3dev::address_type &leftMotorPort,
+         const ev3dev::address_type &rightMotorPort)
   : m_MotorLeft(leftMotorPort)
   , m_MotorRight(rightMotorPort)
   , m_MaxSpeedTachos(m_MotorLeft.max_speed())

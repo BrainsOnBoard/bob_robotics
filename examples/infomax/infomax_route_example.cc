@@ -1,12 +1,11 @@
-#include "read_data.h"
-
 // BoB robotics includes
-#include "common/logging.h"
 #include "common/timer.h"
+#include "common/serialise_matrix.h"
 #include "navigation/image_database.h"
 #include "navigation/infomax.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -28,32 +27,27 @@
 
 using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
+using namespace std::literals;
 namespace plt = matplotlibcpp;
 
-using namespace units::literals;
-using namespace units::math;
-
 using FloatType = float;
-using InfoMaxType = InfoMaxRotater<InSilicoRotater, FloatType>;
+using InfoMaxType = InfoMaxRotater<FloatType>;
 
-void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
-                 const std::vector<double> &ally, const std::vector<cv::Mat> &images)
+void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
+               const std::vector<double> &y, const std::vector<cv::Mat> &images)
 {
-    std::vector<double> x, y, u, v;
+    using namespace units::math;
+
+    std::vector<double> u, v;
     {
         // Test network
         LOGI << "Testing network...";
         Timer<> t{ "Network testing took: " };
-        for (size_t i = 0; i < images.size(); i++) {
-            x.push_back(allx[i]);
-            y.push_back(ally[i]);
-
+        for (const auto &image : images) {
             // Get heading and convert to vector
-            const units::angle::radian_t heading = std::get<0>(infomax.getHeading(images[i]));
-            double sinx, cosx;
-            sincos(heading.value(), &sinx, &cosx);
-            u.push_back(cosx);
-            v.push_back(sinx);
+            const auto heading = std::get<0>(infomax.getHeading(image));
+            u.push_back(cos(heading));
+            v.push_back(sin(heading));
         }
     }
 
@@ -67,16 +61,13 @@ void doTesting(const InfoMaxType &infomax, const std::vector<double> &allx,
     plt::show();
 }
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     if (argc < 2) {
         LOGE << "Must specify a route, e.g.:"
              << "\t" << argv[0] << " ../../tools/ant_world_db_creator/ant1_route1 [num training repititions]";
         return 1;
     }
-
-    LOGI << "Eigen is using " << Eigen::nbThreads() << " threads.";
 
     // Where we are loading images from
     const filesystem::path routePath(argv[1]);
@@ -91,11 +82,11 @@ main(int argc, char **argv)
         LOGI << "Loading images from " << routePath << "...";
         Timer<> loadingTimer{ "Images loaded in: " };
         const ImageDatabase routeImages(routePath);
-        assert(routeImages.size() > 0);
+        assert(!routeImages.empty());
 
         cv::Mat image;
         for (size_t i = 1; i < routeImages.size(); i++) {
-            image = routeImages[i].loadGreyscale();
+            image = routeImages[i].load();
             images.emplace_back(imSize, CV_8UC1);
             cv::resize(image, images.back(), imSize);
 
@@ -113,7 +104,7 @@ main(int argc, char **argv)
     // If we already have a network for these params, load from disk
     if (netPath.exists()) {
         LOGI << "Loading weights from " << netPath;
-        const auto weights = readData<FloatType>(netPath);
+        const auto weights = readMatrix<FloatType>(netPath);
 
         InfoMaxType infomax(imSize, weights);
         doTesting(infomax, x, y, images);
@@ -135,11 +126,7 @@ main(int argc, char **argv)
 
             // Write weights to disk
             LOGI << "Writing weights to " << netPath;
-            const auto weights = infomax.getWeights();
-            std::ofstream netFile(netPath.str(), std::ios::binary);
-            const int size[2] { (int) weights.rows(), (int) weights.cols() };
-            netFile.write(reinterpret_cast<const char *>(size), sizeof(size));
-            netFile.write(reinterpret_cast<const char *>(weights.data()), weights.size() * sizeof(float));
+            writeMatrix(netPath, infomax.getWeights());
         }
 
         doTesting(infomax, x, y, images);

@@ -1,10 +1,10 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/simulated_tank.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -17,8 +17,7 @@ using namespace units::time;
 using namespace units::literals;
 using namespace units::angle;
 
-int
-main()
+int bobMain(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
     Viz::SFMLWorld display;
@@ -111,4 +110,5 @@ main()
             }
         }
     }
+    return EXIT_SUCCESS;
 }

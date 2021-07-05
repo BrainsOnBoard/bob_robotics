@@ -7,6 +7,9 @@
 // Standard C includes
 #include <cstdint>
 
+// Standard C++ includes
+#include <memory>
+
 namespace BoBRobotics {
 namespace Net {
 //----------------------------------------------------------------------------
@@ -24,7 +27,7 @@ public:
     //! Create a new server, listening on the specified port
     Server(uint16_t port = Connection::DefaultListenPort);
 
-    Connection waitForConnection() const;
+    std::unique_ptr<Connection> waitForConnection() const;
 
 private:
     const Socket m_ListenSocket;

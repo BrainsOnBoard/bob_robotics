@@ -20,12 +20,16 @@ namespace Robots {
 class Mecanum : public Omni2D
 {
 public:
-    Mecanum(const char *path = "/dev/ttyACM0");
+    Mecanum(const char *path = "/dev/ttyACM0", bool alternativeWiring = true);
+    virtual ~Mecanum();
 
     //----------------------------------------------------------------------------
     // Omni2D virtuals
     //----------------------------------------------------------------------------
-    virtual void omni2D(float forwards, float sideways, float turn) override;
+    virtual void omni2D(float forward, float sideways, float turn) override;
+
+    //! Drive robot using individual motor speeds - all range from -1 to 1
+    void driveMotors(float m1, float m2, float m3, float m4);
 
     //----------------------------------------------------------------------------
     // Public API
@@ -42,18 +46,12 @@ public:
         m_Serial.write(data);
     }
 
-    float getForwards() const;
-    float getSideways() const;
-    float getTurn() const;
-
 private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
     BoBRobotics::SerialInterface m_Serial;
-    float m_Forward;
-    float m_Sideways;
-    float m_Turn;
+    const bool m_AlternativeWiring;
 }; // Mecanum
 } // Robots
 } // BoBRobotics

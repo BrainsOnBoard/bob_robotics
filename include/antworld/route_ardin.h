@@ -42,12 +42,13 @@ public:
     // Public API
     //------------------------------------------------------------------------
     void load(const std::string &filename, bool realign = true);
-    void render(meter_t antX, meter_t antY, degree_t antHeading) const;
+    void render(const Pose2<meter_t, degree_t> &pose, meter_t height = meter_t{0.1}) const;
 
-    bool atDestination(meter_t x, meter_t y, meter_t threshold) const;
-    std::tuple<meter_t, size_t> getDistanceToRoute(meter_t x, meter_t y) const;
+    bool atDestination(const Vector2<meter_t> &position, meter_t threshold) const;
+    std::tuple<meter_t, size_t> getDistanceToRoute(const Vector2<meter_t> &position) const;
     void setWaypointFamiliarity(size_t pos, double familiarity);
-    void addPoint(meter_t x, meter_t y, bool error);
+    void highlightWaypointRange(size_t begin, size_t end);
+    void addPoint(const Vector2<meter_t> &position, bool error);
 
     const Vector2<meter_t> &getMinBound()
     {
@@ -80,6 +81,7 @@ private:
     unsigned int m_RouteNumPoints;
 
     std::vector<std::array<float, 2>> m_Waypoints;
+    std::vector<std::array<uint8_t, 3>> m_Colours;
     std::vector<degree_t> m_Headings;
     std::set<size_t> m_TrainedSnapshots;
 

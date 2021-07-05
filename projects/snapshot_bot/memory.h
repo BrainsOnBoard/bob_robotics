@@ -3,6 +3,10 @@
 // BoB robotics includes
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
+#include "navigation/perfect_memory_window.h"
+
+// Third-party includes
+#include "third_party/path.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -11,6 +15,14 @@
 // Forward declarations
 class Config;
 
+namespace BoBRobotics
+{
+namespace ImgProc
+{
+class Mask;
+}
+}
+
 //------------------------------------------------------------------------
 // MemoryBase
 //------------------------------------------------------------------------
@@ -18,12 +30,13 @@ class MemoryBase
 {
 public:
     MemoryBase();
+    virtual ~MemoryBase() = default;
 
     //------------------------------------------------------------------------
     // Declared virtuals
     //------------------------------------------------------------------------
-    virtual void test(const cv::Mat &snapshot) = 0;
-    virtual void train(const cv::Mat &snapshot) = 0;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) = 0;
+    virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) = 0;
 
     virtual void writeCSVHeader(std::ostream &os);
     virtual void writeCSVLine(std::ostream &os);
@@ -60,11 +73,11 @@ public:
     //------------------------------------------------------------------------
     // MemoryBase virtuals
     //------------------------------------------------------------------------
-    virtual void test(const cv::Mat &snapshot) override;
-    virtual void train(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
+    virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
-    virtual void writeCSVHeader(std::ostream &os);
-    virtual void writeCSVLine(std::ostream &os);
+    virtual void writeCSVHeader(std::ostream &os) override;
+    virtual void writeCSVLine(std::ostream &os) override;
 
     //------------------------------------------------------------------------
     // Public API
@@ -97,7 +110,10 @@ class PerfectMemoryConstrained : public PerfectMemory
 public:
     PerfectMemoryConstrained(const Config &config, const cv::Size &inputSize);
 
-    virtual void test(const cv::Mat &snapshot) override;
+    //------------------------------------------------------------------------
+    // MemoryBase virtuals
+    //------------------------------------------------------------------------
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
 private:
     //------------------------------------------------------------------------
@@ -108,20 +124,44 @@ private:
 };
 
 //------------------------------------------------------------------------
+// PerfectMemoryConstrainedDynamicWindow
+//------------------------------------------------------------------------
+class PerfectMemoryConstrainedDynamicWindow : public PerfectMemory
+{
+public:
+    PerfectMemoryConstrainedDynamicWindow(const Config &config, const cv::Size &inputSize);
+
+    //------------------------------------------------------------------------
+    // MemoryBase virtuals
+    //------------------------------------------------------------------------
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
+
+    virtual void writeCSVHeader(std::ostream &os) override;
+    virtual void writeCSVLine(std::ostream &os) override;
+private:
+    //------------------------------------------------------------------------
+    // Members
+    //------------------------------------------------------------------------
+    const int m_ImageWidth;
+    const size_t m_NumScanColumns;
+    BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient m_Window;
+};
+
+//------------------------------------------------------------------------
 // InfoMax
 //------------------------------------------------------------------------
 class InfoMax : public MemoryBase
 {
-    using InfoMaxType = BoBRobotics::Navigation::InfoMaxRotater<BoBRobotics::Navigation::InSilicoRotater, float>;
+    using InfoMaxType = BoBRobotics::Navigation::InfoMaxRotater<float>;
     using InfoMaxWeightMatrixType = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>;
 
 public:
     InfoMax(const Config &config, const cv::Size &inputSize);
 
-    virtual void test(const cv::Mat &snapshot) override;
-    virtual void train(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
+    virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
-    void saveWeights(const std::string &filename) const;
+    void saveWeights(const filesystem::path &filename) const;
 
 protected:
     //------------------------------------------------------------------------
@@ -147,7 +187,7 @@ class InfoMaxConstrained : public InfoMax
 public:
     InfoMaxConstrained(const Config &config, const cv::Size &inputSize);
 
-    virtual void test(const cv::Mat &snapshot) override;
+    virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
 private:
     //------------------------------------------------------------------------

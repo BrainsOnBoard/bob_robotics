@@ -2,11 +2,11 @@
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "common/logging.h"
-#include "insilico_rotater.h"
-#include "visual_navigation_base.h"
+#include "imgproc/mask.h"
+#include "navigation/insilico_rotater.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Eigen
@@ -20,6 +20,7 @@
 
 // Standard C++ includes
 #include <algorithm>
+#include <exception>
 #include <random>
 #include <tuple>
 #include <utility>
@@ -27,11 +28,15 @@
 
 namespace BoBRobotics {
 namespace Navigation {
+class WeightsBlewUpError
+  : std::exception
+{};
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
 template<typename FloatType = float>
-class InfoMax : public VisualNavigationBase
+class InfoMax
 {
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
@@ -40,46 +45,72 @@ public:
     InfoMax(const cv::Size &unwrapRes,
             const MatrixType &initialWeights,
             FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
+      : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
-    {}
+    {
+        BOB_ASSERT(initialWeights.cols() == unwrapRes.width * unwrapRes.height);
+    }
 
     InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
-      , m_LearningRate(learningRate)
-      , m_Weights(getInitialWeights(unwrapRes.width * unwrapRes.height,
-                                    1 + unwrapRes.width * unwrapRes.height))
+      : InfoMax(unwrapRes,
+                generateInitialWeights(unwrapRes.width * unwrapRes.height,
+                                       unwrapRes.width * unwrapRes.height),
+                learningRate)
     {}
 
     //------------------------------------------------------------------------
-    // VisualNavigationBase virtuals
+    // Public API
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image) override
+    void train(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{})
     {
         calculateUY(image);
         trainUY();
     }
 
-    virtual float test(const cv::Mat &image) const override
+    float test(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{}) const
     {
         const auto decs = m_Weights * getFloatVector(image);
         return decs.array().abs().sum();
     }
 
     //! Generates new random weights
-    virtual void clearMemory() override
+    void clearMemory()
     {
-        m_Weights = getInitialWeights(m_Weights.cols(), m_Weights.rows());
+        m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
     }
 
-    //------------------------------------------------------------------------
-    // Public API
-    //------------------------------------------------------------------------
+
     const MatrixType &getWeights() const
     {
         return m_Weights;
     }
+
+    static MatrixType generateInitialWeights(const int numInputs,
+                                             const int numHidden,
+                                             const unsigned seed = std::random_device()())
+    {
+        // Note that we transpose this matrix after normalisation
+        MatrixType weights(numInputs, numHidden);
+
+        LOG_INFO << "Seed for weights is: " << seed;
+
+        std::default_random_engine generator(seed);
+        std::normal_distribution<FloatType> distribution;
+        std::generate_n(weights.data(), weights.size(), [&]() { return distribution(generator); });
+
+        // Normalise mean and SD for row so mean == 0 and SD == 1
+        const auto means = weights.rowwise().mean();
+        weights.colwise() -= means;
+
+        const auto sd = matrixSD(weights);
+        weights = weights.array().colwise() / sd;
+
+        return weights.transpose();
+    }
+
+    //! Get the resolution of images
+    const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
 
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
@@ -90,7 +121,21 @@ public:
         const auto id = MatrixType::Identity(m_Weights.rows(), m_Weights.rows());
         const auto sumYU = (m_Y.array() + m_U.array()).matrix();
         const FloatType learnRate = m_LearningRate / (FloatType) m_U.rows();
+
         m_Weights.array() += (learnRate * (id - sumYU * m_U.transpose()) * m_Weights).array();
+
+        /*
+         * If the learning rate is too high, we may end up with NaNs in our
+         * weight matrix, which will silently muck up subsequent calculations.
+         * I don't *think* this will ever be an issue with a sensibly small
+         * learning rate, but if so, the learning rate could be reduced at this
+         * point instead of just bailing out.
+         *
+         * So if there are any NaNs then throw an error.
+         */
+        if (!(m_Weights.array() == m_Weights.array()).all()) {
+            throw WeightsBlewUpError{};
+        }
     }
 
     void calculateUY(const cv::Mat &image)
@@ -112,45 +157,8 @@ public:
         return std::make_pair<>(m_U, m_Y);
     }
 
-    static MatrixType getInitialWeights(const int numInputs,
-                                        const int numHidden,
-                                        const unsigned seed = std::random_device()())
-    {
-        // Note that we transpose this matrix after normalisation
-        MatrixType weights(numInputs, numHidden);
-
-        LOG_INFO << "Seed for weights is: " << seed;
-
-        std::default_random_engine generator(seed);
-        std::normal_distribution<FloatType> distribution;
-        for (int i = 0; i < numInputs; i++) {
-            for (int j = 0; j < numHidden; j++) {
-                weights(i, j) = distribution(generator);
-            }
-        }
-
-        LOG_VERBOSE << "Initial weights" << std::endl << weights;
-
-        // Normalise mean and SD for row so mean == 0 and SD == 1
-        const auto means = weights.rowwise().mean();
-        LOG_VERBOSE << "Means" << std::endl << means;
-
-        weights.colwise() -= means;
-        LOG_VERBOSE << "Weights after subtracting means" << std::endl << weights;
-
-        LOG_VERBOSE << "New means" << std::endl << weights.rowwise().mean();
-
-        const auto sd = matrixSD(weights);
-        LOG_VERBOSE << "SD" << std::endl << sd;
-
-        weights = weights.array().colwise() / sd;
-        LOG_VERBOSE << "Weights after dividing by SD" << std::endl << weights;
-        LOG_VERBOSE << "New SD" << std::endl << matrixSD(weights);
-
-        return weights.transpose();
-    }
-
 private:
+    const cv::Size m_UnwrapRes;
     size_t m_SnapshotCount = 0;
     FloatType m_LearningRate;
     MatrixType m_Weights;
@@ -165,14 +173,14 @@ private:
     template<class T>
     static auto matrixSD(const T &mat)
     {
-        return (mat.array() * mat.array()).rowwise().mean();
+        return (mat.array() * mat.array()).rowwise().mean().sqrt();
     }
 }; // InfoMax
 
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMaxRotater
 //------------------------------------------------------------------------
-template<typename Rotater = InSilicoRotater, typename FloatType = float>
+template<typename FloatType = float>
 class InfoMaxRotater : public InfoMax<FloatType>
 {
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
@@ -192,20 +200,26 @@ public:
     // Public API
     //------------------------------------------------------------------------
     template<class... Ts>
-    const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
+    const std::vector<FloatType> &getImageDifferences(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
 
     template<class... Ts>
-    auto getHeading(Ts &&... args) const
+    const std::vector<FloatType> &getImageDifferences(const cv::Mat &image, Ts &&... args) const
+    {
+        return getImageDifferences(image, ImgProc::Mask{}, std::forward<Ts>(args)...);
+    }
+
+    template<class... Ts>
+    auto getHeading(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = Rotater::create(unwrapRes, this->getMaskImage(), std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(unwrapRes, mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference
@@ -224,6 +238,12 @@ public:
         return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
     }
 
+    template<class... Ts>
+    auto getHeading(const cv::Mat &image, Ts &&... args) const
+    {
+        return getHeading(image, ImgProc::Mask{}, std::forward<Ts>(args)...);
+    }
+
 private:
     //------------------------------------------------------------------------
     // Private API
@@ -231,13 +251,12 @@ private:
     template<typename R>
     void calcImageDifferences(R &rotater) const
     {
-        // Ensure there's enough space in rotated differe
-        m_RotatedDifferences.reserve(rotater.numRotations());
-        m_RotatedDifferences.clear();
+        // Ensure there's enough space in m_RotatedDifferences
+        m_RotatedDifferences.resize(rotater.numRotations());
 
         // Populate rotated differences with results
-        rotater.rotate([this] (const cv::Mat &image, auto, auto) {
-            m_RotatedDifferences.push_back(this->test(image));
+        rotater.rotate([this] (const cv::Mat &image, const ImgProc::Mask &, size_t i) {
+            m_RotatedDifferences[i] = this->test(image);
         });
     }
 

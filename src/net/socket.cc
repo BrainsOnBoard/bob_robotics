@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "net/socket.h"
 
 namespace BoBRobotics {
@@ -13,9 +13,8 @@ BadCommandError::BadCommandError()
   : std::runtime_error("Bad command received")
 {}
 
-
 Socket::Socket(const socket_t handle)
-    : m_Handle(handle)
+  : m_Handle(handle)
 {
     if (!isOpen()) {
         throw OS::Net::NetworkError("Could not initialise socket");
@@ -23,7 +22,7 @@ Socket::Socket(const socket_t handle)
 }
 
 Socket::Socket(int domain, int type, int protocol)
-    : Socket(socket(domain, type, protocol))
+  : Socket(socket(domain, type, protocol))
 {}
 
 Socket::~Socket()
@@ -31,19 +30,26 @@ Socket::~Socket()
     close();
 }
 
-void Socket::close()
+void
+Socket::close()
 {
-    const socket_t handle = m_Handle.exchange(INVALID_SOCKET);
-    if (handle != INVALID_SOCKET) {
-        ::close(handle);
-    }
+    ::close(m_Handle);
 }
 
-bool Socket::isOpen() const { return m_Handle != INVALID_SOCKET; }
+bool
+Socket::isOpen() const
+{
+    return m_Handle != INVALID_SOCKET;
+}
 
-socket_t Socket::getHandle() const { return m_Handle; }
+socket_t
+Socket::getHandle() const
+{
+    return m_Handle;
+}
 
-size_t Socket::read(void *buffer, const size_t length)
+size_t
+Socket::read(void *buffer, const size_t length)
 {
     const auto nbytes = recv(m_Handle,
                              reinterpret_cast<readbuff_t>(buffer),
@@ -56,7 +62,8 @@ size_t Socket::read(void *buffer, const size_t length)
     return static_cast<size_t>(nbytes);
 }
 
-void Socket::send(const void *buffer, size_t length)
+void
+Socket::send(const void *buffer, size_t length)
 {
     const auto ret = ::send(m_Handle,
                             reinterpret_cast<sendbuff_t>(buffer),
@@ -67,19 +74,21 @@ void Socket::send(const void *buffer, size_t length)
     }
 }
 
-void Socket::send(const std::string &msg)
+void
+Socket::send(const std::string &msg)
 {
     send(msg.c_str(), msg.size());
     LOG_VERBOSE << ">>> " << msg;
 }
 
-Socket::Socket(Socket &&old)
-    : m_Handle(old.m_Handle.load())
+Socket::Socket(Socket &&old) noexcept
+  : m_Handle(old.m_Handle)
 {
     old.m_Handle = INVALID_SOCKET;
 }
 
-void Socket::throwError(const std::string &msg)
+void
+Socket::throwError(const std::string &msg)
 {
     if (isOpen()) {
         close();

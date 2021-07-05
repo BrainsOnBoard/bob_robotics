@@ -1,8 +1,7 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/background_exception_catcher.h"
-#include "common/main.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
@@ -19,8 +18,7 @@ using namespace units::literals;
 using namespace units::time;
 using namespace std::literals;
 
-int
-bob_main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     std::string ipAddress;
     if (argc > 1) {
@@ -48,6 +46,7 @@ bob_main(int argc, char **argv)
 
     Stopwatch stopwatch;
     std::ofstream dataFile;
+    dataFile.exceptions(std::ios::badbit | std::ios::failbit);
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001); // For getting robot's position
 
     // If we're recording, ignore axis movements
@@ -71,10 +70,8 @@ bob_main(int argc, char **argv)
             if (!stopwatch.started()) {
                 // Open a new file for writing
                 dataFile.open("data/angular_velocity.csv");
-                BOB_ASSERT(dataFile.good());
                 dataFile << "Time [ms], Yaw [rad], Pitch [rad], Roll [rad], "
-                         << "Yaw velocity [rad/s], Pitch velocity [rad/s], Roll velocity [rad/s]"
-                        ;
+                         << "Yaw velocity [rad/s], Pitch velocity [rad/s], Roll velocity [rad/s]";
 
                 // Spin robot
                 stopwatch.start();
@@ -111,7 +108,7 @@ bob_main(int argc, char **argv)
         if (stopwatch.started()) { // If we're recording
             const millisecond_t time = stopwatch.elapsed();
             const auto objectData = vicon.getObjectData();
-            const auto attitude = objectData.getAttitude();
+            const auto attitude = objectData.getPose().attitude();
             const auto angvel = objectData.getAngularVelocity();
             dataFile << time() << ", " << attitude[0]() << ", " << attitude[1]() << ", " << attitude[2]() << ", "
                      << angvel[0]() << ", " << angvel[1]() << ", " << angvel[2]() << "\n";

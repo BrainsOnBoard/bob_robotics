@@ -2,7 +2,7 @@
 #include "antworld/common.h"
 #include "antworld/world.h"
 #include "common/macros.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Third-party includes
 #include "third_party/path.h"
@@ -111,6 +111,8 @@ namespace AntWorld
 void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[3],
                  const GLfloat (&groundColour)[3])
 {
+    LOGI << "Loading " << filename << "...";
+
     // Create single surface
     m_Surfaces.clear();
     m_Surfaces.emplace_back();
@@ -118,9 +120,7 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
 
     // Open file for binary IO
     std::ifstream input(filename.str(), std::ios::binary);
-    if(!input.good()) {
-        throw std::runtime_error("Cannot open world file:" + filename.str());
-    }
+    input.exceptions(std::ios::badbit | std::ios::failbit);
 
     // Seek to end of file, get size and rewind
     input.seekg(0, std::ios_base::end);
@@ -161,14 +161,26 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
         }
 
         // Add first ground plane triangle vertex positions
-        positions[0] = m_MinBound[0].value();   positions[1] = m_MinBound[1].value();   positions[2] = 0.0f;
-        positions[3] = m_MaxBound[0].value();   positions[4] = m_MaxBound[1].value();   positions[5] = 0.0f;
-        positions[6] = m_MinBound[0].value();   positions[7] = m_MaxBound[1].value();   positions[8] = 0.0f;
+        positions[0] = static_cast<float>(m_MinBound[0].value());
+        positions[1] = static_cast<float>(m_MinBound[1].value());
+        positions[2] = 0.0f;
+        positions[3] = static_cast<float>(m_MaxBound[0].value());
+        positions[4] = static_cast<float>(m_MaxBound[1].value());
+        positions[5] = 0.0f;
+        positions[6] = static_cast<float>(m_MinBound[0].value());
+        positions[7] = static_cast<float>(m_MaxBound[1].value());
+        positions[8] = 0.0f;
 
         // Add second ground plane triangle vertex positions
-        positions[9] = m_MinBound[0].value();   positions[10] = m_MinBound[1].value();  positions[11] = 0.0f;
-        positions[12] = m_MaxBound[0].value();  positions[13] = m_MinBound[1].value();  positions[14] = 0.0f;
-        positions[15] = m_MaxBound[0].value();  positions[16] = m_MaxBound[1].value();  positions[17] = 0.0f;
+        positions[9] = static_cast<float>(m_MinBound[0].value());
+        positions[10] = static_cast<float>(m_MinBound[1].value());
+        positions[11] = 0.0f;
+        positions[12] = static_cast<float>(m_MaxBound[0].value());
+        positions[13] = static_cast<float>(m_MinBound[1].value());
+        positions[14] = 0.0f;
+        positions[15] = static_cast<float>(m_MaxBound[0].value());
+        positions[16] = static_cast<float>(m_MaxBound[1].value());
+        positions[17] = 0.0f;
 
         // Upload positions
         surface.uploadPositions(positions);
@@ -198,9 +210,9 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
             // Loop through vertices that make up triangle and
             // set to world colour multiplied by triangle colour
             for(unsigned int v = 0; v < 3; v++) {
-                colours[18 + (t * 9) + (v * 3)] = worldColour[0] * triangleColour;
-                colours[18 + (t * 9) + (v * 3) + 1] = worldColour[1] * triangleColour;
-                colours[18 + (t * 9) + (v * 3) + 2] = worldColour[2] * triangleColour;
+                colours[18 + (t * 9) + (v * 3)] = worldColour[0] * static_cast<float>(triangleColour);
+                colours[18 + (t * 9) + (v * 3) + 1] = worldColour[1] * static_cast<float>(triangleColour);
+                colours[18 + (t * 9) + (v * 3) + 2] = worldColour[2] * static_cast<float>(triangleColour);
             }
         }
 
@@ -214,6 +226,8 @@ void World::load(const filesystem::path &filename, const GLfloat (&worldColour)[
 //----------------------------------------------------------------------------
 void World::loadObj(const filesystem::path &filename, float scale, int maxTextureSize, GLint textureFormat)
 {
+    LOGI << "Loading " << filename << "...";
+
     // Get HARDWARE max texture size
     int hardwareMaxTextureSize = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &hardwareMaxTextureSize);
@@ -237,8 +251,8 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
     // 3 - a vector of floating point texture coordinates (U, V)
     std::vector<std::tuple<std::string, std::vector<GLfloat>, std::vector<GLbyte>, std::vector<GLfloat>>> objSurfaces;
 
-    // Map of material names to texture indices
-    std::map<std::string, Texture*> textureNames;
+    // Map of material names to texture pointers and colour names
+    std::map<std::string, std::tuple<Texture*, Surface::Colour>> materialNames;
 
     // Parser
     {
@@ -249,9 +263,8 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
 
         // Open obj file
         std::ifstream objFile(filename.str());
-        if(!objFile.good()) {
-            throw std::runtime_error("Cannot open obj file: " + filename.str());
-        }
+        BOB_ASSERT(!objFile.fail());
+        objFile.exceptions(std::ios::badbit);
 
         // Get base path to load materials etc relative to
         const auto basePath = filename.make_absolute().parent_path();
@@ -265,7 +278,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             stripWindowsLineEnding(lineString);
 
             // Entirely skip comment or empty lines
-            if(lineString[0] == '#' || lineString.empty()) {
+            if(lineString.empty() || lineString[0] == '#') {
                 continue;
             }
 
@@ -280,7 +293,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
                 // Parse materials
                 loadMaterials(basePath, parameterString,
                               textureFormat, maxTextureSize,
-                              textureNames);
+                              materialNames);
             }
             else if(commandString == "o") {
                 lineStream >> parameterString;
@@ -298,7 +311,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             else if(commandString == "vt") {
                 // Read texture coordinate and check there's no unhandled components following it
                 readVector<2>(lineStream, rawTexCoords, 1.0f);
-                BOB_ASSERT(lineStream.eof())
+                BOB_ASSERT(lineStream.eof());
             }
             else if(commandString == "vn") {
                 // ignore vertex normals for now
@@ -313,7 +326,7 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
                 // ignore smoothing
             }
             else if(commandString == "f") {
-                // If there are no textures, surfaces aren't always created (at least be MeshLab), so create a default one
+                // If there are no textures, surfaces aren't always created (at least by MeshLab), so create a default one
                 if(objSurfaces.empty()) {
                     LOG_WARNING << "Encountered faces before any surfaces are defined - adding default surface";
                     objSurfaces.emplace_back("default", std::initializer_list<GLfloat>(),
@@ -362,11 +375,19 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
         const auto &objSurface = objSurfaces[s];
         auto &surface = m_Surfaces[s];
 
+        // Find corresponding material
+        const auto mtl = materialNames.find(std::get<0>(objSurface));
+
         // Bind material
         surface.bind();
 
         // Upload positions from obj file
         surface.uploadPositions(std::get<1>(objSurface));
+
+        // If material was found, set colour
+        if(mtl != materialNames.end()) {
+            surface.setColour(std::get<1>(mtl->second));
+        }
 
         // If there are any vertex colours, upload them from obj file
         if(!std::get<2>(objSurface).empty()) {
@@ -378,10 +399,9 @@ void World::loadObj(const filesystem::path &filename, float scale, int maxTextur
             // Upload texture coordinates from obj file
             surface.uploadTexCoords(std::get<3>(objSurface));
 
-            // Find texture corresponding to this surface
-            const auto tex = textureNames.find(std::get<0>(objSurface));
-            if(tex != textureNames.end()) {
-                surface.setTexture(tex->second);
+            // If material was found, set texture
+            if(mtl != materialNames.end()) {
+                surface.setTexture(std::get<0>(mtl->second));
             }
         }
 
@@ -402,13 +422,12 @@ void World::render() const
 //----------------------------------------------------------------------------
 void World::loadMaterials(const filesystem::path &basePath, const std::string &filename,
                           GLint textureFormat, int maxTextureSize,
-                          std::map<std::string, Texture*> &textureNames)
+                          std::map<std::string, std::tuple<Texture*, Surface::Colour>> &materialNames)
 {
     // Open obj file
     std::ifstream mtlFile((basePath / filename).str());
-    if(!mtlFile.good()) {
-        throw std::runtime_error("Cannot open mtl file: " + filename);
-    }
+    BOB_ASSERT(!mtlFile.fail());
+    mtlFile.exceptions(std::ios::badbit);
 
     LOG_DEBUG << "Reading material file: " << filename;
 
@@ -431,16 +450,33 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
 
         // Read command from first token
         lineStream >> commandString;
+
+        // If command is a material name
         if(commandString == "newmtl") {
             lineStream >> currentMaterialName;
             LOG_INFO << "\tReading material: " << currentMaterialName;
         }
-        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Kd"
-            || commandString == "Ks" || commandString == "Ke" || commandString == "Ni"
-            || commandString == "d" || commandString == "illum")
-        {
-            // ignore lighting properties
+        // Otherwise, if command specifies a diffuse colour
+        else if(commandString == "Kd") {
+            // Read colour
+            Surface::Colour colour;
+            for(unsigned int i = 0; i < 3; i++) {
+                lineStream >> colour[i];
+            }
+
+            // If material doesn't yet exist, emplace new material with colour and no texture
+            auto mtl = materialNames.find(currentMaterialName);
+            if(mtl == materialNames.cend()) {
+                materialNames.emplace(std::piecewise_construct,
+                                      std::forward_as_tuple(currentMaterialName),
+                                      std::forward_as_tuple(nullptr, colour));
+            }
+            // Otherwise, set colour in existing material
+            else {
+                std::get<1>(mtl->second) = colour;
+            }
         }
+        // Otherwise, if command specifies a diffuse map
         else if(commandString == "map_Kd") {
             BOB_ASSERT(!currentMaterialName.empty());
 
@@ -457,7 +493,6 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
             textureFilename = textureFilename.substr(firstNonQuote, lastNonQuote - firstNonQuote + 1);
 
             LOG_DEBUG << "\t\tTexture: '" << textureFilename << "'";
-
 
             // Load texture and add to map
             const std::string texturePath = (basePath / textureFilename).str();
@@ -497,11 +532,30 @@ void World::loadMaterials(const filesystem::path &basePath, const std::string &f
                 m_Textures.emplace_back(new Texture());
                 m_Textures.back()->upload(texture, textureFormat);
 
-                // Add name to map
-                const bool inserted = textureNames.insert(std::make_pair(currentMaterialName, m_Textures.back().get())).second;
-                BOB_ASSERT(inserted);
+                // If material doesn't yet exist, emplace new material with texture and default colour
+                auto mtl = materialNames.find(currentMaterialName);
+                if(mtl == materialNames.cend()) {
+                    materialNames.emplace(std::piecewise_construct,
+                                          std::forward_as_tuple(currentMaterialName),
+                                          std::forward_as_tuple(m_Textures.back().get(), Surface::DefaultColour));
+                }
+                // Otherwise
+                else {
+                    // Ensure texture isn't already set for this material
+                    BOB_ASSERT(std::get<0>(mtl->second) == nullptr);
+
+                    // Set texture in material
+                    std::get<0>(mtl->second) = m_Textures.back().get();
+                }
             }
         }
+        // Otherwise, if it's another material property, ignore
+        else if(commandString == "Ns" || commandString == "Ka" || commandString == "Ks" ||
+                commandString == "Ke" || commandString == "Ni" || commandString == "d" ||
+                commandString == "illum")
+        {
+        }
+        // Otherwise, give warning
         else {
             LOG_WARNING << "Unhandled mtl tag '" << commandString << "'";
         }

@@ -1,11 +1,11 @@
-#include "read_data.h"
-
 // BoB robotics includes
-#include "common/logging.h"
+#include "common/path.h"
+#include "common/serialise_matrix.h"
 #define EXPOSE_INFOMAX_INTERNALS
 #include "navigation/infomax.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 
 // Eigen
@@ -26,6 +26,7 @@
 
 using namespace std::literals;
 using namespace Eigen;
+using namespace BoBRobotics;
 using namespace BoBRobotics::Navigation;
 
 void
@@ -38,19 +39,18 @@ runTest(const filesystem::path &dataPath, int num)
 
     // Load matrices of weights
     const auto pref = "test"s + snum + "_"s;
-    const auto initWeights = readData<>(dataPath / (pref + "weights_init.bin"s));
-    const auto matlabOutputWeights = readData<>(dataPath / (pref + "weights_out.bin"s));
-    const auto matlabOutputWeightsMany = readData<>(dataPath / (pref + "weights_out_many.bin"));
-    const auto matlabU = readData<>(dataPath / (pref + "u.bin"s));
-    const auto matlabY = readData<>(dataPath / (pref + "y.bin"s));
+    const auto initWeights = readMatrix<double>(dataPath / (pref + "weights_init.bin"s));
+    const auto matlabOutputWeights = readMatrix<double>(dataPath / (pref + "weights_out.bin"s));
+    const auto matlabOutputWeightsMany = readMatrix<double>(dataPath / (pref + "weights_out_many.bin"));
+    const auto matlabU = readMatrix<double>(dataPath / (pref + "u.bin"s));
+    const auto matlabY = readMatrix<double>(dataPath / (pref + "y.bin"s));
 
     // Load training image
-    auto imageMatrix = readData<uint8_t>(dataPath / (pref + "train_image.bin"s));
-    const cv::Mat image(imageMatrix.rows(), imageMatrix.cols(),
-                        CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
+    auto imageMatrix = readMatrix<uint8_t>(dataPath / (pref + "train_image.bin"s));
+    const cv::Mat image(imageMatrix.rows(), imageMatrix.cols(), CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
 
     // Make our InfoMax runner object
-    InfoMaxRotater<InSilicoRotater, double> infomax(image.size(), initWeights);
+    InfoMaxRotater<double> infomax(image.size(), initWeights);
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;
@@ -59,20 +59,17 @@ runTest(const filesystem::path &dataPath, int num)
     infomax.trainUY();
 
     LOGI << "Weights before training: "
-              << initWeights
-             ;
+         << initWeights;
 
     LOGI << "Image: "
-              << imageMatrix.cast<int>()
-             ;
+         << imageMatrix.cast<int>();
 
     LOGI << "U: " << u;
     LOGI << "Y: " << y;
 
     const auto &weights = infomax.getWeights();
     LOGI << "Weights after training: "
-              << weights
-             ;
+         << weights;
 
     LOGI << "Diff U: " << matlabU - u;
     LOGI << "Diff Y: " << matlabY - y;
@@ -82,14 +79,14 @@ runTest(const filesystem::path &dataPath, int num)
         infomax.train(image);
     }
     LOGI << "Diff weights (" << manyRuns << " runs): "
-              << matlabOutputWeightsMany - infomax.getWeights();
+         << matlabOutputWeightsMany - infomax.getWeights();
 }
 
 int
-main(int, char **argv)
+bobMain(int, char **)
 {
     // Path where test *.bin files live
-    const auto dataPath = filesystem::path(argv[0]).parent_path() / "test_data";
+    const auto dataPath = BoBRobotics::Path::getProgramDirectory() / "test_data";
 
     // Run tests
     runTest(dataPath, 1);

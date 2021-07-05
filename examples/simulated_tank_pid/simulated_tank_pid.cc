@@ -1,11 +1,10 @@
 // BoB robotics includes
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
 #include "robots/control/tank_pid.h"
 #include "robots/simulated_tank.h"
-#include "viz/sfml_world/sfml_world.h"
+#include "viz/sfml/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -19,8 +18,7 @@ using namespace std::literals;
 using namespace units::literals;
 using namespace units::length;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     Robots::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
     Viz::SFMLWorld display;                                        // For displaying the agent

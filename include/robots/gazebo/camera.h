@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/semaphore.h"
 #include "robots/gazebo/node.h"
@@ -38,7 +38,7 @@ public:
     {}
 
     /*!
-     * \brief Create a video stream for a Gazebo topic using a user-provided tranport node
+     * \brief Create a video stream for a Gazebo topic using a user-provided transport node
      *
      * @param node Gazebo transport node
      * @param topic Gazebo transport topic on which to subscribe

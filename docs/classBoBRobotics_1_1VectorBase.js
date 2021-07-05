@@ -14,6 +14,6 @@ var classBoBRobotics_1_1VectorBase =
     [ "operator const std::array< LengthUnit, N > &", "classBoBRobotics_1_1VectorBase.html#a9ec3bc2d1455ebebfa669815fdcf6ac4", null ],
     [ "operator[]", "classBoBRobotics_1_1VectorBase.html#ae36aacc7798841af1b12c3577a1e319a", null ],
     [ "operator[]", "classBoBRobotics_1_1VectorBase.html#a1dd43e942e9dd3524701c1173c4e98c4", null ],
-    [ "position", "classBoBRobotics_1_1VectorBase.html#a8d4b8ae29599c289210660196cba452c", null ],
-    [ "position", "classBoBRobotics_1_1VectorBase.html#a54866ea8016b50af93c1751984da85f5", null ]
+    [ "position", "classBoBRobotics_1_1VectorBase.html#a54866ea8016b50af93c1751984da85f5", null ],
+    [ "position", "classBoBRobotics_1_1VectorBase.html#a8d4b8ae29599c289210660196cba452c", null ]
 ];

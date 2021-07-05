@@ -1,0 +1,5 @@
+if(OpenMP_CXX_FOUND)
+    BoB_add_link_libraries(OpenMP::OpenMP_CXX)
+elseif (NOT ENABLE_OPENMP)
+    message(WARNING "Could not find OpenMP; code will be single-threaded")
+endif()

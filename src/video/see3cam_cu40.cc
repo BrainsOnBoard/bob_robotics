@@ -1,6 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "video/see3cam_cu40.h"
 
 // Standard C++
@@ -12,8 +12,7 @@ namespace BoBRobotics {
 namespace Video {
 
 See3CAM_CU40::See3CAM_CU40()
-{
-}
+= default;
 
 See3CAM_CU40::See3CAM_CU40(const std::string &device, Resolution res, bool resetToDefaults)
 {
@@ -209,10 +208,10 @@ See3CAM_CU40::calculateImageEntropy(const cv::Mat &mask)
 
     // Sum together entropy for each colour channel
     float entropy = 0.0f;
-    for (unsigned int c = 0; c < 3; c++) {
+    for (const auto &c : hist) {
         entropy -= std::accumulate(
-                std::begin(hist[c]),
-                std::end(hist[c]),
+                std::begin(c),
+                std::end(c),
                 0.0f,
                 [numPixels](float acc, unsigned int h) {
                     if (h == 0) {
@@ -343,7 +342,7 @@ See3CAM_CU40::getSuperPixelHeight() const
 cv::Size
 See3CAM_CU40::getSuperPixelSize() const
 {
-    return cv::Size(getSuperPixelWidth(), getSuperPixelHeight());
+    return {static_cast<int>(getSuperPixelWidth()), static_cast<int>(getSuperPixelHeight())};
 }
 
 bool

@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/circstat.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "robots/tank.h"
 
 // Standard C includes
@@ -43,7 +43,68 @@ void Tank::addJoystick(HID::Joystick &joystick, float deadZone)
             });
 }
 
-void Tank::controlWithThumbsticks(HID::Joystick &joystick)
+void Tank::drive(const HID::Joystick &joystick, float deadZone)
+{
+    drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
+          joystick.getState(HID::JAxis::LeftStickVertical),
+          deadZone);
+}
+
+
+//! Controls the robot with a network stream
+void Tank::readFromNetwork(Net::Connection &connection)
+{
+    // Send robot parameters over network
+    constexpr double _nan = std::numeric_limits<double>::quiet_NaN();
+    double maxTurnSpeed = _nan, maxForwardSpeed = _nan, axisLength = _nan;
+    try {
+        maxTurnSpeed = getAbsoluteMaximumTurnSpeed().value();
+    } catch (std::runtime_error &) {
+        // Then getMaximumTurnSpeed() isn't implemented
+    }
+    try {
+        maxForwardSpeed = getAbsoluteMaximumSpeed().value();
+    } catch (std::runtime_error &) {
+        // Then getMaximumSpeed() isn't implemented
+    }
+    try {
+        axisLength = getRobotWidth().value();
+    } catch (std::runtime_error &) {
+        // Then getRobotWidth() isn't implemented
+    }
+
+    std::stringstream ss;
+    ss << "TNK_PARAMS "
+        << maxTurnSpeed << " "
+        << maxForwardSpeed << " "
+        << axisLength << " "
+        << getMaximumSpeedProportion() << "\n";
+    connection.getSocketWriter().send(ss.str());
+
+    // Handle incoming TNK commands
+    connection.setCommandHandler("TNK",
+                                    [this](Net::Connection &connection, const Net::Command &command) {
+                                        onCommandReceived(connection, command);
+                                    });
+
+    connection.setCommandHandler("TNK_MAX",
+                                    [this](Net::Connection &, const Net::Command &command) {
+                                        Tank::setMaximumSpeedProportion(stof(command.at(1)));
+                                        tank(m_Left, m_Right);
+                                    });
+
+    m_Connection = &connection;
+}
+
+void Tank::stopReadingFromNetwork()
+{
+    if (m_Connection) {
+        // Ignore incoming TNK commands
+        m_Connection->setCommandHandler("TNK", nullptr);
+    }
+}
+
+void Tank::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
 {
     joystick.addHandler(
             [this](HID::JAxis axis, float value) {
@@ -63,13 +124,6 @@ void Tank::controlWithThumbsticks(HID::Joystick &joystick)
                 tank(left, right);
                 return true;
             });
-}
-
-void Tank::drive(const HID::Joystick &joystick, float deadZone)
-{
-    drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-          joystick.getState(HID::JAxis::LeftStickVertical),
-          deadZone);
 }
 
 void Tank::move(meters_per_second_t v,
@@ -147,58 +201,6 @@ float Tank::getMaximumSpeedProportion() const
     return m_MaximumSpeedProportion;
 }
 
-//! Controls the robot with a network stream
-void Tank::readFromNetwork(Net::Connection &connection)
-{
-    // Send robot parameters over network
-    constexpr double _nan = std::numeric_limits<double>::quiet_NaN();
-    double maxTurnSpeed = _nan, maxForwardSpeed = _nan, axisLength = _nan;
-    try {
-        maxTurnSpeed = getAbsoluteMaximumTurnSpeed().value();
-    } catch (std::runtime_error &) {
-        // Then getMaximumTurnSpeed() isn't implemented
-    }
-    try {
-        maxForwardSpeed = getAbsoluteMaximumSpeed().value();
-    } catch (std::runtime_error &) {
-        // Then getMaximumSpeed() isn't implemented
-    }
-    try {
-        axisLength = getRobotWidth().value();
-    } catch (std::runtime_error &) {
-        // Then getRobotWidth() isn't implemented
-    }
-
-    std::stringstream ss;
-    ss << "TNK_PARAMS "
-        << maxTurnSpeed << " "
-        << maxForwardSpeed << " "
-        << axisLength << " "
-        << getMaximumSpeedProportion() << "\n";
-    connection.getSocketWriter().send(ss.str());
-
-    // Handle incoming TNK commands
-    connection.setCommandHandler("TNK",
-                                    [this](Net::Connection &connection, const Net::Command &command) {
-                                        onCommandReceived(connection, command);
-                                    });
-
-    connection.setCommandHandler("TNK_MAX",
-                                    [this](Net::Connection &, const Net::Command &command) {
-                                        Tank::setMaximumSpeedProportion(stof(command.at(1)));
-                                        tank(m_Left, m_Right);
-                                    });
-
-    m_Connection = &connection;
-}
-
-void Tank::stopReadingFromNetwork()
-{
-    if (m_Connection) {
-        // Ignore incoming TNK commands
-        m_Connection->setCommandHandler("TNK", nullptr);
-    }
-}
 
 void Tank::drive(float x, float y, float deadZone)
 {

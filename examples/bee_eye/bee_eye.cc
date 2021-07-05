@@ -26,8 +26,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::ImgProc;
 using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     bool resizeImages = false;
     bool isPanoramic = false;
@@ -126,4 +125,6 @@ main(int argc, char **argv)
             break;
         }
     }
+
+    return EXIT_SUCCESS;
 }

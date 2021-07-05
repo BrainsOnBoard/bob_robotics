@@ -1,70 +1,110 @@
 #include "mb_memory.h"
 
 // Standard C++ includes
-#include <bitset>
 #include <fstream>
 #include <random>
+
+// Standard C includes
+#include <cmath>
+
+// CLI11 includes
+#include "third_party/CLI11.hpp"
 
 // BoB robotics includes
 #include "common/timer.h"
 #include "genn_utils/connectors.h"
-#include "genn_utils/spike_csv_recorder.h"
-
-// GeNN generated code includes
-#include "ardin_mb_CODE/definitions.h"
-
-// Antworld includes
-#include "mb_params.h"
 
 using namespace BoBRobotics;
+using namespace units::literals;
+using namespace units::angle;
+using namespace units::math;
 
 //----------------------------------------------------------------------------
 // Anonymous namespace
 //----------------------------------------------------------------------------
 namespace
 {
-unsigned int convertMsToTimesteps(double ms)
+void record(double t, unsigned int spikeCount, unsigned int *spikes, MBMemory::Spikes &spikeOutput)
 {
-    return (unsigned int)std::round(ms / MBParams::timestepMs);
+    // Add a new entry to the cache
+    spikeOutput.emplace_back();
+
+    // Fill in time
+    spikeOutput.back().first = t;
+
+    // Reserve vector to hold spikes
+    spikeOutput.back().second.reserve(spikeCount);
+
+    // Copy spikes into vector
+    std::copy_n(spikes, spikeCount, std::back_inserter(spikeOutput.back().second));
 }
 }   // Anonymous namespace
 
 //----------------------------------------------------------------------------
 // MBMemory
 //----------------------------------------------------------------------------
-MBMemory::MBMemory(bool normaliseInput)
-    :   Navigation::VisualNavigationBase(cv::Size(MBParams::inputWidth, MBParams::inputHeight)), m_NormaliseInput(normaliseInput),
-        m_SnapshotFloat(MBParams::inputHeight, MBParams::inputWidth, CV_32FC1)
+MBMemory::MBMemory(unsigned int numPN, unsigned int numKC, unsigned int numEN, unsigned int numPNSynapsesPerKC,
+                   int inputWidth, int inputHeight,
+                   double tauD, double kcToENWeight, double dopamineStrength,
+                   double rewardTimeMs, double presentDurationMs, double postStimulusDurationMs, double timestepMs,
+                   const std::string &modelName)
+:   m_SnapshotFloat(inputHeight, inputWidth, CV_32FC1),
+    m_NumPN(numPN), m_NumKC(numKC), m_NumEN(numEN), m_NumPNSynapsesPerKC(numPNSynapsesPerKC),
+    m_InputWidth(inputWidth), m_InputHeight(inputHeight), m_TauD(tauD), m_KCToENWeight(kcToENWeight), m_TimestepMs(timestepMs),
+    m_KCToENDopamineStrength(dopamineStrength), m_RewardTimeMs(rewardTimeMs), m_PresentDurationMs(presentDurationMs),
+    m_PostStimulusDurationMs(postStimulusDurationMs), m_NumPNSpikes(0), m_NumKCSpikes(0), m_NumENSpikes(0),
+    m_NumUsedWeights(numKC * numEN), m_NumActivePN(0), m_NumActiveKC(0), m_SLM("./", modelName)
 {
-
     std::mt19937 gen;
 
     {
         Timer<> timer("Allocation:");
-        allocateMem();
+        m_SLM.allocateMem();
     }
 
     {
         Timer<> timer("Initialization:");
-        initialize();
+        m_SLM.initialize();
     }
 
     {
         Timer<> timer("Building connectivity:");
 
-        GeNNUtils::buildFixedNumberPreConnector(MBParams::numPN, MBParams::numKC, MBParams::numPNSynapsesPerKC,
-                                                rowLengthpnToKC, indpnToKC, maxRowLengthpnToKC, gen);
+        unsigned int *rowLengthpnToKC = m_SLM.getArray<unsigned int>("rowLengthpnToKC");
+        unsigned int *indpnToKC = m_SLM.getArray<unsigned int>("indpnToKC");
+        unsigned int *maxRowLengthpnToKC = m_SLM.getScalar<unsigned int>("maxRowLengthpnToKC");
+        float *gkcToEN = m_SLM.getArray<float>("gkcToEN");
+        GeNNUtils::buildFixedNumberPreConnector(m_NumPN, m_NumKC, m_NumPNSynapsesPerKC,
+                                                rowLengthpnToKC, indpnToKC, *maxRowLengthpnToKC, gen);
 
         // Manually initialise weights
         // **NOTE** this is a little bit of a hack as we're only doing this so repeated calls to initialise won't overwrite
-        std::fill_n(&gkcToEN[0], MBParams::numKC * MBParams::numEN, MBParams::kcToENWeight);
+        std::fill_n(&gkcToEN[0], m_NumKC * m_NumEN, m_KCToENWeight);
     }
 
     // Final setup
     {
         Timer<> timer("Sparse init:");
-        initializeSparse();
+        m_SLM.initializeSparse();
     }
+
+    // Get pointers to EGPs
+    m_InjectDopamineKCToEN = m_SLM.getScalar<bool>("injectDopaminekcToEN");
+    m_TDKCToEN = m_SLM.getScalar<float>("tDkcToEN");
+    m_DKCToEN = m_SLM.getScalar<float>("dkcToEN");
+
+    // Get pointers to state variables
+    m_SpkCntEN = m_SLM.getArray<unsigned int>("glbSpkCntEN");
+    m_SpkEN = m_SLM.getArray<unsigned int>("glbSpkEN");
+    m_SpkCntKC = m_SLM.getArray<unsigned int>("glbSpkCntKC");
+    m_SpkKC = m_SLM.getArray<unsigned int>("glbSpkKC");
+    m_SpkCntPN = m_SLM.getArray<unsigned int>("glbSpkCntPN");
+    m_SpkPN = m_SLM.getArray<unsigned int>("glbSpkPN");
+    m_GKCToEN = m_SLM.getArray<float>("gkcToEN");
+}
+//----------------------------------------------------------------------------
+MBMemory::~MBMemory()
+{
 }
 //----------------------------------------------------------------------------
 void MBMemory::train(const cv::Mat &image)
@@ -72,14 +112,10 @@ void MBMemory::train(const cv::Mat &image)
     present(image, true);
 }
 //----------------------------------------------------------------------------
-float MBMemory::test(const cv::Mat &image) const
+float MBMemory::test(const cv::Mat &image)
 {
     // Get number of EN spikes
-    unsigned int numENSpikes = std::get<2>(present(image, false));
-    //LOGI << "\t" << numENSpikes << " EN spikes";
-
-    // Largest difference would be expressed by EN firing every timestep
-    return (float)numENSpikes / (float)(convertMsToTimesteps(MBParams::presentDurationMs) + convertMsToTimesteps(MBParams::postStimuliDurationMs));
+    return (float)std::get<2>(present(image, false));
 }
 //----------------------------------------------------------------------------
 void MBMemory::clearMemory()
@@ -87,137 +123,152 @@ void MBMemory::clearMemory()
     throw std::runtime_error("MBMemory does not currently support clearing");
 }
 //----------------------------------------------------------------------------
-std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train) const
+void MBMemory::write(cv::FileStorage &fs) const
 {
-    BOB_ASSERT(image.cols == MBParams::inputWidth);
-    BOB_ASSERT(image.rows == MBParams::inputHeight);
+    fs << "rewardTimeMs" << m_RewardTimeMs;
+    fs << "presentDurationMs" << m_PresentDurationMs;
+
+    fs << "kcToEN" << "{";
+    fs << "dopamineStrength" << m_KCToENDopamineStrength;
+    fs << "}";
+}
+//----------------------------------------------------------------------------
+void MBMemory::read(const cv::FileNode &node)
+{
+    cv::read(node["rewardTimeMs"], m_RewardTimeMs, m_RewardTimeMs);
+    cv::read(node["presentDurationMs"], m_PresentDurationMs, m_PresentDurationMs);
+
+    const auto &kcToEN = node["kcToEN"];
+    if(kcToEN.isMap()) {
+        cv::read(kcToEN["dopamineStrength"], m_KCToENDopamineStrength, m_KCToENDopamineStrength);
+    }
+}
+//----------------------------------------------------------------------------
+std::tuple<unsigned int, unsigned int, unsigned int> MBMemory::present(const cv::Mat &image, bool train)
+{
+    BOB_ASSERT(image.cols == m_InputWidth);
+    BOB_ASSERT(image.rows == m_InputHeight);
     BOB_ASSERT(image.type() == CV_8UC1);
 
-    // Convert to float
-    image.convertTo(m_SnapshotFloat, CV_32FC1, 1.0 / 255.0);
-
-    // Normalise snapshot using L2 norm
-    if(m_NormaliseInput) {
-        cv::normalize(m_SnapshotFloat, m_SnapshotFloat);
-    }
-
-    // Convert simulation regime parameters to timesteps
-    const unsigned long long rewardTimestep = convertMsToTimesteps(MBParams::rewardTimeMs);
-    const unsigned int endPresentTimestep = convertMsToTimesteps(MBParams::presentDurationMs);
-    const unsigned int postStimuliDuration = convertMsToTimesteps(MBParams::postStimuliDurationMs);
+     // Convert simulation regime parameters to timesteps
+    const unsigned long long rewardTimestep = convertMsToTimesteps(m_RewardTimeMs);
+    const unsigned int endPresentTimestep = convertMsToTimesteps(m_PresentDurationMs);
+    const unsigned int postStimuliDuration = convertMsToTimesteps(m_PostStimulusDurationMs);
 
     const unsigned long long duration = endPresentTimestep + postStimuliDuration;
 
-    // Open CSV output files
-#ifdef RECORD_SPIKES
-    GeNNUtils::SpikeCSVRecorder pnSpikes("pn_spikes.csv", glbSpkCntPN, glbSpkPN);
-    GeNNUtils::SpikeCSVRecorder kcSpikes("kc_spikes.csv", glbSpkCntKC, glbSpkKC);
-    GeNNUtils::SpikeCSVRecorder enSpikes("en_spikes.csv", glbSpkCntEN, glbSpkEN);
+    // Convert image to float
+    image.convertTo(m_SnapshotFloat, CV_32FC1, 1.0 / 255.0);
 
-    std::bitset<MBParams::numPN> pnSpikeBitset;
-    std::bitset<MBParams::numKC> kcSpikeBitset;
-#endif  // RECORD_SPIKES
+    // Initialise
+    initPresent(duration);
 
     // Make sure KC state and GGN insyn are reset before simulation
-    initialize();
+    m_SLM.initialize();
 
-    // Copy HOG features into external input current
-    BOB_ASSERT(m_SnapshotFloat.isContinuous());
-    std::copy_n(reinterpret_cast<float*>(m_SnapshotFloat.data), MBParams::numPN, IextPN);
-    pushIextPNToDevice();
+    // Start presenting stimuli
+    beginPresent(m_SnapshotFloat);
 
     // Reset model time
-    iT = 0;
-    t = 0.0f;
+    m_SLM.setTimestep(0);
+    m_SLM.setTime(0.0f);
+
+    // Clear spike records
+    m_PNSpikes.clear();
+    m_KCSpikes.clear();
+    m_ENSpikes.clear();
+
+    std::vector<bool> pnSpikeBitset(m_NumPN, false);
+    std::vector<bool> kcSpikeBitset(m_NumKC, false);
+
+    // Reset time of last dopamine spike
+    *m_TDKCToEN = std::numeric_limits<float>::lowest();
 
     // Loop through timesteps
-    unsigned int numPNSpikes = 0;
-    unsigned int numKCSpikes = 0;
-    unsigned int numENSpikes = 0;
-    while(iT < duration) {
+    m_NumPNSpikes = 0;
+    m_NumKCSpikes = 0;
+    m_NumENSpikes = 0;
+    while(m_SLM.getTimestep() < duration) {
         // If we should stop presenting image
-        if(iT == endPresentTimestep) {
-            std::fill_n(IextPN, MBParams::numPN, 0.0f);
-
-            // Copy external input current to device
-            pushIextPNToDevice();
+        if(m_SLM.getTimestep() == endPresentTimestep) {
+            endPresent();
         }
 
         // If we should reward in this timestep, inject dopamine
-        if(train && iT == rewardTimestep) {
-            injectDopaminekcToEN = true;
+        if(train && m_SLM.getTimestep() == rewardTimestep) {
+            *m_InjectDopamineKCToEN = true;
         }
 
-        // Simulat
-        stepTime();
+        // Simulate on GPU
+        m_SLM.stepTime();
 
         // Download spikes
-#ifdef RECORD_SPIKES
-        pullPNCurrentSpikesFromDevice();
-        pullKCCurrentSpikesFromDevice();
-        pullENCurrentSpikesFromDevice();
-#else
-        pullENCurrentSpikesFromDevice();
-#endif
+        m_SLM.pullCurrentSpikesFromDevice("PN");
+        m_SLM.pullCurrentSpikesFromDevice("KC");
+        m_SLM.pullCurrentSpikesFromDevice("EN");
 
         // If a dopamine spike has been injected this timestep
-        if(injectDopaminekcToEN) {
+        if(*m_InjectDopamineKCToEN) {
             // Decay global dopamine traces
-            dkcToEN = dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD);
+            *m_DKCToEN *= std::exp(-(m_SLM.getTime() - *m_TDKCToEN) / m_TauD);
 
             // Add effect of dopamine spike
-            dkcToEN += MBParams::dopamineStrength;
+            *m_DKCToEN += m_KCToENDopamineStrength;
 
             // Update last reward time
-            tDkcToEN = t;
+            *m_TDKCToEN = m_SLM.getTime();
 
             // Clear dopamine injection flags
-            injectDopaminekcToEN = false;
+            *m_InjectDopamineKCToEN = false;
         }
 
-        numENSpikes += spikeCount_EN;
-#ifdef RECORD_SPIKES
-        numPNSpikes += spikeCount_PN;
-        numKCSpikes += spikeCount_KC;
-        for(unsigned int i = 0; i < spikeCount_PN; i++) {
-            pnSpikeBitset.set(spike_PN[i]);
+        m_NumENSpikes += m_SpkCntEN[0];
+        m_NumPNSpikes += m_SpkCntPN[0];
+        m_NumKCSpikes += m_SpkCntKC[0];
+        for(unsigned int i = 0; i < m_SpkCntPN[0]; i++) {
+            pnSpikeBitset[m_SpkPN[i]] = true;
         }
 
-        for(unsigned int i = 0; i < spikeCount_KC; i++) {
-            kcSpikeBitset.set(spike_KC[i]);
+        for(unsigned int i = 0; i < m_SpkCntKC[0]; i++) {
+            kcSpikeBitset[m_SpkKC[i]] = true;
         }
+
         // Record spikes
-        pnSpikes.record(t);
-        kcSpikes.record(t);
-        enSpikes.record(t);
-#endif  // RECORD_SPIKES
+        record(m_SLM.getTime(), m_SpkCntPN[0], m_SpkPN, m_PNSpikes);
+        record(m_SLM.getTime(), m_SpkCntKC[0], m_SpkKC, m_KCSpikes);
+        record(m_SLM.getTime(), m_SpkCntEN[0], m_SpkEN, m_ENSpikes);
+
+        // Perform any additional recording
+        recordAdditional();
     }
 
 #ifdef RECORD_TERMINAL_SYNAPSE_STATE
     // Download synaptic state
-    pullkcToENStateFromDevice();
+    m_SLM.pullStateFromDevice("EN");
 
     std::ofstream terminalStream("terminal_synaptic_state.csv");
+    terminalStream.exceptions(std::ios::badbit | std::ios::failbit);
+
     terminalStream << "Weight, Eligibility" << std::endl;
-    for(unsigned int s = 0; s < MBParams::numKC * MBParams::numEN; s++) {
-        terminalStream << gkcToEN[s] << "," << ckcToEN[s] * std::exp(-(t - tCkcToEN[s]) / 40.0) << std::endl;
+    for(unsigned int s = 0; s < m_NumKC * m_NumEN; s++) {
+        terminalStream << m_GKCToEN[s] << "," << m_CKCToEN[s] * std::exp(-(t - m_TCKCToEN[s]) / 40.0) << std::endl;
     }
-    LOGI << "Final dopamine level:" << dkcToEN * std::exp(-(t - tDkcToEN) / MBParams::tauD);
+    std::cout << "Final dopamine level:" << *m_DKCToEN * std::exp(-(t - *m_TDKCToEN) / m_TauD) << std::endl;
 #endif  // RECORD_TERMINAL_SYNAPSE_STATE
 
-#ifdef RECORD_SPIKES
-    std::ofstream activeNeuronStream("active_neurons.csv", std::ios_base::app);
-    activeNeuronStream << pnSpikeBitset.count() << "," << kcSpikeBitset.count() << "," << numENSpikes << std::endl;
-#endif  // RECORD_SPIKES
+    // Cache number of unique active cells
+    m_NumActivePN = std::count(pnSpikeBitset.cbegin(), pnSpikeBitset.cend(), true);
+    m_NumActiveKC = std::count(kcSpikeBitset.cbegin(), kcSpikeBitset.cend(), true);
+
     if(train) {
-        constexpr unsigned int numWeights = MBParams::numKC * MBParams::numEN;
+        const unsigned int numWeights = m_NumKC * m_NumEN;
 
-        // Download weights
-        pullgkcToENFromDevice();
+        // Pull weights from device
+        m_SLM.pullVarFromDevice("kcToEN", "g");
 
-        unsigned int numUsedWeights = std::count(&gkcToEN[0], &gkcToEN[numWeights], 0.0f);
-        LOGI << "\t" << numWeights - numUsedWeights << " unused weights";
+        // Cache number of unused weights
+        m_NumUsedWeights = numWeights - std::count(&m_GKCToEN[0], &m_GKCToEN[numWeights], 0.0f);
     }
 
-    return std::make_tuple(numPNSpikes, numKCSpikes, numENSpikes);
+    return std::make_tuple(m_NumPNSpikes, m_NumKCSpikes, m_NumENSpikes);
 }

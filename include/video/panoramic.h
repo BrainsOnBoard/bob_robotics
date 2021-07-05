@@ -14,7 +14,7 @@ namespace Video {
 
 //! Try to find a panoramic camera on the current machine and return it
 std::unique_ptr<Input>
-getPanoramicCamera();
+getPanoramicCamera(cv::VideoCaptureAPIs api = cv::CAP_ANY);
 
 } // Video
 } // BoBRobotics

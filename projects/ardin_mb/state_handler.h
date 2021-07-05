@@ -17,20 +17,25 @@
 // Libantworld includes
 #include "antworld/common.h"
 #include "antworld/renderer.h"
+#include "antworld/render_target.h"
+#include "antworld/render_target_input.h"
 #include "antworld/route_ardin.h"
-#include "antworld/snapshot_processor_ardin.h"
 
 // Ardin MB includes
+#include "opencv_texture.h"
 #include "vector_field.h"
 
 // Forward declarations
 namespace BoBRobotics
 {
-namespace Navigation
+namespace AntWorld
 {
-    class VisualNavigationBase;
+    class SnapshotProcessor;
 }
 }
+
+class VisualNavigationBase;
+class VisualNavigationUI;
 
 //----------------------------------------------------------------------------
 // Enumerations
@@ -40,6 +45,7 @@ enum class State
     Invalid,
     Training,
     Testing,
+    BuildingRIDF,
     RandomWalk,
     FreeMovement,
     BuildingVectorField,
@@ -62,19 +68,19 @@ public:
     {
         KeyLeft,
         KeyRight,
+        KeyForward,
+        KeyBackward,
         KeyUp,
         KeyDown,
         KeyReset,
-        KeyTrainSnapshot,
-        KeyTestSnapshot,
-        KeySaveSnapshot,
-        KeyRandomWalk,
-        KeyBuildVectorField,
         KeyMax
     };
 
     StateHandler(const std::string &worldFilename, const std::string &routeFilename,
-                 BoBRobotics::Navigation::VisualNavigationBase &visualNavigation);
+                 float jitterSD, bool quitAfterTrain, bool autoTest, bool realignRoutes,
+                 meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
+                 BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
+                 VisualNavigationUI &visualNavigationUI);
 
     //------------------------------------------------------------------------
     // Public API
@@ -103,6 +109,12 @@ private:
     //! Checks whether current position is still on route/at end etc
     bool checkAntPosition();
 
+    //! Load a route
+    void loadRoute(const std::string &filename);
+
+    //! Update UI
+    bool handleUI();
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
@@ -117,21 +129,23 @@ private:
 
     //! Renderer used for ant world
     BoBRobotics::AntWorld::Renderer m_Renderer;
+    BoBRobotics::AntWorld::RenderTarget m_RenderTargetTopDown;
+    BoBRobotics::AntWorld::RenderTarget m_RenderTargetPanoramic;
 
     //! OpenGL video input used for reading image from framebuffer
-    BoBRobotics::Video::OpenGL m_Input;
+    BoBRobotics::AntWorld::RenderTargetInput m_Input;
 
     //! Route handler - implements the various bits of route-regularizing weirdness from original paper
     BoBRobotics::AntWorld::RouteArdin m_Route;
 
-    //! Snapshot processor - implements the strange resizing algorithm from original paper
-    BoBRobotics::AntWorld::SnapshotProcessorArdin m_SnapshotProcessor;
+    //! OpenCV texture wrapper used to render final snapshot
+    OpenCVTexture m_FinalSnapshotTexture;
 
     //! Class for handling rendering of vector field
     VectorField m_VectorField;
 
     //! Ant's current pose
-    BoBRobotics::Pose2<meter_t, degree_t> m_Pose;
+    BoBRobotics::Pose3<meter_t, degree_t> m_Pose;
 
     //! When training, index of current snapshot
     size_t m_TrainPoint;
@@ -154,15 +168,41 @@ private:
     //! Counters for total number of steps made when testing (or random walking)
     unsigned int m_NumTestSteps;
 
+    //! Should route highlights be shown (rather than familiarity)
+    bool m_ShowRouteHighlight;
+
     //! RNG used for random walk
     std::mt19937 m_RNG;
+
+    //! Distribution of position jitter
+    std::normal_distribution<float> m_PositionJitterDistributionCM;
 
     //! Distribution of angles to turn for random walk
     std::uniform_real_distribution<float> m_RandomWalkAngleDistribution;
 
+    //! Should we quit after training? (useful for automated parameter sweeping)
+    const bool m_QuitAfterTrain;
+
+    //! Should we automatically test after training? (useful for automated benchmarking)
+    const bool m_AutoTest;
+
+    //! In the original paper, routes were 're-aligned' so
+    const bool m_RealignRoutes;
+
+    //! Snapshot processor - takes screen images and pre-processes
+    BoBRobotics::AntWorld::SnapshotProcessor &m_SnapshotProcessor;
+
+    //! Height of path
+    const meter_t m_PathHeight;
+
     //! Model used for visual navigation
-    BoBRobotics::Navigation::VisualNavigationBase &m_VisualNavigation;
+    VisualNavigationBase &m_VisualNavigation;
+
+    //! Object used to handle visual navigation model-specific UI
+    VisualNavigationUI &m_VisualNavigationUI;
 
     unsigned int m_CurrentVectorFieldPoint;
     std::vector<std::pair<units::angle::degree_t, float>> m_VectorFieldNovelty;
+
+    std::vector<float> m_RIDFNovelty;
 };

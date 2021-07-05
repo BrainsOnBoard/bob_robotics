@@ -1,4 +1,5 @@
 // BoB robotics includes
+#include "common/circstat.h"
 #include "common/macros.h"
 #include "robots/gazebo/tank.h"
 
@@ -9,9 +10,9 @@ namespace BoBRobotics {
 namespace Robots {
 namespace Gazebo {
 
-Tank::Tank(const radians_per_second_t maximumSpeed,
-            gazebo::transport::NodePtr node)
-    : m_MaximumSpeed(maximumSpeed)
+Tank::Tank(const meters_per_second_t maximumSpeed,
+           gazebo::transport::NodePtr node) // NOLINT
+  : m_MaximumSpeed(getAngularVelocity(maximumSpeed, 0.3_m))
 {
     // Publish to the  differential_drive_robot topic
     pub = node->Advertise<gazebo::msgs::Vector2d>("~/differential_drive_robot/vel_cmd");
@@ -20,12 +21,14 @@ Tank::Tank(const radians_per_second_t maximumSpeed,
     pub->WaitForConnection();
 }
 
-meters_per_second_t Tank::getAbsoluteMaximumSpeed() const
+meters_per_second_t
+Tank::getAbsoluteMaximumSpeed() const
 {
-    return meters_per_second_t{ 0.3 * m_MaximumSpeed.value() }; //radius of the wheel is 0.3m. v = r × ω
+    return getVelocity(m_MaximumSpeed, 0.3_m); //radius of the wheel is 0.3m
 }
 
-void Tank::tank(float left, float right)
+void
+Tank::tank(float left, float right)
 {
     BOB_ASSERT(left >= -1.f && left <= 1.f);
     BOB_ASSERT(right >= -1.f && right <= 1.f);

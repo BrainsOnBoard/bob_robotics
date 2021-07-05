@@ -1,7 +1,7 @@
 #include "../hid/joystick.h"
 #include "../robots/mecanum.h"
 
-int main()
+int bobMain(int, char **)
 {
     constexpr float joystickDeadzone = 0.25f;
     

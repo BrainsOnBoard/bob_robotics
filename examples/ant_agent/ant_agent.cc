@@ -1,11 +1,11 @@
 // BoB robotics includes
 #include "antworld/agent.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "common/path.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 
 // OpenCV
@@ -21,8 +21,7 @@ using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int
-bob_main(int, char **argv)
+int bobMain(int, char **)
 {
     const cv::Size RenderSize{ 720, 150 };
     const meter_t AntHeight = 1_cm;
@@ -34,7 +33,7 @@ bob_main(int, char **argv)
     // Create renderer
     AntWorld::Renderer renderer(256, 0.001, 1000.0, 360_deg);
     auto &world = renderer.getWorld();
-    world.load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
+    world.load(Path::getResourcesPath() / "antworld" / "world5000_gray.bin",
                { 0.0f, 1.0f, 0.0f },
                { 0.898f, 0.718f, 0.353f });
     const auto minBound = world.getMinBound();
@@ -62,17 +61,16 @@ bob_main(int, char **argv)
         // Poll joystick
         joystick.update();
 
-        const auto pose = agent.getPose<meter_t, degree_t>();
+        const auto pose = agent.getPose();
         if (pose == lastPose) {
             std::this_thread::sleep_for(5ms);
             continue;
         }
 
-        // LOG_INFO << "Pose: " << pose;
         lastPose = pose;
 
         // Update display
-        agent.update();
+        agent.display();
     }
 
     return EXIT_SUCCESS;

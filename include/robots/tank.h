@@ -28,28 +28,29 @@ protected:
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
+    //----------------------------------------------------------------------------
+    // Robot virtuals
+    //----------------------------------------------------------------------------
     virtual void moveForward(float speed) override;
 
     virtual void turnOnTheSpot(float clockwiseSpeed) override;
 
     virtual void stopMoving() override;
 
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
+    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
 
-    void controlWithThumbsticks(HID::Joystick &joystick);
+    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
 
-    void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
+    //! Controls the robot with a network stream
+    virtual void readFromNetwork(Net::Connection &connection) override;
 
-    void move(meters_per_second_t v,
-              radians_per_second_t clockwiseSpeed,
-              const bool maxScaled = false);
-
+    virtual void stopReadingFromNetwork() override;
+    
+    //----------------------------------------------------------------------------
+    // Declared virtuals
+    //----------------------------------------------------------------------------
     //! Set the left and right motors to the specified speed
     virtual void tank(float left, float right);
-
-    void tankMaxScaled(const float left, const float right, const float max = 1.f);
-
-    void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false);
 
     virtual millimeter_t getRobotWidth() const;
 
@@ -64,11 +65,20 @@ public:
     virtual void setMaximumSpeedProportion(float value);
 
     virtual float getMaximumSpeedProportion() const;
+    
+    //----------------------------------------------------------------------------
+    // Public API
+    //----------------------------------------------------------------------------
+    void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick);
+    
+    void move(meters_per_second_t v,
+              radians_per_second_t clockwiseSpeed,
+              const bool maxScaled = false);
 
-    //! Controls the robot with a network stream
-    void readFromNetwork(Net::Connection &connection);
+    
+    void tankMaxScaled(const float left, const float right, const float max = 1.f);
 
-    void stopReadingFromNetwork();
+    void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false);
 
     float getLeft() const;
 
@@ -90,14 +100,3 @@ protected:
 }; // Tank
 } // Robots
 } // BoBRobotics
-
-// Include appropriate header, depending on what kind of tank robot the user wants
-#if defined(TANK_TYPE_Norbot)
-#include "norbot.h"
-#elif defined(TANK_TYPE_EV3)
-#include "ev3/ev3.h"
-#elif defined(TANK_TYPE_Surveyor)
-#include "surveyor.h"
-#elif defined(TANK_TYPE_BundledTankNetSink)
-#include "tank_netsink.h"
-#endif

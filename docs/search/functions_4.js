@@ -1,9 +1,18 @@
 var searchData=
 [
-  ['elapsed',['elapsed',['../classBoBRobotics_1_1Stopwatch.html#ac982ba179e306bd022d8279cebc60962',1,'BoBRobotics::Stopwatch']]],
-  ['empty',['empty',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#ae4163ed082cdbc7f08f7bfe3677e8517',1,'BoBRobotics::Navigation::ImageDatabase']]],
-  ['end',['end',['../classBoBRobotics_1_1Navigation_1_1ImageDatabase.html#a9e0bbbf5491289a0fb430ee9f1263bb5',1,'BoBRobotics::Navigation::ImageDatabase']]],
-  ['exp',['exp',['../group__UnitMath.html#ga37ffdd257c05eb6916d62bfbbc0890e2',1,'units::math']]],
-  ['exp2',['exp2',['../group__UnitMath.html#ga872856d20626a6b912cc97b63bc95c89',1,'units::math']]],
-  ['expm1',['expm1',['../group__UnitMath.html#ga9aee32f9e268b7135c66fc1fb887f44a',1,'units::math']]]
+  ['decreasewindowsize_1813',['decreaseWindowSize',['../structBoBRobotics_1_1Navigation_1_1PerfectMemoryWindow_1_1DynamicBestMatchGradient_1_1WindowConfig.html#a40c5d8d72e665582e2c44e2160547ae6',1,'BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient::WindowConfig']]],
+  ['default_5ffunction_1814',['default_function',['../classCLI_1_1Option.html#a3693531e3da3574fc03185f759f13a83',1,'CLI::Option']]],
+  ['default_5fstr_1815',['default_str',['../classCLI_1_1Option.html#a446f47a5d6ddf6831defd707394d7c07',1,'CLI::Option']]],
+  ['default_5fval_1816',['default_val',['../classCLI_1_1Option.html#a4685cebdb75c6bf8ce0095fd08d8b892',1,'CLI::Option']]],
+  ['delimiter_1817',['delimiter',['../classCLI_1_1OptionBase.html#ad99f5bd0df1e736cd6c3478a77507289',1,'CLI::OptionBase::delimiter()'],['../classCLI_1_1OptionDefaults.html#a45dbccb3672d4d397e6d3b18897e1c0d',1,'CLI::OptionDefaults::delimiter()']]],
+  ['description_1818',['description',['../classCLI_1_1Validator.html#a1d62f88b256ae1587a5c9841f5a42c68',1,'CLI::Validator::description(std::string validator_desc)'],['../classCLI_1_1Validator.html#acb7942915861f00426ba4106c3fa1445',1,'CLI::Validator::description(std::string validator_desc) const'],['../classCLI_1_1Option.html#abe8a53dc9fdeab4d74057891520ac3a7',1,'CLI::Option::description()'],['../classCLI_1_1App.html#a5c26c64a49536e623739685f42475fc2',1,'CLI::App::description()']]],
+  ['differentialdriveplugin_1819',['DifferentialDrivePlugin',['../classgazebo_1_1DifferentialDrivePlugin.html#aa9c47998dda5a08e834e043c85b81c3d',1,'gazebo::DifferentialDrivePlugin']]],
+  ['disable_5fflag_5foverride_1820',['disable_flag_override',['../classCLI_1_1OptionDefaults.html#a8fc246a54dd092621bfb7216807e1490',1,'CLI::OptionDefaults::disable_flag_override()'],['../classCLI_1_1Option.html#abffc5b37b17b35b72b0489fc022e6e78',1,'CLI::Option::disable_flag_override()']]],
+  ['disabled_1821',['disabled',['../classCLI_1_1App.html#abafac323b1dac58044509a62938daa9a',1,'CLI::App']]],
+  ['disabled_5fby_5fdefault_1822',['disabled_by_default',['../classCLI_1_1App.html#a8aa17ef86c76df64bb67dc87b7e0f4bf',1,'CLI::App']]],
+  ['display_1823',['Display',['../classBoBRobotics_1_1Video_1_1Display.html#ad47f0b8dcffe1ebe6c805342c6c85287',1,'BoBRobotics::Video::Display::Display(Input &amp;videoInput, const bool fullScreen=false)'],['../classBoBRobotics_1_1Video_1_1Display.html#ac3bc48e896f9d690c051f00c1d024409',1,'BoBRobotics::Video::Display::Display(Input &amp;videoInput, const cv::Size &amp;unwrapRes, const bool fullScreen=false)']]],
+  ['distance_1824',['distance',['../namespaceBoBRobotics_1_1AntWorld.html#a622492cc5cbb2231ebc2d12e74557da5',1,'BoBRobotics::AntWorld::distance(const T1 &amp;v1, const T2 &amp;v2)'],['../namespaceBoBRobotics_1_1AntWorld.html#aafba305f77afdbdf68029cf421ef271b',1,'BoBRobotics::AntWorld::distance(const T &amp;v1, units::length::meter_t x2, units::length::meter_t y2)']]],
+  ['doflattrimcalibration_1825',['doFlatTrimCalibration',['../classBoBRobotics_1_1Robots_1_1Bebop.html#ab418997fde3cf3cff9aaa5dfcd15210c',1,'BoBRobotics::Robots::Bebop']]],
+  ['drawrectangleatcoordinates_1826',['drawRectangleAtCoordinates',['../classBoBRobotics_1_1Viz_1_1CarDisplay.html#a731dafc18b2d9b29a7073fe3e402b8ad',1,'BoBRobotics::Viz::CarDisplay']]],
+  ['drive_1827',['drive',['../classBoBRobotics_1_1AntWorld_1_1AntAgent.html#aae67c9ad99825bee42795aab2c0b2c2c',1,'BoBRobotics::AntWorld::AntAgent::drive()'],['../classBoBRobotics_1_1Robots_1_1Omni2D.html#aebdddac589786833977e6d9a746321a2',1,'BoBRobotics::Robots::Omni2D::drive()'],['../classBoBRobotics_1_1Robots_1_1Robot.html#a5fadf5e7f4909f83e159ca2760c90779',1,'BoBRobotics::Robots::Robot::drive()'],['../classBoBRobotics_1_1Robots_1_1Tank.html#a2897ee5abe6f54a66d3c0d5e9298e0a7',1,'BoBRobotics::Robots::Tank::drive()'],['../classBoBRobotics_1_1Robots_1_1UAV.html#aeb033a8c75913848d6cd2f81c3f1873b',1,'BoBRobotics::Robots::UAV::drive()']]]
 ];

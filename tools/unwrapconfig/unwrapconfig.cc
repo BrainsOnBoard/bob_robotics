@@ -1,8 +1,5 @@
-// windows.h
-#include "os/windows_include.h"
-
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "os/keycodes.h"
 #include "video/opencvinput.h"
@@ -23,13 +20,12 @@ const int BIG_PX_JUMP = 5;
 
 /* draws a line for the calibration cross */
 inline void
-drawCalibrationLine(cv::Mat &imorig, cv::Point p1, cv::Point p2)
+drawCalibrationLine(cv::Mat &imorig, const cv::Point &p1, const cv::Point &p2)
 {
     cv::line(imorig, p1, p2, cv::Scalar(0x00, 0xff, 0x00), 2);
 }
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     // TODO: add option to calibrate see3cam too
     std::unique_ptr<Video::Input> pcam;

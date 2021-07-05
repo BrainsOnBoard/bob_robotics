@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['norbot_20shopping_20list',['Norbot shopping list',['../md_docs_source_robot-shopping-list.html',1,'']]]
+  ['joystick_20test_2460',['Joystick test',['../md_examples_joystick_README.html',1,'']]]
 ];

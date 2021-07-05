@@ -9,7 +9,6 @@
 #include "os/net.h"
 
 // Standard C++ includes
-#include <atomic>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -74,15 +73,10 @@ public:
     //! Send a string over the socket.
     void send(const std::string &msg);
 
-    // Object is non-copyable
-    Socket(const Socket &) = delete;
-    void operator=(const Socket &) = delete;
-    Socket &operator=(Socket &&) = default;
-
-    Socket(Socket &&old);
+    Socket(Socket &&old) noexcept;
 
 private:
-    std::atomic<socket_t> m_Handle;
+    socket_t m_Handle;
 
     void throwError(const std::string &msg);
 }; // Socket

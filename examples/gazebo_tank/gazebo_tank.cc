@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "robots/simulated_tank.h"
 #include "robots/gazebo/camera.h"
@@ -23,8 +23,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     /************************************Gazebo setup************/
 
@@ -34,7 +33,7 @@ main(int argc, char **argv)
     /************************************Gazebo setup end************/
     std::unique_ptr<Video::Display> display;
     std::unique_ptr<Gazebo::Camera> cam;
-    if(argc >= 3) { // Initialize gazebo camera if more than 2 arguements are provided (display switch and camera url)
+    if(argc >= 3) { // Initialize gazebo camera if more than 2 arguments are provided (display switch and camera url)
         std::cout << "Display switch enabled.\n";
         if(strcmp(argv[1], "-p") == 0) {
             std::cout << "Using panoramic camera.\n";
@@ -46,10 +45,9 @@ main(int argc, char **argv)
             cam = std::make_unique<Gazebo::Camera>(node, argv[2], false);
             display = std::make_unique<Video::Display>(*cam); //unwrap resolution needs to be supplied
         }
-        display->runInBackground();
     }
 
-    Gazebo::Tank robot(5_rad_per_s, node); // Tank agent
+    Gazebo::Tank robot(1_mps, node); // Tank agent
     HID::Joystick joystick(0.25f);
     robot.controlWithThumbsticks(joystick);
 
@@ -57,7 +55,7 @@ main(int argc, char **argv)
 
     do {
         // Check for joystick events
-        if (!joystick.update()) {
+        if (!joystick.update() && (!display || !display->update())) {
             // A small delay so we don't hog CPU
             std::this_thread::sleep_for(5ms);
         }
@@ -67,4 +65,6 @@ main(int argc, char **argv)
     display->close();
     Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
+
+    return EXIT_SUCCESS;
 }

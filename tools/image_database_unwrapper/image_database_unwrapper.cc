@@ -1,22 +1,39 @@
 // BoB robotics includes
 #include "navigation/image_database.h"
 
+// Third-party includes
+#include "third_party/CLI11.hpp"
+
 // Standard C++ includes
 #include <string>
 
 using namespace BoBRobotics;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
-    // We must have a path + an optional image size
-    BOB_ASSERT(argc == 2 || argc == 4);
+    std::vector<size_t> size{ 720, 150 };
+    size_t frameSkip = 1;
+    bool greyscale = false;
 
-    // Either parse image size from command line or use default
-    const cv::Size unwrapRes = argc == 4 ? cv::Size(std::stoi(argv[2]), std::stoi(argv[3]))
-                                         : cv::Size(720, 58);
+    CLI::App app{ "Tool for unwrapping image databases." };
+    app.allow_extras();
+    app.add_option("-s,--skip-frames", frameSkip, "Number of frames to skip");
+    auto opt = app.add_option("-r,--resolution", size, "Resolution of unwrapped images");
+    opt->expected(2);
+    app.add_flag("-g,--greyscale", greyscale, "Convert images to greyscale");
+    CLI11_PARSE(app, argc, argv);
+    if (app.remaining_size() != 1) {
+        std::cout << app.help();
+        return EXIT_FAILURE;
+    }
 
     // Unwrap image database
-    Navigation::ImageDatabase database(argv[1]);
-    database.unwrap("unwrapped_" + database.getName(), unwrapRes);
+    const filesystem::path inPath{ app.remaining()[0] };
+    const Navigation::ImageDatabase database(inPath);
+    const filesystem::path outPath = inPath.parent_path() /
+                                        ("unwrapped_" + inPath.filename());
+    std::cout << "Creating new database in " << outPath << "\n";
+    database.unwrap(outPath, { (int) size[0], (int) size[1] }, frameSkip, greyscale);
+
+    return EXIT_SUCCESS;
 }

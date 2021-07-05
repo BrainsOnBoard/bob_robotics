@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/path.h"
 #include "common/macros.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "imgproc/opencv_unwrap_360.h"
 
 // Standard C++ includes
@@ -133,7 +133,7 @@ OpenCVUnwrap360::updateMaps()
 }
 
 void
-OpenCVUnwrap360::unwrap(const cv::Mat &input, cv::Mat &output)
+OpenCVUnwrap360::unwrap(const cv::Mat &input, cv::Mat &output) const
 {
     cv::remap(input, output, m_UnwrapMapX, m_UnwrapMapY, cv::INTER_NEAREST);
 }
@@ -214,7 +214,7 @@ write(cv::FileStorage &fs,
 void
 read(const cv::FileNode &node,
      OpenCVUnwrap360 &x,
-     OpenCVUnwrap360 defaultValue)
+     const OpenCVUnwrap360 &defaultValue)
 {
     if (node.empty()) {
         x = defaultValue;

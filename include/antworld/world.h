@@ -63,13 +63,16 @@ public:
         return m_MaxBound;
     }
 
+    void setMinBound(const Vector3<meter_t> &minBound){ m_MinBound = minBound; }
+    void setMaxBound(const Vector3<meter_t> &maxBound){ m_MaxBound = maxBound; }
+
 private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
     void loadMaterials(const filesystem::path &basePath, const std::string &filename,
                        GLint textureFormat, int maxTextureSize,
-                       std::map<std::string, Texture*> &textureNames);
+                       std::map<std::string, std::tuple<Texture*, Surface::Colour>> &materialNames);
 
     //------------------------------------------------------------------------
     // Members

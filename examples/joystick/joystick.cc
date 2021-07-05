@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <string>
@@ -36,8 +36,7 @@ initButton(Joystick &joystick, JButton button)
     onButtonEvent(button, joystick.isDown(button));
 }
 
-int
-main()
+int bobMain(int, char **)
 {
     LOGI << "Joystick test program";
     LOGI << "Press return to quit";

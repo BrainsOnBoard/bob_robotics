@@ -11,9 +11,11 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/von_mises_distribution.h"
-#include "genn_utils/analogue_csv_recorder.h"
+
+// GeNN userproject includes
+#include "analogueRecorder.h"
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -26,7 +28,7 @@
 using namespace BoBRobotics;
 using namespace BoBRobotics::StoneCX;
 
-int main()
+int bobMain(int, char **)
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;
@@ -95,11 +97,11 @@ int main()
     }
 
 #ifdef RECORD_ELECTROPHYS
-    GeNNUtils::AnalogueCSVRecorder<scalar> tn2Recorder("tn2.csv", rTN2, Parameters::numTN2, "TN2");
-    GeNNUtils::AnalogueCSVRecorder<scalar> cl1Recorder("cl1.csv", rCL1, Parameters::numCL1, "CL1");
-    GeNNUtils::AnalogueCSVRecorder<scalar> tb1Recorder("tb1.csv", rTB1, Parameters::numTB1, "TB1");
-    GeNNUtils::AnalogueCSVRecorder<scalar> cpu4Recorder("cpu4.csv", rCPU4, Parameters::numCPU4, "CPU4");
-    GeNNUtils::AnalogueCSVRecorder<scalar> cpu1Recorder("cpu1.csv", rCPU1, Parameters::numCPU1, "CPU1");
+    AnalogueRecorder<scalar> tn2Recorder("tn2.csv", {rTN2}, Parameters::numTN2, ",");
+    AnalogueRecorder<scalar> cl1Recorder("cl1.csv", {rCL1}, Parameters::numCL1, ",");
+    AnalogueRecorder<scalar> tb1Recorder("tb1.csv", {rTB1}, Parameters::numTB1, ",");
+    AnalogueRecorder<scalar> cpu4Recorder("cpu4.csv", {rCPU4}, Parameters::numCPU4, ",");
+    AnalogueRecorder<scalar> cpu1Recorder("cpu1.csv", {rCPU1}, Parameters::numCPU1, ",");
 #endif  // RECORD_ELECTROPHYS
 
     // Simulate
@@ -109,7 +111,7 @@ int main()
     double yVelocity = 0.0;
     double xPosition = 0.0;
     double yPosition = 0.0;
-    for(unsigned int i = 0;; i++) {
+    while(true) {
         // Project velocity onto each TN2 cell's preferred angle and use as speed input
         for(unsigned int j = 0; j < Parameters::numTN2; j++) {
             speedTN2[j] = (sin(theta + preferredAngleTN2[j]) * xVelocity) +
@@ -135,27 +137,27 @@ int main()
         pullrPontineFromDevice();
 
 #ifdef RECORD_ELECTROPHYS
-        tn2Recorder.record(i);
-        cl1Recorder.record(i);
-        tb1Recorder.record(i);
-        cpu4Recorder.record(i);
-        cpu1Recorder.record(i);
+        tn2Recorder.record(t);
+        cl1Recorder.record(t);
+        tb1Recorder.record(t);
+        cpu4Recorder.record(t);
+        cpu1Recorder.record(t);
 #endif  // RECORD_ELECTROPHYS
 
         // Visualize network activity
         visualize(activityImage);
 
         // If we are on outbound segment of route
-        const bool outbound = (i < numOutwardTimesteps);
+        const bool outbound = (iT < numOutwardTimesteps);
         double a = 0.0;
         if(outbound) {
             // Update angular velocity
             omega = (pathLambda * omega) + pathVonMises(gen);
 
             // Read linear acceleration off spline
-            a = accelerationSpline((double)i);
+            a = accelerationSpline(t);
 
-            if(i == (numOutwardTimesteps - 1)) {
+            if(iT == (numOutwardTimesteps - 1)) {
                 LOGI << "Max CPU4 level r=" << *std::max_element(&rCPU4[0], &rCPU4[Parameters::numCPU4]) << ", i=" << *std::max_element(&iCPU4[0], &iCPU4[Parameters::numCPU4]);
             }
         }

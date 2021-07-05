@@ -1,6 +1,7 @@
 #pragma once
 
 // Standard C++ includes
+#include <array>
 #include <vector>
 
 // OpenGL includes
@@ -34,6 +35,11 @@ public:
     ~Surface();
 
     //------------------------------------------------------------------------
+    // Typedefines
+    //------------------------------------------------------------------------
+    typedef std::array<GLfloat, 3> Colour;
+
+    //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
     void bind() const;
@@ -56,7 +62,7 @@ public:
         glEnableClientState(GL_VERTEX_ARRAY);
 
         // Calculate number of vertices from positions
-        m_NumVertices = positions.size() / size;
+        m_NumVertices = static_cast<GLsizei>(positions.size() / size);
 
         // Unbind buffer
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -97,7 +103,7 @@ public:
         uploadBuffer(indices, m_IBO, GL_ELEMENT_ARRAY_BUFFER, usage);
 
         // Cache number of indices
-        m_NumIndices = indices.size();
+        m_NumIndices = static_cast<GLsizei>(indices.size());
 
         // Cache primitive type
         m_PrimitiveType = primitiveType;
@@ -109,9 +115,16 @@ public:
         // as it has no client state/pointer tying it to the VAO. Therefore we need to
         // leave it bound until after we unbind the VAO - makes sense but ugly
     }
-    
+
     void setTexture(const Texture *texture){ m_Texture = texture; }
     void setPrimitiveType(GLenum primitiveType){ m_PrimitiveType = primitiveType; }
+
+    void setColour(const Colour &colour) { m_Colour = colour; }
+
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+    static const Colour DefaultColour;
 
 private:
     //------------------------------------------------------------------------
@@ -141,15 +154,16 @@ private:
     GLuint m_ColourVBO;
     GLuint m_TexCoordVBO;
     GLuint m_IBO;
-    
+
     GLenum m_PrimitiveType;
 
     GLenum m_IndexType;
 
-    unsigned int m_NumVertices;
-    unsigned int m_NumIndices;
+    GLsizei m_NumVertices, m_NumIndices;
 
     const Texture *m_Texture;
+
+    Colour m_Colour;
 };
 }   // namespace AntWorld
 }   // namespace BoBRobotics

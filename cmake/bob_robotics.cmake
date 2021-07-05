@@ -15,13 +15,13 @@ macro(BoB_project)
     # Parse input args
     include(CMakeParseArguments)
     cmake_parse_arguments(PARSED_ARGS
-                          "GENN_CPU_ONLY"
-                          "EXECUTABLE;GENN_MODEL;GAZEBO_PLUGIN"
+                          "INCLUDE_GENN_USERPROJECTS;GENN_CPU_ONLY;IS_EXPERIMENT"
+                          "EXECUTABLE;GENN_MODEL;PYTHON_MODULE;CXX_STANDARD"
                           "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     BoB_set_options()
 
-    if(NOT PARSED_ARGS_SOURCES AND NOT PARSED_ARGS_GAZEBO_PLUGIN)
+    if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB project")
     endif()
 
@@ -36,12 +36,41 @@ macro(BoB_project)
     endif()
     project(${NAME})
 
+    # Allow for setting the C++ standard on a per-project basis.
+    if(PARSED_ARGS_CXX_STANDARD AND NOT DEFINED CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD ${PARSED_ARGS_CXX_STANDARD})
+    endif()
+
     # Include local *.h files in project. We don't strictly need to do this, but
     # if we don't then they won't be included in generated Visual Studio
     # projects.
     file(GLOB H_FILES "*.h")
 
-    if(PARSED_ARGS_EXECUTABLE)
+    # Used so that we can do extra checks etc. for code that should be
+    # experiment grade
+    if(PARSED_ARGS_IS_EXPERIMENT)
+        add_definitions(-DBOB_IS_EXPERIMENT)
+    endif()
+
+    if(PARSED_ARGS_PYTHON_MODULE)
+        set(NAME ${PARSED_ARGS_PYTHON_MODULE})
+        if(WIN32 AND "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+            set(NAME ${NAME}_d)
+        endif()
+        add_library(${NAME} SHARED "${PARSED_ARGS_SOURCES}" "${H_FILES}")
+        set_target_properties(${NAME} PROPERTIES PREFIX "")
+        if(WIN32)
+            set_target_properties(${NAME} PROPERTIES SUFFIX ".pyd")
+        endif()
+        set(BOB_TARGETS ${NAME})
+        add_definitions(-DBOB_SHARED_LIB)
+        install(TARGETS ${NAME} LIBRARY DESTINATION ${NAME})
+
+        if(GNU_TYPE_COMPILER)
+            add_compile_flags(-fPIC)
+        endif()
+        BoB_external_libraries(python)
+    elseif(PARSED_ARGS_EXECUTABLE)
         # Build a single executable from these source files
         add_executable(${NAME} "${PARSED_ARGS_SOURCES}" "${H_FILES}")
         set(BOB_TARGETS ${NAME})
@@ -55,113 +84,144 @@ macro(BoB_project)
         endforeach()
     endif()
 
-    if(PARSED_ARGS_GAZEBO_PLUGIN)
-        get_filename_component(shortname ${PARSED_ARGS_GAZEBO_PLUGIN} NAME)
-        string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
-
-        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
-
-        # I'm sometimes getting linker errors when ld is linking against the
-        # static libs for BoB modules (because Gazebo plugins, as shared libs,
-        # are PIC, but the static libs seem not to be). So let's just compile
-        # everything as PIC.
-        if(GNU_TYPE_COMPILER)
-            add_definitions(-fPIC)
-        endif()
-
-        # Gazebo plugins are shared libraries
-        add_library(${target} SHARED ${PARSED_ARGS_GAZEBO_PLUGIN})
-        list(APPEND BOB_TARGETS ${target})
-
-        # We need to link against Gazebo libs
-        BoB_external_libraries(gazebo)
-    endif()
-
     # If this project includes a GeNN model...
-    if(PARSED_ARGS_GENN_MODEL)
-        get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
-        set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
-        set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
-        set(genn_model_dest "${genn_model_dir}/runner.cc")
+    if(PARSED_ARGS_GENN_MODEL OR PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+        if(WIN32)
+            set(shext bat)
+        else()
+            set(shext sh)
+        endif()
 
-        if(NOT GENN_CPU_ONLY)
-            if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
-                set(GENN_CPU_ONLY TRUE)
-            else()
-                set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+        if(DEFINED GENN_PATH)
+            set(GENN_BUILDMODEL "${GENN_PATH}/bin/genn-buildmodel.${shext}")
+        else()
+            # Find genn-buildmodel (which should be in the path)
+            find_program(GENN_BUILDMODEL genn-buildmodel.${shext})
+            if(NOT DEFINED GENN_BUILDMODEL)
+                message(FATAL_ERROR "GeNN not found. Please install and ensure it is in path or set the GENN_PATH CMake variable.")
             endif()
-        endif(NOT GENN_CPU_ONLY)
-        if(GENN_CPU_ONLY)
-            message("Building GeNN model for CPU only")
-            add_definitions(-DCPU_ONLY)
-            set(CPU_FLAG -c)
-        else()
-            message("Building GeNN model with CUDA")
+
+            # Figure out path to GeNN
+            get_filename_component(GENN_BIN_PATH ${GENN_BUILDMODEL} DIRECTORY)
+            get_filename_component(GENN_PATH ${GENN_BIN_PATH}/.. ABSOLUTE)
         endif()
+        message("GeNN found in ${GENN_PATH}")
 
-        # Custom command to generate source code with GeNN
-        add_custom_command(PRE_BUILD
-                           OUTPUT ${genn_model_dest}
-                           DEPENDS ${genn_model_src}
-                           COMMAND genn-buildmodel.sh
-                                   ${genn_model_src}
-                                   ${CPU_FLAG}
-                                   -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
-                           COMMENT "Generating source code with GeNN")
+        # Include userproject headers
+        BoB_add_include_directories(${GENN_PATH}/userproject/include)
 
-        # Custom command to generate librunner.so
-        add_custom_command(PRE_BUILD
-                           OUTPUT ${genn_model_dir}/librunner.so
-                           DEPENDS ${genn_model_dest}
-                           COMMAND make -C "${genn_model_dir}")
+        # If the user just wants the userprojects headers...
+        if(PARSED_ARGS_INCLUDE_GENN_USERPROJECTS)
+            # On *nix link dl
+            if(NOT WIN32)
+                BoB_add_link_libraries(dl)
+            endif()
 
-        add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+            # If GeNN is installed to /usr the above method for finding
+            # userprojects headers won't work
+            BoB_add_include_directories(/usr/include/genn)
+        elseif(PARSED_ARGS_GENN_MODEL)
+            get_filename_component(genn_model_name "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
+            set(genn_model_dir "${CMAKE_CURRENT_BINARY_DIR}/${genn_model_name}_CODE")
+            set(genn_model_src "${CMAKE_CURRENT_SOURCE_DIR}/${PARSED_ARGS_GENN_MODEL}")
+            set(genn_model_dest "${genn_model_dir}/runner.cc")
 
-        # Our targets depend on librunner.so
-        BoB_add_include_directories(/usr/include/genn)
-        BoB_add_link_libraries(${genn_model_dir}/librunner.so)
-        foreach(target IN LISTS BOB_TARGETS)
-            add_dependencies(${target} ${PROJECT_NAME}_genn_model)
-        endforeach()
+            if(NOT GENN_CPU_ONLY)
+                if(DEFINED ENV{CPU_ONLY} AND NOT $ENV{CPU_ONLY} STREQUAL 0)
+                    set(GENN_CPU_ONLY TRUE)
+                else()
+                    set(GENN_CPU_ONLY ${PARSED_ARGS_GENN_CPU_ONLY})
+                endif()
+            endif(NOT GENN_CPU_ONLY)
+            if(GENN_CPU_ONLY)
+                message("Building GeNN model for CPU only")
+                add_definitions(-DCPU_ONLY)
+                set(CPU_FLAG -c)
+            else()
+                message("Building GeNN model with CUDA")
+            endif()
 
-        # So code can access headers in the *_CODE folder
-        BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+            # Custom command to generate source code with GeNN
+            add_custom_command(PRE_BUILD
+                            OUTPUT ${genn_model_dest}
+                            DEPENDS ${genn_model_src}
+                            COMMAND ${GENN_BUILDMODEL}
+                                    ${genn_model_src}
+                                    ${CPU_FLAG}
+                                    -i ${BOB_ROBOTICS_PATH}:${BOB_ROBOTICS_PATH}/include
+                            COMMENT "Generating source code with GeNN")
+
+            # Custom command to generate librunner.so
+            add_custom_command(PRE_BUILD
+                            OUTPUT ${genn_model_dir}/librunner.so
+                            DEPENDS ${genn_model_dest}
+                            COMMAND make -C "${genn_model_dir}")
+
+            add_custom_target(${PROJECT_NAME}_genn_model ALL DEPENDS ${genn_model_dir}/librunner.so)
+
+            # Our targets depend on librunner.so
+            BoB_add_include_directories(/usr/include/genn)
+            BoB_add_link_libraries(${genn_model_dir}/librunner.so)
+            foreach(target IN LISTS BOB_TARGETS)
+                add_dependencies(${target} ${PROJECT_NAME}_genn_model)
+            endforeach()
+
+            # So code can access headers in the *_CODE folder
+            BoB_add_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+        endif()
     endif()
 
-    # Allow users to choose the type of tank robot to use with TANK_TYPE env var
-    # or CMake param (defaults to Norbot)
-    if(NOT TANK_TYPE)
-        if(NOT "$ENV{TANK_TYPE}" STREQUAL "")
-            set(TANK_TYPE $ENV{TANK_TYPE})
+    # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
+    # or CMake param
+    if(NOT ROBOT_TYPE)
+        if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
+            set(ROBOT_TYPE $ENV{ROBOT_TYPE})
+        elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
+            set(ROBOT_TYPE Norbot)
         else()
-            set(TANK_TYPE Norbot)
+            set(ROBOT_TYPE Tank)
         endif()
     endif()
-    add_definitions(-DTANK_TYPE=${TANK_TYPE} -DTANK_TYPE_${TANK_TYPE})
-    message("Default tank robot type (if used): ${TANK_TYPE}")
+    message("Default robot type (if used): ${ROBOT_TYPE}")
 
-    # For EV3 (Lego) robots, we need an extra module
-    if(${TANK_TYPE} STREQUAL EV3)
+    # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
+    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
+
+    # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
+    # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
+    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+    string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
+    add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
+
+    # Extra modules needed for some robot types
+    if(${ROBOT_TYPE} STREQUAL EV3)
         list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
+    elseif(${ROBOT_TYPE} STREQUAL Gazebo::Tank)
+        list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
     endif()
+
+    # We always need the common module so that main() is defined
+    list(APPEND PARSED_ARGS_BOB_MODULES common)
 
     # Do linking etc.
     BoB_build()
 
+    # When using the ARSDK (Parrot Bebop SDK) the rpath is not correctly set on
+    # Ubuntu (and presumably when linking against other libs in non-standard
+    # locations too). This linker flag fixes the problem.
+    if(UNIX AND NOT APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS -Wl,--disable-new-dtags)
+    endif()
+
     # Copy all DLLs over from vcpkg dir. We don't necessarily need all of them,
     # but it would be a hassle to figure out which ones we need.
     if(WIN32)
-        file(GLOB dll_files "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/bin/*.dll")
-        foreach(file IN LISTS dll_files)
-            get_filename_component(filename "${file}" NAME)
-            if(NOT EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename}")
-                message("Copying ${filename} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}...")
-                file(COPY "${file}"
-                     DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-            endif()
+        # Add custom command to
+        foreach(target IN LISTS BOB_TARGETS)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND "${BOB_ROBOTICS_PATH}/bin/copy_dependencies_vcpkg.bat" "${CMAKE_SOURCE_DIR}/${target}.exe" "${VCPKG_PACKAGE_DIR}"
+            )
         endforeach()
-
-        link_directories("${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
     endif()
 endmacro()
 
@@ -189,7 +249,7 @@ macro(BoB_module_custom)
     cmake_parse_arguments(PARSED_ARGS
                           ""
                           ""
-                          "SOURCES;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
+                          "SOURCES;GAZEBO_PLUGINS;BOB_MODULES;EXTERNAL_LIBS;THIRD_PARTY;PLATFORMS;OPTIONS"
                           "${ARGV}")
     if(NOT PARSED_ARGS_SOURCES)
         message(FATAL_ERROR "SOURCES not defined for BoB module")
@@ -198,6 +258,32 @@ macro(BoB_module_custom)
 
     # Check we're on a supported platform
     check_platform(${PARSED_ARGS_PLATFORMS})
+
+    if(PARSED_ARGS_GAZEBO_PLUGINS)
+        # I'm sometimes getting linker errors when ld is linking against the
+        # static libs for BoB modules (because Gazebo plugins, as shared libs,
+        # are PIC, but the static libs seem not to be). So let's just compile
+        # everything as PIC.
+        if(GNU_TYPE_COMPILER)
+            add_definitions(-fPIC)
+        endif()
+
+        # We need to link against Gazebo libs
+        BoB_external_libraries(gazebo)
+
+        # Dump plugins into source dir
+        set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+        foreach(plugin IN LISTS PARSED_ARGS_GAZEBO_PLUGINS)
+            # Use the plugin's filename, minus the extension as target name
+            get_filename_component(shortname ${plugin} NAME)
+            string(REGEX REPLACE "\\.[^.]*$" "" target ${shortname})
+
+            # Gazebo plugins are shared libraries
+            add_library(${target} SHARED ${plugin})
+            list(APPEND BOB_TARGETS ${target})
+        endforeach()
+    endif()
 
     # Module name is based on path relative to src/
     file(RELATIVE_PATH NAME "${BOB_ROBOTICS_PATH}/src" "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -212,11 +298,6 @@ macro(BoB_module_custom)
 endmacro()
 
 macro(BoB_init)
-    # CMake defaults to 32-bit builds on Windows
-    if(WIN32 AND NOT CMAKE_GENERATOR_PLATFORM)
-        message(WARNING "CMAKE_GENERATOR_PLATFORM is set to x86. This is probably not what you want!")
-    endif()
-
     # For release builds, CMake disables assertions, but a) this isn't what we
     # want and b) it will break code.
     if(MSVC)
@@ -234,30 +315,89 @@ macro(add_linker_flags EXTRA_ARGS)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${EXTRA_ARGS}")
 endmacro()
 
+# Annoyingly, various packages export a target rather than simply variables
+# with the include path and link flags and it seems that these targets
+# aren't "passed up" by add_subdirectory(), so we always include these
+# packages on the off-chance we need them somewhere
 macro(always_included_packages)
     # Assume we always want threading
     find_package(Threads REQUIRED)
 
-    # Annoyingly, these packages export a target rather than simply variables
-    # with the include path and link flags and it seems that this target isn't
-    # "passed up" by add_subdirectory(), so we always include these packages on
-    # the off-chance we need them.
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND NOT TARGET OpenMP::OpenMP_CXX)
+    if(NOT DEFINED ENABLE_OPENMP)
+        set(ENABLE_OPENMP TRUE)
+    endif()
+
+    if(ENABLE_OPENMP)
+        if(APPLE AND "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+            macos_find_homebrew_openmp()
+        endif()
         find_package(OpenMP QUIET)
+
+        # For old versions of CMake (< 3.9) we need to manually add compiler flags instead
+        if (NOT OpenMP_CXX_FOUND)
+            if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+                add_compile_flags(-fopenmp)
+            else()
+                # Otherwise, signal that we couldn't find it
+                set(ENABLE_OPENMP FALSE)
+            endif()
+        endif()
     endif()
     if(NOT TARGET GLEW::GLEW)
         find_package(GLEW QUIET)
+    endif()
+
+    # Gazebo creates this target unconditionally, so make sure we don't try to
+    # create it twice
+    if(NOT TARGET FreeImage::FreeImage)
+        find_package(gazebo QUIET)
     endif()
 
     # On Unix we use pkg-config to find SDL2 or Eigen, because the CMake
     # packages may not be present
     if(NOT UNIX)
         if(NOT TARGET SDL2::SDL2)
-            find_package(SDL2)
+            find_package(SDL2 QUIET)
         endif()
         if(NOT TARGET Eigen3::Eigen)
             find_package(Eigen3 QUIET)
         endif()
+    endif()
+endmacro()
+
+macro(get_git_commit DIR VARNAME RV_VARNAME)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
+                    RESULT_VARIABLE ${RV_VARNAME}
+                    OUTPUT_VARIABLE ${VARNAME}
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    if(NOT ${RV_VARNAME} EQUAL 0)
+        # Git might fail (e.g. if we're not in a git repo), but let's carry on regardless
+        set(${VARNAME} "(unknown)")
+        return()
+    endif()
+
+    # Append -dirty if worktree has been modified
+    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
+                    RESULT_VARIABLE git_dirty_rv)
+    if(NOT ${git_dirty_rv} EQUAL 0)
+        set(${VARNAME} ${${VARNAME}}-dirty)
+    endif()
+endmacro()
+
+macro(macos_find_homebrew_openmp)
+    # See if libomp was installed with homebrew...
+    execute_process(COMMAND brew --prefix libomp
+                    RESULT_VARIABLE rv
+                    OUTPUT_VARIABLE LIBOMP_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # ...success!
+    if(${rv} EQUAL 0)
+        set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${LIBOMP_PREFIX}/include")
+        set(OpenMP_CXX_LIB_NAMES omp)
+        set(OpenMP_omp_LIBRARY "${LIBOMP_PREFIX}/lib/libomp.a")
     endif()
 endmacro()
 
@@ -269,6 +409,35 @@ macro(BoB_build)
         set(NO_I2C TRUE)
         add_definitions(-DNO_I2C)
     endif()
+
+    # Add macro so that programs know where the root folder is for e.g. loading
+    # resources
+    add_definitions(-DBOB_ROBOTICS_PATH="${BOB_ROBOTICS_PATH}")
+
+    # Pass the current git commits of project and BoB robotics as C macros
+    get_git_commit("${CMAKE_SOURCE_DIR}" PROJECT_GIT_COMMIT rv)
+    get_git_commit("${BOB_ROBOTICS_PATH}" BOB_ROBOTICS_GIT_COMMIT rv)
+
+    if (${rv} EQUAL 0)
+        # The git working tree is dirty
+        if ("${BOB_ROBOTICS_GIT_COMMIT}" MATCHES dirty)
+            add_definitions(-DBOB_GIT_TREE_DIRTY)
+        endif()
+
+        # Check whether the current commit is in master branch
+        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" branch -a --contains ${BOB_ROBOTICS_GIT_COMMIT}
+                        OUTPUT_VARIABLE ov
+                        ERROR_VARIABLE ev)
+        string(REGEX MATCH " (origin/)?master" match "${ov}")
+        if("${match}" STREQUAL "")
+            add_definitions(-DBOB_GIT_COMMIT_NOT_IN_MASTER)
+        endif()
+    else()
+        add_definitions(-DBOB_GIT_FAILED)
+    endif()
+
+    add_definitions(-DBOB_ROBOTICS_GIT_COMMIT="${BOB_ROBOTICS_GIT_COMMIT}"
+                    -DBOB_PROJECT_GIT_COMMIT="${PROJECT_GIT_COMMIT}")
 
     # Default to building release type
     if (NOT CMAKE_BUILD_TYPE)
@@ -293,9 +462,7 @@ macro(BoB_build)
     endif()
 
     # Flags for gcc and clang
-    if (NOT GNU_TYPE_COMPILER AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-        set(GNU_TYPE_COMPILER TRUE)
-
+    if(GNU_TYPE_COMPILER)
         # Default to building with -march=native
         if(NOT DEFINED ENV{ARCH})
             set(ENV{ARCH} native)
@@ -328,41 +495,58 @@ macro(BoB_build)
 
         # Disable optimisation for debug builds
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
-
-        # If we don't do this, I get linker errors on the BrickPi for the net
-        # module
-        set(CMAKE_EXE_LINKER_FLAGS "-Wl,--allow-multiple-definition")
     endif()
 
-    # Use C++14. On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD doesn't
+    # If C++ standard has not been specified explicitly either with a command
+    # line argument or with an environment variable, set the standard to C++14,
+    # the minimum supported by BoB robotics.
+    #
+    # The main reason for allowing users to choose a more recent standard is
+    # because the latest version of Gazebo (v11) requires C++17, so we need it
+    # for Gazebo-based projects.
+    if(NOT DEFINED CMAKE_CXX_STANDARD)
+        if(DEFINED ENV{BOB_ROBOTICS_CXX_STANDARD})
+            set(CMAKE_CXX_STANDARD $ENV{BOB_ROBOTICS_CXX_STANDARD})
+        else()
+            set(CMAKE_CXX_STANDARD 14)
+        endif()
+    endif()
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # On Ubuntu 16.04, seemingly setting CMAKE_CXX_STANDARD by itself doesn't
     # work, so add the compiler flag manually.
     #
     # Conversely, only setting the compiler flag means that the surveyor example
     # mysteriously gets linker errors on Ubuntu 18.04 and my Arch Linux machine.
     #       - AD
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        add_compile_flags(-std=c++14)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        add_compile_flags(-std=gnu++${CMAKE_CXX_STANDARD})
     endif()
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
     # Irritatingly, neither GCC nor Clang produce nice ANSI-coloured output if they detect
     # that output "isn't a terminal" - which seems to include whatever pipe-magick cmake includes.
     # https://medium.com/@alasher/colored-c-compiler-output-with-ninja-clang-gcc-10bfe7f2b949
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-       add_compile_flags(-fdiagnostics-color=always)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       add_compile_flags(-fcolor-diagnostics)
-    endif ()
-    
-    # Different Jetson devices have different user-facing I2C interfaces 
-    # so read the chip ID and add preprocessor macro
+    #
+    # When compiling via Jenkins though, we don't want colourised output because
+    # a) the Jenkins logs don't support colours anyway and b) the colour escape
+    # sequences seem to break Jenkins' auto-parsing of error messages.
+    if(NOT "$ENV{USER}" STREQUAL jenkins)
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+            add_compile_flags(-fdiagnostics-color=always)
+        elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            add_compile_flags(-fcolor-diagnostics)
+        endif ()
+    endif()
+
+    # Different Jetson devices have different user-facing I2C interfaces
+    # so read the chip ID and add preprocessor macro, stripping trailing whitespace (carriage return)
     if(EXISTS /sys/module/tegra_fuse/parameters/tegra_chip_id)
         file(READ /sys/module/tegra_fuse/parameters/tegra_chip_id TEGRA_CHIP_ID)
+        string(STRIP ${TEGRA_CHIP_ID} TEGRA_CHIP_ID)
         add_definitions(-DTEGRA_CHIP_ID=${TEGRA_CHIP_ID})
         message("Tegra chip id: ${TEGRA_CHIP_ID}")
     endif()
-    
+
     # Set include dirs and link libraries for this module/project
     always_included_packages()
     BoB_external_libraries(${PARSED_ARGS_EXTERNAL_LIBS})
@@ -371,11 +555,6 @@ macro(BoB_build)
 
     # Link threading lib
     BoB_add_link_libraries(${CMAKE_THREAD_LIBS_INIT})
-
-    # Clang needs to be linked against libm and libstdc++ explicitly
-    if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        BoB_add_link_libraries(m stdc++)
-    endif()
 
     # The list of linked libraries can end up very long with lots of duplicate
     # entries and this can break ld, so remove them. We remove from the start,
@@ -386,6 +565,14 @@ macro(BoB_build)
     # Link all targets against the libraries
     foreach(target IN LISTS BOB_TARGETS)
         target_link_libraries(${target} ${${PROJECT_NAME}_LIBRARIES})
+
+        # Older versions of CMake don't have target_link_directories(), but
+        # hopefully we can get away without using it in this case (because we'll
+        # probably only find this on Linux machines which don't care about
+        # linking directories anyway)
+        if(${CMAKE_VERSION} VERSION_GREATER "3.13.0" OR ${CMAKE_VERSION} EQUAL "3.13.0")
+            target_link_directories(${target} PUBLIC ${${PROJECT_NAME}_LIB_DIRS})
+        endif()
     endforeach()
 endmacro()
 
@@ -444,6 +631,15 @@ macro(BoB_add_link_libraries)
         CACHE INTERNAL "${PROJECT_NAME}: Libraries" FORCE)
 endmacro()
 
+macro(BoB_add_link_directories)
+    if(${CMAKE_VERSION} VERSION_LESS "3.13.0")
+        link_directories(${ARGV})
+    else()
+        set(${PROJECT_NAME}_LIB_DIRS "${${PROJECT_NAME}_LIB_DIRS};${ARGV}"
+            CACHE INTERNAL "${PROJECT_NAME}: Library directories" FORCE)
+    endif()
+endmacro()
+
 function(BoB_deprecated WHAT ALTERNATIVE)
     message(WARNING "!!!!! WARNING: Use of ${WHAT} in BoB robotics code is deprecated and will be removed in future. Use ${ALTERNATIVE} instead. !!!!!")
 endfunction()
@@ -489,6 +685,7 @@ function(BoB_find_package)
     find_package(${ARGV})
     BoB_add_include_directories(${${ARGV0}_INCLUDE_DIRS})
     BoB_add_link_libraries(${${ARGV0}_LIBS} ${${ARGV0}_LIBRARIES})
+    BoB_add_link_directories(${${ARGV0}_LIB_DIR})
 endfunction()
 
 function(BoB_add_pkg_config_libraries)
@@ -496,7 +693,9 @@ function(BoB_add_pkg_config_libraries)
     foreach(lib IN LISTS ARGV)
         pkg_check_modules(${lib} REQUIRED ${lib})
         BoB_add_include_directories(${${lib}_INCLUDE_DIRS})
+        BoB_add_link_directories(${${lib}_LIBRARY_DIRS})
         BoB_add_link_libraries(${${lib}_LIBRARIES})
+        add_compile_flags(${${lib}_CFLAGS} ${${lib}_LDFLAGS})
     endforeach()
 endfunction()
 
@@ -520,12 +719,6 @@ endmacro()
 
 function(BoB_third_party)
     foreach(module IN LISTS ARGV)
-        # Extra actions for third-party modules
-        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
-        if(EXISTS "${incpath}")
-            include("${incpath}")
-        endif()
-
         if(EXISTS "${BOB_ROBOTICS_PATH}/third_party/${module}")
             # Checkout git submodules under this path
             find_package(Git REQUIRED)
@@ -545,6 +738,12 @@ function(BoB_third_party)
             # Link against extra libs, if needed
             BoB_add_link_libraries(${${module}_LIBRARIES})
         endif()
+
+        # Extra actions for third-party modules
+        set(incpath "${BOB_ROBOTICS_PATH}/cmake/third_party/${module}.cmake")
+        if(EXISTS "${incpath}")
+            include("${incpath}")
+        endif()
     endforeach()
 endfunction()
 
@@ -556,16 +755,14 @@ if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 endif()
 
 # Set output directories for libs and executables
-set(BOB_ROBOTICS_PATH "${CMAKE_CURRENT_LIST_DIR}/..")
+get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 # If this var is defined then this project is being included in another build
 if(NOT DEFINED BOB_DIR)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
     if(WIN32)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BOB_ROBOTICS_PATH}/bin)
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BOB_ROBOTICS_PATH}/bin)
-    else()
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR})
     endif()
 
     # Folder to build BoB modules + third-party modules
@@ -584,17 +781,53 @@ if(WIN32)
         message(FATAL_ERROR "The environment VCPKG_ROOT must be set on Windows")
     endif()
 
+    # When using Visual Studio as a target, you have to specify whether you want
+    # a 32- or 64-bit build when CMake is invoked. Use this to determine the
+    # correct vcpkg libraries to look for or default to 64-bit.
+    if(CMAKE_GENERATOR_PLATFORM)
+        set(PLATFORM ${CMAKE_GENERATOR_PLATFORM}-windows)
+    else()
+        set(PLATFORM x64-windows)
+    endif()
+
+    if(CMAKE_BUILD_TYPE STREQUAL Debug)
+        set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}/debug")
+    else()
+        set(VCPKG_PACKAGE_DIR "$ENV{VCPKG_ROOT}/installed/${PLATFORM}")
+    endif()
+
+
     # The vcpkg toolchain in theory should do something like this already, but
     # if we don't do this, then cmake can't find any of vcpkg's packages
-    file(GLOB children "$ENV{VCPKG_ROOT}/installed/${CMAKE_GENERATOR_PLATFORM}-windows/share/*")
+    file(GLOB children "${VCPKG_PACKAGE_DIR}/share/*")
     foreach(child IN LISTS children)
         if(IS_DIRECTORY "${child}")
             list(APPEND CMAKE_PREFIX_PATH "${child}")
         endif()
     endforeach()
 
+    # Link against vcpkg packages' libs
+    link_directories("${VCPKG_PACKAGE_DIR}/lib")
+
     # Suppress warnings about std::getenv being insecure
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+    # We don't want the min/max macros defined in windows.h
+    add_definitions(-DNOMINMAX)
+
+    # the version of the Windows API that we want
+    add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
+
+    # for a less bloated version of windows.h
+    add_definitions(-D_WIN32_LEAN_AND_MEAN)
+
+    # disable the winsock v1 API, which is included by default and conflicts
+    # with v2 of the API
+    add_definitions(-D_WINSOCKAPI_)
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(GNU_TYPE_COMPILER TRUE)
 endif()
 
 # Assume we always need plog
@@ -612,6 +845,7 @@ add_definitions(
     -DENABLE_PREDEFINED_ANGLE_UNITS
     -DENABLE_PREDEFINED_VELOCITY_UNITS
     -DENABLE_PREDEFINED_ANGULAR_VELOCITY_UNITS
+    -DENABLE_PREDEFINED_FREQUENCY_UNITS
 )
 
 # Look for additional CMake packages in the current folder

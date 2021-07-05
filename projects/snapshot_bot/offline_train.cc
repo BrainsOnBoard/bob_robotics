@@ -3,9 +3,9 @@
 #include "memory.h"
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 
-int main(int argc, char *argv[])
+int bobMain(int argc, char *argv[])
 {
     const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
 
@@ -38,6 +38,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    infomax.saveWeights((config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin")).str());
+    infomax.saveWeights(config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin"));
     return EXIT_SUCCESS;
 }

@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "robots/bebop/bebop.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/macros.h"
 
 using namespace units::angle;
@@ -279,7 +279,7 @@ Bebop::takePhoto()
  * \brief Add an event handler for when the drone is taking off or landing.
  */
 void
-Bebop::setFlightEventHandler(FlightEventHandler handler)
+Bebop::setFlightEventHandler(const FlightEventHandler &handler)
 {
     m_FlightEventHandler = handler;
 }

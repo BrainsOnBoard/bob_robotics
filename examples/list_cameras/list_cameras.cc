@@ -1,13 +1,14 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "os/video.h"
 
 // Standard C++ includes
 
-int main()
+int bobMain(int, char **)
 {
     LOGI << "Cameras:";
-    for (auto cam : BoBRobotics::OS::Video::getCameras()) {
+    for (const auto &cam : BoBRobotics::OS::Video::getCameras()) {
         LOGI << "- Device " << cam.first << ": " << cam.second;
     }
+    return EXIT_SUCCESS;
 }

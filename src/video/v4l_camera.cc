@@ -1,7 +1,7 @@
 #ifdef __linux__
 // BoB robotics includes
 #include "video/v4l_camera.h"
-#include "common/logging.h"
+#include "plog/Log.h"
 
 // Standard C includes
 #include <cstring>
@@ -133,7 +133,7 @@ Video4LinuxCamera::open(const std::string &device,
                 m_Camera,                  // Camera device to map within
                 m_BufferInfo[i].m.offset); // Offset into device 'file'
                                            // where buffer should be mapped
-        if (m_Buffer[i] == MAP_FAILED) {
+        if (m_Buffer[i] == MAP_FAILED) {   // NOLINT
             throw Error("Cannot mmap buffer");
         }
 
@@ -157,7 +157,7 @@ Video4LinuxCamera::open(const std::string &device,
 }
 
 void
-Video4LinuxCamera::enumerateControls(std::function<void(const v4l2_queryctrl &)> processControl)
+Video4LinuxCamera::enumerateControls(const std::function<void(const v4l2_queryctrl &)> &processControl)
 {
     // Fill control query structure
     v4l2_queryctrl queryControl;

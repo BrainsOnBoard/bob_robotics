@@ -3,8 +3,7 @@
 // BoB robotics includes
 #include "robots/simulated_tank.h"
 
-int
-main()
+int bobMain(int, char **)
 {
     // Our tank-like agent
     Robots::SimulatedTank<> tank;
@@ -16,4 +15,6 @@ main()
 
     // Run program
     while (runner->update());
+
+    return EXIT_SUCCESS;
 }

@@ -1,19 +1,18 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "robots/tank_netsink.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifdef TANK_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3
 #include "robots/ev3/mindstorms_imu.h"
 #endif
 
@@ -28,8 +27,7 @@
 using namespace std::literals;
 using namespace BoBRobotics;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     std::unique_ptr<Video::Input> camera;
     std::unique_ptr<HID::Joystick> joystick;
@@ -48,10 +46,10 @@ bob_main(int, char **)
     }
 
     // Construct tank of desired type
-    Robots::TANK_TYPE tank;
+    Robots::ROBOT_TYPE tank;
 
     // Read motor commands from network
-    tank.readFromNetwork(connection);
+    tank.readFromNetwork(*connection);
 
     // Try to get joystick
     try {
@@ -62,7 +60,7 @@ bob_main(int, char **)
         LOGW << e.what();
     }
 
-#ifdef TANK_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3
     tank.setMaximumSpeedProportion(0.7f); // Sensible default
 
     // If an IMU is present, stream over network
@@ -80,21 +78,21 @@ bob_main(int, char **)
 
     if (!joystick && !camera) {
         // Run on main thread
-        connection.run();
+        connection->run();
         return EXIT_SUCCESS;
     }
     if (camera) {
         // Stream camera synchronously over network
-        netSink = std::make_unique<Video::NetSink>(connection, camera->getOutputSize(), camera->getCameraName());
+        netSink = std::make_unique<Video::NetSink>(*connection, camera->getOutputSize(), camera->getCameraName());
     }
 
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
     catcher.trapSignals(); // Catch Ctrl-C
-    connection.runInBackground();
+    connection->runInBackground();
 
     cv::Mat frame;
-    while (connection.isOpen()) {
+    while (connection->isOpen()) {
         // Rethrow any exceptions caught on background thread
         catcher.check();
 

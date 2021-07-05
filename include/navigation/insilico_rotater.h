@@ -2,6 +2,8 @@
 
 // BoB robotics includes
 #include "common/macros.h"
+#include "imgproc/mask.h"
+#include "imgproc/roll.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -9,8 +11,8 @@
 // OpenCV
 #include <opencv2/opencv.hpp>
 
-// Standard C++ includes
-#include <algorithm>
+// TBB
+#include <tbb/parallel_for.h>
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -31,7 +33,7 @@ struct InSilicoRotater
     {
     public:
         RotaterInternal(const cv::Size &unwrapRes,
-                        const cv::Mat &maskImage,
+                        const ImgProc::Mask &mask,
                         const cv::Mat &image,
                         size_t scanStep,
                         IterType beginRoll,
@@ -39,10 +41,8 @@ struct InSilicoRotater
           : m_ScanStep(scanStep)
           , m_BeginRoll(beginRoll)
           , m_EndRoll(endRoll)
-          , m_ImageOriginal(image)
-          , m_MaskImageOriginal(maskImage)
-          , m_Image(unwrapRes.height, unwrapRes.width, CV_8UC1)
-          , m_MaskImage(maskImage.rows, maskImage.cols, maskImage.type())
+          , m_Image(image)
+          , m_Mask(mask)
         {
             BOB_ASSERT(image.cols == unwrapRes.width);
             BOB_ASSERT(image.rows == unwrapRes.height);
@@ -50,37 +50,29 @@ struct InSilicoRotater
             BOB_ASSERT(image.isContinuous());
             BOB_ASSERT(beginRoll < endRoll);
             BOB_ASSERT((distance(endRoll, beginRoll) % scanStep) == 0);
-
-            const auto index = toIndex(beginRoll);
-            rollImage(image, m_Image, index);
-            if (!maskImage.empty()) {
-                rollImage(maskImage, m_MaskImage, index);
-            }
-        }
+      }
 
         template<class Func>
-        void rotate(Func func)
+        void rotate(Func func) const
         {
-            auto i = m_BeginRoll;
-            while (true) {
-                func(m_Image, m_MaskImage, distance(m_BeginRoll, i));
+            static thread_local cv::Mat scratchImage;
+            static thread_local ImgProc::Mask scratchMask;
 
-                i += m_ScanStep;
-                if (i >= m_EndRoll) {
-                    break;
-                }
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, numRotations()),
+                [&](const auto &r) {
+                    for (size_t i = r.begin(); i != r.end(); ++i) {
+                        const auto index = toIndex(m_BeginRoll + i * m_ScanStep);
+                        ImgProc::roll(m_Image, scratchImage, index);
+                        m_Mask.roll(scratchMask, index);
 
-                const auto index = toIndex(i);
-                rollImage(m_ImageOriginal, m_Image, index);
-                if (!m_MaskImageOriginal.empty()) {
-                    rollImage(m_MaskImageOriginal, m_MaskImage, index);
-                }
-            }
-        }
+                        func(scratchImage, scratchMask, i);
+                    }
+                });
+       }
 
         units::angle::radian_t columnToHeading(size_t column) const
         {
-            return units::angle::turn_t{ (double) toIndex(m_BeginRoll + column) / (double) m_ImageOriginal.cols };
+            return units::angle::turn_t{ (double) toIndex(m_BeginRoll + column) / (double) m_Image.cols };
         }
 
         size_t numRotations() const
@@ -91,21 +83,8 @@ struct InSilicoRotater
     private:
         const size_t m_ScanStep;
         const IterType m_BeginRoll, m_EndRoll;
-        const cv::Mat &m_ImageOriginal, &m_MaskImageOriginal;
-        cv::Mat m_Image, m_MaskImage;
-
-        static void rollImage(const cv::Mat &imageIn, cv::Mat &imageOut, size_t pixels)
-        {
-            // Loop through rows
-            for (int y = 0; y < imageIn.rows; y++) {
-                // Get pointer to start of row
-                const uint8_t *rowPtr = imageIn.ptr(y);
-                uint8_t *rowPtrOut = imageOut.ptr(y);
-
-                // Rotate row to left by pixels
-                std::rotate_copy(rowPtr, rowPtr + pixels, rowPtr + imageIn.cols, rowPtrOut);
-            }
-        }
+        const cv::Mat &m_Image;
+        const ImgProc::Mask m_Mask;
 
         static size_t distance(size_t first, size_t last)
         {
@@ -133,33 +112,33 @@ struct InSilicoRotater
     template<typename IterType>
     static auto
     create(const cv::Size &unwrapRes,
-           const cv::Mat &maskImage,
+           const ImgProc::Mask &mask,
            const cv::Mat &image,
            IterType beginRoll,
            IterType endRoll)
     {
-        return RotaterInternal<IterType>(unwrapRes, maskImage, image, 1, beginRoll, endRoll);
+        return RotaterInternal<IterType>(unwrapRes, mask, image, 1, beginRoll, endRoll);
     }
 
     static auto
     create(const cv::Size &unwrapRes,
-           const cv::Mat &maskImage,
+           const ImgProc::Mask &mask,
            const cv::Mat &image,
            size_t scanStep,
            size_t beginRoll,
            size_t endRoll)
     {
-        return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, endRoll);
+        return RotaterInternal<size_t>(unwrapRes, mask, image, scanStep, beginRoll, endRoll);
     }
 
     static auto
     create(const cv::Size &unwrapRes,
-           const cv::Mat &maskImage,
+           const ImgProc::Mask &mask,
            const cv::Mat &image,
            size_t scanStep = 1,
            size_t beginRoll = 0)
     {
-        return RotaterInternal<size_t>(unwrapRes, maskImage, image, scanStep, beginRoll, image.cols);
+        return RotaterInternal<size_t>(unwrapRes, mask, image, scanStep, beginRoll, image.cols);
     }
 };
 } // Navigation

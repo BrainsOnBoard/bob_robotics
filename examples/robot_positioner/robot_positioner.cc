@@ -3,12 +3,10 @@
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/robot_type.h"
 #include "vicon/udp.h"
 
 // Third-party includes
@@ -59,9 +57,8 @@ private:
 
 public:
     PositionerExample()
-      : m_Tank(m_Client)
-      , m_Vicon(51001)
-      , m_ViconObject(m_Vicon.getObjectReference(0))
+      : m_Vicon(51001)
+      , m_ViconObject(m_Vicon.getObjectReference())
       , m_Positioner(m_Tank,
                      m_ViconObject,
                      StoppingDistance,
@@ -87,9 +84,6 @@ public:
     {
         m_Catcher.trapSignals(); // Catch ctrl+c etc.
 
-        // Listen in background
-        m_Client.runInBackground();
-
         LOGI << "Press Y to start homing";
 
         while (!m_Joystick.isPressed(HID::JButton::B)) {
@@ -99,7 +93,7 @@ public:
         }
     }
 
-    virtual bool handleEvent(State state, Event event) override
+    bool handleEvent(State state, Event event) override
     {
         if (state == InvalidState) {
             return true;
@@ -181,8 +175,7 @@ public:
     }
 
 private:
-    Net::Client m_Client;
-    Robots::TankNetSink m_Tank;
+    Robots::ROBOT_TYPE m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
@@ -192,8 +185,7 @@ private:
     BackgroundExceptionCatcher m_Catcher;
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     PositionerExample example;
     example.run();

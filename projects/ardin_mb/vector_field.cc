@@ -29,10 +29,14 @@ void VectorField::createVertices(meter_t startX, meter_t endX, meter_t gridX,
     m_NumY = (unsigned int)units::math::ceil((endY - startY) / gridY);
 
     // Create a vertex array object to bind everything together
-    glGenVertexArrays(1, &m_LinesVAO);
+    if(m_LinesVAO == 0) {
+        glGenVertexArrays(1, &m_LinesVAO);
+    }
 
     // Generate vertex buffer objects for positions
-    glGenBuffers(1, &m_LinesPositionVBO);
+    if(m_LinesPositionVBO == 0) {
+        glGenBuffers(1, &m_LinesPositionVBO);
+    }
 
     // Bind vertex array
     glBindVertexArray(m_LinesVAO);
@@ -63,6 +67,10 @@ void VectorField::createVertices(meter_t startX, meter_t endX, meter_t gridX,
         glVertexPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
         glEnableClientState(GL_VERTEX_ARRAY);
     }
+
+    // Unbind VAO
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 //------------------------------------------------------------------------
 VectorField::~VectorField()
@@ -71,24 +79,27 @@ VectorField::~VectorField()
     glDeleteVertexArrays(1, &m_LinesVAO);
 }
 //------------------------------------------------------------------------
-void VectorField::render()
+void VectorField::render(meter_t height)
 {
     // Bind lines VAO
     glBindVertexArray(m_LinesVAO);
 
     // Draw lines
     glPushMatrix();
-    glTranslatef(0.0f, 0.0f, 0.1f);
+    glTranslatef(0.0f, 0.0f, static_cast<GLfloat>(height.value()));
     glDrawArrays(GL_LINES, 0, getNumPoints() * 2);
     glPopMatrix();
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
 //------------------------------------------------------------------------
 std::tuple<meter_t, meter_t> VectorField::getPoint(unsigned int point) const
 {
     // Convert index into x and y grid coordinates
-    const auto index = div(point, m_NumX);
-    const unsigned int xGrid = index.rem;
-    const unsigned int yGrid = index.quot;
+    const auto index = div((int)point, (int)m_NumX);
+    const int xGrid = index.rem;
+    const int yGrid = index.quot;
 
     return std::make_tuple(m_StartX + ((float)xGrid * m_GridX),
                            m_StartY + ((float)yGrid * m_GridY));
@@ -114,5 +125,6 @@ void VectorField::setNovelty(unsigned int point, const std::vector<std::pair<uni
     glBindBuffer(GL_ARRAY_BUFFER, m_LinesPositionVBO);
     glBufferSubData(GL_ARRAY_BUFFER, (point * sizeof(float) * 4),
                     sizeof(float) * 2, position);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 }

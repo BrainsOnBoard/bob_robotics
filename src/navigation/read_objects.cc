@@ -23,9 +23,9 @@ readObjects(const filesystem::path &objectFilePath)
 
     cv::FileStorage fs(objectFilePath.str(), cv::FileStorage::READ);
     std::vector<double> vertex(2);
-    for (auto objectNode : fs["objects"]) {
+    for (const auto objectNode : fs["objects"]) {
         objects.emplace_back();
-        for (auto vertexNode : objectNode) {
+        for (const auto vertexNode : objectNode) {
             vertexNode >> vertex;
 
             // Check that we have x and y values

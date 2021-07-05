@@ -1,7 +1,7 @@
 #ifdef __linux__ // This code is Linux only
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "common/serial_interface.h"
 
 // Standard C++ includes
@@ -12,7 +12,7 @@
 #include <cstring>
 
 // Posix includes
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>

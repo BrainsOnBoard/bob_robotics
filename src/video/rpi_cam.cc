@@ -10,7 +10,7 @@
 #include <stdexcept>
 
 // Extra POSIX includes
-#if defined(unix) || defined(__unix__) || defined(__unix)
+#ifndef _WIN32
 #include <fcntl.h>
 #endif
 
@@ -34,7 +34,7 @@ cv::Size
 RPiCamera::getOutputSize() const
 {
     // this is fixed
-    return cv::Size(152, 72);
+    return {152, 72};
 }
 
 bool

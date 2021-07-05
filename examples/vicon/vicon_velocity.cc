@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 
@@ -12,7 +12,7 @@ using namespace BoBRobotics::Vicon;
 using namespace std::literals;
 using namespace units::angular_velocity;
 
-int main()
+int bobMain(int, char **)
 {
     UDPClient<ObjectDataVelocity> vicon(51001);
     CaptureControl viconCaptureControl("192.168.1.100", 3003, "c:\\users\\ad374\\Desktop");
@@ -22,7 +22,7 @@ int main()
     for (int i = 0; i < 120; i++) {
         auto objectData = vicon.getObjectData();
         const auto velocity = objectData.getVelocity();
-        const auto angularVelocity = objectData.getAngularVelocity<degrees_per_second_t>();
+        const auto angularVelocity = objectData.getAngularVelocity();
 
         LOGI << "("
              << velocity[0] << ", " << velocity[1] << ", " << velocity[2]

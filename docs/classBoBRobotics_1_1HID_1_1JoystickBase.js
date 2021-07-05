@@ -11,8 +11,8 @@ var classBoBRobotics_1_1HID_1_1JoystickBase =
     [ "runInternal", "classBoBRobotics_1_1HID_1_1JoystickBase.html#ab91b629f47a802d3481d85012af778d9", null ],
     [ "setPressed", "classBoBRobotics_1_1HID_1_1JoystickBase.html#a36d47660fefa728f85c083b3060c8b2e", null ],
     [ "setReleased", "classBoBRobotics_1_1HID_1_1JoystickBase.html#a8e4c7759cd462b39fba3fd53b04aca20", null ],
-    [ "setState", "classBoBRobotics_1_1HID_1_1JoystickBase.html#a1ae0322b897b2cc7c0c201b3d3b46460", null ],
     [ "setState", "classBoBRobotics_1_1HID_1_1JoystickBase.html#a824bfbb7d362aaf7b8bf8da86aa0e223", null ],
+    [ "setState", "classBoBRobotics_1_1HID_1_1JoystickBase.html#a1ae0322b897b2cc7c0c201b3d3b46460", null ],
     [ "update", "classBoBRobotics_1_1HID_1_1JoystickBase.html#a0e3142956e27f8aae54578a52f916518", null ],
     [ "updateState", "classBoBRobotics_1_1HID_1_1JoystickBase.html#ae9004a6bac3574918118c3b10622f25e", null ]
 ];

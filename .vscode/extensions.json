@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "EditorConfig.EditorConfig",
+        "ms-vscode.cpptools",
+        "twxs.cmake",
+        "davidschuldenfrei.gtest-adapter"
+    ]
+}

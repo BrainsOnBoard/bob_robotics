@@ -1,13 +1,13 @@
 #ifdef __linux__
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "os/video.h"
 
 // Linux includes
+#include <cstdio>
 #include <fcntl.h>
 #include <linux/videodev2.h>
-#include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 

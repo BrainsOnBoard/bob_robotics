@@ -24,14 +24,14 @@ public:
     virtual void takeOff() override;
     virtual void land() override;
     virtual void setPitch(float pitch) override;
-    virtual void setRoll(float right) override;
+    virtual void setRoll(float roll) override;
     virtual void setVerticalSpeed(float up) override;
     virtual void setYawSpeed(float right) override;
     virtual void sendCommand();
 
 private:
     gazebo::transport::PublisherPtr m_Pub;
-    float m_Thrust, m_Roll, m_Pitch, m_Yaw;
+    float m_Thrust{}, m_Roll{}, m_Pitch{}, m_Yaw{};
     std::atomic_bool m_Armed;
     std::mutex m_Mutex;
 }; // UAV

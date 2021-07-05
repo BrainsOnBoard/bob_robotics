@@ -3,13 +3,22 @@
 // Standard C includes
 #include <cmath>
 
+// IMGUI
+#include "imgui.h"
+
+// PLOG includes
+#include "plog/Log.h"
+
 // BoBRobotics includes
-#include "common/logging.h"
-#include "navigation/visual_navigation_base.h"
+#include "common/path.h"
+
+// Antworld includes
+#include "antworld/snapshot_processor.h"
 
 // Ardin MB includes
-#include "mb_params.h"
 #include "sim_params.h"
+#include "visual_navigation_base.h"
+#include "visual_navigation_ui.h"
 
 using namespace BoBRobotics;
 using namespace units::literals;
@@ -19,25 +28,38 @@ using namespace units::length;
 // StateHandler
 //----------------------------------------------------------------------------
 StateHandler::StateHandler(const std::string &worldFilename, const std::string &routeFilename,
-                           BoBRobotics::Navigation::VisualNavigationBase &visualNavigation)
+                           float jitterSD, bool quitAfterTrain, bool autoTest, bool realignRoutes,
+                           meter_t pathHeight, const std::vector<float> &minBound, const std::vector<float> &maxBound,
+                           BoBRobotics::AntWorld::SnapshotProcessor &snapshotProcessor, VisualNavigationBase &visualNavigation,
+                           VisualNavigationUI &visualNavigationUI)
 :   m_StateMachine(this, State::Invalid), m_Snapshot(SimParams::displayRenderHeight, SimParams::displayRenderWidth, CV_8UC3),
-    m_Input({ SimParams::displayRenderWidth, SimParams::displayRenderHeight }, { 0, SimParams::displayRenderWidth + 10 }), m_Route(0.2f, 800),
-    m_SnapshotProcessor(SimParams::displayScale, SimParams::intermediateSnapshotWidth, SimParams::intermediateSnapshotHeight, MBParams::inputWidth, MBParams::inputHeight),
-    m_VectorField(20_cm), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0), m_VisualNavigation(visualNavigation)
+    m_RenderTargetTopDown(SimParams::displayRenderWidth, SimParams::displayRenderWidth), m_RenderTargetPanoramic(SimParams::displayRenderWidth, SimParams::displayRenderHeight),
+    m_Input(m_RenderTargetPanoramic), m_Route(0.2f, 800), m_VectorField(20_cm), m_ShowRouteHighlight(true),
+    m_PositionJitterDistributionCM(0.0f, jitterSD), m_RandomWalkAngleDistribution(-SimParams::scanAngle.value() / 2.0, SimParams::scanAngle.value() / 2.0),
+    m_QuitAfterTrain(quitAfterTrain), m_AutoTest(autoTest), m_RealignRoutes(realignRoutes), m_SnapshotProcessor(snapshotProcessor), m_PathHeight(pathHeight), m_VisualNavigation(visualNavigation), m_VisualNavigationUI(visualNavigationUI)
+
 {
     // Load world
-    m_Renderer.getWorld().load(worldFilename, SimParams::worldColour, SimParams::groundColour);
+    if(worldFilename.empty()) {
+        m_Renderer.getWorld().load((Path::getResourcesPath() / "antworld" / "world5000_gray.bin").str(),
+                                   SimParams::worldColour, SimParams::groundColour);
+    }
+    else {
+        m_Renderer.getWorld().loadObj(worldFilename);
+    }
+
+    // Override world bounds if they are specified
+    if(!minBound.empty()) {
+        m_Renderer.getWorld().setMinBound(Vector3<meter_t>(meter_t(minBound[0]), meter_t(minBound[1]), meter_t(minBound[2])));
+    }
+
+    if(!maxBound.empty()) {
+        m_Renderer.getWorld().setMaxBound(Vector3<meter_t>(meter_t(maxBound[0]), meter_t(maxBound[1]), meter_t(maxBound[2])));
+    }
 
     // If route is specified
     if(!routeFilename.empty()) {
-        m_Route.load(routeFilename);
-
-        // Get bounds of route
-        const auto &routeMin = m_Route.getMinBound();
-        const auto &routeMax = m_Route.getMaxBound();
-
-        // Create vector field geometry to cover route bounds
-        m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm, routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+        loadRoute(routeFilename);
 
         // Start training
         m_StateMachine.transition(State::Training);
@@ -53,52 +75,82 @@ bool StateHandler::handleEvent(State state, Event event)
 {
     // If this event is an update
     if(event == Event::Update) {
+        // Render panoramic view to target
+        m_Renderer.renderPanoramicView(m_Pose.x(), m_Pose.y(), m_PathHeight,
+                                       m_Pose.yaw(), m_Pose.pitch(), 0.0_deg,
+                                       m_RenderTargetPanoramic);
 
-        // Render top down and ants eye view
-        m_Renderer.renderPanoramicView(m_Pose.y(), m_Pose.x(), 0.01_m,
-                                       m_Pose.yaw(), 0.0_deg, 0.0_deg,
-                                       0, SimParams::displayRenderWidth + 10, SimParams::displayRenderWidth, SimParams::displayRenderHeight);
-        m_Renderer.renderTopDownView(0, 0, SimParams::displayRenderWidth, SimParams::displayRenderWidth);
+        // Bind top-down render target
+        m_RenderTargetTopDown.bind();
+
+        // Clear render target
+        m_RenderTargetTopDown.clear();
+
+        // Render top down view to target
+        // **NOTE** disable automatic binding and clearing
+        m_Renderer.renderTopDownView(m_RenderTargetTopDown, false, false);
 
         // Render route
-        m_Route.render(m_Pose.x(), m_Pose.y(), m_Pose.yaw());
+        m_Route.render(m_Pose, m_PathHeight);
 
         // Render vector field
-        m_VectorField.render();
+        m_VectorField.render(m_PathHeight);
 
-        // Read pixels from framebuffer
+        // Unbind top-down render target
+        m_RenderTargetTopDown.unbind();
+
+        // Read pixels from render target
         m_Input.readFrame(m_Snapshot);
 
         // Process snapshot
         m_SnapshotProcessor.process(m_Snapshot);
 
-        // If random walk key is pressed, transition to correct state
-        if(m_KeyBits.test(KeyRandomWalk)) {
-            m_StateMachine.transition(State::RandomWalk);
+        // Update the final snapshot texture with the snapshot processor's final output
+        m_FinalSnapshotTexture.update(m_SnapshotProcessor.getFinalSnapshot());
+
+        // Handle UI
+        if(!handleUI()) {
+            return false;
         }
 
-        // If vector field key is pressed, transition to correct state
-        if(m_KeyBits.test(KeyBuildVectorField)) {
-            m_StateMachine.transition(State::BuildingVectorField);
-        }
-
-        cv::waitKey(1);
+        // Handle visual navigation model-specific UI
+        m_VisualNavigationUI.handleUI();
     }
 
     // If we're in training state
     if(state == State::Training) {
         if(event == Event::Enter) {
-            LOGI << "Starting training";
+            std::cout << "Starting training" << std::endl;
             m_TrainPoint = 0;
 
             resetAntPosition();
         }
         else if(event == Event::Update) {
+            // Open popup
+            // **YUCK** OpenPopup crashes if you try and call in enter of 1st state
+            if(!ImGui::IsPopupOpen("Training...")) {
+                ImGui::OpenPopup("Training...");
+            }
+
             // Train memory with snapshot
             m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
 
+            // Handle visual navigation model-specific UI
+            m_VisualNavigationUI.handleUITraining();
+
+            // Show training progress
+            if(ImGui::BeginPopupModal("Training...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar((float)m_TrainPoint / (float)m_Route.size(), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
+
             // Mark results from previous training snapshot on route
-            m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
+            if(!m_ShowRouteHighlight) {
+                m_Route.setWaypointFamiliarity(m_TrainPoint - 1, 0.5f);//(double)numENSpikes / 20.0);
+            }
 
             // If GeNN isn't training and we have more route points to train
             if(m_TrainPoint < m_Route.size()) {
@@ -110,10 +162,15 @@ bool StateHandler::handleEvent(State state, Event event)
             }
             // Otherwise, if we've reached end of route
             else {
-                LOGI << "Training complete (" << m_Route.size() << " snapshots)";
-
-
-                m_StateMachine.transition(State::Testing);
+                if(m_QuitAfterTrain) {
+                    return false;
+                }
+                else if(m_AutoTest) {
+                    m_StateMachine.transition(State::Testing);
+                }
+                else {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
             }
         }
     }
@@ -124,7 +181,7 @@ bool StateHandler::handleEvent(State state, Event event)
             m_Pose.yaw() -= (SimParams::scanAngle / 2.0);
 
             // Add initial replay point to route
-            m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
+            m_Route.addPoint(m_Pose, false);
 
             m_TestingScan = 0;
 
@@ -134,17 +191,31 @@ bool StateHandler::handleEvent(State state, Event event)
 
             m_BestTestHeading = 0.0_deg;
             m_LowestTestDifference = std::numeric_limits<float>::max();
+
+            ImGui::OpenPopup("Testing...");
         }
         else if(event == Event::Update) {
             // Test snapshot
             const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
+
+            // Handle visual navigation model-specific UI
+            m_VisualNavigationUI.handleUITesting();
+
+            // Show training progress
+            if(ImGui::BeginPopupModal("Testing...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar(std::min(1.0f, (float)m_NumTestSteps / (float)m_Route.size()), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
 
             // If this is an improvement on previous best spike count
             if(difference < m_LowestTestDifference) {
                 m_BestTestHeading = m_Pose.yaw();
                 m_LowestTestDifference = difference;
 
-                //LOGI << "\tUpdated result: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference";
+                //std::cout << "\tUpdated result: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
             }
 
             // Go onto next scan
@@ -156,7 +227,16 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_Pose.yaw() += SimParams::scanStep;
             }
             else {
-                LOGI << "Scan complete: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference";
+                std::cout << "Scan complete: " << m_BestTestHeading << " is most familiar heading with " << m_LowestTestDifference << " difference" << std::endl;
+
+                // Perform any stateful updates in visual navigation class
+                m_VisualNavigation.resetTestScan();
+
+                // If we should show highlights, do so
+                if(m_ShowRouteHighlight) {
+                    const auto highlight = m_VisualNavigation.getHighlightedWaypoints();
+                    m_Route.highlightWaypointRange(highlight.first, highlight.second);
+                }
 
                 // Snap ant to it's best heading
                 m_Pose.yaw() = m_BestTestHeading;
@@ -168,9 +248,18 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_Pose.x() += SimParams::snapshotDistance * units::math::sin(m_Pose.yaw());
                 m_Pose.y() += SimParams::snapshotDistance * units::math::cos(m_Pose.yaw());
 
+                // Jitter position
+                m_Pose.x() += units::length::centimeter_t(m_PositionJitterDistributionCM(m_RNG));
+                m_Pose.y() += units::length::centimeter_t(m_PositionJitterDistributionCM(m_RNG));
+
                 // If new position means run is over - stop
                 if(!checkAntPosition()) {
-                    return false;
+                    if(m_AutoTest) {
+                        return false;
+                    }
+                    else {
+                        m_StateMachine.transition(State::FreeMovement);
+                    }
                 }
                 // Otherwise, reset scan
                 else {
@@ -179,6 +268,45 @@ bool StateHandler::handleEvent(State state, Event event)
                     m_LowestTestDifference = std::numeric_limits<float>::max();
                 }
             }
+        }
+    }
+    else if(state == State::BuildingRIDF) {
+        if(event == Event::Enter) {
+            m_Pose.yaw() -= (SimParams::scanAngle / 2.0);
+
+            m_TestingScan = 0;
+
+            m_RIDFNovelty.clear();
+            m_RIDFNovelty.reserve(SimParams::numScanSteps);
+            ImGui::OpenPopup("Calculating RIDF...");
+
+        }
+        else if(event == Event::Update) {
+            // Test snapshot and add difference to vector
+            m_RIDFNovelty.push_back(m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()));
+
+            // Show training progress
+            if(ImGui::BeginPopupModal("Calculating RIDF...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar(std::min(1.0f, (float)m_TestingScan / (float)SimParams::numScanSteps), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
+
+            // Go onto next scan
+            m_TestingScan++;
+
+            // If scan isn't complete
+            if(m_TestingScan < SimParams::numScanSteps) {
+                // Scan right
+                m_Pose.yaw() += SimParams::scanStep;
+            }
+            else {
+                m_StateMachine.transition(State::FreeMovement);
+            }
+
+
         }
     }
     else if(state == State::RandomWalk) {
@@ -203,7 +331,7 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // If new position means run is over - stop
             if(!checkAntPosition()) {
-                return false;
+                m_StateMachine.transition(State::FreeMovement);
             }
         }
     }
@@ -223,22 +351,18 @@ bool StateHandler::handleEvent(State state, Event event)
                 m_Pose.yaw() += SimParams::antTurnStep;
             }
             if(m_KeyBits.test(KeyUp)) {
+                m_Pose.pitch() -= SimParams::antPitchStep;
+            }
+            if(m_KeyBits.test(KeyDown)) {
+                m_Pose.pitch() += SimParams::antPitchStep;
+            }
+            if(m_KeyBits.test(KeyForward)) {
                 m_Pose.x() += SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
                 m_Pose.y() += SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
             }
-            if(m_KeyBits.test(KeyDown)) {
+            if(m_KeyBits.test(KeyBackward)) {
                 m_Pose.x() -= SimParams::antMoveStep * units::math::sin(m_Pose.yaw());
                 m_Pose.y() -= SimParams::antMoveStep * units::math::cos(m_Pose.yaw());
-            }
-            if(m_KeyBits.test(KeyTrainSnapshot)) {
-                m_VisualNavigation.train(m_Snapshot);
-
-            }
-            if(m_KeyBits.test(KeyTestSnapshot)) {
-                LOGI << "Difference: " << m_VisualNavigation.test(m_Snapshot);
-            }
-            if(m_KeyBits.test(KeySaveSnapshot)) {
-                cv::imwrite("snapshot.png", m_SnapshotProcessor.getFinalSnapshot());
             }
         }
     }
@@ -252,8 +376,18 @@ bool StateHandler::handleEvent(State state, Event event)
 
             // Clear vector of novelty values
             m_VectorFieldNovelty.clear();
+            ImGui::OpenPopup("Calculating vector field...");
         }
         else if(event == Event::Update) {
+            // Show training progress
+            if(ImGui::BeginPopupModal("Calculating vector field...", nullptr, ImGuiWindowFlags_NoResize)) {
+                ImGui::ProgressBar(std::min(1.0f, (float)m_CurrentVectorFieldPoint / (float)m_VectorField.getNumPoints()), ImVec2(100, 20));
+                if(ImGui::Button("Stop")) {
+                    m_StateMachine.transition(State::FreeMovement);
+                }
+                ImGui::EndPopup();
+            }
+
             // Test snapshot
             const float difference = m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot());
 
@@ -295,21 +429,34 @@ bool StateHandler::handleEvent(State state, Event event)
     return true;
 }
 //----------------------------------------------------------------------------
+void StateHandler::resetAntPosition()
+{
+    if(m_Route.size() > 0) {
+        m_Pose = m_Route[0];
+    }
+    else {
+        m_Pose.x() = 5.0_m;
+        m_Pose.y() = 5.0_m;
+        m_Pose.yaw() = 270.0_deg;
+        m_Pose.pitch() = 0.0_deg;
+    }
+}
+//----------------------------------------------------------------------------
 bool StateHandler::checkAntPosition()
 {
     // If we've reached destination
-    if(m_Route.atDestination(m_Pose.x(), m_Pose.y(), SimParams::errorDistance)) {
-        LOGW << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors";
+    if(m_Route.atDestination(m_Pose, SimParams::errorDistance)) {
+        std::cerr << "Destination reached in " << m_NumTestSteps << " steps with " << m_NumTestErrors << " errors" << std::endl;
 
         // Add final point to route
-        m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
+        m_Route.addPoint(m_Pose, false);
 
         // Stop
         return false;
     }
     // Otherwise, if we've
     else if(m_NumTestSteps >= SimParams::testStepLimit) {
-        LOGW << "Failed to find destination after " << m_NumTestSteps << " steps and " << m_NumTestErrors << " errors";
+        std::cerr << "Failed to find destination after " << m_NumTestSteps << " steps and " << m_NumTestErrors << " errors" << std::endl;
 
         // Stop
         return false;
@@ -319,8 +466,8 @@ bool StateHandler::checkAntPosition()
         // Calculate distance to route
         meter_t distanceToRoute;
         size_t nearestRouteWaypoint;
-        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose.x(), m_Pose.y());
-        LOGI << "\tDistance to route: " << distanceToRoute * 100.0f << "cm";
+        std::tie(distanceToRoute, nearestRouteWaypoint) = m_Route.getDistanceToRoute(m_Pose);
+        std::cout << "\tDistance to route: " << distanceToRoute * 100.0f << "cm" << std::endl;
 
         // If we are further away than error threshold
         if(distanceToRoute > SimParams::errorDistance) {
@@ -336,7 +483,7 @@ bool StateHandler::checkAntPosition()
             m_MaxTestPoint = std::max(m_MaxTestPoint, snapWaypoint);
 
             // Add error point to route
-            m_Route.addPoint(m_Pose.x(), m_Pose.y(), true);
+            m_Route.addPoint(m_Pose, true);
 
             // Increment error counter
             m_NumTestErrors++;
@@ -344,21 +491,121 @@ bool StateHandler::checkAntPosition()
         // Otherwise, update maximum test point reached and add 'correct' point to route
         else {
             m_MaxTestPoint = std::max(m_MaxTestPoint, nearestRouteWaypoint);
-            m_Route.addPoint(m_Pose.x(), m_Pose.y(), false);
+            m_Route.addPoint(m_Pose, false);
         }
 
         return true;
     }
 }
 //----------------------------------------------------------------------------
-void StateHandler::resetAntPosition()
+void StateHandler::loadRoute(const std::string &filename)
 {
-    if(m_Route.size() > 0) {
-        m_Pose = m_Route[0];
+    // If loading route is successful
+    m_Route.load(filename, m_RealignRoutes);
+
+    // Get bounds of route
+    const auto &routeMin = m_Route.getMinBound();
+    const auto &routeMax = m_Route.getMaxBound();
+
+    // Create vector field geometry to cover area of route bounds with 20cm border around it
+    m_VectorField.createVertices(routeMin[0] - 20_cm, routeMax[0] + 20_cm, 20_cm,
+                                 routeMin[1] - 20_cm, routeMax[1] + 20_cm, 20_cm);
+}
+//----------------------------------------------------------------------------
+bool StateHandler::handleUI()
+{
+    // Draw panoramic view window
+    if(ImGui::Begin("Panoramic", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Image((void*)m_RenderTargetPanoramic.getTexture(),
+                     ImVec2(m_RenderTargetPanoramic.getWidth(), m_RenderTargetPanoramic.getHeight()),
+                     ImVec2(0, 1), ImVec2(1, 0));
+
+        if(ImGui::Button("Train")) {
+            m_VisualNavigation.train(m_SnapshotProcessor.getFinalSnapshot());
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Test")) {
+            std::cout << "Difference: " << m_VisualNavigation.test(m_SnapshotProcessor.getFinalSnapshot()) << std::endl;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("RIDF")) {
+            m_StateMachine.transition(State::BuildingRIDF);
+        }
     }
-    else {
-        m_Pose.x() = 5.0_m;
-        m_Pose.y() = 5.0_m;
-        m_Pose.yaw() = 270.0_deg;
+    ImGui::End();
+
+    // Draw top-down view window
+    if(ImGui::Begin("Top-down", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Image((void*)m_RenderTargetTopDown.getTexture(),
+                     ImVec2(m_RenderTargetTopDown.getWidth(), m_RenderTargetTopDown.getHeight()),
+                     ImVec2(0, 1), ImVec2(1, 0));
     }
+    ImGui::End();
+
+    // Draw processed snapshot view window
+    if(ImGui::Begin("Processed snapshot", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::Image((void*)m_FinalSnapshotTexture.getTexture(),
+                     ImVec2(m_VisualNavigation.getUnwrapResolution().width * 4, m_VisualNavigation.getUnwrapResolution().height * 4));
+    }
+    ImGui::End();
+
+    // Draw processed snapshot view window
+    if(ImGui::Begin("RIDF", nullptr, ImGuiWindowFlags_NoResize))
+    {
+        ImGui::PlotLines("", m_RIDFNovelty.data(), m_RIDFNovelty.size(), 0, nullptr,
+                         FLT_MAX, FLT_MAX, ImVec2(SimParams::numScanSteps * 5, 50));
+    }
+    ImGui::End();
+
+    if(ImGui::BeginMainMenuBar()) {
+        if(ImGui::BeginMenu("File")) {
+            if(ImGui::BeginMenu("Open Route")) {
+                char routeFilename[32];
+                for(unsigned int r = 1; r <= 14; r++) {
+                    sprintf(routeFilename, "ant1_route%u.bin", r);
+                    if(ImGui::MenuItem(routeFilename)) {
+                        loadRoute((Path::getResourcesPath() / "antworld" / routeFilename).str());
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            if(ImGui::MenuItem("Quit")) {
+                return false;
+            }
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("Tools")) {
+            const bool routeLoaded = (m_Route.size() > 0);
+            if(ImGui::MenuItem("Train route", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::Training);
+            }
+
+            if(ImGui::MenuItem("Test route", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::Testing);
+            }
+
+            if(ImGui::MenuItem("Random walk", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::RandomWalk);
+            }
+
+            if(ImGui::MenuItem("Build vector field", nullptr, false, routeLoaded)) {
+                m_StateMachine.transition(State::BuildingVectorField);
+            }
+            ImGui::EndMenu();
+        }
+
+        if(ImGui::BeginMenu("View")) {
+            if(ImGui::MenuItem("Route highlights", nullptr, m_ShowRouteHighlight)) {
+                m_ShowRouteHighlight = !m_ShowRouteHighlight;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+
+    return true;
 }

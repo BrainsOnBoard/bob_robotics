@@ -1,7 +1,6 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/logging.h"
-#include "common/main.h"
+#include "plog/Log.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
@@ -50,7 +49,8 @@ public:
         m_FilePath = dataDir / ss.str();
 
         // Open file and write header
-        m_FileStream = std::ofstream(m_FilePath.str());
+        m_FileStream.exceptions(std::ios::badbit | std::ios::failbit);
+        m_FileStream.open(m_FilePath.str());
         m_FileStream << "x, y, t\n";
         m_FileStream << std::setprecision(10); // set number of decimal places
 
@@ -76,7 +76,7 @@ public:
             m_StopwatchSample.start();
 
             // Get coordinates from Vicon
-            const auto position = m_Vicon.getObjectData().getPosition<meter_t>();
+            const Vector3<meter_t> position = m_Vicon.getObjectData().getPose().position();
 
             // Write to CSV file
             m_FileStream << position[0].value() << ", " << position[1].value()
@@ -101,8 +101,7 @@ private:
     Stopwatch m_Stopwatch, m_StopwatchSample;
 };
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // Connect to robot
     LOGI << "Connecting to robot";

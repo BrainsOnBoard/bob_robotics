@@ -1,12 +1,14 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
+#include "common/path.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
-#include "hid/joystick_sfml_keyboard.h"
 #include "antworld/common.h"
 #include "antworld/render_target_hex_display.h"
 #include "antworld/renderer.h"
 #include "antworld/renderer_stereo.h"
+#include "viz/sfml/joystick_keyboard.h"
+
 
 // Third-party includes
 #include "third_party/path.h"
@@ -32,35 +34,50 @@ using namespace units::time;
 // Anonymous namespace
 namespace
 {
-void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message,
+void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message,
                    const void *)
 {
-    throw std::runtime_error(message);
-}
-
-std::unique_ptr<HID::JoystickBase<HID::JAxis, HID::JButton>> createJoystick(sf::Window &window)
-{
-    try
-    {
-        return std::make_unique<HID::Joystick>(0.25f);
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        LOGE << message;
     }
-    catch(std::runtime_error &ex)
-    {
-        LOGW << "Error opening joystick - \"" << ex.what() << "\" - using keyboard interface";
-        return std::make_unique<HID::JoystickSFMLKeyboard>(window);
+    else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        LOGW << message;
+    }
+    else if (severity == GL_DEBUG_SEVERITY_LOW) {
+        LOGI << message;
+    }
+    else {
+        LOGD << message;
     }
 }
 }
 
-int main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     const auto turnSpeed = 200_deg_per_s;
     const auto moveSpeed = 1_mps;
     const unsigned int width = 1024;
     const unsigned int height = 500;//853;
 
-    // Whether to use the 3D reconstructed Rothamsted model
-    const std::string overrideModel = (argc > 1) ? argv[1] : "";
+
+    // If an argument is passed
+    filesystem::path modelPath;
+    if(argc > 1) {
+        // If it's the magical rothamsted argument
+        if(strcmp(argv[1], "--rothamsted") == 0) {
+            const char *rothamstedPath = std::getenv("ROTHAMSTED_3D_MODEL_PATH");
+            if(!rothamstedPath) {
+                throw std::runtime_error("Error: ROTHAMSTED_3D_MODEL_PATH env var is not set");
+            }
+
+            // Set model path to first rothamsted model
+            modelPath = filesystem::path(rothamstedPath).parent_path() / "flight_1_decimate.obj";
+        }
+        // Otherwise, use argument directly as path
+        else {
+            modelPath = filesystem::path(argv[1]);
+        }
+    }
 
     // Create SFML window
     sf::Window window(sf::VideoMode{ width, height },
@@ -116,7 +133,7 @@ int main(int argc, char **argv)
     }
 
     // Create HID device for controlling movement
-    auto joystick = createJoystick(window);
+    auto joystick = Viz::JoystickKeyboard::createJoystick();
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer->getWorld().getMinBound();

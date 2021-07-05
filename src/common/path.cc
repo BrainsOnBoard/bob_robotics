@@ -1,5 +1,16 @@
 // BoB robotics includes
+#include "common/macros.h"
 #include "common/path.h"
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 // Standard C includes
 #include <cstdlib>
@@ -9,23 +20,41 @@
 #include <sstream>
 #include <stdexcept>
 
-#define BOB_TO_STRING_LITERAL(s) #s
-
 namespace BoBRobotics {
 namespace Path {
 filesystem::path
+getProgramDirectory()
+{
+    return getProgramPath().parent_path();
+}
+
+filesystem::path
+getProgramPath()
+{
+#if defined(__linux__)
+    char path[PATH_MAX + 1];
+    ssize_t len = readlink("/proc/self/exe", path, PATH_MAX);
+    BOB_ASSERT(len >= 0);
+    path[len] = '\0';
+#elif defined(_WIN32)
+    wchar_t path[MAX_PATH];
+    DWORD len = GetModuleFileNameW(nullptr, path, MAX_PATH);
+    BOB_ASSERT(len > 0);
+#elif defined(__APPLE__)
+    char path[MAXPATHLEN + 1];
+    uint32_t len = sizeof(path);
+    BOB_ASSERT(_NSGetExecutablePath(path, &len) == 0);
+#else
+    #error "Unsupported platform"
+#endif
+
+    return filesystem::path{ path };
+}
+
+filesystem::path
 getRepoPath()
 {
-#ifdef BOB_ROBOTICS_SUBMODULE_PATH
-    return filesystem::path{ BOB_TO_STRING_LITERAL(BOB_ROBOTICS_SUBMODULE_PATH) };
-#else
-    // Get from environment variable
-    const char *path = std::getenv("BOB_ROBOTICS_PATH");
-    if (!path) {
-        throw std::runtime_error("BOB_ROBOTICS_PATH environment variable not set");
-    }
-    return path;
-#endif
+    return filesystem::path{ BOB_ROBOTICS_PATH };
 }
 
 filesystem::path
@@ -34,36 +63,46 @@ getResourcesPath()
     return getRepoPath() / "resources";
 }
 
+
 filesystem::path
-getNewPath(const filesystem::path &rootPath, const std::string &extension)
+getNewPath(const std::tm &currentTime, const filesystem::path &rootPath,
+           const std::string &extension)
 {
     // Put a timestamp in the filename
     std::stringstream ss;
-    const auto timer = time(nullptr);
-    const auto currentTime = localtime(&timer);
     ss << std::setfill('0')
-       << std::setw(2) << currentTime->tm_mday
-       << std::setw(2) << currentTime->tm_mon
-       << std::setw(2) << currentTime->tm_year - 100
+       << std::setw(4) << currentTime.tm_year + 1900
+       << std::setw(2) << currentTime.tm_mon + 1
+       << std::setw(2) << currentTime.tm_mday
        << "_"
-       << std::setw(2) << currentTime->tm_hour
-       << std::setw(2) << currentTime->tm_min
-       << std::setw(2) << currentTime->tm_sec
-       << "_";
-    const auto basename = (rootPath / ss.str()).str();
+       << std::setw(2) << currentTime.tm_hour
+       << std::setw(2) << currentTime.tm_min
+       << std::setw(2) << currentTime.tm_sec;
+    const auto fileNameRoot = (rootPath / ss.str()).str();
+    filesystem::path path = fileNameRoot + extension;
+    if (!path.exists()) {
+        return path;
+    }
 
-    // Append a number in case we get name collisions
+    // Append a number if there is already a database by this name
     ss.str(std::string{}); // clear stringstream
-    filesystem::path path;
-    for (int i = 1; ; i++) {
-        ss << i << extension;
-        path = basename + ss.str();
+    for (int i = 2; ; i++) {
+        ss << "_" << i << extension;
+        path = fileNameRoot + ss.str();
         if (!path.exists()) {
             break;
         }
         ss.str(std::string{}); // clear stringstream
     }
     return path;
+}
+
+filesystem::path
+getNewPath(const filesystem::path &rootPath, const std::string &extension)
+{
+    const auto timer = time(nullptr);
+    const auto currentTime = localtime(&timer);
+    return getNewPath(*currentTime, rootPath, extension);
 }
 } // Path
 } // BoBRobotics

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "net/connection.h"
 
 // Standard C++ includes
@@ -12,12 +12,12 @@ namespace Net {
 Connection::SocketWriter::SocketWriter(Connection &connection)
     : m_Connection(connection)
 {
-    m_Connection.m_SendMutex->lock();
+    m_Connection.m_SendMutex.lock();
 }
 
 Connection::SocketWriter::~SocketWriter()
 {
-    m_Connection.m_SendMutex->unlock();
+    m_Connection.m_SendMutex.unlock();
 }
 
 Connection::~Connection()
@@ -35,9 +35,9 @@ Connection::~Connection()
 
 bool Connection::isOpen() const { return m_Socket.isOpen(); }
 
-void Connection::setCommandHandler(const std::string &commandName, const CommandHandler handler)
+void Connection::setCommandHandler(const std::string &commandName, const CommandHandler &handler)
 {
-    std::lock_guard<std::mutex> guard(*m_CommandHandlersMutex);
+    std::lock_guard<std::mutex> guard(m_CommandHandlersMutex);
     m_CommandHandlers.emplace(commandName, handler);
 }
 
@@ -94,7 +94,7 @@ bool Connection::parseCommand(Command &command)
     }
 
     try {
-        std::lock_guard<std::mutex> guard(*m_CommandHandlersMutex);
+        std::lock_guard<std::mutex> guard(m_CommandHandlersMutex);
         CommandHandler &handler = m_CommandHandlers.at(command[0]);
 
         // handler will be nullptr if it has been removed

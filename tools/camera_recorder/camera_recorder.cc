@@ -1,8 +1,8 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "imgproc/opencv_unwrap_360.h"
-#include "robots/tank.h"
+#include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
@@ -17,7 +17,7 @@ using namespace BoBRobotics::Robots;
 using namespace BoBRobotics::Video;
 using namespace std::literals;
 
-int main()
+int bobMain(int, char **)
 {
     constexpr unsigned int recordingInterval = 10;
     constexpr float joystickDeadzone = 0.25f;
@@ -42,7 +42,7 @@ int main()
     auto unwrapper = cam.createUnwrapper(unwrapSize);
 
     // Create motor interface
-    TANK_TYPE motor;
+    ROBOT_TYPE motor;
 
     cv::Mat output;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
@@ -60,6 +60,7 @@ int main()
 
     // Open file to log capture data and write header
     std::ofstream data("vicon.csv");
+    data.exceptions(std::ios::badbit | std::ios::failbit);
     data << "Filename, Frame, X, Y, Z, Rx, Ry, Rz" << std::endl;
 #endif  // VICON_CAPTURE
 
@@ -85,8 +86,8 @@ int main()
 #ifdef VICON_CAPTURE
             // Get tracking data
             auto objectData = vicon.getObjectData();
-            const auto &position = objectData.getPosition<>();
-            const auto &attitude = objectData.getAttitude<>();
+            const auto &position = objectData.getPose().position();
+            const auto &attitude = objectData.getPose().attitude();
 
             // Write to CSV
             data << filename << ", " << objectData.getFrameNumber() << ", "

@@ -1,5 +1,6 @@
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
+#include "common/path.h"
 #include "antworld/common.h"
 #include "antworld/renderer.h"
 #include "antworld/route_continuous.h"
@@ -17,17 +18,29 @@
 using namespace BoBRobotics;
 
 namespace {
-void handleGLError(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *message, const void *)
+void handleGLError(GLenum, GLenum, GLuint, GLenum severity, GLsizei, const GLchar *message, const void *)
 {
-    throw std::runtime_error(message);
+    if (severity == GL_DEBUG_SEVERITY_HIGH) {
+        LOGE << message;
+    }
+    else if (severity == GL_DEBUG_SEVERITY_MEDIUM) {
+        LOGW << message;
+    }
+    else if (severity == GL_DEBUG_SEVERITY_LOW) {
+        LOGI << message;
+    }
+    else {
+        LOGD << message;
+    }
 }
 }
 
 
-int main(int, char **argv)
+int bobMain(int argc, char **argv)
 {
     const unsigned int renderWidth = 1050;
     const unsigned int renderHeight = 1050;
+    const bool oldAntWorld = argc > 1 && strcmp(argv[1], "--old-ant-world") == 0;
 
     // Create SFML window
     sf::Window window(sf::VideoMode(renderWidth, renderHeight),
@@ -62,8 +75,17 @@ int main(int, char **argv)
 
     // Create renderer
     AntWorld::Renderer renderer;
-    renderer.getWorld().load(filesystem::path(argv[0]).parent_path() / "../../resources/antworld/world5000_gray.bin",
-                             {0.0f, 1.0f, 0.0f}, {0.898f, 0.718f, 0.353f});
+    const auto antWorldPath = Path::getResourcesPath() / "antworld";
+    if (oldAntWorld) {
+        renderer.getWorld().load(antWorldPath / "world5000_gray.bin",
+                                 { 0.0f, 1.0f, 0.0f },
+                                 { 0.898f, 0.718f, 0.353f });
+    } else {
+        renderer.getWorld().loadObj(antWorldPath / "seville_vegetation_downsampled.obj");
+
+        renderer.getWorld().setMinBound({0_m, 0_m, 0_m});
+        renderer.getWorld().setMaxBound({10_m, 10_m, 2.8_m});
+    }
 
     // Create input to read snapshots from screen
     Video::OpenGL input({ renderWidth, renderHeight });
@@ -77,8 +99,6 @@ int main(int, char **argv)
 
     // Render first person
     renderer.renderTopDownView(0, 0, renderWidth, renderHeight);
-
-    window.display();
 
     // Read snapshot
     input.readFrame(map);

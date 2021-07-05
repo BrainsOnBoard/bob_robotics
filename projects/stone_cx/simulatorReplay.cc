@@ -14,7 +14,8 @@
 #include <opencv2/opencv.hpp>
 
 // Common includes
-#include "common/logging.h"
+#include "common/macros.h"
+#include "plog/Log.h"
 #include "genn_utils/analogue_csv_recorder.h"
 
 // GeNN generated code includes
@@ -37,7 +38,7 @@ double readDoubleField(std::istringstream &lineStream)
 }
 }
 
-int main()
+int bobMain(int, char **)
 {
     // Simulation rendering parameters
     const unsigned int pathImageSize = 1000;
@@ -86,6 +87,8 @@ int main()
 #endif  // RECORD_ELECTROPHYS
 
     std::ifstream replayData("data.csv");
+    BOB_ASSERT(replayData.good());
+    replayData.exceptions(std::ios::badbit);
 
     // Simulate
     double theta = 0.0;

@@ -25,9 +25,9 @@ using namespace units::literals;
 struct BestMatchingSnapshot
 {
     template<typename Rotater>
-    auto operator()(std::vector<size_t> &bestCols,
-                    std::vector<float> &minDifferences,
-                    const Rotater &rotater)
+    auto operator()(const std::vector<size_t> &bestCols,
+                    const std::vector<float> &minDifferences,
+                    const Rotater &rotater, size_t startSnapshot)
     {
         // Get index corresponding to best-matching snapshot
         const auto bestPtr = std::min_element(std::begin(minDifferences), std::end(minDifferences));
@@ -42,7 +42,7 @@ struct BestMatchingSnapshot
         const float difference = minDifferences[bestSnapshot] / 255.0f;
 
         // Bundle result as tuple
-        return std::make_tuple(heading, bestSnapshot, difference);
+        return std::make_tuple(heading, bestSnapshot + startSnapshot, difference);
     }
 };
 
@@ -53,7 +53,7 @@ struct WeightSnapshotsDynamic
     template<typename Rotater>
     auto operator()(std::vector<size_t> &bestCols,
                     std::vector<float> &minDifferences,
-                    const Rotater &rotater)
+                    const Rotater &rotater, size_t)
     {
         using namespace units::angle;
 
@@ -63,7 +63,7 @@ struct WeightSnapshotsDynamic
 
         // Build a heap (only partially sorts)
         auto comparator = [&minDifferences](const size_t i1, const size_t i2) {
-            return minDifferences[i1] >= minDifferences[i2];
+            return minDifferences[i1] > minDifferences[i2];
         };
         std::make_heap(std::begin(idx), std::end(idx), comparator);
 
@@ -99,7 +99,7 @@ struct WeightSnapshotsDynamic
         std::transform(minDifferencesOut.cbegin(), minDifferencesOut.cend(),
                        weights.begin(), diffsToWeights);
 
-        // Best angle is a weighted cirular mean of headings
+        // Best angle is a weighted circular mean of headings
         const radian_t bestAngle = circularMean(headings, weights);
 
         // Bundle result as tuple

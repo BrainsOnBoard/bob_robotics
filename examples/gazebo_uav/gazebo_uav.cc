@@ -21,8 +21,7 @@ using namespace BoBRobotics;
 using namespace BoBRobotics::Robots;
 using namespace std::literals;
 
-int
-main(int argc, char **argv)
+int bobMain(int argc, char **argv)
 {
     /************************************Gazebo setup************/
 
@@ -46,10 +45,9 @@ main(int argc, char **argv)
             else{
                 std::cerr << "Unsupported flag\n";
             }
-            display->runInBackground();
             break;
         default:
-            std::cout <<"Usage ./bob_iris [-s,-p] [camera_url]\n";
+            std::cout <<"Usage " << argv[0] << " [-s,-p] [camera_url]\n";
 
     }
     Robots::Gazebo::UAV iris(node); // QuadCopter agent
@@ -60,7 +58,7 @@ main(int argc, char **argv)
 
     do {
         // Check for joystick events
-        if (!joystick.update()) {
+        if (!joystick.update() && (!display || !display->update())) {
             // A small delay so we don't hog CPU
             std::this_thread::sleep_for(5ms);
         }
@@ -70,4 +68,6 @@ main(int argc, char **argv)
     display->close();
     Gazebo::shutDown();
     std::cout <<"Shutting down...\n";
+
+    return EXIT_SUCCESS;
 }

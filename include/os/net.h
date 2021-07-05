@@ -13,10 +13,8 @@
 
 // Headers to be included
 #ifdef _WIN32
-// Our common header for including windows.h with the right #defines in place
-#include "windows_include.h"
-
 // Include the (new) winsock API
+#undef _WINSOCKAPI_
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -76,10 +74,10 @@ namespace Net {
  * We set sendFlags to MSG_NOSIGNAL  on Linux, because otherwise a broken pipe
  * will terminate the program.
  */
-#ifdef _WIN32
-constexpr int sendFlags = 0;
-#else
+#ifdef __linux__
 constexpr int sendFlags = MSG_NOSIGNAL;
+#else
+constexpr int sendFlags = 0;
 #endif
 
 /*!
@@ -88,7 +86,7 @@ constexpr int sendFlags = MSG_NOSIGNAL;
  * This class does nothing on *nix.
  *
  * Use it like so:
- *   int main()
+ *   int bobMain(int, char **)
  *   {
  *      try {
  *          BoBRobotics::OS::Net::WindowsNetworking net;

@@ -11,7 +11,7 @@ var classio_1_1CSVReader =
     [ "read_header", "classio_1_1CSVReader.html#a9fad9ae02aa243dba6bc78156c5ce7e5", null ],
     [ "read_row", "classio_1_1CSVReader.html#a61ecdcaa62c024bf97c4e5d133478d7e", null ],
     [ "set_file_line", "classio_1_1CSVReader.html#a1303bd6a2eb0d3d7c743212e52839ac4", null ],
-    [ "set_file_name", "classio_1_1CSVReader.html#a4096c1e43a4fba2b4f5ae21d047b5fbc", null ],
     [ "set_file_name", "classio_1_1CSVReader.html#a5f1dc083a8fa8661f5ecdcf6aebc7b24", null ],
+    [ "set_file_name", "classio_1_1CSVReader.html#a4096c1e43a4fba2b4f5ae21d047b5fbc", null ],
     [ "set_header", "classio_1_1CSVReader.html#ab68eedff1bd59a49fa4ddb160dff94e0", null ]
 ];

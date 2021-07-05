@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __linux__
 
 // BoB robotics includes
 #include "common/macros.h"
@@ -199,3 +200,4 @@ private:
 }; // See3Cam_CU40
 } // Video
 } // BoBRobotics
+#endif // __linux__

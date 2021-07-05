@@ -5,15 +5,16 @@
  */
 
 // BoB robotics includes
-#include "common/logging.h"
+#include "plog/Log.h"
 #include "video/panoramic.h"
 #include "video/display.h"
 
 using namespace BoBRobotics::Video;
 
-int main()
+int bobMain(int, char **)
 {
     auto cam = getPanoramicCamera();
     Display display(*cam, {1240, 600});
     display.run();
+    return EXIT_SUCCESS;
 }

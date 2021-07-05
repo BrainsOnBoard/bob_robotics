@@ -1,6 +1,5 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "common/main.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "robots/tank_netsink.h"
@@ -13,8 +12,7 @@
 using namespace BoBRobotics;
 using namespace std::literals;
 
-int
-bob_main(int, char **)
+int bobMain(int, char **)
 {
     // Make connection to robot on default port
     Net::Client client;

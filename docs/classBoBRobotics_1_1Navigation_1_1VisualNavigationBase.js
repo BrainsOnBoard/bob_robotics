@@ -1,12 +1,13 @@
 var classBoBRobotics_1_1Navigation_1_1VisualNavigationBase =
 [
-    [ "VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a3caf78f24c463cb3903e2a76a9ce2619", null ],
-    [ "~VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a0c7daf68a3f695cd87543346c31b4689", null ],
+    [ "VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#ad552449fcdc32c571160c3b7701ff571", null ],
+    [ "~VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a486c60448e87cfdc11668416030066ea", null ],
     [ "clearMemory", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a8f629d662d71fe86d7c4fdcb3957d92e", null ],
-    [ "getMaskImage", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a1b8b184eb98108166b761c639ad4ffd9", null ],
-    [ "getUnwrapResolution", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a7e8caa36a4d367b65b2d9a0a7518744f", null ],
-    [ "setMaskImage", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a897ca87fe635b0970e3e12e3a61c616d", null ],
+    [ "getMask", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#abe4100bf5ddad72514f250e491814524", null ],
+    [ "getUnwrapResolution", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a50061b94cb3af54852b55fb36428fb63", null ],
+    [ "setMask", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#af049097b52b140a7907e7131a836e286", null ],
     [ "test", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#abbc9a5e55f663074f2ccfbd93cd31f99", null ],
     [ "train", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#af96f0b786f2a3704c9a8cc37230ee33b", null ],
-    [ "trainRoute", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a41469055c5e89f1d1bc3fe0ea36c281b", null ]
+    [ "trainRoute", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#aee7254707164790773361e19df068746", null ],
+    [ "trainRoute", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html#a3cfe9c62a15e55be1f8be0b03232c3fd", null ]
 ];

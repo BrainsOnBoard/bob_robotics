@@ -8,6 +8,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <string>
 
 namespace {
@@ -41,6 +42,7 @@ signalHandler(int sig)
 
 namespace BoBRobotics {
 bool BackgroundExceptionCatcher::CatcherExists = false;
+std::mutex BackgroundExceptionCatcher::ExceptionPtrMutex;
 std::exception_ptr BackgroundExceptionCatcher::ExceptionPtr;
 
 BackgroundExceptionCatcher::BackgroundExceptionCatcher()
@@ -74,8 +76,13 @@ BackgroundExceptionCatcher::trapSignals(const std::unordered_set<int> &signals)
 void
 BackgroundExceptionCatcher::check() const
 {
-    if (ExceptionPtr) {
-        std::rethrow_exception(ExceptionPtr);
+    std::exception_ptr eptr;
+    ExceptionPtrMutex.lock();
+    eptr = ExceptionPtr;
+    ExceptionPtrMutex.unlock();
+
+    if (eptr) {
+        std::rethrow_exception(eptr);
     }
 }
 
@@ -84,7 +91,9 @@ void
 BackgroundExceptionCatcher::set(const std::exception_ptr &error)
 {
     if (CatcherExists) {
+        ExceptionPtrMutex.lock();
         ExceptionPtr = error;
+        ExceptionPtrMutex.unlock();
     } else {
         std::rethrow_exception(error);
     }
