@@ -165,7 +165,7 @@ public:
 
             // Create tank PID
             m_TankPID = std::make_unique<Robots::TankPID<Vicon::ObjectReference<Vicon::ObjectData>>>(
-                m_Robot, m_ViconObject, m_Config.getTankPIDKP(), m_Config.getTankPIDKI(), m_Config.getTankPIDKD(),
+                m_Robot, *m_ViconObject, m_Config.getTankPIDKP(), m_Config.getTankPIDKI(), m_Config.getTankPIDKD(),
                 m_Config.getTankPIDDistanceTolerance(), m_Config.getTankPIDAngleTolerance(),
                 m_Config.getTankPIDStartTurningThreshold(), m_Config.getTankPIDAverageSpeed());
         }
@@ -408,7 +408,7 @@ private:
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
-                        const auto objectData = m_ViconObject.getData();
+                        const auto objectData = m_ViconObject->getData();
                         const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                         const auto &position = pose.position();
                         const auto &attitude = pose.attitude();
@@ -500,7 +500,7 @@ private:
                 // If vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
                     // Get tracking data
-                    const auto objectData = m_ViconObject.getData();
+                    const auto objectData = m_ViconObject->getData();
                     const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
                     const auto &position = pose.position();
                     const auto &attitude = pose.attitude();
@@ -651,7 +651,7 @@ private:
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
 
     // Vicon tracking object
-    Vicon::ObjectReference<Vicon::ObjectData> m_ViconObject;
+    std::unique_ptr<Vicon::ObjectReference<Vicon::ObjectData>> m_ViconObject;
 
     // PID controller for driving robot
     std::unique_ptr<Robots::TankPID<Vicon::ObjectReference<Vicon::ObjectData>>> m_TankPID;
