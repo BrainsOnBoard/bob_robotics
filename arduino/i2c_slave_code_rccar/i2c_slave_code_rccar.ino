@@ -5,8 +5,6 @@
 
 using namespace BoBRobotics::Robots::RCCar;
 
-#define SLAVE_ADDRESS 0x29
-
 volatile Movement i2cMove{}, remoteMove{}; // holds data about speed and turning
 volatile bool sendRemote = false;
 volatile State state = State::RemoteControl;
@@ -36,7 +34,7 @@ setup()
   steering.attach(STEERING_CONTROL); //attach steering to pin
 
   // starts i2c connection
-  Wire.begin(SLAVE_ADDRESS);
+  Wire.begin(RCCAR_SLAVE_ADDRESS);
 
   // if Master sends data -> call receiveEvent()
   Wire.onReceive(receiveEvent);
