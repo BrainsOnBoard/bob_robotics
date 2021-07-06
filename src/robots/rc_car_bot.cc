@@ -17,15 +17,20 @@ sgn(T val)
 namespace BoBRobotics {
 namespace Robots {
 
-RCCarBot::RCCarBot(const char *path, int slaveAddress)
-  : m_I2C(path, slaveAddress)
+constexpr degree_t RCCarBot::TurnMax;
+
+RCCarBot::RCCarBot(const char *path)
+  : m_I2C(path, RCCAR_SLAVE_ADDRESS)
   , m_speed(0.0f)
   , m_turningAngle(0_deg)
-{}
+{
+    setState(RCCar::State::I2CControl);
+}
 
 RCCarBot::~RCCarBot()
 {
     stopMoving();
+    setState(RCCar::State::RemoteControl);
 }
 
 //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
@@ -33,50 +38,32 @@ void
 RCCarBot::move(float speed, degree_t left)
 {
     BOB_ASSERT(speed >= -1.f && speed <= 1.f);
-    BOB_ASSERT(left >= -35_deg && left <= 35_deg);
+    BOB_ASSERT(left >= -TurnMax && left <= TurnMax);
 
-    m_speed = speed;
-    m_turningAngle = left;
-
-    // mapping to the range
-    uint8_t uspeed = (speed * 255) + sgn(-speed) * 127;     // mapping to : 0-127 backward, 127-255 forward
-    uint8_t uturn = (uint8_t)(90.0 + left.value()); // mapping to : 65 full left 90 center 125 full right
-    uint8_t buffer[2] = { uspeed, uturn };
-    m_I2C.write(buffer); // send to arduino on i2c
+    RCCar::Message msg;
+    msg.command = RCCar::Command::Drive;
+    msg.move.speed = static_cast<int8_t>(speed * 100.f);
+    msg.move.turn = static_cast<int8_t>(100.0 * left / TurnMax);
+    m_I2C.write(&msg, sizeof(msg));
 }
 
 void
 RCCarBot::moveForward(float speed)
 {
-    BOB_ASSERT(speed >= -1.f && speed <= 1.f);
-
     m_speed = speed;
-
-    // mapping to the range
-    uint8_t uspeed = (speed * 255) + sgn(-speed) * 127;     // mapping to : 0-127 backward, 127-255 forward
-    uint8_t uturn = (uint8_t)(90.0 + m_turningAngle.value()); // mapping to : 65 full left 90 center 125 full right
-    uint8_t buffer[2] = { uspeed, uturn };
-    m_I2C.write(buffer); // send to arduino on i2c
+    move(speed, m_turningAngle);
 }
 
 void
 RCCarBot::steer(float left)
 {
-    steer(left * 35_deg);
+    steer(left * TurnMax);
 }
 
 void
 RCCarBot::steer(units::angle::degree_t left)
 {
-    BOB_ASSERT(left >= -35_deg && left <= 35_deg);
-
-    m_turningAngle = left;
-
-    // mapping to the range
-    uint8_t uspeed = (m_speed * 255) + sgn(-m_speed) * 127;     // mapping to : 0-127 backward, 127-255 forward
-    uint8_t uturn = (uint8_t)(90.0 + left.value()); // mapping to : 65 full left 90 center 125 full right
-    uint8_t buffer[2] = { uspeed, uturn };
-    m_I2C.write(buffer); // send to arduino on i2c
+    move(m_speed, left);
 }
 
 // stops the car
@@ -86,19 +73,9 @@ RCCarBot::stopMoving()
     move(0, 0_deg);
 }
 
-void
-RCCarBot::updateState()
-{
-    uint8_t buffer[2];
-    m_I2C.read(buffer);
-    m_speed = 2*float(int(buffer[0])-127) / 255;
-    m_turningAngle = degree_t( 90 - int(buffer[1]));
-}
-
 float
 RCCarBot::getSpeed() const
 {
-
     return m_speed;
 }
 
@@ -111,9 +88,31 @@ RCCarBot::getTurningAngle() const
 degree_t
 RCCarBot::getMaximumTurn() const
 {
-    return 35_deg;
+    return TurnMax;
 }
 
+void
+RCCarBot::setState(RCCar::State state)
+{
+    RCCar::Message msg;
+    msg.command = RCCar::Command::SetState;
+    msg.state = state;
+    m_I2C.write(&msg, sizeof(msg));
+}
+
+
+std::pair<float, degree_t>
+RCCarBot::readRemote()
+{
+    RCCar::Message msg;
+    msg.command = RCCar::Command::ReadRemoteControl;
+    m_I2C.write(&msg, sizeof(msg));
+
+    RCCar::Movement move;
+    m_I2C.read(&move, sizeof(move));
+
+    return { float(move.speed) / 100.f, TurnMax * double(move.turn) / 100.0 };
+}
 } // Robots
 } // BoBRobotics
 #endif	// __linux__
