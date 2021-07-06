@@ -40,11 +40,10 @@ public:
     template<typename T, size_t N>
     void read(T (&data)[N])
     {
-        const size_t size = sizeof(T) * N;
-        if (::read(m_I2C, &data[0], size) != size) {
-            throw std::runtime_error("Failed to read from i2c bus");
-        }
+        read(&data[0], N * sizeof(T));
     }
+
+    void read(void *data, size_t size);
 
     void writeByteCommand(uint8_t address, uint8_t byte);
     void writeByte(uint8_t byte);
@@ -53,11 +52,10 @@ public:
     template<typename T, size_t N>
     void write(const T (&data)[N])
     {
-        const size_t size = sizeof(T) * N;
-        if (::write(m_I2C, &data[0], size) != size) {
-            throw std::runtime_error("Failed to write to i2c bus");
-        }
+        write(&data[0], N * sizeof(T));
     }
+
+    void write(const void *data, size_t size);
 
 private:
     //---------------------------------------------------------------------
