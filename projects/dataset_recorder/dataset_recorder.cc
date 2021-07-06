@@ -193,10 +193,8 @@ int bobMain(int argc, char* argv[])
         float bot_speed;
         degree_t turn_ang;
         try {
-            bot.updateState();
-            bot_speed =  bot.getSpeed();
-            turn_ang = bot.getTurningAngle();
-        } catch(std::exception &e) {
+            std::tie(bot_speed, turn_ang) = bot.readRemote();
+        } catch (std::exception &e) {
             // if we can't read speed or angle, we just write nan values
             LOGE << "Could not read speed and steering angle from robot : " << e.what();
             bot_speed = NAN;
