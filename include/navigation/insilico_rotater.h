@@ -55,17 +55,14 @@ struct InSilicoRotater
         template<class Func>
         void rotate(Func func) const
         {
-            static thread_local cv::Mat scratchImage;
-            static thread_local ImgProc::Mask scratchMask;
-
             tbb::parallel_for(tbb::blocked_range<size_t>(0, numRotations()),
-                [&](const auto &r) {
+                [this, func](const auto &r) {
                     for (size_t i = r.begin(); i != r.end(); ++i) {
                         const auto index = RotaterInternal<IterType>::toIndex(m_BeginRoll + i * m_ScanStep);
-                        ImgProc::roll(m_Image, scratchImage, index);
-                        m_Mask.roll(scratchMask, index);
+                        ImgProc::roll(m_Image, m_ScratchImage, index);
+                        m_Mask.roll(m_ScratchMask, index);
 
-                        func(scratchImage, scratchMask, i);
+                        func(m_ScratchImage, m_ScratchMask, i);
                     }
                 });
        }
@@ -86,6 +83,9 @@ struct InSilicoRotater
         const cv::Mat &m_Image;
         const ImgProc::Mask m_Mask;
 
+        static thread_local cv::Mat m_ScratchImage;
+        static thread_local ImgProc::Mask m_ScratchMask;
+        
         static size_t distance(size_t first, size_t last)
         {
             return last - first;
@@ -108,7 +108,7 @@ struct InSilicoRotater
             return *it;
         }
     };
-
+    
     template<typename IterType>
     static auto
     create(const cv::Size &unwrapRes,
@@ -141,5 +141,12 @@ struct InSilicoRotater
         return RotaterInternal<size_t>(unwrapRes, mask, image, scanStep, beginRoll, image.cols);
     }
 };
+
+template<typename IterType>
+thread_local cv::Mat InSilicoRotater::RotaterInternal<IterType>::m_ScratchImage;
+
+template<typename IterType>
+thread_local ImgProc::Mask InSilicoRotater::RotaterInternal<IterType>::m_ScratchMask;
+
 } // Navigation
 } // BoBRobotics
