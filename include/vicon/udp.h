@@ -433,6 +433,14 @@ private:
         close(socket);
     }
 
+    struct CmpChar {
+        template<size_t N>
+        bool operator()(const std::array<char, N> &strA, const std::array<char, N> &strB) const
+        {
+            return (strncmp(strA.data(), strB.data(), N) == 0);
+        }
+    };
+
     struct HashChar {
         //--------------------------------------------------------------------------
         /*! \brief This function returns the 32-bit hash of a string
@@ -508,7 +516,7 @@ private:
      * then we could get a heap allocation with every data packet received for
      * longer object names.
      */
-    std::unordered_map<std::array<char, 24>, ObjectDataType, HashChar> m_ObjectData;
+    std::unordered_map<std::array<char, 24>, ObjectDataType, HashChar, CmpChar> m_ObjectData;
     std::atomic<bool> m_ShouldQuit;
     mutable std::timed_mutex m_ConnectionMutex;
     bool m_IsConnected = false;
