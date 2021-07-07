@@ -39,7 +39,7 @@ Omni2D::readFromNetwork(Net::Connection &connection)
     // Superclass
     Tank::readFromNetwork(connection);
 
-    // handle incoming TNK commands
+    // handle incoming OMN commands
     connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
         onOmniCommandReceived(connection, command);
     });
@@ -53,7 +53,7 @@ void Omni2D::stopReadingFromNetwork()
     Tank::stopReadingFromNetwork();
 
     if (m_Connection) {
-        // Ignore incoming TNK commands
+        // Ignore incoming OMN commands
         m_Connection->setCommandHandler("OMN", nullptr);
     }
 }
