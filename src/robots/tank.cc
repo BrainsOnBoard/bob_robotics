@@ -84,7 +84,7 @@ void Tank::readFromNetwork(Net::Connection &connection)
     // Handle incoming TNK commands
     connection.setCommandHandler("TNK",
                                     [this](Net::Connection &connection, const Net::Command &command) {
-                                        onCommandReceived(connection, command);
+                                        onTankCommandReceived(connection, command);
                                     });
 
     connection.setCommandHandler("TNK_MAX",
@@ -238,7 +238,7 @@ void Tank::drive(float x, float y, float deadZone)
     }
 }
 
-void Tank::onCommandReceived(Net::Connection &, const Net::Command &command)
+void Tank::onTankCommandReceived(Net::Connection &, const Net::Command &command)
 {
     // second space separates left and right parameters
     if (command.size() != 3) {
