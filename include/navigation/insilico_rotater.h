@@ -61,7 +61,7 @@ struct InSilicoRotater
             tbb::parallel_for(tbb::blocked_range<size_t>(0, numRotations()),
                 [&](const auto &r) {
                     for (size_t i = r.begin(); i != r.end(); ++i) {
-                        const auto index = toIndex(m_BeginRoll + i * m_ScanStep);
+                        const auto index = RotaterInternal<IterType>::toIndex(m_BeginRoll + i * m_ScanStep);
                         ImgProc::roll(m_Image, scratchImage, index);
                         m_Mask.roll(scratchMask, index);
 
