@@ -50,6 +50,7 @@ enum class State
     Invalid,
     WaitToTrain,
     Training,
+    ReturnToStart,
     WaitToTest,
     Testing,
     DrivingForward,
@@ -218,7 +219,12 @@ public:
             }
 
             // Start directly in testing state
-            m_StateMachine.transition(State::WaitToTest);
+            if(!m_Config.getTrainingPath().empty() && m_Config.shouldReturnToStart()) {
+                m_StateMachine.transition(State::ReturnToStart);
+            }
+            else {
+                m_StateMachine.transition(State::WaitToTest);
+            }
         }
     }
 
@@ -342,7 +348,7 @@ private:
 
                     // Start moving towards it
                     m_TankPID->moveTo(*m_CurrentTrainingRouteWaypoint);
-                    LOGD << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
+                    LOGI << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
                 }
 
                 // Write header
@@ -375,11 +381,17 @@ private:
 
                         // If there're more waypoints to go, move to next waypoint
                         if (m_CurrentTrainingRouteWaypoint != m_TrainingRoute.cend()) {
-                            LOGD << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
+                            LOGI << "Moving to waypoint (" << m_CurrentTrainingRouteWaypoint->x() << ", " << m_CurrentTrainingRouteWaypoint->y() << ")";
                             m_TankPID->moveTo(*m_CurrentTrainingRouteWaypoint);
                         }
                         else {
                             LOGI << "Reached last training waypoint";
+                            if(m_Config.shouldReturnToStart()) {
+                                m_StateMachine.transition(State::ReturnToStart);
+                            }
+                            else {
+                                m_StateMachine.transition(State::WaitToTest);
+                            }
                         }
                     }
                 }
@@ -428,6 +440,28 @@ private:
             }
             else if(event == Event::Exit) {
                 m_Robot.stopMoving();
+            }
+        }
+        else if(state == State::ReturnToStart) {
+            if(event == Event::Enter) {
+                LOGI << "Returning to start of training route";
+
+                // Assert that we have a training route
+                assert(!m_TrainingRoute.empty());
+
+               // Start moving towards first point in training route
+               m_TankPID->moveTo(m_TrainingRoute.front());
+               LOGD << "Moving to waypoint (" << m_TrainingRoute.front().x() << ", " << m_TrainingRoute.front().y() << ")";
+            }
+            else if(event == Event::Update) {
+                // If we've reached waypoint
+                 if(!m_TankPID->pollPositioner()) {
+                     // Stop robot
+                     m_Robot.stopMoving();
+
+                     // Transition to waiting to test state
+                     m_StateMachine.transition(State::WaitToTest);
+                 }
             }
         }
         else if(state == State::WaitToTest) {

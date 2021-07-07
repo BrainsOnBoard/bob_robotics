@@ -24,7 +24,7 @@ class Config
     using WindowConfig = BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient::WindowConfig;
 
 public:
-    Config() : m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false), m_ODK2(false),
+    Config() : m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false), m_ReturnToStart(false), m_ODK2(false),
         m_MaxSnapshotRotateDegrees(180.0), m_PMFwdLASize(std::numeric_limits<size_t>::max()), m_PMFwdConfig{0, 0, 0, 0}, m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50),
         m_WatershedMarkerImageFilename("segmentation.png"), m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0),
         m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1),
@@ -43,6 +43,7 @@ public:
     bool shouldUseInfoMax() const{ return m_UseInfoMax; }
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
+    bool shouldReturnToStart() const{ return m_ReturnToStart; }
     bool shouldUseODK2() const{ return m_ODK2; }
 
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotateDegrees); }
@@ -117,6 +118,7 @@ public:
         fs << "shouldUseInfoMax" << shouldUseInfoMax();
         fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();
         fs << "shouldStreamOutput" << shouldStreamOutput();
+        fs << "shouldReturnToStart" << shouldReturnToStart();
         fs << "shouldUseODK2" << shouldUseODK2();
         fs << "outputPath" << getOutputPath().str();
         fs << "trainingPath" << getTrainingPath().str();
@@ -183,6 +185,7 @@ public:
         cv::read(node["shouldUseInfoMax"], m_UseInfoMax, m_UseInfoMax);
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
+        cv::read(node["shouldReturnToStart"], m_ReturnToStart, m_ReturnToStart);
         cv::read(node["shouldUseODK2"], m_ODK2, m_ODK2);
 
         // Assert that configuration is valid
@@ -333,6 +336,9 @@ private:
 
     // Should we transmit visual output
     bool m_StreamOutput;
+
+    // Should we automatically drive back to start of route
+    bool m_ReturnToStart;
 
     // Should we use the ODK2 camera
     bool m_ODK2;

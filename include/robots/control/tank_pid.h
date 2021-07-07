@@ -127,7 +127,7 @@ private:
         switch (state) {
         case TankPIDState::OrientingToGoal:
             if (event == Event::Enter) {
-                LOG_INFO << "Starting turning";
+                LOG_DEBUG << "Starting turning";
             } else if (event == Event::Update) {
                 /*
                  * If m_HeadingOffset is suitably small, we've finished turning
@@ -143,7 +143,7 @@ private:
                 }
             } else { // Exit
                 m_Robot.stopMoving();
-                LOG_INFO << "Stopping turning";
+                LOG_DEBUG << "Stopping turning";
             }
             break;
         case TankPIDState::DrivingToGoal: {
@@ -181,7 +181,7 @@ private:
         } break;
         case TankPIDState::AtGoal:
             if (event == Event::Enter) {
-                LOG_INFO << "Reached goal";
+                LOG_DEBUG << "Reached goal";
             }
             break;
         case TankPIDState::Invalid:
