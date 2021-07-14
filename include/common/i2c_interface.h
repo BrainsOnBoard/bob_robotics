@@ -43,7 +43,12 @@ public:
         read(&data[0], N * sizeof(T));
     }
 
-    void read(void *data, size_t size);
+    template<typename T,
+             typename std::enable_if<std::is_pod<T>::value, T>::type* = nullptr>
+    void read(T &data)
+    {
+        read(&data, sizeof(T));
+    }
 
     void writeByteCommand(uint8_t address, uint8_t byte);
     void writeByte(uint8_t byte);
@@ -55,13 +60,21 @@ public:
         write(&data[0], N * sizeof(T));
     }
 
-    void write(const void *data, size_t size);
+    template<typename T,
+             typename std::enable_if<std::is_pod<T>::value, T>::type* = nullptr>
+    void write(const T &data)
+    {
+        write(&data, sizeof(T));
+    }
 
 private:
     //---------------------------------------------------------------------
     // Members
     //---------------------------------------------------------------------
     int m_I2C; // i2c file
+
+    void read(void *data, size_t size);
+    void write(const void *data, size_t size);
 };
 } // BoBRobotics
 #endif // __linux__

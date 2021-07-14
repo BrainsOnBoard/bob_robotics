@@ -35,13 +35,7 @@ PassiveRCCarBot::setState(RCCar::State state)
     RCCar::Message msg;
     msg.command = RCCar::Command::SetState;
     msg.state = state;
-    writeMessage(msg);
-}
-
-void
-PassiveRCCarBot::writeMessage(const RCCar::Message &msg)
-{
-    m_I2C.write(&msg, sizeof(msg));
+    m_I2C.write(msg);
 }
 
 std::pair<float, degree_t>
@@ -49,10 +43,10 @@ PassiveRCCarBot::readRemoteControl()
 {
     RCCar::Message msg;
     msg.command = RCCar::Command::ReadRemoteControl;
-    m_I2C.write(&msg, sizeof(msg));
+    m_I2C.write(msg);
 
     RCCar::Movement move;
-    m_I2C.read(&move, sizeof(move));
+    m_I2C.read(move);
 
     return { float(move.speed) / 100.f, TurnMax * double(move.turn) / 100.0 };
 }
@@ -80,7 +74,7 @@ RCCarBot::move(float speed, degree_t left)
     msg.command = RCCar::Command::Drive;
     msg.move.speed = static_cast<int8_t>(speed * 100.f);
     msg.move.turn = static_cast<int8_t>(100.0 * left / TurnMax);
-    writeMessage(msg);
+    m_I2C.write(msg);
 }
 
 void

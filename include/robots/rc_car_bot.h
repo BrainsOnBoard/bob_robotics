@@ -36,13 +36,11 @@ public:
 
     constexpr static degree_t TurnMax{ 35 };
 
-private:
+protected:
     BoBRobotics::I2CInterface m_I2C; // i2c interface
 
-protected:
     PassiveRCCarBot(const char *path, RCCar::State initialState);
     void setState(RCCar::State state);
-    void writeMessage(const RCCar::Message &msg);
 }; // PassiveRCCarBot
 
 //----------------------------------------------------------------------------
