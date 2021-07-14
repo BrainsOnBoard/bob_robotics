@@ -102,7 +102,7 @@ RCCarBot::setState(RCCar::State state)
 
 
 std::pair<float, degree_t>
-RCCarBot::readRemote()
+RCCarBot::readRemoteControl()
 {
     RCCar::Message msg;
     msg.command = RCCar::Command::ReadRemoteControl;

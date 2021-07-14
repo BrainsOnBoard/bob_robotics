@@ -26,7 +26,7 @@ int bobMain(int, char**)
         sw.start();
         catcher.check();
 
-        const auto move = bot.readRemote();
+        const auto move = bot.readRemoteControl();
         bot.move(move.first, move.second);
         std::cout << move.first << ", " << move.second << "\n";
 

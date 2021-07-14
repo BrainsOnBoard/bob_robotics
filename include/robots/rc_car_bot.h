@@ -47,7 +47,8 @@ public:
     //! Stop the car
     virtual void stopMoving() override;
 
-    std::pair<float, degree_t> readRemote();
+    //! Read speed and turn values from remote control
+    std::pair<float, degree_t> readRemoteControl();
 
     constexpr static degree_t TurnMax{ 35 };
 
