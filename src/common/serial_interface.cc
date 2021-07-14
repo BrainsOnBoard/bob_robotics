@@ -23,7 +23,7 @@
 
 namespace BoBRobotics {
 SerialInterface::SerialInterface(const char *path)
-  : m_Serial_fd{ open(path, O_WRONLY | O_NOCTTY | O_SYNC) }
+  : m_Serial_fd{ open(path, O_RDWR | O_NOCTTY | O_SYNC) }
 {
     if (m_Serial_fd < 0) {
         throw std::runtime_error("Could not open serial interface: " + std::string(strerror(errno)));
