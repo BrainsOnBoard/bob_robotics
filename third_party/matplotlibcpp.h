@@ -995,29 +995,34 @@ inline std::array<double, 2> xlim()
 {
     PyObject* args = PyTuple_New(0);
     PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_xlim, args);
+    Py_DECREF(args);
 
     if(!res) throw std::runtime_error("Call to xlim() failed.");
 
-    Py_DECREF(res);
-
     PyObject* left = PyTuple_GetItem(res,0);
     PyObject* right = PyTuple_GetItem(res,1);
-    return { PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
-}
 
+    std::array<double, 2> lims{ PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
+    Py_DECREF(res);
+
+    return lims;
+}
 
 inline std::array<double, 2> ylim()
 {
     PyObject* args = PyTuple_New(0);
     PyObject* res = PyObject_CallObject(detail::_interpreter::get().s_python_function_ylim, args);
+    Py_DECREF(args);
 
     if(!res) throw std::runtime_error("Call to ylim() failed.");
 
+    PyObject* bottom = PyTuple_GetItem(res,0);
+    PyObject* top = PyTuple_GetItem(res,1);
+
+    std::array<double, 2> lims{ PyFloat_AsDouble(bottom), PyFloat_AsDouble(top) };
     Py_DECREF(res);
 
-    PyObject* left = PyTuple_GetItem(res,0);
-    PyObject* right = PyTuple_GetItem(res,1);
-    return { PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
+    return lims;
 }
 
 template<typename Numeric>
