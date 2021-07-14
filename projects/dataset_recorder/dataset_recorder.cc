@@ -60,7 +60,7 @@ int bobMain(int argc, char* argv[])
 
     // setting up
     const char *path_linux = "/dev/ttyACM1"; // path for linux systems
-    BoBRobotics::Robots::RCCarBot bot;
+    BoBRobotics::Robots::PassiveRCCarBot bot;
     BoBRobotics::GPS::Gps gps;
     gps.connect(path_linux);
     BoBRobotics::BN055 imu;

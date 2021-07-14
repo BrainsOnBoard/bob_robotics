@@ -20,11 +20,37 @@ namespace Robots {
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
+// BoBRobotics::Robots::PassiveRCCarBot
+//----------------------------------------------------------------------------
+//! An interface for RC car robots which are being passively driven by the
+//! remote control. Don't cast to RCCarBot otherwise you'll get slicing issues!
+class PassiveRCCarBot
+{
+    using degree_t = units::angle::degree_t;
+
+public:
+    PassiveRCCarBot(const char *path = I2C_DEVICE_DEFAULT);
+
+    //! Read speed and turn values from remote control
+    std::pair<float, degree_t> readRemoteControl();
+
+    constexpr static degree_t TurnMax{ 35 };
+
+private:
+    BoBRobotics::I2CInterface m_I2C; // i2c interface
+
+protected:
+    PassiveRCCarBot(const char *path, RCCar::State initialState);
+    void setState(RCCar::State state);
+    void writeMessage(const RCCar::Message &msg);
+}; // PassiveRCCarBot
+
+//----------------------------------------------------------------------------
 // BoBRobotics::Robots::RCCarBot
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
 class RCCarBot final
-  : public Ackermann
+  : public Ackermann, public PassiveRCCarBot
 {
     using degree_t = units::angle::degree_t;
 
@@ -47,24 +73,9 @@ public:
     //! Stop the car
     virtual void stopMoving() override;
 
-    //! Read speed and turn values from remote control
-    std::pair<float, degree_t> readRemoteControl();
-
-    constexpr static degree_t TurnMax{ 35 };
-
 private:
-    BoBRobotics::I2CInterface m_I2C; // i2c interface
     float m_speed;                   // current control speed of the robot
     degree_t m_turningAngle;         // current turning angle of the robot
-
-    void setState(RCCar::State state);
-
-    template<typename T, size_t N>
-    void write(const T (&data)[N])
-    {
-        m_I2C.write(data);
-    }
-
 }; // RCCarBot
 } // Robots
 } // BoBRobotics

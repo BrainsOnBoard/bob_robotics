@@ -17,15 +17,51 @@ sgn(T val)
 namespace BoBRobotics {
 namespace Robots {
 
-constexpr degree_t RCCarBot::TurnMax;
+constexpr degree_t PassiveRCCarBot::TurnMax;
+
+PassiveRCCarBot::PassiveRCCarBot(const char *path)
+  : PassiveRCCarBot(path, RCCar::State::RemoteControl)
+{}
+
+PassiveRCCarBot::PassiveRCCarBot(const char *path, RCCar::State initialState)
+  : m_I2C(path, RCCAR_SLAVE_ADDRESS)
+{
+    setState(initialState);
+}
+
+void
+PassiveRCCarBot::setState(RCCar::State state)
+{
+    RCCar::Message msg;
+    msg.command = RCCar::Command::SetState;
+    msg.state = state;
+    writeMessage(msg);
+}
+
+void
+PassiveRCCarBot::writeMessage(const RCCar::Message &msg)
+{
+    m_I2C.write(&msg, sizeof(msg));
+}
+
+std::pair<float, degree_t>
+PassiveRCCarBot::readRemoteControl()
+{
+    RCCar::Message msg;
+    msg.command = RCCar::Command::ReadRemoteControl;
+    m_I2C.write(&msg, sizeof(msg));
+
+    RCCar::Movement move;
+    m_I2C.read(&move, sizeof(move));
+
+    return { float(move.speed) / 100.f, TurnMax * double(move.turn) / 100.0 };
+}
 
 RCCarBot::RCCarBot(const char *path)
-  : m_I2C(path, RCCAR_SLAVE_ADDRESS)
+  : PassiveRCCarBot(path, RCCar::State::I2CControl)
   , m_speed(0.0f)
   , m_turningAngle(0_deg)
-{
-    setState(RCCar::State::I2CControl);
-}
+{}
 
 RCCarBot::~RCCarBot()
 {
@@ -44,7 +80,7 @@ RCCarBot::move(float speed, degree_t left)
     msg.command = RCCar::Command::Drive;
     msg.move.speed = static_cast<int8_t>(speed * 100.f);
     msg.move.turn = static_cast<int8_t>(100.0 * left / TurnMax);
-    m_I2C.write(&msg, sizeof(msg));
+    writeMessage(msg);
 }
 
 void
@@ -89,29 +125,6 @@ degree_t
 RCCarBot::getMaximumTurn() const
 {
     return TurnMax;
-}
-
-void
-RCCarBot::setState(RCCar::State state)
-{
-    RCCar::Message msg;
-    msg.command = RCCar::Command::SetState;
-    msg.state = state;
-    m_I2C.write(&msg, sizeof(msg));
-}
-
-
-std::pair<float, degree_t>
-RCCarBot::readRemoteControl()
-{
-    RCCar::Message msg;
-    msg.command = RCCar::Command::ReadRemoteControl;
-    m_I2C.write(&msg, sizeof(msg));
-
-    RCCar::Movement move;
-    m_I2C.read(&move, sizeof(move));
-
-    return { float(move.speed) / 100.f, TurnMax * double(move.turn) / 100.0 };
 }
 } // Robots
 } // BoBRobotics
