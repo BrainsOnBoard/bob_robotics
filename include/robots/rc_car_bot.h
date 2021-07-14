@@ -23,9 +23,10 @@ using namespace units::literals;
 // BoBRobotics::Robots::PassiveRCCarBot
 //----------------------------------------------------------------------------
 //! An interface for RC car robots which are being passively driven by the
-//! remote control. Don't cast to RCCarBot otherwise you'll get slicing issues!
+//! remote control.
 class PassiveRCCarBot
 {
+    friend class RCCarBot;
     using degree_t = units::angle::degree_t;
 
 public:
@@ -36,7 +37,7 @@ public:
 
     constexpr static degree_t TurnMax{ 35 };
 
-protected:
+private:
     BoBRobotics::I2CInterface m_I2C; // i2c interface
 
     PassiveRCCarBot(const char *path, RCCar::State initialState);
@@ -48,7 +49,7 @@ protected:
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
 class RCCarBot final
-  : public Ackermann, public PassiveRCCarBot
+  : public Ackermann
 {
     using degree_t = units::angle::degree_t;
 
@@ -58,6 +59,7 @@ public:
 
     float getSpeed() const;
     degree_t getTurningAngle() const;
+    std::pair<float, degree_t> readRemoteControl();
 
     // Public virtuals
     virtual void moveForward(float speed) override;
@@ -72,6 +74,7 @@ public:
     virtual void stopMoving() override;
 
 private:
+    PassiveRCCarBot m_Bot;
     float m_speed;                   // current control speed of the robot
     degree_t m_turningAngle;         // current turning angle of the robot
 }; // RCCarBot

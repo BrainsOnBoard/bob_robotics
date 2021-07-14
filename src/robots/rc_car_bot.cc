@@ -54,7 +54,7 @@ PassiveRCCarBot::readRemoteControl()
 }
 
 RCCarBot::RCCarBot(const char *path)
-  : PassiveRCCarBot(path, RCCar::State::I2CControl)
+  : m_Bot(path, RCCar::State::I2CControl)
   , m_speed(0.0f)
   , m_turningAngle(0_deg)
 {}
@@ -62,7 +62,7 @@ RCCarBot::RCCarBot(const char *path)
 RCCarBot::~RCCarBot()
 {
     stopMoving();
-    setState(RCCar::State::RemoteControl);
+    m_Bot.setState(RCCar::State::RemoteControl);
 }
 
 //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
@@ -70,13 +70,13 @@ void
 RCCarBot::move(float speed, degree_t left)
 {
     BOB_ASSERT(speed >= -1.f && speed <= 1.f);
-    BOB_ASSERT(left >= -TurnMax && left <= TurnMax);
+    BOB_ASSERT(units::math::abs(left) <= PassiveRCCarBot::TurnMax);
 
     RCCar::Message msg;
     msg.command = RCCar::Command::Drive;
     msg.move.speed = static_cast<int8_t>(speed * 100.f);
-    msg.move.turn = static_cast<int8_t>(100.0 * left / TurnMax);
-    m_I2C.write(msg);
+    msg.move.turn = static_cast<int8_t>(100.0 * left / PassiveRCCarBot::TurnMax);
+    m_Bot.m_I2C.write(msg);
 }
 
 void
@@ -89,7 +89,7 @@ RCCarBot::moveForward(float speed)
 void
 RCCarBot::steer(float left)
 {
-    steer(left * TurnMax);
+    steer(left * PassiveRCCarBot::TurnMax);
 }
 
 void
@@ -117,10 +117,16 @@ RCCarBot::getTurningAngle() const
     return m_turningAngle;
 }
 
+std::pair<float, degree_t>
+RCCarBot::readRemoteControl()
+{
+    return m_Bot.readRemoteControl();
+}
+
 degree_t
 RCCarBot::getMaximumTurn() const
 {
-    return TurnMax;
+    return PassiveRCCarBot::TurnMax;
 }
 } // Robots
 } // BoBRobotics
