@@ -1,10 +1,12 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "os/keycodes.h"
 #include "video/odk2/odk2.h"
 
 // Standard C++ includes
 #include <iostream>
 
+using namespace BoBRobotics;
 using namespace BoBRobotics::Video;
 
 int bobMain(int, char**)
