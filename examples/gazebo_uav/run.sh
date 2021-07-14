@@ -1,5 +1,5 @@
 #!/bin/sh
-trap 'kill %1' SIGINT
+trap 'kill %1' INT
 world_file=iris_demo.world
 # display_flag=''
 
@@ -18,5 +18,5 @@ while getopts 'dr' flag; do
   esac
 done
 
-GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:$(dirname "$0") gazebo --verbose $world_file & ./gazebo_uav $display_flag $camera_url
-
+GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:$(dirname "$0") gazebo --verbose $world_file &
+./gazebo_uav $display_flag $camera_url

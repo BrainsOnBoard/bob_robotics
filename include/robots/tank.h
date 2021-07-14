@@ -45,7 +45,7 @@ public:
     virtual void readFromNetwork(Net::Connection &connection) override;
 
     virtual void stopReadingFromNetwork() override;
-    
+
     //----------------------------------------------------------------------------
     // Declared virtuals
     //----------------------------------------------------------------------------
@@ -65,17 +65,17 @@ public:
     virtual void setMaximumSpeedProportion(float value);
 
     virtual float getMaximumSpeedProportion() const;
-    
+
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
     void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick);
-    
+
     void move(meters_per_second_t v,
               radians_per_second_t clockwiseSpeed,
               const bool maxScaled = false);
 
-    
+
     void tankMaxScaled(const float left, const float right, const float max = 1.f);
 
     void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false);
@@ -90,7 +90,7 @@ private:
 
     void drive(float x, float y, float deadZone);
 
-    void onCommandReceived(Net::Connection &, const Net::Command &command);
+    void onTankCommandReceived(Net::Connection &, const Net::Command &command);
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 

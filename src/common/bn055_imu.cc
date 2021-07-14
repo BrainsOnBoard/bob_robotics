@@ -77,11 +77,12 @@ Eigen::Vector3f BN055::getVector(VectorType vectorType)
     // Return vector, scaling correctly based on vector type
     if(vectorType == VectorType::MAGNETOMETER
         || vectorType == VectorType::GYROSCOPE
-        || vectorType == VectorType::EULER) {
+        || vectorType == VectorType::EULER)
+    {
         return {(float)raw[0] / 16.0f, (float)raw[1] / 16.0f, (float)raw[2] / 16.0f};
-    } else {
-        return {(float)raw[0] / 100.0f, (float)raw[1] / 100.0f, (float)raw[2] / 100.0f};
     }
+    
+    return {(float)raw[0] / 100.0f, (float)raw[1] / 100.0f, (float)raw[2] / 100.0f};
 }
 //----------------------------------------------------------------------------
 uint8_t BN055::readByte(uint8_t address)

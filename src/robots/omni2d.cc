@@ -14,21 +14,6 @@ Omni2D::omni2D(float forward, float sideways, float turn)
     LOGI << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn;
 }
 
-void Omni2D::moveForward(float speed)
-{
-    omni2D(speed, 0.0f, 0.0f);
-}
-
-void Omni2D::turnOnTheSpot(float clockwiseSpeed)
-{
-    omni2D(0.0f, 0.0f, clockwiseSpeed);
-}
-
-void Omni2D::stopMoving()
-{
-    omni2D(0.0f, 0.0f, 0.0f);
-}
-
 void
 Omni2D::addJoystick(HID::Joystick &joystick, float deadZone)
 {
@@ -51,20 +36,32 @@ Omni2D::drive(const HID::Joystick &joystick, float deadZone)
 void
 Omni2D::readFromNetwork(Net::Connection &connection)
 {
-    // handle incoming TNK commands
+    // Superclass
+    Tank::readFromNetwork(connection);
+
+    // handle incoming OMN commands
     connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
-        onCommandReceived(connection, command);
+        onOmniCommandReceived(connection, command);
     });
-    
+
     m_Connection = &connection;
 }
 
 void Omni2D::stopReadingFromNetwork()
 {
+    // Superclass
+    Tank::stopReadingFromNetwork();
+
     if (m_Connection) {
-        // Ignore incoming TNK commands
-        m_Connection->setCommandHandler("TNK", nullptr);
+        // Ignore incoming OMN commands
+        m_Connection->setCommandHandler("OMN", nullptr);
     }
+}
+
+void Omni2D::tank(float left, float right)
+{
+    // Implement tank controls in terms of omni
+    omni2D((left + right) / 2.0f, 0.0f, (left - right) / 2.0f);
 }
 
 float
@@ -104,7 +101,7 @@ Omni2D::drive(float forward, float sideways, float turn, float deadZone)
 }
 
 void
-Omni2D::onCommandReceived(Net::Connection &, const Net::Command &command)
+Omni2D::onOmniCommandReceived(Net::Connection &, const Net::Command &command)
 {
     // second space separates left and right parameters
     if (command.size() != 4) {

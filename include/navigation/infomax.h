@@ -4,7 +4,6 @@
 #include "common/macros.h"
 #include "imgproc/mask.h"
 #include "navigation/insilico_rotater.h"
-#include "navigation/visual_navigation_base.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -37,7 +36,7 @@ class WeightsBlewUpError
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
 template<typename FloatType = float>
-class InfoMax : public VisualNavigationBase
+class InfoMax
 {
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
@@ -46,7 +45,7 @@ public:
     InfoMax(const cv::Size &unwrapRes,
             const MatrixType &initialWeights,
             FloatType learningRate = 0.0001)
-      : VisualNavigationBase(unwrapRes)
+      : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
     {
@@ -61,29 +60,27 @@ public:
     {}
 
     //------------------------------------------------------------------------
-    // VisualNavigationBase virtuals
+    // Public API
     //------------------------------------------------------------------------
-    virtual void train(const cv::Mat &image) override
+    void train(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{})
     {
         calculateUY(image);
         trainUY();
     }
 
-    virtual float test(const cv::Mat &image) const override
+    float test(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{}) const
     {
         const auto decs = m_Weights * getFloatVector(image);
         return decs.array().abs().sum();
     }
 
     //! Generates new random weights
-    virtual void clearMemory() override
+    void clearMemory()
     {
         m_Weights = generateInitialWeights(m_Weights.cols(), m_Weights.rows());
     }
 
-    //------------------------------------------------------------------------
-    // Public API
-    //------------------------------------------------------------------------
+
     const MatrixType &getWeights() const
     {
         return m_Weights;
@@ -112,6 +109,8 @@ public:
         return weights.transpose();
     }
 
+    //! Get the resolution of images
+    const cv::Size &getUnwrapResolution() const { return m_UnwrapRes; }
 
 #ifndef EXPOSE_INFOMAX_INTERNALS
     private:
@@ -159,6 +158,7 @@ public:
     }
 
 private:
+    const cv::Size m_UnwrapRes;
     size_t m_SnapshotCount = 0;
     FloatType m_LearningRate;
     MatrixType m_Weights;
@@ -180,7 +180,7 @@ private:
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMaxRotater
 //------------------------------------------------------------------------
-template<typename Rotater = InSilicoRotater, typename FloatType = float>
+template<typename FloatType = float>
 class InfoMaxRotater : public InfoMax<FloatType>
 {
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
@@ -200,20 +200,26 @@ public:
     // Public API
     //------------------------------------------------------------------------
     template<class... Ts>
-    const std::vector<FloatType> &getImageDifferences(Ts &&... args) const
+    const std::vector<FloatType> &getImageDifferences(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
-        auto rotater = Rotater::create(this->getUnwrapResolution(), this->getMask(), std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(this->getUnwrapResolution(), mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
         return m_RotatedDifferences;
     }
 
     template<class... Ts>
-    auto getHeading(Ts &&... args) const
+    const std::vector<FloatType> &getImageDifferences(const cv::Mat &image, Ts &&... args) const
+    {
+        return getImageDifferences(image, ImgProc::Mask{}, std::forward<Ts>(args)...);
+    }
+
+    template<class... Ts>
+    auto getHeading(const cv::Mat &image, ImgProc::Mask mask, Ts &&... args) const
     {
         using radian_t = units::angle::radian_t;
 
         const cv::Size unwrapRes = this->getUnwrapResolution();
-        auto rotater = Rotater::create(unwrapRes, this->getMask(), std::forward<Ts>(args)...);
+        auto rotater = InSilicoRotater::create(unwrapRes, mask, image, std::forward<Ts>(args)...);
         calcImageDifferences(rotater);
 
         // Find index of lowest difference
@@ -230,6 +236,12 @@ public:
         }
 
         return std::make_tuple(heading, *el, std::cref(m_RotatedDifferences));
+    }
+
+    template<class... Ts>
+    auto getHeading(const cv::Mat &image, Ts &&... args) const
+    {
+        return getHeading(image, ImgProc::Mask{}, std::forward<Ts>(args)...);
     }
 
 private:
