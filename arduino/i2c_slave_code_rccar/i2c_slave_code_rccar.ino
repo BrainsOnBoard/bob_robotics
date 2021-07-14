@@ -120,9 +120,10 @@ receiveEvent(int bytes)
   }
 
   switch (msg.command) {
-    case Command::SetState:
-      Serial.println("Set state to: " + String((int) msg.state));
-      state = msg.state;
+    case Command::SetStateRemoteControl:
+    case Command::SetStateI2CControl:
+      Serial.println("Set state to: " + String((int) msg.command));
+      state = static_cast<State>(msg.command);
       break;
     case Command::ReadRemoteControl:
       sendRemote = true;

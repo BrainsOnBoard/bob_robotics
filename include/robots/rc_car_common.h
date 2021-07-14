@@ -14,7 +14,8 @@ enum class State : uint8_t
 
 enum class Command : uint8_t
 {
-    SetState,
+    SetStateRemoteControl,
+    SetStateI2CControl,
     ReadRemoteControl,
     Drive
 };
@@ -27,11 +28,7 @@ struct __attribute__((packed)) Movement
 struct __attribute__((packed)) Message
 {
     Command command;
-    union
-    {
-        State state;
-        Movement move;
-    };
+    Movement move;
 };
 } // RCCar
 } // Robots

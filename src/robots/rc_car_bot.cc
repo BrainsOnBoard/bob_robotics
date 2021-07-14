@@ -33,8 +33,10 @@ void
 PassiveRCCarBot::setState(RCCar::State state)
 {
     RCCar::Message msg;
-    msg.command = RCCar::Command::SetState;
-    msg.state = state;
+
+    // The SetState* commands align with the values of the State enum
+    msg.command = static_cast<RCCar::Command>(state);
+
     m_I2C.write(msg);
 }
 
