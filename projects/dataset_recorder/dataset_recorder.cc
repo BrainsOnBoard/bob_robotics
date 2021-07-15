@@ -34,9 +34,8 @@ int
 bobMain(int argc, char *argv[])
 {
     // setting up
-    const char *path_linux = "/dev/ttyACM1"; // path for linux systems
     Robots::RCCarBot bot;
-    GPS::GPSReader gps{ path_linux };
+    GPS::GPSReader gps;
     GPS::GPSData data;
     BN055 imu;
     const int maxTrials = 3;

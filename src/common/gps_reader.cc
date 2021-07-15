@@ -10,6 +10,8 @@
 namespace BoBRobotics {
 namespace GPS {
 
+constexpr const char *GPSReader::DefaultLinuxDevicePath;
+
 GPSReader::GPSReader(const char *devicePath)
   : m_Serial{ devicePath }
 {

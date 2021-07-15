@@ -13,7 +13,8 @@ namespace GPS {
 class GPSReader
 {
 public:
-    GPSReader(const char *devicePath = SerialInterface::DefaultLinuxDevicePath);
+    static constexpr const char *DefaultLinuxDevicePath = "/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00";
+    GPSReader(const char *devicePath = DefaultLinuxDevicePath);
 
     /*!
      * \brief Attempt to read GPS data from the serial device.
