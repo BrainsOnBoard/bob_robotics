@@ -34,7 +34,7 @@ int
 bobMain(int argc, char *argv[])
 {
     // setting up
-    Robots::RCCarBot bot;
+    Robots::PassiveRCCarBot bot;
     GPS::GPSReader gps;
     GPS::GPSData data;
     BN055 imu;
@@ -131,9 +131,7 @@ bobMain(int argc, char *argv[])
         float botSpeed = NAN;
         degree_t turnAngle = 0_deg;
         try {
-            bot.updateState();
-            botSpeed = bot.getSpeed();
-            turnAngle = bot.getTurningAngle();
+            std::tie(botSpeed, turnAngle) = bot.readRemoteControl();
         } catch (std::exception &e) {
             // if we can't read speed or angle, we just write nan values
             LOGE << "Could not read speed and steering angle from robot : " << e.what();

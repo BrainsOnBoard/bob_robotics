@@ -40,10 +40,14 @@ public:
     template<typename T, size_t N>
     void read(T (&data)[N])
     {
-        const size_t size = sizeof(T) * N;
-        if (::read(m_I2C, &data[0], size) != size) {
-            throw std::runtime_error("Failed to read from i2c bus");
-        }
+        read(&data[0], N * sizeof(T));
+    }
+
+    template<typename T,
+             typename std::enable_if<std::is_pod<T>::value, T>::type* = nullptr>
+    void read(T &data)
+    {
+        read(&data, sizeof(T));
     }
 
     void writeByteCommand(uint8_t address, uint8_t byte);
@@ -53,10 +57,14 @@ public:
     template<typename T, size_t N>
     void write(const T (&data)[N])
     {
-        const size_t size = sizeof(T) * N;
-        if (::write(m_I2C, &data[0], size) != size) {
-            throw std::runtime_error("Failed to write to i2c bus");
-        }
+        write(&data[0], N * sizeof(T));
+    }
+
+    template<typename T,
+             typename std::enable_if<std::is_pod<T>::value, T>::type* = nullptr>
+    void write(const T &data)
+    {
+        write(&data, sizeof(T));
     }
 
 private:
@@ -64,6 +72,9 @@ private:
     // Members
     //---------------------------------------------------------------------
     int m_I2C; // i2c file
+
+    void read(void *data, size_t size);
+    void write(const void *data, size_t size);
 };
 } // BoBRobotics
 #endif // __linux__
