@@ -1,12 +1,3 @@
-// // standard includes
-// #include<string>
-// #include<vector>
-// #include <thread>
-// #include <mutex>
-// #include <atomic>
-// #include <fstream>
-// #include <chrono>
-
 // BoB includes
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
@@ -16,7 +7,6 @@
 #include "common/stopwatch.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
-#include "plog/Log.h"
 #include "robots/rc_car_bot.h"
 #include "video/panoramic.h"
 
@@ -30,11 +20,8 @@
 #include <ctime>
 
 // Standard C++ includes
+#include <array>
 #include <chrono>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <thread>
 
 using namespace BoBRobotics;
 using namespace std::literals;
