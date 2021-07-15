@@ -1,8 +1,8 @@
-// BoB robotics includes
+// BoB includes
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
-#include "common/gps.h"
-#include "common/macros.h"
+#include "common/gps_reader.h"
+#include "common/main.h"
 #include "common/map_coordinate.h"
 #include "common/stopwatch.h"
 #include "imgproc/opencv_unwrap_360.h"
@@ -20,11 +20,8 @@
 #include <ctime>
 
 // Standard C++ includes
+#include <array>
 #include <chrono>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <thread>
 
 using namespace BoBRobotics;
 using namespace std::literals;
@@ -39,8 +36,8 @@ bobMain(int argc, char *argv[])
     // setting up
     const char *path_linux = "/dev/ttyACM1"; // path for linux systems
     Robots::PassiveRCCarBot bot;
-    GPS::Gps gps;
-    gps.connect(path_linux);
+    GPS::GPSReader gps{ path_linux };
+    GPS::GPSData data;
     BN055 imu;
     const int maxTrials = 3;
     int numTrials = maxTrials;
@@ -52,7 +49,7 @@ bobMain(int argc, char *argv[])
     GPS::GPSData gpsData;
     for (; numTrials > 0; numTrials--) {
         try {
-            gpsData = gps.getGPSData();
+            gps.read(gpsData);
         } catch (GPS::GPSError &e) {
             LOGW << " measuring failed, trying again in 1 second "
                  << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
@@ -141,7 +138,9 @@ bobMain(int argc, char *argv[])
             LOGE << "Could not read speed and steering angle from robot : " << e.what();
         }
         try {
-            gpsData = gps.getGPSData();
+
+            // get gps data
+            gps.read(data);
             const auto &coord = gpsData.coordinate;
             int gpsQual = (int) gpsData.gpsQuality; // gps quality
 

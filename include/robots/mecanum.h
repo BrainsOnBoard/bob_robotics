@@ -20,7 +20,8 @@ namespace Robots {
 class Mecanum : public Omni2D
 {
 public:
-    Mecanum(const char *path = "/dev/ttyACM0", bool alternativeWiring = true);
+    Mecanum(bool alternativeWiring = true,
+            const char *path = SerialInterface::DefaultLinuxDevicePath);
     virtual ~Mecanum();
 
     //----------------------------------------------------------------------------
@@ -50,8 +51,8 @@ private:
     //----------------------------------------------------------------------------
     // Private members
     //----------------------------------------------------------------------------
-    BoBRobotics::SerialInterface m_Serial;
     const bool m_AlternativeWiring;
+    SerialInterface m_Serial;
 }; // Mecanum
 } // Robots
 } // BoBRobotics
