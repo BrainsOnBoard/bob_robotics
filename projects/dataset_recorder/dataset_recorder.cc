@@ -67,18 +67,27 @@ bobMain(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Use the system clock to get date (might be wrong!)
+    /*
+     * Use the system clock to get date (might be wrong!). Note that we have to
+     * get the time in UTC as that's the form that GPS devices use, then we
+     * convert to localtime later (which we need to do if we don't want
+     * timestamps to be an hour out during DST).
+     */
     time_t rawtime;
     time(&rawtime);
-    std::tm currentTime = *localtime(&rawtime);
+    std::tm currentTimeUTC = *gmtime(&rawtime);
 
     /*
      * Use GPS to get time, because Jetsons don't remember the system time
      * across boots.
      */
-    currentTime.tm_hour = gpsData.time.hour;
-    currentTime.tm_min = gpsData.time.minute;
-    currentTime.tm_sec = gpsData.time.second;
+    currentTimeUTC.tm_hour = gpsData.time.hour;
+    currentTimeUTC.tm_min = gpsData.time.minute;
+    currentTimeUTC.tm_sec = gpsData.time.second;
+
+    // Convert to localtime
+    time_t unixTime = mktime(&currentTimeUTC);
+    std::tm currentTime = *localtime(&unixTime);
 
     // Make a new image database using current time to generate folder name
     Navigation::ImageDatabase database{ currentTime };
