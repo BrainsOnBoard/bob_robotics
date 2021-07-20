@@ -100,7 +100,7 @@ SFMLWorld::lengthToPixel(const meter_t value) const
 }
 
 Vector2<meter_t>
-SFMLWorld::pixelToVector(int x, int y)
+SFMLWorld::pixelToVector(int x, int y) const
 {
     return { m_MinBounds[0] + m_UnitPerPixel * x,
              m_MinBounds[1] + m_UnitPerPixel * (WindowHeight - y) };

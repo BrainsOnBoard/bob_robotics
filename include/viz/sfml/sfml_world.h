@@ -226,7 +226,7 @@ public:
     bool isOpen() const;
     void close();
     float lengthToPixel(const meter_t value) const;
-    Vector2<meter_t> pixelToVector(int x, int y);
+    Vector2<meter_t> pixelToVector(int x, int y) const;
     sf::Window &getWindow();
 
     template<class VectorType>
