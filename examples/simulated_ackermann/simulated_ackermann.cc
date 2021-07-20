@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "robots/ackermann/simulated_ackermann.h"
-#include "viz/car_display/car_display.h"
+#include "viz/sfml/sfml_world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -15,46 +15,61 @@ using namespace units::literals;
 using namespace units::angle;
 using namespace units::length;
 
-int bobMain(int, char **)
+int
+bobMain(int, char **)
 {
-    Robots::Ackermann::SimulatedAckermann car(1.4_mps, 500_mm); // simulated ackermann car
-    Viz::CarDisplay display(10.2_m, 160_mm);                    // For displaying the agent
+    constexpr auto MaxSpeed = 1.4_mps;
+    constexpr auto MaxTurn = 30_deg;
 
-    auto mmps = 0_mps;
-    degree_t deg = 0_deg;
-    while(display.isOpen()) {
-        // clear screen
-        display.clearScreen();
+    Robots::Ackermann::SimulatedAckermann robot(MaxSpeed, 500_mm); // simulated Ackermann car
+    Viz::SFMLWorld display({ 10.2_m, 10.2_m });         // For displaying the agent
 
+    auto car = display.createCarAgent(160_mm);
+
+    auto velocity = 0_mps;
+    auto turn = 0_deg;
+    while (display.isOpen()) {
         //move car
-        car.move(mmps, deg);
+        robot.move(velocity, turn);
+        car.setPose(robot.getPose());
 
         // run GUI 1 step and get user key command
-        const auto key = display.runGUI(car.getPose());
+        const auto event = display.update(car);
 
-        // if key up -> add speed
-        if (key.first == SDLK_UP) {
-            mmps = 1.4_mps;
+        switch (event.type) {
+        case sf::Event::KeyPressed:
+            switch (event.key.code) {
+            case sf::Keyboard::Up:
+                velocity = MaxSpeed;
+                break;
+            case sf::Keyboard::Down:
+                velocity = -MaxSpeed;
+                break;
+            case sf::Keyboard::Left:
+                turn = MaxTurn;
+                break;
+            case sf::Keyboard::Right:
+                turn = -MaxTurn;
+            default:
+                break;
+            }
+            break;
+        case sf::Event::KeyReleased:
+            switch (event.key.code) {
+            case sf::Keyboard::Up:
+            case sf::Keyboard::Down:
+                velocity = 0_mps;
+                break;
+            case sf::Keyboard::Left:
+            case sf::Keyboard::Right:
+                turn = 0_deg;
+            default:
+                break;
+            }
+        default:
+            break;
         }
-
-        // if key down -> stop
-        if (key.first == SDLK_DOWN) {
-            mmps = 0_mps;
-        }
-
-        // if left or right key -> turn steering wheel
-        if (key.first == SDLK_LEFT) {
-            deg = 30_deg;
-        }
-
-        else if (key.first == SDLK_RIGHT) {
-            deg = -30_deg;
-        }
-
-        else {
-            deg = 0_deg;
-        }
-
     }
+
     return EXIT_SUCCESS;
 }
