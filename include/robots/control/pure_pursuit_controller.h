@@ -40,7 +40,7 @@ public:
 
     //! sets the lookahead distance. Large values causes the car to cut corners,
     //! where small values makes the car follow the path more closely
-    void setlookAheadDistance(const millimeter_t distance);
+    void setLookAheadDistance(const millimeter_t distance);
 
     //! sets the distance between the car's wheel bases
     void setWheelBaseLength(const millimeter_t length);

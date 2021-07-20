@@ -35,7 +35,7 @@ void PurePursuitController::addToWayPoint(const Vector2<millimeter_t> wayPoint) 
 
 //! sets the lookahead distance. Large values causes the car to cut corners,
 //! where small values makes the car follow the path more closely
-void PurePursuitController::setlookAheadDistance(const millimeter_t distance) {
+void PurePursuitController::setLookAheadDistance(const millimeter_t distance) {
     m_lookAheadDistance = distance;
 }
 

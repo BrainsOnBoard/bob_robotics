@@ -178,7 +178,7 @@ int bobMain(int, char **)
                     } else {
                         mmps = max_speed;
                         deg = 0_deg;
-                        controller.setlookAheadDistance(lookaheadDistance); // reset lookahead distance
+                        controller.setLookAheadDistance(lookaheadDistance); // reset lookahead distance
                     }
                     isControllerOn = !isControllerOn;
                     break;
