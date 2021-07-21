@@ -63,27 +63,22 @@ int bobMain(int, char **)
             robot.stopMoving();
         }
 
-        if (runPositioner) {
-            if (display.mouseClicked()) {
-                // Set a new goal position if user clicks in the window
-                const auto mousePosition = display.mouseClickPosition();
+        if (display.mouseClicked()) {
+            // Set a new goal position if user clicks in the window
+            const auto mousePosition = display.mouseClickPosition();
 
-                // Set the goal to this position
-                positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
+            // Set the goal to this position
+            positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
 
-                goalCircle.setPosition(display.vectorToPixel(mousePosition));
-            }
-
-            // Check if the robot is within threshold distance and bearing of goal
-            if (!positioner.pollPositioner()) {
-                runPositioner = false;
-                LOGI << "Reached goal";
-                robot.stopMoving();
-            }
+            goalCircle.setPosition(display.vectorToPixel(mousePosition));
         }
 
-        // A small delay, so we don't eat all the CPU
-        std::this_thread::sleep_for(2ms);
+        // Check if the robot is within threshold distance and bearing of goal
+        if (runPositioner && !positioner.pollPositioner()) {
+            runPositioner = false;
+            LOGI << "Reached goal";
+            robot.stopMoving();
+        }
     }
 
     return EXIT_SUCCESS;
