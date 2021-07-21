@@ -10,9 +10,6 @@
 // SFML
 #include <SFML/Graphics.hpp>
 
-// Standard C includes
-#include <cstring>
-
 // Standard C++ includes
 #include <memory>
 #include <vector>
@@ -143,41 +140,13 @@ public:
     template<typename... Drawables>
     sf::Event update(Drawables&& ...drawables)
     {
-        // Set m_Window to be active OpenGL context
-        m_Window.setActive(true);
-
-        // Check all the window's events that were triggered since the last iteration of the loop
-        sf::Event event;
-        memset(static_cast<void *>(&event), 0, sizeof(event));
-        while (m_Window.pollEvent(event)) {
-            if (handleEvents(event)) {
-                return event;
-            }
-        }
-
-        // Draw on screen
-        doDrawing(std::forward<Drawables>(drawables)...);
-
-        // We don't need to be the current OpenGL context any more
-        m_Window.setActive(false);
-
-        return event;
+        return updateAndHandleEvents(Noop{}, std::forward<Drawables>(drawables)...);
     }
 
     template<typename RobotType, typename... Drawables>
     sf::Event updateAndDrive(RobotType &robot, Drawables&& ...drawables)
     {
-        // Set m_Window to be active OpenGL context
-        m_Window.setActive(true);
-
-        // Check all the window's events that were triggered since the last iteration of the loop
-        sf::Event event;
-        memset(static_cast<void *>(&event), 0, sizeof(event));
-        while (m_Window.pollEvent(event)) {
-            if (handleEvents(event)) {
-                return event;
-            }
-
+        auto drive = [&robot](const sf::Event &event) {
             switch (event.type) {
             case sf::Event::KeyPressed:
                 switch (event.key.code) {
@@ -210,15 +179,9 @@ public:
             default:
                 break;
             }
-        }
+        };
 
-        // Draw on screen
-        doDrawing(std::forward<Drawables>(drawables)...);
-
-        // We don't need to be the current OpenGL context any more
-        m_Window.setActive(false);
-
-        return event;
+        return updateAndHandleEvents(drive, std::forward<Drawables>(drawables)...);
     }
 
     bool mouseClicked() const;
@@ -280,6 +243,35 @@ private:
 
     void draw()
     {}
+
+    struct Noop {
+        void operator()(const sf::Event &){};
+    };
+    
+    template<typename Func, typename... Drawables>
+    sf::Event updateAndHandleEvents(Func eventHandler, Drawables&& ...drawables)
+    {
+        // Set m_Window to be active OpenGL context
+        m_Window.setActive(true);
+
+        // Check all the window's events that were triggered since the last iteration of the loop
+        sf::Event event{};
+        while (m_Window.pollEvent(event)) {
+            if (handleEvents(event)) {
+                return event;
+            }
+
+            eventHandler(event);
+        }
+
+        // Draw on screen
+        doDrawing(std::forward<Drawables>(drawables)...);
+
+        // We don't need to be the current OpenGL context any more
+        m_Window.setActive(false);
+
+        return event;
+    }
 
     static sf::ContextSettings getContextSettings();
 
