@@ -2,14 +2,14 @@
 
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "robot.h"
 
 namespace BoBRobotics {
 namespace Robots {
 class UAV
-  : public Robot
 {
 public:
+    virtual ~UAV();
+
     virtual void takeOff() = 0;
     virtual void land() = 0;
     virtual void setPitch(float pitch) = 0;
@@ -18,24 +18,18 @@ public:
     virtual void setYawSpeed(float right) = 0;
 
     //! An alias for setPitch
-    virtual void moveForward(float speed) override;
+    virtual void moveForward(float speed);
 
     //! Sets the yaw speed, stopping motion in all other axes
-    virtual void turnOnTheSpot(float clockwiseSpeed) override;
+    virtual void turnOnTheSpot(float clockwiseSpeed);
 
-    virtual void stopMoving() override;
+    virtual void stopMoving();
 
     //! Start controlling this drone with a joystick
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
+    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
 
     //! Drive the robot using the current joystick state
-    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
-
-    //! Add a handler to the connection to drive robot
-    virtual void readFromNetwork(Net::Connection &connection) override;
-
-    //! Remove and connection handlers that drive this robot
-    virtual void stopReadingFromNetwork() override;
+    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
 
 private:
     // Handle joystick axis events

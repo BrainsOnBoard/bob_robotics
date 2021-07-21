@@ -3,7 +3,6 @@
 // BoB robotics includes
 #include "hid/joystick.h"
 #include "net/connection.h"
-#include "robot.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -15,7 +14,6 @@ namespace Robots {
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
 class Tank
-  : public Robot
 {
 /*
  * If these are declared private then they annoyingly conflict with "usings" in
@@ -28,23 +26,22 @@ protected:
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
-    //----------------------------------------------------------------------------
-    // Robot virtuals
-    //----------------------------------------------------------------------------
-    virtual void moveForward(float speed) override;
+    virtual ~Tank();
 
-    virtual void turnOnTheSpot(float clockwiseSpeed) override;
+    virtual void moveForward(float speed);
 
-    virtual void stopMoving() override;
+    virtual void turnOnTheSpot(float clockwiseSpeed);
 
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
+    virtual void stopMoving();
 
-    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
+    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
+
+    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
 
     //! Controls the robot with a network stream
-    virtual void readFromNetwork(Net::Connection &connection) override;
+    virtual void readFromNetwork(Net::Connection &connection);
 
-    virtual void stopReadingFromNetwork() override;
+    virtual void stopReadingFromNetwork();
 
     //----------------------------------------------------------------------------
     // Declared virtuals

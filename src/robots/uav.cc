@@ -7,6 +7,9 @@
 namespace BoBRobotics {
 namespace Robots {
 
+UAV::~UAV()
+{}
+
 void UAV::moveForward(float speed)
 {
     setPitch(speed);
@@ -45,16 +48,6 @@ void UAV::drive(const HID::Joystick &joystick, float)
     setVerticalSpeed(-joystick.getState(HID::JAxis::LeftStickVertical));
     setYawSpeed(-joystick.getState(HID::JAxis::LeftTrigger));
     setYawSpeed(joystick.getState(HID::JAxis::RightTrigger));
-}
-
-void UAV::readFromNetwork(Net::Connection &)
-{
-    throw std::runtime_error("Network control of UAV not implemented");
-}
-
-void UAV::stopReadingFromNetwork()
-{
-    throw std::runtime_error("Network control of UAV not implemented");
 }
 
 bool UAV::onAxisEvent(HID::JAxis axis, float value)

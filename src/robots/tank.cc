@@ -1,8 +1,10 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/circstat.h"
-#include "plog/Log.h"
 #include "robots/tank.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C includes
 #include <cmath>
@@ -19,6 +21,9 @@ using namespace units::velocity;
 
 namespace BoBRobotics {
 namespace Robots {
+
+Tank::~Tank()
+{}
 
 void Tank::moveForward(float speed)
 {

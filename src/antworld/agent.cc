@@ -93,16 +93,6 @@ void AntAgent::drive(const HID::Joystick &joystick, float deadZone)
     }
 }
 
-void AntAgent::readFromNetwork(Net::Connection &)
-{
-    throw std::runtime_error("Network control of AntAgent not implemented");
-}
-
-void AntAgent::stopReadingFromNetwork()
-{
-    throw std::runtime_error("Network control of AntAgent not implemented");
-}
-
 radians_per_second_t
 AntAgent::getMaximumTurnSpeed() const
 {
