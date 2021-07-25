@@ -10,7 +10,7 @@
 // This program can be run locally on the robot or remotely
 #ifdef NO_I2C_ROBOT
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 #else
 #include "robots/robot_type.h"
 #endif

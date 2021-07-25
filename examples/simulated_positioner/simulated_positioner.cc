@@ -2,7 +2,7 @@
 #include "plog/Log.h"
 #include "common/pose.h"
 #include "robots/control/robot_positioner.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "viz/sfml/sfml_world.h"
 
 // Third-party includes

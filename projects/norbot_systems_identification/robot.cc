@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "net/server.h"
 #ifdef NO_I2C
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 #else
-#include "robots/norbot.h"
+#include "robots/tank/norbot.h"
 #endif
 
 // Standard C includes

@@ -5,7 +5,7 @@
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 #include "vicon/udp.h"
 
 // Third-party includes

@@ -1,6 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
-#include "robots/norbot.h"
+#include "robots/tank/norbot.h"
 
 // Standard C includes
 #include <cmath>

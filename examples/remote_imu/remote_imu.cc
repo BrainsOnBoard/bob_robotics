@@ -3,7 +3,7 @@
 #include "plog/Log.h"
 #include "net/client.h"
 #include "net/imu_netsource.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 
 // Standard C++ includes
 #include <chrono>

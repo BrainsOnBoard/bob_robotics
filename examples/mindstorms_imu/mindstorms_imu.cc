@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/ev3/mindstorms_imu.h"
+#include "robots/tank/ev3/mindstorms_imu.h"
 
 // Standard C++ includes
 #include <chrono>

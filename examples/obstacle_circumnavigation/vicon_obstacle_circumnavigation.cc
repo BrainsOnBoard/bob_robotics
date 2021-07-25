@@ -4,7 +4,7 @@
 #include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 #include "vicon/udp.h"
 
 int bobMain(int, char **)

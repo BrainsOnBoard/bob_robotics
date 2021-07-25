@@ -4,7 +4,7 @@
 #include "common/macros.h"
 #include "common/circstat.h"
 #include "common/pose.h"
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 
 // Third-party includes
 #include "third_party/units.h"

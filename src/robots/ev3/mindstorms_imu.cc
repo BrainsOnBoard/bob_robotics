@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "robots/ev3/mindstorms_imu.h"
+#include "robots/tank/ev3/mindstorms_imu.h"
 
 // Standard C++ includes
 #include <sstream>

@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "plog/Log.h"
-#include "robots/ev3/ev3.h"
+#include "robots/tank/ev3/ev3.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes

@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/stopwatch.h"
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 
 // EV3 library
 #include "../../third_party/ev3dev-lang-cpp/ev3dev.h"

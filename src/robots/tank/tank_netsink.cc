@@ -2,7 +2,7 @@
 #include "plog/Log.h"
 #include "common/macros.h"
 #include "common/stopwatch.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 
 namespace BoBRobotics {
 namespace Robots {

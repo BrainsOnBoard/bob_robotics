@@ -1,7 +1,7 @@
 #include "common.h"
 
 // BoB robotics includes
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 
 int bobMain(int, char **)
 {

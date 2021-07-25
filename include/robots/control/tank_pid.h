@@ -7,7 +7,7 @@
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "vicon/udp.h"
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 
 // Third-party includes
 #include "third_party/units.h"

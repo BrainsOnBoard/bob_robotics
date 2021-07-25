@@ -5,7 +5,7 @@
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"
 #include "robots/control/obstacle_circumnavigation.h"
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"
 

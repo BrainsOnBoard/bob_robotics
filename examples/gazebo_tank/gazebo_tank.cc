@@ -4,7 +4,7 @@
 #include "robots/gazebo/camera.h"
 #include "robots/gazebo/node.h"
 #include "robots/gazebo/tank.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "video/display.h"
 
 // Third-party includes

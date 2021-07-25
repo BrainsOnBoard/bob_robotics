@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/circstat.h"
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 
 // Third-party includes
 #include "plog/Log.h"

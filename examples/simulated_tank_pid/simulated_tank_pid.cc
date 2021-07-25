@@ -3,7 +3,7 @@
 #include "common/pose.h"
 #include "hid/joystick.h"
 #include "robots/control/tank_pid.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "viz/sfml/sfml_world.h"
 
 // Third-party includes

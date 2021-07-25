@@ -7,7 +7,7 @@
 #include "common/pose.h"
 #include "robots/control/collision_detector.h"
 #include "robots/control/tank_pid.h"
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 
 // Third-party includes
 #include "third_party/units.h"

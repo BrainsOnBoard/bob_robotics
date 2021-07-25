@@ -8,7 +8,7 @@
 #include "net/client.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 #include "vicon/udp.h"
 
 // Third-party includes

@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "robots/tank.h"
+#include "robots/tank/tank.h"
 #include "robots/gazebo/node.h"
 
 // Third-party includes

@@ -6,7 +6,7 @@
 #include "navigation/read_objects.h"
 #include "net/client.h"
 #include "robots/control/collision_detector.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 #include "vicon/udp.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"

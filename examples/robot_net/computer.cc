@@ -13,7 +13,7 @@
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/tank_netsink.h"
 #include "video/display.h"
 #include "video/netsource.h"
 
