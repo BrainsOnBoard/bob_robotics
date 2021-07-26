@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "hid/joystick.h"
 #include "net/connection.h"
-#include "tank/tank.h"
+#include "robots/tank/tank.h"
 
 namespace BoBRobotics {
 namespace Robots {

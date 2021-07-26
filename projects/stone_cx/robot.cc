@@ -7,16 +7,11 @@
 #include "net/imu_netsource.h"
 #include "net/server.h"
 #include "os/keycodes.h"
-#include "robots/mecanum.h"
-#include "robots/tank/norbot.h"
+#include "robots/robot_type.h"
 #include "video/netsink.h"
 
 // Third-party includes
 #include "plog/Log.h"
-#include "third_party/units.h"
-
-// OpenCV
-#include <opencv2/opencv.hpp>
 
 // GeNN generated code includes
 #include "stone_cx_CODE/definitions.h"
@@ -59,26 +54,6 @@ class HeadingSource
 {
 public:
     virtual radian_t getHeading() = 0;
-};
-
-//---------------------------------------------------------------------------
-// SpeedSource
-//---------------------------------------------------------------------------
-//! Interface for ways of getting velocity
-class SpeedSource
-{
-public:
-    virtual std::array<float, 2> getSpeed() = 0;
-};
-
-//---------------------------------------------------------------------------
-// MotorController
-//---------------------------------------------------------------------------
-//! Interface to drive robot from model output
-class MotorController
-{
-public:
-    virtual void drive(float left, float right, bool log = false) = 0;
 };
 
 //---------------------------------------------------------------------------
@@ -158,107 +133,50 @@ private:
 };
 
 //---------------------------------------------------------------------------
-// SpeedSourceDeadReckon
+// SpeedSource
 //---------------------------------------------------------------------------
-class SpeedSourceTankDeadReckon : public SpeedSource
+class SpeedSource
 {
 public:
-    SpeedSourceTankDeadReckon(const Robots::ROBOT_TYPE &tank, float velocityScale = 1.0f / 10.0f)
-    :   m_Tank(tank), m_VelocityScale(velocityScale)
-    {
-    }
+    SpeedSource(const Robots::ROBOT_TYPE &robot)
+      : m_Robot{ robot }
+    {}
 
-    //------------------------------------------------------------------------
-    // SpeedSource virtuals
-    //------------------------------------------------------------------------
-    virtual std::array<float, 2> getSpeed() override
+    std::array<float, 2> getSpeed() const
     {
-        const float speed =  (m_Tank.getLeft() + m_Tank.getRight()) * m_VelocityScale;
-        return {speed, speed};
-    }
+#ifdef ROBOT_TYPE_MECANUM
+        constexpr float VelocityScale = 1.f;
 
-private:
-    //------------------------------------------------------------------------
-    // Members
-    //------------------------------------------------------------------------
-    const Robots::ROBOT_TYPE &m_Tank;
-    const float m_VelocityScale;
-};
-
-//---------------------------------------------------------------------------
-// SpeedSourceOmni2DDeadReckon
-//---------------------------------------------------------------------------
-class SpeedSourceOmni2DDeadReckon : public SpeedSource
-{
-public:
-    SpeedSourceOmni2DDeadReckon(const Robots::Omni2D &omni,
-                                 const std::array<radian_t, 2> &preferredAngleTN2 = {45_deg, -45_deg},
-                                 float velocityScale = 1.0f)
-    :   m_Omni(omni), m_PreferredAngleTN2(preferredAngleTN2), m_VelocityScale(velocityScale)
-    {
-    }
-
-    //------------------------------------------------------------------------
-    // SpeedSource virtuals
-    //------------------------------------------------------------------------
-    virtual std::array<float, 2> getSpeed() override
-    {
         // **TODO** sideways awesome
-        const float speed =  m_Omni.getForwards() * m_VelocityScale;
-        return {speed, speed};
+        const float speed = m_Robot.getForwards() * VelocityScale;
+#else
+        constexpr float VelocityScale = 0.1f;
+        const float speed = (m_Robot.getLeft() + m_Robot.getRight()) * VelocityScale;
+#endif
+
+        return { speed, speed };
     }
 
 private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const Robots::Omni2D &m_Omni;
-    const std::array<radian_t, 2> m_PreferredAngleTN2;
-    const float m_VelocityScale;
+    const Robots::ROBOT_TYPE &m_Robot;
 };
 
 //---------------------------------------------------------------------------
-// MotorControllerOmni2D
+// MotorController
 //---------------------------------------------------------------------------
-class MotorControllerTank : public MotorController
+class MotorController
 {
 public:
-    MotorControllerTank(Robots::ROBOT_TYPE &tank)
-    :   m_Tank(tank)
+    MotorController(Robots::ROBOT_TYPE &robot)
+      : m_Robot(robot)
+    {}
+
+    void drive(float left, float right, bool log)
     {
-    }
-
-    virtual void drive(float left, float right, bool log) override
-    {
-        // Calculate differential steering signal
-        const float steering = left - right;
-        if(log) {
-            LOGI << "Steer:" << steering;
-        }
-
-        // Clamp motor input values to be between -1 and 1
-        const float leftMotor = 1.0f + steering;
-        const float rightMotor = 1.0f - steering;
-        m_Tank.tank(std::max(-1.f, std::min(1.f, leftMotor)), std::max(-1.f, std::min(1.f, rightMotor)));
-    }
-
-private:
-    Robots::ROBOT_TYPE &m_Tank;
-};
-
-//---------------------------------------------------------------------------
-// MotorControllerOmni2D
-//---------------------------------------------------------------------------
-class MotorControllerOmni2D : public MotorController
-{
-public:
-    MotorControllerOmni2D(Robots::Omni2D &omni)
-    :   m_Omni(omni)
-    {
-    }
-
-    virtual void drive(float left, float right, bool log) override
-    {
+#ifdef ROBOT_TYPE_MECANUM
         const float length = (left * left) + (right * right);
 
         // Steer based on signal
@@ -271,30 +189,24 @@ public:
         // So no forward  speed if we're turning fast
         const float forward = 1.0f - std::min(1.0f, std::fabs(steering));
 
-        m_Omni.omni2D(forward * 0.5f, 0.0f, steering * 8.0f);
+        m_Robot.omni2D(forward * 0.5f, 0.0f, steering * 8.0f);
+#else
+        // Calculate differential steering signal
+        const float steering = left - right;
+        if(log) {
+            LOGI << "Steer:" << steering;
+        }
+
+        // Clamp motor input values to be between -1 and 1
+        const float leftMotor = 1.0f + steering;
+        const float rightMotor = 1.0f - steering;
+        m_Robot.tank(std::max(-1.f, std::min(1.f, leftMotor)), std::max(-1.f, std::min(1.f, rightMotor)));
+#endif
     }
 
 private:
-    Robots::Omni2D &m_Omni;
+    Robots::ROBOT_TYPE &m_Robot;
 };
-
-std::unique_ptr<MotorController> createMotorController(Robots::ROBOT_TYPE &robot)
-{
-#ifdef ROBOT_TYPE_MECANUM
-    return std::make_unique<MotorControllerOmni2D>(robot);
-#else
-    return std::make_unique<MotorControllerTank>(robot);
-#endif
-}
-
-std::unique_ptr<SpeedSource> createSpeedSource(Robots::ROBOT_TYPE &robot)
-{
-#ifdef ROBOT_TYPE_MECANUM
-    return std::make_unique<SpeedSourceOmni2DDeadReckon>(robot);
-#else
-    return std::make_unique<SpeedSourceTankDeadReckon>(robot);
-#endif
-}
 
 void readHeadingThreadFunc(HeadingSource *headingSource,
                            std::atomic<bool> &shouldQuit,
@@ -318,8 +230,8 @@ int bobMain(int argc, char *argv[])
     // Create motor interface
     Robots::ROBOT_TYPE motor;
 
-    std::unique_ptr<SpeedSource> speedSource = createSpeedSource(motor);
-    std::unique_ptr<MotorController> motorController = createMotorController(motor);
+    SpeedSource speedSource{ motor };
+    MotorController motorController{ motor };
 
 #ifdef ROBOT_TYPE_EV3
     std::unique_ptr<HeadingSource> headingSource = std::make_unique<HeadingSourceEV3IMU>(motor.getConnection());
@@ -402,7 +314,7 @@ int bobMain(int argc, char *argv[])
         }
 
         // Calculate dead reckoning speed from motor
-        const auto speed = speedSource->getSpeed();
+        const auto speed = speedSource.getSpeed();
         speedTN2[Parameters::HemisphereLeft] = speed[0];
         speedTN2[Parameters::HemisphereRight] = speed[1];
 
@@ -460,7 +372,7 @@ int bobMain(int argc, char *argv[])
             // Sum left and right motor activity and pass to motor controller
             const float leftMotor = std::accumulate(&rCPU1[0], &rCPU1[8], 0.0f);
             const float rightMotor = std::accumulate(&rCPU1[8], &rCPU1[16], 0.0f);
-            motorController->drive(leftMotor, rightMotor, (numTicks % 100) == 0);
+            motorController.drive(leftMotor, rightMotor, (numTicks % 100) == 0);
         }
 
         // Record time at end of tick

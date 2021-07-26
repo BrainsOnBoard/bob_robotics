@@ -1,6 +1,8 @@
 // BoB robotics includes
+#include "robots/omni2d/omni2d.h"
+
+// Third-party includes
 #include "plog/Log.h"
-#include "robots/omni2d.h"
 
 // Standard C++ includes
 #include <string>

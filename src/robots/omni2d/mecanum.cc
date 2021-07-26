@@ -1,6 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
-#include "robots/mecanum.h"
+#include "robots/omni2d/mecanum.h"
 
 // Standard C includes
 #include <cmath>
