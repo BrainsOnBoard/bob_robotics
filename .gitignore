@@ -11,6 +11,11 @@ clang_tidy_fixes
 # CMake build dir
 **/build/*
 
+# Ninja
+.ninja_deps
+.ninja_log
+build.ninja
+
 # OS-specific files
 .directory
 .DS_Store
