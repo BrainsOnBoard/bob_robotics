@@ -198,15 +198,15 @@ private:
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
-    Robots::RobotPositioner<Vicon::ObjectReference<>> m_Positioner;
+    Robots::RobotPositioner<decltype(m_Tank), decltype(m_ViconObject)> m_Positioner;
     Robots::CollisionDetector m_CollisionDetector;
-    Robots::ObstacleCircumnavigator<Vicon::ObjectReference<>> m_Circumnavigator;
-    Robots::ObstacleAvoidingPositioner<Robots::RobotPositioner<Vicon::ObjectReference<>>, Vicon::ObjectReference<>> m_AvoidingPositioner;
+    Robots::ObstacleCircumnavigator<decltype(m_Tank), decltype(m_ViconObject)> m_Circumnavigator;
+    Robots::ObstacleAvoidingPositioner<decltype(m_Positioner), decltype(m_Tank), decltype(m_ViconObject)> m_AvoidingPositioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
 
-    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank &tank)
+    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::TankNetSink &tank)
     {
         using V = Vector2<meter_t>;
         const auto halfWidth = tank.getRobotWidth() / 2;

@@ -5,7 +5,6 @@
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"
 #include "robots/control/obstacle_circumnavigation.h"
-#include "robots/tank/tank.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"
 
@@ -28,13 +27,13 @@ using namespace units::literals;
 using namespace units::length;
 using namespace std::literals;
 
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class ObstacleCircumnavigationRunner
 {
     using V = Vector2<meter_t>;
 
 public:
-    ObstacleCircumnavigationRunner(Robots::Tank &tank,
+    ObstacleCircumnavigationRunner(TankType &tank,
                                    PoseGetterType &poseGetter)
       : m_Tank(tank)
       , m_PoseGetter(poseGetter)
@@ -60,9 +59,9 @@ public:
                                                                           objects,
                                                                           20_cm,
                                                                           1_cm);
-        m_Circumnavigator = std::make_unique<Robots::ObstacleCircumnavigator<PoseGetterType>>(m_Tank,
-                                                                                              m_PoseGetter,
-                                                                                              *m_CollisionDetector);
+        m_Circumnavigator = std::make_unique<Robots::ObstacleCircumnavigator<TankType, PoseGetterType>>(m_Tank,
+                                                                                                         m_PoseGetter,
+                                                                                                         *m_CollisionDetector);
 
         // Create drawable objects
         const auto &resizedObjects = m_CollisionDetector->getResizedObjects();
@@ -102,20 +101,20 @@ public:
     }
 
 private:
-    Robots::Tank &m_Tank;
+    TankType &m_Tank;
     PoseGetterType &m_PoseGetter;
     Viz::SFMLWorld m_Display;
     Viz::SFMLWorld::CarAgent m_CarAgent;
     Viz::SFMLWorld::LineStrip m_RouteLines;
     std::vector<Viz::ArenaObject> m_ObjectShapes;
     std::unique_ptr<Robots::CollisionDetector> m_CollisionDetector;
-    std::unique_ptr<Robots::ObstacleCircumnavigator<PoseGetterType>> m_Circumnavigator;
+    std::unique_ptr<Robots::ObstacleCircumnavigator<TankType, PoseGetterType>> m_Circumnavigator;
 };
 
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 auto
-createRunner(Robots::Tank &tank,
+createRunner(TankType &tank,
              PoseGetterType &poseGetter)
 {
-    return std::make_unique<ObstacleCircumnavigationRunner<PoseGetterType>>(tank, poseGetter);
+    return std::make_unique<ObstacleCircumnavigationRunner<TankType, PoseGetterType>>(tank, poseGetter);
 }

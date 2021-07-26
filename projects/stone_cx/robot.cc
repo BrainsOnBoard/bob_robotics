@@ -9,7 +9,6 @@
 #include "net/server.h"
 #include "robots/mecanum.h"
 #include "robots/tank/norbot.h"
-#include "robots/tank/tank.h"
 #include "third_party/units.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
@@ -79,7 +78,7 @@ public:
 class MotorController
 {
 public:
-    virtual void drive(float left, float right, bool log = false);
+    virtual void drive(float left, float right, bool log = false) = 0;
 };
 
 //---------------------------------------------------------------------------
@@ -191,7 +190,7 @@ private:
 class SpeedSourceTankDeadReckon : public SpeedSource
 {
 public:
-    SpeedSourceTankDeadReckon(const Robots::Tank &tank, float velocityScale = 1.0f / 10.0f)
+    SpeedSourceTankDeadReckon(const Robots::ROBOT_TYPE &tank, float velocityScale = 1.0f / 10.0f)
     :   m_Tank(tank), m_VelocityScale(velocityScale)
     {
     }
@@ -209,7 +208,7 @@ private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    const Robots::Tank &m_Tank;
+    const Robots::ROBOT_TYPE &m_Tank;
     const float m_VelocityScale;
 };
 
@@ -290,7 +289,7 @@ private:
 class MotorControllerTank : public MotorController
 {
 public:
-    MotorControllerTank(Robots::Tank &tank)
+    MotorControllerTank(Robots::ROBOT_TYPE &tank)
     :   m_Tank(tank)
     {
     }
@@ -310,7 +309,7 @@ public:
     }
 
 private:
-    Robots::Tank &m_Tank;
+    Robots::ROBOT_TYPE &m_Tank;
 };
 
 //---------------------------------------------------------------------------
@@ -345,24 +344,22 @@ private:
     Robots::Omni2D &m_Omni;
 };
 
-std::unique_ptr<MotorController> createMotorController(Robots::Tank &tank)
+std::unique_ptr<MotorController> createMotorController(Robots::ROBOT_TYPE &robot)
 {
-    return std::make_unique<MotorControllerTank>(tank);
+#ifdef ROBOT_TYPE_MECANUM
+    return std::make_unique<MotorControllerOmni2D>(robot);
+#else
+    return std::make_unique<MotorControllerTank>(robot);
+#endif
 }
 
-std::unique_ptr<MotorController> createMotorController(Robots::Omni2D &omni)
+std::unique_ptr<SpeedSource> createSpeedSource(Robots::ROBOT_TYPE &robot)
 {
-    return std::make_unique<MotorControllerOmni2D>(omni);
-}
-
-std::unique_ptr<SpeedSource> createSpeedSource(Robots::Tank &tank)
-{
-    return std::make_unique<SpeedSourceTankDeadReckon>(tank);
-}
-
-std::unique_ptr<SpeedSource> createSpeedSource(Robots::Omni2D &omni)
-{
-    return std::make_unique<SpeedSourceOmni2DDeadReckon>(omni);
+#ifdef ROBOT_TYPE_MECANUM
+    return std::make_unique<SpeedSourceOmni2DDeadReckon>(robot);
+#else
+    return std::make_unique<SpeedSourceTankDeadReckon>(robot);
+#endif
 }
 
 void readHeadingThreadFunc(HeadingSource *headingSource,

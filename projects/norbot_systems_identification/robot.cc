@@ -1,10 +1,6 @@
 // BoB robotics includes
 #include "net/server.h"
-#ifdef NO_I2C
-#include "robots/tank/tank.h"
-#else
 #include "robots/tank/norbot.h"
-#endif
 
 // Standard C includes
 #include <cstring>
@@ -22,13 +18,8 @@ int bobMain(int, char **)
     Net::Server server;
     auto connection = server.waitForConnection();
 
-#ifdef NO_I2C
-    // Print motor commands
-    Robots::Tank robot;
-#else
     // Use Arduino robot
     Robots::Norbot robot;
-#endif
 
     // Read motor commands from network
     robot.readFromNetwork(*connection);

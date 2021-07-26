@@ -30,8 +30,8 @@ using namespace units::time;
 class DataFile
 {
 public:
-    DataFile(Robots::Tank &robot, Vicon::UDPClient<> &vicon)
-      : m_Robot(robot)
+    DataFile(Robots::TankNetSink &tank, Vicon::UDPClient<> &vicon)
+      : m_Tank(tank)
       , m_Vicon(vicon)
     {
         // Set the driving speed at which we're testing the robot
@@ -55,7 +55,7 @@ public:
         m_FileStream << std::setprecision(10); // set number of decimal places
 
         // Start driving robot forwards; start stopwatch
-        robot.tank(robotSpeed, robotSpeed);
+        tank.tank(robotSpeed, robotSpeed);
         m_Stopwatch.start();
         m_StopwatchSample.start();
 
@@ -64,7 +64,7 @@ public:
 
     ~DataFile()
     {
-        m_Robot.stopMoving();
+        m_Tank.stopMoving();
         LOGI << "Data written to " << m_FilePath;
     }
 
@@ -96,7 +96,7 @@ public:
 private:
     std::ofstream m_FileStream;
     filesystem::path m_FilePath;
-    Robots::Tank &m_Robot;
+    Robots::TankNetSink &m_Tank;
     Vicon::UDPClient<> &m_Vicon;
     Stopwatch m_Stopwatch, m_StopwatchSample;
 };

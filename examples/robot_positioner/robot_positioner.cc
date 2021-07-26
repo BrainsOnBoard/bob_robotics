@@ -179,7 +179,7 @@ private:
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
-    Robots::RobotPositioner<Vicon::ObjectReference<>> m_Positioner;
+    Robots::RobotPositioner<decltype(m_Tank), decltype(m_ViconObject)> m_Positioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
