@@ -2,20 +2,20 @@
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
 #include "common/lm9ds1_imu.h"
-#include "plog/Log.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "net/imu_netsource.h"
 #include "net/server.h"
+#include "os/keycodes.h"
 #include "robots/mecanum.h"
 #include "robots/tank/norbot.h"
-#include "third_party/units.h"
-#include "vicon/capture_control.h"
-#include "vicon/udp.h"
 #include "video/netsink.h"
 
-#include "os/keycodes.h"
+// Third-party includes
+#include "plog/Log.h"
+#include "third_party/units.h"
 
+// OpenCV
 #include <opencv2/opencv.hpp>
 
 // GeNN generated code includes
@@ -158,33 +158,6 @@ private:
 };
 
 //---------------------------------------------------------------------------
-// HeadingSourceVicon
-//---------------------------------------------------------------------------
-class HeadingSourceVicon : public HeadingSource
-{
-public:
-    HeadingSourceVicon(const Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon)
-    :   m_Vicon(vicon)
-    {
-    }
-
-    //------------------------------------------------------------------------
-    // IMU virtuals
-    //------------------------------------------------------------------------
-    virtual radian_t getHeading() override
-    {
-        // Read data from VICON system
-        auto objectData = m_Vicon.getObjectData();
-        const auto &attitude = objectData.getPose().attitude();
-
-        return -attitude[2];
-    }
-
-private:
-    const Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
-};
-
-//---------------------------------------------------------------------------
 // SpeedSourceDeadReckon
 //---------------------------------------------------------------------------
 class SpeedSourceTankDeadReckon : public SpeedSource
@@ -242,45 +215,6 @@ private:
     const Robots::Omni2D &m_Omni;
     const std::array<radian_t, 2> m_PreferredAngleTN2;
     const float m_VelocityScale;
-};
-
-//---------------------------------------------------------------------------
-// SpeedSourceVicon
-//---------------------------------------------------------------------------
-class SpeedSourceVicon : public SpeedSource
-{
-public:
-    SpeedSourceVicon(const Vicon::UDPClient<Vicon::ObjectDataVelocity> &vicon,
-                     const std::array<radian_t, 2> &preferredAngleTN2 = {45_deg, -45_deg},
-                     float speedScale = 5.0f)
-    :   m_Vicon(vicon), m_PreferredAngleTN2(preferredAngleTN2), m_SpeedScale(speedScale)
-    {
-    }
-
-    //------------------------------------------------------------------------
-    // SpeedSource virtuals
-    //------------------------------------------------------------------------
-    virtual std::array<float, 2> getSpeed() override
-    {
-        // Read data from VICON system
-        auto objectData = m_Vicon.getObjectData();
-        const auto &velocity = objectData.getVelocity();
-        const auto &attitude = objectData.getPose().attitude();
-
-        const radian_t heading = -attitude[2];
-
-        std::array<float, 2> speedTN2;
-        for(size_t j = 0; j < Parameters::numTN2; j++) {
-            speedTN2[j] = (sin(heading + m_PreferredAngleTN2[j]) * m_SpeedScale * velocity[0].value()) +
-                          (cos(heading + m_PreferredAngleTN2[j]) * m_SpeedScale * velocity[1].value());
-        }
-        return speedTN2;
-    }
-
-private:
-    const Vicon::UDPClient<Vicon::ObjectDataVelocity> &m_Vicon;
-    const std::array<radian_t, 2> m_PreferredAngleTN2;
-    const float m_SpeedScale;
 };
 
 //---------------------------------------------------------------------------
