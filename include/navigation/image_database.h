@@ -448,6 +448,9 @@ public:
     //! Check if this database has any saved metadata (yet)
     bool hasMetadata() const;
 
+    //! Check if database contains a video file cf. multiple image files
+    bool isVideoType() const;
+
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
                       bool greyscale = true) const

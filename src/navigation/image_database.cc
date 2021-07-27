@@ -280,7 +280,7 @@ ImageDatabase::ImageDatabase(const std::tm *creationTime,
     // Try to read entries from CSV file
     if (!loadCSV()) {
         LOGW << "Could not find CSV file";
-        if (m_VideoFilePath.empty()) {
+        if (!isVideoType()) {
             if (!readDirectoryEntries()) {
                 // Make sure we have a directory to save into
                 filesystem::create_directory(m_Path);
@@ -354,7 +354,7 @@ ImageDatabase::loadCSV()
      * The Filename column is required for image-type databases, but doesn't
      * make sense for video-type ones.
      */
-    BOB_ASSERT(validIdx(fieldNameIdx[4]) == m_VideoFilePath.empty());
+    BOB_ASSERT(validIdx(fieldNameIdx[4]) == !isVideoType());
 
     // Assume it's a grid if we have any of the Grid fields...
     if (!hasMetadata()) {
@@ -407,7 +407,7 @@ ImageDatabase::loadCSV()
               millimeter_t(std::stod(getDefaultField(1))),
               millimeter_t(std::stod(getDefaultField(2))) },
             degree_t(std::stod(getDefaultField(3))),
-            m_VideoFilePath.empty() ? m_Path / getDefaultField(4) : filesystem::path{},
+            !isVideoType() ? m_Path / getDefaultField(4) : filesystem::path{},
             gridPosition,
             std::move(extraFields)
         };
@@ -573,6 +573,12 @@ ImageDatabase::isGrid() const
     return !empty() && !m_IsRoute;
 }
 
+bool
+ImageDatabase::isVideoType() const
+{
+    return !m_VideoFilePath.empty();
+}
+
 //! Load all of the images in this database into memory and return
 std::vector<cv::Mat>
 ImageDatabase::loadImages(const cv::Size &size, size_t frameSkip,
@@ -670,7 +676,7 @@ ImageDatabase::generateUnwrapCSV(const filesystem::path &destination,
 
     // Copy headers; if the source is a video file we need to append file names
     ofs << line;
-    if (!m_VideoFilePath.empty()) {
+    if (isVideoType()) {
         ofs << ",Filename";
     }
     ofs << "\n";
@@ -913,7 +919,7 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
     os.exceptions(std::ios::badbit | std::ios::failbit);
     os.open(path);
     os << "X [mm], Y [mm], Z [mm], Heading [degrees]";
-    if (m_VideoFilePath.empty()) {
+    if (!isVideoType()) {
         os << ", Filename";
     }
     if (!m_IsRoute) {
@@ -930,7 +936,7 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
            << e.position[2]() << ", " << e.heading();
 
         // ...this is only written if we're not saving as a video
-        if (m_VideoFilePath.empty()) {
+        if (!isVideoType()) {
             os << ", " << e.path.filename();
         }
 
