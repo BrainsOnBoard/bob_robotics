@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/path.h"
+#include "common/string.h"
 #include "navigation/image_database.h"
 
 // TBB
@@ -11,27 +12,116 @@
 #include "third_party/path.h"
 
 // Standard C++ includes
+#include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 #include <string>
 
 using namespace BoBRobotics;
+using namespace Navigation;
 
 // **TODO**: Allow user to choose output video format
 constexpr const char *VideoExtension = ".mp4";
 constexpr const char *VideoFormat = "mp4v";
 
+bool
+readCSVLine(std::ifstream &ifs, std::string &line,
+            std::vector<std::string> &fields)
+{
+    if (!std::getline(ifs, line)) {
+        return false;
+    }
+
+    strSplit(line, ',', fields);
+
+    // Trim whitespace from fields
+    std::for_each(fields.begin(), fields.end(), strTrim);
+
+    return true;
+}
+
+// Strips out the Filename column from the csv file
 void
-writeVideoFile(const Navigation::ImageDatabase &inDatabase,
+convertCSVFile(const ImageDatabase &inDatabase,
                const filesystem::path &outPath)
+{
+    std::ifstream ifs{ (inDatabase.getPath() / ImageDatabase::EntriesFilename).str() };
+    BOB_ASSERT(ifs.good());
+    ifs.exceptions(std::ios::badbit);
+
+    std::string line;
+    std::vector<std::string> fields;
+
+    BOB_ASSERT(readCSVLine(ifs, line, fields));
+    const auto found = std::find(fields.cbegin(), fields.cend(), "Filename");
+    const size_t filenameIdx = std::distance(fields.cbegin(), found);
+
+    std::vector<size_t> copyIdx;
+    for (size_t i = 0; i < fields.size() - 1; i++) {
+        if (i != filenameIdx) {
+            copyIdx.push_back(i);
+        }
+    }
+
+    std::ofstream ofs{ (outPath / ImageDatabase::EntriesFilename).str() };
+    BOB_ASSERT(ofs.good());
+    ofs.exceptions(std::ios::badbit);
+    do {
+        ofs << fields[copyIdx[0]];
+        for (size_t i = 1; i < copyIdx.size(); i++) {
+            ofs << ", " << fields[copyIdx[i]];
+        }
+        ofs << "\n";
+    } while (readCSVLine(ifs, line, fields));
+}
+
+void
+convertYAMLFile(const ImageDatabase &inDatabase,
+                const filesystem::path &outPath,
+                const filesystem::path &videoFile,
+                double frameRate)
+{
+    const auto outYamlPath = outPath / ImageDatabase::MetadataFilename;
+    const auto inYamlPath = inDatabase.getPath() / ImageDatabase::MetadataFilename;
+    if (inYamlPath.exists()) {
+        filesystem::copy_file(inYamlPath, outYamlPath);
+    } else {
+        // If there's no metadata file then add one
+        std::ofstream ofs{ outYamlPath.str() };
+        BOB_ASSERT(ofs.good());
+        ofs.exceptions(std::ios::badbit);
+        ofs << R"(%YAML:1.0
+---
+metadata:
+  type: route
+  camera:
+     name: pixpro_usb
+     resolution: [ 1440, 1440 ]
+     isPanoramic: 1
+  needsUnwrapping: 1
+  isGreyscale: 0)";
+    }
+
+    std::ofstream ofs{ outYamlPath.str(), std::ios::app };
+    BOB_ASSERT(ofs.good());
+    ofs.exceptions(std::ios::badbit);
+    ofs << "\n  videoFile: " << videoFile.filename() << "\n"
+        << "  frameRate: " << frameRate << "\n"
+        << "  image_database_to_video_git_commit: " BOB_ROBOTICS_GIT_COMMIT "\n";
+}
+
+void
+writeVideoFile(const ImageDatabase &inDatabase,
+               const filesystem::path &videoFile,
+               double frameRate)
 {
     const auto imageSize = inDatabase[0].load(false).size();
 
     // **TODO**: Set FPS correctly
-    const auto videoPath = outPath / (inDatabase.getName() + VideoExtension);
-    cv::VideoWriter writer{ videoPath.str(),
+    cv::VideoWriter writer{ videoFile.str(),
                             cv::VideoWriter::fourcc(VideoFormat[0], VideoFormat[1], VideoFormat[2], VideoFormat[3]),
-                            30.0, /*fps*/
+                            frameRate,
                             imageSize };
     BOB_ASSERT(writer.isOpened());
 
@@ -44,10 +134,13 @@ int
 bobMain(int argc, char **argv)
 {
     filesystem::path outputDir = "video_databases";
+    double frameRate;
 
     CLI::App app{ "Tool for converting image databases composed of separate image files to video-type databases (i.e. to save space)." };
     // **TODO**: Add option to delete converted databases
     app.add_option("-o,--output-dir", outputDir, "Folder to save converted databases into");
+    app.add_option("-f", frameRate, "Frame rate at which image sequence was recorded")->required();
+
     app.allow_extras();
     CLI11_PARSE(app, argc, argv);
     if (app.remaining_size() == 0) {
@@ -61,7 +154,7 @@ bobMain(int argc, char **argv)
 
     std::mutex printMtx;
     const auto convertDatabase = [&](const auto &databasePath) {
-        const Navigation::ImageDatabase inDatabase{ databasePath };
+        const ImageDatabase inDatabase{ databasePath };
         BOB_ASSERT(!inDatabase.isVideoType());
         BOB_ASSERT(!inDatabase.empty());
 
@@ -73,7 +166,10 @@ bobMain(int argc, char **argv)
         printMtx.unlock();
         filesystem::create_directory(outPath);
 
-        writeVideoFile(inDatabase, outPath);
+        const auto videoFile = outPath / (inDatabase.getName() + VideoExtension);
+        convertCSVFile(inDatabase, outPath);
+        convertYAMLFile(inDatabase, outPath, videoFile, frameRate);
+        writeVideoFile(inDatabase, videoFile, frameRate);
     };
 
     // Convert databases in parallel
