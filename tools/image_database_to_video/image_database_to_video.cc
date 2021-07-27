@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <mutex>
 #include <string>
 
 using namespace BoBRobotics;
@@ -118,7 +117,6 @@ writeVideoFile(const ImageDatabase &inDatabase,
 {
     const auto imageSize = inDatabase[0].load(false).size();
 
-    // **TODO**: Set FPS correctly
     cv::VideoWriter writer{ videoFile.str(),
                             cv::VideoWriter::fourcc(VideoFormat[0], VideoFormat[1], VideoFormat[2], VideoFormat[3]),
                             frameRate,
@@ -137,7 +135,6 @@ bobMain(int argc, char **argv)
     double frameRate;
 
     CLI::App app{ "Tool for converting image databases composed of separate image files to video-type databases (i.e. to save space)." };
-    // **TODO**: Add option to delete converted databases
     app.add_option("-o,--output-dir", outputDir, "Folder to save converted databases into");
     app.add_option("-f", frameRate, "Frame rate at which image sequence was recorded")->required();
 
@@ -152,7 +149,6 @@ bobMain(int argc, char **argv)
         BOB_ASSERT(filesystem::create_directory(outputDir));
     }
 
-    std::mutex printMtx;
     const auto convertDatabase = [&](const auto &databasePath) {
         const ImageDatabase inDatabase{ databasePath };
         BOB_ASSERT(!inDatabase.isVideoType());
@@ -161,9 +157,7 @@ bobMain(int argc, char **argv)
         const auto outPath = outputDir / inDatabase.getName();
         // **TODO**: Allow for optionally overwriting converted databases
         BOB_ASSERT(!outPath.exists());
-        printMtx.lock();
-        std::cout << "Saving new database to " << outPath << "...\n";
-        printMtx.unlock();
+        LOGI << "Saving new database to " << outPath;
         filesystem::create_directory(outPath);
 
         const auto videoFile = outPath / (inDatabase.getName() + VideoExtension);
