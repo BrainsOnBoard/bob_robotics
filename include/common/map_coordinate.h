@@ -1,9 +1,11 @@
 #pragma once
 
+// BoB robotics includes
+#include "common/pose.h"
+
 // Third-party includes
 #include "third_party/units.h"
 #include "third_party/UTM.h"
-#include <stdio.h>
 
 //----------------------------------------------------------------------------
 // BoBRobotics::MapCoordinate::Transform
@@ -86,6 +88,11 @@ struct UTMCoordinate
     units::length::meter_t northing;
     units::length::meter_t height;
     char zone[4];
+
+    Vector3<units::length::meter_t> toVector() const
+    {
+        return { easting, northing, height };
+    }
 };
 
 //----------------------------------------------------------------------------
@@ -263,6 +270,16 @@ inline Cartesian<Datum> latLonToCartesian(const LatLon<Datum> &latLon)
     return Cartesian<Datum>{(nu + h) * cosPhi * cosLambda,
                             (nu + h) * cosPhi * sinLambda,
                             (nu * (1.0 - eSq) + h) * sinPhi};
+}
+
+//! Convert latitude and longitude to UTM coordinates
+template<class Datum>
+inline UTMCoordinate latLonToUTM(const LatLon<Datum> &latLon)
+{
+    UTMCoordinate utm;
+    const auto cart = latLonToCartesian(latLon);
+    cartesianToUTM(cart, utm);
+    return utm;
 }
 
 //! Transform cartesian coordinates from WGS84 into desired space

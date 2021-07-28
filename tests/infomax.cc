@@ -1,6 +1,7 @@
 #include "common.h"
 
 // BoB robotics includes
+#include "common/path.h"
 #include "common/serialise_matrix.h"
 #include "navigation/generate_images.h"
 #include "navigation/infomax_test.h"

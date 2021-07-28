@@ -378,10 +378,10 @@ Pose2<meter_t, degree_t> RouteArdin::operator[](size_t waypoint) const
 
     // If this isn't the last waypoint, return the heading of the segment from this waypoint
     if(waypoint < m_Headings.size()) {
-        return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[waypoint]);
+        return {x, y, 90_deg + m_Headings[waypoint]};
     }
     else {
-        return Pose2<meter_t, degree_t>(x, y, 0_deg);
+        return {x, y, 0_deg};
     }
 }
 }   // namespace AntWorld

@@ -1,6 +1,0 @@
-var structpybind11_1_1detail_1_1initimpl_1_1factory_3_01Func_00_01void__type_07_5_08_07_08_00_01Return_07Args_8_8_8_08_4 =
-[
-    [ "factory", "structpybind11_1_1detail_1_1initimpl_1_1factory_3_01Func_00_01void__type_07_5_08_07_08_00_01Return_07Args_8_8_8_08_4.html#af395a2daa6dc611a56821bf44f38f824", null ],
-    [ "execute", "structpybind11_1_1detail_1_1initimpl_1_1factory_3_01Func_00_01void__type_07_5_08_07_08_00_01Return_07Args_8_8_8_08_4.html#ab0d9a0aef1b48f770732dd6c431bff76", null ],
-    [ "class_factory", "structpybind11_1_1detail_1_1initimpl_1_1factory_3_01Func_00_01void__type_07_5_08_07_08_00_01Return_07Args_8_8_8_08_4.html#a3cf600393f3c8053a264db0003f20551", null ]
-];

@@ -34,6 +34,7 @@ var namespaceBoBRobotics =
       [ "cartesianToUTM", "map__coordinate_8h.html#abadba76f2a9785952b5eafdea7cffaa4", null ],
       [ "latLonToCartesian", "map__coordinate_8h.html#a6461952cb16d282e1f9fb35dc360bb43", null ],
       [ "latLonToOS", "map__coordinate_8h.html#a94408526655cc4d49672c12f98491bcb", null ],
+      [ "latLonToUTM", "map__coordinate_8h.html#aec311f68d21f798472b4c2e10e71c22f", null ],
       [ "shiftLatLon", "map__coordinate_8h.html#a047861c9aeb4d40f38375b861856c879", null ],
       [ "shiftUTM", "map__coordinate_8h.html#a082f84621cbd1269ff308d81584bffa9", null ],
       [ "transformCartesian", "map__coordinate_8h.html#a47d9bb6539d86b91a817d9ea5fe74df1", null ],
@@ -45,6 +46,7 @@ var namespaceBoBRobotics =
     [ "OS", "namespaceBoBRobotics_1_1OS.html", "namespaceBoBRobotics_1_1OS" ],
     [ "Path", null, [
       [ "getNewPath", "include_2common_2path_8h.html#a1b989c4c0849cc10e93bd32f4dd69099", null ],
+      [ "getNewPath", "include_2common_2path_8h.html#af43c178c5f420cd13c7a0929c6f82520", null ],
       [ "getProgramDirectory", "include_2common_2path_8h.html#a7a6bd57939cafafc49c54318af46098a", null ],
       [ "getProgramPath", "include_2common_2path_8h.html#a6b02920ae9d0761a05cf2617a937d18d", null ],
       [ "getRepoPath", "include_2common_2path_8h.html#a34a565adf787baaa3a5d047780676662", null ],

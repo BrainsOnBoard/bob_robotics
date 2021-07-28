@@ -61,10 +61,10 @@ Eigen::Quaternionf BN055::getQuaternion()
     // Read quaternion (w, x, y, z)
     int16_t raw[4];
     readData(static_cast<uint8_t>(Register::QUATERNION_DATA_W_LSB_ADDR), raw);
-    
+
     // Scale and return Eigen quaternion
     constexpr float scale = (1.0f / (1 << 14));
-    return Eigen::Quaternionf((float)raw[0] * scale, (float)raw[1] * scale, 
+    return Eigen::Quaternionf((float)raw[0] * scale, (float)raw[1] * scale,
                               (float)raw[2] * scale, (float)raw[3] * scale);
 }
 //----------------------------------------------------------------------------
@@ -79,12 +79,10 @@ Eigen::Vector3f BN055::getVector(VectorType vectorType)
         || vectorType == VectorType::GYROSCOPE
         || vectorType == VectorType::EULER)
     {
-        return Eigen::Vector3f((float)raw[0] / 16.0f, (float)raw[1] / 16.0f, (float)raw[2] / 16.0f);
-    }
-    else {
-        return Eigen::Vector3f((float)raw[0] / 100.0f, (float)raw[1] / 100.0f, (float)raw[2] / 100.0f);
+        return {(float)raw[0] / 16.0f, (float)raw[1] / 16.0f, (float)raw[2] / 16.0f};
     }
     
+    return {(float)raw[0] / 100.0f, (float)raw[1] / 100.0f, (float)raw[2] / 100.0f};
 }
 //----------------------------------------------------------------------------
 uint8_t BN055::readByte(uint8_t address)

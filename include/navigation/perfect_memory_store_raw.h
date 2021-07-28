@@ -46,16 +46,22 @@ public:
         return m_Snapshots.size();
     }
 
-    const cv::Mat &getSnapshot(size_t index) const
+    const std::pair<cv::Mat, ImgProc::Mask> &getSnapshot(size_t index) const
     {
         BOB_ASSERT(index < m_Snapshots.size());
         return m_Snapshots[index];
     }
 
-    size_t addSnapshot(const cv::Mat &image)
+    size_t addSnapshot(const cv::Mat &image, const ImgProc::Mask &mask)
     {
+        // Add a new entry to vector
         m_Snapshots.emplace_back();
-        image.copyTo(m_Snapshots.back());
+
+        // Make a deep copy of the image
+        image.copyTo(m_Snapshots.back().first);
+
+        // Make a shallow copy of the mask
+        m_Snapshots.back().second = mask;
 
         // Return index of new snapshot
         return (m_Snapshots.size() - 1);
@@ -68,24 +74,19 @@ public:
 
     float calcSnapshotDifference(const cv::Mat &image,
                                  const ImgProc::Mask &imageMask,
-                                 size_t snapshot,
-                                 const ImgProc::Mask &snapshotMask) const
+                                 size_t snapshot) const
     {
-        /*
-         * Workaround for a really longstanding gcc bug:
-         *      https://gcc.gnu.org/bugzilla/show_bug.cgi?id=27557
-         */
         static thread_local typename Differencer::template Internal<> differencer;
 
         // Calculate difference between image and stored image
-        return differencer(image, m_Snapshots[snapshot], imageMask, snapshotMask);
+        return differencer(image, m_Snapshots[snapshot].first, imageMask, m_Snapshots[snapshot].second);
     }
 
 private:
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
-    std::vector<cv::Mat> m_Snapshots;
+    std::vector<std::pair<cv::Mat, ImgProc::Mask>> m_Snapshots;
 }; // RawImage
 } // PerfectMemoryStore
 } // Navigation

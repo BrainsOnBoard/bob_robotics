@@ -63,7 +63,7 @@ struct WeightSnapshotsDynamic
 
         // Build a heap (only partially sorts)
         auto comparator = [&minDifferences](const size_t i1, const size_t i2) {
-            return minDifferences[i1] >= minDifferences[i2];
+            return minDifferences[i1] > minDifferences[i2];
         };
         std::make_heap(std::begin(idx), std::end(idx), comparator);
 

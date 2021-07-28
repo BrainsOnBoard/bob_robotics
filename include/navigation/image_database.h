@@ -14,6 +14,9 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 
+// TBB
+#include <tbb/parallel_for.h>
+
 // Standard C includes
 #include <ctime>
 
@@ -23,6 +26,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -75,6 +79,7 @@ class ImageDatabase
 {
     using degree_t = units::angle::degree_t;
     using millimeter_t = units::length::millimeter_t;
+    using hertz_t = units::frequency::hertz_t;
 
 public:
     //! The metadata for an entry in an ImageDatabase
@@ -91,9 +96,40 @@ public:
         const std::string &getExtraField(const std::string &name) const;
     };
 
+    class FrameWriter {
+    public:
+        virtual std::string getCurrentFilenameRoot() const = 0;
+        virtual void writeFrame(const cv::Mat &frame, Entry &entry) = 0;
+    };
+
+    class ImageFileWriter
+      : public FrameWriter {
+    public:
+        ImageFileWriter(const ImageDatabase &, std::string imageFormat);
+        void writeFrame(const cv::Mat &frame, Entry &entry) override;
+
+    private:
+        const std::string m_ImageFormat;
+    };
+
+    class VideoFileWriter
+      : public FrameWriter {
+    public:
+        VideoFileWriter(const ImageDatabase &,
+                        const std::pair<const std::string &, const std::string &> &format);
+        void writeFrame(const cv::Mat &frame, Entry &entry) override;
+        const std::string &getVideoFileName() const;
+
+    private:
+        cv::VideoWriter m_Writer;
+        const std::string m_FileName;
+    };
+
     //! Base class for GridRecorder and RouteRecorder
-    template<size_t NumExtraFields = 0>
-    class Recorder {
+    template<class FrameWriterType>
+    class Recorder
+      : public FrameWriterType
+    {
     public:
         ~Recorder()
         {
@@ -129,17 +165,8 @@ public:
         //! Current number of *new* entries for the ImageDatabase
         size_t size() const { return m_NewEntries.size(); }
 
-        //! Get the format in which images will be saved
-        std::string getImageFormat() const { return m_ImageFormat; }
-
-        void setImageFormat(const std::string &imageFormat)
-        {
-            m_ImageFormat = imageFormat;
-        }
-
     private:
-        const std::array<std::string, NumExtraFields> m_ExtraFieldNames;
-        std::string m_ImageFormat = "png";
+        const std::vector<std::string> m_ExtraFieldNames;
         ImageDatabase &m_ImageDatabase;
         bool m_Recording;
         std::vector<Entry> m_NewEntries;
@@ -147,11 +174,13 @@ public:
     protected:
         cv::FileStorage m_YAML;
 
-        template<class... Ts>
+        template<class T, class... Ts>
         Recorder(ImageDatabase &imageDatabase,
-                 const bool isRoute,
-                 Ts &&... extraFieldNames)
-          : m_ExtraFieldNames({ std::forward<Ts>(extraFieldNames)... })
+                 bool isRoute,
+                 T &&format,
+                 std::vector<std::string> extraFieldNames)
+          : FrameWriterType{ imageDatabase, std::move(format) }
+          , m_ExtraFieldNames(std::move(extraFieldNames))
           , m_ImageDatabase(imageDatabase)
           , m_Recording(true)
           , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
@@ -160,14 +189,20 @@ public:
             imageDatabase.m_IsRoute = isRoute;
 
             // Get current date and time
-            std::time_t now = std::time(nullptr);
-            char timeStr[sizeof("0000-00-00 00:00:00")];
-            BOB_ASSERT(0 != std::strftime(timeStr, sizeof(timeStr), "%F %T", std::localtime(&now)));
+            const auto &creationTime = imageDatabase.getCreationTime();
+            std::stringstream ss;
+            ss << std::setfill('0')
+               << std::setw(4) << (creationTime.tm_year + 1900) << "-"
+               << std::setw(2) << (creationTime.tm_mon + 1) << "-"
+               << std::setw(2) << creationTime.tm_mday << " "
+               << std::setw(2) << creationTime.tm_hour << ":"
+               << std::setw(2) << creationTime.tm_min << ":"
+               << std::setw(2) << creationTime.tm_sec;
 
             // Write some metadata; users can add extra
             m_YAML << "metadata"
                    << "{"
-                   << "time" << timeStr
+                   << "time" << ss.str()
                    << "project_git_commit" << BOB_PROJECT_GIT_COMMIT
                    << "bob_robotics_git_commit" << BOB_ROBOTICS_GIT_COMMIT
 #ifdef BOB_IS_EXPERIMENT
@@ -179,28 +214,34 @@ public:
         }
 
         template<class... Ts>
-        void addEntry(const std::string &filename,
-                      const cv::Mat &image,
+        void addEntry(const cv::Mat &image,
                       const Vector3<millimeter_t> &position,
                       const degree_t heading,
                       const std::array<size_t, 3> &gridPosition,
                       Ts&&... extraFieldValues)
         {
-            static_assert(sizeof...(extraFieldValues) == NumExtraFields,
-                          "Must supply correct number of extra field values");
+            // **NOTE** for reasons I can't quite comprehend, "BOB_ASSERT(sizeof...(extraFieldValues) == m_ExtraFieldNames.size());"
+            // results in "error C2065: 'extraFieldValues': undeclared identifier" on Visual Studio
+            constexpr size_t numExtraFields = sizeof...(extraFieldValues);
+            BOB_ASSERT(numExtraFields == m_ExtraFieldNames.size());
             BOB_ASSERT(m_Recording);
-
-            m_ImageDatabase.writeImage(filename, image);
 
             Entry newEntry{
                 position,
                 heading,
-                m_ImageDatabase.m_Path / filename,
+                "",
                 gridPosition,
                 {}
             };
+            this->writeFrame(image, newEntry);
             m_NewEntries.emplace_back(std::move(newEntry));
+
             setExtraFields(std::forward<Ts>(extraFieldValues)...);
+        }
+
+        const ImageDatabase &getImageDatabase() const
+        {
+            return m_ImageDatabase;
         }
 
         template<class... Ts>
@@ -209,6 +250,12 @@ public:
             const auto &key = *(m_ExtraFieldNames.cend() - 1 - sizeof...(otherValues));
             m_NewEntries.back().extraFields.emplace(key, std::move(value));
             setExtraFields(std::forward<Ts>(otherValues)...);
+        }
+
+        template<class... Ts>
+        void setExtraFields(const char *value, Ts&&... otherValues)
+        {
+            setExtraFields(std::string{ value }, std::forward<Ts>(otherValues)...);
         }
 
         template<class T, class... Ts>
@@ -223,64 +270,22 @@ public:
     };
 
     //! For recording a grid of images at a fixed heading
-    template<size_t NumExtraFields = 0>
     class GridRecorder
-      : public Recorder<NumExtraFields> {
+      : public Recorder<ImageFileWriter> {
     public:
-        template<class... Ts>
         GridRecorder(ImageDatabase &imageDatabase, const Range &xrange,
                      const Range &yrange, const Range &zrange = Range(0_mm),
-                     degree_t heading = 0_deg, Ts &&... extraFieldNames)
-          : Recorder<NumExtraFields>(imageDatabase, false,
-                                     std::forward<Ts>(extraFieldNames)...)
-          , m_Heading(heading)
-          , m_Begin(xrange.begin, yrange.begin, zrange.begin)
-          , m_Separation(xrange.separation, yrange.separation, zrange.separation)
-          , m_Size({ xrange.size(), yrange.size(), zrange.size() })
-          , m_Current({ 0, 0, 0 })
-        {
-            BOB_ASSERT(!imageDatabase.isRoute());
+                     degree_t heading = 0_deg,
+                     std::string imageFormat = "png",
+                     std::vector<std::string> extraFieldNames = {});
 
-            // Save some extra, grid-specific metadata
-            this->m_YAML << "grid"
-                         << "{"
-                         << "beginAtMM"
-                         << "[:" << m_Begin[0]() << m_Begin[1]() << m_Begin[2]() << "]"
-                         << "separationMM"
-                         << "[:" << m_Separation[0]() << m_Separation[1]() << m_Separation[2]() << "]"
-                         << "size"
-                         << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
-                         << "}";
-        }
+        std::string getCurrentFilenameRoot() const override;
 
         //! Get the physical position represented by grid coordinates
-        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const
-        {
-            BOB_ASSERT(gridPosition[0] < m_Size[0]
-                        && gridPosition[1] < m_Size[1]
-                        && gridPosition[2] < m_Size[2]);
-            Vector3<millimeter_t> position;
-            for (size_t i = 0; i < position.size(); i++) {
-                position[i] = (m_Separation[i] * gridPosition[i]) + m_Begin[i];
-            }
-            return position;
-        }
+        Vector3<millimeter_t> getPosition(const std::array<size_t, 3> &gridPosition) const;
 
         //! Get a vector of all possible positions for this grid
-        std::vector<Vector3<millimeter_t>> getPositions() const
-        {
-            std::vector<Vector3<millimeter_t>> positions;
-            positions.reserve(maximumSize());
-
-            for (size_t x = 0; x < sizeX(); x++) {
-                for (size_t y = 0; y < sizeY(); y++) {
-                    for (size_t z = 0; z < sizeZ(); z++) {
-                        positions.emplace_back(getPosition({ x, y, z }));
-                    }
-                }
-            }
-            return positions;
-        }
+        std::vector<Vector3<millimeter_t>> getPositions() const;
 
         /**!
          * \brief Save a new image into the database with values for extra
@@ -310,21 +315,15 @@ public:
                     const cv::Mat &image, Ts&&... extraFieldValues)
         {
             const auto position = getPosition(gridPosition);
-            const std::string filename = ImageDatabase::getFilename(position,
-                this->getImageFormat());
-            this->addEntry(filename, image, position, m_Heading,
+            this->addEntry(image, position, m_Heading,
                      { gridPosition[0], gridPosition[1], gridPosition[2] },
                      std::forward<Ts>(extraFieldValues)...);
         }
 
-        size_t maximumSize() const
-        {
-            return sizeX() * sizeY() * sizeZ();
-        }
-
-        size_t sizeX() const { return m_Size[0]; }
-        size_t sizeY() const { return m_Size[1]; }
-        size_t sizeZ() const { return m_Size[2]; }
+        size_t maximumSize() const;
+        size_t sizeX() const;
+        size_t sizeY() const;
+        size_t sizeZ() const;
 
     private:
         const degree_t m_Heading;
@@ -334,14 +333,16 @@ public:
     };
 
     //! For saving images recorded along a route
-    template<size_t NumExtraFields = 0>
+    template<class FrameWriterType>
     class RouteRecorder
-      : public Recorder<NumExtraFields> {
+      : public Recorder<FrameWriterType> {
     public:
-        template<class... Ts>
-        RouteRecorder(ImageDatabase &imageDatabase, Ts&&... extraFieldNames)
-          : Recorder<NumExtraFields>(imageDatabase, true,
-                                     std::forward<Ts>(extraFieldNames)...)
+        template<class T>
+        RouteRecorder(ImageDatabase &imageDatabase, T &&format,
+                      std::vector<std::string> extraFieldNames)
+          : Recorder<FrameWriterType>(imageDatabase, true,
+                                      std::move(format),
+                                      std::move(extraFieldNames))
         {
             BOB_ASSERT(!imageDatabase.isGrid());
         }
@@ -354,17 +355,23 @@ public:
         void record(const Vector3<millimeter_t> &position, degree_t heading,
                     const cv::Mat &image, Ts &&... extraFieldValues)
         {
-            const auto filename = ImageDatabase::getFilename(this->size(),
-                                                             this->getImageFormat());
-            this->addEntry(filename, image, position, heading, { 0, 0, 0 },
+            this->addEntry(image, position, heading, { 0, 0, 0 },
                            std::forward<Ts>(extraFieldValues)...);
+        }
+
+        std::string getCurrentFilenameRoot() const override
+        {
+            std::ostringstream ss;
+            ss << "image" << std::setw(5) << std::setfill('0') << this->size() + 1;
+            return (this->getImageDatabase().getPath() / ss.str()).str();
         }
     };
 
+    ImageDatabase();
     ImageDatabase(const char *databasePath, bool overwrite = false);
     ImageDatabase(const std::string &databasePath, bool overwrite = false);
-    ImageDatabase(const filesystem::path &databasePath = Path::getNewPath(),
-                  bool overwrite = false);
+    ImageDatabase(filesystem::path databasePath, bool overwrite = false);
+    ImageDatabase(const std::tm &creationTime);
 
     //! Get the path of the directory corresponding to this ImageDatabase
     const filesystem::path &getPath() const;
@@ -391,10 +398,12 @@ public:
     bool isGrid() const;
 
     //! Load all of the images in this database into memory and return
-    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, bool greyscale = true) const;
+    std::vector<cv::Mat> loadImages(const cv::Size &size = {}, size_t frameSkip = 1,
+                                    bool greyscale = true) const;
 
     //! Load all of the images in this database into the specified std::vector<>
-    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {}, bool greyscale = true) const;
+    void loadImages(std::vector<cv::Mat> &images, const cv::Size &size = {},
+                    size_t frameSkip = 1, bool greyscale = true) const;
 
     //! Access the metadata for this database via OpenCV's persistence API
     cv::FileNode getMetadata() const;
@@ -402,26 +411,36 @@ public:
     //! Get the (directory) name of this database
     std::string getName() const;
 
+    //! Get the time at which this database was created
+    const std::tm &getCreationTime() const;
+
     //! Start recording a grid of images
-    template<class... Ts>
-    auto getGridRecorder(const Range &xrange, const Range &yrange,
-                         const Range &zrange = Range(0_mm),
-                         degree_t heading = 0_deg, Ts &&... extraFieldNames)
-    {
-        return GridRecorder<sizeof...(extraFieldNames)>{
-            *this, xrange, yrange, zrange, heading,
-            std::forward<Ts>(extraFieldNames)...
-        };
-    }
+    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
+                                 const Range &zrange = Range(0_mm),
+                                 degree_t heading = 0_deg,
+                                 std::string imageFormat = "png",
+                                 std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    template<class... Ts>
-    auto getRouteRecorder(Ts&&... extraFieldNames)
-    {
-        return RouteRecorder<sizeof...(extraFieldNames)>{
-            *this, std::forward<Ts>(extraFieldNames)...
-        };
-    }
+    RouteRecorder<ImageFileWriter> getRouteRecorder(std::string imageFormat = "png",
+                                                    std::vector<std::string> extraFieldNames = {});
+
+    /**!
+     * \brief Start recording a route, saving images into video file using
+     *        default AVI/MJPEG format.
+     */
+    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
+                                                         hertz_t fps,
+                                                         std::vector<std::string> extraFieldNames = {});
+
+    //! Start recording a route, saving images into video file with a custom codec
+    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
+                                                         hertz_t fps,
+                                                         const std::string &extension,
+                                                         const std::string &codec,
+                                                         std::vector<std::string> extraFieldNames = {});
+
+    hertz_t getFrameRate() const;
 
     //! Get the resolution of saved images
     cv::Size getResolution() const;
@@ -429,92 +448,86 @@ public:
     //! Check if this database has any saved metadata (yet)
     bool hasMetadata() const;
 
+    template<class Func>
+    void forEachImage(const Func &func, size_t frameSkip = 1,
+                      bool greyscale = true) const
+    {
+        BOB_ASSERT(frameSkip > 0);
+
+        if (empty()) {
+            return;
+        }
+
+        // If database consists of individual image files...
+        if (m_VideoFilePath.empty()) {
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, m_Entries.size() / frameSkip),
+                              [&](const auto &r) {
+                                  for (size_t i = r.begin(); i != r.end(); ++i) {
+                                      func(i, m_Entries[i * frameSkip].load(greyscale));
+                                  }
+                              });
+
+            return;
+        }
+
+        // ...otherwise we have a video file
+        cv::VideoCapture cap{ m_VideoFilePath.str() };
+        BOB_ASSERT(cap.isOpened());
+
+        cv::Mat img;
+        for (size_t i = 0; i < m_Entries.size() / frameSkip; i++) {
+            BOB_ASSERT(cap.read(img));
+
+            if (greyscale) {
+                cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
+            }
+
+            func(i, img);
+
+            /*
+             * It is possible to explicitly jump to a given frame with OpenCV,
+             * but that turns out to be reeeeeeeaaaally slow.
+             */
+            for (size_t j = 1; j < frameSkip && cap.grab(); j++)
+                ;
+        }
+    }
+
     /**!
      *  \brief Unwrap all the panoramic images in this database into a new
      *         folder, creating a new database.
      */
     void unwrap(const filesystem::path &destination,
-                const cv::Size &unwrapRes) const;
-
-    //! Get a filename for a route-type database
-    static std::string getFilename(const size_t routeIndex,
-                                   const std::string &imageFormat = "png");
-
-    //! Get a filename for a grid-type database
-    static std::string getFilename(const Vector3<millimeter_t> &position,
-                                   const std::string &imageFormat = "png");
+                const cv::Size &unwrapRes,
+                size_t frameSkip = 1,
+                bool greyscale = false) const;
 
     //! Return true if fn1 should be sorted before fn2
     static bool fileNameCompare(const std::string &fn1, const std::string &fn2);
 
 private:
-    const filesystem::path m_Path;
+    filesystem::path m_Path, m_VideoFilePath;
     std::vector<Entry> m_Entries;
     std::unique_ptr<cv::FileStorage> m_MetadataYAML;
     cv::Size m_Resolution;
+    std::tm m_CreationTime;
+    hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
+    bool m_NeedsUnwrapping = true;
     static constexpr const char *MetadataFilename = "database_metadata.yaml";
     static constexpr const char *EntriesFilename = "database_entries.csv";
 
+    ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
+                  bool overwrite);
+
+    void generateUnwrapCSV(const filesystem::path &destination, size_t frameSkip) const;
     void loadMetadata();
     bool loadCSV();
-    void readDirectoryEntries();
+    bool readDirectoryEntries();
     void writeImage(const std::string &filename, const cv::Mat &image) const;
 
-    template<size_t N>
     void addNewEntries(std::vector<Entry> &newEntries,
-                       const std::array<std::string, N> &extraFieldNames)
-    {
-        if (newEntries.empty()) {
-            LOG_WARNING << "No new entries added, nothing will be written";
-            return;
-        }
-
-        const std::string path = (m_Path / EntriesFilename).str();
-        LOG_INFO << "Writing entries to " << path << "...";
-
-        // Move new entries into this object's vector
-        m_Entries.reserve(m_Entries.size() + newEntries.size());
-        for (auto &&e : newEntries) {
-            m_Entries.emplace_back(std::move(e));
-        }
-
-        // Write image entries info to CSV file
-        std::ofstream os;
-        os.exceptions(std::ios::badbit | std::ios::failbit);
-        os.open(path);
-        os << "X [mm], Y [mm], Z [mm], Heading [degrees], Filename";
-        if (!m_IsRoute) {
-            os << ", Grid X, Grid Y, Grid Z";
-        }
-        for (const auto &name : extraFieldNames) {
-            os << ", " << name;
-        }
-        os << "\n";
-
-        for (auto &e : m_Entries) {
-            // These fields are always written...
-            os << e.position[0]() << ", " << e.position[1]() << ", "
-               << e.position[2]() << ", " << e.heading() << ", "
-               << e.path.filename();
-
-            // ...and these are only written if it's a grid database
-            if (!m_IsRoute) {
-                os << ", " << e.gridPosition[0] << ", " << e.gridPosition[1]
-                   << ", " << e.gridPosition[2];
-            }
-
-            // Write any extra user-specified field values
-            for (const auto &name : extraFieldNames) {
-                os << ", " << e.extraFields[name];
-            }
-
-            os << "\n";
-        }
-
-        // Reload metadata, in case it's changed
-        loadMetadata();
-    }
+                       const std::vector<std::string> &extraFieldNames);
 }; // ImageDatabase
 } // Navigation
 } // BoB robotics

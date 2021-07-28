@@ -1,50 +1,5 @@
 var group__error__group =
 [
-    [ "Using Mocks in Tests", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#UsingMocks", null ],
-    [ "Setting Default Actions", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#OnCall", null ],
-    [ "Setting Expectations", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#ExpectCall", null ],
-    [ "Matchers", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MatcherList", [
-      [ "Mocking a Normal Class", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MockClass", null ],
-      [ "Mocking a Class Template", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MockTemplate", null ],
-      [ "Floating-Point Matchers", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#FpMatchers", null ],
-      [ "Multi-argument Matchers", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MultiArgMatchers", null ],
-      [ "Using Matchers as Predicates", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#MatchersAsPredicatesCheat", null ]
-    ] ],
-    [ "Actions", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#ActionList", null ],
-    [ "Cardinalities", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#CardinalityList", [
-      [ "The After Clause", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#AfterClause", null ],
-      [ "Sequences", "md_third_party_googletest_googlemock_docs_cheat_sheet.html#UsingSequences", null ]
-    ] ],
-    [ "Mocking Non-virtual Methods", "md_third_party_googletest_googlemock_docs_cook_book.html#MockingNonVirtualMethods", null ],
-    [ "The Nice, the Strict, and the Naggy", "md_third_party_googletest_googlemock_docs_cook_book.html#NiceStrictNaggy", null ],
-    [ "Simplifying the Interface without Breaking Existing Code", "md_third_party_googletest_googlemock_docs_cook_book.html#SimplerInterfaces", null ],
-    [ "Delegating Calls to a Fake", "md_third_party_googletest_googlemock_docs_cook_book.html#DelegatingToFake", null ],
-    [ "Combining Matchers", "md_third_party_googletest_googlemock_docs_cook_book.html#CombiningMatchers", null ],
-    [ "Casting Matchers", "md_third_party_googletest_googlemock_docs_cook_book.html#SafeMatcherCast", null ],
-    [ "Selecting Between Overloaded Functions", "md_third_party_googletest_googlemock_docs_cook_book.html#SelectOverload", null ],
-    [ "Matchers must have no side-effects", "md_third_party_googletest_googlemock_docs_cook_book.html#PureMatchers", null ],
-    [ "Knowing When to Expect", "md_third_party_googletest_googlemock_docs_cook_book.html#UseOnCall", null ],
-    [ "Understanding Uninteresting vs Unexpected Calls", "md_third_party_googletest_googlemock_docs_cook_book.html#uninteresting-vs-unexpected", null ],
-    [ "Ignoring Uninteresting Arguments", "md_third_party_googletest_googlemock_docs_cook_book.html#ParameterlessExpectations", null ],
-    [ "Expecting Ordered Calls", "md_third_party_googletest_googlemock_docs_cook_book.html#OrderedCalls", null ],
-    [ "Expecting Partially Ordered Calls", "md_third_party_googletest_googlemock_docs_cook_book.html#PartialOrder", null ],
-    [ "Verifying Complex Arguments", "md_third_party_googletest_googlemock_docs_cook_book.html#SaveArgVerify", null ],
-    [ "Mocking Side Effects", "md_third_party_googletest_googlemock_docs_cook_book.html#MockingSideEffects", null ],
-    [ "Setting the Default Value for a Return Type", "md_third_party_googletest_googlemock_docs_cook_book.html#DefaultValue", null ],
-    [ "Using Functions/Methods/Functors/Lambdas as Actions", "md_third_party_googletest_googlemock_docs_cook_book.html#FunctionsAsActions", null ],
-    [ "Selecting an Action's Arguments", "md_third_party_googletest_googlemock_docs_cook_book.html#SelectingArgs", [
-      [ "Legacy workarounds for move-only types", "md_third_party_googletest_googlemock_docs_cook_book.html#LegacyMoveOnly", null ]
-    ] ],
-    [ "Using Check Points", "md_third_party_googletest_googlemock_docs_cook_book.html#UsingCheckPoints", null ],
-    [ "Using gMock and Threads", "md_third_party_googletest_googlemock_docs_cook_book.html#UsingThreads", null ],
-    [ "Writing New Matchers Quickly", "md_third_party_googletest_googlemock_docs_cook_book.html#NewMatchers", null ],
-    [ "Writing New Actions Quickly", "md_third_party_googletest_googlemock_docs_cook_book.html#QuickNewActions", null ],
-    [ "Writing New Monomorphic Actions", "md_third_party_googletest_googlemock_docs_cook_book.html#NewMonoActions", null ],
-    [ "Writing New Polymorphic Actions", "md_third_party_googletest_googlemock_docs_cook_book.html#NewPolyActions", null ],
-    [ "Mock std::function", "md_third_party_googletest_googlemock_docs_cook_book.html#MockFunction", [
-      [ "Using Multiple Expectations", "GMockForDummies.html#MultiExpectations", null ],
-      [ "All Expectations Are Sticky (Unless Said Otherwise)", "GMockForDummies.html#StickyExpectations", null ]
-    ] ],
     [ "Error", "classCLI_1_1Error.html", [
       [ "Error", "classCLI_1_1Error.html#a7b30cbdb0c6f3ef3d5550df7d8e18904", null ],
       [ "Error", "classCLI_1_1Error.html#a52187308eced1fc96f270ef384dbd7a2", null ],
@@ -149,7 +104,7 @@ var group__error__group =
       [ "ArgumentMismatch", "classCLI_1_1ArgumentMismatch.html#a4c14036a691d0f6d98fa05a8e4cc3955", null ],
       [ "ArgumentMismatch", "classCLI_1_1ArgumentMismatch.html#a4010dec4a893c12afe4d25407f60deef", null ],
       [ "ArgumentMismatch", "classCLI_1_1ArgumentMismatch.html#a1b852b3bb6f7f89af18dd59c1ae4639d", null ],
-      [ "ArgumentMismatch", "classCLI_1_1ArgumentMismatch.html#a50aceb9f7f1831af211f8b1d9ac813db", null ]
+      [ "ArgumentMismatch", "classCLI_1_1ArgumentMismatch.html#a03b5d359cb07e82b2d2f0f734ffeb545", null ]
     ] ],
     [ "RequiresError", "classCLI_1_1RequiresError.html", [
       [ "RequiresError", "classCLI_1_1RequiresError.html#a0d3d7973f261a958297b464a58ea69c5", null ],
@@ -170,7 +125,8 @@ var group__error__group =
       [ "ExtrasError", "classCLI_1_1ExtrasError.html#a9410870ec18de49f382e4c3b0c771d31", null ],
       [ "ExtrasError", "classCLI_1_1ExtrasError.html#a270efab44c11f4d5cf205cd2791334cc", null ],
       [ "ExtrasError", "classCLI_1_1ExtrasError.html#aae120b6989fd5c3af29bcc9e6bcfec4c", null ],
-      [ "ExtrasError", "classCLI_1_1ExtrasError.html#a859422a4eb856a261e41bba1f6bd87f9", null ]
+      [ "ExtrasError", "classCLI_1_1ExtrasError.html#a859422a4eb856a261e41bba1f6bd87f9", null ],
+      [ "ExtrasError", "classCLI_1_1ExtrasError.html#a81d8c1878d1397dac1070f4a977c3fbd", null ]
     ] ],
     [ "ConfigError", "classCLI_1_1ConfigError.html", [
       [ "ConfigError", "classCLI_1_1ConfigError.html#a1872c4bcdf0b53d46d7dba1647824ccf", null ],

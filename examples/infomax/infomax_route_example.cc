@@ -31,7 +31,7 @@ using namespace std::literals;
 namespace plt = matplotlibcpp;
 
 using FloatType = float;
-using InfoMaxType = InfoMaxRotater<InSilicoRotater, FloatType>;
+using InfoMaxType = InfoMaxRotater<FloatType>;
 
 void doTesting(const InfoMaxType &infomax, const std::vector<double> &x,
                const std::vector<double> &y, const std::vector<cv::Mat> &images)
@@ -82,7 +82,7 @@ int bobMain(int argc, char **argv)
         LOGI << "Loading images from " << routePath << "...";
         Timer<> loadingTimer{ "Images loaded in: " };
         const ImageDatabase routeImages(routePath);
-        assert(routeImages.size() > 0);
+        assert(!routeImages.empty());
 
         cv::Mat image;
         for (size_t i = 1; i < routeImages.size(); i++) {

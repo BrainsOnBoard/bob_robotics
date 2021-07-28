@@ -42,30 +42,26 @@ void MemoryBase::writeCSVLine(std::ostream &os)
 //------------------------------------------------------------------------
 // PerfectMemory
 //------------------------------------------------------------------------
-PerfectMemory::PerfectMemory(const Config &config, const cv::Size &inputSize)
+PerfectMemory::PerfectMemory(const Config&, const cv::Size &inputSize)
 :   m_PM(inputSize), m_BestSnapshotIndex(std::numeric_limits<size_t>::max())
 {
-    // Load mask image
-    if(!config.getMaskImageFilename().empty()) {
-        getPM().setMask(ImgProc::Mask{ config.getMaskImageFilename() });
-    }
 }
 //------------------------------------------------------------------------
-void PerfectMemory::test(const cv::Mat &snapshot)
+void PerfectMemory::test(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
     // Get heading directly from Perfect Memory
     degree_t bestHeading;
     float lowestDifference;
-    std::tie(bestHeading, m_BestSnapshotIndex, lowestDifference, std::ignore) = getPM().getHeading(snapshot);
+    std::tie(bestHeading, m_BestSnapshotIndex, lowestDifference, std::ignore) = getPM().getHeading(snapshot, mask);
 
     // Set best heading and vector length
     setBestHeading(bestHeading);
     setLowestDifference(lowestDifference);
 }
 //------------------------------------------------------------------------
-void PerfectMemory::train(const cv::Mat &snapshot)
+void PerfectMemory::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
-    getPM().train(snapshot);
+    getPM().train(snapshot, mask);
 }
 //------------------------------------------------------------------------
 void PerfectMemory::writeCSVHeader(std::ostream &os)
@@ -93,21 +89,21 @@ PerfectMemoryConstrained::PerfectMemoryConstrained(const Config &config, const c
 {
 }
 //------------------------------------------------------------------------
-void PerfectMemoryConstrained::test(const cv::Mat &snapshot)
+void PerfectMemoryConstrained::test(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
     // Get best heading from left side of scan
     degree_t leftBestHeading;
     float leftLowestDifference;
     size_t leftBestSnapshot;
     std::tie(leftBestHeading, leftBestSnapshot, leftLowestDifference, std::ignore) = getPM().getHeading(
-        snapshot, 1, 0, m_NumScanColumns);
+        snapshot, mask, 1, 0, m_NumScanColumns);
 
     // Get best heading from right side of scan
     degree_t rightBestHeading;
     float rightLowestDifference;
     size_t rightBestSnapshot;
     std::tie(rightBestHeading, rightBestSnapshot, rightLowestDifference, std::ignore) = getPM().getHeading(
-        snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
+        snapshot, mask, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
 
     // Get lowest difference and best heading from across scans
     setLowestDifference(std::min(leftLowestDifference, rightLowestDifference) / 255.0f);
@@ -125,7 +121,7 @@ PerfectMemoryConstrainedDynamicWindow::PerfectMemoryConstrainedDynamicWindow(con
 {
 }
 //------------------------------------------------------------------------
-void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
+void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
     // Get current window
     const auto window = m_Window.getWindow(getPM().getNumSnapshots());
@@ -135,14 +131,14 @@ void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot)
     float leftLowestDifference;
     size_t leftBestSnapshot;
     std::tie(leftBestHeading, leftBestSnapshot, leftLowestDifference, std::ignore) = getPM().getHeading(
-        window, snapshot, 1, 0, m_NumScanColumns);
+        snapshot, mask, window, 1, 0, m_NumScanColumns);
 
     // Get best heading from right side of scan
     degree_t rightBestHeading;
     float rightLowestDifference;
     size_t rightBestSnapshot;
     std::tie(rightBestHeading, rightBestSnapshot, rightLowestDifference, std::ignore) = getPM().getHeading(
-        window, snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
+        snapshot, mask, window, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
 
     // If best result came from left scan
     if(leftLowestDifference < rightLowestDifference) {
@@ -184,25 +180,27 @@ void PerfectMemoryConstrainedDynamicWindow::writeCSVLine(std::ostream &os)
 InfoMax::InfoMax(const Config &config, const cv::Size &inputSize)
 :   m_InfoMax(createInfoMax(config, inputSize))
 {
-    BOB_ASSERT(config.getMaskImageFilename().empty());
     LOGI << "\tUsing " << Eigen::nbThreads() << " threads";
 }
 //------------------------------------------------------------------------
-void InfoMax::test(const cv::Mat &snapshot)
+void InfoMax::test(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
+    BOB_ASSERT(mask.empty());
+
     // Get heading directly from InfoMax
     degree_t bestHeading;
     float lowestDifference;
-    std::tie(bestHeading, lowestDifference, std::ignore) = getInfoMax().getHeading(snapshot);
+    std::tie(bestHeading, lowestDifference, std::ignore) = getInfoMax().getHeading(snapshot, mask);
 
     // Set best heading and vector length
     setBestHeading(bestHeading);
     setLowestDifference(lowestDifference);
 }
 //-----------------------------------------------------------------------
-void InfoMax::train(const cv::Mat &snapshot)
+void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
-    getInfoMax().train(snapshot);
+    BOB_ASSERT(mask.empty());
+    getInfoMax().train(snapshot, mask);
 }
 //-----------------------------------------------------------------------
 void InfoMax::saveWeights(const filesystem::path &filename) const
@@ -234,19 +232,20 @@ InfoMaxConstrained::InfoMaxConstrained(const Config &config, const cv::Size &inp
 {
 }
 //-----------------------------------------------------------------------
-void InfoMaxConstrained::test(const cv::Mat &snapshot)
+void InfoMaxConstrained::test(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 {
+    BOB_ASSERT(mask.empty());
     // Get best heading from left side of scan
     degree_t leftBestHeading;
     float leftLowestDifference;
     std::tie(leftBestHeading, leftLowestDifference, std::ignore) = getInfoMax().getHeading(
-        snapshot, 1, 0, m_NumScanColumns);
+        snapshot, mask, 1, 0, m_NumScanColumns);
 
     // Get best heading from right side of scan
     degree_t rightBestHeading;
     float rightLowestDifference;
     std::tie(rightBestHeading, rightLowestDifference, std::ignore) = getInfoMax().getHeading(
-        snapshot, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
+        snapshot, mask, 1, m_ImageWidth - m_NumScanColumns, m_ImageWidth);
 
     // Get lowest difference and best heading from across scans
     setLowestDifference(std::min(leftLowestDifference, rightLowestDifference));

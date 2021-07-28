@@ -58,14 +58,16 @@ public:
         return m_Snapshots.size();
     }
 
-    const cv::Mat &getSnapshot(size_t) const
+    const std::pair<cv::Mat, ImgProc::Mask> &getSnapshot(size_t) const
     {
         throw std::runtime_error("When using HOG features, snapshots aren't stored");
     }
 
     // Add a snapshot to memory and return its index
-    size_t addSnapshot(const cv::Mat &image)
+    size_t addSnapshot(const cv::Mat &image, const ImgProc::Mask &mask)
     {
+        BOB_ASSERT(mask.empty());
+
         m_Snapshots.emplace_back(m_HOGDescriptorSize);
         m_HOG.compute(image, m_Snapshots.back());
         BOB_ASSERT(m_Snapshots.back().size() == m_HOGDescriptorSize);
@@ -82,15 +84,10 @@ public:
     // Calculate difference between memory and snapshot with index
     float calcSnapshotDifference(const cv::Mat &image,
                                  const ImgProc::Mask &imageMask,
-                                 size_t snapshot,
-                                 const ImgProc::Mask &) const
+                                 size_t snapshot) const
     {
         BOB_ASSERT(imageMask.empty());
 
-        /*
-         * Workaround for a really longstanding gcc bug:
-         *      https://gcc.gnu.org/bugzilla/show_bug.cgi?id=27557
-         */
         static thread_local typename Differencer::template Internal<std::vector<float>> differencer;
 
         // Calculate HOG descriptors of image

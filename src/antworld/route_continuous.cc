@@ -241,7 +241,7 @@ Pose2<meter_t, degree_t> RouteContinuous::getPose(meter_t distance) const
     const meter_t y{ prevWaypoint[1] + proportion * (nextWaypoint[1] - prevWaypoint[1]) };
 
     // Return position
-    return Pose2<meter_t, degree_t>(x, y, 90_deg + m_Headings[prevWaypointIndex]);
+    return {x, y, 90_deg + m_Headings[prevWaypointIndex]};
 }
 //----------------------------------------------------------------------------
 void RouteContinuous::setWaypointFamiliarity(size_t pos, double familiarity)

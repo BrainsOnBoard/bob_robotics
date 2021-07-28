@@ -1,10 +1,12 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
+#include "os/keycodes.h"
 #include "video/odk2/odk2.h"
 
 // Standard C++ includes
 #include <iostream>
 
+using namespace BoBRobotics;
 using namespace BoBRobotics::Video;
 
 int bobMain(int, char**)
@@ -31,7 +33,8 @@ int bobMain(int, char**)
         std::cout << "Orientation: (" << euler[0].value() << ", " << euler[1].value() << ", "<< euler[2].value() << ") degrees" << std::endl;
 
         // Pump events and stop if escape is pressed
-        if(cv::waitKey(1) == 27) {
+        const int key = cv::waitKey(1) & OS::KeyMask;
+        if(key == 27) {
             break;
         }
     }

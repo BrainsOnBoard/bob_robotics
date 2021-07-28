@@ -25,7 +25,7 @@ using Window = std::pair<size_t, size_t>;
 PM_TEST(SampleImage, PerfectMemoryRotater<>, "pm.bin")
 PM_TEST(SampleImageRMS, PerfectMemoryRotater<PerfectMemoryStore::RawImage<RMSDiff>>, "pm_rms.bin")
 
-void testCCoeff(const std::string &filename, ImgProc::Mask mask, std::pair<size_t, size_t> window)
+void testCCoeff(const std::string &filename, const ImgProc::Mask &mask, std::pair<size_t, size_t> window)
 {
     using namespace BoBRobotics;
     constexpr float precision = 1e-5f;
@@ -34,15 +34,14 @@ void testCCoeff(const std::string &filename, ImgProc::Mask mask, std::pair<size_
     const auto trueDifferences = readMatrix<float>(filepath);
 
     PerfectMemoryRotater<PerfectMemoryStore::RawImage<CorrCoefficient>> algo{ TestImageSize };
-    algo.setMask(std::move(mask));
     for (const auto &image : TestImages) {
-        algo.train(image);
+        algo.train(image, mask);
     }
 
     if (window == Window{}) {
         window = algo.getFullWindow();
     }
-    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    const auto &differences = algo.getImageDifferences(TestImages[0], mask, window);
     compareFloatMatrices(differences, trueDifferences, precision);
 }
 
@@ -105,7 +104,7 @@ testHog(const std::string &filename, std::pair<size_t, size_t> window, float pre
     if (window == Window{}) {
         window = algo.getFullWindow();
     }
-    const auto &differences = algo.getImageDifferences(window, TestImages[0]);
+    const auto &differences = algo.getImageDifferences(TestImages[0], ImgProc::Mask{}, window);
     compareFloatMatrices(differences, trueDifferences, precision);
 }
 

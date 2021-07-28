@@ -23,6 +23,9 @@ public:
     //! Construct a mask based on a cv::Mat where zero pixels are treated as masked
     explicit Mask(cv::Mat mask, const cv::Size &resizeTo = {});
 
+    //! Construct a mask based on a cv::Mat where pixels outside of lower and upper range are masked
+    explicit Mask(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &resizeTo = {});
+
     //! Load a mask from an image file
     explicit Mask(const filesystem::path &imagePath, const cv::Size &resizeTo = {});
 
@@ -37,6 +40,9 @@ public:
     const cv::Mat &get() const;
     bool isValid(const cv::Size &imageSize) const;
 
+    //! Clone mask
+    Mask clone() const;
+
     /*!
      * \brief Roll the mask the specified number of pixels to the left
      *
@@ -45,8 +51,9 @@ public:
      */
     void roll(Mask &out, size_t pixelsLeft) const;
 
-    void set(cv::Mat mask, const cv::Size &resizeTo = {});
-    void set(const filesystem::path &imagePath, const cv::Size &resizeTo = {});
+    void set(cv::Mat mask, const cv::Size &size = {});
+    void set(const cv::Mat &image, const cv::Scalar &lower, const cv::Scalar &upper, const cv::Size &size = {});
+    void set(const filesystem::path &imagePath, const cv::Size &size = {});
 
 private:
     cv::Mat m_Mask;
