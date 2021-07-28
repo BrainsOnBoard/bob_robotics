@@ -1,6 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
-#include "dc_motor_featherwing.h"
+#include "common/dc_motor_featherwing.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::DCMotorFeatherWing
@@ -14,7 +14,7 @@ const PCA9685::Channel DCMotorFeatherWing::motorChannels[MOTOR_MAX][MOTOR_CHANNE
         {PCA9685::Channel::CHANNEL_7, PCA9685::Channel::CHANNEL_5, PCA9685::Channel::CHANNEL_6}};
 //----------------------------------------------------------------------------
 DCMotorFeatherWing::DCMotorFeatherWing(const char *path, int slaveAddress, units::frequency::hertz_t pwmFrequency)
-:   m_PCA9685(path, slaveAddress)
+:   m_PCA9685(slaveAddress, path)
 {
     // Set PWM frequency
     m_PCA9685.setFrequency(pwmFrequency);
