@@ -39,11 +39,11 @@ MecanumPCA9685::omni2D(float forward, float sideways, float turn)
     setWheelSpeed(forward, sideways, turn);
 
     // resolve to motor speeds
-    const float m1 = +sideways - forward - turn;
+    const float m1 = -sideways + forward - turn;
     const float m2 = +sideways + forward + turn;
-    const float m3 = -sideways + forward - turn;
-    const float m4 = -sideways - forward + turn;
-    
+    const float m3 = +sideways + forward - turn;
+    const float m4 = -sideways + forward + turn;
+
     driveMotors(m1, m2, m3, m4);
 }
 //----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ void MecanumPCA9685::driveMotors(float m1, float m2, float m3, float m4)
     cap(m2);
     cap(m3);
     cap(m4);
-    
+
     setMotorThrottle(Motor::MOTOR_1, m1);
     setMotorThrottle(Motor::MOTOR_2, m2);
     setMotorThrottle(Motor::MOTOR_3, m3);
