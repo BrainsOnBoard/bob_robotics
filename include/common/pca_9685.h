@@ -19,7 +19,7 @@ namespace BoBRobotics {
 class PCA9685
 {
 public:
-    PCA9685(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x60, 
+    PCA9685(int slaveAddress, const char *path = I2C_DEVICE_DEFAULT, 
             units::frequency::hertz_t referenceClockSpeed = units::frequency::megahertz_t(25.0));
     
     //----------------------------------------------------------------------------

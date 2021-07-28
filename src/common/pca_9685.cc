@@ -17,7 +17,7 @@ union PWM
 //----------------------------------------------------------------------------
 namespace BoBRobotics
 {
-PCA9685::PCA9685(const char *path, int slaveAddress, units::frequency::hertz_t referenceClockSpeed)
+PCA9685::PCA9685(int slaveAddress, const char *path, units::frequency::hertz_t referenceClockSpeed)
 :   m_ReferenceClockSpeed(referenceClockSpeed)
 {
     // Setup I2C device
