@@ -2,7 +2,7 @@
 #ifdef __linux__
 
 // BoB robotics includes
-#include "common/pca_9685.h"
+#include "pca_9685.h"
 
 // Third-party includes
 #include "third_party/units.h"

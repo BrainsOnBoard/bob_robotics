@@ -1,6 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
-#include "robots/dc_motor_featherwing.h"
+#include "dc_motor_featherwing.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::DCMotorFeatherWing
