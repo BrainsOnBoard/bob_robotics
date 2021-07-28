@@ -253,26 +253,24 @@ private:
             }
 
             // Capture frame
-            if(!m_Camera->readFrame(m_Output)) {
-                return false;
-            }
+            if(m_Camera->readFrame(m_Output)) {
+                // If our camera image needs unwrapping
+                if(m_Camera->needsUnwrapping()) {
+                    // Unwrap the image
+                    m_Unwrapper.unwrap(m_Output, m_Unwrapped);
 
-            // If our camera image needs unwrapping
-            if(m_Camera->needsUnwrapping()) {
-                // Unwrap the image
-                m_Unwrapper.unwrap(m_Output, m_Unwrapped);
+                    // Crop unwrapped frame
+                    m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
+                }
+                // Otherwise, crop camera image directly
+                else {
+                    m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
+                }
 
-                // Crop unwrapped frame
-                m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
-            }
-            // Otherwise, crop camera image directly
-            else {
-                m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
-            }
-
-            // If we're using the ODK2, generate mask from all black pixels in cropped image
-            if(m_Config.shouldUseODK2()) {
-                m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+                // If we're using the ODK2, generate mask from all black pixels in cropped image
+                if(m_Config.shouldUseODK2()) {
+                    m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+                }
             }
 
             // Pump OpenCV event queue
