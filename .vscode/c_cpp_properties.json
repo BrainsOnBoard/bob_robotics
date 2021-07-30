@@ -9,6 +9,8 @@
                 "${workspaceFolder}/third_party/plog/include",
                 "${workspaceFolder}/third_party/pybind11/include",
                 "${workspaceFolder}/third_party/development_kit_odk2",
+                "${workspaceFolder}/third_party/imgui",
+                "${workspaceFolder}/third_party/imgui/include",
                 "${ARSDK_ROOT}/out/arsdk-native/staging/usr/include",
                 "/usr/include/python3.7m",
                 "/usr/include/python3.8",
