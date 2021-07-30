@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 set(SOURCES include/imgui_widgets.cpp include/imgui_draw.cpp include/imgui.cpp include/imgui_demo.cpp
-            include/misc/cpp/imgui_stdlib.cpp  include/examples/imgui_impl_opengl2.cpp
-            imgui_impl_sfml.cpp)
+            include/misc/cpp/imgui_stdlib.cpp  include/backends/imgui_impl_opengl2.cpp
+            include/imgui_tables.cpp imgui_impl_sfml.cpp)
 include_directories(include)
 
 # If we have Freetype, use it
