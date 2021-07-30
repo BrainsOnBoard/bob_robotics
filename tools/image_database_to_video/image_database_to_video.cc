@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 using namespace BoBRobotics;
@@ -82,31 +83,27 @@ convertCSVFile(const ImageDatabase &inDatabase,
     } while (readCSVLine(ifs, line, fields));
 }
 
-void
+bool
 convertYAMLFile(const ImageDatabase &inDatabase,
                 const filesystem::path &outPath,
                 const filesystem::path &videoFile,
-                double frameRate)
+                double frameRate,
+                const std::string &defaultMetadata)
 {
     const auto outYamlPath = outPath / ImageDatabase::MetadataFilename;
     const auto inYamlPath = inDatabase.getPath() / ImageDatabase::MetadataFilename;
     if (inYamlPath.exists()) {
         filesystem::copy_file(inYamlPath, outYamlPath);
-    } else {
+    } else if (!defaultMetadata.empty()) {
         // If there's no metadata file then add one
         std::ofstream ofs{ outYamlPath.str() };
         BOB_ASSERT(ofs.good());
         ofs.exceptions(std::ios::badbit);
-        ofs << R"(%YAML:1.0
----
-metadata:
-  type: route
-  camera:
-     name: pixpro_usb
-     resolution: [ 1440, 1440 ]
-     isPanoramic: 1
-  needsUnwrapping: 1
-  isGreyscale: 0)";
+        ofs << defaultMetadata;
+    } else {
+        LOGE << "No metadata found and default metadata file was not specified. Skipping "
+             << inDatabase.getPath();
+        return false;
     }
 
     std::ofstream ofs{ outYamlPath.str(), std::ios::app };
@@ -115,6 +112,7 @@ metadata:
     ofs << "\n  videoFile: " << videoFile.filename() << "\n"
         << "  frameRate: " << frameRate << "\n"
         << "  image_database_to_video_git_commit: " BOB_ROBOTICS_GIT_COMMIT "\n";
+    return true;
 }
 
 void
@@ -139,10 +137,12 @@ int
 bobMain(int argc, char **argv)
 {
     filesystem::path outputDir = "video_databases";
+    filesystem::path defaultMetadataPath;
     double frameRate;
 
     CLI::App app{ "Tool for converting image databases composed of separate image files to video-type databases (i.e. to save space)." };
     app.add_option("-o,--output-dir", outputDir, "Folder to save converted databases into");
+    app.add_option("-d,--default-metadata", defaultMetadataPath, "Path to a default metadata file to use if one is not present");
     app.add_option("-f", frameRate, "Frame rate at which image sequence was recorded")->required();
 
     app.allow_extras();
@@ -154,6 +154,15 @@ bobMain(int argc, char **argv)
 
     if (!outputDir.exists()) {
         BOB_ASSERT(filesystem::create_directory(outputDir));
+    }
+
+    // Read in default metadata YAML to use if none is present
+    std::string defaultMetadata;
+    if (!defaultMetadataPath.empty()) {
+        std::ifstream ifs{ defaultMetadataPath.str() };
+        std::stringstream ss;
+        ss << ifs.rdbuf();
+        defaultMetadata = ss.str();
     }
 
     const auto convertDatabase = [&](const auto &databasePath) {
@@ -168,9 +177,10 @@ bobMain(int argc, char **argv)
         filesystem::create_directory(outPath);
 
         const auto videoFile = outPath / (inDatabase.getName() + VideoExtension);
-        convertCSVFile(inDatabase, outPath);
-        convertYAMLFile(inDatabase, outPath, videoFile, frameRate);
-        writeVideoFile(inDatabase, videoFile, frameRate);
+        if (convertYAMLFile(inDatabase, outPath, videoFile, frameRate, defaultMetadata)) {
+            convertCSVFile(inDatabase, outPath);
+            writeVideoFile(inDatabase, videoFile, frameRate);
+        }
     };
 
     // Convert databases in parallel
