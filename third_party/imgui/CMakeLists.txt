@@ -22,7 +22,7 @@ if(WIN32)
     include_directories("$ENV{VCPKG_ROOT}/installed/x64-windows/include")
 else()
     # Supress warnings from inside imgui
-    add_compile_flags(-Wno-class-memaccess)
+    add_compile_flags(-Wno-strict-overflow)
 endif()
 
 # Build as static library
