@@ -56,13 +56,20 @@ convertCSVFile(const ImageDatabase &inDatabase,
     const auto found = std::find(fields.cbegin(), fields.cend(), "Filename");
     const size_t filenameIdx = std::distance(fields.cbegin(), found);
 
+    /*
+     * Store a list of column indices excluding the one corresponding to
+     * Filename. This step is necessary because otherwise it's fiddly to work
+     * out where to write commas between fields.
+     */
     std::vector<size_t> copyIdx;
+    copyIdx.reserve(fields.size() - 1);
     for (size_t i = 0; i < fields.size() - 1; i++) {
         if (i != filenameIdx) {
             copyIdx.push_back(i);
         }
     }
 
+    // Write out new CSV file without Filename column
     std::ofstream ofs{ (outPath / ImageDatabase::EntriesFilename).str() };
     BOB_ASSERT(ofs.good());
     ofs.exceptions(std::ios::badbit);
