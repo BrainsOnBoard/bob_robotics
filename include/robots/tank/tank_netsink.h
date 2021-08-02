@@ -4,7 +4,7 @@
 #include "common/macros.h"
 #include "net/client.h"
 #include "net/connection.h"
-#include "tank.h"
+#include "robots/tank/tank_base.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -19,7 +19,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 //! An interface for transmitting tank steering commands over the network
 template<class ConnectionType = Net::Connection &>
-class TankNetSinkBase : public Tank
+class TankNetSinkBase : public TankBase
 {
 private:
     using millimeter_t = units::length::millimeter_t;
@@ -45,7 +45,7 @@ public:
             m_TurnSpeed = radians_per_second_t(stod(command[1]));
             m_ForwardSpeed = meters_per_second_t(stod(command[2]));
             m_AxisLength = millimeter_t(stod(command[3]));
-            Tank::setMaximumSpeedProportion(stof(command[4]));
+            TankBase::setMaximumSpeedProportion(stof(command[4]));
         });
 
         /*

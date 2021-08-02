@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "hid/joystick.h"
 #include "net/connection.h"
-#include "robots/tank/tank.h"
+#include "robots/tank/tank_base.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -11,7 +11,7 @@ namespace Robots {
 // BoBRobotics::Robots::Omni2D
 //----------------------------------------------------------------------------
 // Interface for driving Omni2D-like wheeled robots
-class Omni2D : public Tank
+class Omni2D : public TankBase
 {
 public:
     //------------------------------------------------------------------------
@@ -28,7 +28,7 @@ public:
     virtual void stopReadingFromNetwork() override;
 
     //------------------------------------------------------------------------
-    // Tank virtuals
+    // TankBase virtuals
     //------------------------------------------------------------------------
     virtual void tank(float left, float right) override;
 

@@ -1,6 +1,5 @@
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "plog/Log.h"
 #include "robots/gazebo/camera.h"
 #include "robots/gazebo/node.h"
 #include "robots/gazebo/tank.h"
@@ -8,6 +7,7 @@
 #include "video/display.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C includes

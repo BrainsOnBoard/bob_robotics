@@ -10,10 +10,10 @@
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::Tank
+// BoBRobotics::Robots::TankBase
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
-class Tank
+class TankBase
 {
 /*
  * If these are declared private then they annoyingly conflict with "usings" in
@@ -26,7 +26,7 @@ protected:
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
-    virtual ~Tank();
+    virtual ~TankBase();
 
     virtual void moveForward(float speed);
 

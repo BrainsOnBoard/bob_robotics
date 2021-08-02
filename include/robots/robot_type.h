@@ -9,8 +9,8 @@
 #include "tank/surveyor.h"
 #elif defined(ROBOT_TYPE_BUNDLEDTANKNETSINK)
 #include "tank/tank_netsink.h"
-#elif defined(ROBOT_TYPE_TANK)
-#include "tank/tank.h" // For dummy tank
+#elif defined(ROBOT_TYPE_TANKBASE)
+#include "tank/tank_base.h" // For dummy tank
 #elif defined(ROBOT_TYPE_MECANUM)
 #include "omni2d/mecanum.h"
 #elif defined(ROBOT_TYPE_GAZEBO_TANK)

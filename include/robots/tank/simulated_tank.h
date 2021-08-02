@@ -5,7 +5,7 @@
 #include "common/macros.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "tank.h"
+#include "robots/tank/tank_base.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -17,7 +17,7 @@ using namespace units::literals;
 template<typename LengthUnit = units::length::millimeter_t,
          typename AngleUnit = units::angle::degree_t>
 class SimulatedTank
-  : public Tank
+  : public TankBase
 {
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;

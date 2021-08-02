@@ -40,7 +40,7 @@ void
 TankNetSinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
 {
     if (value != getMaximumSpeedProportion()) {
-        Tank::setMaximumSpeedProportion(value);
+        TankBase::setMaximumSpeedProportion(value);
 
         m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
     }
@@ -84,7 +84,7 @@ units::length::millimeter_t
 TankNetSinkBase<ConnectionType>::getRobotWidth() const
 {
     if (std::isnan(m_AxisLength.value())) {
-        return Tank::getRobotWidth();
+        return TankBase::getRobotWidth();
     } else {
         return m_AxisLength;
     }
@@ -95,7 +95,7 @@ units::velocity::meters_per_second_t
 TankNetSinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
 {
     if (std::isnan(m_ForwardSpeed.value())) {
-        return Tank::getAbsoluteMaximumSpeed();
+        return TankBase::getAbsoluteMaximumSpeed();
     } else {
         return m_ForwardSpeed;
     }
@@ -106,7 +106,7 @@ units::angular_velocity::radians_per_second_t
 TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
 {
     if (std::isnan(m_TurnSpeed.value())) {
-        return Tank::getAbsoluteMaximumTurnSpeed();
+        return TankBase::getAbsoluteMaximumTurnSpeed();
     } else {
         return m_TurnSpeed;
     }

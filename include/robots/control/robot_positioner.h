@@ -159,7 +159,7 @@ public:
         /*
          * Drive robot with specified velocities.
          * We invert the turning direction because we're counting anti-clockwise
-         * for the robot's pose, but the Tank interface turns robots clockwise.
+         * for the robot's pose, but the TankBase interface turns robots clockwise.
          * If the motor commands are out of range, they will be scaled down.
          */
         m_Tank.move(v, -omega, true);

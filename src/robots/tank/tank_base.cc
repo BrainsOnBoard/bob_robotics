@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/macros.h"
 #include "common/circstat.h"
-#include "robots/tank/tank.h"
+#include "robots/tank/tank_base.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -22,25 +22,25 @@ using namespace units::velocity;
 namespace BoBRobotics {
 namespace Robots {
 
-Tank::~Tank()
+TankBase::~TankBase()
 {}
 
-void Tank::moveForward(float speed)
+void TankBase::moveForward(float speed)
 {
     tank(speed, speed);
 }
 
-void Tank::turnOnTheSpot(float clockwiseSpeed)
+void TankBase::turnOnTheSpot(float clockwiseSpeed)
 {
     tank(clockwiseSpeed, -clockwiseSpeed);
 }
 
-void Tank::stopMoving()
+void TankBase::stopMoving()
 {
     tank(0.f, 0.f);
 }
 
-void Tank::addJoystick(HID::Joystick &joystick, float deadZone)
+void TankBase::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
             [this, deadZone](HID::JAxis axis, float value) {
@@ -48,7 +48,7 @@ void Tank::addJoystick(HID::Joystick &joystick, float deadZone)
             });
 }
 
-void Tank::drive(const HID::Joystick &joystick, float deadZone)
+void TankBase::drive(const HID::Joystick &joystick, float deadZone)
 {
     drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
           joystick.getState(HID::JAxis::LeftStickVertical),
@@ -57,7 +57,7 @@ void Tank::drive(const HID::Joystick &joystick, float deadZone)
 
 
 //! Controls the robot with a network stream
-void Tank::readFromNetwork(Net::Connection &connection)
+void TankBase::readFromNetwork(Net::Connection &connection)
 {
     // Send robot parameters over network
     constexpr double _nan = std::numeric_limits<double>::quiet_NaN();
@@ -94,14 +94,14 @@ void Tank::readFromNetwork(Net::Connection &connection)
 
     connection.setCommandHandler("TNK_MAX",
                                     [this](Net::Connection &, const Net::Command &command) {
-                                        Tank::setMaximumSpeedProportion(stof(command.at(1)));
+                                        TankBase::setMaximumSpeedProportion(stof(command.at(1)));
                                         tank(m_Left, m_Right);
                                     });
 
     m_Connection = &connection;
 }
 
-void Tank::stopReadingFromNetwork()
+void TankBase::stopReadingFromNetwork()
 {
     if (m_Connection) {
         // Ignore incoming TNK commands
@@ -109,7 +109,7 @@ void Tank::stopReadingFromNetwork()
     }
 }
 
-void Tank::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
+void TankBase::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
 {
     joystick.addHandler(
             [this](HID::JAxis axis, float value) {
@@ -131,7 +131,7 @@ void Tank::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &j
             });
 }
 
-void Tank::move(meters_per_second_t v,
+void TankBase::move(meters_per_second_t v,
                 radians_per_second_t clockwiseSpeed,
                 const bool maxScaled)
 {
@@ -145,14 +145,14 @@ void Tank::move(meters_per_second_t v,
 }
 
 //! Set the left and right motors to the specified speed
-void Tank::tank(float left, float right)
+void TankBase::tank(float left, float right)
 {
     BOB_ASSERT(left >= -1.f && left <= 1.f);
     BOB_ASSERT(right >= -1.f && right <= 1.f);
     LOG_INFO << "Dummy motor: left: " << left << "; right: " << right;
 }
 
-void Tank::tankMaxScaled(const float left, const float right, const float max)
+void TankBase::tankMaxScaled(const float left, const float right, const float max)
 {
     const float larger = std::max(std::fabs(left), std::fabs(right));
     if (larger <= max) {
@@ -163,7 +163,7 @@ void Tank::tankMaxScaled(const float left, const float right, const float max)
     }
 }
 
-void Tank::tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled)
+void TankBase::tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled)
 {
     const meters_per_second_t maxSpeed = getMaximumSpeed();
     const auto leftMotor = static_cast<float>(left / maxSpeed);
@@ -175,39 +175,39 @@ void Tank::tank(meters_per_second_t left, meters_per_second_t right, bool maxSca
     }
 }
 
-BOB_NOT_IMPLEMENTED(millimeter_t Tank::getRobotWidth() const)
+BOB_NOT_IMPLEMENTED(millimeter_t TankBase::getRobotWidth() const)
 
-meters_per_second_t Tank::getMaximumSpeed() const
+meters_per_second_t TankBase::getMaximumSpeed() const
 {
     return getMaximumSpeedProportion() * getAbsoluteMaximumSpeed();
 }
 
-BOB_NOT_IMPLEMENTED(meters_per_second_t Tank::getAbsoluteMaximumSpeed() const)
+BOB_NOT_IMPLEMENTED(meters_per_second_t TankBase::getAbsoluteMaximumSpeed() const)
 
-radians_per_second_t Tank::getMaximumTurnSpeed() const
+radians_per_second_t TankBase::getMaximumTurnSpeed() const
 {
     return getMaximumSpeedProportion() * getAbsoluteMaximumTurnSpeed();
 }
 
-radians_per_second_t Tank::getAbsoluteMaximumTurnSpeed() const
+radians_per_second_t TankBase::getAbsoluteMaximumTurnSpeed() const
 {
     // max turn speed = v_max / r
     return radians_per_second_t{ (getAbsoluteMaximumSpeed() * 2 / static_cast<meter_t>(getRobotWidth())).value() };
 }
 
-void Tank::setMaximumSpeedProportion(float value)
+void TankBase::setMaximumSpeedProportion(float value)
 {
     BOB_ASSERT(value >= -1.f && value <= 1.f);
     m_MaximumSpeedProportion = value;
 }
 
-float Tank::getMaximumSpeedProportion() const
+float TankBase::getMaximumSpeedProportion() const
 {
     return m_MaximumSpeedProportion;
 }
 
 
-void Tank::drive(float x, float y, float deadZone)
+void TankBase::drive(float x, float y, float deadZone)
 {
     const float halfPi = pi<float>() / 2.0f;
 
@@ -243,7 +243,7 @@ void Tank::drive(float x, float y, float deadZone)
     }
 }
 
-void Tank::onTankCommandReceived(Net::Connection &, const Net::Command &command)
+void TankBase::onTankCommandReceived(Net::Connection &, const Net::Command &command)
 {
     // second space separates left and right parameters
     if (command.size() != 3) {
@@ -258,7 +258,7 @@ void Tank::onTankCommandReceived(Net::Connection &, const Net::Command &command)
     tank(left, right);
 }
 
-bool Tank::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
+bool TankBase::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
 {
     // only interested in left joystick
     switch (axis) {
@@ -277,17 +277,17 @@ bool Tank::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
     return true;
 }
 
-float Tank::getLeft() const
+float TankBase::getLeft() const
 {
     return m_Left;
 }
 
-float Tank::getRight() const
+float TankBase::getRight() const
 {
     return m_Right;
 }
 
-void Tank::setWheelSpeeds(float left, float right)
+void TankBase::setWheelSpeeds(float left, float right)
 {
     BOB_ASSERT(left >= -1.f && left <= 1.f);
     BOB_ASSERT(right >= -1.f && right <= 1.f);

@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "robots/tank/tank.h"
+#include "robots/tank/tank_base.h"
 #include "robots/gazebo/node.h"
 
 // Third-party includes
@@ -17,7 +17,7 @@ namespace Gazebo {
 
 using namespace units::literals;
 
-class Tank : public Robots::Tank
+class Tank : public Robots::TankBase
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
