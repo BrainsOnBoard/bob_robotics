@@ -13,7 +13,7 @@
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "os/net.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "video/display.h"
 #include "video/netsource.h"
 
@@ -50,7 +50,7 @@ int bobMain(int argc, char **argv)
     Video::NetSource video(client);
 
     // Transmit motor commands over network
-    Robots::Tank::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;

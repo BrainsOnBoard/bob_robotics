@@ -8,7 +8,7 @@
 #include "net/client.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 
 // Third-party includes
@@ -194,7 +194,7 @@ public:
 
 private:
     Net::Client m_Client;
-    Robots::Tank::TankNetSink m_Tank;
+    Robots::Tank::Net::Sink m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
@@ -206,7 +206,7 @@ private:
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
 
-    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank::TankNetSink &tank)
+    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank::Net::Sink &tank)
     {
         using V = Vector2<meter_t>;
         const auto halfWidth = tank.getRobotWidth() / 2;

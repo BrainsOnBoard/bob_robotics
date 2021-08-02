@@ -2,7 +2,7 @@
 #include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -18,7 +18,7 @@ int bobMain(int, char **)
     Net::Client client;
 
     // Transmit motor commands over network
-    Robots::Tank::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;

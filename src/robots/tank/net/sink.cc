@@ -2,31 +2,32 @@
 #include "plog/Log.h"
 #include "common/macros.h"
 #include "common/stopwatch.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 
 namespace BoBRobotics {
 namespace Robots {
 namespace Tank {
+namespace Net {
 
 // Explicitly instantiate
-template class TankNetSinkBase<Net::Connection &>;
+template class SinkBase<BoBRobotics::Net::Connection &>;
 
-BundledTankNetSink::BundledTankNetSink()
-  : TankNetSinkBase<Net::Client>()
+BundledSink::BundledSink()
+  : SinkBase<BoBRobotics::Net::Client>()
 {
     // Run client on background thread
     getConnection().runInBackground();
 }
 
 template<class ConnectionType>
-TankNetSinkBase<ConnectionType>::~TankNetSinkBase()
+SinkBase<ConnectionType>::~SinkBase()
 {
     try {
         stopMoving();
     } catch (OS::Net::NetworkError &e) {
         LOG_WARNING << "Caught exception while trying to send command: "
                     << e.what();
-    } catch (Net::SocketClosedError &) {
+    } catch (BoBRobotics::Net::SocketClosedError &) {
         // Socket has already been cleanly closed
     }
 
@@ -38,7 +39,7 @@ TankNetSinkBase<ConnectionType>::~TankNetSinkBase()
 
 template<class ConnectionType>
 void
-TankNetSinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
+SinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
 {
     if (value != getMaximumSpeedProportion()) {
         TankBase::setMaximumSpeedProportion(value);
@@ -50,7 +51,7 @@ TankNetSinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
 //! Motor command: send TNK command over TCP
 template<class ConnectionType>
 void
-TankNetSinkBase<ConnectionType>::tank(float left, float right)
+SinkBase<ConnectionType>::tank(float left, float right)
 {
     BOB_ASSERT(left >= -1.f && left <= 1.f);
     BOB_ASSERT(right >= -1.f && right <= 1.f);
@@ -82,7 +83,7 @@ TankNetSinkBase<ConnectionType>::tank(float left, float right)
 
 template<class ConnectionType>
 units::length::millimeter_t
-TankNetSinkBase<ConnectionType>::getRobotWidth() const
+SinkBase<ConnectionType>::getRobotWidth() const
 {
     if (std::isnan(m_AxisLength.value())) {
         return TankBase::getRobotWidth();
@@ -93,7 +94,7 @@ TankNetSinkBase<ConnectionType>::getRobotWidth() const
 
 template<class ConnectionType>
 units::velocity::meters_per_second_t
-TankNetSinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
+SinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
 {
     if (std::isnan(m_ForwardSpeed.value())) {
         return TankBase::getAbsoluteMaximumSpeed();
@@ -104,7 +105,7 @@ TankNetSinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
 
 template<class ConnectionType>
 units::angular_velocity::radians_per_second_t
-TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
+SinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
 {
     if (std::isnan(m_TurnSpeed.value())) {
         return TankBase::getAbsoluteMaximumTurnSpeed();
@@ -113,6 +114,7 @@ TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
     }
 }
 
+} // Net
 } // Tank
 } // Robots
 } // BoBRobotics

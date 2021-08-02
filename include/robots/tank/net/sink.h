@@ -15,12 +15,13 @@
 namespace BoBRobotics {
 namespace Robots {
 namespace Tank {
+namespace Net {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::Tank::TankNetSinkBase
+// BoBRobotics::Robots::Tank::Net::SinkBase
 //----------------------------------------------------------------------------
 //! An interface for transmitting tank steering commands over the network
-template<class ConnectionType = Net::Connection &>
-class TankNetSinkBase : public TankBase
+template<class ConnectionType = BoBRobotics::Net::Connection &>
+class SinkBase : public TankBase
 {
 private:
     using millimeter_t = units::length::millimeter_t;
@@ -35,12 +36,12 @@ private:
 
 public:
     template<class... Ts>
-    TankNetSinkBase(Ts &&... args)
+    SinkBase(Ts &&... args)
       : m_Connection{ std::forward<Ts>(args)... }
     {
-        m_Connection.setCommandHandler("TNK_PARAMS", [this](Net::Connection &, const Net::Command &command) {
+        m_Connection.setCommandHandler("TNK_PARAMS", [this](auto &, const auto &command) {
             if (command.size() != 5) {
-                throw Net::BadCommandError();
+                throw BoBRobotics::Net::BadCommandError();
             }
 
             m_TurnSpeed = radians_per_second_t(stod(command[1]));
@@ -60,7 +61,7 @@ public:
             ;
     }
 
-    virtual ~TankNetSinkBase() override;
+    virtual ~SinkBase() override;
 
     virtual void setMaximumSpeedProportion(float value) override;
 
@@ -73,27 +74,28 @@ public:
 
     virtual radians_per_second_t getAbsoluteMaximumTurnSpeed() const override;
 
-    Net::Connection &getConnection()
+    auto &getConnection()
     {
         return m_Connection;
     }
 
-}; // TankNetSinkBase
+}; // SinkBase
 
 //! Default type for controlling robots over network
-using TankNetSink = TankNetSinkBase<Net::Connection &>;
+using Sink = SinkBase<BoBRobotics::Net::Connection &>;
 
 /**!
  * \brief Control a robot over the network, initialising the connection in the
  *        constructor.
  */
-class BundledTankNetSink
-  : public TankNetSinkBase<Net::Client>
+class BundledSink
+  : public SinkBase<BoBRobotics::Net::Client>
 {
 public:
-    BundledTankNetSink();
-}; // BundledTankNetSink
+    BundledSink();
+}; // BundledSink
 
+} // Net
 } // Tank
 } // Robots
 } // BoBRobotics

@@ -6,7 +6,7 @@
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/robot_type.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"

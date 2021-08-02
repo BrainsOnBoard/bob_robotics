@@ -10,7 +10,7 @@
 // This program can be run locally on the robot or remotely
 #ifdef NO_I2C_ROBOT
 #include "net/client.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #else
 #include "robots/robot_type.h"
 #endif
@@ -70,7 +70,7 @@ int bobMain(int argc, char **argv)
 #ifdef NO_I2C_ROBOT
     // Make connection to robot on default port
     Net::Client client;
-    Robots::TankNetSink robot(client);
+    Robots::Tank::Net::Sink robot(client);
 
     if (filesystem::path(PLAY_PATH).exists()) {
         canPlaySound = true;

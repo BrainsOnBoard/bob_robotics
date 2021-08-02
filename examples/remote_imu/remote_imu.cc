@@ -3,7 +3,7 @@
 #include "plog/Log.h"
 #include "net/client.h"
 #include "net/imu_netsource.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -16,7 +16,7 @@ int bobMain(int, char **)
     // Make connection to robot on default port
     Net::Client client;
 
-    Robots::Tank::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
 
     // Read IMU over network
     Net::IMUNetSource imu(client);

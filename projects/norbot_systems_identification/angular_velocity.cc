@@ -5,7 +5,7 @@
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
 #include "net/client.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 
 // Standard C++ includes
@@ -37,7 +37,7 @@ int bobMain(int argc, char **argv)
     LOGI << "Connected to " << ipAddress;
 
     // Send motor commands to robot
-    Robots::Tank::TankNetSink robot(client);
+    Robots::Tank::Net::Sink robot(client);
 
     // Open joystick
     HID::Joystick joystick;

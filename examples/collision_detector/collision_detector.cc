@@ -6,7 +6,7 @@
 #include "navigation/read_objects.h"
 #include "net/client.h"
 #include "robots/control/collision_detector.h"
-#include "robots/tank/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"
@@ -69,7 +69,7 @@ int bobMain(int, char **)
     // Control robot with joystick over network
     HID::Joystick joystick;
     Net::Client client;
-    Robots::Tank::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
     tank.addJoystick(joystick);
 
     // Display for robot + objects
