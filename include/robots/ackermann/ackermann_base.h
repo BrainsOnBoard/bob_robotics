@@ -8,6 +8,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Ackermann {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::AckermannBase
 //----------------------------------------------------------------------------
@@ -37,5 +38,6 @@ public:
         });
     }
 }; // AckermannBase
+} // Ackermann
 } // Robots
 } // BoBRobotics

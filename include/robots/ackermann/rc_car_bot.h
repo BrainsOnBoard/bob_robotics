@@ -19,6 +19,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Ackermann {
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
@@ -79,6 +80,7 @@ private:
     float m_speed;                   // current control speed of the robot
     degree_t m_turningAngle;         // current turning angle of the robot
 }; // RCCarBot
+} // Ackermann
 } // Robots
 } // BoBRobotics
 #endif	// __linux__

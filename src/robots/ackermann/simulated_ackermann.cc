@@ -10,6 +10,7 @@ using namespace units::velocity;
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Ackermann {
 
 SimulatedAckermann::SimulatedAckermann(const meters_per_second_t maximumSpeed,
                                        const meter_t axisDist,
@@ -123,5 +124,7 @@ SimulatedAckermann::updatePose()
     double delta_angle = m_currentVelocity * elapsed / m_distanceBetweenAxis * tan(m_steeringWheelAngle);
     m_Pose.yaw() += radian_t(delta_angle);
 }
+
+} // Ackermann
 } // Robots
 } // BoBRobotics

@@ -53,11 +53,10 @@ void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *render
 
 int bobMain(int, char **)
 {
-
-    Robots::SimulatedAckermann car(1.4_mps, 500_mm); // simulated car
-    Viz::CarDisplay display(10.2_m, 160_mm);         // For displaying the agent
-    std::vector<SDL_Rect> rekt_list;                 // list of waypoints
-    float currentX = 0, currentY = 0;                // current mouse coordinate click
+    Robots::Ackermann::SimulatedAckermann car(1.4_mps, 500_mm); // simulated car
+    Viz::CarDisplay display(10.2_m, 160_mm);                    // For displaying the agent
+    std::vector<SDL_Rect> rekt_list;                            // list of waypoints
+    float currentX = 0, currentY = 0;                           // current mouse coordinate click
     bool isControllerOn = true;
 
     // adding the first coordinate

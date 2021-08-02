@@ -10,6 +10,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Ackermann {
 using namespace units::literals;
 
 class SimulatedAckermann
@@ -55,6 +56,6 @@ private:
 
     void updatePose();
 }; // SimulatedAckermann
+} // Ackermann
 } // Robots
 } // BoBRobotics
-

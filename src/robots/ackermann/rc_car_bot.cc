@@ -16,6 +16,7 @@ sgn(T val)
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Ackermann {
 
 constexpr degree_t PassiveRCCarBot::TurnMax;
 
@@ -128,6 +129,8 @@ RCCarBot::getMaximumTurn() const
 {
     return PassiveRCCarBot::TurnMax;
 }
+
+} // Ackermann
 } // Robots
 } // BoBRobotics
 #endif	// __linux__

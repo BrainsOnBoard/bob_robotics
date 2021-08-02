@@ -15,7 +15,7 @@ using namespace std::literals;
 
 int bobMain(int, char**)
 {
-    RCCarBot bot;
+    Ackermann::RCCarBot bot;
     Stopwatch sw;
 
     std::cout << "Press Ctrl+C to quit\n";

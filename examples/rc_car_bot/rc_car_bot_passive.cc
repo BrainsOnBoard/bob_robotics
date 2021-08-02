@@ -14,7 +14,7 @@ using namespace std::literals;
 
 int bobMain(int, char**)
 {
-    PassiveRCCarBot bot;
+    Ackermann::PassiveRCCarBot bot;
 
     while (true) {
         const auto move = bot.readRemoteControl();

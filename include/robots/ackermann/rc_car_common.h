@@ -2,6 +2,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Ackermann {
 namespace RCCar {
 
 #define RCCAR_SLAVE_ADDRESS 0x29
@@ -31,5 +32,6 @@ struct __attribute__((packed)) Message
     Movement move;
 };
 } // RCCar
+} // Ackermann
 } // Robots
 } // BoBRobotics
