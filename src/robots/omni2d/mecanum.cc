@@ -41,7 +41,6 @@ Mecanum::Mecanum(bool alternativeWiring, const char *devicePath)
 
 Mecanum::~Mecanum()
 {
-    stopReadingFromNetwork();
     stopMoving();
 }
 //----------------------------------------------------------------------------

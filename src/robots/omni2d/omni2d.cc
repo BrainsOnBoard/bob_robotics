@@ -34,32 +34,6 @@ Omni2D::drive(const HID::Joystick &joystick, float deadZone)
           deadZone);
 }
 
-
-void
-Omni2D::readFromNetwork(Net::Connection &connection)
-{
-    // Superclass
-    // TankBase::readFromNetwork(connection);
-
-    // handle incoming OMN commands
-    connection.setCommandHandler("OMN", [this](Net::Connection &connection, const Net::Command &command) {
-        onOmniCommandReceived(connection, command);
-    });
-
-    m_Connection = &connection;
-}
-
-void Omni2D::stopReadingFromNetwork()
-{
-    // Superclass
-    // TankBase::stopReadingFromNetwork();
-
-    if (m_Connection) {
-        // Ignore incoming OMN commands
-        m_Connection->setCommandHandler("OMN", nullptr);
-    }
-}
-
 void Omni2D::tank(float left, float right)
 {
     // Implement tank controls in terms of omni
@@ -100,23 +74,6 @@ Omni2D::drive(float forward, float sideways, float turn, float deadZone)
 
     // Drive motor
     omni2D(forward * !deadForward, sideways * !deadSideways, turn * !deadTurn);
-}
-
-void
-Omni2D::onOmniCommandReceived(Net::Connection &, const Net::Command &command)
-{
-    // second space separates left and right parameters
-    if (command.size() != 4) {
-        throw Net::BadCommandError();
-    }
-
-    // parse strings to floats
-    const float forward = stof(command[1]);
-    const float sideways = stof(command[2]);
-    const float turn = stof(command[3]);
-
-    // send motor command
-    omni2D(forward, sideways, turn);
 }
 
 bool

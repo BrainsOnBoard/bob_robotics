@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "net/connection.h"
 #include "robots/tank/tank_base.h"
 
 namespace BoBRobotics {
@@ -30,8 +29,6 @@ public:
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
-    void readFromNetwork(Net::Connection &connection);
-    void stopReadingFromNetwork();
     float getForwards() const;
     float getSideways() const;
     float getTurn() const;
@@ -43,10 +40,8 @@ private:
     float m_Forward = 0;
     float m_Sideways = 0;
     float m_Turn = 0;
-    Net::Connection *m_Connection = nullptr;
 
     void drive(float forward, float sideways, float turn, float deadZone);
-    void onOmniCommandReceived(Net::Connection &, const Net::Command &command);
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 }; // Omni2D
 } // Robots
