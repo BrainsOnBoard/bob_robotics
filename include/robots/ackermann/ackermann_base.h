@@ -9,13 +9,13 @@
 namespace BoBRobotics {
 namespace Robots {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::Ackermann
+// BoBRobotics::Robots::AckermannBase
 //----------------------------------------------------------------------------
 //! A base class for robots with Ackermann-type steering
-class Ackermann
+class AckermannBase
 {
 public:
-    virtual ~Ackermann();
+    virtual ~AckermannBase();
 
     virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
     virtual units::angle::degree_t getMaximumTurn() const = 0;
@@ -28,6 +28,6 @@ public:
     // Virtual functions that aren't required to be overriden by inheriting classes
     virtual void move(units::velocity::meters_per_second_t velocity,
                       units::angle::degree_t steeringAngle);
-}; // Ackermann
+}; // AckermannBase
 } // Robots
 } // BoBRobotics

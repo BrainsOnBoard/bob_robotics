@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "robots/ackermann/ackermann.h"
+#include "robots/ackermann/ackermann_base.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -13,7 +13,7 @@ namespace Robots {
 using namespace units::literals;
 
 class SimulatedAckermann
-  : public Ackermann
+  : public AckermannBase
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;

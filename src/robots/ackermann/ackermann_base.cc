@@ -1,17 +1,17 @@
 // BoB robotics includes
 #include "common/macros.h"
-#include "robots/ackermann/ackermann.h"
+#include "robots/ackermann/ackermann_base.h"
 
 // Standard C includes
 #include <cmath>
 
 namespace BoBRobotics {
 namespace Robots {
-Ackermann::~Ackermann()
+AckermannBase::~AckermannBase()
 {}
 
 void
-Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
+AckermannBase::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler([this, deadZone](HID::JAxis axis, float value) {
         if (fabs(value) <= deadZone) {
@@ -31,7 +31,7 @@ Ackermann::addJoystick(HID::Joystick &joystick, float deadZone)
 
 BOB_NOT_IMPLEMENTED(
     void
-    Ackermann::move(units::velocity::meters_per_second_t,
+    AckermannBase::move(units::velocity::meters_per_second_t,
                     units::angle::degree_t)
 )
 } // Robots

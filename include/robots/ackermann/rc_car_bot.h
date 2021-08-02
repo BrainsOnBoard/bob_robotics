@@ -3,7 +3,7 @@
 
 // BoB robotics includes
 #include "common/i2c_interface.h"
-#include "robots/ackermann/ackermann.h"
+#include "robots/ackermann/ackermann_base.h"
 #include "robots/ackermann/rc_car_common.h"
 #include "third_party/units.h"
 
@@ -49,7 +49,7 @@ private:
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
 class RCCarBot final
-  : public Ackermann
+  : public AckermannBase
 {
     using degree_t = units::angle::degree_t;
 
