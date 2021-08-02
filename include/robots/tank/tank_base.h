@@ -9,8 +9,9 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::TankBase
+// BoBRobotics::Robots::Tank::TankBase
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
 class TankBase
@@ -94,6 +95,7 @@ private:
 protected:
     void setWheelSpeeds(float left, float right);
 
-}; // Tank
+}; // TankBase
+} // Tank
 } // Robots
 } // BoBRobotics

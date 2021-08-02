@@ -15,7 +15,7 @@ namespace BoBRobotics {
 namespace Robots {
 //! Control for a Lego Mindstorms tank robot
 class EV3 final
-  : public TankBase
+  : public Tank::TankBase
 {
 public:
     /*
@@ -45,6 +45,6 @@ private:
     const int m_MaxSpeedTachos, m_TachoCountPerRotation;
 
     meters_per_second_t tachoToSpeed(int tachos) const;
-};
-}
-}
+}; // EV3
+} // Robots
+} // BoBRobotics

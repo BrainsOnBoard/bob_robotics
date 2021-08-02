@@ -17,7 +17,7 @@ namespace Gazebo {
 
 using namespace units::literals;
 
-class Tank : public Robots::TankBase
+class Tank : public Robots::Tank::TankBase
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
 

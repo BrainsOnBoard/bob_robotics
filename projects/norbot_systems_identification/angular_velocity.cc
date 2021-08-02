@@ -37,7 +37,7 @@ int bobMain(int argc, char **argv)
     LOGI << "Connected to " << ipAddress;
 
     // Send motor commands to robot
-    Robots::TankNetSink robot(client);
+    Robots::Tank::TankNetSink robot(client);
 
     // Open joystick
     HID::Joystick joystick;

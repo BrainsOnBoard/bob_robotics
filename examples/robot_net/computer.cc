@@ -50,7 +50,7 @@ int bobMain(int argc, char **argv)
     Video::NetSource video(client);
 
     // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
+    Robots::Tank::TankNetSink tank(client);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;

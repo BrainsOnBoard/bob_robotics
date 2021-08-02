@@ -11,7 +11,7 @@ namespace Robots {
 // BoBRobotics::Robots::Omni2D
 //----------------------------------------------------------------------------
 // Interface for driving Omni2D-like wheeled robots
-class Omni2D : public TankBase
+class Omni2D : public Tank::TankBase
 {
 public:
     //------------------------------------------------------------------------

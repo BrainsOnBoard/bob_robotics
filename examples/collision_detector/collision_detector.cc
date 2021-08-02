@@ -69,7 +69,7 @@ int bobMain(int, char **)
     // Control robot with joystick over network
     HID::Joystick joystick;
     Net::Client client;
-    Robots::TankNetSink tank(client);
+    Robots::Tank::TankNetSink tank(client);
     tank.addJoystick(joystick);
 
     // Display for robot + objects

@@ -16,7 +16,7 @@ int bobMain(int, char **)
     // Make connection to robot on default port
     Net::Client client;
 
-    Robots::TankNetSink tank(client);
+    Robots::Tank::TankNetSink tank(client);
 
     // Read IMU over network
     Net::IMUNetSource imu(client);

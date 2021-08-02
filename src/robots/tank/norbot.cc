@@ -22,6 +22,7 @@ uint8_t floatToI2C(float speed)
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 
 Norbot::Norbot(const char *path, int slaveAddress)
     : m_I2C(path, slaveAddress)
@@ -65,6 +66,7 @@ millimeter_t Norbot::getRobotWidth() const
     return 104_mm;
 }
 
+} // Tank
 } // Robots
 } // BoBRobotics
 #endif

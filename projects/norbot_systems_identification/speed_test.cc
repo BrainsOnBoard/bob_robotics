@@ -30,7 +30,7 @@ using namespace units::time;
 class DataFile
 {
 public:
-    DataFile(Robots::TankNetSink &tank, Vicon::UDPClient<> &vicon)
+    DataFile(Robots::Tank::TankNetSink &tank, Vicon::UDPClient<> &vicon)
       : m_Tank(tank)
       , m_Vicon(vicon)
     {
@@ -96,7 +96,7 @@ public:
 private:
     std::ofstream m_FileStream;
     filesystem::path m_FilePath;
-    Robots::TankNetSink &m_Tank;
+    Robots::Tank::TankNetSink &m_Tank;
     Vicon::UDPClient<> &m_Vicon;
     Stopwatch m_Stopwatch, m_StopwatchSample;
 };
@@ -109,7 +109,7 @@ int bobMain(int, char **)
     LOGI << "Connected to " << client.getIP();
 
     // Send motor commands to robot
-    Robots::TankNetSink robot(client);
+    Robots::Tank::TankNetSink robot(client);
 
     // Open joystick
     HID::Joystick joystick;

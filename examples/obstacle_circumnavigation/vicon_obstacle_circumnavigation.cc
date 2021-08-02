@@ -19,7 +19,7 @@ int bobMain(int, char **)
     Net::Client client;
 
     // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
+    Robots::Tank::TankNetSink tank(client);
 
     // Control with joystick
     tank.addJoystick(joystick);

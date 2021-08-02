@@ -16,7 +16,7 @@ using namespace units::literals;
 
 int bobMain(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
+    Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
     Viz::SFMLWorld display;                         // For displaying the agent
     auto car = display.createCarAgent();
 

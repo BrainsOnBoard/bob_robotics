@@ -12,6 +12,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 using namespace units::literals;
 
 template<typename LengthUnit = units::length::millimeter_t,
@@ -96,5 +97,6 @@ private:
         }
     }
 }; // SimulatedTank
+} // Tank
 } // Robots
 } // BoBRobotics

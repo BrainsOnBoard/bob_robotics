@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "robots/tank/ev3/ev3.h"
+#include "robots/ev3/ev3.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -97,5 +97,5 @@ EV3::tachoToSpeed(int tachos) const
     const double angularVelocity{ 2.0 * pi() * static_cast<double>(tachos) / static_cast<double>(m_TachoCountPerRotation) };
     return meters_per_second_t{ angularVelocity * wheelRadius.value() };
 }
-}
-}
+} // Robots
+} // BoBRobotics

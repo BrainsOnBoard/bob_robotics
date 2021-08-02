@@ -20,7 +20,7 @@ using namespace units::length;
 
 int bobMain(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
+    Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
     Viz::SFMLWorld display;                                        // For displaying the agent
     auto pid = Robots::createTankPID(robot, robot, .1f, .1f, .1f); // PID controller
     auto car = display.createCarAgent();

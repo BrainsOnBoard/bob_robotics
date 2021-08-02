@@ -19,7 +19,7 @@ int bobMain(int, char **)
     auto connection = server.waitForConnection();
 
     // Use Arduino robot
-    Robots::Norbot robot;
+    Robots::Tank::Norbot robot;
 
     // Read motor commands from network
     robot.readFromNetwork(*connection);

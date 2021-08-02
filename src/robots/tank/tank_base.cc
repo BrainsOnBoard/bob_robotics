@@ -21,6 +21,7 @@ using namespace units::velocity;
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 
 TankBase::~TankBase()
 {}
@@ -296,5 +297,6 @@ void TankBase::setWheelSpeeds(float left, float right)
     m_Right = right;
 }
 
+} // Tank
 } // Robots
 } // BoBRobotics

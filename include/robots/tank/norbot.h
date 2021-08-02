@@ -10,8 +10,9 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::Norbot
+// BoBRobotics::Robots::Tank::Norbot
 //----------------------------------------------------------------------------
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
 class Norbot : public TankBase
@@ -55,6 +56,7 @@ private:
     //----------------------------------------------------------------------------
     BoBRobotics::I2CInterface m_I2C;
 }; // Norbot
+} // Tank
 } // Robots
 } // BoBRobotics
 #endif // __linux__

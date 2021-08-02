@@ -18,7 +18,7 @@ int bobMain(int, char **)
     Net::Client client;
 
     // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
+    Robots::Tank::TankNetSink tank(client);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;

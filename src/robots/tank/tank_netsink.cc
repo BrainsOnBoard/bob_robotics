@@ -6,6 +6,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 
 // Explicitly instantiate
 template class TankNetSinkBase<Net::Connection &>;
@@ -112,5 +113,6 @@ TankNetSinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
     }
 }
 
+} // Tank
 } // Robots
 } // BoBRobotics

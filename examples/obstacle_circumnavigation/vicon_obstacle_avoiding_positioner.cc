@@ -194,7 +194,7 @@ public:
 
 private:
     Net::Client m_Client;
-    Robots::TankNetSink m_Tank;
+    Robots::Tank::TankNetSink m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
@@ -206,7 +206,7 @@ private:
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
 
-    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::TankNetSink &tank)
+    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank::TankNetSink &tank)
     {
         using V = Vector2<meter_t>;
         const auto halfWidth = tank.getRobotWidth() / 2;

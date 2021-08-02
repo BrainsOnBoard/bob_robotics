@@ -14,8 +14,9 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Tank {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::TankNetSinkBase
+// BoBRobotics::Robots::Tank::TankNetSinkBase
 //----------------------------------------------------------------------------
 //! An interface for transmitting tank steering commands over the network
 template<class ConnectionType = Net::Connection &>
@@ -93,5 +94,6 @@ public:
     BundledTankNetSink();
 }; // BundledTankNetSink
 
+} // Tank
 } // Robots
 } // BoBRobotics
