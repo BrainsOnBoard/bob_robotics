@@ -1,7 +1,7 @@
 #ifdef __linux__
 // BoB robotics includes
-#include "robots/ackermann/rc_car_bot.h"
 #include "common/macros.h"
+#include "robots/ackermann/rc_car_bot.h"
 
 using namespace units::angle;
 using namespace units::literals;

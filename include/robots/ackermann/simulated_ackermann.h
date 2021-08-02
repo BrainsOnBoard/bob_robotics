@@ -13,7 +13,7 @@ namespace Robots {
 using namespace units::literals;
 
 class SimulatedAckermann
-  : public AckermannBase
+  : public AckermannBase<SimulatedAckermann>
 {
     using meter_t = units::length::meter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -30,19 +30,19 @@ public:
 
     const Pose3<meter_t, degree_t> &getPose();
     meters_per_second_t getAbsoluteMaximumSpeed() const;
-    degree_t getMaximumTurn() const override;
+    degree_t getMaximumTurn() const;
     void setPose(const Pose3<meter_t, degree_t> &pose);
 
-    // Public virtual methods
-    virtual void moveForward(float speed) override;
-    virtual void steer(float value) override;
-    virtual void steer(degree_t steeringAngle) override;
-    virtual void stopMoving() override;
+    // Public methods
+    void moveForward(float speed);
+    void steer(float value);
+    void steer(degree_t steeringAngle);
+    void stopMoving();
 
-    virtual void move(float velocity, degree_t steeringAngle) override;
+    void move(float velocity, degree_t steeringAngle);
 
     //! sets the robot velocity and steering to move
-    virtual void move(meters_per_second_t velocity, degree_t steeringAngle) override;
+    void move(meters_per_second_t velocity, degree_t steeringAngle);
 
 private:
     Pose3<meter_t, degree_t> m_Pose;

@@ -3,8 +3,8 @@
 // BoB robotics includes
 #include "hid/joystick.h"
 
-// Third-party includes
-#include "third_party/units.h"
+// Standard C includes
+#include <cmath>
 
 namespace BoBRobotics {
 namespace Robots {
@@ -12,22 +12,30 @@ namespace Robots {
 // BoBRobotics::Robots::AckermannBase
 //----------------------------------------------------------------------------
 //! A base class for robots with Ackermann-type steering
+template<class Derived>
 class AckermannBase
 {
 public:
-    virtual ~AckermannBase();
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
+    {
+        joystick.addHandler([this, deadZone](HID::JAxis axis, float value) {
+            auto *derived = static_cast<Derived *>(this);
 
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
-    virtual units::angle::degree_t getMaximumTurn() const = 0;
-    virtual void moveForward(float speed) = 0;
-    virtual void steer(float left) = 0;
-    virtual void steer(units::angle::degree_t left) = 0;
-    virtual void stopMoving() = 0;
-    virtual void move(float forward, units::angle::degree_t steeringAngle) = 0;
+            if (fabs(value) <= deadZone) {
+                value = 0.f;
+            }
 
-    // Virtual functions that aren't required to be overriden by inheriting classes
-    virtual void move(units::velocity::meters_per_second_t velocity,
-                      units::angle::degree_t steeringAngle);
+            if (axis == HID::JAxis::LeftStickVertical) {
+                derived->moveForward(-value);
+                return true;
+            } else if (axis == HID::JAxis::RightStickHorizontal) {
+                derived->steer(-value);
+                return true;
+            } else {
+                return false;
+            }
+        });
+    }
 }; // AckermannBase
 } // Robots
 } // BoBRobotics

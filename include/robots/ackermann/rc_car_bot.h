@@ -5,6 +5,8 @@
 #include "common/i2c_interface.h"
 #include "robots/ackermann/ackermann_base.h"
 #include "robots/ackermann/rc_car_common.h"
+
+// Third-party includes
 #include "third_party/units.h"
 
 // Standard C includes
@@ -49,29 +51,28 @@ private:
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
 class RCCarBot final
-  : public AckermannBase
+  : public AckermannBase<RCCarBot>
 {
     using degree_t = units::angle::degree_t;
 
 public:
     RCCarBot(const char *path = I2C_DEVICE_DEFAULT);
-    virtual ~RCCarBot();
+    ~RCCarBot();
 
     float getSpeed() const;
     degree_t getTurningAngle() const;
     std::pair<float, degree_t> readRemoteControl();
 
-    // Public virtuals
-    virtual void moveForward(float speed) override;
-    virtual void steer(float left) override;
-    virtual void steer(units::angle::degree_t left) override;
-    virtual degree_t getMaximumTurn() const override;
+    void moveForward(float speed);
+    void steer(float left);
+    void steer(units::angle::degree_t left);
+    degree_t getMaximumTurn() const;
 
     //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
-    virtual void move(float speed, degree_t left) override;
+    void move(float speed, degree_t left);
 
     //! Stop the car
-    virtual void stopMoving() override;
+    void stopMoving();
 
 private:
     PassiveRCCarBot m_Bot;
