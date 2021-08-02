@@ -37,7 +37,6 @@ EV3::EV3(const ev3dev::address_type &leftMotorPort,
 EV3::~EV3()
 {
     stopMoving();
-    stopReadingFromNetwork();
 }
 
 void

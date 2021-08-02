@@ -20,21 +20,17 @@ public:
     virtual void omni2D(float forward, float sideways, float turn);
 
     //------------------------------------------------------------------------
-    // Robot virtuals
+    // TankBase virtuals
     //------------------------------------------------------------------------
     virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
     virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
-    virtual void readFromNetwork(Net::Connection &connection) override;
-    virtual void stopReadingFromNetwork() override;
-
-    //------------------------------------------------------------------------
-    // TankBase virtuals
-    //------------------------------------------------------------------------
     virtual void tank(float left, float right) override;
 
     //------------------------------------------------------------------------
     // Public API
     //------------------------------------------------------------------------
+    void readFromNetwork(Net::Connection &connection);
+    void stopReadingFromNetwork();
     float getForwards() const;
     float getSideways() const;
     float getTurn() const;

@@ -1,20 +1,23 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "hid/joystick.h"
 #include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/robot_type.h"
 #include "robots/tank/net/sink.h"
+#include "robots/tank/net/source.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifdef ROBOT_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3_EV3
 #include "robots/ev3/mindstorms_imu.h"
 #endif
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C includes
 #include <cstring>
@@ -49,7 +52,7 @@ int bobMain(int, char **)
     Robots::ROBOT_TYPE tank;
 
     // Read motor commands from network
-    tank.readFromNetwork(*connection);
+    const auto netSource = Robots::Tank::Net::createSource(*connection, tank);
 
     // Try to get joystick
     try {

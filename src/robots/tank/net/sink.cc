@@ -1,8 +1,10 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/stopwatch.h"
 #include "robots/tank/net/sink.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -33,8 +35,6 @@ SinkBase<ConnectionType>::~SinkBase()
 
     // Stop listening for incoming commands
     m_Connection.setCommandHandler("TNK_PARAMS", nullptr);
-
-    stopReadingFromNetwork();
 }
 
 template<class ConnectionType>

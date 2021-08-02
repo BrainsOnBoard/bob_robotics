@@ -56,60 +56,6 @@ void TankBase::drive(const HID::Joystick &joystick, float deadZone)
           deadZone);
 }
 
-
-//! Controls the robot with a network stream
-void TankBase::readFromNetwork(Net::Connection &connection)
-{
-    // Send robot parameters over network
-    constexpr double _nan = std::numeric_limits<double>::quiet_NaN();
-    double maxTurnSpeed = _nan, maxForwardSpeed = _nan, axisLength = _nan;
-    try {
-        maxTurnSpeed = getAbsoluteMaximumTurnSpeed().value();
-    } catch (std::runtime_error &) {
-        // Then getMaximumTurnSpeed() isn't implemented
-    }
-    try {
-        maxForwardSpeed = getAbsoluteMaximumSpeed().value();
-    } catch (std::runtime_error &) {
-        // Then getMaximumSpeed() isn't implemented
-    }
-    try {
-        axisLength = getRobotWidth().value();
-    } catch (std::runtime_error &) {
-        // Then getRobotWidth() isn't implemented
-    }
-
-    std::stringstream ss;
-    ss << "TNK_PARAMS "
-        << maxTurnSpeed << " "
-        << maxForwardSpeed << " "
-        << axisLength << " "
-        << getMaximumSpeedProportion() << "\n";
-    connection.getSocketWriter().send(ss.str());
-
-    // Handle incoming TNK commands
-    connection.setCommandHandler("TNK",
-                                    [this](Net::Connection &connection, const Net::Command &command) {
-                                        onTankCommandReceived(connection, command);
-                                    });
-
-    connection.setCommandHandler("TNK_MAX",
-                                    [this](Net::Connection &, const Net::Command &command) {
-                                        TankBase::setMaximumSpeedProportion(stof(command.at(1)));
-                                        tank(m_Left, m_Right);
-                                    });
-
-    m_Connection = &connection;
-}
-
-void TankBase::stopReadingFromNetwork()
-{
-    if (m_Connection) {
-        // Ignore incoming TNK commands
-        m_Connection->setCommandHandler("TNK", nullptr);
-    }
-}
-
 void TankBase::controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
 {
     joystick.addHandler(
@@ -242,21 +188,6 @@ void TankBase::drive(float x, float y, float deadZone)
             tank(-r, -r * cos(twoTheta));
         }
     }
-}
-
-void TankBase::onTankCommandReceived(Net::Connection &, const Net::Command &command)
-{
-    // second space separates left and right parameters
-    if (command.size() != 3) {
-        throw Net::BadCommandError();
-    }
-
-    // parse strings to floats
-    const float left = stof(command[1]);
-    const float right = stof(command[2]);
-
-    // send motor command
-    tank(left, right);
 }
 
 bool TankBase::onJoystickEvent(HID::JAxis axis, float value, float deadZone)

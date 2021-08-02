@@ -37,7 +37,6 @@ Norbot::Norbot(const char *path, int slaveAddress)
 Norbot::~Norbot()
 {
     stopMoving();
-    stopReadingFromNetwork();
 }
 
 void Norbot::tank(float left, float right)

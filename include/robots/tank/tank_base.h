@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "net/connection.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -38,11 +37,6 @@ public:
     virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
 
     virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
-
-    //! Controls the robot with a network stream
-    virtual void readFromNetwork(Net::Connection &connection);
-
-    virtual void stopReadingFromNetwork();
 
     //----------------------------------------------------------------------------
     // Declared virtuals
@@ -83,12 +77,9 @@ public:
     float getRight() const;
 
 private:
-    Net::Connection *m_Connection = nullptr;
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
 
     void drive(float x, float y, float deadZone);
-
-    void onTankCommandReceived(Net::Connection &, const Net::Command &command);
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
 

@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "net/server.h"
+#include "robots/tank/net/source.h"
 #include "robots/tank/norbot.h"
 
 // Standard C includes
@@ -22,7 +23,7 @@ int bobMain(int, char **)
     Robots::Tank::Norbot robot;
 
     // Read motor commands from network
-    robot.readFromNetwork(*connection);
+    const auto netSource = Robots::Tank::Net::createSource(*connection, robot);
 
     // Run server
     connection->run();
