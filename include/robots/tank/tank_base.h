@@ -72,19 +72,12 @@ public:
 
     void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false);
 
-    float getLeft() const;
-
-    float getRight() const;
-
 private:
-    float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f, m_Left = 0.f, m_Right = 0.f;
+    float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f;
 
     void drive(float x, float y, float deadZone);
 
     bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
-
-protected:
-    void setWheelSpeeds(float left, float right);
 
 }; // TankBase
 } // Tank

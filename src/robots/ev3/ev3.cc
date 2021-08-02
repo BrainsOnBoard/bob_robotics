@@ -44,14 +44,11 @@ EV3::stopMoving()
 {
     m_MotorLeft.stop();
     m_MotorRight.stop();
-    setWheelSpeeds(0.f, 0.f);
 }
 
 void
 EV3::tank(float left, float right)
 {
-    setWheelSpeeds(left, right);
-
     // NB: We are driving the motors backwards, as the camera is on the rear
     const float maxTachos = getMaximumSpeedProportion() * m_MaxSpeedTachos;
     m_MotorLeft.set_speed_sp(-maxTachos * left);

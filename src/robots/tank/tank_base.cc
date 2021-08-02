@@ -209,25 +209,6 @@ bool TankBase::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
     return true;
 }
 
-float TankBase::getLeft() const
-{
-    return m_Left;
-}
-
-float TankBase::getRight() const
-{
-    return m_Right;
-}
-
-void TankBase::setWheelSpeeds(float left, float right)
-{
-    BOB_ASSERT(left >= -1.f && left <= 1.f);
-    BOB_ASSERT(right >= -1.f && right <= 1.f);
-
-    m_Left = left;
-    m_Right = right;
-}
-
 } // Tank
 } // Robots
 } // BoBRobotics

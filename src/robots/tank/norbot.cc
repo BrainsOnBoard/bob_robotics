@@ -41,8 +41,6 @@ Norbot::~Norbot()
 
 void Norbot::tank(float left, float right)
 {
-    setWheelSpeeds(left, right);
-
     // Cache left and right
     const float maxSpeed = getMaximumSpeedProportion();
     left *= maxSpeed;

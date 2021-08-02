@@ -133,38 +133,6 @@ private:
 };
 
 //---------------------------------------------------------------------------
-// SpeedSource
-//---------------------------------------------------------------------------
-class SpeedSource
-{
-public:
-    SpeedSource(const Robots::ROBOT_TYPE &robot)
-      : m_Robot{ robot }
-    {}
-
-    std::array<float, 2> getSpeed() const
-    {
-#ifdef ROBOT_TYPE_MECANUM
-        constexpr float VelocityScale = 1.f;
-
-        // **TODO** sideways awesome
-        const float speed = m_Robot.getForwards() * VelocityScale;
-#else
-        constexpr float VelocityScale = 0.1f;
-        const float speed = (m_Robot.getLeft() + m_Robot.getRight()) * VelocityScale;
-#endif
-
-        return { speed, speed };
-    }
-
-private:
-    //------------------------------------------------------------------------
-    // Members
-    //------------------------------------------------------------------------
-    const Robots::ROBOT_TYPE &m_Robot;
-};
-
-//---------------------------------------------------------------------------
 // MotorController
 //---------------------------------------------------------------------------
 class MotorController
@@ -187,9 +155,8 @@ public:
 
         // Clamp absolute steering value to [0,1] and subtract from 1
         // So no forward  speed if we're turning fast
-        const float forward = 1.0f - std::min(1.0f, std::fabs(steering));
-
-        m_Robot.omni2D(forward * 0.5f, 0.0f, steering * 8.0f);
+        m_Forward = 0.5f * (1.0f - std::min(1.0f, std::fabs(steering)));
+        m_Robot.omni2D(m_Forward, 0.0f, steering * 8.0f);
 #else
         // Calculate differential steering signal
         const float steering = left - right;
@@ -198,14 +165,32 @@ public:
         }
 
         // Clamp motor input values to be between -1 and 1
-        const float leftMotor = 1.0f + steering;
-        const float rightMotor = 1.0f - steering;
-        m_Robot.tank(std::max(-1.f, std::min(1.f, leftMotor)), std::max(-1.f, std::min(1.f, rightMotor)));
+        const float leftMotor = std::max(-1.f, std::min(1.f, 1.0f + steering));
+        const float rightMotor = std::max(-1.f, std::min(1.f, 1.0f - steering));
+        m_Robot.tank(leftMotor, rightMotor);
+
+        m_Forward = leftMotor + rightMotor;
 #endif
+    }
+
+    std::array<float, 2> getSpeed() const
+    {
+#ifdef ROBOT_TYPE_MECANUM
+        constexpr float VelocityScale = 1.f;
+
+        // **TODO** sideways awesome
+#else
+        constexpr float VelocityScale = 0.1f;
+#endif
+
+        const float speed = m_Forward * VelocityScale;
+
+        return { speed, speed };
     }
 
 private:
     Robots::ROBOT_TYPE &m_Robot;
+    float m_Forward = 0.f;
 };
 
 void readHeadingThreadFunc(HeadingSource *headingSource,
@@ -230,7 +215,6 @@ int bobMain(int argc, char *argv[])
     // Create motor interface
     Robots::ROBOT_TYPE motor;
 
-    SpeedSource speedSource{ motor };
     MotorController motorController{ motor };
 
 #ifdef ROBOT_TYPE_EV3
@@ -314,7 +298,7 @@ int bobMain(int argc, char *argv[])
         }
 
         // Calculate dead reckoning speed from motor
-        const auto speed = speedSource.getSpeed();
+        const auto speed = motorController.getSpeed();
         speedTN2[Parameters::HemisphereLeft] = speed[0];
         speedTN2[Parameters::HemisphereRight] = speed[1];
 
