@@ -11,7 +11,8 @@ namespace Robots {
 // BoBRobotics::Robots::Omni2D
 //----------------------------------------------------------------------------
 // Interface for driving Omni2D-like wheeled robots
-class Omni2D : public Tank::TankBase
+class Omni2D
+  : public Tank::TankBase<Omni2D>
 {
 public:
     //------------------------------------------------------------------------
@@ -22,9 +23,9 @@ public:
     //------------------------------------------------------------------------
     // TankBase virtuals
     //------------------------------------------------------------------------
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
-    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
-    virtual void tank(float left, float right) override;
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
+    void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
+    void tank(float left, float right);
 
     //------------------------------------------------------------------------
     // Public API

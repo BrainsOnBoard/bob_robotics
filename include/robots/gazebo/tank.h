@@ -1,8 +1,8 @@
 #pragma once
 
 // BoB robotics includes
-#include "robots/tank/tank_base.h"
 #include "robots/gazebo/node.h"
+#include "robots/tank/tank_base.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -17,7 +17,8 @@ namespace Gazebo {
 
 using namespace units::literals;
 
-class Tank : public Robots::Tank::TankBase
+class Tank
+  : public Robots::Tank::TankBase<Tank>
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
 
@@ -25,9 +26,9 @@ public:
     Tank(const meters_per_second_t maximumSpeed = 1_mps,
          gazebo::transport::NodePtr node = getNode());
 
-    // Public virtual methods
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
-    virtual void tank(float left, float right) override;
+    // Public methods
+    meters_per_second_t getAbsoluteMaximumSpeed() const;
+    void tank(float left, float right);
 
 private:
     const radians_per_second_t m_MaximumSpeed;

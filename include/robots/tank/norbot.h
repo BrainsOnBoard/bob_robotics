@@ -15,27 +15,31 @@ namespace Tank {
 // BoBRobotics::Robots::Tank::Norbot
 //----------------------------------------------------------------------------
 //! An interface for wheeled, Arduino-based robots developed at the University of Sussex
-class Norbot : public TankBase
+class Norbot
+  : public TankBase<Norbot>
 {
-    using meters_per_second_t = units::velocity::meters_per_second_t;
-    using millimeter_t = units::length::millimeter_t;
-
 public:
     Norbot(const char *path = I2C_DEVICE_DEFAULT, int slaveAddress = 0x29);
 
     //----------------------------------------------------------------------------
     // TankBase virtuals
     //----------------------------------------------------------------------------
-    virtual ~Norbot() override;
+    ~Norbot();
 
-    virtual void tank(float left, float right) override;
+    void tank(float left, float right);
 
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
+    static constexpr auto getAbsoluteMaximumSpeed()
+    {
+        return units::velocity::meters_per_second_t{ 0.11 };
+    }
 
-    virtual millimeter_t getRobotWidth() const override;
+    static constexpr auto getRobotWidth()
+    {
+        return units::length::millimeter_t{ 104 };
+    }
 
 private:
-    BoBRobotics::I2CInterface m_I2C;
+    I2CInterface m_I2C;
 
     template<typename T, size_t N>
     void read(T (&data)[N])

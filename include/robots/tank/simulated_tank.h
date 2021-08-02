@@ -18,7 +18,7 @@ using namespace units::literals;
 template<typename LengthUnit = units::length::millimeter_t,
          typename AngleUnit = units::angle::degree_t>
 class SimulatedTank
-  : public TankBase
+  : public TankBase<SimulatedTank<LengthUnit, AngleUnit>>
 {
     using millimeter_t = units::length::millimeter_t;
     using meters_per_second_t = units::velocity::meters_per_second_t;
@@ -29,7 +29,7 @@ public:
       , m_AxisLength(axisLength)
     {}
 
-    virtual millimeter_t getRobotWidth() const override
+    millimeter_t getRobotWidth() const
     {
         return m_AxisLength;
     }
@@ -40,7 +40,7 @@ public:
         return m_Pose;
     }
 
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override
+    meters_per_second_t getAbsoluteMaximumSpeed() const
     {
         return m_MaximumSpeed;
     }
@@ -57,7 +57,7 @@ public:
         return true;
     }
 
-    virtual void tank(float left, float right) override
+    void tank(float left, float right)
     {
         updatePose();
         BOB_ASSERT(left >= -1.f && left <= 1.f);

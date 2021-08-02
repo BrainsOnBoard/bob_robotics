@@ -21,7 +21,8 @@ namespace Net {
 //----------------------------------------------------------------------------
 //! An interface for transmitting tank steering commands over the network
 template<class ConnectionType = BoBRobotics::Net::Connection &>
-class SinkBase : public TankBase
+class SinkBase
+  : public TankBase<SinkBase<ConnectionType>>
 {
 private:
     using millimeter_t = units::length::millimeter_t;
@@ -47,7 +48,8 @@ public:
             m_TurnSpeed = radians_per_second_t(stod(command[1]));
             m_ForwardSpeed = meters_per_second_t(stod(command[2]));
             m_AxisLength = millimeter_t(stod(command[3]));
-            TankBase::setMaximumSpeedProportion(stof(command[4]));
+
+            TankBase<SinkBase<ConnectionType>>::setMaximumSpeedProportion(stof(command[4]));
         });
 
         /*
@@ -61,18 +63,18 @@ public:
             ;
     }
 
-    virtual ~SinkBase() override;
+    ~SinkBase();
 
-    virtual void setMaximumSpeedProportion(float value) override;
+    void setMaximumSpeedProportion(float value);
 
     //! Motor command: send TNK command over TCP
-    virtual void tank(float left, float right) override;
+    void tank(float left, float right);
 
-    virtual millimeter_t getRobotWidth() const override;
+    millimeter_t getRobotWidth() const;
 
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
+    meters_per_second_t getAbsoluteMaximumSpeed() const;
 
-    virtual radians_per_second_t getAbsoluteMaximumTurnSpeed() const override;
+    radians_per_second_t getAbsoluteMaximumTurnSpeed() const;
 
     auto &getConnection()
     {

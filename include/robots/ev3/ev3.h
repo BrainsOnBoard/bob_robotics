@@ -15,7 +15,7 @@ namespace BoBRobotics {
 namespace Robots {
 //! Control for a Lego Mindstorms tank robot
 class EV3 final
-  : public Tank::TankBase
+  : public Tank::TankBase<EV3>
 {
 public:
     /*
@@ -31,12 +31,12 @@ public:
 
     EV3(const ev3dev::address_type &leftMotorPort = ev3dev::OUTPUT_A,
         const ev3dev::address_type &rightMotorPort = ev3dev::OUTPUT_D);
-    virtual ~EV3() override;
+    ~EV3();
 
-    virtual void stopMoving() override;
-    virtual void tank(float left, float right) override;
-    virtual millimeter_t getRobotWidth() const override;
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
+    void stopMoving();
+    void tank(float left, float right);
+    millimeter_t getRobotWidth() const;
+    meters_per_second_t getAbsoluteMaximumSpeed() const;
     std::pair<meters_per_second_t, meters_per_second_t> getWheelVelocities() const;
 
 private:

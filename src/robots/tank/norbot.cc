@@ -53,16 +53,6 @@ void Norbot::tank(float left, float right)
     write(buffer);
 }
 
-meters_per_second_t Norbot::getAbsoluteMaximumSpeed() const
-{
-    return 0.11_mps;
-}
-
-millimeter_t Norbot::getRobotWidth() const
-{
-    return 104_mm;
-}
-
 } // Tank
 } // Robots
 } // BoBRobotics

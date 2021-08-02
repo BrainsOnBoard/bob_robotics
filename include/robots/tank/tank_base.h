@@ -1,6 +1,8 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/circstat.h"
+#include "common/macros.h"
 #include "hid/joystick.h"
 
 // Third-party includes
@@ -13,6 +15,7 @@ namespace Tank {
 // BoBRobotics::Robots::Tank::TankBase
 //----------------------------------------------------------------------------
 //! Interface for driving wheeled robots with tank steering
+template<class Derived>
 class TankBase
 {
 /*
@@ -26,58 +29,192 @@ protected:
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
 public:
-    virtual ~TankBase();
+    void moveForward(float speed)
+    {
+        tank(speed, speed);
+    }
 
-    virtual void moveForward(float speed);
+    void turnOnTheSpot(float clockwiseSpeed)
+    {
+        tank(clockwiseSpeed, -clockwiseSpeed);
+    }
 
-    virtual void turnOnTheSpot(float clockwiseSpeed);
+    void stopMoving()
+    {
+        tank(0.f, 0.f);
+    }
 
-    virtual void stopMoving();
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
+    {
+        joystick.addHandler(
+                [this, deadZone](HID::JAxis axis, float value) {
+                    return this->onJoystickEvent(axis, value, deadZone);
+                });
+    }
 
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
+    void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
+    {
+        drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
+              joystick.getState(HID::JAxis::LeftStickVertical),
+              deadZone);
+    }
 
-    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
+    void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
+    {
+        joystick.addHandler(
+                [this](HID::JAxis axis, float value) {
+                    static float left{}, right{};
 
-    //----------------------------------------------------------------------------
-    // Declared virtuals
-    //----------------------------------------------------------------------------
-    //! Set the left and right motors to the specified speed
-    virtual void tank(float left, float right);
+                    switch (axis) {
+                    case HID::JAxis::LeftStickVertical:
+                        left = -value;
+                        break;
+                    case HID::JAxis::RightStickVertical:
+                        right = -value;
+                        break;
+                    default:
+                        return false;
+                    }
 
-    virtual millimeter_t getRobotWidth() const;
-
-    virtual meters_per_second_t getMaximumSpeed() const;
-
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const;
-
-    virtual radians_per_second_t getMaximumTurnSpeed() const;
-
-    virtual radians_per_second_t getAbsoluteMaximumTurnSpeed() const;
-
-    virtual void setMaximumSpeedProportion(float value);
-
-    virtual float getMaximumSpeedProportion() const;
-
-    //----------------------------------------------------------------------------
-    // Public API
-    //----------------------------------------------------------------------------
-    void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick);
+                    tank(left, right);
+                    return true;
+                });
+    }
 
     void move(meters_per_second_t v,
               radians_per_second_t clockwiseSpeed,
-              const bool maxScaled = false);
+              const bool maxScaled)
+    {
+        const meters_per_second_t diff{
+            (clockwiseSpeed * getRobotWidth() / 2).value()
+        };
+        const meters_per_second_t vL = v + diff;
+        const meters_per_second_t vR = v - diff;
+        tank(vL, vR, maxScaled);
+    }
 
+    void tankMaxScaled(const float left, const float right, const float max = 1.f)
+    {
+        const float larger = std::max(std::fabs(left), std::fabs(right));
+        if (larger <= max) {
+            tank(left, right);
+        } else {
+            const float ratio = max / larger;
+            tank(ratio * left, ratio * right);
+        }
+    }
 
-    void tankMaxScaled(const float left, const float right, const float max = 1.f);
+    void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false)
+    {
+        const meters_per_second_t maxSpeed = getMaximumSpeed();
+        const auto leftMotor = static_cast<float>(left / maxSpeed);
+        const auto rightMotor = static_cast<float>(right / maxSpeed);
+        if (maxScaled) {
+            tankMaxScaled(leftMotor, rightMotor);
+        } else {
+            tank(leftMotor, rightMotor);
+        }
+    }
 
-    void tank(meters_per_second_t left, meters_per_second_t right, bool maxScaled = false);
+    auto getMaximumSpeed() const
+    {
+        return this->getMaximumSpeedProportion() * getAbsoluteMaximumSpeed();
+    }
+
+    radians_per_second_t getMaximumTurnSpeed() const
+    {
+        return this->getMaximumSpeedProportion() * this->getAbsoluteMaximumTurnSpeed();
+    }
+
+    radians_per_second_t getAbsoluteMaximumTurnSpeed() const
+    {
+        // max turn speed = v_max / r
+        return radians_per_second_t{ (getAbsoluteMaximumSpeed() * 2 / getRobotWidth()).value() };
+    }
+
+    void setMaximumSpeedProportion(float value)
+    {
+        BOB_ASSERT(value >= -1.f && value <= 1.f);
+        m_MaximumSpeedProportion = value;
+    }
+
+    float getMaximumSpeedProportion() const
+    {
+        return m_MaximumSpeedProportion;
+    }
 
 private:
     float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f;
 
-    void drive(float x, float y, float deadZone);
+    void drive(float x, float y, float deadZone)
+    {
+        const float halfPi = pi<float>() / 2.0f;
 
-    bool onJoystickEvent(HID::JAxis axis, float value, float deadZone);
+        const bool deadX = (fabs(x) < deadZone);
+        const bool deadY = (fabs(y) < deadZone);
+        if (deadX && deadY) {
+            tank(0.0f, 0.0f);
+        } else if (deadX) {
+            tank(-y, -y);
+        } else if (deadY) {
+            tank(x, -x);
+        } else {
+            // If length of joystick vector places it in deadZone, stop motors
+            float r = hypot(x, y);
+
+            // By removing deadzone, we're preventing it being possible to drive at low speed
+            // So subtract deadzone, rescale the result and clamp so it's back on (0,1)
+            r = std::min(1.f, (r - deadZone) / (1.0f - deadZone));
+
+            const float theta = atan2(x, -y);
+            const float twoTheta = 2.0f * theta;
+
+            // Drive motor
+            if (theta >= 0.0f && theta < halfPi) {
+                tank(r, r * cos(twoTheta));
+            } else if (theta >= halfPi && theta < pi<float>()) {
+                tank(-r * cos(twoTheta), -r);
+            } else if (theta < 0.0f && theta >= -halfPi) {
+                tank(r * cos(twoTheta), r);
+            } else if (theta < -halfPi && theta >= -pi<float>()) {
+                tank(-r, -r * cos(twoTheta));
+            }
+        }
+    }
+
+    bool onJoystickEvent(HID::JAxis axis, float value, float deadZone)
+    {
+        // only interested in left joystick
+        switch (axis) {
+        case HID::JAxis::LeftStickVertical:
+            m_Y = value;
+            break;
+        case HID::JAxis::LeftStickHorizontal:
+            m_X = value;
+            break;
+        default:
+            return false;
+        }
+
+        // drive robot with joystick
+        drive(m_X, m_Y, deadZone);
+        return true;
+    }
+
+    void tank(float left, float right)
+    {
+        static_cast<Derived *>(this)->tank(left, right);
+    }
+
+    meter_t getRobotWidth() const
+    {
+        return static_cast<const Derived *>(this)->getRobotWidth();
+    }
+
+    meters_per_second_t getAbsoluteMaximumSpeed() const
+    {
+        return static_cast<const Derived *>(this)->getAbsoluteMaximumSpeed();
+    }
 
 }; // TankBase
 } // Tank

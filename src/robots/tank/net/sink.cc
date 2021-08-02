@@ -6,6 +6,9 @@
 // Third-party includes
 #include "plog/Log.h"
 
+// Standard C++ includes
+#include <stdexcept>
+
 namespace BoBRobotics {
 namespace Robots {
 namespace Tank {
@@ -25,7 +28,7 @@ template<class ConnectionType>
 SinkBase<ConnectionType>::~SinkBase()
 {
     try {
-        stopMoving();
+        this->stopMoving();
     } catch (OS::Net::NetworkError &e) {
         LOG_WARNING << "Caught exception while trying to send command: "
                     << e.what();
@@ -41,8 +44,8 @@ template<class ConnectionType>
 void
 SinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
 {
-    if (value != getMaximumSpeedProportion()) {
-        TankBase::setMaximumSpeedProportion(value);
+    if (value != this->getMaximumSpeedProportion()) {
+        TankBase<SinkBase<ConnectionType>>::setMaximumSpeedProportion(value);
 
         m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
     }
@@ -86,10 +89,10 @@ units::length::millimeter_t
 SinkBase<ConnectionType>::getRobotWidth() const
 {
     if (std::isnan(m_AxisLength.value())) {
-        return TankBase::getRobotWidth();
-    } else {
-        return m_AxisLength;
+        throw std::runtime_error("No value given for robot width");
     }
+
+    return m_AxisLength;
 }
 
 template<class ConnectionType>
@@ -97,10 +100,10 @@ units::velocity::meters_per_second_t
 SinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
 {
     if (std::isnan(m_ForwardSpeed.value())) {
-        return TankBase::getAbsoluteMaximumSpeed();
-    } else {
-        return m_ForwardSpeed;
+        throw std::runtime_error("No value given for maximum speed");
     }
+
+    return m_ForwardSpeed;
 }
 
 template<class ConnectionType>
@@ -108,10 +111,10 @@ units::angular_velocity::radians_per_second_t
 SinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
 {
     if (std::isnan(m_TurnSpeed.value())) {
-        return TankBase::getAbsoluteMaximumTurnSpeed();
-    } else {
-        return m_TurnSpeed;
+        throw std::runtime_error("No value given for maximum turn speed");
     }
+
+    return m_TurnSpeed;
 }
 
 } // Net
