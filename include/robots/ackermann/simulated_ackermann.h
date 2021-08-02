@@ -3,7 +3,7 @@
 // BoB robotics includes
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "robots/ackermann.h"
+#include "robots/ackermann/ackermann.h"
 
 // Third-party includes
 #include "third_party/units.h"

@@ -7,7 +7,7 @@
 #include "common/stopwatch.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
-#include "robots/rc_car_bot.h"
+#include "robots/ackermann/rc_car_bot.h"
 #include "video/panoramic.h"
 
 // Third-party includes

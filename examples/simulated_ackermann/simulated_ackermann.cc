@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/simulated_ackermann.h"
+#include "robots/ackermann/simulated_ackermann.h"
 #include "viz/car_display/car_display.h"
 
 // Third-party includes

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/rc_car_bot.h"
+#include "robots/ackermann/rc_car_bot.h"
 
 // Standard C++ includes
 #include <chrono>

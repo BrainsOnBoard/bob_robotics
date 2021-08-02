@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/macros.h"
-#include "robots/simulated_ackermann.h"
+#include "robots/ackermann/simulated_ackermann.h"
 
 using namespace units::angle;
 using namespace units::length;

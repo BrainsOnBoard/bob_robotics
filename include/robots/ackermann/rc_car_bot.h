@@ -3,8 +3,8 @@
 
 // BoB robotics includes
 #include "common/i2c_interface.h"
-#include "robots/ackermann.h"
-#include "robots/rc_car_common.h"
+#include "robots/ackermann/ackermann.h"
+#include "robots/ackermann/rc_car_common.h"
 #include "third_party/units.h"
 
 // Standard C includes

@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/macros.h"
-#include "robots/ackermann.h"
+#include "robots/ackermann/ackermann.h"
 
 // Standard C includes
 #include <cmath>
