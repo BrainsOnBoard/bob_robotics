@@ -34,9 +34,9 @@ public:
 
     virtual millimeter_t getRobotWidth() const override;
 
-    //----------------------------------------------------------------------------
-    // Public API
-    //----------------------------------------------------------------------------
+private:
+    BoBRobotics::I2CInterface m_I2C;
+
     template<typename T, size_t N>
     void read(T (&data)[N])
     {
@@ -48,13 +48,6 @@ public:
     {
         m_I2C.write(data);
     }
-
-private:
-
-    //----------------------------------------------------------------------------
-    // Private members
-    //----------------------------------------------------------------------------
-    BoBRobotics::I2CInterface m_I2C;
 }; // Norbot
 } // Tank
 } // Robots
