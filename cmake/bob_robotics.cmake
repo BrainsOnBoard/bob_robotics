@@ -240,7 +240,7 @@ macro(BoB_set_options)
     endif()
 endmacro()
 
-# Build a module with extra libraries etc. Currently used by robots/bebop
+# Build a module with extra libraries etc. Currently used by robots/uav/bebop
 # module because the stock BoB_module() isn't flexible enough.
 macro(BoB_module_custom)
     BoB_init()

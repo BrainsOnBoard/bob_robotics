@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "robots/uav.h"
+#include "robots/uav/uav.h"
 
 // Gazebo includes
 #include <gazebo/transport/transport.hh>

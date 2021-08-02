@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "plog/Log.h"
 #include "hid/joystick.h"
-#include "robots/bebop/bebop.h"
+#include "robots/uav/bebop/bebop.h"
 
 // Standard C++ includes
 #include <atomic>

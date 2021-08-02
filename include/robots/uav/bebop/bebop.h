@@ -20,7 +20,7 @@
 #include "common/semaphore.h"
 #include "hid/joystick.h"
 #include "video/input.h"
-#include "robots/uav.h"
+#include "robots/uav/uav.h"
 
 // Third-party includes
 #include "third_party/units.h"

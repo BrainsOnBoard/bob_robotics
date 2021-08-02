@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/uav.h"
+#include "robots/uav/uav.h"
 
 // Standard C++ includes
 #include <stdexcept>

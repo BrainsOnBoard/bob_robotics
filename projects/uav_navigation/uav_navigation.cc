@@ -4,7 +4,7 @@
 #include "hid/joystick.h"
 #include "navigation/perfect_memory.h"
 #include "os/keycodes.h"
-#include "robots/bebop/bebop.h"
+#include "robots/uav/bebop/bebop.h"
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"

@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/bebop/bebop.h"
+#include "robots/uav/bebop/bebop.h"
 #include "plog/Log.h"
 #include "common/macros.h"
 
