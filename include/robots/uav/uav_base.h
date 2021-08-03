@@ -5,38 +5,113 @@
 
 namespace BoBRobotics {
 namespace Robots {
+template<class Derived>
 class UAVBase
 {
 public:
-    virtual ~UAVBase();
+    void moveForward(float speed)
+    {
+        setPitch(speed);
+    }
 
-    virtual void takeOff() = 0;
-    virtual void land() = 0;
-    virtual void setPitch(float pitch) = 0;
-    virtual void setRoll(float right) = 0;
-    virtual void setVerticalSpeed(float up) = 0;
-    virtual void setYawSpeed(float right) = 0;
+    void turnOnTheSpot(float clockwiseSpeed)
+    {
+        setPitch(0.f);
+        setRoll(0.f);
+        setVerticalSpeed(0.f);
+        setYawSpeed(clockwiseSpeed);
+    }
 
-    //! An alias for setPitch
-    virtual void moveForward(float speed);
+    void stopMoving()
+    {
+        setPitch(0.f);
+        setRoll(0.f);
+        setVerticalSpeed(0.f);
+        setYawSpeed(0.f);
+    }
 
-    //! Sets the yaw speed, stopping motion in all other axes
-    virtual void turnOnTheSpot(float clockwiseSpeed);
+    void addJoystick(HID::Joystick &joystick)
+    {
+        joystick.addHandler([this](auto &, HID::JAxis axis, float value) {
+            return onAxisEvent(axis, value);
+        });
+        joystick.addHandler([this](auto &, HID::JButton button, bool pressed) {
+            return onButtonEvent(button, pressed);
+        });
+    }
 
-    virtual void stopMoving();
-
-    //! Start controlling this drone with a joystick
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
-
-    //! Drive the robot using the current joystick state
-    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
+    void drive(const HID::Joystick &joystick)
+    {
+        setRoll(joystick.getState(HID::JAxis::RightStickHorizontal));
+        setPitch(-joystick.getState(HID::JAxis::RightStickVertical));
+        setVerticalSpeed(-joystick.getState(HID::JAxis::LeftStickVertical));
+        setYawSpeed(joystick.getState(HID::JAxis::RightTrigger)
+                             - joystick.getState(HID::JAxis::LeftTrigger));
+    }
 
 private:
-    // Handle joystick axis events
-    bool onAxisEvent(HID::JAxis axis, float value);
+    bool onAxisEvent(HID::JAxis axis, float value)
+    {
+        /*
+         * setRoll/Pitch etc. all take values between -1 and 1. We cap these
+         * values for the joystick code to make the drone more controllable.
+         */
+        switch (axis) {
+        case HID::JAxis::RightStickHorizontal:
+            setRoll(value);
+            return true;
+        case HID::JAxis::RightStickVertical:
+            setPitch(-value);
+            return true;
+        case HID::JAxis::LeftStickVertical:
+            setVerticalSpeed(-value);
+            return true;
+        case HID::JAxis::LeftTrigger:
+            setYawSpeed(-value);
+            return true;
+        case HID::JAxis::RightTrigger:
+            setYawSpeed(value);
+            return true;
+        default:
+            // otherwise signal that we haven't handled event
+            return false;
+        }
+    }
 
-    // Handle joystick button events
-    bool onButtonEvent(HID::JButton button, bool pressed);
+    bool onButtonEvent(HID::JButton button, bool pressed)
+    {
+        // we only care about button presses
+        if (!pressed) {
+            return false;
+        }
+
+        // A = take off; B = land
+        auto *derived = static_cast<Derived *>(this);
+        switch (button) {
+        case HID::JButton::A:
+            derived->takeOff();
+            return true;
+        case HID::JButton::B:
+            derived->land();
+            return true;
+        default:
+            // otherwise signal that we haven't handled event
+            return false;
+        }
+    }
+
+#define DERIVED_FUNC(NAME)                         \
+    void NAME(float value)                         \
+    {                                              \
+        static_cast<Derived *>(this)->NAME(value); \
+    }
+
+    DERIVED_FUNC(setPitch)
+    DERIVED_FUNC(setRoll)
+    DERIVED_FUNC(setYawSpeed)
+    DERIVED_FUNC(setVerticalSpeed)
+
+#undef DERIVED_FUNC
 };
 } // Robots
 } // BoBRobotics

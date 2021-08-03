@@ -102,8 +102,8 @@ checkError(eARCONTROLLER_ERROR err)
  * It also provides an interface to access the drone's video stream.
  */
 //------------------------------------------------------------------------------
-class Bebop final
-  : public UAVBase
+class Bebop
+  : public UAVBase<Bebop>
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 
@@ -187,7 +187,7 @@ public:
     Bebop(degrees_per_second_t maxYawSpeed = DefaultMaximumYawSpeed,
           meters_per_second_t maxVerticalSpeed = DefaultMaximumVerticalSpeed,
           degree_t maxTilt = DefaultMaximumTilt);
-    virtual ~Bebop() override;
+    ~Bebop();
 
     // speed limits
     degree_t getMaximumTilt() const;
@@ -198,12 +198,12 @@ public:
     std::pair<degrees_per_second_t, degrees_per_second_t> &getYawSpeedLimits();
 
     // motor control
-    virtual void takeOff() override;
-    virtual void land() override;
-    virtual void setPitch(float pitch) override;
-    virtual void setRoll(float right) override;
-    virtual void setVerticalSpeed(float up) override;
-    virtual void setYawSpeed(float right) override;
+    void takeOff();
+    void land();
+    void setPitch(float pitch);
+    void setRoll(float right);
+    void setVerticalSpeed(float up);
+    void setYawSpeed(float right);
     void relativeMove(meter_t x, meter_t y, meter_t z, radian_t yaw = 0_rad);
     RelativeMoveState getRelativeMoveState() const;
     std::pair<Vector3<meter_t>, radian_t> getRelativeMovePoseDifference() const;

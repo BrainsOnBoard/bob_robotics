@@ -11,7 +11,7 @@ namespace BoBRobotics {
 namespace Robots {
 namespace Gazebo {
 class UAV
-  : public Robots::UAVBase
+  : public Robots::UAVBase<UAV>
 {
 public:
     UAV(gazebo::transport::NodePtr node)
@@ -21,13 +21,13 @@ public:
         // Wait for a subscriber to connect to this publisher
         m_Pub->WaitForConnection();
     }
-    virtual void takeOff() override;
-    virtual void land() override;
-    virtual void setPitch(float pitch) override;
-    virtual void setRoll(float roll) override;
-    virtual void setVerticalSpeed(float up) override;
-    virtual void setYawSpeed(float right) override;
-    virtual void sendCommand();
+    void takeOff();
+    void land();
+    void setPitch(float pitch);
+    void setRoll(float roll);
+    void setVerticalSpeed(float up);
+    void setYawSpeed(float right);
+    void sendCommand();
 
 private:
     gazebo::transport::PublisherPtr m_Pub;
