@@ -6,7 +6,7 @@
 
 int bobMain(int, char **)
 {
-    BoBRobotics::Robots::Bebop drone;
+    BoBRobotics::Robots::UAV::Bebop drone;
 
     std::cout << "Place the drone on a flat surface and press any key to continue."
               << std::endl << std::endl;
