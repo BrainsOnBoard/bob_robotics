@@ -23,7 +23,7 @@ namespace Ackermann {
 using namespace units::literals;
 
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::PassiveRCCarBot
+// BoBRobotics::Robots::Ackermann::PassiveRCCarBot
 //----------------------------------------------------------------------------
 //! An interface for RC car robots which are being passively driven by the
 //! remote control.
@@ -48,7 +48,7 @@ private:
 }; // PassiveRCCarBot
 
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::RCCarBot
+// BoBRobotics::Robots::Ackermann::RCCarBot
 //----------------------------------------------------------------------------
 //! An interface for 4 wheeled, Arduino-based robots developed at the University of Sussex
 class RCCarBot final
