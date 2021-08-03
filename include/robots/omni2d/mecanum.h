@@ -18,17 +18,15 @@ namespace Omni2D {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Omni2D::Mecanum
 //----------------------------------------------------------------------------
-class Mecanum : public Omni2DBase
+class Mecanum
+  : public Omni2DBase<Mecanum>
 {
 public:
     Mecanum(bool alternativeWiring = true,
             const char *path = SerialInterface::DefaultLinuxDevicePath);
-    virtual ~Mecanum();
+    ~Mecanum();
 
-    //----------------------------------------------------------------------------
-    // Omni2DBase virtuals
-    //----------------------------------------------------------------------------
-    virtual void omni2D(float forward, float sideways, float turn) override;
+    void omni2D(float forward, float sideways, float turn);
 
     //! Drive robot using individual motor speeds - all range from -1 to 1
     void driveMotors(float m1, float m2, float m3, float m4);
