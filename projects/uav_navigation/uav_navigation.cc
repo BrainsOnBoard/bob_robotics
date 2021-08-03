@@ -115,12 +115,12 @@ public:
                     break;
                 }
             }
-        } while (m_Drone.getState() == Robots::Bebop::State::Running && (cv::waitKeyEx(1) & OS::KeyMask) != OS::KeyCodes::Escape);
+        } while (m_Drone.getState() == Robots::UAV::Bebop::State::Running && (cv::waitKeyEx(1) & OS::KeyMask) != OS::KeyCodes::Escape);
     }
 
 private:
     HID::Joystick m_Joystick;
-    Robots::Bebop m_Drone;
+    Robots::UAV::Bebop m_Drone;
     Navigation::PerfectMemory<> m_PerfectMemory;
     const degree_t m_HalfScanWidth;
     const degrees_per_second_t m_YawSpeed;

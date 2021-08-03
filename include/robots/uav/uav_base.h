@@ -5,6 +5,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace UAV {
 template<class Derived>
 class UAVBase
 {
@@ -112,6 +113,7 @@ private:
     DERIVED_FUNC(setVerticalSpeed)
 
 #undef DERIVED_FUNC
-};
+}; // UAVBase
+} // UAV
 } // Robots
 } // BoBRobotics

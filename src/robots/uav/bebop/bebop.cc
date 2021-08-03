@@ -43,6 +43,7 @@ checkError(eARDISCOVERY_ERROR err)
 
 namespace BoBRobotics {
 namespace Robots {
+namespace UAV {
 
 /** BEGIN PUBLIC MEMBERS **/
 
@@ -652,5 +653,6 @@ Bebop::productVersionReceived(ARCONTROLLER_DICTIONARY_ELEMENT_t *dict)
         LOG_VERBOSE_IF(arg) << "Bebop hardware version: " << arg->value.String;
     }
 }
+} // UAV
 } // Robots
 } // BoBRobotics

@@ -4,6 +4,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace UAV {
 bool
 Bebop::VideoStream::initCodec()
 {
@@ -322,5 +323,7 @@ Bebop::VideoStream::frameCallback(ARCONTROLLER_Frame_t *frame, void *data)
     }
     return ARCONTROLLER_OK;
 }
+
+} // UAV
 } // Robots
 } // BoBRobotics

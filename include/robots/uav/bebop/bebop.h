@@ -74,6 +74,7 @@ extern "C"
 
 namespace BoBRobotics {
 namespace Robots {
+namespace UAV {
 using namespace units::literals;
 
 //! Handlers which are called when the drone takes off or lands
@@ -93,7 +94,7 @@ checkError(eARCONTROLLER_ERROR err)
 }
 
 //------------------------------------------------------------------------------
-// BoBRobotics::Robots::Bebop
+// BoBRobotics::Robots::UAV::Bebop
 //------------------------------------------------------------------------------
 /*!
  * \brief An interface to Parrot Bebop 2 drones
@@ -333,5 +334,6 @@ private:
                              eARCONTROLLER_ERROR err,
                              void *data);
 }; // Bebop
+} // UAV
 } // Robots
 } // BoBRobotics

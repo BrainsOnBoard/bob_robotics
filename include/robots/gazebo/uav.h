@@ -11,7 +11,7 @@ namespace BoBRobotics {
 namespace Robots {
 namespace Gazebo {
 class UAV
-  : public Robots::UAVBase<UAV>
+  : public Robots::UAV::UAVBase<UAV>
 {
 public:
     UAV(gazebo::transport::NodePtr node)

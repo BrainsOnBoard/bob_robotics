@@ -14,7 +14,7 @@
 #include <utility>
 
 using namespace BoBRobotics;
-using namespace BoBRobotics::Robots;
+using namespace BoBRobotics::Robots::UAV;
 using namespace std::literals;
 
 template<typename T>

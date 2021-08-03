@@ -10,7 +10,7 @@
 #include <thread>
 
 using namespace BoBRobotics;
-using namespace BoBRobotics::Robots;
+using namespace BoBRobotics::Robots::UAV;
 using namespace std::literals;
 using namespace units::length;
 using namespace units::angle;
