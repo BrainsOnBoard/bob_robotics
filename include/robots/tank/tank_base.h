@@ -47,8 +47,8 @@ public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
         joystick.addHandler(
-                [this, deadZone](auto &joystick, HID::JAxis axis, float value) {
-                    return this->onJoystickEvent(joystick, axis, value, deadZone);
+                [this, deadZone](auto &joystick, HID::JAxis axis, float) {
+                    return this->onJoystickEvent(joystick, axis, deadZone);
                 });
     }
 
@@ -177,7 +177,7 @@ private:
     }
 
     bool onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
-                         HID::JAxis axis, float, float deadZone)
+                         HID::JAxis axis, float deadZone)
     {
         if (axis == HID::JAxis::LeftStickVertical || axis == HID::JAxis::LeftStickVertical) {
             // drive robot with joystick
