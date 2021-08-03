@@ -31,9 +31,13 @@ public:
     //! Drive robot using individual motor speeds - all range from -1 to 1
     void driveMotors(float m1, float m2, float m3, float m4);
 
+private:
     //----------------------------------------------------------------------------
-    // Public API
+    // Private members
     //----------------------------------------------------------------------------
+    const bool m_AlternativeWiring;
+    SerialInterface m_Serial;
+
     template<typename T, size_t N>
     void read(T (&data)[N])
     {
@@ -45,13 +49,6 @@ public:
     {
         m_Serial.write(data);
     }
-
-private:
-    //----------------------------------------------------------------------------
-    // Private members
-    //----------------------------------------------------------------------------
-    const bool m_AlternativeWiring;
-    SerialInterface m_Serial;
 }; // Mecanum
 } // Omni2D
 } // Robots
