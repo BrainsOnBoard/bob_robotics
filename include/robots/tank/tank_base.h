@@ -63,11 +63,11 @@ public:
     void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
     {
         joystick.addHandler(
-                [](auto &joystick, HID::JAxis axis, float) {
+                [this](auto &joystick, HID::JAxis axis, float) {
                     constexpr auto Left = HID::JAxis::LeftStickVertical;
                     constexpr auto Right = HID::JAxis::RightStickVertical;
                     if (axis == Left || axis == Right) {
-                        tank(joystick.getState(Left), joystick.getState(Right));
+                        this->tank(joystick.getState(Left), joystick.getState(Right));
                         return true;
                     }
 
