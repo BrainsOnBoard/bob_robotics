@@ -47,12 +47,13 @@ public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
         joystick.addHandler(
-                [this, deadZone](auto &, HID::JAxis axis, float value) {
-                    return this->onJoystickEvent(axis, value, deadZone);
+                [this, deadZone](auto &joystick, HID::JAxis axis, float value) {
+                    return this->onJoystickEvent(joystick, axis, value, deadZone);
                 });
     }
 
-    void drive(const HID::Joystick &joystick, float deadZone = 0.25f)
+    void drive(const HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
+               float deadZone = 0.25f)
     {
         drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
               joystick.getState(HID::JAxis::LeftStickVertical),
@@ -62,22 +63,15 @@ public:
     void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
     {
         joystick.addHandler(
-                [this](auto &, HID::JAxis axis, float value) {
-                    static float left{}, right{};
-
-                    switch (axis) {
-                    case HID::JAxis::LeftStickVertical:
-                        left = -value;
-                        break;
-                    case HID::JAxis::RightStickVertical:
-                        right = -value;
-                        break;
-                    default:
-                        return false;
+                [this](auto &joystick, HID::JAxis axis, float) {
+                    constexpr auto Left = HID::JAxis::LeftStickVertical;
+                    constexpr auto Right = HID::JAxis::RightStickVertical;
+                    if (axis == Left || axis == Right) {
+                        tank(joystick.getState(Left), joystick.getState(Right));
+                        return true;
                     }
 
-                    tank(left, right);
-                    return true;
+                    return false;
                 });
     }
 
@@ -144,7 +138,7 @@ public:
     }
 
 private:
-    float m_X = 0, m_Y = 0, m_MaximumSpeedProportion = 1.f;
+    float m_MaximumSpeedProportion = 1.f;
 
     void drive(float x, float y, float deadZone)
     {
@@ -182,23 +176,16 @@ private:
         }
     }
 
-    bool onJoystickEvent(HID::JAxis axis, float value, float deadZone)
+    bool onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
+                         HID::JAxis axis, float, float deadZone)
     {
-        // only interested in left joystick
-        switch (axis) {
-        case HID::JAxis::LeftStickVertical:
-            m_Y = value;
-            break;
-        case HID::JAxis::LeftStickHorizontal:
-            m_X = value;
-            break;
-        default:
-            return false;
+        if (axis == HID::JAxis::LeftStickVertical || axis == HID::JAxis::LeftStickVertical) {
+            // drive robot with joystick
+            drive(joystick, deadZone);
+            return true;
         }
 
-        // drive robot with joystick
-        drive(m_X, m_Y, deadZone);
-        return true;
+        return false;
     }
 
     void tank(float left, float right)
