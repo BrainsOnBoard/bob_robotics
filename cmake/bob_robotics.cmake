@@ -179,7 +179,7 @@ macro(BoB_project)
         elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
             set(ROBOT_TYPE Tank::Norbot)
         else()
-            set(ROBOT_TYPE Tank::TankBase)
+            set(ROBOT_TYPE Tank::DummyTank)
         endif()
     endif()
     message("Default robot type (if used): ${ROBOT_TYPE}")
