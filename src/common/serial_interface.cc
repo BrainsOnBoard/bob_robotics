@@ -1,4 +1,4 @@
-#ifdef __linux__ // This code is Linux only
+#ifndef WIN32
 
 // BoB robotics includes
 #include "common/macros.h"
