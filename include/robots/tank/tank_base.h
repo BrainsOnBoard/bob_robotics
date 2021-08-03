@@ -28,8 +28,6 @@ protected:
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
-    TankBase<Derived>() = default;
-
 public:
     void moveForward(float speed)
     {
@@ -49,7 +47,7 @@ public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
         joystick.addHandler(
-                [this, deadZone](HID::JAxis axis, float value) {
+                [this, deadZone](auto &, HID::JAxis axis, float value) {
                     return this->onJoystickEvent(axis, value, deadZone);
                 });
     }
@@ -64,7 +62,7 @@ public:
     void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
     {
         joystick.addHandler(
-                [this](HID::JAxis axis, float value) {
+                [this](auto &, HID::JAxis axis, float value) {
                     static float left{}, right{};
 
                     switch (axis) {

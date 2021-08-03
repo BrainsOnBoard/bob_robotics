@@ -56,7 +56,7 @@ void
 AntAgent::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
-            [this, deadZone](HID::JAxis axis, float value) {
+            [this, deadZone](auto &, HID::JAxis axis, float value) {
                 switch (axis) {
                 case HID::JAxis::LeftStickVertical:
                     m_JoystickY = value;

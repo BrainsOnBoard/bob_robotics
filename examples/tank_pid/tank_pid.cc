@@ -118,7 +118,7 @@ int bobMain(int argc, char **argv)
     auto viconObject = vicon.getObjectReference();
     auto pid = Robots::createTankPID(robot, viconObject, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);
     bool runPositioner = false;
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
+    joystick.addHandler([&](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }
@@ -148,7 +148,7 @@ int bobMain(int argc, char **argv)
             return false;
         }
     });
-    joystick.addHandler([&runPositioner](HID::JAxis, float) {
+    joystick.addHandler([&runPositioner](auto &, HID::JAxis, float) {
         // If positioner is running, do nothing when joysticks moved
         return runPositioner;
     });

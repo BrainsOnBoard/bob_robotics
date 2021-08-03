@@ -51,10 +51,10 @@ public:
 
         LOGI << "Connected to drone";
 
-        m_Joystick.addHandler([this](HID::JButton button, bool pressed) {
+        m_Joystick.addHandler([this](auto &, HID::JButton button, bool pressed) {
             return onButtonEvent(button, pressed);
         });
-        m_Joystick.addHandler([this](HID::JAxis axis, float) {
+        m_Joystick.addHandler([this](auto &, HID::JAxis axis, float) {
             if (axis != HID::JAxis::RightStickHorizontal && axis != HID::JAxis::RightStickVertical && m_NavigationState != NotNavigating) {
                 stopNavigating();
             }

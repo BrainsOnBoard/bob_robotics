@@ -30,7 +30,7 @@ int bobMain(int, char **)
 
     const Vector2<millimeter_t> goal{}; // Goal is origin
     bool pidRunning = false;
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
+    joystick.addHandler([&](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }

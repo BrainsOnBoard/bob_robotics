@@ -50,7 +50,7 @@ int bobMain(int argc, char **argv)
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001); // For getting robot's position
 
     // If we're recording, ignore axis movements
-    joystick.addHandler([&stopwatch](HID::JAxis, float) {
+    joystick.addHandler([&stopwatch](auto &, HID::JAxis, float) {
         if (stopwatch.started()) {
             LOGI << "Ignoring joystick command";
             return true;
@@ -60,7 +60,7 @@ int bobMain(int argc, char **argv)
     });
 
     // Toggle testing mode with buttons
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
+    joystick.addHandler([&](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }

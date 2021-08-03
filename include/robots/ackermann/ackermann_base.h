@@ -22,7 +22,7 @@ protected:
 public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
-        joystick.addHandler([this, deadZone](HID::JAxis axis, float value) {
+        joystick.addHandler([this, deadZone](auto &, HID::JAxis axis, float value) {
             auto *derived = static_cast<Derived *>(this);
 
             if (fabs(value) <= deadZone) {

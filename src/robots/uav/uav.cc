@@ -33,10 +33,10 @@ void UAV::stopMoving()
 
 void UAV::addJoystick(HID::Joystick &joystick, float)
 {
-    joystick.addHandler([this](HID::JAxis axis, float value) {
+    joystick.addHandler([this](auto &, HID::JAxis axis, float value) {
         return onAxisEvent(axis, value);
     });
-    joystick.addHandler([this](HID::JButton button, bool pressed) {
+    joystick.addHandler([this](auto &, HID::JButton button, bool pressed) {
         return onButtonEvent(button, pressed);
     });
 }

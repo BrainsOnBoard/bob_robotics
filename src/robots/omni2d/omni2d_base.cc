@@ -20,7 +20,7 @@ void
 Omni2DBase::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
-            [this, deadZone](HID::JAxis axis, float value) {
+            [this, deadZone](auto &, HID::JAxis axis, float value) {
                 return onJoystickEvent(axis, value, deadZone);
             });
 }

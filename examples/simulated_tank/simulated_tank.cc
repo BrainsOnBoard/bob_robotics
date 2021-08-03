@@ -23,7 +23,7 @@ int bobMain(int, char **)
     auto joystick = Viz::JoystickKeyboard::createJoystick();
     robot.controlWithThumbsticks(*joystick);
 
-    joystick->addHandler([&robot](HID::JButton button, bool pressed) {
+    joystick->addHandler([&robot](auto &, HID::JButton button, bool pressed) {
         if (pressed && button == HID::JButton::Start) {
             robot.setPose({}); // Reset to origin
             return true;

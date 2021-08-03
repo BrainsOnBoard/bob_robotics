@@ -120,7 +120,7 @@ int bobMain(int, char **)
     Vicon::UDPClient<> vicon(51001); // For getting robot's position
 
     // If we're recording, ignore axis movements
-    joystick.addHandler([&dataFile](HID::JAxis, float) {
+    joystick.addHandler([&dataFile](auto &, HID::JAxis, float) {
         if (dataFile != nullptr) {
             LOGW << "Ignoring joystick command";
             return true;
@@ -130,7 +130,7 @@ int bobMain(int, char **)
     });
 
     // Toggle testing mode with buttons
-    joystick.addHandler([&dataFile, &robot, &vicon](HID::JButton button, bool pressed) {
+    joystick.addHandler([&dataFile, &robot, &vicon](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }
