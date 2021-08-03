@@ -49,9 +49,6 @@ Mecanum::~Mecanum()
 void
 Mecanum::omni2D(float forward, float sideways, float turn)
 {
-    // Cache left and right
-    setWheelSpeed(forward, sideways, turn);
-
     // resolve to motor speeds
     const float m1 = m_AlternativeWiring ? (-sideways + forward - turn) : (+sideways - forward - turn);
     const float m2 = +sideways + forward + turn;

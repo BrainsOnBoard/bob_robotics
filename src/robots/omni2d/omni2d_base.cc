@@ -20,13 +20,14 @@ void
 Omni2DBase::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
-            [this, deadZone](auto &, HID::JAxis axis, float value) {
-                return onJoystickEvent(axis, value, deadZone);
+            [this, deadZone](auto &joystick, HID::JAxis axis, float value) {
+                return onJoystickEvent(joystick, axis, value, deadZone);
             });
 }
 
 void
-Omni2DBase::drive(const HID::Joystick &joystick, float deadZone)
+Omni2DBase::drive(const HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
+                  float deadZone)
 {
     drive(-joystick.getState(HID::JAxis::LeftStickVertical),
           joystick.getState(HID::JAxis::LeftStickHorizontal),
@@ -38,31 +39,6 @@ void Omni2DBase::tank(float left, float right)
 {
     // Implement tank controls in terms of omni
     omni2D((left + right) / 2.0f, 0.0f, (left - right) / 2.0f);
-}
-
-float
-Omni2DBase::getForwards() const
-{
-    return m_Forward;
-}
-
-float
-Omni2DBase::getSideways() const
-{
-    return m_Sideways;
-}
-
-float
-Omni2DBase::getTurn() const
-{
-    return m_Turn;
-}
-
-void Omni2DBase::setWheelSpeed(float forward, float sideways, float turn)
-{
-    m_Forward = forward;
-    m_Sideways = sideways;
-    m_Turn = turn;
 }
 
 void
@@ -77,28 +53,19 @@ Omni2DBase::drive(float forward, float sideways, float turn, float deadZone)
 }
 
 bool
-Omni2DBase::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
+Omni2DBase::onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
+                            HID::JAxis axis, float, float deadZone)
 {
-    float forward = m_Forward;
-    float sideways = m_Sideways;
-    float turn = m_Turn;
-    switch (axis) {
-    case HID::JAxis::LeftStickVertical:
-        forward = -value;
-        break;
-    case HID::JAxis::LeftStickHorizontal:
-        sideways = value;
-        break;
-    case HID::JAxis::RightStickHorizontal:
-        turn = value;
-        break;
-    default:
-        return false;
+    if (axis == HID::JAxis::LeftStickVertical
+        || axis == HID::JAxis::LeftStickHorizontal
+        || axis == HID::JAxis::RightStickHorizontal) {
+
+        // drive robot with joystick
+        drive(joystick, deadZone);
+        return true;
     }
 
-    // drive robot with joystick
-    drive(forward, sideways, turn, deadZone);
-    return true;
+    return false;
 }
 } // Robots
 } // BoBRobotics
