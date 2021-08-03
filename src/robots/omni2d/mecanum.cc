@@ -44,7 +44,7 @@ Mecanum::~Mecanum()
     stopMoving();
 }
 //----------------------------------------------------------------------------
-// Omni2D virtuals
+// Omni2DBase virtuals
 //----------------------------------------------------------------------------
 void
 Mecanum::omni2D(float forward, float sideways, float turn)

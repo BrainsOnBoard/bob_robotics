@@ -3,7 +3,7 @@
 
 // BoB robotics includes
 #include "common/serial_interface.h"
-#include "omni2d.h"
+#include "robots/omni2d/omni2d_base.h"
 
 // Standard C++ includes
 #include <vector>
@@ -17,7 +17,7 @@ namespace Robots {
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::Mecanum
 //----------------------------------------------------------------------------
-class Mecanum : public Omni2D
+class Mecanum : public Omni2DBase
 {
 public:
     Mecanum(bool alternativeWiring = true,
@@ -25,7 +25,7 @@ public:
     virtual ~Mecanum();
 
     //----------------------------------------------------------------------------
-    // Omni2D virtuals
+    // Omni2DBase virtuals
     //----------------------------------------------------------------------------
     virtual void omni2D(float forward, float sideways, float turn) override;
 

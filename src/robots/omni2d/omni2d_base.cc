@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/omni2d/omni2d.h"
+#include "robots/omni2d/omni2d_base.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -11,13 +11,13 @@ namespace BoBRobotics {
 namespace Robots {
 
 void
-Omni2D::omni2D(float forward, float sideways, float turn)
+Omni2DBase::omni2D(float forward, float sideways, float turn)
 {
     LOGI << "Dummy motor: forward: " << forward << "; sideways: " << sideways << "; turn: " << turn;
 }
 
 void
-Omni2D::addJoystick(HID::Joystick &joystick, float deadZone)
+Omni2DBase::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
             [this, deadZone](HID::JAxis axis, float value) {
@@ -26,7 +26,7 @@ Omni2D::addJoystick(HID::Joystick &joystick, float deadZone)
 }
 
 void
-Omni2D::drive(const HID::Joystick &joystick, float deadZone)
+Omni2DBase::drive(const HID::Joystick &joystick, float deadZone)
 {
     drive(-joystick.getState(HID::JAxis::LeftStickVertical),
           joystick.getState(HID::JAxis::LeftStickHorizontal),
@@ -34,31 +34,31 @@ Omni2D::drive(const HID::Joystick &joystick, float deadZone)
           deadZone);
 }
 
-void Omni2D::tank(float left, float right)
+void Omni2DBase::tank(float left, float right)
 {
     // Implement tank controls in terms of omni
     omni2D((left + right) / 2.0f, 0.0f, (left - right) / 2.0f);
 }
 
 float
-Omni2D::getForwards() const
+Omni2DBase::getForwards() const
 {
     return m_Forward;
 }
 
 float
-Omni2D::getSideways() const
+Omni2DBase::getSideways() const
 {
     return m_Sideways;
 }
 
 float
-Omni2D::getTurn() const
+Omni2DBase::getTurn() const
 {
     return m_Turn;
 }
 
-void Omni2D::setWheelSpeed(float forward, float sideways, float turn)
+void Omni2DBase::setWheelSpeed(float forward, float sideways, float turn)
 {
     m_Forward = forward;
     m_Sideways = sideways;
@@ -66,7 +66,7 @@ void Omni2D::setWheelSpeed(float forward, float sideways, float turn)
 }
 
 void
-Omni2D::drive(float forward, float sideways, float turn, float deadZone)
+Omni2DBase::drive(float forward, float sideways, float turn, float deadZone)
 {
     const bool deadForward = (fabs(forward) < deadZone);
     const bool deadSideways = (fabs(sideways) < deadZone);
@@ -77,7 +77,7 @@ Omni2D::drive(float forward, float sideways, float turn, float deadZone)
 }
 
 bool
-Omni2D::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
+Omni2DBase::onJoystickEvent(HID::JAxis axis, float value, float deadZone)
 {
     float forward = m_Forward;
     float sideways = m_Sideways;
