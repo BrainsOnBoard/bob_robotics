@@ -1,7 +1,7 @@
 #pragma once
 
 // BoB robotics includes
-#include "robots/uav/uav.h"
+#include "robots/uav/uav_base.h"
 
 // Gazebo includes
 #include <gazebo/transport/transport.hh>
@@ -11,7 +11,7 @@ namespace BoBRobotics {
 namespace Robots {
 namespace Gazebo {
 class UAV
-  : public Robots::UAV
+  : public Robots::UAVBase
 {
 public:
     UAV(gazebo::transport::NodePtr node)

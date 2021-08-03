@@ -20,7 +20,7 @@
 #include "common/semaphore.h"
 #include "hid/joystick.h"
 #include "video/input.h"
-#include "robots/uav/uav.h"
+#include "robots/uav/uav_base.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -103,7 +103,7 @@ checkError(eARCONTROLLER_ERROR err)
  */
 //------------------------------------------------------------------------------
 class Bebop final
-  : public UAV
+  : public UAVBase
 {
     using ControllerPtr = std::unique_ptr<ARCONTROLLER_Device_t, std::function<void(ARCONTROLLER_Device_t *)>>;
 

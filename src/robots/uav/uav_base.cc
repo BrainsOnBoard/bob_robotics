@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/uav/uav.h"
+#include "robots/uav/uav_base.h"
 
 // Standard C++ includes
 #include <stdexcept>
@@ -7,15 +7,15 @@
 namespace BoBRobotics {
 namespace Robots {
 
-UAV::~UAV()
+UAVBase::~UAVBase()
 {}
 
-void UAV::moveForward(float speed)
+void UAVBase::moveForward(float speed)
 {
     setPitch(speed);
 }
 
-void UAV::turnOnTheSpot(float clockwiseSpeed)
+void UAVBase::turnOnTheSpot(float clockwiseSpeed)
 {
     setPitch(0.f);
     setRoll(0.f);
@@ -23,7 +23,7 @@ void UAV::turnOnTheSpot(float clockwiseSpeed)
     setYawSpeed(clockwiseSpeed);
 }
 
-void UAV::stopMoving()
+void UAVBase::stopMoving()
 {
     setPitch(0.f);
     setRoll(0.f);
@@ -31,7 +31,7 @@ void UAV::stopMoving()
     setYawSpeed(0.f);
 }
 
-void UAV::addJoystick(HID::Joystick &joystick, float)
+void UAVBase::addJoystick(HID::Joystick &joystick, float)
 {
     joystick.addHandler([this](auto &, HID::JAxis axis, float value) {
         return onAxisEvent(axis, value);
@@ -41,7 +41,7 @@ void UAV::addJoystick(HID::Joystick &joystick, float)
     });
 }
 
-void UAV::drive(const HID::Joystick &joystick, float)
+void UAVBase::drive(const HID::Joystick &joystick, float)
 {
     setRoll(joystick.getState(HID::JAxis::RightStickHorizontal));
     setPitch(-joystick.getState(HID::JAxis::RightStickVertical));
@@ -50,7 +50,7 @@ void UAV::drive(const HID::Joystick &joystick, float)
     setYawSpeed(joystick.getState(HID::JAxis::RightTrigger));
 }
 
-bool UAV::onAxisEvent(HID::JAxis axis, float value)
+bool UAVBase::onAxisEvent(HID::JAxis axis, float value)
 {
     /*
      * setRoll/Pitch etc. all take values between -1 and 1. We cap these
@@ -78,7 +78,7 @@ bool UAV::onAxisEvent(HID::JAxis axis, float value)
     }
 }
 
-bool UAV::onButtonEvent(HID::JButton button, bool pressed)
+bool UAVBase::onButtonEvent(HID::JButton button, bool pressed)
 {
     // we only care about button presses
     if (!pressed) {

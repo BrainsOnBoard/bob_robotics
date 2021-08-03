@@ -5,10 +5,10 @@
 
 namespace BoBRobotics {
 namespace Robots {
-class UAV
+class UAVBase
 {
 public:
-    virtual ~UAV();
+    virtual ~UAVBase();
 
     virtual void takeOff() = 0;
     virtual void land() = 0;
