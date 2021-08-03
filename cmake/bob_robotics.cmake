@@ -193,12 +193,12 @@ macro(BoB_project)
     string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
     add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
 
-    # Extra modules needed for some robot types
-    if(${ROBOT_TYPE} STREQUAL EV3::EV3)
-        list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
-    elseif(${ROBOT_TYPE} STREQUAL Gazebo::Tank)
-        list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
-    endif()
+    # Extra modules needed for some robot types. The namespace name tells us
+    # which module to add (e.g. all Ackermann robots live in robots/ackermann).
+    string(TOLOWER ${ROBOT_TYPE} ROBOT_TYPE_LOWER)
+    string(REGEX REPLACE :: / ROBOT_TYPE_LOWER ${ROBOT_TYPE_LOWER})
+    get_filename_component(ROBOT_TYPE_MODULE ${ROBOT_TYPE_LOWER} DIRECTORY)
+    list(APPEND PARSED_ARGS_BOB_MODULES robots/${ROBOT_TYPE_MODULE})
 
     # We always need the common module so that main() is defined
     list(APPEND PARSED_ARGS_BOB_MODULES common)
