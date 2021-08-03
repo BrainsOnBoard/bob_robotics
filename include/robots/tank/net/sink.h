@@ -48,8 +48,6 @@ public:
             m_TurnSpeed = radians_per_second_t(stod(command[1]));
             m_ForwardSpeed = meters_per_second_t(stod(command[2]));
             m_AxisLength = millimeter_t(stod(command[3]));
-
-            TankBase<SinkBase<ConnectionType>>::setMaximumSpeedProportion(stof(command[4]));
         });
 
         /*
@@ -65,16 +63,14 @@ public:
 
     ~SinkBase();
 
-    void setMaximumSpeedProportion(float value);
-
     //! Motor command: send TNK command over TCP
     void tank(float left, float right);
 
     millimeter_t getRobotWidth() const;
 
-    meters_per_second_t getAbsoluteMaximumSpeed() const;
+    meters_per_second_t getMaximumSpeed() const;
 
-    radians_per_second_t getAbsoluteMaximumTurnSpeed() const;
+    radians_per_second_t getMaximumTurnSpeed() const;
 
     auto &getConnection()
     {

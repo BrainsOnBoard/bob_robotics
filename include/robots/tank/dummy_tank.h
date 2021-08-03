@@ -27,7 +27,7 @@ public:
         return units::length::meter_t{ 1 };
     }
 
-    static constexpr auto getAbsoluteMaximumSpeed()
+    static constexpr auto getMaximumSpeed()
     {
         return units::velocity::meters_per_second_t{ 1 };
     }

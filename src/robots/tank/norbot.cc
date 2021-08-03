@@ -41,11 +41,6 @@ Norbot::~Norbot()
 
 void Norbot::tank(float left, float right)
 {
-    // Cache left and right
-    const float maxSpeed = getMaximumSpeedProportion();
-    left *= maxSpeed;
-    right *= maxSpeed;
-
     // Convert standard (-1,1) values to bytes in order to send to I2C slave
     uint8_t buffer[2] = { floatToI2C(left), floatToI2C(right) };
 

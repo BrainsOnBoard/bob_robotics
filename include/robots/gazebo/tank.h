@@ -27,7 +27,7 @@ public:
          gazebo::transport::NodePtr node = getNode());
 
     // Public methods
-    meters_per_second_t getAbsoluteMaximumSpeed() const;
+    meters_per_second_t getMaximumSpeed() const;
     void tank(float left, float right);
 
 private:

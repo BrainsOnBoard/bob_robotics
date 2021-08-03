@@ -1,15 +1,16 @@
 // BoB robotics includes
-#include "robots/control/robot_positioner.h"
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "plog/Log.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "robots/control/robot_positioner.h"
 #include "robots/robot_type.h"
+#include "robots/tank/slowed_tank.h"
 #include "vicon/udp.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C includes
@@ -175,11 +176,11 @@ public:
     }
 
 private:
-    Robots::ROBOT_TYPE m_Tank;
+    Robots::Tank::SlowedTank<Robots::ROBOT_TYPE> m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
-    Robots::RobotPositioner<decltype(m_Tank), decltype(m_ViconObject)> m_Positioner;
+    Robots::RobotPositioner<decltype(m_Tank) &, decltype(m_ViconObject)> m_Positioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;

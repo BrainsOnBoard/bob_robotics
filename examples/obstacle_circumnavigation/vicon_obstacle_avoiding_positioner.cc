@@ -9,6 +9,7 @@
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/tank/net/sink.h"
+#include "robots/tank/slowed_tank.h"
 #include "vicon/udp.h"
 
 // Third-party includes
@@ -74,7 +75,7 @@ public:
                      StartSlowingDownAt,
                      PositionerMinSpeed,
                      PositionerMaxSpeed)
-      , m_CollisionDetector{ getRobotDimensions(m_Tank), Navigation::readObjects("objects.yaml"), 30_cm, 1_cm }
+      , m_CollisionDetector{ getRobotDimensions(), Navigation::readObjects("objects.yaml"), 30_cm, 1_cm }
       , m_Circumnavigator{ m_Tank, m_ViconObject, m_CollisionDetector }
       , m_AvoidingPositioner(m_Positioner, m_Circumnavigator)
       , m_StateMachine(this, InvalidState)
@@ -194,22 +195,22 @@ public:
 
 private:
     Net::Client m_Client;
-    Robots::Tank::Net::Sink m_Tank;
+    Robots::Tank::SlowedTank<Robots::Tank::Net::Sink> m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
-    Robots::RobotPositioner<decltype(m_Tank), decltype(m_ViconObject)> m_Positioner;
+    Robots::RobotPositioner<decltype(m_Tank) &, decltype(m_ViconObject)> m_Positioner;
     Robots::CollisionDetector m_CollisionDetector;
-    Robots::ObstacleCircumnavigator<decltype(m_Tank), decltype(m_ViconObject)> m_Circumnavigator;
-    Robots::ObstacleAvoidingPositioner<decltype(m_Positioner), decltype(m_Tank), decltype(m_ViconObject)> m_AvoidingPositioner;
+    Robots::ObstacleCircumnavigator<decltype(m_Tank) &, decltype(m_ViconObject)> m_Circumnavigator;
+    Robots::ObstacleAvoidingPositioner<decltype(m_Positioner), decltype(m_Tank) &, decltype(m_ViconObject)> m_AvoidingPositioner;
     FSM<State> m_StateMachine;
     Stopwatch m_PrintTimer;
     BackgroundExceptionCatcher m_Catcher;
 
-    static std::array<Vector2<meter_t>, 4> getRobotDimensions(Robots::Tank::Net::Sink &tank)
+    std::array<Vector2<meter_t>, 4> getRobotDimensions()
     {
         using V = Vector2<meter_t>;
-        const auto halfWidth = tank.getRobotWidth() / 2;
+        const auto halfWidth = m_Tank.getRobotWidth() / 2;
 
         // The x and y dimensions of the robot
         const std::array<V, 4> robotDimensions = {

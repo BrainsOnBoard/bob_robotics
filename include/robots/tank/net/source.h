@@ -27,12 +27,12 @@ public:
         // Send robot parameters over network
         double maxTurnSpeed = NAN, maxForwardSpeed = NAN, axisLength = NAN;
         try {
-            maxTurnSpeed = m_Tank.getAbsoluteMaximumTurnSpeed().value();
+            maxTurnSpeed = m_Tank.getMaximumTurnSpeed().value();
         } catch (std::runtime_error &) {
             // Then getMaximumTurnSpeed() isn't implemented
         }
         try {
-            maxForwardSpeed = m_Tank.getAbsoluteMaximumSpeed().value();
+            maxForwardSpeed = m_Tank.getMaximumSpeed().value();
         } catch (std::runtime_error &) {
             // Then getMaximumSpeed() isn't implemented
         }
@@ -46,8 +46,7 @@ public:
         ss << "TNK_PARAMS "
            << maxTurnSpeed << " "
            << maxForwardSpeed << " "
-           << axisLength << " "
-           << m_Tank.getMaximumSpeedProportion() << "\n";
+           << axisLength << "\n";
         connection.getSocketWriter().send(ss.str());
 
         // Handle incoming TNK commands
@@ -55,19 +54,12 @@ public:
                                      [this](auto &connection, const auto &command) {
                                          onTankCommandReceived(connection, command);
                                      });
-
-        connection.setCommandHandler("TNK_MAX",
-                                     [this](auto &, const auto &command) {
-                                         m_Tank.setMaximumSpeedProportion(stof(command.at(1)));
-                                         m_Tank.tank(m_Left, m_Right);
-                                     });
     }
 
     ~Source()
     {
         // Remove command handlers
         m_Connection.setCommandHandler("TNK", nullptr);
-        m_Connection.setCommandHandler("TNK_MAX", nullptr);
     }
 
 private:

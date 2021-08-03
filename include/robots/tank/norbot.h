@@ -28,7 +28,7 @@ public:
 
     void tank(float left, float right);
 
-    static constexpr auto getAbsoluteMaximumSpeed()
+    static constexpr auto getMaximumSpeed()
     {
         return units::velocity::meters_per_second_t{ 0.11 };
     }

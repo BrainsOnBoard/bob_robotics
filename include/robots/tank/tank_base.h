@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "common/circstat.h"
-#include "common/macros.h"
 #include "hid/joystick.h"
 
 // Third-party includes
@@ -110,36 +109,13 @@ public:
         }
     }
 
-    auto getMaximumSpeed() const
-    {
-        return this->getMaximumSpeedProportion() * getAbsoluteMaximumSpeed();
-    }
-
     radians_per_second_t getMaximumTurnSpeed() const
     {
-        return this->getMaximumSpeedProportion() * this->getAbsoluteMaximumTurnSpeed();
-    }
-
-    radians_per_second_t getAbsoluteMaximumTurnSpeed() const
-    {
         // max turn speed = v_max / r
-        return radians_per_second_t{ (getAbsoluteMaximumSpeed() * 2 / getRobotWidth()).value() };
-    }
-
-    void setMaximumSpeedProportion(float value)
-    {
-        BOB_ASSERT(value >= -1.f && value <= 1.f);
-        m_MaximumSpeedProportion = value;
-    }
-
-    float getMaximumSpeedProportion() const
-    {
-        return m_MaximumSpeedProportion;
+        return radians_per_second_t{ (getMaximumSpeed() * 2 / getRobotWidth()).value() };
     }
 
 private:
-    float m_MaximumSpeedProportion = 1.f;
-
     void drive(float x, float y, float deadZone)
     {
         const float halfPi = pi<float>() / 2.0f;
@@ -198,9 +174,9 @@ private:
         return static_cast<const Derived *>(this)->getRobotWidth();
     }
 
-    meters_per_second_t getAbsoluteMaximumSpeed() const
+    meters_per_second_t getMaximumSpeed() const
     {
-        return static_cast<const Derived *>(this)->getAbsoluteMaximumSpeed();
+        return static_cast<const Derived *>(this)->getMaximumSpeed();
     }
 
 }; // TankBase

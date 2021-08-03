@@ -36,7 +36,7 @@ public:
     void stopMoving();
     void tank(float left, float right);
     millimeter_t getRobotWidth() const;
-    meters_per_second_t getAbsoluteMaximumSpeed() const;
+    meters_per_second_t getMaximumSpeed() const;
     std::pair<meters_per_second_t, meters_per_second_t> getWheelVelocities() const;
 
 private:

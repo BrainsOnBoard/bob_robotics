@@ -37,7 +37,7 @@ SimulatedAckermann::getPose()
 }
 
 meters_per_second_t
-SimulatedAckermann::getAbsoluteMaximumSpeed() const
+SimulatedAckermann::getMaximumSpeed() const
 {
     return m_MaximumSpeed;
 }

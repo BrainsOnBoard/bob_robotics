@@ -40,17 +40,6 @@ SinkBase<ConnectionType>::~SinkBase()
     m_Connection.setCommandHandler("TNK_PARAMS", nullptr);
 }
 
-template<class ConnectionType>
-void
-SinkBase<ConnectionType>::setMaximumSpeedProportion(float value)
-{
-    if (value != this->getMaximumSpeedProportion()) {
-        TankBase<SinkBase<ConnectionType>>::setMaximumSpeedProportion(value);
-
-        m_Connection.getSocketWriter().send("TNK_MAX " + std::to_string(value) + "\n");
-    }
-}
-
 //! Motor command: send TNK command over TCP
 template<class ConnectionType>
 void
@@ -97,7 +86,7 @@ SinkBase<ConnectionType>::getRobotWidth() const
 
 template<class ConnectionType>
 units::velocity::meters_per_second_t
-SinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
+SinkBase<ConnectionType>::getMaximumSpeed() const
 {
     if (std::isnan(m_ForwardSpeed.value())) {
         throw std::runtime_error("No value given for maximum speed");
@@ -108,7 +97,7 @@ SinkBase<ConnectionType>::getAbsoluteMaximumSpeed() const
 
 template<class ConnectionType>
 units::angular_velocity::radians_per_second_t
-SinkBase<ConnectionType>::getAbsoluteMaximumTurnSpeed() const
+SinkBase<ConnectionType>::getMaximumTurnSpeed() const
 {
     if (std::isnan(m_TurnSpeed.value())) {
         throw std::runtime_error("No value given for maximum turn speed");

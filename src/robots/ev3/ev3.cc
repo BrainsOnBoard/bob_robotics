@@ -50,9 +50,8 @@ void
 EV3::tank(float left, float right)
 {
     // NB: We are driving the motors backwards, as the camera is on the rear
-    const float maxTachos = getMaximumSpeedProportion() * m_MaxSpeedTachos;
-    m_MotorLeft.set_speed_sp(-maxTachos * left);
-    m_MotorRight.set_speed_sp(-maxTachos * right);
+    m_MotorLeft.set_speed_sp(-m_MaxSpeedTachos * left);
+    m_MotorRight.set_speed_sp(-m_MaxSpeedTachos * right);
     m_MotorLeft.run_forever();
     m_MotorRight.run_forever();
 
@@ -74,7 +73,7 @@ EV3::getRobotWidth() const
 }
 
 meters_per_second_t
-EV3::getAbsoluteMaximumSpeed() const
+EV3::getMaximumSpeed() const
 {
     return tachoToSpeed(m_MaxSpeedTachos);
 }

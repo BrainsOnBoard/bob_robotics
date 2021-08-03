@@ -30,7 +30,7 @@ public:
     meter_t getDistanceBetweenAxis() const;
 
     const Pose3<meter_t, degree_t> &getPose();
-    meters_per_second_t getAbsoluteMaximumSpeed() const;
+    meters_per_second_t getMaximumSpeed() const;
     degree_t getMaximumTurn() const;
     void setPose(const Pose3<meter_t, degree_t> &pose);
 

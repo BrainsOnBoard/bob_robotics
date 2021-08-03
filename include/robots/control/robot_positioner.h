@@ -4,6 +4,7 @@
 #include "common/macros.h"
 #include "common/circstat.h"
 #include "common/pose.h"
+#include "robots/tank/slowed_tank.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -20,11 +21,19 @@ template<class TankType, class PoseGetterType>
 class RobotPositioner;
 
 template<class TankType, class PoseGetterType, class... Args>
+auto createRobotPositioner(Robots::Tank::SlowedTank<TankType> &tank,
+                           PoseGetterType &poseGetter,
+                           Args&&... otherArgs)
+{
+    return RobotPositioner<Robots::Tank::SlowedTank<TankType> &, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+}
+
+template<class TankType, class PoseGetterType, class... Args>
 auto createRobotPositioner(TankType &tank,
                            PoseGetterType &poseGetter,
                            Args&&... otherArgs)
 {
-    return RobotPositioner<TankType, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+    return RobotPositioner<Robots::Tank::SlowedTank<TankType &>, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
 }
 
 /*!
@@ -44,7 +53,7 @@ class RobotPositioner
 
 private:
     // Hardware
-    TankType &m_Tank;
+    TankType m_Tank;
     PoseGetterType &m_PoseGetter;
 
     // Robot variables
@@ -83,8 +92,9 @@ private:
 
     //-----------------PUBLIC API---------------------------------------------------------------------
 public:
+    template<class TankType2>
     RobotPositioner(
-            TankType &tank,
+            TankType2 &tank,
             PoseGetterType &poseGetter,
             meter_t stoppingDistance,     // if the robot's distance from goal < stopping dist, robot stops
             radian_t allowedHeadingError, // the amount of error allowed in the final heading

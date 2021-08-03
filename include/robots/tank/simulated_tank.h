@@ -40,7 +40,7 @@ public:
         return m_Pose;
     }
 
-    meters_per_second_t getAbsoluteMaximumSpeed() const
+    meters_per_second_t getMaximumSpeed() const
     {
         return m_MaximumSpeed;
     }
