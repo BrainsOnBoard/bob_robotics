@@ -9,6 +9,7 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Omni2D {
 
 void
 Omni2DBase::omni2D(float forward, float sideways, float turn)
@@ -67,5 +68,7 @@ Omni2DBase::onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &joystic
 
     return false;
 }
+
+} // Omni2D
 } // Robots
 } // BoBRobotics

@@ -15,7 +15,7 @@
 #include "tank/net/sink.h"
 #elif defined(ROBOT_TYPE_TANK_DUMMYTANK)
 #include "tank/dummy_tank.h" // For dummy tank
-#elif defined(ROBOT_TYPE_MECANUM)
+#elif defined(ROBOT_TYPE_OMNI2D_MECANUM)
 #include "omni2d/mecanum.h"
 #elif defined(ROBOT_TYPE_GAZEBO_TANK)
 #include "gazebo/tank.h"

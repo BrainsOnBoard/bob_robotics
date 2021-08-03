@@ -144,7 +144,7 @@ public:
 
     void drive(float left, float right, bool log)
     {
-#ifdef ROBOT_TYPE_MECANUM
+#ifdef ROBOT_TYPE_OMNI2D_MECANUM
         const float length = (left * left) + (right * right);
 
         // Steer based on signal
@@ -175,7 +175,7 @@ public:
 
     std::array<float, 2> getSpeed() const
     {
-#ifdef ROBOT_TYPE_MECANUM
+#ifdef ROBOT_TYPE_OMNI2D_MECANUM
         constexpr float VelocityScale = 1.f;
 
         // **TODO** sideways awesome

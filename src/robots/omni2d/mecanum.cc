@@ -13,6 +13,8 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Omni2D {
+
 Mecanum::Mecanum(bool alternativeWiring, const char *devicePath)
   : m_AlternativeWiring(alternativeWiring)
   , m_Serial(devicePath)
@@ -74,6 +76,8 @@ void Mecanum::driveMotors(float m1, float m2, float m3, float m4)
     // Send buffer
     write(buffer);
 }
+
+} // Omni2D
 } // Robots
 } // BoBRobotics
 #endif	// __linux__

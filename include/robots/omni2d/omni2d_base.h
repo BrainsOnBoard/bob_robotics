@@ -6,8 +6,9 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Omni2D {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::Omni2DBase
+// BoBRobotics::Robots::Omni2D::Omni2DBase
 //----------------------------------------------------------------------------
 // Interface for driving Omni2D-like wheeled robots
 class Omni2DBase
@@ -32,5 +33,6 @@ private:
     bool onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &,
                          HID::JAxis axis, float value, float deadZone);
 }; // Omni2D
+} // Omni2D
 } // Robots
 } // BoBRobotics

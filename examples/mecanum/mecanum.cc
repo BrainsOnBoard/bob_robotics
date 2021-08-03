@@ -12,7 +12,7 @@ int bobMain(int, char **)
     HID::Joystick joystick(0.25f);
 
     // Create motor interface
-    Robots::Mecanum robot;
+    Robots::Omni2D::Mecanum robot;
 
     std::cout << "Hold down joystick buttons A, B, X or Y to drive an individual motor and hold down LB to reverse." << std::endl;
     std::cout << "If wrong motor turns, or motors turn in wrong direction, swap wires going from motor shield." << std::endl;

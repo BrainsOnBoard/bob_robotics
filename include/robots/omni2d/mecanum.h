@@ -14,8 +14,9 @@
 
 namespace BoBRobotics {
 namespace Robots {
+namespace Omni2D {
 //----------------------------------------------------------------------------
-// BoBRobotics::Robots::Mecanum
+// BoBRobotics::Robots::Omni2D::Mecanum
 //----------------------------------------------------------------------------
 class Mecanum : public Omni2DBase
 {
@@ -54,6 +55,7 @@ private:
     const bool m_AlternativeWiring;
     SerialInterface m_Serial;
 }; // Mecanum
+} // Omni2D
 } // Robots
 } // BoBRobotics
 #endif	// __linux__
