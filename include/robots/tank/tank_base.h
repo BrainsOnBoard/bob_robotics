@@ -28,6 +28,8 @@ protected:
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
 
+    TankBase<Derived>() = default;
+
 public:
     void moveForward(float speed)
     {

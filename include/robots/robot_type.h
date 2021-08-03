@@ -2,8 +2,8 @@
 
 // For IDEs
 #ifndef ROBOT_TYPE
-#define ROBOT_TYPE_TANK_TANKBASE
-#define ROBOT_TYPE Tank::TankBase
+#define ROBOT_TYPE_TANK_DUMMYTANK
+#define ROBOT_TYPE Tank::DummyTank
 #endif
 
 // Include appropriate header, depending on what kind of robot the user wants
@@ -13,8 +13,8 @@
 #include "tank/ev3/ev3.h"
 #elif defined(ROBOT_TYPE_TANK_BUNDLEDTANKNETSINK)
 #include "tank/net/sink.h"
-#elif defined(ROBOT_TYPE_TANK_TANKBASE)
-#include "tank/tank_base.h" // For dummy tank
+#elif defined(ROBOT_TYPE_TANK_DUMMYTANK)
+#include "tank/dummy_tank.h" // For dummy tank
 #elif defined(ROBOT_TYPE_MECANUM)
 #include "omni2d/mecanum.h"
 #elif defined(ROBOT_TYPE_GAZEBO_TANK)

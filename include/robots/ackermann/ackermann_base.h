@@ -16,6 +16,9 @@ namespace Ackermann {
 template<class Derived>
 class AckermannBase
 {
+protected:
+    AckermannBase<Derived>() = default;
+
 public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
     {
