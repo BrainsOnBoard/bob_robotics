@@ -34,7 +34,7 @@ int
 bobMain(int argc, char *argv[])
 {
     // setting up
-    Robots::PassiveRCCarBot bot;
+    Robots::Ackermann::PassiveRCCarBot bot;
     GPS::GPSReader gps;
     GPS::GPSData data;
     BN055 imu;
