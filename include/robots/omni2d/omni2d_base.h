@@ -2,7 +2,6 @@
 
 // BoB robotics includes
 #include "hid/joystick.h"
-#include "robots/tank/tank_base.h"
 
 namespace BoBRobotics {
 namespace Robots {
@@ -13,7 +12,6 @@ namespace Omni2D {
 // Interface for driving Omni2D-like wheeled robots
 template<class Derived>
 class Omni2DBase
-  : public Tank::TankBase<Omni2DBase<Derived>>
 {
 public:
     void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
@@ -33,11 +31,20 @@ public:
               deadZone);
     }
 
-    void tank(float left, float right)
+    void moveForward(float speed)
     {
-        // Implement tank controls in terms of omni
-        auto *derived = static_cast<Derived *>(this);
-        derived->omni2D((left + right) / 2.0f, 0.0f, (left - right) / 2.0f);
+        omni2D(speed, 0.f, 0.f);
+    }
+
+    void turnOnTheSpot(float clockwiseSpeed)
+    {
+        // **TODO**: Check that this really is clockwise
+        omni2D(0.f, 0.f, clockwiseSpeed);
+    }
+
+    void stopMoving()
+    {
+        omni2D(0.f, 0.f, 0.f);
     }
 
 private:
@@ -48,8 +55,13 @@ private:
         const bool deadTurn = (fabs(turn) < deadZone);
 
         // Drive motor
+        omni2D(forward * !deadForward, sideways * !deadSideways, turn * !deadTurn);
+    }
+
+    void omni2D(float forward, float sideways, float turn)
+    {
         auto *derived = static_cast<Derived *>(this);
-        derived->omni2D(forward * !deadForward, sideways * !deadSideways, turn * !deadTurn);
+        derived->omni2D(forward, sideways, turn);
     }
 
     bool onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
