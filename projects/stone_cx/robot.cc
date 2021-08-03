@@ -217,7 +217,7 @@ int bobMain(int argc, char *argv[])
 
     MotorController motorController{ motor };
 
-#ifdef ROBOT_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3_EV3
     std::unique_ptr<HeadingSource> headingSource = std::make_unique<HeadingSourceEV3IMU>(motor.getConnection());
 #else
     std::unique_ptr<Net::Server> server;
@@ -327,7 +327,7 @@ int bobMain(int argc, char *argv[])
             // Render network activity
             visualize(activityImage);
 
-#ifdef ROBOT_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3_EV3
             cv::imshow("activity", activityImage);
             if ((cv::waitKeyEx(1) & OS::KeyMask) == OS::KeyCodes::Escape) {
                 break;

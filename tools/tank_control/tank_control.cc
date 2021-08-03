@@ -63,7 +63,7 @@ int bobMain(int, char **)
         LOGW << e.what();
     }
 
-#ifdef ROBOT_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3_EV3
     tank.setMaximumSpeedProportion(0.7f); // Sensible default
 
     // If an IMU is present, stream over network
