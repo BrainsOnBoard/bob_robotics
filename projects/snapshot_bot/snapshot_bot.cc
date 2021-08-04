@@ -153,9 +153,6 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         }
         else {
-            // **TODO** save ODK2 masks
-            BOB_ASSERT(!m_Config.shouldUseODK2());
-
             // If we're not using InfoMax or pre-trained weights don't exist
             if(!m_Config.shouldUseInfoMax() || !(m_Config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin")).exists()) {
                 LOGI << "Training on stored snapshots";
@@ -253,24 +250,24 @@ private:
             }
 
             // Capture frame
-            if(m_Camera->readFrame(m_Output)) {
-                // If our camera image needs unwrapping
-                if(m_Camera->needsUnwrapping()) {
-                    // Unwrap the image
-                    m_Unwrapper.unwrap(m_Output, m_Unwrapped);
+            m_Camera->readFrameSync(m_Output);
 
-                    // Crop unwrapped frame
-                    m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
-                }
-                // Otherwise, crop camera image directly
-                else {
-                    m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
-                }
+            // If our camera image needs unwrapping
+            if(m_Camera->needsUnwrapping()) {
+                // Unwrap the image
+                m_Unwrapper.unwrap(m_Output, m_Unwrapped);
 
-                // If we're using the ODK2, generate mask from all black pixels in cropped image
-                if(m_Config.shouldUseODK2()) {
-                    m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
-                }
+                // Crop unwrapped frame
+                m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
+            }
+            // Otherwise, crop camera image directl
+            else {
+                m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
+            }
+
+            // If we're using the ODK2, generate mask from all black pixels in cropped image
+            if(m_Config.shouldUseODK2()) {
+                m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
             }
 
             // Pump OpenCV event queue
@@ -481,8 +478,9 @@ private:
                 }
 
                 // If we should turn, set timer and transition to turning state
-                if(m_Config.getTurnSpeed(m_Memory->getBestHeading()) > 0.0f) {
-                    m_DriveTime = m_Config.getMotorTurnCommandInterval();
+                const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                if(turnSpeed.first > 0.0f) {
+                    m_DriveTime = turnSpeed.second;
                     m_StateMachine.transition(State::Turning);
                 }
                 // Otherwise, set timer and transition to driving forward state
@@ -502,8 +500,8 @@ private:
                 }
                 // Otherwise start turning
                 else {
-                    const float turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
-                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
+                    const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed.first : -turnSpeed.first;
                     m_Robot.turnOnTheSpot(motorTurn);
                 }
 
