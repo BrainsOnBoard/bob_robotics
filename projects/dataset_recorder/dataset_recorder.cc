@@ -22,6 +22,7 @@
 // Standard C++ includes
 #include <array>
 #include <chrono>
+#include <thread>
 
 using namespace BoBRobotics;
 using namespace std::literals;
