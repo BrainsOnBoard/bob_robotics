@@ -52,7 +52,7 @@ int bobMain(int, char **)
     // Construct tank of desired type
 
 #ifdef ROBOT_TYPE_EV3_EV3
-    Robots::Tank::SlowedTank<Robots::ROBOT_TYPE> tank;
+    Robots::Tank::SlowedTank<ROBOT_TYPE> tank;
     tank.setMaximumSpeedProportion(0.7f); // Sensible default
 
     // If an IMU is present, stream over network
@@ -67,7 +67,7 @@ int bobMain(int, char **)
         imu->streamOverNetwork(connection);
     }
 #else
-    Robots::ROBOT_TYPE tank;
+    ROBOT_TYPE tank;
 #endif
 
     // Read motor commands from network

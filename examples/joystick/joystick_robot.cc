@@ -12,7 +12,7 @@ int bobMain(int, char **)
     HID::Joystick joystick(joystickDeadzone);
 
     // Create motor interface
-    Robots::ROBOT_TYPE robot;
+    ROBOT_TYPE robot;
 
     do {
         // Read joystick

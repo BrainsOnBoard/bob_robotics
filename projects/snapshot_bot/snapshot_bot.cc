@@ -579,7 +579,7 @@ private:
     std::unique_ptr<MemoryBase> m_Memory;
 
     // Motor driver
-    Robots::ROBOT_TYPE m_Robot;
+    ROBOT_TYPE m_Robot;
 
     // Last time at which a motor command was issued or a snapshot was trained
     Stopwatch m_MoveStopwatch;

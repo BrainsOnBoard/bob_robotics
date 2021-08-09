@@ -42,7 +42,7 @@ run(Video::Input &camera)
     Video::NetSink netSink(*connection, camera.getOutputSize(), camera.getCameraName());
 
     // Initialise robot
-    Robots::ROBOT_TYPE tank;
+    ROBOT_TYPE tank;
 
     // Read motor commands from network
     const auto netSource = Robots::Tank::Net::createSource(*connection, tank);

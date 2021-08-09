@@ -646,7 +646,11 @@ function(BoB_modules)
             message("Robot type: ${ROBOT_TYPE}")
 
             # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
-            add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
+            add_definitions(-DROBOT_TYPE=BoBRobotics::Robots::${ROBOT_TYPE})
+
+            # We also need to know the namespace name sometimes
+            string(REGEX REPLACE ::[A-Za-z0-9_]+\$ "" ROBOT_TYPE_NAMESPACE ${ROBOT_TYPE})
+            add_definitions(-DROBOT_TYPE_NAMESPACE=BoBRobotics::Robots::ROBOT_TYPE_NAMESPACE)
 
             # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
             # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS

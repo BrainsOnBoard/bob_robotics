@@ -138,7 +138,7 @@ private:
 class MotorController
 {
 public:
-    MotorController(Robots::ROBOT_TYPE &robot)
+    MotorController(ROBOT_TYPE &robot)
       : m_Robot(robot)
     {}
 
@@ -189,7 +189,7 @@ public:
     }
 
 private:
-    Robots::ROBOT_TYPE &m_Robot;
+    ROBOT_TYPE &m_Robot;
     float m_Forward = 0.f;
 };
 
@@ -213,7 +213,7 @@ int bobMain(int argc, char *argv[])
     const bool doVisualise = (argc > 1) && strcmp(argv[1], "--visualise") == 0;
 
     // Create motor interface
-    Robots::ROBOT_TYPE motor;
+    ROBOT_TYPE motor;
 
     MotorController motorController{ motor };
 

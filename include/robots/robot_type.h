@@ -3,7 +3,8 @@
 // For IDEs
 #ifndef ROBOT_TYPE
 #define ROBOT_TYPE_TANK_DUMMYTANK
-#define ROBOT_TYPE Tank::DummyTank
+#define ROBOT_TYPE_NAMESPACE BoBRobotics::Robots::Tank
+#define ROBOT_TYPE ROBOT_TYPE_NAMESPACE::DummyTank
 #endif
 
 // Include appropriate header, depending on what kind of robot the user wants

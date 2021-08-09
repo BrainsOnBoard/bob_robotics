@@ -176,7 +176,7 @@ public:
     }
 
 private:
-    Robots::Tank::SlowedTank<Robots::ROBOT_TYPE> m_Tank;
+    Robots::Tank::SlowedTank<ROBOT_TYPE> m_Tank;
     Vicon::UDPClient<> m_Vicon;
     Vicon::ObjectReference<> m_ViconObject;
     HID::Joystick m_Joystick;
