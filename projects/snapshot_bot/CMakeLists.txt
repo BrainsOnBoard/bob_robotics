@@ -6,20 +6,18 @@ if(NOT TARGET)
     set(TARGET snapshot_bot)
 endif()
 
-
-
 if(${TARGET} STREQUAL snapshot_bot)
     if(USE_ODK2)
         add_definitions(-DUSE_ODK2)
         BoB_project(IS_EXPERIMENT TRUE
                 EXECUTABLE snapshot_bot
                 SOURCES snapshot_bot.cc memory.cc image_input.cc
-                BOB_MODULES common hid imgproc navigation robots/tank vicon video video/odk2)
+                BOB_MODULES common hid imgproc navigation robots vicon video video/odk2)
     else()
         BoB_project(IS_EXPERIMENT TRUE
                 EXECUTABLE snapshot_bot
                 SOURCES snapshot_bot.cc memory.cc image_input.cc
-                BOB_MODULES common hid imgproc navigation robots/tank vicon video)
+                BOB_MODULES common hid imgproc navigation robots vicon video)
     endif()
 
 else()

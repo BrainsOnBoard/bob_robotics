@@ -171,35 +171,6 @@ macro(BoB_project)
         endif()
     endif()
 
-    # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
-    # or CMake param
-    if(NOT ROBOT_TYPE)
-        if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
-            set(ROBOT_TYPE $ENV{ROBOT_TYPE})
-        elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
-            set(ROBOT_TYPE Tank::Norbot)
-        else()
-            set(ROBOT_TYPE Tank::DummyTank)
-        endif()
-    endif()
-    message("Default robot type (if used): ${ROBOT_TYPE}")
-
-    # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
-    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
-
-    # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
-    # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
-    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
-    string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
-    add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
-
-    # Extra modules needed for some robot types. The namespace name tells us
-    # which module to add (e.g. all Ackermann robots live in robots/ackermann).
-    string(TOLOWER ${ROBOT_TYPE} ROBOT_TYPE_LOWER)
-    string(REGEX REPLACE :: / ROBOT_TYPE_LOWER ${ROBOT_TYPE_LOWER})
-    get_filename_component(ROBOT_TYPE_MODULE ${ROBOT_TYPE_LOWER} DIRECTORY)
-    list(APPEND PARSED_ARGS_BOB_MODULES robots/${ROBOT_TYPE_MODULE})
-
     # We always need the common module so that main() is defined
     list(APPEND PARSED_ARGS_BOB_MODULES common)
 
@@ -660,6 +631,39 @@ endfunction()
 
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
+        if(module STREQUAL robots)
+            # Allow users to choose the type of robot to use with ROBOT_TYPE env var
+            # or CMake param
+            if(NOT ROBOT_TYPE)
+                if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
+                    set(ROBOT_TYPE $ENV{ROBOT_TYPE})
+                elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
+                    set(ROBOT_TYPE Tank::Norbot)
+                else()
+                    set(ROBOT_TYPE Tank::DummyTank)
+                endif()
+            endif()
+            message("Robot type: ${ROBOT_TYPE}")
+
+            # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
+            add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
+
+            # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
+            # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
+            string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+            string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
+            add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
+
+            # Extra modules needed for some robot types. The namespace name tells us
+            # which module to add (e.g. all Ackermann robots live in robots/ackermann).
+            string(TOLOWER ${ROBOT_TYPE} ROBOT_TYPE_LOWER)
+            string(REGEX REPLACE :: / ROBOT_TYPE_LOWER ${ROBOT_TYPE_LOWER})
+            get_filename_component(ROBOT_TYPE_MODULE ${ROBOT_TYPE_LOWER} DIRECTORY)
+
+            # Add the correct submodule
+            set(module robots/${ROBOT_TYPE_MODULE})
+        endif()
+
         set(module_path ${BOB_ROBOTICS_PATH}/src/${module})
 
         # Some (sub)modules have a slash in the name; replace with underscore

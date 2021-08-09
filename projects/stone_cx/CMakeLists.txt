@@ -13,7 +13,7 @@ elseif(${TARGET} STREQUAL simulatorReplay)
     set(BOB_MODULES common)
 elseif(${TARGET} STREQUAL robot)
     set(SOURCES robot.cc visualizationCommon.cc)
-    set(BOB_MODULES common hid imgproc net os robots robots/tank video)
+    set(BOB_MODULES common hid imgproc net os robots robots video)
 else()
     message(FATAL_ERROR "Bad target specified")
 endif()
@@ -25,4 +25,4 @@ BoB_project(IS_EXPERIMENT TRUE
             GENN_MODEL model.cc
             GENN_CPU_ONLY TRUE
             EXTERNAL_LIBS opencv
-            OPTIONS RECORD_ELECTROPHYS RECORD_SENSORS USE_SEE3CAM USE_EV3)
+            OPTIONS RECORD_ELECTROPHYS RECORD_SENSORS USE_SEE3CAM)
