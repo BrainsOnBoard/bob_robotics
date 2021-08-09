@@ -36,10 +36,9 @@ public:
 
     // Public methods
     void moveForward(float speed);
-    void steer(float value);
-    void steer(degree_t steeringAngle);
     void stopMoving();
 
+    void move(float velocity, float left);
     void move(float velocity, degree_t steeringAngle);
 
     //! sets the robot velocity and steering to move

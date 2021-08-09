@@ -65,6 +65,8 @@ public:
     void moveForward(float speed);
     degree_t getMaximumTurn() const;
 
+    void move(float speed, float left);
+
     //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
     void move(float speed, degree_t left);
 

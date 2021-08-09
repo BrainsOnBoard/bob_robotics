@@ -66,24 +66,6 @@ SimulatedAckermann::moveForward(float speed)
 }
 
 void
-SimulatedAckermann::steer(float value)
-{
-    // Check value is in range
-    BOB_ASSERT(value >= -1.f && value <= 1.f);
-
-    updatePose();
-    m_steeringWheelAngle = value * m_MaximumTurn;
-}
-
-void
-SimulatedAckermann::steer(degree_t steeringAngle)
-{
-    BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
-    updatePose();
-    m_steeringWheelAngle = steeringAngle;
-}
-
-void
 SimulatedAckermann::stopMoving()
 {
     move(0_mps, 0_deg);
@@ -92,13 +74,19 @@ SimulatedAckermann::stopMoving()
 void
 SimulatedAckermann::move(float velocity, degree_t steeringAngle)
 {
+    move(velocity, static_cast<float>(steeringAngle / m_MaximumTurn));
+}
+
+void
+SimulatedAckermann::move(float velocity, float left)
+{
     // Check values are in range
-    BOB_ASSERT(velocity >= -1.f && velocity <= 1.f);
-    BOB_ASSERT(abs(steeringAngle) <= m_MaximumTurn);
+    BOB_ASSERT(fabs(velocity) <= 1.f);
+    BOB_ASSERT(fabs(left) <= 1.f);
 
     updatePose();
     m_currentVelocity = velocity * m_MaximumSpeed;
-    m_steeringWheelAngle = steeringAngle;
+    m_steeringWheelAngle = left * m_MaximumTurn;
 }
 
 void
