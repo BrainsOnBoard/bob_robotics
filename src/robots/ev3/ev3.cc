@@ -15,6 +15,7 @@ using namespace units::literals;
 
 namespace BoBRobotics {
 namespace Robots {
+namespace EV3 {
 void
 checkMotor(const EV3::MotorType &motor, const std::string &label)
 {
@@ -92,5 +93,6 @@ EV3::tachoToSpeed(int tachos) const
     const double angularVelocity{ 2.0 * pi() * static_cast<double>(tachos) / static_cast<double>(m_TachoCountPerRotation) };
     return meters_per_second_t{ angularVelocity * wheelRadius.value() };
 }
+} // EV3
 } // Robots
 } // BoBRobotics

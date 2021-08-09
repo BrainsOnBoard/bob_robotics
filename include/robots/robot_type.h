@@ -10,7 +10,7 @@
 #if defined(ROBOT_TYPE_TANK_NORBOT)
 #include "tank/norbot.h"
 #elif defined(ROBOT_TYPE_EV3_EV3)
-#include "tank/ev3/ev3.h"
+#include "ev3/ev3.h"
 #elif defined(ROBOT_TYPE_TANK_BUNDLEDTANKNETSINK)
 #include "tank/net/sink.h"
 #elif defined(ROBOT_TYPE_TANK_DUMMYTANK)

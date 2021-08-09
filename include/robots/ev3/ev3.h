@@ -8,11 +8,12 @@
 #include "../../third_party/ev3dev-lang-cpp/ev3dev.h"
 
 // Standard C++ includes
-#include <string>
 #include <utility>
 
 namespace BoBRobotics {
 namespace Robots {
+namespace EV3 {
+
 //! Control for a Lego Mindstorms tank robot
 class EV3 final
   : public Tank::TankBase<EV3>
@@ -46,5 +47,6 @@ private:
 
     meters_per_second_t tachoToSpeed(int tachos) const;
 }; // EV3
+} // EV3
 } // Robots
 } // BoBRobotics
