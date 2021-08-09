@@ -1,6 +1,8 @@
 // BoB robotics includes
+#include "hid/joystick.h"
 #include "robots/omni2d/mecanum.h"
 
+// Standard C++ includes
 #include <iostream>
 
 using namespace BoBRobotics;

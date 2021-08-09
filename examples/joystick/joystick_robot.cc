@@ -1,8 +1,12 @@
 // BoB robotics includes
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "robots/robot_type.h"
 
+#include <iostream>
+
 using namespace BoBRobotics;
+using namespace BoBRobotics::Robots;
 
 int bobMain(int, char **)
 {
@@ -19,7 +23,7 @@ int bobMain(int, char **)
         joystick.update();
 
         // Use joystick to drive motor
-        robot.drive(joystick);
+        HID::drive(robot, joystick);
 
     } while(!joystick.isDown(HID::JButton::B));
 

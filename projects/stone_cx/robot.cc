@@ -4,6 +4,7 @@
 #include "common/lm9ds1_imu.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/imu_netsource.h"
 #include "net/server.h"
 #include "os/keycodes.h"
@@ -341,7 +342,7 @@ int bobMain(int argc, char *argv[])
         // If we are going outbound
         if(outbound) {
             // Use joystick to drive motor
-            motor.drive(joystick, RobotParameters::joystickDeadzone);
+            HID::drive(motor, joystick, RobotParameters::joystickDeadzone);
 
             // If first button is pressed switch to returning home
             if(joystick.isDown(JButton::A)) {

@@ -4,6 +4,7 @@
 #include "common/fsm.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "navigation/read_objects.h"
 #include "net/client.h"
 #include "robots/control/obstacle_circumnavigation.h"
@@ -134,7 +135,7 @@ public:
                         m_StateMachine.transition(ControlWithJoystick);
                     }
                 } else if (state == ControlWithJoystick) {
-                    m_Tank.drive(m_Joystick);
+                    HID::drive(m_Tank, m_Joystick);
                 }
             }
         }

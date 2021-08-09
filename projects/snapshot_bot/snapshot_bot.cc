@@ -11,6 +11,7 @@
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "imgproc/mask.h"
 #include "net/server.h"
@@ -249,7 +250,7 @@ private:
 
             // If we're in a suitable state, drive motors using joystick
             if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {
-                m_Robot.drive(m_Joystick, m_Config.getJoystickDeadzone());
+                HID::drive(m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
             }
 
             // Capture frame

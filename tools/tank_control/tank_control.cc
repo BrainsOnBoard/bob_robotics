@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
@@ -76,7 +77,7 @@ int bobMain(int, char **)
     // Try to get joystick
     try {
         joystick = std::make_unique<HID::Joystick>();
-        tank.addJoystick(*joystick);
+        HID::addJoystick(tank, *joystick);
     } catch (std::runtime_error &e) {
         // Joystick not found
         LOGW << e.what();

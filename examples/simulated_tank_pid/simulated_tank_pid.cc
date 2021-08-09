@@ -1,12 +1,13 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "robots/control/tank_pid.h"
 #include "robots/tank/simulated_tank.h"
 #include "viz/sfml/sfml_world.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -26,7 +27,7 @@ int bobMain(int, char **)
     auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);
-    robot.controlWithThumbsticks(joystick);
+    HID::controlWithThumbsticks(robot, joystick);
 
     const Vector2<millimeter_t> goal{}; // Goal is origin
     bool pidRunning = false;

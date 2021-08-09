@@ -1,12 +1,13 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/macros.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "navigation/perfect_memory.h"
 #include "os/keycodes.h"
 #include "robots/uav/bebop/bebop.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/matplotlibcpp.h"
 #include "third_party/units.h"
 
@@ -62,7 +63,7 @@ public:
         });
 
         // Control drone with joystick
-        m_Drone.addJoystick(m_Joystick);
+        HID::addJoystick(m_Drone, m_Joystick);
     }
 
     void mainLoop()

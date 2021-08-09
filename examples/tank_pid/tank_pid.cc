@@ -1,8 +1,8 @@
 // BoB robotics includes
 #include "robots/control/tank_pid.h"
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "navigation/read_objects.h"
 #include "vicon/udp.h"
 #include "viz/plot_agent.h"
@@ -16,6 +16,7 @@
 #endif
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/matplotlibcpp.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
@@ -113,7 +114,7 @@ int bobMain(int argc, char **argv)
 
     // Drive robot with joystick
     HID::Joystick joystick;
-    robot.addJoystick(joystick);
+    HID::addJoystick(robot, joystick);
 
     auto viconObject = vicon.getObjectReference();
     auto pid = Robots::createTankPID(robot, viconObject, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed);

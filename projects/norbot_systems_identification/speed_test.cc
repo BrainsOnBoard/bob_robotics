@@ -1,14 +1,15 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
 #include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -113,7 +114,7 @@ int bobMain(int, char **)
 
     // Open joystick
     HID::Joystick joystick;
-    robot.addJoystick(joystick);
+    HID::addJoystick(robot, joystick);
     LOGI << "Opened joystick";
 
     std::unique_ptr<DataFile> dataFile; // CSV output file

@@ -1,12 +1,15 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/background_exception_catcher.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
 #include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -41,7 +44,7 @@ int bobMain(int argc, char **argv)
 
     // Open joystick
     HID::Joystick joystick;
-    robot.addJoystick(joystick);
+    HID::addJoystick(robot, joystick);
     LOGI << "Opened joystick";
 
     Stopwatch stopwatch;

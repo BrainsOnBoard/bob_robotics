@@ -1,10 +1,11 @@
 // BoB robotics includes
-#include "plog/Log.h"
+#include "hid/robot_control.h"
 #include "robots/tank/simulated_tank.h"
 #include "viz/sfml/joystick_keyboard.h"
 #include "viz/sfml/sfml_world.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -21,7 +22,7 @@ int bobMain(int, char **)
     auto car = display.createCarAgent();
 
     auto joystick = Viz::JoystickKeyboard::createJoystick();
-    robot.controlWithThumbsticks(*joystick);
+    HID::controlWithThumbsticks(robot, *joystick);
 
     joystick->addHandler([&robot](auto &, HID::JButton button, bool pressed) {
         if (pressed && button == HID::JButton::Start) {

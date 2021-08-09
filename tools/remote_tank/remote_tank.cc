@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
 #include "robots/tank/net/sink.h"
 
@@ -27,7 +28,7 @@ int bobMain(int, char **)
 
     // Add joystick for controlling robot
     HID::Joystick joystick;
-    tank.addJoystick(joystick);
+    HID::addJoystick(tank, joystick);
 
     while (!joystick.isPressed(HID::JButton::B)) {
         // Rethrow any exceptions caught on background thread

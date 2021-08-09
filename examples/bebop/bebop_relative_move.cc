@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "plog/Log.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "robots/uav/bebop/bebop.h"
 
 // Standard C++ includes
@@ -28,7 +29,7 @@ int bobMain(int, char **)
 
     // control drone with joystick
     HID::Joystick joystick;
-    drone.addJoystick(joystick);
+    HID::addJoystick(drone, joystick);
     joystick.runInBackground();
 
     std::string str;

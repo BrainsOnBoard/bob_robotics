@@ -1,9 +1,5 @@
 #pragma once
 
-// BoB robotics includes
-#include "common/circstat.h"
-#include "hid/joystick.h"
-
 // Third-party includes
 #include "third_party/units.h"
 
@@ -41,37 +37,6 @@ public:
     void stopMoving()
     {
         tank(0.f, 0.f);
-    }
-
-    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f)
-    {
-        joystick.addHandler(
-                [this, deadZone](auto &joystick, HID::JAxis axis, float) {
-                    return this->onJoystickEvent(joystick, axis, deadZone);
-                });
-    }
-
-    void drive(const HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
-               float deadZone = 0.25f)
-    {
-        drive(joystick.getState(HID::JAxis::LeftStickHorizontal),
-              joystick.getState(HID::JAxis::LeftStickVertical),
-              deadZone);
-    }
-
-    void controlWithThumbsticks(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick)
-    {
-        joystick.addHandler(
-                [this](auto &joystick, HID::JAxis axis, float) {
-                    constexpr auto Left = HID::JAxis::LeftStickVertical;
-                    constexpr auto Right = HID::JAxis::RightStickVertical;
-                    if (axis == Left || axis == Right) {
-                        this->tank(joystick.getState(Left), joystick.getState(Right));
-                        return true;
-                    }
-
-                    return false;
-                });
     }
 
     void move(meters_per_second_t v,
@@ -116,54 +81,6 @@ public:
     }
 
 private:
-    void drive(float x, float y, float deadZone)
-    {
-        const float halfPi = pi<float>() / 2.0f;
-
-        const bool deadX = (fabs(x) < deadZone);
-        const bool deadY = (fabs(y) < deadZone);
-        if (deadX && deadY) {
-            tank(0.0f, 0.0f);
-        } else if (deadX) {
-            tank(-y, -y);
-        } else if (deadY) {
-            tank(x, -x);
-        } else {
-            // If length of joystick vector places it in deadZone, stop motors
-            float r = hypot(x, y);
-
-            // By removing deadzone, we're preventing it being possible to drive at low speed
-            // So subtract deadzone, rescale the result and clamp so it's back on (0,1)
-            r = std::min(1.f, (r - deadZone) / (1.0f - deadZone));
-
-            const float theta = atan2(x, -y);
-            const float twoTheta = 2.0f * theta;
-
-            // Drive motor
-            if (theta >= 0.0f && theta < halfPi) {
-                tank(r, r * cos(twoTheta));
-            } else if (theta >= halfPi && theta < pi<float>()) {
-                tank(-r * cos(twoTheta), -r);
-            } else if (theta < 0.0f && theta >= -halfPi) {
-                tank(r * cos(twoTheta), r);
-            } else if (theta < -halfPi && theta >= -pi<float>()) {
-                tank(-r, -r * cos(twoTheta));
-            }
-        }
-    }
-
-    bool onJoystickEvent(HID::JoystickBase<HID::JAxis, HID::JButton> &joystick,
-                         HID::JAxis axis, float deadZone)
-    {
-        if (axis == HID::JAxis::LeftStickVertical || axis == HID::JAxis::LeftStickVertical) {
-            // drive robot with joystick
-            drive(joystick, deadZone);
-            return true;
-        }
-
-        return false;
-    }
-
     void tank(float left, float right)
     {
         static_cast<Derived *>(this)->tank(left, right);
