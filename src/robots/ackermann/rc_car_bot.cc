@@ -56,8 +56,6 @@ PassiveRCCarBot::readRemoteControl()
 
 RCCarBot::RCCarBot(const char *path)
   : m_Bot(path, RCCar::State::I2CControl)
-  , m_speed(0.0f)
-  , m_turningAngle(0_deg)
 {}
 
 RCCarBot::~RCCarBot()
@@ -83,20 +81,7 @@ RCCarBot::move(float speed, degree_t left)
 void
 RCCarBot::moveForward(float speed)
 {
-    m_speed = speed;
-    move(speed, m_turningAngle);
-}
-
-void
-RCCarBot::steer(float left)
-{
-    steer(left * PassiveRCCarBot::TurnMax);
-}
-
-void
-RCCarBot::steer(units::angle::degree_t left)
-{
-    move(m_speed, left);
+    move(speed, 0_deg);
 }
 
 // stops the car
@@ -104,18 +89,6 @@ void
 RCCarBot::stopMoving()
 {
     move(0, 0_deg);
-}
-
-float
-RCCarBot::getSpeed() const
-{
-    return m_speed;
-}
-
-degree_t
-RCCarBot::getTurningAngle() const
-{
-    return m_turningAngle;
 }
 
 std::pair<float, degree_t>

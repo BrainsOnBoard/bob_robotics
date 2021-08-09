@@ -60,13 +60,9 @@ public:
     RCCarBot(const char *path = I2C_DEVICE_DEFAULT);
     ~RCCarBot();
 
-    float getSpeed() const;
-    degree_t getTurningAngle() const;
     std::pair<float, degree_t> readRemoteControl();
 
     void moveForward(float speed);
-    void steer(float left);
-    void steer(units::angle::degree_t left);
     degree_t getMaximumTurn() const;
 
     //! Move the car with Speed: [-1,1], TurningAngle: [-35,35]
@@ -77,8 +73,6 @@ public:
 
 private:
     PassiveRCCarBot m_Bot;
-    float m_speed;                   // current control speed of the robot
-    degree_t m_turningAngle;         // current turning angle of the robot
 }; // RCCarBot
 } // Ackermann
 } // Robots
