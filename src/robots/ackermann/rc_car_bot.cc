@@ -98,7 +98,7 @@ RCCarBot::readRemoteControl()
 }
 
 degree_t
-RCCarBot::getMaximumTurn() const
+RCCarBot::getMaximumTurn()
 {
     return PassiveRCCarBot::TurnMax;
 }

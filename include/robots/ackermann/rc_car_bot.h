@@ -63,7 +63,7 @@ public:
     std::pair<float, degree_t> readRemoteControl();
 
     void moveForward(float speed);
-    degree_t getMaximumTurn() const;
+    constexpr degree_t getMaximumTurn();
 
     void move(float speed, float left);
 
