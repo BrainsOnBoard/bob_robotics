@@ -66,11 +66,12 @@ int bobMain(int, char **)
         if (display.mouseClicked()) {
             // Set a new goal position if user clicks in the window
             const auto mousePosition = display.mouseClickPosition();
+            const auto vec = display.pixelToVector(mousePosition.x, mousePosition.y);
 
             // Set the goal to this position
-            positioner.moveTo({ mousePosition.x(), mousePosition.y(), 15_deg });
+            positioner.moveTo({ vec.x(), vec.y(), 15_deg });
 
-            goalCircle.setPosition(display.vectorToPixel(mousePosition));
+            goalCircle.setPosition(mousePosition.x, mousePosition.y);
         }
 
         // Check if the robot is within threshold distance and bearing of goal

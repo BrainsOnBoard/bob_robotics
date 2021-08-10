@@ -185,7 +185,7 @@ public:
     }
 
     bool mouseClicked() const;
-    Vector2<meter_t> mouseClickPosition() const;
+    sf::Vector2i mouseClickPosition() const;
     bool isOpen() const;
     void close();
     float lengthToPixel(const meter_t value) const;
@@ -206,7 +206,7 @@ private:
     std::unique_ptr<CrossShape> m_OriginCross;
     const Vector2<meter_t> m_MinBounds;
     meter_t m_UnitPerPixel;
-    Vector2<meter_t> m_MouseClickPosition = Vector2<meter_t>::nan();
+    sf::Vector2i m_MouseClickPosition{ -1, -1 };
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 
@@ -247,7 +247,7 @@ private:
     struct Noop {
         void operator()(const sf::Event &){};
     };
-    
+
     template<typename Func, typename... Drawables>
     sf::Event updateAndHandleEvents(Func eventHandler, Drawables&& ...drawables)
     {
