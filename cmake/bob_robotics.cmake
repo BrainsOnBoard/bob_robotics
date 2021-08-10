@@ -631,6 +631,10 @@ endfunction()
 
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
+        # The robots module is special. It is used only to identify which
+        # submodule is needed for a given ROBOT_TYPE (e.g. a Tank::Norbot needs
+        # the robots/tank module). If you're not making use of the ROBOT_TYPE
+        # macro in your project, then you don't need it.
         if(module STREQUAL robots)
             # Allow users to choose the type of robot to use with ROBOT_TYPE env var
             # or CMake param
