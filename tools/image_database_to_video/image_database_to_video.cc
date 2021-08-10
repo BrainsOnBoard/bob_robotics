@@ -143,7 +143,7 @@ bobMain(int argc, char **argv)
     CLI::App app{ "Tool for converting image databases composed of separate image files to video-type databases (i.e. to save space)." };
     app.add_option("-o,--output-dir", outputDir, "Folder to save converted databases into");
     app.add_option("-d,--default-metadata", defaultMetadataPath, "Path to a default metadata file to use if one is not present");
-    app.add_option("-f", frameRate, "Frame rate at which image sequence was recorded")->required();
+    app.add_option("-r", frameRate, "Frame rate at which image sequence was recorded")->required();
 
     app.allow_extras();
     CLI11_PARSE(app, argc, argv);
