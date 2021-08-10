@@ -21,10 +21,6 @@
 using namespace BoBRobotics;
 using namespace Navigation;
 
-// **TODO**: Allow user to choose output video format
-constexpr const char *VideoExtension = ".mp4";
-constexpr const char *VideoFormat = "mp4v";
-
 bool
 readCSVLine(std::ifstream &ifs, std::string &line,
             std::vector<std::string> &fields)
@@ -118,12 +114,13 @@ convertYAMLFile(const ImageDatabase &inDatabase,
 void
 writeVideoFile(const ImageDatabase &inDatabase,
                const filesystem::path &videoFile,
-               double frameRate)
+               double frameRate,
+               const std::string &fourcc)
 {
     const auto imageSize = inDatabase[0].load(false).size();
 
     cv::VideoWriter writer{ videoFile.str(),
-                            cv::VideoWriter::fourcc(VideoFormat[0], VideoFormat[1], VideoFormat[2], VideoFormat[3]),
+                            cv::VideoWriter::fourcc(fourcc[0], fourcc[1], fourcc[2], fourcc[3]),
                             frameRate,
                             imageSize };
     BOB_ASSERT(writer.isOpened());
@@ -138,12 +135,15 @@ bobMain(int argc, char **argv)
 {
     filesystem::path outputDir = "video_databases";
     filesystem::path defaultMetadataPath;
+    std::string fileExtension = "avi", fourcc = "MJPG";
     double frameRate;
 
     CLI::App app{ "Tool for converting image databases composed of separate image files to video-type databases (i.e. to save space)." };
     app.add_option("-o,--output-dir", outputDir, "Folder to save converted databases into");
     app.add_option("-d,--default-metadata", defaultMetadataPath, "Path to a default metadata file to use if one is not present");
     app.add_option("-r", frameRate, "Frame rate at which image sequence was recorded")->required();
+    app.add_option("-f,--format", fileExtension, "Extension for video file (default: avi)");
+    app.add_option("--fourcc", fourcc, "Fourcc code for video stream (default: MJPG)");
 
     app.allow_extras();
     CLI11_PARSE(app, argc, argv);
@@ -151,6 +151,8 @@ bobMain(int argc, char **argv)
         std::cout << app.help();
         return EXIT_FAILURE;
     }
+
+    BOB_ASSERT(fourcc.size() == 4);
 
     if (!outputDir.exists()) {
         BOB_ASSERT(filesystem::create_directory(outputDir));
@@ -176,10 +178,10 @@ bobMain(int argc, char **argv)
         LOGI << "Saving new database to " << outPath;
         filesystem::create_directory(outPath);
 
-        const auto videoFile = outPath / (inDatabase.getName() + VideoExtension);
+        const auto videoFile = outPath / (inDatabase.getName() + "." + fileExtension);
         if (convertYAMLFile(inDatabase, outPath, videoFile, frameRate, defaultMetadata)) {
             convertCSVFile(inDatabase, outPath);
-            writeVideoFile(inDatabase, videoFile, frameRate);
+            writeVideoFile(inDatabase, videoFile, frameRate, fourcc);
         }
     };
 
