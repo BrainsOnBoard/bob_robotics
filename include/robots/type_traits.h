@@ -1,43 +1,27 @@
 #pragma once
 
-#define BOB_DEFINE_HAS_METHOD(traitName, methodName)      \
-    template<class T>                                     \
-    class traitName                                       \
-    {                                                     \
-    private:                                              \
-        typedef char YesType[1];                          \
-        typedef char NoType[2];                           \
-                                                          \
-        template<class C>                                 \
-        static YesType &test(decltype(&C::methodName));   \
-        template<class C>                                 \
-        static NoType &test(...);                         \
-                                                          \
-    public:                                               \
-        enum                                              \
-        {                                                 \
-            value = sizeof(test<T>(0)) == sizeof(YesType) \
-        };                                                \
-    }
-
-namespace BoBRobotics
-{
-namespace Robots
-{
-BOB_DEFINE_HAS_METHOD(isTank, tank);
-BOB_DEFINE_HAS_METHOD(isOmni2D, omni2d);
-BOB_DEFINE_HAS_METHOD(hasMove, move);
-BOB_DEFINE_HAS_METHOD(isUAV, setVerticalSpeed);
-
-// Tank robots may also have a move method, so let's disambiguate that case
-template<class T>
-class isAckermann
-{
-public:
-    enum
-    {
-        value = hasMove<T>::value && !isTank<T>::value
+/*
+ * Check for different robot types by looking at base classes (e.g. all tanks
+ * inherit from TankBase).
+ */
+#define BOB_DEFINE_TRAIT(TYPE)                                                        \
+    namespace TYPE {                                                                  \
+    template<class Derived>                                                           \
+    class TYPE##Base;                                                                 \
+    }                                                                                 \
+    template<class T>                                                                 \
+    struct Is##TYPE                                                                   \
+    {                                                                                 \
+        static constexpr bool value = std::is_base_of<TYPE::TYPE##Base<T>, T>::value; \
     };
-};
+
+namespace BoBRobotics {
+namespace Robots {
+
+BOB_DEFINE_TRAIT(Ackermann)
+BOB_DEFINE_TRAIT(Tank)
+BOB_DEFINE_TRAIT(Omni2D)
+BOB_DEFINE_TRAIT(UAV)
+
 } // Robots
 } // BoBRobotics

@@ -25,7 +25,7 @@ drive(RobotType &robot, const JoystickBase<JAxis, JButton> &joystick)
 }
 
 template<class AckermannType,
-         std::enable_if_t<Robots::isAckermann<AckermannType>::value, int> = 0>
+         std::enable_if_t<Robots::IsAckermann<AckermannType>::value, int> = 0>
 constexpr auto usedAxes()
 {
     return std::array<JAxis, 2>{ JAxis::LeftStickVertical,
@@ -33,7 +33,7 @@ constexpr auto usedAxes()
 }
 
 template<class Omni2DType,
-         std::enable_if_t<Robots::isOmni2D<Omni2DType>::value, int> = 0>
+         std::enable_if_t<Robots::IsOmni2D<Omni2DType>::value, int> = 0>
 constexpr auto usedAxes()
 {
     return std::array<JAxis, 3>{ JAxis::LeftStickVertical,
@@ -42,7 +42,7 @@ constexpr auto usedAxes()
 }
 
 template<class TankType,
-         std::enable_if_t<Robots::isTank<TankType>::value, int> = 0>
+         std::enable_if_t<Robots::IsTank<TankType>::value, int> = 0>
 constexpr auto usedAxes()
 {
     return std::array<JAxis, 2>{ JAxis::LeftStickVertical,
@@ -55,7 +55,7 @@ constexpr auto usedAxes()
  * Save boilerplate by writing this function generically.
  */
 template<class RobotType,
-         std::enable_if_t<!Robots::isUAV<RobotType>::value, int> = 0>
+         std::enable_if_t<!Robots::IsUAV<RobotType>::value, int> = 0>
 void
 addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone = DEFAULT_DEAD_ZONE)
 {
@@ -70,7 +70,7 @@ addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float dead
     });
 }
 
-template<class AckermannType, std::enable_if_t<Robots::isAckermann<AckermannType>::value, int> = 0>
+template<class AckermannType, std::enable_if_t<Robots::IsAckermann<AckermannType>::value, int> = 0>
 void
 drive(AckermannType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone)
 {
@@ -82,7 +82,7 @@ drive(AckermannType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZo
                thresh(joystick.getState(JAxis::RightStickHorizontal)));
 }
 
-template<class Omni2DType, std::enable_if_t<Robots::isOmni2D<Omni2DType>::value, int> = 0>
+template<class Omni2DType, std::enable_if_t<Robots::IsOmni2D<Omni2DType>::value, int> = 0>
 void
 drive(Omni2DType &robot, const JoystickBase<JAxis, JButton> &joystick, float deadZone)
 {
@@ -97,7 +97,7 @@ drive(Omni2DType &robot, const JoystickBase<JAxis, JButton> &joystick, float dea
     robot.omni2D(forward * !deadForward, sideways * !deadSideways, turn * !deadTurn);
 }
 
-template<class TankType, std::enable_if_t<Robots::isTank<TankType>::value, int> = 0>
+template<class TankType, std::enable_if_t<Robots::IsTank<TankType>::value, int> = 0>
 void
 drive(TankType &robot, const JoystickBase<JAxis, JButton> &joystick, float deadZone)
 {
@@ -137,7 +137,7 @@ drive(TankType &robot, const JoystickBase<JAxis, JButton> &joystick, float deadZ
     }
 }
 
-template<class TankType, std::enable_if_t<Robots::isTank<TankType>::value, int> = 0>
+template<class TankType, std::enable_if_t<Robots::IsTank<TankType>::value, int> = 0>
 void
 controlWithThumbsticks(TankType &robot, JoystickBase<JAxis, JButton> &joystick)
 {
@@ -154,7 +154,7 @@ controlWithThumbsticks(TankType &robot, JoystickBase<JAxis, JButton> &joystick)
             });
 }
 
-template<class UAVType, std::enable_if_t<Robots::isUAV<UAVType>::value, int> = 0>
+template<class UAVType, std::enable_if_t<Robots::IsUAV<UAVType>::value, int> = 0>
 void
 drive(UAVType &uav, const JoystickBase<JAxis, JButton> &joystick)
 {
@@ -164,7 +164,7 @@ drive(UAVType &uav, const JoystickBase<JAxis, JButton> &joystick)
     uav.setYawSpeed(joystick.getState(JAxis::RightTrigger) - joystick.getState(JAxis::LeftTrigger));
 }
 
-template<class UAVType, std::enable_if_t<Robots::isUAV<UAVType>::value, int> = 0>
+template<class UAVType, std::enable_if_t<Robots::IsUAV<UAVType>::value, int> = 0>
 void
 addJoystick(UAVType &uav, JoystickBase<JAxis, JButton> &joystick)
 {
