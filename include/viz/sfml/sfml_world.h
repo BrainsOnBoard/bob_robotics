@@ -5,6 +5,7 @@
 #include "common/pose.h"
 
 // Third-party includes
+#include "third_party/optional.hpp"
 #include "third_party/units.h"
 
 // SFML
@@ -184,8 +185,7 @@ public:
         return updateAndHandleEvents(drive, std::forward<Drawables>(drawables)...);
     }
 
-    bool mouseClicked() const;
-    sf::Vector2i mouseClickPosition() const;
+    std::experimental::optional<sf::Vector2i> mouseClickPosition() const;
     bool isOpen() const;
     void close();
     float lengthToPixel(const meter_t value) const;
@@ -206,7 +206,7 @@ private:
     std::unique_ptr<CrossShape> m_OriginCross;
     const Vector2<meter_t> m_MinBounds;
     meter_t m_UnitPerPixel;
-    sf::Vector2i m_MouseClickPosition{ -1, -1 };
+    std::experimental::optional<sf::Vector2i> m_MouseClickPosition;
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 
@@ -256,6 +256,7 @@ private:
 
         // Check all the window's events that were triggered since the last iteration of the loop
         sf::Event event{};
+        m_MouseClickPosition.reset();
         while (m_Window.pollEvent(event)) {
             if (handleEvents(event)) {
                 return event;

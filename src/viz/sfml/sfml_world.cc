@@ -69,13 +69,7 @@ SFMLWorld::createCarAgent(meter_t carWidth)
     return CarAgent(*this, carWidth);
 }
 
-bool
-SFMLWorld::mouseClicked() const
-{
-    return m_MouseClickPosition != sf::Vector2i{ -1, -1 };
-}
-
-sf::Vector2i
+std::experimental::optional<sf::Vector2i>
 SFMLWorld::mouseClickPosition() const
 {
     return m_MouseClickPosition;
@@ -116,8 +110,6 @@ SFMLWorld::vectorToPixel(double x, double y) const
 bool
 SFMLWorld::handleEvents(sf::Event &event)
 {
-    m_MouseClickPosition = sf::Vector2i{ -1, -1 };
-
     if (event.type == sf::Event::Closed ||
         (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Q)) {
         m_Window.close();
