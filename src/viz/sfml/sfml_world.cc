@@ -111,7 +111,7 @@ bool
 SFMLWorld::handleEvents(sf::Event &event)
 {
     if (event.type == sf::Event::Closed ||
-        (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Q)) {
+        (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape)) {
         m_Window.close();
         return true;
     }
