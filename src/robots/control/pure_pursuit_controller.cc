@@ -14,12 +14,12 @@ namespace Robots {
 
 PurePursuitController::PurePursuitController() {}
 
-PurePursuitController::PurePursuitController(millimeter_t lookahead,
+PurePursuitController::PurePursuitController(millimeter_t lookAhead,
                                              millimeter_t wheelBaseLength,
-                                             millimeter_t stopping_dist)
-  : m_lookAheadDistance(lookahead)
+                                             millimeter_t stoppingDist)
+  : m_lookAheadDistance(lookAhead)
   , m_wheelBase(wheelBaseLength)
-  , m_stoppingDistance(stopping_dist)
+  , m_stoppingDistance(stoppingDist)
 {
 }
 
@@ -29,7 +29,7 @@ void PurePursuitController::setWayPoints(const std::vector<Vector2<millimeter_t>
 }
 
 //! adds to the list of waypoints
-void PurePursuitController::addToWayPoint(const Vector2<millimeter_t> wayPoint) {
+void PurePursuitController::addToWayPoint(const Vector2<millimeter_t> &wayPoint) {
     m_wayPoints.push_back(wayPoint);
 }
 

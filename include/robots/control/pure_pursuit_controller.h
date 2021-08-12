@@ -30,13 +30,13 @@ public:
 
     PurePursuitController(millimeter_t lookahead,
                           millimeter_t wheelBaseLength,
-                          millimeter_t stopping_dist);
+                          millimeter_t stoppingDist);
 
     //! set waypoints which forms a path to be followed
     void setWayPoints(const std::vector<Vector2<millimeter_t>> &wp);
 
     //! adds to the list of waypoints
-    void addToWayPoint(const Vector2<millimeter_t> wayPoint);
+    void addToWayPoint(const Vector2<millimeter_t> &wayPoint);
 
     //! sets the lookahead distance. Large values causes the car to cut corners,
     //! where small values makes the car follow the path more closely
