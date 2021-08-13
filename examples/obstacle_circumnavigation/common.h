@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/path.h"
 #include "common/pose.h"
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"
@@ -42,7 +43,7 @@ public:
       , m_RouteLines(m_Display.createLineStrip(sf::Color::Blue))
     {
         // Read object vertices from file
-        const auto objects = Navigation::readObjects("objects.yaml");
+        const auto objects = Navigation::readObjects(Path::getProgramDirectory() / "objects.yaml");
 
         // The x and y dimensions of the robot
         const auto halfWidth = m_CarAgent.getSize().x() / 2;
