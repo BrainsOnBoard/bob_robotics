@@ -153,9 +153,6 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         }
         else {
-            // **TODO** save ODK2 masks
-            BOB_ASSERT(!m_Config.shouldUseODK2());
-
             // If we're not using InfoMax or pre-trained weights don't exist
             if(!m_Config.shouldUseInfoMax() || !(m_Config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin")).exists()) {
                 LOGI << "Training on stored snapshots";
@@ -253,9 +250,7 @@ private:
             }
 
             // Capture frame
-            if(!m_Camera->readFrame(m_Output)) {
-                return false;
-            }
+            m_Camera->readFrameSync(m_Output);
 
             // If our camera image needs unwrapping
             if(m_Camera->needsUnwrapping()) {
@@ -265,7 +260,7 @@ private:
                 // Crop unwrapped frame
                 m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
             }
-            // Otherwise, crop camera image directly
+            // Otherwise, crop camera image directl
             else {
                 m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
             }
@@ -483,8 +478,9 @@ private:
                 }
 
                 // If we should turn, set timer and transition to turning state
-                if(m_Config.getTurnSpeed(m_Memory->getBestHeading()) > 0.0f) {
-                    m_DriveTime = m_Config.getMotorTurnCommandInterval();
+                const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                if(turnSpeed.first > 0.0f) {
+                    m_DriveTime = turnSpeed.second;
                     m_StateMachine.transition(State::Turning);
                 }
                 // Otherwise, set timer and transition to driving forward state
@@ -504,8 +500,8 @@ private:
                 }
                 // Otherwise start turning
                 else {
-                    const float turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
-                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed : -turnSpeed;
+                    const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed.first : -turnSpeed.first;
                     m_Robot.turnOnTheSpot(motorTurn);
                 }
 
