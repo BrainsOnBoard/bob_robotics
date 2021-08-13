@@ -186,12 +186,14 @@ public:
         return CrossShape(vectorToPixel(position), size, thickness, colour);
     }
 
+    //! Update the GUI, drawing the specified drawables in the window
     template<typename... Drawables>
     void draw(Drawables&& ...drawables)
     {
         drawAndHandleEvents(Noop{}, std::forward<Drawables>(drawables)...);
     }
 
+    //! As with draw(), except window events are also passed in sequence to eventHandler
     template<typename Func, typename... Drawables>
     void drawAndHandleEvents(Func eventHandler, Drawables&& ...drawables)
     {
