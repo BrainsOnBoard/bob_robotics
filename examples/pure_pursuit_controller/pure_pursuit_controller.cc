@@ -16,15 +16,18 @@
 */
 
 // BoB robotics includes
-#include "robots/ackermann/simulated_ackermann.h"
 #include "robots/control/pure_pursuit_controller.h"
-#include "viz/car_display/car_display.h"
+#include "robots/ackermann/simulated_ackermann.h"
+#include "viz/sfml/robot_control.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
 #include <chrono>
+#include <iostream>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -33,170 +36,117 @@ using namespace units::literals;
 using namespace units::length;
 using namespace units::angle;
 using namespace units::velocity;
+using namespace units::math;
 
-//! draw lines between a list of points
-void drawLinesBetweenRects(std::vector<SDL_Rect> listRects, SDL_Renderer *renderer) {
-    if (!listRects.empty()) {
-        for (unsigned int i = 0; i < listRects.size()-1; i++) {
-            SDL_Rect current_rectangle = listRects.at(i);
-            SDL_Rect next_rectangle = listRects.at(i+1);
-
-            float lineStartX = current_rectangle.x;
-            float lineStartY = current_rectangle.y;
-            float lineEndX = next_rectangle.x;
-            float lineEndY = next_rectangle.y;
-
-            SDL_RenderDrawLine(renderer, lineStartX, lineStartY, lineEndX, lineEndY);
-        }
-    }
-}
-
-int bobMain(int, char **)
+int
+bobMain(int, char **)
 {
-    Robots::Ackermann::SimulatedAckermann car(1.4_mps, 500_mm); // simulated car
-    Viz::CarDisplay display(10.2_m, 160_mm);                    // For displaying the agent
-    std::vector<SDL_Rect> rekt_list;                            // list of waypoints
-    float currentX = 0, currentY = 0;                           // current mouse coordinate click
-    bool isControllerOn = true;
+    constexpr millimeter_t LookAheadDistance = 1_m;   // lookahead distance
+    constexpr meters_per_second_t MaxSpeed = 1.4_mps; // car's max speed
+    constexpr degree_t MaxTurn = 30_deg;              // car's maximum turning angle
+    constexpr millimeter_t StoppingDist = 1_cm;       // car's stopping distance
 
-    // adding the first coordinate
-    //-------------------------------------------------------------------
-    millimeter_t xMM, yMM;
-    display.pixelToMM(currentX, currentY,  xMM,  yMM);
-    std::vector<Vector2<millimeter_t>> wpCoordinates;
-    wpCoordinates.emplace_back(xMM, yMM);
-    //-------------------------------------------------------------------
+    Robots::Ackermann::SimulatedAckermann robot(MaxSpeed, 500_mm, 0_m, MaxTurn); // simulated robot
+    Viz::SFML::World display({ 10.2_m, 10.2_m });                                // display the agent
+    auto car = display.createCarAgent(160_mm);                                   // car sprite
+    bool isControllerOn = false;
+    car.setPose(Pose2<meter_t, degree_t>{});
 
-    auto mmps = 0_mps;    // speed of robot car
-    degree_t deg = 0_deg; // angle of steering of robot car
-    constexpr millimeter_t lookaheadDistance = 1000_mm; // lookahead distance
-    constexpr meters_per_second_t max_speed = 1.4_mps;  // car's max speed
-    constexpr millimeter_t stopping_dist = 1_cm;        // car's stopping distance
+    auto wpLines = display.createLineStrip(sf::Color::Blue);      // lines between way points
+    std::vector<sf::RectangleShape> wpRects;                      // rectangles representing way points
+    auto lookAheadLine = display.createLineStrip(sf::Color::Red); // a line between robot and lookahead point
 
-    const auto wheelBase = car.getDistanceBetweenAxis(); // distance between wheel bases
-    Robots::PurePursuitController controller(lookaheadDistance, wheelBase, stopping_dist);
+    const auto wheelBase = robot.getDistanceBetweenAxis(); // distance between wheel bases
+    Robots::PurePursuitController controller(LookAheadDistance, wheelBase, StoppingDist);
+    bool warningDisplayed = false; // has message about stuck robot already been displayed?
 
-    while(display.isOpen()) {
+    auto addWayPoint = [&](const auto &position) {
+        constexpr float SquareWidth = 6.f;
+        sf::RectangleShape rect{ sf::Vector2f{ SquareWidth, SquareWidth } };
+        rect.setFillColor(sf::Color::Blue);
+        rect.setPosition(position.x - SquareWidth / 2.f, position.y - SquareWidth / 2.f);
+        wpRects.push_back(rect);
 
-        // each click will spawn a way point which is connected together
-        std::vector<float> mousePos = display.getMouseClickPixelPosition();
-        const float xp = mousePos[0];
-        const float yp = mousePos[1];
+        wpLines.append(sf::Vector2f{ (float) position.x, (float) position.y });
 
-        // click to the screen to store waypoint in list
-        if (xp != currentX && yp != currentY) {
-            // draw a rectangle at the goal position
-            SDL_Rect rekt;
-            rekt.x = xp;
-            rekt.y = yp;
-            rekt.w = 5;
-            rekt.h = 5;
-            currentX = xp;
-            currentY = yp;
-            rekt_list.push_back(rekt); // save rectangle
+        controller.addToWayPoint(display.pixelToVector(position.x, position.y));
+    };
 
-            // we store the physical unit coordinate in the waypoint list
-            display.pixelToMM(xp, yp,  xMM,  yMM);
-            wpCoordinates.emplace_back(xMM,yMM);
+    // Add an initial waypoint in the centre of the window
+    addWayPoint(sf::Vector2i{ display.WindowWidth / 2, display.WindowHeight / 2 });
+
+    // For handling window events
+    auto eventHandler = [&](const sf::Event &event) {
+        // try driving the robot with the keyboard
+        if (!isControllerOn && Viz::SFML::drive(robot, event)) {
+            return;
         }
 
-        // set waypoints in controller
-        controller.setWayPoints(wpCoordinates);
+        // if user presses space, it toggles the controller on/off
+        if (event.type == sf::Event::KeyReleased
+            && event.key.code == sf::Keyboard::Space)
+        {
+            if (isControllerOn) {
+                std::cout << "Controller off\n";
 
-        // run a GUI step
-        const auto key = display.runGUI(car.getPose());
+                robot.stopMoving();
+                isControllerOn = false;
+                lookAheadLine.clear();
+            } else if (wpRects.size() > 1) {
+                std::cout << "Controller on\n";
 
-        // clear screen before drawing other elements
-        display.clearScreen();
-
-        // draw all the waypoints on the screen
-        for (auto &r : rekt_list) {
-            display.drawRectangleAtCoordinates(r);
-        }
-
-        // draw lines between waypoints to form a path
-        if (rekt_list.size() > 1) {
-            drawLinesBetweenRects(rekt_list, display.getRenderer());
-        }
-
-        // draw lookahead point and a line to it from the robot
-        Vector2<millimeter_t> lookPoint;
-        const bool didGetPoint = controller.getLookAheadPoint(car.getPose().x(), car.getPose().y(),lookaheadDistance,lookPoint);
-        int pxx, pxy;
-        const auto robx = car.getPose().x();
-        const auto roby = car.getPose().y();
-        const auto heading = car.getPose().yaw();
-
-        // draw the line from robot to lookahead point if there is one
-        if (lookPoint.size() > 1 && didGetPoint) {
-            display.mmToPixel(lookPoint.x(),lookPoint.y(),pxx,pxy);
-            std::vector<SDL_Rect> rektVec;
-            SDL_Rect rkt, rkt_rob;
-            rkt.x = pxx;
-            rkt.y = pxy;
-
-            int rx,ry;
-            display.mmToPixel(robx, roby, rx,ry);
-            rkt_rob.x = rx;
-            rkt_rob.y = ry;
-            display.drawRectangleAtCoordinates(rkt);
-            rektVec.push_back(rkt);
-            rektVec.push_back(rkt_rob); // rect at robot
-            // draw line between robot and lookahead point
-            drawLinesBetweenRects(rektVec, display.getRenderer());
-        }
-
-        // calculate turning angle with controller
-        degree_t turningAngle;
-        const bool didGetAngle = controller.getTurningAngle(robx, roby, heading, turningAngle);
-
-
-        // if there is a key command, move car with keys, othwerwise listen to
-        // the controller command to turn the car so it follows the path
-        if (key.second) {
-            switch (key.first)
-            {
-                case SDLK_UP:
-                    mmps = max_speed; // go max speed
-                    deg = 0_deg;
-                    break;
-                case SDLK_DOWN:
-                    mmps = 0_mps;     // stop
-                    deg = 0_deg;
-                    break;
-                case SDLK_LEFT:
-                    deg = 30_deg;
-                    break;
-                case SDLK_RIGHT:
-                    deg = -30_deg;
-                    break;
-                // if user presses space, it toggles the controller on/off
-                case SDLK_SPACE:
-                    if (isControllerOn) {
-                        mmps = 0_mps;
-                        deg = 0_deg;
-                    } else {
-                        mmps = max_speed;
-                        deg = 0_deg;
-                        controller.setLookAheadDistance(lookaheadDistance); // reset lookahead distance
-                    }
-                    isControllerOn = !isControllerOn;
-                    break;
-                default:
-                    break;
-            }
-        }
-        // if controller is on -> car moves with controller's commands
-        if (isControllerOn) {
-            if (didGetAngle) {
-                car.move(mmps, turningAngle);
+                controller.setLookAheadDistance(LookAheadDistance); // reset lookahead distance
+                isControllerOn = true;
+                warningDisplayed = false;
             } else {
-                car.move(0_mps, 0_deg); // stop car
+                std::cerr << "Too few way points!\n";
             }
-        } else {
-        // if controller is off -> car moves with user's commands
-            car.move(mmps, deg);
+
+            return;
+        }
+
+        // the user can add waypoints by clicking
+        if (event.type == sf::Event::MouseButtonPressed
+            && event.mouseButton.button == sf::Mouse::Left)
+        {
+            addWayPoint(event.mouseButton);
+        }
+    };
+
+    while (display.isOpen()) {
+        car.setPose(robot.getPose());
+
+        // update GUI; handle keyboard + mouse events
+        display.drawAndHandleEvents(eventHandler, wpLines, wpRects, lookAheadLine, car);
+
+        if (isControllerOn) {
+            const auto lookPoint = controller.getLookAheadPoint(robot.getPose(), LookAheadDistance);
+
+            // draw lookahead point and a line to it from the robot
+            lookAheadLine.clear();
+            if (lookPoint) {
+                lookAheadLine.append(robot.getPose());
+                lookAheadLine.append(lookPoint.value());
+                warningDisplayed = false;
+            } else if (!warningDisplayed) {
+                LOGE << "Robot is stuck! 😭\n";
+                warningDisplayed = true;
+            }
+
+            // calculate turning angle with controller
+            const auto turningAngle = controller.getTurningAngle(robot.getPose(), lookPoint);
+            if (turningAngle) {
+                const auto ang = turningAngle.value();
+                if (abs(ang) > MaxTurn) {
+                    robot.move(MaxSpeed, copysign(MaxTurn, ang));
+                } else {
+                    robot.move(MaxSpeed, ang);
+                }
+            } else {
+                robot.stopMoving();
+            }
         }
     }
+
     return EXIT_SUCCESS;
 }

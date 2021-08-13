@@ -8,6 +8,7 @@
 #include "common/pose.h"
 
 // Third-party includes
+#include "third_party/optional.hpp"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -48,26 +49,26 @@ public:
     //! sets the stopping distance. If the car is within this distance, the controller stops
     void setStoppingDistance(const millimeter_t distance);
 
-    //! calculates the turning angle needed to follow the path, returns true if there is a valid angle.
-    bool getTurningAngle(const millimeter_t x, const millimeter_t y, const radian_t heading, degree_t &turningAngle);
+    //! calculates the turning angle needed to follow the path or nullopt if not available
+    std::experimental::optional<degree_t>
+    getTurningAngle(const Pose2<millimeter_t, radian_t> &robotPose,
+                    const std::experimental::optional<Vector2<millimeter_t>> &lookPoint) const;
 
-    //! calculates the look-ahead point the robot follows. returns true if there is a valid point
-    bool getLookAheadPoint(const millimeter_t x, const millimeter_t y, const millimeter_t r, Vector2<millimeter_t> &lookaheadPoint);
+    //! calculates the look-ahead point the robot follows
+    std::experimental::optional<Vector2<millimeter_t>>
+    getLookAheadPoint(const Vector2<millimeter_t> &robotPosition,
+                      millimeter_t lookAheadDistance) const;
 
 private:
-
     millimeter_t m_lookAheadDistance;                 // the distance to look ahead
     millimeter_t m_wheelBase;                         // length between wheel bases
     millimeter_t m_stoppingDistance;                  // stopping distance.
     std::vector<Vector2<millimeter_t>> m_wayPoints;   // list of waypoint coordinates
 
     // computes the turning angle using the lookahead point
-    degree_t computeTurningAngle(const millimeter_t xrobot,
-                                 const millimeter_t yrobot,
-                                 const millimeter_t xlookahead,
-                                 const millimeter_t ylookahead,
-                                 const millimeter_t lookAheadDistance,
-                                 const radian_t heading);
+    degree_t computeTurningAngle(const Pose2<millimeter_t, radian_t> &robotPose,
+                                 const Vector2<millimeter_t> &lookPoint,
+                                 millimeter_t lookAheadDistance) const;
 }; // PurePursuitController
 }  // Robot
 }  // BoBRobotics
