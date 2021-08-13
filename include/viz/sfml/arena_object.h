@@ -1,19 +1,20 @@
 #pragma once
 
 // BoB robotics includes
-#include "sfml_world.h"
+#include "world.h"
 
 // Third-party includes
 #include "third_party/units.h"
 
 namespace BoBRobotics {
 namespace Viz {
+namespace SFML {
 class ArenaObject
   : public sf::Drawable
 {
 public:
     template<class VectorArrayType, class MatrixType>
-    ArenaObject(const SFMLWorld &display, const VectorArrayType &original, const MatrixType &resized)
+    ArenaObject(const World &display, const VectorArrayType &original, const MatrixType &resized)
       : m_GreenShape(original.size())
       , m_RedShape(original.size())
     {
@@ -38,7 +39,7 @@ public:
     }
 
     template<class VectorOfObjects, class VectorOfMatrices>
-    static auto fromObjects(const SFMLWorld &display,
+    static auto fromObjects(const World &display,
                             const VectorOfObjects &objects,
                             const VectorOfMatrices &resized)
     {
@@ -53,5 +54,6 @@ public:
 private:
     sf::ConvexShape m_GreenShape, m_RedShape;
 }; // ArenaObject
+} // SFML
 } // Viz
 } // BoBRobotics

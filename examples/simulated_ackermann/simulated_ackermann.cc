@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "robots/ackermann/simulated_ackermann.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -22,7 +22,7 @@ bobMain(int, char **)
     constexpr auto MaxTurn = 30_deg;
 
     Robots::Ackermann::SimulatedAckermann robot(MaxSpeed, 500_mm); // simulated Ackermann car
-    Viz::SFMLWorld display({ 10.2_m, 10.2_m });         // For displaying the agent
+    Viz::SFML::World display({ 10.2_m, 10.2_m });         // For displaying the agent
 
     auto car = display.createCarAgent(160_mm);
 

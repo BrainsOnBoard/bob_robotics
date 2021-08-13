@@ -9,7 +9,7 @@
 #include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 #include "viz/sfml/arena_object.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -31,7 +31,7 @@ class Agent
   : public sf::Drawable
 {
 public:
-    Agent(const Viz::SFMLWorld &display, size_t numVertices)
+    Agent(const Viz::SFML::World &display, size_t numVertices)
       : m_Display(display)
       , m_Shape(numVertices)
     {
@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    const Viz::SFMLWorld &m_Display;
+    const Viz::SFML::World &m_Display;
     sf::ConvexShape m_Shape;
 };
 
@@ -76,7 +76,7 @@ int bobMain(int, char **)
     HID::addJoystick(tank, joystick);
 
     // Display for robot + objects
-    Viz::SFMLWorld display{ V{ 5_m, 5_m } };
+    Viz::SFML::World display{ V{ 5_m, 5_m } };
 
     // Read objects from file
     const auto objects = Navigation::readObjects("objects.yaml");
@@ -86,7 +86,7 @@ int bobMain(int, char **)
     const auto &resizedObjects = collisionDetector.getResizedObjects();
 
     // Create drawable objects
-    std::vector<Viz::ArenaObject> objectShapes;
+    std::vector<Viz::SFML::ArenaObject> objectShapes;
     objectShapes.reserve(objects.size());
     for (size_t i = 0; i < objects.size(); i++) {
         objectShapes.emplace_back(display, objects[i], resizedObjects[i]);

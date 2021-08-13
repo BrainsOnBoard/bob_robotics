@@ -17,6 +17,7 @@
 
 namespace BoBRobotics {
 namespace Viz {
+namespace SFML {
 using namespace units::literals;
 
 class CrossShape
@@ -31,7 +32,7 @@ private:
     sf::RectangleShape m_Horizontal, m_Vertical;
 }; // CrossShape
 
-class SFMLWorld
+class World
 {
     using meter_t = units::length::meter_t;
 
@@ -40,7 +41,7 @@ public:
       : public sf::Drawable
     {
     public:
-        CarAgent(const SFMLWorld &display, meter_t carWidth);
+        CarAgent(const World &display, meter_t carWidth);
 
         const auto &getSize() const { return m_Size; }
 
@@ -54,7 +55,7 @@ public:
         virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     private:
-        const SFMLWorld &m_Display;
+        const World &m_Display;
         Vector2<meter_t> m_Size;
         sf::Texture m_Texture;
         sf::Sprite m_Sprite;
@@ -64,7 +65,7 @@ public:
       : public sf::Drawable
     {
     public:
-        LineStrip(const SFMLWorld &renderer, const sf::Color &colour)
+        LineStrip(const World &renderer, const sf::Color &colour)
           : m_Renderer(renderer)
           , m_Colour(colour)
         {}
@@ -89,16 +90,16 @@ public:
 
     private:
         std::vector<sf::Vertex> m_Vertices;
-        const SFMLWorld &m_Renderer;
+        const World &m_Renderer;
         const sf::Color m_Colour;
     };
 
     static constexpr int WindowWidth = 800, WindowHeight = 800;
 
-    SFMLWorld(const Vector2<meter_t> &arenaSize = { 3.2_m, 3.2_m });
+    World(const Vector2<meter_t> &arenaSize = { 3.2_m, 3.2_m });
 
     template<typename MaxBoundsType>
-    SFMLWorld(const Vector2<meter_t> &minBounds,
+    World(const Vector2<meter_t> &minBounds,
               const MaxBoundsType &maxBounds)
       : m_Window(sf::VideoMode(WindowWidth, WindowHeight),
                  "BoB robotics",
@@ -281,7 +282,8 @@ private:
 
     static sf::ContextSettings getContextSettings();
 
-}; // SFMLWorld
+}; // World
 
+} // SFML
 } // Viz
 } // BobRobotics

@@ -6,7 +6,7 @@
 #include "robots/control/collision_detector.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "viz/sfml/arena_object.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -65,7 +65,7 @@ public:
 
         // Create drawable objects
         const auto &resizedObjects = m_CollisionDetector->getResizedObjects();
-        m_ObjectShapes = Viz::ArenaObject::fromObjects(m_Display, objects, resizedObjects);
+        m_ObjectShapes = Viz::SFML::ArenaObject::fromObjects(m_Display, objects, resizedObjects);
     }
 
     bool update()
@@ -103,10 +103,10 @@ public:
 private:
     TankType &m_Tank;
     PoseGetterType &m_PoseGetter;
-    Viz::SFMLWorld m_Display;
-    Viz::SFMLWorld::CarAgent m_CarAgent;
-    Viz::SFMLWorld::LineStrip m_RouteLines;
-    std::vector<Viz::ArenaObject> m_ObjectShapes;
+    Viz::SFML::World m_Display;
+    Viz::SFML::World::CarAgent m_CarAgent;
+    Viz::SFML::World::LineStrip m_RouteLines;
+    std::vector<Viz::SFML::ArenaObject> m_ObjectShapes;
     std::unique_ptr<Robots::CollisionDetector> m_CollisionDetector;
     std::unique_ptr<Robots::ObstacleCircumnavigator<TankType, PoseGetterType>> m_Circumnavigator;
 };

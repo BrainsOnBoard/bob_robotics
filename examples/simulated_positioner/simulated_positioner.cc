@@ -3,7 +3,7 @@
 #include "common/pose.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/tank/simulated_tank.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -24,14 +24,14 @@ using namespace std::literals;
 int bobMain(int, char **)
 {
     Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm);
-    Viz::SFMLWorld display;
+    Viz::SFML::World display;
     auto car = display.createCarAgent();
 
     // A circle to show where the goal is
     sf::CircleShape goalCircle(10);
     goalCircle.setFillColor(sf::Color::Blue);
     goalCircle.setOrigin(10, 10);
-    goalCircle.setPosition(Viz::SFMLWorld::WindowWidth / 2, Viz::SFMLWorld::WindowHeight / 2);
+    goalCircle.setPosition(Viz::SFML::World::WindowWidth / 2, Viz::SFML::World::WindowHeight / 2);
 
     constexpr meter_t stoppingDistance = 5_cm;      // if the robot's distance from goal < stopping dist, robot stops
     constexpr radian_t allowedHeadingError = 2_deg; // the amount of error allowed in the final heading

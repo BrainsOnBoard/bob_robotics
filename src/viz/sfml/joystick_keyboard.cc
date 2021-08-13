@@ -7,6 +7,7 @@
 
 namespace BoBRobotics {
 namespace Viz {
+namespace SFML {
 
 const JoystickKeyboard::AxisKey JoystickKeyboard::AxisKeys[] = {
     { sf::Keyboard::Key::S, sf::Keyboard::Key::W, HID::JAxis::LeftStickVertical },
@@ -23,7 +24,7 @@ const JoystickKeyboard::ButtonKey JoystickKeyboard::ButtonKeys[] = {
 };
 
 //------------------------------------------------------------------------
-// BoBRobotics::Viz::JoystickKeyboard
+// BoBRobotics::Viz::SFML::JoystickKeyboard
 //------------------------------------------------------------------------
 JoystickKeyboard::JoystickKeyboard()
   : JoystickBase(0.0f)
@@ -83,5 +84,7 @@ JoystickKeyboard::createJoystick()
         return std::make_unique<JoystickKeyboard>();
     }
 }
+
+} // SFML
 } // Viz
 } // BoBRobotics

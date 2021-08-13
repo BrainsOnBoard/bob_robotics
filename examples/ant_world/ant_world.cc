@@ -120,7 +120,7 @@ int bobMain(int argc, char **argv)
     }
 
     // Create HID device for controlling movement
-    auto joystick = Viz::JoystickKeyboard::createJoystick();
+    auto joystick = Viz::SFML::JoystickKeyboard::createJoystick();
 
     // Get world bounds and initially centre agent in world
     const auto &worldMin = renderer.getWorld().getMinBound();

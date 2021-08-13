@@ -2,7 +2,7 @@
 #include "hid/robot_control.h"
 #include "robots/tank/simulated_tank.h"
 #include "viz/sfml/joystick_keyboard.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 
 // Third-party includes
 #include "plog/Log.h"
@@ -18,10 +18,10 @@ using namespace units::literals;
 int bobMain(int, char **)
 {
     Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm); // Tank agent
-    Viz::SFMLWorld display;                         // For displaying the agent
+    Viz::SFML::World display;                             // For displaying the agent
     auto car = display.createCarAgent();
 
-    auto joystick = Viz::JoystickKeyboard::createJoystick();
+    auto joystick = Viz::SFML::JoystickKeyboard::createJoystick();
     HID::controlWithThumbsticks(robot, *joystick);
 
     joystick->addHandler([&robot](auto &, HID::JButton button, bool pressed) {

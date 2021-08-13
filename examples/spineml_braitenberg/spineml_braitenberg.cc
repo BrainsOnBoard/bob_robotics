@@ -5,7 +5,7 @@
 #include "robots/control/collision_detector.h"
 #include "robots/tank/simulated_tank.h"
 #include "viz/sfml/arena_object.h"
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 
 // SpineML simulator includes
 #include "spineml/simulator/simulator.h"
@@ -41,7 +41,7 @@ int bobMain(int, char **)
     Robots::SimulatedTank<> robot(1.0_mps, 104_mm);
 
     // For displaying the agent
-    Viz::SFMLWorld display({5_m, 5_m});
+    Viz::SFML::World display({5_m, 5_m});
     auto car = display.createCarAgent();
 
     // Read objects from file
@@ -52,7 +52,7 @@ int bobMain(int, char **)
     const auto &resizedObjects = collisionDetector.getResizedObjects();
 
     // Create drawable objects
-    std::vector<Viz::ArenaObject> objectShapes;
+    std::vector<Viz::SFML::ArenaObject> objectShapes;
     objectShapes.reserve(objects.size());
     for (size_t i = 0; i < objects.size(); i++) {
         objectShapes.emplace_back(display, objects[i], resizedObjects[i]);

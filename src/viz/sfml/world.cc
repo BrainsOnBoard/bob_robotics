@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "viz/sfml/sfml_world.h"
+#include "viz/sfml/world.h"
 #include "common/path.h"
 
 // SFML
@@ -13,6 +13,7 @@ using namespace units::length;
 
 namespace BoBRobotics {
 namespace Viz {
+namespace SFML {
 
 CrossShape::CrossShape(const sf::Vector2f &position, float size, float thickness, const sf::Color &colour)
   : m_Horizontal({ size, thickness })
@@ -33,9 +34,9 @@ CrossShape::draw(sf::RenderTarget &target, sf::RenderStates states) const
     target.draw(m_Vertical, states);
 }
 
-constexpr float SFMLWorld::OriginLineThickness, SFMLWorld::OriginLineLength;
+constexpr float World::OriginLineThickness, World::OriginLineLength;
 
-SFMLWorld::CarAgent::CarAgent(const SFMLWorld &display, meter_t carWidth)
+World::CarAgent::CarAgent(const World &display, meter_t carWidth)
   : m_Display(display)
 {
     const auto imageFilePath = Path::getResourcesPath() / "car.bmp";
@@ -53,62 +54,62 @@ SFMLWorld::CarAgent::CarAgent(const SFMLWorld &display, meter_t carWidth)
 }
 
 void
-SFMLWorld::CarAgent::draw(sf::RenderTarget &target, sf::RenderStates states) const
+World::CarAgent::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
     target.draw(m_Sprite, states);
 }
 
-SFMLWorld::SFMLWorld(const Vector2<meter_t> &arenaSize)
-  : SFMLWorld(Vector2<meter_t>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
+World::World(const Vector2<meter_t> &arenaSize)
+  : World(Vector2<meter_t>{ -arenaSize[0] / 2, -arenaSize[1] / 2 },
               Vector2<meter_t>{ arenaSize[0] / 2, arenaSize[1] / 2 })
 {}
 
-SFMLWorld::CarAgent
-SFMLWorld::createCarAgent(meter_t carWidth)
+World::CarAgent
+World::createCarAgent(meter_t carWidth)
 {
     return CarAgent(*this, carWidth);
 }
 
 std::experimental::optional<sf::Vector2i>
-SFMLWorld::mouseClickPosition() const
+World::mouseClickPosition() const
 {
     return m_MouseClickPosition;
 }
 
 bool
-SFMLWorld::isOpen() const
+World::isOpen() const
 {
     return m_Window.isOpen();
 }
 
 void
-SFMLWorld::close()
+World::close()
 {
     m_Window.close();
 }
 
 float
-SFMLWorld::lengthToPixel(const meter_t value) const
+World::lengthToPixel(const meter_t value) const
 {
     return static_cast<float>((value / m_UnitPerPixel).value());
 }
 
 Vector2<meter_t>
-SFMLWorld::pixelToVector(int x, int y) const
+World::pixelToVector(int x, int y) const
 {
     return { m_MinBounds[0] + m_UnitPerPixel * x,
              m_MinBounds[1] + m_UnitPerPixel * (WindowHeight - y) };
 }
 
 sf::Vector2f
-SFMLWorld::vectorToPixel(double x, double y) const
+World::vectorToPixel(double x, double y) const
 {
     return { lengthToPixel(meter_t{ x } - m_MinBounds[0]),
              static_cast<float>(WindowHeight) - lengthToPixel(meter_t{ y } - m_MinBounds[1]) };
 }
 
 bool
-SFMLWorld::handleEvents(sf::Event &event)
+World::handleEvents(sf::Event &event)
 {
     if (event.type == sf::Event::Closed ||
         (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape)) {
@@ -124,7 +125,7 @@ SFMLWorld::handleEvents(sf::Event &event)
 }
 
 sf::ContextSettings
-SFMLWorld::getContextSettings()
+World::getContextSettings()
 {
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
@@ -132,10 +133,11 @@ SFMLWorld::getContextSettings()
 }
 
 sf::Window &
-SFMLWorld::getWindow()
+World::getWindow()
 {
     return m_Window;
 }
 
+} // SFML
 } // Viz
 } // BobRobotics

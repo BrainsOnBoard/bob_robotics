@@ -11,9 +11,10 @@
 
 namespace BoBRobotics {
 namespace Viz {
+namespace SFML {
 
 //------------------------------------------------------------------------
-// BoBRobotics::Viz::JoystickKeyboard
+// BoBRobotics::Viz::SFML::JoystickKeyboard
 //------------------------------------------------------------------------
 /*!
  * \brief Class for using keyboard (via SFML) as a joystick
@@ -47,5 +48,7 @@ private:
     static const AxisKey AxisKeys[];
     static const ButtonKey ButtonKeys[];
 }; // JoystickLinux
+
+} // SFML
 } // HID
 } // BoBRobotics
