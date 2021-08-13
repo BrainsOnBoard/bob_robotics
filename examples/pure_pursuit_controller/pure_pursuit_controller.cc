@@ -16,6 +16,7 @@
 */
 
 // BoB robotics includes
+#include "common/fsm.h"
 #include "robots/control/pure_pursuit_controller.h"
 #include "robots/ackermann/simulated_ackermann.h"
 #include "viz/sfml/robot_control.h"
@@ -27,58 +28,158 @@
 
 // Standard C++ includes
 #include <chrono>
-#include <iostream>
 #include <thread>
 
-using namespace BoBRobotics;
-using namespace std::literals;
 using namespace units::literals;
 using namespace units::length;
 using namespace units::angle;
 using namespace units::velocity;
 using namespace units::math;
 
-int
-bobMain(int, char **)
+using namespace BoBRobotics;
+using namespace BoBRobotics::Robots::Ackermann;
+using namespace BoBRobotics::Viz::SFML;
+
+constexpr millimeter_t LookAheadDistance = 1_m;   // lookahead distance
+constexpr meters_per_second_t MaxSpeed = 1.4_mps; // car's max speed
+constexpr degree_t MaxTurn = 30_deg;              // car's maximum turning angle
+constexpr millimeter_t StoppingDist = 1_cm;       // car's stopping distance
+
+enum State
 {
-    constexpr millimeter_t LookAheadDistance = 1_m;   // lookahead distance
-    constexpr meters_per_second_t MaxSpeed = 1.4_mps; // car's max speed
-    constexpr degree_t MaxTurn = 30_deg;              // car's maximum turning angle
-    constexpr millimeter_t StoppingDist = 1_cm;       // car's stopping distance
+    Invalid,
+    ControllerOn,
+    ControllerOff
+};
 
-    Robots::Ackermann::SimulatedAckermann robot(MaxSpeed, 500_mm, 0_m, MaxTurn); // simulated robot
-    Viz::SFML::World display({ 10.2_m, 10.2_m });                                // display the agent
-    auto car = display.createCarAgent(160_mm);                                   // car sprite
-    bool isControllerOn = false;
-    car.setPose(Pose2<meter_t, degree_t>{});
+class PPCExample
+  : FSM<State>::StateHandler
+{
+public:
+    PPCExample()
+      : m_Robot(MaxSpeed, 500_mm, 0_m, MaxTurn)
+      , m_Controller(LookAheadDistance, m_Robot.getDistanceBetweenAxis(), StoppingDist)
+      , m_Display({ 10.2_m, 10.2_m })
+      , m_CarSprite(m_Display.createCarAgent(160_mm))
+      , m_WayPointLines(m_Display.createLineStrip(sf::Color::Blue))
+      , m_LookAheadLine(m_Display.createLineStrip(sf::Color::Red))
+      , m_StateMachine(this, Invalid)
+    {
+        // Add an initial waypoint in the centre of the window
+        addWayPoint(sf::Vector2i{ World::WindowWidth / 2, World::WindowHeight / 2 });
+    }
 
-    auto wpLines = display.createLineStrip(sf::Color::Blue);      // lines between way points
-    std::vector<sf::RectangleShape> wpRects;                      // rectangles representing way points
-    auto lookAheadLine = display.createLineStrip(sf::Color::Red); // a line between robot and lookahead point
+    void run()
+    {
+        // Initially control with keyboard
+        m_StateMachine.transition(ControllerOff);
 
-    const auto wheelBase = robot.getDistanceBetweenAxis(); // distance between wheel bases
-    Robots::PurePursuitController controller(LookAheadDistance, wheelBase, StoppingDist);
-    bool warningDisplayed = false; // has message about stuck robot already been displayed?
+        // Run until window is closed
+        while (m_Display.isOpen()) {
+            m_StateMachine.update();
+        }
+    }
 
-    auto addWayPoint = [&](const auto &position) {
+private:
+    using Event = FSM<State>::StateHandler::Event;
+
+    SimulatedAckermann m_Robot;                 // simulated robot
+    Robots::PurePursuitController m_Controller; // for auto-controlling the robot
+    World m_Display;                            // display the agent
+    World::CarAgent m_CarSprite;
+    World::LineStrip m_WayPointLines;
+    std::vector<sf::RectangleShape> m_WayPointRectangles;
+    World::LineStrip m_LookAheadLine;
+    FSM<State> m_StateMachine;
+
+    template<class T>
+    void addWayPoint(const T& position)
+    {
         constexpr float SquareWidth = 6.f;
+
+        // add rectangle for new way point
         sf::RectangleShape rect{ sf::Vector2f{ SquareWidth, SquareWidth } };
         rect.setFillColor(sf::Color::Blue);
         rect.setPosition(position.x - SquareWidth / 2.f, position.y - SquareWidth / 2.f);
-        wpRects.push_back(rect);
+        m_WayPointRectangles.push_back(rect);
 
-        wpLines.append(sf::Vector2f{ (float) position.x, (float) position.y });
+        // add point to end of line
+        m_WayPointLines.append(sf::Vector2f{ (float) position.x, (float) position.y });
 
-        controller.addWayPoint(display.pixelToVector(position.x, position.y));
-    };
+        // tell controller about way point
+        m_Controller.addWayPoint(m_Display.pixelToVector(position.x, position.y));
+    }
 
-    // Add an initial waypoint in the centre of the window
-    addWayPoint(sf::Vector2i{ display.WindowWidth / 2, display.WindowHeight / 2 });
+    virtual bool handleEvent(State state, Event event) override
+    {
+        if (state == Invalid) {
+            return true;
+        }
 
-    // For handling window events
-    auto eventHandler = [&](const sf::Event &event) {
+        switch (event) {
+        case Event::Enter:
+            if (state == ControllerOn) {
+                LOGI << "Controller ON";
+
+                // reset lookahead distance
+                m_Controller.setLookAheadDistance(LookAheadDistance);
+            } else {
+                LOGI << "Controller OFF";
+
+                // don't draw lookahead line anymore
+                m_LookAheadLine.clear();
+            }
+            break;
+        case Event::Exit:
+            m_Robot.stopMoving();
+            break;
+        case Event::Update:
+            m_CarSprite.setPose(m_Robot.getPose());
+
+            // update GUI; handle keyboard + mouse events
+            auto eventHandler = [&](const sf::Event &event) { handleEvent(state, event); };
+            m_Display.drawAndHandleEvents(eventHandler, m_WayPointLines,
+                                          m_WayPointRectangles, m_LookAheadLine, m_CarSprite);
+
+            if (state == ControllerOn) {
+                const auto lookPoint = m_Controller.getLookAheadPoint(m_Robot.getPose(), LookAheadDistance);
+
+                // draw lookahead point and a line to it from the robot
+                m_LookAheadLine.clear();
+                if (lookPoint) {
+                    m_LookAheadLine.append(m_Robot.getPose());
+                    m_LookAheadLine.append(lookPoint.value());
+                } else {
+                    LOGE << "Robot is stuck! 😭";
+                    m_StateMachine.transition(ControllerOff);
+                    return true;
+                }
+
+                // calculate turning angle with controller
+                const auto turningAngle = m_Controller.getTurningAngle(m_Robot.getPose(), lookPoint);
+                if (turningAngle) {
+                    const auto ang = turningAngle.value();
+                    if (abs(ang) > MaxTurn) {
+                        m_Robot.move(MaxSpeed, copysign(MaxTurn, ang));
+                    } else {
+                        m_Robot.move(MaxSpeed, ang);
+                    }
+                } else {
+                    LOGI << "Reached destination!";
+                    m_StateMachine.transition(ControllerOff);
+                }
+            }
+
+            break;
+        }
+
+        return true;
+    }
+
+    void handleEvent(State state, const sf::Event &event)
+    {
         // try driving the robot with the keyboard
-        if (!isControllerOn && Viz::SFML::drive(robot, event)) {
+        if (state == ControllerOff && Viz::SFML::drive(m_Robot, event)) {
             return;
         }
 
@@ -86,20 +187,12 @@ bobMain(int, char **)
         if (event.type == sf::Event::KeyReleased
             && event.key.code == sf::Keyboard::Space)
         {
-            if (isControllerOn) {
-                std::cout << "Controller off\n";
-
-                robot.stopMoving();
-                isControllerOn = false;
-                lookAheadLine.clear();
-            } else if (wpRects.size() > 1) {
-                std::cout << "Controller on\n";
-
-                controller.setLookAheadDistance(LookAheadDistance); // reset lookahead distance
-                isControllerOn = true;
-                warningDisplayed = false;
+            if (state == ControllerOn) {
+                m_StateMachine.transition(ControllerOff);
+            } else if (m_WayPointRectangles.size() > 1) {
+                m_StateMachine.transition(ControllerOn);
             } else {
-                std::cerr << "Too few way points!\n";
+                LOGW << "Too few way points!";
             }
 
             return;
@@ -111,42 +204,14 @@ bobMain(int, char **)
         {
             addWayPoint(event.mouseButton);
         }
-    };
-
-    while (display.isOpen()) {
-        car.setPose(robot.getPose());
-
-        // update GUI; handle keyboard + mouse events
-        display.drawAndHandleEvents(eventHandler, wpLines, wpRects, lookAheadLine, car);
-
-        if (isControllerOn) {
-            const auto lookPoint = controller.getLookAheadPoint(robot.getPose(), LookAheadDistance);
-
-            // draw lookahead point and a line to it from the robot
-            lookAheadLine.clear();
-            if (lookPoint) {
-                lookAheadLine.append(robot.getPose());
-                lookAheadLine.append(lookPoint.value());
-                warningDisplayed = false;
-            } else if (!warningDisplayed) {
-                LOGE << "Robot is stuck! 😭\n";
-                warningDisplayed = true;
-            }
-
-            // calculate turning angle with controller
-            const auto turningAngle = controller.getTurningAngle(robot.getPose(), lookPoint);
-            if (turningAngle) {
-                const auto ang = turningAngle.value();
-                if (abs(ang) > MaxTurn) {
-                    robot.move(MaxSpeed, copysign(MaxTurn, ang));
-                } else {
-                    robot.move(MaxSpeed, ang);
-                }
-            } else {
-                robot.stopMoving();
-            }
-        }
     }
+};
+
+int
+bobMain(int, char **)
+{
+    PPCExample ppc;
+    ppc.run();
 
     return EXIT_SUCCESS;
 }
