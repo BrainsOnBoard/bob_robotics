@@ -1,11 +1,12 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "robots/control/robot_positioner.h"
 #include "robots/tank/simulated_tank.h"
+#include "viz/sfml/robot_control.h"
 #include "viz/sfml/world.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
