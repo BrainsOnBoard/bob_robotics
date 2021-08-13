@@ -56,8 +56,7 @@ public:
 
     //! calculates the look-ahead point the robot follows
     std::experimental::optional<Vector2<millimeter_t>>
-    getLookAheadPoint(const Vector2<millimeter_t> &robotPosition,
-                      millimeter_t lookAheadDistance) const;
+    getLookAheadPoint(const Vector2<millimeter_t> &robotPosition) const;
 
 private:
     millimeter_t m_lookAheadDistance;                 // the distance to look ahead

@@ -142,7 +142,7 @@ private:
                                           m_WayPointRectangles, m_LookAheadLine, m_CarSprite);
 
             if (state == ControllerOn) {
-                const auto lookPoint = m_Controller.getLookAheadPoint(m_Robot.getPose(), LookAheadDistance);
+                const auto lookPoint = m_Controller.getLookAheadPoint(m_Robot.getPose());
 
                 // draw lookahead point and a line to it from the robot
                 m_LookAheadLine.clear();

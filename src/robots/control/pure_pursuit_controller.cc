@@ -98,15 +98,13 @@ PurePursuitController::getTurningAngle(const Pose2<millimeter_t, radian_t> &robo
 }
 
 std::experimental::optional<Vector2<millimeter_t>>
-PurePursuitController::getLookAheadPoint(const Vector2<millimeter_t> &robotPosition,
-                                         millimeter_t lookAheadDistance) const
+PurePursuitController::getLookAheadPoint(const Vector2<millimeter_t> &robotPosition) const
 {
     using namespace units::math;
 
     BOB_ASSERT(m_wayPoints.size() > 1);
 
-    auto lookAheadPoint = Vector2<millimeter_t>::nan();
-    bool didGetIntersection = false;
+    std::experimental::optional<Vector2<millimeter_t>> lookAheadPoint;
     for (unsigned int i = 0; i < m_wayPoints.size() - 1; i++) {
         // path points
         const Vector2<millimeter_t> segmentStart = m_wayPoints.at(i);
@@ -124,9 +122,10 @@ PurePursuitController::getLookAheadPoint(const Vector2<millimeter_t> &robotPosit
         const auto D = p1x * p2y - p2x * p1y;
 
         // if the discriminant is zero -> no intersection
-        const auto discriminant = lookAheadDistance * lookAheadDistance * d * d - D * D;
-        if (discriminant.value() < 0)
+        const auto discriminant = m_lookAheadDistance * m_lookAheadDistance * d * d - D * D;
+        if (discriminant.value() < 0) {
             continue;
+        }
 
         // x components of the intersection point
         const auto x1 = (D * dy + sgn(dy.value()) * dx * sqrt(discriminant)) / (d * d);
@@ -145,28 +144,19 @@ PurePursuitController::getLookAheadPoint(const Vector2<millimeter_t> &robotPosit
         // we always want the latest path segment point so if we have a
         // valid point, we delete the previous point
         if (validIntersection1) {
-            lookAheadPoint.x() = x1 + robotPosition.x();
-            lookAheadPoint.y() = y1 + robotPosition.y();
-            didGetIntersection = true;
+            lookAheadPoint.emplace(x1 + robotPosition.x(), y1 + robotPosition.y());
         }
 
         // if there is a valid 2. intersection point, we keep that and remove
         // the first one
-        if (validIntersection2) {
-            if (lookAheadPoint.isnan() || fabs(x1 - p2x) > fabs(x2 - p2x) ||
-                fabs(y1 - p2y) > fabs(y2 - p2y)) {
-                lookAheadPoint.x() = x2 + robotPosition.x();
-                lookAheadPoint.y() = y2 + robotPosition.y();
-                didGetIntersection = true;
-            }
+        if (validIntersection2 && (!lookAheadPoint ||
+            fabs(x1 - p2x) > fabs(x2 - p2x) || fabs(y1 - p2y) > fabs(y2 - p2y)))
+        {
+            lookAheadPoint.emplace(x2 + robotPosition.x(), y2 + robotPosition.y());
         }
     }
 
-    if (didGetIntersection) {
-        return lookAheadPoint;
-    }
-
-    return std::experimental::nullopt;
+    return lookAheadPoint;
 }
 
 degree_t
