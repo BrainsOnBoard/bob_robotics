@@ -28,7 +28,7 @@ public:
         m_MaxSnapshotRotateDegrees(180.0), m_PMFwdLASize(std::numeric_limits<size_t>::max()), m_PMFwdConfig{0, 0, 0, 0}, m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50),
         m_WatershedMarkerImageFilename("segmentation.png"), m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0),
         m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1),
-        m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25), m_TurnThresholds{{units::angle::degree_t(5.0), 0.5f}, {units::angle::degree_t(10.0), 1.0f}},
+        m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25), m_TurnThresholds{{units::angle::degree_t(5.0), {0.5f, Milliseconds(500.0)}}, {units::angle::degree_t(10.0), {1.0f, Milliseconds(500.0)}}},
         m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"), m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
     {
     }
@@ -63,7 +63,6 @@ public:
     bool shouldAutoTrain() const{ return m_AutoTrain; }
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
     Milliseconds getMotorCommandInterval() const{ return m_MotorCommandInterval; }
-    Milliseconds getMotorTurnCommandInterval() const{ return m_MotorTurnCommandInterval; }
 
     bool shouldUseViconTracking() const{ return m_UseViconTracking; }
     int getViconTrackingPort() const{ return m_ViconTrackingPort; }
@@ -81,7 +80,7 @@ public:
 
     float getMoveSpeed() const{ return m_MoveSpeed; }
 
-    float getTurnSpeed(units::angle::degree_t angleDifference) const
+    std::pair<float, Milliseconds> getTurnSpeed(units::angle::degree_t angleDifference) const
     {
         const auto absoluteAngleDifference = units::math::fabs(angleDifference);
 
@@ -94,7 +93,7 @@ public:
         }
 
         // No turning required!
-        return 0.0f;
+        return std::make_pair(0.0f, Milliseconds(0.0));
     }
 
 
@@ -124,14 +123,14 @@ public:
         fs << "autoTrain" << shouldAutoTrain();
         fs << "trainInterval" << getTrainInterval().count();
         fs << "motorCommandInterval" << getMotorCommandInterval().count();
-        fs << "motorTurnCommandInterval" << getMotorTurnCommandInterval().count();
+        fs << "motorTurnCommandInterval" << m_MotorTurnCommandInterval.count();
         fs << "serverListenPort" << getServerListenPort();
         fs << "snapshotServerListenPort" << getSnapshotServerListenPort();
         fs << "bestSnapshotServerListenPort" << getBestSnapshotServerListenPort();
         fs << "moveSpeed" << getMoveSpeed();
         fs << "turnThresholds" << "[";
         for(const auto &t : m_TurnThresholds) {
-            fs << "[" << t.first.value() << t.second << "]";
+            fs << "[" << t.first.value() << t.second.first << t.second.second.count() << "]";
         }
         fs << "]";
 
@@ -216,8 +215,19 @@ public:
         if(node["turnThresholds"].isSeq()) {
             m_TurnThresholds.clear();
             for(const auto &t : node["turnThresholds"]) {
-                assert(t.isSeq() && t.size() == 2);
-                m_TurnThresholds.emplace(units::angle::degree_t((double)t[0]), (float)t[1]);
+                assert(t.isSeq());
+
+                if(t.size() == 2) {
+                    m_TurnThresholds.emplace(std::piecewise_construct,
+                                             std::forward_as_tuple(units::angle::degree_t((double)t[0])), 
+                                             std::forward_as_tuple((float)t[1], m_MotorTurnCommandInterval));
+                }
+                else if(t.size() == 3){
+                    m_TurnThresholds.emplace(std::piecewise_construct,
+                                             std::forward_as_tuple(units::angle::degree_t((double)t[0])), 
+                                             std::forward_as_tuple((float)t[1], (Milliseconds)t[2]));
+
+                }
             }
         }
 
@@ -349,7 +359,7 @@ private:
     float m_MoveSpeed;
 
     // RDF angle difference thresholds that trigger different turning speeds
-    std::map<units::angle::degree_t, float> m_TurnThresholds;
+    std::map<units::angle::degree_t, std::pair<float, Milliseconds>> m_TurnThresholds;
 
     // Vicon tracking settings
     bool m_UseViconTracking;

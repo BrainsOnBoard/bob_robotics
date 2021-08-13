@@ -1,5 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
+#include "common/macros.h"
 #include "robots/omni2d/mecanum.h"
 
 // Standard C includes
@@ -57,18 +58,18 @@ Mecanum::omni2D(float forward, float sideways, float turn)
     const float m3 = m_AlternativeWiring ? (+sideways + forward - turn) : (-sideways + forward - turn);
     const float m4 = m_AlternativeWiring ? (-sideways + forward + turn) : (-sideways - forward + turn);
 
-    driveMotors(m1, m2, m3, m4);
-
+    // Cap before passing to driveMotors as valid forward, sideways and
+    // turn values can still result in invalid m1, m2, m3 and m4
+    const auto cap = [](float val) { return std::min(1.0f, std::max(val, -1.0f)); };
+    driveMotors(cap(m1), cap(m2), cap(m3), cap(m4));
 }
 //----------------------------------------------------------------------------
 void Mecanum::driveMotors(float m1, float m2, float m3, float m4)
 {
-    // clamp values to be between -1 and 1 after resolving
-    const auto cap = [](float &val) { val = std::min(1.f, std::max(val, -1.f)); };
-    cap(m1);
-    cap(m2);
-    cap(m3);
-    cap(m4);
+    BOB_ASSERT(m1 >= -1.0f && m1 <= 1.0f);
+    BOB_ASSERT(m2 >= -1.0f && m2 <= 1.0f);
+    BOB_ASSERT(m3 >= -1.0f && m3 <= 1.0f);
+    BOB_ASSERT(m4 >= -1.0f && m4 <= 1.0f);
 
     // **NOTE** 254s are because 255 is line end character
     uint8_t buffer[9] = { m1 > 0, m2 > 0, m3 > 0, m4 > 0, (uint8_t)(fabs(m1) * 254.0f), (uint8_t)(fabs(m2) * 254.0f), (uint8_t)(fabs(m3) * 254.0f), (uint8_t)(fabs(m4) * 254.0f), 255 };

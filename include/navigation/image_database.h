@@ -82,6 +82,9 @@ class ImageDatabase
     using hertz_t = units::frequency::hertz_t;
 
 public:
+    static constexpr const char *MetadataFilename = "database_metadata.yaml";
+    static constexpr const char *EntriesFilename = "database_entries.csv";
+
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
@@ -448,6 +451,9 @@ public:
     //! Check if this database has any saved metadata (yet)
     bool hasMetadata() const;
 
+    //! Check if database contains a video file cf. multiple image files
+    bool isVideoType() const;
+
     template<class Func>
     void forEachImage(const Func &func, size_t frameSkip = 1,
                       bool greyscale = true) const
@@ -514,8 +520,6 @@ private:
     hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
     bool m_NeedsUnwrapping = true;
-    static constexpr const char *MetadataFilename = "database_metadata.yaml";
-    static constexpr const char *EntriesFilename = "database_entries.csv";
 
     ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
                   bool overwrite);
