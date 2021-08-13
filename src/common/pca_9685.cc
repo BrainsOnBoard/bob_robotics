@@ -1,4 +1,5 @@
 #ifdef __linux__
+#include "common/macros.h"
 #include "common/pca_9685.h"
 
 // BoB robotics include
@@ -22,14 +23,13 @@ PCA9685::PCA9685(int slaveAddress, const char *path, units::frequency::hertz_t r
 {
     // Setup I2C device
     m_Device.setup(path, slaveAddress);
-    
+
     reset();
 }
 //----------------------------------------------------------------------------
 void PCA9685::setDutyCycle(Channel channel, float dutyCycle)
 {
-    // Clamp duty cycle
-    dutyCycle = std::min(1.0f, std::max(0.0f, dutyCycle));
+    BOB_ASSERT(dutyCycle >= 0.0f && dutyCycle <= 1.0f);
 
     // If duty cycle is fully on, set full-on bit
     PWM pwm;
@@ -47,7 +47,7 @@ void PCA9685::setDutyCycle(Channel channel, float dutyCycle)
         pwm.ushort[0] = 0;
         pwm.ushort[1] = (uint16_t)std::round(dutyCycle * 4095.0f);
     }
-    
+
     // Write the four bytes representing channel state to device
     const uint8_t startChannel = static_cast<uint8_t>(Register::LED0_ON_L) + (4 * static_cast<uint8_t>(channel));
     for(size_t i = 0; i < 4; i++) {
@@ -56,7 +56,7 @@ void PCA9685::setDutyCycle(Channel channel, float dutyCycle)
 }
 //----------------------------------------------------------------------------
 float PCA9685::getDutyCycle(Channel channel)
-{    
+{
     // Read 4 bytes representing state of each channel into union
     // **TOOD** investigate auto-increment
     PWM pwm;
@@ -64,8 +64,7 @@ float PCA9685::getDutyCycle(Channel channel)
     for(size_t i = 0; i < 4; i++) {
         pwm.byte[i] = readByte(startChannel + i);
     }
-    
-    
+
     LOGI << pwm.ushort[0] << "," << pwm.ushort[1];
     // If full-on bit is set, return 1.0
     if(pwm.ushort[0] == 0x1000) {
@@ -88,14 +87,14 @@ void PCA9685::setFrequency(units::frequency::hertz_t frequency)
     if(prescale < 3.0) {
         throw std::runtime_error("PCA9685 cannot output at the given frequency");
     }
-    
+
     // Put device to sleep, turning of oscillator
     const uint8_t oldMode1 = readRegister(Register::MODE_1);
     writeRegister(Register::MODE_1, oldMode1 | mode1Sleep);
-    
+
     // Set prescale
     writeRegister(Register::PRESCALE, (uint8_t)std::round(prescale));
-    
+
     // Re-awaken device
     writeRegister(Register::MODE_1, oldMode1);
 }
@@ -104,7 +103,7 @@ units::frequency::hertz_t PCA9685::getFrequency()
 {
     // Read pre-scale
     const uint8_t prescale = readRegister(Register::PRESCALE);
-    
+
     // Convert to hertz and return
     return m_ReferenceClockSpeed / 4096.0 / prescale;
 }

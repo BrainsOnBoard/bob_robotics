@@ -19,9 +19,9 @@ namespace BoBRobotics {
 class PCA9685
 {
 public:
-    PCA9685(int slaveAddress, const char *path = I2C_DEVICE_DEFAULT, 
+    PCA9685(int slaveAddress, const char *path = I2C_DEVICE_DEFAULT,
             units::frequency::hertz_t referenceClockSpeed = units::frequency::megahertz_t(25.0));
-    
+
     //----------------------------------------------------------------------------
     // Enumerations
     //----------------------------------------------------------------------------
@@ -44,29 +44,29 @@ public:
         CHANNEL_14 = 14,
         CHANNEL_15 = 15,
     };
-    
+
     //----------------------------------------------------------------------------
     // Public API
     //----------------------------------------------------------------------------
     //! Set the duty cycle of a channel from 0.0 (never high) to 1.0 (always high)
     void setDutyCycle(Channel channel, float dutyCycle);
-    
+
     //! Get the duty cycle of a channel from 0.0 (never high) to 1.0 (always high)
     float getDutyCycle(Channel channel);
-    
+
     //! Set PWM frequency
     void setFrequency(units::frequency::hertz_t frequency);
-    
+
     //! Get PWM frequency
     units::frequency::hertz_t getFrequency();
-    
+
     //! Reset device
     void reset();
-    
+
 private:
     static constexpr uint8_t mode1Sleep = (1 << 4);
     static constexpr uint8_t mode1AutoIncrement = (1 << 5);
-    
+
     //----------------------------------------------------------------------------
     // Enumerations
     //----------------------------------------------------------------------------
@@ -74,26 +74,26 @@ private:
     enum class Register : uint8_t
     {
         MODE_1 = 0x0,
-        
+
         LED0_ON_L = 0x6,
         LED0_ON_H = 0x7,
         LED0_OFF_L = 0x8,
         LED0_OFF_H = 0x9,
-        
+
         PRESCALE = 0xFE,
     };
-    
-    
-    
+
+
+
     //----------------------------------------------------------------------------
     // Private methods
     //----------------------------------------------------------------------------
     uint8_t readByte(uint8_t address);
     void writeByte(uint8_t address, uint8_t data);
-     
+
     uint8_t readRegister(Register reg);
     void writeRegister(Register reg, uint8_t data);
-    
+
     //----------------------------------------------------------------------------
     // Members
     //----------------------------------------------------------------------------

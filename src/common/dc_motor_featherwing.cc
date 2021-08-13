@@ -1,6 +1,7 @@
 #ifdef __linux__
 // BoB robotics includes
 #include "common/dc_motor_featherwing.h"
+#include "common/macros.h"
 
 //----------------------------------------------------------------------------
 // BoBRobotics::Robots::DCMotorFeatherWing
@@ -22,14 +23,16 @@ DCMotorFeatherWing::DCMotorFeatherWing(const char *path, int slaveAddress, units
 //----------------------------------------------------------------------------
 void DCMotorFeatherWing::enableMotor(Motor motor)
 {
+    BOB_ASSERT(motor >= MOTOR_1 && motor < MOTOR_MAX);
+
     m_PCA9685.setDutyCycle(motorChannels[motor][MOTOR_CHANNEL_ENABLE], 1.0f);
 }
 //----------------------------------------------------------------------------
 void DCMotorFeatherWing::setDCMotorThrottle(Motor motor, float throttle)
 {
-    // Clamp throttle value
-    throttle = std::min(1.0f, std::max(-1.0f, throttle));
-    
+    BOB_ASSERT(motor >= MOTOR_1 && motor < MOTOR_MAX);
+    BOB_ASSERT(throttle >= -1.0f && throttle <= 1.0f);
+
     // If throttle is zero, brake motor by turning on both channels
     if(throttle == 0.0f) {
         m_PCA9685.setDutyCycle(motorChannels[motor][MOTOR_CHANNEL_POSITIVE], 1.0f);
@@ -46,7 +49,6 @@ void DCMotorFeatherWing::setDCMotorThrottle(Motor motor, float throttle)
         m_PCA9685.setDutyCycle(motorChannels[motor][MOTOR_CHANNEL_NEGATIVE], 0.0f);
     }
 }
-
 }   // namespace Robots
 }   // namespace BoBRobotics
 #endif   // __linux__

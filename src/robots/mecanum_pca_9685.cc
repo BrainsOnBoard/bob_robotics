@@ -1,5 +1,6 @@
 #ifdef __linux__
 // BoB robotics includes
+#include "common/macros.h"
 #include "robots/mecanum_pca_9685.h"
 
 // Standard C includes
@@ -35,6 +36,10 @@ MecanumPCA9685::~MecanumPCA9685()
 void
 MecanumPCA9685::omni2D(float forward, float sideways, float turn)
 {
+    BOB_ASSERT(forward >= -1.0f && forward <= 1.0f);
+    BOB_ASSERT(sideways >= -1.0f && sideways <= 1.0f);
+    BOB_ASSERT(turn >= -1.0f && turn <= 1.0f);
+
     // Cache left and right
     setWheelSpeed(forward, sideways, turn);
 
@@ -44,18 +49,14 @@ MecanumPCA9685::omni2D(float forward, float sideways, float turn)
     const float m3 = +sideways + forward - turn;
     const float m4 = -sideways + forward + turn;
 
-    driveMotors(m1, m2, m3, m4);
+    // Cap before passing to driveMotors as valid forward, sideways and
+    // turn values can still result in invalid m1, m2, m3 and m4
+    const auto cap = [](float val) { return std::min(1.0f, std::max(val, -1.0f)); };
+    driveMotors(cap(m1), cap(m2), cap(m3), cap(m4));
 }
 //----------------------------------------------------------------------------
 void MecanumPCA9685::driveMotors(float m1, float m2, float m3, float m4)
 {
-    // clamp values to be between -1 and 1 after resolving
-    const auto cap = [](float &val) { val = std::min(1.f, std::max(val, -1.f)); };
-    cap(m1);
-    cap(m2);
-    cap(m3);
-    cap(m4);
-
     setMotorThrottle(Motor::MOTOR_1, m1);
     setMotorThrottle(Motor::MOTOR_2, m2);
     setMotorThrottle(Motor::MOTOR_3, m3);
@@ -64,6 +65,9 @@ void MecanumPCA9685::driveMotors(float m1, float m2, float m3, float m4)
 //----------------------------------------------------------------------------
 void MecanumPCA9685::setMotorThrottle(Motor motor, float throttle)
 {
+    BOB_ASSERT(motor >= MOTOR_1 && motor < MOTOR_MAX);
+    BOB_ASSERT(throttle >= -1.0f && throttle <= 1.0f);
+
     // If throttle is zero, brake motor by turning on both channels
     if(throttle == 0.0f) {
         m_PCA9685.setDutyCycle(motorChannels[motor][MOTOR_CHANNEL_POSITIVE], 1.0f);
