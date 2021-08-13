@@ -64,7 +64,7 @@ int bobMain(int, char **)
 
         // Refresh display
         car.setPose(robot.getPose());
-        display.update(car);
+        display.draw(car);
 
         // Run PID controller
         if (pidRunning && !pid.pollPositioner()) {

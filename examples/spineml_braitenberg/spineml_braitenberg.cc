@@ -159,7 +159,7 @@ int bobMain(int, char **)
 
         // Refresh display
         car.setPose(robot.getPose());
-        display.update(objectShapes, car);
+        display.draw(objectShapes, car);
 
     }
 

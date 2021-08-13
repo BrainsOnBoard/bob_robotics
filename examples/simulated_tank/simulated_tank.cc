@@ -38,7 +38,7 @@ int bobMain(int, char **)
     do {
         // Refresh display
         car.setPose(robot.getPose());
-        display.update(car);
+        display.draw(car);
 
         // Check for joystick events
         joystick->update();

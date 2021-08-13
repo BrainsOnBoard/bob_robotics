@@ -80,35 +80,43 @@ int bobMain(int, char **)
 
     bool runPositioner = false;
     while (display.isOpen()) {
-        // Run GUI events
         car.setPose(robot.getPose());
-        const sf::Event event = display.updateAndDrive(robot, objectShape, goalCircle, car);
 
-        // Spacebar toggles whether positioner is running
-        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
-            runPositioner = !runPositioner;
-            robot.stopMoving();
-        }
+        auto eventHandler = [&](const sf::Event &event) {
+            // drive robot with keyboard
+            if (Viz::SFML::drive(robot, event)) {
+                return;
+            }
 
-        if (runPositioner) {
-            // set a new goal position if user clicks in the window
-            const auto mousePosition = display.mouseClickPosition();
-            if (mousePosition) {
-                const auto vec = display.pixelToVector(mousePosition->x, mousePosition->y);
+            // Spacebar toggles whether positioner is running
+            if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Space) {
+                runPositioner = !runPositioner;
+                robot.stopMoving();
+                return;
+            }
+
+            if (runPositioner && event.type == sf::Event::MouseButtonPressed
+                && event.mouseButton.button == sf::Mouse::Left) {
+
+                // set a new goal position if user clicks in the window
+                const auto vec = display.pixelToVector(event.mouseButton.x, event.mouseButton.y);
 
                 // Set the goal to this position
                 const Pose2<meter_t, radian_t> goalPose{ vec.x(), vec.y(), 15_deg };
                 avoidingPositioner.moveTo(goalPose);
 
-                goalCircle.setPosition(mousePosition->x, mousePosition->y);
+                goalCircle.setPosition(event.mouseButton.x, event.mouseButton.y);
             }
+        };
 
-            // Check if the robot is within threshold distance and bearing of goal
-            if (!avoidingPositioner.pollPositioner()) {
-                runPositioner = false;
-                LOGI << "Reached goal";
-                robot.stopMoving();
-            }
+        // Run GUI events
+        display.drawAndHandleEvents(eventHandler, objectShape, goalCircle, car);
+
+        // Check if the robot is within threshold distance and bearing of goal
+        if (runPositioner && !avoidingPositioner.pollPositioner()) {
+            runPositioner = false;
+            LOGI << "Reached goal";
+            robot.stopMoving();
         }
     }
     return EXIT_SUCCESS;

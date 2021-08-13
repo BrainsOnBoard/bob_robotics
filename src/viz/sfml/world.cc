@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "viz/sfml/world.h"
 #include "common/path.h"
+#include "viz/sfml/world.h"
 
 // SFML
 #include <SFML/Graphics.hpp>
@@ -70,12 +70,6 @@ World::createCarAgent(meter_t carWidth)
     return CarAgent(*this, carWidth);
 }
 
-std::experimental::optional<sf::Vector2i>
-World::mouseClickPosition() const
-{
-    return m_MouseClickPosition;
-}
-
 bool
 World::isOpen() const
 {
@@ -109,7 +103,7 @@ World::vectorToPixel(double x, double y) const
 }
 
 bool
-World::handleEvents(sf::Event &event)
+World::handleWindowClosing(sf::Event &event)
 {
     if (event.type == sf::Event::Closed ||
         (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape)) {
@@ -117,10 +111,6 @@ World::handleEvents(sf::Event &event)
         return true;
     }
 
-    // Left mouse button pressed
-    if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left) {
-        m_MouseClickPosition = sf::Vector2i{ event.mouseButton.x, event.mouseButton.y };
-    }
     return false;
 }
 

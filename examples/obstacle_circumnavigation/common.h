@@ -90,11 +90,14 @@ public:
 
         // Render display
         m_CarAgent.setPose(pose);
+        auto driveRobot = [this](const auto &event) {
+            Viz::SFML::drive(m_Tank, event);
+        };
         if (m_Circumnavigator->getState() == Robots::ObstacleCircumnavigatorState::DoingNothing) {
-            m_Display.updateAndDrive(m_Tank, m_ObjectShapes, m_CarAgent);
+            m_Display.drawAndHandleEvents(driveRobot, m_ObjectShapes, m_CarAgent);
         } else {
-            // Also draw routeLines
-            m_Display.updateAndDrive(m_Tank, m_ObjectShapes, m_RouteLines, m_CarAgent);
+            // Also draw m_RouteLines
+            m_Display.drawAndHandleEvents(driveRobot, m_ObjectShapes, m_RouteLines, m_CarAgent);
         }
 
         // Signal whether or not to exit program

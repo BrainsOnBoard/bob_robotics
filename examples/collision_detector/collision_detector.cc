@@ -121,7 +121,7 @@ int bobMain(int, char **)
 
         // Render on display
         agent.setVertices(collisionDetector.getRobotVertices());
-        display.update(objectShapes, agent);
+        display.draw(objectShapes, agent);
     }
 
     return EXIT_SUCCESS;

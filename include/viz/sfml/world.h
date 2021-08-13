@@ -5,7 +5,6 @@
 #include "common/pose.h"
 
 // Third-party includes
-#include "third_party/optional.hpp"
 #include "third_party/units.h"
 
 // SFML
@@ -19,6 +18,49 @@ namespace BoBRobotics {
 namespace Viz {
 namespace SFML {
 using namespace units::literals;
+
+/**!
+ * \brief Drive a robot with an SFML window event
+ *
+ * Returns true if event was handled or false otherwise.
+ */
+template<class RobotType>
+bool drive(RobotType &robot, const sf::Event &event)
+{
+    switch (event.type) {
+    case sf::Event::KeyPressed:
+        switch (event.key.code) {
+        case sf::Keyboard::Up:
+            robot.moveForward(1.f);
+            return true;
+        case sf::Keyboard::Down:
+            robot.moveForward(-1.f);
+            return true;
+        case sf::Keyboard::Left:
+            robot.turnOnTheSpot(-0.5f);
+            return true;
+        case sf::Keyboard::Right:
+            robot.turnOnTheSpot(0.5f);
+            return true;
+        default:
+            return false;
+        }
+        break;
+    case sf::Event::KeyReleased:
+        switch (event.key.code) {
+        case sf::Keyboard::Up:
+        case sf::Keyboard::Down:
+        case sf::Keyboard::Left:
+        case sf::Keyboard::Right:
+            robot.stopMoving();
+            return true;
+        default:
+            return false;
+        }
+    default:
+        return false;
+    }
+}
 
 class CrossShape
   : public sf::Drawable
@@ -145,53 +187,40 @@ public:
     }
 
     template<typename... Drawables>
-    sf::Event update(Drawables&& ...drawables)
+    void draw(Drawables&& ...drawables)
     {
-        return updateAndHandleEvents(Noop{}, std::forward<Drawables>(drawables)...);
+        drawAndHandleEvents(Noop{}, std::forward<Drawables>(drawables)...);
     }
 
-    template<typename RobotType, typename... Drawables>
-    sf::Event updateAndDrive(RobotType &robot, Drawables&& ...drawables)
+    template<typename Func, typename... Drawables>
+    void drawAndHandleEvents(Func eventHandler, Drawables&& ...drawables)
     {
-        auto drive = [&robot](const sf::Event &event) {
-            switch (event.type) {
-            case sf::Event::KeyPressed:
-                switch (event.key.code) {
-                case sf::Keyboard::Up:
-                    robot.moveForward(1.f);
-                    break;
-                case sf::Keyboard::Down:
-                    robot.moveForward(-1.f);
-                    break;
-                case sf::Keyboard::Left:
-                    robot.turnOnTheSpot(-0.5f);
-                    break;
-                case sf::Keyboard::Right:
-                    robot.turnOnTheSpot(0.5f);
-                    break;
-                default:
-                    break;
-                }
-                break;
-            case sf::Event::KeyReleased:
-                switch (event.key.code) {
-                case sf::Keyboard::Up:
-                case sf::Keyboard::Down:
-                case sf::Keyboard::Left:
-                case sf::Keyboard::Right:
-                    robot.stopMoving();
-                default:
-                    break;
-                }
-            default:
+        // Set m_Window to be active OpenGL context
+        m_Window.setActive(true);
+
+        // Check all the window's events that were triggered since the last iteration of the loop
+        sf::Event event{};
+        while (m_Window.pollEvent(event)) {
+            if (handleWindowClosing(event)) {
                 break;
             }
-        };
 
-        return updateAndHandleEvents(drive, std::forward<Drawables>(drawables)...);
+            eventHandler(event);
+        }
+
+        // Set background colour
+        m_Window.clear(sf::Color::White);
+
+        // Draw cross at origin and other things
+        drawThings(*m_OriginCross, std::forward<Drawables>(drawables)...);
+
+        // Swap buffers
+        m_Window.display();
+
+        // We don't need to be the current OpenGL context any more
+        m_Window.setActive(false);
     }
 
-    std::experimental::optional<sf::Vector2i> mouseClickPosition() const;
     bool isOpen() const;
     void close();
     float lengthToPixel(const meter_t value) const;
@@ -212,73 +241,34 @@ private:
     std::unique_ptr<CrossShape> m_OriginCross;
     const Vector2<meter_t> m_MinBounds;
     meter_t m_UnitPerPixel;
-    std::experimental::optional<sf::Vector2i> m_MouseClickPosition;
 
     static constexpr float OriginLineThickness = 3.f, OriginLineLength = 20.f;
 
-    bool handleEvents(sf::Event &event);
-
-    template<typename... Drawables>
-    void doDrawing(Drawables&& ...drawables)
-    {
-        // Set background colour
-        m_Window.clear(sf::Color::White);
-
-        // Draw objects
-        draw(*m_OriginCross, std::forward<Drawables>(drawables)...);
-
-        // Swap buffers
-        m_Window.display();
-    }
+    bool handleWindowClosing(sf::Event &event);
 
     template<typename DrawableType, typename... Drawables>
-    void draw(const std::vector<DrawableType> &drawables, Drawables&& ...others)
+    void drawThings(const std::vector<DrawableType> &drawables, Drawables&& ...others)
     {
-        for (auto &drawable : drawables) {
+        for (const auto &drawable : drawables) {
             m_Window.draw(drawable);
         }
-        draw(std::forward<Drawables>(others)...);
+        drawThings(std::forward<Drawables>(others)...);
     }
 
     template<typename... Drawables>
-    void draw(const sf::Drawable &drawable, Drawables&& ...others)
+    void drawThings(const sf::Drawable &drawable, Drawables&& ...others)
     {
         m_Window.draw(drawable);
-        draw(std::forward<Drawables>(others)...);
+        drawThings(std::forward<Drawables>(others)...);
     }
 
-    void draw()
+    void drawThings()
     {}
 
     struct Noop {
-        void operator()(const sf::Event &){};
+        void operator()(const sf::Event &)
+        {}
     };
-
-    template<typename Func, typename... Drawables>
-    sf::Event updateAndHandleEvents(Func eventHandler, Drawables&& ...drawables)
-    {
-        // Set m_Window to be active OpenGL context
-        m_Window.setActive(true);
-
-        // Check all the window's events that were triggered since the last iteration of the loop
-        sf::Event event{};
-        m_MouseClickPosition.reset();
-        while (m_Window.pollEvent(event)) {
-            if (handleEvents(event)) {
-                return event;
-            }
-
-            eventHandler(event);
-        }
-
-        // Draw on screen
-        doDrawing(std::forward<Drawables>(drawables)...);
-
-        // We don't need to be the current OpenGL context any more
-        m_Window.setActive(false);
-
-        return event;
-    }
 
     static sf::ContextSettings getContextSettings();
 
