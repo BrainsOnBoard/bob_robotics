@@ -37,7 +37,7 @@ public:
     void setWayPoints(const std::vector<Vector2<millimeter_t>> &wp);
 
     //! adds to the list of waypoints
-    void addToWayPoint(const Vector2<millimeter_t> &wayPoint);
+    void addWayPoint(const Vector2<millimeter_t> &wayPoint);
 
     //! sets the lookahead distance. Large values causes the car to cut corners,
     //! where small values makes the car follow the path more closely

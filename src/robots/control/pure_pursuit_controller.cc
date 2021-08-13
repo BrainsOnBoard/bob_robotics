@@ -37,7 +37,7 @@ PurePursuitController::setWayPoints(const std::vector<Vector2<millimeter_t>> &wp
 
 //! adds to the list of waypoints
 void
-PurePursuitController::addToWayPoint(const Vector2<millimeter_t> &wayPoint)
+PurePursuitController::addWayPoint(const Vector2<millimeter_t> &wayPoint)
 {
     m_wayPoints.push_back(wayPoint);
 }

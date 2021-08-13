@@ -69,7 +69,7 @@ bobMain(int, char **)
 
         wpLines.append(sf::Vector2f{ (float) position.x, (float) position.y });
 
-        controller.addToWayPoint(display.pixelToVector(position.x, position.y));
+        controller.addWayPoint(display.pixelToVector(position.x, position.y));
     };
 
     // Add an initial waypoint in the centre of the window
