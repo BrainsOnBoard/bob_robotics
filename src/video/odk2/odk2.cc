@@ -151,6 +151,10 @@ void ODK2::readThread()
                 if (ret == DEVKIT_DRIVER_RX_TIMEOUT) {
                     LOGW << "RX timeout";
                 }
+                // **HACK** current ODK2 driver doesn't correctly handle (ignore) EINTR errors
+                else if (ret == DEVKIT_DRIVER_SOCKET_ERROR && errno == 4) {
+                    LOGW << "Interrrupt";
+                }
                 else {
                     throw std::runtime_error("Error in devkit driver RX (" + std::to_string(ret) + ")");
                 }

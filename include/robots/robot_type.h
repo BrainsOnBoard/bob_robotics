@@ -13,6 +13,8 @@
 #include "tank.h" // For dummy tank
 #elif defined(ROBOT_TYPE_MECANUM)
 #include "mecanum.h"
+#elif defined(ROBOT_TYPE_MECANUMPCA9685)
+#include "mecanum_pca_9685.h"
 #elif defined(ROBOT_TYPE_GAZEBO_TANK)
 #include "gazebo/tank.h"
 #endif
