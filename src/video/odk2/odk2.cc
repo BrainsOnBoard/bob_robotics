@@ -22,7 +22,8 @@ ODK2::ODK2(const std::string &hostIP, const std::string &remoteIP)
     devkitDriverConfig_t config = {};
     strncpy(config.hostIP, hostIP.c_str(), sizeof(config.hostIP) - 1);
     strncpy(config.remoteIP, remoteIP.c_str(), sizeof(config.remoteIP) - 1);
-    config.port = 50102;
+    config.rxPort = 50102;
+    config.txPort = 50102;
 
     // Initialise dev-kit
     const int ret = devkit_driver_init(&m_State, &config);
