@@ -6,6 +6,7 @@
 #include "navigation/image_database.h"
 #include "robots/ackermann/simulated_ackermann.h"
 #include "robots/control/pure_pursuit_controller.h"
+#include "video/randominput.h"
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"
@@ -58,6 +59,7 @@ bobMain(int argc, char **argv)
     Robots::Ackermann::SimulatedAckermann robot{ MaxSpeed, 500_mm, 0_m, MaxTurn };
     RobotArrow arrow;
     Robots::PurePursuitController controller{ LookAheadDistance, robot.getDistanceBetweenAxis(), StoppingDist };
+    Navigation::ImageDatabase database;
 
     constexpr meter_t infM{ std::numeric_limits<double>::infinity() };
     auto xLims = std::make_pair(infM, -infM);
@@ -81,22 +83,29 @@ bobMain(int argc, char **argv)
     Pose2<meter_t, degree_t> pose{ route[0].easting + 0.5_m, route[0].northing + 0.5_m, 270_deg };
     robot.setPose(pose);
 
+    // Record random images into database (as this is just for testing)
+    constexpr auto frameRate = 20_Hz;
+    Video::RandomInput<> cam{ { 360, 100 } };
+    auto recorder = database.getRouteVideoRecorder(cam.getOutputSize(), frameRate, { "UTM zone" });
+
+    cv::Mat fr;
     do {
         plt::figure(1);
         plt::clf();
         arrow.plot(robot.getPose());
         plt::plot(x, y);
         plt::axis("equal");
-        plt::pause(0.05);
+        plt::pause((1 / frameRate).value());
 
-        const auto lookPoint = controller.getLookAheadPoint(robot.getPose());
+        const auto pose = robot.getPose();
+        const auto lookPoint = controller.getLookAheadPoint(pose);
         if (!lookPoint) {
             LOGE << "Robot got stuck! 😭";
             break;
         }
 
         // calculate turning angle with controller
-        const auto turningAngle = controller.getTurningAngle(robot.getPose(), lookPoint);
+        const auto turningAngle = controller.getTurningAngle(pose, lookPoint);
         if (turningAngle) {
             const auto ang = turningAngle.value();
             if (abs(ang) > MaxTurn) {
@@ -108,6 +117,10 @@ bobMain(int argc, char **argv)
             LOGI << "Reached destination!";
             break;
         }
+
+        // Also save UTM zone
+        cam.readFrameSync(fr);
+        recorder.record(pose, pose.yaw(), fr, route[0].zone);
     } while (plt::fignum_exists(1));
 
     return EXIT_SUCCESS;

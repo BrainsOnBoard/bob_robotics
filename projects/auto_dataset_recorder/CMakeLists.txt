@@ -13,5 +13,5 @@ endif()
 
 BoB_project(IS_EXPERIMENT TRUE
             SOURCES ${NAME}.cc
-            BOB_MODULES common navigation robots/ackermann robots/control
+            BOB_MODULES common navigation robots/ackermann robots/control video
             THIRD_PARTY matplotlibcpp)

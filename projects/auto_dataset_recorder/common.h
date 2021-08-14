@@ -17,6 +17,8 @@ loadRoute(const BoBRobotics::Navigation::ImageDatabase &database)
 {
     using namespace BoBRobotics;
 
+    BOB_ASSERT(!database.empty());
+
     std::vector<MapCoordinate::UTMCoordinate> route;
     route.reserve(database.size());
 
