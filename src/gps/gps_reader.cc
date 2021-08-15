@@ -1,5 +1,5 @@
 // BoB includes
-#include "common/gps_reader.h"
+#include "gps/gps_reader.h"
 
 // Standard C++ includes
 #include <stdexcept>

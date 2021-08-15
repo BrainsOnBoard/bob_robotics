@@ -28,7 +28,7 @@ type 1 or 9 update, null field when DGPS is not used
 #pragma once
 // BoB robotics includes
 #include "common/macros.h"
-#include "map_coordinate.h"
+#include "common/map_coordinate.h"
 
 // Third-party includes
 #include "third_party/units.h"

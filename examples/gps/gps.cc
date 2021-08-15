@@ -1,6 +1,6 @@
 // BoB robotics includes
-#include "common/gps_reader.h"
 #include "common/map_coordinate.h"
+#include "gps/gps_reader.h"
 
 // Third-party includes
 #include "plog/Log.h"

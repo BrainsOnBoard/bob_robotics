@@ -1,10 +1,9 @@
 // BoB includes
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
-#include "common/gps_reader.h"
-#include "common/main.h"
 #include "common/map_coordinate.h"
 #include "common/stopwatch.h"
+#include "gps/gps_reader.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
 #include "robots/rc_car_bot.h"

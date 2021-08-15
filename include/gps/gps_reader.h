@@ -1,8 +1,8 @@
 #pragma once
 
 // BoB robotics includes
-#include "nmea.h"
-#include "serial_interface.h"
+#include "common/serial_interface.h"
+#include "gps/nmea.h"
 
 // Standard C++ includes
 #include <string>
