@@ -22,7 +22,7 @@ bobMain(int argc, char **argv)
 {
 #ifdef __linux__
     BOB_ASSERT(argc <= 2);
-    const char *devicePath = (argc == 3) ? argv[1] : GPSReader::DefaultLinuxDevicePath;
+    const char *devicePath = (argc == 2) ? argv[1] : GPSReader::DefaultLinuxDevicePath;
 #else
     /*
      * Need to provide path explicitly on macOS!
