@@ -31,6 +31,9 @@ private:
     SerialInterface m_Serial;
     NMEAParser m_Parser;
     std::string m_Line;
+
+    void setSerialAttributes();
+    void waitForValidReading();
 };
 } // GPS
 } // BoBRobotics

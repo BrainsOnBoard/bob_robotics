@@ -37,34 +37,9 @@ bobMain(int argc, char *argv[])
     GPS::GPSReader gps;
     GPS::GPSData data;
     BN055 imu;
-    const int maxTrials = 3;
-    int numTrials = maxTrials;
 
     const millisecond_t runTime = (argc > 1) ? second_t{ std::stod(argv[1]) } : 30_s;
     LOGD << "running for " << runTime;
-
-    // check to see if we get valid coordinates by checking GPS quality
-    GPS::GPSData gpsData;
-    for (; numTrials > 0; numTrials--) {
-        try {
-            gps.read(gpsData);
-        } catch (GPS::NMEAError &e) {
-            LOGW << " measuring failed, trying again in 1 second "
-                 << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
-            std::this_thread::sleep_for(1s);
-            continue;
-        }
-
-        if (gpsData.gpsQuality != GPS::GPSQuality::INVALID) {
-            LOGI << " we have a valid measurement";
-            break;
-        }
-    }
-
-    if (numTrials == 0) {
-        LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
-        return EXIT_FAILURE;
-    }
 
     // Use the system clock to get date (might be wrong!)
     time_t rawtime;
@@ -75,6 +50,8 @@ bobMain(int argc, char *argv[])
      * Use GPS to get time, because Jetsons don't remember the system time
      * across boots.
      */
+    GPS::GPSData gpsData;
+    gps.read(gpsData);
     currentTime.tm_hour = gpsData.time.hour;
     currentTime.tm_min = gpsData.time.minute;
     currentTime.tm_sec = gpsData.time.second;

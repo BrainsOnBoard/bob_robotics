@@ -36,29 +36,13 @@ bobMain(int argc, char **argv)
 
     GPSReader gps{ devicePath };
 
-    // if GPS location is invalid, keep trying to get a valid one
-    // if failed x times we exit
-    const int maxTrials = 20;
-    int numTrials = maxTrials;
-    GPSData data;
-    while (numTrials > 0) {
-        gps.read(data);
-        if (data.gpsQuality != GPSQuality::INVALID) {
-            std::cout << " we have a valid measurement" << std::endl;
-            break;
-        }
-    }
-    if (numTrials == 0) {
-        std::cout << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program " << std::endl;
-        return EXIT_FAILURE;
-    }
-
     // Let the user set to nonblocking mode for testing purposes
     if (argc > 1 && strcmp(argv[1], "nonblock") == 0) {
         gps.setBlocking(false);
     }
 
     // print for 100 timestep
+    GPSData data;
     for (int i = 0; i < 100; i++) {
         // NB: This will only return false in nonblocking mode
         if (!gps.read(data)) {

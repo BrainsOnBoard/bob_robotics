@@ -4,6 +4,9 @@
 // Third-party includes
 #include "plog/Log.h"
 
+// Standard C++ includes
+#include <stdexcept>
+
 namespace BoBRobotics {
 namespace GPS {
 
@@ -11,6 +14,16 @@ constexpr const char *GPSReader::DefaultLinuxDevicePath;
 
 GPSReader::GPSReader(const char *devicePath)
   : m_Serial{ devicePath }
+{
+    // Set baudrate etc.
+    setSerialAttributes();
+
+    // Check that we actually have valid readings
+    waitForValidReading();
+}
+
+void
+GPSReader::setSerialAttributes()
 {
     termios tty{};
 
@@ -36,6 +49,28 @@ GPSReader::GPSReader(const char *devicePath)
     tty.c_cc[VTIME] = 5; // set timeout to 0.5 secs
 
     m_Serial.setAttributes(tty);
+}
+
+void
+GPSReader::waitForValidReading()
+{
+    // if GPS location is invalid, keep trying to get a valid one
+    // if failed x times we exit
+    const int maxTrials = 3;
+    int numTrials = maxTrials;
+    GPSData data;
+    while (numTrials > 0) {
+        read(data);
+        if (data.gpsQuality != GPSQuality::INVALID) {
+            LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
+                 << data.coordinate.lon.value() << "°)";
+            break;
+        }
+    }
+
+    if (numTrials == 0) {
+        throw std::runtime_error{ "There is no valid gps measurement, please try waiting for the survey in to finish and restart the program" };
+    }
 }
 
 void
