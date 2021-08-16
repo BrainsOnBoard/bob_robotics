@@ -73,7 +73,7 @@ bobMain(int argc, char *argv[])
                                                      "Steering angle [degrees]",
                                                      "UTM zone",
                                                      "GPS quality",
-                                                     "Horizontal dilution [mm]"
+                                                     "Horizontal dilution [mm]",
                                                      "Timestamp [ms]" });
 
     cv::Mat frame;
