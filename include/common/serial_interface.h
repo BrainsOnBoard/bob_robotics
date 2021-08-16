@@ -23,6 +23,9 @@ public:
     SerialInterface(const char *path = DefaultLinuxDevicePath);
     ~SerialInterface();
 
+    // Make non-moveable and non-copyable
+    SerialInterface(SerialInterface &&) = delete;
+
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------
