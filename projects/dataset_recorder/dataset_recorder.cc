@@ -48,7 +48,7 @@ bobMain(int argc, char *argv[])
     for (; numTrials > 0; numTrials--) {
         try {
             gps.read(gpsData);
-        } catch (GPS::GPSError &e) {
+        } catch (GPS::NMEAError &e) {
             LOGW << " measuring failed, trying again in 1 second "
                  << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
             std::this_thread::sleep_for(1s);
@@ -135,34 +135,25 @@ bobMain(int argc, char *argv[])
             // if we can't read speed or angle, we just write nan values
             LOGE << "Could not read speed and steering angle from robot : " << e.what();
         }
-        try {
 
-            // get gps data
-            gps.read(data);
-            const auto &coord = gpsData.coordinate;
-            int gpsQual = (int) gpsData.gpsQuality; // gps quality
+        // get gps data
+        gps.read(data);
+        const auto &coord = gpsData.coordinate;
+        int gpsQual = (int) gpsData.gpsQuality; // gps quality
 
-            // output results
-            LOGD << std::setprecision(10)
-                 << "GPS quality: " << gpsQual
-                 << " latitude: " << coord.lat.value()
-                 << " longitude: " << coord.lon.value()
-                 << " num sats: " << gpsData.numberOfSatellites
-                 << " time: " << time.value() << std::endl;
+        // output results
+        LOGD << std::setprecision(10)
+             << "GPS quality: " << gpsQual
+             << " latitude: " << coord.lat.value()
+             << " longitude: " << coord.lon.value()
+             << " num sats: " << gpsData.numberOfSatellites
+             << " time: " << time.value() << std::endl;
 
-            // converting to UTM
-            const auto utm = MapCoordinate::latLonToUTM(coord);
-            recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
-                            botSpeed, turnAngle.value(), utm.zone,
-                            (int) gpsData.gpsQuality, time.value());
-        }
-        // if there is a gps error write nan values
-        catch (GPS::GPSError &e) {
-            LOGW << e.what();
-            recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                            frame, pitch, roll, botSpeed, turnAngle.value(), "",
-                            -1, time.value());
-        }
+        // converting to UTM
+        const auto utm = MapCoordinate::latLonToUTM(coord);
+        recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
+                        botSpeed, turnAngle.value(), utm.zone,
+                        (int) gpsData.gpsQuality, time.value());
     }
 
     // Make sure that written data is actually written to disk before we exit

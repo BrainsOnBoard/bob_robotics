@@ -2,7 +2,7 @@
 
 // BoB robotics includes
 #include "common/serial_interface.h"
-#include "gps/nmea.h"
+#include "gps/nmea_parser.h"
 
 // Standard C++ includes
 #include <string>
@@ -29,6 +29,7 @@ public:
 
 private:
     SerialInterface m_Serial;
+    NMEAParser m_Parser;
     std::string m_Line;
 };
 } // GPS

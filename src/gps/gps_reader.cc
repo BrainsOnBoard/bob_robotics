@@ -1,11 +1,8 @@
 // BoB includes
 #include "gps/gps_reader.h"
 
-// Standard C++ includes
-#include <stdexcept>
-
-// Standard C includes
-#include <cstring>
+// Third-party includes
+#include "plog/Log.h"
 
 namespace BoBRobotics {
 namespace GPS {
@@ -15,8 +12,7 @@ constexpr const char *GPSReader::DefaultLinuxDevicePath;
 GPSReader::GPSReader(const char *devicePath)
   : m_Serial{ devicePath }
 {
-    termios tty;
-    memset(&tty, 0, sizeof(tty));
+    termios tty{};
 
     /*
      * B9600   : set baudrate to 9600
@@ -53,17 +49,21 @@ GPSReader::setBlocking(bool blocking)
 bool
 GPSReader::read(GPSData &data)
 {
-    do {
+    while (true) {
         // If in non-blocking mode and there's no data, return
         if (!m_Serial.read(m_Line)) {
             return false;
         }
 
-        // Continue parsing data until we get the kind of message we want
-    } while (!NMEA::parse(m_Line, data));
-
-    // Signal that we have successfully read valid GPS data
-    return true;
+        try {
+            if (m_Parser.parseCoordinates(m_Line, data)) {
+                // Signal that we have successfully read valid GPS data
+                return true;
+            }
+        } catch (NMEAError &e) {
+            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+        }
+    }
 }
 
 } // GPS
