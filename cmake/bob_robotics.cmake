@@ -171,35 +171,6 @@ macro(BoB_project)
         endif()
     endif()
 
-    # Allow users to choose the type of tank robot to use with ROBOT_TYPE env var
-    # or CMake param
-    if(NOT ROBOT_TYPE)
-        if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
-            set(ROBOT_TYPE $ENV{ROBOT_TYPE})
-        elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
-            set(ROBOT_TYPE Norbot)
-        else()
-            set(ROBOT_TYPE Tank)
-        endif()
-    endif()
-    message("Default robot type (if used): ${ROBOT_TYPE}")
-
-    # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
-    add_definitions(-DROBOT_TYPE=${ROBOT_TYPE})
-
-    # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
-    # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
-    string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
-    string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
-    add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
-
-    # Extra modules needed for some robot types
-    if(${ROBOT_TYPE} STREQUAL EV3)
-        list(APPEND PARSED_ARGS_BOB_MODULES robots/ev3)
-    elseif(${ROBOT_TYPE} STREQUAL Gazebo::Tank)
-        list(APPEND PARSED_ARGS_BOB_MODULES robots/gazebo)
-    endif()
-
     # We always need the common module so that main() is defined
     list(APPEND PARSED_ARGS_BOB_MODULES common)
 
@@ -240,7 +211,7 @@ macro(BoB_set_options)
     endif()
 endmacro()
 
-# Build a module with extra libraries etc. Currently used by robots/bebop
+# Build a module with extra libraries etc. Currently used by robots/uav/bebop
 # module because the stock BoB_module() isn't flexible enough.
 macro(BoB_module_custom)
     BoB_init()
@@ -660,6 +631,47 @@ endfunction()
 
 function(BoB_modules)
     foreach(module IN LISTS ARGV)
+        # The robots module is special. It is used only to identify which
+        # submodule is needed for a given ROBOT_TYPE (e.g. a Tank::Norbot needs
+        # the robots/tank module). If you're not making use of the ROBOT_TYPE
+        # macro in your project, then you don't need it.
+        if(module STREQUAL robots)
+            # Allow users to choose the type of robot to use with ROBOT_TYPE env var
+            # or CMake param
+            if(NOT ROBOT_TYPE)
+                if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
+                    set(ROBOT_TYPE $ENV{ROBOT_TYPE})
+                elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
+                    set(ROBOT_TYPE Tank::Norbot)
+                else()
+                    set(ROBOT_TYPE Tank::DummyTank)
+                endif()
+            endif()
+            message("Robot type: ${ROBOT_TYPE}")
+
+            # Define a ROBOT_TYPE macro to be used as a class name in place of Robots::Norbot etc.
+            add_definitions(-DROBOT_TYPE=BoBRobotics::Robots::${ROBOT_TYPE})
+
+            # We also need to know the namespace name sometimes
+            string(REGEX REPLACE ::[A-Za-z0-9_]+\$ "" ROBOT_TYPE_NAMESPACE ${ROBOT_TYPE})
+            add_definitions(-DROBOT_TYPE_NAMESPACE=BoBRobotics::Robots::ROBOT_TYPE_NAMESPACE)
+
+            # Define a macro specifying each robot type. Uppercase versions of the class + namespace names
+            # are used, with :: replaced with _, e.g.: Namespace::RobotClass becomes NAMESPACE_ROBOTCLASS
+            string(TOUPPER ${ROBOT_TYPE} ROBOT_TYPE_UPPER)
+            string(REGEX REPLACE :: _ ROBOT_TYPE_UPPER ${ROBOT_TYPE_UPPER})
+            add_definitions(-DROBOT_TYPE_${ROBOT_TYPE_UPPER})
+
+            # Extra modules needed for some robot types. The namespace name tells us
+            # which module to add (e.g. all Ackermann robots live in robots/ackermann).
+            string(TOLOWER ${ROBOT_TYPE} ROBOT_TYPE_LOWER)
+            string(REGEX REPLACE :: / ROBOT_TYPE_LOWER ${ROBOT_TYPE_LOWER})
+            get_filename_component(ROBOT_TYPE_MODULE ${ROBOT_TYPE_LOWER} DIRECTORY)
+
+            # Add the correct submodule
+            set(module robots/${ROBOT_TYPE_MODULE})
+        endif()
+
         set(module_path ${BOB_ROBOTICS_PATH}/src/${module})
 
         # Some (sub)modules have a slash in the name; replace with underscore

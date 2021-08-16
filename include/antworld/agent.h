@@ -5,7 +5,6 @@
 #include "common/pose.h"
 #include "hid/joystick.h"
 #include "renderer.h"
-#include "robots/robot.h"
 
 // Standard C++ includes
 #include <mutex>
@@ -19,8 +18,7 @@ using namespace units::literals;
 //----------------------------------------------------------------------------
 //! A simple agent with a position and a panoramic view of the current AntWorld
 class AntAgent
-  : public Robots::Robot
-  , public Camera
+  : public Camera
 {
     using meters_per_second_t = units::velocity::meters_per_second_t;
     using radians_per_second_t = units::angular_velocity::radians_per_second_t;
@@ -35,25 +33,16 @@ public:
              meters_per_second_t velocity = DefaultVelocity,
              radians_per_second_t turnSpeed = DefaultTurnSpeed);
 
-    //----------------------------------------------------------------------------
-    // Robot virtuals
-    //----------------------------------------------------------------------------
-    virtual void moveForward(float speed) override;
+    void moveForward(float speed);
 
-    virtual void turnOnTheSpot(float clockwiseSpeed) override;
+    void turnOnTheSpot(float clockwiseSpeed);
 
-    virtual void stopMoving() override;
+    void stopMoving();
 
-    virtual void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f) override;
+    void addJoystick(HID::Joystick &joystick, float deadZone = 0.25f);
 
     //! Drive the robot using the current joystick state
-    virtual void drive(const HID::Joystick &joystick, float deadZone = 0.25f) override;
-
-    //! Add a handler to the connection to drive robot
-    virtual void readFromNetwork(Net::Connection &connection) override;
-
-    //! Remove and connection handlers that drive this robot
-    virtual void stopReadingFromNetwork() override;
+    void drive(const HID::Joystick &joystick, float deadZone = 0.25f);
 
     //----------------------------------------------------------------------------
     // Public API

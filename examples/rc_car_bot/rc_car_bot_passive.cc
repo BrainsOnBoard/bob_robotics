@@ -1,6 +1,6 @@
 // BoB robotics includes
 #include "common/stopwatch.h"
-#include "robots/rc_car_bot.h"
+#include "robots/ackermann/rc_car_bot.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -14,7 +14,7 @@ using namespace std::literals;
 
 int bobMain(int, char**)
 {
-    PassiveRCCarBot bot;
+    Ackermann::PassiveRCCarBot bot;
 
     while (true) {
         const auto move = bot.readRemoteControl();

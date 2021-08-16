@@ -1,11 +1,14 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
 #include "video/see3cam_cu40.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <fstream>
@@ -65,7 +68,7 @@ int bobMain(int, char **)
 #endif  // VICON_CAPTURE
 
     // Loop through time until joystick button pressed
-    motor.addJoystick(joystick, joystickDeadzone);
+    HID::addJoystick(motor, joystick, joystickDeadzone);
     for (unsigned int x = 0; !joystick.isDown(JButton::B); x++) {
         // Read joystick
         joystick.update();

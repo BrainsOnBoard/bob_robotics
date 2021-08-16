@@ -1,5 +1,5 @@
 // BoB robotics includes
-#include "robots/rc_car_bot.h"
+#include "robots/ackermann/rc_car_bot.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -11,7 +11,7 @@ using namespace std::literals;
 
 int bobMain(int, char **)
 {
-    Robots::RCCarBot bot;
+    Robots::Ackermann::RCCarBot bot;
 
     // Drive in a circle for 10s
     bot.move(0.5f, -35_deg);

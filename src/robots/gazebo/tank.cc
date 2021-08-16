@@ -22,7 +22,7 @@ Tank::Tank(const meters_per_second_t maximumSpeed,
 }
 
 meters_per_second_t
-Tank::getAbsoluteMaximumSpeed() const
+Tank::getMaximumSpeed() const
 {
     return getVelocity(m_MaximumSpeed, 0.3_m); //radius of the wheel is 0.3m
 }

@@ -1,12 +1,13 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/macros.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "navigation/perfect_memory.h"
 #include "os/keycodes.h"
-#include "robots/bebop/bebop.h"
+#include "robots/uav/bebop/bebop.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/matplotlibcpp.h"
 #include "third_party/units.h"
 
@@ -51,10 +52,10 @@ public:
 
         LOGI << "Connected to drone";
 
-        m_Joystick.addHandler([this](HID::JButton button, bool pressed) {
+        m_Joystick.addHandler([this](auto &, HID::JButton button, bool pressed) {
             return onButtonEvent(button, pressed);
         });
-        m_Joystick.addHandler([this](HID::JAxis axis, float) {
+        m_Joystick.addHandler([this](auto &, HID::JAxis axis, float) {
             if (axis != HID::JAxis::RightStickHorizontal && axis != HID::JAxis::RightStickVertical && m_NavigationState != NotNavigating) {
                 stopNavigating();
             }
@@ -62,7 +63,7 @@ public:
         });
 
         // Control drone with joystick
-        m_Drone.addJoystick(m_Joystick);
+        HID::addJoystick(m_Drone, m_Joystick);
     }
 
     void mainLoop()
@@ -115,12 +116,12 @@ public:
                     break;
                 }
             }
-        } while (m_Drone.getState() == Robots::Bebop::State::Running && (cv::waitKeyEx(1) & OS::KeyMask) != OS::KeyCodes::Escape);
+        } while (m_Drone.getState() == Robots::UAV::Bebop::State::Running && (cv::waitKeyEx(1) & OS::KeyMask) != OS::KeyCodes::Escape);
     }
 
 private:
     HID::Joystick m_Joystick;
-    Robots::Bebop m_Drone;
+    Robots::UAV::Bebop m_Drone;
     Navigation::PerfectMemory<> m_PerfectMemory;
     const degree_t m_HalfScanWidth;
     const degrees_per_second_t m_YawSpeed;

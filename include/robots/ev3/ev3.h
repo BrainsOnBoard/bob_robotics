@@ -2,20 +2,21 @@
 
 // BoB robotics includes
 #include "common/stopwatch.h"
-#include "robots/tank.h"
+#include "robots/tank/tank_base.h"
 
 // EV3 library
 #include "../../third_party/ev3dev-lang-cpp/ev3dev.h"
 
 // Standard C++ includes
-#include <string>
 #include <utility>
 
 namespace BoBRobotics {
 namespace Robots {
+namespace EV3 {
+
 //! Control for a Lego Mindstorms tank robot
 class EV3 final
-  : public Tank
+  : public Tank::TankBase<EV3>
 {
 public:
     /*
@@ -31,12 +32,12 @@ public:
 
     EV3(const ev3dev::address_type &leftMotorPort = ev3dev::OUTPUT_A,
         const ev3dev::address_type &rightMotorPort = ev3dev::OUTPUT_D);
-    virtual ~EV3() override;
+    ~EV3();
 
-    virtual void stopMoving() override;
-    virtual void tank(float left, float right) override;
-    virtual millimeter_t getRobotWidth() const override;
-    virtual meters_per_second_t getAbsoluteMaximumSpeed() const override;
+    void stopMoving();
+    void tank(float left, float right);
+    millimeter_t getRobotWidth() const;
+    meters_per_second_t getMaximumSpeed() const;
     std::pair<meters_per_second_t, meters_per_second_t> getWheelVelocities() const;
 
 private:
@@ -45,6 +46,7 @@ private:
     const int m_MaxSpeedTachos, m_TachoCountPerRotation;
 
     meters_per_second_t tachoToSpeed(int tachos) const;
-};
-}
-}
+}; // EV3
+} // EV3
+} // Robots
+} // BoBRobotics
