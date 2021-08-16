@@ -57,7 +57,7 @@ GPSReader::waitForValidReading()
     // if GPS location is invalid, keep trying to get a valid one
     // if failed x times we exit
     int numTrials = 3;
-    GPSData data;
+    GPSData data{};
     while (numTrials--) {
         read(data);
         if (data.gpsQuality != GPSQuality::INVALID) {
