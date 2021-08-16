@@ -73,6 +73,7 @@ bobMain(int argc, char *argv[])
                                                      "Steering angle [degrees]",
                                                      "UTM zone",
                                                      "GPS quality",
+                                                     "Horizontal dilution [mm]"
                                                      "Timestamp [ms]" });
 
     cv::Mat frame;
@@ -126,7 +127,9 @@ bobMain(int argc, char *argv[])
         const auto utm = MapCoordinate::latLonToUTM(coord);
         recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
                         botSpeed, turnAngle.value(), utm.zone,
-                        (int) gpsData.gpsQuality, time.value());
+                        (int) gpsData.gpsQuality,
+                        millimeter_t{ gpsData.horizontalDilution }.value(),
+                        time.value());
     }
 
     // Make sure that written data is actually written to disk before we exit
