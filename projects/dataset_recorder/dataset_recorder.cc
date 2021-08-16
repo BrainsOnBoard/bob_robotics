@@ -35,7 +35,6 @@ bobMain(int argc, char *argv[])
     // setting up
     Robots::PassiveRCCarBot bot;
     GPS::GPSReader gps;
-    GPS::GPSData data;
     BN055 imu;
 
     const millisecond_t runTime = (argc > 1) ? second_t{ std::stod(argv[1]) } : 30_s;
@@ -111,7 +110,7 @@ bobMain(int argc, char *argv[])
         }
 
         // get gps data
-        gps.read(data);
+        gps.read(gpsData);
         const auto &coord = gpsData.coordinate;
         int gpsQual = (int) gpsData.gpsQuality; // gps quality
 
