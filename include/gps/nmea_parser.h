@@ -39,6 +39,9 @@ type 1 or 9 update, null field when DGPS is not used
 #include <sstream>
 #include <string>
 
+// Standard C includes
+#include <ctime>
+
 namespace BoBRobotics {
 namespace GPS {
 
@@ -61,37 +64,6 @@ enum class GPSQuality
     FRTK = 5
 };
 
-struct TimeStamp
-{
-    int hour{}, minute{}, second{}, millisecond{};
-
-    TimeStamp() = default;
-
-    TimeStamp(const std::string &timeString)
-    {
-        if (timeString.empty())
-            throw NMEAError("Empty string when reading time");
-        if (timeString.length() < 9)
-            throw NMEAError("Time information parse error");
-        hour = stoi(timeString.substr(0, 2));
-        minute = stoi(timeString.substr(2, 2));
-        second = stoi(timeString.substr(4, 2));
-        millisecond = stoi(timeString.substr(7, 2));
-    }
-
-    std::string str() const
-    {
-        std::stringstream ss;
-        ss << std::setw(2) << std::setfill('0') << hour << ":"
-           << std::setw(2) << std::setfill('0') << minute << ":";
-        if (second < 10) {
-            ss << '0';
-        }
-        ss << static_cast<float>(second) + static_cast<float>(millisecond) / 1000.f;
-        return ss.str();
-    }
-};
-
 struct GPSData
 {
     MapCoordinate::GPSCoordinate coordinate;   // Latitude and longitude coordinate
@@ -99,7 +71,8 @@ struct GPSData
     int numberOfSatellites;                    // Currently observed number of satelites
     units::length::meter_t horizontalDilution; // horizontal dilution - lower value is better
     GPSQuality gpsQuality;                     // GPS quality indicator
-    TimeStamp time;                            // time of measurement
+    std::tm time;                              // time of measurement
+    int milliseconds;                          // milliseconds component of measurement time
 };
 
 class NMEAParser

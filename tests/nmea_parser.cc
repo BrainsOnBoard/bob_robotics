@@ -18,10 +18,10 @@ TEST(NMEAParser, SampleGNGGASentence)
     nmea.parseCoordinates(sentence, data);
 
     // Check timestamp
-    EXPECT_EQ(data.time.hour, 0);
-    EXPECT_EQ(data.time.minute, 10);
-    EXPECT_EQ(data.time.second, 43);
-    EXPECT_EQ(data.time.millisecond, 0);
+    EXPECT_EQ(data.time.tm_hour, 0);
+    EXPECT_EQ(data.time.tm_min, 10);
+    EXPECT_EQ(data.time.tm_sec, 43);
+    EXPECT_EQ(data.milliseconds, 0);
 
     // Check coordinates
     BOB_EXPECT_UNIT_T_EQ(data.coordinate.lat, degree_t{ 44 } + arcminute_t{ 4.14036 });

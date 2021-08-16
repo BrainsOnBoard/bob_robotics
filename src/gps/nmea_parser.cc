@@ -4,6 +4,23 @@
 
 namespace BoBRobotics {
 namespace GPS {
+
+void
+parseTime(const std::string &field, std::tm &time, int &milliseconds)
+{
+    if (field.empty()) {
+        throw NMEAError("Empty string when reading time");
+    }
+    if (field.length() < 9) {
+        throw NMEAError("Time information parse error");
+    }
+
+    time.tm_hour = stoi(field.substr(0, 2));
+    time.tm_min = stoi(field.substr(2, 2));
+    time.tm_sec = stoi(field.substr(4, 2));
+    milliseconds = stoi(field.substr(7, 2));
+}
+
 bool
 NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
 {
@@ -16,7 +33,8 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
     }
 
     try {
-        data.time = TimeStamp{ m_Fields[0] }; // UTC time
+        parseTime(m_Fields[0], data.time, data.milliseconds); // UTC time
+
         data.coordinate.lat = degree_t(std::stod(m_Fields[1].substr(0, 2))) +
                               arcminute_t(std::stod(m_Fields[1].substr(2, 8)));
         if (m_Fields[2][0] == 'W') {

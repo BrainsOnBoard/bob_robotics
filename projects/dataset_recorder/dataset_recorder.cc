@@ -52,9 +52,9 @@ bobMain(int argc, char *argv[])
      */
     GPS::GPSData gpsData;
     gps.read(gpsData);
-    currentTime.tm_hour = gpsData.time.hour;
-    currentTime.tm_min = gpsData.time.minute;
-    currentTime.tm_sec = gpsData.time.second;
+    currentTime.tm_hour = gpsData.time.tm_hour;
+    currentTime.tm_min = gpsData.time.tm_min;
+    currentTime.tm_sec = gpsData.time.tm_sec;
 
     // Make a new image database using current time to generate folder name
     Navigation::ImageDatabase database{ currentTime };

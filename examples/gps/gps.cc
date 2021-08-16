@@ -56,7 +56,7 @@ bobMain(int argc, char **argv)
         const auto &time = data.time;
 
         std::cout << "latitude: " << coord.lat.value() << " longitude: " << coord.lon.value() << "[ "
-                  << time.hour << ":" << time.minute << ":" << time.second << ":" << time.millisecond << "] " << std::endl;
+                  << time.tm_hour << ":" << time.tm_min << ":" << time.tm_sec << ":" << data.milliseconds << "]\n";
     }
 
     return 0;
