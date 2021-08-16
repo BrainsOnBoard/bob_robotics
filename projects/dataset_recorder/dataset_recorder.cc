@@ -41,20 +41,16 @@ bobMain(int argc, char *argv[])
     const millisecond_t runTime = (argc > 1) ? second_t{ std::stod(argv[1]) } : 30_s;
     LOGD << "running for " << runTime;
 
-    // Use the system clock to get date (might be wrong!)
-    time_t rawtime;
-    time(&rawtime);
-    std::tm currentTime = *localtime(&rawtime);
-
     /*
-     * Use GPS to get time, because Jetsons don't remember the system time
-     * across boots.
+     * Use GPS to get time and date, because Jetsons don't remember the system
+     * time across boots.
+     *
+     * As the GPS gives the current time in UTC (and we might be in BST in the
+     * UK), we convert to localtime first.
      */
-    GPS::GPSData gpsData;
-    gps.read(gpsData);
-    currentTime.tm_hour = gpsData.time.tm_hour;
-    currentTime.tm_min = gpsData.time.tm_min;
-    currentTime.tm_sec = gpsData.time.tm_sec;
+    std::tm currentTime = gps.getCurrentDateTime();
+    const auto time = mktime(&currentTime); // get raw time
+    currentTime = *localtime(&time);
 
     // Make a new image database using current time to generate folder name
     Navigation::ImageDatabase database{ currentTime };
@@ -81,6 +77,7 @@ bobMain(int argc, char *argv[])
                                                      "Timestamp [ms]" });
 
     cv::Mat frame;
+    GPS::GPSData gpsData;
     catcher.trapSignals();
     sw.start();
     for (auto time = 0_ms; time < runTime;) {

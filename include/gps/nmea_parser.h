@@ -79,6 +79,7 @@ class NMEAParser
 {
 public:
     bool parseCoordinates(const std::string &line, GPSData &data);
+    bool parseDateTime(const std::string &line, std::tm &time);
 
 private:
     std::array<std::string, 9> m_Fields; // For storing fields of NMEA sentences

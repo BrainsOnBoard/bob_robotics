@@ -6,19 +6,40 @@ namespace BoBRobotics {
 namespace GPS {
 
 void
-parseTime(const std::string &field, std::tm &time, int &milliseconds)
+parseTimeField(const std::string &field, std::tm &time)
 {
-    if (field.empty()) {
-        throw NMEAError("Empty string when reading time");
-    }
-    if (field.length() < 9) {
-        throw NMEAError("Time information parse error");
-    }
-
     time.tm_hour = stoi(field.substr(0, 2));
     time.tm_min = stoi(field.substr(2, 2));
     time.tm_sec = stoi(field.substr(4, 2));
-    milliseconds = stoi(field.substr(7, 2));
+
+    // Indicates that information about DST is not available
+    time.tm_isdst = -1;
+}
+
+bool
+NMEAParser::parseDateTime(const std::string &line, std::tm &time)
+{
+    if (!parse(line, "$GNZDA", 6)) {
+        return false;
+    }
+
+    try {
+        parseTimeField(m_Fields[0], time);
+        time.tm_mday = stoi(m_Fields[1]);
+        time.tm_mon = stoi(m_Fields[2]) - 1;
+        time.tm_year = stoi(m_Fields[3]) - 1900;
+
+        // This field is available in GNU/BSD but is not strict ISO C
+        int hoursOff = m_Fields[4].empty() ? 0 : stoi(m_Fields[4]);
+        int minutesOff = m_Fields[5].size() <= 3 ? 0 : stoi(m_Fields[5].substr(0, 2));
+        time.tm_gmtoff = 3600 * hoursOff + 60 * minutesOff;
+    } catch (std::invalid_argument &e) {
+        throw NMEAError(e.what());
+    } catch (std::out_of_range &e) {
+        throw NMEAError(e.what());
+    }
+
+    return true;
 }
 
 bool
@@ -33,7 +54,8 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
     }
 
     try {
-        parseTime(m_Fields[0], data.time, data.milliseconds); // UTC time
+        parseTimeField(m_Fields[0], data.time); // UTC time
+        data.milliseconds = stoi(m_Fields[0].substr(7, 2));
 
         data.coordinate.lat = degree_t(std::stod(m_Fields[1].substr(0, 2))) +
                               arcminute_t(std::stod(m_Fields[1].substr(2, 8)));
@@ -76,6 +98,28 @@ NMEAParser::parse(const std::string &line, const std::string &sentenceId,
     }
     if (field != sentenceId) {
         return false;
+    }
+
+    if (line.size() < 3 || line[line.size() - 3] != '*') {
+        throw NMEAError{ "Missing checksum" };
+    }
+
+    // Check that the checksum matches
+    char *p;
+    long reportedChecksum = std::strtoul(&line[line.size() - 2], &p, 16);
+    if (*p != 0) {
+        throw NMEAError{ "Could not parse checksum" };
+    }
+
+    long actualChecksum = 0;
+    for (size_t i = 1; i < line.size() - 3; i++) {
+        actualChecksum ^= line[i];
+    }
+    if (reportedChecksum != actualChecksum) {
+        std::stringstream ss;
+        ss << "Bad checksum (expected: " << std::hex << reportedChecksum
+           << ", got: " << std::hex << actualChecksum << ")";
+        throw NMEAError{ ss.str() };
     }
 
     // Extract the remaining fields

@@ -1,4 +1,5 @@
 // BoB includes
+#include "common/stopwatch.h"
 #include "gps/gps_reader.h"
 
 // Third-party includes
@@ -20,6 +21,15 @@ GPSReader::GPSReader(const char *devicePath)
 
     // Check that we actually have valid readings
     waitForValidReading();
+
+    // These messages should be emitted roughly every ~1s by the ublox sensor
+    waitForCurrentTime();
+}
+
+const std::tm &
+GPSReader::getCurrentDateTime() const
+{
+    return m_CurrentTime;
 }
 
 void
@@ -73,6 +83,34 @@ GPSReader::waitForValidReading()
 }
 
 void
+GPSReader::waitForCurrentTime()
+{
+    using namespace std::literals;
+
+    // We may already have read a GNZDA message
+    if (m_CurrentTime.tm_year != 0) {
+        return;
+    }
+
+    // Try to read the current time + date for 5s
+    Stopwatch sw;
+    sw.start();
+    while (sw.elapsed() < 5s) {
+        // This method will block
+        m_Serial.read(m_Line);
+
+        try {
+            // If it's a GNZDA message, we want to extract the time + date info
+            if (m_Parser.parseDateTime(m_Line, m_CurrentTime)) {
+                return;
+            }
+        } catch (NMEAError &e) {
+            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+        }
+    }
+}
+
+void
 GPSReader::setBlocking(bool blocking)
 {
     auto tty = m_Serial.getAttributes();
@@ -94,6 +132,15 @@ GPSReader::read(GPSData &data)
                 // Signal that we have successfully read valid GPS data
                 return true;
             }
+
+            // Copy date and timezone info from cached GNZDA data
+            data.time.tm_mday = m_CurrentTime.tm_mday;
+            data.time.tm_mon = m_CurrentTime.tm_mon;
+            data.time.tm_year = m_CurrentTime.tm_year;
+            data.time.tm_gmtoff = m_CurrentTime.tm_gmtoff;
+
+            // If it's a GNZDA message, we want to extract the time + date info
+            m_Parser.parseDateTime(m_Line, m_CurrentTime);
         } catch (NMEAError &e) {
             LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
         }
