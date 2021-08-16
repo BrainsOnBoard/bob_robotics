@@ -56,10 +56,9 @@ GPSReader::waitForValidReading()
 {
     // if GPS location is invalid, keep trying to get a valid one
     // if failed x times we exit
-    const int maxTrials = 3;
-    int numTrials = maxTrials;
+    int numTrials = 3;
     GPSData data;
-    while (numTrials > 0) {
+    while (numTrials--) {
         read(data);
         if (data.gpsQuality != GPSQuality::INVALID) {
             LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
