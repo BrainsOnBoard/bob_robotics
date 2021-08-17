@@ -1,23 +1,16 @@
-#include "common.h"
+#include "auto_controller.h"
 
 // BoB robotics includes
 #include "common/macros.h"
-#include "common/map_coordinate.h"
 #include "navigation/image_database.h"
 #include "robots/ackermann/simulated_ackermann.h"
-#include "robots/control/pure_pursuit_controller.h"
 #include "video/randominput.h"
 
 // Third-party includes
 #include "third_party/matplotlibcpp.h"
 
 // Standard C++ includes
-#include <algorithm>
-#include <iostream>
-#include <limits>
-#include <utility>
 #include <vector>
-
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -53,32 +46,20 @@ bobMain(int argc, char **argv)
     constexpr millimeter_t LookAheadDistance = 1_m;   // lookahead distance
     constexpr millimeter_t StoppingDist = 5_cm;       // car's stopping distance
 
-    BOB_ASSERT(argc > 1);
-    const auto route = loadRoute(argv[1]);
+    BOB_ASSERT(argc == 2);
 
     Robots::Ackermann::SimulatedAckermann robot{ MaxSpeed, 500_mm, 0_m, MaxTurn };
     RobotArrow arrow;
-    Robots::PurePursuitController controller{ LookAheadDistance, robot.getDistanceBetweenAxis(), StoppingDist };
+    AutoController controller{ argv[1], LookAheadDistance, robot.getDistanceBetweenAxis(), StoppingDist };
     Navigation::ImageDatabase database;
+    const auto &route = controller.getRoute();
 
-    constexpr meter_t infM{ std::numeric_limits<double>::infinity() };
-    auto xLims = std::make_pair(infM, -infM);
-    auto yLims = xLims;
     std::vector<double> x, y;
     for (const auto &utm : route) {
         x.push_back(utm.easting.value());
         y.push_back(utm.northing.value());
 
-        xLims.first = std::min(xLims.first, utm.easting);
-        xLims.second = std::max(xLims.second, utm.easting);
-        yLims.first = std::min(yLims.first, utm.northing);
-        yLims.second = std::max(yLims.second, utm.northing);
-
-        controller.addWayPoint(utm.toVector());
     }
-
-    std::cout << "x limits: [" << xLims.first << ", " << xLims.second << "]\n";
-    std::cout << "y limits: [" << yLims.first << ", " << yLims.second << "]\n";
 
     Pose2<meter_t, degree_t> pose{ route[0].easting + 0.5_m, route[0].northing + 0.5_m, 270_deg };
     robot.setPose(pose);
@@ -97,24 +78,7 @@ bobMain(int argc, char **argv)
         plt::axis("equal");
         plt::pause((1 / frameRate).value());
 
-        const auto pose = robot.getPose();
-        const auto lookPoint = controller.getLookAheadPoint(pose);
-        if (!lookPoint) {
-            LOGE << "Robot got stuck! 😭";
-            break;
-        }
-
-        // calculate turning angle with controller
-        const auto turningAngle = controller.getTurningAngle(pose, lookPoint);
-        if (turningAngle) {
-            const auto ang = turningAngle.value();
-            if (abs(ang) > MaxTurn) {
-                robot.move(MaxSpeed, copysign(MaxTurn, ang));
-            } else {
-                robot.move(MaxSpeed, ang);
-            }
-        } else {
-            LOGI << "Reached destination!";
+        if (!controller.step(robot.getPose(), robot, MaxSpeed, MaxTurn)) {
             break;
         }
 
