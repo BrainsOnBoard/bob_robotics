@@ -7,7 +7,12 @@
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
 #include "robots/ackermann/rc_car_bot.h"
+
+#ifdef DUMMY_CAMERA
+#include "video/randominput.h"
+#else
 #include "video/panoramic.h"
+#endif
 
 // Third-party includes
 #include "plog/Log.h"
@@ -21,6 +26,7 @@
 // Standard C++ includes
 #include <array>
 #include <chrono>
+#include <memory>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -58,8 +64,14 @@ bobMain(int argc, char *argv[])
     // Make a new image database using current time to generate folder name
     Navigation::ImageDatabase database{ currentTime };
 
+#ifdef DUMMY_CAMERA
+    Video::RandomInput<> randomInput({ 360, 100 });
+    auto *cam = &randomInput;
+    LOGW << "USING DUMMY CAMERA!!!!!!!!";
+#else
     // PixPro defaults to 1440x1440
     auto cam = Video::getPanoramicCamera();
+#endif
     LOGI << "camera initialised " << cam->getOutputSize();
 
     BackgroundExceptionCatcher catcher;

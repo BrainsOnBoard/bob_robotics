@@ -2,4 +2,5 @@ cmake_minimum_required(VERSION 3.1)
 include(../../cmake/bob_robotics.cmake)
 BoB_project(IS_EXPERIMENT TRUE
             SOURCES dataset_recorder.cc
-            BOB_MODULES common gps imgproc navigation robots/ackermann video)
+            BOB_MODULES common gps imgproc navigation robots/ackermann video
+            OPTIONS DUMMY_CAMERA)
