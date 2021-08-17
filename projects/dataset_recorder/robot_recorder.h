@@ -1,7 +1,6 @@
 #pragma once
 
 // BoB robotics includes
-#include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
 #include "common/stopwatch.h"
 #include "gps/gps_reader.h"
@@ -30,8 +29,9 @@
 namespace BoBRobotics {
 class RobotRecorder {
 public:
-    RobotRecorder()
-      : m_Camera{ getCamera() }
+    RobotRecorder(GPS::GPSReader &gps)
+      : m_GPS{ gps }
+      , m_Camera{ getCamera() }
       , m_Database{ getCurrentTime() }
       , m_Recorder{ m_Database.getRouteVideoRecorder(m_Camera->getOutputSize(),
                                                      m_Camera->getFrameRate(),
@@ -48,9 +48,6 @@ public:
     {
         // We're polling the GPS
         m_GPS.setBlocking(false);
-
-        // Turn Ctrl+C etc. into exceptions
-        m_Catcher.trapSignals();
     }
 
     ~RobotRecorder()
@@ -61,14 +58,11 @@ public:
 
     //! Record from sensors. Returns time elapsed since start of recording.
     template<class T>
-    auto step(T &robot)
+    auto step(T &robot, BN055 &imu)
     {
         using namespace units::angle;
         using namespace units::length;
         using namespace units::time;
-
-        // Check for signals
-        m_Catcher.check();
 
         // Read image from camera (synchronously)
         m_Camera->readFrameSync(m_Frame);
@@ -79,7 +73,7 @@ public:
         // get imu data
         degree_t yaw{ NAN }, pitch{ NAN }, roll{ NAN };
         try {
-            const auto angles = m_IMU.getEulerAngles();
+            const auto angles = imu.getEulerAngles();
             yaw = angles[0];
             pitch = angles[1];
             roll = angles[2];
@@ -131,15 +125,18 @@ public:
         return time;
     }
 
+    const auto &getGPSData() const
+    {
+        return m_GPSData;
+    }
+
 private:
-    GPS::GPSReader m_GPS;
+    GPS::GPSReader &m_GPS;
     GPS::GPSData m_GPSData;
-    BN055 m_IMU;
     std::unique_ptr<Video::Input> m_Camera;
     cv::Mat m_Frame;
     Navigation::ImageDatabase m_Database;
     Navigation::ImageDatabase::RouteRecorder<Navigation::ImageDatabase::VideoFileWriter> m_Recorder;
-    BackgroundExceptionCatcher m_Catcher;
     Stopwatch m_Stopwatch;
 
     static std::unique_ptr<Video::Input> getCamera()

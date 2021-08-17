@@ -11,7 +11,12 @@ set(MODULES common navigation robots/ackermann video)
 if(${TARGET} STREQUAL dataset_recorder)
     BoB_project(IS_EXPERIMENT TRUE
                 SOURCES ${SOURCES}
-                BOB_MODULES ${MODULES} gps imgproc
+                BOB_MODULES ${MODULES} gps
+                OPTIONS DUMMY_CAMERA)
+elseif(${TARGET} STREQUAL auto_dataset_recorder)
+    BoB_project(IS_EXPERIMENT TRUE
+                SOURCES ${SOURCES}
+                BOB_MODULES ${MODULES} gps robots/control
                 OPTIONS DUMMY_CAMERA)
 elseif(${TARGET} STREQUAL auto_dataset_recorder_simulated)
     BoB_project(SOURCES ${SOURCES}
