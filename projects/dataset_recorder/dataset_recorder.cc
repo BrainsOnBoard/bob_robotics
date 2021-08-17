@@ -38,6 +38,9 @@ bobMain(int argc, char *argv[])
     GPS::GPSReader gps;
     BN055 imu;
 
+    // We're polling the GPS
+    gps.setBlocking(false);
+
     const millisecond_t runTime = (argc > 1) ? second_t{ std::stod(argv[1]) } : 30_s;
     LOGD << "running for " << runTime;
 
@@ -111,26 +114,36 @@ bobMain(int argc, char *argv[])
             LOGE << "Could not read speed and steering angle from robot : " << e.what();
         }
 
-        // get gps data
-        gps.read(gpsData);
-        const auto &coord = gpsData.coordinate;
-        int gpsQual = (int) gpsData.gpsQuality; // gps quality
+        // Poll for GPS data
+        if (gps.read(gpsData)) {
+            const auto &coord = gpsData.coordinate;
+            int gpsQual = (int) gpsData.gpsQuality; // gps quality
 
-        // output results
-        LOGD << std::setprecision(10)
-             << "GPS quality: " << gpsQual
-             << " latitude: " << coord.lat.value()
-             << " longitude: " << coord.lon.value()
-             << " num sats: " << gpsData.numberOfSatellites
-             << " time: " << time.value() << std::endl;
+            // output results
+            LOGD << std::setprecision(10)
+                << "GPS quality: " << gpsQual
+                << " latitude: " << coord.lat.value()
+                << " longitude: " << coord.lon.value()
+                << " num sats: " << gpsData.numberOfSatellites
+                << " time: " << time.value() << std::endl;
 
-        // converting to UTM
-        const auto utm = MapCoordinate::latLonToUTM(coord);
-        recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
-                        botSpeed, turnAngle.value(), utm.zone,
-                        (int) gpsData.gpsQuality,
-                        millimeter_t{ gpsData.horizontalDilution }.value(),
-                        time.value());
+            // converting to UTM
+            const auto utm = MapCoordinate::latLonToUTM(coord);
+            recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
+                            botSpeed, turnAngle.value(), utm.zone,
+                            (int) gpsData.gpsQuality,
+                            millimeter_t{ gpsData.horizontalDilution }.value(),
+                            time.value());
+        } else {
+            /*
+             * No new data was available. Indicate this by writing NaNs to the
+             * CSV file. We can always estimate these missing values post hoc
+             * with interpolation.
+             */
+            recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
+                frame, pitch, roll, botSpeed, turnAngle.value(), "",
+                -1, NAN, time.value());
+        }
     }
 
     // Make sure that written data is actually written to disk before we exit
