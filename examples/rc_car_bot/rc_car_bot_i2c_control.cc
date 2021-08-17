@@ -1,7 +1,7 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/stopwatch.h"
-#include "robots/rc_car_bot.h"
+#include "robots/ackermann/rc_car_bot.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -15,7 +15,7 @@ using namespace std::literals;
 
 int bobMain(int, char**)
 {
-    RCCarBot bot;
+    Ackermann::RCCarBot bot;
     Stopwatch sw;
 
     std::cout << "Press Ctrl+C to quit\n";

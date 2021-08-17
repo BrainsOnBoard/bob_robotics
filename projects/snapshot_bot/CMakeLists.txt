@@ -6,8 +6,6 @@ if(NOT TARGET)
     set(TARGET snapshot_bot)
 endif()
 
-
-
 if(${TARGET} STREQUAL snapshot_bot)
     if(USE_ODK2)
         add_definitions(-DUSE_ODK2)

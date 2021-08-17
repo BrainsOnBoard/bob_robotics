@@ -3,7 +3,7 @@
 #include "Servo.h"
 #include "Wire.h"
 
-using namespace BoBRobotics::Robots::RCCar;
+using namespace BoBRobotics::Robots::Ackermann::RCCar;
 
 volatile Movement i2cMove{}, remoteMove{}; // holds data about speed and turning
 volatile bool sendRemote = false;

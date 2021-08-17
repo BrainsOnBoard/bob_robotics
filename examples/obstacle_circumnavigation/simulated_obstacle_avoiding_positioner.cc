@@ -3,7 +3,7 @@
 #include "common/pose.h"
 #include "robots/control/obstacle_circumnavigation.h"
 #include "robots/control/robot_positioner.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "viz/sfml/sfml_world.h"
 
 // Third-party includes
@@ -19,7 +19,7 @@ using namespace units::angle;
 
 int bobMain(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);
+    Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm);
     Viz::SFMLWorld display;
     auto car = display.createCarAgent();
 

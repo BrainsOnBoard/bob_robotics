@@ -1,15 +1,18 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "navigation/read_objects.h"
 #include "net/client.h"
 #include "robots/control/collision_detector.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Eigen
 #include <Eigen/Core>
@@ -69,8 +72,8 @@ int bobMain(int, char **)
     // Control robot with joystick over network
     HID::Joystick joystick;
     Net::Client client;
-    Robots::TankNetSink tank(client);
-    tank.addJoystick(joystick);
+    Robots::Tank::Net::Sink tank(client);
+    HID::addJoystick(tank, joystick);
 
     // Display for robot + objects
     Viz::SFMLWorld display{ V{ 5_m, 5_m } };

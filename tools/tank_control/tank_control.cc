@@ -1,20 +1,25 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/robot_type.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
+#include "robots/tank/net/source.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
 
-#ifdef ROBOT_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3_EV3
 #include "robots/ev3/mindstorms_imu.h"
+#include "robots/tank/slowed_tank.h"
 #endif
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C includes
 #include <cstring>
@@ -46,21 +51,9 @@ int bobMain(int, char **)
     }
 
     // Construct tank of desired type
-    Robots::ROBOT_TYPE tank;
 
-    // Read motor commands from network
-    tank.readFromNetwork(*connection);
-
-    // Try to get joystick
-    try {
-        joystick = std::make_unique<HID::Joystick>();
-        tank.addJoystick(*joystick);
-    } catch (std::runtime_error &e) {
-        // Joystick not found
-        LOGW << e.what();
-    }
-
-#ifdef ROBOT_TYPE_EV3
+#ifdef ROBOT_TYPE_EV3_EV3
+    Robots::Tank::SlowedTank<ROBOT_TYPE> tank;
     tank.setMaximumSpeedProportion(0.7f); // Sensible default
 
     // If an IMU is present, stream over network
@@ -74,7 +67,21 @@ int bobMain(int, char **)
         LOGI << "Found Mindstorms IMU";
         imu->streamOverNetwork(connection);
     }
+#else
+    ROBOT_TYPE tank;
 #endif
+
+    // Read motor commands from network
+    const auto netSource = Robots::Tank::Net::createSource(*connection, tank);
+
+    // Try to get joystick
+    try {
+        joystick = std::make_unique<HID::Joystick>();
+        HID::addJoystick(tank, *joystick);
+    } catch (std::runtime_error &e) {
+        // Joystick not found
+        LOGW << e.what();
+    }
 
     if (!joystick && !camera) {
         // Run on main thread

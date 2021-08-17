@@ -11,9 +11,10 @@
 #include "common/background_exception_catcher.h"
 #include "plog/Log.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
 #include "os/net.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "video/display.h"
 #include "video/netsource.h"
 
@@ -50,7 +51,7 @@ int bobMain(int argc, char **argv)
     Video::NetSource video(client);
 
     // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
@@ -59,7 +60,7 @@ int bobMain(int argc, char **argv)
 
     // Add joystick for controlling robot
     HID::Joystick joystick;
-    tank.addJoystick(joystick);
+    HID::addJoystick(tank, joystick);
 
     // Display video stream on screen
     Video::Display display(video, { 1240, 500 });

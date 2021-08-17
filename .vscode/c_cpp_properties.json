@@ -33,8 +33,6 @@
                 "/usr/include/genn"
             ],
             "defines": [
-                "ROBOT_TYPE_TANK",
-                "ROBOT_TYPE=Tank",
                 "BOB_ROBOTICS_PATH=\"/some/path\"",
                 "BOB_PROJECT_GIT_COMMIT=\"abcdef\"",
                 "BOB_ROBOTICS_GIT_COMMIT=\"abcdef\""

@@ -45,7 +45,7 @@ class JoystickBase : public Threadable
      * @param pressed Whether button was pressed/released
      * @return True if the function has handled the event, false otherwise
      */
-    using ButtonHandler = std::function<bool(JButton button, bool pressed)>;
+    using ButtonHandler = std::function<bool(JoystickBase<JAxis, JButton> &, JButton button, bool pressed)>;
 
     /*!
      * \brief A delegate to handle joystick axis events (i.e. moving joysticks)
@@ -54,7 +54,7 @@ class JoystickBase : public Threadable
      * @param value Value from -1.0f to 1.0f representing new position of axis
      * @return True if the function has handled the event, false otherwise
      */
-    using AxisHandler = std::function<bool(JAxis axis, float value)>;
+    using AxisHandler = std::function<bool(JoystickBase<JAxis, JButton> &, JAxis axis, float value)>;
 
 protected:
     template<class T>
@@ -255,7 +255,7 @@ protected:
 
         if(!isInitial && (isPressed(button) || isReleased(button))) {
             for (auto handler : m_ButtonHandlers) {
-                if (handler(button, isPressed(button))) {
+                if (handler(*this, button, isPressed(button))) {
                     break;
                 }
             }
@@ -275,7 +275,7 @@ protected:
 
                 // run handlers
                 for (auto handler : m_AxisHandlers) {
-                    if (handler(axis, processedState)) {
+                    if (handler(*this, axis, processedState)) {
                         break;
                     }
                 }

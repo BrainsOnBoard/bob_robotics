@@ -1,3 +1,5 @@
+#ifndef WIN32
+
 // BoB includes
 #include "common/stopwatch.h"
 #include "gps/gps_reader.h"
@@ -149,3 +151,5 @@ GPSReader::read(GPSData &data)
 
 } // GPS
 } // BoBRobotics
+
+#endif

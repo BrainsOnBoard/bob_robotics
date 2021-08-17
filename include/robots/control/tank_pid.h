@@ -3,13 +3,12 @@
 // BoB robotics includes
 #include "common/circstat.h"
 #include "common/fsm.h"
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "vicon/udp.h"
-#include "robots/tank.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C includes
@@ -24,15 +23,15 @@ namespace Robots {
 using namespace units::literals;
 
 // Forward declaration
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class TankPID;
 
-template<class PoseGetterType, class... Args>
-auto createTankPID(Robots::Tank &tank,
+template<class TankType, class PoseGetterType, class... Args>
+auto createTankPID(TankType &tank,
                    PoseGetterType &poseGetter,
                    Args&&... otherArgs)
 {
-    return TankPID<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+    return TankPID<TankType, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
 }
 
 enum class TankPIDState
@@ -43,7 +42,7 @@ enum class TankPIDState
     AtGoal
 };
 
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class TankPID
   : FSM<TankPIDState>::StateHandler
 {
@@ -53,7 +52,7 @@ class TankPID
     using Event = FSM<TankPIDState>::StateHandler::Event;
 
 public:
-    TankPID(Tank &robot,
+    TankPID(TankType &robot,
             PoseGetterType &poseGetter,
             float Kp, float Ki, float Kd,
             meter_t distanceTolerance = 5_cm,
@@ -104,7 +103,7 @@ public:
 
 private:
     FSM<TankPIDState> m_StateMachine;
-    Tank &m_Robot;
+    TankType &m_Robot;
     PoseGetterType &m_PoseGetter;
     Pose2<meter_t, radian_t> m_RobotPose;
     Vector2<meter_t> m_Goal;
