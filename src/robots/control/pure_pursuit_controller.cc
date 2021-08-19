@@ -2,6 +2,9 @@
 #include "common/macros.h"
 #include "robots/control/pure_pursuit_controller.h"
 
+// Standard C++ includes
+#include <cmath>
+
 using namespace units::angle;
 using namespace units::length;
 
@@ -28,17 +31,17 @@ PurePursuitController::PurePursuitController(millimeter_t lookAhead,
 {
 }
 
-//! set waypoints which forms a path to be followed
-void
-PurePursuitController::setWayPoints(const std::vector<Vector2<millimeter_t>> &wp)
-{
-    m_wayPoints = wp;
-}
-
 //! adds to the list of waypoints
 void
 PurePursuitController::addWayPoint(const Vector2<millimeter_t> &wayPoint)
 {
+    /*
+     * Check that the way point is a real number. This is not a given, as e.g.
+     * we use NaNs to indicate that GPS data was not available in
+     * dataset_recorder.
+     */
+    BOB_ASSERT(std::isfinite(wayPoint.x().value()) && std::isfinite(wayPoint.y().value()));
+
     m_wayPoints.push_back(wayPoint);
 }
 

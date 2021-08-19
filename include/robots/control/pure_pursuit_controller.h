@@ -33,9 +33,6 @@ public:
                           millimeter_t wheelBaseLength,
                           millimeter_t stoppingDist);
 
-    //! set waypoints which forms a path to be followed
-    void setWayPoints(const std::vector<Vector2<millimeter_t>> &wp);
-
     //! adds to the list of waypoints
     void addWayPoint(const Vector2<millimeter_t> &wayPoint);
 
