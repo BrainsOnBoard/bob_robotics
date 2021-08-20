@@ -5,9 +5,11 @@
 #include "common/background_exception_catcher.h"
 #include "common/circstat.h"
 #include "common/macros.h"
+#include "common/stopwatch.h"
 #include "robots/ackermann/rc_car_bot.h"
 
 using namespace BoBRobotics;
+using namespace std::literals;
 using namespace units::angle;
 using namespace units::length;
 using namespace units::math;
@@ -37,11 +39,14 @@ bobMain(int argc, char **argv)
     const radian_t headingOffset = [&]() {
         constexpr float InitialDriveSpeed = 0.5f;
         constexpr meter_t InitialDriveDistance = 1_m;
-
+        constexpr auto DriveTimeout = 20s;
         GPS::GPSData gpsData;
+
+        LOGI << "Calculating robot's position with GPS...";
 
         // Get initial position (try to get reading 5 times)
         // (NB: GPS reads are blocking at this point)
+        LOGI << "Waiting for initial GPS fix";
         for (int i = 0; i < 5; i++) {
             catcher.check();
 
@@ -55,12 +60,20 @@ bobMain(int argc, char **argv)
         // Drive forward until we've gone x metres
         MapCoordinate::UTMCoordinate utmEnd{};
         meter_t distance;
+        LOGI << "Driving forwards...";
+        Stopwatch sw;
+        sw.start();
         robot.moveForward(InitialDriveSpeed);
         do {
             catcher.check();
 
             gps.read(gpsData);
             if (gpsData.gpsQuality == GPS::GPSQuality::INVALID) {
+                // Put this additional check in so we don't drive forever
+                if (sw.elapsed() > DriveTimeout) {
+                    throw std::runtime_error{ "Timed out waiting for valid GPS reading" };
+                }
+
                 LOGW << "Invalid GPS reading!";
                 continue;
             }
@@ -69,6 +82,9 @@ bobMain(int argc, char **argv)
             distance = hypot(utmEnd.easting - utmStart.easting,
                              utmEnd.northing - utmStart.northing);
         } while (distance < InitialDriveDistance);
+        robot.stopMoving();
+
+        LOGI << "Successfully calculated heading";
 
         // Calculate offset
         const degree_t head = atan2(utmEnd.northing - utmStart.northing,
