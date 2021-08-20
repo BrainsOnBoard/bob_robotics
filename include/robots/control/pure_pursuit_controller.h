@@ -63,7 +63,7 @@ private:
 
     // computes the turning angle using the lookahead point
     degree_t computeTurningAngle(const Pose2<millimeter_t, radian_t> &robotPose,
-                                 const Vector2<millimeter_t> &lookPoint,
+                                 const Vector2<millimeter_t> &lookAheadPoint,
                                  millimeter_t lookAheadDistance) const;
 }; // PurePursuitController
 }  // Robot
