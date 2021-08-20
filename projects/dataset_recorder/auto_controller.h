@@ -93,13 +93,15 @@ private:
     {
         using namespace BoBRobotics;
 
-        BOB_ASSERT(!database.empty());
-
+        // Load route from image database
         std::vector<MapCoordinate::UTMCoordinate> route;
-        route.reserve(database.size());
+        for (const auto &entry : database) {
+            if (std::isnan(entry.position.x().value())) {
+                continue;
+            }
 
-        const auto entryToUTM = [](const Navigation::ImageDatabase::Entry &entry) {
-            MapCoordinate::UTMCoordinate utm;
+            route.emplace_back();
+            auto &utm = route.back();
             utm.easting = entry.position.x();
             utm.northing = entry.position.y();
             utm.height = entry.position.z();
@@ -107,10 +109,10 @@ private:
             // Copy UTM zone
             memset(utm.zone, 0, 4);
             strncpy(utm.zone, entry.getExtraField("UTM zone").c_str(), 3);
+        }
 
-            return utm;
-        };
-        std::transform(database.begin(), database.end(), std::back_inserter(route), entryToUTM);
+        // Check that we have at least two valid coordinates
+        BOB_ASSERT(route.size() >= 2);
 
         // Sanity check: make sure all coords are in same UTM zone
         const bool allUTMZonesSame = std::all_of(route.cbegin() + 1, route.cend(), [&route](const auto &utm) {
