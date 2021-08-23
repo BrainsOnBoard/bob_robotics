@@ -68,20 +68,17 @@ GPSReader::waitForValidReading()
 {
     // if GPS location is invalid, keep trying to get a valid one
     // if failed x times we exit
-    int numTrials = 3;
     GPSData data{};
-    while (numTrials--) {
+    for (int numTrials = 0; numTrials < 3; numTrials++) {
         read(data);
         if (data.gpsQuality != GPSQuality::INVALID) {
             LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
                  << data.coordinate.lon.value() << "°)";
-            break;
+            return;
         }
     }
 
-    if (numTrials == 0) {
-        throw std::runtime_error{ "There is no valid gps measurement, please try waiting for the survey in to finish and restart the program" };
-    }
+    throw std::runtime_error{ "There is no valid gps measurement, please try waiting for the survey in to finish and restart the program" };
 }
 
 void
