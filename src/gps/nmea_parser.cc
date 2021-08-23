@@ -61,14 +61,28 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
 
         data.coordinate.lat = degree_t(std::stod(m_Fields[1].substr(0, 2))) +
                               arcminute_t(std::stod(m_Fields[1].substr(2, 8)));
-        if (m_Fields[2][0] == 'W') {
-            data.coordinate.lat = -data.coordinate.lat;
+        switch (m_Fields[2][0]) {
+            case 'N':
+                break;
+            case 'S':
+                data.coordinate.lat = -data.coordinate.lat;
+                break;
+            default:
+                throw NMEAError{ "Bad latitude direction" };
         }
+
         data.coordinate.lon = degree_t(std::stod(m_Fields[3].substr(0, 3))) +
                               arcminute_t(std::stod(m_Fields[3].substr(3, 9)));
-        if (m_Fields[4][0] == 'S') {
-            data.coordinate.lon = -data.coordinate.lon;
+        switch (m_Fields[4][0]) {
+            case 'E':
+                data.coordinate.lon = -data.coordinate.lon;
+                break;
+            case 'W':
+                break;
+            default:
+                throw NMEAError{ "Bad longitude direction" };
         }
+
         data.gpsQuality = static_cast<GPSQuality>(std::stoi(m_Fields[5]));
         data.numberOfSatellites = std::stoi(m_Fields[6]);
         data.horizontalDilution = meter_t{ std::stod(m_Fields[7]) };
