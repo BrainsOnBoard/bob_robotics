@@ -134,9 +134,10 @@ NMEAParser::parse(const std::string &line, const std::string &sentenceId,
     }
 
     // Check that the checksum matches
-    char *p;
-    unsigned int reportedChecksum = std::strtoul(&line[line.size() - 2], &p, 16);
-    if (*p != 0) {
+    unsigned int reportedChecksum;
+    try {
+        reportedChecksum = std::stoul(&line[line.size() - 2], nullptr, 16);
+    } catch (std::exception &) {
         throw NMEAError{ "Could not parse checksum" };
     }
 

@@ -94,6 +94,15 @@ TEST(NMEAParser, BadChecksum)
                  NMEAError);
 }
 
+TEST(NMEAParser, InvalidChecksum)
+{
+    NMEAParser nmea;
+    GPSData data{};
+    EXPECT_THROW(nmea.parseCoordinates("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*xx",
+                                       data),
+                 NMEAError);
+}
+
 // We don't use the last few fields anyway, but let's test for if one of the ones we want is missing
 TEST_BROKEN_NMEA(TooFewFields, "$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12")
 TEST_BROKEN_NMEA(BadLatitude, "$GNGGA,A001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M")
