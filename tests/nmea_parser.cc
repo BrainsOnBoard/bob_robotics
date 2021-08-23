@@ -6,6 +6,9 @@
 // Standard C includes
 #include <cstring>
 
+// Standard C++ includes
+#include <sstream>
+
 using namespace BoBRobotics::GPS;
 using namespace units::angle;
 using namespace units::length;
@@ -63,3 +66,37 @@ TEST(NMEAParser, SampleGNZDASentence)
     EXPECT_EQ(time.tm_gmtoff, 0);
     EXPECT_EQ(time.tm_isdst, -1);
 }
+
+/*
+ * Check that a broken NMEA sentence triggers an NMEAError. Note that we append
+ * the correct checksum so that the parsing doesn't fail on those grounds.
+ */
+#define TEST_BROKEN_NMEA(name, line)                                                       \
+    TEST(NMEAParser, name)                                                                 \
+    {                                                                                      \
+        NMEAParser nmea;                                                                   \
+        GPSData data{};                                                                    \
+                                                                                           \
+        std::stringstream ss;                                                              \
+        const auto checksum = NMEAParser::computeChecksum(line, strlen(line));             \
+        ss << line << "*"                                                                  \
+           << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << checksum; \
+                                                                                           \
+        EXPECT_THROW(nmea.parseCoordinates(ss.str(), data), NMEAError);                    \
+    }
+
+TEST(NMEAParser, BadChecksum)
+{
+    NMEAParser nmea;
+    GPSData data{};
+    EXPECT_THROW(nmea.parseCoordinates("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*46",
+                                       data),
+                 NMEAError);
+}
+
+// We don't use the last few fields anyway, but let's test for if one of the ones we want is missing
+TEST_BROKEN_NMEA(TooFewFields, "$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12")
+TEST_BROKEN_NMEA(BadLatitude, "$GNGGA,A001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M")
+TEST_BROKEN_NMEA(BadNumSatellites, "$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,A12,0.98,1113.0,M,-21.3,M")
+TEST_BROKEN_NMEA(BadLatitudeDir, "$GNGGA,001043.00,4404.14036,E,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M")
+TEST_BROKEN_NMEA(BadLongitudeDir, "$GNGGA,001043.00,4404.14036,N,12118.85961,S,1,12,0.98,1113.0,M,-21.3,M")

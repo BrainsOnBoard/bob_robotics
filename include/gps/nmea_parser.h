@@ -78,6 +78,9 @@ struct GPSData
 class NMEAParser
 {
 public:
+    //! Compute an NMEA-style checksum
+    static unsigned int computeChecksum(const char *str, size_t len);
+
     /**!
      * \brief Parse an NMEA message indicating current latitude and longitude
      *

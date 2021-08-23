@@ -96,6 +96,19 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
     return true;
 }
 
+unsigned int
+NMEAParser::computeChecksum(const char *str, size_t len)
+{
+    unsigned int checksum = 0;
+
+    // Assume that the first char is $, which we skip
+    for (size_t i = 1; i < len; i++) {
+        checksum ^= str[i];
+    }
+
+    return checksum;
+}
+
 bool
 NMEAParser::parse(const std::string &line, const std::string &sentenceId,
                   size_t numFields)
@@ -122,15 +135,12 @@ NMEAParser::parse(const std::string &line, const std::string &sentenceId,
 
     // Check that the checksum matches
     char *p;
-    long reportedChecksum = std::strtoul(&line[line.size() - 2], &p, 16);
+    unsigned int reportedChecksum = std::strtoul(&line[line.size() - 2], &p, 16);
     if (*p != 0) {
         throw NMEAError{ "Could not parse checksum" };
     }
 
-    long actualChecksum = 0;
-    for (size_t i = 1; i < line.size() - 3; i++) {
-        actualChecksum ^= line[i];
-    }
+    unsigned int actualChecksum = computeChecksum(line.c_str(), line.size() - 3);
     if (reportedChecksum != actualChecksum) {
         std::stringstream ss;
         ss << "Bad checksum (expected: " << std::hex << reportedChecksum
