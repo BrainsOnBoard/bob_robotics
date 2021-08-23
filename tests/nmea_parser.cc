@@ -3,9 +3,6 @@
 // BoB robotics includes
 #include "gps/nmea_parser.h"
 
-// Standard C includes
-#include <cstring>
-
 // Standard C++ includes
 #include <sstream>
 
@@ -17,11 +14,10 @@ using namespace units::length;
 TEST(NMEAParser, SampleGNGGASentence)
 {
     NMEAParser nmea;
-    GPSData data;
 
     const auto sentence = "$GNGGA,001043.00,4404.14036,N,12118.85961,W,"
                           "1,12,0.98,1113.0,M,-21.3,M*47";
-    ASSERT_TRUE(nmea.parseCoordinates(sentence, data));
+    const auto data = nmea.parseCoordinates(sentence).value();
 
     // Check timestamp
     EXPECT_EQ(data.time.tm_hour, 0);
@@ -45,12 +41,8 @@ TEST(NMEAParser, SampleGNGGASentence)
 TEST(NMEAParser, SampleGNZDASentence)
 {
     NMEAParser nmea;
-    std::tm time;
 
-    // Don't leave fields zero-initialised, for the sake of this test
-    memset(&time, 0xff, sizeof(time));
-
-    ASSERT_TRUE(nmea.parseDateTime("$GNZDA,143042.00,25,08,2005,,*70", time));
+    const auto time = nmea.parseDateTime("$GNZDA,143042.00,25,08,2005,,*70").value();
 
     // Time
     EXPECT_EQ(time.tm_hour, 14);
@@ -75,31 +67,26 @@ TEST(NMEAParser, SampleGNZDASentence)
     TEST(NMEAParser, name)                                                                 \
     {                                                                                      \
         NMEAParser nmea;                                                                   \
-        GPSData data{};                                                                    \
                                                                                            \
         std::stringstream ss;                                                              \
         const auto checksum = NMEAParser::computeChecksum(line, strlen(line));             \
         ss << line << "*"                                                                  \
            << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << checksum; \
                                                                                            \
-        EXPECT_THROW(nmea.parseCoordinates(ss.str(), data), NMEAError);                    \
+        EXPECT_THROW(nmea.parseCoordinates(ss.str()), NMEAError);                    \
     }
 
 TEST(NMEAParser, BadChecksum)
 {
     NMEAParser nmea;
-    GPSData data{};
-    EXPECT_THROW(nmea.parseCoordinates("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*46",
-                                       data),
+    EXPECT_THROW(nmea.parseCoordinates("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*46"),
                  NMEAError);
 }
 
 TEST(NMEAParser, InvalidChecksum)
 {
     NMEAParser nmea;
-    GPSData data{};
-    EXPECT_THROW(nmea.parseCoordinates("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*xx",
-                                       data),
+    EXPECT_THROW(nmea.parseCoordinates("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*xx"),
                  NMEAError);
 }
 

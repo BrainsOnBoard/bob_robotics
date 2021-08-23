@@ -19,14 +19,15 @@ parseTimeField(const std::string &field, std::tm &time)
     time.tm_isdst = -1;
 }
 
-bool
-NMEAParser::parseDateTime(const std::string &line, std::tm &time)
+std::experimental::optional<std::tm>
+NMEAParser::parseDateTime(const std::string &line)
 {
-    // If this line isn't a valid time and date message, return false
+    // If this line isn't a valid time and date message, return nullopt
     if (!parse(line, "$GNZDA", 6)) {
-        return false;
+        return std::experimental::nullopt;
     }
 
+    std::tm time;
     try {
         parseTimeField(m_Fields[0], time);
         time.tm_mday = stoi(m_Fields[1]);
@@ -43,21 +44,22 @@ NMEAParser::parseDateTime(const std::string &line, std::tm &time)
         std::throw_with_nested(NMEAError{});
     }
 
-    return true;
+    return time;
 }
 
-bool
-NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
+std::experimental::optional<GPSData>
+NMEAParser::parseCoordinates(const std::string &line)
 {
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
 
-    // If this line isn't a valid coordinate message, return false
+    // If this line isn't a valid coordinate message, return nullopt
     if (!parse(line, "$GNGGA", 9)) {
-        return false;
+        return std::experimental::nullopt;
     }
 
+    GPSData data;
     try {
         parseTimeField(m_Fields[0], data.time); // UTC time
         data.milliseconds = stoi(m_Fields[0].substr(7, 2));
@@ -96,7 +98,7 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
         std::throw_with_nested(NMEAError{});
     }
 
-    return true;
+    return data;
 }
 
 unsigned int

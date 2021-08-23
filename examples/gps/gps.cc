@@ -42,21 +42,19 @@ bobMain(int argc, char **argv)
     }
 
     // print for 100 timestep
-    GPSData data;
     for (int i = 0; i < 100; i++) {
-        // NB: This will only return false in nonblocking mode
-        if (!gps.read(data)) {
+        if (const auto optData = gps.read()) {
+            const auto &data = optData.value();
+            const auto &coord = data.coordinate;
+            const auto &time = data.time;
+
+            std::cout << "latitude: " << coord.lat.value() << " longitude: " << coord.lon.value() << "[ "
+                      << time.tm_hour << ":" << time.tm_min << ":" << time.tm_sec << ":" << data.milliseconds << "]\n";
+        } else {
             // Indicate that polling has taken place, even though we don't yet have a reading
             std::cout << "(data not yet available)" << std::endl;
             std::this_thread::sleep_for(100ms);
-            continue;
         }
-
-        const auto &coord = data.coordinate;
-        const auto &time = data.time;
-
-        std::cout << "latitude: " << coord.lat.value() << " longitude: " << coord.lon.value() << "[ "
-                  << time.tm_hour << ":" << time.tm_min << ":" << time.tm_sec << ":" << data.milliseconds << "]\n";
     }
 
     return 0;

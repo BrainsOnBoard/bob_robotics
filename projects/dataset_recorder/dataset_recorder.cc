@@ -93,7 +93,6 @@ bobMain(int argc, char *argv[])
                                                      "Timestamp [ms]" });
 
     cv::Mat frame;
-    GPS::GPSData gpsData;
     catcher.trapSignals();
     sw.start();
     for (auto time = 0_ms; time < runTime;) {
@@ -127,7 +126,8 @@ bobMain(int argc, char *argv[])
         }
 
         // Poll for GPS data
-        if (gps.read(gpsData)) {
+        if (const auto optData = gps.read()) {
+            const auto &gpsData = optData.value();
             const auto &coord = gpsData.coordinate;
             int gpsQual = (int) gpsData.gpsQuality; // gps quality
 

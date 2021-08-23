@@ -4,6 +4,9 @@
 #include "common/serial_interface.h"
 #include "gps/nmea_parser.h"
 
+// Third-party includes
+#include "third_party/optional.hpp"
+
 // Standard C++ includes
 #include <string>
 
@@ -28,7 +31,7 @@ public:
      * Returns true if data was successfully read and false if no new data was
      * available. Throws an exception if the data is malformed.
      */
-    bool read(GPSData &data);
+    std::experimental::optional<GPSData> read();
 
     //! Set the underlying serial device to (non)blocking mode for reading
     void setBlocking(bool);

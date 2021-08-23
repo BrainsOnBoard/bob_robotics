@@ -31,6 +31,7 @@ type 1 or 9 update, null field when DGPS is not used
 #include "common/map_coordinate.h"
 
 // Third-party includes
+#include "third_party/optional.hpp"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -86,14 +87,14 @@ public:
      *
      * Returns true if the message is of the correct type, false otherwise.
      */
-    bool parseCoordinates(const std::string &line, GPSData &data);
+    std::experimental::optional<GPSData> parseCoordinates(const std::string &line);
 
     /**!
      * \brief Parse an NMEA message stating the time/date + timezone info
      *
      * Returns true if the message is of the correct type, false otherwise.
      */
-    bool parseDateTime(const std::string &line, std::tm &time);
+    std::experimental::optional<std::tm> parseDateTime(const std::string &line);
 
 private:
     std::array<std::string, 9> m_Fields; // For storing fields of NMEA sentences

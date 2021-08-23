@@ -68,9 +68,8 @@ GPSReader::waitForValidReading()
 {
     // if GPS location is invalid, keep trying to get a valid one
     // if failed x times we exit
-    GPSData data{};
     for (int numTrials = 0; numTrials < 3; numTrials++) {
-        read(data);
+        const auto data = read().value();
         if (data.gpsQuality != GPSQuality::INVALID) {
             LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
                  << data.coordinate.lon.value() << "°)";
@@ -100,7 +99,9 @@ GPSReader::waitForCurrentTime()
 
         try {
             // If it's a GNZDA message, we want to extract the time + date info
-            if (m_Parser.parseDateTime(m_Line, m_CurrentTime)) {
+            const auto time = m_Parser.parseDateTime(m_Line);
+            if (time) {
+                m_CurrentTime = time.value();
                 return;
             }
         } catch (NMEAError &e) {
@@ -117,29 +118,36 @@ GPSReader::setBlocking(bool blocking)
     m_Serial.setAttributes(tty);
 }
 
-bool
-GPSReader::read(GPSData &data)
+std::experimental::optional<GPSData>
+GPSReader::read()
 {
-    while (true) {
-        // If in non-blocking mode and there's no data, return
-        if (!m_Serial.read(m_Line)) {
-            return false;
-        }
+    std::experimental::optional<GPSData> optData;
 
+    /*
+     * If socket is non-blocking, then this will return false if there is no new
+     * data.
+     */
+    while (m_Serial.read(m_Line)) {
         try {
-            if (m_Parser.parseCoordinates(m_Line, data)) {
-                // Signal that we have successfully read valid GPS data
-                return true;
+            optData = m_Parser.parseCoordinates(m_Line);
+            if (optData) {
+                /*
+                 * We have GPS coordinates! Copy date and timezone info from
+                 * cached GNZDA data.
+                 */
+                auto &data = optData.value();
+                data.time.tm_mday = m_CurrentTime.tm_mday;
+                data.time.tm_mon = m_CurrentTime.tm_mon;
+                data.time.tm_year = m_CurrentTime.tm_year;
+                data.time.tm_gmtoff = m_CurrentTime.tm_gmtoff;
+
+                break;
             }
 
-            // Copy date and timezone info from cached GNZDA data
-            data.time.tm_mday = m_CurrentTime.tm_mday;
-            data.time.tm_mon = m_CurrentTime.tm_mon;
-            data.time.tm_year = m_CurrentTime.tm_year;
-            data.time.tm_gmtoff = m_CurrentTime.tm_gmtoff;
-
             // If it's a GNZDA message, we want to extract the time + date info
-            m_Parser.parseDateTime(m_Line, m_CurrentTime);
+            if (const auto optTime = m_Parser.parseDateTime(m_Line)) {
+                m_CurrentTime = optTime.value();
+            }
         } catch (NMEAError &e) {
             LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
 
@@ -150,6 +158,8 @@ GPSReader::read(GPSData &data)
             }
         }
     }
+
+    return optData;
 }
 
 } // GPS
