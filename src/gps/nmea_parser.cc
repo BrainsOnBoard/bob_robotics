@@ -19,6 +19,7 @@ parseTimeField(const std::string &field, std::tm &time)
 bool
 NMEAParser::parseDateTime(const std::string &line, std::tm &time)
 {
+    // If this line isn't a valid time and date message, return false
     if (!parse(line, "$GNZDA", 6)) {
         return false;
     }
@@ -49,6 +50,7 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
 
+    // If this line isn't a valid coordinate message, return false
     if (!parse(line, "$GNGGA", 9)) {
         return false;
     }

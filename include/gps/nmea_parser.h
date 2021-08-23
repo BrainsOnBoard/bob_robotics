@@ -78,7 +78,18 @@ struct GPSData
 class NMEAParser
 {
 public:
+    /**!
+     * \brief Parse an NMEA message indicating current latitude and longitude
+     *
+     * Returns true if the message is of the correct type, false otherwise.
+     */
     bool parseCoordinates(const std::string &line, GPSData &data);
+
+    /**!
+     * \brief Parse an NMEA message stating the time/date + timezone info
+     *
+     * Returns true if the message is of the correct type, false otherwise.
+     */
     bool parseDateTime(const std::string &line, std::tm &time);
 
 private:
