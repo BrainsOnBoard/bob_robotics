@@ -49,7 +49,7 @@ class NMEAError
   : public std::runtime_error
 {
 public:
-    NMEAError(const std::string &msg)
+    NMEAError(const std::string &msg = "")
       : std::runtime_error(msg)
     {}
 };

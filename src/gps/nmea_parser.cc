@@ -2,6 +2,9 @@
 #include "common/macros.h"
 #include "gps/nmea_parser.h"
 
+// Standard C++ includes
+#include <exception>
+
 namespace BoBRobotics {
 namespace GPS {
 
@@ -35,9 +38,9 @@ NMEAParser::parseDateTime(const std::string &line, std::tm &time)
         int minutesOff = m_Fields[5].size() <= 3 ? 0 : stoi(m_Fields[5].substr(0, 2));
         time.tm_gmtoff = 3600 * hoursOff + 60 * minutesOff;
     } catch (std::invalid_argument &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     } catch (std::out_of_range &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     }
 
     return true;
@@ -88,9 +91,9 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
         data.horizontalDilution = meter_t{ std::stod(m_Fields[7]) };
         data.coordinate.height = meter_t{ std::stod(m_Fields[8]) };
     } catch (std::invalid_argument &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     } catch (std::out_of_range &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     }
 
     return true;

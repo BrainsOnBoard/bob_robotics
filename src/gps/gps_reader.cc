@@ -142,6 +142,12 @@ GPSReader::read(GPSData &data)
             m_Parser.parseDateTime(m_Line, m_CurrentTime);
         } catch (NMEAError &e) {
             LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+
+            try {
+                std::rethrow_if_nested(e);
+            } catch(const std::exception& e) {
+                LOGW << "NMEA parsing error internal: " <<  e.what();
+            }
         }
     }
 }
