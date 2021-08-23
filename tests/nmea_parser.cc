@@ -59,23 +59,6 @@ TEST(NMEAParser, SampleGNZDASentence)
     EXPECT_EQ(time.tm_isdst, -1);
 }
 
-/*
- * Check that a broken NMEA sentence triggers an NMEAError. Note that we append
- * the correct checksum so that the parsing doesn't fail on those grounds.
- */
-#define TEST_BROKEN_NMEA(name, line)                                                       \
-    TEST(NMEAParser, name)                                                                 \
-    {                                                                                      \
-        NMEAParser nmea;                                                                   \
-                                                                                           \
-        std::stringstream ss;                                                              \
-        const auto checksum = NMEAParser::computeChecksum(line, strlen(line));             \
-        ss << line << "*"                                                                  \
-           << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << checksum; \
-                                                                                           \
-        EXPECT_THROW(nmea.parseCoordinates(ss.str()), NMEAError);                    \
-    }
-
 TEST(NMEAParser, BadChecksum)
 {
     NMEAParser nmea;
@@ -90,9 +73,45 @@ TEST(NMEAParser, InvalidChecksum)
                  NMEAError);
 }
 
+/*
+ * Check that a broken NMEA sentence triggers an NMEAError. Note that we append
+ * the correct checksum so that the parsing doesn't fail on those grounds.
+ */
+void
+testBrokenNMEA(const char *sentence)
+{
+    NMEAParser nmea;
+
+    std::stringstream ss;
+    const auto checksum = NMEAParser::computeChecksum(sentence, strlen(sentence));
+    ss << sentence << "*"
+       << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << checksum;
+
+    EXPECT_THROW(nmea.parseCoordinates(ss.str()), NMEAError);
+}
+
 // We don't use the last few fields anyway, but let's test for if one of the ones we want is missing
-TEST_BROKEN_NMEA(TooFewFields, "$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12")
-TEST_BROKEN_NMEA(BadLatitude, "$GNGGA,A001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M")
-TEST_BROKEN_NMEA(BadNumSatellites, "$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,A12,0.98,1113.0,M,-21.3,M")
-TEST_BROKEN_NMEA(BadLatitudeDir, "$GNGGA,001043.00,4404.14036,E,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M")
-TEST_BROKEN_NMEA(BadLongitudeDir, "$GNGGA,001043.00,4404.14036,N,12118.85961,S,1,12,0.98,1113.0,M,-21.3,M")
+TEST(NMEAParser, TooFewFields)
+{
+    testBrokenNMEA("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12");
+}
+
+TEST(NMEAParser, BadLatitude)
+{
+    testBrokenNMEA("$GNGGA,A001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M");
+}
+
+TEST(NMEAParser, BadNumSatellites)
+{
+    testBrokenNMEA("$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,A12,0.98,1113.0,M,-21.3,M");
+}
+
+TEST(NMEAParser, BadLatitudeDir)
+{
+    testBrokenNMEA("$GNGGA,001043.00,4404.14036,E,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M");
+}
+
+TEST(NMEAParser, BadLongitudeDir)
+{
+    testBrokenNMEA("$GNGGA,001043.00,4404.14036,N,12118.85961,S,1,12,0.98,1113.0,M,-21.3,M");
+}
