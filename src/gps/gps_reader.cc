@@ -119,34 +119,43 @@ GPSReader::setBlocking(bool blocking)
 }
 
 std::experimental::optional<GPSData>
+GPSReader::parseLine(NMEAParser &parser,
+                     const std::string &line,
+                     std::tm &currentTime)
+{
+    if (auto optData = parser.parseCoordinates(line)) {
+        /*
+         * We have GPS coordinates! Copy date and timezone info from
+         * cached GNZDA data.
+         */
+        auto &data = optData.value();
+        data.time.tm_mday = currentTime.tm_mday;
+        data.time.tm_mon = currentTime.tm_mon;
+        data.time.tm_year = currentTime.tm_year;
+        data.time.tm_gmtoff = currentTime.tm_gmtoff;
+
+        return optData;
+    }
+
+    // If it's a GNZDA message, we want to extract the time + date info
+    if (const auto optTime = parser.parseDateTime(line)) {
+        currentTime = optTime.value();
+    }
+
+    return std::experimental::nullopt;
+}
+
+std::experimental::optional<GPSData>
 GPSReader::read()
 {
-    std::experimental::optional<GPSData> optData;
-
     /*
      * If socket is non-blocking, then this will return false if there is no new
      * data.
      */
     while (m_Serial.read(m_Line)) {
         try {
-            optData = m_Parser.parseCoordinates(m_Line);
-            if (optData) {
-                /*
-                 * We have GPS coordinates! Copy date and timezone info from
-                 * cached GNZDA data.
-                 */
-                auto &data = optData.value();
-                data.time.tm_mday = m_CurrentTime.tm_mday;
-                data.time.tm_mon = m_CurrentTime.tm_mon;
-                data.time.tm_year = m_CurrentTime.tm_year;
-                data.time.tm_gmtoff = m_CurrentTime.tm_gmtoff;
-
-                break;
-            }
-
-            // If it's a GNZDA message, we want to extract the time + date info
-            if (const auto optTime = m_Parser.parseDateTime(m_Line)) {
-                m_CurrentTime = optTime.value();
+            if (auto optData = parseLine(m_Parser, m_Line, m_CurrentTime)) {
+                return optData;
             }
         } catch (NMEAError &e) {
             LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
@@ -159,7 +168,7 @@ GPSReader::read()
         }
     }
 
-    return optData;
+    return std::experimental::nullopt;
 }
 
 } // GPS

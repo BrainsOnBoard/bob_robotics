@@ -36,6 +36,10 @@ public:
     //! Set the underlying serial device to (non)blocking mode for reading
     void setBlocking(bool);
 
+    static std::experimental::optional<GPSData> parseLine(NMEAParser &parser,
+                                                          const std::string &line,
+                                                          std::tm &time);
+
 private:
     SerialInterface m_Serial;
     NMEAParser m_Parser;
