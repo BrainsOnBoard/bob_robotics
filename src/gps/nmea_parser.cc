@@ -3,6 +3,7 @@
 #include "gps/nmea_parser.h"
 
 // Standard C++ includes
+#include <algorithm>
 #include <exception>
 
 namespace BoBRobotics {
@@ -24,6 +25,13 @@ NMEAParser::parseDateTime(const std::string &line)
 {
     // If this line isn't a valid time and date message, return nullopt
     if (!parse(line, "$GNZDA", 6)) {
+        return std::experimental::nullopt;
+    }
+
+    // If any of the required fields are empty, return false
+    if (std::any_of(&m_Fields[0], &m_Fields[4],
+        [](const auto &s) { return s.empty(); }))
+    {
         return std::experimental::nullopt;
     }
 
@@ -60,6 +68,17 @@ NMEAParser::parseCoordinates(const std::string &line)
     }
 
     GPSData data;
+    if (std::any_of(&m_Fields[0], &m_Fields[9], [](const auto &s) { return s.empty();  })) {
+        data.coordinate = { degree_t(NAN), degree_t(NAN), meter_t(NAN) };
+        data.altitude = meter_t(NAN);
+        data.numberOfSatellites = 0;
+        data.horizontalDilution = meter_t(NAN);
+        data.gpsQuality = GPSQuality::INVALID;
+        data.time = {};
+        data.milliseconds = 0;
+        return data;
+    }
+
     try {
         parseTimeField(m_Fields[0], data.time); // UTC time
         data.milliseconds = stoi(m_Fields[0].substr(7, 2));
@@ -67,25 +86,25 @@ NMEAParser::parseCoordinates(const std::string &line)
         data.coordinate.lat = degree_t(std::stod(m_Fields[1].substr(0, 2))) +
                               arcminute_t(std::stod(m_Fields[1].substr(2, 8)));
         switch (m_Fields[2][0]) {
-            case 'N':
-                break;
-            case 'S':
-                data.coordinate.lat = -data.coordinate.lat;
-                break;
-            default:
-                throw NMEAError{ "Bad latitude direction" };
+        case 'N':
+            break;
+        case 'S':
+            data.coordinate.lat = -data.coordinate.lat;
+            break;
+        default:
+            throw NMEAError{ "Bad latitude direction" };
         }
 
         data.coordinate.lon = degree_t(std::stod(m_Fields[3].substr(0, 3))) +
                               arcminute_t(std::stod(m_Fields[3].substr(3, 9)));
         switch (m_Fields[4][0]) {
-            case 'E':
-                data.coordinate.lon = -data.coordinate.lon;
-                break;
-            case 'W':
-                break;
-            default:
-                throw NMEAError{ "Bad longitude direction" };
+        case 'E':
+            data.coordinate.lon = -data.coordinate.lon;
+            break;
+        case 'W':
+            break;
+        default:
+            throw NMEAError{ "Bad longitude direction" };
         }
 
         data.gpsQuality = static_cast<GPSQuality>(std::stoi(m_Fields[5]));

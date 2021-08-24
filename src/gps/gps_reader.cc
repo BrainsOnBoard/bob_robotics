@@ -11,6 +11,8 @@
 // Standard C++ includes
 #include <stdexcept>
 
+using namespace std::literals;
+
 namespace BoBRobotics {
 namespace GPS {
 
@@ -85,14 +87,18 @@ GPSReader::setSerialAttributes()
 void
 GPSReader::waitForValidReading()
 {
-    // if GPS location is invalid, keep trying to get a valid one
-    // if failed x times we exit
-    for (int numTrials = 0; numTrials < 3; numTrials++) {
-        const auto data = read().value();
-        if (data.gpsQuality != GPSQuality::INVALID) {
-            LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
-                 << data.coordinate.lon.value() << "°)";
-            return;
+    Stopwatch sw;
+    sw.start();
+    while (sw.elapsed() < 3s) {
+        try {
+            const auto data = read().value();
+            if (data.gpsQuality != GPSQuality::INVALID) {
+                LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
+                    << data.coordinate.lon.value() << "°)";
+                return;
+            }
+        } catch (NMEAError &e) {
+            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
         }
     }
 
@@ -102,17 +108,15 @@ GPSReader::waitForValidReading()
 void
 GPSReader::waitForCurrentTime()
 {
-    using namespace std::literals;
-
     // We may already have read a GNZDA message
     if (m_CurrentTime.tm_year != 0) {
         return;
     }
 
-    // Try to read the current time + date for 5s
+    // Try to read the current time + date for 3s
     Stopwatch sw;
     sw.start();
-    while (sw.elapsed() < 5s) {
+    while (sw.elapsed() < 3s) {
         // This method will block
         readLine();
 
@@ -127,6 +131,8 @@ GPSReader::waitForCurrentTime()
             LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
         }
     }
+
+    throw std::runtime_error{ "Timed out waiting for GPS signal" };
 }
 
 void
