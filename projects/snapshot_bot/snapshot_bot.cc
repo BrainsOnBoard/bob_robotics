@@ -168,7 +168,7 @@ public:
 
                         // If we're using ODK2, extract mask from iamge
                         if(m_Config.shouldUseODK2()) {
-                            m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+                            m_Mask.set(snapshot, odk2MaskLowerBound, odk2MaskUpperBound);
                         }
 
                         // Process snapshot
