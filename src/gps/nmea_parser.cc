@@ -127,9 +127,6 @@ NMEAParser::parse(const std::string &line, const std::string &sentenceId,
     if (!getline(lineStream, field, ',')) {
         return false;
     }
-    if (field.empty() || field[0] != '$') {
-        throw NMEAError{ "Sentence doesn't begin with $" };
-    }
     if (field != sentenceId) {
         return false;
     }
