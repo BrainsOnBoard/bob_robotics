@@ -2,6 +2,7 @@
 
 // BoB includes
 #include "common/stopwatch.h"
+#include "common/string.h"
 #include "gps/gps_reader.h"
 
 // Third-party includes
@@ -32,6 +33,24 @@ const std::tm &
 GPSReader::getCurrentDateTime() const
 {
     return m_CurrentTime;
+}
+
+bool
+GPSReader::readLine()
+{
+    do {
+        // If there's no data available then we're done
+        if (!m_Serial.read(m_Line)) {
+            return false;
+        }
+
+        // If we got an empty line, try again
+    } while (m_Line.empty());
+
+    // Trim trailing CRLF
+    strTrimRight(m_Line);
+
+    return true;
 }
 
 void
@@ -95,7 +114,7 @@ GPSReader::waitForCurrentTime()
     sw.start();
     while (sw.elapsed() < 5s) {
         // This method will block
-        m_Serial.read(m_Line);
+        readLine();
 
         try {
             // If it's a GNZDA message, we want to extract the time + date info
@@ -152,7 +171,7 @@ GPSReader::read()
      * If socket is non-blocking, then this will return false if there is no new
      * data.
      */
-    while (m_Serial.read(m_Line)) {
+    while (readLine()) {
         try {
             if (auto optData = parseLine(m_Parser, m_Line, m_CurrentTime)) {
                 return optData;

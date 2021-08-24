@@ -20,7 +20,10 @@ TEST(GPSReader, ParseSampleData)
     std::string line;
     std::tm time;
     while (std::getline(ifs, line)) {
-        line.pop_back(); // Remove trailing \r
+        if (!line.empty()) {
+            line.pop_back(); // Remove trailing \r
+        }
+
         GPS::GPSReader::parseLine(nmea, line, time);
     }
 }

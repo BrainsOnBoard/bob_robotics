@@ -46,6 +46,7 @@ private:
     std::string m_Line;
     std::tm m_CurrentTime{};
 
+    bool readLine();
     void setSerialAttributes();
     void waitForValidReading();
     void waitForCurrentTime();
