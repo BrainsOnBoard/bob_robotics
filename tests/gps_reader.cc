@@ -24,6 +24,6 @@ TEST(GPSReader, ParseSampleData)
             line.pop_back(); // Remove trailing \r
         }
 
-        GPS::GPSReader::parseLine(nmea, line, time);
+        GPS::GPSReader::tryParseLine(nmea, line, time);
     }
 }
