@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <exception>
 
+using namespace std::experimental;
+
 namespace BoBRobotics {
 namespace GPS {
 
@@ -20,19 +22,19 @@ parseTimeField(const std::string &field, std::tm &time)
     time.tm_isdst = -1;
 }
 
-std::experimental::optional<std::tm>
+optional<std::tm>
 NMEAParser::parseDateTime(const std::string &line)
 {
     // If this line isn't a valid time and date message, return nullopt
     if (!parse(line, "$GNZDA", 6)) {
-        return std::experimental::nullopt;
+        return nullopt;
     }
 
     // If any of the required fields are empty, return false
     if (std::any_of(&m_Fields[0], &m_Fields[4],
         [](const auto &s) { return s.empty(); }))
     {
-        return std::experimental::nullopt;
+        return nullopt;
     }
 
     std::tm time;
@@ -55,7 +57,7 @@ NMEAParser::parseDateTime(const std::string &line)
     return time;
 }
 
-std::experimental::optional<GPSData>
+optional<GPSData>
 NMEAParser::parseCoordinates(const std::string &line)
 {
     using meter_t = units::length::meter_t;
@@ -64,7 +66,7 @@ NMEAParser::parseCoordinates(const std::string &line)
 
     // If this line isn't a valid coordinate message, return nullopt
     if (!parse(line, "$GNGGA", 9)) {
-        return std::experimental::nullopt;
+        return nullopt;
     }
 
     GPSData data;

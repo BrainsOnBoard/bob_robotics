@@ -16,6 +16,7 @@
 
 // Third-party includes
 #include "plog/Log.h"
+#include "third_party/CLI11.hpp"
 
 // POSIX includes
 #include <unistd.h>
@@ -36,33 +37,87 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::time;
 
+/*
+ * Jetsons sadly don't record the time and date while powered off. We can
+ * sometimes get the date from the GPS though (also sadly) we don't always
+ * get given this information. So let's have a command-line option to force
+ * using the system clock. The onus is then on the user to check that the
+ * system clock's date is correct.
+ *
+ * We do however always get *time* information with GPS coordinates, so we
+ * can at least rely on that being correct.
+ */
+const std::tm &
+getCurrentDateTime(GPS::GPSReader &gps, const CLI::Option &useSystemClock)
+{
+    auto currentTime = gps.getCurrentDateTime();
+
+    // We already have current date from GPS
+    if (currentTime.tm_year) {
+        goto out;
+    }
+
+    // Get the date from the system clock (the time still comes from the GPS)
+    if (useSystemClock) {
+        LOGW << "Using system clock to get current date. This may not be correct!";
+        const auto rawTime = std::time(nullptr);
+        const auto &systemTime = *gmtime(&rawTime);
+        currentTime.tm_mday = systemTime.tm_mday;
+        currentTime.tm_mon = systemTime.tm_mon;
+        currentTime.tm_year = systemTime.tm_year;
+        goto out;
+    }
+
+    // See if we get a valid date message in the next 5s...
+    {
+        Stopwatch sw;
+        sw.start();
+        while (sw.elapsed() < 5s) {
+            currentTime = gps.getCurrentDateTime();
+            if (currentTime.tm_year) {
+                goto out;
+            }
+        }
+    }
+
+    // ...and if we didn't, give up
+    throw std::runtime_error{ "Timed out waiting for date from GPS" };
+
+    // So sue me.
+out:
+    const auto time = mktime(&currentTime);
+    return *localtime(&time);
+}
+
 int
 bobMain(int argc, char *argv[])
 {
+    CLI::App app{ "Record data with RC car robot" };
+    auto *useSystemClock = app.add_flag("--use-system-clock",
+                    "Use the system clock to get current date rather than GPS");
+    CLI11_PARSE(app, argc, argv);
+
+    // Time to run data collection for
+    millisecond_t runTime;
+    switch (app.remaining_size()) {
+    case 0:
+        runTime = 30_s;
+        break;
+    case 1:
+        runTime = second_t{ std::stod(app.remaining()[0]) };
+        break;
+    default:
+        std::cout << app.help();
+        return EXIT_FAILURE;
+    }
+
     // setting up
     Robots::Ackermann::PassiveRCCarBot bot;
     GPS::GPSReader gps;
     BN055 imu;
 
-    // We're polling the GPS
-    gps.setBlocking(false);
-
-    const millisecond_t runTime = (argc > 1) ? second_t{ std::stod(argv[1]) } : 30_s;
-    LOGD << "running for " << runTime;
-
-    /*
-     * Use GPS to get time and date, because Jetsons don't remember the system
-     * time across boots.
-     *
-     * As the GPS gives the current time in UTC (and we might be in BST in the
-     * UK), we convert to localtime first.
-     */
-    std::tm currentTime = gps.getCurrentDateTime();
-    const auto time = mktime(&currentTime); // get raw time
-    currentTime = *localtime(&time);
-
     // Make a new image database using current time to generate folder name
-    Navigation::ImageDatabase database{ currentTime };
+    Navigation::ImageDatabase database{ getCurrentDateTime(gps, *useSystemClock) };
 
 #ifdef DUMMY_CAMERA
     Video::RandomInput<> randomInput({ 360, 100 });

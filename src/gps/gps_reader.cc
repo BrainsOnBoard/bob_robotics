@@ -11,6 +11,7 @@
 // Standard C++ includes
 #include <stdexcept>
 
+using namespace std::experimental;
 using namespace std::literals;
 
 namespace BoBRobotics {
@@ -38,14 +39,28 @@ GPSReader::GPSReader(const char *devicePath)
 
     // Check that we actually have valid readings
     waitForValidReading();
-
-    // These messages should be emitted roughly every ~1s by the ublox sensor
-    waitForCurrentTime();
 }
 
 const std::tm &
-GPSReader::getCurrentDateTime() const
+GPSReader::getCurrentDateTime()
 {
+    /*
+     * If we've already read the current date + time once, then just return
+     * that. Otherwise try reading more data.
+     */
+    if (m_CurrentTime.tm_year || !readLine()) {
+        return m_CurrentTime;
+    }
+
+    // Might get the date + time, might not
+    if (const auto time = m_Parser.parseDateTime(m_Line)) {
+        m_CurrentTime = time.value();
+    }
+
+    /*
+     * If all else fails, we will at least have time info because we know that
+     * we've received at one valid GNGGA message (which contains the time).
+     */
     return m_CurrentTime;
 }
 
@@ -118,36 +133,6 @@ GPSReader::waitForValidReading()
 }
 
 void
-GPSReader::waitForCurrentTime()
-{
-    // We may already have read a GNZDA message
-    if (m_CurrentTime.tm_year != 0) {
-        return;
-    }
-
-    // Try to read the current time + date for 3s
-    Stopwatch sw;
-    sw.start();
-    while (sw.elapsed() < 3s) {
-        // This method will block
-        readLine();
-
-        try {
-            // If it's a GNZDA message, we want to extract the time + date info
-            const auto time = m_Parser.parseDateTime(m_Line);
-            if (time) {
-                m_CurrentTime = time.value();
-                return;
-            }
-        } catch (NMEAError &e) {
-            printError(e, m_Line);
-        }
-    }
-
-    throw std::runtime_error{ "Timed out waiting for GPS signal" };
-}
-
-void
 GPSReader::setBlocking(bool blocking)
 {
     auto tty = m_Serial.getAttributes();
@@ -155,34 +140,48 @@ GPSReader::setBlocking(bool blocking)
     m_Serial.setAttributes(tty);
 }
 
-std::experimental::optional<GPSData>
-GPSReader::parseLine(NMEAParser &parser,
-                     const std::string &line,
-                     std::tm &currentTime)
+optional<GPSData>
+GPSReader::tryParseLine(NMEAParser &parser,
+                        const std::string &line,
+                        std::tm &currentTime)
 {
-    if (auto optData = parser.parseCoordinates(line)) {
+    if (auto data = parser.parseCoordinates(line)) {
+        // We have GPS coordinates!
+        auto &time = data->time;
+
         /*
-         * We have GPS coordinates! Copy date and timezone info from
-         * cached GNZDA data.
+         * Try to copy date and timezone info from cached GNZDA data. Might not
+         * be present.
          */
-        auto &data = optData.value();
-        data.time.tm_mday = currentTime.tm_mday;
-        data.time.tm_mon = currentTime.tm_mon;
-        data.time.tm_year = currentTime.tm_year;
-        data.time.tm_gmtoff = currentTime.tm_gmtoff;
+        time.tm_mday = currentTime.tm_mday;
+        time.tm_mon = currentTime.tm_mon;
+        time.tm_year = currentTime.tm_year;
+        time.tm_gmtoff = currentTime.tm_gmtoff;
 
-        return optData;
+        /*
+         * Update time portion of struct, so even if it doesn't have a date, at
+         * least it will have a time.
+         */
+        currentTime.tm_hour = time.tm_hour;
+        currentTime.tm_min = time.tm_min;
+        currentTime.tm_sec = time.tm_sec;
+
+        return data;
     }
 
-    // If it's a GNZDA message, we want to extract the time + date info
-    if (const auto optTime = parser.parseDateTime(line)) {
-        currentTime = optTime.value();
+    /*
+     * If it's a GNZDA message, we want to extract the time + date info. We only
+     * update currentTime if we get a valid reading so we don't clobber existing
+     * data.
+     */
+    if (const auto time = parser.parseDateTime(line)) {
+        currentTime = time.value();
     }
 
-    return std::experimental::nullopt;
+    return nullopt;
 }
 
-std::experimental::optional<GPSData>
+optional<GPSData>
 GPSReader::read()
 {
     /*
@@ -191,15 +190,15 @@ GPSReader::read()
      */
     while (readLine()) {
         try {
-            if (auto optData = parseLine(m_Parser, m_Line, m_CurrentTime)) {
-                return optData;
+            if (auto data = tryParseLine(m_Parser, m_Line, m_CurrentTime)) {
+                return data;
             }
         } catch (NMEAError &e) {
             printError(e, m_Line);
         }
     }
 
-    return std::experimental::nullopt;
+    return nullopt;
 }
 
 } // GPS
