@@ -1,17 +1,22 @@
 // BoB includes
 #include "common/background_exception_catcher.h"
 #include "common/bn055_imu.h"
-#include "common/gps_reader.h"
-#include "common/main.h"
 #include "common/map_coordinate.h"
 #include "common/stopwatch.h"
+#include "gps/gps_reader.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "navigation/image_database.h"
 #include "robots/ackermann/rc_car_bot.h"
+
+#ifdef DUMMY_CAMERA
+#include "video/randominput.h"
+#else
 #include "video/panoramic.h"
+#endif
 
 // Third-party includes
 #include "plog/Log.h"
+#include "third_party/CLI11.hpp"
 
 // POSIX includes
 #include <unistd.h>
@@ -22,6 +27,7 @@
 // Standard C++ includes
 #include <array>
 #include <chrono>
+#include <memory>
 #include <thread>
 
 using namespace BoBRobotics;
@@ -31,61 +37,98 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::time;
 
+/*
+ * Jetsons sadly don't record the time and date while powered off. We can
+ * sometimes get the date from the GPS though (also sadly) we don't always
+ * get given this information. So let's have a command-line option to force
+ * using the system clock. The onus is then on the user to check that the
+ * system clock's date is correct.
+ *
+ * We do however always get *time* information with GPS coordinates, so we
+ * can at least rely on that being correct.
+ */
+const std::tm &
+getCurrentDateTime(GPS::GPSReader &gps, const CLI::Option &useSystemClock)
+{
+    auto currentTime = gps.getCurrentDateTime();
+
+    // We already have current date from GPS
+    if (currentTime.tm_year) {
+        goto out;
+    }
+
+    // Get the date from the system clock (the time still comes from the GPS)
+    if (useSystemClock) {
+        LOGW << "Using system clock to get current date. This may not be correct!";
+        const auto rawTime = std::time(nullptr);
+        const auto &systemTime = *gmtime(&rawTime);
+        currentTime.tm_mday = systemTime.tm_mday;
+        currentTime.tm_mon = systemTime.tm_mon;
+        currentTime.tm_year = systemTime.tm_year;
+        goto out;
+    }
+
+    // See if we get a valid date message in the next 5s...
+    {
+        Stopwatch sw;
+        sw.start();
+        while (sw.elapsed() < 5s) {
+            currentTime = gps.getCurrentDateTime();
+            if (currentTime.tm_year) {
+                goto out;
+            }
+        }
+    }
+
+    // ...and if we didn't, give up
+    throw std::runtime_error{ "Timed out waiting for date from GPS" };
+
+    // So sue me.
+out:
+    const auto time = mktime(&currentTime);
+    return *localtime(&time);
+}
+
 int
 bobMain(int argc, char *argv[])
 {
-    // setting up
-    Robots::Ackermann::PassiveRCCarBot bot;
-    GPS::GPSReader gps;
-    GPS::GPSData data;
-    BN055 imu;
-    const int maxTrials = 3;
-    int numTrials = maxTrials;
+    CLI::App app{ "Record data with RC car robot" };
+    auto *useSystemClock = app.add_flag("--use-system-clock",
+                    "Use the system clock to get current date rather than GPS");
+    CLI11_PARSE(app, argc, argv);
 
-    const millisecond_t runTime = (argc > 1) ? second_t{ std::stod(argv[1]) } : 30_s;
-    LOGD << "running for " << runTime;
-
-    // check to see if we get valid coordinates by checking GPS quality
-    GPS::GPSData gpsData;
-    for (; numTrials > 0; numTrials--) {
-        try {
-            gps.read(gpsData);
-        } catch (GPS::GPSError &e) {
-            LOGW << " measuring failed, trying again in 1 second "
-                 << "[" << maxTrials - numTrials << "/" << maxTrials << "]";
-            std::this_thread::sleep_for(1s);
-            continue;
-        }
-
-        if (gpsData.gpsQuality != GPS::GPSQuality::INVALID) {
-            LOGI << " we have a valid measurement";
-            break;
-        }
-    }
-
-    if (numTrials == 0) {
-        LOGW << " There is no valid gps measurement, please try waiting for the survey in to finish and restart the program ";
+    // Time to run data collection for
+    millisecond_t runTime;
+    switch (app.remaining_size()) {
+    case 0:
+        runTime = 30_s;
+        break;
+    case 1:
+        runTime = second_t{ std::stod(app.remaining()[0]) };
+        break;
+    default:
+        std::cout << app.help();
         return EXIT_FAILURE;
     }
 
-    // Use the system clock to get date (might be wrong!)
-    time_t rawtime;
-    time(&rawtime);
-    std::tm currentTime = *localtime(&rawtime);
-
-    /*
-     * Use GPS to get time, because Jetsons don't remember the system time
-     * across boots.
-     */
-    currentTime.tm_hour = gpsData.time.hour;
-    currentTime.tm_min = gpsData.time.minute;
-    currentTime.tm_sec = gpsData.time.second;
+    // setting up
+    Robots::Ackermann::PassiveRCCarBot bot;
+    GPS::GPSReader gps;
+    BN055 imu;
 
     // Make a new image database using current time to generate folder name
-    Navigation::ImageDatabase database{ currentTime };
+    Navigation::ImageDatabase database{ getCurrentDateTime(gps, *useSystemClock) };
 
+#ifdef DUMMY_CAMERA
+    Video::RandomInput<> randomInput({ 360, 100 });
+    auto *cam = &randomInput;
+    constexpr auto frameRate = 30_Hz;
+    LOGW << "USING DUMMY CAMERA!!!!!!!!";
+#else
     // PixPro defaults to 1440x1440
     auto cam = Video::getPanoramicCamera();
+    const auto frameRate = cam->getFrameRate();
+#endif
     LOGI << "camera initialised " << cam->getOutputSize();
 
     BackgroundExceptionCatcher catcher;
@@ -94,7 +137,7 @@ bobMain(int argc, char *argv[])
     std::array<degree_t, 3> angles;
 
     auto recorder = database.getRouteVideoRecorder(cam->getOutputSize(),
-                                                   cam->getFrameRate(),
+                                                   frameRate,
                                                    "mp4",
                                                    "mp4v",
                                                    { "Pitch [degrees]",
@@ -103,6 +146,7 @@ bobMain(int argc, char *argv[])
                                                      "Steering angle [degrees]",
                                                      "UTM zone",
                                                      "GPS quality",
+                                                     "Horizontal dilution [mm]",
                                                      "Timestamp [ms]" });
 
     cv::Mat frame;
@@ -113,6 +157,11 @@ bobMain(int argc, char *argv[])
 
         // Read image from camera (synchronously)
         cam->readFrameSync(frame);
+
+#ifdef DUMMY_CAMERA
+        // RandomInputs don't block, so throttle the framerate to 30 fps
+        std::this_thread::sleep_for(33ms);
+#endif
 
         // Sync time to when camera frame was read
         time = sw.elapsed();
@@ -137,33 +186,37 @@ bobMain(int argc, char *argv[])
             // if we can't read speed or angle, we just write nan values
             LOGE << "Could not read speed and steering angle from robot : " << e.what();
         }
-        try {
 
-            // get gps data
-            gps.read(data);
+        // Poll for GPS data
+        if (const auto optData = gps.read()) {
+            const auto &gpsData = optData.value();
             const auto &coord = gpsData.coordinate;
             int gpsQual = (int) gpsData.gpsQuality; // gps quality
 
             // output results
             LOGD << std::setprecision(10)
-                 << "GPS quality: " << gpsQual
-                 << " latitude: " << coord.lat.value()
-                 << " longitude: " << coord.lon.value()
-                 << " num sats: " << gpsData.numberOfSatellites
-                 << " time: " << time.value() << std::endl;
+                << "GPS quality: " << gpsQual
+                << " latitude: " << coord.lat.value()
+                << " longitude: " << coord.lon.value()
+                << " num sats: " << gpsData.numberOfSatellites
+                << " time: " << time.value() << std::endl;
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
             recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
                             botSpeed, turnAngle.value(), utm.zone,
-                            (int) gpsData.gpsQuality, time.value());
-        }
-        // if there is a gps error write nan values
-        catch (GPS::GPSError &e) {
-            LOGW << e.what();
+                            (int) gpsData.gpsQuality,
+                            millimeter_t{ gpsData.horizontalDilution }.value(),
+                            time.value());
+        } else {
+            /*
+             * No new data was available. Indicate this by writing NaNs to the
+             * CSV file. We can always estimate these missing values post hoc
+             * with interpolation.
+             */
             recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                            frame, pitch, roll, botSpeed, turnAngle.value(), "",
-                            -1, time.value());
+                frame, pitch, roll, botSpeed, turnAngle.value(), "",
+                -1, NAN, time.value());
         }
     }
 

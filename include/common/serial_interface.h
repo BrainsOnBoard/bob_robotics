@@ -20,8 +20,11 @@ class SerialInterface
 {
 public:
     static constexpr const char *DefaultLinuxDevicePath = "/dev/ttyACM0";
-    SerialInterface(const char *path = DefaultLinuxDevicePath);
+    SerialInterface(const char *path = DefaultLinuxDevicePath, bool blocking = true);
     ~SerialInterface();
+
+    // Make non-moveable and non-copyable
+    SerialInterface(SerialInterface &&) = delete;
 
     //---------------------------------------------------------------------
     // Public API
