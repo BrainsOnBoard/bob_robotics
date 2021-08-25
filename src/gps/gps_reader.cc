@@ -18,6 +18,18 @@ namespace GPS {
 
 constexpr const char *GPSReader::DefaultLinuxDevicePath;
 
+void
+printError(const NMEAError &e, const std::string &line)
+{
+    LOGW << "NMEA parsing error: " << e.what() << ": " << line;
+
+    try {
+        std::rethrow_if_nested(e);
+    } catch (const std::exception &e) {
+        LOGW << "NMEA parsing error internal: " << e.what();
+    }
+}
+
 GPSReader::GPSReader(const char *devicePath)
   : m_Serial{ devicePath }
 {
@@ -98,7 +110,7 @@ GPSReader::waitForValidReading()
                 return;
             }
         } catch (NMEAError &e) {
-            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+            printError(e, m_Line);
         }
     }
 
@@ -128,7 +140,7 @@ GPSReader::waitForCurrentTime()
                 return;
             }
         } catch (NMEAError &e) {
-            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+            printError(e, m_Line);
         }
     }
 
@@ -183,13 +195,7 @@ GPSReader::read()
                 return optData;
             }
         } catch (NMEAError &e) {
-            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
-
-            try {
-                std::rethrow_if_nested(e);
-            } catch(const std::exception& e) {
-                LOGW << "NMEA parsing error internal: " <<  e.what();
-            }
+            printError(e, m_Line);
         }
     }
 
