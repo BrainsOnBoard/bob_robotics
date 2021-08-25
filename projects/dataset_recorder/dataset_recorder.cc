@@ -122,10 +122,12 @@ bobMain(int argc, char *argv[])
 #ifdef DUMMY_CAMERA
     Video::RandomInput<> randomInput({ 360, 100 });
     auto *cam = &randomInput;
+    constexpr auto frameRate = 30_Hz;
     LOGW << "USING DUMMY CAMERA!!!!!!!!";
 #else
     // PixPro defaults to 1440x1440
     auto cam = Video::getPanoramicCamera();
+    const auto frameRate = cam->getFrameRate();
 #endif
     LOGI << "camera initialised " << cam->getOutputSize();
 
@@ -135,7 +137,7 @@ bobMain(int argc, char *argv[])
     std::array<degree_t, 3> angles;
 
     auto recorder = database.getRouteVideoRecorder(cam->getOutputSize(),
-                                                   cam->getFrameRate(),
+                                                   frameRate,
                                                    "mp4",
                                                    "mp4v",
                                                    { "Pitch [degrees]",
@@ -155,6 +157,11 @@ bobMain(int argc, char *argv[])
 
         // Read image from camera (synchronously)
         cam->readFrameSync(frame);
+
+#ifdef DUMMY_CAMERA
+        // RandomInputs don't block, so throttle the framerate to 30 fps
+        std::this_thread::sleep_for(33ms);
+#endif
 
         // Sync time to when camera frame was read
         time = sw.elapsed();
