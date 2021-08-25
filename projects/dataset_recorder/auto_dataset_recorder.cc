@@ -8,6 +8,9 @@
 #include "common/stopwatch.h"
 #include "robots/ackermann/rc_car_bot.h"
 
+// Third-party includes
+#include "third_party/CLI11.hpp"
+
 using namespace BoBRobotics;
 using namespace std::literals;
 using namespace units::angle;
@@ -19,7 +22,10 @@ using namespace units::literals;
 int
 bobMain(int argc, char **argv)
 {
-    BOB_ASSERT(argc == 2);
+    CLI::App app{ "Record data with RC car robot, automatically following previously traversed route" };
+    auto *useSystemClock = app.add_flag("--use-system-clock",
+                    "Use the system clock to get current date rather than GPS");
+    CLI11_PARSE(app, argc, argv);
 
     constexpr float MaxSpeed = 0.7f;                // car's max speed
     constexpr degree_t MaxTurn = 30_deg;            // car's maximum turning angle
@@ -40,22 +46,26 @@ bobMain(int argc, char **argv)
         constexpr float InitialDriveSpeed = 0.5f;
         constexpr meter_t InitialDriveDistance = 1_m;
         constexpr auto DriveTimeout = 20s;
-        GPS::GPSData gpsData;
+        constexpr auto ReadDelay = 50ms;
 
         LOGI << "Calculating robot's position with GPS...";
 
         // Get initial position (try to get reading 5 times)
-        // (NB: GPS reads are blocking at this point)
-        LOGI << "Waiting for initial GPS fix";
-        for (int i = 0; i < 5; i++) {
-            catcher.check();
+        const MapCoordinate::UTMCoordinate utmStart = [&]() {
+            LOGI << "Waiting for initial GPS fix";
+            for (int i = 0; i < 5; i++) {
+                catcher.check();
 
-            gps.read(gpsData);
-            if (gpsData.gpsQuality != GPS::GPSQuality::INVALID) {
-                break;
+                const auto data = gps.read();
+                if (data && data->gpsQuality != GPS::GPSQuality::INVALID) {
+                    return MapCoordinate::latLonToUTM(data->coordinate);
+                }
+
+                std::this_thread::sleep_for(ReadDelay);
             }
-        }
-        const auto utmStart = MapCoordinate::latLonToUTM(gpsData.coordinate);
+
+            throw std::runtime_error{ "Could not get initial GPS fix" };
+        }();
 
         // Drive forward until we've gone x metres
         MapCoordinate::UTMCoordinate utmEnd{};
@@ -67,20 +77,19 @@ bobMain(int argc, char **argv)
         do {
             catcher.check();
 
-            gps.read(gpsData);
-            if (gpsData.gpsQuality == GPS::GPSQuality::INVALID) {
+            const auto data = gps.read();
+            if (data && data->gpsQuality != GPS::GPSQuality::INVALID) {
+                utmEnd = MapCoordinate::latLonToUTM(data->coordinate);
+                distance = hypot(utmEnd.easting - utmStart.easting,
+                                 utmEnd.northing - utmStart.northing);
+            } else {
                 // Put this additional check in so we don't drive forever
                 if (sw.elapsed() > DriveTimeout) {
                     throw std::runtime_error{ "Timed out waiting for valid GPS reading" };
                 }
-
-                LOGW << "Invalid GPS reading!";
-                continue;
             }
 
-            utmEnd = MapCoordinate::latLonToUTM(gpsData.coordinate);
-            distance = hypot(utmEnd.easting - utmStart.easting,
-                             utmEnd.northing - utmStart.northing);
+            std::this_thread::sleep_for(ReadDelay);
         } while (distance < InitialDriveDistance);
         robot.stopMoving();
 
@@ -93,7 +102,7 @@ bobMain(int argc, char **argv)
     }();
 
     // Helper to record sensor data to ImageDatabase
-    RobotRecorder recorder{ gps };
+    RobotRecorder recorder{ gps, useSystemClock->count() > 0 };
 
     // **TODO**: We need to actually measure the robot
     constexpr millimeter_t WheelBaseLength = 15_cm;

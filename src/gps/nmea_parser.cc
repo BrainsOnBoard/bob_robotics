@@ -2,6 +2,12 @@
 #include "common/macros.h"
 #include "gps/nmea_parser.h"
 
+// Standard C++ includes
+#include <algorithm>
+#include <exception>
+
+using namespace std::experimental;
+
 namespace BoBRobotics {
 namespace GPS {
 
@@ -16,13 +22,22 @@ parseTimeField(const std::string &field, std::tm &time)
     time.tm_isdst = -1;
 }
 
-bool
-NMEAParser::parseDateTime(const std::string &line, std::tm &time)
+optional<std::tm>
+NMEAParser::parseDateTime(const std::string &line)
 {
+    // If this line isn't a valid time and date message, return nullopt
     if (!parse(line, "$GNZDA", 6)) {
-        return false;
+        return nullopt;
     }
 
+    // If any of the required fields are empty, return false
+    if (std::any_of(&m_Fields[0], &m_Fields[4],
+        [](const auto &s) { return s.empty(); }))
+    {
+        return nullopt;
+    }
+
+    std::tm time;
     try {
         parseTimeField(m_Fields[0], time);
         time.tm_mday = stoi(m_Fields[1]);
@@ -34,23 +49,36 @@ NMEAParser::parseDateTime(const std::string &line, std::tm &time)
         int minutesOff = m_Fields[5].size() <= 3 ? 0 : stoi(m_Fields[5].substr(0, 2));
         time.tm_gmtoff = 3600 * hoursOff + 60 * minutesOff;
     } catch (std::invalid_argument &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     } catch (std::out_of_range &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     }
 
-    return true;
+    return time;
 }
 
-bool
-NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
+optional<GPSData>
+NMEAParser::parseCoordinates(const std::string &line)
 {
     using meter_t = units::length::meter_t;
     using degree_t = units::angle::degree_t;
     using arcminute_t = units::angle::arcminute_t;
 
+    // If this line isn't a valid coordinate message, return nullopt
     if (!parse(line, "$GNGGA", 9)) {
-        return false;
+        return nullopt;
+    }
+
+    GPSData data;
+    if (std::any_of(&m_Fields[0], &m_Fields[9], [](const auto &s) { return s.empty();  })) {
+        data.coordinate = { degree_t(NAN), degree_t(NAN), meter_t(NAN) };
+        data.altitude = meter_t(NAN);
+        data.numberOfSatellites = 0;
+        data.horizontalDilution = meter_t(NAN);
+        data.gpsQuality = GPSQuality::INVALID;
+        data.time = {};
+        data.milliseconds = 0;
+        return data;
     }
 
     try {
@@ -59,25 +87,52 @@ NMEAParser::parseCoordinates(const std::string &line, GPSData &data)
 
         data.coordinate.lat = degree_t(std::stod(m_Fields[1].substr(0, 2))) +
                               arcminute_t(std::stod(m_Fields[1].substr(2, 8)));
-        if (m_Fields[2][0] == 'W') {
+        switch (m_Fields[2][0]) {
+        case 'N':
+            break;
+        case 'S':
             data.coordinate.lat = -data.coordinate.lat;
+            break;
+        default:
+            throw NMEAError{ "Bad latitude direction" };
         }
+
         data.coordinate.lon = degree_t(std::stod(m_Fields[3].substr(0, 3))) +
                               arcminute_t(std::stod(m_Fields[3].substr(3, 9)));
-        if (m_Fields[4][0] == 'S') {
+        switch (m_Fields[4][0]) {
+        case 'E':
             data.coordinate.lon = -data.coordinate.lon;
+            break;
+        case 'W':
+            break;
+        default:
+            throw NMEAError{ "Bad longitude direction" };
         }
+
         data.gpsQuality = static_cast<GPSQuality>(std::stoi(m_Fields[5]));
         data.numberOfSatellites = std::stoi(m_Fields[6]);
         data.horizontalDilution = meter_t{ std::stod(m_Fields[7]) };
         data.coordinate.height = meter_t{ std::stod(m_Fields[8]) };
     } catch (std::invalid_argument &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     } catch (std::out_of_range &e) {
-        throw NMEAError(e.what());
+        std::throw_with_nested(NMEAError{});
     }
 
-    return true;
+    return data;
+}
+
+unsigned int
+NMEAParser::computeChecksum(const char *str, size_t len)
+{
+    unsigned int checksum = 0;
+
+    // Assume that the first char is $, which we skip
+    for (size_t i = 1; i < len; i++) {
+        checksum ^= str[i];
+    }
+
+    return checksum;
 }
 
 bool
@@ -93,9 +148,6 @@ NMEAParser::parse(const std::string &line, const std::string &sentenceId,
     if (!getline(lineStream, field, ',')) {
         return false;
     }
-    if (field.empty() || field[0] != '$') {
-        throw NMEAError{ "Sentence doesn't begin with $" };
-    }
     if (field != sentenceId) {
         return false;
     }
@@ -105,16 +157,14 @@ NMEAParser::parse(const std::string &line, const std::string &sentenceId,
     }
 
     // Check that the checksum matches
-    char *p;
-    long reportedChecksum = std::strtoul(&line[line.size() - 2], &p, 16);
-    if (*p != 0) {
+    unsigned int reportedChecksum;
+    try {
+        reportedChecksum = std::stoul(&line[line.size() - 2], nullptr, 16);
+    } catch (std::exception &) {
         throw NMEAError{ "Could not parse checksum" };
     }
 
-    long actualChecksum = 0;
-    for (size_t i = 1; i < line.size() - 3; i++) {
-        actualChecksum ^= line[i];
-    }
+    unsigned int actualChecksum = computeChecksum(line.c_str(), line.size() - 3);
     if (reportedChecksum != actualChecksum) {
         std::stringstream ss;
         ss << "Bad checksum (expected: " << std::hex << reportedChecksum

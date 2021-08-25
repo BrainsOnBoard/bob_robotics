@@ -23,18 +23,21 @@
 #include <ctime>
 
 // Standard C++ includes
+#include <array>
+#include <chrono>
 #include <exception>
 #include <memory>
+#include <thread>
 
 namespace BoBRobotics {
 class RobotRecorder {
 public:
-    RobotRecorder(GPS::GPSReader &gps)
+    RobotRecorder(GPS::GPSReader &gps, bool useSystemClock)
       : m_GPS{ gps }
       , m_Camera{ getCamera() }
-      , m_Database{ getCurrentTime() }
+      , m_Database{ getCurrentDateTime(useSystemClock) }
       , m_Recorder{ m_Database.getRouteVideoRecorder(m_Camera->getOutputSize(),
-                                                     m_Camera->getFrameRate(),
+                                                     getFrameRate(),
                                                      "mp4",
                                                      "mp4v",
                                                      { "Pitch [degrees]",
@@ -46,8 +49,6 @@ public:
                                                        "Horizontal dilution [mm]",
                                                        "Timestamp [ms]" }) }
     {
-        // We're polling the GPS
-        m_GPS.setBlocking(false);
     }
 
     ~RobotRecorder()
@@ -66,6 +67,11 @@ public:
 
         // Read image from camera (synchronously)
         m_Camera->readFrameSync(m_Frame);
+
+#ifdef DUMMY_CAMERA
+        // RandomInputs don't block, so throttle the framerate to 30 fps
+        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+#endif
 
         // Sync time to when camera frame was read
         const millisecond_t time = m_Stopwatch.elapsed();
@@ -92,34 +98,36 @@ public:
         }
 
         // Poll for GPS data
-        if (m_GPS.read(m_GPSData)) {
-            const auto &coord = m_GPSData.coordinate;
-            int gpsQual = (int) m_GPSData.gpsQuality; // gps quality
+        if (const auto optData = m_GPS.read()) {
+            const auto &gpsData = optData.value();
+            const auto &coord = gpsData.coordinate;
+            int gpsQual = (int) gpsData.gpsQuality; // gps quality
 
             // output results
             LOGD << std::setprecision(10)
                 << "GPS quality: " << gpsQual
                 << " latitude: " << coord.lat.value()
                 << " longitude: " << coord.lon.value()
-                << " num sats: " << m_GPSData.numberOfSatellites
+                << " num sats: " << gpsData.numberOfSatellites
                 << " time: " << time.value() << std::endl;
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
-            m_Recorder.record(utm.toVector(), yaw, m_Frame, pitch.value(),
-                            roll.value(), botSpeed, turnAngle.value(), utm.zone,
-                            (int) m_GPSData.gpsQuality,
-                            millimeter_t{ m_GPSData.horizontalDilution }.value(),
-                            time.value());
+            m_Recorder.record(utm.toVector(), degree_t{ yaw }, m_Frame,
+                              pitch.value(), roll.value(), botSpeed,
+                              turnAngle.value(), utm.zone,
+                              (int) gpsData.gpsQuality,
+                              millimeter_t{ gpsData.horizontalDilution }.value(),
+                              time.value());
         } else {
             /*
              * No new data was available. Indicate this by writing NaNs to the
              * CSV file. We can always estimate these missing values post hoc
              * with interpolation.
              */
-            m_Recorder.record(Vector3<millimeter_t>::nan(), yaw,
-                m_Frame, pitch.value(), roll.value(), botSpeed,
-                turnAngle.value(), "", -1, NAN, time.value());
+            m_Recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
+                              m_Frame, pitch.value(), roll.value(), botSpeed,
+                              turnAngle.value(), "", -1, NAN, time.value());
         }
 
         return time;
@@ -149,17 +157,65 @@ private:
 #endif
     }
 
-    const std::tm &getCurrentTime() const
+    units::frequency::hertz_t getFrameRate() const
     {
-        /*
-         * Use GPS to get time and date, because Jetsons don't remember the system
-         * time across boots.
-         *
-         * As the GPS gives the current time in UTC (and we might be in BST in the
-         * UK), we convert to localtime first.
-         */
-        std::tm currentTime = m_GPS.getCurrentDateTime();
-        const auto time = mktime(&currentTime); // get raw time
+#ifdef DUMMY_CAMERA
+        return units::frequency::hertz_t{ 30 };
+#else
+        return m_Camera->getFrameRate();
+#endif
+    }
+
+    /*
+     * Jetsons sadly don't record the time and date while powered off. We can
+     * sometimes get the date from the GPS though (also sadly) we don't always
+     * get given this information. So let's have a command-line option to force
+     * using the system clock. The onus is then on the user to check that the
+     * system clock's date is correct.
+     *
+     * We do however always get *time* information with GPS coordinates, so we
+     * can at least rely on that being correct.
+     */
+    const std::tm &getCurrentDateTime(bool useSystemClock) const
+    {
+        using namespace std::literals;
+
+        auto currentTime = m_GPS.getCurrentDateTime();
+
+        // We already have current date from GPS
+        if (currentTime.tm_year) {
+            goto out;
+        }
+
+        // Get the date from the system clock (the time still comes from the GPS)
+        if (useSystemClock) {
+            LOGW << "Using system clock to get current date. This may not be correct!";
+            const auto rawTime = std::time(nullptr);
+            const auto &systemTime = *gmtime(&rawTime);
+            currentTime.tm_mday = systemTime.tm_mday;
+            currentTime.tm_mon = systemTime.tm_mon;
+            currentTime.tm_year = systemTime.tm_year;
+            goto out;
+        }
+
+        // See if we get a valid date message in the next 5s...
+        {
+            Stopwatch sw;
+            sw.start();
+            while (sw.elapsed() < 5s) {
+                currentTime = m_GPS.getCurrentDateTime();
+                if (currentTime.tm_year) {
+                    goto out;
+                }
+            }
+        }
+
+        // ...and if we didn't, give up
+        throw std::runtime_error{ "Timed out waiting for date from GPS" };
+
+        // So sue me.
+    out:
+        const auto time = mktime(&currentTime);
         return *localtime(&time);
     }
 

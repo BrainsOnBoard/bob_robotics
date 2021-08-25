@@ -2,36 +2,86 @@
 
 // BoB includes
 #include "common/stopwatch.h"
+#include "common/string.h"
 #include "gps/gps_reader.h"
 
 // Third-party includes
 #include "plog/Log.h"
 
 // Standard C++ includes
+#include <chrono>
 #include <stdexcept>
+#include <thread>
+
+using namespace std::experimental;
+using namespace std::literals;
 
 namespace BoBRobotics {
 namespace GPS {
 
 constexpr const char *GPSReader::DefaultLinuxDevicePath;
 
+void
+printError(const NMEAError &e, const std::string &line)
+{
+    LOGW << "NMEA parsing error: " << e.what() << ": " << line;
+
+    try {
+        std::rethrow_if_nested(e);
+    } catch (const std::exception &e) {
+        LOGW << "NMEA parsing error internal: " << e.what();
+    }
+}
+
 GPSReader::GPSReader(const char *devicePath)
-  : m_Serial{ devicePath }
+  : m_Serial{ devicePath, /*blocking=*/false }
 {
     // Set baudrate etc.
     setSerialAttributes();
 
     // Check that we actually have valid readings
     waitForValidReading();
-
-    // These messages should be emitted roughly every ~1s by the ublox sensor
-    waitForCurrentTime();
 }
 
 const std::tm &
-GPSReader::getCurrentDateTime() const
+GPSReader::getCurrentDateTime()
 {
+    /*
+     * If we've already read the current date + time once, then just return
+     * that. Otherwise try reading more data.
+     */
+    if (m_CurrentTime.tm_year || !readLine()) {
+        return m_CurrentTime;
+    }
+
+    // Might get the date + time, might not
+    if (const auto time = m_Parser.parseDateTime(m_Line)) {
+        m_CurrentTime = time.value();
+    }
+
+    /*
+     * If all else fails, we will at least have time info because we know that
+     * we've received at one valid GNGGA message (which contains the time).
+     */
     return m_CurrentTime;
+}
+
+bool
+GPSReader::readLine()
+{
+    do {
+        // If there's no data available then we're done
+        if (!m_Serial.read(m_Line)) {
+            return false;
+        }
+
+        // If we got an empty line, try again
+    } while (m_Line.empty());
+
+    // Trim trailing CRLF
+    strTrimRight(m_Line);
+
+    return true;
 }
 
 void
@@ -57,7 +107,7 @@ GPSReader::setSerialAttributes()
     tty.c_oflag = (OPOST | ONLCR);
 
     /* fetch bytes as they become available */
-    tty.c_cc[VMIN] = 1; // set to blocking by default
+    tty.c_cc[VMIN] = 0;  // set to nonblocking
     tty.c_cc[VTIME] = 5; // set timeout to 0.5 secs
 
     m_Serial.setAttributes(tty);
@@ -66,87 +116,89 @@ GPSReader::setSerialAttributes()
 void
 GPSReader::waitForValidReading()
 {
-    // if GPS location is invalid, keep trying to get a valid one
-    // if failed x times we exit
-    int numTrials = 3;
-    GPSData data{};
-    while (numTrials--) {
-        read(data);
-        if (data.gpsQuality != GPSQuality::INVALID) {
-            LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
-                 << data.coordinate.lon.value() << "°)";
-            break;
-        }
-    }
-
-    if (numTrials == 0) {
-        throw std::runtime_error{ "There is no valid gps measurement, please try waiting for the survey in to finish and restart the program" };
-    }
-}
-
-void
-GPSReader::waitForCurrentTime()
-{
-    using namespace std::literals;
-
-    // We may already have read a GNZDA message
-    if (m_CurrentTime.tm_year != 0) {
-        return;
-    }
-
-    // Try to read the current time + date for 5s
     Stopwatch sw;
     sw.start();
-    while (sw.elapsed() < 5s) {
-        // This method will block
-        m_Serial.read(m_Line);
-
+    while (sw.elapsed() < 3s) {
         try {
-            // If it's a GNZDA message, we want to extract the time + date info
-            if (m_Parser.parseDateTime(m_Line, m_CurrentTime)) {
+            const auto data = read();
+            if (data && data->gpsQuality != GPSQuality::INVALID) {
+                LOGI << "Valid GPS fix found (" << data->coordinate.lat.value() << "°, "
+                     << data->coordinate.lon.value() << "°)";
                 return;
             }
         } catch (NMEAError &e) {
-            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+            printError(e, m_Line);
         }
+
+        std::this_thread::sleep_for(50ms);
     }
+
+    throw std::runtime_error{ "There is no valid gps measurement, please try waiting for the survey in to finish and restart the program" };
 }
 
-void
-GPSReader::setBlocking(bool blocking)
+optional<GPSData>
+GPSReader::tryParseLine(NMEAParser &parser,
+                        const std::string &line,
+                        std::tm &currentTime)
 {
-    auto tty = m_Serial.getAttributes();
-    tty.c_cc[VMIN] = blocking ? 1 : 0;
-    m_Serial.setAttributes(tty);
+    if (auto data = parser.parseCoordinates(line)) {
+        // We have GPS coordinates!
+        auto &time = data->time;
+
+        /*
+         * Try to copy date and timezone info from cached GNZDA data. Might not
+         * be present.
+         */
+        time.tm_mday = currentTime.tm_mday;
+        time.tm_mon = currentTime.tm_mon;
+        time.tm_year = currentTime.tm_year;
+        time.tm_gmtoff = currentTime.tm_gmtoff;
+
+        /*
+         * Update time portion of struct, so even if it doesn't have a date, at
+         * least it will have a time.
+         */
+        currentTime.tm_hour = time.tm_hour;
+        currentTime.tm_min = time.tm_min;
+        currentTime.tm_sec = time.tm_sec;
+
+        return data;
+    }
+
+    /*
+     * If it's a GNZDA message, we want to extract the time + date info. We only
+     * update currentTime if we get a valid reading so we don't clobber existing
+     * data.
+     */
+    if (const auto time = parser.parseDateTime(line)) {
+        currentTime = time.value();
+    }
+
+    return nullopt;
 }
 
-bool
-GPSReader::read(GPSData &data)
+optional<GPSData>
+GPSReader::read()
 {
-    while (true) {
-        // If in non-blocking mode and there's no data, return
-        if (!m_Serial.read(m_Line)) {
-            return false;
-        }
+    optional<GPSData> data;
 
+    /*
+     * readLine() returns false if there is no new serial data.
+     *
+     * We keep trying to read data until there is no more available, then return
+     * the last retrieved GPSData.
+     */
+    while (readLine()) {
         try {
-            if (m_Parser.parseCoordinates(m_Line, data)) {
-                // Signal that we have successfully read valid GPS data
-                return true;
+            if (auto newData = tryParseLine(m_Parser, m_Line, m_CurrentTime)) {
+                data = newData;
             }
-
-            // Copy date and timezone info from cached GNZDA data
-            data.time.tm_mday = m_CurrentTime.tm_mday;
-            data.time.tm_mon = m_CurrentTime.tm_mon;
-            data.time.tm_year = m_CurrentTime.tm_year;
-            data.time.tm_gmtoff = m_CurrentTime.tm_gmtoff;
-
-            // If it's a GNZDA message, we want to extract the time + date info
-            m_Parser.parseDateTime(m_Line, m_CurrentTime);
         } catch (NMEAError &e) {
-            LOGW << "NMEA parsing error: " << e.what() << ": " << m_Line;
+            printError(e, m_Line);
         }
     }
+
+    return data;
 }
 
 } // GPS
