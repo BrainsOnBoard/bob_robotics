@@ -36,11 +36,6 @@ bobMain(int argc, char **argv)
 
     GPSReader gps{ devicePath };
 
-    // Let the user set to nonblocking mode for testing purposes
-    if (argc > 1 && strcmp(argv[1], "nonblock") == 0) {
-        gps.setBlocking(false);
-    }
-
     // print for 100 timestep
     for (int i = 0; i < 100; i++) {
         if (const auto optData = gps.read()) {
@@ -48,11 +43,14 @@ bobMain(int argc, char **argv)
             const auto &coord = data.coordinate;
             const auto &time = data.time;
 
-            std::cout << "latitude: " << coord.lat.value() << " longitude: " << coord.lon.value() << "[ "
-                      << time.tm_hour << ":" << time.tm_min << ":" << time.tm_sec << ":" << data.milliseconds << "]\n";
+            std::cout << "latitude: " << coord.lat.value() << " longitude: " << coord.lon.value() << " ["
+                      << std::setfill('0') << std::setw(2) << time.tm_hour << ":"
+                      << std::setfill('0') << std::setw(2) << time.tm_min << ":"
+                      << std::setfill('0') << std::setw(2) << time.tm_sec << "."
+                      << std::setfill('0') << std::setw(3) << data.milliseconds << "]\n";
         } else {
             // Indicate that polling has taken place, even though we don't yet have a reading
-            std::cout << "(data not yet available)" << std::endl;
+            std::cout << "(waiting for data)" << std::endl;
             std::this_thread::sleep_for(100ms);
         }
     }

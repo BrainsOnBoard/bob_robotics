@@ -36,9 +36,6 @@ public:
      */
     optional<GPSData> read();
 
-    //! Set the underlying serial device to (non)blocking mode for reading
-    void setBlocking(bool);
-
     static optional<GPSData> tryParseLine(NMEAParser &parser,
                                           const std::string &line,
                                           std::tm &currentTime);

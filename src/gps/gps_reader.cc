@@ -9,7 +9,9 @@
 #include "plog/Log.h"
 
 // Standard C++ includes
+#include <chrono>
 #include <stdexcept>
+#include <thread>
 
 using namespace std::experimental;
 using namespace std::literals;
@@ -32,7 +34,7 @@ printError(const NMEAError &e, const std::string &line)
 }
 
 GPSReader::GPSReader(const char *devicePath)
-  : m_Serial{ devicePath }
+  : m_Serial{ devicePath, /*blocking=*/false }
 {
     // Set baudrate etc.
     setSerialAttributes();
@@ -105,7 +107,7 @@ GPSReader::setSerialAttributes()
     tty.c_oflag = (OPOST | ONLCR);
 
     /* fetch bytes as they become available */
-    tty.c_cc[VMIN] = 1; // set to blocking by default
+    tty.c_cc[VMIN] = 0;  // set to nonblocking
     tty.c_cc[VTIME] = 5; // set timeout to 0.5 secs
 
     m_Serial.setAttributes(tty);
@@ -118,26 +120,20 @@ GPSReader::waitForValidReading()
     sw.start();
     while (sw.elapsed() < 3s) {
         try {
-            const auto data = read().value();
-            if (data.gpsQuality != GPSQuality::INVALID) {
-                LOGI << "Valid GPS fix found (" << data.coordinate.lat.value() << "°, "
-                    << data.coordinate.lon.value() << "°)";
+            const auto data = read();
+            if (data && data->gpsQuality != GPSQuality::INVALID) {
+                LOGI << "Valid GPS fix found (" << data->coordinate.lat.value() << "°, "
+                     << data->coordinate.lon.value() << "°)";
                 return;
             }
         } catch (NMEAError &e) {
             printError(e, m_Line);
         }
+
+        std::this_thread::sleep_for(50ms);
     }
 
     throw std::runtime_error{ "There is no valid gps measurement, please try waiting for the survey in to finish and restart the program" };
-}
-
-void
-GPSReader::setBlocking(bool blocking)
-{
-    auto tty = m_Serial.getAttributes();
-    tty.c_cc[VMIN] = blocking ? 1 : 0;
-    m_Serial.setAttributes(tty);
 }
 
 optional<GPSData>
@@ -184,21 +180,25 @@ GPSReader::tryParseLine(NMEAParser &parser,
 optional<GPSData>
 GPSReader::read()
 {
+    optional<GPSData> data;
+
     /*
-     * If socket is non-blocking, then this will return false if there is no new
-     * data.
+     * readLine() returns false if there is no new serial data.
+     *
+     * We keep trying to read data until there is no more available, then return
+     * the last retrieved GPSData.
      */
     while (readLine()) {
         try {
-            if (auto data = tryParseLine(m_Parser, m_Line, m_CurrentTime)) {
-                return data;
+            if (auto newData = tryParseLine(m_Parser, m_Line, m_CurrentTime)) {
+                data = newData;
             }
         } catch (NMEAError &e) {
             printError(e, m_Line);
         }
     }
 
-    return nullopt;
+    return data;
 }
 
 } // GPS
