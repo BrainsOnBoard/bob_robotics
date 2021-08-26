@@ -49,6 +49,8 @@ public:
                                                        "Horizontal dilution [mm]",
                                                        "Timestamp [ms]" }) }
     {
+        // Start timing
+        m_Stopwatch.start();
     }
 
     ~RobotRecorder()
