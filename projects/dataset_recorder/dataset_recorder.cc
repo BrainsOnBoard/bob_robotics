@@ -17,6 +17,7 @@ bobMain(int argc, char *argv[])
     CLI::App app{ "Record data with RC car robot" };
     auto *useSystemClock = app.add_flag("--use-system-clock",
                     "Use the system clock to get current date rather than GPS");
+    app.allow_extras();
     CLI11_PARSE(app, argc, argv);
 
     // Time to run data collection for
