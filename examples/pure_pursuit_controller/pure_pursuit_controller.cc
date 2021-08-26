@@ -58,7 +58,7 @@ class PPCExample
 public:
     PPCExample()
       : m_Robot(MaxSpeed, 500_mm, 0_m, MaxTurn)
-      , m_Controller(LookAheadDistance, m_Robot.getDistanceBetweenAxis(), StoppingDist)
+      , m_Controller(LookAheadDistance, m_Robot.getDistanceBetweenAxes(), StoppingDist)
       , m_Display({ 10.2_m, 10.2_m })
       , m_CarSprite(m_Display.createCarAgent(160_mm))
       , m_WayPointLines(m_Display.createLineStrip(sf::Color::Blue))

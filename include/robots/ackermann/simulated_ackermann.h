@@ -27,7 +27,7 @@ public:
                        const meter_t carHeight = 0_m,
                        const degree_t maxTurn = 45_deg);
 
-    meter_t getDistanceBetweenAxis() const;
+    meter_t getDistanceBetweenAxes() const;
 
     const Pose3<meter_t, degree_t> &getPose();
     meters_per_second_t getMaximumSpeed() const;
