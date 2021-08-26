@@ -105,9 +105,8 @@ bobMain(int argc, char **argv)
     RobotRecorder recorder{ gps, useSystemClock->count() > 0 };
 
     // **TODO**: We need to actually measure the robot
-    constexpr millimeter_t WheelBaseLength = 15_cm;
     AutoController controller{
-        argv[1], LookAheadDistance, WheelBaseLength, StoppingDist
+        argv[1], LookAheadDistance, robot.getDistanceBetweenAxes(), StoppingDist
     };
 
     /*
