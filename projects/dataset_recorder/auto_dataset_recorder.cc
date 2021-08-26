@@ -104,7 +104,7 @@ bobMain(int argc, char **argv)
     // Helper to record sensor data to ImageDatabase
     RobotRecorder recorder{ gps, useSystemClock->count() > 0 };
 
-    // **TODO**: We need to actually measure the robot
+    // For automatically driving the robot
     AutoController controller{
         argv[1], LookAheadDistance, robot.getDistanceBetweenAxes(), StoppingDist
     };
@@ -116,6 +116,7 @@ bobMain(int argc, char **argv)
      * 3. Ctrl+C is pressed
      */
     Pose2<millimeter_t, radian_t> pose;
+    LOGI << "RECORDING STARTED";
     do {
         catcher.check();
 

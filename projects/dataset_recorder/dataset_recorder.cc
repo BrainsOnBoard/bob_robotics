@@ -46,6 +46,7 @@ bobMain(int argc, char *argv[])
     catcher.trapSignals();
 
     // Keep recording readings from sensors until runTime has passed
+    LOGI << "RECORDING STARTED";
     while (recorder.step(robot, imu) < runTime) {
         catcher.check();
     }
