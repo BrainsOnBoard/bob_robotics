@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef __linux__
 // BoB robotics includes
 #include "nmea.h"
 #include "serial_interface.h"
@@ -33,3 +33,4 @@ private:
 };
 } // GPS
 } // BoBRobotics
+#endif // __linux__

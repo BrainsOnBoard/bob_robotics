@@ -1,3 +1,5 @@
+#ifdef __linux__ // This code is Linux only
+
 // BoB includes
 #include "common/gps_reader.h"
 
@@ -68,3 +70,5 @@ GPSReader::read(GPSData &data)
 
 } // GPS
 } // BoBRobotics
+
+#endif
