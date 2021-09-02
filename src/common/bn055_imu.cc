@@ -64,8 +64,8 @@ Eigen::Quaternionf BN055::getQuaternion()
 
     // Scale and return Eigen quaternion
     constexpr float scale = (1.0f / (1 << 14));
-    return Eigen::Quaternionf((float)raw[0] * scale, (float)raw[1] * scale,
-                              (float)raw[2] * scale, (float)raw[3] * scale);
+    return { (float) raw[0] * scale, (float) raw[1] * scale,
+             (float) raw[2] * scale, (float) raw[3] * scale };
 }
 //----------------------------------------------------------------------------
 Eigen::Vector3f BN055::getVector(VectorType vectorType)
@@ -81,7 +81,7 @@ Eigen::Vector3f BN055::getVector(VectorType vectorType)
     {
         return {(float)raw[0] / 16.0f, (float)raw[1] / 16.0f, (float)raw[2] / 16.0f};
     }
-    
+
     return {(float)raw[0] / 100.0f, (float)raw[1] / 100.0f, (float)raw[2] / 100.0f};
 }
 //----------------------------------------------------------------------------
