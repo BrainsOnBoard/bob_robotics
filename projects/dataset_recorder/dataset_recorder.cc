@@ -14,26 +14,13 @@ using namespace units::literals;
 int
 bobMain(int argc, char *argv[])
 {
+    double runTimeSecs{ 30 };
     CLI::App app{ "Record data with RC car robot" };
     auto *useSystemClock = app.add_flag("--use-system-clock",
-                    "Use the system clock to get current date rather than GPS");
-    app.allow_extras();
+                                        "Use the system clock to get current date rather than GPS");
+    app.add_option("--runtime", runTimeSecs, "Time to run for");
     CLI11_PARSE(app, argc, argv);
-
-    // Time to run data collection for
-    millisecond_t runTime;
-    switch (app.remaining_size()) {
-    case 0:
-        runTime = 30_s;
-        break;
-    case 1:
-        runTime = second_t{ std::stod(app.remaining()[0]) };
-        break;
-    default:
-        std::cout << app.help();
-        return EXIT_FAILURE;
-    }
-    LOGD << "running for " << runTime;
+    LOGI << "Running for " << runTimeSecs << "s\n";
 
     // setting up
     Robots::Ackermann::PassiveRCCarBot robot;
@@ -47,7 +34,7 @@ bobMain(int argc, char *argv[])
 
     // Keep recording readings from sensors until runTime has passed
     LOGI << "RECORDING STARTED";
-    while (recorder.step(robot, imu) < runTime) {
+    while (recorder.step(robot, imu) < second_t{ runTimeSecs }) {
         catcher.check();
     }
 
