@@ -99,7 +99,7 @@ private:
     }
 
     // We (optionally) throttle the frame rate to a user-defined value
-    void waitForFrameDelay()
+    void waitForFrameDelay() const
     {
         using namespace units::time;
         using namespace std::literals;
@@ -114,9 +114,6 @@ private:
         const auto remaining = frameDelay - elapsed;
         if (remaining > 0s) {
             std::this_thread::sleep_for(remaining);
-
-            // reset timer
-            m_FrameTimer.start();
         }
     }
 };
