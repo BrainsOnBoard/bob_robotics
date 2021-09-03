@@ -48,21 +48,21 @@ PurePursuitController::addWayPoint(const Vector2<millimeter_t> &wayPoint)
 //! sets the lookahead distance. Large values causes the car to cut corners,
 //! where small values makes the car follow the path more closely
 void
-PurePursuitController::setLookAheadDistance(const millimeter_t distance)
+PurePursuitController::setLookAheadDistance(millimeter_t distance)
 {
     m_lookAheadDistance = distance;
 }
 
 //! sets the distance between the car's wheel bases
 void
-PurePursuitController::setWheelBaseLength(const millimeter_t length)
+PurePursuitController::setWheelBaseLength(millimeter_t length)
 {
     m_wheelBase = length;
 }
 
 //! sets the stopping distance. If the car is within this distance, the controller stops
 void
-PurePursuitController::setStoppingDistance(const millimeter_t distance)
+PurePursuitController::setStoppingDistance(millimeter_t distance)
 {
     m_stoppingDistance = distance;
 }
