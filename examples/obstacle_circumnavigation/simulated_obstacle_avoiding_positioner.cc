@@ -102,7 +102,10 @@ int bobMain(int, char **)
                 // set a new goal position if user clicks in the window
                 const auto vec = display.pixelToVector(event.mouseButton.x, event.mouseButton.y);
 
-                // Set the goal to this position
+                /*
+                 * Set the goal to this position. We use a non-zero angle to
+                 * root out common "variable not set"-type errors.
+                 */
                 const Pose2<meter_t, radian_t> goalPose{ vec.x(), vec.y(), 15_deg };
                 avoidingPositioner.moveTo(goalPose);
 
