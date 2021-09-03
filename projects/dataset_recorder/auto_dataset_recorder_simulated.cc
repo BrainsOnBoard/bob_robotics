@@ -20,23 +20,17 @@ using namespace units::literals;
 using namespace units::math;
 namespace plt = matplotlibcpp;
 
-class RobotArrow
+void plotArrow(const Pose3<meter_t, radian_t> &pose)
 {
-public:
-    void plot(const Pose3<meter_t, radian_t> &pose)
-    {
-        m_X[0] = pose.x().value();
-        m_Y[0] = pose.y().value();
-        m_U[0] = cos(pose.yaw());
-        m_V[0] = sin(pose.yaw());
+    static const std::map<std::string, std::string> kwargs = { std::make_pair("angles", "xy") };
 
-        plt::quiver(m_X, m_Y, m_U, m_V, m_Kwargs);
-    }
+    const std::vector<double> x = { pose.x().value() };
+    const std::vector<double> y = { pose.y().value() };
+    const std::vector<double> u = { cos(pose.yaw()) };
+    const std::vector<double> v = { sin(pose.yaw()) };
 
-private:
-    std::vector<double> m_X = { 0 }, m_Y = { 0 }, m_U = { 0 }, m_V = { 0 };
-    const std::map<std::string, std::string> m_Kwargs = { std::make_pair("angles", "xy") };
-};
+    plt::quiver(x, y, u, v, kwargs);
+}
 
 int
 bobMain(int argc, char **argv)
@@ -49,7 +43,6 @@ bobMain(int argc, char **argv)
     BOB_ASSERT(argc == 2);
 
     Robots::Ackermann::SimulatedAckermann robot{ MaxSpeed, 500_mm, 0_m, MaxTurn };
-    RobotArrow arrow;
     AutoController controller{ argv[1], LookAheadDistance, robot.getDistanceBetweenAxes(), StoppingDist };
     Navigation::ImageDatabase database;
     const auto &route = controller.getRoute();
@@ -73,7 +66,7 @@ bobMain(int argc, char **argv)
     do {
         plt::figure(1);
         plt::clf();
-        arrow.plot(robot.getPose());
+        plotArrow(robot.getPose());
         plt::plot(x, y);
         plt::axis("equal");
         plt::pause((1 / frameRate).value());
