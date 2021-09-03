@@ -170,43 +170,37 @@ private:
     {
         using namespace std::literals;
 
-        auto currentTime = m_GPS.getCurrentDateTime();
+        std::tm time = [&]() {
+            auto time = m_GPS.getCurrentDateTime();
 
-        // We already have current date from GPS
-        if (currentTime.tm_year) {
-            goto out;
-        }
+            // We already have current date from GPS
+            if (time.tm_year) {
+                return time;
+            }
 
-        // Get the date from the system clock (the time still comes from the GPS)
-        if (useSystemClock) {
-            LOGW << "Using system clock to get current date. This may not be correct!";
-            const auto rawTime = std::time(nullptr);
-            const auto &systemTime = *gmtime(&rawTime);
-            currentTime.tm_mday = systemTime.tm_mday;
-            currentTime.tm_mon = systemTime.tm_mon;
-            currentTime.tm_year = systemTime.tm_year;
-            goto out;
-        }
+            // Get the date from the system clock (the time still comes from the GPS)
+            if (useSystemClock) {
+                LOGW << "Using system clock to get current date. This may not be correct!";
+                const auto rawTime = std::time(nullptr);
+                return *gmtime(&rawTime);
+            }
 
-        // See if we get a valid date message in the next 5s...
-        {
+            // See if we get a valid date message in the next 5s...
             Stopwatch sw;
             sw.start();
             while (sw.elapsed() < 5s) {
-                currentTime = m_GPS.getCurrentDateTime();
-                if (currentTime.tm_year) {
-                    goto out;
+                time = m_GPS.getCurrentDateTime();
+                if (time.tm_year) {
+                    return time;
                 }
             }
-        }
 
-        // ...and if we didn't, give up
-        throw std::runtime_error{ "Timed out waiting for date from GPS" };
+            // ...and if we didn't, give up
+            throw std::runtime_error{ "Timed out waiting for date from GPS" };
+        }();
 
-        // So sue me.
-    out:
-        const auto time = mktime(&currentTime);
-        return *localtime(&time);
+        const auto rawTime = mktime(&time);
+        return *localtime(&rawTime);
     }
 
 }; // RobotRecorder
