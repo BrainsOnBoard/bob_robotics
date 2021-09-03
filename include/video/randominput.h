@@ -1,33 +1,49 @@
 #pragma once
 
 // BoB robotics includes
-#include "input.h"
+#include "common/stopwatch.h"
+#include "video/input.h"
+
+// Third-party includes
+#include "third_party/units.h"
 
 // OpenCV
 #include <opencv2/opencv.hpp>
 
 // Standard C++ includes
 #include <algorithm>
+#include <chrono>
+#include <limits>
 #include <random>
+#include <thread>
 
 namespace BoBRobotics {
 namespace Video {
 //! A Video::Input which generates white noise, for testing purposes
 template<typename GeneratorType = std::mt19937>
 class RandomInput : public Input {
+    using hertz_t = units::frequency::hertz_t;
+
 public:
-    RandomInput(const cv::Size &size, const std::string &cameraName = "random",
-                const typename GeneratorType::result_type seed = getRandomSeed())
+    RandomInput(const cv::Size &size,
+                hertz_t frameRate = hertz_t{ std::numeric_limits<double>::infinity() },
+                const std::string &cameraName = "random",
+                const typename GeneratorType::result_type seed = std::random_device{}())
       : m_Size(size)
+      , m_FrameRate(frameRate)
       , m_CameraName(cameraName)
       , m_Generator(seed)
 	  , m_Distribution(0, 0xff)
-    {}
+    {
+        m_FrameTimer.start();
+    }
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
         outFrame.create(m_Size, CV_8UC3);
         fillRandom(outFrame.data, outFrame.data + m_Size.area() * 3);
+
+        waitForFrameDelay();
         return true;
     }
 
@@ -35,12 +51,19 @@ public:
     {
         outFrame.create(m_Size, CV_8UC1);
         fillRandom(outFrame.data, outFrame.data + m_Size.area());
+
+        waitForFrameDelay();
         return true;
     }
 
     virtual std::string getCameraName() const override
     {
         return m_CameraName;
+    }
+
+    virtual hertz_t getFrameRate() const override
+    {
+        return m_FrameRate;
     }
 
     virtual cv::Size getOutputSize() const override
@@ -64,19 +87,37 @@ public:
 
 private:
     cv::Size m_Size;
+    const hertz_t m_FrameRate;
     std::string m_CameraName;
     GeneratorType m_Generator;
     std::uniform_int_distribution<int> m_Distribution;
+    Stopwatch m_FrameTimer;
 
     void fillRandom(uchar *start, uchar *end)
     {
         std::generate(start, end, [this](){ return static_cast<uchar>(m_Distribution(m_Generator)); });
     }
 
-    static auto getRandomSeed()
+    // We (optionally) throttle the frame rate to a user-defined value
+    void waitForFrameDelay()
     {
-        std::random_device rd;
-        return rd();
+        using namespace units::time;
+        using namespace std::literals;
+
+        // No delay needed...
+        if (std::isinf(m_FrameRate.value())) {
+            return;
+        }
+
+        const auto frameDelay = static_cast<Stopwatch::Duration>(1 / m_FrameRate);
+        const auto elapsed = m_FrameTimer.elapsed() % frameDelay;
+        const auto remaining = frameDelay - elapsed;
+        if (remaining > 0s) {
+            std::this_thread::sleep_for(remaining);
+
+            // reset timer
+            m_FrameTimer.start();
+        }
     }
 };
 } // Video

@@ -37,7 +37,7 @@ public:
       , m_Camera{ getCamera() }
       , m_Database{ getCurrentDateTime(useSystemClock) }
       , m_Recorder{ m_Database.getRouteVideoRecorder(m_Camera->getOutputSize(),
-                                                     getFrameRate(),
+                                                     m_Camera->getFrameRate(),
                                                      "mp4",
                                                      "mp4v",
                                                      { "Pitch [degrees]",
@@ -69,11 +69,6 @@ public:
 
         // Read image from camera (synchronously)
         m_Camera->readFrameSync(m_Frame);
-
-#ifdef DUMMY_CAMERA
-        // RandomInputs don't block, so throttle the framerate to 30 fps
-        std::this_thread::sleep_for(std::chrono::milliseconds(33));
-#endif
 
         // Sync time to when camera frame was read
         const millisecond_t time = m_Stopwatch.elapsed();
@@ -153,18 +148,10 @@ private:
     {
 #ifdef DUMMY_CAMERA
         LOGW << "USING DUMMY CAMERA!!!!!!!!";
-        return std::make_unique<Video::RandomInput<>>(cv::Size{ 360, 100 });
+        return std::make_unique<Video::RandomInput<>>(cv::Size{ 360, 100 },
+                                                      units::frequency::hertz_t{ 30 });
 #else
         return Video::getPanoramicCamera();
-#endif
-    }
-
-    units::frequency::hertz_t getFrameRate() const
-    {
-#ifdef DUMMY_CAMERA
-        return units::frequency::hertz_t{ 30 };
-#else
-        return m_Camera->getFrameRate();
 #endif
     }
 
