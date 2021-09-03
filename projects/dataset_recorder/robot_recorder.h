@@ -96,16 +96,16 @@ public:
 
         // Poll for GPS data
         if (const auto optData = m_GPS.read()) {
-            const auto &gpsData = optData.value();
-            const auto &coord = gpsData.coordinate;
-            int gpsQual = (int) gpsData.gpsQuality; // gps quality
+            m_GPSData = optData.value();
+            const auto &coord = m_GPSData.coordinate;
+            int gpsQual = (int) m_GPSData.gpsQuality; // gps quality
 
             // output results
             LOGD << std::setprecision(10)
                 << "GPS quality: " << gpsQual
                 << " latitude: " << coord.lat.value()
                 << " longitude: " << coord.lon.value()
-                << " num sats: " << gpsData.numberOfSatellites
+                << " num sats: " << m_GPSData.numberOfSatellites
                 << " time: " << time.value() << std::endl;
 
             // converting to UTM
@@ -113,8 +113,8 @@ public:
             m_Recorder.record(utm.toVector(), degree_t{ yaw }, m_Frame,
                               pitch.value(), roll.value(), botSpeed,
                               turnAngle.value(), utm.zone,
-                              (int) gpsData.gpsQuality,
-                              millimeter_t{ gpsData.horizontalDilution }.value(),
+                              (int) m_GPSData.gpsQuality,
+                              millimeter_t{ m_GPSData.horizontalDilution }.value(),
                               time.value());
         } else {
             /*
