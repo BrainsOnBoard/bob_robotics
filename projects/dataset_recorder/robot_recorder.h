@@ -148,8 +148,9 @@ private:
     {
 #ifdef DUMMY_CAMERA
         LOGW << "USING DUMMY CAMERA!!!!!!!!";
-        return std::make_unique<Video::RandomInput<>>(cv::Size{ 360, 100 },
-                                                      units::frequency::hertz_t{ 30 });
+        auto cam = std::make_unique<Video::RandomInput<>>(cv::Size{ 360, 100 });
+        cam->setFrameRate(units::frequency::hertz_t{ 30 });
+        return cam;
 #else
         return Video::getPanoramicCamera();
 #endif

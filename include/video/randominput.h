@@ -26,12 +26,10 @@ class RandomInput : public Input {
 
 public:
     RandomInput(const cv::Size &size,
-                hertz_t frameRate = hertz_t{ std::numeric_limits<double>::infinity() },
-                const std::string &cameraName = "random",
-                const typename GeneratorType::result_type seed = std::random_device{}())
+                typename GeneratorType::result_type seed = std::random_device{}())
       : m_Size(size)
-      , m_FrameRate(frameRate)
-      , m_CameraName(cameraName)
+      , m_FrameRate(std::numeric_limits<double>::infinity())
+      , m_CameraName("random")
       , m_Generator(seed)
 	  , m_Distribution(0, 0xff)
     {
@@ -85,9 +83,19 @@ public:
         return m_CameraName != "random";
     }
 
+    void setCameraName(std::string name)
+    {
+        m_CameraName = std::move(name);
+    }
+
+    void setFrameRate(hertz_t frameRate)
+    {
+        m_FrameRate = frameRate;
+    }
+
 private:
     cv::Size m_Size;
-    const hertz_t m_FrameRate;
+    hertz_t m_FrameRate;
     std::string m_CameraName;
     GeneratorType m_Generator;
     std::uniform_int_distribution<int> m_Distribution;

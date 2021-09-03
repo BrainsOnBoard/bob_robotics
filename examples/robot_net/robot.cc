@@ -84,7 +84,8 @@ int bobMain(int argc, char **argv)
             } catch (std::invalid_argument &) {
                 // ...and fall back on treating it as a string
                 if (strcmp(argv[1], "random") == 0) {
-                    Video::RandomInput<> camera({ 500, 250 }, "webcam360");
+                    Video::RandomInput<> camera({ 500, 250 });
+                    camera.setCameraName("webcam360");
                     run(camera);
                 } else {
                     Video::OpenCVInput camera(argv[1]);

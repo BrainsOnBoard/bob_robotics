@@ -16,7 +16,7 @@ static const cv::Size TestImageSize{ 90, 10 };
 
 static inline std::array<cv::Mat, NumTestImages> generateImages()
 {
-    BoBRobotics::Video::RandomInput<> video{ TestImageSize, "random", /*seed=*/42 };
+    BoBRobotics::Video::RandomInput<> video{ TestImageSize, /*seed=*/42 };
     std::array<cv::Mat, NumTestImages> images;
     for (auto &image : images) {
         video.readGreyscaleFrameSync(image);
