@@ -38,19 +38,23 @@ public:
 
     virtual bool readFrame(cv::Mat &outFrame) override
     {
+        if (!frameReady()) {
+            return false;
+        }
+
         outFrame.create(m_Size, CV_8UC3);
         fillRandom(outFrame.data, outFrame.data + m_Size.area() * 3);
-
-        waitForFrameDelay();
         return true;
     }
 
     virtual bool readGreyscaleFrame(cv::Mat &outFrame) override
     {
+        if (!frameReady()) {
+            return false;
+        }
+
         outFrame.create(m_Size, CV_8UC1);
         fillRandom(outFrame.data, outFrame.data + m_Size.area());
-
-        waitForFrameDelay();
         return true;
     }
 
@@ -107,22 +111,23 @@ private:
     }
 
     // We (optionally) throttle the frame rate to a user-defined value
-    void waitForFrameDelay() const
+    bool frameReady()
     {
         using namespace units::time;
         using namespace std::literals;
 
         // No delay needed...
         if (std::isinf(m_FrameRate.value())) {
-            return;
+            return true;
         }
 
         const auto frameDelay = static_cast<Stopwatch::Duration>(1 / m_FrameRate);
-        const auto elapsed = m_FrameTimer.elapsed() % frameDelay;
-        const auto remaining = frameDelay - elapsed;
-        if (remaining > 0s) {
-            std::this_thread::sleep_for(remaining);
+        if (m_FrameTimer.elapsed() > frameDelay) {
+            m_FrameTimer.start();
+            return true;
         }
+
+        return false;
     }
 };
 } // Video
