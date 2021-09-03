@@ -81,6 +81,7 @@ readRemote()
   // Timeout for reading pulses (in microsecs)
   constexpr auto Timeout = 500000;
 
+  // curTurn will be 0 if pulseIn() times out
   int curTurn = pulseIn(STEERING, HIGH, Timeout);
   if (curTurn == 0) {
     remoteMove.speed = 0;
