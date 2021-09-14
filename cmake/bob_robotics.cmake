@@ -341,19 +341,19 @@ macro(get_git_commit DIR VARNAME RV_VARNAME)
     execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
                     RESULT_VARIABLE ${RV_VARNAME}
                     OUTPUT_VARIABLE ${VARNAME}
+                    ERROR_VARIABLE unused
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    if(NOT ${RV_VARNAME} EQUAL 0)
+    if(${RV_VARNAME} EQUAL 0)
+        # Append -dirty if worktree has been modified
+        execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
+                        RESULT_VARIABLE git_dirty_rv)
+        if(NOT ${git_dirty_rv} EQUAL 0)
+            set(${VARNAME} ${${VARNAME}}-dirty)
+        endif()
+    else()
         # Git might fail (e.g. if we're not in a git repo), but let's carry on regardless
         set(${VARNAME} "(unknown)")
-        return()
-    endif()
-
-    # Append -dirty if worktree has been modified
-    execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" diff --no-ext-diff --quiet --exit-code
-                    RESULT_VARIABLE git_dirty_rv)
-    if(NOT ${git_dirty_rv} EQUAL 0)
-        set(${VARNAME} ${${VARNAME}}-dirty)
     endif()
 endmacro()
 
