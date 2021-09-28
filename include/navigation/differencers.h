@@ -137,29 +137,6 @@ public:
     };
 };
 
-template<class T>
-bool allSame(cv::InputArray &arr)
-{
-    const cv::Mat_<T> m = arr.getMat();
-    return std::all_of(m.begin() + 1, m.end(),
-                       [&m](T val) { return val == *m.begin(); });
-}
-
-/*
- * OpenCV v4.5.1 appears to have a bug where passing a non-empty mask into
- * cv::matchTemplate() when using the cv::TM_CCOEFF_NORMED method causes a
- * not-very-instructive assertion failure deep inside OpenCV code (and mangles
- * the contents of the input arrays in the process).
- *
- * This bug *may* not apply to earlier versions of OpenCV, but for now, just
- * emit an error for older versions of OpenCV in the case that a non-empty mask
- * is passed in so that users know to upgrade (which is probably the easiest
- * solution).
- */
-#if (CV_VERSION_MAJOR << 16 | CV_VERSION_MINOR << 8 | CV_VERSION_REVISION) >= 0x040502
-#define BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
-#endif
-
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::CorrCoefficient
 //------------------------------------------------------------------------
@@ -185,59 +162,56 @@ struct CorrCoefficient {
                          const ImgProc::Mask &mask1 = {},
                          const ImgProc::Mask &mask2 = {})
         {
-            BOB_ASSERT(src1.type() == src2.type());
+            mask1.combine(mask2, m_CombinedMask);
 
-            /*
-             * NB: We could easily support other mat types but these are the
-             * only ones we care about for now.
-             */
-            bool nonUniqueInputArray;
-            switch (src1.type()) {
-            case CV_8UC1:
-                nonUniqueInputArray = allSame<uint8_t>(src1) || allSame<uint8_t>(src2);
-                break;
-            case CV_32FC1:
-                nonUniqueInputArray = allSame<float>(src1) || allSame<float>(src2);
-                break;
-            default:
-                throw std::invalid_argument("Unsupported mat type: " + std::to_string(src1.type()));
-            }
-
-            if (nonUniqueInputArray) {
+            const float var1 = getVariance(src1, m_Scratch1);
+            const float var2 = getVariance(src2, m_Scratch2);
+            if (var1 == 0.f || var2 == 0.f) {
                 throw std::invalid_argument("Vectors src1 and src2 must have "
                                             "more than one unique value (e.g. "
                                             "they cannot be all zeros)");
             }
 
-            // See comment above...
-#ifndef BOB_OPENCV_SUPPORTS_CCOEFF_MASKS
-            if (!mask1.empty() || !mask2.empty()) {
-                throw std::runtime_error("OpenCV versions older than 4.5.2 "
-                                         "can't handle using masks for "
-                                         "correlation coefficients (your "
-                                         "version: " CV_VERSION ")");
-            }
-#endif
-            mask1.combine(mask2, m_CombinedMask);
+            cv::multiply(m_Scratch1, m_Scratch2, m_ScratchMult);
+            const float abMean = cv::mean(m_ScratchMult, m_CombinedMask.get())[0];
 
-            // OpenCV v3 doesn't allow for passing std::arrays as cv::OutputArrays
-#if CV_VERSION_MAJOR < 4
-            std::vector<float> dst;
-#else
-            std::array<float, 1> dst;
-#endif
-            cv::matchTemplate(src1, src2, dst, cv::TM_CCOEFF_NORMED, m_CombinedMask.get());
-
-            /*
-             * As we're interested in *dissimilarity* between images, we use
-             * 1 - correlation coefficient. For our purposes, it doesn't matter
-             * whether the correlation is positive or negative.
-             */
-            return 1.f - fabsf(dst[0]);
+            const float rho = abMean / sqrtf(var1 * var2);
+            return 1.f - fabsf(rho);
         }
 
     private:
+        cv::Mat m_Scratch1, m_Scratch2, m_ScratchMult;
         ImgProc::Mask m_CombinedMask;
+
+        float getVariance(cv::InputArray &in, cv::Mat &out)
+        {
+            in.getMat().convertTo(out, CV_8U);
+            const float mean = cv::mean(in, m_CombinedMask.get())[0];
+            out -= mean;
+
+            // Square the contents of "out", applying a mask if one is specified
+            unsigned int sse = 0;
+            unsigned int count;
+            const auto numPixels = static_cast<size_t>(out.size().width * out.size().height);
+            if (m_CombinedMask.empty()) {
+                count = numPixels;
+
+                for (size_t i = 0; i < numPixels; i++) {
+                    sse += out.data[i] * out.data[i];
+                }
+            } else {
+                count = 0;
+
+                for (size_t i = 0; i < numPixels; i++) {
+                    if (m_CombinedMask.get().data[i]) {
+                        sse += out.data[i] * out.data[i];
+                        count++;
+                    }
+                }
+            }
+
+            return static_cast<float>(sse) / static_cast<float>(count);
+        }
     };
 };
 
