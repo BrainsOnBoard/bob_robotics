@@ -826,6 +826,9 @@ if(WIN32)
 
     # We don't want the min/max macros defined in windows.h
     add_definitions(-DNOMINMAX)
+    
+    # <cmath> doesn't normally define M_PI etc on windows
+    add_definitions(-D_USE_MATH_DEFINES)
 
     # the version of the Windows API that we want
     add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN7)
