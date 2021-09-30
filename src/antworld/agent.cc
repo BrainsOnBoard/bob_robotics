@@ -56,7 +56,7 @@ void
 AntAgent::addJoystick(HID::Joystick &joystick, float deadZone)
 {
     joystick.addHandler(
-            [this, deadZone](HID::JAxis axis, float value) {
+            [this, deadZone](auto &, HID::JAxis axis, float value) {
                 switch (axis) {
                 case HID::JAxis::LeftStickVertical:
                     m_JoystickY = value;
@@ -91,16 +91,6 @@ void AntAgent::drive(const HID::Joystick &joystick, float deadZone)
     } else {
         stopMoving();
     }
-}
-
-void AntAgent::readFromNetwork(Net::Connection &)
-{
-    throw std::runtime_error("Network control of AntAgent not implemented");
-}
-
-void AntAgent::stopReadingFromNetwork()
-{
-    throw std::runtime_error("Network control of AntAgent not implemented");
 }
 
 radians_per_second_t

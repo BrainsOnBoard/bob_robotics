@@ -3,7 +3,7 @@
 #include "hid/joystick.h"
 #include "navigation/read_objects.h"
 #include "robots/control/collision_detector.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "viz/sfml/arena_object.h"
 #include "viz/sfml/sfml_world.h"
 

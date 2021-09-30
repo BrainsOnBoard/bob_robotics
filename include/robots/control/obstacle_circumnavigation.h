@@ -7,7 +7,6 @@
 #include "common/pose.h"
 #include "robots/control/collision_detector.h"
 #include "robots/control/tank_pid.h"
-#include "robots/tank.h"
 
 // Third-party includes
 #include "third_party/units.h"
@@ -29,24 +28,24 @@ namespace Robots {
 using namespace units::literals;
 
 // Forward declarations
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class ObstacleCircumnavigator;
-template<class PositionerType, class PoseGetterType>
+template<class PositionerType, class TankType, class PoseGetterType>
 class ObstacleAvoidingPositioner;
 
-template<class PoseGetterType, class... Args>
-auto createObstacleCircumnavigator(Robots::Tank &tank,
+template<class TankType, class PoseGetterType, class... Args>
+auto createObstacleCircumnavigator(TankType &tank,
                                    PoseGetterType &poseGetter,
                                    Args&&... otherArgs)
 {
-    return ObstacleCircumnavigator<PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
+    return ObstacleCircumnavigator<TankType, PoseGetterType>{ tank, poseGetter, std::forward<Args>(otherArgs)... };
 }
 
-template<class PositionerType, class PoseGetterType>
+template<class PositionerType, class TankType, class PoseGetterType>
 auto createObstacleAvoidingPositioner(PositionerType &positioner,
-                                      ObstacleCircumnavigator<PoseGetterType> &circumnavigator)
+                                      ObstacleCircumnavigator<TankType, PoseGetterType> &circumnavigator)
 {
-    return ObstacleAvoidingPositioner<PositionerType, PoseGetterType>{ positioner, circumnavigator };
+    return ObstacleAvoidingPositioner<PositionerType, TankType, PoseGetterType>{ positioner, circumnavigator };
 }
 
 enum class ObstacleCircumnavigatorState {
@@ -55,12 +54,12 @@ enum class ObstacleCircumnavigatorState {
     Circumnavigating
 };
 
-template<class PositionerType, class PoseGetterType>
+template<class PositionerType, class TankType, class PoseGetterType>
 class ObstacleAvoidingPositioner
 {
 public:
     ObstacleAvoidingPositioner(PositionerType &positioner,
-                               ObstacleCircumnavigator<PoseGetterType> &circumnavigator)
+                               ObstacleCircumnavigator<TankType, PoseGetterType> &circumnavigator)
       : m_Positioner(positioner)
       , m_Circumnavigator(circumnavigator)
     {}
@@ -97,10 +96,10 @@ public:
 
 private:
     PositionerType &m_Positioner;
-    ObstacleCircumnavigator<PoseGetterType> &m_Circumnavigator;
+    ObstacleCircumnavigator<TankType, PoseGetterType> &m_Circumnavigator;
 }; // ObstacleAvoidingPositioner
 
-template<class PoseGetterType>
+template<class TankType, class PoseGetterType>
 class ObstacleCircumnavigator {
     using meter_t = units::length::meter_t;
     using radian_t = units::angle::radian_t;
@@ -108,7 +107,7 @@ class ObstacleCircumnavigator {
 public:
     using State = ObstacleCircumnavigatorState;
 
-    ObstacleCircumnavigator(Robots::Tank &robot,
+    ObstacleCircumnavigator(TankType &tank,
                             PoseGetterType &poseGetter,
                             Robots::CollisionDetector &collisionDetector,
                             meter_t stoppingDistance = 3_cm,
@@ -116,7 +115,7 @@ public:
                             float ki = 0.1f,
                             float kd = 0.1f,
                             float averageSpeed = 0.5f)
-        : m_TankPID(robot, poseGetter, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed)
+        : m_TankPID(tank, poseGetter, kp, ki, kd, stoppingDistance, 3_deg, 45_deg, averageSpeed)
         , m_PoseGetter(poseGetter)
         , m_CollisionDetector(collisionDetector)
     {}
@@ -146,7 +145,7 @@ public:
     const auto &getPIDWaypoints() const { return m_PIDWaypoints; }
 
 private:
-    Robots::TankPID<PoseGetterType> m_TankPID;
+    Robots::TankPID<TankType, PoseGetterType> m_TankPID;
     PoseGetterType &m_PoseGetter;
     EigenSTDVector<Eigen::Matrix2d> m_ObjectLines;
     std::list<Vector2<meter_t>> m_PIDWaypoints;

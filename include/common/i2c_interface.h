@@ -30,6 +30,9 @@ public:
     I2CInterface(const char *path, int slaveAddress);
     ~I2CInterface();
 
+    // Make non-moveable and non-copyable
+    I2CInterface(I2CInterface &&) = delete;
+
     //---------------------------------------------------------------------
     // Public API
     //---------------------------------------------------------------------

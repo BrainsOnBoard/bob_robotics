@@ -1,4 +1,4 @@
-#ifdef __linux__ // This code is Linux only
+#ifndef WIN32
 
 // BoB robotics includes
 #include "common/macros.h"
@@ -22,8 +22,8 @@
 #include <sys/ioctl.h>
 
 namespace BoBRobotics {
-SerialInterface::SerialInterface(const char *path)
-  : m_Serial_fd{ open(path, O_RDWR | O_NOCTTY | O_SYNC) }
+SerialInterface::SerialInterface(const char *path, bool blocking)
+  : m_Serial_fd{ open(path, O_RDWR | O_NOCTTY | O_SYNC | (blocking ? 0 : O_NONBLOCK)) }
 {
     if (m_Serial_fd < 0) {
         throw std::runtime_error("Could not open serial interface: " + std::string(strerror(errno)));

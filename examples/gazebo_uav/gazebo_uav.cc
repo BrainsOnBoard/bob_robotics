@@ -1,5 +1,6 @@
 // BoB robotics includes
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "robots/gazebo/camera.h"
 #include "robots/gazebo/node.h"
 #include "robots/gazebo/uav.h"
@@ -54,7 +55,7 @@ bobMain(int argc, char **argv)
     std::unique_ptr<HID::Joystick> joystick;
     try {
         joystick = std::make_unique<HID::Joystick>(0.25f);
-        iris.addJoystick(*joystick);
+        HID::addJoystick(iris, *joystick);
     } catch (std::runtime_error &) {
         LOGW << "Could not find joystick";
     }

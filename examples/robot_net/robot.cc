@@ -6,14 +6,17 @@
 
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "net/server.h"
 #include "os/net.h"
 #include "robots/robot_type.h"
+#include "robots/tank/net/source.h"
 #include "video/netsink.h"
 #include "video/opencvinput.h"
 #include "video/panoramic.h"
 #include "video/randominput.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C includes
 #include <cstring>
@@ -39,10 +42,10 @@ run(Video::Input &camera)
     Video::NetSink netSink(*connection, camera.getOutputSize(), camera.getCameraName());
 
     // Initialise robot
-    Robots::ROBOT_TYPE tank;
+    ROBOT_TYPE tank;
 
     // Read motor commands from network
-    tank.readFromNetwork(*connection);
+    const auto netSource = Robots::Tank::Net::createSource(*connection, tank);
 
     // Run server in background,, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;

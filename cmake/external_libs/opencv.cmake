@@ -13,6 +13,12 @@
 #
 # We also provide an extra option to explicitly use pkg-config.
 if(NOT OpenCV_FOUND)
+    # The CMake package file for OpenCV v4.3+ appears to have a bug in which
+    # means that the C++ standard is forced to C++11, which will break BoB
+    # robotics code as we use C++14 features all over the place. Setting this
+    # variable seems to be a good workaround.
+    set(OPENCV_COMPILE_FEATURES "")
+
     if(NOT FIND_OPENCV_WITH_PKGCONFIG)
         find_package(OpenCV QUIET)
     endif()

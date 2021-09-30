@@ -1,8 +1,9 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -18,7 +19,7 @@ int bobMain(int, char **)
     Net::Client client;
 
     // Transmit motor commands over network
-    Robots::TankNetSink tank(client);
+    Robots::Tank::Net::Sink tank(client);
 
     // Run client on background thread, catching any exceptions for rethrowing
     BackgroundExceptionCatcher catcher;
@@ -27,7 +28,7 @@ int bobMain(int, char **)
 
     // Add joystick for controlling robot
     HID::Joystick joystick;
-    tank.addJoystick(joystick);
+    HID::addJoystick(tank, joystick);
 
     while (!joystick.isPressed(HID::JButton::B)) {
         // Rethrow any exceptions caught on background thread

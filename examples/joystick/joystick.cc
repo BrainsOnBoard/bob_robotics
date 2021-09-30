@@ -8,7 +8,7 @@
 using namespace BoBRobotics::HID;
 
 bool
-onAxisEvent(JAxis axis, float value)
+onAxisEvent(JoystickBase<JAxis, JButton> &, JAxis axis, float value)
 {
     std::string name = Joystick::getName(axis);
     LOGI << "Axis " << name << " (" << static_cast<int>(axis) << "): "
@@ -19,7 +19,7 @@ onAxisEvent(JAxis axis, float value)
 }
 
 bool
-onButtonEvent(JButton button, bool pressed)
+onButtonEvent(JoystickBase<JAxis, JButton> &, JButton button, bool pressed)
 {
     std::string name = Joystick::getName(button);
     LOGI << "Button " << name << " (" << static_cast<int>(button)
@@ -33,7 +33,7 @@ inline void
 initButton(Joystick &joystick, JButton button)
 {
     LOGI << "[initial] ";
-    onButtonEvent(button, joystick.isDown(button));
+    onButtonEvent(joystick, button, joystick.isDown(button));
 }
 
 int bobMain(int, char **)
@@ -48,7 +48,7 @@ int bobMain(int, char **)
     for (int i = 0; i < static_cast<int>(JAxis::LENGTH); i++) {
         JAxis axis = static_cast<JAxis>(i);
         LOGI << "[initial] ";
-        onAxisEvent(axis, joystick.getState(axis));
+        onAxisEvent(joystick, axis, joystick.getState(axis));
     }
 
     // get initial button states

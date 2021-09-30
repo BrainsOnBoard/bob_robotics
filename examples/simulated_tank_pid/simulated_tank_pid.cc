@@ -1,12 +1,13 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "robots/control/tank_pid.h"
-#include "robots/simulated_tank.h"
+#include "robots/tank/simulated_tank.h"
 #include "viz/sfml/sfml_world.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -20,17 +21,17 @@ using namespace units::length;
 
 int bobMain(int, char **)
 {
-    Robots::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
+    Robots::Tank::SimulatedTank<> robot(0.3_mps, 104_mm);                // Tank agent
     Viz::SFMLWorld display;                                        // For displaying the agent
     auto pid = Robots::createTankPID(robot, robot, .1f, .1f, .1f); // PID controller
     auto car = display.createCarAgent();
 
     HID::Joystick joystick(0.25f);
-    robot.controlWithThumbsticks(joystick);
+    HID::controlWithThumbsticks(robot, joystick);
 
     const Vector2<millimeter_t> goal{}; // Goal is origin
     bool pidRunning = false;
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
+    joystick.addHandler([&](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }

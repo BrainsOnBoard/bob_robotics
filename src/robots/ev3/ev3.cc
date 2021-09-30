@@ -1,9 +1,9 @@
 // BoB robotics includes
 #include "common/circstat.h"
-#include "plog/Log.h"
 #include "robots/ev3/ev3.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Standard C++ includes
@@ -15,6 +15,7 @@ using namespace units::literals;
 
 namespace BoBRobotics {
 namespace Robots {
+namespace EV3 {
 void
 checkMotor(const EV3::MotorType &motor, const std::string &label)
 {
@@ -37,7 +38,6 @@ EV3::EV3(const ev3dev::address_type &leftMotorPort,
 EV3::~EV3()
 {
     stopMoving();
-    stopReadingFromNetwork();
 }
 
 void
@@ -45,18 +45,14 @@ EV3::stopMoving()
 {
     m_MotorLeft.stop();
     m_MotorRight.stop();
-    setWheelSpeeds(0.f, 0.f);
 }
 
 void
 EV3::tank(float left, float right)
 {
-    setWheelSpeeds(left, right);
-
     // NB: We are driving the motors backwards, as the camera is on the rear
-    const float maxTachos = getMaximumSpeedProportion() * m_MaxSpeedTachos;
-    m_MotorLeft.set_speed_sp(-maxTachos * left);
-    m_MotorRight.set_speed_sp(-maxTachos * right);
+    m_MotorLeft.set_speed_sp(-m_MaxSpeedTachos * left);
+    m_MotorRight.set_speed_sp(-m_MaxSpeedTachos * right);
     m_MotorLeft.run_forever();
     m_MotorRight.run_forever();
 
@@ -78,7 +74,7 @@ EV3::getRobotWidth() const
 }
 
 meters_per_second_t
-EV3::getAbsoluteMaximumSpeed() const
+EV3::getMaximumSpeed() const
 {
     return tachoToSpeed(m_MaxSpeedTachos);
 }
@@ -97,5 +93,6 @@ EV3::tachoToSpeed(int tachos) const
     const double angularVelocity{ 2.0 * pi() * static_cast<double>(tachos) / static_cast<double>(m_TachoCountPerRotation) };
     return meters_per_second_t{ angularVelocity * wheelRadius.value() };
 }
-}
-}
+} // EV3
+} // Robots
+} // BoBRobotics

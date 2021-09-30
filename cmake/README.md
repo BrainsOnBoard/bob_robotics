@@ -96,7 +96,7 @@ You can then install any needed packages like so:
 ```
 
 Note that CMake *also* defaults to building 32-bit binaries on Windows; if you
-want a 64-bit build you have to enable it explictly
+want a 64-bit build you have to enable it explicitly:
 ```bat
 cmake.exe -DCMAKE_GENERATOR_PLATFORM=x64 ..
 ```

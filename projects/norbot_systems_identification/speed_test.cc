@@ -1,14 +1,15 @@
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
-#include "plog/Log.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -30,8 +31,8 @@ using namespace units::time;
 class DataFile
 {
 public:
-    DataFile(Robots::Tank &robot, Vicon::UDPClient<> &vicon)
-      : m_Robot(robot)
+    DataFile(Robots::Tank::Net::Sink &tank, Vicon::UDPClient<> &vicon)
+      : m_Tank(tank)
       , m_Vicon(vicon)
     {
         // Set the driving speed at which we're testing the robot
@@ -55,7 +56,7 @@ public:
         m_FileStream << std::setprecision(10); // set number of decimal places
 
         // Start driving robot forwards; start stopwatch
-        robot.tank(robotSpeed, robotSpeed);
+        tank.tank(robotSpeed, robotSpeed);
         m_Stopwatch.start();
         m_StopwatchSample.start();
 
@@ -64,7 +65,7 @@ public:
 
     ~DataFile()
     {
-        m_Robot.stopMoving();
+        m_Tank.stopMoving();
         LOGI << "Data written to " << m_FilePath;
     }
 
@@ -96,7 +97,7 @@ public:
 private:
     std::ofstream m_FileStream;
     filesystem::path m_FilePath;
-    Robots::Tank &m_Robot;
+    Robots::Tank::Net::Sink &m_Tank;
     Vicon::UDPClient<> &m_Vicon;
     Stopwatch m_Stopwatch, m_StopwatchSample;
 };
@@ -109,18 +110,18 @@ int bobMain(int, char **)
     LOGI << "Connected to " << client.getIP();
 
     // Send motor commands to robot
-    Robots::TankNetSink robot(client);
+    Robots::Tank::Net::Sink robot(client);
 
     // Open joystick
     HID::Joystick joystick;
-    robot.addJoystick(joystick);
+    HID::addJoystick(robot, joystick);
     LOGI << "Opened joystick";
 
     std::unique_ptr<DataFile> dataFile; // CSV output file
     Vicon::UDPClient<> vicon(51001); // For getting robot's position
 
     // If we're recording, ignore axis movements
-    joystick.addHandler([&dataFile](HID::JAxis, float) {
+    joystick.addHandler([&dataFile](auto &, HID::JAxis, float) {
         if (dataFile != nullptr) {
             LOGW << "Ignoring joystick command";
             return true;
@@ -130,7 +131,7 @@ int bobMain(int, char **)
     });
 
     // Toggle testing mode with buttons
-    joystick.addHandler([&dataFile, &robot, &vicon](HID::JButton button, bool pressed) {
+    joystick.addHandler([&dataFile, &robot, &vicon](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }

@@ -1,12 +1,15 @@
 // BoB robotics includes
-#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/background_exception_catcher.h"
 #include "common/stopwatch.h"
 #include "hid/joystick.h"
+#include "hid/robot_control.h"
 #include "net/client.h"
-#include "robots/tank_netsink.h"
+#include "robots/tank/net/sink.h"
 #include "vicon/udp.h"
+
+// Third-party includes
+#include "plog/Log.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -37,11 +40,11 @@ int bobMain(int argc, char **argv)
     LOGI << "Connected to " << ipAddress;
 
     // Send motor commands to robot
-    Robots::TankNetSink robot(client);
+    Robots::Tank::Net::Sink robot(client);
 
     // Open joystick
     HID::Joystick joystick;
-    robot.addJoystick(joystick);
+    HID::addJoystick(robot, joystick);
     LOGI << "Opened joystick";
 
     Stopwatch stopwatch;
@@ -50,7 +53,7 @@ int bobMain(int argc, char **argv)
     Vicon::UDPClient<Vicon::ObjectDataVelocity> vicon(51001); // For getting robot's position
 
     // If we're recording, ignore axis movements
-    joystick.addHandler([&stopwatch](HID::JAxis, float) {
+    joystick.addHandler([&stopwatch](auto &, HID::JAxis, float) {
         if (stopwatch.started()) {
             LOGI << "Ignoring joystick command";
             return true;
@@ -60,7 +63,7 @@ int bobMain(int argc, char **argv)
     });
 
     // Toggle testing mode with buttons
-    joystick.addHandler([&](HID::JButton button, bool pressed) {
+    joystick.addHandler([&](auto &, HID::JButton button, bool pressed) {
         if (!pressed) {
             return false;
         }
