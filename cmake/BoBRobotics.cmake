@@ -7,8 +7,10 @@ function(make_base_target)
                                "${BOB_ROBOTICS_PATH}")
 
     # Build with C++14
-    set_property(TARGET bob_base PROPERTY CXX_STANDARD 14)
-    set_property(TARGET bob_base PROPERTY CXX_STANDARD_REQUIRED TRUE)
+    if(NOT CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD 14)
+    endif()
+    set(CXX_STANDARD_REQUIRED TRUE)
 
     # Define DEBUG macro
     target_compile_definitions(bob_base INTERFACE "$<$<CONFIG:DEBUG>:DEBUG>")
@@ -17,8 +19,8 @@ function(make_base_target)
         # Use ccache if present to speed up repeat builds
         find_program(CCACHE ccache)
         if(CCACHE)
-            set_property(TARGET bob_base PROPERTY RULE_LAUNCH_COMPILE "${ccache}")
-            set_property(TARGET bob_base PROPERTY RULE_LAUNCH_LINK "${ccache}")
+            set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+            set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
         else()
             message(WARNING "ccache not found. Install for faster repeat builds.")
         endif()

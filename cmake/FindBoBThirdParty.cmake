@@ -75,4 +75,5 @@ foreach(MODULE IN LISTS BoBThirdParty_FIND_COMPONENTS)
 endforeach()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(BoBThirdParty HANDLE_COMPONENTS)
+find_package_handle_standard_args(BoBThirdParty REQUIRED_VARS
+                                  BoBThirdParty_LIBRARIES HANDLE_COMPONENTS)
