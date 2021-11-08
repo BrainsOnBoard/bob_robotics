@@ -8,13 +8,22 @@ macro(find_backend NAME LIBNAME)
     endif()
 endmacro()
 
-# Find genn-buildmodel (which should be in the path)
-find_program(_GeNN_BUILDMODEL genn-buildmodel.sh)
-if(_GeNN_BUILDMODEL)
-    # Figure out path to GeNN
-    get_filename_component(_GeNN_BIN_PATH ${_GeNN_BUILDMODEL} DIRECTORY)
-    get_filename_component(GeNN_ROOT_DIR ${_GeNN_BIN_PATH}/.. ABSOLUTE)
+# Let users give an explicit path to GeNN
+if(GENN_PATH)
+    set(GeNN_ROOT_DIR "${GENN_PATH}")
+    set(GeNN_BUILDMODEL "${GENN_PATH}/bin/genn-buildmodel.sh")
+else()
+    # Find genn-buildmodel (which should be in the path)
+    find_program(GeNN_BUILDMODEL genn-buildmodel.sh)
 
+    if(GeNN_BUILDMODEL)
+        # Figure out path to GeNN
+        get_filename_component(_GeNN_BIN_PATH "${GeNN_BUILDMODEL}" DIRECTORY)
+        get_filename_component(GeNN_ROOT_DIR "${_GeNN_BIN_PATH}/.." ABSOLUTE)
+    endif()
+endif()
+
+if(GeNN_ROOT_DIR)
     set(GeNN_INCLUDE_DIRS "${GeNN_ROOT_DIR}/include/genn" "${GeNN_ROOT_DIR}/include/genn/genn")
 
     # If GeNN is living in its git repo, then this is where the userproject
@@ -104,7 +113,7 @@ function(add_genn_model TARGET_NAME MODEL_SRC)
     add_custom_command(OUTPUT "${MODEL_LIB}"
                        DEPENDS "${MODEL_SRC}"
                        IMPLICIT_DEPENDS CXX "${MODEL_SRC}"
-                       COMMAND "${_GeNN_BUILDMODEL}"
+                       COMMAND "${GeNN_BUILDMODEL}"
                                ${BUILDMODEL_OPTIONS}
                                "${MODEL_SRC}" > genn.log
                        COMMAND make -C "${MODEL_DIR}"
