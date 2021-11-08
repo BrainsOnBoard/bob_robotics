@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(robot_net_example)
 
 include(../../cmake/BoBRobotics.cmake)
-find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid net os robots robots/tank_net video)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid net os robots robots/tank/net video)
 
 foreach(TARGET robot computer)
     add_executable(${TARGET} ${TARGET}.cc)
