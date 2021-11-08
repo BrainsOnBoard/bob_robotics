@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES unwrapconfig.cc
-            BOB_MODULES common imgproc video)
+cmake_minimum_required(VERSION 3.10)
+project(unwrapconfig)
+
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS imgproc video)
+
+add_executable(unwrapconfig unwrapconfig.cc)
+target_link_libraries(unwrapconfig PUBLIC ${BoBRobotics_LIBRARIES})

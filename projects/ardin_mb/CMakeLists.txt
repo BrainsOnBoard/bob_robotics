@@ -1,23 +1,28 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
+cmake_minimum_required(VERSION 3.10)
+project(ardin_mb)
 
-if(NO_GENN)
-    add_definitions(-DNO_GENN)
-    BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE ardin_mb
-                SOURCES ardin_mb.cc state_handler.cc opencv_texture.cc vector_field.cc visual_navigation_ui.cc
-                BOB_MODULES common antworld navigation
-                THIRD_PARTY imgui)
-else()
-    BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE ardin_mb
-                SOURCES ardin_mb.cc state_handler.cc mb_memory.cc opencv_texture.cc mb_memory_ardin.cc vector_field.cc visual_navigation_ui.cc
-                BOB_MODULES common antworld navigation
-                THIRD_PARTY imgui
-                INCLUDE_GENN_USERPROJECTS)
+set(IS_EXPERIMENT TRUE)
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld common navigation)
+find_package(BoBThirdParty REQUIRED imgui)
+
+if(NOT DEFINED NO_GENN)
+    find_package(GeNN)
+    if(GeNN_FOUND)
+        add_genn_model(mb_memory_ardin model_ardin.cc)
+    else()
+        message(WARNING "GeNN not found; building without")
+    endif()
 endif()
 
-# Suppress warning from inside imgui
-if(NOT WIN32)
-    add_compile_flags(-Wno-int-to-pointer-cast)
+set(SOURCES ardin_mb.cc state_handler.cc opencv_texture.cc vector_field.cc
+    visual_navigation_ui.cc)
+
+if(TARGET mb_memory_ardin)
+    add_executable(ardin_mb ${SOURCES} mb_memory.cc mb_memory_ardin.cc)
+    target_link_libraries(ardin_mb ${BoBRobotics_LIBRARIES} BoBThirdParty::imgui
+                          mb_memory_ardin)
+else()
+    add_executable(ardin_mb ${SORUCES})
+    target_link_libraries(ardin_mb ${BoBRobotics_LIBRARIES} BoBThirdParty::imgui)
 endif()

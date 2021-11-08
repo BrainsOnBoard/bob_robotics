@@ -1,4 +1,11 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_module(SOURCES joystick_linux.cc joystick_windows.cc
-           BOB_MODULES common)
+cmake_minimum_required(VERSION 3.10)
+project(hid)
+
+find_package(BoBRobotics REQUIRED COMPONENTS common)
+if(${CMAKE_SYSTEM_NAME} MATCHES Linux)
+    BoB_module(${BOB_MODULE_TARGET} STATIC joystick_linux.cc)
+elseif(WIN32)
+    BoB_module(${BOB_MODULE_TARGET} STATIC joystick_windows.cc)
+else()
+    message(FATAL_ERROR "Unsupported platform")
+endif()

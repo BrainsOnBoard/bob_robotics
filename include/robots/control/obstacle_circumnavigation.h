@@ -2,13 +2,13 @@
 
 // BoB robotics includes
 #include "common/geometry.h"
-#include "plog/Log.h"
 #include "common/macros.h"
 #include "common/pose.h"
 #include "robots/control/collision_detector.h"
 #include "robots/control/tank_pid.h"
 
 // Third-party includes
+#include "plog/Log.h"
 #include "third_party/units.h"
 
 // Eigen

@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES joystick.cc joystick_polling.cc joystick_robot.cc
-            BOB_MODULES common hid robots
-            PLATFORMS linux windows)
+cmake_minimum_required(VERSION 3.10)
+
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid robots)
+
+foreach(TARGET joystick joystick_polling joystick_robot)
+    add_executable(${TARGET} ${TARGET}.cc)
+    target_link_libraries(${TARGET} PUBLIC BoBRobotics::hid)
+endforeach(TARGET joystick joystick_polling joystick_robot)
+target_link_libraries(joystick_robot PUBLIC BoBRobotics::robots)

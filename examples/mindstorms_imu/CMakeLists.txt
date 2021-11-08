@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES mindstorms_imu.cc
-            BOB_MODULES robots/ev3
-            PLATFORMS linux)
+cmake_minimum_required(VERSION 3.10)
+project(mindstorms_imu_example)
+
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS robots/ev3)
+
+add_executable(mindstorms_imu mindstorms_imu.cc)
+target_link_libraries(mindstorms_imu PUBLIC ${BoBRobotics_LIBRARIES})

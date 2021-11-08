@@ -1,5 +1,13 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_module(SOURCES image_database.cc perfect_memory_window.cc read_objects.cc
-           BOB_MODULES common imgproc
-           EXTERNAL_LIBS eigen3 opencv tbb)
+cmake_minimum_required(VERSION 3.10)
+project(navigation)
+
+find_package(BoBRobotics REQUIRED COMPONENTS common imgproc)
+BoB_module(image_database.cc perfect_memory_window.cc read_objects.cc)
+
+find_package(Eigen3 REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(TBB REQUIRED)
+target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS}
+                           ${TBB_INCLUDE_DIRS})
+target_link_libraries(${BOB_MODULE_TARGET} PUBLIC Eigen3::Eigen ${OpenCV_LIBS}
+                      ${TBB_LIBRARIES})

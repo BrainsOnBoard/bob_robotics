@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_module(SOURCES bee_eye.cc mask.cc opencv_optical_flow.cc
-                   opencv_unwrap_360.cc roll.cc
-           BOB_MODULES common
-           EXTERNAL_LIBS opencv)
+cmake_minimum_required(VERSION 3.10)
+project(imgproc)
+
+find_package(BoBRobotics REQUIRED COMPONENTS common)
+BoB_module(bee_eye.cc mask.cc opencv_optical_flow.cc opencv_unwrap_360.cc roll.cc)
+
+find_package(OpenCV REQUIRED)
+target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_LIBS})

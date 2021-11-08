@@ -1,8 +1,17 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_module(SOURCES agent.cc camera.cc render_mesh.cc render_target_input.cc
-                   render_target.cc renderer.cc route_ardin.cc
-                   route_continuous.cc snapshot_processor_ardin.cc
-                   surface.cc texture.cc world.cc
-           BOB_MODULES common hid video/opengl
-           EXTERNAL_LIBS opencv glew sfml-graphics)
+cmake_minimum_required(VERSION 3.10)
+project(antworld)
+
+find_package(BoBRobotics REQUIRED COMPONENTS common hid video/opengl)
+BoB_module(agent.cc camera.cc render_mesh.cc render_target_input.cc
+           render_target.cc renderer.cc route_ardin.cc route_continuous.cc
+           snapshot_processor_ardin.cc surface.cc texture.cc world.cc)
+
+find_package(GLEW REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(SFML REQUIRED COMPONENTS graphics)
+
+target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS}
+                           ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS})
+target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${GLEW_LIBRARIES}
+                      ${OpenCV_LIBS} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+                      sfml-graphics)

@@ -1,13 +1,15 @@
-BoB_external_libraries(python)
+find_package(Python3 COMPONENTS Development NumPy)
 
-# Try to find numpy path
-execute_process(COMMAND "python" "${BOB_ROBOTICS_PATH}/bin/find_numpy.py"
-                RESULT_VARIABLE rv
-                OUTPUT_VARIABLE numpy_include_path)
+if(Python3_FOUND)
+    list(APPEND INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+    list(APPEND LIBRARIES ${Python3_LIBRARIES})
 
-# If we have numpy then use it, otherwise matplotlibcpp will still work without it
-if(${rv} EQUAL 0)
-    BoB_add_include_directories(${numpy_include_path})
+    if(Python3_NumPy_FOUND)
+        list(APPEND LIBRARIES Python3::NumPy)
+    else()
+        message(WARNING "NumPy was not found; building without")
+        list(APPEND DEFINITIONS -DWITHOUT_NUMPY)
+    endif()
 else()
-    add_definitions(-DWITHOUT_NUMPY)
+    set(FOUND FALSE)
 endif()

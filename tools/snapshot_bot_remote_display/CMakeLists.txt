@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES snapshot_bot_remote_display.cc
-            BOB_MODULES navigation net video)
+cmake_minimum_required(VERSION 3.10)
+project(snapshot_bot_remote_display)
+
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS navigation net video)
+
+add_executable(snapshot_bot_remote_display snapshot_bot_remote_display.cc)
+target_link_libraries(snapshot_bot_remote_display PUBLIC ${BoBRobotics_LIBRARIES})

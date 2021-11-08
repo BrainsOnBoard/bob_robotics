@@ -1,28 +1,19 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
+cmake_minimum_required(VERSION 3.10)
+project(snapshot_bot)
 
-# Default to building snapshot_bot
-if(NOT TARGET)
-    set(TARGET snapshot_bot)
+set(IS_EXPERIMENT TRUE)
+include(../../cmake/BoBRobotics.cmake)
+
+set(MODULES hid imgproc navigation robots vicon video)
+if(USE_ODK)
+    list(APPEND MODULES video/odk2)
+    add_definitions(-DUSE_ODK)
 endif()
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS ${MODULES})
 
-if(${TARGET} STREQUAL snapshot_bot)
-    if(USE_ODK2)
-        add_definitions(-DUSE_ODK2)
-        BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE snapshot_bot
-                SOURCES snapshot_bot.cc memory.cc image_input.cc
-                BOB_MODULES common hid imgproc navigation robots vicon video video/odk2)
-    else()
-        BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE snapshot_bot
-                SOURCES snapshot_bot.cc memory.cc image_input.cc
-                BOB_MODULES common hid imgproc navigation robots vicon video)
-    endif()
+add_executable(snapshot_bot snapshot_bot.cc memory.cc image_input.cc)
+target_link_libraries(snapshot_bot PUBLIC ${BoBRobotics_LIBRARIES})
 
-else()
-    BoB_project(IS_EXPERIMENT TRUE
-                EXECUTABLE offline_train
-                SOURCES offline_train.cc memory.cc image_input.cc
-                BOB_MODULES common imgproc navigation video)
-endif()
+add_executable(offline_train offline_train.cc memory.cc image_input.cc)
+target_link_libraries(offline_train PUBLIC BoBRobotics::imgproc
+                      BoBRobotics::navigation BoBRobotics::video)

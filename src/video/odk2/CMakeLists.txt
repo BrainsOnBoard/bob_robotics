@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../../cmake/bob_robotics.cmake)
-BoB_module(SOURCES odk2.cc
-           BOB_MODULES video
-           THIRD_PARTY development_kit_odk2
-           PLATFORMS linux windows)
+cmake_minimum_required(VERSION 3.10)
+project(video/odk2)
+
+include(../../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS video)
+find_package(BoBThirdParty REQUIRED COMPONENTS development_kit_odk2)
+
+BoB_module(odk2.cc)
+target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${BoBRobotics_LIBRARIES}
+                      ${BoBThirdParty_LIBRARIES})

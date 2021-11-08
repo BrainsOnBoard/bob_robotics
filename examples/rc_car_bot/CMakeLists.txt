@@ -1,4 +1,10 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES rc_car_bot.cc rc_car_bot_i2c_control.cc rc_car_bot_passive.cc
-            BOB_MODULES common robots/ackermann)
+cmake_minimum_required(VERSION 3.10)
+project(rc_car_bot_example)
+
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED robots/ackermann)
+
+foreach(TARGET rc_car_bot rc_car_bot_i2c_control rc_car_bot_passive)
+    add_executable(${TARGET} ${TARGET}.cc)
+    target_link_libraries(${TARGET} PUBLIC ${BoBRobotics_LIBRARIES})
+endforeach(TARGET rc_car_bot rc_car_bot_i2c_control rc_car_bot_passive)

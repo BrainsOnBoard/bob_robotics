@@ -1,5 +1,15 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES spineml_braitenberg.cc
-            BOB_MODULES common hid navigation robots/tank robots/control viz/sfml
-            EXTERNAL_LIBS spineml_simulation)
+cmake_minimum_required(VERSION 3.10)
+project(spineml_braitenberg_example)
+
+include(../../cmake/BoBRobotics.cmake)
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid navigation robots/tank
+             robots/control viz/sfml)
+
+# TODO: Link against spineml stuff
+add_executable(spineml_braitenberg spineml_braitenberg.cc)
+target_link_libraries(spineml_braitenberg PUBLIC ${BoBRobotics_LIBRARIES})
+
+
+# BoB_project(SOURCES spineml_braitenberg.cc
+#             BOB_MODULES common
+#             EXTERNAL_LIBS spineml_simulation)
