@@ -30,7 +30,7 @@ int bobMain(int argc, char *argv[])
         // If file exists, load image and train memory on it
         if(filename.exists()) {
             std::cout << "." << std::flush;
-            infomax.train(imageInput->processSnapshot(cv::imread(filename.str())));
+            infomax.train(imageInput->processSnapshot(cv::imread(filename.str())), {});
         }
         // Otherwise, stop searching
         else {
