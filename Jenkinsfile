@@ -21,31 +21,6 @@ void setBuildStatus(String message, String state) {
     ]);
 }
 
-def runBuild(String name, String nodeLabel) {
-    stage("Building " + name + " (" + env.NODE_NAME + ")") {
-        dir(name) {
-            // Delete CMake cache folder
-            dir("build") {
-                deleteDir();
-            }
-
-            // Generate unique name for message
-            def uniqueMsg = "msg_build_" + name + "_" + env.NODE_NAME;
-
-            setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "PENDING");
-
-            // Build tests and set build status based on return code
-            def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
-            if(statusCode != 0) {
-                setBuildStatus("Building " + name + " (" + env.NODE_NAME + ")", "FAILURE");
-            }
-
-            // Archive output
-            archive uniqueMsg;
-        }
-    }
-}
-
 //--------------------------------------------------------------------------
 // Entry point
 //--------------------------------------------------------------------------
@@ -91,10 +66,27 @@ for(b = 0; b < builderNodes.size(); b++) {
                 sh 'bin/download_and_build_genn.sh'
             }
 
-            runBuild("examples", nodeLabel);
-            runBuild("projects", nodeLabel);
-            runBuild("tools", nodeLabel);
-            runBuild("tests", nodeLabel);
+            def buildMsg = "Building BoB robotics (" + env.NODE_NAME + ")"
+            stage(buildMsg) {
+                // Delete CMake cache folder
+                dir("build") {
+                    deleteDir();
+                }
+
+                // Generate unique name for message
+                def uniqueMsg = "msg_build_" + env.NODE_NAME;
+
+                setBuildStatus(buildMsg, "PENDING");
+
+                // Build tests and set build status based on return code
+                def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+                if(statusCode != 0) {
+                    setBuildStatus(buildMsg, "FAILURE");
+                }
+
+                // Archive output
+                archive uniqueMsg;
+            }
 
             // Parse test output for GCC warnings
             recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
