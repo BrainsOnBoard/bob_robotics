@@ -93,19 +93,18 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");
-                dir("tests") {
-                    // Generate unique name for message
-                    def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
-                    def runTestsCommand = "./tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
-                    def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
-                    // Archive output
-                    archive uniqueMsg;
+                // Generate unique name for message
+                def uniqueMsg = "msg_test_results_" + env.NODE_NAME;
+                def runTestsCommand = "./build/tests/tests --gtest_output=xml:gtest_test_results.xml 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"";
+                def runTestsStatus = sh script:runTestsCommand, returnStatus:true;
 
-                    // If tests failed, set failure status
-                    if(runTestsStatus != 0) {
-                        setBuildStatus("Running tests (" + env.NODE_NAME + ")", "FAILURE");
-                    }
+                // Archive output
+                archive uniqueMsg;
+
+                // If tests failed, set failure status
+                if(runTestsStatus != 0) {
+                    setBuildStatus("Running tests (" + env.NODE_NAME + ")", "FAILURE");
                 }
             }
 
