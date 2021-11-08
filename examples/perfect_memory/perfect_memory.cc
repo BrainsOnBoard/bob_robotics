@@ -150,7 +150,7 @@ int bobMain(int, char **)
         Timer<> t{ "Time taken for testing: " };
 
         // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1/image_00010.png").str(), cv::IMREAD_GRAYSCALE);
+        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools" / "ant_world_db_creator" / "ant1_route1" / "image00010.png").str(), cv::IMREAD_GRAYSCALE);
         BOB_ASSERT(!snap.empty());
         cv::resize(snap, snap, imSize);
         size_t snapshot;
@@ -171,7 +171,7 @@ int bobMain(int, char **)
         Timer<> t{ "Time taken for testing: " };
 
         // Treat snapshot #10 as test data
-        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools/ant_world_db_creator/ant1_route1/image_00010.png").str(), cv::IMREAD_GRAYSCALE);
+        cv::Mat snap = cv::imread((Path::getRepoPath() / "tools" / "ant_world_db_creator" / "ant1_route1" / "image00010.png").str(), cv::IMREAD_GRAYSCALE);
         BOB_ASSERT(!snap.empty());
         cv::resize(snap, snap, imSize);
         size_t snapshot;

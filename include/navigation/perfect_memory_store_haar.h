@@ -90,22 +90,22 @@ private:
     //------------------------------------------------------------------------
     // Private methods
     //------------------------------------------------------------------------
-    void downsampleIntoROI(const cv::Mat &feature, cv::Mat &roi) const
+    void downsampleIntoHaar(const cv::Mat &feature, cv::Mat &haar, cv::Point offset) const
     {
         // Loop through rows of feature and ROI
         int featureRow;
-        int roiRow;
-        for(featureRow = 1, roiRow = 1; featureRow < feature.rows; featureRow += 2, roiRow++)
+        int haarRow;
+        for(featureRow = 1, haarRow = offset.y; featureRow < feature.rows; featureRow += 2, haarRow++)
         {
             // Get pointers to rows 
             // **NOTE** start with 2nd pixel of feature row
             const int16_t *featurePixel = feature.ptr<int16_t>(featureRow, 1);
-            int16_t *roiPixel = roi.ptr<int16_t>(roiRow);
+            int16_t *haarPixel = haar.ptr<int16_t>(haarRow, offset.x);
 
             // Loop through feature pixels in row
-            for(int j = 1; j < feature.cols; j += 2, roiPixel++, featurePixel += 2) {
+            for(int j = 1; j < feature.cols; j += 2, haarPixel++, featurePixel += 2) {
                 // Copy into ROI
-                *roiPixel = *featurePixel;
+                *haarPixel = *featurePixel;
             }
         }
     }
@@ -126,12 +126,12 @@ private:
         
         // Create image to hold Haar features
         haar.create(m_ImageSize, CV_16SC1);
-        
+
         // Copy 4 features into final image
-        downsampleIntoROI(ll, cv::Mat(haar, cv::Rect(cv::Point(0, 0), m_HaarSize)));
-        downsampleIntoROI(hl, cv::Mat(haar, cv::Rect(cv::Point(m_HaarSize.width, 0), m_HaarSize)));
-        downsampleIntoROI(lh, cv::Mat(haar, cv::Rect(cv::Point(m_HaarSize.width, m_HaarSize.height), m_HaarSize)));
-        downsampleIntoROI(hh, cv::Mat(haar, cv::Rect(cv::Point(0, m_HaarSize.height), m_HaarSize)));
+        downsampleIntoHaar(ll, haar, cv::Point(0, 0));
+        downsampleIntoHaar(hl, haar, cv::Point(m_HaarSize.width, 0));
+        downsampleIntoHaar(lh, haar, cv::Point(m_HaarSize.width, m_HaarSize.height));
+        downsampleIntoHaar(hh, haar, cv::Point(0, m_HaarSize.height));
     }
 
     //------------------------------------------------------------------------
