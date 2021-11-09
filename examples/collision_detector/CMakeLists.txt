@@ -6,6 +6,4 @@ find_package(BoBRobotics QUIET REQUIRED COMPONENTS common hid navigation net
              robots/tank/net robots/control vicon viz/sfml)
 
 add_executable(collision_detector collision_detector.cc)
-target_compile_definitions(collision_detector PUBLIC ${BoBRobotics_DEFINITIONS})
-target_include_directories(collision_detector PUBLIC ${BoBRobotics_INCLUDE_DIRS})
 target_link_libraries(collision_detector PUBLIC ${BoBRobotics_LIBRARIES})

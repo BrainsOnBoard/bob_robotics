@@ -8,10 +8,11 @@ BoB_module(agent.cc camera.cc render_mesh.cc render_target_input.cc
 
 find_package(GLEW REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(SFML REQUIRED COMPONENTS graphics)
+find_package(SFML REQUIRED COMPONENTS graphics system window)
 
 target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS}
-                           ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS})
+                           ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS}
+                           ${SFML_INCLUDE_DIRS})
 target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${GLEW_LIBRARIES}
                       ${OpenCV_LIBS} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
-                      sfml-graphics)
+                      ${SFML_LIBRARIES})
