@@ -8,11 +8,11 @@ endif()
 
 include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld)
-find_package(Python3 REQUIRED COMPONENTS Development NumPy)
+find_package(Python REQUIRED COMPONENTS Development NumPy)
 
 add_library(antworld SHARED antworld.cc)
 target_link_libraries(antworld PUBLIC ${BoBRobotics_LIBRARIES}
-                      ${Python3_LIBRARIES} Python3::NumPy)
+                      ${Python_LIBRARIES} Python::NumPy)
 
 set_target_properties(antworld PROPERTIES PREFIX "")
 if(WIN32)

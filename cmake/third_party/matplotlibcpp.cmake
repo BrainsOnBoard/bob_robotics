@@ -1,11 +1,11 @@
-find_package(Python3 COMPONENTS Development NumPy)
+find_package(Python COMPONENTS Development NumPy)
 
-if(Python3_FOUND)
-    list(APPEND INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
-    list(APPEND LIBRARIES ${Python3_LIBRARIES})
+if(Python_FOUND)
+    list(APPEND INCLUDE_DIRS ${Python_INCLUDE_DIRS})
+    list(APPEND LIBRARIES ${Python_LIBRARIES})
 
-    if(Python3_NumPy_FOUND)
-        list(APPEND LIBRARIES Python3::NumPy)
+    if(Python_NumPy_FOUND)
+        list(APPEND LIBRARIES Python::NumPy)
     else()
         message(WARNING "NumPy was not found; building without")
         list(APPEND DEFINITIONS -DWITHOUT_NUMPY)
