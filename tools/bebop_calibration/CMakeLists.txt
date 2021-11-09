@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(bebop_calibration)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS robots/uav/bebop)
 
 add_executable(flat_trim flat_trim.cc)

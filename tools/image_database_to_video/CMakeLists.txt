@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(image_database_to_video)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS navigation)
 
 add_executable(image_database_to_video image_database_to_video.cc)

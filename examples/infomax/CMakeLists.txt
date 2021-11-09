@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(infomax_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS common navigation)
 
 foreach(TARGET infomax_matlab_comparison infomax_route_example)

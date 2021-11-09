@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(bn055_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED common)
 
 add_executable(bn055 bn055.cc)

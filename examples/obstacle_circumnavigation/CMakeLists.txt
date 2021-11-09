@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(obstacle_circumnavigation_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS common hid navigation net
              robots/tank robots/tank/net robots/control vicon viz/sfml)
 

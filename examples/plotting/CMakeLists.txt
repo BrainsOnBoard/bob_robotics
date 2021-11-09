@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(plotting_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBThirdParty COMPONENTS matplotlibcpp REQUIRED)
 
 add_executable(plotting plotting.cc)

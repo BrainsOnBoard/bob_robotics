@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(stone_cx)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS common hid imgproc net os robots video)
 find_package(GeNN REQUIRED)
 find_package(OpenCV REQUIRED)

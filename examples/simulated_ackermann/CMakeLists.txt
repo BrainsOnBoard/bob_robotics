@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(simulated_ackermann_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS robots/ackermann viz/car_display)
 
 add_executable(simulated_ackermann simulated_ackermann.cc)

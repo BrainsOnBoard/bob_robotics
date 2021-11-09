@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(python_antworld)
 
 add_definitions(-DBOB_SHARED_LIB)
@@ -6,7 +7,6 @@ if(UNIX)
     string(APPEND CMAKE_CXX_FLAGS " -fPIC")
 endif()
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld)
 find_package(Python REQUIRED COMPONENTS Development NumPy)
 find_package(PythonLibs REQUIRED)

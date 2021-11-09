@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(tank_pid_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid navigation net
              robots/tank robots/control vicon viz/sfml)
 find_package(BoBThirdParty REQUIRED COMPONENTS matplotlibcpp)

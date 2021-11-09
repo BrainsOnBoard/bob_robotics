@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-project(tests)
-
 include(../cmake/BoBRobotics.cmake)
+project(tests)
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS gps imgproc navigation video)
 find_package(BoBThirdParty REQUIRED googletest)

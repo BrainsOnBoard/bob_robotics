@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(robots/gazebo)
 
-include(../../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics REQUIRED)
 BoB_module(node.cc tank.cc uav.cc)
 

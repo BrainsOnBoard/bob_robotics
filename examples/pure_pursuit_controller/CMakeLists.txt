@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(pure_pursuit_controller_example)
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS robots/ackermann
              robots/control viz/car_display)
 add_executable(pure_pursuit_controller pure_pursuit_controller.cc)

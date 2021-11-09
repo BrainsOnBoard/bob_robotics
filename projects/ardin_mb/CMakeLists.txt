@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(ardin_mb)
 
 set(IS_EXPERIMENT TRUE)
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld common navigation)
 find_package(BoBThirdParty REQUIRED imgui)
 

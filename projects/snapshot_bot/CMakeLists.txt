@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(snapshot_bot)
 
 set(IS_EXPERIMENT TRUE)
-include(../../cmake/BoBRobotics.cmake)
 
 set(MODULES hid imgproc navigation robots vicon video)
 if(USE_ODK)

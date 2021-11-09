@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(camera_recorder)
 
 set(MODULES hid imgproc robots/tank video)
@@ -7,7 +8,6 @@ if(USE_VICON)
     add_definitions(-DUSE_VICON)
 endif()
 
-include(../../cmake/BoBRobotics.cmake)
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS ${MODULES})
 
 add_executable(camera_recorder camera_recorder.cc)
