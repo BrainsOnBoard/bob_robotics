@@ -1,5 +1,5 @@
 macro(get_git_commit DIR VARNAME RV_VARNAME)
-    find_package(Git REQUIRED)
+    find_package(Git)
     execute_process(COMMAND ${GIT_EXECUTABLE} -C "${DIR}" rev-parse --short HEAD
                     RESULT_VARIABLE ${RV_VARNAME}
                     OUTPUT_VARIABLE ${VARNAME}
