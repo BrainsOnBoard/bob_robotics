@@ -12,7 +12,7 @@ find_package(SFML REQUIRED COMPONENTS graphics system window)
 
 target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS}
                            ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS}
-                           ${SFML_INCLUDE_DIRS})
+                           ${SFML_INCLUDE_DIR})
 target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${GLEW_LIBRARIES}
                       ${OpenCV_LIBS} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
                       ${SFML_LIBRARIES})
