@@ -14,11 +14,12 @@ find_package(PythonExtensions REQUIRED)
 find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
 include_directories(${NumPy_INCLUDE_DIRS})
 
-add_library(antworld MODULE antworld.cc)
-python_extension_module(antworld)
-target_link_libraries(antworld ${BoBRobotics_LIBRARIES})
+add_library(_antworld MODULE antworld.cc)
+python_extension_module(_antworld)
+install(TARGETS _antworld LIBRARY DESTINATION antworld)
+target_link_libraries(_antworld ${BoBRobotics_LIBRARIES})
 
-install(TARGETS antworld LIBRARY DESTINATION antworld)
+install(TARGETS _antworld LIBRARY DESTINATION antworld)
 
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)

@@ -282,7 +282,7 @@ static struct PyModuleDef ModuleDefinitions
 };
 
 PyMODINIT_FUNC
-PyInit_antworld(void)
+PyInit__antworld(void)
 {
     import_array();             // init numpy
     BoBRobotics::initLogging(); // init plog
