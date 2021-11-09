@@ -40,7 +40,7 @@ struct AgentObject
     // clang-format on
 };
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
 {
     int width, height;
@@ -62,7 +62,7 @@ Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
     return self;
 }
 
-DLL_EXPORT static void
+DLL_EXPORT void
 Agent_dealloc(AgentObject *self)
 {
     if (self->members) {
@@ -72,7 +72,7 @@ Agent_dealloc(AgentObject *self)
     LOGD << "Agent object deallocated";
 }
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_load_world(AgentObject *self, PyObject *args)
 {
     char *filepath_c;
@@ -117,7 +117,7 @@ Agent_load_world(AgentObject *self, PyObject *args)
     return worldBounds;
 }
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_read_frame(AgentObject *self, PyObject *)
 {
     const auto size = self->members->agent.getOutputSize();
@@ -144,7 +144,7 @@ Agent_read_frame(AgentObject *self, PyObject *)
     return array;
 }
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_read_frame_greyscale(AgentObject *self, PyObject *)
 {
     const auto size = self->members->agent.getOutputSize();
@@ -171,7 +171,7 @@ Agent_read_frame_greyscale(AgentObject *self, PyObject *)
     return array;
 }
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_set_position(AgentObject *self, PyObject *args)
 {
     using namespace units::length;
@@ -187,7 +187,7 @@ Agent_set_position(AgentObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_set_attitude(AgentObject *self, PyObject *args)
 {
     using namespace units::angle;
@@ -203,7 +203,7 @@ Agent_set_attitude(AgentObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-DLL_EXPORT static PyObject *
+DLL_EXPORT PyObject *
 Agent_display(AgentObject *self, PyObject *)
 {
     self->members->agent.display();
