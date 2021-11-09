@@ -1,11 +1,13 @@
-find_package(Python COMPONENTS Development NumPy)
+find_package(PythonLibs)
+if(PYTHONLIBS_FOUND)
+    list(APPEND INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
 
-if(Python_FOUND)
-    list(APPEND INCLUDE_DIRS ${Python_INCLUDE_DIRS})
-    list(APPEND LIBRARIES ${Python_LIBRARIES})
+    # TODO: Do we need PYTHON_DEBUG_LIBRARIES on Windows?
+    list(APPEND LIBRARIES ${PYTHON_LIBRARIES})
 
-    if(Python_NumPy_FOUND)
-        list(APPEND LIBRARIES Python::NumPy)
+    find_package(NumPy)
+    if(PYTHON_NUMPY_FOUND)
+        list(APPEND INCLUDE_DIRS "${PYTHON_NUMPY_INCLUDE_DIR}")
     else()
         message(WARNING "NumPy was not found; building without")
         list(APPEND DEFINITIONS -DWITHOUT_NUMPY)
