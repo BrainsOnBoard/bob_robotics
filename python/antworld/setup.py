@@ -6,5 +6,6 @@ setup(
     description="A python interface for the BoB robotics antworld module",
     author='Alex Dewar',
     license="GPLv2",
-    packages=['antworld']
+    packages=['antworld'],
+    package_data = { 'antworld': ['*.dll'] }
 )
