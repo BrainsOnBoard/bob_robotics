@@ -8,20 +8,21 @@ if(UNIX)
 endif()
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld)
-find_package(Python REQUIRED COMPONENTS Development NumPy)
-find_package(PythonLibs REQUIRED)
-find_package(NumPy REQUIRED)
 
-add_library(antworld SHARED antworld.cc)
-target_include_directories(antworld PUBLIC ${PYTHON_INCLUDE_DIRS} "${PYTHON_NUMPY_INCLUDE_DIR}")
-target_link_libraries(antworld PUBLIC ${BoBRobotics_LIBRARIES} ${PYTHON_LIBRARIES})
+# NB: These are extra modules only available to scikit-build
+find_package(PythonExtensions REQUIRED)
+find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
+include_directories(${NumPy_INCLUDE_DIRS})
 
-set_target_properties(antworld PROPERTIES PREFIX "")
-if(WIN32)
-    set_target_properties(antworld PROPERTIES SUFFIX ".pyd")
-endif()
+add_library(_antworld MODULE antworld.cc)
+python_extension_module(_antworld)
+install(TARGETS _antworld LIBRARY DESTINATION antworld)
+target_link_libraries(_antworld ${BoBRobotics_LIBRARIES})
 
-# TODO: Make CMake put the .so file in the right place
+# set_target_properties(antworld PROPERTIES PREFIX "")
+# if(WIN32)
+#     set_target_properties(antworld PROPERTIES SUFFIX ".pyd")
+# endif()
 
 # # On gcc I'm getting this warning for static definitions of structs, but it
 # # doesn't matter if the remaining fields are filled with zeros, so just suppress
