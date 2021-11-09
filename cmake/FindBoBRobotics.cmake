@@ -49,7 +49,11 @@ function(get_module_libraries LIBS_VARNAME)
     set(${LIBS_VARNAME} ${LIBRARIES} PARENT_SCOPE)
 endfunction(get_module_libraries)
 
-include(BoBRobotics)
+if(NOT TARGET BoBRobotics::base)
+    include(BoBRobotics)
+    make_base_target()
+endif()
+
 set(BoBRobotics_ROOT_DIR ${BOB_ROBOTICS_PATH})
 
 ################################################################################

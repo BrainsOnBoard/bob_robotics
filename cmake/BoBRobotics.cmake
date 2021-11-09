@@ -89,11 +89,12 @@ function(make_base_target)
     endif(WIN32)
 endfunction(make_base_target)
 
+if(WIN32 AND NOT CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{VCPKG_ROOT})
+    message(STATUS "Found vcpkg at $ENV{VCPKG_ROOT}")
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}\\scripts\\buildsystems\\vcpkg.cmake" CACHE PATH "toolchain file")
+endif()
+
 # Look for additional CMake packages in the current folder
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 
 get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
-
-if(NOT TARGET BoBRobotics::base)
-    make_base_target()
-endif()

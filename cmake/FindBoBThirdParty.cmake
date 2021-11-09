@@ -2,7 +2,10 @@ if(NOT BoBThirdParty_FIND_COMPONENTS)
     message(FATAL_ERROR "Third-party components must be specified")
 endif()
 
-include(BoBRobotics)
+if(NOT TARGET BoBRobotics::base)
+    include(BoBRobotics)
+    make_base_target()
+endif()
 
 unset(BoBThirdParty_INCLUDE_DIRS)
 set(BoBThirdParty_LIBRARIES BoBRobotics::base)
