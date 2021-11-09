@@ -6,12 +6,6 @@ function(make_base_target)
                                "${BOB_ROBOTICS_PATH}/include"
                                "${BOB_ROBOTICS_PATH}")
 
-    # Build with C++14
-    if(NOT CMAKE_CXX_STANDARD)
-        set(CMAKE_CXX_STANDARD 14)
-    endif()
-    set(CXX_STANDARD_REQUIRED TRUE)
-
     # Define DEBUG macro
     target_compile_definitions(bob_base INTERFACE "$<$<CONFIG:DEBUG>:DEBUG>")
 
@@ -98,5 +92,11 @@ endif()
 if(NOT "${CMAKE_CURRENT_LIST_DIR}" IN_LIST CMAKE_MODULE_PATH)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
 endif()
+
+# Build with C++14
+if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 14)
+endif()
+set(CXX_STANDARD_REQUIRED TRUE)
 
 get_filename_component(BOB_ROBOTICS_PATH .. ABSOLUTE BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
