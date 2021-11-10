@@ -1,9 +1,9 @@
 var group__CompileTimeUnitManipulators =
 [
-    [ "unit_value_add", "structunits_1_1unit__value__add.html", null ],
-    [ "unit_value_subtract", "structunits_1_1unit__value__subtract.html", null ],
-    [ "unit_value_multiply", "structunits_1_1unit__value__multiply.html", null ],
-    [ "unit_value_divide", "structunits_1_1unit__value__divide.html", null ],
-    [ "unit_value_power", "structunits_1_1unit__value__power.html", null ],
-    [ "unit_value_sqrt", "structunits_1_1unit__value__sqrt.html", null ]
+    [ "units::unit_value_add< U1, U2 >", "structunits_1_1unit__value__add.html", null ],
+    [ "units::unit_value_subtract< U1, U2 >", "structunits_1_1unit__value__subtract.html", null ],
+    [ "units::unit_value_multiply< U1, U2 >", "structunits_1_1unit__value__multiply.html", null ],
+    [ "units::unit_value_divide< U1, U2 >", "structunits_1_1unit__value__divide.html", null ],
+    [ "units::unit_value_power< U1, power >", "structunits_1_1unit__value__power.html", null ],
+    [ "units::unit_value_sqrt< U1, Eps >", "structunits_1_1unit__value__sqrt.html", null ]
 ];

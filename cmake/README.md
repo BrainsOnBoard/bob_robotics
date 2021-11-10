@@ -6,68 +6,33 @@ found in [src/](../src)).
 To make a new BoB robotics project you need to create a ``CMakeLists.txt`` file
 with the following lines at the top:
 ```cmake
-cmake_minimum_required(VERSION 3.1)
-include([path to BoB robotics]/cmake/bob_robotics.cmake)
+cmake_minimum_required(VERSION 3.10)
+include([path to BoB robotics]/cmake/BoBRobotics.cmake)
 ```
 
-If you have the ``BOB_ROBOTICS_PATH`` environment variable set, you can do this:
+Next, we find the BoB robotics package, specifying which modules we are using:
 ```cmake
-cmake_minimum_required(VERSION 3.1)
-include($ENV{BOB_ROBOTICS_PATH}/cmake/bob_robotics.cmake)
+find_package(BoBRobotics REQUIRED COMPONENTS hid antworld video)
 ```
-
-Next, we call the ``BoB_project()`` function to specify which modules,
-third-party libraries and external libraries we are using. All of these
-parameters are optional.
-```cmake
-BoB_project(SOURCES my_program.cc
-            BOB_MODULES common hid antworld video
-            THIRD_PARTY third_party_modules
-            EXTERNAL_LIBS sdl2)
-```
-As a rule of thumb, if you ``#include`` a file from a given folder, then the folder name is the module you should include (i.e. if you
-include [imgproc/opencv_unwrap_360.h](../include/imgproc/opencv_unwrap_360.h),
-you need to add ``imgproc`` to your ``BOB_MODULES``). Some modules depend on
+As a rule of thumb, if you ``#include`` a file from a given folder, then the
+folder name is the module you should include (i.e. if you include
+[imgproc/opencv_unwrap_360.h](../include/imgproc/opencv_unwrap_360.h), you need
+to add ``imgproc`` to your list of ``COMPONENTS``). Some modules depend on
 others and on external libraries, but these dependencies should be handled
-automatically. Generally you *don't* need to specify ``EXTERNAL_LIBS``
-explicitly as these dependencies will already be added.
+automatically.
 
-Every subfolder in [third_party/](../third_party) counts as a ``THIRD_PARTY``
-module and you can include it by adding it to the ``THIRD_PARTY`` list.
+Every subfolder in [third_party/](../third_party) counts as a third-party module
+and there is a separate ``BoBThirdParty`` CMake package for these components.
 [plog](https://github.com/SergiusTheBest/plog) is included automatically.
-Header-only files do not need to be added to the ``THIRD_PARTY`` array, with the
-exception of [matplotlibcpp](../third_party/matplotlibcpp.h), which has external
-dependencies.
-
-If a project will only work on a particular platform, then you should specify
-possible platforms in the ``PLATFORMS`` array. Possible options are ``unix``,
-``linux``, ``windows`` and ``all``. The default is ``all``.
-
-Note that by default, ``BoB_project()`` builds every file in ``SOURCES`` array
-as a separate executable. If you want to make a single executable from multiple
-``*.cc`` files instead, specify a name for the executable, like so:
+Header-only files do not need to be included with the exception of
+[matplotlibcpp](../third_party/matplotlibcpp.h), which has external
+dependencies:
 ```cmake
-BoB_project(EXECUTABLE my_program
-            SOURCES my_program.cc common.cc
-            ...
-            )
+# Optionally specify third-party modules
+find_package(BoBThirdParty REQUIRED COMPONENTS matplotlibcpp)
 ```
 
-## GeNN support
-[GeNN](https://github.com/genn-team/genn) support for a project can be added
-like so:
-```cmake
-BoB_project(BOB_MODULES ${BOB_MODULES}
-            GENN_MODEL model.cc
-            GENN_CPU_ONLY)
-```
-The ``GENN_CPU_ONLY`` parameter is optional.
-
-## Disabling I2C support
-As you may not want to build the I2C code (i.e. on a desktop machine), you can
-set the ``NO_I2C`` environment variable so this code will not be included in the
-``common`` module.
-
+For more details, see the [example CMakeLists.txt file](example_CMakeLists.txt).
 ## Building projects
 To build a project with CMake, use the standard procedure:
 ```sh
@@ -76,9 +41,6 @@ cd build
 cmake ..
 make -j $(nproc)
 ```
-As typing this can become tedious, there is a script called ``bob_make`` in
-[bin/](../bin) which performs these steps. You can add this folder to your
-``$PATH`` for convenience.
 
 ## Windows support
 For Windows, we use [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) for
