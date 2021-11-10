@@ -21,7 +21,6 @@ import os
 import shutil
 import subprocess
 import sys
-from xml.sax.saxutils import escape
 
 INCLUDE_CHECKS = (
     'bugprone-*',
@@ -51,6 +50,7 @@ EXCLUDE_CHECKS = (
     'modernize-use-emplace',
     'modernize-use-equals-default',
     'modernize-use-nodiscard',
+    'modernize-use-override',
     'modernize-raw-string-literal',
     'modernize-use-trailing-return-type',
     'performance-type-promotion-in-math-fn',
