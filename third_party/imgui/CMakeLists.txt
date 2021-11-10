@@ -11,14 +11,6 @@ if(Freetype_FOUND)
     list(APPEND SOURCES include/misc/freetype/imgui_freetype.cpp)
 endif()
 
-if(WIN32)
-    # Hack needed so we can find SFML headers here
-    include_directories("$ENV{VCPKG_ROOT}/installed/x64-windows/include")
-else()
-    # Supress warnings from inside imgui
-    # add_compile_flags(-Wno-strict-overflow)
-endif()
-
 # Build as static library
 add_library(imgui STATIC ${SOURCES})
 target_include_directories(imgui PUBLIC include)
