@@ -4,12 +4,9 @@ project(spineml_braitenberg_example)
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid navigation robots/tank
              robots/control viz/sfml)
+find_package(GeNN REQUIRED COMPONENTS spineml)
 
-# TODO: Link against spineml stuff
 add_executable(spineml_braitenberg spineml_braitenberg.cc)
-target_link_libraries(spineml_braitenberg PUBLIC ${BoBRobotics_LIBRARIES})
-
-
-# BoB_project(SOURCES spineml_braitenberg.cc
-#             BOB_MODULES common
-#             EXTERNAL_LIBS spineml_simulation)
+target_include_directories(spineml_braitenberg PUBLIC ${GeNN_INCLUDE_DIRS})
+target_link_libraries(spineml_braitenberg PUBLIC ${BoBRobotics_LIBRARIES}
+                      ${GeNN_SPINEML_LIBRARIES})

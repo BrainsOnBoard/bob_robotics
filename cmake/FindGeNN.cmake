@@ -24,7 +24,8 @@ else()
 endif()
 
 if(GeNN_ROOT_DIR)
-    set(GeNN_INCLUDE_DIRS "${GeNN_ROOT_DIR}/include/genn" "${GeNN_ROOT_DIR}/include/genn/genn")
+    set(GeNN_INCLUDE_DIRS "${GeNN_ROOT_DIR}/include/genn"
+                          "${GeNN_ROOT_DIR}/include/genn/genn")
 
     # If GeNN is living in its git repo, then this is where the userproject
     # headers will be
@@ -35,6 +36,24 @@ if(GeNN_ROOT_DIR)
     find_backend(CPU single_threaded_cpu)
     find_backend(CUDA cuda)
     find_backend(OPENCL opencl)
+
+    # NB: This currently fails for me with GeNN v4.6.0 because the pugixml
+    # library is not bundled
+    if(spineml IN_LIST GeNN_FIND_COMPONENTS)
+        set(GeNN_SPINEML_INCLUDE_DIRS "${GeNN_ROOT_DIR}/include/spineml")
+
+        # Extra libraries for SpineML integration
+        foreach(LIB common simulator)
+            list(APPEND GeNN_SPINEML_LIBRARIES "${GeNN_ROOT_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}spineml_${LIB}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        endforeach()
+
+        if(UNIX)
+            list(APPEND GeNN_SPINEML_LIBRARIES dl)
+        endif()
+
+        list(APPEND GeNN_INCLUDE_DIRS "${GeNN_SPINEML_INCLUDE_DIRS}")
+        list(APPEND GeNN_LIBRARIES "${GeNN_SPINEML_LIBRARIES}")
+    endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
