@@ -22,3 +22,9 @@ foreach(PLUGIN tank_plugin uav_plugin)
     target_include_directories(gazebo_${PLUGIN} PUBLIC "${GAZEBO_INCLUDE_DIRS}")
     target_link_libraries(gazebo_${PLUGIN} PUBLIC "${GAZEBO_LIBRARIES}" BoBRobotics::base)
 endforeach(PLUGIN tank_plugin uav_plugin)
+
+# Newer versions of Gazebo require C++17
+if("${GAZEBO_MAJOR_VERSION}" GREATER_EQUAL 11)
+    set_target_properties(bob_robots__gazebo gazebo_tank_plugin gazebo_uav_plugin
+                          PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED TRUE)
+endif()
