@@ -43,7 +43,7 @@ if(GeNN_ROOT_DIR)
         set(GeNN_SPINEML_INCLUDE_DIRS "${GeNN_ROOT_DIR}/include/spineml")
 
         # Extra libraries for SpineML integration
-        foreach(LIB common simulator)
+        foreach(LIB simulator common)
             list(APPEND GeNN_SPINEML_LIBRARIES "${GeNN_ROOT_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}spineml_${LIB}${CMAKE_STATIC_LIBRARY_SUFFIX}")
         endforeach()
 
