@@ -22,7 +22,12 @@ TEST(InfoMax, SampleImage)
     }
 
     const auto &differences = algo.getImageDifferences(TestImages[0]);
-    compareFloatMatrices(differences, trueDifferences);
+
+    /*
+     * We have reduced precision here as there does seem to be substantial
+     * variation between machines.
+     */
+    compareFloatMatrices(differences, trueDifferences, 0.01f);
 }
 
 // Check that the columns have means of approx 0 and SDs of approx 1
