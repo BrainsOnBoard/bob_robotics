@@ -13,7 +13,6 @@ if(TARGET BoBRobotics::common)
 endif()
 
 # Optional dependency on libi2c
-# TODO: FIND I2C VERSION
 find_package(I2C)
 if(I2C_FOUND)
     list(APPEND SOURCES bn055_imu.cc dc_motor_featherwing.cc i2c_interface.cc
