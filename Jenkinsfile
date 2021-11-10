@@ -79,7 +79,7 @@ for(b = 0; b < builderNodes.size(); b++) {
                 setBuildStatus(buildMsg, "PENDING");
 
                 // Build tests and set build status based on return code
-                def statusCode = sh script:"./build_all.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
+                def statusCode = sh script:"./bin/build_all_jenkins.sh -DGENN_PATH=\"" + WORKSPACE + "/genn\" 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\"", returnStatus:true
                 if(statusCode != 0) {
                     setBuildStatus(buildMsg, "FAILURE");
                 }
