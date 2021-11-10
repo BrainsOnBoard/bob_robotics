@@ -8,13 +8,19 @@ macro(find_backend NAME LIBNAME)
     endif()
 endmacro()
 
+if(WIN32)
+    set(_GeNN_BUILDMODEL_NAME genn-buildmodel.bat)
+else()
+    set(_GeNN_BUILDMODEL_NAME genn-buildmodel.sh)
+endif()
+
 # Let users give an explicit path to GeNN
 if(GENN_PATH)
     set(GeNN_ROOT_DIR "${GENN_PATH}")
-    set(GeNN_BUILDMODEL "${GENN_PATH}/bin/genn-buildmodel.sh")
+    set(GeNN_BUILDMODEL "${GENN_PATH}/bin/${_GeNN_BUILDMODEL_NAME}.sh")
 else()
     # Find genn-buildmodel (which should be in the path)
-    find_program(GeNN_BUILDMODEL genn-buildmodel.sh)
+    find_program(GeNN_BUILDMODEL ${_GeNN_BUILDMODEL_NAME})
 
     if(GeNN_BUILDMODEL)
         # Figure out path to GeNN
@@ -111,9 +117,9 @@ function(add_genn_model TARGET_NAME MODEL_SRC)
 
     # Explicitly set the C++ standard
     if(PARSED_ARGS_CXX_STANDARD)
-        list(APPEND BUILDMODEL_OPTIONS -s gnu++${PARSED_ARGS_CXX_STANDARD})
+        list(APPEND BUILDMODEL_OPTIONS -s c++${PARSED_ARGS_CXX_STANDARD})
     elseif(CMAKE_CXX_STANDARD)
-        list(APPEND BUILDMODEL_OPTIONS -s gnu++${CMAKE_CXX_STANDARD})
+        list(APPEND BUILDMODEL_OPTIONS -s c++${CMAKE_CXX_STANDARD})
     endif()
 
     if(NOT DEFINED PARSED_ARGS_SHARED_LIBRARY_MODEL OR PARSED_ARGS_SHARED_LIBRARY_MODEL)
