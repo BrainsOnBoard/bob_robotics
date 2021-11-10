@@ -8,3 +8,6 @@ add_executable(dct_hash dct_hash.cc)
 target_compile_definitions(dct_hash PUBLIC ${BoBRobotics_DEFINITIONS})
 target_include_directories(dct_hash PUBLIC ${BoBRobotics_INCLUDE_DIRS})
 target_link_libraries(dct_hash PUBLIC ${BoBRobotics_LIBRARIES})
+
+configure_file(library1.jpg "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
+configure_file(library2.jpg "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)

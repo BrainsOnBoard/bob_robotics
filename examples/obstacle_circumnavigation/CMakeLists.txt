@@ -19,3 +19,5 @@ foreach(TYPE avoiding_positioner circumnavigation)
     target_link_libraries(${TARGET_ROBOT} PUBLIC ${DEPS} BoBRobotics::net
                           BoBRobotics::robots__tank__net BoBRobotics::vicon)
 endforeach(TYPE avoiding_positioner circumnavigation)
+
+configure_file(objects.yaml "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)

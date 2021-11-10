@@ -7,3 +7,5 @@ find_package(BoBRobotics QUIET REQUIRED COMPONENTS common hid navigation net
 
 add_executable(collision_detector collision_detector.cc)
 target_link_libraries(collision_detector PUBLIC ${BoBRobotics_LIBRARIES})
+
+configure_file(objects.yaml "${CMAKE_CURRENT_BINARY_DIR}/objects.yaml" COPYONLY)

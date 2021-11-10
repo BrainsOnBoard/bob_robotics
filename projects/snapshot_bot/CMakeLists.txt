@@ -17,3 +17,6 @@ target_link_libraries(snapshot_bot PUBLIC ${BoBRobotics_LIBRARIES})
 add_executable(offline_train offline_train.cc memory.cc image_input.cc)
 target_link_libraries(offline_train PUBLIC BoBRobotics::imgproc
                       BoBRobotics::navigation BoBRobotics::video)
+
+configure_file(mask.png "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
+configure_file(segmentation.png "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
