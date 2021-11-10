@@ -1,2 +1,2 @@
 # Import from shared library
-from .antworld import *
+from ._antworld import *

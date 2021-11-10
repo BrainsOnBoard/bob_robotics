@@ -13,7 +13,7 @@ using namespace BoBRobotics;
 
 TEST(GPSReader, ParseSampleData)
 {
-    std::ifstream ifs{ (Path::getProgramDirectory() / "sample_nmea.txt").str() };
+    std::ifstream ifs{ (getTestsPath() / "sample_nmea.txt").str() };
     ASSERT_TRUE(ifs.good());
 
     GPS::NMEAParser nmea;

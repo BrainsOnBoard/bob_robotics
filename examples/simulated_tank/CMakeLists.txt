@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES simulated_tank.cc
-            BOB_MODULES hid robots/tank viz/sfml)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(simulated_tank_example)
+
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid robots/tank viz/sfml)
+
+add_executable(simulated_tank simulated_tank.cc)
+target_link_libraries(simulated_tank PUBLIC ${BoBRobotics_LIBRARIES})
