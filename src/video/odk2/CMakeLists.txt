@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../../cmake/BoBRobotics.cmake)
 project(video/odk2)
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS video)

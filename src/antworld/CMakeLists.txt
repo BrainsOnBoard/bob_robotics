@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(antworld)
 
 find_package(BoBRobotics REQUIRED COMPONENTS common hid video/opengl)

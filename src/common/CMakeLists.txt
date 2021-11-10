@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
 project(common)
 
 set(SOURCES background_exception_catcher.cc geometry.cc macros.cc main.cc
