@@ -26,7 +26,7 @@ var NAVTREE =
 [
   [ "BoB robotics", "index.html", [
     [ "BoB robotics Documentation", "index.html", null ],
-    [ "CMake utilities", "md_cmake_README.html", null ],
+    [ "CMake", "md_cmake_README.html", null ],
     [ "Example image databases", "md_docs_source_example_image_databases_README.html", null ],
     [ "Build requirements", "md_docs_source_requirements.html", null ],
     [ "Norbot shopping list", "md_docs_source_robot_shopping_list.html", null ],

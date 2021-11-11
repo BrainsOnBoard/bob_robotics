@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.2"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BoB robotics: CMake utilities</title>
+<title>BoB robotics: CMake</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -84,10 +84,10 @@ $(document).ready(function(){initNavTree('md_cmake_README.html',''); initResizab
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">CMake utilities </div></div>
+  <div class="headertitle"><div class="title">CMake </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p >This folder contains the common CMake code shared between projects. The main file is <code>bob_robotics.cmake</code> which is used to build BoB modules (which can be found in <a href="../src">src/</a>).</p>
+<div class="textblock"><p >BoB robotics projects are built using <a href="https://cmake.org">CMake</a>. Note that the minimum version required is 3.10, which is the default as of Ubuntu 18.04, but is newer than the version included with Ubuntu 16.04. However, the CMake devs <a href="https://apt.kitware.com">provide a PPA</a> which includes prebuilt packages for x86 and ARM64.</p>
 <p >To make a new BoB robotics project you need to create a <code>CMakeLists.txt</code> file with the following lines at the top: </p><div class="fragment"><div class="line">cmake_minimum_required(VERSION 3.10)</div>
 <div class="line">include([path to BoB robotics]/cmake/BoBRobotics.cmake)</div>
 </div><!-- fragment --><p >Next, we find the BoB robotics package, specifying which modules we are using: </p><div class="fragment"><div class="line">find_package(BoBRobotics REQUIRED COMPONENTS hid antworld video)</div>

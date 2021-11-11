@@ -43,7 +43,7 @@ var searchData=
   ['client_40',['Client',['../classBoBRobotics_1_1Net_1_1Client.html',1,'BoBRobotics::Net::Client'],['../classBoBRobotics_1_1Net_1_1Client.html#af5d14328607f4d1a7fc7657d8a18180d',1,'BoBRobotics::Net::Client::Client()']]],
   ['clone_41',['clone',['../classBoBRobotics_1_1ImgProc_1_1Mask.html#a792d6981b9a7bcbc2f1c7a09c19b2fcd',1,'BoBRobotics::ImgProc::Mask']]],
   ['close_42',['close',['../classBoBRobotics_1_1Net_1_1Socket.html#af20d65298bb282618fd05c868335b23a',1,'BoBRobotics::Net::Socket::close()'],['../classBoBRobotics_1_1Video_1_1Display.html#ab43d1b1018180aa4e2c6080f86ecc941',1,'BoBRobotics::Video::Display::close()']]],
-  ['cmake_20utilities_43',['CMake utilities',['../md_cmake_README.html',1,'']]],
+  ['cmake_43',['CMake',['../md_cmake_README.html',1,'']]],
   ['collisiondetector_44',['CollisionDetector',['../classBoBRobotics_1_1Robots_1_1CollisionDetector.html',1,'BoBRobotics::Robots']]],
   ['column_5fwidth_45',['column_width',['../classCLI_1_1FormatterBase.html#acd8c03570a48e5937ab748bf6103ca2d',1,'CLI::FormatterBase']]],
   ['column_5fwidth_5f_46',['column_width_',['../classCLI_1_1FormatterBase.html#a2427b2199dd9654b050d00c89d764332',1,'CLI::FormatterBase']]],

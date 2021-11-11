@@ -1,7 +1,9 @@
-## CMake utilities
-This folder contains the common CMake code shared between projects. The main
-file is ``bob_robotics.cmake`` which is used to build BoB modules (which can be
-found in [src/](../src)).
+## CMake
+BoB robotics projects are built using [CMake](https://cmake.org). Note that the
+minimum version required is 3.10, which is the default as of Ubuntu 18.04, but
+is newer than the version included with Ubuntu 16.04. However, the CMake devs
+[provide a PPA](https://apt.kitware.com) which includes prebuilt packages for
+x86 and ARM64.
 
 To make a new BoB robotics project you need to create a ``CMakeLists.txt`` file
 with the following lines at the top:
