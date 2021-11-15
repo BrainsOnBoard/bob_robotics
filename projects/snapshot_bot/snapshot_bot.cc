@@ -639,11 +639,11 @@ int bobMain(int argc, char *argv[])
         Timer<> timer("Total time:");
 
         unsigned int frame = 0;
-        for(frame = 0; robot.update(); frame++) {
+        backgroundEx.trapSignals();
+        for (frame = 0; robot.update(); frame++) {
+            // Check for background exceptions and re-throw
+            backgroundEx.check();
         }
-
-        // Check for background exceptions and re-throw
-        backgroundEx.check();
 
         const double msPerFrame = timer.get() / (double)frame;
         LOGI << "FPS:" << 1000.0 / msPerFrame;
