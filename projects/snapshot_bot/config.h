@@ -170,7 +170,11 @@ public:
         // **YUCK** why does OpenCV (at least my version) not have a cv::read overload for std::string!?
         cv::String outputPath;
         cv::read(node["outputPath"], outputPath, m_OutputPath.str());
-        m_OutputPath = (std::string)outputPath;
+        if (outputPath.empty()) {
+            m_OutputPath = filesystem::current_path();
+        } else {
+            m_OutputPath = (std::string)outputPath;
+        }
 
         cv::String testingSuffix;
         cv::read(node["testingSuffix"], testingSuffix, m_TestingSuffix);
@@ -219,12 +223,12 @@ public:
 
                 if(t.size() == 2) {
                     m_TurnThresholds.emplace(std::piecewise_construct,
-                                             std::forward_as_tuple(units::angle::degree_t((double)t[0])), 
+                                             std::forward_as_tuple(units::angle::degree_t((double)t[0])),
                                              std::forward_as_tuple((float)t[1], m_MotorTurnCommandInterval));
                 }
                 else if(t.size() == 3){
                     m_TurnThresholds.emplace(std::piecewise_construct,
-                                             std::forward_as_tuple(units::angle::degree_t((double)t[0])), 
+                                             std::forward_as_tuple(units::angle::degree_t((double)t[0])),
                                              std::forward_as_tuple((float)t[1], (Milliseconds)t[2]));
 
                 }
