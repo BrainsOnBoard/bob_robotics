@@ -10,10 +10,13 @@
 #include "third_party/units.h"
 
 // Standard C++ includes
-#include <fstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 // Forward declarations
 class Config;
+class ImageInput;
 
 namespace BoBRobotics
 {
@@ -21,7 +24,16 @@ namespace ImgProc
 {
 class Mask;
 }
+
+namespace Navigation
+{
+class ImageDatabase;
 }
+}
+
+// Bounds used for extracting masks from ODK2 images
+const cv::Scalar odk2MaskLowerBound(1, 1, 1);
+const cv::Scalar odk2MaskUpperBound(255, 255, 255);
 
 //------------------------------------------------------------------------
 // MemoryBase
@@ -38,8 +50,11 @@ public:
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) = 0;
     virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) = 0;
 
-    virtual void writeCSVHeader(std::ostream &os);
-    virtual void writeCSVLine(std::ostream &os);
+    virtual std::vector<std::string> getCSVFieldNames() const;
+    virtual void setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const;
+
+    virtual void trainRoute(BoBRobotics::Navigation::ImageDatabase &route,
+                            bool useODK2, ImageInput &imageInput);
 
     //------------------------------------------------------------------------
     // Public API
@@ -76,8 +91,8 @@ public:
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
-    virtual void writeCSVHeader(std::ostream &os) override;
-    virtual void writeCSVLine(std::ostream &os) override;
+    virtual std::vector<std::string> getCSVFieldNames() const override;
+    virtual void setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const override;
 
     //------------------------------------------------------------------------
     // Public API
@@ -136,8 +151,8 @@ public:
     //------------------------------------------------------------------------
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
 
-    virtual void writeCSVHeader(std::ostream &os) override;
-    virtual void writeCSVLine(std::ostream &os) override;
+    virtual std::vector<std::string> getCSVFieldNames() const override;
+    virtual void setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const override;
 private:
     //------------------------------------------------------------------------
     // Members
@@ -160,6 +175,8 @@ public:
 
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
+    virtual void trainRoute(BoBRobotics::Navigation::ImageDatabase &route,
+                            bool useODK2, ImageInput &imageInput) override;
 
     void saveWeights(const filesystem::path &filename) const;
 

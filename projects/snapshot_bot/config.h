@@ -3,6 +3,8 @@
 // BoB robotics includes
 #include "navigation/perfect_memory_window.h"
 #include "net/connection.h"
+
+// Third-party includes
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -24,12 +26,35 @@ class Config
     using WindowConfig = BoBRobotics::Navigation::PerfectMemoryWindow::DynamicBestMatchGradient::WindowConfig;
 
 public:
-    Config() : m_UseBinaryImage(false), m_UseHorizonVector(false), m_Train(true), m_UseInfoMax(false), m_SaveTestingDiagnostic(false), m_StreamOutput(false), m_ODK2(false),
-        m_MaxSnapshotRotateDegrees(180.0), m_PMFwdLASize(std::numeric_limits<size_t>::max()), m_PMFwdConfig{0, 0, 0, 0}, m_UnwrapRes(180, 50), m_CroppedRect(0, 0, 180, 50),
-        m_WatershedMarkerImageFilename("segmentation.png"), m_JoystickDeadzone(0.25f), m_AutoTrain(false), m_TrainInterval(100.0), m_MotorCommandInterval(500.0), m_MotorTurnCommandInterval(500.0),
-        m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort), m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1),
-        m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2), m_MoveSpeed(0.25), m_TurnThresholds{{units::angle::degree_t(5.0), {0.5f, Milliseconds(500.0)}}, {units::angle::degree_t(10.0), {1.0f, Milliseconds(500.0)}}},
-        m_UseViconTracking(false), m_ViconTrackingPort(0), m_ViconTrackingObjectName("norbot"), m_UseViconCaptureControl(false), m_ViconCaptureControlPort(0)
+    Config()
+      : m_UseBinaryImage(false)
+      , m_UseHorizonVector(false)
+      , m_Train(true)
+      , m_UseInfoMax(false)
+      , m_SaveTestingDiagnostic(false)
+      , m_StreamOutput(false)
+      , m_ODK2(false)
+      , m_MaxSnapshotRotateDegrees(180.0)
+      , m_PMFwdLASize(std::numeric_limits<size_t>::max())
+      , m_PMFwdConfig{ 0, 0, 0, 0 }
+      , m_UnwrapRes(180, 50)
+      , m_CroppedRect(0, 0, 180, 50)
+      , m_WatershedMarkerImageFilename("segmentation.png")
+      , m_JoystickDeadzone(0.25f)
+      , m_AutoTrain(false)
+      , m_TrainInterval(100.0)
+      , m_MotorCommandInterval(500.0)
+      , m_MotorTurnCommandInterval(500.0)
+      , m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort)
+      , m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1)
+      , m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2)
+      , m_MoveSpeed(0.25)
+      , m_TurnThresholds{ { units::angle::degree_t(5.0), { 0.5f, Milliseconds(500.0) } }, { units::angle::degree_t(10.0), { 1.0f, Milliseconds(500.0) } } }
+      , m_UseViconTracking(false)
+      , m_ViconTrackingPort(0)
+      , m_ViconTrackingObjectName("norbot")
+      , m_UseViconCaptureControl(false)
+      , m_ViconCaptureControlPort(0)
     {
     }
 
@@ -50,7 +75,6 @@ public:
     const WindowConfig &getPMFwdConfig() const{ return m_PMFwdConfig; }
 
     const filesystem::path &getOutputPath() const{ return m_OutputPath; }
-    const std::string &getTestingSuffix() const{ return m_TestingSuffix; }
 
     const cv::Size &getUnwrapRes() const{ return m_UnwrapRes; }
     const cv::Rect &getCroppedRect() const{ return m_CroppedRect; }
@@ -108,7 +132,6 @@ public:
         fs << "shouldStreamOutput" << shouldStreamOutput();
         fs << "shouldUseODK2" << shouldUseODK2();
         fs << "outputPath" << getOutputPath().str();
-        fs << "testingSuffix" << getTestingSuffix();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
         fs << "pmFwdLASize" << getIntegerSize(getPMFwdLASize());
         fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdConfig().increaseSize);
@@ -171,14 +194,10 @@ public:
         cv::String outputPath;
         cv::read(node["outputPath"], outputPath, m_OutputPath.str());
         if (outputPath.empty()) {
-            m_OutputPath = filesystem::current_path();
+            m_OutputPath = filesystem::current_path() / "training";
         } else {
             m_OutputPath = (std::string)outputPath;
         }
-
-        cv::String testingSuffix;
-        cv::read(node["testingSuffix"], testingSuffix, m_TestingSuffix);
-        m_TestingSuffix = (std::string)testingSuffix;
 
         cv::read(node["maxSnapshotRotateDegrees"], m_MaxSnapshotRotateDegrees, m_MaxSnapshotRotateDegrees);
 
@@ -318,9 +337,6 @@ private:
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;
-
-    // Suffix to add to end of testing images and csvs
-    std::string m_TestingSuffix;
 
     // Maximum (absolute) angle snapshots will be rotated by
     double m_MaxSnapshotRotateDegrees;
