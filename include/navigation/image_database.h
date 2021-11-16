@@ -222,6 +222,16 @@ public:
                    << "type" << (isRoute ? "route" : "grid");
         }
 
+        void addEntry(const cv::Mat &image, Entry entry)
+        {
+            BOB_ASSERT(entry.extraFields.size() == m_ExtraFieldNames.size());
+
+            if (m_SaveImages) {
+                this->writeFrame(image, entry);
+            }
+            m_NewEntries.emplace_back(std::move(entry));
+        }
+
         template<class... Ts>
         void addEntry(const cv::Mat &image,
                       const Vector3<millimeter_t> &position,
@@ -369,6 +379,11 @@ public:
         {
             this->addEntry(image, position, heading, { 0, 0, 0 },
                            std::forward<Ts>(extraFieldValues)...);
+        }
+
+        void record(const cv::Mat &image, Entry entry)
+        {
+            this->addEntry(image, entry);
         }
 
         std::string getCurrentFilenameRoot() const override
