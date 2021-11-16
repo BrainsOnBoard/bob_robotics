@@ -29,6 +29,7 @@
 #include "memory.h"
 
 // Standard C++ includes
+#include <chrono>
 #include <future>
 #include <limits>
 #include <memory>
@@ -63,6 +64,7 @@ enum class State
 //------------------------------------------------------------------------
 class RobotFSM : FSM<State>::StateHandler
 {
+    using Milliseconds = std::chrono::duration<double, std::milli>;
     using ImageDatabase = Navigation::ImageDatabase;
 
 public:
@@ -260,7 +262,7 @@ private:
             }
             else if(event == Event::Update) {
                 // If A is pressed
-                if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && static_cast<millisecond_t>(m_TrainingStopwatch.elapsed()) > m_Config.getTrainInterval())) {
+                if(m_Joystick.isPressed(HID::JButton::A) || (m_Config.shouldAutoTrain() && m_TrainingStopwatch.elapsed() > m_Config.getTrainInterval())) {
                     // Update last train time
                     m_TrainingStopwatch.start();
 
@@ -416,13 +418,13 @@ private:
                 // If A is pressed
                 if(m_Joystick.isPressed(HID::JButton::A)) {
                     // Subtract time we've already moved for from drive time
-                    m_DriveTime -= static_cast<millisecond_t>(m_MoveStopwatch.elapsed());
+                    m_DriveTime -= m_MoveStopwatch.elapsed();
 
                     // Transition to correct paused state
                     m_StateMachine.transition((state == State::DrivingForward) ? State::PausedDrivingForward : State::PausedTurning);
                 }
                 // Otherwise, if drive time has passed
-                else if(static_cast<millisecond_t>(m_MoveStopwatch.elapsed()) > m_DriveTime) {
+                else if(m_MoveStopwatch.elapsed() > m_DriveTime) {
                     m_StateMachine.transition(State::Testing);
                 }
             }
@@ -521,7 +523,7 @@ private:
     // For recording training and testing data
     std::unique_ptr<ImageDatabase::ImageRouteRecorder> m_Recorder;
 
-    millisecond_t m_DriveTime;
+    Milliseconds m_DriveTime;
 
     // How many snapshots has memory been trained on
     size_t m_NumSnapshots;
