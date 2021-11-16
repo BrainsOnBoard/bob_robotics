@@ -13,3 +13,8 @@ add_executable(tests circstat.cc dct.cc differencers.cc geometry.cc
 target_include_directories(tests PUBLIC ${GTEST_INCLUDE_DIRS})
 target_link_libraries(tests PUBLIC ${BoBRobotics_LIBRARIES}
                       ${BoBThirdParty_LIBRARIES} Eigen3::Eigen)
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(tests PUBLIC OpenMP::OpenMP_CXX)
+endif()

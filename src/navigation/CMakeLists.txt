@@ -12,3 +12,8 @@ target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS}
                            ${TBB_INCLUDE_DIRS})
 target_link_libraries(${BOB_MODULE_TARGET} PUBLIC Eigen3::Eigen ${OpenCV_LIBS}
                       ${TBB_LIBRARIES})
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${BOB_MODULE_TARGET} PUBLIC OpenMP::OpenMP_CXX)
+endif()
