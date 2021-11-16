@@ -478,16 +478,16 @@ ImageDatabase::getGridRecorder(const Range &xrange, const Range &yrange,
                                         std::move(extraFieldNames) };
 }
 
-ImageDatabase::RouteRecorder<ImageDatabase::ImageFileWriter>
+ImageDatabase::ImageRouteRecorder
 ImageDatabase::getRouteRecorder(std::string imageFormat,
                                 std::vector<std::string> extraFieldNames)
 {
-    return ImageDatabase::RouteRecorder<ImageFileWriter>{
+    return ImageDatabase::ImageRouteRecorder{
         *this, std::move(imageFormat), std::move(extraFieldNames)
     };
 }
 
-ImageDatabase::RouteRecorder<ImageDatabase::VideoFileWriter>
+ImageDatabase::VideoRouteRecorder
 ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
                                      units::frequency::hertz_t fps,
                                      std::vector<std::string> extraFieldNames)
@@ -495,7 +495,7 @@ ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
     return getRouteVideoRecorder(resolution, fps, "avi", "MJPG", std::move(extraFieldNames));
 }
 
-ImageDatabase::RouteRecorder<ImageDatabase::VideoFileWriter>
+ImageDatabase::VideoRouteRecorder
 ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
                                      units::frequency::hertz_t fps,
                                      const std::string &extension,
@@ -506,7 +506,7 @@ ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
     m_FrameRate = fps;
 
     const std::pair<const std::string &, const std::string &> format{ extension, codec };
-    RouteRecorder<VideoFileWriter> recorder{
+    VideoRouteRecorder recorder{
         *this,
         format,
         std::move(extraFieldNames)

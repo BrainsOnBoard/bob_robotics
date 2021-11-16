@@ -370,6 +370,9 @@ public:
         }
     };
 
+    using ImageRouteRecorder = RouteRecorder<ImageFileWriter>;
+    using VideoRouteRecorder = RouteRecorder<VideoFileWriter>;
+
     ImageDatabase();
     ImageDatabase(const char *databasePath, bool overwrite = false);
     ImageDatabase(const std::string &databasePath, bool overwrite = false);
@@ -425,23 +428,23 @@ public:
                                  std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    RouteRecorder<ImageFileWriter> getRouteRecorder(std::string imageFormat = "png",
-                                                    std::vector<std::string> extraFieldNames = {});
+    ImageRouteRecorder getRouteRecorder(std::string imageFormat = "png",
+                                        std::vector<std::string> extraFieldNames = {});
 
     /**!
      * \brief Start recording a route, saving images into video file using
      *        default AVI/MJPEG format.
      */
-    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
-                                                         hertz_t fps,
-                                                         std::vector<std::string> extraFieldNames = {});
+    VideoRouteRecorder getRouteVideoRecorder(const cv::Size &resolution,
+                                             hertz_t fps,
+                                             std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route, saving images into video file with a custom codec
-    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
-                                                         hertz_t fps,
-                                                         const std::string &extension,
-                                                         const std::string &codec,
-                                                         std::vector<std::string> extraFieldNames = {});
+    VideoRouteRecorder getRouteVideoRecorder(const cv::Size &resolution,
+                                             hertz_t fps,
+                                             const std::string &extension,
+                                             const std::string &codec,
+                                             std::vector<std::string> extraFieldNames = {});
 
     hertz_t getFrameRate() const;
 
