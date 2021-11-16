@@ -165,13 +165,18 @@ public:
             m_Recording = false;
         }
 
+        void setSaveImages(bool saveImages)
+        {
+            m_SaveImages = saveImages;
+        }
+
         //! Current number of *new* entries for the ImageDatabase
         size_t size() const { return m_NewEntries.size(); }
 
     private:
         const std::vector<std::string> m_ExtraFieldNames;
         ImageDatabase &m_ImageDatabase;
-        bool m_Recording;
+        bool m_Recording, m_SaveImages;
         std::vector<Entry> m_NewEntries;
 
     protected:
@@ -186,6 +191,7 @@ public:
           , m_ExtraFieldNames(std::move(extraFieldNames))
           , m_ImageDatabase(imageDatabase)
           , m_Recording(true)
+          , m_SaveImages(true)
           , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
         {
             // Set this property of the ImageDatabase
@@ -236,7 +242,10 @@ public:
                 gridPosition,
                 {}
             };
-            this->writeFrame(image, newEntry);
+
+            if (m_SaveImages) {
+                this->writeFrame(image, newEntry);
+            }
             m_NewEntries.emplace_back(std::move(newEntry));
 
             setExtraFields(std::forward<Ts>(extraFieldValues)...);
