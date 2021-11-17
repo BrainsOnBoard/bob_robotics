@@ -229,9 +229,6 @@ private:
             if(m_Config.shouldUseODK2()) {
                 m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
             }
-
-            // Pump OpenCV event queue
-            cv::waitKey(1);
         }
 
         if(state == State::WaitToTrain) {
