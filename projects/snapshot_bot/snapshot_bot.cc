@@ -73,19 +73,12 @@ public:
       , m_StateMachine(this, State::Invalid)
       , m_Camera(getPanoramicCamera(config))
       , m_Output(m_Camera->getOutputSize(), CV_8UC3)
-      , m_Unwrapped(config.getUnwrapRes(), CV_8UC3)
-      , m_Cropped(config.getCroppedRect().size(), CV_8UC3)
       , m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1)
-      , m_ImageInput(createImageInput(config))
+      , m_ImageInput(createImageInput())
       , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
       , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain())
       , m_NumSnapshots(0)
     {
-        // If camera image will need unwrapping, create unwrapper
-        if(m_Camera->needsUnwrapping()) {
-            m_Unwrapper = m_Camera->createUnwrapper(config.getUnwrapRes());
-        }
-
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             // Spawn async tasks to wait for connections
@@ -126,12 +119,6 @@ public:
             m_BestSnapshotConnection->runInBackground();
         }
 
-         // If a static mask image is specified, set it as the mask
-        if(!m_Config.getMaskImageFilename().empty()) {
-            BOB_ASSERT(!m_Config.shouldUseODK2());
-            m_Mask.set(m_Config.getMaskImageFilename());
-        }
-
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
             // Connect to port specified in config
@@ -170,6 +157,21 @@ public:
     }
 
 private:
+    std::unique_ptr<ImageInput> createImageInput() const
+    {
+        // If camera image will need unwrapping, create unwrapper
+        std::unique_ptr<ImgProc::OpenCVUnwrap360> unwrapper;
+        cv::Size unwrapSize;
+        if (m_Camera->needsUnwrapping()) {
+            unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(m_Camera->createUnwrapper(m_Config.getUnwrapRes()));
+            unwrapSize = unwrapper->getOutputSize();
+        } else {
+            unwrapSize = m_Camera->getOutputSize();
+        }
+
+        return ::createImageInput(m_Config, unwrapSize, std::move(unwrapper));
+    }
+
     std::unique_ptr<Video::Input> getPanoramicCamera(const Config &config)
     {
         if(config.shouldUseODK2()) {
@@ -212,22 +214,12 @@ private:
             // Capture frame
             m_Camera->readFrameSync(m_Output);
 
-            // If our camera image needs unwrapping
-            if(m_Camera->needsUnwrapping()) {
-                // Unwrap the image
-                m_Unwrapper.unwrap(m_Output, m_Unwrapped);
+            // Process image (unwrap, crop etc.)
+            std::tie(m_Processed, m_Mask) = m_ImageInput->processSnapshot(m_Output);
 
-                // Crop unwrapped frame
-                m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
-            }
-            // Otherwise, crop camera image directly
-            else {
-                m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
-            }
-
-            // If we're using the ODK2, generate mask from all black pixels in cropped image
-            if(m_Config.shouldUseODK2()) {
-                m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+            // Transmit over network if desired
+            if (m_Config.shouldStreamOutput()) {
+                m_LiveNetSink->sendFrame(m_Processed);
             }
         }
 
@@ -265,12 +257,11 @@ private:
 
                     // Train memory
                     LOGI << "\tTrained snapshot";
-                    const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                    m_Memory->train(processedSnapshot, m_Config.shouldUseODK2() ? m_Mask.clone() : m_Mask);
+                    m_Memory->train(m_Processed, m_Mask);
 
                     // If we should stream output, send snapshot
                     if(m_Config.shouldStreamOutput()) {
-                        m_SnapshotNetSink->sendFrame(processedSnapshot);
+                        m_SnapshotNetSink->sendFrame(m_Processed);
                     }
 
                     const double elapsed = static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value();
@@ -282,12 +273,12 @@ private:
                         const auto pose = objectData.getPose();
                         m_Recorder->record(pose.position(),
                                            pose.yaw(),
-                                           m_Cropped,
+                                           m_Output,
                                            elapsed,
                                            objectData.getFrameNumber());
                     } else {
                         m_Recorder->record(Vector3<millimeter_t>::nan(),
-                                           degree_t{ NAN }, m_Cropped, elapsed, -1);
+                                           degree_t{ NAN }, m_Output, elapsed, -1);
                     }
                 }
 
@@ -342,8 +333,7 @@ private:
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
-                const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                m_Memory->test(processedSnapshot, m_Mask);
+                m_Memory->test(m_Processed, m_Mask);
 
                 ImageDatabase::Entry entry;
                 entry.extraFields["Timestamp [ms]"] = std::to_string(static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value());
@@ -364,12 +354,12 @@ private:
                 }
 
                 // Save data
-                m_Recorder->record(m_Cropped, std::move(entry));
+                m_Recorder->record(m_Output, std::move(entry));
 
                 // If we should stream output
                 if(m_Config.shouldStreamOutput()) {
                     // Send out snapshot
-                    m_SnapshotNetSink->sendFrame(processedSnapshot);
+                    m_SnapshotNetSink->sendFrame(m_Processed);
 
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
@@ -455,8 +445,10 @@ private:
                                                                          "jpg",
                                                                          std::move(fieldNames));
 
-        // Save unwrapper settings
-        m_Recorder->getMetadataWriter() << "unwrapper" << m_Unwrapper;
+        // Save additional metadata
+        auto &metadata = m_Recorder->getMetadataWriter();
+        metadata << "camera" << *m_Camera;
+        m_ImageInput->writeMetadata(metadata);
     }
 
     //------------------------------------------------------------------------
@@ -476,12 +468,8 @@ private:
 
     // OpenCV images used to store raw camera frame and unwrapped panorama
     cv::Mat m_Output;
-    cv::Mat m_Unwrapped;
-    cv::Mat m_Cropped;
+    cv::Mat m_Processed;
     cv::Mat m_DifferenceImage;
-
-    // OpenCV-based panorama unwrapper
-    ImgProc::OpenCVUnwrap360 m_Unwrapper;
 
     // Mask for image matching
     ImgProc::Mask m_Mask;

@@ -19,10 +19,6 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::math;
 
-// Bounds used for extracting masks from ODK2 images
-const cv::Scalar odk2MaskLowerBound(1, 1, 1);
-const cv::Scalar odk2MaskUpperBound(255, 255, 255);
-
 namespace {
 constexpr const char *CSVBestHeading = "Best heading [degrees]";
 constexpr const char *CSVLowestDifference = "Lowest difference";
@@ -50,7 +46,7 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
     fields[CSVLowestDifference] = std::to_string(getLowestDifference());
 }
 
-void MemoryBase::trainRoute(Navigation::ImageDatabase &route,
+void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                             bool useODK2, ImageInput &imageInput)
 {
     LOGI << "Loading stored snapshots...";
@@ -63,13 +59,8 @@ void MemoryBase::trainRoute(Navigation::ImageDatabase &route,
         {
             std::cout << "." << std::flush;
 
-            // If we're using ODK2, extract mask from iamge
-            if(useODK2) {
-                snapshots[i].second.set(snapshot, odk2MaskLowerBound, odk2MaskUpperBound);
-            }
-
             // Process snapshot
-            snapshots[i].first = imageInput.processSnapshot(snapshot);
+            snapshots[i] = imageInput.processSnapshot(snapshot);
         }, /*frameSkip=*/1, /*greyscale=*/false);
     std::cout << "\n";
     LOGI << "Loaded " << route.size() << " snapshots";
@@ -252,7 +243,7 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
     getInfoMax().train(snapshot, mask);
 }
 //-----------------------------------------------------------------------
-void InfoMax::trainRoute(Navigation::ImageDatabase &route, bool useODK2,
+void InfoMax::trainRoute(const Navigation::ImageDatabase &route, bool useODK2,
                          ImageInput &imageInput)
 {
     // If this file exists then we've already trained the network...
