@@ -102,6 +102,18 @@ OpenCVUnwrap360::create(const cv::Size &cameraResolution,
     createMaps();
 }
 
+const cv::Size &
+OpenCVUnwrap360::getInputSize() const
+{
+    return m_CameraResolution;
+}
+
+const cv::Size &
+OpenCVUnwrap360::getOutputSize() const
+{
+    return m_UnwrappedResolution;
+}
+
 void
 OpenCVUnwrap360::updateMaps()
 {
