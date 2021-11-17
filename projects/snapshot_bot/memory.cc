@@ -26,6 +26,10 @@ constexpr const char *CSVBestSnapshot = "Best snapshot index";
 constexpr const char *CSVWindowStart = "Window start";
 constexpr const char *CSVWindowEnd = "Window end";
 
+// Bounds used for extracting masks from ODK2 images
+const cv::Scalar odk2MaskLowerBound(1, 1, 1);
+const cv::Scalar odk2MaskUpperBound(255, 255, 255);
+
 //------------------------------------------------------------------------
 // MemoryBase
 //------------------------------------------------------------------------

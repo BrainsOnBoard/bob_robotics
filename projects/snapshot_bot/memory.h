@@ -32,8 +32,8 @@ class ImageDatabase;
 }
 
 // Bounds used for extracting masks from ODK2 images
-const cv::Scalar odk2MaskLowerBound(1, 1, 1);
-const cv::Scalar odk2MaskUpperBound(255, 255, 255);
+extern const cv::Scalar odk2MaskLowerBound;
+extern const cv::Scalar odk2MaskUpperBound;
 
 //------------------------------------------------------------------------
 // MemoryBase
