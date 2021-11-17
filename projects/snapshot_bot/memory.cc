@@ -53,7 +53,6 @@ void MemoryBase::trainRoute(Navigation::ImageDatabase &route,
 
     // Load and process images in parallel
     // **TODO**: Add support for static mask images
-    std::atomic_int loadCount{ 0 };
     route.forEachImage(
         [&](size_t i, const cv::Mat &snapshot)
         {
