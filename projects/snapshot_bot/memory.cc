@@ -19,15 +19,17 @@ using namespace units::length;
 using namespace units::literals;
 using namespace units::math;
 
+// Bounds used for extracting masks from ODK2 images
+const cv::Scalar odk2MaskLowerBound(1, 1, 1);
+const cv::Scalar odk2MaskUpperBound(255, 255, 255);
+
+namespace {
 constexpr const char *CSVBestHeading = "Best heading [degrees]";
 constexpr const char *CSVLowestDifference = "Lowest difference";
 constexpr const char *CSVBestSnapshot = "Best snapshot index";
 constexpr const char *CSVWindowStart = "Window start";
 constexpr const char *CSVWindowEnd = "Window end";
-
-// Bounds used for extracting masks from ODK2 images
-const cv::Scalar odk2MaskLowerBound(1, 1, 1);
-const cv::Scalar odk2MaskUpperBound(255, 255, 255);
+}
 
 //------------------------------------------------------------------------
 // MemoryBase
