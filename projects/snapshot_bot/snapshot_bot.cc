@@ -347,7 +347,7 @@ private:
                 m_Memory->test(processedSnapshot, m_Mask);
 
                 ImageDatabase::Entry entry;
-                entry.extraFields["Time [ms]"] = std::to_string(static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value());
+                entry.extraFields["Timestamp [ms]"] = std::to_string(static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value());
 
                 // Extra algorithm-specific info
                 m_Memory->setCSVFieldValues(entry.extraFields);
@@ -447,7 +447,7 @@ private:
 
     void makeRecorder(ImageDatabase &database, std::vector<std::string> fieldNames = {})
     {
-        fieldNames.emplace_back("Time [ms]");
+        fieldNames.emplace_back("Timestamp [ms]");
 
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
