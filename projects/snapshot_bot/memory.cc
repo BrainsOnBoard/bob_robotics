@@ -1,4 +1,3 @@
-#define NO_HEADER_DEFINITIONS
 #include "memory.h"
 
 // BoB robotics includes

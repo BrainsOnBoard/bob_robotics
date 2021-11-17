@@ -1,4 +1,3 @@
-#define NO_HEADER_DEFINITIONS
 #include "image_input.h"
 
 // BoB robotics includes
@@ -37,7 +36,7 @@ const cv::Mat &ImageInputRaw::processSnapshot(const cv::Mat &snapshot)
 // ImageInputBinary
 //----------------------------------------------------------------------------
 ImageInputBinary::ImageInputBinary(const Config &config)
-:   ImageInput(config), m_SegmentIndices(config.getCroppedRect().size(), CV_32SC1), 
+:   ImageInput(config), m_SegmentIndices(config.getCroppedRect().size(), CV_32SC1),
     m_SegmentedImage(config.getCroppedRect().height - 2, config.getCroppedRect().width - 2, CV_8UC1)
 {
     // Read marker image
