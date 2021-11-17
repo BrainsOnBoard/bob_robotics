@@ -20,8 +20,9 @@ var hierarchy =
       [ "units::unit_value_t< Units, Num, Denom >", "structunits_1_1unit__value__t.html", null ]
     ] ],
     [ "BoBRobotics::Navigation::AbsDiff", "classBoBRobotics_1_1Navigation_1_1AbsDiff.html", null ],
-    [ "BoBRobotics::Robots::Ackermann", "classBoBRobotics_1_1Robots_1_1Ackermann.html", [
-      [ "BoBRobotics::Robots::SimulatedAckermann", "classBoBRobotics_1_1Robots_1_1SimulatedAckermann.html", null ]
+    [ "BoBRobotics::Robots::Ackermann::AckermannBase< Derived >", "classBoBRobotics_1_1Robots_1_1Ackermann_1_1AckermannBase.html", null ],
+    [ "BoBRobotics::Robots::Ackermann::AckermannBase< SimulatedAckermann >", "classBoBRobotics_1_1Robots_1_1Ackermann_1_1AckermannBase.html", [
+      [ "BoBRobotics::Robots::Ackermann::SimulatedAckermann", "classBoBRobotics_1_1Robots_1_1Ackermann_1_1SimulatedAckermann.html", null ]
     ] ],
     [ "AgentObject", "structAgentObject.html", null ],
     [ "AgentObjectData", "structAgentObjectData.html", null ],
@@ -97,6 +98,8 @@ var hierarchy =
     ] ],
     [ "Config", "classConfig.html", null ],
     [ "CLI::ConfigItem", "structCLI_1_1ConfigItem.html", null ],
+    [ "std::experimental::constexpr_optional_base< T >", "structstd_1_1experimental_1_1constexpr__optional__base.html", null ],
+    [ "std::experimental::constexpr_storage_t< T >", "unionstd_1_1experimental_1_1constexpr__storage__t.html", null ],
     [ "BoBRobotics::Navigation::CorrCoefficient", "structBoBRobotics_1_1Navigation_1_1CorrCoefficient.html", null ],
     [ "io::CSVReader< column_count, trim_policy, quote_policy, overflow_policy, comment_policy >", "classio_1_1CSVReader.html", null ],
     [ "DataFile", "classDataFile.html", null ],
@@ -172,12 +175,15 @@ var hierarchy =
       ] ]
     ] ],
     [ "BoBRobotics::FSM< S >", "classBoBRobotics_1_1FSM.html", null ],
-    [ "BoBRobotics::FSM< State >", "classBoBRobotics_1_1FSM.html", null ],
-    [ "BoBRobotics::FSM< TankPIDState >", "classBoBRobotics_1_1FSM.html", null ],
     [ "BoBRobotics::Robots::Gantry", "classBoBRobotics_1_1Robots_1_1Gantry.html", null ],
-    [ "BoBRobotics::GPS::Gps", "classBoBRobotics_1_1GPS_1_1Gps.html", null ],
     [ "BoBRobotics::GPS::GPSData", "structBoBRobotics_1_1GPS_1_1GPSData.html", null ],
+    [ "BoBRobotics::GPS::GPSReader", "classBoBRobotics_1_1GPS_1_1GPSReader.html", null ],
     [ "CLI::detail::has_find< C, V >", "structCLI_1_1detail_1_1has__find.html", null ],
+    [ "std::experimental::is_nothrow_move_assignable< T >::has_nothrow_move_assign< X, has_any_move_assign >", "structstd_1_1experimental_1_1is__nothrow__move__assignable_1_1has__nothrow__move__assign.html", null ],
+    [ "std::experimental::is_nothrow_move_assignable< T >::has_nothrow_move_assign< X, true >", "structstd_1_1experimental_1_1is__nothrow__move__assignable_1_1has__nothrow__move__assign_3_01X_00_01true_01_4.html", null ],
+    [ "std::experimental::detail_::has_overloaded_addressof< T >", "structstd_1_1experimental_1_1detail___1_1has__overloaded__addressof.html", null ],
+    [ "std::hash< std::experimental::optional< T & > >", "structstd_1_1hash_3_01std_1_1experimental_1_1optional_3_01T_01_6_01_4_01_4.html", null ],
+    [ "std::hash< std::experimental::optional< T > >", "structstd_1_1hash_3_01std_1_1experimental_1_1optional_3_01T_01_4_01_4.html", null ],
     [ "BoBRobotics::Navigation::PerfectMemoryStore::HOG< Differencer >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryStore_1_1HOG.html", null ],
     [ "io::ignore_overflow", "structio_1_1ignore__overflow.html", null ],
     [ "BoBRobotics::Navigation::ImageDatabase", "classBoBRobotics_1_1Navigation_1_1ImageDatabase.html", null ],
@@ -188,10 +194,19 @@ var hierarchy =
       [ "ImageInputRaw", "classImageInputRaw.html", null ]
     ] ],
     [ "BoBRobotics::Net::IMUNetSource", "classBoBRobotics_1_1Net_1_1IMUNetSource.html", null ],
+    [ "std::experimental::in_place_t", "structstd_1_1experimental_1_1in__place__t.html", null ],
+    [ "BoBRobotics::Navigation::InfoMax< FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", null ],
+    [ "BoBRobotics::Navigation::InfoMax< float >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", [
+      [ "BoBRobotics::Navigation::InfoMaxRotater< float >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ],
+      [ "BoBRobotics::Navigation::InfoMaxRotater< FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", [
+        [ "BoBRobotics::Navigation::InfoMaxTest", "classBoBRobotics_1_1Navigation_1_1InfoMaxTest.html", null ]
+      ] ]
+    ] ],
+    [ "std::experimental::nullopt_t::init", "structstd_1_1experimental_1_1nullopt__t_1_1init.html", null ],
     [ "BoBRobotics::Video::Input", "classBoBRobotics_1_1Video_1_1Input.html", [
       [ "BoBRobotics::AntWorld::RenderTargetInput", "classBoBRobotics_1_1AntWorld_1_1RenderTargetInput.html", null ],
-      [ "BoBRobotics::Robots::Bebop::VideoStream", "classBoBRobotics_1_1Robots_1_1Bebop_1_1VideoStream.html", null ],
       [ "BoBRobotics::Robots::Gazebo::Camera", "classBoBRobotics_1_1Robots_1_1Gazebo_1_1Camera.html", null ],
+      [ "BoBRobotics::Robots::UAV::Bebop::VideoStream", "classBoBRobotics_1_1Robots_1_1UAV_1_1Bebop_1_1VideoStream.html", null ],
       [ "BoBRobotics::Video::NetSource", "classBoBRobotics_1_1Video_1_1NetSource.html", null ],
       [ "BoBRobotics::Video::ODK2", "classBoBRobotics_1_1Video_1_1ODK2.html", null ],
       [ "BoBRobotics::Video::OpenCVInput", "classBoBRobotics_1_1Video_1_1OpenCVInput.html", null ],
@@ -251,25 +266,35 @@ var hierarchy =
       [ "units::traits::is_voltage_unit< T >", "structunits_1_1traits_1_1is__voltage__unit.html", null ],
       [ "units::traits::is_volume_unit< T >", "structunits_1_1traits_1_1is__volume__unit.html", null ]
     ] ],
+    [ "std::experimental::is_assignable< T, U >", "structstd_1_1experimental_1_1is__assignable.html", null ],
     [ "std::is_base_of", null, [
       [ "units::traits::is_base_unit< T >", "structunits_1_1traits_1_1is__base__unit.html", null ]
     ] ],
     [ "CLI::is_copyable_ptr< T >", "structCLI_1_1is__copyable__ptr.html", null ],
     [ "CLI::detail::is_direct_constructible< T, C >", "classCLI_1_1detail_1_1is__direct__constructible.html", null ],
     [ "CLI::detail::is_istreamable< T, S >", "classCLI_1_1detail_1_1is__istreamable.html", null ],
+    [ "std::experimental::is_nothrow_move_assignable< T >", "structstd_1_1experimental_1_1is__nothrow__move__assignable.html", null ],
+    [ "std::experimental::is_nothrow_move_constructible< T >", "structstd_1_1experimental_1_1is__nothrow__move__constructible.html", null ],
     [ "CLI::detail::is_ostreamable< T, S >", "classCLI_1_1detail_1_1is__ostreamable.html", null ],
     [ "std::is_same", null, [
       [ "units::traits::is_convertible_unit< U1, U2 >", "structunits_1_1traits_1_1is__convertible__unit.html", null ]
     ] ],
     [ "CLI::detail::is_tuple_like< S >", "classCLI_1_1detail_1_1is__tuple__like.html", null ],
+    [ "BoBRobotics::Robots::IsAckermann< T >", "structBoBRobotics_1_1Robots_1_1IsAckermann.html", null ],
     [ "CLI::IsMemberType< T >", "structCLI_1_1IsMemberType.html", null ],
     [ "CLI::IsMemberType< const char * >", "structCLI_1_1IsMemberType_3_01const_01char_01_5_01_4.html", null ],
+    [ "BoBRobotics::Robots::IsOmni2D< T >", "structBoBRobotics_1_1Robots_1_1IsOmni2D.html", null ],
+    [ "BoBRobotics::Robots::IsTank< T >", "structBoBRobotics_1_1Robots_1_1IsTank.html", null ],
+    [ "BoBRobotics::Robots::IsUAV< T >", "structBoBRobotics_1_1Robots_1_1IsUAV.html", null ],
     [ "BoBRobotics::MapCoordinate::LatLon< D >", "structBoBRobotics_1_1MapCoordinate_1_1LatLon.html", null ],
     [ "units::linear_scale< T >", "structunits_1_1linear__scale.html", null ],
     [ "units::linear_scale< double >", "structunits_1_1linear__scale.html", [
       [ "units::unit_t< Units, T, NonLinearScale >", "classunits_1_1unit__t.html", null ]
     ] ],
     [ "io::LineReader", "classio_1_1LineReader.html", null ],
+    [ "logic_error", null, [
+      [ "std::experimental::bad_optional_access", "classstd_1_1experimental_1_1bad__optional__access.html", null ]
+    ] ],
     [ "CLI::make_void< Ts >", "structCLI_1_1make__void.html", null ],
     [ "BoBRobotics::ImgProc::BeeEye::Map", "classBoBRobotics_1_1ImgProc_1_1BeeEye_1_1Map.html", null ],
     [ "BoBRobotics::ImgProc::Mask", "classBoBRobotics_1_1ImgProc_1_1Mask.html", null ],
@@ -282,6 +307,32 @@ var hierarchy =
         [ "PerfectMemoryConstrainedDynamicWindow", "classPerfectMemoryConstrainedDynamicWindow.html", null ]
       ] ]
     ] ],
+    [ "MergedNeuronInitGroup0", "structMergedNeuronInitGroup0.html", null ],
+    [ "MergedNeuronInitGroup1", "structMergedNeuronInitGroup1.html", null ],
+    [ "MergedNeuronInitGroup2", "structMergedNeuronInitGroup2.html", null ],
+    [ "MergedNeuronInitGroup3", "structMergedNeuronInitGroup3.html", null ],
+    [ "MergedNeuronInitGroup4", "structMergedNeuronInitGroup4.html", null ],
+    [ "MergedNeuronInitGroup5", "structMergedNeuronInitGroup5.html", null ],
+    [ "MergedNeuronSpikeQueueUpdateGroup0", "structMergedNeuronSpikeQueueUpdateGroup0.html", null ],
+    [ "MergedNeuronSpikeQueueUpdateGroup1", "structMergedNeuronSpikeQueueUpdateGroup1.html", null ],
+    [ "MergedNeuronUpdateGroup0", "structMergedNeuronUpdateGroup0.html", null ],
+    [ "MergedNeuronUpdateGroup1", "structMergedNeuronUpdateGroup1.html", null ],
+    [ "MergedNeuronUpdateGroup2", "structMergedNeuronUpdateGroup2.html", null ],
+    [ "MergedNeuronUpdateGroup3", "structMergedNeuronUpdateGroup3.html", null ],
+    [ "MergedNeuronUpdateGroup4", "structMergedNeuronUpdateGroup4.html", null ],
+    [ "MergedNeuronUpdateGroup5", "structMergedNeuronUpdateGroup5.html", null ],
+    [ "MergedPostsynapticUpdateGroup0", "structMergedPostsynapticUpdateGroup0.html", null ],
+    [ "MergedPresynapticUpdateGroup0", "structMergedPresynapticUpdateGroup0.html", null ],
+    [ "MergedPresynapticUpdateGroup1", "structMergedPresynapticUpdateGroup1.html", null ],
+    [ "MergedSynapseConnectivityInitGroup0", "structMergedSynapseConnectivityInitGroup0.html", null ],
+    [ "MergedSynapseConnectivityInitGroup1", "structMergedSynapseConnectivityInitGroup1.html", null ],
+    [ "MergedSynapseConnectivityInitGroup2", "structMergedSynapseConnectivityInitGroup2.html", null ],
+    [ "MergedSynapseConnectivityInitGroup3", "structMergedSynapseConnectivityInitGroup3.html", null ],
+    [ "MergedSynapseConnectivityInitGroup4", "structMergedSynapseConnectivityInitGroup4.html", null ],
+    [ "MergedSynapseConnectivityInitGroup5", "structMergedSynapseConnectivityInitGroup5.html", null ],
+    [ "MergedSynapseDenseInitGroup0", "structMergedSynapseDenseInitGroup0.html", null ],
+    [ "MergedSynapseDynamicsGroup0", "structMergedSynapseDynamicsGroup0.html", null ],
+    [ "MergedSynapseDynamicsGroup1", "structMergedSynapseDynamicsGroup1.html", null ],
     [ "BoBRobotics::MindstormsIMU", "classBoBRobotics_1_1MindstormsIMU.html", null ],
     [ "ModelPlugin", null, [
       [ "gazebo::DifferentialDrivePlugin", "classgazebo_1_1DifferentialDrivePlugin.html", null ],
@@ -291,23 +342,28 @@ var hierarchy =
     [ "BoBRobotics::GPS::NMEAParser", "classBoBRobotics_1_1GPS_1_1NMEAParser.html", null ],
     [ "io::no_comment", "structio_1_1no__comment.html", null ],
     [ "io::no_quote_escape< sep >", "structio_1_1no__quote__escape.html", null ],
+    [ "std::experimental::nullopt_t", "structstd_1_1experimental_1_1nullopt__t.html", null ],
     [ "std::numeric_limits< units::unit_t< Units, T, NonLinearScale > >", "classstd_1_1numeric__limits_3_01units_1_1unit__t_3_01Units_00_01T_00_01NonLinearScale_01_4_01_4.html", null ],
     [ "BoBRobotics::Vicon::ObjectData", "classBoBRobotics_1_1Vicon_1_1ObjectData.html", [
       [ "BoBRobotics::Vicon::ObjectDataVelocity", "classBoBRobotics_1_1Vicon_1_1ObjectDataVelocity.html", null ]
     ] ],
     [ "BoBRobotics::Vicon::ObjectReference< ObjectDataType >", "classBoBRobotics_1_1Vicon_1_1ObjectReference.html", null ],
-    [ "BoBRobotics::Robots::ObstacleAvoidingPositioner< PositionerType, PoseGetterType >", "classBoBRobotics_1_1Robots_1_1ObstacleAvoidingPositioner.html", null ],
-    [ "BoBRobotics::Robots::ObstacleAvoidingPositioner< Robots::RobotPositioner< Vicon::ObjectReference<> >, Vicon::ObjectReference<> >", "classBoBRobotics_1_1Robots_1_1ObstacleAvoidingPositioner.html", null ],
-    [ "ObstacleCircumnavigationRunner< PoseGetterType >", "classObstacleCircumnavigationRunner.html", null ],
-    [ "BoBRobotics::Robots::ObstacleCircumnavigator< PoseGetterType >", "classBoBRobotics_1_1Robots_1_1ObstacleCircumnavigator.html", null ],
-    [ "BoBRobotics::Robots::ObstacleCircumnavigator< Vicon::ObjectReference<> >", "classBoBRobotics_1_1Robots_1_1ObstacleCircumnavigator.html", null ],
-    [ "BoBRobotics::ImgProc::OpenCVOpticalFlow", "classBoBRobotics_1_1ImgProc_1_1OpenCVOpticalFlow.html", null ],
+    [ "BoBRobotics::Robots::ObstacleAvoidingPositioner< PositionerType, TankType, PoseGetterType >", "classBoBRobotics_1_1Robots_1_1ObstacleAvoidingPositioner.html", null ],
+    [ "ObstacleCircumnavigationRunner< TankType, PoseGetterType >", "classObstacleCircumnavigationRunner.html", null ],
+    [ "BoBRobotics::Robots::ObstacleCircumnavigator< TankType, PoseGetterType >", "classBoBRobotics_1_1Robots_1_1ObstacleCircumnavigator.html", null ],
+    [ "BoBRobotics::Robots::Omni2D::Omni2DBase< Derived >", "classBoBRobotics_1_1Robots_1_1Omni2D_1_1Omni2DBase.html", null ],
     [ "OpenCVTexture", "classOpenCVTexture.html", null ],
     [ "BoBRobotics::ImgProc::OpenCVUnwrap360", "classBoBRobotics_1_1ImgProc_1_1OpenCVUnwrap360.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< T >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLbyte >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLbyte_01_4.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLfloat >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLfloat_01_4.html", null ],
     [ "BoBRobotics::AntWorld::OpenGLTypeTraits< GLuint >", "structBoBRobotics_1_1AntWorld_1_1OpenGLTypeTraits_3_01GLuint_01_4.html", null ],
+    [ "std::experimental::optional< T & >", "classstd_1_1experimental_1_1optional_3_01T_01_6_01_4.html", null ],
+    [ "std::experimental::optional< T && >", "classstd_1_1experimental_1_1optional_3_01T_01_6_6_01_4.html", null ],
+    [ "std::experimental::optional_base< T >", "structstd_1_1experimental_1_1optional__base.html", null ],
+    [ "OptionalBase", null, [
+      [ "std::experimental::optional< T >", "classstd_1_1experimental_1_1optional.html", null ]
+    ] ],
     [ "CLI::OptionBase< CRTP >", "classCLI_1_1OptionBase.html", null ],
     [ "CLI::OptionBase< Option >", "classCLI_1_1OptionBase.html", [
       [ "CLI::Option", "classCLI_1_1Option.html", null ]
@@ -318,23 +374,20 @@ var hierarchy =
     [ "BoBRobotics::MapCoordinate::OSCoordinate", "structBoBRobotics_1_1MapCoordinate_1_1OSCoordinate.html", null ],
     [ "BoBRobotics::MapCoordinate::OSGB36", "structBoBRobotics_1_1MapCoordinate_1_1OSGB36.html", null ],
     [ "filesystem::path", "classfilesystem_1_1path.html", null ],
+    [ "BoBRobotics::Navigation::PerfectMemory< Store >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
+    [ "BoBRobotics::Navigation::PerfectMemory< BoBRobotics::Navigation::PerfectMemoryStore::RawImage<> >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
+    [ "BoBRobotics::Navigation::PerfectMemory< PerfectMemoryStore::RawImage<> >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", [
+      [ "BoBRobotics::Navigation::PerfectMemoryRotater< Store, RIDFProcessor >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryRotater.html", null ]
+    ] ],
     [ "BoBRobotics::PID", "classBoBRobotics_1_1PID.html", null ],
     [ "BoBRobotics::PoseBase< Derived >", "classBoBRobotics_1_1PoseBase.html", [
-      [ "BoBRobotics::Pose2< units::length::millimeter_t, units::angle::degree_t >", "classBoBRobotics_1_1Pose2.html", null ],
-      [ "BoBRobotics::Pose2< units::unit_t, units::unit_t >", "classBoBRobotics_1_1Pose2.html", null ],
-      [ "BoBRobotics::Pose3< millimeter_t, units::unit_t >", "classBoBRobotics_1_1Pose3.html", null ],
-      [ "BoBRobotics::Pose3< units::unit_t, units::unit_t >", "classBoBRobotics_1_1Pose3.html", null ],
-      [ "BoBRobotics::VectorBase< LengthUnit, 3, Vector3< LengthUnit > >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector3< LengthUnit >", "classBoBRobotics_1_1Vector3.html", null ]
-      ] ],
       [ "BoBRobotics::VectorBase< LengthUnit, 2, Vector2< LengthUnit > >", "classBoBRobotics_1_1VectorBase.html", [
         [ "BoBRobotics::Vector2< LengthUnit >", "classBoBRobotics_1_1Vector2.html", null ]
       ] ],
-      [ "BoBRobotics::VectorBase< LengthUnit, N, Derived >", "classBoBRobotics_1_1VectorBase.html", [
-        [ "BoBRobotics::Vector2< units::unit_t >", "classBoBRobotics_1_1Vector2.html", null ],
-        [ "BoBRobotics::Vector3< millimeter_t >", "classBoBRobotics_1_1Vector3.html", null ],
-        [ "BoBRobotics::Vector3< units::unit_t >", "classBoBRobotics_1_1Vector3.html", null ]
-      ] ]
+      [ "BoBRobotics::VectorBase< LengthUnit, 3, Vector3< LengthUnit > >", "classBoBRobotics_1_1VectorBase.html", [
+        [ "BoBRobotics::Vector3< LengthUnit >", "classBoBRobotics_1_1Vector3.html", null ]
+      ] ],
+      [ "BoBRobotics::VectorBase< LengthUnit, N, Derived >", "classBoBRobotics_1_1VectorBase.html", null ]
     ] ],
     [ "BoBRobotics::PoseBase< Pose2< LengthUnit, AngleUnit > >", "classBoBRobotics_1_1PoseBase.html", [
       [ "BoBRobotics::Pose2< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Pose2.html", null ]
@@ -351,33 +404,14 @@ var hierarchy =
     ] ],
     [ "BoBRobotics::AntWorld::RenderTarget", "classBoBRobotics_1_1AntWorld_1_1RenderTarget.html", null ],
     [ "BoBRobotics::Navigation::RMSDiff", "classBoBRobotics_1_1Navigation_1_1RMSDiff.html", null ],
-    [ "BoBRobotics::Robots::Robot", "classBoBRobotics_1_1Robots_1_1Robot.html", [
-      [ "BoBRobotics::AntWorld::AntAgent", "classBoBRobotics_1_1AntWorld_1_1AntAgent.html", null ],
-      [ "BoBRobotics::Robots::Omni2D", "classBoBRobotics_1_1Robots_1_1Omni2D.html", null ],
-      [ "BoBRobotics::Robots::Tank", "classBoBRobotics_1_1Robots_1_1Tank.html", [
-        [ "BoBRobotics::Robots::TankNetSinkBase< Net::Client >", "classBoBRobotics_1_1Robots_1_1TankNetSinkBase.html", [
-          [ "BoBRobotics::Robots::BundledTankNetSink", "classBoBRobotics_1_1Robots_1_1BundledTankNetSink.html", null ]
-        ] ],
-        [ "BoBRobotics::Robots::EV3", "classBoBRobotics_1_1Robots_1_1EV3.html", null ],
-        [ "BoBRobotics::Robots::Gazebo::Tank", "classBoBRobotics_1_1Robots_1_1Gazebo_1_1Tank.html", null ],
-        [ "BoBRobotics::Robots::SimulatedTank< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Robots_1_1SimulatedTank.html", null ],
-        [ "BoBRobotics::Robots::Surveyor", "classBoBRobotics_1_1Robots_1_1Surveyor.html", null ],
-        [ "BoBRobotics::Robots::TankNetSinkBase< ConnectionType >", "classBoBRobotics_1_1Robots_1_1TankNetSinkBase.html", null ]
-      ] ],
-      [ "BoBRobotics::Robots::UAV", "classBoBRobotics_1_1Robots_1_1UAV.html", [
-        [ "BoBRobotics::Robots::Bebop", "classBoBRobotics_1_1Robots_1_1Bebop.html", null ],
-        [ "BoBRobotics::Robots::Gazebo::UAV", "classBoBRobotics_1_1Robots_1_1Gazebo_1_1UAV.html", null ]
-      ] ]
-    ] ],
-    [ "BoBRobotics::Robots::RobotPositioner< PoseGetterType >", "classBoBRobotics_1_1Robots_1_1RobotPositioner.html", null ],
-    [ "BoBRobotics::Robots::RobotPositioner< Vicon::ObjectReference<> >", "classBoBRobotics_1_1Robots_1_1RobotPositioner.html", null ],
+    [ "BoBRobotics::Robots::RobotPositioner< TankType, PoseGetterType >", "classBoBRobotics_1_1Robots_1_1RobotPositioner.html", null ],
     [ "BoBRobotics::Navigation::InSilicoRotater::RotaterInternal< IterType >", "classBoBRobotics_1_1Navigation_1_1InSilicoRotater_1_1RotaterInternal.html", null ],
     [ "Rotor", "classRotor.html", null ],
     [ "BoBRobotics::AntWorld::RouteArdin", "classBoBRobotics_1_1AntWorld_1_1RouteArdin.html", null ],
     [ "BoBRobotics::AntWorld::RouteContinuous", "classBoBRobotics_1_1AntWorld_1_1RouteContinuous.html", null ],
     [ "std::runtime_error", null, [
       [ "BoBRobotics::AssertionFailedException", "classBoBRobotics_1_1AssertionFailedException.html", null ],
-      [ "BoBRobotics::GPS::GPSError", "classBoBRobotics_1_1GPS_1_1GPSError.html", null ],
+      [ "BoBRobotics::GPS::NMEAError", "classBoBRobotics_1_1GPS_1_1NMEAError.html", null ],
       [ "BoBRobotics::Net::BadCommandError", "classBoBRobotics_1_1Net_1_1BadCommandError.html", null ],
       [ "BoBRobotics::Net::SocketClosedError", "classBoBRobotics_1_1Net_1_1SocketClosedError.html", null ],
       [ "BoBRobotics::NotImplementedException", "classBoBRobotics_1_1NotImplementedException.html", null ],
@@ -422,8 +456,6 @@ var hierarchy =
     [ "matplotlibcpp::select_npy_type< uint64_t >", "structmatplotlibcpp_1_1select__npy__type_3_01uint64__t_01_4.html", null ],
     [ "matplotlibcpp::select_npy_type< uint8_t >", "structmatplotlibcpp_1_1select__npy__type_3_01uint8__t_01_4.html", null ],
     [ "BoBRobotics::Semaphore", "classBoBRobotics_1_1Semaphore.html", null ],
-    [ "BoBRobotics::SerialInterface", "classBoBRobotics_1_1SerialInterface.html", null ],
-    [ "SerialReader", "classSerialReader.html", null ],
     [ "BoBRobotics::Net::Server", "classBoBRobotics_1_1Net_1_1Server.html", null ],
     [ "io::set_to_max_on_overflow", "structio_1_1set__to__max__on__overflow.html", null ],
     [ "BoBRobotics::Viz::SFMLWorld", "classBoBRobotics_1_1Viz_1_1SFMLWorld.html", null ],
@@ -434,19 +466,45 @@ var hierarchy =
     ] ],
     [ "BoBRobotics::Net::Socket", "classBoBRobotics_1_1Net_1_1Socket.html", null ],
     [ "BoBRobotics::Net::Connection::SocketWriter", "classBoBRobotics_1_1Net_1_1Connection_1_1SocketWriter.html", null ],
+    [ "BoBRobotics::Robots::Tank::Net::Source< TankType >", "classBoBRobotics_1_1Robots_1_1Tank_1_1Net_1_1Source.html", null ],
     [ "BoBRobotics::GeNNUtils::SpikeRenderer", "classBoBRobotics_1_1GeNNUtils_1_1SpikeRenderer.html", null ],
     [ "tk::spline", "classtk_1_1spline.html", null ],
     [ "BoBRobotics::FSM< S >::StateHandler", "classBoBRobotics_1_1FSM_1_1StateHandler.html", [
-      [ "BoBRobotics::Robots::TankPID< PoseGetterType >", "classBoBRobotics_1_1Robots_1_1TankPID.html", null ],
+      [ "BoBRobotics::Robots::TankPID< TankType, PoseGetterType >", "classBoBRobotics_1_1Robots_1_1TankPID.html", null ],
+      [ "PositionerExample", "classPositionerExample.html", null ],
+      [ "PositionerExample", "classPositionerExample.html", null ],
       [ "StateHandler", "classStateHandler.html", null ]
     ] ],
-    [ "BoBRobotics::FSM< State >::StateHandler", null, [
-      [ "PositionerExample", "classPositionerExample.html", null ],
-      [ "PositionerExample", "classPositionerExample.html", null ]
-    ] ],
     [ "BoBRobotics::Stopwatch", "classBoBRobotics_1_1Stopwatch.html", null ],
+    [ "std::experimental::storage_t< T >", "unionstd_1_1experimental_1_1storage__t.html", null ],
     [ "BoBRobotics::AntWorld::Surface", "classBoBRobotics_1_1AntWorld_1_1Surface.html", null ],
     [ "io::detail::SynchronousReader", "classio_1_1detail_1_1SynchronousReader.html", null ],
+    [ "BoBRobotics::Robots::Tank::TankBase< Derived >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Tank::Net::SinkBase< BoBRobotics::Net::Client >", "classBoBRobotics_1_1Robots_1_1Tank_1_1Net_1_1SinkBase.html", [
+        [ "BoBRobotics::Robots::Tank::Net::BundledSink", "classBoBRobotics_1_1Robots_1_1Tank_1_1Net_1_1BundledSink.html", null ]
+      ] ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< DummyTank >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Tank::DummyTank", "classBoBRobotics_1_1Robots_1_1Tank_1_1DummyTank.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< EV3 >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::EV3::EV3", "classBoBRobotics_1_1Robots_1_1EV3_1_1EV3.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< SimulatedTank< units::length::millimeter_t, units::angle::degree_t > >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Tank::SimulatedTank< LengthUnit, AngleUnit >", "classBoBRobotics_1_1Robots_1_1Tank_1_1SimulatedTank.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< SinkBase< BoBRobotics::Net::Connection & > >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Tank::Net::SinkBase< ConnectionType >", "classBoBRobotics_1_1Robots_1_1Tank_1_1Net_1_1SinkBase.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< SlowedTank< TankType > >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Tank::SlowedTank< TankType >", "classBoBRobotics_1_1Robots_1_1Tank_1_1SlowedTank.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< Tank >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Gazebo::Tank", "classBoBRobotics_1_1Robots_1_1Gazebo_1_1Tank.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::Tank::TankBase< TankAdaptor< Omni2DType > >", "classBoBRobotics_1_1Robots_1_1Tank_1_1TankBase.html", [
+      [ "BoBRobotics::Robots::Omni2D::TankAdaptor< Omni2DType >", "classBoBRobotics_1_1Robots_1_1Omni2D_1_1TankAdaptor.html", null ]
+    ] ],
     [ "testing::Test", null, [
       [ "Differencers", "classDifferencers.html", null ],
       [ "Mask", "classMask.html", null ]
@@ -456,14 +514,14 @@ var hierarchy =
       [ "BoBRobotics::HID::JoystickBase< JAxisDummy, JButtonDummy >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
         [ "BoBRobotics::HID::JoystickDummy", "classBoBRobotics_1_1HID_1_1JoystickDummy.html", null ]
       ] ],
+      [ "BoBRobotics::HID::JoystickBase< JAxisLinux, JButtonLinux >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
+        [ "BoBRobotics::HID::JoystickLinux", "classBoBRobotics_1_1HID_1_1JoystickLinux.html", null ]
+      ] ],
       [ "BoBRobotics::HID::JoystickBase< JAxisWindows, JButtonWindows >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
         [ "BoBRobotics::HID::JoystickWindows", "classBoBRobotics_1_1HID_1_1JoystickWindows.html", null ]
       ] ],
       [ "BoBRobotics::HID::JoystickBase< HID::JAxis, HID::JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
         [ "BoBRobotics::Viz::JoystickKeyboard", "classBoBRobotics_1_1Viz_1_1JoystickKeyboard.html", null ]
-      ] ],
-      [ "BoBRobotics::HID::JoystickBase< JAxisLinux, JButtonLinux >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", [
-        [ "BoBRobotics::HID::JoystickLinux", "classBoBRobotics_1_1HID_1_1JoystickLinux.html", null ]
       ] ],
       [ "BoBRobotics::HID::JoystickBase< JAxis, JButton >", "classBoBRobotics_1_1HID_1_1JoystickBase.html", null ],
       [ "BoBRobotics::Net::Connection", "classBoBRobotics_1_1Net_1_1Connection.html", [
@@ -474,11 +532,11 @@ var hierarchy =
     [ "io::throw_on_overflow", "structio_1_1throw__on__overflow.html", null ],
     [ "BoBRobotics::Timer< A >", "classBoBRobotics_1_1Timer.html", null ],
     [ "BoBRobotics::TimerAccumulate< A >", "classBoBRobotics_1_1TimerAccumulate.html", null ],
-    [ "BoBRobotics::GPS::TimeStamp", "structBoBRobotics_1_1GPS_1_1TimeStamp.html", null ],
     [ "tinydir_dir", "structtinydir__dir.html", null ],
     [ "tinydir_file", "structtinydir__file.html", null ],
     [ "BoBRobotics::MapCoordinate::Transform", "structBoBRobotics_1_1MapCoordinate_1_1Transform.html", null ],
     [ "io::trim_chars< trim_char_list >", "structio_1_1trim__chars.html", null ],
+    [ "std::experimental::trivial_init_t", "structstd_1_1experimental_1_1trivial__init__t.html", null ],
     [ "std::true_type", null, [
       [ "CLI::detail::pair_adaptor< T, conditional_t< false, void_t< typename T::value_type::first_type, typename T::value_type::second_type >, void > >", "structCLI_1_1detail_1_1pair__adaptor_3_01T_00_01conditional__t_3_01false_00_01void__t_3_01typenac7f3d35561ff46242630d08443185a90.html", null ],
       [ "CLI::is_bool< bool >", "structCLI_1_1is__bool_3_01bool_01_4.html", null ],
@@ -497,9 +555,15 @@ var hierarchy =
     [ "CLI::detail::type_count< T, typename std::enable_if< is_tuple_like< T >::value >::type >", "structCLI_1_1detail_1_1type__count_3_01T_00_01typename_01std_1_1enable__if_3_01is__tuple__like_3e6a3451e4af5895ed38f67eba8d5dee3.html", null ],
     [ "CLI::detail::type_count< T, typename std::enable_if< is_vector< T >::value >::type >", "structCLI_1_1detail_1_1type__count_3_01T_00_01typename_01std_1_1enable__if_3_01is__vector_3_01T_01_4_1_1value_01_4_1_1type_01_4.html", null ],
     [ "CLI::detail::type_count< T, typename std::enable_if<!is_vector< T >::value &&!is_tuple_like< T >::value &&!std::is_void< T >::value >::type >", "structCLI_1_1detail_1_1type__count_3_01T_00_01typename_01std_1_1enable__if_3_9is__vector_3_01T_01c73ad89d793127dbbbc0ffaec103d5a.html", null ],
+    [ "BoBRobotics::Robots::UAV::UAVBase< Derived >", "classBoBRobotics_1_1Robots_1_1UAV_1_1UAVBase.html", null ],
+    [ "BoBRobotics::Robots::UAV::UAVBase< Bebop >", "classBoBRobotics_1_1Robots_1_1UAV_1_1UAVBase.html", [
+      [ "BoBRobotics::Robots::UAV::Bebop", "classBoBRobotics_1_1Robots_1_1UAV_1_1Bebop.html", null ]
+    ] ],
+    [ "BoBRobotics::Robots::UAV::UAVBase< UAV >", "classBoBRobotics_1_1Robots_1_1UAV_1_1UAVBase.html", [
+      [ "BoBRobotics::Robots::Gazebo::UAV", "classBoBRobotics_1_1Robots_1_1Gazebo_1_1UAV.html", null ]
+    ] ],
     [ "UAVNavigation", "classUAVNavigation.html", null ],
     [ "BoBRobotics::Vicon::UDPClient< ObjectDataType >", "classBoBRobotics_1_1Vicon_1_1UDPClient.html", null ],
-    [ "BoBRobotics::Vicon::UDPClient< ObjectData >", "classBoBRobotics_1_1Vicon_1_1UDPClient.html", null ],
     [ "CLI::detail::uncommon_type< T >", "structCLI_1_1detail_1_1uncommon__type.html", null ],
     [ "units::detail::unit_value_arithmetic", null, [
       [ "units::unit_value_add< U1, U2 >", "structunits_1_1unit__value__add.html", null ],
@@ -531,20 +595,6 @@ var hierarchy =
     ] ],
     [ "BoBRobotics::GeNNUtils::VarSlider< T >", "classBoBRobotics_1_1GeNNUtils_1_1VarSlider.html", null ],
     [ "VectorField", "classVectorField.html", null ],
-    [ "BoBRobotics::Navigation::VisualNavigationBase", "classBoBRobotics_1_1Navigation_1_1VisualNavigationBase.html", [
-      [ "BoBRobotics::Navigation::InfoMax< float >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", [
-        [ "BoBRobotics::Navigation::InfoMaxRotater< BoBRobotics::Navigation::InSilicoRotater, float >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", null ],
-        [ "BoBRobotics::Navigation::InfoMaxRotater< Rotater, FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMaxRotater.html", [
-          [ "BoBRobotics::Navigation::InfoMaxTest", "classBoBRobotics_1_1Navigation_1_1InfoMaxTest.html", null ]
-        ] ]
-      ] ],
-      [ "BoBRobotics::Navigation::PerfectMemory< PerfectMemoryStore::RawImage<> >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", [
-        [ "BoBRobotics::Navigation::PerfectMemoryRotater< Store, RIDFProcessor, Rotater >", "classBoBRobotics_1_1Navigation_1_1PerfectMemoryRotater.html", null ]
-      ] ],
-      [ "BoBRobotics::Navigation::PerfectMemory< BoBRobotics::Navigation::PerfectMemoryStore::RawImage<> >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ],
-      [ "BoBRobotics::Navigation::InfoMax< FloatType >", "classBoBRobotics_1_1Navigation_1_1InfoMax.html", null ],
-      [ "BoBRobotics::Navigation::PerfectMemory< Store >", "classBoBRobotics_1_1Navigation_1_1PerfectMemory.html", null ]
-    ] ],
     [ "VisualNavigationBase", "classVisualNavigationBase.html", [
       [ "MBMemory", "classMBMemory.html", [
         [ "MBMemoryArdin", "classMBMemoryArdin.html", null ]

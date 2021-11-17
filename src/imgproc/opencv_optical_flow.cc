@@ -8,6 +8,8 @@
 // OpenCV includes
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#ifdef HAVE_OPENCV_SUPERRES
 #include <opencv2/superres/optical_flow.hpp>
 
 namespace BoBRobotics {
@@ -104,3 +106,4 @@ OpenCVOpticalFlow::getFlowY() const
 
 } // ImgProc
 } // BoBRobotics
+#endif  // HAVE_OPENCV_SUPERRES

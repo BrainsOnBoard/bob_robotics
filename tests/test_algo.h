@@ -17,7 +17,7 @@ using Window = std::pair<size_t, size_t>;
 template<class Algo>
 void testAlgo(const std::string &filename, ImgProc::Mask mask, Window window)
 {
-    const auto filepath = Path::getProgramDirectory() / "navigation" / filename;
+    const auto filepath = getTestsPath() / "navigation" / filename;
     const auto trueDifferences = readMatrix<float>(filepath);
 
     Algo algo{ TestImageSize };

@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES flat_trim.cc
-            BOB_MODULES robots/uav/bebop
-            PLATFORMS unix)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(bebop_calibration)
+
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS robots/uav/bebop)
+
+add_executable(flat_trim flat_trim.cc)
+target_link_libraries(flat_trim PUBLIC ${BoBRobotics_LIBRARIES})

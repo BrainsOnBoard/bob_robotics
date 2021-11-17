@@ -1,7 +1,7 @@
 var namespaceBoBRobotics_1_1HID =
 [
     [ "JoystickBase", "classBoBRobotics_1_1HID_1_1JoystickBase.html", "classBoBRobotics_1_1HID_1_1JoystickBase" ],
-    [ "JoystickDummy", "classBoBRobotics_1_1HID_1_1JoystickDummy.html", "classBoBRobotics_1_1HID_1_1JoystickDummy" ],
+    [ "JoystickDummy", "classBoBRobotics_1_1HID_1_1JoystickDummy.html", null ],
     [ "JoystickLinux", "classBoBRobotics_1_1HID_1_1JoystickLinux.html", "classBoBRobotics_1_1HID_1_1JoystickLinux" ],
     [ "JoystickWindows", "classBoBRobotics_1_1HID_1_1JoystickWindows.html", "classBoBRobotics_1_1HID_1_1JoystickWindows" ],
     [ "JAxis", "namespaceBoBRobotics_1_1HID.html#abaa8b39bfb810e5582646a9544f674dd", null ],
@@ -85,5 +85,6 @@ var namespaceBoBRobotics_1_1HID =
       [ "X", "namespaceBoBRobotics_1_1HID.html#a4b89850960416bd783bd3888c982671ca02129bb861061d1a052c592e2dc6b383", null ],
       [ "Y", "namespaceBoBRobotics_1_1HID.html#a4b89850960416bd783bd3888c982671ca57cec4137b614c87cb4e24a3d003a3e0", null ],
       [ "LENGTH", "namespaceBoBRobotics_1_1HID.html#a4b89850960416bd783bd3888c982671caaddeac40406177897b3fccba88558f1c", null ]
-    ] ]
+    ] ],
+    [ "addJoystick", "namespaceBoBRobotics_1_1HID.html#aa6606f540246394beaa5208760a1720c", null ]
 ];

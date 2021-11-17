@@ -1,7 +1,5 @@
 var UTM_8h =
 [
-    [ "DEG_TO_RAD", "UTM_8h.html#a212460e743fecb084d717bb2180c5a56", null ],
-    [ "RAD_TO_DEG", "UTM_8h.html#a89e47af0449640d4f15191aba5ca24c6", null ],
     [ "UTM_E2", "UTM_8h.html#a8ceb5d1234972ff5e235776268d12e6b", null ],
     [ "UTM_E4", "UTM_8h.html#af78f8bbfc681107b474cc625b44f3024", null ],
     [ "UTM_E6", "UTM_8h.html#a7411578a5ceb861e0a291903a95c81c1", null ],

@@ -38,7 +38,7 @@ int bobMain(int, char **)
     };
 
     // Tank agent
-    Robots::SimulatedTank<> robot(1.0_mps, 104_mm);
+    Robots::Tank::SimulatedTank<> robot(1.0_mps, 104_mm);
 
     // For displaying the agent
     Viz::SFMLWorld display({5_m, 5_m});

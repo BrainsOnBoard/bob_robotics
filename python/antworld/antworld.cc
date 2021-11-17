@@ -11,6 +11,12 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#ifdef _WIN32
+#define DLL_EXPORT extern "C" __declspec(dllexport)
+#else
+#define DLL_EXPORT
+#endif
+
 using namespace BoBRobotics;
 
 struct AgentObjectData
@@ -34,7 +40,7 @@ struct AgentObject
     // clang-format on
 };
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
 {
     int width, height;
@@ -56,7 +62,7 @@ Agent_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
     return self;
 }
 
-static void
+DLL_EXPORT void
 Agent_dealloc(AgentObject *self)
 {
     if (self->members) {
@@ -66,7 +72,7 @@ Agent_dealloc(AgentObject *self)
     LOGD << "Agent object deallocated";
 }
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_load_world(AgentObject *self, PyObject *args)
 {
     char *filepath_c;
@@ -111,7 +117,7 @@ Agent_load_world(AgentObject *self, PyObject *args)
     return worldBounds;
 }
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_read_frame(AgentObject *self, PyObject *)
 {
     const auto size = self->members->agent.getOutputSize();
@@ -138,7 +144,7 @@ Agent_read_frame(AgentObject *self, PyObject *)
     return array;
 }
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_read_frame_greyscale(AgentObject *self, PyObject *)
 {
     const auto size = self->members->agent.getOutputSize();
@@ -165,7 +171,7 @@ Agent_read_frame_greyscale(AgentObject *self, PyObject *)
     return array;
 }
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_set_position(AgentObject *self, PyObject *args)
 {
     using namespace units::length;
@@ -181,7 +187,7 @@ Agent_set_position(AgentObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_set_attitude(AgentObject *self, PyObject *args)
 {
     using namespace units::angle;
@@ -197,7 +203,7 @@ Agent_set_attitude(AgentObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static PyObject *
+DLL_EXPORT PyObject *
 Agent_display(AgentObject *self, PyObject *)
 {
     self->members->agent.display();
@@ -276,7 +282,7 @@ static struct PyModuleDef ModuleDefinitions
 };
 
 PyMODINIT_FUNC
-PyInit_antworld(void)
+PyInit__antworld(void)
 {
     import_array();             // init numpy
     BoBRobotics::initLogging(); // init plog

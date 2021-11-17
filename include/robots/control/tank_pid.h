@@ -5,7 +5,6 @@
 #include "common/fsm.h"
 #include "common/pose.h"
 #include "common/stopwatch.h"
-#include "vicon/udp.h"
 
 // Third-party includes
 #include "plog/Log.h"

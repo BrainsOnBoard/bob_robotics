@@ -32,7 +32,7 @@ generateDataRaw(const std::string &filename, ImgProc::Mask mask, Window window,
     const auto &differences = algo.getImageDifferences(window, TestImages[0]);
     static_assert(std::is_same<const float &, const decltype(differences[0]) &>::value,
                   "Must return floats");
-    writeMatrix(Path::getProgramDirectory() / filename, differences);
+    writeMatrix(getTestsPath() / filename, differences);
 }
 
 template<class Algo, class... Ts>

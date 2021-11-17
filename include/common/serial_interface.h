@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef __linux__
 // Posix includes
 #include <termios.h>
 #include <unistd.h>
@@ -71,3 +71,4 @@ private:
     int m_Serial_fd;
 };
 } // BoBRobotics
+#endif // __linux__

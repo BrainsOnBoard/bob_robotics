@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
-include(../../cmake/bob_robotics.cmake)
-BoB_project(SOURCES remote_tank.cc
-            BOB_MODULES common hid net robots/tank/net
-            PLATFORMS linux windows)
+cmake_minimum_required(VERSION 3.10)
+include(../../cmake/BoBRobotics.cmake)
+project(remote_tank)
+
+find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid net robots/tank/net)
+
+add_executable(remote_tank remote_tank.cc)
+target_link_libraries(remote_tank PUBLIC ${BoBRobotics_LIBRARIES})
