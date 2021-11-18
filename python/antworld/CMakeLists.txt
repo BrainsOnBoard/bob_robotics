@@ -16,10 +16,8 @@ include_directories(${NumPy_INCLUDE_DIRS})
 
 add_library(_antworld MODULE antworld.cc)
 python_extension_module(_antworld)
-install(TARGETS _antworld LIBRARY DESTINATION antworld)
+install(TARGETS _antworld LIBRARY DESTINATION bobrobotics/antworld)
 target_link_libraries(_antworld ${BoBRobotics_LIBRARIES})
-
-install(TARGETS _antworld LIBRARY DESTINATION antworld)
 
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)
