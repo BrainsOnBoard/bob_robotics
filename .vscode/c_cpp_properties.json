@@ -3,7 +3,8 @@
         {
             "name": "default",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json",
-            "cppStandard": "c++14"
+            "cppStandard": "c++14",
+            "configurationProvider": "ms-vscode.cmake-tools"
         }
     ],
     "version": 4
