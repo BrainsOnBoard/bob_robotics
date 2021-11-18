@@ -7,5 +7,5 @@ setup(
     author='Alex Dewar',
     license="GPLv2",
     packages=['bob_robotics.antworld'],
-    package_data = { 'bob_robotics/antworld': ['*.dll'] }
+    package_data = { 'bob_robotics.antworld': ['*.dll'] }
 )
