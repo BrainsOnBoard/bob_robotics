@@ -25,8 +25,8 @@ add_library(BoBRobotics::common ALIAS bob_common)
 find_package(BoBThirdParty REQUIRED COMPONENTS plog)
 find_package(Eigen3 REQUIRED)
 find_package(Threads REQUIRED)
-target_link_libraries(bob_common PUBLIC BoBRobotics::base
-                      BoBThirdParty::plog Eigen3::Eigen Threads::Threads
+target_link_libraries(common PUBLIC BoBRobotics::base
+                      BoBThirdParty::plog Threads::Threads
                       ${I2C_LIBRARIES})
 
 find_package(OpenMP)
@@ -36,7 +36,8 @@ endif()
 
 
 # Default include path
-target_include_directories(bob_common PUBLIC "${BOB_ROBOTICS_PATH}/include")
+target_include_directories(common PUBLIC "${BOB_ROBOTICS_PATH}/include"
+                           ${EIGEN3_INCLUDE_DIRS})
 
 include(BoBGetGitCommits)
 get_git_commits()

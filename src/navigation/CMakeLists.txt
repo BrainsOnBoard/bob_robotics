@@ -9,8 +9,8 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(TBB REQUIRED)
 target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_INCLUDE_DIRS}
-                           ${TBB_INCLUDE_DIRS})
-target_link_libraries(${BOB_MODULE_TARGET} PUBLIC Eigen3::Eigen ${OpenCV_LIBS}
+                           ${TBB_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIRS})
+target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_LIBS}
                       ${TBB_LIBRARIES})
 
 find_package(OpenMP)
