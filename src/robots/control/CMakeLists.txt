@@ -10,3 +10,8 @@ find_package(OpenCV REQUIRED)
 target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${EIGEN3_INCLUDE_DIRS}
                            ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${OpenCV_LIBS})
+
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${BOB_MODULE_TARGET} PUBLIC OpenMP::OpenMP_CXX)
+endif()
