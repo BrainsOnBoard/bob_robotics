@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+project(joystick_example)
 include(../../cmake/BoBRobotics.cmake)
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS hid robots)
