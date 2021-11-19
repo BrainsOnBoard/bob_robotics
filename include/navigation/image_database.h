@@ -165,13 +165,18 @@ public:
             m_Recording = false;
         }
 
+        void setSaveImages(bool saveImages)
+        {
+            m_SaveImages = saveImages;
+        }
+
         //! Current number of *new* entries for the ImageDatabase
         size_t size() const { return m_NewEntries.size(); }
 
     private:
         const std::vector<std::string> m_ExtraFieldNames;
         ImageDatabase &m_ImageDatabase;
-        bool m_Recording;
+        bool m_Recording, m_SaveImages;
         std::vector<Entry> m_NewEntries;
 
     protected:
@@ -186,6 +191,7 @@ public:
           , m_ExtraFieldNames(std::move(extraFieldNames))
           , m_ImageDatabase(imageDatabase)
           , m_Recording(true)
+          , m_SaveImages(true)
           , m_YAML(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY)
         {
             // Set this property of the ImageDatabase
@@ -216,6 +222,16 @@ public:
                    << "type" << (isRoute ? "route" : "grid");
         }
 
+        void addEntry(const cv::Mat &image, Entry entry)
+        {
+            BOB_ASSERT(entry.extraFields.size() == m_ExtraFieldNames.size());
+
+            if (m_SaveImages) {
+                this->writeFrame(image, entry);
+            }
+            m_NewEntries.emplace_back(std::move(entry));
+        }
+
         template<class... Ts>
         void addEntry(const cv::Mat &image,
                       const Vector3<millimeter_t> &position,
@@ -236,7 +252,10 @@ public:
                 gridPosition,
                 {}
             };
-            this->writeFrame(image, newEntry);
+
+            if (m_SaveImages) {
+                this->writeFrame(image, newEntry);
+            }
             m_NewEntries.emplace_back(std::move(newEntry));
 
             setExtraFields(std::forward<Ts>(extraFieldValues)...);
@@ -362,6 +381,11 @@ public:
                            std::forward<Ts>(extraFieldValues)...);
         }
 
+        void record(const cv::Mat &image, Entry entry)
+        {
+            this->addEntry(image, entry);
+        }
+
         std::string getCurrentFilenameRoot() const override
         {
             std::ostringstream ss;
@@ -369,6 +393,9 @@ public:
             return (this->getImageDatabase().getPath() / ss.str()).str();
         }
     };
+
+    using ImageRouteRecorder = RouteRecorder<ImageFileWriter>;
+    using VideoRouteRecorder = RouteRecorder<VideoFileWriter>;
 
     ImageDatabase();
     ImageDatabase(const char *databasePath, bool overwrite = false);
@@ -425,23 +452,23 @@ public:
                                  std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    RouteRecorder<ImageFileWriter> getRouteRecorder(std::string imageFormat = "png",
-                                                    std::vector<std::string> extraFieldNames = {});
+    ImageRouteRecorder getRouteRecorder(std::string imageFormat = "png",
+                                        std::vector<std::string> extraFieldNames = {});
 
     /**!
      * \brief Start recording a route, saving images into video file using
      *        default AVI/MJPEG format.
      */
-    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
-                                                         hertz_t fps,
-                                                         std::vector<std::string> extraFieldNames = {});
+    VideoRouteRecorder getRouteVideoRecorder(const cv::Size &resolution,
+                                             hertz_t fps,
+                                             std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route, saving images into video file with a custom codec
-    RouteRecorder<VideoFileWriter> getRouteVideoRecorder(const cv::Size &resolution,
-                                                         hertz_t fps,
-                                                         const std::string &extension,
-                                                         const std::string &codec,
-                                                         std::vector<std::string> extraFieldNames = {});
+    VideoRouteRecorder getRouteVideoRecorder(const cv::Size &resolution,
+                                             hertz_t fps,
+                                             const std::string &extension,
+                                             const std::string &codec,
+                                             std::vector<std::string> extraFieldNames = {});
 
     hertz_t getFrameRate() const;
 

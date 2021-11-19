@@ -48,6 +48,9 @@ public:
                 degree_t offsetAngle = 0_deg,
                 bool flip = false);
 
+    const cv::Size &getInputSize() const;
+    const cv::Size &getOutputSize() const;
+
     void updateMaps();
 
     void unwrap(const cv::Mat &input, cv::Mat &output) const;

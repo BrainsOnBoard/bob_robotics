@@ -1,21 +1,15 @@
-// Standard C++ includes
-#include <chrono>
-#include <fstream>
-#include <future>
-#include <limits>
-#include <memory>
-
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
+#include "common/path.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
 #include "hid/robot_control.h"
 #include "imgproc/opencv_unwrap_360.h"
 #include "imgproc/mask.h"
+#include "navigation/image_database.h"
 #include "net/server.h"
-#include "plog/Log.h"
 #include "robots/robot_type.h"
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
@@ -25,7 +19,8 @@
 #include "video/odk2/odk2.h"
 #endif
 
-// BoB robotics third-party includes
+// Third-party includes
+#include "plog/Log.h"
 #include "third_party/path.h"
 
 // Snapshot bot includes
@@ -33,11 +28,18 @@
 #include "image_input.h"
 #include "memory.h"
 
+// Standard C++ includes
+#include <chrono>
+#include <future>
+#include <limits>
+#include <memory>
+
 using namespace BoBRobotics;
 using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
 using namespace units::math;
+using namespace units::time;
 
 //------------------------------------------------------------------------
 // Anonymous namespace
@@ -57,35 +59,26 @@ enum class State
     PausedTurning,
 };
 
-// Bounds used for extracting masks from ODK2 images
-const cv::Scalar odk2MaskLowerBound(1, 1, 1);
-const cv::Scalar odk2MaskUpperBound(255, 255, 255);
-
 //------------------------------------------------------------------------
 // RobotFSM
 //------------------------------------------------------------------------
 class RobotFSM : FSM<State>::StateHandler
 {
-    using Seconds = std::chrono::duration<double, std::ratio<1>>;
     using Milliseconds = std::chrono::duration<double, std::milli>;
+    using ImageDatabase = Navigation::ImageDatabase;
 
 public:
     RobotFSM(const Config &config)
-    :   m_Config(config), m_StateMachine(this, State::Invalid), m_Camera(getPanoramicCamera(config)),
-        m_Output(m_Camera->getOutputSize(), CV_8UC3), m_Unwrapped(config.getUnwrapRes(), CV_8UC3), m_Cropped(config.getCroppedRect().size(), CV_8UC3),
-        m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1), m_ImageInput(createImageInput(config)),
-        m_Memory(createMemory(config, m_ImageInput->getOutputSize())), m_NumSnapshots(0)
+      : m_Config(config)
+      , m_StateMachine(this, State::Invalid)
+      , m_Camera(getPanoramicCamera(config))
+      , m_Output(m_Camera->getOutputSize(), CV_8UC3)
+      , m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1)
+      , m_ImageInput(createImageInput())
+      , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
+      , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain())
+      , m_NumSnapshots(0)
     {
-        m_LogFile.exceptions(std::ios::badbit | std::ios::failbit);
-
-        // Create output directory (if necessary)
-        filesystem::create_directory(m_Config.getOutputPath());
-
-        // If camera image will need unwrapping, create unwrapper
-        if(m_Camera->needsUnwrapping()) {
-            m_Unwrapper = m_Camera->createUnwrapper(config.getUnwrapRes());
-        }
-
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             // Spawn async tasks to wait for connections
@@ -126,12 +119,6 @@ public:
             m_BestSnapshotConnection->runInBackground();
         }
 
-         // If a static mask image is specified, set it as the mask
-        if(!m_Config.getMaskImageFilename().empty()) {
-            BOB_ASSERT(!m_Config.shouldUseODK2());
-            m_Mask.set(m_Config.getMaskImageFilename());
-        }
-
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
             // Connect to port specified in config
@@ -152,45 +139,9 @@ public:
         if(m_Config.shouldTrain()) {
             // Start in training state
             m_StateMachine.transition(State::WaitToTrain);
-        }
-        else {
-            // If we're not using InfoMax or pre-trained weights don't exist
-            if(!m_Config.shouldUseInfoMax() || !(m_Config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin")).exists()) {
-                LOGI << "Training on stored snapshots";
-                for(m_NumSnapshots = 0;;m_NumSnapshots++) {
-                    const auto filename = getSnapshotPath(m_NumSnapshots);
-
-                    // If file exists
-                    if(filename.exists()) {
-                        std::cout << "." << std::flush;
-
-                        // Load snapshot
-                        const cv::Mat snapshot = cv::imread(filename.str());
-
-                        // If we're using ODK2, extract mask from iamge
-                        if(m_Config.shouldUseODK2()) {
-                            m_Mask.set(snapshot, odk2MaskLowerBound, odk2MaskUpperBound);
-                        }
-
-                        // Process snapshot
-                        const cv::Mat &processedSnapshot = m_ImageInput->processSnapshot(snapshot);
-
-                        // Train model
-                        m_Memory->train(processedSnapshot, m_Mask);
-                    }
-                    // Otherwise, stop searching
-                    else {
-                        break;
-                    }
-                }
-                LOGI << "Loaded " << m_NumSnapshots << " snapshots";
-
-                // If we are using InfoMax save the weights now
-                if(m_Config.shouldUseInfoMax()) {
-                    InfoMax *infoMax = dynamic_cast<InfoMax*>(m_Memory.get());
-                    infoMax->saveWeights(m_Config.getOutputPath() / "weights.bin");
-                }
-            }
+        } else {
+            // Train the algorithm on the stored images
+            m_Memory->trainRoute(m_TrainDatabase, config.shouldUseODK2(), *m_ImageInput);
 
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
@@ -206,9 +157,19 @@ public:
     }
 
 private:
-    filesystem::path getSnapshotPath(size_t index) const
+    std::unique_ptr<ImageInput> createImageInput() const
     {
-        return m_Config.getOutputPath() / ("snapshot_" + std::to_string(index) + ".png");
+        // If camera image will need unwrapping, create unwrapper
+        std::unique_ptr<ImgProc::OpenCVUnwrap360> unwrapper;
+        cv::Size unwrapSize;
+        if (m_Camera->needsUnwrapping()) {
+            unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(m_Camera->createUnwrapper(m_Config.getUnwrapRes()));
+            unwrapSize = unwrapper->getOutputSize();
+        } else {
+            unwrapSize = m_Camera->getOutputSize();
+        }
+
+        return ::createImageInput(m_Config, unwrapSize, std::move(unwrapper));
     }
 
     std::unique_ptr<Video::Input> getPanoramicCamera(const Config &config)
@@ -253,26 +214,13 @@ private:
             // Capture frame
             m_Camera->readFrameSync(m_Output);
 
-            // If our camera image needs unwrapping
-            if(m_Camera->needsUnwrapping()) {
-                // Unwrap the image
-                m_Unwrapper.unwrap(m_Output, m_Unwrapped);
+            // Process image (unwrap, crop etc.)
+            std::tie(m_Processed, m_Mask) = m_ImageInput->processSnapshot(m_Output);
 
-                // Crop unwrapped frame
-                m_Cropped = cv::Mat(m_Unwrapped, m_Config.getCroppedRect());
+            // Transmit over network if desired
+            if (m_Config.shouldStreamOutput()) {
+                m_LiveNetSink->sendFrame(m_Processed);
             }
-            // Otherwise, crop camera image directl
-            else {
-                m_Cropped = cv::Mat(m_Output, m_Config.getCroppedRect());
-            }
-
-            // If we're using the ODK2, generate mask from all black pixels in cropped image
-            if(m_Config.shouldUseODK2()) {
-                m_Mask.set(m_Cropped, odk2MaskLowerBound, odk2MaskUpperBound);
-            }
-
-            // Pump OpenCV event queue
-            cv::waitKey(1);
         }
 
         if(state == State::WaitToTrain) {
@@ -289,38 +237,17 @@ private:
             if(event == Event::Enter) {
                 LOGI << "Starting training";
 
-                // Open settings file and write unwrapper settings to it
-                cv::FileStorage settingsFile((m_Config.getOutputPath() / "training_settings.yaml").str(), cv::FileStorage::WRITE);
-                settingsFile << "unwrapper" << m_Unwrapper;
-
                 // If we should stream, send state update
                 if(m_Config.shouldStreamOutput()) {
                     m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TRAINING\n");
                 }
 
-                // Close log file if it's already open
-                if(m_LogFile.is_open()) {
-                    m_LogFile.close();
-                }
-
-                m_LogFile.open((m_Config.getOutputPath() / "training.csv").str());
-
-                // Write header
-                m_LogFile << "Time [s], Filename";
-
-                // If Vicon tracking is available, write additional header
-                if(m_Config.shouldUseViconTracking()) {
-                    m_LogFile << ", Frame, X, Y, Z, Rx, Ry, Rz";
-                }
-                m_LogFile << std::endl;
+                // For saving images + metadata
+                makeRecorder(m_TrainDatabase);
 
                 // Reset train time and test image
                 m_RecordingStopwatch.start();
                 m_TrainingStopwatch.start();
-
-                // Delete old snapshots
-                const std::string snapshotWildcard = (m_Config.getOutputPath() / "snapshot_*.png").str();
-                system(("rm -f " + snapshotWildcard).c_str());
             }
             else if(event == Event::Update) {
                 // If A is pressed
@@ -330,35 +257,29 @@ private:
 
                     // Train memory
                     LOGI << "\tTrained snapshot";
-                    const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                    m_Memory->train(processedSnapshot, m_Config.shouldUseODK2() ? m_Mask.clone() : m_Mask);
-
-                    // Write raw snapshot to disk
-                    const std::string filename = getSnapshotPath(m_NumSnapshots++).str();
-                    cv::imwrite(filename, m_Cropped);
-
-                    // Write time
-                    m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", " << filename;
+                    m_Memory->train(m_Processed, m_Mask);
 
                     // If we should stream output, send snapshot
                     if(m_Config.shouldStreamOutput()) {
-                        m_SnapshotNetSink->sendFrame(processedSnapshot);
+                        m_SnapshotNetSink->sendFrame(m_Processed);
                     }
+
+                    const double elapsed = static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value();
 
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
-                        const auto &position = pose.position();
-                        const auto &attitude = pose.attitude();
-
-                        // Write to CSV
-                        m_LogFile << ", " << objectData.getFrameNumber() << ", ";
-                        m_LogFile << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", ";
-                        m_LogFile << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
+                        const auto pose = objectData.getPose();
+                        m_Recorder->record(pose.position(),
+                                           pose.yaw(),
+                                           m_Output,
+                                           elapsed,
+                                           objectData.getFrameNumber());
+                    } else {
+                        m_Recorder->record(Vector3<millimeter_t>::nan(),
+                                           degree_t{ NAN }, m_Output, elapsed, -1);
                     }
-                    m_LogFile << std::endl;
                 }
 
                 // If B is pressed, go to testing
@@ -368,6 +289,9 @@ private:
             }
             else if(event == Event::Exit) {
                 m_Robot.stopMoving();
+
+                // Write metadata to disk
+                m_Recorder.reset();
             }
         }
         else if(state == State::WaitToTest) {
@@ -376,47 +300,28 @@ private:
             }
             else if(event == Event::Update) {
                 if(m_Joystick.isPressed(HID::JButton::B)) {
-                    // Open settings file and write unwrapper settings to it
-                    cv::FileStorage settingsFile((m_Config.getOutputPath() / "testing_settings.yaml").str(), cv::FileStorage::WRITE);
-                    settingsFile << "unwrapper" << m_Unwrapper;
-
                     // If we should stream, send state update
                     if(m_Config.shouldStreamOutput()) {
                         m_LiveConnection->getSocketWriter().send("SNAPSHOT_BOT_STATE TESTING\n");
                     }
 
-                    // Close log file if it's already open
-                    if(m_LogFile.is_open()) {
-                        m_LogFile.close();
-                    }
+                    // Create new image database in subfolder of training database
+                    const auto testingPath = m_TrainDatabase.getPath() / "testing";
+                    filesystem::create_directory(testingPath);
+                    m_TestDatabase = std::make_unique<ImageDatabase>(Path::getNewPath(testingPath));
 
-                    // Open log file
-                    m_LogFile.open((m_Config.getOutputPath() / ("testing" + m_Config.getTestingSuffix() + ".csv")).str());
-                    BOB_ASSERT(m_LogFile.good());
+                    // Extra fields for test algorithms
+                    std::vector<std::string> fieldNames = m_Memory->getCSVFieldNames();
 
-                    // Write heading for time column
-                    m_LogFile << "Time [s], ";
+                    // For writing metadata
+                    makeRecorder(*m_TestDatabase, std::move(fieldNames));
 
-                    // Write memory-specific CSV header
-                    m_Memory->writeCSVHeader(m_LogFile);
-
-                    // If Vicon tracking is available, write additional header fields
-                    if(m_Config.shouldUseViconTracking()) {
-                        m_LogFile << ", Frame number, X, Y, Z, Rx, Ry, Rz";
-                    }
-
-                    if(m_Config.shouldSaveTestingDiagnostic()) {
-                        m_LogFile << ", Filename";
-                    }
-                    m_LogFile << std::endl;
+                    // We only save images if this option is set
+                    m_Recorder->setSaveImages(m_Config.shouldSaveTestingDiagnostic());
 
                     // Reset test time and test image
                     m_RecordingStopwatch.start();
                     m_TestImageIndex = 0;
-
-                    // Delete old testing images
-                    const std::string testWildcard = (m_Config.getOutputPath() / ("test" +  m_Config.getTestingSuffix() + "_*.png")).str();
-                    system(("rm -f " + testWildcard).c_str());
 
                     m_StateMachine.transition(State::Testing);
                 }
@@ -428,44 +333,33 @@ private:
             }
             else if(event == Event::Update) {
                 // Find matching snapshot
-                const auto &processedSnapshot = m_ImageInput->processSnapshot(m_Cropped);
-                m_Memory->test(processedSnapshot, m_Mask);
+                m_Memory->test(m_Processed, m_Mask);
 
-                // Write time
-                m_LogFile << ((Seconds)m_RecordingStopwatch.elapsed()).count() << ", ";
+                ImageDatabase::Entry entry;
+                entry.extraFields["Timestamp [ms]"] = std::to_string(static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value());
 
-                // Write memory-specific CSV logging
-                m_Memory->writeCSVLine(m_LogFile);
+                // Extra algorithm-specific info
+                m_Memory->setCSVFieldValues(entry.extraFields);
 
-                // If vicon tracking is available
+                // If Vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
                     // Get tracking data
-                    const auto objectData = m_ViconTracking.getObjectData();
-                    const Pose3<millimeter_t, degree_t> pose = objectData.getPose();
-                    const auto &position = pose.position();
-                    const auto &attitude = pose.attitude();
-
-                    // Write extra logging data
-                    m_LogFile << ", " << objectData.getFrameNumber() << ", ";
-                    m_LogFile << position[0].value() << ", " << position[1].value() << ", " << position[2].value() << ", ";
-                    m_LogFile << attitude[0].value() << ", " << attitude[1].value() << ", " << attitude[2].value();
+                    const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
+                    const auto &pose = objectData.getPose();
+                    entry.position = pose.position();
+                    entry.heading = pose.yaw();
+                    entry.extraFields["Frame"] = std::to_string(objectData.getFrameNumber());
+                } else {
+                    entry.extraFields["Frame"] = "-1";
                 }
 
-                // If we should save diagnostics when testing
-                if(m_Config.shouldSaveTestingDiagnostic()) {
-                    const std::string filename = "test" + m_Config.getTestingSuffix() + "_" + std::to_string(m_TestImageIndex++) + ".png";
-                    m_LogFile << ", " << filename;
-                    // Build path to test image and save
-                    const auto testImagePath = m_Config.getOutputPath() / filename;
-                    cv::imwrite(testImagePath.str(), m_Cropped);
-                }
-
-                m_LogFile << std::endl;
+                // Save data
+                m_Recorder->record(m_Output, std::move(entry));
 
                 // If we should stream output
                 if(m_Config.shouldStreamOutput()) {
                     // Send out snapshot
-                    m_SnapshotNetSink->sendFrame(processedSnapshot);
+                    m_SnapshotNetSink->sendFrame(m_Processed);
 
                     // Attempt to dynamic cast memory to a perfect memory
                     PerfectMemory *perfectMemory = dynamic_cast<PerfectMemory*>(m_Memory.get());
@@ -474,7 +368,7 @@ private:
                         m_BestSnapshotNetSink->sendFrame(perfectMemory->getBestSnapshot());
                     }
                     else {
-                        LOGW << "WARNING: Can only stream output from a perfect memory";
+                        LOGW << "Can only stream output from a perfect memory";
                     }
                 }
 
@@ -489,8 +383,6 @@ private:
                     m_DriveTime = m_Config.getMotorCommandInterval();
                     m_StateMachine.transition(State::DrivingForward);
                 }
-
-
             }
         }
         else if(state == State::DrivingForward || state == State::Turning) {
@@ -542,6 +434,23 @@ private:
         return true;
     }
 
+    void makeRecorder(ImageDatabase &database, std::vector<std::string> fieldNames = {})
+    {
+        fieldNames.emplace_back("Timestamp [ms]");
+
+        // Also log Vicon frame number, if present
+        fieldNames.emplace_back("Frame");
+
+        m_Recorder = std::make_unique<ImageDatabase::ImageRouteRecorder>(database,
+                                                                         "jpg",
+                                                                         std::move(fieldNames));
+
+        // Save additional metadata
+        auto &metadata = m_Recorder->getMetadataWriter();
+        metadata << "camera" << *m_Camera;
+        m_ImageInput->writeMetadata(metadata);
+    }
+
     //------------------------------------------------------------------------
     // Members
     //------------------------------------------------------------------------
@@ -559,12 +468,8 @@ private:
 
     // OpenCV images used to store raw camera frame and unwrapped panorama
     cv::Mat m_Output;
-    cv::Mat m_Unwrapped;
-    cv::Mat m_Cropped;
+    cv::Mat m_Processed;
     cv::Mat m_DifferenceImage;
-
-    // OpenCV-based panorama unwrapper
-    ImgProc::OpenCVUnwrap360 m_Unwrapper;
 
     // Mask for image matching
     ImgProc::Mask m_Mask;
@@ -594,8 +499,14 @@ private:
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
 
-    // CSV file containing logging
-    std::ofstream m_LogFile;
+    // For training data
+    ImageDatabase m_TrainDatabase;
+
+    // For testing data
+    std::unique_ptr<ImageDatabase> m_TestDatabase;
+
+    // For recording training and testing data
+    std::unique_ptr<ImageDatabase::ImageRouteRecorder> m_Recorder;
 
     Milliseconds m_DriveTime;
 
@@ -639,11 +550,11 @@ int bobMain(int argc, char *argv[])
         Timer<> timer("Total time:");
 
         unsigned int frame = 0;
-        for(frame = 0; robot.update(); frame++) {
+        backgroundEx.trapSignals();
+        for (frame = 0; robot.update(); frame++) {
+            // Check for background exceptions and re-throw
+            backgroundEx.check();
         }
-
-        // Check for background exceptions and re-throw
-        backgroundEx.check();
 
         const double msPerFrame = timer.get() / (double)frame;
         LOGI << "FPS:" << 1000.0 / msPerFrame;

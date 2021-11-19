@@ -1,12 +1,9 @@
-#define NO_HEADER_DEFINITIONS
 #include "memory.h"
-
-// Standard C++ includes
-#include <fstream>
 
 // BoB robotics includes
 #include "common/serialise_matrix.h"
 #include "imgproc/mask.h"
+#include "navigation/image_database.h"
 
 // BoB robotics third party includes
 #include "plog/Log.h"
@@ -14,12 +11,21 @@
 
 // Snapshot bot includes
 #include "config.h"
+#include "image_input.h"
 
 using namespace BoBRobotics;
 using namespace units::angle;
 using namespace units::length;
 using namespace units::literals;
 using namespace units::math;
+
+namespace {
+constexpr const char *CSVBestHeading = "Best heading [degrees]";
+constexpr const char *CSVLowestDifference = "Lowest difference";
+constexpr const char *CSVBestSnapshot = "Best snapshot index";
+constexpr const char *CSVWindowStart = "Window start";
+constexpr const char *CSVWindowEnd = "Window end";
+}
 
 //------------------------------------------------------------------------
 // MemoryBase
@@ -29,14 +35,44 @@ MemoryBase::MemoryBase()
 {
 }
 //------------------------------------------------------------------------
-void MemoryBase::writeCSVHeader(std::ostream &os)
+std::vector<std::string> MemoryBase::getCSVFieldNames() const
 {
-    os << "Best heading [degrees], Lowest difference";
+    return { CSVBestHeading, CSVLowestDifference };
 }
 //------------------------------------------------------------------------
-void MemoryBase::writeCSVLine(std::ostream &os)
+void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const
 {
-    os << getBestHeading().value() << ", " << getLowestDifference();
+    fields[CSVBestHeading] = std::to_string(getBestHeading().value());
+    fields[CSVLowestDifference] = std::to_string(getLowestDifference());
+}
+
+void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
+                            bool useODK2, ImageInput &imageInput)
+{
+    LOGI << "Loading stored snapshots...";
+    std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(route.size());
+
+    // Load and process images in parallel
+    // **TODO**: Add support for static mask images
+    route.forEachImage(
+        [&](size_t i, const cv::Mat &snapshot)
+        {
+            std::cout << "." << std::flush;
+
+            // Process snapshot
+            snapshots[i] = imageInput.processSnapshot(snapshot);
+        }, /*frameSkip=*/1, /*greyscale=*/false);
+    std::cout << "\n";
+    LOGI << "Loaded " << route.size() << " snapshots";
+
+    // Train model
+    LOGI << "Training model...";
+    for (const auto &snapshot : snapshots) {
+        std::cout << "." << std::flush;
+        train(snapshot.first, snapshot.second);
+    }
+    std::cout << "\n";
+    LOGI << "Training complete";
 }
 
 //------------------------------------------------------------------------
@@ -64,20 +100,21 @@ void PerfectMemory::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
     getPM().train(snapshot, mask);
 }
 //------------------------------------------------------------------------
-void PerfectMemory::writeCSVHeader(std::ostream &os)
+std::vector<std::string> PerfectMemory::getCSVFieldNames() const
 {
     // Superclass
-    MemoryBase::writeCSVHeader(os);
+    auto fieldNames = MemoryBase::getCSVFieldNames();
 
-    os << ", Best snapshot index";
+    fieldNames.emplace_back(CSVBestSnapshot);
+    return fieldNames;
 }
 //------------------------------------------------------------------------
-void PerfectMemory::writeCSVLine(std::ostream &os)
+void PerfectMemory::setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const
 {
     // Superclass
-    MemoryBase::writeCSVLine(os);
+    MemoryBase::setCSVFieldValues(fields);
 
-    os << ", " << getBestSnapshotIndex();
+    fields[CSVBestSnapshot] = std::to_string(getBestSnapshotIndex());
 }
 
 //------------------------------------------------------------------------
@@ -157,21 +194,24 @@ void PerfectMemoryConstrainedDynamicWindow::test(const cv::Mat &snapshot, const 
     }
 }
 //------------------------------------------------------------------------
-void PerfectMemoryConstrainedDynamicWindow::writeCSVHeader(std::ostream &os)
+std::vector<std::string> PerfectMemoryConstrainedDynamicWindow::getCSVFieldNames() const
 {
     // Superclass
-    PerfectMemory::writeCSVHeader(os);
+    auto fieldNames = PerfectMemory::getCSVFieldNames();
 
-    os << ", Window start, Window end";
+    fieldNames.emplace_back(CSVWindowStart);
+    fieldNames.emplace_back(CSVWindowEnd);
+    return fieldNames;
 }
 //------------------------------------------------------------------------
-void PerfectMemoryConstrainedDynamicWindow::writeCSVLine(std::ostream &os)
+void PerfectMemoryConstrainedDynamicWindow::setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const
 {
     // Superclass
-    PerfectMemory::writeCSVLine(os);
+    PerfectMemory::setCSVFieldValues(fields);
 
     const auto window = m_Window.getWindow(getPM().getNumSnapshots());
-    os << ", " << window.first << ", " << window.second;
+    fields[CSVWindowStart] = std::to_string(window.first);
+    fields[CSVWindowEnd] = std::to_string(window.second);
 }
 
 //------------------------------------------------------------------------
@@ -203,6 +243,20 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
     getInfoMax().train(snapshot, mask);
 }
 //-----------------------------------------------------------------------
+void InfoMax::trainRoute(const Navigation::ImageDatabase &route, bool useODK2,
+                         ImageInput &imageInput)
+{
+    // If this file exists then we've already trained the network...
+    const auto weightsPath = route.getPath() / "weights.bin";
+    if (weightsPath.exists()) {
+        return;
+    }
+
+    // ...otherwise, train it now
+    MemoryBase::trainRoute(route, useODK2, imageInput);
+    saveWeights(weightsPath);
+}
+//-----------------------------------------------------------------------
 void InfoMax::saveWeights(const filesystem::path &filename) const
 {
     // Write weights to disk
@@ -211,7 +265,7 @@ void InfoMax::saveWeights(const filesystem::path &filename) const
 //-----------------------------------------------------------------------
 InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size &inputSize)
 {
-    const filesystem::path weightPath = filesystem::path(config.getOutputPath()) / ("weights" + config.getTestingSuffix() + ".bin");
+    const filesystem::path weightPath = filesystem::path(config.getOutputPath()) / ("weights.bin");
     if(weightPath.exists()) {
         LOGI << "\tLoading weights from " << weightPath;
 

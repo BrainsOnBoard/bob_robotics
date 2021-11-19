@@ -3,7 +3,13 @@
 #include "memory.h"
 
 // BoB robotics includes
+#include "imgproc/opencv_unwrap_360.h"
+#include "navigation/image_database.h"
+
+// Third-party includes
 #include "plog/Log.h"
+
+using namespace BoBRobotics;
 
 int bobMain(int argc, char *argv[])
 {
@@ -18,26 +24,31 @@ int bobMain(int argc, char *argv[])
         }
     }
 
-    // Create image input
-    std::unique_ptr<ImageInput> imageInput = createImageInput(config);
+    const Navigation::ImageDatabase database{ config.getOutputPath() };
 
-    InfoMax infomax(config, imageInput->getOutputSize());
-
-    LOGI << "Training";
-    for(size_t i = 0;;i++) {
-        const filesystem::path filename = config.getOutputPath() / ("snapshot_" + std::to_string(i) + ".png");
-
-        // If file exists, load image and train memory on it
-        if(filename.exists()) {
-            std::cout << "." << std::flush;
-            infomax.train(imageInput->processSnapshot(cv::imread(filename.str())), {});
-        }
-        // Otherwise, stop searching
-        else {
-            break;
-        }
+    // Load required parameters from database's metadata (YAML) file
+    const auto &metadata = database.getMetadata();
+    std::unique_ptr<ImgProc::OpenCVUnwrap360> unwrapper;
+    cv::Size unwrapSize;
+    auto camera = metadata["camera"];
+    cv::Size cameraSize;
+    camera["resolution"] >> cameraSize;
+    if (!metadata["imageInput"].empty() && !metadata["imageInput"]["unwrapper"].empty()) {
+        std::string cameraName;
+        camera["name"] >> cameraName;
+        unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(cameraSize, config.getUnwrapRes(), cameraName);
+        metadata["imageInput"]["unwrapper"] >> *unwrapper;
+        unwrapSize = unwrapper->getOutputSize();
+    } else {
+        unwrapSize = cameraSize;
     }
 
-    infomax.saveWeights(config.getOutputPath() / ("weights" + config.getTestingSuffix() + ".bin"));
+    // Create image input
+    std::unique_ptr<ImageInput> imageInput = createImageInput(config, unwrapSize, std::move(unwrapper));
+
+    // Train InfoMax network with training image database and save weights
+    InfoMax infomax(config, imageInput->getOutputSize());
+    infomax.trainRoute(database, config.shouldUseODK2(), *imageInput);
+
     return EXIT_SUCCESS;
 }
