@@ -19,7 +19,7 @@ class DummyTank
 public:
     static void tank(float left, float right)
     {
-        LOG(plog::DUMMY_TANK_VERBOSITY) << "Driving: " << left << ", " << right;
+        LOGI << "Driving: " << left << ", " << right;
     }
 
     static constexpr auto getRobotWidth()
