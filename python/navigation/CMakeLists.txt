@@ -14,7 +14,7 @@ find_package(PythonExtensions REQUIRED)
 find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
 include_directories(${NumPy_INCLUDE_DIRS})
 
-add_library(_navigation MODULE navigation.cc)
+add_library(_navigation MODULE src/navigation.cc)
 python_extension_module(_navigation)
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
 target_link_libraries(_navigation ${BoBRobotics_LIBRARIES})
