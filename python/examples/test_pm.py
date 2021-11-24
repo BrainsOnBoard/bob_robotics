@@ -7,7 +7,7 @@ dbPath = sys.argv[1]
 img = cv2.imread(dbPath + '/image_00002.png')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-pm = navigation.PerfectMemory(*img.shape)
-pm.train_route(dbPath)
+algo = navigation.InfoMax(90, 45)
+algo.train_route(dbPath)
 
-print("angle: %g°" % pm.get_heading(img))
+print("angle: %g°" % algo.get_heading(img))

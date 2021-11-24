@@ -1,6 +1,7 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "navigation/image_database.h"
+#include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
 // Third-party includes
@@ -18,197 +19,219 @@
 #include <numpy/arrayobject.h>
 
 // Standard C++ includes
-#include <exception>
-
-#ifdef _WIN32
-#define DLL_EXPORT extern "C" __declspec(dllexport)
-#else
-#define DLL_EXPORT
-#endif
+#include <stdexcept>
+#include <string>
 
 using namespace BoBRobotics::Navigation;
 using namespace units::angle;
 
-struct PyPerfectMemory
+template<class T>
+struct PyAlgoWrapper
 {
-    PyObject_HEAD;
-    PerfectMemoryRotater<> pm;
-};
+    void destroy()
+    {
+        // Invoke destructor explicitly
+        if (constructed)
+            algo.~T();
 
-DLL_EXPORT PyObject *
-PerfectMemory_new(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
-{
-    int width, height;
-    if (!PyArg_ParseTuple(args, "ii", &width, &height))
-        return nullptr;
-
-    // Allocate memory
-    PyObject *self = type->tp_alloc(type, 0);
-    if (!self)
-        return nullptr;
-
-    // Construct in place; assume no exceptions thrown
-    auto *pm = &reinterpret_cast<PyPerfectMemory *>(self)->pm;
-    new (pm) PerfectMemoryRotater<>({ width, height });
-
-    return self;
-}
-
-DLL_EXPORT void
-PerfectMemory_dealloc(PyPerfectMemory *self)
-{
-    // Invoke destructor explicitly
-    self->pm.~PerfectMemoryRotater<>();
-
-    Py_TYPE(self)->tp_free(reinterpret_cast<PyObject *>(self));
-    LOGD << "PerfectMemory object deallocated";
-}
-
-static cv::Mat bufToMat(const PyPerfectMemory &self, const Py_buffer &buf)
-{
-    if (buf.itemsize != 1) {
-        throw std::runtime_error("Image must be uint8");
+        Py_TYPE(this)->tp_free(reinterpret_cast<PyObject *>(this));
+        LOGD << "PerfectMemory object deallocated";
     }
 
-    /*
-     * buf.shape seems not to be defined when using numpy arrays, so we can't
-     * check the height and width explicitly
-     */
-    const auto sz = self.pm.getUnwrapResolution();
-    if (buf.len != (sz.height * sz.width)) {
-        throw std::runtime_error("Image is either not greyscale or the wrong size");
-    }
-
-    return cv::Mat{ sz, CV_8UC1, buf.buf };
-}
-
-DLL_EXPORT PyObject *
-PerfectMemory_train(PyPerfectMemory *self, PyObject *args)
-{
-    Py_buffer buf;
-    if (!PyArg_ParseTuple(args, "y*", &buf))
-        return nullptr;
-
-    try {
-        self->pm.train(bufToMat(*self, buf));
-    } catch (std::exception &e) {
-        PyErr_SetString(PyExc_RuntimeError, e.what());
-        return nullptr;
-    }
-
-    Py_RETURN_NONE;
-}
-
-DLL_EXPORT PyObject *
-PerfectMemory_trainRoute(PyPerfectMemory *self, PyObject *args)
-{
-    const char *dbPath;
-    if (!PyArg_ParseTuple(args, "s", &dbPath))
-        return nullptr;
-
-    try {
-        const ImageDatabase database{ dbPath };
-        BOB_ASSERT(!database.empty());
-
-        cv::Mat img;
-        for (const auto &entry : database) {
-            img = entry.load();
-            if (img.size() != self->pm.getUnwrapResolution()) {
-                cv::resize(img, img, self->pm.getUnwrapResolution());
-            }
-
-            self->pm.train(img);
+    cv::Mat bufToMat(const Py_buffer &buf)
+    {
+        if (buf.itemsize != 1) {
+            throw std::runtime_error("Image must be uint8");
         }
-    } catch (std::exception &e) {
-        PyErr_SetString(PyExc_RuntimeError, e.what());
-        return nullptr;
+
+        /*
+         * buf.shape seems not to be defined when using numpy arrays, so we can't
+         * check the height and width explicitly
+         */
+        const auto sz = algo.getUnwrapResolution();
+        if (buf.len != (sz.height * sz.width)) {
+            throw std::runtime_error("Image is either not greyscale or the wrong size");
+        }
+
+        return cv::Mat{ sz, CV_8UC1, buf.buf };
     }
 
-    Py_RETURN_NONE;
-}
+    PyObject *getHeading(PyObject *args)
+    {
+        Py_buffer buf;
+        if (!PyArg_ParseTuple(args, "y*", &buf))
+            return nullptr;
 
-DLL_EXPORT PyObject *
-PerfectMemory_test(PyPerfectMemory *self, PyObject *args)
-{
-    Py_buffer buf;
-    if (!PyArg_ParseTuple(args, "y*", &buf))
-        return nullptr;
-
-    try {
-        const float result = self->pm.test(bufToMat(*self, buf));
-        return PyFloat_FromDouble(result);
-    } catch (std::exception &e) {
-        PyErr_SetString(PyExc_RuntimeError, e.what());
-        return nullptr;
+        try {
+            const degree_t heading = std::get<0>(algo.getHeading(bufToMat(buf)));
+            return PyFloat_FromDouble(heading.value());
+        } catch (std::exception &e) {
+            PyErr_SetString(PyExc_RuntimeError, e.what());
+            return nullptr;
+        }
     }
-}
 
-DLL_EXPORT PyObject *
-PerfectMemory_getHeading(PyPerfectMemory *self, PyObject *args)
-{
-    Py_buffer buf;
-    if (!PyArg_ParseTuple(args, "y*", &buf))
-        return nullptr;
+    PyObject *test(PyObject *args)
+    {
+        Py_buffer buf;
+        if (!PyArg_ParseTuple(args, "y*", &buf))
+            return nullptr;
 
-    try {
-        const degree_t heading = std::get<0>(self->pm.getHeading(bufToMat(*self, buf)));
-        return PyFloat_FromDouble(heading.value());
-    } catch (std::exception &e) {
-        PyErr_SetString(PyExc_RuntimeError, e.what());
-        return nullptr;
+        try {
+            const float result = algo.test(bufToMat(buf));
+            return PyFloat_FromDouble(result);
+        } catch (std::exception &e) {
+            PyErr_SetString(PyExc_RuntimeError, e.what());
+            return nullptr;
+        }
     }
-}
 
-static PyMethodDef PerfectMemoryMethods[] = {
-    { "train", (PyCFunction) PerfectMemory_train, METH_VARARGS, "Train with a single image" },
-    { "train_route", (PyCFunction) PerfectMemory_trainRoute, METH_VARARGS, "Train with an image database" },
-    { "test", (PyCFunction) PerfectMemory_test, METH_VARARGS, "Get output value for single test image" },
-    { "get_heading", (PyCFunction) PerfectMemory_getHeading, METH_VARARGS, "Get the heading estimate for a given image"},
-    {}
+    PyObject *train(PyObject *args)
+    {
+        Py_buffer buf;
+        if (!PyArg_ParseTuple(args, "y*", &buf))
+            return nullptr;
+
+        try {
+            algo.train(bufToMat(buf));
+        } catch (std::exception &e) {
+            PyErr_SetString(PyExc_RuntimeError, e.what());
+            return nullptr;
+        }
+
+        Py_RETURN_NONE;
+    }
+
+    PyObject *trainRoute(PyObject *args)
+    {
+        const char *dbPath;
+        if (!PyArg_ParseTuple(args, "s", &dbPath))
+            return nullptr;
+
+        try {
+            const ImageDatabase database{ dbPath };
+            BOB_ASSERT(!database.empty());
+
+            cv::Mat img;
+            for (const auto &entry : database) {
+                // Resize images if necessary
+                img = entry.load();
+                if (img.size() != algo.getUnwrapResolution()) {
+                    cv::resize(img, img, algo.getUnwrapResolution());
+                }
+
+                // Train underlying algorithm
+                algo.train(img);
+            }
+        } catch (std::exception &e) {
+            PyErr_SetString(PyExc_RuntimeError, e.what());
+            return nullptr;
+        }
+
+        Py_RETURN_NONE;
+    }
+
+    static PyObject* construct(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
+    {
+        int width, height;
+        if (!PyArg_ParseTuple(args, "ii", &width, &height))
+            return nullptr;
+
+        // Allocate memory
+        PyObject *self = type->tp_alloc(type, 0);
+        if (!self)
+            return nullptr;
+
+        // Construct algo object in place
+        try {
+            auto &wrapper = *reinterpret_cast<PyAlgoWrapper<T> *>(self);
+            new (&wrapper.algo) T({ width, height });
+
+            // Extra flag needed in case there is an error thrown in the constructor
+            wrapper.constructed = true;
+        } catch (std::exception &e) {
+            type->tp_free(self);
+            PyErr_SetString(PyExc_RuntimeError, e.what());
+            return nullptr;
+        }
+
+        return self;
+    }
+
+    static PyTypeObject getType(const std::string &name)
+    {
+        static PyMethodDef methods[] = {
+            { "train", (PyCFunction) &PyAlgoWrapper<T>::train, METH_VARARGS, "Train with a single image" },
+            { "train_route", (PyCFunction) &PyAlgoWrapper<T>::trainRoute, METH_VARARGS, "Train with an image database" },
+            { "test", (PyCFunction) &PyAlgoWrapper<T>::test, METH_VARARGS, "Get output value for single test image" },
+            { "get_heading", (PyCFunction) &PyAlgoWrapper<T>::getHeading, METH_VARARGS, "Get the heading estimate for a given image" },
+            {}
+        };
+
+        const std::string fullName = "navigation." + name;
+        return {
+            // clang-format off
+            PyVarObject_HEAD_INIT(&PyType_Type, 0)
+            // clang-format on
+            fullName.c_str(),                        /* tp_name */
+            sizeof(PyAlgoWrapper<T>),                /* tp_basicsize */
+            0,                                       /* tp_itemsize */
+            (destructor) &PyAlgoWrapper<T>::destroy, /* tp_dealloc */
+            0,                                       /* tp_print */
+            0,                                       /* tp_getattr */
+            0,                                       /* tp_setattr */
+            0,                                       /* tp_reserved */
+            0,                                       /* tp_repr */
+            0,                                       /* tp_as_number */
+            0,                                       /* tp_as_sequence */
+            0,                                       /* tp_as_mapping */
+            0,                                       /* tp_hash */
+            0,                                       /* tp_call */
+            0,                                       /* tp_str */
+            0,                                       /* tp_getattro */
+            0,                                       /* tp_setattro */
+            0,                                       /* tp_as_buffer */
+            Py_TPFLAGS_DEFAULT,                      /* tp_flags */
+            0,                                       /* tp_doc */
+            0,                                       /* tp_traverse */
+            0,                                       /* tp_clear */
+            0,                                       /* tp_richcompare */
+            0,                                       /* tp_weaklistoffset */
+            0,                                       /* tp_iter */
+            0,                                       /* tp_iternext */
+            methods,                                 /* tp_methods */
+            0,                                       /* tp_members */
+            0,                                       /* tp_getset */
+            0,                                       /* tp_base */
+            0,                                       /* tp_dict */
+            0,                                       /* tp_descr_get */
+            0,                                       /* tp_descr_set */
+            0,                                       /* tp_dictoffset */
+            0,                                       /* tp_init */
+            0,                                       /* tp_alloc */
+            (newfunc) &construct,                    /* tp_new */
+        };
+    }
+    static PyTypeObject Type;
+
+    PyObject_HEAD;
+    T algo;
+    bool constructed;
 };
 
-static PyTypeObject PyPerfectMemoryType = {
-    // clang-format off
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
-    // clang-format on
-    "navigation.PerfectMemory",         /* tp_name */
-    sizeof(PyPerfectMemory),            /* tp_basicsize */
-    0,                                  /* tp_itemsize */
-    (destructor) PerfectMemory_dealloc, /* tp_dealloc */
-    0,                                  /* tp_print */
-    0,                                  /* tp_getattr */
-    0,                                  /* tp_setattr */
-    0,                                  /* tp_reserved */
-    0,                                  /* tp_repr */
-    0,                                  /* tp_as_number */
-    0,                                  /* tp_as_sequence */
-    0,                                  /* tp_as_mapping */
-    0,                                  /* tp_hash */
-    0,                                  /* tp_call */
-    0,                                  /* tp_str */
-    0,                                  /* tp_getattro */
-    0,                                  /* tp_setattro */
-    0,                                  /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                 /* tp_flags */
-    0,                                  /* tp_doc */
-    0,                                  /* tp_traverse */
-    0,                                  /* tp_clear */
-    0,                                  /* tp_richcompare */
-    0,                                  /* tp_weaklistoffset */
-    0,                                  /* tp_iter */
-    0,                                  /* tp_iternext */
-    PerfectMemoryMethods,               /* tp_methods */
-    0,                                  /* tp_members */
-    0,                                  /* tp_getset */
-    0,                                  /* tp_base */
-    0,                                  /* tp_dict */
-    0,                                  /* tp_descr_get */
-    0,                                  /* tp_descr_set */
-    0,                                  /* tp_dictoffset */
-    0,                                  /* tp_init */
-    0,                                  /* tp_alloc */
-    (newfunc) PerfectMemory_new,        /* tp_new */
-};
+template<class Algo>
+void addAlgo(PyObject *module, const std::string &name)
+{
+    static PyTypeObject algoType = PyAlgoWrapper<Algo>::getType(name);
+    if (PyType_Ready(&algoType) < 0)
+        throw std::exception{};
+
+    Py_INCREF(&algoType);
+    if (PyModule_AddObject(module, name.c_str(), (PyObject *) &algoType) < 0) {
+        Py_DECREF(&algoType);
+        throw std::exception{};
+    }
+}
 
 static struct PyModuleDef ModuleDefinitions
 {
@@ -226,19 +249,15 @@ PyInit__navigation(void)
     import_array();             // init numpy
     BoBRobotics::initLogging(); // init plog
 
-    if (PyType_Ready(&PyPerfectMemoryType) < 0)
+    PyObject *module = PyModule_Create(&ModuleDefinitions);
+    if (!module)
         return nullptr;
 
-    PyObject *pModule = PyModule_Create(&ModuleDefinitions);
-    if (!pModule)
-        return nullptr;
-    PyModule_AddStringConstant(pModule, "bob_robotics_path", BOB_ROBOTICS_PATH);
-
-    Py_INCREF(&PyPerfectMemoryType);
-    if (PyModule_AddObject(pModule, "PerfectMemory", (PyObject *) &PyPerfectMemoryType) < 0) {
-        Py_DECREF(&PyPerfectMemoryType);
-        Py_DECREF(pModule);
+    try {
+        addAlgo<PerfectMemoryRotater<>>(module, "PerfectMemory");
+    } catch (std::exception &) {
+        Py_DECREF(module);
     }
 
-    return pModule;
+    return module;
 }
