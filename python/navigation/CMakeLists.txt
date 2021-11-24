@@ -19,10 +19,6 @@ python_extension_module(_navigation)
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
 target_link_libraries(_navigation ${BoBRobotics_LIBRARIES})
 
-if(NOT MSVC)
-    target_compile_options(_navigation PRIVATE -Wno-pmf-conversions)
-endif()
-
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)
 endif(WIN32)

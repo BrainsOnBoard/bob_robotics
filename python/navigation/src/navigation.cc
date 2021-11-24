@@ -158,13 +158,22 @@ struct PyAlgoWrapper
         return self;
     }
 
+#define ALGO_FUN(NAME) \
+    auto NAME = [](PyAlgoWrapper<T> *self, auto&&... args) { return self->NAME(std::forward<decltype(args)>(args)...); }
+
     static PyTypeObject getType(const std::string &name)
     {
+        ALGO_FUN(destroy);
+        ALGO_FUN(getHeading);
+        ALGO_FUN(train);
+        ALGO_FUN(trainRoute);
+        ALGO_FUN(test);
+
         static PyMethodDef methods[] = {
-            { "train", (PyCFunction) &PyAlgoWrapper<T>::train, METH_VARARGS, "Train with a single image" },
-            { "train_route", (PyCFunction) &PyAlgoWrapper<T>::trainRoute, METH_VARARGS, "Train with an image database" },
-            { "test", (PyCFunction) &PyAlgoWrapper<T>::test, METH_VARARGS, "Get output value for single test image" },
-            { "get_heading", (PyCFunction) &PyAlgoWrapper<T>::getHeading, METH_VARARGS, "Get the heading estimate for a given image" },
+            { "get_heading", (PyCFunction) &getHeading, METH_VARARGS, "Get the heading estimate for a given image" },
+            { "test", (PyCFunction) &test, METH_VARARGS, "Get output value for single test image" },
+            { "train", (PyCFunction) &train, METH_VARARGS, "Train with a single image" },
+            { "train_route", (PyCFunction) &trainRoute, METH_VARARGS, "Train with an image database" },
             {}
         };
 
@@ -173,43 +182,43 @@ struct PyAlgoWrapper
             // clang-format off
             PyVarObject_HEAD_INIT(&PyType_Type, 0)
             // clang-format on
-            fullName.c_str(),                        /* tp_name */
-            sizeof(PyAlgoWrapper<T>),                /* tp_basicsize */
-            0,                                       /* tp_itemsize */
-            (destructor) &PyAlgoWrapper<T>::destroy, /* tp_dealloc */
-            0,                                       /* tp_print */
-            0,                                       /* tp_getattr */
-            0,                                       /* tp_setattr */
-            0,                                       /* tp_reserved */
-            0,                                       /* tp_repr */
-            0,                                       /* tp_as_number */
-            0,                                       /* tp_as_sequence */
-            0,                                       /* tp_as_mapping */
-            0,                                       /* tp_hash */
-            0,                                       /* tp_call */
-            0,                                       /* tp_str */
-            0,                                       /* tp_getattro */
-            0,                                       /* tp_setattro */
-            0,                                       /* tp_as_buffer */
-            Py_TPFLAGS_DEFAULT,                      /* tp_flags */
-            0,                                       /* tp_doc */
-            0,                                       /* tp_traverse */
-            0,                                       /* tp_clear */
-            0,                                       /* tp_richcompare */
-            0,                                       /* tp_weaklistoffset */
-            0,                                       /* tp_iter */
-            0,                                       /* tp_iternext */
-            methods,                                 /* tp_methods */
-            0,                                       /* tp_members */
-            0,                                       /* tp_getset */
-            0,                                       /* tp_base */
-            0,                                       /* tp_dict */
-            0,                                       /* tp_descr_get */
-            0,                                       /* tp_descr_set */
-            0,                                       /* tp_dictoffset */
-            0,                                       /* tp_init */
-            0,                                       /* tp_alloc */
-            (newfunc) &construct,                    /* tp_new */
+            fullName.c_str(),         /* tp_name */
+            sizeof(PyAlgoWrapper<T>), /* tp_basicsize */
+            0,                        /* tp_itemsize */
+            (destructor) &destroy,    /* tp_dealloc */
+            0,                        /* tp_print */
+            0,                        /* tp_getattr */
+            0,                        /* tp_setattr */
+            0,                        /* tp_reserved */
+            0,                        /* tp_repr */
+            0,                        /* tp_as_number */
+            0,                        /* tp_as_sequence */
+            0,                        /* tp_as_mapping */
+            0,                        /* tp_hash */
+            0,                        /* tp_call */
+            0,                        /* tp_str */
+            0,                        /* tp_getattro */
+            0,                        /* tp_setattro */
+            0,                        /* tp_as_buffer */
+            Py_TPFLAGS_DEFAULT,       /* tp_flags */
+            0,                        /* tp_doc */
+            0,                        /* tp_traverse */
+            0,                        /* tp_clear */
+            0,                        /* tp_richcompare */
+            0,                        /* tp_weaklistoffset */
+            0,                        /* tp_iter */
+            0,                        /* tp_iternext */
+            methods,                  /* tp_methods */
+            0,                        /* tp_members */
+            0,                        /* tp_getset */
+            0,                        /* tp_base */
+            0,                        /* tp_dict */
+            0,                        /* tp_descr_get */
+            0,                        /* tp_descr_set */
+            0,                        /* tp_dictoffset */
+            0,                        /* tp_init */
+            0,                        /* tp_alloc */
+            (newfunc) &construct,     /* tp_new */
         };
     }
     static PyTypeObject Type;
