@@ -445,9 +445,21 @@ private:
         if (m_Config.shouldRecordVideo()) {
             /*
              * If auto-training we know the framerate, otherwise just
-             * arbitrarily record at 15 fps.
+             * arbitrarily choose 15 fps for the video file.
              */
-            const auto fps = m_Config.shouldAutoTrain() ? 1 / units::time::second_t{ m_Config.getTrainInterval() } : 15_Hz;
+            auto fps = 15_Hz;
+            if (m_Config.shouldAutoTrain()) {
+                const auto period = m_Config.getTrainInterval();
+                if (period == Milliseconds(0)) {
+                    fps = m_Camera->getFrameRate();
+                    LOGI << fps;
+                } else {
+                    fps = 1 / units::time::second_t{ period };
+                    if (fps > m_Camera->getFrameRate()) {
+                        throw std::runtime_error("Requested training rate is higher than camera's FPS");
+                    }
+                }
+            }
             m_Recorder = database.createVideoRouteRecorder(m_Camera->getOutputSize(),
                                                            fps,
                                                            m_Config.getVideoFileExtension(),

@@ -45,7 +45,7 @@ public:
       , m_WatershedMarkerImageFilename("segmentation.png")
       , m_JoystickDeadzone(0.25f)
       , m_AutoTrain(true)
-      , m_TrainInterval(100.0)
+      , m_TrainInterval(0.0)
       , m_MotorCommandInterval(500.0)
       , m_MotorTurnCommandInterval(500.0)
       , m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort)
