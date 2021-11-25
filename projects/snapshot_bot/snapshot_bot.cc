@@ -527,10 +527,22 @@ private:
 
 int bobMain(int argc, char *argv[])
 {
-    const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
+    Config config;
+    const char *configFilename = "config.yaml";
+
+    if (argc > 1) {
+        if (strcmp(argv[1], "--dump-config") == 0) {
+            // Dump default config values to disk without doing anything
+            cv::FileStorage configFile("default_config.yaml", cv::FileStorage::WRITE);
+            configFile << "config" << config;
+
+            return EXIT_SUCCESS;
+        } else {
+            configFilename = argv[1];
+        }
+    }
 
     // Read config values from file
-    Config config;
     {
         cv::FileStorage configFile(configFilename, cv::FileStorage::READ);
         if(configFile.isOpened()) {
