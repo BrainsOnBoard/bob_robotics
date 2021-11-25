@@ -80,16 +80,15 @@ ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry,
 }
 
 ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database,
-                                                const std::pair<const std::string &, const std::string &> &format)
-  : m_FileName{ database.getName() + "." + format.first }
+                                                std::string extension, std::string codec)
+  : m_FileName{ database.getName() + "." + extension }
 {
     const auto path = database.getPath() / m_FileName;
     BOB_ASSERT(!path.exists()); // Don't overwrite by mistake
 
-    const auto &fourcc = format.second;
-    BOB_ASSERT(fourcc.size() == 4);
+    BOB_ASSERT(codec.size() == 4);
     m_Writer.open(path.str(),
-                  cv::VideoWriter::fourcc(fourcc[0], fourcc[1], fourcc[2], fourcc[3]),
+                  cv::VideoWriter::fourcc(codec[0], codec[1], codec[2], codec[3]),
                   database.getFrameRate().value(),
                   database.getResolution());
     BOB_ASSERT(m_Writer.isOpened());
@@ -491,13 +490,12 @@ ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
     m_Resolution = resolution;
     m_FrameRate = fps;
 
-    const auto format = std::make_pair(extension, codec);
-    auto writer = std::make_unique<ImageDatabase::VideoFileWriter>(*this, format);
+    auto writer = std::make_unique<ImageDatabase::VideoFileWriter>(*this, extension, codec);
+    const auto &fileName = writer->getVideoFileName();
+    auto recorder = std::make_unique<RouteRecorder>(*this, std::move(writer), std::move(extraFieldNames));
 
-    auto recorder = std::make_unique<RouteRecorder>(*this, std::move(writer),
-                                                    std::move(extraFieldNames));
-    recorder->getMetadataWriter() << "videoFile" << writer->getVideoFileName()
-                                  << "frameRate" << m_FrameRate.value();
+    // Save extra metadata
+    recorder->getMetadataWriter() << "videoFile" << fileName << "frameRate" << fps.value();
 
     return recorder;
 }

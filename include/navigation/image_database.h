@@ -120,10 +120,8 @@ public:
     class VideoFileWriter
       : public FrameWriter {
     public:
-        VideoFileWriter(const ImageDatabase &,
-                        const std::pair<const std::string &, const std::string &> &format);
-        void writeFrame(const cv::Mat &frame, Entry &entry,
-                        const std::function<std::string()> &getFileName) override;
+        VideoFileWriter(const ImageDatabase &, std::string extension, std::string codec);
+        void writeFrame(const cv::Mat &frame, Entry &entry, const std::function<std::string()> &getFileName) override;
         const std::string &getVideoFileName() const;
 
     private:
