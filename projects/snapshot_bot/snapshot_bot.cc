@@ -441,9 +441,7 @@ private:
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
 
-        m_Recorder = std::make_unique<ImageDatabase::ImageRouteRecorder>(database,
-                                                                         "jpg",
-                                                                         std::move(fieldNames));
+        m_Recorder = database.createRouteRecorder("jpg", std::move(fieldNames));
 
         // Save additional metadata
         auto &metadata = m_Recorder->getMetadataWriter();
@@ -506,7 +504,7 @@ private:
     std::unique_ptr<ImageDatabase> m_TestDatabase;
 
     // For recording training and testing data
-    std::unique_ptr<ImageDatabase::ImageRouteRecorder> m_Recorder;
+    std::unique_ptr<ImageDatabase::RouteRecorder> m_Recorder;
 
     Milliseconds m_DriveTime;
 

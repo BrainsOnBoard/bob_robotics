@@ -33,7 +33,7 @@ int bobMain(int, char **)
     auto recorder = imdb.createRouteRecorder("Sensor value");
 
     // Save camera info (not essential, but useful so we know resolution etc.)
-    recorder.getMetadataWriter() << "camera" << cam;
+    recorder->getMetadataWriter() << "camera" << cam;
 
     Vector3<millimeter_t> pos;
     pos.z() = 10_cm;
@@ -45,7 +45,7 @@ int bobMain(int, char **)
         cam.readFrameSync(image);
 
         // Save image and info (including the reading from our extra dummy sensor)
-        recorder.record(pos, 0_deg, image, sensorValue);
+        recorder->record(pos, 0_deg, image, sensorValue);
 
         pos.x() += 0.5_m;
         pos.y() += 0.25_m;

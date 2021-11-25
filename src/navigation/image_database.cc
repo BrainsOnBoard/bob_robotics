@@ -69,9 +69,10 @@ ImageDatabase::ImageFileWriter::ImageFileWriter(const ImageDatabase &,
 {}
 
 void
-ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry)
+ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry,
+                                           const std::function<std::string()> &getFileName)
 {
-    filesystem::path path = getCurrentFilenameRoot() + "." + m_ImageFormat;
+    filesystem::path path = getFileName() + "." + m_ImageFormat;
     BOB_ASSERT(!path.exists()); // Don't overwrite data by default!
     BOB_ASSERT(cv::imwrite(path.str(), frame));
 
@@ -101,7 +102,8 @@ ImageDatabase::VideoFileWriter::getVideoFileName() const
 }
 
 void
-ImageDatabase::VideoFileWriter::writeFrame(const cv::Mat &frame, Entry &)
+ImageDatabase::VideoFileWriter::writeFrame(const cv::Mat &frame, Entry &,
+                                           const std::function<std::string()> &)
 {
     m_Writer.write(frame);
 }
@@ -113,8 +115,10 @@ ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
                                           degree_t heading,
                                           std::string imageFormat,
                                           std::vector<std::string> extraFieldNames)
-  : Recorder<ImageFileWriter>(imageDatabase, false, std::move(imageFormat),
-                              std::move(extraFieldNames))
+  : Recorder(imageDatabase,
+             false,
+             std::make_unique<ImageFileWriter>(imageDatabase, std::move(imageFormat)),
+             std::move(extraFieldNames))
   , m_Heading(heading)
   , m_Begin(xrange.begin, yrange.begin, zrange.begin)
   , m_Separation(xrange.separation, yrange.separation, zrange.separation)
@@ -133,25 +137,6 @@ ImageDatabase::GridRecorder::GridRecorder(ImageDatabase &imageDatabase,
                  << "size"
                  << "[:" << (int) m_Size[0] << (int) m_Size[1] << (int) m_Size[2] << "]"
                  << "}";
-}
-
-std::string
-ImageDatabase::GridRecorder::getCurrentFilenameRoot() const
-{
-    // Convert to integers
-    std::array<int, 3> iposition;
-    const auto position = getPosition(m_Current);
-    std::transform(position.begin(), position.end(), iposition.begin(), [](auto mm) {
-        return static_cast<int>(units::math::round(mm));
-    });
-
-    // Make filename
-    std::ostringstream ss;
-    ss << "image_" << std::setw(7) << std::setfill('0') << std::showpos << std::internal
-       << std::setw(7) << iposition[0] << "_"
-       << std::setw(7) << iposition[1] << "_"
-       << std::setw(7) << iposition[2];
-    return (this->getImageDatabase().getPath() / ss.str()).str();
 }
 
 Vector3<millimeter_t>
@@ -467,35 +452,36 @@ ImageDatabase::getCreationTime() const
     return m_CreationTime;
 }
 
-ImageDatabase::GridRecorder
+std::unique_ptr<ImageDatabase::GridRecorder>
 ImageDatabase::createGridRecorder(const Range &xrange, const Range &yrange,
                                   const Range &zrange, degree_t heading,
                                   std::string imageFormat,
                                   std::vector<std::string> extraFieldNames)
 {
-    return ImageDatabase::GridRecorder{ *this, xrange, yrange, zrange, heading,
-                                        std::move(imageFormat),
-                                        std::move(extraFieldNames) };
+    return std::make_unique<GridRecorder>(*this, xrange, yrange, zrange,
+                                          heading, std::move(imageFormat),
+                                          std::move(extraFieldNames));
 }
 
-ImageDatabase::ImageRouteRecorder
+std::unique_ptr<ImageDatabase::RouteRecorder>
 ImageDatabase::createRouteRecorder(std::string imageFormat,
-                                std::vector<std::string> extraFieldNames)
+                                   std::vector<std::string> extraFieldNames)
 {
-    return ImageDatabase::ImageRouteRecorder{
-        *this, std::move(imageFormat), std::move(extraFieldNames)
-    };
+    auto writer = std::make_unique<ImageDatabase::ImageFileWriter>(*this, std::move(imageFormat));
+    return std::make_unique<RouteRecorder>(*this, std::move(writer),
+                                           std::move(extraFieldNames));
 }
 
-ImageDatabase::VideoRouteRecorder
+std::unique_ptr<ImageDatabase::RouteRecorder>
 ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
                                         units::frequency::hertz_t fps,
                                         std::vector<std::string> extraFieldNames)
 {
-    return createVideoRouteRecorder(resolution, fps, "avi", "MJPG", std::move(extraFieldNames));
+    return createVideoRouteRecorder(resolution, fps, "avi", "MJPG",
+                                    std::move(extraFieldNames));
 }
 
-ImageDatabase::VideoRouteRecorder
+std::unique_ptr<ImageDatabase::RouteRecorder>
 ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
                                         units::frequency::hertz_t fps,
                                         const std::string &extension,
@@ -505,14 +491,13 @@ ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
     m_Resolution = resolution;
     m_FrameRate = fps;
 
-    const std::pair<const std::string &, const std::string &> format{ extension, codec };
-    VideoRouteRecorder recorder{
-        *this,
-        format,
-        std::move(extraFieldNames)
-    };
-    recorder.getMetadataWriter() << "videoFile" << recorder.getVideoFileName()
-                                 << "frameRate" << m_FrameRate.value();
+    const auto format = std::make_pair(extension, codec);
+    auto writer = std::make_unique<ImageDatabase::VideoFileWriter>(*this, format);
+
+    auto recorder = std::make_unique<RouteRecorder>(*this, std::move(writer),
+                                                    std::move(extraFieldNames));
+    recorder->getMetadataWriter() << "videoFile" << writer->getVideoFileName()
+                                  << "frameRate" << m_FrameRate.value();
 
     return recorder;
 }
