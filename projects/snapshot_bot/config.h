@@ -34,6 +34,9 @@ public:
       , m_SaveTestingDiagnostic(false)
       , m_StreamOutput(false)
       , m_ODK2(false)
+      , m_RecordVideo(false)
+      , m_VideoFileExtension("avi")
+      , m_VideoCodec("XVID")
       , m_MaxSnapshotRotate(180.0)
       , m_PMFwdLASize(std::numeric_limits<size_t>::max())
       , m_PMFwdConfig{ 0, 0, 0, 0 }
@@ -68,6 +71,10 @@ public:
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
     bool shouldUseODK2() const{ return m_ODK2; }
+    bool shouldRecordVideo() const{ return m_RecordVideo; }
+
+    const std::string &getVideoCodec() const{ return m_VideoCodec; }
+    const std::string &getVideoFileExtension() const{ return m_VideoFileExtension; }
 
     units::angle::degree_t getMaxSnapshotRotateAngle() const{ return units::angle::degree_t(m_MaxSnapshotRotate); }
 
@@ -132,6 +139,9 @@ public:
         fs << "shouldStreamOutput" << shouldStreamOutput();
         fs << "shouldUseODK2" << shouldUseODK2();
         fs << "outputPath" << getOutputPath().str();
+        fs << "shouldRecordVideo" << shouldRecordVideo();
+        fs << "videoCodec" << getVideoCodec();
+        fs << "videoFileExtension" << getVideoFileExtension();
         fs << "maxSnapshotRotateDegrees" << getMaxSnapshotRotateAngle().value();
         fs << "pmFwdLASize" << getIntegerSize(getPMFwdLASize());
         fs << "pmFwdLAIncreaseSize" << getIntegerSize(getPMFwdConfig().increaseSize);
@@ -186,6 +196,9 @@ public:
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
         cv::read(node["shouldUseODK2"], m_ODK2, m_ODK2);
+        cv::read(node["shouldRecordVideo"], m_RecordVideo, m_RecordVideo);
+        cv::read(node["videoCodec"], m_VideoCodec, m_VideoCodec);
+        cv::read(node["videoFileExtension"], m_VideoFileExtension, m_VideoFileExtension);
 
         // Assert that configuration is valid
         BOB_ASSERT(!m_UseBinaryImage || !m_UseHorizonVector);
@@ -337,6 +350,15 @@ private:
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;
+
+    // Should we save image database as a video file
+    bool m_RecordVideo;
+
+    // File extension to use for video file
+    std::string m_VideoFileExtension;
+
+    // Video codec to use for video file
+    std::string m_VideoCodec;
 
     // Maximum (absolute) angle snapshots will be rotated by
     double m_MaxSnapshotRotate;

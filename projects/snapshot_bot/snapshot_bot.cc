@@ -441,7 +441,21 @@ private:
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
 
-        m_Recorder = database.createRouteRecorder("jpg", std::move(fieldNames));
+        // Record as video file or images according to user's preference
+        if (m_Config.shouldRecordVideo()) {
+            /*
+             * If auto-training we know the framerate, otherwise just
+             * arbitrarily record at 15 fps.
+             */
+            const auto fps = m_Config.shouldAutoTrain() ? 1 / units::time::second_t{ m_Config.getTrainInterval() } : 15_Hz;
+            m_Recorder = database.createVideoRouteRecorder(m_Camera->getOutputSize(),
+                                                           fps,
+                                                           m_Config.getVideoFileExtension(),
+                                                           m_Config.getVideoCodec(),
+                                                           std::move(fieldNames));
+        } else {
+            m_Recorder = database.createRouteRecorder("jpg", std::move(fieldNames));
+        }
 
         // Save additional metadata
         auto &metadata = m_Recorder->getMetadataWriter();
