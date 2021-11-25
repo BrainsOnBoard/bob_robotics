@@ -25,7 +25,7 @@ int bobMain(int, char **)
 
     // Save images into a folder called gantry
     Navigation::ImageDatabase database("gantry_images", /*overwrite=*/true);
-    auto gridRecorder = database.getGridRecorder(xrange, yrange, z);
+    auto gridRecorder = database.createGridRecorder(xrange, yrange, z);
     auto &metadata = gridRecorder.getMetadataWriter();
     metadata << "camera" << cam
              << "needsUnwrapping" << true

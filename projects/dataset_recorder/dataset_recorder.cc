@@ -136,7 +136,7 @@ bobMain(int argc, char *argv[])
     Stopwatch sw;
     std::array<degree_t, 3> angles;
 
-    auto recorder = database.getRouteVideoRecorder(cam->getOutputSize(),
+    auto recorder = database.createVideoRouteRecorder(cam->getOutputSize(),
                                                    frameRate,
                                                    "mp4",
                                                    "mp4v",

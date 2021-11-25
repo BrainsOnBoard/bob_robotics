@@ -23,14 +23,14 @@ int bobMain(int, char **)
      * pass in all the names to this function.
      *
      * // No extra fields
-     * auto recorder = imdb.getRouteRecorder();
+     * auto recorder = imdb.createRouteRecorder();
      *
      * // Two extra fields
-     * auto recorder = imdb.getRouteRecorder("Value 1", "Value 2");
+     * auto recorder = imdb.createRouteRecorder("Value 1", "Value 2");
      *
      * // ...etc.
      */
-    auto recorder = imdb.getRouteRecorder("Sensor value");
+    auto recorder = imdb.createRouteRecorder("Sensor value");
 
     // Save camera info (not essential, but useful so we know resolution etc.)
     recorder.getMetadataWriter() << "camera" << cam;

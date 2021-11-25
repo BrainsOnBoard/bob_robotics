@@ -468,10 +468,10 @@ ImageDatabase::getCreationTime() const
 }
 
 ImageDatabase::GridRecorder
-ImageDatabase::getGridRecorder(const Range &xrange, const Range &yrange,
-                               const Range &zrange, degree_t heading,
-                               std::string imageFormat,
-                               std::vector<std::string> extraFieldNames)
+ImageDatabase::createGridRecorder(const Range &xrange, const Range &yrange,
+                                  const Range &zrange, degree_t heading,
+                                  std::string imageFormat,
+                                  std::vector<std::string> extraFieldNames)
 {
     return ImageDatabase::GridRecorder{ *this, xrange, yrange, zrange, heading,
                                         std::move(imageFormat),
@@ -479,7 +479,7 @@ ImageDatabase::getGridRecorder(const Range &xrange, const Range &yrange,
 }
 
 ImageDatabase::ImageRouteRecorder
-ImageDatabase::getRouteRecorder(std::string imageFormat,
+ImageDatabase::createRouteRecorder(std::string imageFormat,
                                 std::vector<std::string> extraFieldNames)
 {
     return ImageDatabase::ImageRouteRecorder{
@@ -488,19 +488,19 @@ ImageDatabase::getRouteRecorder(std::string imageFormat,
 }
 
 ImageDatabase::VideoRouteRecorder
-ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
-                                     units::frequency::hertz_t fps,
-                                     std::vector<std::string> extraFieldNames)
+ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
+                                        units::frequency::hertz_t fps,
+                                        std::vector<std::string> extraFieldNames)
 {
-    return getRouteVideoRecorder(resolution, fps, "avi", "MJPG", std::move(extraFieldNames));
+    return createVideoRouteRecorder(resolution, fps, "avi", "MJPG", std::move(extraFieldNames));
 }
 
 ImageDatabase::VideoRouteRecorder
-ImageDatabase::getRouteVideoRecorder(const cv::Size &resolution,
-                                     units::frequency::hertz_t fps,
-                                     const std::string &extension,
-                                     const std::string &codec,
-                                     std::vector<std::string> extraFieldNames)
+ImageDatabase::createVideoRouteRecorder(const cv::Size &resolution,
+                                        units::frequency::hertz_t fps,
+                                        const std::string &extension,
+                                        const std::string &codec,
+                                        std::vector<std::string> extraFieldNames)
 {
     m_Resolution = resolution;
     m_FrameRate = fps;

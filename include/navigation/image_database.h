@@ -445,30 +445,30 @@ public:
     const std::tm &getCreationTime() const;
 
     //! Start recording a grid of images
-    GridRecorder getGridRecorder(const Range &xrange, const Range &yrange,
-                                 const Range &zrange = Range(0_mm),
-                                 degree_t heading = 0_deg,
-                                 std::string imageFormat = "png",
-                                 std::vector<std::string> extraFieldNames = {});
+    GridRecorder createGridRecorder(const Range &xrange, const Range &yrange,
+                                    const Range &zrange = Range(0_mm),
+                                    degree_t heading = 0_deg,
+                                    std::string imageFormat = "png",
+                                    std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route
-    ImageRouteRecorder getRouteRecorder(std::string imageFormat = "png",
-                                        std::vector<std::string> extraFieldNames = {});
+    ImageRouteRecorder createRouteRecorder(std::string imageFormat = "png",
+                                           std::vector<std::string> extraFieldNames = {});
 
     /**!
      * \brief Start recording a route, saving images into video file using
      *        default AVI/MJPEG format.
      */
-    VideoRouteRecorder getRouteVideoRecorder(const cv::Size &resolution,
-                                             hertz_t fps,
-                                             std::vector<std::string> extraFieldNames = {});
+    VideoRouteRecorder createVideoRouteRecorder(const cv::Size &resolution,
+                                                hertz_t fps,
+                                                std::vector<std::string> extraFieldNames = {});
 
     //! Start recording a route, saving images into video file with a custom codec
-    VideoRouteRecorder getRouteVideoRecorder(const cv::Size &resolution,
-                                             hertz_t fps,
-                                             const std::string &extension,
-                                             const std::string &codec,
-                                             std::vector<std::string> extraFieldNames = {});
+    VideoRouteRecorder createVideoRouteRecorder(const cv::Size &resolution,
+                                                hertz_t fps,
+                                                const std::string &extension,
+                                                const std::string &codec,
+                                                std::vector<std::string> extraFieldNames = {});
 
     hertz_t getFrameRate() const;
 
