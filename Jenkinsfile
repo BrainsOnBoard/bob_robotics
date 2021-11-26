@@ -27,7 +27,7 @@ void setBuildStatus(String message, String state) {
 // Build dictionary of available nodes and their labels
 def availableNodes = [:]
 for(node in jenkins.model.Jenkins.instance.nodes) {
-    if(node.getComputer().isOnline() && node.getComputer().countIdle() > 0) {
+    if(node.getComputer().isOnline()) {
         availableNodes[node.name] = node.getLabelString().split() as Set
     }
 }
