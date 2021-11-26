@@ -186,8 +186,8 @@ public:
                  bool isRoute,
                  std::unique_ptr<FrameWriter> writer,
                  std::vector<std::string> extraFieldNames)
-          : m_ExtraFieldNames(std::move(extraFieldNames))
-          , m_ImageDatabase(imageDatabase)
+          : m_ImageDatabase(imageDatabase)
+          , m_ExtraFieldNames(std::move(extraFieldNames))
           , m_Writer(std::move(writer))
           , m_Recording(true)
           , m_SaveImages(true)
