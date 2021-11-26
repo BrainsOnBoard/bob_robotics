@@ -14,8 +14,15 @@ function(make_base_target)
                                "${BOB_ROBOTICS_PATH}/include"
                                "${BOB_ROBOTICS_PATH}")
 
-    # Define DEBUG macro
+    # Define DEBUG macro, if appropriate
     target_compile_definitions(bob_base INTERFACE "$<$<CONFIG:DEBUG>:DEBUG>")
+
+    # For some reason, these flags seem not to be applied to targets by default
+    # (maybe because we're setting target_compile_options explicitly below?) so
+    # add them here. All targets linking to bob_base will then inherit these
+    # options.
+    string(REPLACE " " ";" _BOB_FLAGS "${CMAKE_CXX_FLAGS};${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+    target_compile_options(bob_base INTERFACE ${_BOB_FLAGS})
 
     if(NOT MSVC)
         # Let user explicitly disable ccache if desired (e.g. for comparing
