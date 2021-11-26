@@ -26,3 +26,8 @@ else()
     add_executable(ardin_mb ${SORUCES})
     target_link_libraries(ardin_mb ${BoBRobotics_LIBRARIES} BoBThirdParty::imgui)
 endif()
+
+if(UNIX)
+    configure_file(run_benchmark.sh.in "${CMAKE_CURRENT_BINARY_DIR}/run_benchmark.sh")
+    execute_process(COMMAND chmod +x run_benchmark.sh)
+endif()
