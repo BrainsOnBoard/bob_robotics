@@ -17,7 +17,7 @@ endif()
 # Let users give an explicit path to GeNN
 if(GENN_PATH)
     set(GeNN_ROOT_DIR "${GENN_PATH}")
-    set(GeNN_BUILDMODEL "${GENN_PATH}/bin/${_GeNN_BUILDMODEL_NAME}.sh")
+    set(GeNN_BUILDMODEL "${GENN_PATH}/bin/${_GeNN_BUILDMODEL_NAME}")
 else()
     # Find genn-buildmodel (which should be in the path)
     find_program(GeNN_BUILDMODEL ${_GeNN_BUILDMODEL_NAME})
