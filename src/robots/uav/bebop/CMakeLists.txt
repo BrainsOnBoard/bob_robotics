@@ -9,5 +9,11 @@ find_package(ARSDK REQUIRED)
 target_include_directories(${BOB_MODULE_TARGET} PUBLIC ${ARSDK_INCLUDE_DIRS})
 target_link_libraries(${BOB_MODULE_TARGET} PUBLIC ${ARSDK_LIBRARIES})
 
-# We use a bunch of deprecated ffmpeg functions in this module
-target_compile_options(${BOB_MODULE_TARGET} PRIVATE -Wno-deprecated-declarations)
+# Disable some warnings from inside ARSDK
+include(CheckCXXCompilerFlag)
+foreach(FLAG -Wno-deprecated-declarations -Wno-implicit-fallthrough)
+    check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+    if(COMPILER_SUPPORTS_${FLAG})
+        target_compile_options(${BOB_MODULE_TARGET} PRIVATE ${FLAG})
+    endif()
+endforeach()
