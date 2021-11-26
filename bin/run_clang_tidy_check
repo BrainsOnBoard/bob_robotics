@@ -36,7 +36,9 @@ INCLUDE_CHECKS = (
 EXCLUDE_CHECKS = (
     '*osx.*',
     'bugprone-branch-clone',
+    'bugprone-easily-swappable-parameters',
     'bugprone-exception-escape',
+    'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-integer-division',
     'bugprone-macro-parentheses',
     'bugprone-narrowing-conversions',
@@ -63,6 +65,7 @@ EXCLUDE_CHECKS = (
     'readability-magic-numbers',
     'readability-make-member-function-const',
     'readability-named-parameter',
+    'readability-redundant-declaration',
     'readability-static-accessed-through-instance',
     'readability-uppercase-literal-suffix',
     'readability-qualified-auto',
