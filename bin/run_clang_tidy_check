@@ -94,7 +94,7 @@ def run_clang_tidy(file):
     # We force use of C++17 because some of the code requires it (anything using
     # Gazebo v11+) and if we don't explicitly do this, then clang-tidy seems to
     # be using C++14 everywhere
-    args = ['/usr/bin/clang-tidy', '-p', '.', '-std=c++17', file]
+    args = ['/usr/bin/clang-tidy', '-p', '.', '-extra-arg=-std=c++17', file]
 
     # Explicitly (disallow) various checks
     if check_args:
