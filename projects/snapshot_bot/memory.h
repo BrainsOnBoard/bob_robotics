@@ -50,7 +50,7 @@ public:
     virtual void setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const;
 
     virtual void trainRoute(const BoBRobotics::Navigation::ImageDatabase &route,
-                            bool useODK2, ImageInput &imageInput);
+                            ImageInput &imageInput);
 
     //------------------------------------------------------------------------
     // Public API
@@ -172,7 +172,7 @@ public:
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void trainRoute(const BoBRobotics::Navigation::ImageDatabase &route,
-                            bool useODK2, ImageInput &imageInput) override;
+                            ImageInput &imageInput) override;
 
     void saveWeights(const filesystem::path &filename) const;
 
