@@ -25,6 +25,9 @@ function(make_base_target)
     target_compile_options(bob_base INTERFACE ${_BOB_FLAGS})
 
     if(NOT MSVC)
+        # Build with debug symbols even on release builds. It's useful.
+        target_compile_options(bob_base INTERFACE -g)
+
         # Let user explicitly disable ccache if desired (e.g. for comparing
         # compile times)
         if(NOT DEFINED USE_CCACHE OR USE_CCACHE)
