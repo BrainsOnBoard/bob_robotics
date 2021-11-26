@@ -1,4 +1,12 @@
 function(make_base_target)
+    if(CMAKE_BUILD_TYPE)
+        string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
+    else()
+        # Default to doing a release build
+        set(CMAKE_BUILD_TYPE RELEASE)
+    endif()
+    message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
     add_library(bob_base INTERFACE)
     add_library(BoBRobotics::base ALIAS bob_base)
 
