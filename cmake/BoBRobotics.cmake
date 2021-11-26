@@ -10,13 +10,17 @@ function(make_base_target)
     target_compile_definitions(bob_base INTERFACE "$<$<CONFIG:DEBUG>:DEBUG>")
 
     if(NOT MSVC)
-        # Use ccache if present to speed up repeat builds
-        find_program(CCACHE ccache)
-        if(CCACHE)
-            set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-            set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-        else()
-            message(WARNING "ccache not found. Install for faster repeat builds.")
+        # Let user explicitly disable ccache if desired (e.g. for comparing
+        # compile times)
+        if(NOT DEFINED USE_CCACHE OR USE_CCACHE)
+            # Use ccache if present to speed up repeat builds
+            find_program(CCACHE ccache)
+            if(CCACHE)
+                set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+                set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+            else()
+                message(WARNING "ccache not found. Install for faster repeat builds.")
+            endif()
         endif()
 
         # Irritatingly, neither GCC nor Clang produce nice ANSI-coloured output if they detect
