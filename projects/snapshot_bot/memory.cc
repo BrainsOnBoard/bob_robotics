@@ -1,6 +1,7 @@
 #include "memory.h"
 
 // BoB robotics includes
+#include "common/progress_bar.h"
 #include "common/serialise_matrix.h"
 #include "imgproc/mask.h"
 #include "navigation/image_database.h"
@@ -49,30 +50,30 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                             ImageInput &imageInput)
 {
-    LOGI << "Loading stored snapshots...";
     std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(route.size());
 
     // Load and process images in parallel
     // **TODO**: Add support for static mask images
-    route.forEachImage(
-        [&](size_t i, const cv::Mat &snapshot)
-        {
-            std::cout << "." << std::flush;
-
-            // Process snapshot
-            snapshots[i] = imageInput.processSnapshot(snapshot);
-        }, /*frameSkip=*/1, /*greyscale=*/false);
-    std::cout << "\n";
-    LOGI << "Loaded " << route.size() << " snapshots";
+    {
+        ProgressBar loadProgBar{ "Loading snapshots", route.size() };
+        route.forEachImage(
+                [&](size_t i, const cv::Mat &snapshot) {
+                    // Process snapshot
+                    snapshots[i] = imageInput.processSnapshot(snapshot);
+                    loadProgBar.increment();
+                },
+                /*frameSkip=*/1,
+                /*greyscale=*/false);
+    }
 
     // Train model
-    LOGI << "Training model...";
-    for (const auto &snapshot : snapshots) {
-        std::cout << "." << std::flush;
-        train(snapshot.first, snapshot.second);
+    {
+        ProgressBar trainProgBar{ "Training", route.size() };
+        for (const auto &snapshot : snapshots) {
+            train(snapshot.first, snapshot.second);
+            trainProgBar.increment();
+        }
     }
-    std::cout << "\n";
-    LOGI << "Training complete";
 }
 
 //------------------------------------------------------------------------
