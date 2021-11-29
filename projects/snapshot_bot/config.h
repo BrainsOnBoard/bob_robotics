@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/path.h"
 #include "navigation/perfect_memory_window.h"
 #include "net/connection.h"
 
@@ -34,6 +35,7 @@ public:
       , m_SaveTestingDiagnostic(false)
       , m_StreamOutput(false)
       , m_ODK2(false)
+      , m_OutputPath(BoBRobotics::Path::getProgramDirectory() / "training")
       , m_RecordVideo(false)
       , m_VideoFileExtension("avi")
       , m_VideoCodec("XVID")
