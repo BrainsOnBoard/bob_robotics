@@ -15,7 +15,7 @@ ProgressBar::ProgressBar(std::string description, size_t total, size_t initialVa
 {
     BOB_ASSERT(initialValue <= total);
 
-    std::cout << "[" << initialValue << "/" << m_Total << "]\t"
+    std::cout << "[" << initialValue << "/" << m_Total << "]    "
               << m_Description << "..." << std::flush;
 
     m_Timer.start();
@@ -53,7 +53,7 @@ ProgressBar::run()
     size_t cur = 0;
     do {
         if (cur != 0) {
-            std::cout << "\r[" << cur << "/" << m_Total << "]\t" << m_Description << " (";
+            std::cout << "\r[" << cur << "/" << m_Total << "]    " << m_Description << " (";
 
             // Print remaining time in minutes and seconds
             const auto remaining = m_Remaining.load();
@@ -71,7 +71,7 @@ ProgressBar::run()
         cur = m_Current.load();
     } while (m_DoRun && cur < m_Total);
 
-    std::cout << "\r[" << cur << "/" << m_Total << "]\t" << m_Description
+    std::cout << "\r[" << cur << "/" << m_Total << "]    " << m_Description
               << (cur == m_Total ? " completed" : " cancelled") << "            \n";
 }
 
