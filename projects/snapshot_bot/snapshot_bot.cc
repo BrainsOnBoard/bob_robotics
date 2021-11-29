@@ -2,6 +2,7 @@
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
 #include "common/path.h"
+#include "common/progress_bar.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -257,7 +258,7 @@ private:
 
                     // Train memory
                     LOGI << "\tTrained snapshot";
-                    m_Memory->train(m_Processed, m_Mask);
+                    m_ProcessedSnapshots.emplace_back(m_Processed, m_Mask);
 
                     // If we should stream output, send snapshot
                     if(m_Config.shouldStreamOutput()) {
@@ -292,6 +293,18 @@ private:
 
                 // Write metadata to disk
                 m_Recorder.reset();
+
+                // Train the algorithm with the cached processed snapshots
+                {
+                    ProgressBar trainProgBar{ "Training", m_ProcessedSnapshots.size() };
+                    for (const auto &snapshot : m_ProcessedSnapshots) {
+                        m_Memory->train(snapshot.first, snapshot.second);
+                        trainProgBar.increment();
+                    }
+                }
+
+                // Recover memory
+                m_ProcessedSnapshots.clear();
             }
         }
         else if(state == State::WaitToTest) {
@@ -501,8 +514,11 @@ private:
     // Image processor
     std::unique_ptr<ImageInput> m_ImageInput;
 
-    // Perfect memory
+    // Algorithm memory
     std::unique_ptr<MemoryBase> m_Memory;
+
+    // Store for processed snapshots
+    std::vector<std::pair<cv::Mat, ImgProc::Mask>> m_ProcessedSnapshots;
 
     // Motor driver
     ROBOT_TYPE m_Robot;
