@@ -51,7 +51,8 @@ public:
     virtual void setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const;
 
     virtual void trainRoute(const BoBRobotics::Navigation::ImageDatabase &route,
-                            ImageInput &imageInput, BoBRobotics::BackgroundExceptionCatcher * = nullptr);
+                            ImageInput &imageInput, size_t frameSkip,
+                            BoBRobotics::BackgroundExceptionCatcher * = nullptr);
 
     //------------------------------------------------------------------------
     // Public API
@@ -173,7 +174,8 @@ public:
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void trainRoute(const BoBRobotics::Navigation::ImageDatabase &route,
-                            ImageInput &imageInput, BoBRobotics::BackgroundExceptionCatcher * = nullptr) override;
+                            ImageInput &imageInput, size_t frameSkip,
+                            BoBRobotics::BackgroundExceptionCatcher * = nullptr) override;
 
     void saveWeights(const filesystem::path &filename) const;
 

@@ -143,7 +143,8 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         } else {
             // Train the algorithm on the stored images
-            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput, &m_BackgroundEx);
+            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput,
+                                 m_Config.getSkipFrames(), &m_BackgroundEx);
 
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
@@ -226,10 +227,9 @@ private:
         }
 
         if(state == State::WaitToTrain) {
-            if(event == Event::Enter) {
+            if (event == Event::Enter) {
                 LOGI << "Press B to start training" ;
-            }
-            else if(event == Event::Update) {
+            } else if (event == Event::Update) {
                 if(m_Joystick.isPressed(HID::JButton::B)) {
                     m_StateMachine.transition(State::Training);
                 }
@@ -238,6 +238,7 @@ private:
         else if(state == State::Training) {
             if(event == Event::Enter) {
                 LOGI << "Starting training";
+                m_NumSnapshots = 0;
 
                 // If we should stream, send state update
                 if(m_Config.shouldStreamOutput()) {
@@ -258,8 +259,10 @@ private:
                     m_TrainingStopwatch.start();
 
                     // Train memory
-                    LOGI << "\tTrained snapshot";
-                    m_ProcessedSnapshots.emplace_back(m_Processed, m_Mask);
+                    if ((m_NumSnapshots++ % m_Config.getSkipFrames()) == 0) {
+                        LOGI << "\tTrained snapshot";
+                        m_ProcessedSnapshots.emplace_back(m_Processed, m_Mask);
+                    }
 
                     // If we should stream output, send snapshot
                     if(m_Config.shouldStreamOutput()) {

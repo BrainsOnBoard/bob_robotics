@@ -50,6 +50,7 @@ public:
       , m_TrainInterval(0.0)
       , m_MotorCommandInterval(500.0)
       , m_MotorTurnCommandInterval(500.0)
+      , m_SkipFrames(1)
       , m_ServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort)
       , m_SnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 1)
       , m_BestSnapshotServerListenPort(BoBRobotics::Net::Connection::DefaultListenPort + 2)
@@ -96,6 +97,8 @@ public:
     bool shouldAutoTrain() const{ return m_AutoTrain; }
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
     Milliseconds getMotorCommandInterval() const{ return m_MotorCommandInterval; }
+
+    size_t getSkipFrames() const{ return m_SkipFrames; }
 
     bool shouldUseViconTracking() const{ return m_UseViconTracking; }
     int getViconTrackingPort() const{ return m_ViconTrackingPort; }
@@ -157,6 +160,7 @@ public:
         fs << "joystickDeadzone" << getJoystickDeadzone();
         fs << "autoTrain" << shouldAutoTrain();
         fs << "trainInterval" << getTrainInterval().count();
+        fs << "frameSkip" << getIntegerSize(getSkipFrames());
         fs << "motorCommandInterval" << getMotorCommandInterval().count();
         fs << "motorTurnCommandInterval" << m_MotorTurnCommandInterval.count();
         fs << "serverListenPort" << getServerListenPort();
@@ -243,6 +247,11 @@ public:
         double trainInterval;
         cv::read(node["trainInterval"], trainInterval, m_TrainInterval.count());
         m_TrainInterval = (Milliseconds)trainInterval;
+
+        int frameSkip = m_SkipFrames;
+        cv::read(node["frameSkip"], frameSkip, frameSkip);
+        BOB_ASSERT(frameSkip > 0);
+        m_SkipFrames = (size_t) frameSkip;
 
         double motorCommandInterval;
         cv::read(node["motorCommandInterval"], motorCommandInterval, m_MotorCommandInterval.count());
@@ -393,6 +402,10 @@ private:
     Milliseconds m_TrainInterval;
     Milliseconds m_MotorCommandInterval;
     Milliseconds m_MotorTurnCommandInterval;
+
+    // Number of frames to skip when training algo (e.g. 2 means every other
+    // image is used)
+    size_t m_SkipFrames;
 
     // Listen port used for streaming etc
     int m_ServerListenPort;

@@ -50,14 +50,16 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
 
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                             ImageInput &imageInput,
+                            size_t frameSkip,
                             BackgroundExceptionCatcher *backgroundEx)
 {
-    std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(route.size());
+    const size_t numSnaps = (frameSkip < route.size()) ? route.size() / frameSkip : 1;
+    std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(numSnaps);
 
     // Load and process images in parallel
     // **TODO**: Add support for static mask images
     {
-        ProgressBar loadProgBar{ "Loading snapshots", route.size() };
+        ProgressBar loadProgBar{ "Loading snapshots", numSnaps };
         route.forEachImage(
                 [&](size_t i, const cv::Mat &snapshot) {
                     if (backgroundEx) {
@@ -68,13 +70,13 @@ void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                     snapshots[i] = imageInput.processSnapshot(snapshot);
                     loadProgBar.increment();
                 },
-                /*frameSkip=*/1,
+                /*frameSkip=*/frameSkip,
                 /*greyscale=*/false);
     }
 
     // Train model
     {
-        ProgressBar trainProgBar{ "Training", route.size() };
+        ProgressBar trainProgBar{ "Training", numSnaps };
         for (const auto &snapshot : snapshots) {
             if (backgroundEx) {
                 backgroundEx->check();
@@ -256,6 +258,7 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 //-----------------------------------------------------------------------
 void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
                          ImageInput &imageInput,
+                         size_t frameSkip,
                          BackgroundExceptionCatcher* backgroundEx)
 {
     // If this file exists then we've already trained the network...
@@ -265,7 +268,7 @@ void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
     }
 
     // ...otherwise, train it now
-    MemoryBase::trainRoute(route, imageInput, backgroundEx);
+    MemoryBase::trainRoute(route, imageInput, frameSkip, backgroundEx);
     saveWeights(weightsPath);
 }
 //-----------------------------------------------------------------------
