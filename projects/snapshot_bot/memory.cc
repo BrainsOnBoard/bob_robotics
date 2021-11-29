@@ -1,6 +1,7 @@
 #include "memory.h"
 
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "common/progress_bar.h"
 #include "common/serialise_matrix.h"
 #include "imgproc/mask.h"
@@ -48,7 +49,8 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
 }
 
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
-                            ImageInput &imageInput)
+                            ImageInput &imageInput,
+                            BackgroundExceptionCatcher *backgroundEx)
 {
     std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(route.size());
 
@@ -58,6 +60,10 @@ void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
         ProgressBar loadProgBar{ "Loading snapshots", route.size() };
         route.forEachImage(
                 [&](size_t i, const cv::Mat &snapshot) {
+                    if (backgroundEx) {
+                        backgroundEx->check();
+                    }
+
                     // Process snapshot
                     snapshots[i] = imageInput.processSnapshot(snapshot);
                     loadProgBar.increment();
@@ -70,6 +76,10 @@ void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
     {
         ProgressBar trainProgBar{ "Training", route.size() };
         for (const auto &snapshot : snapshots) {
+            if (backgroundEx) {
+                backgroundEx->check();
+            }
+
             train(snapshot.first, snapshot.second);
             trainProgBar.increment();
         }
@@ -245,7 +255,8 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 }
 //-----------------------------------------------------------------------
 void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
-                         ImageInput &imageInput)
+                         ImageInput &imageInput,
+                         BackgroundExceptionCatcher* backgroundEx)
 {
     // If this file exists then we've already trained the network...
     const auto weightsPath = route.getPath() / "weights.bin";
@@ -254,7 +265,7 @@ void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
     }
 
     // ...otherwise, train it now
-    MemoryBase::trainRoute(route, imageInput);
+    MemoryBase::trainRoute(route, imageInput, backgroundEx);
     saveWeights(weightsPath);
 }
 //-----------------------------------------------------------------------

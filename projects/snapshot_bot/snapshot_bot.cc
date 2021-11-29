@@ -69,7 +69,7 @@ class RobotFSM : FSM<State>::StateHandler
     using ImageDatabase = Navigation::ImageDatabase;
 
 public:
-    RobotFSM(const Config &config)
+    RobotFSM(const Config &config, BackgroundExceptionCatcher &backgroundEx)
       : m_Config(config)
       , m_StateMachine(this, State::Invalid)
       , m_Camera(getPanoramicCamera(config))
@@ -79,6 +79,7 @@ public:
       , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
       , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain())
       , m_NumSnapshots(0)
+      , m_BackgroundEx(backgroundEx)
     {
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
@@ -142,7 +143,7 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         } else {
             // Train the algorithm on the stored images
-            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput);
+            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput, &m_BackgroundEx);
 
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
@@ -298,6 +299,8 @@ private:
                 {
                     ProgressBar trainProgBar{ "Training", m_ProcessedSnapshots.size() };
                     for (const auto &snapshot : m_ProcessedSnapshots) {
+                        m_BackgroundEx.check();
+
                         m_Memory->train(snapshot.first, snapshot.second);
                         trainProgBar.increment();
                     }
@@ -562,6 +565,9 @@ private:
     std::unique_ptr<Video::NetSink> m_LiveNetSink;
     std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
     std::unique_ptr<Video::NetSink> m_BestSnapshotNetSink;
+
+    // For catching exceptions on background threads
+    BackgroundExceptionCatcher &m_BackgroundEx;
 };
 }   // Anonymous namespace
 
@@ -596,7 +602,7 @@ int bobMain(int argc, char *argv[])
         configFile << "config" << config;
     }
     BackgroundExceptionCatcher backgroundEx;
-    RobotFSM robot(config);
+    RobotFSM robot(config, backgroundEx);
 
     {
         Timer<> timer("Total time:");
