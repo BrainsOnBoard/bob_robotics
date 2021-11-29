@@ -15,6 +15,9 @@
 #include "config.h"
 #include "image_input.h"
 
+// Standard C++ includes
+#include <sstream>
+
 using namespace BoBRobotics;
 using namespace units::angle;
 using namespace units::length;
@@ -27,6 +30,13 @@ constexpr const char *CSVLowestDifference = "Lowest difference";
 constexpr const char *CSVBestSnapshot = "Best snapshot index";
 constexpr const char *CSVWindowStart = "Window start";
 constexpr const char *CSVWindowEnd = "Window end";
+
+std::string getWeightsFileName(const cv::Size &inputSize)
+{
+    std::stringstream ss;
+    ss << "weights" << inputSize.width << "x" << inputSize.height << ".bin";
+    return ss.str();
+}
 }
 
 //------------------------------------------------------------------------
@@ -262,7 +272,7 @@ void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
                          BackgroundExceptionCatcher* backgroundEx)
 {
     // If this file exists then we've already trained the network...
-    const auto weightsPath = route.getPath() / "weights.bin";
+    const auto weightsPath = route.getPath() / getWeightsFileName(imageInput.getOutputSize());
     if (weightsPath.exists()) {
         return;
     }
@@ -280,14 +290,13 @@ void InfoMax::saveWeights(const filesystem::path &filename) const
 //-----------------------------------------------------------------------
 InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size &inputSize)
 {
-    const filesystem::path weightPath = filesystem::path(config.getOutputPath()) / ("weights.bin");
-    if(weightPath.exists()) {
+    const filesystem::path weightPath = config.getOutputPath() / getWeightsFileName(inputSize);
+    if (weightPath.exists()) {
         LOGI << "\tLoading weights from " << weightPath;
 
         const auto weights = readMatrix<InfoMaxWeightMatrixType::Scalar>(weightPath);
         return InfoMaxType(inputSize, weights);
-    }
-    else {
+    } else {
         return InfoMaxType(inputSize);
     }
 }
