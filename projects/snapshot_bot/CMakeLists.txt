@@ -10,8 +10,9 @@ if(USE_ODK)
     add_definitions(-DUSE_ODK)
 endif()
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS ${MODULES})
+set(SOURCES config.cc image_input.cc memory.cc)
 
-add_executable(snapshot_bot snapshot_bot.cc memory.cc image_input.cc)
+add_executable(snapshot_bot snapshot_bot.cc ${SOURCES})
 target_link_libraries(snapshot_bot PUBLIC ${BoBRobotics_LIBRARIES})
 
 # Put the default config into a file for the user to edit
@@ -19,7 +20,7 @@ add_custom_command(TARGET snapshot_bot
                    POST_BUILD
                    COMMAND "${CMAKE_CURRENT_BINARY_DIR}/snapshot_bot" --dump-config)
 
-add_executable(offline_train offline_train.cc memory.cc image_input.cc)
+add_executable(offline_train offline_train.cc ${SOURCES})
 target_link_libraries(offline_train PUBLIC BoBRobotics::imgproc
                       BoBRobotics::navigation BoBRobotics::video)
 
