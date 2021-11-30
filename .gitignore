@@ -1,3 +1,4 @@
+virtualenv
 *.mp4
 clang_tidy_fixes
 

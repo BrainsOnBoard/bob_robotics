@@ -60,6 +60,14 @@ for(b = 0; b < builderNodes.size(); b++) {
         node(nodeName) {
             stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
+
+                // Delete CMake cache folder
+                dir("build") {
+                    deleteDir();
+                }
+
+                // Make sure we have a clean working tree
+                sh 'git clean -fXd'
             }
 
             stage("Downloading and building GeNN (" + env.NODE_NAME + ")") {
@@ -68,11 +76,6 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             def buildMsg = "Building BoB robotics (" + env.NODE_NAME + ")"
             stage(buildMsg) {
-                // Delete CMake cache folder
-                dir("build") {
-                    deleteDir();
-                }
-
                 // Generate unique name for message
                 def uniqueMsg = "msg_build_" + env.NODE_NAME;
 
