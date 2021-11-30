@@ -10,7 +10,7 @@ endif()
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld)
 
 # NB: These are extra modules only available to scikit-build
-find_package(PythonExtensions REQUIRED)
+find_package(PythonExtensions 3.0 REQUIRED)
 find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
 include_directories(${NumPy_INCLUDE_DIRS})
 
@@ -24,3 +24,13 @@ install(TARGETS _antworld LIBRARY DESTINATION antworld)
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)
 endif(WIN32)
+
+# Some of the python structs have a load of fields that we don't use, so let's
+# just auto-initialise them to zeros.
+include(CheckCXXCompilerFlag)
+foreach(FLAG -Wno-missing-field-initializers)
+    check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+    if(COMPILER_SUPPORTS_${FLAG})
+        target_compile_options(_antworld PRIVATE ${FLAG})
+    endif()
+endforeach()

@@ -47,7 +47,7 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
 }
 
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
-                            bool useODK2, ImageInput &imageInput)
+                            ImageInput &imageInput)
 {
     LOGI << "Loading stored snapshots...";
     std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(route.size());
@@ -243,7 +243,7 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
     getInfoMax().train(snapshot, mask);
 }
 //-----------------------------------------------------------------------
-void InfoMax::trainRoute(const Navigation::ImageDatabase &route, bool useODK2,
+void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
                          ImageInput &imageInput)
 {
     // If this file exists then we've already trained the network...
@@ -253,7 +253,7 @@ void InfoMax::trainRoute(const Navigation::ImageDatabase &route, bool useODK2,
     }
 
     // ...otherwise, train it now
-    MemoryBase::trainRoute(route, useODK2, imageInput);
+    MemoryBase::trainRoute(route, imageInput);
     saveWeights(weightsPath);
 }
 //-----------------------------------------------------------------------

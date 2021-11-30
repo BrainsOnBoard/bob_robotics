@@ -3,5 +3,6 @@ project(bob_robotics)
 
 add_subdirectory(examples)
 add_subdirectory(projects)
+add_subdirectory(python)
 add_subdirectory(tests)
 add_subdirectory(tools)

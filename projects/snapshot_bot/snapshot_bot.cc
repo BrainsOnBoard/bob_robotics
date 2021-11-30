@@ -141,7 +141,7 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         } else {
             // Train the algorithm on the stored images
-            m_Memory->trainRoute(m_TrainDatabase, config.shouldUseODK2(), *m_ImageInput);
+            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput);
 
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);

@@ -27,7 +27,7 @@ void setBuildStatus(String message, String state) {
 // Build dictionary of available nodes and their labels
 def availableNodes = [:]
 for(node in jenkins.model.Jenkins.instance.nodes) {
-    if(node.getComputer().isOnline() && node.getComputer().countIdle() > 0) {
+    if(node.getComputer().isOnline()) {
         availableNodes[node.name] = node.getLabelString().split() as Set
     }
 }
@@ -60,6 +60,14 @@ for(b = 0; b < builderNodes.size(); b++) {
         node(nodeName) {
             stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
+
+                // Delete CMake cache folder
+                dir("build") {
+                    deleteDir();
+                }
+
+                // Make sure we have a clean working tree
+                sh 'git clean -fXd'
             }
 
             stage("Downloading and building GeNN (" + env.NODE_NAME + ")") {
@@ -68,11 +76,6 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             def buildMsg = "Building BoB robotics (" + env.NODE_NAME + ")"
             stage(buildMsg) {
-                // Delete CMake cache folder
-                dir("build") {
-                    deleteDir();
-                }
-
                 // Generate unique name for message
                 def uniqueMsg = "msg_build_" + env.NODE_NAME;
 
@@ -89,7 +92,7 @@ for(b = 0; b < builderNodes.size(); b++) {
             }
 
             // Parse test output for GCC warnings
-            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_*_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
+            recordIssues enabledForFailure: true, tool: gcc(pattern: "**/msg_build_" + env.NODE_NAME, id: "gcc_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
 
             stage("Running tests (" + env.NODE_NAME + ")") {
                 setBuildStatus("Running tests (" + env.NODE_NAME + ")", "PENDING");

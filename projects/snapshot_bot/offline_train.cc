@@ -48,7 +48,7 @@ int bobMain(int argc, char *argv[])
 
     // Train InfoMax network with training image database and save weights
     InfoMax infomax(config, imageInput->getOutputSize());
-    infomax.trainRoute(database, config.shouldUseODK2(), *imageInput);
+    infomax.trainRoute(database, *imageInput);
 
     return EXIT_SUCCESS;
 }
