@@ -15,5 +15,5 @@ pip3 install numpy scikit-build
 rm -rf build
 mkdir build
 cd build
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "$@" ..
+cmake -DPYTHON_EXECUTABLE="$(which python3)" -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "$@" ..
 make -k -j $(nproc)
