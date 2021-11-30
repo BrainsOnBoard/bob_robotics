@@ -389,20 +389,23 @@ public:
         template<class... Ts>
         void record(const Vector3<millimeter_t> &position, degree_t heading, const cv::Mat &image, Ts &&...extraFieldValues)
         {
-            this->addEntry(image, getFileName, position, heading, { 0, 0, 0 }, std::forward<Ts>(extraFieldValues)...);
+            this->addEntry(image, std::bind(&RouteRecorder::getFileName, this),
+                           position, heading, { 0, 0, 0 },
+                           std::forward<Ts>(extraFieldValues)...);
         }
 
         void record(const cv::Mat &image, Entry entry)
         {
-            this->addEntry(image, entry, getFileName);
+            this->addEntry(image, entry, std::bind(&RouteRecorder::getFileName, this));
         }
 
     private:
-        const std::function<std::string()> getFileName = [this]() {
+        std::string getFileName()
+        {
             std::ostringstream ss;
             ss << "image" << std::setw(5) << std::setfill('0') << this->size() + 1;
             return (this->getImageDatabase().getPath() / ss.str()).str();
-        };
+        }
     };
 
     ImageDatabase();
