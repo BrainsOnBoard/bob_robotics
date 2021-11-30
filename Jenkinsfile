@@ -60,6 +60,9 @@ for(b = 0; b < builderNodes.size(); b++) {
         node(nodeName) {
             stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
+
+                // Make sure we have a clean working tree
+                sh 'git clean -fXd'
             }
 
             stage("Downloading and building GeNN (" + env.NODE_NAME + ")") {
