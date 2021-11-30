@@ -10,7 +10,7 @@ endif()
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS antworld)
 
 # NB: These are extra modules only available to scikit-build
-find_package(PythonExtensions REQUIRED)
+find_package(PythonExtensions 3.0 REQUIRED)
 find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
 include_directories(${NumPy_INCLUDE_DIRS})
 

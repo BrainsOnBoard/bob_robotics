@@ -5,9 +5,9 @@
 
 if(NOT PYTHON_EXECUTABLE)
   if(NumPy_FIND_QUIETLY)
-    find_package(PythonInterp QUIET)
+    find_package(PythonInterp 3.0 QUIET)
   else()
-    find_package(PythonInterp)
+    find_package(PythonInterp 3.0)
     set(__numpy_out 1)
   endif()
 endif()

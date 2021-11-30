@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(python)
 
-find_package(PythonInterp)
+find_package(PythonInterp 3.0)
 if(NOT PYTHON_EXECUTABLE)
     message(WARNING "Python executable not found")
     return()
