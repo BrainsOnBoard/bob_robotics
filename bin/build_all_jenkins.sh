@@ -13,5 +13,6 @@ pip3 install numpy scikit-build
 
 # Configure and build source, continuing if there are errors
 rm -rf build
+mkdir build
 cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "$@"
 make -C build -k -j $(nproc)
