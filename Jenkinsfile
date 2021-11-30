@@ -68,11 +68,6 @@ for(b = 0; b < builderNodes.size(); b++) {
 
             def buildMsg = "Building BoB robotics (" + env.NODE_NAME + ")"
             stage(buildMsg) {
-                // Delete CMake cache folder
-                dir("build") {
-                    deleteDir();
-                }
-
                 // Generate unique name for message
                 def uniqueMsg = "msg_build_" + env.NODE_NAME;
 

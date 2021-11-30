@@ -3,11 +3,15 @@
 # exit if command fails
 set -e
 
-builddir=$(dirname "$0")/../build
-if [ ! -d $builddir ]; then
-    mkdir $builddir
-fi
-cd $builddir
+cd "$(dirname $0)/.."
 
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "$@" ..
-make -k -j $(nproc)
+# Make sure we have necessary python packages for our python modules
+rm -rf virtualenv
+python -m venv virtualenv
+. virtualenv/bin/activate
+pip install numpy scikit-build
+
+# Configure and build source, continuing if there are errors
+rm -rf build
+cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=1 "$@"
+make -C build -k -j $(nproc)
