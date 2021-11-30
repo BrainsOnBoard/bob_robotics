@@ -61,6 +61,11 @@ for(b = 0; b < builderNodes.size(); b++) {
             stage("Checking out project (" + env.NODE_NAME + ")") {
                 checkout scm
 
+                // Delete CMake cache folder
+                dir("build") {
+                    deleteDir();
+                }
+
                 // Make sure we have a clean working tree
                 sh 'git clean -fXd'
             }
