@@ -7,9 +7,9 @@ cd "$(dirname $0)/.."
 
 # Make sure we have necessary python packages for our python modules
 rm -rf virtualenv
-python -m venv virtualenv
+python3 -m venv virtualenv
 . virtualenv/bin/activate
-pip install numpy scikit-build
+pip3 install numpy scikit-build
 
 # Configure and build source, continuing if there are errors
 rm -rf build
