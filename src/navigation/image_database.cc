@@ -17,6 +17,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
+#include <limits>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -694,7 +695,11 @@ ImageDatabase::unwrap(const filesystem::path &destination,
     BOB_ASSERT(!(destination / EntriesFilename).exists());
 
     BOB_ASSERT(frameSkip != 0);
-    BOB_ASSERT(m_NeedsUnwrapping);
+    if (!m_NeedsUnwrapping.has_value()) {
+        LOGW << "Database's metadata doesn't indicate whether it's already unwrapped; unwrapping anyway";
+    } else if (!m_NeedsUnwrapping.value()) {
+        throw std::runtime_error{ "Database is already unwrapped" };
+    }
 
     // Create object for unwrapping images
     std::string camName;
@@ -726,10 +731,19 @@ ImageDatabase::unwrap(const filesystem::path &destination,
          */
         const std::regex regex{ "^(\\s*)(\\w+):.*" };
         std::smatch match;
+        auto indentation = std::numeric_limits<size_t>::max();
         while (std::getline(ifs, line)) {
             if (std::regex_match(line, match, regex)) {
                 const auto &whitespace = match[1];
                 const auto &key = match[2];
+
+                /*
+                 * We need to match the indentation style when we append
+                 * elements below
+                 */
+                if (whitespace.length() != 0) {
+                    indentation = std::min((size_t) whitespace.length(), indentation);
+                }
 
                 // The new database won't need unwrapping anymore
                 if (key == "needsUnwrapping") {
@@ -760,7 +774,8 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         }
 
         // Save this value
-        ofs << "  frameSkip: " << frameSkip << "\n";
+        const std::string whitespace(indentation, ' ');
+        ofs << whitespace << "frameSkip: " << frameSkip << "\n";
 
         // Append info about the unwrapping object, indenting appropriately
         cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
@@ -770,7 +785,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         std::getline(ss, line);
         std::getline(ss, line);
         while (std::getline(ss, line)) {
-            ofs << "  " << line << "\n";
+            ofs << whitespace << line << "\n";
         }
     }
 
@@ -848,13 +863,31 @@ ImageDatabase::loadMetadata()
             throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
         }
 
-        // Check whether images are panoramic or not
-        metadata["needsUnwrapping"] >> m_NeedsUnwrapping;
+        /*
+         * Check if the database has been explicitly marked as containing
+         * raw panoramic images.
+         */
+        if (metadata["needsUnwrapping"].type() != cv::FileNode::NONE) {
+            m_NeedsUnwrapping = (int) metadata["needsUnwrapping"];
+        }
 
-        // Get image resolution
-        std::vector<int> size(2);
-        metadata["camera"]["resolution"] >> size;
-        m_Resolution = { size[0], size[1] };
+        if (metadata["camera"].type() == cv::FileNode::MAP) {
+            /*
+             * If needsUnwrapping is not explicitly set then assume that if the
+             * camera used was panoramic then we want to unwrap it.
+             *
+             * Note that these things don't necessarily go together! The
+             * database could already be unwrapped.
+             */
+            if (!m_NeedsUnwrapping && metadata["camera"]["isPanoramic"].type() != cv::FileNode::NONE) {
+                m_NeedsUnwrapping = (int) metadata["camera"]["isPanoramic"];
+            }
+
+            // Get image resolution
+            std::vector<int> size(2);
+            metadata["camera"]["resolution"] >> size;
+            m_Resolution = { size[0], size[1] };
+        }
 
         // These will only be set if database was recorded as a video file
         std::string videoFileName;
