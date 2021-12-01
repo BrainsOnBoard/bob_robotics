@@ -60,10 +60,10 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
 
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                             ImageInput &imageInput,
-                            size_t frameSkip,
+                            size_t testFrameSkip,
                             BackgroundExceptionCatcher *backgroundEx)
 {
-    const size_t numSnaps = (frameSkip < route.size()) ? route.size() / frameSkip : 1;
+    const size_t numSnaps = (testFrameSkip < route.size()) ? route.size() / testFrameSkip : 1;
     std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(numSnaps);
 
     // Load and process images in parallel
@@ -80,7 +80,7 @@ void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                     snapshots[i] = imageInput.processSnapshot(snapshot);
                     loadProgBar.increment();
                 },
-                /*frameSkip=*/frameSkip,
+                /*testFrameSkip=*/testFrameSkip,
                 /*greyscale=*/false);
     }
 
@@ -268,7 +268,7 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 //-----------------------------------------------------------------------
 void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
                          ImageInput &imageInput,
-                         size_t frameSkip,
+                         size_t testFrameSkip,
                          BackgroundExceptionCatcher* backgroundEx)
 {
     // If this file exists then we've already trained the network...
@@ -278,7 +278,7 @@ void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
     }
 
     // ...otherwise, train it now
-    MemoryBase::trainRoute(route, imageInput, frameSkip, backgroundEx);
+    MemoryBase::trainRoute(route, imageInput, testFrameSkip, backgroundEx);
     saveWeights(weightsPath);
 }
 //-----------------------------------------------------------------------

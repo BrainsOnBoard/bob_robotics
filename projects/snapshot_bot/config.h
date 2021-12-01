@@ -61,7 +61,7 @@ public:
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
     Milliseconds getMotorCommandInterval() const{ return m_MotorCommandInterval; }
 
-    size_t getSkipFrames() const{ return m_SkipFrames; }
+    size_t getSkipFrames() const{ return m_TestSkipFrames; }
 
     bool shouldUseViconTracking() const{ return m_UseViconTracking; }
     int getViconTrackingPort() const{ return m_ViconTrackingPort; }
@@ -155,7 +155,7 @@ private:
 
     // Number of frames to skip when training algo (e.g. 2 means every other
     // image is used)
-    size_t m_SkipFrames;
+    size_t m_TestSkipFrames;
 
     // Listen port used for streaming etc
     int m_ServerListenPort;
