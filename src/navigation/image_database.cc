@@ -711,7 +711,11 @@ ImageDatabase::unwrap(const filesystem::path &destination,
     BOB_ASSERT(!(destination / EntriesFilename).exists());
 
     BOB_ASSERT(frameSkip != 0);
-    BOB_ASSERT(m_NeedsUnwrapping);
+    if (!m_NeedsUnwrapping.has_value()) {
+        LOGW << "Database's metadata doesn't indicate whether it's already unwrapped; unwrapping anyway";
+    } else if (!m_NeedsUnwrapping.value()) {
+        throw std::runtime_error{ "Database is already unwrapped" };
+    }
 
     // Create object for unwrapping images
     std::string camName;
@@ -865,13 +869,31 @@ ImageDatabase::loadMetadata()
             throw std::runtime_error("Invalid database type \"" + dbtype + "\"");
         }
 
-        // Check whether images are panoramic or not
-        metadata["needsUnwrapping"] >> m_NeedsUnwrapping;
+        /*
+         * Check if the database has been explicitly marked as containing
+         * raw panoramic images.
+         */
+        if (metadata["needsUnwrapping"].type() != cv::FileNode::NONE) {
+            m_NeedsUnwrapping = (int) metadata["needsUnwrapping"];
+        }
 
-        // Get image resolution
-        std::vector<int> size(2);
-        metadata["camera"]["resolution"] >> size;
-        m_Resolution = { size[0], size[1] };
+        if (metadata["camera"].type() == cv::FileNode::MAP) {
+            /*
+             * If needsUnwrapping is not explicitly set then assume that if the
+             * camera used was panoramic then we want to unwrap it.
+             *
+             * Note that these things don't necessarily go together! The
+             * database could already be unwrapped.
+             */
+            if (!m_NeedsUnwrapping && metadata["camera"]["isPanoramic"].type() != cv::FileNode::NONE) {
+                m_NeedsUnwrapping = (int) metadata["camera"]["isPanoramic"];
+            }
+
+            // Get image resolution
+            std::vector<int> size(2);
+            metadata["camera"]["resolution"] >> size;
+            m_Resolution = { size[0], size[1] };
+        }
 
         // These will only be set if database was recorded as a video file
         std::string videoFileName;

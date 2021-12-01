@@ -8,6 +8,7 @@
 
 // Third-party includes
 #include "plog/Log.h"
+#include "third_party/optional.hpp"
 #include "third_party/path.h"
 #include "third_party/units.h"
 
@@ -546,7 +547,7 @@ private:
     std::tm m_CreationTime;
     hertz_t m_FrameRate{ 0 };
     bool m_IsRoute;
-    bool m_NeedsUnwrapping = true;
+    std::experimental::optional<bool> m_NeedsUnwrapping;
 
     ImageDatabase(const std::tm *creationTime, filesystem::path databasePath,
                   bool overwrite);
