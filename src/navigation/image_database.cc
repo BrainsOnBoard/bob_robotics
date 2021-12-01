@@ -17,6 +17,7 @@
 // Standard C++ includes
 #include <algorithm>
 #include <fstream>
+#include <limits>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -747,10 +748,19 @@ ImageDatabase::unwrap(const filesystem::path &destination,
          */
         const std::regex regex{ "^(\\s*)(\\w+):.*" };
         std::smatch match;
+        auto indentation = std::numeric_limits<size_t>::max();
         while (std::getline(ifs, line)) {
             if (std::regex_match(line, match, regex)) {
                 const auto &whitespace = match[1];
                 const auto &key = match[2];
+
+                /*
+                 * We need to match the indentation style when we append
+                 * elements below
+                 */
+                if (whitespace.length() != 0) {
+                    indentation = std::min((size_t) whitespace.length(), indentation);
+                }
 
                 // The new database won't need unwrapping anymore
                 if (key == "needsUnwrapping") {
@@ -781,7 +791,8 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         }
 
         // Save this value
-        ofs << "  frameSkip: " << frameSkip << "\n";
+        const std::string whitespace(indentation, ' ');
+        ofs << whitespace << "frameSkip: " << frameSkip << "\n";
 
         // Append info about the unwrapping object, indenting appropriately
         cv::FileStorage fs(".yml", cv::FileStorage::WRITE | cv::FileStorage::MEMORY);
@@ -791,7 +802,7 @@ ImageDatabase::unwrap(const filesystem::path &destination,
         std::getline(ss, line);
         std::getline(ss, line);
         while (std::getline(ss, line)) {
-            ofs << "  " << line << "\n";
+            ofs << whitespace << line << "\n";
         }
     }
 
