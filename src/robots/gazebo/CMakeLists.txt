@@ -29,3 +29,12 @@ if("${GAZEBO_MAJOR_VERSION}" GREATER_EQUAL 11)
     set_target_properties(bob_robots__gazebo gazebo_tank_plugin gazebo_uav_plugin
                           PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED TRUE)
 endif()
+
+# Disable warning from inside gazebo
+include(CheckCXXCompilerFlag)
+foreach(FLAG -Wno-deprecated-copy)
+    check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+    if(COMPILER_SUPPORTS_${FLAG})
+        target_compile_options(gazebo_uav_plugin PRIVATE ${FLAG})
+    endif()
+endforeach()
