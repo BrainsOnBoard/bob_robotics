@@ -490,6 +490,7 @@ private:
 
         // Save additional metadata
         auto &metadata = m_Recorder->getMetadataWriter();
+        metadata << "config" << m_Config;
         metadata << "camera" << *m_Camera;
         m_ImageInput->writeMetadata(metadata);
     }
