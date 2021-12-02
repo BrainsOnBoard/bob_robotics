@@ -578,7 +578,8 @@ private:
 int bobMain(int argc, char *argv[])
 {
     Config config;
-    const char *configFilename = "config.yaml";
+    filesystem::path configPath{ "config.yaml" };
+    bool configIsDatabase = false;
 
     if (argc > 1) {
         if (strcmp(argv[1], "--dump-config") == 0) {
@@ -588,21 +589,30 @@ int bobMain(int argc, char *argv[])
 
             return EXIT_SUCCESS;
         } else {
-            configFilename = argv[1];
+            configPath = argv[1];
+            configIsDatabase = configPath.is_directory();
+            if (configIsDatabase) {
+                configPath = configPath / "database_metadata.yaml";
+                BOB_ASSERT(configPath.exists());
+            }
         }
     }
 
     // Read config values from file
     {
-        cv::FileStorage configFile(configFilename, cv::FileStorage::READ);
+        cv::FileStorage configFile(configPath.str(), cv::FileStorage::READ);
         if(configFile.isOpened()) {
-            configFile["config"] >> config;
+            if (configIsDatabase) {
+                configFile["metadata"]["config"] >> config;
+            } else {
+                configFile["config"] >> config;
+            }
         }
     }
 
     // Re-write config file
-    {
-        cv::FileStorage configFile(configFilename, cv::FileStorage::WRITE);
+    if (!configIsDatabase) {
+        cv::FileStorage configFile(configPath.str(), cv::FileStorage::WRITE);
         configFile << "config" << config;
     }
     BackgroundExceptionCatcher backgroundEx;
