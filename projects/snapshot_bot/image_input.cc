@@ -76,10 +76,11 @@ std::pair<cv::Mat, Mask> ImageInput::preprocess(const cv::Mat &image) const
     }
 
     /*
-     * Return cropped image and mask. Note that this operation will not perform
-     * any heap allocations as cv::Mats use CoW internally.
+     * Return cropped image and mask. Note that we need to explicitly copy
+     * cropped as internally it points to m_Unwrapped, which will be modified on
+     * the next call to this function.
      */
-    return { cropped, m_Mask };
+    return { cropped.clone(), m_Mask };
 }
 //----------------------------------------------------------------------------
 // ImageInputRaw
