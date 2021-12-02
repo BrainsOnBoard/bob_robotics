@@ -1,6 +1,8 @@
 #include "memory.h"
 
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
+#include "common/progress_bar.h"
 #include "common/serialise_matrix.h"
 #include "imgproc/mask.h"
 #include "navigation/image_database.h"
@@ -12,6 +14,9 @@
 // Snapshot bot includes
 #include "config.h"
 #include "image_input.h"
+
+// Standard C++ includes
+#include <sstream>
 
 using namespace BoBRobotics;
 using namespace units::angle;
@@ -25,6 +30,13 @@ constexpr const char *CSVLowestDifference = "Lowest difference";
 constexpr const char *CSVBestSnapshot = "Best snapshot index";
 constexpr const char *CSVWindowStart = "Window start";
 constexpr const char *CSVWindowEnd = "Window end";
+
+std::string getWeightsFileName(const cv::Size &inputSize)
+{
+    std::stringstream ss;
+    ss << "weights" << inputSize.width << "x" << inputSize.height << ".bin";
+    return ss.str();
+}
 }
 
 //------------------------------------------------------------------------
@@ -47,32 +59,43 @@ void MemoryBase::setCSVFieldValues(std::unordered_map<std::string, std::string> 
 }
 
 void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
-                            ImageInput &imageInput)
+                            ImageInput &imageInput,
+                            size_t testFrameSkip,
+                            BackgroundExceptionCatcher *backgroundEx)
 {
-    LOGI << "Loading stored snapshots...";
-    std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(route.size());
+    const size_t numSnaps = (testFrameSkip < route.size()) ? route.size() / testFrameSkip : 1;
+    std::vector<std::pair<cv::Mat, ImgProc::Mask>> snapshots(numSnaps);
 
     // Load and process images in parallel
     // **TODO**: Add support for static mask images
-    route.forEachImage(
-        [&](size_t i, const cv::Mat &snapshot)
-        {
-            std::cout << "." << std::flush;
+    {
+        ProgressBar loadProgBar{ "Loading snapshots", numSnaps };
+        route.forEachImage(
+                [&](size_t i, const cv::Mat &snapshot) {
+                    if (backgroundEx) {
+                        backgroundEx->check();
+                    }
 
-            // Process snapshot
-            snapshots[i] = imageInput.processSnapshot(snapshot);
-        }, /*frameSkip=*/1, /*greyscale=*/false);
-    std::cout << "\n";
-    LOGI << "Loaded " << route.size() << " snapshots";
+                    // Process snapshot
+                    snapshots[i] = imageInput.processSnapshot(snapshot);
+                    loadProgBar.increment();
+                },
+                /*testFrameSkip=*/testFrameSkip,
+                /*greyscale=*/false);
+    }
 
     // Train model
-    LOGI << "Training model...";
-    for (const auto &snapshot : snapshots) {
-        std::cout << "." << std::flush;
-        train(snapshot.first, snapshot.second);
+    {
+        ProgressBar trainProgBar{ "Training", numSnaps };
+        for (const auto &snapshot : snapshots) {
+            if (backgroundEx) {
+                backgroundEx->check();
+            }
+
+            train(snapshot.first, snapshot.second);
+            trainProgBar.increment();
+        }
     }
-    std::cout << "\n";
-    LOGI << "Training complete";
 }
 
 //------------------------------------------------------------------------
@@ -244,16 +267,18 @@ void InfoMax::train(const cv::Mat &snapshot, const ImgProc::Mask &mask)
 }
 //-----------------------------------------------------------------------
 void InfoMax::trainRoute(const Navigation::ImageDatabase &route,
-                         ImageInput &imageInput)
+                         ImageInput &imageInput,
+                         size_t testFrameSkip,
+                         BackgroundExceptionCatcher* backgroundEx)
 {
     // If this file exists then we've already trained the network...
-    const auto weightsPath = route.getPath() / "weights.bin";
+    const auto weightsPath = route.getPath() / getWeightsFileName(imageInput.getOutputSize());
     if (weightsPath.exists()) {
         return;
     }
 
     // ...otherwise, train it now
-    MemoryBase::trainRoute(route, imageInput);
+    MemoryBase::trainRoute(route, imageInput, testFrameSkip, backgroundEx);
     saveWeights(weightsPath);
 }
 //-----------------------------------------------------------------------
@@ -265,14 +290,13 @@ void InfoMax::saveWeights(const filesystem::path &filename) const
 //-----------------------------------------------------------------------
 InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size &inputSize)
 {
-    const filesystem::path weightPath = filesystem::path(config.getOutputPath()) / ("weights.bin");
-    if(weightPath.exists()) {
+    const filesystem::path weightPath = config.getOutputPath() / getWeightsFileName(inputSize);
+    if (weightPath.exists()) {
         LOGI << "\tLoading weights from " << weightPath;
 
         const auto weights = readMatrix<InfoMaxWeightMatrixType::Scalar>(weightPath);
         return InfoMaxType(inputSize, weights);
-    }
-    else {
+    } else {
         return InfoMaxType(inputSize);
     }
 }

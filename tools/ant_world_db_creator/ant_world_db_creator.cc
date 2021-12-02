@@ -142,11 +142,11 @@ public:
         xrange.separation = yrange.separation = gridSpacing;
 
         // Make GridRecorder
-        auto gridRecorder = m_Database.getGridRecorder(xrange, yrange, {m_AgentHeight});
-        addMetadata(gridRecorder.getMetadataWriter());
+        auto gridRecorder = m_Database.createGridRecorder(xrange, yrange, {m_AgentHeight});
+        addMetadata(gridRecorder->getMetadataWriter());
 
         // Record image database
-        run(gridRecorder.getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder.record(image); });
+        run(gridRecorder->getPositions(), [&gridRecorder](const cv::Mat &image) { gridRecorder->record(image); });
     }
 };
 
@@ -172,12 +172,12 @@ public:
         }
 
         // Record image database
-        auto routeRecorder = m_Database.getRouteRecorder();
-        addMetadata(routeRecorder.getMetadataWriter());
+        auto routeRecorder = m_Database.createRouteRecorder();
+        addMetadata(routeRecorder->getMetadataWriter());
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
             const auto pos = m_Agent.getPose().position();
-            routeRecorder.record({pos[0], pos[1], pos[2]}, m_Agent.getPose().attitude()[0], image);
+            routeRecorder->record({pos[0], pos[1], pos[2]}, m_Agent.getPose().attitude()[0], image);
         });
     }
 

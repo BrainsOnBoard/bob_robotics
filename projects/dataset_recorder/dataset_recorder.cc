@@ -136,7 +136,7 @@ bobMain(int argc, char *argv[])
     Stopwatch sw;
     std::array<degree_t, 3> angles;
 
-    auto recorder = database.getRouteVideoRecorder(cam->getOutputSize(),
+    auto recorder = database.createVideoRouteRecorder(cam->getOutputSize(),
                                                    frameRate,
                                                    "mp4",
                                                    "mp4v",
@@ -203,20 +203,20 @@ bobMain(int argc, char *argv[])
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
-            recorder.record(utm.toVector(), degree_t{ yaw }, frame, pitch, roll,
-                            botSpeed, turnAngle.value(), utm.zone,
-                            (int) gpsData.gpsQuality,
-                            millimeter_t{ gpsData.horizontalDilution }.value(),
-                            time.value());
+            recorder->record(utm.toVector(), degree_t{ yaw }, frame, pitch,
+                             roll, botSpeed, turnAngle.value(), utm.zone,
+                             (int) gpsData.gpsQuality,
+                             millimeter_t{ gpsData.horizontalDilution }.value(),
+                             time.value());
         } else {
             /*
              * No new data was available. Indicate this by writing NaNs to the
              * CSV file. We can always estimate these missing values post hoc
              * with interpolation.
              */
-            recorder.record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                frame, pitch, roll, botSpeed, turnAngle.value(), "",
-                -1, NAN, time.value());
+            recorder->record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
+                             frame, pitch, roll, botSpeed, turnAngle.value(),
+                             "", -1, NAN, time.value());
         }
     }
 

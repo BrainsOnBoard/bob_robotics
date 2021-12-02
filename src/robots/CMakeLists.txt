@@ -6,12 +6,14 @@ if(TARGET BoBRobotics::robots)
     return()
 endif()
 
+find_package(I2C)
+
 # Allow users to choose the type of robot to use with ROBOT_TYPE env var
 # or CMake param
 if(NOT ROBOT_TYPE)
     if(NOT "$ENV{ROBOT_TYPE}" STREQUAL "")
         set(ROBOT_TYPE $ENV{ROBOT_TYPE})
-    elseif(UNIX AND NOT APPLE) # Default to Norbot on Linux
+    elseif(I2C_FOUND) # Default to Norbot if we have I2C
         set(ROBOT_TYPE Tank::Norbot)
     else()
         set(ROBOT_TYPE Tank::DummyTank)

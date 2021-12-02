@@ -1,6 +1,7 @@
 #pragma once
 
 // BoB robotics includes
+#include "common/background_exception_catcher.h"
 #include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 #include "navigation/perfect_memory_window.h"
@@ -50,7 +51,8 @@ public:
     virtual void setCSVFieldValues(std::unordered_map<std::string, std::string> &fields) const;
 
     virtual void trainRoute(const BoBRobotics::Navigation::ImageDatabase &route,
-                            ImageInput &imageInput);
+                            ImageInput &imageInput, size_t testFrameSkip,
+                            BoBRobotics::BackgroundExceptionCatcher * = nullptr);
 
     //------------------------------------------------------------------------
     // Public API
@@ -172,7 +174,8 @@ public:
     virtual void test(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void train(const cv::Mat &snapshot, const BoBRobotics::ImgProc::Mask &mask) override;
     virtual void trainRoute(const BoBRobotics::Navigation::ImageDatabase &route,
-                            ImageInput &imageInput) override;
+                            ImageInput &imageInput, size_t testFrameSkip,
+                            BoBRobotics::BackgroundExceptionCatcher * = nullptr) override;
 
     void saveWeights(const filesystem::path &filename) const;
 

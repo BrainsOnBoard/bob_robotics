@@ -2,6 +2,7 @@
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
 #include "common/path.h"
+#include "common/progress_bar.h"
 #include "common/stopwatch.h"
 #include "common/timer.h"
 #include "hid/joystick.h"
@@ -68,7 +69,7 @@ class RobotFSM : FSM<State>::StateHandler
     using ImageDatabase = Navigation::ImageDatabase;
 
 public:
-    RobotFSM(const Config &config)
+    RobotFSM(const Config &config, BackgroundExceptionCatcher &backgroundEx)
       : m_Config(config)
       , m_StateMachine(this, State::Invalid)
       , m_Camera(getPanoramicCamera(config))
@@ -78,6 +79,7 @@ public:
       , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
       , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain())
       , m_NumSnapshots(0)
+      , m_BackgroundEx(backgroundEx)
     {
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
@@ -141,7 +143,8 @@ public:
             m_StateMachine.transition(State::WaitToTrain);
         } else {
             // Train the algorithm on the stored images
-            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput);
+            m_Memory->trainRoute(m_TrainDatabase, *m_ImageInput,
+                                 m_Config.getSkipFrames(), &m_BackgroundEx);
 
             // Start directly in testing state
             m_StateMachine.transition(State::WaitToTest);
@@ -224,10 +227,9 @@ private:
         }
 
         if(state == State::WaitToTrain) {
-            if(event == Event::Enter) {
+            if (event == Event::Enter) {
                 LOGI << "Press B to start training" ;
-            }
-            else if(event == Event::Update) {
+            } else if (event == Event::Update) {
                 if(m_Joystick.isPressed(HID::JButton::B)) {
                     m_StateMachine.transition(State::Training);
                 }
@@ -236,6 +238,7 @@ private:
         else if(state == State::Training) {
             if(event == Event::Enter) {
                 LOGI << "Starting training";
+                m_NumSnapshots = 0;
 
                 // If we should stream, send state update
                 if(m_Config.shouldStreamOutput()) {
@@ -256,8 +259,10 @@ private:
                     m_TrainingStopwatch.start();
 
                     // Train memory
-                    LOGI << "\tTrained snapshot";
-                    m_Memory->train(m_Processed, m_Mask);
+                    if ((m_NumSnapshots++ % m_Config.getSkipFrames()) == 0) {
+                        LOGI << "\tTrained snapshot";
+                        m_ProcessedSnapshots.emplace_back(m_Processed, m_Mask);
+                    }
 
                     // If we should stream output, send snapshot
                     if(m_Config.shouldStreamOutput()) {
@@ -292,6 +297,20 @@ private:
 
                 // Write metadata to disk
                 m_Recorder.reset();
+
+                // Train the algorithm with the cached processed snapshots
+                {
+                    ProgressBar trainProgBar{ "Training", m_ProcessedSnapshots.size() };
+                    for (const auto &snapshot : m_ProcessedSnapshots) {
+                        m_BackgroundEx.check();
+
+                        m_Memory->train(snapshot.first, snapshot.second);
+                        trainProgBar.increment();
+                    }
+                }
+
+                // Recover memory
+                m_ProcessedSnapshots.clear();
             }
         }
         else if(state == State::WaitToTest) {
@@ -441,12 +460,37 @@ private:
         // Also log Vicon frame number, if present
         fieldNames.emplace_back("Frame");
 
-        m_Recorder = std::make_unique<ImageDatabase::ImageRouteRecorder>(database,
-                                                                         "jpg",
-                                                                         std::move(fieldNames));
+        // Record as video file or images according to user's preference
+        if (m_Config.shouldRecordVideo()) {
+            /*
+             * If auto-training we know the framerate, otherwise just
+             * arbitrarily choose 15 fps for the video file.
+             */
+            auto fps = 15_Hz;
+            if (m_Config.shouldAutoTrain()) {
+                const auto period = m_Config.getTrainInterval();
+                if (period == Milliseconds(0)) {
+                    fps = m_Camera->getFrameRate();
+                    LOGI << fps;
+                } else {
+                    fps = 1 / units::time::second_t{ period };
+                    if (fps > m_Camera->getFrameRate()) {
+                        throw std::runtime_error("Requested training rate is higher than camera's FPS");
+                    }
+                }
+            }
+            m_Recorder = database.createVideoRouteRecorder(m_Camera->getOutputSize(),
+                                                           fps,
+                                                           m_Config.getVideoFileExtension(),
+                                                           m_Config.getVideoCodec(),
+                                                           std::move(fieldNames));
+        } else {
+            m_Recorder = database.createRouteRecorder("jpg", std::move(fieldNames));
+        }
 
         // Save additional metadata
         auto &metadata = m_Recorder->getMetadataWriter();
+        metadata << "config" << m_Config;
         metadata << "camera" << *m_Camera;
         m_ImageInput->writeMetadata(metadata);
     }
@@ -477,8 +521,11 @@ private:
     // Image processor
     std::unique_ptr<ImageInput> m_ImageInput;
 
-    // Perfect memory
+    // Algorithm memory
     std::unique_ptr<MemoryBase> m_Memory;
+
+    // Store for processed snapshots
+    std::vector<std::pair<cv::Mat, ImgProc::Mask>> m_ProcessedSnapshots;
 
     // Motor driver
     ROBOT_TYPE m_Robot;
@@ -506,7 +553,7 @@ private:
     std::unique_ptr<ImageDatabase> m_TestDatabase;
 
     // For recording training and testing data
-    std::unique_ptr<ImageDatabase::ImageRouteRecorder> m_Recorder;
+    std::unique_ptr<ImageDatabase::RouteRecorder> m_Recorder;
 
     Milliseconds m_DriveTime;
 
@@ -522,29 +569,54 @@ private:
     std::unique_ptr<Video::NetSink> m_LiveNetSink;
     std::unique_ptr<Video::NetSink> m_SnapshotNetSink;
     std::unique_ptr<Video::NetSink> m_BestSnapshotNetSink;
+
+    // For catching exceptions on background threads
+    BackgroundExceptionCatcher &m_BackgroundEx;
 };
 }   // Anonymous namespace
 
 int bobMain(int argc, char *argv[])
 {
-    const char *configFilename = (argc > 1) ? argv[1] : "config.yaml";
+    Config config;
+    filesystem::path configPath{ "config.yaml" };
+    bool configIsDatabase = false;
+
+    if (argc > 1) {
+        if (strcmp(argv[1], "--dump-config") == 0) {
+            // Dump default config values to disk without doing anything
+            cv::FileStorage configFile("default_config.yaml", cv::FileStorage::WRITE);
+            configFile << "config" << config;
+
+            return EXIT_SUCCESS;
+        } else {
+            configPath = argv[1];
+            configIsDatabase = configPath.is_directory();
+            if (configIsDatabase) {
+                configPath = configPath / "database_metadata.yaml";
+                BOB_ASSERT(configPath.exists());
+            }
+        }
+    }
 
     // Read config values from file
-    Config config;
     {
-        cv::FileStorage configFile(configFilename, cv::FileStorage::READ);
+        cv::FileStorage configFile(configPath.str(), cv::FileStorage::READ);
         if(configFile.isOpened()) {
-            configFile["config"] >> config;
+            if (configIsDatabase) {
+                configFile["metadata"]["config"] >> config;
+            } else {
+                configFile["config"] >> config;
+            }
         }
     }
 
     // Re-write config file
-    {
-        cv::FileStorage configFile(configFilename, cv::FileStorage::WRITE);
+    if (!configIsDatabase) {
+        cv::FileStorage configFile(configPath.str(), cv::FileStorage::WRITE);
         configFile << "config" << config;
     }
     BackgroundExceptionCatcher backgroundEx;
-    RobotFSM robot(config);
+    RobotFSM robot(config, backgroundEx);
 
     {
         Timer<> timer("Total time:");
