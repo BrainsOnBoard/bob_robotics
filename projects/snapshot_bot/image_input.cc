@@ -149,7 +149,7 @@ cv::Mat ImageInputBinary::readSegmentIndices(const cv::Mat &snapshot)
 
     // For some reason watershed thresholding results in a border around image so return ROI inside this
     // **NOTE** we don't use getOutputSize() here as it may be overriden in derived classes
-    return cv::Mat(m_SegmentIndices, cv::Rect(1, 1, getUnwrapSize().width - 2, getUnwrapSize().height - 2));
+    return { m_SegmentIndices, cv::Rect(1, 1, getUnwrapSize().width - 2, getUnwrapSize().height - 2) };
 }
 
 //----------------------------------------------------------------------------

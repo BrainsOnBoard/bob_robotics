@@ -268,6 +268,7 @@ static PyTypeObject AgentType = {
     nullptr,                    /* tp_init */
     nullptr,                    /* tp_alloc */
     (newfunc) Agent_new,        /* tp_new */
+    // NOLINTNEXTLINE
 };
 
 static struct PyModuleDef ModuleDefinitions
@@ -278,10 +279,11 @@ static struct PyModuleDef ModuleDefinitions
     "A Python wrapper for the BoB robotics ant world module",
     -1,
     // clang-format on
+    // NOLINTNEXTLINE
 };
 
 PyMODINIT_FUNC
-PyInit__antworld(void)
+PyInit__antworld(void) // NOLINT
 {
     import_array();             // init numpy
     BoBRobotics::initLogging(); // init plog

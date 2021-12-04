@@ -81,7 +81,7 @@ ImageDatabase::ImageFileWriter::writeFrame(const cv::Mat &frame, Entry &entry,
 }
 
 ImageDatabase::VideoFileWriter::VideoFileWriter(const ImageDatabase &database,
-                                                std::string extension, std::string codec)
+                                                const std::string& extension, std::string codec)
   : m_FileName{ database.getName() + "." + extension }
 {
     const auto path = database.getPath() / m_FileName;
