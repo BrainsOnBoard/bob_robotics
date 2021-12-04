@@ -30,7 +30,7 @@ if(USE_VICON)
 endif()
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS ${MODULES})
-add_library(snapshot_bot_common OBJECT common.cc config.cc image_input.cc memory.cc)
+add_library(snapshot_bot_common STATIC common.cc config.cc image_input.cc memory.cc)
 target_link_libraries(snapshot_bot_common PUBLIC BoBRobotics::imgproc
                       BoBRobotics::navigation BoBRobotics::video)
 
