@@ -116,33 +116,33 @@ for(b = 0; b < builderNodes.size(); b++) {
             }
 
             // Only run on nodes which actually have clang-tidy installed
-//             if(nodeLabel.contains("clang_tidy")) {
-//                 stage("Running clang-tidy (" + env.NODE_NAME + ")") {
-//                     // Generate unique name for message
-//                     def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
-//                     def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check --generate-fixes 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\""
+            if(nodeLabel.contains("clang_tidy")) {
+                stage("Running clang-tidy (" + env.NODE_NAME + ")") {
+                    // Generate unique name for message
+                    def uniqueMsg = "msg_clang_tidy_" + env.NODE_NAME;
+                    def runClangTidyStatus = sh script:"./bin/run_clang_tidy_check --generate-fixes 1> \"" + uniqueMsg + "\" 2> \"" + uniqueMsg + "\""
 
-//                     archive uniqueMsg;
+                    archive uniqueMsg;
 
-//                     recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
-//                     if(runClangTidyStatus != 0) {
-//                         setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
-//                     }
+                    recordIssues enabledForFailure: true, tool: clangTidy(pattern: "**/msg_clang_tidy_" + env.NODE_NAME, id: "clang_tidy_" + env.NODE_NAME), qualityGates: [[threshold: 1, type: 'TOTAL', unstable: true]]
+                    if(runClangTidyStatus != 0) {
+                        setBuildStatus("Running clang-tidy (" + env.NODE_NAME + ")", "FAILURE")
+                    }
 
-//                     // If there are auto-generated fixes, archive these in a zip file
-//                     def hasFixes = fileExists "./clang_tidy_fixes"
-//                     if(hasFixes) {
-//                         // **YUCK**: clang-tidy's fixes use absolute paths
-//                         sh "sed -i 's|" + env.WORKSPACE + "|.|g' ./clang_tidy_fixes/*"
+                    // If there are auto-generated fixes, archive these in a zip file
+                    def hasFixes = fileExists "./clang_tidy_fixes"
+                    if(hasFixes) {
+                        // **YUCK**: clang-tidy's fixes use absolute paths
+                        sh "sed -i 's|" + env.WORKSPACE + "|.|g' ./clang_tidy_fixes/*"
 
-//                         def fileName = "clang_tidy_fixes_" + env.NODE_NAME + ".zip";
-//                         echo "Archiving clang-tidy fixes as " + fileName;
-//                         zip zipFile: fileName, archive: true, dir: './clang_tidy_fixes'
-//                     } else {
-//                         echo "No clang-tidy fixes found to archive"
-//                     }
-//                 }
-//             }
+                        def fileName = "clang_tidy_fixes_" + env.NODE_NAME + ".zip";
+                        echo "Archiving clang-tidy fixes as " + fileName;
+                        zip zipFile: fileName, archive: true, dir: './clang_tidy_fixes'
+                    } else {
+                        echo "No clang-tidy fixes found to archive"
+                    }
+                }
+            }
         }
     }
 }
