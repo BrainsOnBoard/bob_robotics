@@ -42,7 +42,7 @@ std::string getCameraName(int deviceNumber)
         }
     }
 
-    return { video_cap.card };
+    return { (char *) video_cap.card };
 }
 
 std::vector<CameraDevice> getCameras()
