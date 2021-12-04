@@ -26,6 +26,7 @@
 
 // Third-party includes
 #include "plog/Log.h"
+#include "third_party/optional.hpp"
 #include "third_party/path.h"
 
 // Standard C++ includes
@@ -80,6 +81,13 @@ public:
       , m_NumSnapshots(0)
       , m_BackgroundEx(backgroundEx)
     {
+        // If actually driving the robot, it needs to be initialised
+        if (m_Config.shouldDriveRobot()) {
+            m_Robot.emplace();
+        } else {
+            LOGW << "Robot driving is disabled in config file";
+        }
+
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             // Spawn async tasks to wait for connections
@@ -191,8 +199,8 @@ private:
             }
 
             // If we're in a suitable state, drive motors using joystick
-            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {
-                HID::drive(m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
+            if(m_Robot && (state == State::WaitToTrain || state == State::Training || state == State::WaitToTest)) {
+                HID::drive(*m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
             }
 
             // Capture frame
@@ -276,7 +284,9 @@ private:
                 }
             }
             else if(event == Event::Exit) {
-                m_Robot.stopMoving();
+                if (m_Robot) {
+                    m_Robot->stopMoving();
+                }
 
                 // Write metadata to disk
                 m_Recorder.reset();
@@ -397,15 +407,17 @@ private:
         }
         else if(state == State::DrivingForward || state == State::Turning) {
             if(event == Event::Enter) {
-                // If we're driving forward, do so
-                if(state == State::DrivingForward) {
-                    m_Robot.moveForward(m_Config.getMoveSpeed());
-                }
-                // Otherwise start turning
-                else {
-                    const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
-                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed.first : -turnSpeed.first;
-                    m_Robot.turnOnTheSpot(motorTurn);
+                if (m_Robot) {
+                    // If we're driving forward, do so
+                    if(state == State::DrivingForward) {
+                        m_Robot->moveForward(m_Config.getMoveSpeed());
+                    }
+                    // Otherwise start turning
+                    else {
+                        const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                        const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed.first : -turnSpeed.first;
+                        m_Robot->turnOnTheSpot(motorTurn);
+                    }
                 }
 
                 // Start timer
@@ -425,8 +437,8 @@ private:
                     m_StateMachine.transition(State::Testing);
                 }
             }
-            else if(event == Event::Exit) {
-                m_Robot.stopMoving();
+            else if(event == Event::Exit && m_Robot) {
+                m_Robot->stopMoving();
             }
         }
         else if(state == State::PausedDrivingForward || state == State::PausedTurning) {
@@ -519,7 +531,7 @@ private:
     std::vector<std::pair<cv::Mat, ImgProc::Mask>> m_ProcessedSnapshots;
 
     // Motor driver
-    ROBOT_TYPE m_Robot;
+    std::experimental::optional<ROBOT_TYPE> m_Robot;
 
     // Last time at which a motor command was issued or a snapshot was trained
     Stopwatch m_MoveStopwatch;

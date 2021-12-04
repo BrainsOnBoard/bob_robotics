@@ -38,6 +38,7 @@ public:
     bool shouldStreamOutput() const{ return m_StreamOutput; }
     bool shouldUseODK2() const{ return m_ODK2; }
     bool shouldUseWebcam() const{ return m_Webcam; }
+    bool shouldDriveRobot() const{ return m_DriveRobot; }
     bool shouldRecordVideo() const{ return m_RecordVideo; }
 
     const std::string &getVideoCodec() const{ return m_VideoCodec; }
@@ -114,6 +115,9 @@ private:
 
     // Should we use the system webcam
     bool m_Webcam;
+
+    // Should we actually move the robot
+    bool m_DriveRobot;
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;

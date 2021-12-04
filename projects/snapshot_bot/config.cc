@@ -47,6 +47,7 @@ Config::Config()
   , m_StreamOutput(false)
   , m_ODK2(false)
   , m_Webcam(false)
+  , m_DriveRobot(true)
   , m_OutputPath(BoBRobotics::Path::getProgramDirectory() / "training")
   , m_RecordVideo(false)
   , m_VideoFileExtension("avi")
@@ -105,6 +106,7 @@ Config::read(const cv::FileNode &node)
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
         cv::read(node["shouldUseODK2"], m_ODK2, m_ODK2);
         cv::read(node["shouldUseWebcam"], m_Webcam, m_Webcam);
+        cv::read(node["shouldDriveRobot"], m_DriveRobot, m_DriveRobot);
         cv::read(node["shouldRecordVideo"], m_RecordVideo, m_RecordVideo);
         cv::read(node["videoCodec"], m_VideoCodec, m_VideoCodec);
         cv::read(node["videoFileExtension"], m_VideoFileExtension, m_VideoFileExtension);
@@ -221,6 +223,7 @@ Config::write(cv::FileStorage &fs) const
     fs << "shouldStreamOutput" << shouldStreamOutput();
     fs << "shouldUseODK2" << shouldUseODK2();
     fs << "shouldUseWebcam" << shouldUseWebcam();
+    fs << "shouldDriveRobot" << shouldDriveRobot();
     fs << "outputPath" << getOutputPath().str();
     fs << "shouldRecordVideo" << shouldRecordVideo();
     fs << "videoCodec" << getVideoCodec();
