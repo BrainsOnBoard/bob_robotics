@@ -37,6 +37,7 @@ public:
     bool shouldSaveTestingDiagnostic() const{ return m_SaveTestingDiagnostic; }
     bool shouldStreamOutput() const{ return m_StreamOutput; }
     bool shouldUseODK2() const{ return m_ODK2; }
+    bool shouldUseWebcam() const{ return m_Webcam; }
     bool shouldRecordVideo() const{ return m_RecordVideo; }
 
     const std::string &getVideoCodec() const{ return m_VideoCodec; }
@@ -81,6 +82,8 @@ public:
 
     std::pair<float, Milliseconds> getTurnSpeed(units::angle::degree_t angleDifference) const;
 
+    void parseArgs(int argc, char **argv);
+
     void write(cv::FileStorage &fs) const;
 
     void read(const cv::FileNode &node);
@@ -108,6 +111,9 @@ private:
 
     // Should we use the ODK2 camera
     bool m_ODK2;
+
+    // Should we use the system webcam
+    bool m_Webcam;
 
     // Path to store snapshots etc
     filesystem::path m_OutputPath;
