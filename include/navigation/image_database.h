@@ -121,7 +121,7 @@ public:
     class VideoFileWriter
       : public FrameWriter {
     public:
-        VideoFileWriter(const ImageDatabase &, std::string extension, std::string codec);
+        VideoFileWriter(const ImageDatabase &, const std::string& extension, std::string codec);
         void writeFrame(const cv::Mat &frame, Entry &entry, const std::function<std::string()> &getFileName) override;
         const std::string &getVideoFileName() const;
 

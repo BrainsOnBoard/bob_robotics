@@ -80,7 +80,7 @@ void MemoryBase::trainRoute(const Navigation::ImageDatabase &route,
                     snapshots[i] = imageInput.processSnapshot(snapshot);
                     loadProgBar.increment();
                 },
-                /*testFrameSkip=*/testFrameSkip,
+                /*frameSkip=*/testFrameSkip,
                 /*greyscale=*/false);
     }
 
