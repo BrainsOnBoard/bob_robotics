@@ -337,6 +337,12 @@ private:
                 // Find matching snapshot
                 m_Memory->test(m_Processed, m_Mask);
 
+                // Extra info about the navigation algo
+                LOGD << "Heading: " << static_cast<degree_t>(m_Memory->getBestHeading()).value() << "°";
+                LOGD << "Image difference: " << m_Memory->getLowestDifference();
+                const auto *pm = dynamic_cast<PerfectMemory *>(m_Memory.get());
+                LOGD_IF(pm) << "Best-matching snapshot: " << pm->getBestSnapshotIndex();
+
                 ImageDatabase::Entry entry;
                 entry.extraFields["Timestamp [ms]"] = std::to_string(static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value());
 
