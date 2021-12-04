@@ -30,11 +30,11 @@ if(USE_VICON)
 endif()
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS ${MODULES})
-add_library(snapshot_bot_common OBJECT config.cc image_input.cc memory.cc)
+add_library(snapshot_bot_common OBJECT common.cc config.cc image_input.cc memory.cc)
 target_link_libraries(snapshot_bot_common PUBLIC BoBRobotics::imgproc
                       BoBRobotics::navigation BoBRobotics::video)
 
-add_executable(snapshot_bot snapshot_bot.cc common.cc ${SOURCES})
+add_executable(snapshot_bot snapshot_bot.cc)
 target_link_libraries(snapshot_bot PRIVATE snapshot_bot_common
                       ${BoBRobotics_LIBRARIES})
 
@@ -54,7 +54,7 @@ find_package(BoBThirdParty COMPONENTS matplotlibcpp)
 if(NOT BoBThirdParty_FOUND)
     message(WARNING "Could not find Python; will not build extra tools")
 else()
-    add_executable(live_difference live_difference.cc common.cc)
+    add_executable(live_difference live_difference.cc)
     target_link_libraries(live_difference PRIVATE ${BoBThirdParty_LIBRARIES}
                           snapshot_bot_common)
 endif()
