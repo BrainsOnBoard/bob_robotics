@@ -227,6 +227,7 @@ static PyMethodDef Agent_methods[] = {
     // clang-format on
 };
 
+// NOLINTNEXTLINE
 static PyTypeObject AgentType = {
     // clang-format off
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
@@ -281,7 +282,7 @@ static struct PyModuleDef ModuleDefinitions
 };
 
 PyMODINIT_FUNC
-PyInit__antworld(void)
+PyInit__antworld(void) // NOLINT
 {
     import_array();             // init numpy
     BoBRobotics::initLogging(); // init plog
