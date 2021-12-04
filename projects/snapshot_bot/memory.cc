@@ -295,9 +295,9 @@ InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size
         LOGI << "\tLoading weights from " << weightPath;
 
         const auto weights = readMatrix<InfoMaxWeightMatrixType::Scalar>(weightPath);
-        return InfoMaxType(inputSize, weights);
+        return { inputSize, weights };
     } else {
-        return InfoMaxType(inputSize);
+        return { inputSize };
     }
 }
 
