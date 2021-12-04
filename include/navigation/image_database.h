@@ -103,6 +103,7 @@ public:
 
     class FrameWriter {
     public:
+        virtual ~FrameWriter() = default;
         virtual void writeFrame(const cv::Mat &frame, Entry &entry,
                                 const std::function<std::string()> &getFileName) = 0;
     };
