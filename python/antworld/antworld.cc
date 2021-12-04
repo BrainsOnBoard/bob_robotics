@@ -227,7 +227,6 @@ static PyMethodDef Agent_methods[] = {
     // clang-format on
 };
 
-// NOLINTNEXTLINE
 static PyTypeObject AgentType = {
     // clang-format off
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
@@ -269,6 +268,7 @@ static PyTypeObject AgentType = {
     nullptr,                    /* tp_init */
     nullptr,                    /* tp_alloc */
     (newfunc) Agent_new,        /* tp_new */
+    // NOLINTNEXTLINE
 };
 
 static struct PyModuleDef ModuleDefinitions
@@ -279,6 +279,7 @@ static struct PyModuleDef ModuleDefinitions
     "A Python wrapper for the BoB robotics ant world module",
     -1,
     // clang-format on
+    // NOLINTNEXTLINE
 };
 
 PyMODINIT_FUNC
