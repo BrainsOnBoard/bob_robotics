@@ -1,0 +1,44 @@
+%YAML:1.0
+---
+config:
+   shouldUseBinaryImage: 0
+   shouldUseHorizonVector: 0
+   shouldTrain: 1
+   shouldUseInfoMax: 0
+   shouldSaveTestingDiagnostic: 1
+   shouldStreamOutput: 1
+   shouldUseODK2: 0
+   shouldUseWebcam: 0
+   outputPath: demo
+   shouldRecordVideo: 1
+   videoCodec: XVID
+   videoFileExtension: avi
+   maxSnapshotRotateDegrees: 90.
+   pmFwdLASize: -1
+   pmFwdLAIncreaseSize: 0
+   pmFwdLADecreaseSize: 0
+   pmMinFwdLASize: 0
+   pmMaxFwdLASize: 0
+   unwrapRes: [ 180, 50 ]
+   croppedRect: [ 0, 25, 180, 25 ]
+   maskImageFilename: ""
+   watershedMarkerImageFilename: "segmentation.png"
+   joystickDeadzone: 2.5000000000000000e-01
+   autoTrain: 1
+   trainInterval: 100.
+   testFrameSkip: 1
+   motorCommandInterval: 400.
+   motorTurnCommandInterval: 500.
+   serverListenPort: 2000
+   snapshotServerListenPort: 2001
+   bestSnapshotServerListenPort: 2002
+   moveSpeed: 5.0000000000000000e-01
+   turnThresholds:
+      -
+         - 10.
+         - 2.0000000298023224e-01
+         - 500.
+      -
+         - 20.
+         - 3.0000001192092896e-01
+         - 500.

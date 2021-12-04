@@ -46,6 +46,8 @@ Config::Config()
   , m_SaveTestingDiagnostic(false)
   , m_StreamOutput(false)
   , m_ODK2(false)
+  , m_Webcam(false)
+  , m_DriveRobot(true)
   , m_OutputPath(BoBRobotics::Path::getProgramDirectory() / "training")
   , m_RecordVideo(false)
   , m_VideoFileExtension("avi")
@@ -72,8 +74,7 @@ Config::Config()
   , m_ViconTrackingObjectName("norbot")
   , m_UseViconCaptureControl(false)
   , m_ViconCaptureControlPort(0)
-{
-}
+{}
 
 std::pair<float, Milliseconds>
 Config::getTurnSpeed(units::angle::degree_t angleDifference) const
@@ -104,6 +105,8 @@ Config::read(const cv::FileNode &node)
         cv::read(node["shouldSaveTestingDiagnostic"], m_SaveTestingDiagnostic, m_SaveTestingDiagnostic);
         cv::read(node["shouldStreamOutput"], m_StreamOutput, m_StreamOutput);
         cv::read(node["shouldUseODK2"], m_ODK2, m_ODK2);
+        cv::read(node["shouldUseWebcam"], m_Webcam, m_Webcam);
+        cv::read(node["shouldDriveRobot"], m_DriveRobot, m_DriveRobot);
         cv::read(node["shouldRecordVideo"], m_RecordVideo, m_RecordVideo);
         cv::read(node["videoCodec"], m_VideoCodec, m_VideoCodec);
         cv::read(node["videoFileExtension"], m_VideoFileExtension, m_VideoFileExtension);
@@ -219,6 +222,8 @@ Config::write(cv::FileStorage &fs) const
     fs << "shouldSaveTestingDiagnostic" << shouldSaveTestingDiagnostic();
     fs << "shouldStreamOutput" << shouldStreamOutput();
     fs << "shouldUseODK2" << shouldUseODK2();
+    fs << "shouldUseWebcam" << shouldUseWebcam();
+    fs << "shouldDriveRobot" << shouldDriveRobot();
     fs << "outputPath" << getOutputPath().str();
     fs << "shouldRecordVideo" << shouldRecordVideo();
     fs << "videoCodec" << getVideoCodec();
@@ -268,4 +273,38 @@ Config::write(cv::FileStorage &fs) const
         fs << "}";
     }
     fs << "}";
+}
+
+void
+Config::parseArgs(int argc, char **argv)
+{
+    filesystem::path configPath{ "config.yaml" };
+    bool configIsDatabase = false;
+
+    if (argc > 1) {
+        configPath = argv[1];
+        configIsDatabase = configPath.is_directory();
+        if (configIsDatabase) {
+            configPath = configPath / "database_metadata.yaml";
+            BOB_ASSERT(configPath.exists());
+        }
+    }
+
+    // Read config values from file
+    {
+        cv::FileStorage configFile(configPath.str(), cv::FileStorage::READ);
+        if(configFile.isOpened()) {
+            if (configIsDatabase) {
+                configFile["metadata"]["config"] >> *this;
+            } else {
+                configFile["config"] >> *this;
+            }
+        }
+    }
+
+    // Re-write config file
+    if (!configIsDatabase) {
+        cv::FileStorage configFile(configPath.str(), cv::FileStorage::WRITE);
+        configFile << "config" << *this;
+    }
 }

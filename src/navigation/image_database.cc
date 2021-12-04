@@ -598,6 +598,12 @@ ImageDatabase::loadImages(std::vector<cv::Mat> &images, const cv::Size &size,
     }
 }
 
+bool
+ImageDatabase::needsUnwrapping() const
+{
+    return m_NeedsUnwrapping.value();
+}
+
 units::frequency::hertz_t
 ImageDatabase::getFrameRate() const
 {

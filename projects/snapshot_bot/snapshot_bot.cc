@@ -1,3 +1,8 @@
+#include "common.h"
+#include "config.h"
+#include "image_input.h"
+#include "memory.h"
+
 // BoB robotics includes
 #include "common/background_exception_catcher.h"
 #include "common/fsm.h"
@@ -12,22 +17,17 @@
 #include "navigation/image_database.h"
 #include "net/server.h"
 #include "robots/robot_type.h"
+#ifdef USE_VICON
 #include "vicon/capture_control.h"
 #include "vicon/udp.h"
+#endif // USE_VICON
+#include "video/input.h"
 #include "video/netsink.h"
-#include "video/panoramic.h"
-#ifdef USE_ODK2
-#include "video/odk2/odk2.h"
-#endif
 
 // Third-party includes
 #include "plog/Log.h"
+#include "third_party/optional.hpp"
 #include "third_party/path.h"
-
-// Snapshot bot includes
-#include "config.h"
-#include "image_input.h"
-#include "memory.h"
 
 // Standard C++ includes
 #include <chrono>
@@ -75,12 +75,19 @@ public:
       , m_Camera(getPanoramicCamera(config))
       , m_Output(m_Camera->getOutputSize(), CV_8UC3)
       , m_DifferenceImage(config.getCroppedRect().size(), CV_8UC1)
-      , m_ImageInput(createImageInput())
+      , m_ImageInput(createImageInput(config, *m_Camera))
       , m_Memory(createMemory(config, m_ImageInput->getOutputSize()))
       , m_TrainDatabase(m_Config.getOutputPath(), m_Config.shouldTrain())
       , m_NumSnapshots(0)
       , m_BackgroundEx(backgroundEx)
     {
+        // If actually driving the robot, it needs to be initialised
+        if (m_Config.shouldDriveRobot()) {
+            m_Robot.emplace();
+        } else {
+            LOGW << "Robot driving is disabled in config file";
+        }
+
         // If we should stream output, run server thread
         if(m_Config.shouldStreamOutput()) {
             // Spawn async tasks to wait for connections
@@ -123,18 +130,26 @@ public:
 
         // If we should use Vicon tracking
         if(m_Config.shouldUseViconTracking()) {
+#ifdef USE_VICON
             // Connect to port specified in config
             m_ViconTracking.connect(m_Config.getViconTrackingPort());
+#else
+            throw std::runtime_error("You must rebuild with -DUSE_VICON=ON");
+#endif
         }
 
         // If we should use Vicon capture control
         if(m_Config.shouldUseViconCaptureControl()) {
+#ifdef USE_VICON
             // Connect to capture host system specified in config
             m_ViconCaptureControl.connect(m_Config.getViconCaptureControlHost(), m_Config.getViconCaptureControlPort(),
                                           m_Config.getViconCaptureControlPath());
 
             // Start capture
             m_ViconCaptureControl.startRecording(m_Config.getViconCaptureControlName());
+#else
+            throw std::runtime_error("You must rebuild with -DUSE_VICON=ON");
+#endif
         }
 
         // If we should train
@@ -160,35 +175,6 @@ public:
     }
 
 private:
-    std::unique_ptr<ImageInput> createImageInput() const
-    {
-        // If camera image will need unwrapping, create unwrapper
-        std::unique_ptr<ImgProc::OpenCVUnwrap360> unwrapper;
-        cv::Size unwrapSize;
-        if (m_Camera->needsUnwrapping()) {
-            unwrapper = std::make_unique<ImgProc::OpenCVUnwrap360>(m_Camera->createUnwrapper(m_Config.getUnwrapRes()));
-            unwrapSize = unwrapper->getOutputSize();
-        } else {
-            unwrapSize = m_Camera->getOutputSize();
-        }
-
-        return ::createImageInput(m_Config, unwrapSize, std::move(unwrapper));
-    }
-
-    std::unique_ptr<Video::Input> getPanoramicCamera(const Config &config)
-    {
-        if(config.shouldUseODK2()) {
-#ifdef USE_ODK2
-            return std::make_unique<Video::ODK2>();
-#else
-            throw std::runtime_error("Snapshot bot not compiled with ODK2 support - please re-run cmake with -DUSE_ODK2=1");
-#endif
-        }
-        else {
-            return Video::getPanoramicCamera(cv::CAP_V4L);
-        }
-    }
-
     //------------------------------------------------------------------------
     // FSM::StateHandler virtuals
     //------------------------------------------------------------------------
@@ -201,17 +187,20 @@ private:
 
             // Exit if X is pressed
             if(m_Joystick.isPressed(HID::JButton::X)) {
+#ifdef USE_VICON
                  // If we should use Vicon capture control
                 if(m_Config.shouldUseViconCaptureControl()) {
                     // Stop capture
                     m_ViconCaptureControl.stopRecording(m_Config.getViconCaptureControlName());
                 }
+#endif
+                LOGD << "X button pressed. Terminating...";
                 return false;
             }
 
             // If we're in a suitable state, drive motors using joystick
-            if(state == State::WaitToTrain || state == State::Training || state == State::WaitToTest) {
-                HID::drive(m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
+            if(m_Robot && (state == State::WaitToTrain || state == State::Training || state == State::WaitToTest)) {
+                HID::drive(*m_Robot, m_Joystick, m_Config.getJoystickDeadzone());
             }
 
             // Capture frame
@@ -273,6 +262,7 @@ private:
 
                     // If Vicon tracking is available
                     if(m_Config.shouldUseViconTracking()) {
+#ifdef USE_VICON
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
                         const auto pose = objectData.getPose();
@@ -281,6 +271,7 @@ private:
                                            m_Output,
                                            elapsed,
                                            objectData.getFrameNumber());
+#endif
                     } else {
                         m_Recorder->record(Vector3<millimeter_t>::nan(),
                                            degree_t{ NAN }, m_Output, elapsed, -1);
@@ -293,7 +284,9 @@ private:
                 }
             }
             else if(event == Event::Exit) {
-                m_Robot.stopMoving();
+                if (m_Robot) {
+                    m_Robot->stopMoving();
+                }
 
                 // Write metadata to disk
                 m_Recorder.reset();
@@ -354,6 +347,12 @@ private:
                 // Find matching snapshot
                 m_Memory->test(m_Processed, m_Mask);
 
+                // Extra info about the navigation algo
+                LOGD << "Heading: " << static_cast<degree_t>(m_Memory->getBestHeading()).value() << "°";
+                LOGD << "Image difference: " << m_Memory->getLowestDifference();
+                const auto *pm = dynamic_cast<PerfectMemory *>(m_Memory.get());
+                LOGD_IF(pm) << "Best-matching snapshot: " << pm->getBestSnapshotIndex();
+
                 ImageDatabase::Entry entry;
                 entry.extraFields["Timestamp [ms]"] = std::to_string(static_cast<millisecond_t>(m_RecordingStopwatch.elapsed()).value());
 
@@ -362,12 +361,14 @@ private:
 
                 // If Vicon tracking is available
                 if(m_Config.shouldUseViconTracking()) {
+#ifdef USE_VICON
                     // Get tracking data
                     const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
                     const auto &pose = objectData.getPose();
                     entry.position = pose.position();
                     entry.heading = pose.yaw();
                     entry.extraFields["Frame"] = std::to_string(objectData.getFrameNumber());
+#endif
                 } else {
                     entry.extraFields["Frame"] = "-1";
                 }
@@ -406,15 +407,17 @@ private:
         }
         else if(state == State::DrivingForward || state == State::Turning) {
             if(event == Event::Enter) {
-                // If we're driving forward, do so
-                if(state == State::DrivingForward) {
-                    m_Robot.moveForward(m_Config.getMoveSpeed());
-                }
-                // Otherwise start turning
-                else {
-                    const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
-                    const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed.first : -turnSpeed.first;
-                    m_Robot.turnOnTheSpot(motorTurn);
+                if (m_Robot) {
+                    // If we're driving forward, do so
+                    if(state == State::DrivingForward) {
+                        m_Robot->moveForward(m_Config.getMoveSpeed());
+                    }
+                    // Otherwise start turning
+                    else {
+                        const auto turnSpeed = m_Config.getTurnSpeed(m_Memory->getBestHeading());
+                        const float motorTurn = (m_Memory->getBestHeading() <  0.0_deg) ? turnSpeed.first : -turnSpeed.first;
+                        m_Robot->turnOnTheSpot(motorTurn);
+                    }
                 }
 
                 // Start timer
@@ -434,8 +437,8 @@ private:
                     m_StateMachine.transition(State::Testing);
                 }
             }
-            else if(event == Event::Exit) {
-                m_Robot.stopMoving();
+            else if(event == Event::Exit && m_Robot) {
+                m_Robot->stopMoving();
             }
         }
         else if(state == State::PausedDrivingForward || state == State::PausedTurning) {
@@ -528,7 +531,7 @@ private:
     std::vector<std::pair<cv::Mat, ImgProc::Mask>> m_ProcessedSnapshots;
 
     // Motor driver
-    ROBOT_TYPE m_Robot;
+    std::experimental::optional<ROBOT_TYPE> m_Robot;
 
     // Last time at which a motor command was issued or a snapshot was trained
     Stopwatch m_MoveStopwatch;
@@ -540,11 +543,13 @@ private:
     // Index of test image to write
     size_t m_TestImageIndex;
 
+#ifdef USE_VICON
     // Vicon tracking interface
     Vicon::UDPClient<Vicon::ObjectData> m_ViconTracking;
 
     // Vicon capture control interface
     Vicon::CaptureControl m_ViconCaptureControl;
+#endif
 
     // For training data
     ImageDatabase m_TrainDatabase;
@@ -578,47 +583,21 @@ private:
 int bobMain(int argc, char *argv[])
 {
     Config config;
-    filesystem::path configPath{ "config.yaml" };
-    bool configIsDatabase = false;
 
-    if (argc > 1) {
-        if (strcmp(argv[1], "--dump-config") == 0) {
-            // Dump default config values to disk without doing anything
-            cv::FileStorage configFile("default_config.yaml", cv::FileStorage::WRITE);
-            configFile << "config" << config;
-
-            return EXIT_SUCCESS;
-        } else {
-            configPath = argv[1];
-            configIsDatabase = configPath.is_directory();
-            if (configIsDatabase) {
-                configPath = configPath / "database_metadata.yaml";
-                BOB_ASSERT(configPath.exists());
-            }
-        }
-    }
-
-    // Read config values from file
-    {
-        cv::FileStorage configFile(configPath.str(), cv::FileStorage::READ);
-        if(configFile.isOpened()) {
-            if (configIsDatabase) {
-                configFile["metadata"]["config"] >> config;
-            } else {
-                configFile["config"] >> config;
-            }
-        }
-    }
-
-    // Re-write config file
-    if (!configIsDatabase) {
-        cv::FileStorage configFile(configPath.str(), cv::FileStorage::WRITE);
+    if (argc > 1 && strcmp(argv[1], "--dump-config") == 0) {
+        // Dump default config values to disk without doing anything
+        cv::FileStorage configFile("default_config.yaml", cv::FileStorage::WRITE);
         configFile << "config" << config;
+
+        return EXIT_SUCCESS;
     }
-    BackgroundExceptionCatcher backgroundEx;
-    RobotFSM robot(config, backgroundEx);
 
     {
+        // Load from file/database specified by arguments
+        config.parseArgs(argc, argv);
+
+        BackgroundExceptionCatcher backgroundEx;
+        RobotFSM robot(config, backgroundEx);
         Timer<> timer("Total time:");
 
         unsigned int frame = 0;

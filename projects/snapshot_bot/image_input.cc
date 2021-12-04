@@ -64,15 +64,15 @@ std::pair<cv::Mat, Mask> ImageInput::preprocess(const cv::Mat &image) const
         // Unwrap panorama
         m_Unwrapper->unwrap(image, m_Unwrapped);
     } else {
-        m_Unwrapped = image;
+        cv::resize(image, m_Unwrapped, m_Unwrapped.size());
     }
 
     // Crop the image to the bounds specified in the config file
-    cv::Mat cropped{ m_Unwrapped, m_CropRect };
+    cv::Mat processed{ m_Unwrapped, m_CropRect };
 
     // Images from the ODK2 need a dynamic masking process
     if (m_UseODK) {
-        m_Mask.set(cropped, odk2MaskLowerBound, odk2MaskUpperBound);
+        m_Mask.set(processed, odk2MaskLowerBound, odk2MaskUpperBound);
     }
 
     /*
@@ -80,7 +80,7 @@ std::pair<cv::Mat, Mask> ImageInput::preprocess(const cv::Mat &image) const
      * cropped as internally it points to m_Unwrapped, which will be modified on
      * the next call to this function.
      */
-    return { cropped.clone(), m_Mask };
+    return { processed.clone(), m_Mask };
 }
 //----------------------------------------------------------------------------
 // ImageInputRaw
