@@ -50,7 +50,7 @@ int bobMain(int, char **)
     // Create motor interface
     ROBOT_TYPE motor;
 
-    cv::Mat output;
+    cv::Mat image;
     cv::Mat unwrapped(unwrapSize, CV_8UC1);
 
 #ifdef USE_VICON
@@ -77,10 +77,10 @@ int bobMain(int, char **)
         joystick.update();
 
         // If we successfully captured a frame
-        cam.readGreyscaleFrame(output);
+        cam.readGreyscaleFrame(image);
 
         // Unwrap frame
-        unwrapper.unwrap(output, unwrapped);
+        unwrapper.unwrap(image, unwrapped);
 
         // If recording interval has elapsed
         if ((x % recordingInterval) == 0) {

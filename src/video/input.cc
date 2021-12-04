@@ -22,7 +22,7 @@ ImgProc::OpenCVUnwrap360
 Input::createUnwrapper(const cv::Size &unwrapRes) const
 {
     // Create unwrapper and return
-    return ImgProc::OpenCVUnwrap360(getOutputSize(), unwrapRes, getCameraName());
+    return { getOutputSize(), unwrapRes, getCameraName() };
 }
 
 std::string

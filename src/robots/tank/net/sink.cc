@@ -18,7 +18,6 @@ namespace Net {
 template class SinkBase<BoBRobotics::Net::Connection &>;
 
 BundledSink::BundledSink()
-  : SinkBase<BoBRobotics::Net::Client>()
 {
     // Run client on background thread
     getConnection().runInBackground();
