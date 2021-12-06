@@ -22,3 +22,13 @@ target_link_libraries(_navigation ${BoBRobotics_LIBRARIES})
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)
 endif(WIN32)
+
+# Some of the python structs have a load of fields that we don't use, so let's
+# just auto-initialise them to zeros.
+include(CheckCXXCompilerFlag)
+foreach(FLAG -Wno-missing-field-initializers)
+    check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+    if(COMPILER_SUPPORTS_${FLAG})
+        target_compile_options(_navigation PRIVATE ${FLAG})
+    endif()
+endforeach()
