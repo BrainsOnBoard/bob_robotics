@@ -223,7 +223,7 @@ struct PyAlgoWrapper
     }
     static PyTypeObject Type;
 
-    PyObject_HEAD;
+    PyObject_HEAD
     T algo;
     bool constructed;
 };
