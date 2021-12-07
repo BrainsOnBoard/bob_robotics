@@ -49,6 +49,7 @@ target_link_libraries(offline_train PRIVATE snapshot_bot_common)
 configure_file(mask.png "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
 configure_file(segmentation.png "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
 configure_file(config_demo.yaml "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
+configure_file(config_demo_testing.yaml "${CMAKE_CURRENT_BINARY_DIR}" COPYONLY)
 
 find_package(BoBThirdParty COMPONENTS matplotlibcpp)
 if(NOT BoBThirdParty_FOUND)
