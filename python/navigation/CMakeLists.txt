@@ -8,16 +8,16 @@ if(NOT MSVC)
 endif()
 
 find_package(BoBRobotics QUIET REQUIRED COMPONENTS navigation)
+find_package(BoBThirdParty REQUIRED COMPONENTS pybind11)
 
 # NB: These are extra modules only available to scikit-build
 find_package(PythonExtensions REQUIRED)
 find_package(NumPy REQUIRED)  # Not to be confused with our own FindNumpy.cmake!
 include_directories(${NumPy_INCLUDE_DIRS})
 
-add_library(_navigation MODULE src/navigation.cc)
-python_extension_module(_navigation)
+pybind11_add_module(_navigation MODULE src/navigation.cc)
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
-target_link_libraries(_navigation ${BoBRobotics_LIBRARIES})
+target_link_libraries(_navigation PRIVATE ${BoBRobotics_LIBRARIES})
 
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)
