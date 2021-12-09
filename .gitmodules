@@ -1,3 +1,6 @@
+[submodule "third_party/development_kit_odk2"]
+	path = third_party/development_kit_odk2
+	url = https://github.com/OpteranDevKit2/development_kit_odk2.git
 [submodule "third_party/ev3dev-lang-cpp"]
 	path = third_party/ev3dev-lang-cpp
 	url = https://github.com/alexdewar/ev3dev-lang-cpp.git
@@ -10,6 +13,6 @@
 [submodule "third_party/plog"]
 	path = third_party/plog
 	url = https://github.com/SergiusTheBest/plog.git
-[submodule "third_party/development_kit_odk2"]
-	path = third_party/development_kit_odk2
-	url = https://github.com/OpteranDevKit2/development_kit_odk2.git
+[submodule "third_party/pybind"]
+	path = third_party/pybind11
+	url = https://github.com/pybind/pybind11
