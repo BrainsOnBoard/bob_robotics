@@ -1,7 +1,6 @@
 // BoB robotics includes
 #include "common/main.h"
 #include "navigation/image_database.h"
-#include "navigation/infomax.h"
 #include "navigation/perfect_memory.h"
 
 // Third-party includes
@@ -28,14 +27,19 @@ using namespace units::angle;
 template<class T>
 struct PyAlgoWrapper
 {
+    PyObject_HEAD
+    T algo;
+    bool constructed;
+
     void destroy()
     {
         // Invoke destructor explicitly
-        if (constructed)
+        if (constructed) {
             algo.~T();
+        }
 
         Py_TYPE(this)->tp_free(reinterpret_cast<PyObject *>(this));
-        LOGD << "PerfectMemory object deallocated";
+        LOGD << "PyAlgoWrapper<T> object deallocated";
     }
 
     cv::Mat bufToMat(const Py_buffer &buf)
@@ -158,26 +162,28 @@ struct PyAlgoWrapper
         return self;
     }
 
-#define ALGO_FUN(NAME) \
-    auto NAME = [](PyAlgoWrapper<T> *self, auto&&... args) { return self->NAME(std::forward<decltype(args)>(args)...); }
-
     static PyTypeObject getType(const std::string &name)
     {
-        ALGO_FUN(destroy);
-        ALGO_FUN(getHeading);
-        ALGO_FUN(train);
-        ALGO_FUN(trainRoute);
-        ALGO_FUN(test);
+        /*
+         * Wrap various member functions into lambdas, so we can pass them as
+         * pointers to C functions.
+         */
+        #define MEMBER_FUN(NAME) \
+        [](PyObject *self, PyObject *args) { return reinterpret_cast<PyAlgoWrapper<T> *>(self)->NAME(args); }
+
+        static auto destroy = [](PyObject *self) {
+            reinterpret_cast<PyAlgoWrapper<T> *>(self)->destroy();
+        };
 
         static PyMethodDef methods[] = {
-            { "get_heading", (PyCFunction) &getHeading, METH_VARARGS, "Get the heading estimate for a given image" },
-            { "test", (PyCFunction) &test, METH_VARARGS, "Get output value for single test image" },
-            { "train", (PyCFunction) &train, METH_VARARGS, "Train with a single image" },
-            { "train_route", (PyCFunction) &trainRoute, METH_VARARGS, "Train with an image database" },
+            { "get_heading", MEMBER_FUN(getHeading), METH_VARARGS, "Get the heading estimate for a given image" },
+            { "test", MEMBER_FUN(test), METH_VARARGS, "Get output value for single test image" },
+            { "train", MEMBER_FUN(train), METH_VARARGS, "Train with a single image" },
+            { "train_route", MEMBER_FUN(trainRoute), METH_VARARGS, "Train with an image database" },
             {}
         };
 
-        const std::string fullName = "navigation." + name;
+        static const std::string fullName = "navigation." + name;
         return {
             // clang-format off
             PyVarObject_HEAD_INIT(&PyType_Type, 0)
@@ -185,7 +191,7 @@ struct PyAlgoWrapper
             fullName.c_str(),         /* tp_name */
             sizeof(PyAlgoWrapper<T>), /* tp_basicsize */
             0,                        /* tp_itemsize */
-            (destructor) &destroy,    /* tp_dealloc */
+            destroy,                  /* tp_dealloc */
             0,                        /* tp_print */
             0,                        /* tp_getattr */
             0,                        /* tp_setattr */
@@ -218,25 +224,22 @@ struct PyAlgoWrapper
             0,                        /* tp_dictoffset */
             0,                        /* tp_init */
             0,                        /* tp_alloc */
-            (newfunc) &construct,     /* tp_new */
+            &construct,               /* tp_new */
         };
     }
     static PyTypeObject Type;
-
-    PyObject_HEAD
-    T algo;
-    bool constructed;
 };
 
 template<class Algo>
-void addAlgo(PyObject *module, const std::string &name)
+void addAlgo(PyObject *module, const char *name)
 {
     static PyTypeObject algoType = PyAlgoWrapper<Algo>::getType(name);
     if (PyType_Ready(&algoType) < 0)
         throw std::exception{};
 
     Py_INCREF(&algoType);
-    if (PyModule_AddObject(module, name.c_str(), (PyObject *) &algoType) < 0) {
+    std::cout << "incref\n";
+    if (PyModule_AddObject(module, "PerfectMemory", (PyObject *) &algoType) < 0) {
         Py_DECREF(&algoType);
         throw std::exception{};
     }
