@@ -138,7 +138,7 @@ struct PyAlgoWrapper
     static PyObject* construct(PyTypeObject *type, PyObject *args, PyObject * /*kwds*/)
     {
         int width, height;
-        if (!PyArg_ParseTuple(args, "ii", &width, &height))
+        if (!PyArg_ParseTuple(args, "(ii)", &width, &height))
             return nullptr;
 
         // Allocate memory
