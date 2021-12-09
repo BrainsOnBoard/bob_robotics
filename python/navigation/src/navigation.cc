@@ -238,7 +238,6 @@ void addAlgo(PyObject *module, const char *name)
         throw std::exception{};
 
     Py_INCREF(&algoType);
-    std::cout << "incref\n";
     if (PyModule_AddObject(module, "PerfectMemory", (PyObject *) &algoType) < 0) {
         Py_DECREF(&algoType);
         throw std::exception{};
