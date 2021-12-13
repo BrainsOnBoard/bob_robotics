@@ -85,7 +85,7 @@ struct InSilicoRotater
 
         static thread_local cv::Mat m_ScratchImage;
         static thread_local ImgProc::Mask m_ScratchMask;
-        
+
         static size_t distance(size_t first, size_t last)
         {
             return last - first;
@@ -108,7 +108,7 @@ struct InSilicoRotater
             return *it;
         }
     };
-    
+
     template<typename IterType>
     static auto
     create(const cv::Size &unwrapRes,
