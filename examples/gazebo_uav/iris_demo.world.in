@@ -87,7 +87,7 @@
 
     <model name="iris_demo">
       <include>
-        <uri>iris_with_standoffs_demo</uri>
+        <uri>@BOB_GAZEBO_RESOURCES_PATH@/uav/iris_with_standoffs_demo</uri>
       </include>
     </model>
   </world>

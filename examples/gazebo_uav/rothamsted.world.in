@@ -32,16 +32,16 @@
     <model name="heightmap_flight1">
       <pose>0 0 -200 0 0 0</pose>
       <include>
-        <uri>model://heightmap_flight1</uri>
+        <uri>model://@BOB_ROTHAMSTED_3D_MODEL_PATH@/heightmap_flight1</uri>
       </include>
     </model>
-    
+
     <model name="iris_demo">
       <pose>-370 -205 0 0 0 0</pose>
       <include>
-        <uri>iris_with_standoffs_demo</uri>
+        <uri>@BOB_GAZEBO_RESOURCES_PATH@/uav/iris_with_standoffs_demo</uri>
       </include>
     </model>
-    
+
   </world>
 </sdf>
