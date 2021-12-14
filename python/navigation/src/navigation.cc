@@ -35,13 +35,13 @@ struct type_caster<cv::Size>
     }
 };
 
-// Coerce all angle-unit types into degrees
+// Coerce all angle-unit types into radians
 template<class T>
 struct type_caster<T, std::enable_if_t<units::traits::is_angle_unit<T>::value>>
 {
-    PYBIND11_TYPE_CASTER(degree_t, _("degrees"));
+    PYBIND11_TYPE_CASTER(radian_t, _("radians"));
 
-    static handle cast(degree_t src, return_value_policy /* policy */, handle /* parent */)
+    static handle cast(radian_t src, return_value_policy /* policy */, handle /* parent */)
     {
         return PyFloat_FromDouble(src.value());
     }

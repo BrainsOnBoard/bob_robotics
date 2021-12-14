@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from bob_robotics import navigation
 import cv2
+import numpy as np
 import sys
 
 dbPath = sys.argv[1]
@@ -11,4 +12,4 @@ print('Loaded image')
 algo = navigation.InfoMax((90, 10))
 algo.train_route(dbPath)
 
-print("angle: %g°" % algo.get_heading(img))
+print("angle: %g°" % np.rad2deg(algo.get_heading(img)))

@@ -22,7 +22,7 @@ print(time() - t0)
 # which should be faster
 (heading, best_snap, best_min, diffs) = algo.get_ridf_data(img)
 
-print('Best snapshot: %d at %g° (diff: %g)' % (best_snap, heading, best_min))
+print('Best snapshot: %d at %g° (diff: %g)' % (best_snap, np.rad2deg(heading), best_min))
 
 xs = np.linspace(0, 360, diffs.shape[1])
 ridf = diffs[best_snap, :]
