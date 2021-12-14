@@ -19,5 +19,5 @@ while getopts 'dp' flag; do
   esac
 done
 
-GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:$(dirname "$0") gazebo --verbose $world_file &
-./gazebo_tank $display_flag $camera_url
+gazebo --verbose "@CMAKE_CURRENT_BINARY_DIR@/$world_file" &
+"@CMAKE_CURRENT_BINARY_DIR@/gazebo_tank" $display_flag $camera_url
