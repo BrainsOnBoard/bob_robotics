@@ -353,9 +353,9 @@ public:
             };
 
             const auto position = getPosition(gridPosition);
-            this->addEntry(image, getFileName, { position, { m_Heading, NAN, NAN } },
-                     { gridPosition[0], gridPosition[1], gridPosition[2] },
-                     std::forward<Ts>(extraFieldValues)...);
+            constexpr degree_t nan{ NAN };
+            this->addEntry(image, getFileName, { position, { m_Heading, nan, nan } },
+                           gridPosition, std::forward<Ts>(extraFieldValues)...);
         }
 
         size_t maximumSize() const;
