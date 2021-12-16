@@ -90,8 +90,7 @@ public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
-        Vector3<millimeter_t> position = Vector3<millimeter_t>::nan();
-        degree_t heading{ NAN };
+        Pose3<millimeter_t, degree_t> pose = Pose3<millimeter_t, degree_t>::nan();
         filesystem::path path;
         std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
         std::unordered_map<std::string, std::string> extraFields;
@@ -237,8 +236,7 @@ public:
         template<class... Ts>
         void addEntry(const cv::Mat &image,
                       const std::function<std::string()> &getFileName,
-                      const Vector3<millimeter_t> &position,
-                      const degree_t heading,
+                      const Pose3<millimeter_t, degree_t> &pose,
                       const std::array<size_t, 3> &gridPosition,
                       Ts&&... extraFieldValues)
         {
@@ -249,8 +247,7 @@ public:
             BOB_ASSERT(m_Recording);
 
             Entry newEntry{
-                position,
-                heading,
+                pose,
                 "",
                 gridPosition,
                 {}
@@ -356,7 +353,7 @@ public:
             };
 
             const auto position = getPosition(gridPosition);
-            this->addEntry(image, getFileName, position, m_Heading,
+            this->addEntry(image, getFileName, { position, { m_Heading, NAN, NAN } },
                      { gridPosition[0], gridPosition[1], gridPosition[2] },
                      std::forward<Ts>(extraFieldValues)...);
         }
@@ -389,11 +386,11 @@ public:
          *        extra fields, if used
          */
         template<class... Ts>
-        void record(const Vector3<millimeter_t> &position, degree_t heading, const cv::Mat &image, Ts &&...extraFieldValues)
+        void record(const Pose3<millimeter_t, degree_t> &pose,
+                    const cv::Mat &image, Ts &&...extraFieldValues)
         {
             this->addEntry(image, std::bind(&RouteRecorder::getFileName, this),
-                           position, heading, { 0, 0, 0 },
-                           std::forward<Ts>(extraFieldValues)...);
+                           pose, { 0, 0, 0 }, std::forward<Ts>(extraFieldValues)...);
         }
 
         void record(const cv::Mat &image, Entry entry)

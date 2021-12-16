@@ -265,16 +265,14 @@ private:
 #ifdef USE_VICON
                         // Get tracking data
                         const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                        const auto pose = objectData.getPose();
-                        m_Recorder->record(pose.position(),
-                                           pose.yaw(),
+                        m_Recorder->record(objectData.getPose(),
                                            m_Output,
                                            elapsed,
                                            objectData.getFrameNumber());
 #endif
                     } else {
-                        m_Recorder->record(Vector3<millimeter_t>::nan(),
-                                           degree_t{ NAN }, m_Output, elapsed, -1);
+                        m_Recorder->record(Pose3<millimeter_t, degree_t>::nan(),
+                                           m_Output, elapsed, -1);
                     }
                 }
 
@@ -364,9 +362,7 @@ private:
 #ifdef USE_VICON
                     // Get tracking data
                     const auto objectData = m_ViconTracking.getObjectData(m_Config.getViconTrackingObjectName());
-                    const auto &pose = objectData.getPose();
-                    entry.position = pose.position();
-                    entry.heading = pose.yaw();
+                    entry.pose = objectData.getPose();
                     entry.extraFields["Frame"] = std::to_string(objectData.getFrameNumber());
 #endif
                 } else {
