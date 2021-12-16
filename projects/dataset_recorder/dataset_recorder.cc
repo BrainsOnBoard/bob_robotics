@@ -134,15 +134,12 @@ bobMain(int argc, char *argv[])
     BackgroundExceptionCatcher catcher;
 
     Stopwatch sw;
-    std::array<degree_t, 3> angles;
 
     auto recorder = database.createVideoRouteRecorder(cam->getOutputSize(),
                                                    frameRate,
                                                    "mp4",
                                                    "mp4v",
-                                                   { "Pitch [degrees]",
-                                                     "Roll [degrees]",
-                                                     "Speed",
+                                                   { "Speed",
                                                      "Steering angle [degrees]",
                                                      "UTM zone",
                                                      "GPS quality",
@@ -167,19 +164,16 @@ bobMain(int argc, char *argv[])
         time = sw.elapsed();
 
         // get imu data
-        double roll = NAN, pitch = NAN, yaw = NAN;
+        std::array<degree_t, 3> attitude{ degree_t(NAN), degree_t(NAN), degree_t(NAN) };
         try {
-            angles = imu.getEulerAngles();
-            yaw = angles[0].value();
-            pitch = angles[1].value();
-            roll = angles[2].value();
+            attitude = imu.getEulerAngles();
         } catch (std::exception &e) {
             LOGE << "Could not read from IMU: " << e.what();
         }
 
         // read speed and steering angle from robot
         float botSpeed = NAN;
-        degree_t turnAngle = 0_deg;
+        degree_t turnAngle{ NAN };
         try {
             std::tie(botSpeed, turnAngle) = bot.readRemoteControl();
         } catch (std::exception &e) {
@@ -203,8 +197,8 @@ bobMain(int argc, char *argv[])
 
             // converting to UTM
             const auto utm = MapCoordinate::latLonToUTM(coord);
-            recorder->record(utm.toVector(), degree_t{ yaw }, frame, pitch,
-                             roll, botSpeed, turnAngle.value(), utm.zone,
+            recorder->record({ utm.toVector(), attitude }, frame, botSpeed,
+                             turnAngle.value(), utm.zone,
                              (int) gpsData.gpsQuality,
                              millimeter_t{ gpsData.horizontalDilution }.value(),
                              time.value());
@@ -214,9 +208,9 @@ bobMain(int argc, char *argv[])
              * CSV file. We can always estimate these missing values post hoc
              * with interpolation.
              */
-            recorder->record(Vector3<millimeter_t>::nan(), degree_t{ yaw },
-                             frame, pitch, roll, botSpeed, turnAngle.value(),
-                             "", -1, NAN, time.value());
+            recorder->record({ Vector3<millimeter_t>::nan(), attitude },
+                             frame, botSpeed, turnAngle.value(), "", -1, NAN,
+                             time.value());
         }
     }
 

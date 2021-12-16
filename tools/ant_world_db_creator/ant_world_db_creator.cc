@@ -176,8 +176,7 @@ public:
         addMetadata(routeRecorder->getMetadataWriter());
 
         run(poses, [&routeRecorder, this](const cv::Mat &image) {
-            const auto pos = m_Agent.getPose().position();
-            routeRecorder->record({pos[0], pos[1], pos[2]}, m_Agent.getPose().attitude()[0], image);
+            routeRecorder->record(m_Agent.getPose(), image);
         });
     }
 

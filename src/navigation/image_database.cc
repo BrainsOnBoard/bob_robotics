@@ -307,9 +307,9 @@ ImageDatabase::loadCSV()
     std::for_each(fields.begin(), fields.end(), strTrim);
     const size_t numFields = fields.size();
 
-    constexpr std::array<const char *, 8> defaultFieldNames{
+    constexpr std::array<const char *, 10> defaultFieldNames{
         "X [mm]", "Y [mm]", "Z [mm]", "Heading [degrees]", "Filename", "Grid X",
-        "Grid Y", "Grid Z"
+        "Grid Y", "Grid Z", "Pitch [degrees]", "Roll [degrees]"
     };
 
     /*
@@ -388,10 +388,14 @@ ImageDatabase::loadCSV()
 
         // Save details to vector
         Entry entry{
-            { millimeter_t(std::stod(getDefaultField(0))),
-              millimeter_t(std::stod(getDefaultField(1))),
-              millimeter_t(std::stod(getDefaultField(2))) },
-            degree_t(std::stod(getDefaultField(3))),
+            {
+                { millimeter_t(std::stod(getDefaultField(0))),
+                  millimeter_t(std::stod(getDefaultField(1))),
+                  millimeter_t(std::stod(getDefaultField(2))) },
+                { degree_t(std::stod(getDefaultField(3))),
+                  degree_t(fieldNameIdx[8] == -1 ? NAN : std::stod(getDefaultField(8))),
+                  degree_t(fieldNameIdx[9] == -1 ? NAN : std::stod(getDefaultField(9))) }
+            },
             !isVideoType() ? m_Path / getDefaultField(4) : filesystem::path{},
             gridPosition,
             std::move(extraFields)
@@ -940,7 +944,7 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
     std::ofstream os;
     os.exceptions(std::ios::badbit | std::ios::failbit);
     os.open(path);
-    os << "X [mm], Y [mm], Z [mm], Heading [degrees]";
+    os << "X [mm], Y [mm], Z [mm], Heading [degrees], Pitch [degrees], Roll [degrees]";
     if (!isVideoType()) {
         os << ", Filename";
     }
@@ -954,8 +958,9 @@ ImageDatabase::addNewEntries(std::vector<ImageDatabase::Entry> &newEntries,
 
     for (auto &e : m_Entries) {
         // These fields are always written...
-        os << e.position[0]() << ", " << e.position[1]() << ", "
-           << e.position[2]() << ", " << e.heading();
+        os << e.pose.x().value() << ", " << e.pose.y().value() << ", "
+           << e.pose.z().value() << ", " << e.pose.yaw().value() << ", "
+           << e.pose.pitch().value() << ", " << e.pose.roll().value();
 
         // ...this is only written if we're not saving as a video
         if (!isVideoType()) {
