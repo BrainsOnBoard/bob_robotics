@@ -38,6 +38,20 @@ Range::size() const
     return (separation == 0_mm) ? 1 : (1 + ((end - begin) / separation).to<size_t>());
 }
 
+ImageDatabase::Entry::Entry()
+  : pose(Pose3<millimeter_t, degree_t>::nan())
+{}
+
+ImageDatabase::Entry::Entry(const Pose3<millimeter_t, degree_t> &_pose,
+                            filesystem::path _path,
+                            const std::array<size_t, 3> &_gridPosition,
+                            std::unordered_map<std::string, std::string> _extraFields)
+  : pose(_pose)
+  , path(std::move(_path))
+  , gridPosition(_gridPosition)
+  , extraFields(std::move(_extraFields))
+{}
+
 cv::Mat
 ImageDatabase::Entry::load(bool greyscale) const
 {

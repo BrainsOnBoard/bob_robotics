@@ -90,11 +90,16 @@ public:
     //! The metadata for an entry in an ImageDatabase
     struct Entry
     {
-        Pose3<millimeter_t, degree_t> pose = Pose3<millimeter_t, degree_t>::nan();
+        Pose3<millimeter_t, degree_t> pose;
         filesystem::path path;
         std::array<size_t, 3> gridPosition; //! For grid-type databases, indicates the x,y,z grid position
         std::unordered_map<std::string, std::string> extraFields;
 
+        Entry();
+        Entry(const Pose3<millimeter_t, degree_t> &_pose,
+              filesystem::path _path,
+              const std::array<size_t, 3> &_gridPosition,
+              std::unordered_map<std::string, std::string> _extraFields);
         cv::Mat load(bool greyscale = true) const;
         bool hasExtraField(const std::string &name) const;
         const std::string &getExtraField(const std::string &name) const;
