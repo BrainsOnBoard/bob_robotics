@@ -48,10 +48,21 @@ strSplit(const std::string &s, char delim, std::vector<std::string> &parts)
 {
     parts.clear();
 
-    std::stringstream ss{ s };
-    std::string parsed;
-    while (std::getline(ss, parsed, delim)) {
-        parts.emplace_back(std::move(parsed));
+    // Treat empty strings as containing no fields
+    if (s.empty()) {
+        return;
     }
+
+    auto start = s.c_str();
+    auto c = start;
+    for (; *c != '\0'; c++) {
+        if (*c == delim) {
+            parts.emplace_back(start, c);
+            start = c + 1;
+        }
+    }
+
+    // Final field is terminated with EOL
+    parts.emplace_back(start, c);
 }
 } // BoBRobotics
