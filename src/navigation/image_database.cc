@@ -392,8 +392,13 @@ ImageDatabase::loadCSV()
             return fields[fieldNameIdx[i]];
         };
 
+        // Treat empty strings as NaNs (this is how pandas encodes them)
+        const auto getDouble = [](const std::string &s) {
+            return s.empty() ? NAN : std::stod(s);
+        };
+
         // Get grid position for grid databases
-        std::array<size_t, 3> gridPosition{0, 0, 0};
+        std::array<size_t, 3> gridPosition{ 0, 0, 0 };
         if (!m_IsRoute) {
             gridPosition[0] = static_cast<size_t>(std::stoul(getDefaultField(5)));
             gridPosition[1] = static_cast<size_t>(std::stoul(getDefaultField(6)));
@@ -403,12 +408,12 @@ ImageDatabase::loadCSV()
         // Save details to vector
         Entry entry{
             {
-                { millimeter_t(std::stod(getDefaultField(0))),
-                  millimeter_t(std::stod(getDefaultField(1))),
-                  millimeter_t(std::stod(getDefaultField(2))) },
-                { degree_t(std::stod(getDefaultField(3))),
-                  degree_t(fieldNameIdx[8] == -1 ? NAN : std::stod(getDefaultField(8))),
-                  degree_t(fieldNameIdx[9] == -1 ? NAN : std::stod(getDefaultField(9))) }
+                { millimeter_t(getDouble(getDefaultField(0))),
+                  millimeter_t(getDouble(getDefaultField(1))),
+                  millimeter_t(getDouble(getDefaultField(2))) },
+                { degree_t(getDouble(getDefaultField(3))),
+                  degree_t(fieldNameIdx[8] == -1 ? NAN : getDouble(getDefaultField(8))),
+                  degree_t(fieldNameIdx[9] == -1 ? NAN : getDouble(getDefaultField(9))) }
             },
             !isVideoType() ? m_Path / getDefaultField(4) : filesystem::path{},
             gridPosition,
