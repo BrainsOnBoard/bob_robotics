@@ -19,7 +19,7 @@ t0 = time()
 ang = algo.get_heading(img)
 print(time() - t0)
 
-# Alternatively you can use algo.get_heading(img) to just getting the heading,
+# Alternatively you can use algo.get_heading(img) to just get the heading,
 # which should be faster
 (heading, best_snap, best_min, diffs) = algo.get_ridf_data(img)
 
