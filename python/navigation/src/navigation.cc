@@ -18,6 +18,7 @@
 #include <stdexcept>
 
 namespace py = pybind11;
+using namespace py::literals;
 using namespace BoBRobotics::Navigation;
 using namespace units::angle;
 
@@ -92,8 +93,9 @@ template<class T>
 class PyAlgoWrapper
 {
 public:
-    PyAlgoWrapper(const cv::Size &size)
-      : m_Algo(size)
+    template<class... Ts>
+    PyAlgoWrapper(Ts&&... args)
+      : m_Algo(std::forward<Ts>(args)...)
     {}
 
     auto getHeading(const cv::Mat &img) const
@@ -144,12 +146,11 @@ private:
 };
 
 template<class Algo>
-void
+auto
 addAlgo(py::handle scope, const char *name)
 {
     using T = PyAlgoWrapper<Algo>;
-    py::class_<T>(scope, name)
-            .def(py::init<const cv::Size &>())
+    return py::class_<T>(scope, name)
             .def("get_heading", &T::getHeading)
             .def("get_ridf_data", &T::getRIDFData)
             .def("test", &T::test)
@@ -168,6 +169,8 @@ PYBIND11_MODULE(_navigation, m)
     }
 
     // Add various algorithms as Python classes
-    addAlgo<PerfectMemoryRotater<>>(m, "PerfectMemory");
-    addAlgo<InfoMaxRotater<>>(m, "InfoMax");
+    addAlgo<PerfectMemoryRotater<>>(m, "PerfectMemory")
+            .def(py::init<const cv::Size &>());
+    addAlgo<InfoMaxRotater<>>(m, "InfoMax")
+            .def(py::init<const cv::Size &, float>(), "size"_a, "learning_rate"_a = 0.0001f);
 }
