@@ -4,6 +4,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
+from time import time
 
 dbPath = sys.argv[1]
 img = cv2.imread(dbPath + '/image_00100.png')
