@@ -28,7 +28,7 @@ struct type_caster<cv::Size>
 {
     PYBIND11_TYPE_CASTER(cv::Size, _("cvSize"));
 
-    // For converting from a Python tuple to a cv::Mat
+    // For converting from a Python tuple to a cv::Size
     bool load(handle src, bool)
     {
         return PyArg_ParseTuple(src.ptr(), "ii", &value.width, &value.height);
