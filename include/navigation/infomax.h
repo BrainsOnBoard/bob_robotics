@@ -26,7 +26,8 @@
 #include <utility>
 #include <vector>
 
-#define INFOMAX_DEFAULT_LEARNING_RATE 0.0001
+#define INFOMAX_DEFAULT_LEARNING_RATE 0.01
+#define DEFAULT_TANH_SCALING_FACTOR 0.1
 
 namespace BoBRobotics {
 namespace Navigation {
@@ -46,19 +47,24 @@ class InfoMax
 public:
     InfoMax(const cv::Size &unwrapRes,
             MatrixType initialWeights,
-            FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
+            FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
+            FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
+      , m_TanhScalingFactor(tanhScalingFactor)
       , m_Weights(std::move(initialWeights))
     {
         BOB_ASSERT(m_Weights.cols() == unwrapRes.width * unwrapRes.height);
     }
 
-    InfoMax(const cv::Size &unwrapRes, FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
+    InfoMax(const cv::Size &unwrapRes,
+            FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
+            FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
       : InfoMax(unwrapRes,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height,
                                        unwrapRes.width * unwrapRes.height),
-                learningRate)
+                learningRate,
+                tanhScalingFactor)
     {}
 
     //------------------------------------------------------------------------
@@ -149,7 +155,7 @@ public:
         BOB_ASSERT(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
-        m_U = m_Weights * getFloatVector(image);
+        m_U = m_Weights * getFloatVector(image) * m_TanhScalingFactor;
         m_Y = tanh(m_U.array());
     }
 
@@ -161,7 +167,7 @@ public:
 
 private:
     const cv::Size m_UnwrapRes;
-    FloatType m_LearningRate;
+    const FloatType m_LearningRate, m_TanhScalingFactor;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
 
@@ -189,12 +195,15 @@ class InfoMaxRotater : public InfoMax<FloatType>
 public:
     InfoMaxRotater(const cv::Size &unwrapRes,
                    MatrixType initialWeights,
-                   FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
-    :   InfoMax<FloatType>(unwrapRes, std::move(initialWeights), learningRate)
+                   FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
+                   FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
+    :   InfoMax<FloatType>(unwrapRes, std::move(initialWeights), learningRate, tanhScalingFactor)
     {}
 
-    InfoMaxRotater(const cv::Size &unwrapRes, FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
-    :   InfoMax<FloatType>(unwrapRes, learningRate)
+    InfoMaxRotater(const cv::Size &unwrapRes,
+                   FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
+                   FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
+    :   InfoMax<FloatType>(unwrapRes, learningRate, tanhScalingFactor)
     {}
 
     //------------------------------------------------------------------------

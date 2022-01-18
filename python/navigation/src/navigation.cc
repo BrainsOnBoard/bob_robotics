@@ -169,15 +169,18 @@ class PyAlgoWrapper<InfoMaxType>
   : public PyAlgoWrapperBase<InfoMaxType>
 {
 public:
-    PyAlgoWrapper(const cv::Size &size, float learningRate, int numHidden)
-      : PyAlgoWrapper(size, learningRate, numHidden, std::random_device()())
+    PyAlgoWrapper(const cv::Size &size, float learningRate,
+                  float tanhScalingFactor, int numHidden)
+      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, numHidden,
+                      std::random_device()())
     {}
 
-    PyAlgoWrapper(const cv::Size &size, float learningRate, int numHidden,
-                  int seed)
+    PyAlgoWrapper(const cv::Size &size, float learningRate,
+                  float tanhScalingFactor, int numHidden, int seed)
       : PyAlgoWrapperBase<InfoMaxType>(size,
                                        generateInitialWeights(size, numHidden, seed),
-                                       learningRate)
+                                       learningRate,
+                                       tanhScalingFactor)
       , m_Seed(seed)
     {}
 
@@ -223,7 +226,14 @@ PYBIND11_MODULE(_navigation, m)
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>());
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, int>(), "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE, "num_hidden"_a = -1)
-            .def(py::init<const cv::Size &, float, int, int>(), "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE, "num_hidden"_a = -1, "seed"_a)
+            .def(py::init<const cv::Size &, float, float, int>(),
+                 "size"_a,
+                 "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
+                 "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR,
+                 "num_hidden"_a = -1)
+            .def(py::init<const cv::Size &, float, float, int, int>(),
+                 "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
+                 "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR,
+                 "num_hidden"_a = -1, "seed"_a)
             .def("get_seed", &PyAlgoWrapper<InfoMaxType>::getSeed);
 }
