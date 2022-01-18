@@ -19,6 +19,13 @@ pybind11_add_module(_navigation MODULE src/navigation.cc)
 install(TARGETS _navigation LIBRARY DESTINATION bob_robotics/navigation)
 target_link_libraries(_navigation PRIVATE ${BoBRobotics_LIBRARIES})
 
+# Suppress clang warning (emitted by clang-tidy)
+set(FLAG -Wno-ignored-optimization-argument)
+check_cxx_compiler_flag(${FLAG} COMPILER_SUPPORTS_${FLAG})
+if(COMPILER_SUPPORTS_${FLAG})
+    target_compile_options(_navigation PRIVATE ${FLAG})
+endif()
+
 if(WIN32)
     install(SCRIPT copy_dlls.cmake)
 endif(WIN32)
