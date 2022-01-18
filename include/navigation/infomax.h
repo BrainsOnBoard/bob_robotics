@@ -161,7 +161,6 @@ public:
 
 private:
     const cv::Size m_UnwrapRes;
-    size_t m_SnapshotCount = 0;
     FloatType m_LearningRate;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
