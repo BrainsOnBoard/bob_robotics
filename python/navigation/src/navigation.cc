@@ -172,5 +172,5 @@ PYBIND11_MODULE(_navigation, m)
     addAlgo<PerfectMemoryRotater<>>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>());
     addAlgo<InfoMaxRotater<>>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float>(), "size"_a, "learning_rate"_a = 0.0001f);
+            .def(py::init<const cv::Size &, float>(), "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE);
 }

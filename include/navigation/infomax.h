@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+#define INFOMAX_DEFAULT_LEARNING_RATE 0.0001
+
 namespace BoBRobotics {
 namespace Navigation {
 class WeightsBlewUpError
@@ -44,7 +46,7 @@ class InfoMax
 public:
     InfoMax(const cv::Size &unwrapRes,
             const MatrixType &initialWeights,
-            FloatType learningRate = 0.0001)
+            FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_Weights(initialWeights)
@@ -52,7 +54,7 @@ public:
         BOB_ASSERT(initialWeights.cols() == unwrapRes.width * unwrapRes.height);
     }
 
-    InfoMax(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
+    InfoMax(const cv::Size &unwrapRes, FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
       : InfoMax(unwrapRes,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height,
                                        unwrapRes.width * unwrapRes.height),
@@ -188,11 +190,11 @@ class InfoMaxRotater : public InfoMax<FloatType>
 public:
     InfoMaxRotater(const cv::Size &unwrapRes,
                    const MatrixType &initialWeights,
-                   FloatType learningRate = 0.0001)
+                   FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
     :   InfoMax<FloatType>(unwrapRes, initialWeights, learningRate)
     {}
 
-    InfoMaxRotater(const cv::Size &unwrapRes, FloatType learningRate = 0.0001)
+    InfoMaxRotater(const cv::Size &unwrapRes, FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
     :   InfoMax<FloatType>(unwrapRes, learningRate)
     {}
 
