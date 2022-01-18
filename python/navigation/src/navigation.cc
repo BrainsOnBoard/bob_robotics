@@ -25,6 +25,16 @@ using namespace units::angle;
 using PerfectMemoryType = PerfectMemoryRotater<>;
 using InfoMaxType = InfoMaxRotater<>;
 
+template<class T>
+using optional = std::experimental::optional<T>;
+constexpr std::experimental::nullopt_t nullopt{ std::experimental::nullopt_t::init() };
+
+// Using optionals is a convenient way to allow passing None values from Python
+namespace pybind11 { namespace detail {
+    template <typename T>
+    struct type_caster<optional<T>> : optional_caster<optional<T>> {};
+}}
+
 namespace pybind11 {
 namespace detail {
 template<>
@@ -164,38 +174,33 @@ public:
     {}
 };
 
+
 template<>
 class PyAlgoWrapper<InfoMaxType>
   : public PyAlgoWrapperBase<InfoMaxType>
 {
 public:
     PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor, int numHidden)
-      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, numHidden,
-                      std::random_device()())
+                  float tanhScalingFactor, Eigen::MatrixXf weights)
+      : PyAlgoWrapperBase<InfoMaxType>(size, std::move(weights), learningRate, tanhScalingFactor)
     {}
 
     PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor, int numHidden, int seed)
-      : PyAlgoWrapperBase<InfoMaxType>(size,
-                                       generateInitialWeights(size, numHidden, seed),
-                                       learningRate,
-                                       tanhScalingFactor)
-      , m_Seed(seed)
+                  float tanhScalingFactor)
+      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, generateInitialWeights(size).first)
     {}
 
-    int getSeed() { return m_Seed; }
-
-private:
-    const int m_Seed;
-
-    static Eigen::MatrixXf generateInitialWeights(const cv::Size &size, int numHidden, int seed)
+    static std::pair<Eigen::MatrixXf, unsigned>
+    generateInitialWeights(const cv::Size &size,
+                           optional<int> numHidden = nullopt,
+                           optional<unsigned> seedArg = nullopt)
     {
-        if (numHidden == -1) {
-            numHidden = size.width * size.height;
-        }
-
-        return InfoMax<>::generateInitialWeights(size.width * size.height, numHidden, seed);
+        const auto seed = seedArg ? seedArg.value() : std::random_device()();
+        const auto numInput = size.width * size.height;
+        auto weights = InfoMax<>::generateInitialWeights(numInput,
+                                                         numHidden.value_or(numInput),
+                                                         seed);
+        return std::make_pair(weights, seed);
     }
 };
 
@@ -226,14 +231,18 @@ PYBIND11_MODULE(_navigation, m)
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>());
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, float, int>(),
+            .def(py::init<const cv::Size &, float, float>(),
+                 "size"_a,
+                 "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
+                 "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR)
+            .def(py::init<const cv::Size &, float, float, Eigen::MatrixXf>(),
                  "size"_a,
                  "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
                  "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR,
-                 "num_hidden"_a = -1)
-            .def(py::init<const cv::Size &, float, float, int, int>(),
-                 "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
-                 "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR,
-                 "num_hidden"_a = -1, "seed"_a)
-            .def("get_seed", &PyAlgoWrapper<InfoMaxType>::getSeed);
+                 "weights"_a)
+            .def_static("generate_initial_weights",
+                        &PyAlgoWrapper<InfoMaxType>::generateInitialWeights,
+                        "size"_a,
+                        "num_hidden"_a = optional<int>{},
+                        "seed"_a = optional<unsigned>{});
 }
