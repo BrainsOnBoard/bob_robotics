@@ -128,6 +128,11 @@ public:
 
         for (const auto &entry : database) {
             train(entry.load());
+
+            // Handle e.g. Ctrl+C during training
+            if (PyErr_CheckSignals()) {
+                return;
+            }
         }
     }
 
