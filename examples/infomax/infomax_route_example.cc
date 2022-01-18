@@ -104,9 +104,8 @@ int bobMain(int argc, char **argv)
     // If we already have a network for these params, load from disk
     if (netPath.exists()) {
         LOGI << "Loading weights from " << netPath;
-        const auto weights = readMatrix<FloatType>(netPath);
 
-        InfoMaxType infomax(imSize, weights);
+        InfoMaxType infomax(imSize, readMatrix<FloatType>(netPath));
         doTesting(infomax, x, y, images);
     } else {
         // ...otherwise do the training now

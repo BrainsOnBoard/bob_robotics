@@ -45,13 +45,13 @@ class InfoMax
 
 public:
     InfoMax(const cv::Size &unwrapRes,
-            const MatrixType &initialWeights,
+            MatrixType initialWeights,
             FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
-      , m_Weights(initialWeights)
+      , m_Weights(std::move(initialWeights))
     {
-        BOB_ASSERT(initialWeights.cols() == unwrapRes.width * unwrapRes.height);
+        BOB_ASSERT(m_Weights.cols() == unwrapRes.width * unwrapRes.height);
     }
 
     InfoMax(const cv::Size &unwrapRes, FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
@@ -189,9 +189,9 @@ class InfoMaxRotater : public InfoMax<FloatType>
 
 public:
     InfoMaxRotater(const cv::Size &unwrapRes,
-                   const MatrixType &initialWeights,
+                   MatrixType initialWeights,
                    FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
-    :   InfoMax<FloatType>(unwrapRes, initialWeights, learningRate)
+    :   InfoMax<FloatType>(unwrapRes, std::move(initialWeights), learningRate)
     {}
 
     InfoMaxRotater(const cv::Size &unwrapRes, FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE)
