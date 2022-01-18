@@ -22,6 +22,9 @@ using namespace py::literals;
 using namespace BoBRobotics::Navigation;
 using namespace units::angle;
 
+using PerfectMemoryType = PerfectMemoryRotater<>;
+using InfoMaxType = InfoMaxRotater<>;
+
 namespace pybind11 {
 namespace detail {
 template<>
@@ -90,11 +93,11 @@ struct type_caster<cv::Mat>
 } // namespace pybind11::detail
 
 template<class T>
-class PyAlgoWrapper
+class PyAlgoWrapperBase
 {
 public:
     template<class... Ts>
-    PyAlgoWrapper(Ts&&... args)
+    PyAlgoWrapperBase(Ts&&... args)
       : m_Algo(std::forward<Ts>(args)...)
     {}
 
@@ -145,6 +148,49 @@ private:
     }
 };
 
+template<class T>
+class PyAlgoWrapper
+  : public PyAlgoWrapperBase<T>
+{
+public:
+    template<class... Ts>
+    PyAlgoWrapper(Ts&&... args)
+      : PyAlgoWrapperBase<T>(std::forward<Ts>(args)...)
+    {}
+};
+
+template<>
+class PyAlgoWrapper<InfoMaxType>
+  : public PyAlgoWrapperBase<InfoMaxType>
+{
+public:
+    PyAlgoWrapper(const cv::Size &size, float learningRate, int numHidden)
+      : PyAlgoWrapper(size, learningRate, numHidden, std::random_device()())
+    {}
+
+    PyAlgoWrapper(const cv::Size &size, float learningRate, int numHidden,
+                  int seed)
+      : PyAlgoWrapperBase<InfoMaxType>(size,
+                                       generateInitialWeights(size, numHidden, seed),
+                                       learningRate)
+      , m_Seed(seed)
+    {}
+
+    int getSeed() { return m_Seed; }
+
+private:
+    const int m_Seed;
+
+    static Eigen::MatrixXf generateInitialWeights(const cv::Size &size, int numHidden, int seed)
+    {
+        if (numHidden == -1) {
+            numHidden = size.width * size.height;
+        }
+
+        return InfoMax<>::generateInitialWeights(size.width * size.height, numHidden, seed);
+    }
+};
+
 template<class Algo>
 auto
 addAlgo(py::handle scope, const char *name)
@@ -169,8 +215,10 @@ PYBIND11_MODULE(_navigation, m)
     }
 
     // Add various algorithms as Python classes
-    addAlgo<PerfectMemoryRotater<>>(m, "PerfectMemory")
+    addAlgo<PerfectMemoryType>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>());
-    addAlgo<InfoMaxRotater<>>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float>(), "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE);
+    addAlgo<InfoMaxType>(m, "InfoMax")
+            .def(py::init<const cv::Size &, float, int>(), "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE, "num_hidden"_a = -1)
+            .def(py::init<const cv::Size &, float, int, int>(), "size"_a, "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE, "num_hidden"_a = -1, "seed"_a)
+            .def("get_seed", &PyAlgoWrapper<InfoMaxType>::getSeed);
 }
