@@ -146,8 +146,10 @@ public:
         }
     }
 
-private:
+protected:
     T m_Algo;
+
+private:
     mutable cv::Mat m_Resized;
 
     const auto &getResizedMat(const cv::Mat &img) const
@@ -189,6 +191,8 @@ public:
                   float tanhScalingFactor)
       : PyAlgoWrapper(size, learningRate, tanhScalingFactor, generateInitialWeights(size).first)
     {}
+
+    const auto &getWeights() const { return m_Algo.getWeights(); }
 
     static std::pair<Eigen::MatrixXf, unsigned>
     generateInitialWeights(const cv::Size &size,
@@ -240,6 +244,7 @@ PYBIND11_MODULE(_navigation, m)
                  "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
                  "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR,
                  "weights"_a)
+            .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights",
                         &PyAlgoWrapper<InfoMaxType>::generateInitialWeights,
                         "size"_a,
