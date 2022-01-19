@@ -1,4 +1,4 @@
-#ifndef WIN32
+#ifndef _WIN32
 
 // BoB robotics includes
 #include "common/macros.h"
@@ -108,4 +108,4 @@ SerialInterface::writeByte(uint8_t byte) const
     }
 }
 } // BoBRobotics
-#endif // __linux__
+#endif // !_WIN32
