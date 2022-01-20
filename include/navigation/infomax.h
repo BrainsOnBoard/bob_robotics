@@ -78,7 +78,7 @@ public:
 
     float test(const cv::Mat &image, const ImgProc::Mask& = ImgProc::Mask{}) const
     {
-        const auto decs = m_Weights * getFloatVector(image);
+        const auto decs = m_Weights * getNetInputs(image);
         return decs.array().abs().sum();
     }
 
@@ -155,7 +155,7 @@ public:
         BOB_ASSERT(image.rows == unwrapRes.height);
 
         // Convert image to vector of floats
-        m_U = m_Weights * getFloatVector(image) * m_TanhScalingFactor;
+        m_U = m_Weights * getNetInputs(image) * m_TanhScalingFactor;
         m_Y = tanh(m_U.array());
     }
 
@@ -171,12 +171,19 @@ private:
     MatrixType m_Weights;
     VectorType m_U, m_Y;
 
-    static auto getFloatVector(const cv::Mat &image)
+    //! Normalises the input image to a vector of z-scores
+    static VectorType getNetInputs(const cv::Mat &image)
     {
         Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
-        return map.cast<FloatType>() / 255.0;
+        const auto v = map.cast<FloatType>();
+        const FloatType mean = v.mean();
+
+        const auto vNorm = v.array() - mean;
+        const FloatType sd = std::sqrt((vNorm * vNorm).mean());
+        return vNorm / sd;
     }
 
+    //! NB: This only works if mat's column means are zero!
     template<class T>
     static auto matrixSD(const T &mat)
     {
