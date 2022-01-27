@@ -237,12 +237,12 @@ PYBIND11_MODULE(_navigation, m)
     addAlgo<InfoMaxType>(m, "InfoMax")
             .def(py::init<const cv::Size &, float, float>(),
                  "size"_a,
-                 "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
-                 "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR)
+                 "learning_rate"_a = InfoMaxType::DefaultLearningRate,
+                 "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor)
             .def(py::init<const cv::Size &, float, float, Eigen::MatrixXf>(),
                  "size"_a,
-                 "learning_rate"_a = INFOMAX_DEFAULT_LEARNING_RATE,
-                 "tanh_scaling_factor"_a = DEFAULT_TANH_SCALING_FACTOR,
+                 "learning_rate"_a = InfoMaxType::DefaultLearningRate,
+                 "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
                  "weights"_a)
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights",

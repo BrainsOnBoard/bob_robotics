@@ -26,9 +26,6 @@
 #include <utility>
 #include <vector>
 
-#define INFOMAX_DEFAULT_LEARNING_RATE 0.01
-#define DEFAULT_TANH_SCALING_FACTOR 0.1
-
 namespace BoBRobotics {
 namespace Navigation {
 class WeightsBlewUpError
@@ -45,10 +42,13 @@ class InfoMax
     using VectorType = Eigen::Matrix<FloatType, Eigen::Dynamic, 1>;
 
 public:
+    static constexpr FloatType DefaultLearningRate{ 0.01 };
+    static constexpr FloatType DefaultTanhScalingFactor{ 0.1 };
+
     InfoMax(const cv::Size &unwrapRes,
             MatrixType initialWeights,
-            FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
-            FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
+            FloatType learningRate = DefaultLearningRate,
+            FloatType tanhScalingFactor = DefaultTanhScalingFactor)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_TanhScalingFactor(tanhScalingFactor)
@@ -58,8 +58,8 @@ public:
     }
 
     InfoMax(const cv::Size &unwrapRes,
-            FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
-            FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
+            FloatType learningRate = DefaultLearningRate,
+            FloatType tanhScalingFactor = DefaultTanhScalingFactor)
       : InfoMax(unwrapRes,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height,
                                        unwrapRes.width * unwrapRes.height),
@@ -202,14 +202,14 @@ class InfoMaxRotater : public InfoMax<FloatType>
 public:
     InfoMaxRotater(const cv::Size &unwrapRes,
                    MatrixType initialWeights,
-                   FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
-                   FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
+                   FloatType learningRate = InfoMax<FloatType>::DefaultLearningRate,
+                   FloatType tanhScalingFactor = InfoMax<FloatType>::DefaultTanhScalingFactor)
     :   InfoMax<FloatType>(unwrapRes, std::move(initialWeights), learningRate, tanhScalingFactor)
     {}
 
     InfoMaxRotater(const cv::Size &unwrapRes,
-                   FloatType learningRate = INFOMAX_DEFAULT_LEARNING_RATE,
-                   FloatType tanhScalingFactor = DEFAULT_TANH_SCALING_FACTOR)
+                   FloatType learningRate = InfoMax<FloatType>::DefaultLearningRate,
+                   FloatType tanhScalingFactor = InfoMax<FloatType>::DefaultTanhScalingFactor)
     :   InfoMax<FloatType>(unwrapRes, learningRate, tanhScalingFactor)
     {}
 
@@ -282,5 +282,11 @@ private:
     //------------------------------------------------------------------------
     mutable std::vector<FloatType> m_RotatedDifferences;
 };
+
+template<class T>
+constexpr T InfoMax<T>::DefaultLearningRate;
+
+template<class T>
+constexpr T InfoMax<T>::DefaultTanhScalingFactor;
 } // Navigation
 } // BoBRobotics
