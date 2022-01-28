@@ -296,7 +296,8 @@ InfoMax::InfoMaxType InfoMax::createInfoMax(const Config &config, const cv::Size
 
         const auto weights = readMatrix<InfoMaxWeightMatrixType::Scalar>(weightPath);
         return { inputSize, InfoMaxType::DefaultLearningRate,
-                 InfoMaxType::DefaultTanhScalingFactor, weights };
+                 InfoMaxType::DefaultTanhScalingFactor,
+                 Navigation::Normalisation::None, weights };
     } else {
         return { inputSize };
     }

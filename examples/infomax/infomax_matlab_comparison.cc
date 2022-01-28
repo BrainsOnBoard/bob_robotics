@@ -39,7 +39,7 @@ runTest(const filesystem::path &dataPath, int num)
 
     // Load matrices of weights
     const auto pref = "test"s + snum + "_"s;
-    const auto initWeights = readMatrix<double>(dataPath / (pref + "weights_init.bin"s));
+    auto initWeights = readMatrix<double>(dataPath / (pref + "weights_init.bin"s));
     const auto matlabOutputWeights = readMatrix<double>(dataPath / (pref + "weights_out.bin"s));
     const auto matlabOutputWeightsMany = readMatrix<double>(dataPath / (pref + "weights_out_many.bin"));
     const auto matlabU = readMatrix<double>(dataPath / (pref + "u.bin"s));
@@ -52,7 +52,8 @@ runTest(const filesystem::path &dataPath, int num)
     // Make our InfoMax runner object
     using InfoMaxType = InfoMaxRotater<double>;
     InfoMaxType infomax(image.size(), InfoMaxType::DefaultLearningRate,
-                        InfoMaxType::DefaultTanhScalingFactor, initWeights);
+                        InfoMaxType::DefaultTanhScalingFactor,
+                        Normalisation::None, std::move(initWeights));
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;
@@ -61,7 +62,7 @@ runTest(const filesystem::path &dataPath, int num)
     infomax.trainUY();
 
     LOGI << "Weights before training: "
-         << initWeights;
+         << infomax.getWeights();
 
     LOGI << "Image: "
          << imageMatrix.cast<int>();

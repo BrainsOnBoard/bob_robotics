@@ -32,6 +32,12 @@ class WeightsBlewUpError
   : std::exception
 {};
 
+enum class Normalisation
+{
+    None,
+    ZScore
+};
+
 //------------------------------------------------------------------------
 // BoBRobotics::Navigation::InfoMax
 //------------------------------------------------------------------------
@@ -48,10 +54,12 @@ public:
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate,
             FloatType tanhScalingFactor,
+            Normalisation normalisation,
             MatrixType initialWeights)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_TanhScalingFactor(tanhScalingFactor)
+      , m_Normalisation(normalisation)
       , m_Weights(std::move(initialWeights))
     {
         BOB_ASSERT(m_Weights.cols() == unwrapRes.width * unwrapRes.height);
@@ -59,8 +67,9 @@ public:
 
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate = DefaultLearningRate,
-            FloatType tanhScalingFactor = DefaultTanhScalingFactor)
-      : InfoMax(unwrapRes, learningRate, tanhScalingFactor,
+            FloatType tanhScalingFactor = DefaultTanhScalingFactor,
+            Normalisation normalisation = Normalisation::None)
+      : InfoMax(unwrapRes, learningRate, tanhScalingFactor, normalisation,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height,
                                        unwrapRes.width * unwrapRes.height))
     {}
@@ -166,19 +175,34 @@ public:
 private:
     const cv::Size m_UnwrapRes;
     const FloatType m_LearningRate, m_TanhScalingFactor;
+    const Normalisation m_Normalisation;
     MatrixType m_Weights;
     VectorType m_U, m_Y;
 
-    //! Normalises the input image to a vector of z-scores
-    static VectorType getNetInputs(const cv::Mat &image)
+    template<class T>
+    static auto toZScore(const T &vec)
     {
-        Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
-        const auto v = map.cast<FloatType>();
-        const FloatType mean = v.mean();
+        const FloatType mean = vec.mean();
 
-        const auto vNorm = v.array() - mean;
+        const auto vNorm = vec.array() - mean;
         const FloatType sd = std::sqrt((vNorm * vNorm).mean());
         return vNorm / sd;
+    }
+
+    //! Converts image to VectorType and normalises
+    VectorType getNetInputs(const cv::Mat &image) const
+    {
+        Eigen::Map<Eigen::Matrix<uint8_t, Eigen::Dynamic, 1>> map(image.data, image.cols * image.rows);
+        const auto vec = map.cast<FloatType>();
+
+        switch (m_Normalisation) {
+        case Normalisation::None:
+            return vec;
+        case Normalisation::ZScore:
+            return toZScore(vec);
+        default:
+            throw std::runtime_error{ "Invalid normalisation method" };
+        }
     }
 
     //! NB: This only works if mat's column means are zero!

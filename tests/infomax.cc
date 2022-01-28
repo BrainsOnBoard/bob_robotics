@@ -51,6 +51,7 @@ TEST(InfoMax, ExplodingWeights)
 {
     InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/0.1f,
                               InfoMaxRotater<>::DefaultTanhScalingFactor,
+                              Normalisation::None,
                               InitialWeights };
 
     EXPECT_THROW({
@@ -65,6 +66,7 @@ TEST(InfoMax, NonExplodingWeights)
 {
     InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/1e-5f,
                               InfoMaxRotater<>::DefaultTanhScalingFactor,
+                              Normalisation::None,
                               InitialWeights };
 
     EXPECT_NO_THROW({
