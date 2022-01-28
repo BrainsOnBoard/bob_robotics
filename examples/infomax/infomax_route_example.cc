@@ -108,7 +108,8 @@ int bobMain(int argc, char **argv)
     if (netPath.exists()) {
         LOGI << "Loading weights from " << netPath;
 
-        InfoMaxType infomax(imSize, LearningRate, TanhScalingFactor, readMatrix<FloatType>(netPath));
+        InfoMaxType infomax(imSize, LearningRate, TanhScalingFactor,
+                            Normalisation::ZScore, readMatrix<FloatType>(netPath));
         doTesting(infomax, x, y, images);
     } else {
         // ...otherwise do the training now

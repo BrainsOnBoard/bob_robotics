@@ -183,13 +183,16 @@ class PyAlgoWrapper<InfoMaxType>
 {
 public:
     PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor, Eigen::MatrixXf weights)
-      : PyAlgoWrapperBase<InfoMaxType>(size, std::move(weights), learningRate, tanhScalingFactor)
+                  float tanhScalingFactor, Normalisation normalisation,
+                  Eigen::MatrixXf weights)
+      : PyAlgoWrapperBase<InfoMaxType>(size, learningRate, tanhScalingFactor,
+                                       normalisation, std::move(weights))
     {}
 
     PyAlgoWrapper(const cv::Size &size, float learningRate,
-                  float tanhScalingFactor)
-      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, generateInitialWeights(size).first)
+                  float tanhScalingFactor, Normalisation normalisation)
+      : PyAlgoWrapper(size, learningRate, tanhScalingFactor, normalisation,
+                      generateInitialWeights(size).first)
     {}
 
     const auto &getWeights() const { return m_Algo.getWeights(); }
@@ -231,18 +234,24 @@ PYBIND11_MODULE(_navigation, m)
         throw std::runtime_error{ "numpy.core.multiarray failed to import" };
     }
 
+    py::enum_<Normalisation>(m, "Normalisation")
+            .value("none", Normalisation::None)
+            .value("zscore", Normalisation::ZScore);
+
     // Add various algorithms as Python classes
     addAlgo<PerfectMemoryType>(m, "PerfectMemory")
             .def(py::init<const cv::Size &>());
     addAlgo<InfoMaxType>(m, "InfoMax")
-            .def(py::init<const cv::Size &, float, float>(),
-                 "size"_a,
-                 "learning_rate"_a = InfoMaxType::DefaultLearningRate,
-                 "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor)
-            .def(py::init<const cv::Size &, float, float, Eigen::MatrixXf>(),
+            .def(py::init<const cv::Size &, float, float, Normalisation>(),
                  "size"_a,
                  "learning_rate"_a = InfoMaxType::DefaultLearningRate,
                  "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
+                 "normalisation"_a = Normalisation::None)
+            .def(py::init<const cv::Size &, float, float, Normalisation, Eigen::MatrixXf>(),
+                 "size"_a,
+                 "learning_rate"_a = InfoMaxType::DefaultLearningRate,
+                 "tanh_scaling_factor"_a = InfoMaxType::DefaultTanhScalingFactor,
+                 "normalisation"_a = Normalisation::None,
                  "weights"_a)
             .def("get_weights", &PyAlgoWrapper<InfoMaxType>::getWeights)
             .def_static("generate_initial_weights",

@@ -29,8 +29,13 @@
 namespace BoBRobotics {
 namespace Navigation {
 class WeightsBlewUpError
-  : std::exception
-{};
+  : std::runtime_error
+{
+public:
+    WeightsBlewUpError()
+      : std::runtime_error("InfoMax net's weights blew up")
+    {}
+};
 
 enum class Normalisation
 {
@@ -197,7 +202,7 @@ private:
 
         switch (m_Normalisation) {
         case Normalisation::None:
-            return vec;
+            return vec / 255.0;
         case Normalisation::ZScore:
             return toZScore(vec);
         default:
