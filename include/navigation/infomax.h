@@ -46,9 +46,9 @@ public:
     static constexpr FloatType DefaultTanhScalingFactor{ 0.1 };
 
     InfoMax(const cv::Size &unwrapRes,
-            MatrixType initialWeights,
-            FloatType learningRate = DefaultLearningRate,
-            FloatType tanhScalingFactor = DefaultTanhScalingFactor)
+            FloatType learningRate,
+            FloatType tanhScalingFactor,
+            MatrixType initialWeights)
       : m_UnwrapRes(unwrapRes)
       , m_LearningRate(learningRate)
       , m_TanhScalingFactor(tanhScalingFactor)
@@ -60,11 +60,9 @@ public:
     InfoMax(const cv::Size &unwrapRes,
             FloatType learningRate = DefaultLearningRate,
             FloatType tanhScalingFactor = DefaultTanhScalingFactor)
-      : InfoMax(unwrapRes,
+      : InfoMax(unwrapRes, learningRate, tanhScalingFactor,
                 generateInitialWeights(unwrapRes.width * unwrapRes.height,
-                                       unwrapRes.width * unwrapRes.height),
-                learningRate,
-                tanhScalingFactor)
+                                       unwrapRes.width * unwrapRes.height))
     {}
 
     //------------------------------------------------------------------------
@@ -197,20 +195,12 @@ private:
 template<typename FloatType = float>
 class InfoMaxRotater : public InfoMax<FloatType>
 {
+public:
     using MatrixType = Eigen::Matrix<FloatType, Eigen::Dynamic, Eigen::Dynamic>;
 
-public:
-    InfoMaxRotater(const cv::Size &unwrapRes,
-                   MatrixType initialWeights,
-                   FloatType learningRate = InfoMax<FloatType>::DefaultLearningRate,
-                   FloatType tanhScalingFactor = InfoMax<FloatType>::DefaultTanhScalingFactor)
-    :   InfoMax<FloatType>(unwrapRes, std::move(initialWeights), learningRate, tanhScalingFactor)
-    {}
-
-    InfoMaxRotater(const cv::Size &unwrapRes,
-                   FloatType learningRate = InfoMax<FloatType>::DefaultLearningRate,
-                   FloatType tanhScalingFactor = InfoMax<FloatType>::DefaultTanhScalingFactor)
-    :   InfoMax<FloatType>(unwrapRes, learningRate, tanhScalingFactor)
+    template<class... Ts>
+    InfoMaxRotater(Ts&&... args)
+      : InfoMax<FloatType>(std::forward<Ts>(args)...)
     {}
 
     //------------------------------------------------------------------------

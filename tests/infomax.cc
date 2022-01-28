@@ -49,7 +49,9 @@ TEST(InfoMax, RandomWeightsDistribution)
 // Check that too high a learning rate causes weights to blow up
 TEST(InfoMax, ExplodingWeights)
 {
-    InfoMaxRotater<> infomax{ TestImageSize, InitialWeights, /*learningRate=*/0.1f };
+    InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/0.1f,
+                              InfoMaxRotater<>::DefaultTanhScalingFactor,
+                              InitialWeights };
 
     EXPECT_THROW({
         for (const auto &image : TestImages) {
@@ -61,7 +63,9 @@ TEST(InfoMax, ExplodingWeights)
 // Check that using a sensible learning rate doesn't throw an exception
 TEST(InfoMax, NonExplodingWeights)
 {
-    InfoMaxRotater<> infomax{ TestImageSize, InitialWeights, /*learningRate=*/1e-5f };
+    InfoMaxRotater<> infomax{ TestImageSize, /*learningRate=*/1e-5f,
+                              InfoMaxRotater<>::DefaultTanhScalingFactor,
+                              InitialWeights };
 
     EXPECT_NO_THROW({
         for (const auto &image : TestImages) {

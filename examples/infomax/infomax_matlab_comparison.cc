@@ -50,7 +50,9 @@ runTest(const filesystem::path &dataPath, int num)
     const cv::Mat image(imageMatrix.rows(), imageMatrix.cols(), CV_8UC1, reinterpret_cast<void *>(imageMatrix.data()));
 
     // Make our InfoMax runner object
-    InfoMaxRotater<double> infomax(image.size(), initWeights);
+    using InfoMaxType = InfoMaxRotater<double>;
+    InfoMaxType infomax(image.size(), InfoMaxType::DefaultLearningRate,
+                        InfoMaxType::DefaultTanhScalingFactor, initWeights);
 
     // Do training
     Matrix<double, Dynamic, 1> u, y;

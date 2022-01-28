@@ -101,15 +101,18 @@ int bobMain(int argc, char **argv)
     const filesystem::path netPath = "trained_network_"s + routePath.filename()
             + "_reps"s + std::to_string(numReps) + ".bin"s;
 
+    constexpr auto LearningRate = InfoMaxType::DefaultLearningRate;
+    constexpr auto TanhScalingFactor = InfoMaxType::DefaultTanhScalingFactor;
+
     // If we already have a network for these params, load from disk
     if (netPath.exists()) {
         LOGI << "Loading weights from " << netPath;
 
-        InfoMaxType infomax(imSize, readMatrix<FloatType>(netPath));
+        InfoMaxType infomax(imSize, LearningRate, TanhScalingFactor, readMatrix<FloatType>(netPath));
         doTesting(infomax, x, y, images);
     } else {
         // ...otherwise do the training now
-        InfoMaxType infomax(imSize);
+        InfoMaxType infomax(imSize, LearningRate, TanhScalingFactor);
 
         // Train network
         {
