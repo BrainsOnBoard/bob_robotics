@@ -13,15 +13,15 @@
 // Standard C includes
 #include <cmath>
 
-#define DEFAULT_DEAD_ZONE 0.25f
-
 namespace BoBRobotics {
 namespace HID {
+constexpr float DefaultDeadZone = 0.25f;
+
 template<class RobotType>
 void
 drive(RobotType &robot, const JoystickBase<JAxis, JButton> &joystick)
 {
-    drive(robot, joystick, DEFAULT_DEAD_ZONE);
+    drive(robot, joystick, DefaultDeadZone);
 }
 
 template<class AckermannType,
@@ -57,7 +57,7 @@ constexpr auto usedAxes()
 template<class RobotType,
          std::enable_if_t<!Robots::IsUAV<RobotType>::value, int> = 0>
 void
-addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone = DEFAULT_DEAD_ZONE)
+addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone = DefaultDeadZone)
 {
     joystick.addHandler([&robot, deadZone](auto &joystick, JAxis axis, float) {
         constexpr auto axes = usedAxes<RobotType>();
