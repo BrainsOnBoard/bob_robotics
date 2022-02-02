@@ -470,7 +470,6 @@ private:
                 const auto period = m_Config.getTrainInterval();
                 if (period == Milliseconds(0)) {
                     fps = m_Camera->getFrameRate();
-                    LOGI << fps;
                 } else {
                     fps = 1 / units::time::second_t{ period };
                     if (fps > m_Camera->getFrameRate()) {
