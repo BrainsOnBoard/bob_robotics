@@ -24,6 +24,12 @@ drive(RobotType &robot, const JoystickBase<JAxis, JButton> &joystick)
     drive(robot, joystick, DefaultDeadZone);
 }
 
+template<class RobotType>
+void addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick)
+{
+    addJoystick(robot, joystick, DefaultDeadZone);
+}
+
 template<class AckermannType,
          std::enable_if_t<Robots::IsAckermann<AckermannType>::value, int> = 0>
 constexpr auto usedAxes()
@@ -57,7 +63,7 @@ constexpr auto usedAxes()
 template<class RobotType,
          std::enable_if_t<!Robots::IsUAV<RobotType>::value, int> = 0>
 void
-addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone = DefaultDeadZone)
+addJoystick(RobotType &robot, JoystickBase<JAxis, JButton> &joystick, float deadZone)
 {
     joystick.addHandler([&robot, deadZone](auto &joystick, JAxis axis, float) {
         constexpr auto axes = usedAxes<RobotType>();
@@ -166,7 +172,7 @@ drive(UAVType &uav, const JoystickBase<JAxis, JButton> &joystick)
 
 template<class UAVType, std::enable_if_t<Robots::IsUAV<UAVType>::value, int> = 0>
 void
-addJoystick(UAVType &uav, JoystickBase<JAxis, JButton> &joystick)
+addJoystick(UAVType &uav, JoystickBase<JAxis, JButton> &joystick, float /*deadZone*/)
 {
     auto onAxisEvent = [&uav](auto &, JAxis axis, float value) {
         /*
