@@ -58,6 +58,7 @@ public:
     const std::string &getWatershedMarkerImageFilename() const{ return m_WatershedMarkerImageFilename; }
 
     float getJoystickDeadzone() const{ return m_JoystickDeadzone; }
+    float getJoystickGain() const{ return m_JoystickGain; }
 
     bool shouldAutoTrain() const{ return m_AutoTrain; }
     Milliseconds getTrainInterval() const{ return m_TrainInterval; }
@@ -154,6 +155,9 @@ private:
 
     // How large should the deadzone be on the analogue joystick?
     float m_JoystickDeadzone;
+
+    // Value to multiply joystick axis values by when driving robot
+    float m_JoystickGain;
 
     // Should we train automatically every train interval
     bool m_AutoTrain;
